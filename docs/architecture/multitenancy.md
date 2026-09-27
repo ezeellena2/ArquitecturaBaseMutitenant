@@ -129,6 +129,8 @@ El aviso final, "Tu cuenta fue eliminada", va al método principal. Se encola **
 **4. Desde la plataforma:**
 - Un operador puede **iniciar la baja** de una cuenta activa o suspendida, por ejemplo ante un pedido legal que llega por fuera de la plataforma.
 - Lleva motivo y no pide reautenticar a la persona.
+- Lo bloquean las mismas reglas: si la persona es el **único Dueño** de una organización no cerrada, primero esa organización tiene que sumar otro Dueño, o la plataforma tiene que cerrarla.
+- La cuenta muestra "La plataforma inició la baja el dd/mm/aaaa", en lugar de "Pidió la baja".
 - Sigue el mismo camino: 30 días de gracia, avisos y eliminación.
 - No puede saltearse la gracia ni cancelar por la persona.
 
