@@ -59,7 +59,19 @@ El resultado tiene que servir para empezar productos reales.
 
 Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los módulos de negocio del producto (B2B y B2C) se suman después, cada uno con su plan, copiando Roles, **como módulos con `[FeatureGate]`** (P8).
 
-**Antes de la Etapa 4:** los tableros de teléfono (390 px) de las pantallas del lienzo (P10), para que Roles, la feature de referencia, nazca adaptable.
+**Pantallas:** todas están dibujadas y aprobadas en el lienzo "Sistema visual · Multitenant" (versión 33, 67 tableros, en escritorio y teléfono), con el tema de [`tema.md`](../../../ArquitecturaBaseMutitenantFront/docs/architecture/tema.md) del front. Cada etapa programa las suyas **copiando el tablero**, sin rediseñar. Si una pantalla necesita algo que el tablero no tiene, primero se dibuja y se aprueba.
+
+| Etapa | Tableros del lienzo |
+|---|---|
+| 0–1 | el tema, los componentes base, Botones, Palabras y Avisos (errores genéricos) |
+| 3 | Landing, Ingreso (las dos puertas y todos sus estados), Registro, Enlace, Sesion, Invitacion, Inicio-Personal, Cuenta (métodos de ingreso y baja), Aceptar-Terminos, Legal y Mensajes (correos del ingreso) |
+| 4 | Roles y Rol |
+| 5 | Organizaciones, Organizacion, Cuentas, Cuenta-Plat, Recuperaciones, Recuperar, Legales, Auditoria-Plat y Config-Plat |
+| 6 | Registro-Empresa, Inicio-Org, Inicio-Miembro, Usuarios, Usuario, Empresas, Empresa, Configuracion (con el dominio de correo), Pagina-Org, Auditoria-Org, Perfil-Suspendido y Error-Org |
+| 7 | Pagina-Publica y Directorio |
+| 8 | Mensajes (canal WhatsApp) |
+
+**El login primero:** la prioridad es que el ingreso completo funcione al 100 %. Por eso la Etapa 3 se hace en tres partes, cada una con su puerta (ver la etapa), y la 3a es el primer recorrido real de punta a punta.
 
 **Estándares transversales:** P1 a P10 de [`estandares.md`](../architecture/estandares.md), adoptados el 2026-09-27, ya están repartidos en las tareas de cada etapa (marcados con su P#).
 
@@ -93,7 +105,7 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 ### Tarea 0.6: front
 - [ ] Borrar `node_modules`, `dist` y `.npm-cache` del scaffold viejo.
 - [ ] `package.json` con las dependencias y versiones de ArquitecturaBaseFront, más `openapi-typescript` y `libphonenumber-js`. Además: `tsconfig*`, `vite.config.ts` (proxy, puerto 5174), `.oxlintrc.json`, `components.json`, `index.html` y `silent-renew.html`.
-- [ ] Copiar de la base `index.css` (tokens), `shared/ui`, `shared/hooks`, `shared/lib` y `test/`. Sumar a `shared/ui` `FilterBar`, `StatusDot`, `Avatar`, `FormError`, `Surface` y `tabs.tsx` (shadcn).
+- [ ] Copiar de la base `shared/ui`, `shared/hooks`, `shared/lib` y `test/`, y armar `index.css` con los tokens de [`tema.md`](../../../ArquitecturaBaseMutitenantFront/docs/architecture/tema.md) (tema aprobado en el lienzo) más `theme-tokens.test.ts`. Sumar a `shared/ui` `FilterBar`, `StatusDot`, `Avatar`, `FormError`, `Surface` y `tabs.tsx` (shadcn).
 - [ ] `App.tsx` con un router mínimo. build, lint y test limpios. Commit `chore: esqueleto del SPA`.
 
 ### Tarea 0.7: el arnés
@@ -147,7 +159,8 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 5. **`shared/ui/format`** (DateText, MoneyText, NumberText, PercentText, EnumText, StatusBadge, EmptyValue…) y **`shared/ui/fields`** (DateField, MoneyField, NumberField, PercentField, PhoneField…). `DataTable` ya resuelve el formato por el `type` de cada columna.
 6. `scripts/generate-contracts.mjs`, `npm run contracts` y `contracts:check`.
 7. **Campos con forma propia:** `EmailField`, `PhoneField` con `shared/phone` (países, banderas SVG y `CountrySelect`) y `TaxIdField` (`stdnum`), más `useIdempotentMutation` (P6).
-8. **Diseño adaptable (P10):** `DataTable` con tarjetas por `mobile`, `FilterBar` con el panel inferior, `Dialog` a pantalla completa, y `columns-mobile.test.ts`.
+8. **Diseño adaptable (P10):** `DataTable` con columnas marcadas `mobile` ("primary" y "status", las demás se ven al entrar), `FilterBar` con los filtros debajo del buscador, `Dialog` como hoja desde abajo, y `columns-mobile.test.ts`.
+9. **Errores genéricos** (frontend.md, "Errores"): sin conexión (toast y franja), 5xx con código de seguimiento, 429 con cuenta regresiva en el botón, sesión vencida (vuelve a `/login` con `returnUrl`), "¿Salir sin guardar?" y "Hay una versión nueva". Se prueban en el tablero Avisos.
 
 **Puerta:** la general. Además:
 - cada `ErrorType` sale con su status y el `detail` traducido en es-AR y en-US;
@@ -181,6 +194,11 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 ---
 
 ## Etapa 3: identidad, accesos y OpenIddict
+
+**Se hace en tres partes, cada una con su puerta**, porque es la etapa más grande y la prioridad es que el ingreso funcione de punta a punta cuanto antes:
+- **3a · Ingreso:** los puntos 1 a 6c, 8 y 9. Puerta: el recorrido manual de abajo (registro e ingreso reales, las dos puertas, cambio de lado, F5, logout).
+- **3b · La cuenta:** 6c-bis (métodos de ingreso), 6d (términos) y 6e (baja). Puerta: sumar un correo personal, quitar el de la empresa con código en otro método, aceptar términos nuevos, pedir la baja y cancelarla ingresando.
+- **3c · Invitaciones:** el punto 7. Puerta: invitar a alguien sin cuenta y a alguien con cuenta, y aceptar las dos.
 
 **Back:**
 1. `ApplicationUser` **global** (IsPlatformOperator, Status, Culture, TimeZoneId, LastAccess, LastBusinessTenantId), sin índice único de email ni teléfono: esos valores viven en `LoginMethods` (ver 6c-bis), y `Email`/`PhoneNumber` son solo una copia del método principal.
@@ -219,16 +237,16 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
     - suspensiones.
 
 **Front:**
-1. `auth/` y `tenancy/`: elegir acceso al ingresar, "Ir a mi empresa" / "Ir a mi espacio personal" y elegir organización, con `queryClient.clear()` al cambiar.
-2. `areas/public/auth`: ingreso, código, enlace, registro, callback e invitación.
-3. Los tres layouts vacíos y `areas/personal/account`.
+1. `auth/` y `tenancy/`: las dos puertas (`/login` y `/login/empresa`), "Ir a mi empresa" / "Ir a Personal" en el menú de la cuenta, elegir organización, y `queryClient.clear()` al cambiar.
+2. `areas/public/auth`: ingreso (con todos los estados del tablero Ingreso, incluida la cuenta con la baja pedida y la sesión vencida), código, enlace, registro con la casilla de términos, callback, invitación y la aceptación bloqueante de términos nuevos.
+3. Los tres layouts con el menú lateral del tema (y el `AdminPanel` vacío hasta la Etapa 6), y `areas/personal/account` con los métodos de ingreso, Privacidad (exportar llega en la Etapa 10) y la baja.
 4. `useFormat` conectado a las preferencias de `/api/me`.
 
 **Puerta:** la general, más un recorrido manual:
 0. `./scripts/secretos/importar-desde-arquitecturabase.ps1` y `verificar.ps1` con todo `[ok]`;
 1. registrarse como persona con un código que llega **de verdad** por Gmail, y otra vez con Google → queda en su espacio personal;
-2. pasar a "Demo" con Ana;
-3. F5 → sigue en "Demo";
+2. entrar por "Ingresá como empresa" con Ana → Empresa A (del seed);
+3. F5 → sigue en Empresa A;
 4. volver a Personal;
 5. cambiar la cultura a en-US → fechas y números cambian en todas partes;
 6. logout.
@@ -282,7 +300,7 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 ## Etapa 6: área B2B (organización)
 
 **Back:**
-1. **"Registrá tu empresa"** (`POST /api/auth/business-signup`, desde el portal Empresas; nunca desde el acceso B2C), con `TenantProvisioner` idempotente, compartido con la plataforma. Elegir el slug y validar los reservados.
+1. **"Registrá tu empresa"** (`POST /api/auth/business-signup`, en `/registro/empresa`, desde la portada y la puerta de empresas; nunca desde el acceso B2C), con `TenantProvisioner` idempotente, compartido con la plataforma. Elegir el slug y validar los reservados.
 1b. **Mi página pública:** `PublicPage` (nombre, logo, descripción, contacto, slug), en borrador o publicada, editable por quien tenga `publicpage.manage`.
 2. Usuarios, que parten de `Members`:
    - listado con filtros y conteos, y ficha;
@@ -294,7 +312,7 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 4. Configuración (cultura, zona y moneda por defecto) y auditoría, con listado traducido.
 5. Tests de aislamiento para cada ruta nueva.
 
-**Front:** `areas/business/{home, users, companies, settings, audit}` y `areas/personal/organizations`, dibujadas primero.
+**Front:** `areas/business/{home, users, companies, settings, audit, public-page}` y el `AdminPanel` completo (tema.md), copiando los tableros de la Etapa 6.
 
 ---
 
