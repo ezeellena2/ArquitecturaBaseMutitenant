@@ -280,7 +280,8 @@ ArquitecturaBaseMultitenant.Application/
 │       ├── Time/
 │       │   └── ITimeZoneService.cs                   [E1] IsValid, GetDayRangeUtc, catálogo
 │       └── Phones/
-│           ├── IPhoneNumberParser.cs                [E3]
+│           ├── IPhoneNumberParser.cs                [E3] Parse(country, number, PhoneUsage) → Result<PhoneNumber>; Mask
+│           ├── PhoneUsage.cs                        [E3] Any | Mobile | WhatsApp
 │           └── IPhoneLinkObserver.cs                [E3] el núcleo avisa cambios de teléfono; el módulo suelta el contacto
 ├── Models/                                           *Request (entrada), *Response (salida), ReadModels/*Row (proyección)
 │   ├── Auth/                                         [E3]

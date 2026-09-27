@@ -19,6 +19,7 @@ Las decisiones están en [`docs/decisions/README.md`](docs/decisions/README.md) 
 | usar una fecha u hora | [fechas-y-zonas](docs/rules/fechas-y-zonas.md) |
 | usar un monto, decimal o porcentaje | [numeros-y-moneda](docs/rules/numeros-y-moneda.md) |
 | hacer un listado | [paginado-y-busqueda](docs/rules/paginado-y-busqueda.md) |
+| guardar o validar un teléfono | [telefonos](docs/rules/telefonos.md) |
 | mostrar un texto al usuario | [textos-y-traducciones](docs/rules/textos-y-traducciones.md) |
 | crear una entidad o una tabla | [persistencia-ef](docs/rules/persistencia-ef.md), [multitenancy](docs/rules/multitenancy.md), [auditoria](docs/rules/auditoria.md) |
 | exponer una ruta | [api-http](docs/rules/api-http.md), [permisos](docs/rules/permisos.md) |
@@ -28,7 +29,7 @@ Las decisiones están en [`docs/decisions/README.md`](docs/decisions/README.md) 
 | escribir tests | [tests](docs/rules/tests.md) |
 | agregar un área completa | `docs/guides/agregar-un-area.md` (nace en la Etapa 4) |
 
-Si una regla no está escrita, **preguntá antes de inventar**. Después se agrega la ficha y su test.
+El inventario de todos los estándares transversales (los definidos y los propuestos) está en [`docs/architecture/estandares.md`](docs/architecture/estandares.md). Si una regla no está escrita, **preguntá antes de inventar**. Después se agrega la ficha y su test.
 
 ## Forma de trabajo
 - Commits chicos, en español, con conventional commits. **Commitear al cerrar cada tarea**: el código que nunca se commitea se pierde.

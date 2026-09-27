@@ -12,6 +12,7 @@ Una ficha por tema, todas con el mismo formato: **Regla · Cómo se hace · Proh
 | [permisos](permisos.md) | permisos de organización, empresa, personal y plataforma |
 | [fechas-y-zonas](fechas-y-zonas.md) | UTC, `DateOnly`, zona efectiva |
 | [numeros-y-moneda](numeros-y-moneda.md) | `decimal`, `Money`, porcentajes, redondeo, formato |
+| [telefonos](telefonos.md) | E.164, `IPhoneNumberParser`, `PhoneUsage`, el 9 argentino |
 | [paginado-y-busqueda](paginado-y-busqueda.md) | por páginas, por cursor, orden, búsqueda, conteos |
 | [textos-y-traducciones](textos-y-traducciones.md) | resources es/en, voseo, cultura |
 | [persistencia-ef](persistencia-ef.md) | entidades, configuraciones, migraciones, readers |
