@@ -1045,3 +1045,54 @@ docs/
 src/**/<carpeta de un área>/AGENTS.md                  una línea: "Antes de tocar esto, leé docs/features/<área>.md"
 src/**/<carpeta de un área>/CLAUDE.md                  @AGENTS.md
 ```
+
+## Piezas de los estándares P1 a P10 (adoptados el 2026-09-27)
+
+Rutas completas, para no romper las ramas de arriba. Cada una se crea en la etapa marcada, junto con su ficha de `docs/rules/`.
+
+```
+src/ArquitecturaBaseMultitenant.Domain/
+├── Common/IVersioned.cs                                  [E2] P1  uint Version (xmin)
+├── Common/TextLimits.cs                                  [E1] P4  PersonName 100, OrganizationName 120, ShortName 60, Description 500, LongText 4000
+├── ValueObjects/Email.cs                                 [E1] P3  normalizado (minúsculas, NFC, IDN), validado
+├── ValueObjects/TaxId.cs                                 [E6] P5  país + tipo + dígitos
+├── ValueObjects/TaxIdValidators/ArgentineCuitValidator.cs [E6] P5 dígito verificador módulo 11 (CUIT y CUIL)
+├── ValueObjects/TaxIdValidators/ArgentineDniValidator.cs  [E6] P5
+├── Legal/LegalDocument.cs · LegalDocumentKind.cs · LegalAcceptance.cs · LegalErrors.cs   [E3] P7
+└── Features/Features.cs                                  [E5] P8  catálogo de módulos (clave, tipo de perfil, prendido por defecto)
+
+src/ArquitecturaBaseMultitenant.Application/
+├── Common/Text/TextNormalizer.cs                         [E1] P4  trim, NFC, sin caracteres de control ni de ancho cero
+├── Interfaces/Integrations/Features/IFeatureService.cs   [E5] P8
+├── Interfaces/Persistence/ILegalRepository.cs · ILegalReader.cs   [E3] P7
+├── Services/Legal/LegalService.cs                        [E3] P7  documentos vigentes y aceptación; exportar y dar de baja en E10
+└── Models/Legal/ · Validation/Legal/                     [E3] P7
+
+src/ArquitecturaBaseMultitenant.Infrastructure/
+├── Persistence/Configurations/Platform/IdempotencyKeyConfiguration.cs   [E1] P6
+├── Persistence/Configurations/Platform/LegalDocumentConfiguration.cs    [E3] P7
+├── Persistence/Configurations/Platform/TenantFeatureConfiguration.cs    [E5] P8
+├── Persistence/Configurations/Identity/LegalAcceptanceConfiguration.cs  [E3] P7
+├── Persistence/Conventions/VersionedConvention.cs        [E2] P1  IVersioned → xmin IsRowVersion
+├── Persistence/Conventions/EmailConvention.cs            [E1] P3  conversor de valor de Email
+├── Idempotency/IdempotencyStore.cs · IdempotencyCleanupWorker.cs        [E1] P6
+└── Features/FeaturesRegistration.cs · TenantFeatureFilter.cs · FeatureService.cs   [E5] P8
+
+src/ArquitecturaBaseMultitenant.Api/
+├── Json/NormalizedStringJsonConverter.cs · RawTextAttribute.cs          [E1] P4
+├── Idempotency/IdempotentAttribute.cs · IdempotencyFilter.cs            [E1] P6
+├── Features/DisabledFeatureHandler.cs                    [E5] P8  módulo apagado → 404 ProblemDetails
+├── Legal/LegalAcceptanceMiddleware.cs                    [E3] P7
+├── Controllers/Account/LegalController.cs                [E3] P7  GET /api/legal/current, POST /api/legal/accept
+└── Contracts/Common/PhoneInputHttpRequest.cs · TaxIdHttpRequest.cs      [E1] teléfono y P5
+
+tests/
+├── *.Domain.UnitTests/ValueObjects/EmailTests.cs · TaxIdTests.cs        P3 · P5
+├── *.Application.UnitTests/Common/TextNormalizerTests.cs                P4
+├── *.Api.IntegrationTests/Persistence/ConcurrencyTests.cs · CollationTests.cs   P1 · P2
+├── *.Api.IntegrationTests/Api/IdempotencyTests.cs · NormalizedInputTests.cs     P6 · P4
+├── *.Api.IntegrationTests/Features/FeatureGateTests.cs                  P8
+├── *.Api.IntegrationTests/Legal/LegalAcceptanceTests.cs · AccountDeletionTests.cs (E10)   P7
+└── *.ArchitectureTests/VersionedContractTests.cs · TextLimitsTests.cs · EmailPropertyTests.cs ·
+    TaxIdPropertyTests.cs · IdempotentActionsTests.cs · ModuleControllersTests.cs          P1 · P4 · P3 · P5 · P6 · P8
+```

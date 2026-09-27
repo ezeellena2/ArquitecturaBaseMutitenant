@@ -27,15 +27,32 @@
 | 19 | **Pantallas** | `Page`, listados, ficha, diálogo o pantalla, tokens | shadcn/ui + Tailwind | pantallas-y-ui |
 | 20 | **Configuración y secretos** | mismas claves que ArquitecturaBase, user-secrets, validación al arrancar | Options pattern | operations/configuracion |
 
-## 2. Propuestos: conviene decidirlos **antes de programar** (tocan las Etapas 1 a 3)
+## 2. Adoptados el 2026-09-27 (P1 a P10)
 
-| # | Estándar | Qué fijaría | Librería | Recomendación |
+El usuario los adoptó todos. Sus fichas:
+
+| # | Ficha |
+|---|---|
+| P1 | back [concurrencia](../rules/concurrencia.md) · front `formularios.md` |
+| P2 | back [persistencia-ef](../rules/persistencia-ef.md), "Orden alfabético" |
+| P3 | back [emails](../rules/emails.md) · front `formularios.md` |
+| P4 | back [textos-libres](../rules/textos-libres.md) |
+| P5 | back [identificacion-fiscal](../rules/identificacion-fiscal.md) · front `formatos.md` |
+| P6 | back [idempotencia](../rules/idempotencia.md) · front `datos-y-api.md` |
+| P7 | back [datos-personales](../rules/datos-personales.md) |
+| P8 | back [modulos-habilitados](../rules/modulos-habilitados.md) · front `permisos-y-perfiles.md` |
+| P9 | front `accesibilidad.md` |
+| P10 | front `responsive.md` |
+
+Qué fija cada uno, y en qué etapa entra:
+
+| # | Estándar | Qué fija | Librería | Etapa |
 |---|---|---|---|---|
 | P1 | **Concurrencia optimista** | Dos personas editan el mismo usuario o rol: hoy el segundo pisa al primero sin enterarse. Con esto, cada entidad editable lleva versión (`xmin` de Postgres); el front la manda con `If-Match` y un conflicto da 409 `General.ConcurrencyConflict` con "Otra persona cambió esto; recargá". | Npgsql (`UseXminAsConcurrencyToken`) | **Sí, en E2.** Las pantallas de edición con "Cambios sin guardar" lo necesitan |
 | P2 | **Orden alfabético en español** | El Postgres del contenedor ordena mal "Ñ", los acentos y las mayúsculas ("Álvarez" queda después de "Zapata"). Se resuelve con la collation ICU `es-x-icu` en las columnas de nombres (configuración EF por convención). | Postgres ICU (incluido) | **Sí, en E2.** Es invisible hasta que alguien lo ve mal en producción |
 | P3 | **Correos electrónicos** | trim + minúsculas + NFC, comparación por el normalizado (único global), dominios internacionales y el mismo validador en back y front | `MailAddress` + FluentValidation · zod `email()` | **Sí, en E3** (value object `Email`, que ya existe en ArquitecturaBase) |
 | P4 | **Nombres y textos libres** | trim, espacios colapsados, Unicode NFC, largo máximo por tipo (nombre de persona 100, organización 120, descripción 500), sin caracteres de control | propio (`TextNormalizer`) | **Sí, en E1.** Barato, y evita duplicados como "Grupo  La Cosecha" |
-| P5 | **Identificación fiscal y documentos** | `TaxId` con país y tipo (CUIT, CUIL, DNI; RUT o RUC después), validación del dígito verificador, formato `20-12345678-9`, guardado solo con dígitos | back: propio (la regla de módulo 11 es corta); front: `stdnum` (npm), que valida documentos de decenas de países | **Sí, en E6** (la empresa ya tiene CUIT en el lienzo) |
+| P5 | **Identificación fiscal y documentos** | `TaxId` con país y tipo (CUIT, CUIL, DNI; RUT o RUC después), validación del dígito verificador, formato `20-12345678-6`, guardado solo con dígitos | back: propio (la regla de módulo 11 es corta); front: `stdnum` (npm), que valida documentos de decenas de países | **Sí, en E6** (la empresa ya tiene CUIT en el lienzo) |
 | P6 | **Idempotencia** | un `POST` que crea algo acepta `Idempotency-Key`; repetir el mismo pedido (doble clic, reintento de red) devuelve la misma respuesta sin duplicar | propio (tabla `platform.IdempotencyKeys` + filtro MVC) | **Sí, en E1**, al menos para altas e invitaciones |
 | P7 | **Términos, privacidad y datos personales** | aceptación **versionada** de términos y privacidad al registrarse (quién, cuándo, qué versión), exportar mis datos y pedir la baja de la cuenta. Lo pide el B2C (Ley 25.326 en Argentina) | propio | **Sí, en E3** (registro) y E10 (exportar y dar de baja) |
 | P8 | **Módulos habilitados por organización** | qué funcionalidades tiene prendidas cada organización o perfil (por plan, prueba o permiso de la plataforma); el menú y las rutas se apagan solos | `Microsoft.FeatureManagement` con un filtro por tenant | **Sí, en E5.** Es la base para vender módulos B2B y B2C por separado |

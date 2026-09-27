@@ -73,6 +73,11 @@ Cada fila es una carpeta que lleva `AGENTS.md` + `CLAUDE.md`. Los punteros se es
 | `Infrastructure/Modules/<Módulo>/` | adaptadores del módulo | modulos | — |
 | `Api/Controllers/<Área>/` | controllers finos: contrato → servicio → `ToActionResult`; `[TenantKind]` + permiso | api-http, permisos, multitenancy | `Organization/RolesController.cs` |
 | `Api/Contracts/<Área>/` | `*HttpRequest` / `*Query`, props nullable, `ToString()` sin datos personales | api-http, paginado-y-busqueda | `Organization/CreateRoleHttpRequest.cs` |
+| `Domain/ValueObjects/` (Email, PhoneNumber, TaxId) | un dato con forma propia es un value object, nunca un `string` suelto | emails, telefonos, identificacion-fiscal | `Email.cs` |
+| `Domain/Legal/`, `Application/Services/Legal/` | términos y privacidad versionados, aceptación, exportar y dar de baja | datos-personales | `LegalAcceptance.cs` |
+| `Domain/Features/`, `Infrastructure/Features/` | catálogo de módulos y el filtro por tenant | modulos-habilitados | `Features.cs` |
+| `Api/Idempotency/` | `[Idempotent]` y su filtro; nada más va acá | idempotencia | `IdempotencyFilter.cs` |
+| `Api/Json/` | conversores globales (UTC, `Money`, texto normalizado) | textos-libres, fechas-y-zonas, numeros-y-moneda | `NormalizedStringJsonConverter.cs` |
 | `tests/*.Application.UnitTests/Services/<Área>/` | tests del servicio con dobles a mano | tests | `Services/Roles/RoleServiceWriteTests.cs` |
 | `tests/*.Api.IntegrationTests/<Área>/` | rutas + aislamiento entre tenants | tests, multitenancy | `Organization/RolesTests.cs` |
 

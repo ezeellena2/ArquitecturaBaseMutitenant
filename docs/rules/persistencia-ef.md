@@ -16,6 +16,9 @@
   - en los readers, `Find…` devuelve una proyección, `List…` una colección o página, y `Exists…`/`Count…` escalares.
 - **Readers:** `AsNoTracking` y proyección directa a `*Row` o `*Response`.
 - **Migración:** el comando de [`docs/guides/migracion.md`](../guides/migracion.md) (E2). Si la tabla es de `tenant`, `EnableTenantRls` más los índices del `SortMap`. Se revisa el SQL generado antes de commitear.
+- **Orden alfabético en español (collation):** la base se crea con collation **ICU `es-AR`**: `CREATE DATABASE … LOCALE_PROVIDER icu ICU_LOCALE 'es-AR' TEMPLATE template0`. Así "Álvarez" queda antes que "Zapata" y "Ñandú" después de "Nuñez". En Development la crea `DatabaseBootstrapExtensions`; en producción, el DBA con el mismo comando. `RuntimeRoleValidator` **aborta** el arranque si la base no es ICU `es-AR`.
+- **Versión:** una entidad que se edita desde una pantalla implementa `IVersioned` ([concurrencia](concurrencia.md)).
+- **Largos:** `HasMaxLength(TextLimits.X)`, nunca un número suelto ([textos-libres](textos-libres.md)). Los correos, CUIT y teléfonos son value objects ([emails](emails.md), [identificacion-fiscal](identificacion-fiscal.md), [telefonos](telefonos.md)).
 - **Soft delete:** `ISoftDeletable` y `Remove()`. El interceptor lo convierte en una marca. Para ver lo borrado: `IgnoreQueryFilters(["SoftDelete"])`.
 
 ## Prohibido
@@ -30,7 +33,8 @@
 - `Infrastructure/Persistence/Configurations/Tenant/RoleConfiguration.cs`, `Repositories/RoleRepository.cs` y `Readers/RoleReader.cs` (E4)
 
 ## Lo verifica
-- `EntityConfigurationTests`, `DataClassificationTests`, `DecimalPrecisionTests`.
+- `EntityConfigurationTests`, `DataClassificationTests`, `DecimalPrecisionTests`, `TextLimitsTests`.
+- `CollationTests`: orden real de "Álvarez", "Ñandú", "Nuñez" y "Zapata" contra la base de los tests (Testcontainers creada con ICU `es-AR`).
 - `MigrationsTests`: falla si falta una migración.
 - `RlsPolicyInventoryTests`, `SortIndexTests`, `TransactionBoundaryTests`.
 

@@ -20,6 +20,11 @@ Las decisiones están en [`docs/decisions/README.md`](docs/decisions/README.md) 
 | usar un monto, decimal o porcentaje | [numeros-y-moneda](docs/rules/numeros-y-moneda.md) |
 | hacer un listado | [paginado-y-busqueda](docs/rules/paginado-y-busqueda.md) |
 | guardar o validar un teléfono | [telefonos](docs/rules/telefonos.md) |
+| recibir un correo, un CUIT o DNI, o un texto libre | [emails](docs/rules/emails.md), [identificacion-fiscal](docs/rules/identificacion-fiscal.md), [textos-libres](docs/rules/textos-libres.md) |
+| hacer una pantalla que edita algo | [concurrencia](docs/rules/concurrencia.md) |
+| hacer un `POST` que crea o envía | [idempotencia](docs/rules/idempotencia.md) |
+| agregar una funcionalidad vendible u opcional | [modulos-habilitados](docs/rules/modulos-habilitados.md) |
+| tocar el registro, la cuenta o datos personales | [datos-personales](docs/rules/datos-personales.md) |
 | mostrar un texto al usuario | [textos-y-traducciones](docs/rules/textos-y-traducciones.md) |
 | crear una entidad o una tabla | [persistencia-ef](docs/rules/persistencia-ef.md), [multitenancy](docs/rules/multitenancy.md), [auditoria](docs/rules/auditoria.md) |
 | exponer una ruta | [api-http](docs/rules/api-http.md), [permisos](docs/rules/permisos.md) |

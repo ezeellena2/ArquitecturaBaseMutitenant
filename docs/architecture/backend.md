@@ -689,3 +689,23 @@ Nadie formatea a mano. El catálogo visual completo (cómo se ve cada tipo) est�
 - El SPA vive en `../ArquitecturaBaseMutitenantFront` y se sirve desde el mismo origen (wwwroot en producción, proxy de Vite en desarrollo), **sin CORS**.
 - `BackendPrefixes` es una lista a mano: `/api`, `/account`, `/connect`, `/.well-known`, `/webhooks`, `/health` y `/alive`. Un prefijo nuevo se suma ahí, al `SpaHostingTests` y al `server.proxy` de `vite.config.ts`.
 - La arquitectura del front está en `../ArquitecturaBaseMutitenantFront/docs/architecture/frontend.md`.
+
+---
+
+## 20. Reglas de datos que se aplican solas
+
+Estándares adoptados el 2026-09-27 (P1 a P8 de [`estandares.md`](estandares.md)). Cada uno tiene su ficha y su verificación. La idea es que **quien programa no tenga que acordarse**: la mayoría se aplica por un conversor, una convención o un atributo.
+
+| Qué | Cómo se aplica | Ficha |
+|---|---|---|
+| Textos que entran | `NormalizedStringJsonConverter` global (trim, NFC, sin invisibles; vacío → `null`) + tipos de texto con `TextLimits` | [textos-libres](../rules/textos-libres.md) |
+| Correos | value object `Email` (minúsculas, IDN, único) + conversor EF por convención | [emails](../rules/emails.md) |
+| Teléfonos | value object `PhoneNumber` (E.164) + `IPhoneNumberParser` con `PhoneUsage` | [telefonos](../rules/telefonos.md) |
+| CUIT, CUIL y DNI | value object `TaxId` (país + tipo + dígitos) con dígito verificador | [identificacion-fiscal](../rules/identificacion-fiscal.md) |
+| Ediciones simultáneas | `IVersioned` → `xmin`; `version` en el contrato; 409 `General.ConcurrencyConflict` | [concurrencia](../rules/concurrencia.md) |
+| Orden alfabético | base creada con collation ICU `es-AR`; se verifica al arrancar | [persistencia-ef](../rules/persistencia-ef.md) |
+| Doble clic o reintento | `[Idempotent]` + `Idempotency-Key` + `platform.IdempotencyKeys` | [idempotencia](../rules/idempotencia.md) |
+| Términos y privacidad | `LegalDocuments` versionados, `LegalAcceptances`, `LegalAcceptanceMiddleware` | [datos-personales](../rules/datos-personales.md) |
+| Módulos por organización | `Microsoft.FeatureManagement` + `TenantFeatureFilter` + `[FeatureGate]` (404 si está apagado) | [modulos-habilitados](../rules/modulos-habilitados.md) |
+
+**Pipeline:** `LegalAcceptanceMiddleware` va después de `TenantResolutionMiddleware` y antes de `UseAuthorization`. `IdempotencyFilter` y `[FeatureGate]` son filtros de MVC, así que corren en la acción.

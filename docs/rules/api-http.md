@@ -12,6 +12,7 @@
   - `PUT` y `DELETE` → 204;
   - `GET` → 200;
   - un trabajo aceptado → `ToAcceptedResult`.
+- Un `POST` que crea o envía lleva `[Idempotent]` ([idempotencia](idempotencia.md)). Una acción de un módulo lleva `[FeatureGate]` ([modulos-habilitados](modulos-habilitados.md)). Un `PUT` o `DELETE` de una entidad `IVersioned` recibe `version` ([concurrencia](concurrencia.md)).
 - Cada acción lleva `[TenantKind]` + permiso, `[ProducesResponseType<T>(status)]` y los errores extra con `[ProducesProblem(status)]`.
 - Rutas en inglés, plural y kebab-case (`api/companies/{companyId}/members`). Sin versionado (ADR 0005).
 - **Prefijo nuevo** (fuera de `/api`): se suma en `BackendPrefixes`, en `SpaHostingTests` y en el proxy de `vite.config.ts` ([guía](../guides/prefijo-de-backend.md), E1).

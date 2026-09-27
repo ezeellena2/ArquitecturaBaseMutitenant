@@ -21,5 +21,12 @@ Una ficha por tema, todas con el mismo formato: **Regla · Cómo se hace · Proh
 | [logs](logs.md) | `[LoggerMessage]`, `OperationLog`, qué nunca se loguea |
 | [modulos](modulos.md) | módulos quitables (WhatsApp) |
 | [tests](tests.md) | qué test va dónde, dobles, nombres |
+| [concurrencia](concurrencia.md) | versión (`xmin`) y 409 si dos personas editan a la vez |
+| [emails](emails.md) | value object `Email`: normalizado, validado y único |
+| [textos-libres](textos-libres.md) | limpieza automática, `TextLimits` y tipos de texto |
+| [identificacion-fiscal](identificacion-fiscal.md) | `TaxId`: CUIT, CUIL, DNI, con dígito verificador |
+| [idempotencia](idempotencia.md) | `[Idempotent]` + `Idempotency-Key`: sin duplicados |
+| [datos-personales](datos-personales.md) | términos y privacidad versionados, exportar y dar de baja |
+| [modulos-habilitados](modulos-habilitados.md) | feature flags por organización; módulo ≠ permiso |
 
 **Archivos que todavía no existen:** un "Copiá de" puede nombrar un archivo que nace en una etapa posterior (por ejemplo `RoleService.cs`, Etapa 4). Esos enlaces llevan la marca `(E#)` y `HarnessTests` los empieza a exigir cuando la etapa cierra.

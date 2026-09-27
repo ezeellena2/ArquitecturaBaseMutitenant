@@ -24,6 +24,13 @@ Cada decisión se registra en un archivo `NNNN-titulo.md` cuando se implementa, 
 | 0018 | **B2B + B2C con una sola cuenta** (el flujo de cuenta de Mercado Libre; el producto **no** es un marketplace). Una identidad global por persona, con un perfil Personal (tenant `Kind=Personal`, creado al registrarse) y N perfiles Business por membresía. Los perfiles no comparten datos. El token lleva el perfil activo, y se cambia con `authorize?prompt=none&tenant=` | Aceptada 2026-09-27 |
 | 0019 | **Presentación unificada de datos.** Contrato invariante en la API (UTC con `Z`, `DateOnly`, `decimal`, `Money` con moneda ISO, porcentaje como fracción, `null` para vacío). Se formatea solo en `shared/format` (front) y en `DisplayFormatter` (back), con perfiles fijos por cultura (`es-AR`, `en-US`), y los dos lados se prueban contra `docs/contracts/format-cases.json` | Aceptada 2026-09-27 |
 | 0020 | Autoregistro B2C abierto y "Crear mi organización" en autoservicio, los dos configurables en `PlatformSettings` (`ConsumerSignup`, `BusinessSignup`) | Aceptada 2026-09-27 |
+| 0023 | **Concurrencia optimista**: `IVersioned` mapeado a `xmin`, `version` obligatoria en los contratos de edición y borrado, y 409 `General.ConcurrencyConflict` | Aceptada 2026-09-27 |
+| 0024 | **Collation ICU `es-AR`** para toda la base; verificada al arrancar | Aceptada 2026-09-27 |
+| 0025 | **Datos de entrada normalizados**: textos limpios por un conversor global y `TextLimits`; `Email`, `PhoneNumber` y `TaxId` como value objects | Aceptada 2026-09-27 |
+| 0026 | **Idempotencia** en los `POST` que crean o envían (`[Idempotent]` + `Idempotency-Key`, con reserva por índice único) | Aceptada 2026-09-27 |
+| 0027 | **Términos y privacidad versionados**, aceptación registrada, exportar datos y dar de baja la cuenta | Aceptada 2026-09-27 |
+| 0028 | **Módulos por organización** con `Microsoft.FeatureManagement` y un filtro por tenant; módulo ≠ permiso; un módulo apagado responde 404 | Aceptada 2026-09-27 |
+| 0029 | **Accesibilidad WCAG 2.2 AA** con `vitest-axe` en cada test de pantalla, y **diseño adaptable** a 390, 768 y 1440 declarado por columna | Aceptada 2026-09-27 |
 | 0022 | Integraciones con **las mismas claves de configuración que ArquitecturaBase** (`Authentication:Google:*`, `Email:Smtp:*`, `WhatsApp:*`). Gmail por SMTP también en desarrollo; Google para ingresar y registrarse (desde la Etapa 3); secretos solo en user-secrets o variables de entorno, cargados con `scripts/secretos/` | Aceptada 2026-09-27 |
 | 0021 | Las rutas declaran el tipo de perfil con `[TenantKind(...)]`. El perfil personal no tiene roles: su dueño tiene implícitos los permisos `personal.*` | Aceptada 2026-09-27 |
 

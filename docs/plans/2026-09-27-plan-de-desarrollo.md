@@ -56,7 +56,11 @@ El resultado tiene que servir para empezar productos reales.
 | 10 | Despliegue y operación: CI/CD, migration bundle, backup, runbook | ✔ | ✔ | 9 |
 | 11 | Opcional: canales de WhatsApp por organización | ✔ | ✔ | 8 |
 
-Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los módulos de negocio del producto (B2B y B2C) se suman después, cada uno con su plan, copiando Roles.
+Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los módulos de negocio del producto (B2B y B2C) se suman después, cada uno con su plan, copiando Roles, **como módulos con `[FeatureGate]`** (P8).
+
+**Antes de la Etapa 4:** los tableros de teléfono (390 px) de las pantallas del lienzo (P10), para que Roles, la feature de referencia, nazca adaptable.
+
+**Estándares transversales:** P1 a P10 de [`estandares.md`](../architecture/estandares.md), adoptados el 2026-09-27, ya están repartidos en las tareas de cada etapa (marcados con su P#).
 
 ---
 
@@ -95,6 +99,7 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 - [ ] `HarnessTests` en ArchitectureTests y `src/test/harness.test.ts` en el front, con las cuatro verificaciones de `arnes.md` §5.
 - [ ] Un `AGENTS.md` + `CLAUDE.md` (`@AGENTS.md`) en cada carpeta que crea la Etapa 0, según el mapa de `arnes.md` §3 (back) y §2 (front).
 - [ ] `structure.test.ts` en el front (sin imports entre features ni entre áreas) y la regla `react/jsx-no-literals` en `.oxlintrc.json`.
+- [ ] **Accesibilidad (P9):** `vitest-axe` instalado, `extend-expect` en `test/setup.ts` y el primer `toHaveNoViolations` en `App.test.tsx`.
 - [ ] Commit `chore: arnés de reglas para agentes`.
 
 **Puerta:** la general, más `aspire run` levantando los 3 recursos y `/alive` en verde.
@@ -123,6 +128,12 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 8. **OpenAPI:** la convención de problemas, la exportación a `docs/contracts/openapi.json` y `OpenApiContractTests`.
 9. **Hosting:** ForwardedHeaders, SecurityHeaders, SpaExtensions y el pipeline completo.
 10. `TestFeatures/TestController` y los tests de errores, localización, JSON UTC y `Money`.
+11. **Datos de entrada (P3, P4):**
+    - `TextNormalizer` + `NormalizedStringJsonConverter` global + `[RawText]`;
+    - `Domain/Common/TextLimits.cs` y los tipos de texto de `ValidationRules`;
+    - los value objects `Email` y `PhoneNumber` con sus casos en `format-cases.json`;
+    - tests `TextNormalizerTests`, `NormalizedInputTests`, `TextLimitsTests`, `EmailTests` y `EmailPropertyTests`.
+12. **Idempotencia (P6):** `platform.IdempotencyKeys`, `[Idempotent]` + `IdempotencyFilter`, el worker de vencidas, `IdempotencyTests` e `IdempotentActionsTests`.
 
 **Front:**
 1. `shared/api`: httpClient, ApiError, queryClient y formErrors.
@@ -134,6 +145,8 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 4. **Paginado:** `usePagination` (vuelve a la página 1 y corrige una página fuera de rango), `useCursorList`, `Pagination` con el selector 10/20/50/100 (10 por defecto) y `LoadMore`.
 5. **`shared/ui/format`** (DateText, MoneyText, NumberText, PercentText, EnumText, StatusBadge, EmptyValue…) y **`shared/ui/fields`** (DateField, MoneyField, NumberField, PercentField, PhoneField…). `DataTable` ya resuelve el formato por el `type` de cada columna.
 6. `scripts/generate-contracts.mjs`, `npm run contracts` y `contracts:check`.
+7. **Campos con forma propia:** `EmailField`, `PhoneField` con `shared/phone` (países, banderas SVG y `CountrySelect`) y `TaxIdField` (`stdnum`), más `useIdempotentMutation` (P6).
+8. **Diseño adaptable (P10):** `DataTable` con tarjetas por `mobile`, `FilterBar` con el panel inferior, `Dialog` a pantalla completa, y `columns-mobile.test.ts`.
 
 **Puerta:** la general. Además:
 - cada `ErrorType` sale con su status y el `detail` traducido en es-AR y en-US;
@@ -159,6 +172,8 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 8. `AdvisoryLockKeys` y `CacheKeys`, con prefijo obligatorio. `TenantJobRunner`.
 9. **Búsqueda y paginado sobre Postgres:** `unaccent` + `pg_trgm` + `f_unaccent`, `ApplySearch`, `CursorCodec`, `ToCursorResultAsync` y los tests `PaginationTests`, `CursorPaginationTests`, `SearchTests` y `SortIndexTests`.
 10. `TestFeatures/Isolation/Widget : ITenantOwned`, más los tests de multitenancy.md §11 que no necesitan HTTP, `TransactionBoundaryTests`, `EntityConfigurationTests` y `TenantScopeUsageTests`.
+11. **Concurrencia (P1):** `IVersioned` con la convención a `xmin`, `ConcurrencyConflictException` en `UnitOfWork`, el 409 en el mapper, `ConcurrencyTests` y `VersionedContractTests`. `Widget` es `IVersioned`.
+12. **Orden alfabético (P2):** base creada con ICU `es-AR` en `DatabaseBootstrapExtensions` y en el contenedor de los tests; `RuntimeRoleValidator` verifica la collation; `CollationTests`.
 
 **Puerta:** la general, con `Rls_blocks_cross_tenant_even_with_filters_ignored` y `Runtime_role_is_not_privileged` en verde **en el CI**.
 
@@ -181,6 +196,7 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 6. Outbox persistente y **Gmail por SMTP**, que en desarrollo también envía de verdad (pickup `.eml` como opción), con plantillas de `Notifications.resx` y `DisplayFormatter`.
 6b. **Ingreso y registro con Google** (`Authentication:Google:*`): si la cuenta no existe, crea la identidad y su perfil personal, como el registro por código. Vincular y desvincular Google desde la cuenta.
 6c. **Configuración lista para pegar** ([`docs/operations/configuracion.md`](../operations/configuracion.md)): las mismas claves que ArquitecturaBase; `appsettings.Development.json` con los valores no secretos; los scripts de `scripts/secretos/` probados (importar de ArquitecturaBase, cargar desde un archivo, verificar); validación al arrancar con el nombre de la clave que falta.
+6d. **Términos y privacidad (P7):** `LegalDocuments` (versión 1 de términos y privacidad, en es y en, sembrada), `LegalAcceptances`, `acceptedTerms` en el registro (correo, WhatsApp y Google), `LegalAcceptanceMiddleware` y `LegalAcceptanceTests`. En el front, la casilla del registro y la pantalla bloqueante de aceptación.
 7. Invitaciones a una organización.
 8. `GET /api/me` (cuenta, perfiles, perfil activo, permisos y las preferencias efectivas de cultura, zona y moneda) y `PUT /api/me`.
 9. Seed idempotente en **todos** los ambientes, dentro de un límite y con el advisory lock `seed:` para que dos réplicas no choquen. En desarrollo, además: operador; Ana (Personal + "Demo"); Beto (Personal). Test: arrancar en `Production` contra una base migrada y vacía deja el cliente `web`, los ajustes de plataforma y el operador inicial.
@@ -234,6 +250,12 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 
 **Back:**
 1. `TenantAdministrationService`: listar, ver, aprobar, crear con invitación, suspender, reactivar, cerrar y reintentar el provisioning.
+1b. **Módulos por organización (P8):**
+    - `Microsoft.FeatureManagement.AspNetCore`, el catálogo `Features.cs`, `platform.TenantFeatures` y `TenantFeatureFilter` con caché;
+    - `DisabledFeatureHandler` (404 ProblemDetails) e `IFeatureService`;
+    - `features` en `/api/me` y la sección "Módulos" en la ficha de organización de la plataforma;
+    - `FeatureGateTests` y `ModuleControllersTests`;
+    - en el front, `useFeature`, `<Feature>` y `feature` en las rutas y la navegación.
 2. Identidades: buscar y suspender, lo que revoca todas sus sesiones.
 3. `PlatformOperatorService`; el primer dueño sale del seed.
 4. `SecurityEvent` + `PlatformAuditService` y `PlatformSettings` (`ConsumerSignup`, `BusinessSignup`, límite de organizaciones).
@@ -255,7 +277,7 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
    - invitar, editar, desactivar, reactivar y reenviar la invitación;
    - roles de organización;
    - protección del último TenantAdmin.
-3. Empresas (CRUD, CUIT, zona horaria) y membresías de empresa con sus roles, con protección del último CompanyAdmin.
+3. Empresas (CRUD, CUIT como `TaxId` validado (P5), zona horaria) y membresías de empresa con sus roles, con protección del último CompanyAdmin. `TaxId` + `ArgentineCuitValidator` + `TaxIdTests` y `TaxIdPropertyTests`. Las ediciones de usuario, rol y empresa llevan `version` (P1).
 4. Configuración (cultura, zona y moneda por defecto) y auditoría, con listado traducido.
 5. Tests de aislamiento para cada ruta nueva.
 
@@ -275,7 +297,7 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
    - tests de aislamiento entre perfiles personales y entre el personal y la organización de la misma persona.
 3. `TestFeatures` con un controller `[TenantKind(Personal)]` que prueba esa receta.
 
-**Front:** `PersonalLayout`, `areas/personal/home` y `navigation/personal.ts` listos para sumar módulos, dibujados primero.
+**Front:** `PersonalLayout`, `areas/personal/home` y `navigation/personal.ts` listos para sumar módulos, dibujados primero **a 390 px antes que a 1440** (P10: el B2C se usa sobre todo en el teléfono).
 
 ---
 
@@ -312,7 +334,8 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 - Migration bundle ejecutado con `mt_owner`.
 - CI/CD con GitHub Actions y OIDC.
 - Secretos, certificados de OpenIddict y SMTP real.
-- `docs/operations/runbook.md`: alta de `mt_app`, backup y restore, rotación de certificados, suspensiones, purga y baja de datos personales.
+- `docs/operations/runbook.md`: alta de `mt_app` **y creación de la base con ICU `es-AR`**, backup y restore, rotación de certificados, suspensiones, purga y baja de datos personales.
+- **Datos personales (P7, segunda parte):** `POST /api/me/data-export` y `DELETE /api/me`, con los 30 días de gracia y la anonimización; `AccountDeletionTests`.
 
 ## Etapa 11 (opcional)
 

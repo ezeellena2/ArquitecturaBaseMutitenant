@@ -4,7 +4,12 @@
 
 ## Cómo se hace
 - `Application/Validation/<Área>/<Acción>RequestValidator.cs`: `internal sealed class X : AbstractValidator<XRequest>`.
-- Reglas comunes de `ValidationRules`: `Required()`, `MaxLength(n)`, `ValidEmail()`, `ValidTimeZone()`, `ValidCulture()`, `ValidCurrency()`, `ValidPermissions(scope)`.
+- Reglas comunes de `ValidationRules`:
+  - textos: `Required()`, `PersonName()`, `OrganizationName()`, `ShortName()`, `Description()`, `LongText()` (los largos salen de `TextLimits`; [textos-libres](textos-libres.md));
+  - datos de contacto y fiscales: `ValidEmail()` ([emails](emails.md)), `ValidPhone(usage)` ([telefonos](telefonos.md)), `ValidTaxId()` ([identificacion-fiscal](identificacion-fiscal.md));
+  - preferencias: `ValidTimeZone()`, `ValidCulture()`, `ValidCurrency()`;
+  - permisos: `ValidPermissions(scope)`.
+- El texto ya llega limpio (trim, NFC, sin caracteres invisibles) gracias al conversor global: no se vuelve a limpiar.
 - Los mensajes salen de `ValidationMessages` (resx), nunca de un literal.
 - Un listado usa `PagedRequestValidator<T>` o `CursorRequestValidator<T>`, que ya validan página, tamaño, orden y búsqueda.
 - El servicio recibe `IRequestValidator` y llama `if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;`.
