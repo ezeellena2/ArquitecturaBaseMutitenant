@@ -427,3 +427,6 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Capturas de Playwright MCP
+.playwright-mcp/
