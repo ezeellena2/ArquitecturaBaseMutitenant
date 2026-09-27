@@ -154,7 +154,7 @@ Todo dato nuevo se clasifica **antes** de escribir su entidad:
 
 ## 5. Páginas públicas por subdominio
 
-- **Cada organización tiene un `Slug` único** (`empresa-a`), y su página vive en `https://empresa-a.plataforma.com`. El sitio de la plataforma (`plataforma.com`) tiene el buscador o directorio de empresas publicadas.
+- **Una página pública por organización** (no por empresa): cada organización tiene un `Slug` único (`empresa-a`), y su página vive en `https://empresa-a.plataforma.com`. El sitio de la plataforma (`plataforma.com`) tiene el buscador o directorio de empresas publicadas.
 - **Resolución por host, solo para lo público:** `PublicSiteResolutionMiddleware` lee el subdominio y fija `IPublicSiteContext.BusinessTenantId`. Sirve **únicamente** para leer datos **públicos** de esa empresa. **Nunca** da acceso a datos privados: para eso sigue mandando el claim `tenant_id` del token.
 - **Un solo front** (el mismo SPA) atiende todos los subdominios: con un subdominio de empresa muestra la página pública; con el dominio principal, el sitio de la plataforma y los accesos.
 - **Ingreso desde un subdominio:**
@@ -260,7 +260,8 @@ Con el acceso equivocado responde 403 `Tenancy.Access.Wrong`.
   - `s:{businessTenantId}:` (página pública; se invalida al publicar);
   - `u:{userId}:` (identidad y accesos);
   - `p:` (plataforma).
-- **Únicos globales:** el correo y el teléfono de la identidad, el `Slug` de la organización y el `PhoneNumberId` de WhatsApp.
+- **Únicos globales:** cada método de ingreso (`LoginMethods`: tipo + valor), el dominio verificado (`TenantDomains`), el `Slug` de la organización y el `PhoneNumberId` de WhatsApp.
+- **Una sola fuente para correos y teléfonos:** `LoginMethods`. `AspNetUsers.Email` y `PhoneNumber` son solo una copia del método principal (ASP.NET Identity los usa), sin índice único; los mantiene el servicio de métodos de ingreso.
 - **Locks de recursos compartidos:** sobre la fila (`FOR NO KEY UPDATE`), por ejemplo para no dar dos veces el mismo horario.
 
 ## 13. Tests obligatorios de aislamiento

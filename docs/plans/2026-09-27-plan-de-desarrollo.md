@@ -183,7 +183,7 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 ## Etapa 3: identidad, accesos y OpenIddict
 
 **Back:**
-1. `ApplicationUser` **global** (IsPlatformOperator, Status, Culture, TimeZoneId, LastAccess, LastBusinessTenantId), con índices únicos globales de email y teléfono.
+1. `ApplicationUser` **global** (IsPlatformOperator, Status, Culture, TimeZoneId, LastAccess, LastBusinessTenantId), sin índice único de email ni teléfono: esos valores viven en `LoginMethods` (ver 6c-bis), y `Email`/`PhoneNumber` son solo una copia del método principal.
    - **Sin setters públicos:** las reglas de la cuenta (correo o teléfono obligatorio, largo del nombre, restaurar) viven en métodos de la entidad, con tests unitarios.
    - Un nombre demasiado largo es un error de validación, no un recorte silencioso.
    - `ISignInService` es solo técnico, con 12 miembros como máximo; los datos de la cuenta van por `IUserRepository`. Así queda como en las Etapas 2 y 7 del plan de ArquitecturaBase.
@@ -206,7 +206,7 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
    - tests `LoginMethodsTests` y `ManagedEmailTests` (un exmiembro no puede ingresar con el correo de la empresa).
 
    El **dominio verificado** de la organización (registro TXT) y "Recuperar mi cuenta" asistida por la plataforma van en la Etapa 5.
-6d. **Términos y privacidad (P7):** `LegalDocuments` (versión 1 de términos y privacidad, en es y en, sembrada), `LegalAcceptances`, `acceptedTerms` en el registro (correo, WhatsApp y Google), `LegalAcceptanceMiddleware` y `LegalAcceptanceTests`. En el front, la casilla del registro y la pantalla bloqueante de aceptación.
+6d. **Términos y privacidad (P7):** `LegalDocuments` y `LegalDocumentContents` (versión 1 de términos y privacidad, con su texto en es y en, sembrada), `LegalAcceptances`, `acceptedTerms` en el registro (correo, WhatsApp y Google), `LegalAcceptanceMiddleware` y `LegalAcceptanceTests`. En el front, la casilla del registro y la pantalla bloqueante de aceptación.
 6e. **Baja de la cuenta (ADR 0035, multitenancy.md §3.2):** estados `PendingDeletion` y `Deleted` en la identidad, `ReauthTicket`, `AccountDeletionPolicy`, `POST /api/me/deletion` y `POST /api/auth/deletion/cancel`, el ingreso durante la gracia, `AccountDeletionWorker`, `IAccountDeletionParticipant` con los participantes del núcleo (espacio personal, aceptaciones, outbox), y los avisos. Las membresías suman su participante en la Etapa 6, y la plataforma su "Dar de baja" en la Etapa 5. Tests `AccountDeletionTests`.
 7. Invitaciones a una organización.
 8. `GET /api/me` (cuenta, acceso activo, espacio personal, organizaciones, permisos y las preferencias efectivas de cultura, zona y moneda) y `PUT /api/me`.

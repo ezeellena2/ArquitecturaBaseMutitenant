@@ -3,7 +3,7 @@
 **Regla:** nadie usa el sistema sin haber aceptado la **versión vigente** de los términos y de la política de privacidad, y cada aceptación queda registrada. La persona puede **exportar** sus datos y **dar de baja** su cuenta (Ley 25.326 en Argentina).
 
 ## Cómo se hace
-- **Documentos legales:** `platform.LegalDocuments` con tipo (`Terms` o `Privacy`), versión, fecha de vigencia y contenido por cultura (es y en). Los publica la plataforma y **nunca se editan**: se publica una versión nueva.
+- **Documentos legales:** `platform.LegalDocuments` con tipo (`Terms` o `Privacy`), versión y fecha de vigencia, y el texto en `platform.LegalDocumentContents` (documento, cultura, contenido): **una fila por idioma**, así sumar un idioma no cambia tablas. Publicar pide el texto en todas las culturas soportadas. Los publica la plataforma y **nunca se editan**: se publica una versión nueva.
 - **Aceptación:** `identity.LegalAcceptances` con la identidad, el documento y su versión, `AcceptedAtUtc`, la IP y el user agent. Es append-only.
 - **Registro** (correo, WhatsApp o Google): el pedido trae `acceptedTerms: true`. Sin eso, 400 `Legal.AcceptanceRequired`. Se guarda la aceptación en la misma transacción que la identidad.
 - **Versión nueva:** `LegalAcceptanceMiddleware` responde 403 `Legal.AcceptanceRequired` en todas las rutas de `/api`, salvo `GET /api/me`, `GET /api/legal/*` y `POST /api/legal/accept`, hasta que la persona acepte. El front muestra una pantalla de aceptación que bloquea.

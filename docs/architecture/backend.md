@@ -482,8 +482,8 @@ El cuerpo es `application/problem+json` con `title` y `detail` traducidos, `code
 ## 9. Persistencia
 
 - **Un solo `ApplicationDbContext`**, con cinco esquemas:
-  - **`platform`**: Tenants, PlatformSettings, PlatformRoleAssignments, SecurityEvents, OutboxMessages, WhatsAppChannels, OpenIddict y DataProtection. Sin RLS.
-  - **`identity`**: AspNetUsers (global, sin `TenantId`), UserLogins, UserTokens, LoginCodes, LoginLinks, LoginAudits, WhatsAppContacts y WhatsAppMessages (el número de la plataforma habla con la identidad, no con un acceso). Sin RLS; solo la leen `Infrastructure/Identity`, `Infrastructure/Modules/WhatsApp` y los readers que parten de `Members` (multitenancy.md §8).
+  - **`platform`**: Tenants, TenantFeatures, TenantDomains (dominios de correo verificados), PlatformSettings, PlatformRoleAssignments, SecurityEvents, LegalDocuments y LegalDocumentContents (un texto por documento y por idioma), AccountRecoveryRequests ("Recuperar mi cuenta"), DataExports ("Exportar mis datos"), IdempotencyKeys, OutboxMessages, WhatsAppChannels, OpenIddict y DataProtection. Sin RLS.
+  - **`identity`**: AspNetUsers (global, sin `TenantId`), **LoginMethods** (la única fuente de los correos y teléfonos de una cuenta, cada uno único en todo el sistema), LegalAcceptances, UserLogins, UserTokens, LoginCodes, LoginLinks, LoginAudits, WhatsAppContacts y WhatsAppMessages (el número de la plataforma habla con la identidad, no con un acceso). Sin RLS; solo la leen `Infrastructure/Identity`, `Infrastructure/Modules/WhatsApp` y los readers que parten de `Members` (multitenancy.md §8).
   - **`tenant`**, datos **privados** con **RLS forzado**: Members, Invitations, Companies, CompanyMemberships, Roles, RoleAssignments, TenantSettings, AuditEntries y lo privado que sumen los módulos B2B y B2C.
   - **`public_site`**, datos **públicos** de cada organización con RLS por publicación: PublicPages (slug, nombre, logo, descripción, contacto, estado) y lo que publiquen los módulos.
   - **`engagement`**, datos **compartidos** entre una persona y una organización, con RLS por partes: lo que definan los módulos (reservas, pedidos, solicitudes, mensajes).

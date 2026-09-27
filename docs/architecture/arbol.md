@@ -90,7 +90,7 @@ ArquitecturaBaseMultitenant.Domain/
 │   ├── TenantStatus.cs                               PendingApproval | Provisioning | Active | Suspended | Closed
 │   ├── TenantErrors.cs                               Tenancy.Tenant.*
 │   ├── Member.cs                                     UserId, TenantId, Status, IsOwner, JoinedAtUtc
-│   ├── MemberStatus.cs                               Invited | Active | Inactive
+│   ├── MemberStatus.cs                               Invited | Active | Inactive | Removed
 │   ├── MemberErrors.cs                               Tenancy.Member.*
 │   ├── AccessErrors.cs                               Tenancy.Access.Wrong, .NotMember, .Suspended, .ConsumerCannotCreateBusiness
 │   ├── Invitation.cs                                 [E3] TenantId, email/teléfono, TokenHash, ExpiresAtUtc, roles iniciales
@@ -99,7 +99,7 @@ ArquitecturaBaseMultitenant.Domain/
 │   └── InvitationErrors.cs                           [E3]
 ├── Users/                                            [E3] la identidad global (la entidad EF está en Infrastructure)
 │   ├── Access.cs                                     Consumer | Business | Platform (el acceso; un usuario no-plataforma puede tener los dos primeros)
-│   ├── UserStatus.cs                                 Active | Suspended
+│   ├── UserStatus.cs                                 Active | Suspended | PendingDeletion | Deleted
 │   └── UserErrors.cs                                 Users.User.*
 ├── Authentication/                                   [E3]
 │   ├── LoginCode.cs
@@ -525,7 +525,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   │   ├── PlatformRoleAssignmentConfiguration.cs [E5]
 │   │   │   └── SecurityEventConfiguration.cs        [E5]
 │   │   ├── Identity/
-│   │   │   ├── ApplicationUserConfiguration.cs        [E3] índices únicos globales de email y teléfono
+│   │   │   ├── ApplicationUserConfiguration.cs        [E3] Email y PhoneNumber sin índice único (copia del método principal)
 │   │   │   ├── LoginCodeConfiguration.cs              [E3]
 │   │   │   ├── LoginLinkConfiguration.cs              [E3]
 │   │   │   └── LoginAuditConfiguration.cs           [E3]
@@ -1133,7 +1133,6 @@ tests/
 
 ```
 src/ArquitecturaBaseMultitenant.Domain/
-├── Identity/AccountStatus.cs                                            [E3] Active | Suspended | PendingDeletion | Deleted
 └── Legal/AccountDeletionErrors.cs                                       [E3] ReauthRequired, LastAdmin, PlatformOperator, AlreadyPending, Blocked, NotPending
 
 src/ArquitecturaBaseMultitenant.Application/
@@ -1155,4 +1154,22 @@ src/ArquitecturaBaseMultitenant.Api/
 tests/
 ├── *.Api.IntegrationTests/Legal/AccountDeletionTests.cs                 [E3]
 └── *.ArchitectureTests/AccountDeletionParticipantsTests.cs              [E3] toda entidad con datos de una identidad tiene participante
+```
+
+## Tablas que completan los flujos del lienzo
+
+```
+src/ArquitecturaBaseMultitenant.Domain/
+├── Authentication/LoginMethod.cs                                        [E3] identity.LoginMethods: Type, Value (único por tipo), IsPrimary, VerifiedAtUtc, ManagedByTenantId?
+├── Legal/LegalDocument.cs · LegalDocumentContent.cs                     [E3] versión + una fila de texto por cultura
+├── Tenancy/TenantDomain.cs · TenantDomainStatus.cs                      [E5] platform.TenantDomains: Domain (único), TxtToken, Pending | Verified
+├── Identity/AccountRecoveryRequest.cs · RecoveryRequestStatus.cs        [E5] platform.AccountRecoveryRequests: Pending | Approved | Rejected
+└── Legal/DataExport.cs · DataExportStatus.cs                            [E10] platform.DataExports: archivo, vence a las 48 h
+
+src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Configurations/
+├── Identity/LoginMethodConfiguration.cs                                 [E3] índice único (Type, Value)
+├── Platform/LegalDocumentContentConfiguration.cs                        [E3] clave (LegalDocumentId, Culture)
+├── Platform/TenantDomainConfiguration.cs                                [E5] índice único Domain
+├── Platform/AccountRecoveryRequestConfiguration.cs                      [E5]
+└── Platform/DataExportConfiguration.cs                                  [E10]
 ```
