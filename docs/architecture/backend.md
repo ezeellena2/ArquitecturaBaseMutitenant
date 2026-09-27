@@ -626,7 +626,7 @@ La estructura sigue el diseño de la Etapa 6 del plan maestro de `../Arquitectur
 - **Registro:** un `AddWhatsAppModule()` por capa, llamado desde `Program.cs`. Infrastructure no registra servicios de Application.
 - **Encendido:** se enciende con `WhatsApp:PhoneNumberId`; sin él quedan las implementaciones de `Disabled/`. Las rutas del webhook se mapean solo si hay `AppSecret` y `VerifyToken`.
 - **Quitarlo:** se sigue `docs/guides/quitar-whatsapp.md`: borrar las tres carpetas `Modules/WhatsApp` y `Domain/WhatsApp`, la línea de `Program.cs` y agregar una migración que borra sus tablas. El build y los tests del núcleo tienen que quedar en verde. `ModuleIsolationTests` verifica que el núcleo no referencie `*.Modules.*`.
-- **Número de la plataforma** (Etapa 8): códigos de ingreso, invitaciones y el bot de ingreso. Plantillas `codigo_ingreso` e `invitacion_acceso` (es y en).
+- **Número de la plataforma** (Etapa 8): códigos de ingreso, invitaciones y el bot de ingreso. Plantillas `codigo_ingreso` e `invitacion_organizacion` (es y en), y los avisos de la cuenta. Cuándo y cómo se crea cada plantilla: [`docs/operations/whatsapp-plantillas.md`](../operations/whatsapp-plantillas.md).
 - **Envío por el outbox persistente** (`platform.OutboxMessages`), no en memoria. Esto **difiere a propósito** de ArquitecturaBase, que usa colas en memoria (`WhatsAppSendQueue`, `EmailQueue`) y documenta que un reinicio las pierde. Con varias organizaciones y réplicas, perder una invitación o un código no es aceptable (ADR 0014):
   - el caso de uso inserta el mensaje dentro de su transacción;
   - `OutboxDispatcher` lo envía;

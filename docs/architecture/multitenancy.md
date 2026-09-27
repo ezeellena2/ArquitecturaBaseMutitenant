@@ -56,6 +56,86 @@ Dentro de una empresa, los usuarios se diferencian **solo por rol**: el Dueño, 
   - quitar o cambiar un método pide un código en **otro** método ya verificado;
   - todo cambio queda en `SecurityEvents` y se avisa en **todos** los métodos.
 
+### 3.2 Baja de una cuenta (ADR 0035)
+
+La persona elimina **toda su cuenta**: la identidad, sus métodos de ingreso, su espacio personal y sus membresías. Es definitiva, pero tiene **30 días para arrepentirse** (`PlatformSettings.AccountDeletionGraceDays`). Ley 25.326: el derecho a la supresión.
+
+**Estados de la identidad** (`ApplicationUser.Status`):
+
+```
+Active ──(pide la baja)──► PendingDeletion ──(pasan los días de gracia)──► Deleted
+  ▲                              │
+  └────(ingresa y la cancela)────┘
+
+Active ──(la plataforma suspende)──► Suspended ──(reactiva)──► Active
+```
+
+Campos: `DeletionRequestedAtUtc`, `DeletionScheduledForUtc`, `DeletionReason` y `DeletedAtUtc`.
+
+**1. Pedir la baja** (`POST /api/me/deletion`, `[Idempotent]`, desde "Mi cuenta" en cualquiera de los dos accesos):
+- **Reautenticación:** un código enviado a un método verificado, validado hace menos de 5 minutos (`ReauthTicket`, el mismo que piden quitar o cambiar un método). Sin eso da `Legal.AccountDeletion.ReauthRequired`.
+- **Motivo** obligatorio (texto libre, `TextLimits`).
+- **`AccountDeletionPolicy` bloquea cuando:**
+  - es el **único Dueño** de una organización que no está cerrada (activa, en espera de aprobación o suspendida). Da `Legal.AccountDeletion.LastAdmin`, con la lista de organizaciones. La salida es sumar otro Dueño, o pedirle a la plataforma que cierre la organización;
+  - es **operador de la plataforma**: `Legal.AccountDeletion.PlatformOperator`. A un operador lo da de baja otro operador;
+  - la baja **ya está pedida**: `Legal.AccountDeletion.AlreadyPending`;
+  - un **módulo** tiene algo pendiente, según su `IAccountDeletionParticipant.CheckAsync`: `Legal.AccountDeletion.Blocked`, con los motivos traducidos que devuelve cada módulo. La plantilla no trae módulos, así que no bloquea nada por esto.
+- **En la misma transacción:**
+  - la identidad pasa a `PendingDeletion`, con la fecha programada;
+  - se **revocan todas sus sesiones y tokens**, en los dos accesos (autorizaciones y tokens de OpenIddict);
+  - cada participante corre `OnRequestedAsync`, por ejemplo un módulo que cancela lo que la persona tenía pendiente;
+  - se encola el aviso "Pediste la baja de tu cuenta" en **todos** sus métodos, con la fecha y "si no fuiste vos, ingresá para cancelarla";
+  - se registra el `SecurityEvent` `AccountDeletionRequested`.
+- El front cierra la sesión y muestra "Tu cuenta se elimina el dd/mm/aaaa". El diálogo de baja sugiere antes "Exportar mis datos".
+
+**2. Durante la gracia:**
+- **Nadie puede entrar:** la persona tampoco, salvo para cancelar.
+  - Al ingresar (código o Google, por cualquiera de las dos puertas), el servidor **no emite tokens**. Responde `Identity.Account.PendingDeletion`, con la fecha y un `cancelTicket` que vale 5 minutos.
+  - El front muestra "Tu cuenta tiene la baja pedida · Se elimina el dd/mm/aaaa", con "Cancelar la baja y entrar" y "Salir".
+- **Cancelar** (`POST /api/auth/deletion/cancel`):
+  - la identidad vuelve a `Active` y cada participante corre `OnCancelledAsync`;
+  - se avisa en todos los métodos y se registra el `SecurityEvent`;
+  - el ingreso sigue por la puerta que había elegido.
+
+  Solo la persona puede cancelar; la plataforma no.
+- **Sus métodos siguen reservados:** nadie puede registrarse con ese correo o ese teléfono. Una invitación a esos métodos no se puede aceptar sin ingresar, y ingresar lleva a cancelar la baja.
+- **En cada organización**, el usuario se ve con el estado **"Baja pedida"**, que sale del estado de la identidad y no de la membresía. No se le pueden cambiar los roles; sí se lo puede quitar.
+- **No cuenta como Dueño.** La protección del último Dueño exige otro Dueño activo, así que una organización nunca queda sin Dueño cuando se completa la baja.
+- **La plataforma** ve la cuenta como "Baja pedida", con la fecha.
+
+**3. Eliminación** (`AccountDeletionWorker`):
+- Corre cada hora y toma las cuentas vencidas con `SKIP LOCKED`.
+- Procesa **una cuenta por transacción**, entra a cada tenant con `ITenantScope` y es idempotente: si se corta, la próxima corrida sigue desde donde quedó.
+
+| Dato | Qué pasa |
+|---|---|
+| Identidad | la fila queda, porque la usan la auditoría y las claves foráneas, pero **anonimizada**: nombre "Cuenta eliminada", sin correo, teléfono ni preferencias. `Status = Deleted` y `DeletedAtUtc` |
+| Métodos de ingreso y Google | se **borran**: el correo y el teléfono quedan libres para una cuenta nueva |
+| Sesiones y tokens | ya estaban revocados; se purgan |
+| Espacio personal | el tenant `Personal` pasa a `Closed`. Sus datos privados se **borran**: cada módulo B2C con su participante, y después el barrido por `TenantId` |
+| Membresías | pasan a `Removed`, con motivo `AccountDeleted`, y se quitan sus roles de organización y de empresa. La auditoría de cada organización registra "Cuenta eliminada dejó la organización" |
+| Invitaciones pendientes a sus métodos | se revocan |
+| Invitaciones que mandó ella | siguen valiendo, porque son de la organización; "Invitado por" muestra "Cuenta eliminada" |
+| Datos compartidos con empresas (`engagement`) | la empresa **conserva su registro**, pero la copia de los datos personales (nombre, teléfono y lo que haya pedido el módulo) se reemplaza por "Cuenta eliminada". Si el módulo necesita guardarlos por ley, lo declara con `IRetainedOnConsumerDeletion`, con el motivo y el plazo documentados, y se purgan al vencer |
+| Auditoría y `SecurityEvents` | se **conservan** con el `ActorId`, y el nombre se muestra como "Cuenta eliminada". Nunca tuvieron correos ni teléfonos completos |
+| Aceptaciones legales | se conservan el documento, la versión y la fecha, como prueba; se borran la IP y el user agent |
+| Exportaciones de datos | se borran los archivos |
+| Pedidos de "Recuperar mi cuenta" | se cierran |
+| Outbox | se cancelan los mensajes pendientes para la persona |
+| Caché | se invalidan `u:{userId}:` y `t:{personalTenantId}:` |
+
+El aviso final, "Tu cuenta fue eliminada", va al método principal. Se encola **antes** de borrar los métodos, con la dirección cifrada en el payload. Se registra el `SecurityEvent` `AccountDeleted`.
+
+**4. Desde la plataforma:**
+- Un operador puede **iniciar la baja** de una cuenta activa o suspendida, por ejemplo ante un pedido legal que llega por fuera de la plataforma.
+- Lleva motivo y no pide reautenticar a la persona.
+- Sigue el mismo camino: 30 días de gracia, avisos y eliminación.
+- No puede saltearse la gracia ni cancelar por la persona.
+
+**Participantes** (`IAccountDeletionParticipant`: `CheckAsync`, `OnRequestedAsync`, `OnCancelledAsync` y `ExecuteAsync`):
+- los del núcleo: membresías, espacio personal, datos compartidos, aceptaciones legales, exportaciones, pedidos de recuperación y outbox;
+- cada módulo de un producto registra el suyo si guarda datos de la persona. `AccountDeletionParticipantsTests` verifica que toda entidad con datos de una identidad tenga un participante.
+
 ## 4. Tres clases de datos
 
 Todo dato nuevo se clasifica **antes** de escribir su entidad:
@@ -104,6 +184,7 @@ Página pública:   Draft ──(publicar)──► Published ──(despublicar
 
 - Una organización suspendida: su página muestra "no disponible" y sus usuarios reciben 403 `Tenancy.Tenant.Suspended`. Los datos compartidos quedan visibles para la persona en modo solo lectura.
 - Suspender una identidad revoca sus sesiones en los dos accesos.
+- La identidad tiene además `PendingDeletion` y `Deleted` (la baja, §3.2).
 
 ## 8. Contexto de la petición
 
@@ -199,4 +280,5 @@ Los tests usan las entidades de `TestFeatures` (`Widget` privado, `Poster` públ
 | `Subdomain_resolves_public_data_only` | `empresa-a.plataforma.com` con un token de la Empresa B no ve datos privados de la Empresa A |
 | `Redirect_uri_only_for_published_slugs` | `authorize` con un subdominio inexistente es rechazado |
 | `Wrong_access_is_forbidden`, `Access_switch_requires_membership` | accesos y membresías |
+| `AccountDeletionTests` | la baja pide reautenticación; el único Dueño no puede darse de baja; revoca las sesiones; durante la gracia el ingreso ofrece cancelar; la eliminación anonimiza, libera el correo, quita las membresías y anonimiza la copia en los datos compartidos; la auditoría queda |
 | RLS, rol de runtime, inventario de políticas, columnas inmutables, caché con prefijo | igual que antes, ahora para las tres clases |

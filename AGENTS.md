@@ -29,7 +29,7 @@ Las decisiones están en [`docs/decisions/README.md`](docs/decisions/README.md) 
 | crear una entidad o una tabla | [persistencia-ef](docs/rules/persistencia-ef.md), [multitenancy](docs/rules/multitenancy.md), [auditoria](docs/rules/auditoria.md) |
 | exponer una ruta | [api-http](docs/rules/api-http.md), [permisos](docs/rules/permisos.md) |
 | loguear | [logs](docs/rules/logs.md) |
-| tocar WhatsApp u otro módulo | [modulos](docs/rules/modulos.md) |
+| tocar WhatsApp u otro módulo | [modulos](docs/rules/modulos.md); un mensaje nuevo por WhatsApp: [plantillas](docs/operations/whatsapp-plantillas.md) |
 | configurar Google, Gmail o WhatsApp, o cargar secretos | [configuracion](docs/operations/configuracion.md) (nunca un secreto en el repo) |
 | escribir tests | [tests](docs/rules/tests.md) |
 | agregar un área completa | `docs/guides/agregar-un-area.md` (nace en la Etapa 4) |

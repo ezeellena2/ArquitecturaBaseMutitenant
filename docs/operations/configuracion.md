@@ -70,7 +70,7 @@ Mismos valores que `../ArquitecturaBase/src/ArquitecturaBase.Api/appsettings.Dev
 
 **Meta (webhook).** Una app de Meta tiene **una sola** URL de webhook. Hay dos caminos:
 - **Mientras se desarrolla:** cuando pruebes el multitenant, cambiá la URL de devolución de llamada a `https://<túnel del multitenant>/webhooks/whatsapp`, con la misma palabra de verificación. Al volver a ArquitecturaBase, la volvés a cambiar. Como la URL del túnel de cada AppHost es fija, siempre son las mismas dos direcciones.
-- **Para producción:** una app y un número propios del multitenant, con sus plantillas (`codigo_ingreso`, `invitacion_acceso`, en es y en) cargadas otra vez en esa cuenta.
+- **Para producción:** una app y un número propios del multitenant, con sus plantillas cargadas otra vez en esa cuenta. Cuáles son, cuándo se crean y cómo: [whatsapp-plantillas.md](whatsapp-plantillas.md).
 
 El túnel se prende igual que en ArquitecturaBase:
 ```powershell

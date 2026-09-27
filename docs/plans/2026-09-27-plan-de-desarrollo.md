@@ -207,6 +207,7 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 
    El **dominio verificado** de la organización (registro TXT) y "Recuperar mi cuenta" asistida por la plataforma van en la Etapa 5.
 6d. **Términos y privacidad (P7):** `LegalDocuments` (versión 1 de términos y privacidad, en es y en, sembrada), `LegalAcceptances`, `acceptedTerms` en el registro (correo, WhatsApp y Google), `LegalAcceptanceMiddleware` y `LegalAcceptanceTests`. En el front, la casilla del registro y la pantalla bloqueante de aceptación.
+6e. **Baja de la cuenta (ADR 0035, multitenancy.md §3.2):** estados `PendingDeletion` y `Deleted` en la identidad, `ReauthTicket`, `AccountDeletionPolicy`, `POST /api/me/deletion` y `POST /api/auth/deletion/cancel`, el ingreso durante la gracia, `AccountDeletionWorker`, `IAccountDeletionParticipant` con los participantes del núcleo (espacio personal, aceptaciones, outbox), y los avisos. Las membresías suman su participante en la Etapa 6, y la plataforma su "Dar de baja" en la Etapa 5. Tests `AccountDeletionTests`.
 7. Invitaciones a una organización.
 8. `GET /api/me` (cuenta, acceso activo, espacio personal, organizaciones, permisos y las preferencias efectivas de cultura, zona y moneda) y `PUT /api/me`.
 9. Seed idempotente en **todos** los ambientes, dentro de un límite y con el advisory lock `seed:` para que dos réplicas no choquen. En desarrollo, además: operador; Empresa A con Ana y Kevin; Kevin y Carla como personas. Test: arrancar en `Production` contra una base migrada y vacía deja el cliente `web`, los ajustes de plataforma y el operador inicial.
@@ -266,7 +267,7 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
     - `features` en `/api/me` y la sección "Módulos" en la ficha de organización de la plataforma;
     - `FeatureGateTests` y `ModuleControllersTests`;
     - en el front, `useFeature`, `<Feature>` y `feature` en las rutas y la navegación.
-2. Identidades: buscar y suspender, lo que revoca todas sus sesiones.
+2. Identidades: buscar y suspender, lo que revoca todas sus sesiones, y "Dar de baja" con motivo (ADR 0035).
 3. `PlatformOperatorService`; el primer dueño sale del seed.
 4. `SecurityEvent` + `PlatformAuditService` y `PlatformSettings` (`ConsumerSignup`, `BusinessSignup`, límite de organizaciones).
 5. Tests:
@@ -287,7 +288,8 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
    - listado con filtros y conteos, y ficha;
    - invitar, editar, desactivar, reactivar y reenviar la invitación;
    - roles de organización;
-   - protección del último TenantAdmin.
+   - protección del último TenantAdmin (una cuenta con la baja pedida no cuenta como Dueño);
+   - el estado "Baja pedida" en el listado y la ficha, y el participante de la baja para las membresías (ADR 0035).
 3. Empresas (CRUD, CUIT como `TaxId` validado (P5), zona horaria) y membresías de empresa con sus roles, con protección del último CompanyAdmin. `TaxId` + `ArgentineCuitValidator` + `TaxIdTests` y `TaxIdPropertyTests`. Las ediciones de usuario, rol y empresa llevan `version` (P1).
 4. Configuración (cultura, zona y moneda por defecto) y auditoría, con listado traducido.
 5. Tests de aislamiento para cada ruta nueva.
@@ -325,7 +327,7 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 **Back:**
 1. Las carpetas `Domain/WhatsApp` y `Modules/WhatsApp` en Application, Infrastructure y Api, con un `AddWhatsAppModule()` por capa llamado desde `Program.cs`. Las configuraciones EF del módulo las aplica el propio módulo.
 2. Adaptadores de los puertos del núcleo: `WhatsAppLoginCodeChannel`, `WhatsAppInvitationChannel` y `WhatsAppPhoneLinkObserver`.
-3. Cliente de Cloud API y opciones validadas, con **las mismas claves `WhatsApp:*` que ArquitecturaBase** y los valores no secretos copiados de allá (`configuracion.md` §3). Envío por el outbox (canal `"whatsapp"`), con las plantillas `codigo_ingreso` e `invitacion_acceso` en es y en. Registro B2C por WhatsApp.
+3. Cliente de Cloud API y opciones validadas, con **las mismas claves `WhatsApp:*` que ArquitecturaBase** y los valores no secretos copiados de allá (`configuracion.md` §3). Envío por el outbox (canal `"whatsapp"`), con las plantillas de [`whatsapp-plantillas.md`](../operations/whatsapp-plantillas.md), creadas en Meta al empezar la etapa (la aprobación tarda). Registro B2C por WhatsApp.
 4. Webhook con firma e idempotencia, procesador de entrada, bot de ingreso con enlace de un solo uso, retención de 90 días y health check.
 5. Vincular el teléfono de la identidad, con verificación.
 6. `ModuleIsolationTests`: el núcleo no referencia `*.Modules.*`.
@@ -352,7 +354,7 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 - CI/CD con GitHub Actions y OIDC.
 - Secretos, certificados de OpenIddict y SMTP real.
 - `docs/operations/runbook.md`: alta de `mt_app` **y creación de la base con ICU `es-AR`**, backup y restore, rotación de certificados, suspensiones, purga y baja de datos personales.
-- **Datos personales (P7, segunda parte):** `POST /api/me/data-export` y `DELETE /api/me`, con los 30 días de gracia y la anonimización; `AccountDeletionTests`.
+- **Datos personales (P7, segunda parte):** `POST /api/me/data-export`. La baja de la cuenta ya está en la Etapa 3.
 
 ## Etapa 11 (opcional)
 

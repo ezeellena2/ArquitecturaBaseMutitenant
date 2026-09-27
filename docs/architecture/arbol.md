@@ -1129,3 +1129,30 @@ tests/
 └── *.Api.IntegrationTests/TestFeatures/Isolation/Poster.cs · Deal.cs · PostersController.cs · DealsController.cs
 ```
 
+## Piezas de la baja de una cuenta (ADR 0035)
+
+```
+src/ArquitecturaBaseMultitenant.Domain/
+├── Identity/AccountStatus.cs                                            [E3] Active | Suspended | PendingDeletion | Deleted
+└── Legal/AccountDeletionErrors.cs                                       [E3] ReauthRequired, LastAdmin, PlatformOperator, AlreadyPending, Blocked, NotPending
+
+src/ArquitecturaBaseMultitenant.Application/
+├── Interfaces/Services/IAccountDeletionService.cs                       [E3]
+├── Interfaces/Integrations/Legal/IAccountDeletionParticipant.cs         [E3] CheckAsync, OnRequestedAsync, OnCancelledAsync, ExecuteAsync
+├── Interfaces/Integrations/Legal/IRetainedOnConsumerDeletion.cs         [E7] retención legal declarada por un módulo
+├── Services/Legal/AccountDeletionService.cs · AccountDeletionPolicy.cs  [E3] pedir, cancelar y ejecutar
+├── Services/Identity/ReauthVerifier.cs                                  [E3] ReauthTicket de 5 minutos (baja y cambios de métodos)
+└── Services/Legal/Participants/                                         [E3–E7] PersonalSpace, LegalAcceptances, Outbox, Exports, Recovery (E5), Memberships (E6), Engagement (E7)
+
+src/ArquitecturaBaseMultitenant.Infrastructure/
+└── Legal/AccountDeletionWorker.cs                                       [E3] cada hora, SKIP LOCKED, una cuenta por transacción
+
+src/ArquitecturaBaseMultitenant.Api/
+├── Controllers/Account/AccountDeletionController.cs                     [E3] POST /api/me/deletion
+├── Controllers/Auth/DeletionCancelController.cs                         [E3] POST /api/auth/deletion/cancel
+└── Controllers/Platform/AccountsController.cs                           [E5] + POST /api/platform/accounts/{id}/deletion
+
+tests/
+├── *.Api.IntegrationTests/Legal/AccountDeletionTests.cs                 [E3]
+└── *.ArchitectureTests/AccountDeletionParticipantsTests.cs              [E3] toda entidad con datos de una identidad tiene participante
+```
