@@ -19,7 +19,7 @@
 | 11 | **Zona horaria e idioma en pantalla** | "Buenos Aires (GMT−3)", "Español (Argentina)", nunca el código | `Intl.DisplayNames` | formatos |
 | 12 | **Tamaños de archivo y duraciones** | `1,5 MB`, `2 h 15 min` | `Intl` | formatos |
 | 13 | **Guardado y transacciones** | una sola forma de guardar | propio | guardado |
-| 14 | **Multitenancy y perfiles** | `ITenantOwned`, RLS, `[TenantKind]` | EF + Postgres | multitenancy |
+| 14 | **Accesos y multitenancy** | acceso B2C/B2B/plataforma, tres clases de datos, RLS, `[Access]`, páginas públicas por subdominio | EF + Postgres | multitenancy |
 | 15 | **Permisos** | catálogos, atributos, nunca roles | ASP.NET Core authorization | permisos |
 | 16 | **Auditoría** | marcas, rastro de cambios, eventos de seguridad | propio | auditoria |
 | 17 | **Logs** | `[LoggerMessage]`, `OperationLog`, datos enmascarados | M.E.Logging + OpenTelemetry | logs |
@@ -40,7 +40,7 @@ El usuario los adoptó todos. Sus fichas:
 | P5 | back [identificacion-fiscal](../rules/identificacion-fiscal.md) · front `formatos.md` |
 | P6 | back [idempotencia](../rules/idempotencia.md) · front `datos-y-api.md` |
 | P7 | back [datos-personales](../rules/datos-personales.md) |
-| P8 | back [modulos-habilitados](../rules/modulos-habilitados.md) · front `permisos-y-perfiles.md` |
+| P8 | back [modulos-habilitados](../rules/modulos-habilitados.md) · front `accesos-y-permisos.md` |
 | P9 | front `accesibilidad.md` |
 | P10 | front `responsive.md` |
 
@@ -55,7 +55,7 @@ Qué fija cada uno, y en qué etapa entra:
 | P5 | **Identificación fiscal y documentos** | `TaxId` con país y tipo (CUIT, CUIL, DNI; RUT o RUC después), validación del dígito verificador, formato `20-12345678-6`, guardado solo con dígitos | back: propio (la regla de módulo 11 es corta); front: `stdnum` (npm), que valida documentos de decenas de países | **Sí, en E6** (la empresa ya tiene CUIT en el lienzo) |
 | P6 | **Idempotencia** | un `POST` que crea algo acepta `Idempotency-Key`; repetir el mismo pedido (doble clic, reintento de red) devuelve la misma respuesta sin duplicar | propio (tabla `platform.IdempotencyKeys` + filtro MVC) | **Sí, en E1**, al menos para altas e invitaciones |
 | P7 | **Términos, privacidad y datos personales** | aceptación **versionada** de términos y privacidad al registrarse (quién, cuándo, qué versión), exportar mis datos y pedir la baja de la cuenta. Lo pide el B2C (Ley 25.326 en Argentina) | propio | **Sí, en E3** (registro) y E10 (exportar y dar de baja) |
-| P8 | **Módulos habilitados por organización** | qué funcionalidades tiene prendidas cada organización o perfil (por plan, prueba o permiso de la plataforma); el menú y las rutas se apagan solos | `Microsoft.FeatureManagement` con un filtro por tenant | **Sí, en E5.** Es la base para vender módulos B2B y B2C por separado |
+| P8 | **Módulos habilitados por organización** | qué funcionalidades tiene prendidas cada organización (o el acceso B2C) (por plan, prueba o permiso de la plataforma); el menú y las rutas se apagan solos | `Microsoft.FeatureManagement` con un filtro por tenant | **Sí, en E5.** Es la base para vender módulos B2B y B2C por separado |
 | P9 | **Accesibilidad verificada** | contraste AA y roles; un test automático por pantalla | `vitest-axe` (axe-core) | **Sí, en E0** (una línea por test de pantalla) |
 | P10 | **Diseño adaptable (teléfono)** | cortes de pantalla, tablas que pasan a tarjetas en el teléfono, menú en cajón | Tailwind (ya está) | **Sí, antes de E4**, con los tableros del teléfono que faltan en el lienzo |
 

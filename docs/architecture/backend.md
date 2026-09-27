@@ -3,7 +3,7 @@
 > Documento canónico. Si otro documento contradice a este, manda este. El aislamiento entre organizaciones tiene su propio documento, [`multitenancy.md`](multitenancy.md), y se lee junto con este.
 
 ArquitecturaBaseMultitenant es la versión multitenant de `../ArquitecturaBase`. **Copia sus convenciones tal cual** (capas, MVC, Result, una sola forma de guardar, ProblemDetails, resources, UTC, `[LoggerMessage]`, tests de arquitectura) y les suma:
-- **B2B + B2C con una sola cuenta** (el flujo de cuenta de Mercado Libre, sin ser un marketplace): una identidad por persona, con un perfil **Personal** (B2C, con sus propias funcionalidades) y los perfiles de las **organizaciones** en las que participa (B2B). Se pasa de uno a otro con un selector;
+- **B2B + B2C como en Mercado Libre, para cualquier tipo de negocio:** una cuenta por persona con **dos accesos que no se mezclan**: como **persona** (B2C: su espacio personal y lo que pide a las empresas) y como **empresa** (B2B: las organizaciones donde trabaja). Una persona B2C no crea empresas; eso es el alta B2B, "Registrá tu empresa". Cada organización puede tener su **página pública en un subdominio**, y las personas interactúan con ella mediante datos compartidos entre las dos partes. La plantilla trae los accesos y la mecánica; los módulos de negocio los pone cada producto (multitenancy.md);
 - el aislamiento por tenant, con dos barreras: EF y RLS de PostgreSQL;
 - **una sola forma de representar y mostrar los datos** (fechas, números, moneda, porcentajes, vacíos) en todo el sistema: ver §18 y el documento de formatos del front;
 - las empresas dentro de cada organización;
@@ -19,7 +19,7 @@ Las mejoras que el plan maestro de ArquitecturaBase dejó para después ya viene
 |---|---|
 | Runtime | .NET 10 (`global.json` SDK 10.0.400, `rollForward: latestFeature`, runner Microsoft.Testing.Platform) |
 | Web | ASP.NET Core MVC (controllers). Sin Minimal APIs de negocio |
-| Datos | PostgreSQL 18 + EF Core 10 (Npgsql). Una base, esquemas `platform`, `identity` y `tenant` |
+| Datos | PostgreSQL 18 + EF Core 10 (Npgsql). Una base, esquemas `platform`, `identity`, `tenant`, `public_site` y `engagement` |
 | Identidad | ASP.NET Core Identity (solo usuarios, sin roles de Identity) + OpenIddict 7 (servidor y validación en la misma Api) |
 | Validación | FluentValidation 12 |
 | Caché | `HybridCache` |
@@ -128,13 +128,15 @@ Domain/
 │  ├─ IAuditable.cs              CreatedAtUtc, CreatedBy, ModifiedAtUtc, ModifiedBy
 │  ├─ ISoftDeletable.cs          IsDeleted, DeletedAtUtc, DeletedBy
 │  ├─ ITenantOwned.cs            dato privado: Guid TenantId (lo sella el interceptor, inmutable)
-│  └─ ICompanyOwned.cs           Guid CompanyId (siempre también ITenantOwned)
+│  ├─ ICompanyOwned.cs           Guid CompanyId (siempre también ITenantOwned)
+│  ├─ IPublishedByBusiness.cs    dato público: BusinessTenantId, IsPublished
+│  └─ IConsumerBusinessShared.cs dato compartido: ConsumerTenantId (espacio personal), BusinessTenantId (organización)
 ├─ Results/                      Error, ErrorType, Result, Result<T>, ValidationError
 ├─ ValueObjects/                 Email, PhoneNumber, Money (monto + moneda ISO 4217), CurrencyCode, CultureCode
-├─ Tenancy/                      Tenant, TenantKind (Personal|Business), TenantStatus, Member, MemberStatus,
+├─ Tenancy/                      Tenant, TenantKind (Personal|Business), TenantStatus, Slug, ReservedSlugs, Member, MemberStatus,
 │                                TenantErrors, MemberErrors, ProfileErrors
 ├─ Companies/                    Company, CompanyStatus, CompanyErrors, CompanyMembership, MembershipErrors
-├─ Users/                        AccountKind (User|Platform), UserStatus, UserErrors (las invitaciones están en Tenancy/)
+├─ Users/                        Access (Consumer|Business|Platform), UserStatus, UserErrors (las invitaciones están en Tenancy/)
 ├─ Authentication/               LoginCode, LoginLink, LoginAudit, LoginMethod, LoginCodeChannel, *Errors
 ├─ Authorization/
 │  ├─ Permissions.cs             catálogo de la organización (tenant) y de empresa, con All / OrganizationScoped / CompanyScoped
@@ -182,10 +184,11 @@ Application/
 ├─ Validation/<Área>/                  <Acción>RequestValidator (internal sealed, AbstractValidator<T>)
 ├─ Services/
 │  ├─ Auth/                            AccountService (registro B2C), LoginCodeService, LoginLinkService, ExternalLoginService,
-│  │                                   ConnectService (emisión + cambio de perfil), LoginCodeIssuer, LoginCodeVerifier,
+│  │                                   ConnectService (emisión + cambio de acceso u organización), LoginCodeIssuer, LoginCodeVerifier,
 │  │                                   LoginLinkIssuer, SignupPolicy
-│  ├─ Profile/                         ProfileService (cuenta, idioma, zona), ProfileSwitchPolicy, DestinationCodeVerifier
-│  ├─ Organizations/                   OrganizationSignupService ("Crear mi organización"), TenantProvisioner (idempotente)
+│  ├─ Profile/                         ProfileService (cuenta, idioma, zona), AccessSwitchPolicy, DestinationCodeVerifier
+│  ├─ Organizations/                   BusinessSignupService ("Registrá tu empresa", alta B2B), TenantProvisioner (idempotente)
+│  ├─ PublicSite/                      PublicPageService (datos de la página pública; publicar y despublicar), DirectoryService
 │  ├─ Personal/                        acá van los servicios de los módulos B2C del producto
 │  ├─ Users/                           UserService, UserInvitationIssuer, UserGuard, AccountAccessRevoker
 │  ├─ Roles/                           RoleService, RoleGuard           ← ÁREA DE REFERENCIA
@@ -244,7 +247,7 @@ Infrastructure/
 │  ├─ Seed/                            PlatformSeeder (operador inicial), OpenIddictSeeder, DevelopmentTenantSeeder
 │  └─ DatabaseBootstrapExtensions.cs   solo en Development: rol de runtime + migraciones + seed
 ├─ Identity/
-│  ├─ ApplicationUser.cs               AccountKind, Status, Culture, TimeZoneId, DisplayName, LastActiveTenantId; sin setters
+│  ├─ ApplicationUser.cs               IsPlatformOperator, Status, Culture, TimeZoneId, DisplayName, LastActiveTenantId; sin setters
 │  │                                   públicos: los cambios pasan por métodos que aplican las reglas de la cuenta
 │  ├─ IdentityRegistration.cs          Identity core, cookies de /account y /connect, DataProtection, Google (se enciende con su ClientId)
 │  ├─ SignInService.cs                 (ISignInService)
@@ -277,24 +280,28 @@ Api/
 ├─ Controllers/
 │  ├─ Auth/                            ConnectController, LoginCodeController, LoginLinkController, ExternalLoginController,
 │  │                                   InvitationsController, LoginMethodsController
-│  ├─ Account/                         MeController (cuenta, perfiles, "crear mi organización"), SignupController, TimeZonesController
-│  ├─ Organization/                    [TenantKind(Business)] UsersController, RolesController, PermissionsController,
+│  ├─ Account/                         MeController (cuenta y accesos), SignupController (persona), BusinessSignupController
+│  │                                   ("Registrá tu empresa"), TimeZonesController
+│  ├─ Organization/                    [Access(Business)] UsersController, RolesController, PermissionsController,
 │  │                                   CompaniesController, CompanyMembersController, SettingsController, AuditController
-│  ├─ Personal/                        [TenantKind(Personal)] los controllers de los módulos B2C del producto
+│  ├─ Personal/                        [Access(Consumer)] los controllers de los módulos B2C del producto
+│  ├─ PublicSite/                      [PublicSite][AllowAnonymous] PublicPageController (página por subdominio), DirectoryController
 │  ├─ Platform/                        PlatformTenantsController, PlatformOperatorsController, PlatformAuditController,
 │  │                                   PlatformSettingsController
 ├─ Contracts/<Área>/                   <Acción>HttpRequest, <X>Query (records sealed, props nullable; ToString() sin PII)
 ├─ Authorization/
 │  ├─ HasPermissionAttribute.cs              permiso de organización
 │  ├─ HasCompanyPermissionAttribute.cs       permiso evaluado en la empresa {companyId} de la ruta
-│  ├─ HasPlatformPermissionAttribute.cs      solo AccountKind=Platform
+│  ├─ HasPlatformPermissionAttribute.cs      solo access=platform
 │  ├─ PermissionPolicyProvider.cs            arma "perm:<p>", "cperm:<p>", "pperm:<p>"
 │  └─ *AuthorizationHandler.cs, *Requirement.cs
 ├─ RequestContext/                     CurrentUser (claims), RequestInfo (IP, user agent)
 ├─ Tenancy/
-│  ├─ TenantResolutionMiddleware.cs    claims tenant_id + tenant_kind → TenantContext; membresía y tenant activos (caché)
-│  ├─ TenantKindAttribute.cs           [TenantKind(Business|Personal)] → 403 Tenancy.Profile.WrongKind
-│  └─ TenantClaimTypes.cs              account_kind, tenant_id, tenant_kind
+│  ├─ TenantResolutionMiddleware.cs    claims access + tenant_id + tenant_kind → TenantContext; activos (caché)
+│  ├─ PublicSiteResolutionMiddleware.cs subdominio → IPublicSiteContext (solo datos públicos)
+│  ├─ AccessAttribute.cs               [Access(Consumer|Business|Platform)] → 403 Tenancy.Access.Wrong
+│  ├─ PublicSiteAttribute.cs           [PublicSite]: la ruta necesita un subdominio de empresa publicado
+│  └─ TenantClaimTypes.cs              access, tenant_id, tenant_kind
 ├─ Authentication/                     OpenIdPrincipalFactory (claims y destinos)
 ├─ ErrorHandling/                      ApiErrorCodes, ProblemDetailsMapper, ControllerResultExtensions, GlobalExceptionHandler,
 │                                      MvcInvalidModelStateResponseFactory, EmptyJsonBodyContentTypeFilter
@@ -328,9 +335,9 @@ tests/
 │  └─ TestDoubles/                        FakeUnitOfWork, FakeTenantContext, InMemory<X>Repository, FakeOutbox…
 ├─ *.Api.IntegrationTests/
 │  ├─ Support/                            ApiFactory (WebApplicationFactory + Testcontainers), AuthFlow, TestAuthHandler,
-│  │                                      TenantFixture (Ana y Beto con sus perfiles personales + organizaciones A y B),
+│  │                                      TenantFixture (Empresa A y B; Kevin como empresa y como persona; Carla),
 │  │                                      CapturingOutbox
-│  ├─ Tenancy/                            CrossTenantIsolationTests, ProfileSwitchTests, PublicAndSharedRowsTests,
+│  ├─ Tenancy/                            CrossTenantIsolationTests, AccessTests, SubdomainTests, PublicAndSharedRowsTests,
 │  │                                      RlsPolicyInventoryTests, RuntimeRoleTests
 │  ├─ Contracts/                          ExplicitRouteInventoryTests, OpenApiContractTests
 │  └─ <Área>/                             un archivo por controller
@@ -462,8 +469,9 @@ El cuerpo es `application/problem+json` con `title` y `detail` traducidos, `code
 
 | Interfaz (Application) | Implementación | Fuente |
 |---|---|---|
-| `ICurrentUser` | `Api/RequestContext/CurrentUser` | claims `sub` y `account_kind` (`user` o `platform`) |
-| `ITenantContext` | `Infrastructure/Persistence/TenantContext` | perfil activo (`TenantId` y `TenantKind`). Lo carga `TenantResolutionMiddleware` desde los claims, o `ITenantScope.Enter(tenantId)` en plataforma, workers y altas |
+| `ICurrentUser` | `Api/RequestContext/CurrentUser` | claims `sub` y `access` (`consumer`, `business` o `platform`) |
+| `IPublicSiteContext` | `Api/Tenancy/PublicSiteContext` | la organización del subdominio; **solo** para leer lo público |
+| `ITenantContext` | `Infrastructure/Persistence/TenantContext` | tenant del acceso activo (`TenantId` y `TenantKind`: el espacio personal en B2C, la organización en B2B). Lo carga `TenantResolutionMiddleware` desde los claims, o `ITenantScope.Enter(tenantId)` en plataforma, workers y altas |
 | `IRequestInfo` | `Api/RequestContext/RequestInfo` | IP (después de ForwardedHeaders) y user agent |
 
 - `ITenantContext.TenantId` **nunca** sale de un header, del body ni de la query.
@@ -473,14 +481,16 @@ El cuerpo es `application/problem+json` con `title` y `detail` traducidos, `code
 
 ## 9. Persistencia
 
-- **Un solo `ApplicationDbContext`**, con cuatro esquemas:
+- **Un solo `ApplicationDbContext`**, con cinco esquemas:
   - **`platform`**: Tenants, PlatformSettings, PlatformRoleAssignments, SecurityEvents, OutboxMessages, WhatsAppChannels, OpenIddict y DataProtection. Sin RLS.
-  - **`identity`**: AspNetUsers (global, sin `TenantId`), UserLogins, UserTokens, LoginCodes, LoginLinks, LoginAudits, WhatsAppContacts y WhatsAppMessages (el número de la plataforma habla con la identidad, no con un perfil). Sin RLS; solo la leen `Infrastructure/Identity`, `Infrastructure/Modules/WhatsApp` y los readers que parten de `Members` (multitenancy.md §8).
-  - **`tenant`**, datos de negocio con **RLS forzado**: Members, Invitations, Companies, CompanyMemberships, Roles, RoleAssignments, TenantSettings, AuditEntries y todo lo que sumen los módulos B2B y B2C del producto.
-- **Toda entidad de negocio es `ITenantOwned`** y vive en `tenant`. Compartir datos entre tenants no está previsto; si un producto lo necesita, lleva su propio ADR.
+  - **`identity`**: AspNetUsers (global, sin `TenantId`), UserLogins, UserTokens, LoginCodes, LoginLinks, LoginAudits, WhatsAppContacts y WhatsAppMessages (el número de la plataforma habla con la identidad, no con un acceso). Sin RLS; solo la leen `Infrastructure/Identity`, `Infrastructure/Modules/WhatsApp` y los readers que parten de `Members` (multitenancy.md §8).
+  - **`tenant`**, datos **privados** con **RLS forzado**: Members, Invitations, Companies, CompanyMemberships, Roles, RoleAssignments, TenantSettings, AuditEntries y lo privado que sumen los módulos B2B y B2C.
+  - **`public_site`**, datos **públicos** de cada organización con RLS por publicación: PublicPages (slug, nombre, logo, descripción, contacto, estado) y lo que publiquen los módulos.
+  - **`engagement`**, datos **compartidos** entre una persona y una organización, con RLS por partes: lo que definan los módulos (reservas, pedidos, solicitudes, mensajes).
+- **Toda entidad nueva se clasifica** como privada (`ITenantOwned`), pública (`IPublishedByBusiness`) o compartida (`IConsumerBusinessShared`) antes de escribirla. Cada clase tiene su esquema, su filtro y su política RLS (multitenancy.md §4 y §9).
 - Una configuración por entidad (test). Enums como texto (`HasConversion<string>().HasMaxLength(n)`). Las claves de las tablas de `tenant` son `(TenantId, …)`, sus índices únicos empiezan por `TenantId` y las FK a otras entidades del mismo tenant son compuestas `(TenantId, XId)`.
 - **Filtros globales con nombre (EF 10):** `"Tenant"` (sobre toda `ITenantOwned`, `e.TenantId == tenantContext.TenantId`) y `"SoftDelete"`. `IgnoreQueryFilters(["SoftDelete"])` quita solo el de borrados. Quitar `"Tenant"` está prohibido fuera de Infrastructure/Platform (test).
-- **Migraciones:** una carpeta, `Infrastructure/Persistence/Migrations`. Cada tabla nueva de `tenant` llama a `migrationBuilder.EnableTenantRls(schema, table)` en su migración, y `RlsPolicyInventoryTests` falla si alguna tabla de ese esquema no tiene la política.
+- **Migraciones:** una carpeta, `Infrastructure/Persistence/Migrations`. Cada tabla nueva llama en su migración al helper RLS de su clase (`EnableTenantRls`, `EnablePublicRls` o `EnablePartiesRls`), y `RlsPolicyInventoryTests` falla si alguna tabla de `tenant`, `public_site` o `engagement` no tiene su política.
 
 ```
 dotnet ef migrations add <Nombre> --project src/ArquitecturaBaseMultitenant.Infrastructure \
@@ -557,21 +567,21 @@ La pantalla "Auditoría" de la organización lee `AuditEntries` paginadas y filt
   - Authorization Code + PKCE (obligatorio) + refresh tokens. Sin client credentials.
   - Endpoints `connect/authorize|token|logout|userinfo|revoke`.
   - Scopes `openid profile email offline_access api`.
-- **Un solo cliente público, `web`**, para el SPA. El área la deciden los claims, no el cliente: `account_kind=platform` → plataforma; si no, `tenant_kind` del perfil activo → personal (B2C) u organización (B2B).
+- **Un solo cliente público, `web`**, para el SPA. El área la decide el claim `access`: `consumer` → espacio personal y páginas públicas; `business` → la organización; `platform` → el backoffice. Las páginas públicas de cada subdominio usan el mismo cliente, con redirect URIs validadas contra los slugs publicados (`SubdomainRedirectUriValidator`).
 - Duraciones: código 5 min, access token 15 min, refresh 30 días con rotación. `EnableTokenEntryValidation` permite la revocación inmediata.
-- **Claims** (`OpenIdPrincipalFactory`): `sub`, `name`, `email`, `account_kind` (`user` | `platform`) y, para los usuarios, el **perfil activo**: `tenant_id` y `tenant_kind` (`personal` | `business`). **Ni los permisos ni los roles viajan en el token**: se consultan en vivo, con caché.
-- **Ingreso sin contraseña**, igual que la base: código por correo o WhatsApp, enlace de un solo uso, y **Google**. **Autoregistro B2C abierto** (`POST /api/auth/signup`, o el primer ingreso con Google), que crea la identidad y su perfil personal. Los correos salen por **Gmail (SMTP)**, también en desarrollo. La configuración usa las mismas claves que ArquitecturaBase y se carga con los scripts de `scripts/secretos/`: ver [`docs/operations/configuracion.md`](../operations/configuracion.md).
-- **Identidad global:** el email y el teléfono son únicos en todo el sistema. Una persona tiene una cuenta y N perfiles. Al ingresar se usa el último perfil activo, o el personal. **Para cambiar de perfil** se pide `/connect/authorize?prompt=none&tenant=<id>`: `ConnectController` valida la membresía y emite tokens nuevos (multitenancy.md §9).
+- **Claims** (`OpenIdPrincipalFactory`): `sub`, `name`, `email`, `access` (`consumer` | `business` | `platform`) y el tenant del acceso activo: `tenant_id` y `tenant_kind` (`personal` | `business`). **Ni los permisos ni los roles viajan en el token**: se consultan en vivo, con caché.
+- **Ingreso sin contraseña**, igual que la base: código por correo o WhatsApp, enlace de un solo uso, y **Google**. **Autoregistro B2C abierto** (`POST /api/auth/signup`, o el primer ingreso con Google), que crea la identidad y su espacio personal. **Una persona no crea empresas:** el alta B2B es aparte (`POST /api/auth/business-signup`, "Registrá tu empresa"). Los correos salen por **Gmail (SMTP)**, también en desarrollo. La configuración usa las mismas claves que ArquitecturaBase y se carga con los scripts de `scripts/secretos/`: ver [`docs/operations/configuracion.md`](../operations/configuracion.md).
+- **Identidad global, dos accesos:** el email y el teléfono son únicos en todo el sistema. Una persona tiene **una** cuenta. Ingresa **como persona** (sitio de la plataforma, páginas públicas) o **como empresa** (portal Empresas). **Para cambiar de acceso o de organización** se pide `/connect/authorize?prompt=none&access=<consumer|business>&tenant=<id>`: `ConnectService` valida la membresía y emite tokens nuevos (multitenancy.md §3 y §10).
 - Cookies de Identity solo para `/account` y `/connect` (HttpOnly, Secure, SameSite Lax). La Api usa bearer.
-- En cada request autenticado, `TenantResolutionMiddleware` verifica (con caché de 60 s, invalidado al cambiar de estado) que la identidad, la membresía y el tenant del perfil activo estén activos. Suspender un tenant revoca los tokens emitidos para ese perfil; suspender una identidad, todos los suyos.
-- **Operadores de plataforma:** `AccountKind=Platform`, sin membresías ni perfil personal, con el mismo mecanismo de ingreso. El segundo factor (TOTP) es obligatorio para ellos desde la Etapa 8.
-- **Invitaciones a una organización:** `Member(Invited)` + `UserInvitation` (token con hash, vence) → correo o WhatsApp por outbox → `/api/invitations/accept`. Si la persona no tenía cuenta, la aceptación crea su identidad **y** su perfil personal.
+- En cada request autenticado, `TenantResolutionMiddleware` verifica (con caché de 60 s, invalidado al cambiar de estado) que la identidad, la membresía y el tenant del acceso activo estén activos. Suspender una organización revoca los tokens emitidos para ella; suspender una identidad, todos los suyos, en los dos accesos.
+- **Operadores de plataforma:** `access=platform`, sin membresías ni espacio personal, con el mismo mecanismo de ingreso. El segundo factor (TOTP) es obligatorio para ellos desde la Etapa 8.
+- **Invitaciones a una organización:** `Member(Invited)` + `UserInvitation` (token con hash, vence) → correo o WhatsApp por outbox → `/api/invitations/accept`. Si la persona no tenía cuenta, la aceptación crea su identidad (sin espacio personal: ese nace la primera vez que entra como persona).
 
 ---
 
 ## 14. Autorización
 
-- **Perfil personal (B2C):** no tiene roles. Su dueño tiene implícitos todos los permisos `personal.*` (los que declare cada módulo B2C del producto). Las rutas B2C llevan `[TenantKind(Personal)]` y no piden permisos.
+- **Acceso B2C (espacio personal):** no tiene roles. La persona tiene implícitos todos los permisos `personal.*` (los que declare cada módulo B2C del producto). Las rutas B2C llevan `[Access(Consumer)]` y no piden permisos. Sobre un dato compartido con una empresa, lo que puede hacer cada parte lo decide `PartyPolicy`.
 - **Organización (B2B):** tres catálogos de permisos (constantes en Domain, textos en `Permissions.resx`):
   - **Organización:** `users.read`, `users.manage`, `roles.read`, `roles.manage`, `companies.read`, `companies.manage`, `settings.manage`, `audit.read`.
   - **Empresa:** `company.members.read`, `company.members.manage`, `company.settings.manage` (y los módulos de negocio que vengan).
@@ -583,10 +593,10 @@ La pantalla "Auditoría" de la organización lee `AuditEntries` paginadas y filt
 - **Atributos**, nunca roles ni `[Authorize(Policy=…)]` a mano (test):
   - `[HasPermission(Permissions.Users.Manage)]` para la organización.
   - `[HasCompanyPermission(Permissions.Company.Members.Manage)]`: lee `{companyId}` de la ruta y verifica que la empresa sea de la organización y que el usuario tenga el permiso ahí.
-  - `[HasPlatformPermission(PlatformPermissions.Tenants.Manage)]`: además exige `account_kind=platform`.
+  - `[HasPlatformPermission(PlatformPermissions.Tenants.Manage)]`: además exige `access=platform`.
 - `IPermissionService.GetEffectiveAsync(userId, companyId?)` usa HybridCache con la clave `t:{tenantId}:perm:{userId}`, invalidada por usuario o por rol.
-- Las rutas de organización llevan `[TenantKind(Business)]` **y** el permiso. Con el perfil personal responden 403 `Tenancy.Profile.WrongKind`.
-- `GET /api/me` devuelve la cuenta, **la lista de perfiles** (id, tipo, nombre y estado, para el selector), el perfil activo y sus permisos efectivos (de organización y por empresa), para que el front arme el menú. El front decide solo la experiencia de uso; **el backend decide el acceso**.
+- Las rutas de organización llevan `[Access(Business)]` **y** el permiso. Con otro acceso responden 403 `Tenancy.Access.Wrong`.
+- `GET /api/me` devuelve la cuenta, el **acceso activo**, si tiene espacio personal y sus **organizaciones** (id, nombre y estado, para elegir en el acceso B2B), el tenant activo y sus permisos efectivos (de organización y por empresa), para que el front arme el menú. El front decide solo la experiencia de uso; **el backend decide el acceso**.
 
 ---
 

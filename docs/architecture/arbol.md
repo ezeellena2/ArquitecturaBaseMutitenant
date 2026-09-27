@@ -12,7 +12,7 @@ ArquitecturaBaseMutitenant/
 ├── docs/
 │   ├── architecture/
 │   │   ├── backend.md                                arquitectura canónica
-│   │   ├── multitenancy.md                           perfiles, tenants y aislamiento
+│   │   ├── multitenancy.md                           accesos B2C/B2B, tres clases de datos, subdominios, aislamiento
 │   │   ├── arnes.md                                  cómo se guía a quien programa: fichas, punteros, verificación
 │   │   └── arbol.md                                  este archivo
 │   ├── contracts/
@@ -23,7 +23,7 @@ ArquitecturaBaseMutitenant/
 │   │   └── NNNN-<titulo>.md                          uno por decisión, al implementarla
 │   ├── rules/                                        fichas del arnés: README + 16 temas (guardado, fechas, números…)
 │   ├── features/                                     reglas funcionales por área
-│   │   ├── identidad.md                              [E3] registro, ingreso, perfiles, invitaciones
+│   │   ├── identidad.md                              [E3] registro de personas y de empresas, accesos, invitaciones
 │   │   ├── roles.md                                  [E4] cómo copiar el área de referencia
 │   │   ├── plataforma.md                             [E5]
 │   │   ├── organizaciones.md                         [E6] usuarios, empresas, membresías, filtros y conteos
@@ -92,13 +92,13 @@ ArquitecturaBaseMultitenant.Domain/
 │   ├── Member.cs                                     UserId, TenantId, Status, IsOwner, JoinedAtUtc
 │   ├── MemberStatus.cs                               Invited | Active | Inactive
 │   ├── MemberErrors.cs                               Tenancy.Member.*
-│   ├── ProfileErrors.cs                              Tenancy.Profile.WrongKind, .NotMember, .Suspended
+│   ├── AccessErrors.cs                               Tenancy.Access.Wrong, .NotMember, .Suspended, .ConsumerCannotCreateBusiness
 │   ├── Invitation.cs                                 [E3] TenantId, email/teléfono, TokenHash, ExpiresAtUtc, roles iniciales
 │   ├── InvitationChannel.cs                         [E3] valor ("email", …): cada módulo registra el suyo
 │   ├── InvitationStatus.cs                           [E3] Pending | Accepted | Revoked | Expired
 │   └── InvitationErrors.cs                           [E3]
 ├── Users/                                            [E3] la identidad global (la entidad EF está en Infrastructure)
-│   ├── AccountKind.cs                                User | Platform
+│   ├── Access.cs                                     Consumer | Business | Platform (el acceso; un usuario no-plataforma puede tener los dos primeros)
 │   ├── UserStatus.cs                                 Active | Suspended
 │   └── UserErrors.cs                                 Users.User.*
 ├── Authentication/                                   [E3]
@@ -115,7 +115,7 @@ ArquitecturaBaseMultitenant.Domain/
 │   └── AccountErrors.cs                              Auth.Account.*
 ├── Authorization/                                    [E4]
 │   ├── Permissions.cs                                organización + empresa, con All, OrganizationScoped, CompanyScoped
-│   ├── PersonalPermissions.cs                        personal.*, implícitos del dueño del perfil personal
+│   ├── PersonalPermissions.cs                        personal.*, implícitos de la persona en su espacio personal
 │   ├── PlatformPermissions.cs                        platform.*
 │   ├── Role.cs                                       TenantId, Name, Scope, IsSystem, Permissions
 │   ├── RoleScope.cs                                  Organization | Company
@@ -205,10 +205,10 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── ILoginCodeService.cs                      [E3]
 │   │   ├── ILoginLinkService.cs                      [E3]
 │   │   ├── IExternalLoginService.cs                  [E11]
-│   │   ├── IConnectService.cs                        [E3] emisión de tokens y cambio de perfil
+│   │   ├── IConnectService.cs                        [E3] emisión de tokens y cambio de acceso u organización
 │   │   ├── IInvitationService.cs                     [E3] vista previa y aceptación
 │   │   ├── IProfileService.cs                        [E3] /api/me
-│   │   ├── IOrganizationSignupService.cs             [E6] "Crear mi organización" y "Mis organizaciones"
+│   │   ├── IBusinessSignupService.cs                  [E6] "Registrá tu empresa" (alta B2B, aparte del acceso B2C)
 │   │   ├── IUserService.cs                           [E6]
 │   │   ├── IRoleService.cs                           [E4]
 │   │   ├── ICompanyService.cs                        [E6]
@@ -254,14 +254,14 @@ ArquitecturaBaseMultitenant.Application/
 │   │   └── IAuditEntryReader.cs                     [E6]
 │   └── Integrations/
 │       ├── Request/                                  [E2–E3]
-│       │   ├── ICurrentUser.cs                       UserId, AccountKind
-│       │   ├── ITenantContext.cs                     TenantId, TenantKind, RequiredTenantId
+│       │   ├── ICurrentUser.cs                       UserId, Access (Consumer | Business | Platform)
+│       │   ├── ITenantContext.cs                     TenantId, TenantKind, RequiredTenantId (del acceso activo)
 │       │   ├── IRequestInfo.cs                       IP, user agent
 │       │   └── IPublicOrigin.cs                      origen público para armar enlaces
 │       ├── Identity/                                 [E3–E4]
 │       │   ├── ISignInService.cs                     técnico: sign-in, bloqueos, revocar sesiones (≤12 miembros)
 │       │   ├── IUserLookup.cs                        búsqueda global por email o teléfono
-│       │   ├── IPermissionService.cs                 [E4] permisos efectivos del perfil + invalidación
+│       │   ├── IPermissionService.cs                 [E4] permisos efectivos en la organización + invalidación
 │       │   ├── IPlatformPermissionService.cs         [E5]
 │       │   ├── ITokenRevoker.cs
 │       │   └── IGoogleAvailability.cs                [E3]
@@ -295,21 +295,21 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── ConsumeLoginLinkRequest.cs
 │   │   ├── LoginLinkPreviewResponse.cs
 │   │   ├── LoginMethodsResponse.cs
-│   │   ├── ConnectUser.cs                            identidad + perfil elegido, para armar el principal
+│   │   ├── ConnectUser.cs                            identidad + acceso y tenant elegidos, para armar el principal
 │   │   ├── ProfileSelectionRequest.cs                tenant pedido en authorize
 │   │   └── ReturnUrls.cs
 │   ├── Invitations/                                  [E3]
 │   │   ├── AcceptInvitationRequest.cs
 │   │   └── InvitationPreviewResponse.cs
 │   ├── Profile/                                      [E3]
-│   │   ├── MeResponse.cs                             cuenta + perfiles + perfil activo + permisos
-│   │   ├── ProfileSummary.cs                         id, tipo, nombre y estado (para el selector)
+│   │   ├── MeResponse.cs                             cuenta + acceso activo + espacio personal + organizaciones + permisos + features
+│   │   ├── OrganizationSummary.cs                         id, nombre, slug y estado (para elegir organización)
 │   │   ├── EffectivePermissions.cs                   organización + por empresa
 │   │   ├── UpdateMeRequest.cs
 │   │   ├── VerifyDestinationRequest.cs
 │   │   ├── CreateOrganizationRequest.cs              [E6]
 │   │   └── ReadModels/
-│   │       └── MyOrganizationRow.cs                  [E6]
+│   │       └── PublicPageResponse.cs                 [E6]
 │   ├── Users/                                        [E6]
 │   │   ├── ListUsersRequest.cs                       SortableFields
 │   │   ├── UserDetailResponse.cs
@@ -409,7 +409,7 @@ ArquitecturaBaseMultitenant.Application/
 │       └── UpdatePlatformSettingsRequestValidator.cs
 ├── Services/                                         internal sealed partial; helpers con sufijo fijo y sin IUnitOfWork
 │   ├── Auth/                                         [E3]
-│   │   ├── AccountService.cs                         registro B2C (identidad + perfil personal)
+│   │   ├── AccountService.cs                         registro de personas (identidad + espacio personal)
 │   │   ├── SignupPolicy.cs                           ¿el registro está abierto? ¿el email está libre?
 │   │   ├── LoginCodeService.cs
 │   │   ├── LoginCodeIssuer.cs
@@ -417,7 +417,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── LoginLinkService.cs
 │   │   ├── LoginLinkIssuer.cs
 │   │   ├── ConnectService.cs
-│   │   ├── ProfileSwitchPolicy.cs                    membresía activa + tenant activo
+│   │   ├── AccessSwitchPolicy.cs                     acceso pedido válido: membresía activa (B2B) o identidad activa (B2C)
 │   │   ├── UserCultures.cs                           cultura efectiva para mensajes en segundo plano
 │   │   └── ExternalLoginService.cs                   [E11]
 │   ├── Invitations/                                  [E3]
@@ -427,7 +427,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── ProfileService.cs
 │   │   └── DestinationCodeVerifier.cs
 │   ├── Organizations/                                [E6]
-│   │   ├── OrganizationSignupService.cs
+│   │   ├── BusinessSignupService.cs    
 │   │   ├── BusinessSignupPolicy.cs                   modo de alta y límite por persona
 │   │   └── TenantProvisioner.cs                      idempotente: settings, roles de sistema, 1ª empresa, admin
 │   ├── Users/                                        [E6]
@@ -605,7 +605,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │       ├── PlatformSeeder.cs                          [E5] PlatformSettings + primer dueño
 │       └── DevelopmentSeeder.cs                       [E3] Ana (Personal + "Demo"), Beto (Personal)
 ├── Identity/                                          [E3]
-│   ├── ApplicationUser.cs                             AccountKind, Status, Culture, TimeZoneId, DisplayName, LastActiveTenantId
+│   ├── ApplicationUser.cs                             IsPlatformOperator, Status, Culture, TimeZoneId, DisplayName, LastActiveTenantId
 │   ├── IdentityRegistration.cs                        Identity core, cookies /account y /connect, DataProtection
 │   ├── SignInService.cs
 │   ├── UserLookup.cs                                  búsqueda global (lista blanca)
@@ -618,7 +618,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │       ├── AuthServerDefaults.cs                      rutas, scopes, duraciones
 │       ├── CertificateLoader.cs
 │       ├── WebClientOptions.cs
-│       └── TokenRevoker.cs                            revoca por identidad o por perfil
+│       └── TokenRevoker.cs                            revoca por identidad, por acceso o por organización
 ├── Messaging/                                         [E3]
 │   ├── MessagingRegistration.cs
 │   ├── Outbox.cs                                      IOutbox
@@ -701,7 +701,7 @@ ArquitecturaBaseMultitenant.Api/
 ├── Properties/
 │   └── launchSettings.json
 ├── Authentication/
-│   └── OpenIdPrincipalFactory.cs                      [E3] sub, account_kind, tenant_id, tenant_kind + destinos
+│   └── OpenIdPrincipalFactory.cs                      [E3] sub, access, tenant_id, tenant_kind + destinos
 ├── Authorization/                                     [E4]
 │   ├── HasPermissionAttribute.cs
 │   ├── HasCompanyPermissionAttribute.cs
@@ -715,8 +715,8 @@ ArquitecturaBaseMultitenant.Api/
 │   └── PlatformPermissionAuthorizationHandler.cs      [E5]
 ├── Tenancy/                                           [E3]
 │   ├── TenantResolutionMiddleware.cs
-│   ├── TenantKindAttribute.cs                         [TenantKind(Business|Personal)]
-│   ├── TenantKindFilter.cs                            403 Tenancy.Profile.WrongKind
+│   ├── AccessAttribute.cs                             [Access(Consumer|Business|Platform)] y [PublicSite]
+│   ├── AccessFilter.cs                                403 Tenancy.Access.Wrong; PublicSiteResolutionMiddleware.cs (host → datos públicos)
 │   └── TenantClaimTypes.cs
 ├── RequestContext/                                    [E3]
 │   ├── CurrentUser.cs
@@ -733,9 +733,9 @@ ArquitecturaBaseMultitenant.Api/
 │   │   └── ExternalLoginController.cs                 [E11]
 │   ├── Account/
 │   │   ├── MeController.cs                            [E3] GET/PUT /api/me
-│   │   ├── MyOrganizationsController.cs               [E6] GET/POST /api/me/organizations
+│   │   ├── BusinessSignupController.cs                [E6] POST /api/auth/business-signup ("Registrá tu empresa")
 │   │   └── TimeZonesController.cs                     [E1] GET /api/time-zones
-│   ├── Organization/                                  [TenantKind(Business)]
+│   ├── Organization/                                  [Access(Business)]; suma PublicPageAdminController (E6: mi página pública)
 │   │   ├── RolesController.cs                         [E4] ← referencia
 │   │   ├── PermissionsController.cs                   [E4]
 │   │   ├── UsersController.cs                         [E6]
@@ -743,8 +743,8 @@ ArquitecturaBaseMultitenant.Api/
 │   │   ├── CompanyMembersController.cs                [E6] api/companies/{companyId}/members
 │   │   ├── SettingsController.cs                      [E6]
 │   │   └── AuditController.cs                         [E6]
-│   ├── Personal/                                      [E7] [TenantKind(Personal)]: acá van los módulos B2C del producto
-│   └── Platform/                                      [E5] account_kind=platform
+│   ├── Personal/                                      [E7] [Access(Consumer)]: acá van los módulos B2C del producto
+│   └── Platform/                                      [E5] [Access(Platform)]
 │       ├── PlatformTenantsController.cs
 │       ├── PlatformAccountsController.cs
 │       ├── PlatformOperatorsController.cs
@@ -876,17 +876,17 @@ tests/
 │   │   └── PermissionTextsTests.cs                    [E4]
 │   ├── Services/
 │   │   ├── Auth/                                      [E3]
-│   │   │   ├── AccountServiceTests.cs                 el registro crea identidad + perfil personal
+│   │   │   ├── AccountServiceTests.cs                 el registro crea identidad + espacio personal
 │   │   │   ├── LoginCodeServiceTests.cs
 │   │   │   ├── LoginLinkServiceTests.cs
 │   │   │   ├── ConnectServiceTests.cs
-│   │   │   └── ProfileSwitchPolicyTests.cs
+│   │   │   └── AccessSwitchPolicyTests.cs  
 │   │   ├── Invitations/
 │   │   │   └── InvitationServiceTests.cs              [E3]
 │   │   ├── Profile/
 │   │   │   └── ProfileServiceTests.cs                 [E3]
 │   │   ├── Organizations/                             [E6]
-│   │   │   ├── OrganizationSignupServiceTests.cs
+│   │   │   ├── BusinessSignupServiceTests.cs    
 │   │   │   └── TenantProvisionerTests.cs              idempotencia
 │   │   ├── Roles/                                     [E4]
 │   │   │   ├── RoleServiceTests.cs
@@ -920,7 +920,7 @@ tests/
 │   ├── Support/
 │   │   ├── ApiFactory.cs                              WebApplicationFactory + Testcontainers postgres:18.x (con mt_app real)
 │   │   ├── ApiTestGroup.cs                            colección única, en serie
-│   │   ├── TenantFixture.cs                           [E2] Ana, Beto, sus perfiles personales, organizaciones A y B
+│   │   ├── TenantFixture.cs                           [E2] Empresa A (Ana, Kevin), Empresa B (Beto), Kevin y Carla como personas
 │   │   ├── AuthFlow.cs                                [E3] login real: código → authorize (tenant=) → token
 │   │   ├── TestAuthHandler.cs                         atajo: X-Test-UserId + X-Test-TenantId
 │   │   ├── RuntimeRoleConnection.cs                   [E2] consultas crudas como mt_app para probar RLS
@@ -932,16 +932,18 @@ tests/
 │   │   ├── TestControllerApplicationPart.cs
 │   │   └── Isolation/                                 [E2]
 │   │       ├── Widget.cs                              ITenantOwned, IAuditable, ISoftDeletable
+│   │       ├── Poster.cs                              IPublishedByBusiness: la referencia de un dato público
+│   │       ├── Deal.cs                                IConsumerBusinessShared + PartyPolicy: la referencia de un dato compartido
 │   │       ├── IsolationModelCustomizer.cs
-│   │       ├── WidgetsController.cs                   [TenantKind(Business)]
-│   │       └── PersonalWidgetsController.cs           [E7] [TenantKind(Personal)]: la receta de un módulo B2C
+│   │       ├── WidgetsController.cs                   [Access(Business)]
+│   │       └── PersonalWidgetsController.cs           [E7] [Access(Consumer)]: la receta de un módulo B2C
 │   ├── Tenancy/                                       [E2] los tests de multitenancy.md §11
 │   │   ├── CrossTenantIsolationTests.cs
 │   │   ├── RlsBarrierTests.cs
 │   │   ├── RlsPolicyInventoryTests.cs
 │   │   ├── RuntimeRoleTests.cs
 │   │   ├── TenantColumnsImmutabilityTests.cs
-│   │   ├── ProfileSwitchTests.cs                      [E3]
+│   │   ├── AccessTests.cs                             [E3]
 │   │   ├── WrongProfileKindTests.cs                   [E3]
 │   │   ├── SuspensionTests.cs                         [E5]
 │   │   └── CacheKeyScopeTests.cs
@@ -980,7 +982,7 @@ tests/
 │   │   └── InvitationsTests.cs
 │   ├── Account/
 │   │   ├── MeTests.cs                                 [E3]
-│   │   └── MyOrganizationsTests.cs                    [E6]
+│   │   └── BusinessSignupTests.cs                     [E6]
 │   ├── Organization/
 │   │   ├── RolesTests.cs                              [E4]
 │   │   ├── PermissionAuthorizationTests.cs            [E4]
@@ -1022,7 +1024,7 @@ tests/
     ├── TenantScopeUsageTests.cs                       [E2] ITenantScope solo en la lista blanca
     ├── QueryFilterBypassTests.cs                      [E2] IgnoreQueryFilters solo en Readers/Platform e Identity
     ├── IdentityAccessTests.cs                         [E3] ApplicationUser solo desde Identity/ y MemberReader
-    ├── TenantKindDeclarationTests.cs                  [E3] toda ruta de negocio declara [TenantKind] o [AllowAnonymous]
+    ├── AccessDeclarationTests.cs                      [E3] toda ruta de negocio declara [Access] o [PublicSite]
     ├── PermissionAuthorizationTests.cs                [E4] permisos, nunca roles ni Policy a mano; cada [HasPermission]
     │                                                  nombra un permiso que existe en su catálogo
     └── ModuleIsolationTests.cs                        [E8] el núcleo no referencia ningún namespace *.Modules.*
@@ -1035,7 +1037,7 @@ docs/
 ├── guides/                                            recetas paso a paso, con enlaces a los archivos de Roles
 │   ├── agregar-un-area.md                             [E4] B2B o B2C: entidad → configuración → migración con RLS →
 │   │                                                  errores → permiso → repositorio y lector → servicio → controller
-│   │                                                  con [TenantKind] → tests (aislamiento incluido) → inventario
+│   │                                                  con [Access] → tests (aislamiento incluido) → inventario
 │   ├── permiso-nuevo.md                               [E4]
 │   ├── migracion.md                                   [E2] comando + EnableTenantRls + índices de SortMap
 │   ├── prefijo-de-backend.md                          [E1]
@@ -1059,7 +1061,7 @@ src/ArquitecturaBaseMultitenant.Domain/
 ├── ValueObjects/TaxIdValidators/ArgentineCuitValidator.cs [E6] P5 dígito verificador módulo 11 (CUIT y CUIL)
 ├── ValueObjects/TaxIdValidators/ArgentineDniValidator.cs  [E6] P5
 ├── Legal/LegalDocument.cs · LegalDocumentKind.cs · LegalAcceptance.cs · LegalErrors.cs   [E3] P7
-└── Features/Features.cs                                  [E5] P8  catálogo de módulos (clave, tipo de perfil, prendido por defecto)
+└── Features/Features.cs                                  [E5] P8  catálogo de módulos (clave, lado: Consumer, Business o los dos, prendido por defecto)
 
 src/ArquitecturaBaseMultitenant.Application/
 ├── Common/Text/TextNormalizer.cs                         [E1] P4  trim, NFC, sin caracteres de control ni de ancho cero
@@ -1096,3 +1098,34 @@ tests/
 └── *.ArchitectureTests/VersionedContractTests.cs · TextLimitsTests.cs · EmailPropertyTests.cs ·
     TaxIdPropertyTests.cs · IdempotentActionsTests.cs · ModuleControllersTests.cs          P1 · P4 · P3 · P5 · P6 · P8
 ```
+
+## Piezas del modelo de accesos, sitio público e interacción (ADR 0030 a 0032)
+
+```
+src/ArquitecturaBaseMultitenant.Domain/
+├── Common/IPublishedByBusiness.cs · IConsumerBusinessShared.cs          [E2] clases pública y compartida
+├── Common/Party.cs · PartyPolicy.cs                                     [E2] Consumer | Business; qué parte puede hacer qué
+├── Tenancy/Slug.cs · ReservedSlugs.cs                                   [E6] slug único de la organización (subdominio)
+└── PublicSite/PublicPage.cs · PublicPageStatus.cs · PublicPageErrors.cs [E6] nombre, logo, descripción, contacto; Draft | Published
+
+src/ArquitecturaBaseMultitenant.Application/
+├── Interfaces/Integrations/Request/IPublicSiteContext.cs                [E7] organización del subdominio (solo lo público)
+├── Services/PublicSite/PublicPageService.cs · DirectoryService.cs       [E6–E7]
+└── Services/Organizations/BusinessSignupService.cs                      [E6] "Registrá tu empresa"
+
+src/ArquitecturaBaseMultitenant.Infrastructure/
+├── Persistence/Configurations/PublicSite/PublicPageConfiguration.cs     [E6] esquema public_site, EnablePublicRls
+├── Persistence/Readers/PublicSite/PublicPageReader.cs · DirectoryReader.cs  [E7] caché con prefijo del sitio público
+└── Identity/OpenIddict/SubdomainRedirectUriValidator.cs                 [E7] redirect URI solo para slugs publicados
+
+src/ArquitecturaBaseMultitenant.Api/
+├── Tenancy/PublicSiteResolutionMiddleware.cs · PublicSiteAttribute.cs · PublicSiteContext.cs   [E7]
+├── Controllers/PublicSite/PublicPageController.cs · DirectoryController.cs   [E7] [PublicSite][AllowAnonymous]
+├── Controllers/Organization/PublicPageAdminController.cs               [E6] [Access(Business)] mi página pública
+└── Controllers/Auth/BusinessSignupController.cs                          [E6] POST /api/auth/business-signup
+
+tests/
+├── *.Api.IntegrationTests/Tenancy/AccessTests.cs · SubdomainTests.cs · PublicAndSharedRowsTests.cs
+└── *.Api.IntegrationTests/TestFeatures/Isolation/Poster.cs · Deal.cs · PostersController.cs · DealsController.cs
+```
+

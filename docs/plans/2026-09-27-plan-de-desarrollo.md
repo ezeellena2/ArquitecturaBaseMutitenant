@@ -3,7 +3,8 @@
 > **Para agentes:** este es el plan maestro. La Etapa 0 está al nivel ejecutable. Cada una de las demás se detalla **al arrancarla**, con `superpowers:writing-plans`, en `docs/plans/AAAA-MM-DD-etapa-N-<tema>.md` (TDD, pasos de 2 a 5 minutos), porque depende de cómo quedó la anterior. Casillas `- [ ]` para el seguimiento.
 
 **Objetivo:** construir desde cero la plantilla multitenant **B2B + B2C** con las convenciones de ArquitecturaBase. Incluye:
-- una sola cuenta por persona, con perfil personal y perfiles de organización (el flujo de cuenta de Mercado Libre; **no** es un marketplace);
+- una sola cuenta por persona con **dos accesos que no se mezclan**: como persona (B2C) y como empresa (B2B), como en Mercado Libre y para cualquier tipo de negocio;
+- **páginas públicas por subdominio** y la **mecánica** para que una persona interactúe con una empresa (datos públicos y compartidos), sin módulos de negocio;
 - aislamiento en dos barreras (EF + RLS);
 - empresas, plataforma, auditoría, i18n, UTC y WhatsApp;
 - **una sola forma de mostrar los datos** en todo el sistema.
@@ -46,11 +47,11 @@ El resultado tiene que servir para empezar productos reales.
 | 0 | Esqueleto de las dos soluciones | ✔ | ✔ | — |
 | 1 | Núcleo transversal: Result, errores, i18n y cultura, UTC, validación, logging, OpenAPI, **formatos unificados** | ✔ | ✔ | 0 |
 | 2 | Persistencia multitenant: DbContext, interceptores, UoW, RLS, roles de BD | ✔ | — | 1 |
-| 3 | Identidad global, OpenIddict, **registro B2C con perfil personal**, **cambio de perfil**, invitaciones, outbox, /api/me | ✔ | ✔ | 2 |
+| 3 | Identidad global, OpenIddict, **accesos B2C / B2B / plataforma**, **registro de personas**, cambio de acceso, invitaciones, outbox, /api/me | ✔ | ✔ | 2 |
 | 4 | Autorización y Roles (área de referencia) | ✔ | ✔ | 3 |
 | 5 | Plataforma: organizaciones, aprobaciones, identidades, operadores, auditoría de seguridad | ✔ | ✔ | 4 |
-| 6 | Área B2B: "Crear mi organización", usuarios, empresas, membresías, configuración, auditoría | ✔ | ✔ | 4 |
-| 7 | Área B2C: layout personal, inicio, cuenta, mis organizaciones + guía para módulos B2C | ✔ | ✔ | 3 |
+| 6 | Área B2B: **"Registrá tu empresa"**, usuarios, empresas, membresías, configuración, auditoría, **mi página pública** | ✔ | ✔ | 4 |
+| 7 | Área B2C y **sitio público**: espacio personal, cuenta, páginas por subdominio, directorio, ingreso desde un subdominio, y la **mecánica de interacción** persona ↔ empresa probada de punta a punta | ✔ | ✔ | 3 |
 | 8 | WhatsApp (número de la plataforma: códigos, invitaciones, bot de ingreso) | ✔ | ✔ | 3 |
 | 9 | Endurecimiento: TOTP para operadores, rate limit, headers, observabilidad, fuzz de aislamiento | ✔ | ✔ | 5–8 |
 | 10 | Despliegue y operación: CI/CD, migration bundle, backup, runbook | ✔ | ✔ | 9 |
@@ -159,19 +160,19 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 **Objetivo:** que sea **imposible** leer o escribir datos de otro tenant, aunque un bug se saltee EF.
 
 **Back:**
-1. `Domain/Common`: `IAuditable`, `ISoftDeletable`, `ITenantOwned` e `ICompanyOwned`. `Domain/Tenancy`: `Tenant`, `TenantKind`, `TenantStatus`, `Member` y `MemberStatus`.
+1. `Domain/Common`: `IAuditable`, `ISoftDeletable`, `ITenantOwned`, `ICompanyOwned`, `IPublishedByBusiness` e `IConsumerBusinessShared`. `Domain/Tenancy`: `Tenant`, `TenantKind`, `TenantStatus`, `Member` y `MemberStatus`.
 2. `ITenantContext` (con `TenantKind`), `ITenantScope` y `TenantContext`, con tests de las reglas de `Enter`.
-3. `ApplicationDbContext` con los esquemas `platform`, `identity` y `tenant`, y los filtros con nombre `"Tenant"` y `"SoftDelete"`.
+3. `ApplicationDbContext` con los esquemas `platform`, `identity`, `tenant`, `public_site` y `engagement`, y los filtros con nombre `"Tenant"`, `"Public"`, `"Parties"` y `"SoftDelete"`. `PartyPolicy`.
 4. Interceptores: TenantConnection, TenantStamp, SoftDelete, Auditable y AuditTrail (con `AuditEntry`).
 5. `UnitOfWork` + `CommitPolicy`: set_config local, sin anidar, rollback y el error 23505.
 6. RLS:
-   - `EnableTenantRls`;
+   - `EnableTenantRls`, `EnablePublicRls` y `EnablePartiesRls`;
    - los triggers `prevent_tenant_change` y `prevent_update_delete`;
    - `TenantIsolationModelValidator`.
 7. Roles de BD: la cadena `appdb-admin`, `DatabaseBootstrapExtensions` y `RuntimeRoleValidator`. El AppHost entrega las dos cadenas.
 8. `AdvisoryLockKeys` y `CacheKeys`, con prefijo obligatorio. `TenantJobRunner`.
 9. **Búsqueda y paginado sobre Postgres:** `unaccent` + `pg_trgm` + `f_unaccent`, `ApplySearch`, `CursorCodec`, `ToCursorResultAsync` y los tests `PaginationTests`, `CursorPaginationTests`, `SearchTests` y `SortIndexTests`.
-10. `TestFeatures/Isolation/Widget : ITenantOwned`, más los tests de multitenancy.md §11 que no necesitan HTTP, `TransactionBoundaryTests`, `EntityConfigurationTests` y `TenantScopeUsageTests`.
+10. `TestFeatures/Isolation`: `Widget : ITenantOwned`, `Poster : IPublishedByBusiness` y `Deal : IConsumerBusinessShared` (la referencia de las tres clases, porque la plantilla no trae módulos de negocio), más los tests de multitenancy.md §11 que no necesitan HTTP, `TransactionBoundaryTests`, `EntityConfigurationTests` y `TenantScopeUsageTests`.
 11. **Concurrencia (P1):** `IVersioned` con la convención a `xmin`, `ConcurrencyConflictException` en `UnitOfWork`, el 409 en el mapper, `ConcurrencyTests` y `VersionedContractTests`. `Widget` es `IVersioned`.
 12. **Orden alfabético (P2):** base creada con ICU `es-AR` en `DatabaseBootstrapExtensions` y en el contenedor de los tests; `RuntimeRoleValidator` verifica la collation; `CollationTests`.
 
@@ -179,43 +180,52 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 
 ---
 
-## Etapa 3: identidad, perfiles y OpenIddict
+## Etapa 3: identidad, accesos y OpenIddict
 
 **Back:**
-1. `ApplicationUser` **global** (AccountKind, Status, Culture, TimeZoneId, LastActiveTenantId), con índices únicos globales de email y teléfono.
+1. `ApplicationUser` **global** (IsPlatformOperator, Status, Culture, TimeZoneId, LastAccess, LastBusinessTenantId), con índices únicos globales de email y teléfono.
    - **Sin setters públicos:** las reglas de la cuenta (correo o teléfono obligatorio, largo del nombre, restaurar) viven en métodos de la entidad, con tests unitarios.
    - Un nombre demasiado largo es un error de validación, no un recorte silencioso.
    - `ISignInService` es solo técnico, con 12 miembros como máximo; los datos de la cuenta van por `IUserRepository`. Así queda como en las Etapas 2 y 7 del plan de ArquitecturaBase.
 2. OpenIddict:
    - code + PKCE + refresh y el cliente `web`;
-   - `OpenIdPrincipalFactory` (`account_kind`, `tenant_id`, `tenant_kind`);
+   - `OpenIdPrincipalFactory` (`access`, `tenant_id`, `tenant_kind`);
    - `ConnectController` con `tenant=` en authorize.
-3. `TenantResolutionMiddleware`, `[TenantKind]`, `CurrentUser` y `RequestInfo`.
+3. `TenantResolutionMiddleware`, `[Access]`, `CurrentUser` y `RequestInfo`. `ConnectService` con `access=` y `tenant=` en authorize (cambio de acceso sin volver a ingresar).
 4. Ingreso sin contraseña por correo: códigos, enlaces, `LoginAudit` y rate limits. El canal del código y el de la invitación pasan por `ILoginCodeChannel` e `IInvitationChannel`: el núcleo trae solo `"email"` y WhatsApp se enchufa en la Etapa 8. `IPhoneLinkObserver` avisa los cambios de teléfono.
 5. **Registro B2C:** identidad + tenant `Personal` + `Member(Owner)` + `TenantSettings` (cultura, zona y moneda del navegador).
 6. Outbox persistente y **Gmail por SMTP**, que en desarrollo también envía de verdad (pickup `.eml` como opción), con plantillas de `Notifications.resx` y `DisplayFormatter`.
-6b. **Ingreso y registro con Google** (`Authentication:Google:*`): si la cuenta no existe, crea la identidad y su perfil personal, como el registro por código. Vincular y desvincular Google desde la cuenta.
+6b. **Ingreso y registro con Google** (`Authentication:Google:*`): si la cuenta no existe, crea la identidad y su espacio personal, como el registro por código (solo en el ingreso como persona). Vincular y desvincular Google desde la cuenta.
 6c. **Configuración lista para pegar** ([`docs/operations/configuracion.md`](../operations/configuracion.md)): las mismas claves que ArquitecturaBase; `appsettings.Development.json` con los valores no secretos; los scripts de `scripts/secretos/` probados (importar de ArquitecturaBase, cargar desde un archivo, verificar); validación al arrancar con el nombre de la clave que falta.
+6c-bis. **Métodos de ingreso (ADR 0033):**
+   - `identity.LoginMethods` (correo, teléfono o Google, verificado, principal, `ManagedByTenantId?`);
+   - ingresar con cualquier método verificado;
+   - sumar, verificar, elegir el principal y quitar, con código en otro método y aviso en todos;
+   - el aviso "Agregá un correo personal…" cuando la cuenta depende solo de métodos de una empresa;
+   - al terminar una membresía, desactivar sus correos administrados y avisar;
+   - tests `LoginMethodsTests` y `ManagedEmailTests` (un exmiembro no puede ingresar con el correo de la empresa).
+
+   El **dominio verificado** de la organización (registro TXT) y "Recuperar mi cuenta" asistida por la plataforma van en la Etapa 5.
 6d. **Términos y privacidad (P7):** `LegalDocuments` (versión 1 de términos y privacidad, en es y en, sembrada), `LegalAcceptances`, `acceptedTerms` en el registro (correo, WhatsApp y Google), `LegalAcceptanceMiddleware` y `LegalAcceptanceTests`. En el front, la casilla del registro y la pantalla bloqueante de aceptación.
 7. Invitaciones a una organización.
-8. `GET /api/me` (cuenta, perfiles, perfil activo, permisos y las preferencias efectivas de cultura, zona y moneda) y `PUT /api/me`.
-9. Seed idempotente en **todos** los ambientes, dentro de un límite y con el advisory lock `seed:` para que dos réplicas no choquen. En desarrollo, además: operador; Ana (Personal + "Demo"); Beto (Personal). Test: arrancar en `Production` contra una base migrada y vacía deja el cliente `web`, los ajustes de plataforma y el operador inicial.
+8. `GET /api/me` (cuenta, acceso activo, espacio personal, organizaciones, permisos y las preferencias efectivas de cultura, zona y moneda) y `PUT /api/me`.
+9. Seed idempotente en **todos** los ambientes, dentro de un límite y con el advisory lock `seed:` para que dos réplicas no choquen. En desarrollo, además: operador; Empresa A con Ana y Kevin; Kevin y Carla como personas. Test: arrancar en `Production` contra una base migrada y vacía deja el cliente `web`, los ajustes de plataforma y el operador inicial.
 10. Tests:
     - el recorrido real de ingreso;
     - el registro;
-    - cambio de perfil válido e inválido;
-    - perfil equivocado → 403;
+    - cambio de acceso u organización válido e inválido;
+    - acceso equivocado → 403, y una persona no puede crear una empresa;
     - suspensiones.
 
 **Front:**
-1. `auth/` y `tenancy/`: selector con `queryClient.clear()`.
+1. `auth/` y `tenancy/`: elegir acceso al ingresar, "Ir a mi empresa" / "Ir a mi espacio personal" y elegir organización, con `queryClient.clear()` al cambiar.
 2. `areas/public/auth`: ingreso, código, enlace, registro, callback e invitación.
 3. Los tres layouts vacíos y `areas/personal/account`.
 4. `useFormat` conectado a las preferencias de `/api/me`.
 
 **Puerta:** la general, más un recorrido manual:
 0. `./scripts/secretos/importar-desde-arquitecturabase.ps1` y `verificar.ps1` con todo `[ok]`;
-1. registrarse con un código que llega **de verdad** por Gmail, y otra vez con Google → queda en el perfil personal;
+1. registrarse como persona con un código que llega **de verdad** por Gmail, y otra vez con Google → queda en su espacio personal;
 2. pasar a "Demo" con Ana;
 3. F5 → sigue en "Demo";
 4. volver a Personal;
@@ -228,7 +238,7 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 
 **Back:**
 1. `Permissions` (organización y empresa), `PersonalPermissions`, `PlatformPermissions`, `Role`, `RoleScope`, `RoleAssignment`, `SystemRoles` y `Permissions.resx`.
-2. `PermissionService` (efectivos por perfil y empresa, con caché e invalidación) y `PlatformPermissionService`.
+2. `PermissionService` (efectivos por organización y empresa, con caché e invalidación) y `PlatformPermissionService`.
 3. Los atributos `HasPermission`, `HasCompanyPermission` y `HasPlatformPermission`, su policy provider y handlers, y `PermissionAuthorizationTests`.
 4. **RoleService completo como referencia:** listado paginado con filtros y conteos, get by id, create (201), update, delete, catálogo agrupado y protección de los roles de sistema.
 5. Tests unitarios, de integración y de aislamiento.
@@ -236,7 +246,7 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 **Front:** `areas/business/roles` (RolesPage con "Vale en" y RoleEditorPage), usando `DataTable` con columnas tipadas: es la feature de referencia.
 
 **Documentación de la receta** (como las Etapas 4 y 5 de ArquitecturaBase):
-- `docs/guides/agregar-un-area.md`: los pasos en orden, con la ruta de cada archivo y un enlace al equivalente de Roles, más una lista de verificación. Cubre B2B y B2C: cambian el `[TenantKind]` y los permisos.
+- `docs/guides/agregar-un-area.md`: los pasos en orden, con la ruta de cada archivo y un enlace al equivalente de Roles, más una lista de verificación. Cubre B2B, B2C y los datos públicos o compartidos: cambian el `[Access]`, los permisos y la clase del dato.
 - `docs/guides/permiso-nuevo.md`, `migracion.md` y `prefijo-de-backend.md`.
 - `docs/features/roles.md`, y un `AGENTS.md` de una línea (más su `CLAUDE.md` con `@AGENTS.md`) en cada carpeta de código del área, que apunta a su documento.
 
@@ -262,7 +272,7 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 5. Tests:
    - un operador sin `Enter` no ve datos;
    - un usuario recibe 403 en `/api/platform`;
-   - suspender una organización no afecta los perfiles personales.
+   - suspender una organización no afecta el acceso B2C de sus usuarios, y su página pública muestra "no disponible".
 
 **Front:** `areas/platform/{tenants, accounts, operators, audit, settings}`, dibujadas primero.
 
@@ -271,7 +281,8 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 ## Etapa 6: área B2B (organización)
 
 **Back:**
-1. "Crear mi organización" (`POST /api/me/organizations`), con `TenantProvisioner` idempotente, compartido con la plataforma.
+1. **"Registrá tu empresa"** (`POST /api/auth/business-signup`, desde el portal Empresas; nunca desde el acceso B2C), con `TenantProvisioner` idempotente, compartido con la plataforma. Elegir el slug y validar los reservados.
+1b. **Mi página pública:** `PublicPage` (nombre, logo, descripción, contacto, slug), en borrador o publicada, editable por quien tenga `publicpage.manage`.
 2. Usuarios, que parten de `Members`:
    - listado con filtros y conteos, y ficha;
    - invitar, editar, desactivar, reactivar y reenviar la invitación;
@@ -285,17 +296,23 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 
 ---
 
-## Etapa 7: área B2C (perfil personal)
+## Etapa 7: área B2C, sitio público e interacción
 
 **Objetivo:** dejar el área personal lista para que cada producto le sume sus funcionalidades B2C con la misma receta que las B2B.
 
 **Back:**
-1. `GET /api/me/organizations` para "Mis organizaciones", si no quedó hecho en la Etapa 6.
+1. **Sitio público:**
+   - `PublicSiteResolutionMiddleware` (subdominio → organización publicada), `[PublicSite]` y `ReservedSlugs`;
+   - `SubdomainRedirectUriValidator` para ingresar desde un subdominio;
+   - el directorio de páginas publicadas en el dominio principal;
+   - desarrollo con `*.localtest.me` y el proxy de Vite por host.
+1b. **Mecánica de interacción de punta a punta con `TestFeatures`:** una persona crea un `Deal` desde la página pública, la empresa lo ve en su bandeja y cada parte cambia estados según `PartyPolicy`. Es la guía para que un producto arme su módulo.
 2. `docs/features/personal.md`, la receta de un módulo B2C:
    - entidad `ITenantOwned`;
-   - rutas `[TenantKind(Personal)]` sin permisos, porque el dueño tiene los `personal.*` implícitos;
-   - tests de aislamiento entre perfiles personales y entre el personal y la organización de la misma persona.
-3. `TestFeatures` con un controller `[TenantKind(Personal)]` que prueba esa receta.
+   - rutas `[Access(Consumer)]` sin permisos, porque la persona tiene los `personal.*` implícitos;
+   - un módulo que interactúa con empresas usa datos compartidos (`engagement`) y `PartyPolicy`;
+   - tests de aislamiento entre personas, y entre el acceso B2C y el B2B de la misma persona.
+3. `TestFeatures` con controllers `[Access(Consumer)]` y `[PublicSite]` que prueban esa receta.
 
 **Front:** `PersonalLayout`, `areas/personal/home` y `navigation/personal.ts` listos para sumar módulos, dibujados primero **a 390 px antes que a 1440** (P10: el B2C se usa sobre todo en el teléfono).
 
@@ -323,10 +340,10 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 ## Etapa 9: endurecimiento
 
 - TOTP obligatorio para operadores, con reautenticación reciente en las operaciones sensibles.
-- Rate limit por perfil y por IP; cuotas en `PlatformSettings`.
+- Rate limit por tenant, por identidad y por IP (más estricto en las páginas públicas); cuotas en `PlatformSettings`.
 - Security headers, CSP estricta y revisión de cookies.
 - OpenTelemetry con `tenant.id` y `tenant.kind`.
-- `/security-review` y **fuzz de aislamiento**: IDs cruzados en todas las rutas, con los dos tipos de perfil.
+- `/security-review` y **fuzz de aislamiento**: IDs cruzados en todas las rutas, con los dos accesos, en datos privados, públicos y compartidos, y por subdominio.
 
 ## Etapa 10: despliegue y operación
 

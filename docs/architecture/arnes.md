@@ -71,7 +71,7 @@ Cada fila es una carpeta que lleva `AGENTS.md` + `CLAUDE.md`. Los punteros se es
 | `Infrastructure/Persistence/Readers/` | proyecciones `AsNoTracking` → `*Row`; `SortMap`, `ApplySearch`, `ToPagedResultAsync` | paginado-y-busqueda, multitenancy | `RoleReader.cs` |
 | `Infrastructure/Persistence/Readers/Platform/` | **única** lista blanca para ignorar el filtro `"Tenant"` | multitenancy | — |
 | `Infrastructure/Modules/<Módulo>/` | adaptadores del módulo | modulos | — |
-| `Api/Controllers/<Área>/` | controllers finos: contrato → servicio → `ToActionResult`; `[TenantKind]` + permiso | api-http, permisos, multitenancy | `Organization/RolesController.cs` |
+| `Api/Controllers/<Área>/` | controllers finos: contrato → servicio → `ToActionResult`; `[Access]` + permiso (o `[PublicSite]`) | api-http, permisos, multitenancy | `Organization/RolesController.cs` |
 | `Api/Contracts/<Área>/` | `*HttpRequest` / `*Query`, props nullable, `ToString()` sin datos personales | api-http, paginado-y-busqueda | `Organization/CreateRoleHttpRequest.cs` |
 | `Domain/ValueObjects/` (Email, PhoneNumber, TaxId) | un dato con forma propia es un value object, nunca un `string` suelto | emails, telefonos, identificacion-fiscal | `Email.cs` |
 | `Domain/Legal/`, `Application/Services/Legal/` | términos y privacidad versionados, aceptación, exportar y dar de baja | datos-personales | `LegalAcceptance.cs` |

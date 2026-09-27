@@ -3,10 +3,10 @@
 **Regla:** las rutas piden **permisos, nunca roles**. Hay cuatro catálogos: organización, empresa, personal (implícitos del dueño) y plataforma.
 
 ## Cómo se hace
-- **Organización:** `[TenantKind(Business)] [HasPermission(Permissions.Users.Manage)]`.
+- **Organización:** `[Access(Business)] [HasPermission(Permissions.Users.Manage)]`.
 - **Empresa** (con `{companyId}` en la ruta): `[HasCompanyPermission(Permissions.Company.Members.Manage)]`.
 - **Plataforma:** `[HasPlatformPermission(PlatformPermissions.Tenants.Manage)]`.
-- **Personal:** `[TenantKind(Personal)]` sin permiso, porque el dueño los tiene todos.
+- **Persona (B2C):** `[Access(Consumer)]` sin permiso, porque la persona los tiene todos sobre su espacio personal. Sobre un dato compartido, lo que puede hacer cada parte lo decide `PartyPolicy`, no un permiso.
 - **Un permiso nuevo:**
   1. se declara en `Permissions.cs` (o `PlatformPermissions.cs`) y en su lista `All` / `OrganizationScoped` / `CompanyScoped`;
   2. lleva `Permission.<código>` y `PermissionDescription.<código>` en `Permissions.resx` y `.en.resx`;

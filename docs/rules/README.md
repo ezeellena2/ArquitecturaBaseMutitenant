@@ -8,7 +8,7 @@ Una ficha por tema, todas con el mismo formato: **Regla · Cómo se hace · Proh
 | [guardado](guardado.md) | una sola forma de guardar (`ExecuteInTransactionAsync`) |
 | [result-y-errores](result-y-errores.md) | `Result`, `<X>Errors`, códigos, ProblemDetails |
 | [validacion](validacion.md) | `IRequestValidator`, `ValidationRules`, errores por campo |
-| [multitenancy](multitenancy.md) | `ITenantOwned`, `[TenantKind]`, `ITenantScope`, RLS |
+| [multitenancy](multitenancy.md) | accesos B2C/B2B, `[Access]`, datos privados, públicos y compartidos, subdominios, RLS |
 | [permisos](permisos.md) | permisos de organización, empresa, personal y plataforma |
 | [fechas-y-zonas](fechas-y-zonas.md) | UTC, `DateOnly`, zona efectiva |
 | [numeros-y-moneda](numeros-y-moneda.md) | `decimal`, `Money`, porcentajes, redondeo, formato |

@@ -1,181 +1,202 @@
-# Multitenancy B2B + B2C: identidades, perfiles, organizaciones y aislamiento
+# Multitenancy B2B + B2C: accesos, empresas, páginas públicas e interacción
 
-> Complementa a [`backend.md`](backend.md). Cambiar una regla de este documento requiere un ADR.
+> Complementa a [`backend.md`](backend.md). Cambiar una regla de este documento requiere un ADR. Rehecho el 2026-09-27 con la definición del usuario (ADR 0030).
 
-**El flujo de cuenta es como el de Mercado Libre, pero el producto no es un marketplace.** Una persona se registra sola y entra con **su perfil personal** (B2C), que tiene sus propias funcionalidades. Si crea una organización o la invitan a una, con **la misma cuenta** entra también como esa organización (B2B), que tiene otras funcionalidades. Pasa de un perfil a otro con un selector. El núcleo de ArquitecturaBase (identidad, roles, configuración, WhatsApp) queda incluido en este modelo.
+## 1. Qué es, en simple
 
-## 1. Conceptos
+Una **plantilla estándar para cualquier tipo de negocio**. No es un producto: no sabe de médicos, de gimnasios ni de ventas. Lo que resuelve es **quién ingresa y cómo**, y la mecánica para que dos mundos se encuentren, como en Mercado Libre:
 
-| Concepto | Qué es | En pantalla |
-|---|---|---|
-| **Identidad** (`identity.AspNetUsers`) | la persona: email, teléfono, cultura, zona y métodos de ingreso. **Global, una por persona** | "Tu cuenta" |
-| **Tenant** (`platform.Tenants`) | la unidad de aislamiento. Tiene un `Kind` | nunca se dice "tenant" |
-| Tenant `Personal` | el espacio B2C de una identidad. Se crea solo al registrarse, uno por identidad, y su único miembro es el dueño | "Personal" |
-| Tenant `Business` | una organización B2B con empresas, miembros y roles | "Organización" (o su nombre) |
-| **Membresía** (`tenant.Members`) | el vínculo identidad ↔ tenant, con estado. En un `Personal` hay exactamente una | — |
-| **Perfil activo** | el tenant con el que se opera en esta sesión. Viaja en el token | selector "Personal / Acme SA" |
-| **Empresa** (`tenant.Companies`) | subdivisión de una organización Business | "Empresa" |
-| **Operador** | identidad con `AccountKind=Platform`, sin membresías | "Plataforma" |
+- **Empresas (B2B):** se registran como empresa, tienen sus usuarios con roles, y opcionalmente una **página pública** en su subdominio (`<empresa>.plataforma.com`).
+- **Personas (B2C):** se registran solas como personas y pueden **interactuar con una empresa** a través de lo que esa empresa publica: pedir, contratar, reservar… lo que defina cada producto.
 
-```
-Identidad (persona)
-├─ Perfil Personal   → Tenant Kind=Personal   funcionalidades B2C del producto
-├─ Perfil "Acme SA"  → Tenant Kind=Business   empresas, miembros, roles + funcionalidades B2B del producto
-└─ Perfil "Beta SRL" → Tenant Kind=Business   (si además es miembro de otra organización)
-```
+**El núcleo de la plantilla son los accesos:** quién puede ingresar, por dónde, qué ve cada tipo de usuario y cómo pasa de un acceso al otro (§2 y §3). Las páginas públicas y los datos compartidos (§4 y §5) son la **mecánica genérica** que cada producto usa para sus módulos.
 
-**Los perfiles no comparten datos entre sí.** Lo que una persona hace en su perfil personal no se ve desde su organización, y viceversa. Lo único en común es la identidad: nombre, email, teléfono, cultura y zona.
+> **Ejemplo (solo para entender; la plantilla no trae nada de esto):** una empresa de salud tiene médicos como usuarios B2B. Un kinesiólogo de esa empresa también ingresa **como persona** y le pide un turno a un traumatólogo desde la página de la empresa. El turno lo ven el paciente y el profesional; nadie más. Otro producto usaría lo mismo para clases de un gimnasio, visitas de una inmobiliaria o servicios de un estudio contable.
 
-## 2. Decisiones
+## 2. Quiénes entran
+
+| Tipo | Cómo entra | Qué hace | Qué **no** puede |
+|---|---|---|---|
+| **Visitante** | sin sesión | ve el sitio de la plataforma y las páginas públicas de las empresas | contratar nada |
+| **Persona (acceso B2C)** | "Ingresá" o "Creá tu cuenta" (correo, WhatsApp o Google) | busca empresas, contrata o pide servicios, ve "Mis turnos" o "Mis contrataciones", su cuenta | **crear una empresa**, ver la administración de una empresa |
+| **Usuario de empresa (acceso B2B)** | "Ingresá como empresa" | según su rol: administrar la empresa, armar su página y atender lo que piden las personas (lo que defina cada producto) | ver datos de otras empresas, o de personas fuera de lo que ellas le compartieron |
+| **Dueño de la empresa** | "Registrá tu empresa" (alta B2B aparte) | crea la organización y queda como **Administrador general** (todos los permisos) | — |
+| **Operador de la plataforma** | acceso aparte, con segundo factor | backoffice: aprobar y suspender empresas, módulos por plan, cuentas, auditoría | ver los datos de negocio de una empresa o de una persona |
+
+Dentro de una empresa, los usuarios se diferencian **solo por rol**: el Administrador general, el Administrador de una empresa del grupo y los roles que cree cada organización. La organización puede tener varias **empresas** (razones sociales o sedes).
+
+## 3. Una cuenta, dos accesos
+
+- **Identidad global:** una persona tiene **una sola cuenta** (un correo, un teléfono, un Google). No hay dos contraseñas ni dos registros.
+- **Dos accesos que no se mezclan:**
+  - **Acceso B2C:** su **espacio personal** (tenant `Kind=Personal`). Se crea solo al registrarse como persona o la primera vez que entra como persona.
+  - **Acceso B2B:** sus **organizaciones** (tenants `Kind=Business`), por membresía. Solo existe si registró una empresa o lo invitaron a una.
+- **Al ingresar se elige el acceso:** "como persona" o "como empresa". El sitio de la plataforma y las páginas públicas llevan al acceso B2C; el portal "Empresas" lleva al B2B. Con una sola organización, entra directo; con varias, elige cuál.
+- **Cambiar de acceso** (de paciente a médico) no pide ingresar de nuevo: el menú de la cuenta tiene "Ir a mi empresa" o "Ir a mi espacio personal". Por dentro, son tokens nuevos del otro acceso.
+- **Lo que ve cada acceso no se mezcla:** el espacio personal **no muestra organizaciones**, y la empresa no ve lo personal.
+- **Ejemplo:** alguien trabaja en la Empresa A y además es cliente de la Empresa B. Tiene **una** cuenta. Como **empresa** ve lo de la Empresa A según su rol. Como **persona** ve lo que le pidió a la Empresa B.
+
+### 3.1 Métodos de ingreso: la cuenta no depende de un solo correo
+
+**El problema:** a una persona la invitan con su correo de la empresa (`kevin@empresa-a.com`). Con ese correo ingresa como empresa **y también como persona**. Si después la desvinculan, pasan dos cosas:
+- **pierde su cuenta**, incluido su espacio personal;
+- **peor aún, la empresa sigue siendo dueña de ese buzón**: cualquiera con acceso a él podría pedir un código y entrar a lo personal de Kevin.
+
+**La solución:**
+- **Varios métodos de ingreso por cuenta:** correos, teléfonos (WhatsApp) y Google, todos **verificados** y todos **únicos en todo el sistema** (`identity.LoginMethods`: tipo, valor, `VerifiedAtUtc`, `IsPrimary`, `ManagedByTenantId?`). Se ingresa con **cualquiera** de ellos, y uno es el principal (el que recibe los avisos).
+- **Correo de recupero:** es un correo personal más, verificado. Sirve para ingresar y para recuperar la cuenta.
+- **Correos administrados por una empresa:** una organización puede verificar su **dominio** (`empresa-a.com`, con un registro DNS TXT). Los correos de ese dominio quedan marcados `ManagedByTenantId` = esa organización.
+  - **Mientras la persona es miembro**, un correo administrado sirve para ingresar a los **dos** accesos.
+  - **Cuando la membresía termina**, el correo administrado **deja de servir para ingresar**, y se le avisa a la persona por sus otros métodos. Así la empresa nunca entra a lo personal de alguien que ya no trabaja ahí.
+  - **Si ese era su único método**, la cuenta queda en "necesita recuperación": puede entrar con "Recuperar mi cuenta", verificando otro correo o teléfono con la ayuda de un operador de la plataforma. Esto es la excepción: lo normal es que ya haya agregado uno propio (ver lo que sigue).
+- **Aviso para que no se llegue a eso:** si **todos** los métodos de ingreso de una cuenta son administrados por una organización (o es un correo de la invitación y no hay otro), la cuenta muestra un aviso fijo: "Agregá un correo personal o tu WhatsApp para no perder tu cuenta si dejás la empresa". Aparece al aceptar la invitación, en "Mi cuenta" y al entrar al espacio personal. El aviso se va solo cuando hay un método propio verificado.
+- **Sin dominio verificado** (la regla por defecto): se aplica igual el aviso cuando el correo con el que llegó por invitación **no** es el mismo con el que ya tenía cuenta. Además, al terminar una membresía, la persona recibe el aviso "Revisá tus métodos de ingreso" en sus otros métodos.
+- **Reglas:**
+  - la persona puede sumar, verificar, elegir el principal y quitar métodos, siempre que le **quede al menos uno propio o activo**;
+  - quitar o cambiar un método pide un código en **otro** método ya verificado;
+  - todo cambio queda en `SecurityEvents` y se avisa en **todos** los métodos.
+
+## 4. Tres clases de datos
+
+Todo dato nuevo se clasifica **antes** de escribir su entidad:
+
+| Clase | Qué es | Esquema | Interfaz | Quién lo ve (RLS) |
+|---|---|---|---|---|
+| **Privado** | lo interno de una empresa o de una persona | `tenant` | `ITenantOwned` (`TenantId`) | solo su tenant |
+| **Público** | lo que una empresa publica: su página y lo que cada producto le permita publicar | `public_site` | `IPublishedByBusiness` (`BusinessTenantId`, `IsPublished`) | todos, sin sesión, si está publicado; la empresa, siempre |
+| **Compartido** | lo que une a una persona con una empresa (según el producto: una reserva, un pedido, una solicitud, sus mensajes) | `engagement` | `IConsumerBusinessShared` (`ConsumerTenantId`, `BusinessTenantId`) | solo esa persona y esa empresa |
+
+- **Un dato compartido guarda una copia** de lo que la otra parte necesita ver tal como era en ese momento (por ejemplo, el nombre y el precio de lo que se pidió). Nunca se lee el dato privado de la otra parte.
+- **Quién hace qué:** cada módulo define qué transiciones puede hacer cada parte (por ejemplo, la persona pide o cancela y la empresa confirma o rechaza). La base trae `PartyPolicy` para verificar que el acceso activo sea la parte correcta.
+- **Datos de la persona para la empresa:** la empresa ve **solo** lo que la persona le compartió al contratar (nombre, teléfono, lo que pida el módulo), copiado en el dato compartido. Nunca su cuenta ni su espacio personal.
+
+## 5. Páginas públicas por subdominio
+
+- **Cada organización tiene un `Slug` único** (`empresa-a`), y su página vive en `https://empresa-a.plataforma.com`. El sitio de la plataforma (`plataforma.com`) tiene el buscador o directorio de empresas publicadas.
+- **Resolución por host, solo para lo público:** `PublicSiteResolutionMiddleware` lee el subdominio y fija `IPublicSiteContext.BusinessTenantId`. Sirve **únicamente** para leer datos **públicos** de esa empresa. **Nunca** da acceso a datos privados: para eso sigue mandando el claim `tenant_id` del token.
+- **Un solo front** (el mismo SPA) atiende todos los subdominios: con un subdominio de empresa muestra la página pública; con el dominio principal, el sitio de la plataforma y los accesos.
+- **Ingreso desde un subdominio:**
+  - hay un solo servidor OIDC (`plataforma.com`);
+  - la página de la empresa pide `authorize` con `redirect_uri = https://<slug>.plataforma.com/auth/callback`, y OpenIddict la acepta si el slug existe y está publicado (`SubdomainRedirectUriValidator`, nunca un comodín abierto);
+  - la sesión del servidor OIDC hace que, si ya ingresó en otro subdominio, no tenga que volver a hacerlo (`prompt=none`).
+- **Infraestructura:** DNS comodín `*.plataforma.com` y certificado comodín. En desarrollo: `*.localtest.me` (resuelve a 127.0.0.1) o `*.plataforma.localhost`.
+- **Reservados:** `www`, `app`, `api`, `auth`, `admin`, `empresas`, `plataforma`… no pueden ser el slug de una empresa (`ReservedSlugs`).
+- **Después, opcional:** dominio propio de una empresa (`www.empresa-a.com.ar`), que es la misma resolución por host, con una tabla de dominios verificados.
+
+## 6. Decisiones
 
 | Decisión | Valor |
 |---|---|
-| Aislamiento | Una base compartida, `TenantId`, filtro de EF con nombre `"Tenant"` y **RLS forzado**. B2B y B2C usan **el mismo mecanismo**: el B2C es un tenant `Personal` |
-| Identidad | Global. Email y teléfono únicos en todo el sistema. Una persona, una cuenta |
-| Perfiles | Un `Personal` obligatorio y N `Business` por membresía. El límite de organizaciones propias por persona está en `PlatformSettings` |
-| Resolución | Solo por el claim `tenant_id` del perfil activo. Nunca de un header, del body, de la query ni del host |
-| Cambio de perfil | Tokens nuevos con `/connect/authorize?prompt=none&tenant=<id>`: el servidor valida la membresía y recuerda `LastActiveTenantId` |
-| Registro B2C | Autoregistro abierto (código por email o WhatsApp, o Google). Se cierra con `PlatformSettings.ConsumerSignup` |
-| Alta B2B | "Crear mi organización" desde el perfil personal (`BusinessSignup = Open | RequiresApproval | Closed`), o la crea un operador |
-| Funcionalidades | Cada ruta declara para qué perfil es: `[TenantKind(Business)]`, `[TenantKind(Personal)]`, o ninguno si sirve para los dos |
+| Aislamiento | Una base compartida, `TenantId`, filtros de EF con nombre y **RLS forzado** en `tenant`, `public_site` y `engagement` |
+| Identidad | Global: una persona, una cuenta (correo y teléfono únicos) |
+| Accesos | `access` = `consumer` \| `business` \| `platform` en el token. B2C nunca crea empresas; el alta B2B es "Registrá tu empresa" |
+| Tenant activo | Solo del claim `tenant_id` (el espacio personal en B2C; la organización elegida en B2B). El host solo resuelve lo **público** |
+| Páginas públicas | Subdominio por organización, slug único, redirect URI validada contra los slugs |
+| Interacción B2C ↔ B2B | La base trae la mecánica (públicos, compartidos, `PartyPolicy`); los módulos que la usan los pone cada producto con `[FeatureGate]`. La plantilla **no trae ningún módulo de negocio** |
 
-## 3. Estados
+## 7. Estados
 
 ```
-Personal: Active ──(la plataforma suspende)──► Suspended ──► Active | Closed
-Business: PendingApproval ─► Provisioning ─► Active ──► Suspended ──► Active | Closed
+Espacio personal: Active ──(la plataforma suspende)──► Suspended ──► Active | Closed
+Organización:     PendingApproval ─► Provisioning ─► Active ──► Suspended ──► Active | Closed
+Página pública:   Draft ──(publicar)──► Published ──(despublicar)──► Draft
 ```
 
-- Un perfil `Suspended` o `Closed` responde 403 `Tenancy.Tenant.Suspended` y el selector lo muestra deshabilitado.
-- Suspender una organización **no** afecta el perfil personal de sus miembros.
-- Suspender una **identidad** revoca todas sus sesiones.
+- Una organización suspendida: su página muestra "no disponible" y sus usuarios reciben 403 `Tenancy.Tenant.Suspended`. Los datos compartidos quedan visibles para la persona en modo solo lectura.
+- Suspender una identidad revoca sus sesiones en los dos accesos.
 
-## 4. Contexto de tenant
+## 8. Contexto de la petición
 
 | Pieza | Capa | Rol |
 |---|---|---|
-| `ICurrentUser` | Application | `UserId` y `AccountKind` (`User` \| `Platform`) |
-| `ITenantContext` | Application | `TenantId?`, `TenantKind?` y `RequiredTenantId` |
-| `ITenantScope` | Application (`Interfaces/Persistence`) | `IDisposable Enter(Guid tenantId)` |
-| `TenantContext` | Infrastructure | holder scoped |
-| `TenantResolutionMiddleware` | Api | lee `tenant_id` y `tenant_kind` del token; verifica en caché que la identidad, la membresía y el tenant estén activos |
+| `ICurrentUser` | Application | `UserId`, `Access` (`Consumer` \| `Business` \| `Platform`) |
+| `ITenantContext` | Application | `TenantId?` y `TenantKind?` del acceso activo |
+| `IPublicSiteContext` | Application | `BusinessTenantId?` resuelto por el subdominio (solo para datos públicos) |
+| `ITenantScope` | Application | `Enter(tenantId)` para plataforma, workers y altas |
+| `TenantResolutionMiddleware` | Api | lee `access`, `tenant_id` y `tenant_kind` del token; verifica en caché que estén activos |
+| `PublicSiteResolutionMiddleware` | Api | subdominio → `BusinessTenantId` de una página publicada |
 
-**Reglas**
-1. Con el perfil equivocado, `[TenantKind]` responde 403 `Tenancy.Profile.WrongKind`.
-2. En un request de usuario, el tenant se fija una sola vez desde el token. `Enter` sobre ese scope **lanza**.
-3. Plataforma, workers y altas entran con `ITenantScope.Enter(tenantId)`: un scope DI por tenant, y nunca con una transacción abierta. Solo lo usan `Services/Platform`, `Services/Auth` (registro), `Services/Organizations` (alta), `Infrastructure/BackgroundJobs`, `Infrastructure/Modules/WhatsApp` y `Seed`. Lo verifica `TenantScopeUsageTests`.
+**Rutas:** cada una declara su acceso:
+- `[Access(Consumer)]` para lo de las personas;
+- `[Access(Business)]` + permiso para la administración de la empresa;
+- `[Access(Platform)]` para el backoffice;
+- `[PublicSite]` + `[AllowAnonymous]` para la página pública.
 
-## 5. Barrera 1: EF Core
+Con el acceso equivocado responde 403 `Tenancy.Access.Wrong`.
 
-- **`ITenantOwned`** en toda entidad de negocio, sea B2B o B2C. `TenantStampInterceptor` sella el `TenantId` al insertar y **lanza** si viene otro o si se lo quiere cambiar.
-- **Filtro con nombre `"Tenant"`** (`e.TenantId == ctx.TenantId`), aplicado por convención a toda `ITenantOwned`. Sin tenant no devuelve filas (fallo cerrado). Además está `"SoftDelete"`.
-- **`TenantIsolationModelValidator`** hace fallar el arranque si una entidad `ITenantOwned` no está en el esquema `tenant`, no tiene el filtro o tiene un índice único que no empieza por `TenantId`.
-- `IgnoreQueryFilters(["Tenant"])` solo se permite en la lista blanca de `Infrastructure/Persistence/Readers/Platform`, y lo verifica un test.
+## 9. Barreras
 
-## 6. Barrera 2: PostgreSQL RLS
+- **EF:** filtros con nombre por clase:
+  - `"Tenant"` (privado);
+  - `"Public"`: `IsPublished || BusinessTenantId == ctx.TenantId`;
+  - `"Parties"`: `ConsumerTenantId == ctx.TenantId || BusinessTenantId == ctx.TenantId`;
+  - `"SoftDelete"`.
 
-### Roles de base de datos
+  `TenantStampInterceptor` sella la columna de la clase y rechaza cambios. `TenantIsolationModelValidator` exige que toda entidad esté clasificada.
+- **RLS:** `EnableTenantRls`, `EnablePublicRls` y `EnablePartiesRls`, con `FORCE`, y el trigger `prevent_tenant_change` en las tres clases.
+- **Roles de BD:** `mt_owner` y `mt_app` (sin privilegios), validados al arrancar.
+- `app.tenant_id` llega a la sesión de Postgres como antes: al abrir la conexión y otra vez dentro de la transacción. Una página pública sin sesión lee con `app.tenant_id = ''`: la política pública deja ver solo lo publicado.
 
-| Rol | Uso | Atributos |
-|---|---|---|
-| `mt_owner` | dueño del esquema y migraciones | LOGIN; dueño de las tablas |
-| `mt_app` | runtime de la Api | LOGIN, **NOSUPERUSER, NOBYPASSRLS**, no es dueño; DML sobre `platform`, `identity` y `tenant` |
+## 10. Flujos
 
-- `RuntimeRoleValidator` aborta el arranque si `mt_app` es privilegiado.
-- En Development, `DatabaseBootstrapExtensions` crea `mt_app`. En producción lo crea el DBA.
+**Registro de una persona (B2C):**
+1. "Creá tu cuenta" → código (o Google).
+2. Se crea la identidad y su espacio personal, con aceptación de términos.
+3. Tokens con `access=consumer`.
 
-### Política
+**Registro de una empresa (B2B), "Registrá tu empresa":**
+1. Datos de la empresa (nombre, slug, CUIT) y de quien la registra. Si esa persona ya tiene cuenta, ingresa con ella; si no, se crea la identidad.
+2. `Tenant(Business)` queda en `PendingApproval` o en `Provisioning`, según `BusinessSignup`.
+3. `TenantProvisioner` crea la configuración, los roles de sistema, la primera empresa, la membresía de Administrador general y la página pública en `Draft`.
+4. Tokens con `access=business`.
 
-Cada tabla de `tenant` la recibe en su migración, con `migrationBuilder.EnableTenantRls("tenant", "<Tabla>")`:
+**Invitar a alguien a la empresa:** si ya tiene cuenta, suma el acceso B2B a esa organización; si no, se crea la identidad al aceptar. **No crea un espacio personal:** ese nace la primera vez que entra como persona.
 
-```sql
-ALTER TABLE tenant."X" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tenant."X" FORCE ROW LEVEL SECURITY;
-CREATE POLICY tenant_isolation ON tenant."X"
-  USING      ("TenantId" = nullif(current_setting('app.tenant_id', true), '')::uuid)
-  WITH CHECK ("TenantId" = nullif(current_setting('app.tenant_id', true), '')::uuid);
-```
+**Una persona interactúa con una empresa** (mecánica de la base; qué se pide y con qué estados lo define cada módulo):
+1. Una persona en `empresa-a.plataforma.com` ve lo que la empresa publicó.
+2. Si no ingresó, "Ingresá para continuar" (acceso B2C) y vuelve a la misma página.
+3. El módulo crea el dato compartido (`ConsumerTenantId` = su espacio personal, `BusinessTenantId` = la organización), con copia de lo necesario, en una transacción, con `[Idempotent]`.
+4. La empresa lo ve en su bandeja; la persona, en su espacio personal. Cada cambio de estado lo hace la parte autorizada (`PartyPolicy`) y queda auditado de los dos lados.
+5. Avisos por correo o WhatsApp a las dos partes (outbox).
 
-Además:
-- el trigger `prevent_tenant_change` en cada tabla;
-- `prevent_update_delete` en `AuditEntries`.
+**Cambio de acceso o de organización:** `/connect/authorize?prompt=none&access=business&tenant=<id>` (o `access=consumer`). El servidor valida la membresía y emite tokens nuevos.
 
-### Cómo llega el tenant a Postgres
+## 11. Plataforma
 
-- `TenantConnectionInterceptor` ejecuta `set_config('app.tenant_id', <tenant o ''>, false)` al abrir la conexión.
-- `UnitOfWork` lo vuelve a fijar como local a la transacción y verifica que coincida con el contexto.
+- **Operador:** `access=platform`, con segundo factor.
+  - Aprueba y suspende organizaciones.
+  - Prende y apaga módulos por plan.
+  - Modera páginas públicas: puede despublicarlas con motivo.
+  - Suspende identidades.
+  - Nunca ve datos privados ni compartidos: la auditoría registra cada acción con su motivo.
 
-## 7. Identidad y membresías
+## 12. Caché, locks, unicidad
 
-- `identity.AspNetUsers` es global: **no tiene `TenantId` ni RLS**. Ningún lector de negocio la consulta directo. "Usuarios de mi organización" parte de `tenant.Members` (con RLS) y hace join a la identidad para traer el nombre y el email. Lo verifica `IdentityAccessTests`.
-- La búsqueda global por email o teléfono vive **solo** en `Infrastructure/Identity` (`SignInService`, `UserLookup`).
-- Invitar a alguien a una organización:
-  - **si ya tiene cuenta**, se crea `Member(Invited)` y, al aceptar, la organización aparece en su selector;
-  - **si no tiene cuenta**, al aceptar se crea la identidad **y** su perfil personal.
+- **Prefijos de caché:**
+  - `t:{tenantId}:` (privado);
+  - `s:{businessTenantId}:` (página pública; se invalida al publicar);
+  - `u:{userId}:` (identidad y accesos);
+  - `p:` (plataforma).
+- **Únicos globales:** el correo y el teléfono de la identidad, el `Slug` de la organización y el `PhoneNumberId` de WhatsApp.
+- **Locks de recursos compartidos:** sobre la fila (`FOR NO KEY UPDATE`), por ejemplo para no dar dos veces el mismo horario.
 
-## 8. Flujos
+## 13. Tests obligatorios de aislamiento
 
-### Registro B2C
-1. `POST /api/auth/signup` con email o teléfono → se envía un código.
-2. Al verificar el código, `AccountService.RegisterAsync`:
-   - crea la identidad;
-   - `Enter(nuevo tenant Personal)`;
-   - en una transacción crea `Tenant(Personal, Active)`, `Member(Owner)`, `TenantSettings` (cultura y zona del navegador) y la auditoría.
-3. Emite tokens con `tenant_kind=personal`.
+`TenantFixture` arma este escenario, con nombres neutros:
+- **Empresa A** (B2B), con Ana y Kevin como usuarios;
+- **Empresa B** (B2B), con Beto;
+- **Kevin como persona** (B2C) y **Carla** (B2C).
 
-### Crear mi organización
-`POST /api/me/organizations`, desde cualquier perfil:
-1. Crea `Tenant(Business)` en `PendingApproval` o en `Provisioning`, según `BusinessSignup`.
-2. `Enter(tenant)` y `TenantProvisioner` (idempotente), en una transacción, crea:
-   - `TenantSettings`;
-   - los roles de sistema;
-   - la primera empresa;
-   - `Member(Active)` y TenantAdmin para quien la crea;
-   - la auditoría.
-3. Pasa a `Active` y aparece en el selector.
-
-Si la crea un operador (`POST /api/platform/tenants`), el provisioning es el mismo, pero el admin inicial recibe una invitación.
-
-### Cambio de perfil
-1. `signinSilent({ extraQueryParams: { tenant: id } })` → `/connect/authorize?prompt=none&tenant=<id>`.
-2. `ConnectService` valida con `ProfileSwitchPolicy` y guarda `LastActiveTenantId`.
-3. Emite tokens nuevos con el `tenant_id` y el `tenant_kind` elegidos, y revoca el refresh token anterior.
-
-Al ingresar se usa `LastActiveTenantId`; si no hay, el perfil personal.
-
-## 9. Plataforma
-
-- `AccountKind=Platform`, sin membresías ni perfil personal. El mismo ingreso, más TOTP obligatorio desde la Etapa 8. Las rutas `api/platform/*` exigen `account_kind=platform`.
-- La plataforma gestiona:
-  - identidades: suspenderlas;
-  - organizaciones: aprobar, suspender y cerrar;
-  - perfiles personales: suspenderlos.
-- Toda acción sobre un tenant pasa por `Enter`, registra un `SecurityEvent` con el motivo y se audita con `ActorKind=PlatformOperator`.
-
-## 10. Caché, locks y unicidad
-
-- Prefijos de caché:
-  - `t:{tenantId}:` para los datos de un tenant;
-  - `u:{userId}:` para la identidad (los perfiles del selector);
-  - `p:` para la plataforma.
-- Locks: `AdvisoryLockKeys.For(tenantId, recurso, id)`.
-- Índices únicos: `(TenantId, …)`. Son globales solo el email y el teléfono de la identidad, el `Slug` de la organización y el `PhoneNumberId` de WhatsApp.
-
-## 11. Tests obligatorios de aislamiento
-
-`TenantFixture` arma este escenario:
-- Ana, con su perfil personal y admin de la organización A;
-- Beto, con su perfil personal y admin de la organización B.
+Los tests usan las entidades de `TestFeatures` (`Widget` privado, `Poster` público, `Deal` compartido), porque la plantilla no trae módulos de negocio.
 
 | Test | Qué garantiza |
 |---|---|
-| `Every_tenant_route_hides_other_tenant_rows` | Con el perfil A nunca aparecen IDs de B, y un GET por id de B da 404 |
-| `Personal_profile_is_isolated_from_own_organization` | Ana en su perfil personal no ve datos de A, y en A no ve su perfil personal |
-| `Personal_profiles_are_isolated_from_each_other` | El perfil personal de Ana no ve el de Beto |
-| `Wrong_profile_kind_is_forbidden` | Una ruta `[TenantKind(Business)]` con el perfil personal devuelve 403, y al revés también |
-| `Profile_switch_requires_active_membership` | `tenant=<B>` para Ana es rechazado |
-| `Rls_blocks_queries_without_tenant` / `..._even_with_filters_ignored` | La barrera 2 funciona por su cuenta |
-| `Every_tenant_table_has_forced_rls_policy` | Inventario de políticas |
-| `Runtime_role_is_not_privileged`, `Tenant_id_cannot_change` | Rol de runtime sin privilegios y TenantId inmutable |
-| `Suspended_business_does_not_affect_personal_profile` | Suspender A no afecta el perfil personal de Ana |
-| `Cache_keys_are_scoped` | Ninguna clave de caché se arma sin su prefijo |
+| `Consumer_cannot_create_organization` | con acceso B2C, crear una empresa da 403 |
+| `Access_views_do_not_mix` | Kevin como persona no ve lo privado de la Empresa A, y como empresa no ve su espacio personal |
+| `Shared_rows_visible_only_to_parties` | un `Deal` entre Kevin (persona) y la Empresa A solo lo ven esas dos partes; no Carla ni la Empresa B |
+| `Business_sees_only_what_was_shared` | la Empresa A ve lo copiado en el `Deal`, no la cuenta de Kevin |
+| `Public_rows_visible_only_when_published` | un `Poster` en borrador no aparece en la página pública, ni para visitantes ni para otra empresa |
+| `Subdomain_resolves_public_data_only` | `empresa-a.plataforma.com` con un token de la Empresa B no ve datos privados de la Empresa A |
+| `Redirect_uri_only_for_published_slugs` | `authorize` con un subdominio inexistente es rechazado |
+| `Wrong_access_is_forbidden`, `Access_switch_requires_membership` | accesos y membresías |
+| RLS, rol de runtime, inventario de políticas, columnas inmutables, caché con prefijo | igual que antes, ahora para las tres clases |
