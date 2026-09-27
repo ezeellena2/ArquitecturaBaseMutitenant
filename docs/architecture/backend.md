@@ -141,7 +141,7 @@ Domain/
 ├─ Authorization/
 │  ├─ Permissions.cs             catálogo de la organización (tenant) y de empresa, con All / OrganizationScoped / CompanyScoped
 │  ├─ PlatformPermissions.cs     catálogo de plataforma (separado a propósito)
-│  ├─ Role.cs                    TenantId, Name, Description, Scope (Organization|Company), IsSystem, Permissions
+│  ├─ Role.cs                    TenantId, Name, Description, Scope, CompanyId? (solo con SpecificCompany), IsSystem, Permissions
 │  ├─ RoleScope.cs
 │  ├─ RoleAssignment.cs          UserId, RoleId, CompanyId? (null ⇒ toda la organización)
 │  ├─ SystemRoles.cs             TenantAdmin ("Administrador general"), CompanyAdmin ("Administrador")
@@ -583,12 +583,20 @@ La pantalla "Auditoría" de la organización lee `AuditEntries` paginadas y filt
 
 - **Acceso B2C (espacio personal):** no tiene roles. La persona tiene implícitos todos los permisos `personal.*` (los que declare cada módulo B2C del producto). Las rutas B2C llevan `[Access(Consumer)]` y no piden permisos. Sobre un dato compartido con una empresa, lo que puede hacer cada parte lo decide `PartyPolicy`.
 - **Organización (B2B):** tres catálogos de permisos (constantes en Domain, textos en `Permissions.resx`):
-  - **Organización:** `users.read`, `users.manage`, `roles.read`, `roles.manage`, `companies.read`, `companies.manage`, `settings.manage`, `audit.read`.
-  - **Empresa:** `company.members.read`, `company.members.manage`, `company.settings.manage` (y los módulos de negocio que vengan).
+  - **Organización** (catálogo fino, ADR 0034):
+    - `users.read` (ver usuarios), `users.invite` (invitar, reenviar y revocar invitaciones), `users.manage` (editar, deshabilitar y activar);
+    - `roles.read`, `roles.manage` (crear, editar e inactivar roles), `roles.assign` (dar y quitar roles);
+    - `companies.read`, `companies.manage`;
+    - `settings.read`, `settings.manage`;
+    - `audit.read`;
+    - `publicpage.manage` (la página pública).
+  - **Empresa:** `company.members.read`, `company.members.manage` (y los módulos de negocio que vengan).
   - **Plataforma:** `platform.tenants.read`, `platform.tenants.manage`, `platform.operators.manage`, `platform.audit.read`, `platform.settings.manage`, `platform.whatsapp.manage`.
-- **Roles de la organización** (`tenant.Roles`), con alcance `Organization` o `Company`:
-  - Un rol de organización asignado sin empresa vale para toda la organización y todas sus empresas.
-  - Un rol de empresa se asigna siempre con `CompanyId` y vale solo en esa empresa.
+- **Roles de la organización** (`tenant.Roles`), con **tres alcances** (en pantalla, la columna "Vale en"):
+  - **`Organization`** ("Toda la organización"): se asigna sin empresa y vale en la organización y en todas sus empresas.
+  - **`AnyCompany`** ("Cada empresa"): es un rol de empresa reutilizable; se asigna **con** una empresa y vale solo en esa. Ejemplo: el Administrador de empresa.
+  - **`SpecificCompany`** ("Solo en <empresa>"): el rol pertenece a **una** empresa (`Role.CompanyId`) y solo se puede asignar en ella. Sirve para que cada empresa tenga sus propios roles.
+  - Las empresas son **planas**: no hay empresa matriz ni herencia entre empresas (ADR 0034).
   - `TenantAdmin` y `CompanyAdmin` son de sistema: inmutables y no se borran. Se protege al último `TenantAdmin` y al último `CompanyAdmin` de cada empresa.
 - **Atributos**, nunca roles ni `[Authorize(Policy=…)]` a mano (test):
   - `[HasPermission(Permissions.Users.Manage)]` para la organización.

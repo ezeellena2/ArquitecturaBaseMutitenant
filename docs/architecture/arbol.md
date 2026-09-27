@@ -117,8 +117,8 @@ ArquitecturaBaseMultitenant.Domain/
 │   ├── Permissions.cs                                organización + empresa, con All, OrganizationScoped, CompanyScoped
 │   ├── PersonalPermissions.cs                        personal.*, implícitos de la persona en su espacio personal
 │   ├── PlatformPermissions.cs                        platform.*
-│   ├── Role.cs                                       TenantId, Name, Scope, IsSystem, Permissions
-│   ├── RoleScope.cs                                  Organization | Company
+│   ├── Role.cs                                       TenantId, Name, Scope, CompanyId? (SpecificCompany), IsSystem, Permissions
+│   ├── RoleScope.cs                                  Organization | AnyCompany | SpecificCompany
 │   ├── RoleAssignment.cs                             UserId, RoleId, CompanyId?
 │   ├── SystemRoles.cs                                TenantAdmin, CompanyAdmin
 │   └── RoleErrors.cs                                 Roles.Role.*
