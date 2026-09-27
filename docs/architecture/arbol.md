@@ -30,11 +30,18 @@ ArquitecturaBaseMutitenant/
 │   │   ├── personal.md                               [E7]
 │   │   ├── whatsapp.md                               [E8]
 │   ├── operations/
+│   │   ├── configuracion.md                          Google, Gmail y WhatsApp: claves, secretos y pasos en Google y Meta
+│   │   ├── secretos.plantilla.json                   forma del archivo de secretos (se copia FUERA del repo)
 │   │   └── runbook.md                                [E10]
 │   ├── plans/
 │   │   ├── 2026-09-27-plan-de-desarrollo.md          plan maestro
 │   │   └── AAAA-MM-DD-etapa-N-<tema>.md              plan detallado de cada etapa
 │   └── history/                                      planes cerrados (HISTÓRICO)
+├── scripts/
+│   └── secretos/
+│       ├── importar-desde-arquitecturabase.ps1       copia los 5 secretos de ArquitecturaBase sin mostrarlos
+│       ├── cargar-desde-archivo.ps1                  carga un JSON guardado fuera del repo
+│       └── verificar.ps1                             qué falta, sin mostrar valores
 ├── src/                                              ver abajo
 ├── tests/                                            ver abajo
 ├── .editorconfig                                     [E0] estilo y supresiones justificadas
@@ -257,7 +264,7 @@ ArquitecturaBaseMultitenant.Application/
 │       │   ├── IPermissionService.cs                 [E4] permisos efectivos del perfil + invalidación
 │       │   ├── IPlatformPermissionService.cs         [E5]
 │       │   ├── ITokenRevoker.cs
-│       │   └── IGoogleAvailability.cs                [E11]
+│       │   └── IGoogleAvailability.cs                [E3]
 │       ├── Security/                                 [E3]
 │       │   ├── ISecureTokenGenerator.cs
 │       │   ├── ILoginCodeGenerator.cs
@@ -604,7 +611,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   ├── PermissionService.cs                           [E4] HybridCache t:{tenant}:perm:{user}
 │   ├── PlatformPermissionService.cs                   [E5]
 │   ├── IdentityResultExtensions.cs
-│   ├── GoogleAvailability.cs                          [E11]
+│   ├── GoogleAvailability.cs                          [E3] Google se enciende con Authentication:Google:ClientId
 │   └── OpenIddict/
 │       ├── OpenIddictRegistration.cs                  code + PKCE + refresh, endpoints, validación local
 │       ├── AuthServerDefaults.cs                      rutas, scopes, duraciones

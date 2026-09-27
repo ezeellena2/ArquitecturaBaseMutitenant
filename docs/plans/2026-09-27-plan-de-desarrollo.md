@@ -54,7 +54,7 @@ El resultado tiene que servir para empezar productos reales.
 | 8 | WhatsApp (número de la plataforma: códigos, invitaciones, bot de ingreso) | ✔ | ✔ | 3 |
 | 9 | Endurecimiento: TOTP para operadores, rate limit, headers, observabilidad, fuzz de aislamiento | ✔ | ✔ | 5–8 |
 | 10 | Despliegue y operación: CI/CD, migration bundle, backup, runbook | ✔ | ✔ | 9 |
-| 11 | Opcional: canales de WhatsApp por organización, login con Google | ✔ | ✔ | 8 |
+| 11 | Opcional: canales de WhatsApp por organización | ✔ | ✔ | 8 |
 
 Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los módulos de negocio del producto (B2B y B2C) se suman después, cada uno con su plan, copiando Roles.
 
@@ -178,7 +178,9 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 3. `TenantResolutionMiddleware`, `[TenantKind]`, `CurrentUser` y `RequestInfo`.
 4. Ingreso sin contraseña por correo: códigos, enlaces, `LoginAudit` y rate limits. El canal del código y el de la invitación pasan por `ILoginCodeChannel` e `IInvitationChannel`: el núcleo trae solo `"email"` y WhatsApp se enchufa en la Etapa 8. `IPhoneLinkObserver` avisa los cambios de teléfono.
 5. **Registro B2C:** identidad + tenant `Personal` + `Member(Owner)` + `TenantSettings` (cultura, zona y moneda del navegador).
-6. Outbox persistente, SMTP y pickup, y plantillas con `Notifications.resx` y `DisplayFormatter`.
+6. Outbox persistente y **Gmail por SMTP**, que en desarrollo también envía de verdad (pickup `.eml` como opción), con plantillas de `Notifications.resx` y `DisplayFormatter`.
+6b. **Ingreso y registro con Google** (`Authentication:Google:*`): si la cuenta no existe, crea la identidad y su perfil personal, como el registro por código. Vincular y desvincular Google desde la cuenta.
+6c. **Configuración lista para pegar** ([`docs/operations/configuracion.md`](../operations/configuracion.md)): las mismas claves que ArquitecturaBase; `appsettings.Development.json` con los valores no secretos; los scripts de `scripts/secretos/` probados (importar de ArquitecturaBase, cargar desde un archivo, verificar); validación al arrancar con el nombre de la clave que falta.
 7. Invitaciones a una organización.
 8. `GET /api/me` (cuenta, perfiles, perfil activo, permisos y las preferencias efectivas de cultura, zona y moneda) y `PUT /api/me`.
 9. Seed idempotente en **todos** los ambientes, dentro de un límite y con el advisory lock `seed:` para que dos réplicas no choquen. En desarrollo, además: operador; Ana (Personal + "Demo"); Beto (Personal). Test: arrancar en `Production` contra una base migrada y vacía deja el cliente `web`, los ajustes de plataforma y el operador inicial.
@@ -196,7 +198,8 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 4. `useFormat` conectado a las preferencias de `/api/me`.
 
 **Puerta:** la general, más un recorrido manual:
-1. registrarse → queda en el perfil personal;
+0. `./scripts/secretos/importar-desde-arquitecturabase.ps1` y `verificar.ps1` con todo `[ok]`;
+1. registrarse con un código que llega **de verdad** por Gmail, y otra vez con Google → queda en el perfil personal;
 2. pasar a "Demo" con Ana;
 3. F5 → sigue en "Demo";
 4. volver a Personal;
@@ -283,7 +286,7 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 **Back:**
 1. Las carpetas `Domain/WhatsApp` y `Modules/WhatsApp` en Application, Infrastructure y Api, con un `AddWhatsAppModule()` por capa llamado desde `Program.cs`. Las configuraciones EF del módulo las aplica el propio módulo.
 2. Adaptadores de los puertos del núcleo: `WhatsAppLoginCodeChannel`, `WhatsAppInvitationChannel` y `WhatsAppPhoneLinkObserver`.
-3. Cliente de Cloud API y opciones validadas. Envío por el outbox (canal `"whatsapp"`), con las plantillas `codigo_ingreso` e `invitacion_acceso` en es y en. Registro B2C por WhatsApp.
+3. Cliente de Cloud API y opciones validadas, con **las mismas claves `WhatsApp:*` que ArquitecturaBase** y los valores no secretos copiados de allá (`configuracion.md` §3). Envío por el outbox (canal `"whatsapp"`), con las plantillas `codigo_ingreso` e `invitacion_acceso` en es y en. Registro B2C por WhatsApp.
 4. Webhook con firma e idempotencia, procesador de entrada, bot de ingreso con enlace de un solo uso, retención de 90 días y health check.
 5. Vincular el teléfono de la identidad, con verificación.
 6. `ModuleIsolationTests`: el núcleo no referencia `*.Modules.*`.
@@ -291,7 +294,7 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 
 **Front:** ingreso y registro por WhatsApp, `PhoneField` en la cuenta y `areas/platform/whatsapp`.
 
-**Puerta:** la general, más **la prueba de fuego**: en una copia descartable, quitar el módulo siguiendo `quitar-whatsapp.md`, y el build y los tests del núcleo tienen que quedar en verde.
+**Puerta:** la general, más un recorrido real: con el webhook de Meta apuntando al túnel del multitenant (`configuracion.md` §4), ingresar con un código por WhatsApp y escribirle al bot. Además, **la prueba de fuego**: en una copia descartable, quitar el módulo siguiendo `quitar-whatsapp.md`, y el build y los tests del núcleo tienen que quedar en verde.
 
 ---
 
@@ -314,4 +317,3 @@ Las etapas 5, 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4. Los mód
 ## Etapa 11 (opcional)
 
 - Canales de WhatsApp por organización (`WhatsAppChannels`).
-- Login con Google para el registro B2C.

@@ -246,7 +246,7 @@ Infrastructure/
 ├─ Identity/
 │  ├─ ApplicationUser.cs               AccountKind, Status, Culture, TimeZoneId, DisplayName, LastActiveTenantId; sin setters
 │  │                                   públicos: los cambios pasan por métodos que aplican las reglas de la cuenta
-│  ├─ IdentityRegistration.cs          Identity core, cookies de /account y /connect, DataProtection, Google opcional
+│  ├─ IdentityRegistration.cs          Identity core, cookies de /account y /connect, DataProtection, Google (se enciende con su ClientId)
 │  ├─ SignInService.cs                 (ISignInService)
 │  ├─ PermissionService.cs             permisos efectivos cacheados por tenant+usuario (+empresa)
 │  ├─ PlatformPermissionService.cs
@@ -311,7 +311,7 @@ Api/
 - **`AppHost/AppHost.cs`:**
   - `AddPostgres("postgres", password, port: 5434)`, con un volumen persistente `arquitecturabase-multitenant-pgdata` y `ContainerLifetime.Persistent`.
   - `AddDatabase("appdb")`.
-  - Api con dos cadenas: `appdb`, del login de runtime `mt_app`, y `appdb-admin`, del dueño, solo en Development.
+  - Api en `https://localhost:7280` (ArquitecturaBase usa 7180, así los dos pueden correr a la vez), con dos cadenas: `appdb`, del login de runtime `mt_app`, y `appdb-admin`, del dueño, solo en Development.
   - `AddViteApp("front", "../../../ArquitecturaBaseMutitenantFront")` en https 5174.
   - DevTunnel opcional para el webhook de WhatsApp.
 - **`ServiceDefaults/Extensions.cs`:** como la base (OpenTelemetry, resiliencia, service discovery, `/health` y `/alive`).
@@ -560,7 +560,7 @@ La pantalla "Auditoría" de la organización lee `AuditEntries` paginadas y filt
 - **Un solo cliente público, `web`**, para el SPA. El área la deciden los claims, no el cliente: `account_kind=platform` → plataforma; si no, `tenant_kind` del perfil activo → personal (B2C) u organización (B2B).
 - Duraciones: código 5 min, access token 15 min, refresh 30 días con rotación. `EnableTokenEntryValidation` permite la revocación inmediata.
 - **Claims** (`OpenIdPrincipalFactory`): `sub`, `name`, `email`, `account_kind` (`user` | `platform`) y, para los usuarios, el **perfil activo**: `tenant_id` y `tenant_kind` (`personal` | `business`). **Ni los permisos ni los roles viajan en el token**: se consultan en vivo, con caché.
-- **Ingreso sin contraseña**, igual que la base: código por correo o WhatsApp, enlace de un solo uso, y Google opcional. **Autoregistro B2C abierto** (`POST /api/auth/signup`), que crea la identidad y su perfil personal.
+- **Ingreso sin contraseña**, igual que la base: código por correo o WhatsApp, enlace de un solo uso, y **Google**. **Autoregistro B2C abierto** (`POST /api/auth/signup`, o el primer ingreso con Google), que crea la identidad y su perfil personal. Los correos salen por **Gmail (SMTP)**, también en desarrollo. La configuración usa las mismas claves que ArquitecturaBase y se carga con los scripts de `scripts/secretos/`: ver [`docs/operations/configuracion.md`](../operations/configuracion.md).
 - **Identidad global:** el email y el teléfono son únicos en todo el sistema. Una persona tiene una cuenta y N perfiles. Al ingresar se usa el último perfil activo, o el personal. **Para cambiar de perfil** se pide `/connect/authorize?prompt=none&tenant=<id>`: `ConnectController` valida la membresía y emite tokens nuevos (multitenancy.md §9).
 - Cookies de Identity solo para `/account` y `/connect` (HttpOnly, Secure, SameSite Lax). La Api usa bearer.
 - En cada request autenticado, `TenantResolutionMiddleware` verifica (con caché de 60 s, invalidado al cambiar de estado) que la identidad, la membresía y el tenant del perfil activo estén activos. Suspender un tenant revoca los tokens emitidos para ese perfil; suspender una identidad, todos los suyos.

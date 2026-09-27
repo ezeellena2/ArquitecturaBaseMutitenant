@@ -35,7 +35,7 @@ Identidad (persona)
 | Perfiles | Un `Personal` obligatorio y N `Business` por membresía. El límite de organizaciones propias por persona está en `PlatformSettings` |
 | Resolución | Solo por el claim `tenant_id` del perfil activo. Nunca de un header, del body, de la query ni del host |
 | Cambio de perfil | Tokens nuevos con `/connect/authorize?prompt=none&tenant=<id>`: el servidor valida la membresía y recuerda `LastActiveTenantId` |
-| Registro B2C | Autoregistro abierto (código por email o WhatsApp, Google opcional). Se cierra con `PlatformSettings.ConsumerSignup` |
+| Registro B2C | Autoregistro abierto (código por email o WhatsApp, o Google). Se cierra con `PlatformSettings.ConsumerSignup` |
 | Alta B2B | "Crear mi organización" desde el perfil personal (`BusinessSignup = Open | RequiresApproval | Closed`), o la crea un operador |
 | Funcionalidades | Cada ruta declara para qué perfil es: `[TenantKind(Business)]`, `[TenantKind(Personal)]`, o ninguno si sirve para los dos |
 
