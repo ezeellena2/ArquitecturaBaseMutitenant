@@ -10,7 +10,7 @@
   - errores: el código (`Roles.Role.HasUsers`) y `Title.<ErrorType>`;
   - permisos: `Permission.<código>`;
   - auditoría: `AuditAction.<código>`.
-- **Estilo:** español rioplatense con voseo ("Ingresá", "Revisá"). "Tenant" nunca aparece: se dice "Organización". TenantAdmin es "Administrador general" y CompanyAdmin, "Administrador".
+- **Estilo:** español rioplatense con voseo ("Ingresá", "Revisá"). "Tenant" nunca aparece: se dice "Organización". TenantAdmin es "Dueño" y CompanyAdmin, "Administrador".
 - Identificadores, logs y mensajes de excepción, en inglés.
 
 ## Prohibido

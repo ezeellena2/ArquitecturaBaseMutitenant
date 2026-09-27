@@ -20,10 +20,10 @@ Una **plantilla estándar para cualquier tipo de negocio**. No es un producto: n
 | **Visitante** | sin sesión | ve el sitio de la plataforma y las páginas públicas de las empresas | contratar nada |
 | **Persona (acceso B2C)** | "Ingresá" o "Creá tu cuenta" (correo, WhatsApp o Google) | busca empresas, contrata o pide servicios, ve "Mis turnos" o "Mis contrataciones", su cuenta | **crear una empresa**, ver la administración de una empresa |
 | **Usuario de empresa (acceso B2B)** | "Ingresá como empresa" | según su rol: administrar la empresa, armar su página y atender lo que piden las personas (lo que defina cada producto) | ver datos de otras empresas, o de personas fuera de lo que ellas le compartieron |
-| **Dueño de la empresa** | "Registrá tu empresa" (alta B2B aparte) | crea la organización y queda como **Administrador general** (todos los permisos) | — |
+| **Dueño de la empresa** | "Registrá tu empresa" (alta B2B aparte) | crea la organización y queda como **Dueño** (`TenantAdmin`, todos los permisos) | — |
 | **Operador de la plataforma** | acceso aparte, con segundo factor | backoffice: aprobar y suspender empresas, módulos por plan, cuentas, auditoría | ver los datos de negocio de una empresa o de una persona |
 
-Dentro de una empresa, los usuarios se diferencian **solo por rol**: el Administrador general, el Administrador de una empresa del grupo y los roles que cree cada organización. La organización puede tener varias **empresas** (razones sociales o sedes).
+Dentro de una empresa, los usuarios se diferencian **solo por rol**: el Dueño, el Administrador de una empresa del grupo y los roles que cree cada organización. La organización puede tener varias **empresas** (razones sociales o sedes).
 
 ## 3. Una cuenta, dos accesos
 
@@ -31,8 +31,8 @@ Dentro de una empresa, los usuarios se diferencian **solo por rol**: el Administ
 - **Dos accesos que no se mezclan:**
   - **Acceso B2C:** su **espacio personal** (tenant `Kind=Personal`). Se crea solo al registrarse como persona o la primera vez que entra como persona.
   - **Acceso B2B:** sus **organizaciones** (tenants `Kind=Business`), por membresía. Solo existe si registró una empresa o lo invitaron a una.
-- **Al ingresar se elige el acceso:** "como persona" o "como empresa". El sitio de la plataforma y las páginas públicas llevan al acceso B2C; el portal "Empresas" lleva al B2B. Con una sola organización, entra directo; con varias, elige cuál.
-- **Cambiar de acceso** (de paciente a médico) no pide ingresar de nuevo: el menú de la cuenta tiene "Ir a mi empresa" o "Ir a mi espacio personal". Por dentro, son tokens nuevos del otro acceso.
+- **Al ingresar se elige el acceso, con dos puertas:** "Ingresá" (`/login`, como persona) e "Ingresá como empresa" (`/login/empresa`). No se vuelve "al último lado": se entra al de la puerta elegida. Las páginas públicas llevan a la puerta de personas; la portada ofrece las dos. Por la puerta de empresas, con una sola organización entra directo; con varias, a la última que usó dentro del lado empresa; sin ninguna, ve "Registrá tu empresa".
+- **Cambiar de acceso** (de paciente a médico) no pide ingresar de nuevo: el menú de la cuenta tiene "Ir a mi empresa" o "Ir a Personal". Por dentro, son tokens nuevos del otro acceso.
 - **Lo que ve cada acceso no se mezcla:** el espacio personal **no muestra organizaciones**, y la empresa no ve lo personal.
 - **Ejemplo:** alguien trabaja en la Empresa A y además es cliente de la Empresa B. Tiene **una** cuenta. Como **empresa** ve lo de la Empresa A según su rol. Como **persona** ve lo que le pidió a la Empresa B.
 
@@ -147,7 +147,7 @@ Con el acceso equivocado responde 403 `Tenancy.Access.Wrong`.
 **Registro de una empresa (B2B), "Registrá tu empresa":**
 1. Datos de la empresa (nombre, slug, CUIT) y de quien la registra. Si esa persona ya tiene cuenta, ingresa con ella; si no, se crea la identidad.
 2. `Tenant(Business)` queda en `PendingApproval` o en `Provisioning`, según `BusinessSignup`.
-3. `TenantProvisioner` crea la configuración, los roles de sistema, la primera empresa, la membresía de Administrador general y la página pública en `Draft`.
+3. `TenantProvisioner` crea la configuración, los roles de sistema, la primera empresa, la membresía de Dueño y la página pública en `Draft`.
 4. Tokens con `access=business`.
 
 **Invitar a alguien a la empresa:** si ya tiene cuenta, suma el acceso B2B a esa organización; si no, se crea la identidad al aceptar. **No crea un espacio personal:** ese nace la primera vez que entra como persona.

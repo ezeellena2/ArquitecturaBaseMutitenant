@@ -144,7 +144,7 @@ Domain/
 │  ├─ Role.cs                    TenantId, Name, Description, Scope, CompanyId? (solo con SpecificCompany), IsSystem, Permissions
 │  ├─ RoleScope.cs
 │  ├─ RoleAssignment.cs          UserId, RoleId, CompanyId? (null ⇒ toda la organización)
-│  ├─ SystemRoles.cs             TenantAdmin ("Administrador general"), CompanyAdmin ("Administrador")
+│  ├─ SystemRoles.cs             TenantAdmin ("Dueño"), CompanyAdmin ("Administrador")
 │  └─ RoleErrors.cs
 ├─ Platform/                     PlatformOperatorRole, PlatformRoleAssignment, PlatformErrors
 ├─ Settings/                     TenantSettings (cultura, zona y moneda por defecto), PlatformSettings, SettingsErrors
@@ -557,7 +557,7 @@ La pantalla "Auditoría" de la organización lee `AuditEntries` paginadas y filt
 - No se usa `IStringLocalizer`. Hay envoltorios estáticos sobre `ResourceManager`: `ErrorMessages`, `ValidationMessages`, `PermissionTexts`, `NotificationTexts` y `AuditTexts`.
 - Toda clave va en los dos idiomas (`ResourceParityTests` compara claves y placeholders).
 - Textos en español rioplatense con voseo. Identificadores, logs y mensajes de excepción, en inglés.
-- **En pantalla nunca se dice "tenant"**: se dice "Organización". `TenantAdmin` se muestra como "Administrador general" y `CompanyAdmin` como "Administrador". En el código sigue `Tenant`.
+- **En pantalla nunca se dice "tenant"**: se dice "Organización". `TenantAdmin` se muestra como "Dueño" y `CompanyAdmin` como "Administrador". En el código sigue `Tenant`.
 
 ---
 

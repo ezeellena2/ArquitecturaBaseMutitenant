@@ -9,7 +9,7 @@
 - **Versión nueva:** `LegalAcceptanceMiddleware` responde 403 `Legal.AcceptanceRequired` en todas las rutas de `/api`, salvo `GET /api/me`, `GET /api/legal/*` y `POST /api/legal/accept`, hasta que la persona acepte. El front muestra una pantalla de aceptación que bloquea.
 - **Exportar mis datos** (E10): `POST /api/me/data-export` (`[Idempotent]`) prepara en segundo plano un JSON con la cuenta, los datos del espacio personal y lo compartido con empresas (de su lado), y manda por correo un enlace de descarga que vence en 48 h.
 - **Dar de baja la cuenta** (E10): `DELETE /api/me`, con motivo y reautenticación reciente.
-  - No se permite si la persona es el **único Administrador general** de una organización activa (`Legal.AccountDeletion.LastAdmin`).
+  - No se permite si la persona es el **único Dueño** de una organización activa (`Legal.AccountDeletion.LastAdmin`).
   - Se revocan las sesiones.
   - Pasados 30 días de gracia, se borran los datos del espacio personal y se anonimiza la identidad: nombre "Cuenta eliminada", sin email ni teléfono.
   - La auditoría conserva el `ActorId`, sin datos personales.
