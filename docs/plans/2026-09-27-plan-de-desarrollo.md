@@ -112,11 +112,11 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
 - [x] `App.tsx` con un router mínimo: `providers.tsx` solo con `QueryClientProvider`, `routes.tsx` con una ruta vacía y `test/setup.ts` mínimo, con jest-dom. Auth, i18n, rutas por host y módulos se agregan en sus etapas. Build, lint y test limpios. Commit `chore: esqueleto del SPA`.
 
 ### Tarea 0.7: el arnés
-- [ ] `HarnessTests` en ArchitectureTests y `src/test/harness.test.ts` en el front, con las verificaciones de `arnes.md` §5 (back) y §4 (front) y una constante `HarnessStage` que se sube al cerrar cada etapa.
-- [ ] Un `AGENTS.md` + `CLAUDE.md` (`@AGENTS.md`) en cada carpeta que crea la Etapa 0, según el mapa de `arnes.md` §3 (back) y §2 (front).
-- [ ] `structure.test.ts` en el front (sin imports entre features ni entre áreas) y la regla `react/jsx-no-literals` en `.oxlintrc.json`.
-- [ ] **Accesibilidad (P9):** `vitest-axe` instalado, `extend-expect` en `test/setup.ts` (sin i18n todavía) y el primer `toHaveNoViolations` en `App.test.tsx`.
-- [ ] Commit `chore: arnés de reglas para agentes`.
+- [x] `HarnessTests` en ArchitectureTests y `src/test/harness.test.ts` en el front, con las verificaciones de `arnes.md` §5 (back) y §4 (front) y una constante `HarnessStage` que se sube al cerrar cada etapa.
+- [x] Un `AGENTS.md` + `CLAUDE.md` (`@AGENTS.md`) en cada carpeta que crea la Etapa 0, según el mapa de `arnes.md` §3 (back) y §2 (front).
+- [x] `structure.test.ts` en el front (sin imports entre features ni entre áreas) y la regla `react/jsx-no-literals` en `.oxlintrc.json`.
+- [x] **Accesibilidad (P9):** `vitest-axe` instalado, `extend-expect` en `test/setup.ts` (sin i18n todavía) y el primer `toHaveNoViolations` en `App.test.tsx`.
+- [x] Commit `chore: arnés de reglas para agentes`.
 
 **Puerta:** la general, más `aspire run` levantando los 3 recursos y `/alive` en verde.
 

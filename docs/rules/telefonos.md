@@ -33,4 +33,4 @@
 - `PhoneNumberTests` (E1) de Domain y `DisplayFormatterTests` (E1), con los casos de teléfono de `docs/contracts/format-cases.json`, los mismos que corre el front.
 
 ## Detalle
-El componente y el formato en pantalla: `../ArquitecturaBaseMutitenantFront/docs/rules/telefonos.md`.
+El componente y el formato en pantalla: [ficha del front](../../../ArquitecturaBaseMutitenantFront/docs/rules/telefonos.md).

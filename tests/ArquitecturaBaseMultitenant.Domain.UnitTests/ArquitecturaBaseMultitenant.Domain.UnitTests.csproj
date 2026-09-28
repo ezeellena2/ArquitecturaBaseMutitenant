@@ -1,4 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- En E0 no hay casos de Domain; Microsoft Testing Platform devuelve 8 sin pruebas. Quitar al sumar tests en E1. -->
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --ignore-exit-code 8</TestingPlatformCommandLineArguments>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\ArquitecturaBaseMultitenant.Domain\ArquitecturaBaseMultitenant.Domain.csproj" />
   </ItemGroup>
