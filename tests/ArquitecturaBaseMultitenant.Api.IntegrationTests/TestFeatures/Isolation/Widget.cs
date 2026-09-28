@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Domain.Common;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Isolation;
 
@@ -16,6 +17,7 @@ internal sealed class Widget : Entity, ITenantOwned, IAuditable, ISoftDeletable,
 
     public Guid TenantId { get; private set; }
     public string Name { get; private set; } = string.Empty;
+    public Email? Email { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public Guid? CreatedBy { get; private set; }
     public DateTime? ModifiedAtUtc { get; private set; }

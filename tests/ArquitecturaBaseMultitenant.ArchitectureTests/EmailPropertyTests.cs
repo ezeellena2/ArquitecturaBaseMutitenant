@@ -56,7 +56,8 @@ public sealed class EmailPropertyTests
 
     private static bool IsIdentityEmailCopy(Type type, PropertyInfo property) =>
         type.FullName == "ArquitecturaBaseMultitenant.Infrastructure.Identity.ApplicationUser"
-        && property.Name == "Email";
+        && property.DeclaringType?.Namespace == "Microsoft.AspNetCore.Identity"
+        && property.Name is "Email" or "NormalizedEmail";
 
     private sealed class BareEmailFixture
     {

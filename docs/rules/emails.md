@@ -11,13 +11,13 @@
 - **Error:** `Users.Email.Invalid`, atado al campo.
 - **En la base:** `varchar(254)`, ya normalizado. La unicidad en todo el sistema la da el índice único `(Type, Value)` de `identity.LoginMethods`, la única fuente de los correos de una cuenta (ADR 0033, [multitenancy.md §12](../architecture/multitenancy.md#12-caché-locks-unicidad)). Las invitaciones pendientes tienen su propio índice único por tenant.
 - **Métodos de ingreso:** `LoginMethod.Value` es un texto genérico por tipo. Cuando `Type = Email`, se llena solo con el valor de `Email.Create`, nunca con el texto que llegó en la petición.
-- **Copia de Identity:** `ApplicationUser.Email` (en `Infrastructure/Identity`, heredada de `IdentityUser`) es solo una copia del correo principal, sin índice único. La mantiene el servicio de métodos de ingreso, y nunca se lee para buscar ni para verificar si un correo ya existe.
+- **Copia de Identity:** `ApplicationUser.Email` y `ApplicationUser.NormalizedEmail` (en `Infrastructure/Identity`, heredadas de `IdentityUser`) son solo copias del correo principal, sin índice único. Las mantiene el servicio de métodos de ingreso, y nunca se leen para buscar ni para verificar si un correo ya existe.
 - **Contratos:** el `*HttpRequest` recibe `string`. El servicio o el validador lo convierte con `Email.Create`. Los modelos de Application usan `Email`, no `string`.
 - **EF:** un conversor de valor por convención para todo `Email`.
 - **Front:** `z.string().trim().toLowerCase().email()` como guía, con los mismos casos. Decide el back.
 
 ## Prohibido
-- `string` suelto para un correo en una entidad o un modelo (las únicas excepciones son `LoginMethod.Value` y la copia `ApplicationUser.Email`, descriptas arriba).
+- `string` suelto para un correo en una entidad o un modelo (las únicas excepciones son `LoginMethod.Value` y las copias heredadas `ApplicationUser.Email` y `ApplicationUser.NormalizedEmail`, descriptas arriba).
 - Expresiones regulares propias.
 - Trucos de un proveedor, como sacar los puntos o lo que va después del `+` en Gmail: mezclarían personas distintas.
 - Comparar sin normalizar.
@@ -28,7 +28,7 @@
 
 ## Lo verifica
 - `EmailTests` (E1): la tabla de casos de `format-cases.json` (`"  Juan@Gmail.COM "` → `juan@gmail.com`, IDN, límites).
-- `EmailPropertyTests` (E1): ninguna entidad ni modelo tiene una propiedad `string` llamada `*Email`, salvo `ApplicationUser.Email`, que está en su lista blanca (test de arquitectura).
+- `EmailPropertyTests` (E1): ninguna entidad ni modelo tiene una propiedad `string` llamada `*Email`, salvo las copias heredadas `ApplicationUser.Email` y `ApplicationUser.NormalizedEmail`, que están en su lista blanca (test de arquitectura).
 - `SignupTests` (E3): dos registros que solo difieren en mayúsculas dan `Auth.Signup.EmailTaken`.
 - `LoginMethodsTests` (E3) verifica la unicidad de cada correo; `ManagedEmailTests` (E6) comprueba que un exmiembro no pueda ingresar con el correo de la empresa.
 

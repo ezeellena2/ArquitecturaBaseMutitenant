@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Conventions;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Rls;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
@@ -29,6 +30,12 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
 
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        base.ConfigureConventions(configurationBuilder);
+        EmailConvention.Configure(configurationBuilder);
+    }
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -43,6 +50,7 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
 
         builder.HasDefaultSchema(Schemas.Platform);
         builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+        VersionedConvention.Apply(builder);
         builder.ApplyIsolationQueryFilters(this);
         TenantIsolationModelValidator.Validate(builder.Model);
     }
