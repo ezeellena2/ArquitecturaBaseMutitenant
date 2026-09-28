@@ -18,6 +18,10 @@ public static class ValidationTexts
 
     public static string PageSizeInvalid => Get(nameof(PageSizeInvalid));
 
+    public static string CursorInvalid => Get(nameof(CursorInvalid));
+
+    public static string CursorLimitInvalid => Get(nameof(CursorLimitInvalid));
+
     public static string SortNotAllowed => Get(nameof(SortNotAllowed));
 
     public static string ReturnUrlInvalid => Get(nameof(ReturnUrlInvalid));
@@ -29,6 +33,10 @@ public static class ValidationTexts
     public static string EmailOrPhone => Get(nameof(EmailOrPhone));
 
     public static string CountryInvalid => Get(nameof(CountryInvalid));
+
+    public static string CurrencyInvalid => Get(nameof(CurrencyInvalid));
+
+    public static string TaxIdTypeInvalid => Get(nameof(TaxIdTypeInvalid));
 
     public static string LoginLinkTokenFormat => Get(nameof(LoginLinkTokenFormat));
 

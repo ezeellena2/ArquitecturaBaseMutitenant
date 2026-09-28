@@ -6,7 +6,7 @@
 - `Application/Validation/<Área>/<Acción>RequestValidator.cs`: `internal sealed class X : AbstractValidator<XRequest>`.
 - Reglas comunes de `ValidationRules`:
   - textos: `Required()`, `PersonName()`, `OrganizationName()`, `ShortName()`, `Description()`, `LongText()` (los largos salen de `TextLimits`; [textos-libres](textos-libres.md));
-  - datos de contacto y fiscales: `ValidEmail()` ([emails](emails.md)), `ValidTaxId()` ([identificacion-fiscal](identificacion-fiscal.md));
+  - datos de contacto: `ValidEmail()` ([emails](emails.md)); `ValidTaxId()` y el value object fiscal llegan en E6 ([identificacion-fiscal](identificacion-fiscal.md));
   - datos de referencia: `ValidCurrency()`, `ValidCountry()`, `ValidTimeZone()`, `ValidCulture()` y `ValidTaxIdType()` consultan los cinco catálogos de Application; solo aceptan códigos habilitados para un dato nuevo;
   - permisos: `ValidPermissions(scope)` se agrega en E4, junto con el catálogo; no forma parte de `ValidationRules` de E1.
 - El teléfono no tiene regla en `ValidationRules`: lo interpreta el servicio con `IPhoneNumberParser.Parse(country, number, usage)`, y el error (`Users.Phone.*`) se ata al campo `phone` con `FieldErrors.On` ([telefonos](telefonos.md)).

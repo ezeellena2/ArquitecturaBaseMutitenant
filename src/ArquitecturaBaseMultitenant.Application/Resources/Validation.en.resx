@@ -16,13 +16,17 @@
   <data name="MaxLength" xml:space="preserve"><value>Enter at most {MaxLength} characters.</value></data>
   <data name="EmailInvalid" xml:space="preserve"><value>Enter a valid email address.</value></data>
   <data name="PageInvalid" xml:space="preserve"><value>Page must be between {From} and {To}.</value></data>
-  <data name="PageSizeInvalid" xml:space="preserve"><value>Page size must be between {From} and {To}.</value></data>
+  <data name="PageSizeInvalid" xml:space="preserve"><value>Choose 10, 20, 50 or 100 results per page.</value></data>
+  <data name="CursorInvalid" xml:space="preserve"><value>The list cursor is not valid.</value></data>
+  <data name="CursorLimitInvalid" xml:space="preserve"><value>Limit must be between {From} and {To}.</value></data>
   <data name="SortNotAllowed" xml:space="preserve"><value>Sorting by that field is not allowed.</value></data>
   <data name="ReturnUrlInvalid" xml:space="preserve"><value>The return address is not valid.</value></data>
   <data name="LoginCodeFormat" xml:space="preserve"><value>Enter the code we sent you by email.</value></data>
   <data name="LoginCodeFormatWhatsApp" xml:space="preserve"><value>Enter the code we sent you on WhatsApp.</value></data>
   <data name="EmailOrPhone" xml:space="preserve"><value>Send either the email address or the phone number, not both.</value></data>
   <data name="CountryInvalid" xml:space="preserve"><value>Choose a country from the list.</value></data>
+  <data name="CurrencyInvalid" xml:space="preserve"><value>Choose an available currency.</value></data>
+  <data name="TaxIdTypeInvalid" xml:space="preserve"><value>Choose an available identification type.</value></data>
   <data name="LoginLinkTokenFormat" xml:space="preserve"><value>The link is incomplete. Open it again from WhatsApp.</value></data>
   <data name="RegistrationModeInvalid" xml:space="preserve"><value>The registration mode is not valid.</value></data>
   <data name="PermissionUnknown" xml:space="preserve"><value>That permission does not exist.</value></data>
