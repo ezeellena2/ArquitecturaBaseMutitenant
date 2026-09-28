@@ -1,6 +1,6 @@
 <Project Sdk="Aspire.AppHost.Sdk/13.5.4">
   <PropertyGroup>
-    <OutputType>Library</OutputType>
+    <OutputType>Exe</OutputType>
     <UserSecretsId>dfdf2a75-d636-4ea7-ad5d-bb5ecfcee388</UserSecretsId>
     <AspireUseCliBundle>true</AspireUseCliBundle>
   </PropertyGroup>
@@ -12,6 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ArquitecturaBaseMultitenant.Api\ArquitecturaBaseMultitenant.Api.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\ArquitecturaBaseMultitenant.Api\ArquitecturaBaseMultitenant.Api.csproj" />
   </ItemGroup>
 </Project>

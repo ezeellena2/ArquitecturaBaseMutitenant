@@ -95,9 +95,9 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
 - [x] `dotnet build` sin advertencias. Commit `chore: solución y proyectos`.
 
 ### Tarea 0.3: Aspire y health
-- [ ] Copiar `ServiceDefaults/Extensions.cs` de la base.
-- [ ] `AppHost.cs`: Postgres en el puerto 5434 con volumen persistente, la base `appdb`, la Api y el front con `AddViteApp`.
-- [ ] Api mínima (`AddServiceDefaults`, `MapDefaultEndpoints`) y `HealthCheckTests` (`/alive` → 200). Commit `feat: AppHost y health`.
+- [x] Copiar `ServiceDefaults/Extensions.cs` de la base.
+- [x] `AppHost.cs`: Postgres en el puerto 5434 con volumen persistente, la base `appdb`, la Api y el front con `AddViteApp`.
+- [x] Api mínima (`AddServiceDefaults`, `MapDefaultEndpoints`) y `HealthCheckTests` (`/alive` → 200). Commit `feat: AppHost y health`.
 
 ### Tarea 0.4: tests de arquitectura de base
 - [ ] `LayerDependencyTests`, `ProjectReferencesTests`, `ApplicationPackagesTests`, `MinimalApiRoutesTests` y `Support/CallSites.cs`, copiados y adaptados de la base. Commit `test: reglas de capas`.
