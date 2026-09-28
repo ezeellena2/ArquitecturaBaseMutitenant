@@ -584,6 +584,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 ├── DependencyInjection.cs                             [E1] AddInfrastructure(cfg, env) → llama a cada *Registration
 ├── Persistence/                                       [E1–E2]
 │   ├── ApplicationDbContext.cs                        [E2] IdentityUserContext<ApplicationUser,Guid> + IDataProtectionKeyContext
+│   ├── Schemas.cs                                     [E2] nombres únicos de platform, identity, tenant, public_site y engagement
 │   ├── PersistenceRegistration.cs                     [E2] DbContext (appdb), interceptores, UoW, repositorios, readers
 │   ├── UnitOfWork.cs                                  [E2]
 │   ├── TenantContext.cs                               [E2] implementa ITenantContext + ITenantScope
@@ -591,6 +592,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   ├── DatabaseBootstrapExtensions.cs                 [E2] solo Development: crea la base con ICU es-AR, crea mt_app, migra y hace el seed (appdb-admin)
 │   ├── Configurations/                                una IEntityTypeConfiguration<T> por entidad
 │   │   ├── Platform/
+│   │   │   ├── DataProtectionKeyConfiguration.cs      [E2] claves de Data Protection en platform
 │   │   │   ├── ReferenceData/                         [E2] una IEntityTypeConfiguration por tabla global, sin RLS
 │   │   │   │   ├── CurrencyConfiguration.cs
 │   │   │   │   ├── CurrencyTranslationConfiguration.cs
@@ -700,8 +702,8 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │       ├── LegalDocumentSeeder.cs                     [E3] 3a: versión base de términos y privacidad, con contenidos es y en
 │       └── DevelopmentSeeder.cs                       [E3] operador; Empresa A (Ana, Kevin); Kevin y Carla como personas; desde la E4, Ana
 │                                                      es Dueña (TenantAdmin) de la Empresa A
-├── Identity/                                          [E3]
-│   ├── ApplicationUser.cs                             IsPlatformOperator, Status, Culture, TimeZoneId, DisplayName, LastBusinessTenantId,
+├── Identity/                                          [E2 shell CLR; modelo de cuenta E3]
+│   ├── ApplicationUser.cs                             [E2 shell sin mapeo; E3] IsPlatformOperator, Status, Culture, TimeZoneId, DisplayName, LastBusinessTenantId,
 │   │                                                  DeletionRequestedAtUtc, DeletionScheduledForUtc, DeletionReason, DeletedAtUtc
 │   ├── IdentityRegistration.cs                        Identity core, cookies /account y /connect, DataProtection
 │   ├── SignInService.cs
