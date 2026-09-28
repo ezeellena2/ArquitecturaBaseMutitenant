@@ -138,6 +138,7 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
    - `Application/Common/Formatting/DisplayFormatter.cs`, con patrones de las culturas `es-AR` y `en-US` leídos de `ICultureCatalog`, sin lista fija en código (backend.md §18);
    - `docs/contracts/format-cases.json` con los casos del catálogo de `formatos.md`;
    - `DisplayFormatterTests`, que recorre todos los tipos de `formatos.md` en las culturas habilitadas; el texto fiscal usa los datos del contrato en E1 y el value object `TaxId` nace en E6;
+   - `IPhoneNumberDisplayFormatter` en Application y su adaptador libphonenumber en Infrastructure para mostrar E.164 sin reglas de país en Application; `Formatting.resx` y `.en.resx` para los textos variables del formateador;
    - `MoneyJsonConverter`. La convención EF de `decimal` llega en la Etapa 2, con el `DbContext`.
 6. **Validación y paginado:** `IRequestValidator`, `ValidationRules` (con `ValidCulture`, `ValidCountry`, `ValidCurrency`, `ValidTimeZone` y `ValidTaxIdType`, consultando catálogos de Application) y `FieldErrors`. También `PagedRequest`/`PagedResult`, `CursorRequest`/`CursorResult`, sus validadores y `SortMap` + `ApplySort` (backend.md §9, "Paginado, orden y búsqueda"). `ValidPermissions` espera E4.
 7. **Logging:** `OperationLog` con `[LoggerMessage]`.

@@ -28,7 +28,7 @@
 - Una lista de países o prefijos telefónicos escrita a mano; salen de los datos de referencia ([ADR 0036](../architecture/datos-de-referencia.md)).
 
 ## Copiá de
-- `Domain/ValueObjects/PhoneNumber.cs` (E1), que se copia de `../ArquitecturaBase` (solo verifica el E.164; interpretar lo que escribe la persona es trabajo del parser) · `../ArquitecturaBase/src/ArquitecturaBase.Infrastructure/Phones/LibPhoneNumberParser.cs`, que se copia y se le suma `PhoneUsage` (E3).
+- `Domain/ValueObjects/PhoneNumber.cs` (E1), que se copia de `../ArquitecturaBase` (solo verifica el E.164; interpretar lo que escribe la persona es trabajo del parser) · `Infrastructure/Phones/LibPhoneNumberDisplayFormatter.cs` (E1) presenta con libphonenumber tras `IPhoneNumberDisplayFormatter` · `../ArquitecturaBase/src/ArquitecturaBase.Infrastructure/Phones/LibPhoneNumberParser.cs`, que se copia y se le suma `PhoneUsage` (E3).
 
 ## Lo verifica
 - `LibPhoneNumberParserTests` (E3): el 9 argentino, números con 0 y 15, letras rechazadas, fijo contra celular. El país no permitido para WhatsApp lo prueban los tests del módulo (E8).

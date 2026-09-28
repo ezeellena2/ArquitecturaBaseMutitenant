@@ -6,8 +6,8 @@
 Los nombres de monedas, países, ciudades horarias y tipos fiscales son **datos de referencia traducidos**, no textos de interfaz: salen de los JSON E1 y de las tablas E2 ([ADR 0036](../architecture/datos-de-referencia.md)).
 
 ## Cómo se hace
-- **Archivos:** `Application/Resources/{Errors,Validation,Permissions,Notifications,Audit}.resx` + `.en.resx`. Los módulos tienen los suyos (`Modules/WhatsApp/Resources/`).
-- **Acceso:** con los envoltorios `ErrorTexts`, `ValidationTexts`, `PermissionTexts`, `NotificationTexts` y `AuditTexts`. Sin `IStringLocalizer`.
+- **Archivos:** `Application/Resources/{Errors,Validation,Formatting,Permissions,Notifications,Audit}.resx` + `.en.resx`. `Formatting` guarda relativos, unidades, booleanos y enums que aparecen en mensajes/documentos. Los módulos tienen los suyos (`Modules/WhatsApp/Resources/`).
+- **Acceso:** con los envoltorios `ErrorTexts`, `ValidationTexts`, `FormattingTexts`, `PermissionTexts`, `NotificationTexts` y `AuditTexts`. Sin `IStringLocalizer`.
 - **En un request**, la cultura sale de `Accept-Language` y se acepta si está habilitada en `ICultureCatalog`. **En segundo plano** (correo, WhatsApp), se pasa explícita: la de la cuenta; si no hay, la de la organización; si no, la cultura marcada como predeterminada (`es-AR` en E1).
 - **Claves:**
   - errores: el código (`Roles.Role.HasUsers`) y `Title.<ErrorType>`;

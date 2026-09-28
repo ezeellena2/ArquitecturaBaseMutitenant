@@ -195,7 +195,7 @@ Application/
 │     ├─ Security/                     ISecureTokenGenerator, ILoginCodeGenerator, ILoginCodeHasher, IPayloadProtector
 │     ├─ Messaging/                    IOutbox, IEmailTemplateRenderer
 │     ├─ Time/                         ITimeZoneService
-│     ├─ Phones/                       IPhoneNumberParser
+│     ├─ Phones/                       IPhoneNumberDisplayFormatter (E1), IPhoneNumberParser (E3)
 │     ├─ Legal/                        IAccountDeletionParticipant (CheckAsync, OnRequestedAsync, OnCancelledAsync y ExecuteAsync),
 │     │                                IRetainedOnConsumerDeletion (E7)
 │     ├─ Features/                     IFeatureService
@@ -304,7 +304,7 @@ Infrastructure/
 ├─ Security/                           SecureTokenGenerator, LoginCodeGenerator, LoginCodeHasher, PayloadProtector
 ├─ Time/                               TimeZoneService (TimeZoneInfo, IANA)
 ├─ ReferenceData/                      JsonReferenceDataCatalog (E1: JSON versionados; E2: ReferenceDataReader + HybridCache)
-├─ Phones/                             LibPhoneNumberParser
+├─ Phones/                             LibPhoneNumberDisplayFormatter (E1), LibPhoneNumberParser (E3)
 ├─ Caching/                            CacheKeys (siempre con prefijo de alcance: t: / s: / u: / p:), CachingRegistration
 ├─ Idempotency/                        IdempotencyStore, IdempotencyCleanupWorker (P6)
 ├─ Features/                           FeaturesRegistration, TenantFeatureFilter, FeatureService (P8)
@@ -781,7 +781,7 @@ Nadie formatea a mano. El catálogo visual completo (cómo se ve cada tipo) est�
 
 ### Formato del lado del backend
 
-- `Application/Common/Formatting/DisplayFormatter.cs` presenta desde E1 **todos** los tipos de `formatos.md` en cada cultura habilitada: fechas absolutas, relativas y rangos; enteros, decimales, cantidades y compactos; porcentaje, dinero, tamaño de archivo, duración, teléfono, zona, cultura, identificación fiscal, correo, enum, booleano, vacío y texto. Recibe cultura y zona explícitas, y el instante de `TimeProvider` para los formatos relativos. Usa los patrones del catálogo `Cultures` y `CurrencyTranslations.DisplaySymbol` por cultura para los montos (JSON E1, tablas E2), no perfiles ni símbolos escritos a mano. El formato fiscal E1 usa los campos del contrato; el value object `TaxId` llega en E6.
+- `Application/Common/Formatting/DisplayFormatter.cs` presenta desde E1 **todos** los tipos de `formatos.md` en cada cultura habilitada: fechas absolutas, relativas y rangos; enteros, decimales, cantidades y compactos; porcentaje, dinero, tamaño de archivo, duración, teléfono, zona, cultura, identificación fiscal, correo, enum, booleano, vacío y texto. Recibe cultura y zona explícitas, y el instante de `TimeProvider` para los formatos relativos. Usa los patrones del catálogo `Cultures` y `CurrencyTranslations.DisplaySymbol` por cultura para los montos (JSON E1, tablas E2), no perfiles ni símbolos escritos a mano. Los textos variables salen de `Formatting.resx` y `.en.resx`. El teléfono usa `IPhoneNumberDisplayFormatter` con adaptador libphonenumber en Infrastructure para mantener Application sin esa dependencia. El formato fiscal E1 usa los campos del contrato; el value object `TaxId` llega en E6.
 - `docs/contracts/format-cases.json` tiene `now` fijo (`2026-09-27T15:00:00Z`) y casos `{ id, type, culture, timeZone, input, expected }` para todos los tipos y ambas culturas iniciales, incluidos importes con 0, 2 y 3 decimales y teléfonos nacionales e internacionales. El texto `expected` manda si una librería da otra variante ([datos-de-referencia.md](datos-de-referencia.md) §7).
 - Lo usan las plantillas de correo, los textos de WhatsApp y las exportaciones.
 - `DisplayFormatterTests` recorre `docs/contracts/format-cases.json`; el front corre el mismo archivo. Si los dos lados no producen el mismo texto, falla el CI.

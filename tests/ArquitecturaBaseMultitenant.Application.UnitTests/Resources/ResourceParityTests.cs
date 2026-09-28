@@ -22,6 +22,12 @@ public sealed class ResourceParityTests
     }
 
     [Fact]
+    public void Formatting_texts_have_the_same_keys_and_placeholders()
+    {
+        AssertSameKeysAndPlaceholders(FormattingTexts.ResourceManager);
+    }
+
+    [Fact]
     public void Placeholder_extraction_ignores_escaped_braces_and_preserves_arguments()
     {
         Assert.Equal(["0", "1"], Placeholders("{1} y {0:N2}, pero {{2}} es literal"));

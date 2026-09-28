@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
+using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Services.ReferenceData;
 using FluentValidation;
@@ -13,6 +14,7 @@ public static class DependencyInjection
         ArgumentNullException.ThrowIfNull(services);
 
         services.AddScoped<IReferenceDataService, ReferenceDataService>();
+        services.AddScoped<DisplayFormatter>();
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
         services.AddScoped<IRequestValidator, RequestValidator>();
 

@@ -63,6 +63,7 @@ Cada fila es una carpeta que lleva `AGENTS.md` + `CLAUDE.md`. Los punteros se es
 | `Application/Interfaces/Services/` | una interfaz por servicio; lo único que inyecta un controller | capas-y-flujo | `IRoleService.cs` (E4) |
 | `Application/Interfaces/Persistence/` | `I<X>Repository` (escribe), `I<X>Reader` (lee), `IUnitOfWork`, `ITenantScope`. Nada de `IQueryable` | persistencia-ef, paginado-y-busqueda | `IRoleRepository.cs`, `IRoleReader.cs` (E4) |
 | `Application/Interfaces/ReferenceData/` | puertos de moneda, país, zona, cultura y tipo fiscal; Domain nunca los referencia | datos-de-referencia, capas-y-flujo | `ICurrencyCatalog.cs` (E1) |
+| `Application/Interfaces/Integrations/Phones/` | puerto de formato de lectura E1; parser de entrada E3 | telefonos, capas-y-flujo | `IPhoneNumberDisplayFormatter.cs` (E1) |
 | `Application/Interfaces/Integrations/` | puertos a lo externo, por tema | capas-y-flujo, modulos | — |
 | `Application/Models/` | `*Request`, `*Response`, `ReadModels/*Row`; montos en `Money`, fechas `*Utc`/`DateOnly` | numeros-y-moneda, fechas-y-zonas, paginado-y-busqueda | `Models/Roles/` (E4) |
 | `Application/Models/ReferenceData/` | respuesta de los cinco catálogos traducidos; no persistencia ni listas fijas | datos-de-referencia, textos-y-traducciones | `ReferenceDataResponse.cs` (E1) |
@@ -79,6 +80,7 @@ Cada fila es una carpeta que lleva `AGENTS.md` + `CLAUDE.md`. Los punteros se es
 | `Infrastructure/Persistence/Seed/ReferenceData/` | cinco JSON generados de ISO/IANA/CLDR y fuentes editables del script; no se editan a mano | datos-de-referencia | `currencies.json` (E1) |
 | `scripts/datos-de-referencia/` | fuentes editables, snapshots/lock fijados y generador de los cinco JSON; tests sin red | datos-de-referencia | `generar.mjs` (E1) |
 | `Infrastructure/ReferenceData/` | adaptador JSON de los cinco catálogos en E1; E2 pasa a Reader con HybridCache | datos-de-referencia, capas-y-flujo | `JsonReferenceDataCatalog.cs` (E1) |
+| `Infrastructure/Phones/` | adaptador libphonenumber de presentación E1; parser de entrada E3 | telefonos, capas-y-flujo | `LibPhoneNumberDisplayFormatter.cs` (E1) |
 | `Infrastructure/Persistence/Readers/Platform/` | **única** lista blanca para ignorar el filtro `"Tenant"` | multitenancy | — |
 | `Infrastructure/Features/` | filtro de módulos por tenant | modulos-habilitados | `TenantFeatureFilter.cs` (E5) |
 | `Infrastructure/Modules/<Módulo>/` | adaptadores del módulo | modulos | — |

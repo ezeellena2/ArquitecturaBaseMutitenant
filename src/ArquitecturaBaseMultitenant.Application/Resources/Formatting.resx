@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Relative.JustNow" xml:space="preserve"><value>hace un momento</value></data>
+  <data name="Relative.MinutesAgoSingular" xml:space="preserve"><value>hace {0} minuto</value></data>
+  <data name="Relative.MinutesAgoPlural" xml:space="preserve"><value>hace {0} minutos</value></data>
+  <data name="Relative.HoursAgoSingular" xml:space="preserve"><value>hace {0} hora</value></data>
+  <data name="Relative.HoursAgoPlural" xml:space="preserve"><value>hace {0} horas</value></data>
+  <data name="Relative.DaysAgoSingular" xml:space="preserve"><value>hace {0} día</value></data>
+  <data name="Relative.DaysAgoPlural" xml:space="preserve"><value>hace {0} días</value></data>
+  <data name="Compact.Thousand" xml:space="preserve"><value> mil</value></data>
+  <data name="Compact.Million" xml:space="preserve"><value> M</value></data>
+  <data name="Compact.Billion" xml:space="preserve"><value> mil M</value></data>
+  <data name="FileSize.B" xml:space="preserve"><value> B</value></data>
+  <data name="FileSize.KB" xml:space="preserve"><value> KB</value></data>
+  <data name="FileSize.MB" xml:space="preserve"><value> MB</value></data>
+  <data name="FileSize.GB" xml:space="preserve"><value> GB</value></data>
+  <data name="FileSize.TB" xml:space="preserve"><value> TB</value></data>
+  <data name="Duration.Hours" xml:space="preserve"><value>{0} h</value></data>
+  <data name="Duration.Minutes" xml:space="preserve"><value>{0} min</value></data>
+  <data name="Duration.Seconds" xml:space="preserve"><value>{0} s</value></data>
+  <data name="Boolean.True" xml:space="preserve"><value>Sí</value></data>
+  <data name="Boolean.False" xml:space="preserve"><value>No</value></data>
+  <data name="Empty.Value" xml:space="preserve"><value>—</value></data>
+  <data name="Enum.TestStatus.Active" xml:space="preserve"><value>Activo</value></data>
+</root>

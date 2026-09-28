@@ -330,6 +330,7 @@ ArquitecturaBaseMultitenant.Application/
 │       ├── Time/
 │       │   └── ITimeZoneService.cs                   [E1] conversión y GetDayRangeUtc con TimeZoneInfo; catálogo en ReferenceData/
 │       └── Phones/
+│           ├── IPhoneNumberDisplayFormatter.cs      [E1] formato nacional/internacional de E.164 sin lista de países
 │           ├── IPhoneNumberParser.cs                [E3] Parse(country, number, PhoneUsage) → Result<PhoneNumber>; Mask
 │           ├── PhoneUsage.cs                        [E3] Any | Mobile; no nombra WhatsApp (sus países los controla el módulo)
 │           └── IPhoneLinkObserver.cs                [E3] el núcleo avisa cambios de teléfono; el módulo suelta el contacto
@@ -557,6 +558,8 @@ ArquitecturaBaseMultitenant.Application/
     ├── Errors.en.resx
     ├── Validation.resx                               [E1]
     ├── Validation.en.resx
+    ├── Formatting.resx                               [E1] textos variables de formato, enum y booleano; paridad es/en
+    ├── Formatting.en.resx
     ├── Permissions.resx                              [E4] Area.*, Permission.*, PermissionDescription.*, Role.*
     ├── Permissions.en.resx                          [E4]
     ├── Notifications.resx                            [E3] asuntos y cuerpos de correo (también los avisos de la cuenta por correo)
@@ -565,6 +568,7 @@ ArquitecturaBaseMultitenant.Application/
     ├── Audit.en.resx                                [E6]
     ├── ErrorTexts.cs                                [E1]
     ├── ValidationTexts.cs                           [E1]
+    ├── FormattingTexts.cs                           [E1]
     ├── PermissionTexts.cs                           [E4]
     ├── NotificationTexts.cs                         [E3] con cultura explícita
     └── AuditTexts.cs                                [E6]
@@ -784,7 +788,8 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   └── TimeZoneService.cs                             [E1] TimeZoneInfo con IDs IANA
 ├── ReferenceData/                                     [E1]
 │   └── JsonReferenceDataCatalog.cs                    [E1] implementa los cinco puertos desde JSON; E2 se reemplaza por reader
-├── Phones/                                            [E3]
+├── Phones/                                            [E1–E3]
+│   ├── LibPhoneNumberDisplayFormatter.cs             [E1] libphonenumber para mostrar E.164; sin reglas por país en Application
 │   └── LibPhoneNumberParser.cs                        [E3]
 └── BackgroundJobs/                                    [E2]
     ├── BackgroundJobsRegistration.cs
