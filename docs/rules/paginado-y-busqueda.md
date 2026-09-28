@@ -9,7 +9,9 @@
   ```csharp
   private static readonly SortMap<Role> Sort = new() { ["name"] = r => r.Name, ["createdAtUtc"] = r => r.CreatedAtUtc };
   return await query.ApplyXFilters(request).ApplySearch(request.Search, r => r.Name)
-      .ApplySort(request.Sort, Sort, defaultSort: "name").Select(r => new RoleRow(...))
+      .ApplySort(SortDescriptor.Parse(request.Sort), Sort,
+          new SortDescriptor("name", Descending: false), r => r.Id)
+      .Select(r => new RoleRow(...))
       .ToPagedResultAsync(request, ct);
   ```
 - **Respuesta:** `PagedResult<XRow>`. Una página fuera de rango devuelve `items` vacío con el `totalCount` real, sin error.

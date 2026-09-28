@@ -144,11 +144,11 @@ No quedan preguntas técnicas pendientes. Según AGENTS.md, una duda nueva se re
 
 ### Tarea 11. Contratos de paginado y orden estable
 
-**Archivos:** crear src/ArquitecturaBaseMultitenant.Application/Common/Pagination/{PagedRequest,PagedResult,SortDescriptor}.cs ← homónimos de ../ArquitecturaBase/src/ArquitecturaBase.Application/Common/Pagination/ (tamaño 10); CursorRequest.cs y CursorResult.cs (nuevos); src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Extensions/SortMap.cs (nuevo) y QueryableExtensions.cs ← archivo homónimo de ../ArquitecturaBase/src/ArquitecturaBase.Infrastructure/Persistence/Extensions/ (solo ApplySort en E1; búsqueda y cursor en E2); tests/ArquitecturaBaseMultitenant.Application.UnitTests/Common/PaginationContractsTests.cs y tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Contracts/SortMapTests.cs (nuevos).
+**Archivos:** crear src/ArquitecturaBaseMultitenant.Application/Common/Pagination/{PagedRequest,PagedResult,SortDescriptor}.cs ← homónimos de ../ArquitecturaBase/src/ArquitecturaBase.Application/Common/Pagination/ (tamaño 10); CursorRequest.cs y CursorResult.cs (nuevos); src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Extensions/SortMap.cs (nuevo) y QueryableExtensions.cs ← archivo homónimo de ../ArquitecturaBase/src/ArquitecturaBase.Infrastructure/Persistence/Extensions/ (solo ApplySort en E1; búsqueda y cursor en E2); tests/ArquitecturaBaseMultitenant.Application.UnitTests/Common/PaginationContractsTests.cs y tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Contracts/SortMapTests.cs (nuevos). Actualizar el ejemplo de `docs/rules/paginado-y-busqueda.md` a la firma copiada con desempate explícito.
 **Respaldo:** plan maestro §Etapa 1, Back 6; backend.md §9 “Paginado, orden y búsqueda”; arbol.md back “Application/Common/Pagination” e “Infrastructure/Persistence/Extensions”; rules/paginado-y-busqueda.md.
-- [ ] Probar página/tamaño por defecto, cursor sin total, sort permitido y desempate Id; A/PaginationContractsTests e I/SortMapTests en rojo.
-- [ ] Crear contratos, SortMap y ApplySort; repetir en verde.
-- [ ] Commit back: feat: definir paginado y orden estable
+- [x] Probar página/tamaño por defecto, cursor sin total, sort permitido y desempate Id; A/PaginationContractsTests e I/SortMapTests en rojo.
+- [x] Crear contratos, SortMap y ApplySort; repetir en verde.
+- [x] Commit back: feat: definir paginado y orden estable
 
 ### Tarea 12. Logging de operaciones
 
