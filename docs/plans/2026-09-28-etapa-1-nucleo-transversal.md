@@ -152,11 +152,11 @@ No quedan preguntas técnicas pendientes. Según AGENTS.md, una duda nueva se re
 
 ### Tarea 12. Logging de operaciones
 
-**Archivos:** crear src/ArquitecturaBaseMultitenant.Application/Common/Logging/OperationLog.cs; tests/ArquitecturaBaseMultitenant.Application.UnitTests/Common/OperationLogTests.cs (nuevo).
+**Archivos:** crear src/ArquitecturaBaseMultitenant.Application/Common/Logging/{OperationLog.cs,AGENTS.md,CLAUDE.md}; tests/ArquitecturaBaseMultitenant.Application.UnitTests/Common/OperationLogTests.cs (nuevo); actualizar la firma de ejemplo en docs/rules/logs.md y docs/architecture/backend.md para incluir TimeProvider.
 **Respaldo:** plan maestro §Etapa 1, Back 7; backend.md §17; arbol.md back “Application/Common/Logging”; rules/logs.md.
-- [ ] Probar inicio/fin/fallo mediante FakeLogger sin datos sensibles; A/OperationLogTests en rojo.
-- [ ] Implementar RunAsync con LoggerMessage y TimeProvider; repetir en verde.
-- [ ] Commit back: feat: registrar operaciones sin datos sensibles
+- [x] Probar inicio/fin/fallo mediante FakeLogger sin datos sensibles; A/OperationLogTests en rojo.
+- [x] Implementar RunAsync con LoggerMessage y TimeProvider; repetir en verde.
+- [x] Commit back: feat: registrar operaciones sin datos sensibles
 
 ### Tarea 13. Servicio de datos de referencia
 

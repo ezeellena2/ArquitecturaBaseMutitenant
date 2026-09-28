@@ -3,7 +3,7 @@
 **Regla:** se loguea solo con `[LoggerMessage]`. Cada método público de un servicio va envuelto en `OperationLog.RunAsync`. Nunca se registra un secreto ni un dato personal completo.
 
 ## Cómo se hace
-- **En un servicio:** `OperationLog.RunAsync(logger, "UpdateRole", async () => { … })`. Registra el inicio, el fin y el código de error si falla. Es una línea por método.
+- **En un servicio:** `OperationLog.RunAsync(logger, timeProvider, "UpdateRole", async () => { … })`. Registra el inicio, la duración al terminar y el código de error si falla. Es una línea por método; `TimeProvider` se inyecta.
 - **Un log propio:** `[LoggerMessage(Level = …, Message = "…")] private static partial void LogX(ILogger logger, …);` en una clase `partial`.
 - Mensajes en inglés, con parámetros estructurados (`{RoleId}`), no concatenados.
 - Teléfonos enmascarados con `IPhoneNumberParser.Mask` (`+54 9 11 •••• 6789`); correos enmascarados con la primera letra y el dominio (`j***@gmail.com`), como dice [emails](emails.md).

@@ -180,7 +180,7 @@ Application/
 │  ├─ Pagination/                      PagedRequest, PagedResult<T>, CursorRequest, CursorResult<T>, SortDescriptor
 │  ├─ Validation/                      IRequestValidator, RequestValidator, ValidationRules, FieldErrors, PagedRequestValidator<T>,
 │  │                                   CursorRequestValidator<T>
-│  ├─ Logging/                         OperationLog.RunAsync(logger, "Operación", trabajo): inicio, fin y código de error
+│  ├─ Logging/                         OperationLog.RunAsync(logger, timeProvider, "Operación", trabajo): inicio, fin y código de error
 │  ├─ Formatting/                      DisplayFormatter, CultureProfiles, SupportedCultures (desde el catálogo; §18)
 │  └─ Exceptions/                      UniqueConstraintViolationException, ConcurrencyConflictException
 ├─ Configuration/<Área>/               opciones funcionales (LoginCodeOptions, InvitationOptions…) con SectionName
@@ -445,7 +445,7 @@ public sealed class RolesController(IRoleService service) : ControllerBase
   1. **Validar afuera:** `await validator.ValidateAsync(request, ct)`. Si falla, devuelve el `ValidationError`.
   2. **Un solo límite:** `unitOfWork.ExecuteInTransactionAsync(ct => UpdateCoreAsync(request, ct), CommitPolicy.OnSuccess, ct)`.
   3. **Adentro** del límite: locks → lecturas → reglas (que devuelven `Error`) → escrituras.
-  4. **Afuera, después del commit:** invalidar el caché. El método entero va envuelto en `OperationLog.RunAsync(logger, "UpdateRole", …)`, que registra el inicio, el fin y el código de error: una línea por método, nunca el request.
+  4. **Afuera, después del commit:** invalidar el caché. El método entero va envuelto en `OperationLog.RunAsync(logger, timeProvider, "UpdateRole", …)`, que registra el inicio, el fin y el código de error: una línea por método, nunca el request.
 - Un servicio no llama a los métodos que escriben de otro servicio. Lo compartido baja a un helper.
 - Los métodos que solo leen no abren límite: van directo al reader.
 
