@@ -1,0 +1,29 @@
+name: Compilar y probar
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      # El runner de Ubuntu trae Docker para los tests de integración con Testcontainers.
+      - name: Verificar Docker
+        run: docker info
+
+      - name: Restaurar
+        run: dotnet restore ArquitecturaBaseMultitenant.slnx
+
+      - name: Compilar
+        run: dotnet build ArquitecturaBaseMultitenant.slnx --configuration Release --no-restore
+
+      - name: Probar
+        run: dotnet test ArquitecturaBaseMultitenant.slnx --configuration Release --no-build
