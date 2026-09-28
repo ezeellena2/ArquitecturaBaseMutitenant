@@ -1,15 +1,19 @@
 # Datos de referencia (monedas, países, zonas, culturas, identificación fiscal)
 
-**Regla:** ninguna moneda, país, zona horaria, cultura ni tipo de identificación fiscal se escribe a mano en el código. Salen de las tablas de referencia de `platform`, cargadas desde los estándares oficiales (ISO 4217, ISO 3166, IANA y CLDR) con un seed idempotente, y se leen con su catálogo.
+**Regla:** ninguna moneda, país, zona horaria, cultura ni tipo de identificación fiscal se escribe a mano en el código. En E1 salen de JSON versionados generados desde fuentes oficiales fijadas (ISO 4217, ISO 3166, IANA y CLDR); desde E2, de las tablas de `platform` cargadas con seed idempotente. Se leen siempre por su catálogo.
 
 ## Cómo se hace
 - **Leer:** inyectá el catálogo (`ICurrencyCatalog`, `ICountryCatalog`, `ITimeZoneCatalog`, `ICultureCatalog` o `ITaxIdTypeCatalog`). Nunca leas las tablas directo desde un servicio.
-- **Validar un código:** `ValidCurrency()`, `ValidCountry()`, `ValidTimeZone()`, `ValidCulture()` o `ValidTaxIdType()` de `ValidationRules`. Un código deshabilitado es inválido para un dato nuevo.
-- **Redondear un monto:** `Money.Round()`, que usa los `MinorUnits` de la moneda.
+- **Validar un código nuevo:** `ValidCurrency()`, `ValidCountry()`, `ValidTimeZone()`, `ValidCulture()` o `ValidTaxIdType()` de `ValidationRules`, en Application y contra los catálogos. Un código deshabilitado es inválido para un dato nuevo, pero sigue siendo legible si ya estaba guardado. `CurrencyCode.Create(code)` en Domain solo valida la sintaxis alfa-3: nunca inyecta `ICurrencyCatalog` de Application.
+- **Redondear un monto:** Application obtiene `MinorUnits` de `ICurrencyCatalog` y llama `Money.Round(minorUnits)`; Domain redondea `AwayFromZero` sin consultar el catálogo.
 - **Formatear:** siempre con `DisplayFormatter` o `shared/format`, que toman sus patrones de `Cultures`.
 - **Una tabla nueva que guarda un código** (moneda, país, zona, cultura o tipo fiscal) lleva FK a su tabla de referencia.
-- **Sumar datos:** regenerá con `scripts/datos-de-referencia/generar.mjs` o cambiá `IsEnabled` en el JSON fuente. Nunca edites un JSON generado a mano.
+- **Sumar datos:** actualizá fuentes con `generar.mjs --refresh` cuando cambien ISO/IANA/CLDR, ajustá `scripts/datos-de-referencia/habilitados.json` para `IsEnabled`/`SortOrder`, o editá `cultures.source.json`/`tax-id-types.source.json` si cambia una decisión del producto; revisá snapshots y hashes en `sources.lock.json`, luego regenerá. Los cinco JSON en Infrastructure son salidas: nunca los edites a mano. La generación normal y `generar.test.mjs` corren sin red con Node, paquetes y snapshots fijados y comprueban salida byte a byte.
+- **Territorios incompletos:** si ISO no aporta prefijo, moneda o zona propia, el campo queda `null` y el registro no se habilita para selección nueva. Las FK se prueban solo para valores presentes; no se inventa un valor de reemplazo.
+- **Zona compartida:** `time-zones.json` conserva todos los países de cada fila IANA en `CountryCodes[]`; en E2 `platform.TimeZoneCountries` los persiste con FK y deshabilita asociaciones que IANA retire. No reduzcas la relación a un solo `TimeZones.CountryCode`. `UTC` tiene `CountryCodes: []`.
+- **Habilitación inicial:** generador habilita país y moneda de la cultura por defecto, culturas soportadas, zonas asociadas por IANA a un país habilitado más `UTC`, y tipos fiscales de país habilitado. `habilitados.json` puede cambiar estas selecciones sin un `switch` en código. `ReferenceDataCatalogTests` exige que TimeZoneSelect y TaxIdField tengan opciones iniciales.
 - **En el front:** leé los catálogos de `shared/referenceData` (`GET /api/reference-data`) y usá los selectores de `shared/ui/fields`.
+- **Etapas:** E1 lee los JSON versionados con `JsonReferenceDataCatalog`; E2 agrega tablas, `ReferenceDataSeeder` y `ReferenceDataReader`. `GET /api/reference-data` reemplaza `GET /api/time-zones` y lleva `[AllowAnonymous]`.
 
 ## Prohibido
 - Un `enum`, una constante o un `switch` con monedas, países, zonas o culturas (`if (currency == "ARS")`, `["ARS", "USD"]`).
@@ -22,7 +26,9 @@
 
 ## Lo verifica
 - `ReferenceDataHardcodeTests` (E1): ningún literal ISO de moneda, país o zona fuera de los JSON de referencia y de los tests.
-- `ReferenceDataCatalogTests` (E1): los JSON son válidos, las FK internas existen (país → moneda y zona) y cada cultura habilitada tiene traducciones.
+- `ReferenceDataCatalogTests` (E1): JSON válidos, FK internas presentes cuando el código no es `null`, todos los `CountryCodes[]` de zonas compartidas conservados, `UTC` sin país, registros incompletos deshabilitados, zonas y tipos fiscales iniciales habilitados y traducciones —incluidos nombres de `Cultures` y `DisplaySymbol` de monedas— de cada cultura habilitada.
+- `generar.test.mjs` (E1): fuentes locales con hashes válidos, refresh separado y los cinco JSON reproducibles byte a byte sin red.
+- `CurrencyCodeTests` y `MoneyTests` (E1): sintaxis alfa-3 y redondeo con `MinorUnits` explícitos; los tests de validación en Application cubren existencia y habilitación de la moneda.
 - `ReferenceDataSeederTests` (E2): el seed es idempotente y nunca borra.
 - `DisplayFormatterTests` (E1) y `formatters.test.ts` (E1): mismo texto para cada caso de `format-cases.json`.
 

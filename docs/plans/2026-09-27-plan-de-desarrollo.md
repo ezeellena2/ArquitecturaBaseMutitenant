@@ -127,19 +127,19 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
 **Objetivo:** que todo lo transversal exista y esté probado antes del primer caso de uso. **Incluye la presentación unificada de datos**, para que ninguna pantalla nazca formateando a mano.
 
 **Back:**
-1. `Domain/Results`, `Entity`, `ValueObject`, y los value objects `Money` y `CurrencyCode`, con sus tests.
+1. `Domain/Results`, `Entity`, `ValueObject`, y los value objects `Money` y `CurrencyCode`, con sus tests: `CurrencyCode.Create` valida la sintaxis alfa-3; `Money.Round(minorUnits)` recibe los decimales desde Application.
 2. `Api/ErrorHandling`: ProblemDetailsMapper, ControllerResultExtensions, GlobalExceptionHandler, MvcInvalidModelStateResponseFactory, ApiErrorCodes y EmptyJsonBodyContentTypeFilter.
 3. **Cultura y textos:**
-   - `SupportedCultures` (`es-AR`, `en-US`) y `LocalizationExtensions`;
+   - `SupportedCultures` y `LocalizationExtensions`, alimentados por el catálogo de culturas de E1 (`es-AR`, `en-US` habilitadas inicialmente en el JSON);
    - `Errors.resx` y `Validation.resx` con sus `.en.resx`;
    - `ErrorTexts` y `ValidationTexts`, `ResourceParityTests` y `ErrorCodeTests` (`NotificationTexts` llega en la E3, `PermissionTexts` en la E4 y `AuditTexts` en la E6).
-4. **Tiempo:** `TimeProvider`, `UtcDateTimeConverter`, conversores de `DateOnly` y `TimeOnly`, `ITimeZoneService` y `GET /api/time-zones`.
+4. **Tiempo:** `TimeProvider`, `UtcDateTimeConverter`, conversores de `DateOnly` y `TimeOnly`, `ITimeZoneService` y el catálogo horario de `GET /api/reference-data`; no se expone `GET /api/time-zones`.
 5. **Formatos:**
-   - `Application/Common/Formatting/DisplayFormatter.cs`, con los perfiles `es-AR` y `en-US` (backend.md §18);
+   - `Application/Common/Formatting/DisplayFormatter.cs`, con patrones de las culturas `es-AR` y `en-US` leídos de `ICultureCatalog`, sin lista fija en código (backend.md §18);
    - `docs/contracts/format-cases.json` con los casos del catálogo de `formatos.md`;
-    - `DisplayFormatterTests`, que los recorre (el formato de `TaxId` se suma con su value object en la E6);
+   - `DisplayFormatterTests`, que recorre todos los tipos de `formatos.md` en las culturas habilitadas; el texto fiscal usa los datos del contrato en E1 y el value object `TaxId` nace en E6;
    - `MoneyJsonConverter`. La convención EF de `decimal` llega en la Etapa 2, con el `DbContext`.
-6. **Validación y paginado:** `IRequestValidator`, `ValidationRules` (con `ValidCulture`, `ValidCurrency` y `ValidTimeZone`) y `FieldErrors`. También `PagedRequest`/`PagedResult`, `CursorRequest`/`CursorResult`, sus validadores y `SortMap` + `ApplySort` (backend.md §9, "Paginado, orden y búsqueda").
+6. **Validación y paginado:** `IRequestValidator`, `ValidationRules` (con `ValidCulture`, `ValidCountry`, `ValidCurrency`, `ValidTimeZone` y `ValidTaxIdType`, consultando catálogos de Application) y `FieldErrors`. También `PagedRequest`/`PagedResult`, `CursorRequest`/`CursorResult`, sus validadores y `SortMap` + `ApplySort` (backend.md §9, "Paginado, orden y búsqueda"). `ValidPermissions` espera E4.
 7. **Logging:** `OperationLog` con `[LoggerMessage]`.
 8. **OpenAPI:** la convención de problemas, la exportación a `docs/contracts/openapi.json` y `OpenApiContractTests`.
 9. **Hosting:** ForwardedHeaders, SecurityHeaders, SpaExtensions y el pipeline completo, y `docs/guides/prefijo-de-backend.md` (cómo sumar un prefijo a `BackendPrefixes`, a `SpaHostingTests` y al proxy de `vite.config.ts`).
@@ -150,6 +150,7 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
     - los value objects `Email` y `PhoneNumber` con sus casos en `format-cases.json`;
     - tests `TextNormalizerTests`, `NormalizedInputTests`, `TextLimitsTests`, `EmailTests` y `EmailPropertyTests`.
 12. **Idempotencia (P6):** el atributo `[Idempotent]` (sin comportamiento) e `IdempotentActionsTests` (todo `POST` que responde 201 o 202 lleva `[Idempotent]`). La tabla, el filtro y el worker llegan en la Etapa 2.
+13. **Datos de referencia (ADR 0036):** puertos `ICurrencyCatalog`, `ICountryCatalog`, `ITimeZoneCatalog`, `ICultureCatalog` e `ITaxIdTypeCatalog` en Application; cinco JSON generados de ISO 4217, ISO 3166, IANA/CLDR, culturas y tipos fiscales (`time-zones.json` conserva `CountryCodes[]` de cada zona), con `scripts/datos-de-referencia/generar.mjs`, entradas editables `habilitados.json`, `cultures.source.json` y `tax-id-types.source.json`, snapshots de SIX e IANA, versiones exactas de CLDR/libphonenumber y hashes/URL/versión en `sources.lock.json`; la generación normal y sus tests son reproducibles sin red. Se habilitan por defecto país/moneda de cultura predeterminada, culturas soportadas, zonas IANA del país habilitado más UTC y tipos fiscales del país habilitado, ajustables en `habilitados.json`. `JsonReferenceDataCatalog` en Infrastructure; `GET /api/reference-data` y sus rutas por catálogo `[AllowAnonymous]` con ETag; `ReferenceDataHardcodeTests`, `ReferenceDataCatalogTests` y tests de validación, sin base de datos. El `GET /api/time-zones` anterior queda reemplazado. El front usa el mismo catálogo desde `shared/referenceData` ([datos-de-referencia.md](../architecture/datos-de-referencia.md) §8).
 
 **Front:**
 1. `shared/api`: httpClient, ApiError, queryClient y formErrors.
@@ -159,7 +160,7 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
    - `formatters.test.ts`, que recorre el **mismo** `format-cases.json` del back;
    - `format-usage.test.ts`.
 4. **Paginado:** `usePagination` (vuelve a la página 1 y corrige internamente una página fuera de rango, sin exponer `correctPage`), `useCursorList` y `useDebouncedValue` (ambos nuevos en esta etapa), `Pagination` con el selector 10/20/50/100 (10 por defecto) y `LoadMore`.
-5. **`shared/ui/format`** (DateText, MoneyText, NumberText, PercentText, EnumText, StatusBadge, EmptyValue, TimeZoneText y CultureText) y **`shared/ui/fields`** (DateField, MoneyField, NumberField, PercentField, PhoneField…). `shared/format` incluye `formatTimeZone` y `formatCulture`, y `shared/time/timeZones.ts` nace acá. `DataTable` ya resuelve el formato por el `type` de cada columna.
+5. **`shared/ui/format`** (DateText, MoneyText, NumberText, PercentText, EnumText, StatusBadge, EmptyValue, TimeZoneText y CultureText) y **`shared/ui/fields`** (DateField, MoneyField, NumberField, PercentField, PhoneField…). `shared/format` incluye `formatTimeZone` y `formatCulture`; `shared/referenceData` consume `GET /api/reference-data` y abastece selectores de moneda, país, zona, cultura y tipo fiscal. `DataTable` resuelve el formato por el `type` de cada columna.
 6. `scripts/generate-contracts.mjs`, `npm run contracts` y `contracts:check`; `shared/api/generated/` contiene solo `schema.d.ts` y `shared/api/types.ts` declara los alias a mano reexportando desde él.
 7. **Campos con forma propia:** `EmailField`, `PhoneField` con `shared/phone` (países, banderas SVG y `CountrySelect`) y `TaxIdField` (`stdnum`), más `useIdempotentMutation` (P6).
 8. **Diseño adaptable (P10):** `DataTable` con columnas marcadas `mobile` ("primary" y "status", las demás se ven al entrar), `FilterBar` con los filtros debajo del buscador, `Dialog` como hoja desde abajo, y `columns-mobile.test.ts`.
@@ -198,6 +199,7 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
     - `IdempotencyStore`, que reserva la clave en su propia transacción;
     - `IdempotencyFilter`, que guarda la respuesta después del commit del UoW;
     - `IdempotencyCleanupWorker` e `IdempotencyTests`.
+15. **Datos de referencia (ADR 0036):** tablas globales de `platform` y traducciones para monedas, países, zonas horarias, culturas (`CultureTranslations`) y tipos fiscales; `TimeZoneCountries` conserva la relación muchos a muchos de IANA (sin `TimeZones.CountryCode` singular). Incluye configuraciones EF y migración, `ReferenceDataSeeder` idempotente (upsert, nunca borra; deshabilita asociaciones retiradas) y `ReferenceDataReader` con HybridCache `p:ref:<catálogo>`. Reemplazan `JsonReferenceDataCatalog` de E1 sin cambiar la API ni los tests de formato; `ReferenceDataSeederTests` prueba altas, actualizaciones, deshabilitación y segundo arranque.
 
 **Puerta:** la general, con `Rls_blocks_cross_tenant_even_with_filters_ignored` y `Runtime_role_is_not_privileged` en verde **en el CI**.
 

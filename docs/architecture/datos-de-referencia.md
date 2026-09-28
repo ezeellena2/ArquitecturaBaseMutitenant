@@ -8,8 +8,8 @@
 |---|---|---|
 | Monedas | tabla `platform.Currencies` + `CurrencyTranslations` | ISO 4217 (lista vigente) |
 | Países | tabla `platform.Countries` + `CountryTranslations` | ISO 3166-1 |
-| Zonas horarias | tabla `platform.TimeZones` + `TimeZoneTranslations` | IANA tzdb (zonas canónicas) + CLDR (nombres de ciudad) |
-| Culturas (idioma + región) y su formato | tabla `platform.Cultures` | CLDR, con los ajustes del producto en la propia fila |
+| Zonas horarias | tablas `platform.TimeZones` + `TimeZoneCountries` + `TimeZoneTranslations` | IANA tzdb (zonas canónicas y países asociados) + CLDR (nombres de ciudad) |
+| Culturas (idioma + región) y su formato | tabla `platform.Cultures` + `CultureTranslations` | CLDR, con los ajustes del producto en la propia fila |
 | Tipos de identificación fiscal | tabla `platform.TaxIdTypes` + `TaxIdTypeTranslations` | normativa de cada país (AFIP para Argentina) |
 | Textos de la interfaz | `.resx` (back) y `src/locales/<idioma>/*.json` (front) | — (es la práctica estándar: no van a la base) |
 | Reglas de teléfono | `libphonenumber` (back: `libphonenumber-csharp`; front: `libphonenumber-js`) | los metadatos de Google, que se actualizan con la librería |
@@ -19,36 +19,42 @@
 
 ## 2. Las tablas (esquema `platform`, globales, sin RLS)
 
-Todas tienen `IsEnabled` (qué se ofrece en los selectores) y `SortOrder` opcional (para destacar las más usadas). Las traducciones tienen la clave `(código, Culture)` y caen a la cultura por defecto si falta una.
+Los cinco catálogos principales tienen `IsEnabled` (qué se ofrece en los selectores) y `SortOrder` opcional donde corresponde (para destacar las más usadas). Las traducciones tienen la clave `(código, cultura de visualización)` y caen a la cultura por defecto si falta una; `CultureTranslations` llama `DisplayCulture` a esa segunda columna para distinguirla del código de cultura traducido. Un territorio ISO puede carecer de prefijo telefónico, moneda o zona propia: esos tres campos son anulables y no se sustituyen por valores supuestos. Los registros sin los datos necesarios para seleccionarse en una entrada nueva quedan `IsEnabled = false`; las FK se verifican solo cuando su valor no es `null`.
 
 | Tabla | Columnas |
 |---|---|
 | `Currencies` | `Code` (`ARS`, PK, char(3)), `NumericCode` (`032`), `MinorUnits` (ARS 2, CLP 0, BHD 3), `Symbol` (`$`), `IsEnabled`, `SortOrder` |
-| `CurrencyTranslations` | `CurrencyCode`, `Culture`, `Name` ("Peso argentino"), `NamePlural` |
-| `Countries` | `Code` (`AR`, PK, alfa-2), `Alpha3` (`ARG`), `NumericCode`, `CallingCode` (`54`), `DefaultCurrencyCode` (FK), `DefaultTimeZoneId` (FK), `IsEnabled`, `SortOrder` |
+| `CurrencyTranslations` | `CurrencyCode`, `Culture`, `Name` ("Peso argentino"), `NamePlural`, `DisplaySymbol` (símbolo para esa cultura, derivado de CLDR; ARS: `$` en es-AR, `ARS` en en-US) |
+| `Countries` | `Code` (`AR`, PK, alfa-2), `Alpha3` (`ARG`), `NumericCode`, `CallingCode?` (`54`), `DefaultCurrencyCode?` (FK), `DefaultTimeZoneId?` (FK), `IsEnabled`, `SortOrder` |
 | `CountryTranslations` | `CountryCode`, `Culture`, `Name` ("Argentina") |
-| `TimeZones` | `Id` (`America/Argentina/Buenos_Aires`, PK), `CountryCode` (FK, opcional), `IsEnabled`, `SortOrder` |
+| `TimeZones` | `Id` (`America/Argentina/Buenos_Aires`, PK), `IsEnabled`, `SortOrder` |
+| `TimeZoneCountries` | `TimeZoneId` (FK), `CountryCode` (FK), `IsEnabled`; clave compuesta `(TimeZoneId, CountryCode)` para conservar todos los países de una fila IANA |
 | `TimeZoneTranslations` | `TimeZoneId`, `Culture`, `City` ("Buenos Aires") |
 | `Cultures` | `Code` (`es-AR`, PK), `LanguageCode` (`es`), `CountryCode` (FK), `DatePattern` (`dd/MM/yyyy`), `TimePattern` (`HH:mm`), `DateTimePattern`, `LongDatePattern`, `DecimalSeparator`, `GroupSeparator`, `CurrencyPattern` (`$ n` / `-$ n`), `PercentPattern`, `FallbackCulture`, `IsEnabled`, `IsDefault` |
+| `CultureTranslations` | `CultureCode`, `DisplayCulture`, `Name` (por ejemplo, "Español (Argentina)" en es y "Spanish (Argentina)" en en); clave `(CultureCode, DisplayCulture)` |
 | `TaxIdTypes` | `Code` (`AR-CUIT`, PK), `CountryCode` (FK), `Label`, `Mask` (`99-99999999-9`), `ValidatorKey` (`ar-cuit-mod11`), `AppliesTo` (`Person` \| `Company` \| `Both`), `IsEnabled` |
 | `TaxIdTypeTranslations` | `TaxIdTypeCode`, `Culture`, `Name` ("CUIT") |
 
 - **Las demás tablas apuntan con FK**: `Money.Currency` → `Currencies.Code`; `TenantSettings.DefaultCulture` / `DefaultTimeZoneId` / `DefaultCurrency`, `Companies.TimeZoneId` y `Companies.TaxIdType` → sus tablas; `ApplicationUser.Culture` y `TimeZoneId` también.
 - **Los algoritmos sí son código:** el dígito verificador del CUIT es una clase (`ArgentineCuitValidator`) registrada con su `ValidatorKey`. La tabla dice qué tipos existen y cuál valida cada uno. Un país nuevo suma su fila y, si hace falta, su validador.
 - **Los patrones de formato de `Cultures`** son la única fuente de `DisplayFormatter` (back) y de `shared/format` (front). Reemplazan a los perfiles escritos a mano: son CLDR con los ajustes del producto (por ejemplo, 24 h en `es-AR`).
+- **El símbolo visible de una moneda depende de la cultura:** `CurrencyTranslations.DisplaySymbol` acompaña al patrón de `Cultures`. El `Symbol` global de `Currencies` no sustituye ese dato. `format-cases.json` fija los textos exactos de ARS y USD en es-AR/en-US para ambos formateadores.
 
 ## 3. De dónde salen los datos (seed)
 
-- **Archivos fuente**, versionados en `src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Seed/ReferenceData/`: `currencies.json`, `countries.json`, `time-zones.json`, `cultures.json` y `tax-id-types.json`, con las traducciones adentro.
-- **Se generan con un script** (`scripts/datos-de-referencia/generar.mjs`) a partir de las fuentes oficiales: ISO 4217, ISO 3166 y los nombres de CLDR (vía `Intl.DisplayNames`), y la lista canónica de zonas IANA (`Intl.supportedValuesOf("timeZone")` más su país). La ciudad sale del último tramo del ID (`Buenos_Aires` → "Buenos Aires"), salvo que `scripts/datos-de-referencia/ciudades.<idioma>.json` la traduzca ("New_York" → "Nueva York"). Los patrones de `cultures.json` y los tipos fiscales se escriben a mano, porque son decisiones del producto y no hay fuente oficial. **Nunca se edita un JSON generado:** se regenera.
-- **`ReferenceDataSeeder`** hace un upsert por clave en cada arranque, dentro del seed idempotente (ADR 0006). Nunca borra: una moneda que sale de ISO pasa a `IsEnabled = false`. Qué se habilita por defecto lo dice el propio JSON: el país y la moneda de la cultura por defecto, más las culturas soportadas.
+- **Cinco salidas generadas**, versionadas en `src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Seed/ReferenceData/`: `currencies.json`, `countries.json`, `time-zones.json`, `cultures.json` y `tax-id-types.json`, con las traducciones adentro. Cada zona en `time-zones.json` lleva `CountryCodes[]` con todos los códigos de la fila IANA, sin perder asociaciones compartidas. Sus entradas editables viven en `scripts/datos-de-referencia/`, junto al generador.
+- **Se generan con un script** (`scripts/datos-de-referencia/generar.mjs`) a partir de fuentes fijadas: el snapshot de SIX ISO 4217 List One (`sources/iso4217-list-one.xml`), ISO 3166-1 a través de la versión fijada de CLDR (`codeMappings` y validez de territorios), nombres, símbolos monetarios por cultura, monedas de territorio y nombres de culturas de CLDR, prefijos de la versión fijada de libphonenumber y el snapshot IANA `sources/iana-zone1970.tab`. `sources.lock.json` registra URL, versión y SHA-256 de los snapshots. `package-lock.json` fija CLDR, libphonenumber y el parser XML; `.node-version` fija Node e ICU para `Intl.DisplayNames`. La generación normal lee las fuentes locales y verifica hashes, sin red; solo `--refresh` actualiza snapshots, lock y JSON desde los orígenes. La ciudad sale del último tramo del ID (`Buenos_Aires` → "Buenos Aires"), salvo que `scripts/datos-de-referencia/ciudades.<idioma>.json` la traduzca ("New_York" → "Nueva York"). Los patrones de cultura y los tipos fiscales son decisiones del producto escritas en `cultures.source.json` y `tax-id-types.source.json`; `habilitados.json` declara habilitación y `SortOrder` de los catálogos. Los overrides pueden estar vacíos inicialmente porque se habilitan de forma derivada los países/monedas predeterminados, las culturas soportadas, sus zonas y tipos fiscales (regla siguiente). **Nunca se edita un JSON generado:** se regenera.
+- **Reproducibilidad:** `generar.test.mjs` usa fixtures locales sin red, rechaza hashes incorrectos y compara byte a byte los cinco JSON al regenerar dos veces con las mismas fuentes fijadas. Para incorporar una versión nueva de SIX, CLDR, IANA o libphonenumber se ejecuta el refresh explícito, se revisa el diff de snapshots, lock y JSON y se corren esos tests. La versión de Node también se actualiza explícitamente, no por el ambiente del desarrollador.
+- **`ReferenceDataSeeder`** (E2) hace un upsert por clave y nunca borra: una moneda que sale de ISO pasa a `IsEnabled = false`, y una asociación zona-país que deja de figurar en IANA queda deshabilitada en `TimeZoneCountries`. En E2 lo invoca `DatabaseBootstrapExtensions` en Development y en los tests; desde E3 `SeedExtensions` lo integra al seed idempotente de todos los ambientes (ADR 0006). Qué se habilita por defecto lo dice el JSON generado: país y moneda de la cultura por defecto, culturas soportadas, zonas cuya fila IANA incluya un país habilitado más `UTC`, y tipos fiscales del país habilitado. `habilitados.json` permite overrides de esas selecciones y de `SortOrder`; no hay listas de códigos en C#.
+- El generador conserva los territorios ISO aunque falte un dato oficial: deja `CallingCode`, `DefaultCurrencyCode` o `DefaultTimeZoneId` en `null` y marca `IsEnabled = false` si el registro no alcanza para el selector. `ReferenceDataCatalogTests` valida relaciones cuando hay código y no acepta códigos inventados para llenar huecos.
+- `UTC` entra como zona IANA sin país (`CountryCodes: []`): `zone1970.tab` lista zonas vinculadas a territorios y no trae esa zona global. El test del generador comprueba su presencia explícita, sin asignarle un país supuesto. `ReferenceDataCatalogTests` verifica que cada `CountryCodes[]` apunte a países del catálogo y que una zona compartida conserve todos los códigos.
 
 ## 4. Cómo se usan
 
-- **Back:** un puerto por catálogo en `Application/Interfaces/ReferenceData/` (`ICurrencyCatalog`, `ICountryCatalog`, `ITimeZoneCatalog`, `ICultureCatalog`, `ITaxIdTypeCatalog`). Los lee `ReferenceDataReader`, con HybridCache `p:ref:<catálogo>`, que se invalida cuando el seed cambia algo.
-  - `CurrencyCode.Create(code)` y `Money` validan contra `ICurrencyCatalog`, y `Money.Round()` usa sus `MinorUnits`.
+- **Back:** un puerto por catálogo en `Application/Interfaces/ReferenceData/` (`ICurrencyCatalog`, `ICountryCatalog`, `ITimeZoneCatalog`, `ICultureCatalog`, `ITaxIdTypeCatalog`). En E1 los implementa `JsonReferenceDataCatalog` sobre los JSON versionados; en E2 los lee `ReferenceDataReader` de las tablas, con HybridCache `p:ref:<catálogo>`, que se invalida cuando el seed cambia algo.
+  - **Límite entre capas:** `Domain/ValueObjects/CurrencyCode.Create(code)` valida solo la sintaxis alfa-3 y no referencia a Application. La existencia, vigencia y `IsEnabled` del código para un dato nuevo se verifican en Application mediante `ICurrencyCatalog` y `ValidCurrency()`. `Money.Round(minorUnits)` recibe desde Application los `MinorUnits` del catálogo; Domain no consulta catálogos ni infraestructura. Un código ya guardado se puede seguir leyendo y mostrando aunque luego quede deshabilitado.
   - `ValidationRules` suma `ValidCurrency()`, `ValidCountry()`, `ValidTimeZone()`, `ValidCulture()` y `ValidTaxIdType()`, siempre contra los catálogos: un código deshabilitado es inválido para un dato nuevo, y uno ya guardado se sigue mostrando.
-- **API:** `GET /api/reference-data` (anónimo, `[AllowAnonymous]`, en la lista de `AccessDeclarationTests`) devuelve los cinco catálogos habilitados, traducidos a la cultura del pedido, con `ETag` y caché del navegador. Hay además uno por catálogo (`/api/reference-data/currencies`…) para los selectores con búsqueda.
+- **API:** `GET /api/reference-data` reemplaza `GET /api/time-zones`: es anónimo (`[AllowAnonymous]`, en la lista de `AccessDeclarationTests`) y devuelve los cinco catálogos habilitados, traducidos a la cultura del pedido, con `ETag` y caché del navegador. Hay además uno por catálogo (`/api/reference-data/currencies`…) para los selectores con búsqueda. El catálogo horario entrega ID IANA, `CountryCodes[]` y ciudad traducida; el offset se calcula al mostrar con el reloj actual, no se almacena.
 - **Front:** `shared/referenceData` los carga una vez al arrancar (TanStack Query, `staleTime: Infinity`) y los pasa a `useFormat` y a los campos (`CurrencySelect`, `CountrySelect`, `TimeZoneSelect`, `CultureSelect`, `TaxIdField`). Mientras no llegan, los campos muestran su estado de carga. Nada de listas escritas en el front.
 - **Mostrar una zona:** "Buenos Aires (GMT−3)". La ciudad sale de la tabla y el offset se calcula al mostrar, con el signo menos tipográfico. Los selectores ordenan por `SortOrder`, después por offset y después por ciudad.
 - **Mostrar un teléfono:** en formato nacional si su país es el de la cultura (`AR` para `es-AR`) y en internacional si no. Los países del selector salen de `Countries` y su prefijo de `CallingCode`, validado con `libphonenumber`.
@@ -62,11 +68,11 @@ Todas tienen `IsEnabled` (qué se ofrece en los selectores) y `SortOrder` opcion
 
 ## 6. Sumar un idioma, un país o una moneda
 
-- **Una moneda o un país:** regenerar el catálogo si es nuevo en ISO, o pasar `IsEnabled` a `true` en el JSON. Ningún cambio de código.
+- **Una moneda o un país:** actualizar las fuentes fijadas con `--refresh` si es nuevo en ISO, o modificar `scripts/datos-de-referencia/habilitados.json`; después regenerar los JSON. Ningún cambio de código de negocio ni edición manual de un JSON generado.
 - **Una zona horaria:** regenerar; si su ciudad necesita traducción, sumarla en `ciudades.<idioma>.json`.
-- **Un tipo de identificación fiscal:** su fila en `tax-id-types.json` y, si trae un algoritmo nuevo, su validador registrado con el `ValidatorKey`.
+- **Un tipo de identificación fiscal:** su entrada en `scripts/datos-de-referencia/tax-id-types.source.json` y, si trae un algoritmo nuevo, su validador registrado con el `ValidatorKey`; regenerar `tax-id-types.json`.
 - **Un idioma o una cultura:**
-  1. su fila en `cultures.json`, con sus patrones;
+  1. su entrada en `scripts/datos-de-referencia/cultures.source.json`, con sus patrones; regenerar `cultures.json`;
   2. los `.resx` y la carpeta `src/locales/<idioma>`, con las mismas claves (lo exigen los tests de paridad);
   3. los nombres traducidos: regenerar los catálogos, que traen la columna de ese idioma;
   4. sus casos en `format-cases.json`;
@@ -79,6 +85,6 @@ Todas tienen `IsEnabled` (qué se ofrece en los selectores) y `SortOrder` opcion
 
 ## 8. Etapas
 
-- **E1:** los puertos, los JSON fuente con su script, un adaptador que lee los JSON (`JsonReferenceDataCatalog`), las validaciones, `GET /api/reference-data`, `format-cases.json` y el front consumiéndolos. Todo sin base.
+- **E1:** los puertos de Application, los JSON fuente con su script, un adaptador que lee los JSON (`JsonReferenceDataCatalog`), las validaciones de entradas nuevas en Application, `GET /api/reference-data` y sus rutas por catálogo, `format-cases.json` y el front consumiéndolos. `CurrencyCode` solo valida sintaxis y `Money.Round(minorUnits)` recibe los decimales; todo funciona sin base.
 - **E2:** las tablas, sus configuraciones EF y su migración, `ReferenceDataSeeder` y `ReferenceDataReader` con HybridCache, que reemplaza al adaptador de JSON. Los tests de la E1 siguen en verde sin cambios.
 - **Desde la E3:** las FK de `ApplicationUser`, `TenantSettings` y `Companies` apuntan a estas tablas.

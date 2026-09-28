@@ -35,7 +35,7 @@
 
 ## Lo verifica
 - `TextNormalizerTests` (E1): "José" con el acento separado es igual a "José", "Grupo  La Cosecha " queda "Grupo La Cosecha", y caracteres de ancho cero.
-- `NormalizedInputTests` (E1): un POST con esos textos guarda el valor limpio (integración).
+- `NormalizedInputTests` (E1): un POST de `TestFeatures/TestController` devuelve el cuerpo ya normalizado; no hay persistencia antes de E2.
 - `TextLimitsTests` (E1): ningún `HasMaxLength` ni `MaxLength` con un número literal (arquitectura).
 
 ## Detalle

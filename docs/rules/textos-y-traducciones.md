@@ -3,11 +3,12 @@
 **Regla:** todo texto que ve el usuario sale de resources, en **es** (neutral) y **en**. La cultura (`es-AR`, `en-US`) define el idioma y el formato.
 
 **Excepción:** los términos y la política de privacidad no van en resources; su texto está en `platform.LegalDocumentContents`, una fila por cultura ([datos-personales](datos-personales.md)).
+Los nombres de monedas, países, ciudades horarias y tipos fiscales son **datos de referencia traducidos**, no textos de interfaz: salen de los JSON E1 y de las tablas E2 ([ADR 0036](../architecture/datos-de-referencia.md)).
 
 ## Cómo se hace
 - **Archivos:** `Application/Resources/{Errors,Validation,Permissions,Notifications,Audit}.resx` + `.en.resx`. Los módulos tienen los suyos (`Modules/WhatsApp/Resources/`).
 - **Acceso:** con los envoltorios `ErrorTexts`, `ValidationTexts`, `PermissionTexts`, `NotificationTexts` y `AuditTexts`. Sin `IStringLocalizer`.
-- **En un request**, la cultura sale de `Accept-Language`. **En segundo plano** (correo, WhatsApp), se pasa explícita: la de la cuenta; si no hay, la de la organización; si no, `es-AR`.
+- **En un request**, la cultura sale de `Accept-Language` y se acepta si está habilitada en `ICultureCatalog`. **En segundo plano** (correo, WhatsApp), se pasa explícita: la de la cuenta; si no hay, la de la organización; si no, la cultura marcada como predeterminada (`es-AR` en E1).
 - **Claves:**
   - errores: el código (`Roles.Role.HasUsers`) y `Title.<ErrorType>`;
   - permisos: `Permission.<código>`;
@@ -25,6 +26,7 @@
 
 ## Lo verifica
 - `ResourceParityTests` (E1): claves y placeholders iguales en es y en.
+- `ReferenceDataCatalogTests` (E1): traducciones de los catálogos para cada cultura habilitada y cadena de caída.
 - `ErrorCodeTests` (E1), `PermissionTextsTests` (E4), `LocalizationTests` (E1): fallback a es-AR.
 
 ## Detalle

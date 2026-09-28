@@ -56,27 +56,37 @@ Cada fila es una carpeta que lleva `AGENTS.md` + `CLAUDE.md`. Los punteros se es
 | `Domain/` | entidades, value objects, `<X>Errors`, catálogos. Sin paquetes, sin EF ni Identity | capas-y-flujo, result-y-errores, persistencia-ef | `Domain/Authorization/Role.cs` (E4) |
 | `Domain/Common/` | `Entity`, `ValueObject`; marcas `IAuditable`, `ISoftDeletable`, `IVersioned` y las de las tres clases de datos: `ITenantOwned` (+ `ICompanyOwned`), `IPublishedByBusiness`, `IConsumerBusinessShared`; `Party`/`PartyPolicy`, `NotAuditedAttribute` y `TextLimits`. **No** se agregan marcas sin ADR | multitenancy, auditoria, concurrencia, textos-libres | — |
 | `Domain/ValueObjects/` | `Money`, `Email`, `PhoneNumber`, `TaxId`: un dato con forma propia es un value object, nunca un `string` suelto | numeros-y-moneda, emails, telefonos, identificacion-fiscal | `Money.cs`, `Email.cs` (E1) |
+| `Domain/ReferenceData/` | entidades globales de los cinco catálogos y sus traducciones, sin dependencia de Application ni RLS | datos-de-referencia, capas-y-flujo | `Currency.cs` (E2) |
 | `Domain/Features/` | catálogo de módulos | modulos-habilitados | `Features.cs` (E5) |
 | `Domain/<Módulo>/` | entidades y `<X>Errors` del módulo (hoy `Domain/WhatsApp/`); se borra junto con sus `Modules/` | modulos | — |
 | `Application/Services/` | servicio + helpers (`Policy`, `Guard`, `Issuer`, `Verifier`, `Linker`) | guardado, result-y-errores, validacion, logs, multitenancy | `Services/Roles/RoleService.cs` (E4) |
 | `Application/Interfaces/Services/` | una interfaz por servicio; lo único que inyecta un controller | capas-y-flujo | `IRoleService.cs` (E4) |
 | `Application/Interfaces/Persistence/` | `I<X>Repository` (escribe), `I<X>Reader` (lee), `IUnitOfWork`, `ITenantScope`. Nada de `IQueryable` | persistencia-ef, paginado-y-busqueda | `IRoleRepository.cs`, `IRoleReader.cs` (E4) |
+| `Application/Interfaces/ReferenceData/` | puertos de moneda, país, zona, cultura y tipo fiscal; Domain nunca los referencia | datos-de-referencia, capas-y-flujo | `ICurrencyCatalog.cs` (E1) |
 | `Application/Interfaces/Integrations/` | puertos a lo externo, por tema | capas-y-flujo, modulos | — |
 | `Application/Models/` | `*Request`, `*Response`, `ReadModels/*Row`; montos en `Money`, fechas `*Utc`/`DateOnly` | numeros-y-moneda, fechas-y-zonas, paginado-y-busqueda | `Models/Roles/` (E4) |
+| `Application/Models/ReferenceData/` | respuesta de los cinco catálogos traducidos; no persistencia ni listas fijas | datos-de-referencia, textos-y-traducciones | `ReferenceDataResponse.cs` (E1) |
 | `Application/Validation/` | un validador por request, con `ValidationRules` | validacion, textos-y-traducciones | `CreateRoleRequestValidator.cs` (E4) |
+| `Application/Services/ReferenceData/` | servicio que combina los puertos y entrega los catálogos a la Api | datos-de-referencia, capas-y-flujo | `ReferenceDataService.cs` (E1) |
 | `Application/Resources/` | `.resx` es + en; la clave de un error es su código | textos-y-traducciones | `Errors.resx` (E1) |
 | `Application/Common/Formatting/` | `DisplayFormatter` y perfiles de cultura. **Único** lugar que formatea en el back | numeros-y-moneda, fechas-y-zonas | — |
 | `Application/Modules/<Módulo>/` | un módulo quitable; el núcleo no lo referencia | modulos | `Modules/WhatsApp/` (E8) |
 | `Infrastructure/Persistence/Configurations/<Esquema>/` | una `IEntityTypeConfiguration` por entidad; `decimal` con precisión; enums como texto | persistencia-ef, numeros-y-moneda, multitenancy | `Tenant/RoleConfiguration.cs` (E4) |
+| `Infrastructure/Persistence/Configurations/Platform/ReferenceData/` | una configuración EF por tabla de referencia global, sin RLS | datos-de-referencia, persistencia-ef | `CurrencyConfiguration.cs` (E2) |
 | `Infrastructure/Persistence/Migrations/` | se generan con el comando de la guía; cada tabla nueva llama al helper RLS de su clase (`EnableTenantRls`, `EnablePublicRls` o `EnablePartiesRls`) + índices del `SortMap` | persistencia-ef, multitenancy, paginado-y-busqueda | `docs/guides/migracion.md` (E2) |
 | `Infrastructure/Persistence/Repositories/` | EF para escribir un agregado; exige la transacción del caso de uso | guardado, persistencia-ef | `RoleRepository.cs` (E4) |
 | `Infrastructure/Persistence/Readers/` | proyecciones `AsNoTracking` → `*Row`; `SortMap`, `ApplySearch`, `ToPagedResultAsync` | paginado-y-busqueda, multitenancy | `RoleReader.cs` (E4) |
+| `Infrastructure/Persistence/Seed/ReferenceData/` | cinco JSON generados de ISO/IANA/CLDR y fuentes editables del script; no se editan a mano | datos-de-referencia | `currencies.json` (E1) |
+| `scripts/datos-de-referencia/` | fuentes editables, snapshots/lock fijados y generador de los cinco JSON; tests sin red | datos-de-referencia | `generar.mjs` (E1) |
+| `Infrastructure/ReferenceData/` | adaptador JSON de los cinco catálogos en E1; E2 pasa a Reader con HybridCache | datos-de-referencia, capas-y-flujo | `JsonReferenceDataCatalog.cs` (E1) |
 | `Infrastructure/Persistence/Readers/Platform/` | **única** lista blanca para ignorar el filtro `"Tenant"` | multitenancy | — |
 | `Infrastructure/Features/` | filtro de módulos por tenant | modulos-habilitados | `TenantFeatureFilter.cs` (E5) |
 | `Infrastructure/Modules/<Módulo>/` | adaptadores del módulo | modulos | — |
 | `Api/Modules/<Módulo>/` | lo HTTP del módulo (su `*ApiModule`, controllers como el del webhook, convención de rutas condicional); el núcleo no lo referencia | modulos | — |
 | `Api/Controllers/` | controllers finos: contrato → servicio → `ToActionResult`; `[Access]` + permiso, `[PublicSite]` (subdominio de una organización publicada) o solo `[AllowAnonymous]` si el controller está en la lista de `AccessDeclarationTests` | api-http, permisos, multitenancy | `Organization/RolesController.cs` (E4) |
+| `Api/Controllers/ReferenceData/` | ruta anónima de catálogos globales, con ETag; no recibe catálogos directamente | datos-de-referencia, api-http | `ReferenceDataController.cs` (E1) |
 | `Api/Contracts/` | `*HttpRequest` / `*Query`, props nullable, `ToString()` sin datos personales; los de edición y borrado traen `version` | api-http, paginado-y-busqueda, concurrencia | `Organization/CreateRoleHttpRequest.cs` (E4) |
+| `Api/Contracts/ReferenceData/` | contrato de salida de los cinco catálogos para OpenAPI | datos-de-referencia, api-http | `ReferenceDataHttpResponse.cs` (E1) |
 | `Api/Idempotency/` | `[Idempotent]` y su filtro; nada más va acá | idempotencia | `IdempotencyFilter.cs` (E2) |
 | `Api/Json/` | conversores globales (UTC, `Money`, texto normalizado) | textos-libres, fechas-y-zonas, numeros-y-moneda | `NormalizedStringJsonConverter.cs` (E1) |
 | `tests/*.Application.UnitTests/Services/` | tests del servicio con dobles a mano | tests | `Services/Roles/RoleServiceWriteTests.cs` (E4) |

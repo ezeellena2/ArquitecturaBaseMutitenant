@@ -7,8 +7,9 @@
 - Una propiedad de instante es `DateTime` con sufijo **`Utc`** (`CreatedAtUtc`, `ExpiresAtUtc`) y columna `timestamptz`.
 - Fecha civil (vencimiento, nacimiento): `DateOnly`, `date`. Hora civil (horario de atención): `TimeOnly`, `time`.
 - JSON: `"2026-09-27T17:35:00Z"`, `"2026-09-27"`, `"14:30:00"`. Un instante sin offset es rechazado con 400.
-- **Zona efectiva:** la de la cuenta; si no hay, la de la empresa de la pantalla; si no, `TenantSettings.DefaultTimeZoneId`. Son IDs IANA, validados con `ValidTimeZone()`.
+- **Zona efectiva:** la de la cuenta; si no hay, la de la empresa de la pantalla; si no, `TenantSettings.DefaultTimeZoneId`; al comienzo, la zona por defecto de la cultura. Son IDs IANA. `ValidTimeZone()` consulta `ITimeZoneCatalog` para aceptar una zona habilitada en datos nuevos; `ITimeZoneService` hace la aritmética temporal.
 - "Hoy" o "este mes" para una regla (reportes, vencimientos): `ITimeZoneService.GetDayRangeUtc(DateOnly, tz)`, nunca la cuenta a mano.
+- **Catálogo:** `GET /api/reference-data` o `/api/reference-data/time-zones` devuelve los IDs y ciudades traducidas desde JSON E1 / tablas E2. Reemplaza `GET /api/time-zones`. El offset se calcula con el reloj al mostrar, nunca se almacena.
 - En los tests, `FakeTimeProvider`.
 
 ## Prohibido
@@ -22,7 +23,7 @@
 
 ## Lo verifica
 - `BannedSymbols.txt` (E0): el build falla con los cinco símbolos prohibidos.
-- `UtcDateTimeTests` (E1), `DateOnlyTimeOnlyTests` (E1).
+- `UtcDateTimeTests` (E1), `DateOnlyTimeOnlyTests` (E1), `ReferenceDataCatalogTests` (E1) para IDs y traducciones.
 - `NoManualFormattingTests` (E1): sin formatos de fecha fuera de `DisplayFormatter`.
 
 ## Detalle

@@ -14,7 +14,8 @@
 - **Base de datos:** siempre el E.164; una columna que guarda solo teléfonos es `varchar(16)`. Los teléfonos de una cuenta viven únicamente en `identity.LoginMethods` (`Type=Phone`, `Value` en E.164) y son **únicos en todo el sistema** por el índice `(Type, Value)`; esa columna `Value` es compartida con los correos, así que su largo no es el del teléfono. `AspNetUsers.PhoneNumber` es solo una copia del método principal, **sin índice único**, y la mantiene el servicio de métodos de ingreso ([multitenancy.md §12](../architecture/multitenancy.md#12-caché-locks-unicidad)).
 - **Buscar por teléfono:** se normaliza lo buscado con el mismo parser (o se compara por dígitos) y se busca por el E.164.
 - **Salida (JSON):** el E.164 como texto. El país no se manda: sale del número.
-- **Correo y WhatsApp:** `DisplayFormatter.Phone(phone, culture)` usa las mismas reglas que `PhoneText`.
+- **País de entrada:** `ValidCountry()` de Application consulta `ICountryCatalog`; `GET /api/reference-data` abastece el selector, sin una lista de países en el código.
+- **Correo y WhatsApp:** `DisplayFormatter.Phone(phone, culture, timeZone)` usa las mismas reglas que `PhoneText`: nacional si el país coincide con la cultura, internacional si no. `format-cases.json` fija el texto exacto si las librerías difieren.
 - **Logs:** siempre `IPhoneNumberParser.Mask(phone)` (`+54 9 11 •••• 6789`).
 
 ## Prohibido
@@ -24,6 +25,7 @@
 - Emojis de banderas: en Windows no se ven.
 - Loguear un número completo.
 - Un `PhoneUsage` o un error del núcleo que nombre WhatsApp o sus países.
+- Una lista de países o prefijos telefónicos escrita a mano; salen de los datos de referencia ([ADR 0036](../architecture/datos-de-referencia.md)).
 
 ## Copiá de
 - `Domain/ValueObjects/PhoneNumber.cs` (E1), que se copia de `../ArquitecturaBase` (solo verifica el E.164; interpretar lo que escribe la persona es trabajo del parser) · `../ArquitecturaBase/src/ArquitecturaBase.Infrastructure/Phones/LibPhoneNumberParser.cs`, que se copia y se le suma `PhoneUsage` (E3).

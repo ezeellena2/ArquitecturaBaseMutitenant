@@ -13,11 +13,12 @@
   - `GET` → 200;
   - un trabajo aceptado → `ToAcceptedResult`.
 - Un `POST` que crea o envía lleva `[Idempotent]` ([idempotencia](idempotencia.md)). Una acción de un módulo lleva `[FeatureGate]` ([modulos-habilitados](modulos-habilitados.md)). Un `PUT` o `DELETE` de una entidad `IVersioned` recibe `version` ([concurrencia](concurrencia.md)).
-- Cada acción declara su acceso ([multitenancy](multitenancy.md), [permisos](permisos.md)): `[Access(Business)]` + `[HasPermission]` o `[HasCompanyPermission]`; `[Access(Platform)]` + `[HasPlatformPermission]`; `[Access(Consumer)]` sin permiso (la persona tiene implícitos los `personal.*`); `[PublicSite][AllowAnonymous]` solo si responde en el subdominio de una organización publicada (`PublicPageController`); o solo `[AllowAnonymous]` si es anónima del dominio principal (ingreso, registro, "Registrá tu empresa", invitación, enlace, `GET` de documentos legales, directorio, pedido de "Recuperar mi cuenta", cancelar la baja, webhooks), y entonces su controller va en la lista explícita de `AccessDeclarationTests`. Además lleva `[ProducesResponseType<T>(status)]` y los errores extra con `[ProducesProblem(status)]`.
+- Cada acción declara su acceso ([multitenancy](multitenancy.md), [permisos](permisos.md)): `[Access(Business)]` + `[HasPermission]` o `[HasCompanyPermission]`; `[Access(Platform)]` + `[HasPlatformPermission]`; `[Access(Consumer)]` sin permiso (la persona tiene implícitos los `personal.*`); `[PublicSite][AllowAnonymous]` solo si responde en el subdominio de una organización publicada (`PublicPageController`); o solo `[AllowAnonymous]` si es anónima del dominio principal (ingreso, registro, "Registrá tu empresa", invitación, enlace, `GET` de documentos legales, `GET /api/reference-data` y sus rutas por catálogo, directorio, pedido de "Recuperar mi cuenta", cancelar la baja, webhooks), y entonces su controller va en la lista explícita de `AccessDeclarationTests` (E3). Además lleva `[ProducesResponseType<T>(status)]` y los errores extra con `[ProducesProblem(status)]`.
 - Rutas en inglés, plural y kebab-case (`api/companies/{companyId}/members`). Sin versionado (ADR 0005).
 - **Sin prefijo de acceso:** las rutas de la organización son `api/roles`, `api/permissions`, `api/users`, `api/users/invitations`, `api/companies/{companyId}(/members)`, `api/settings` y `api/public-site`; el acceso lo declara `[Access]`, no la ruta. Las únicas excepciones son `/api/platform/...`, `/api/me/...`, `/api/auth/...` y `/api/invitations/...` (anónimo). "tenant" nunca aparece en una ruta.
-- **Prefijo nuevo** (fuera de `/api`): se suma en `BackendPrefixes`, en `SpaHostingTests` y en el proxy de `vite.config.ts` ([guía](../guides/prefijo-de-backend.md), E1).
+- **Prefijo nuevo** (fuera de `/api`): se suma en `BackendPrefixes`, en `SpaHostingTests` y en el proxy de `vite.config.ts` ([guía](../guides/prefijo-de-backend.md), E1). `/swagger` y `/openapi` están en la lista y en el proxy solo en Development.
 - **Después de cambiar un contrato:** regenerar `docs/contracts/openapi.json` (lo hace el build) y avisar al front (`npm run contracts`).
+- **Datos de referencia:** `GET /api/reference-data` y sus rutas por catálogo son `[AllowAnonymous]`, devuelven solo entradas habilitadas traducidas a `Accept-Language` y llevan `ETag` para caché del navegador ([datos-de-referencia](datos-de-referencia.md)). Sustituyen `GET /api/time-zones`.
 
 ## Prohibido
 - Recibir modelos de Application como body.
@@ -36,6 +37,7 @@
 - `AccessDeclarationTests` (E3): toda ruta declara `[Access]` o `[PublicSite]`; una con solo `[AllowAnonymous]` pasa únicamente si su controller está en la lista explícita del test.
 - `ExplicitRouteInventoryTests` (E1): cada ruta con su test.
 - `OpenApiContractTests` (E1): openapi.json al día. `OpenApiTests` (E1): esquema de éxito y de errores.
+- `ReferenceDataApiTests` (E1): catálogos, traducción, ETag y rutas anónimas.
 
 ## Detalle
 [backend.md §5 y §17](../architecture/backend.md#controller) · ADR 0002

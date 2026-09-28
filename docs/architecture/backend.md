@@ -81,7 +81,7 @@ Lo verifica `ArchitectureTests`.
 
 | Proyecto | Puede referenciar | Contiene |
 |---|---|---|
-| Domain | nada | entidades, value objects, `<Entidad>Errors`, `Result`, catálogos de permisos, enums |
+| Domain | nada | entidades, value objects, `<Entidad>Errors`, `Result`, catálogos de permisos, enums; `CurrencyCode` valida sintaxis y `Money.Round(minorUnits)` recibe un dato |
 | Application | Domain, FluentValidation, algunos `Microsoft.Extensions.*` (lista blanca en `ApplicationPackagesTests`) | interfaces y servicios de casos de uso, modelos `*Request/*Response/*Row`, validadores, puertos de persistencia e integración, resources |
 | Infrastructure | Application, Domain | EF Core, `ApplicationDbContext`, interceptores, repositorios, readers, Identity, OpenIddict, correo, WhatsApp, outbox, workers, caché, RLS |
 | Api | Application, Infrastructure (solo desde `Program.cs`), ServiceDefaults | controllers, contratos HTTP, autorización, adaptadores de la petición, manejo de errores, hosting del SPA |
@@ -135,7 +135,7 @@ Domain/
 │  └─ IConsumerBusinessShared.cs dato compartido: ConsumerTenantId (espacio personal), BusinessTenantId (organización)
 ├─ Results/                      Error, ErrorType, Result, Result<T>, ValidationError
 ├─ ValueObjects/                 Email, PhoneNumber, TaxId (país + tipo + número; validadores en TaxIdValidators/),
-│                                Money (monto + moneda ISO 4217), CurrencyCode, CultureCode
+│                                Money (monto + moneda ISO 4217), CurrencyCode (sintaxis alfa-3), CultureCode (sintaxis)
 ├─ Tenancy/                      Tenant, TenantKind (Personal|Business), TenantStatus, Slug, ReservedSlugs, Member, MemberStatus,
 │                                TenantErrors, MemberErrors, AccessErrors, Invitation, InvitationChannel (valor), InvitationStatus,
 │                                InvitationErrors
@@ -181,11 +181,12 @@ Application/
 │  ├─ Validation/                      IRequestValidator, RequestValidator, ValidationRules, FieldErrors, PagedRequestValidator<T>,
 │  │                                   CursorRequestValidator<T>
 │  ├─ Logging/                         OperationLog.RunAsync(logger, "Operación", trabajo): inicio, fin y código de error
-│  ├─ Formatting/                      DisplayFormatter, CultureProfiles, SupportedCultures (§18)
+│  ├─ Formatting/                      DisplayFormatter, CultureProfiles, SupportedCultures (desde el catálogo; §18)
 │  └─ Exceptions/                      UniqueConstraintViolationException, ConcurrencyConflictException
 ├─ Configuration/<Área>/               opciones funcionales (LoginCodeOptions, InvitationOptions…) con SectionName
 ├─ Interfaces/
 │  ├─ Services/                        I<X>Service, uno por área (lo que inyectan los controllers), entre ellos IAccountDeletionService
+│  ├─ ReferenceData/                   ICurrencyCatalog, ICountryCatalog, ITimeZoneCatalog, ICultureCatalog, ITaxIdTypeCatalog
 │  ├─ Persistence/                     IUnitOfWork, CommitPolicy, I<X>Repository, I<X>Reader, ITenantScope, IAuditLog,
 │  │                                   ILegalRepository, ILegalReader
 │  └─ Integrations/
@@ -222,7 +223,7 @@ Application/
 │  ├─ Companies/                       CompanyService, CompanyGuard, CompanyMemberService, LastCompanyAdminGuard
 │  ├─ Settings/                        TenantSettingsService
 │  ├─ Auditing/                        AuditLogService (lectura)
-│  ├─ Time/                            TimeZoneCatalogService
+│  ├─ ReferenceData/                   ReferenceDataService (catálogos traducidos para GET /api/reference-data)
 │  ├─ Platform/                        TenantAdministrationService, PlatformAccountService (buscar y suspender cuentas, lo que
 │  │                                   revoca sus sesiones; «Dar de baja» con motivo, ADR 0035), PlatformOperatorService,
 │  │                                   PlatformAuditService, PlatformSettingsService, PlatformActionGuard
@@ -252,7 +253,8 @@ Infrastructure/
 │  ├─ Configurations/
 │  │  ├─ Platform/                     TenantConfiguration, PlatformSettingsConfiguration, SecurityEventConfiguration,
 │  │  │                                OutboxMessageConfiguration, PlatformRoleAssignmentConfiguration, IdempotencyKeyConfiguration,
-│  │  │                                LegalDocumentConfiguration, LegalDocumentContentConfiguration, TenantFeatureConfiguration
+│  │  │                                LegalDocumentConfiguration, LegalDocumentContentConfiguration, TenantFeatureConfiguration;
+│  │  │                                ReferenceData/ (una configuración por catálogo y por tabla de traducción, E2, sin RLS)
 │  │  ├─ Identity/                     ApplicationUserConfiguration, LoginMethodConfiguration (índice único Type+Value),
 │  │  │                                LegalAcceptanceConfiguration, LoginCodeConfiguration, LoginLinkConfiguration…
 │  │  ├─ Tenant/                       MemberConfiguration, CompanyConfiguration, CompanyMembershipConfiguration,
@@ -276,7 +278,8 @@ Infrastructure/
 │  ├─ Repositories/                    <X>Repository (internal sealed)
 │  ├─ Readers/                         <X>Reader (AsNoTracking + proyección a *Row/*Response)
 │  ├─ Migrations/                      una sola carpeta; RLS y grants dentro de las migraciones
-│  ├─ Seed/                            PlatformSeeder (operador inicial), OpenIddictSeeder, DevelopmentSeeder
+│  ├─ Seed/                            ReferenceData/*.json (E1), ReferenceDataSeeder (E2, upsert idempotente),
+│  │                                   PlatformSeeder (operador inicial), OpenIddictSeeder, DevelopmentSeeder
 │  └─ DatabaseBootstrapExtensions.cs   solo en Development: rol de runtime + migraciones + seed
 ├─ Identity/
 │  ├─ ApplicationUser.cs               IsPlatformOperator, Status (Active | Suspended | PendingDeletion | Deleted), Culture, TimeZoneId,
@@ -300,6 +303,7 @@ Infrastructure/
 │                                      WhatsAppInfrastructureModule, WhatsAppOptions(+Validator), Disabled/
 ├─ Security/                           SecureTokenGenerator, LoginCodeGenerator, LoginCodeHasher, PayloadProtector
 ├─ Time/                               TimeZoneService (TimeZoneInfo, IANA)
+├─ ReferenceData/                      JsonReferenceDataCatalog (E1: JSON versionados; E2: ReferenceDataReader + HybridCache)
 ├─ Phones/                             LibPhoneNumberParser
 ├─ Caching/                            CacheKeys (siempre con prefijo de alcance: t: / s: / u: / p:), CachingRegistration
 ├─ Idempotency/                        IdempotencyStore, IdempotencyCleanupWorker (P6)
@@ -323,8 +327,9 @@ Api/
 │  │                                   ExternalLoginController, InvitationsController, LoginMethodsController,
 │  │                                   DeletionCancelController (POST /api/auth/deletion/cancel)
 │  ├─ Account/                         MeController (cuenta y accesos), BusinessSignupController ("Registrá tu empresa"),
-│  │                                   TimeZonesController, LegalController (GET /api/legal/current, anónimo; POST /api/legal/accept),
+│  │                                   LegalController (GET /api/legal/current, anónimo; POST /api/legal/accept),
 │  │                                   AccountDeletionController (POST /api/me/deletion)
+│  ├─ ReferenceData/                   ReferenceDataController ([AllowAnonymous]; GET /api/reference-data y por catálogo)
 │  ├─ Organization/                    [Access(Business)] UsersController, RolesController, PermissionsController,
 │  │                                   CompaniesController, CompanyMembersController, SettingsController, AuditController,
 │  │                                   PublicPageAdminController (api/public-site: mi página pública, pantalla /org/pagina,
@@ -418,7 +423,7 @@ Es un resumen. El árbol completo, con la etapa en que nace cada test, está en 
 - La entrada es un contrato de `Api/Contracts/<Área>`, mapeado a mano al `*Request` de Application.
 - La salida es siempre `ToActionResult(this)`, `ToCreatedResult(this, nameof(Get), id => new { id })` o `ToAcceptedResult(this)`. Nunca `IsSuccess ? … : …`.
 - Las rutas de la organización no llevan prefijo de acceso: `api/roles`, `api/permissions`, `api/users`, `api/users/invitations`, `api/companies/{companyId}` y `api/companies/{companyId}/members`, `api/settings` y `api/public-site`. El acceso lo declara `[Access]`, no la ruta, y "tenant" no aparece en ellas. Las excepciones son `/api/platform/...`, `/api/me/...`, `/api/auth/...` e `/api/invitations/...` (anónimo).
-- Cada acción declara `[Access(...)]`, o `[PublicSite][AllowAnonymous]` si responde en el subdominio de una organización publicada (`PublicPageController`). Las rutas anónimas del dominio principal (ingreso, registro, "Registrá tu empresa", invitación, enlace, `GET` de los documentos legales, directorio, pedido de "Recuperar mi cuenta", cancelar la baja y webhooks) declaran solo `[AllowAnonymous]`, y `AccessDeclarationTests` las acepta únicamente si su controller está en la lista explícita del test. En B2B y plataforma, cada acción declara además su permiso (`[HasPermission]`, `[HasCompanyPermission]` o `[HasPlatformPermission]`). Las rutas B2C (`[Access(Consumer)]`) no piden permiso (§14). Además lleva `[ProducesResponseType<T>]`, y los errores extra van con `[ProducesProblem]`.
+- Cada acción declara `[Access(...)]`, o `[PublicSite][AllowAnonymous]` si responde en el subdominio de una organización publicada (`PublicPageController`). Las rutas anónimas del dominio principal (ingreso, registro, "Registrá tu empresa", invitación, enlace, `GET` de los documentos legales, `GET /api/reference-data` y sus rutas por catálogo, directorio, pedido de "Recuperar mi cuenta", cancelar la baja y webhooks) declaran solo `[AllowAnonymous]`, y `AccessDeclarationTests` las acepta únicamente si su controller está en la lista explícita del test. `ReferenceDataController` entra en esa lista al nacer el test en E3. En B2B y plataforma, cada acción declara además su permiso (`[HasPermission]`, `[HasCompanyPermission]` o `[HasPlatformPermission]`). Las rutas B2C (`[Access(Consumer)]`) no piden permiso (§14). Además lleva `[ProducesResponseType<T>]`, y los errores extra van con `[ProducesProblem]`.
 - Un `POST` que crea o envía lleva `[Idempotent]`, y una acción de un módulo lleva `[FeatureGate]`. Un `PUT` o `DELETE` de una entidad `IVersioned` recibe `version`, que es obligatoria ([concurrencia](../rules/concurrencia.md)).
 - `POST` que crea → 201 con `Location` y `GET /{id}`. `PUT` → 204. `DELETE` → 204.
 
@@ -507,7 +512,7 @@ El cuerpo es `application/problem+json` con `title` y `detail` traducidos, `code
 ### Validación
 
 - **Un solo `IRequestValidator`**, inyectado una vez por servicio: `Task<ValidationError?> ValidateAsync<T>(T request, CancellationToken ct)`. Resuelve los `IValidator<T>` y agrupa los errores por campo en camelCase con puntos.
-- Los validadores son `internal sealed`, en `Validation/<Área>`, y usan `ValidationRules` (`Required()`, `MaxLength()`, `ValidEmail()`, `ValidTimeZone()`, `ValidPermissions(scope)`), con mensajes de `ValidationTexts`.
+- Los validadores son `internal sealed`, en `Validation/<Área>`, y usan `ValidationRules` (`Required()`, `MaxLength()`, `ValidEmail()`, `ValidCurrency()`, `ValidCountry()`, `ValidTimeZone()`, `ValidCulture()`, `ValidTaxIdType()`), con mensajes de `ValidationTexts`. Las cinco reglas de referencia consultan los catálogos desde Application; un código deshabilitado no entra en un dato nuevo. `ValidPermissions(scope)` nace en E4 junto con el catálogo de permisos.
 - `FieldErrors.On(error, "name")` ata un error de negocio a un campo del formulario.
 
 ---
@@ -516,8 +521,8 @@ El cuerpo es `application/problem+json` con `title` y `detail` traducidos, `code
 
 | Capa | Punto de entrada | Qué registra |
 |---|---|---|
-| Application | `AddApplication()` | Options (`BindConfiguration + ValidateDataAnnotations + ValidateOnStart`), cada servicio y helper con `AddScoped`, uno por uno, validadores (`AddValidatorsFromAssembly(includeInternalTypes: true)`) e `IRequestValidator` |
-| Infrastructure | `AddInfrastructure(cfg, env)` | `TryAddSingleton(TimeProvider.System)`, `TenantContext` (scoped, un registro para `ITenantContext` y otro para `ITenantScope`), interceptores (en orden: TenantStamp → SoftDelete → Auditable → AuditTrail; más TenantConnection), `AddDbContext`, `IUnitOfWork`, repositorios, readers y los subregistros `AddIdentityServices`, `AddOpenIddictServer`, `AddMessaging`, `AddCaching`. Los módulos se registran aparte, con su `AddWhatsAppModule()` en cada capa, llamado desde `Program.cs` |
+| Application | `AddApplication()` | Options (`BindConfiguration + ValidateDataAnnotations + ValidateOnStart`), cada servicio y helper con `AddScoped`, uno por uno, validadores (`AddValidatorsFromAssembly(includeInternalTypes: true)`), `IRequestValidator` y `ReferenceDataService` (los puertos viven aquí, los implementa Infrastructure) |
+| Infrastructure | `AddInfrastructure(cfg, env)` | En E1, `JsonReferenceDataCatalog` para los cinco puertos y `TryAddSingleton(TimeProvider.System)`, sin base. Desde E2, `ReferenceDataReader`/HybridCache y `ReferenceDataSeeder` reemplazan el adaptador JSON; se agregan `TenantContext` (scoped, un registro para `ITenantContext` y otro para `ITenantScope`), interceptores (en orden: TenantStamp → SoftDelete → Auditable → AuditTrail; más TenantConnection), `AddDbContext`, `IUnitOfWork`, repositorios, readers y los subregistros `AddIdentityServices`, `AddOpenIddictServer`, `AddMessaging`, `AddCaching`. Los módulos se registran aparte, con su `AddWhatsAppModule()` en cada capa, llamado desde `Program.cs` |
 | Api | `AddPresentation()` | ProblemDetails, `GlobalExceptionHandler`, autorización (policy provider y handlers), localización, rate limiting, OpenAPI, `AddControllers` con un solo `ConfigureJson` |
 
 - Sin Scrutor y sin registrar por reflexión.
@@ -605,16 +610,16 @@ La pantalla "Auditoría" de la organización lee `AuditEntries` paginadas y filt
 - El reloj es siempre `TimeProvider` inyectado. `BannedSymbols.txt` rompe el build con `DateTime.Now`, `DateTime.UtcNow` y similares. En los tests se usa `FakeTimeProvider`.
 - Tipos: `DateTime` en UTC con sufijo `Utc`, `DateOnly` para fechas civiles, y `timestamptz` en Postgres.
 - En JSON, `UtcDateTimeConverter` sale siempre con `Z` y rechaza entradas sin offset (400).
-- **Zona efectiva** del usuario: `User.TimeZoneId` → `Company.TimeZoneId` (en pantallas de una empresa) → `TenantSettings.DefaultTimeZoneId` → `"America/Argentina/Buenos_Aires"`. Los IDs son IANA y se validan con `ITimeZoneService.IsValid`.
+- **Zona efectiva** del usuario: `User.TimeZoneId` → `Company.TimeZoneId` (en pantallas de una empresa) → `TenantSettings.DefaultTimeZoneId` → la zona por defecto de la cultura (`America/Argentina/Buenos_Aires` para `es-AR`). Los IDs son IANA; `ITimeZoneService` hace la conversión temporal y `ValidTimeZone()` consulta `ITimeZoneCatalog` para aceptar una zona habilitada en un dato nuevo.
 - **La conversión para mostrar la hace el front.** El backend solo convierte cuando la regla lo exige (rangos "del día" en reportes: `ITimeZoneService.GetDayRangeUtc(DateOnly, tz)`, con horario de verano y días saltados).
-- `GET /api/time-zones` devuelve el catálogo traducido.
+- `GET /api/reference-data` y `GET /api/reference-data/time-zones` devuelven zonas habilitadas con ID IANA, `CountryCodes[]` y ciudad traducida desde los datos de referencia. Son rutas `[AllowAnonymous]` de `ReferenceDataController` (lista explícita de `AccessDeclarationTests` desde E3). El offset se calcula con `TimeProvider` al mostrar y nunca se guarda; `GET /api/time-zones` queda reemplazado (ADR 0036). En E2 `TimeZoneCountries` conserva las asociaciones de varios países por zona.
 
 ---
 
 ## 12. Idioma, traducciones y resources
 
 - **Cultura** es una sola preferencia con idioma y región (`es-AR`, `en-US`), no dos. El **idioma** de los textos sale de su primera parte (`es`, `en`) y el **formato** de números y fechas, de la cultura completa (§18).
-- Culturas soportadas: `es-AR` (por defecto) y `en-US`. Se agregan otras sumándolas a `SupportedCultures`.
+- Culturas iniciales habilitadas: `es-AR` (por defecto) y `en-US`, declaradas en `cultures.json` (E1) y luego en `platform.Cultures` (E2). `SupportedCultures` lee `ICultureCatalog`; agregar otra cultura exige los resources y casos de formato de [datos-de-referencia.md](datos-de-referencia.md) §6, sin cambiar una lista de códigos en C#.
 - La fuente en un request es `Accept-Language`: el front manda la cultura efectiva. `UseRequestLocalization` va antes de `UseExceptionHandler`.
 - En segundo plano (correo y WhatsApp), la cultura es `User.Culture` → `TenantSettings.DefaultCulture` → `es-AR`, y se pasa **explícita** (`NotificationTexts.Get(key, culture, args)`).
 - No se usa `IStringLocalizer`. Hay envoltorios estáticos sobre `ResourceManager`: `ErrorTexts`, `ValidationTexts`, `PermissionTexts`, `NotificationTexts` y `AuditTexts`.
@@ -729,18 +734,19 @@ UseForwardedHeaders → UseSecurityHeaders → UseRequestLocalization → UseExc
 ```
 
 Todo middleware que pueda cortar con un error va después de `UseStatusCodePages`.
+En E1 funcionan los pasos restantes en ese orden; se dejan comentados en su posición `UseAuthentication`, `TenantResolutionMiddleware`, `LegalAcceptanceMiddleware` y `UseAuthorization` (E3), `PublicSiteResolutionMiddleware` (E7) y el bootstrap de base de datos (E2). `UseRateLimiter` queda conectado en E1; las políticas de acceso e identidad se agregan al existir sus rutas.
 
 ---
 
 ## 17. Logging, OpenAPI, health, rate limiting, caché
 
 - **Logging:** `[LoggerMessage]` obligatorio (`CA1848` como warning, que rompe el build). Nunca se registran códigos, tokens, enlaces, emails completos ni teléfonos. Cada log de negocio lleva un scope con `TenantId`.
-- **OpenAPI:** `/openapi/v1.json` y Swagger UI solo en Development. El build exporta `docs/contracts/openapi.json` (`Microsoft.Extensions.ApiDescription.Server`), que el front usa para generar sus tipos. El CI falla si el archivo commiteado no coincide con el generado.
+- **OpenAPI:** `/openapi/v1.json` y Swagger UI solo en Development. El build exporta `docs/contracts/openapi.json` con `Microsoft.Extensions.ApiDescription.Server`, como en ArquitecturaBase; el front lo usa para generar sus tipos. El CI falla si el archivo commiteado no coincide con el generado.
 - **Health:** `/health` (readiness: base de datos, rol de runtime y WhatsApp) y `/alive`.
 - **Rate limiting:**
   - por IP: `login-code`, `login-verify`, `invitation-accept` y `whatsapp-webhook`;
   - por organización: `tenant-api`, una ventana deslizante sobre `/api`.
-  - Un 429 sale como ProblemDetails con `retryAfter`.
+  - Un 429 sale como ProblemDetails con `retryAfter` en segundos; `shared/api/httpClient` del front lo convierte en `ApiError.retryAfterSeconds` para la cuenta regresiva del botón.
 - **Caché:** HybridCache con claves de `CacheKeys`, siempre con prefijo: `t:{tenantId}:` (privado), `s:{businessTenantId}:` (página pública; se invalida al publicar), `u:{userId}:` (identidad y accesos) o `p:` (plataforma). Un test verifica que ninguna clave se arme sin prefijo.
 
 ---
@@ -766,16 +772,17 @@ Nadie formatea a mano. El catálogo visual completo (cómo se ve cada tipo) est�
 | Porcentaje | `decimal` como fracción | `0.125` (= 12,5 %) | `numeric(9,6)` | siempre fracción, nunca 12.5 |
 | Enum | enum | `"Active"` (texto) | texto | el front lo traduce, el backend no manda textos |
 | Teléfono | `PhoneNumber` | `"+5491155551234"` (E.164) | texto | |
-| CUIT / id fiscal | `TaxId` (`Country` + `Type` + `Number`) | `{ "country": "AR", "type": "CUIT", "number": "20123456786" }` | tres columnas: `TaxCountry char(2)` + `TaxType varchar(8)` + `TaxNumber varchar(20)` | solo dígitos, validado con el dígito verificador; el formato con guiones (`20-12345678-6`) es de presentación |
+| CUIT / id fiscal | `TaxId` (`Country` + `Type` + `Number`) | `{ "country": "AR", "type": "AR-CUIT", "number": "20123456786" }` (E6) | tres columnas: `TaxCountry char(2)` + `TaxType varchar(16)` + `TaxNumber varchar(20)` | `type` es el código de `TaxIdTypes`; solo dígitos en `number`, validado con el dígito verificador; los guiones de `20-12345678-6` son solo de presentación |
 | Vacío | `null` | `null` | `NULL` | nunca `""`, `0` ni `"N/A"` para "no hay dato" |
 
-- **Redondeo:** `MidpointRounding.AwayFromZero`, a la cantidad de decimales de la moneda (ARS y USD: 2), **en el backend y al momento de calcular** (por línea y después el total). El front **no calcula** montos, solo los muestra; los totales vienen calculados.
-- **Moneda por defecto** de la organización: `TenantSettings.DefaultCurrency` (ARS). Un importe siempre lleva su moneda explícita, aunque sea la de por defecto.
+- **Redondeo:** `MidpointRounding.AwayFromZero`, a los `MinorUnits` que Application obtiene de `ICurrencyCatalog` y pasa a `Money.Round(minorUnits)`, **en el backend y al momento de calcular** (por línea y después el total). `CurrencyCode.Create(code)` en Domain solo valida la sintaxis alfa-3; `ValidCurrency()` en Application comprueba existencia y habilitación del código para una entrada nueva. El front **no calcula** montos, solo los muestra; los totales vienen calculados.
+- **Moneda por defecto** de la organización: `TenantSettings.DefaultCurrency` (inicialmente ARS desde el catálogo). Un importe siempre lleva su moneda explícita, aunque sea la de por defecto.
 - Límite de precisión: JSON number alcanza para importes de hasta 13 dígitos enteros con 2 decimales. Más que eso requiere un ADR.
 
 ### Formato del lado del backend
 
-- `Application/Common/Formatting/DisplayFormatter.cs` (BCL pura, `CultureInfo`) expone en E1 `Date`, `DateTime`, `Time`, `DateLong`, `Integer`, `Decimal`, `Money`, `Percent`, `Phone` y `Empty`; suma `TaxId` en E6, junto con el value object. Siempre recibe la **cultura y la zona explícitas**.
+- `Application/Common/Formatting/DisplayFormatter.cs` presenta desde E1 **todos** los tipos de `formatos.md` en cada cultura habilitada: fechas absolutas, relativas y rangos; enteros, decimales, cantidades y compactos; porcentaje, dinero, tamaño de archivo, duración, teléfono, zona, cultura, identificación fiscal, correo, enum, booleano, vacío y texto. Recibe cultura y zona explícitas, y el instante de `TimeProvider` para los formatos relativos. Usa los patrones del catálogo `Cultures` y `CurrencyTranslations.DisplaySymbol` por cultura para los montos (JSON E1, tablas E2), no perfiles ni símbolos escritos a mano. El formato fiscal E1 usa los campos del contrato; el value object `TaxId` llega en E6.
+- `docs/contracts/format-cases.json` tiene `now` fijo (`2026-09-27T15:00:00Z`) y casos `{ id, type, culture, timeZone, input, expected }` para todos los tipos y ambas culturas iniciales, incluidos importes con 0, 2 y 3 decimales y teléfonos nacionales e internacionales. El texto `expected` manda si una librería da otra variante ([datos-de-referencia.md](datos-de-referencia.md) §7).
 - Lo usan las plantillas de correo, los textos de WhatsApp y las exportaciones.
 - `DisplayFormatterTests` recorre `docs/contracts/format-cases.json`; el front corre el mismo archivo. Si los dos lados no producen el mismo texto, falla el CI.
 
@@ -784,7 +791,7 @@ Nadie formatea a mano. El catálogo visual completo (cómo se ve cada tipo) est�
 ## 19. Front y hosting
 
 - El SPA vive en `../ArquitecturaBaseMutitenantFront`. El SPA y la Api se sirven desde el **mismo origen en cada host**, el dominio principal y cada `<slug>.plataforma.com`: en producción desde wwwroot, con DNS y certificado comodín; en desarrollo, con el proxy de Vite por host (`*.localtest.me`). **No hay CORS**, tampoco en los subdominios.
-- `BackendPrefixes` es una lista a mano, y se atiende igual en todos los hosts: `/api`, `/account`, `/connect`, `/signin-google`, `/.well-known`, `/webhooks`, `/health` y `/alive`. Un prefijo nuevo se suma ahí, al `SpaHostingTests` y al `server.proxy` de `vite.config.ts`.
+- `BackendPrefixes` es una lista a mano, y se atiende igual en todos los hosts: `/api`, `/account`, `/connect`, `/signin-google`, `/.well-known`, `/webhooks`, `/health` y `/alive`; en Development agrega `/swagger` y `/openapi`. Un prefijo nuevo se suma ahí, al `SpaHostingTests` y al `server.proxy` de `vite.config.ts` (los dos prefijos de documentación solo en Development).
 - La arquitectura del front está en `../ArquitecturaBaseMutitenantFront/docs/architecture/frontend.md`.
 
 ---

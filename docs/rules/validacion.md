@@ -7,8 +7,8 @@
 - Reglas comunes de `ValidationRules`:
   - textos: `Required()`, `PersonName()`, `OrganizationName()`, `ShortName()`, `Description()`, `LongText()` (los largos salen de `TextLimits`; [textos-libres](textos-libres.md));
   - datos de contacto y fiscales: `ValidEmail()` ([emails](emails.md)), `ValidTaxId()` ([identificacion-fiscal](identificacion-fiscal.md));
-  - preferencias: `ValidTimeZone()`, `ValidCulture()`, `ValidCurrency()`;
-  - permisos: `ValidPermissions(scope)`.
+  - datos de referencia: `ValidCurrency()`, `ValidCountry()`, `ValidTimeZone()`, `ValidCulture()` y `ValidTaxIdType()` consultan los cinco catálogos de Application; solo aceptan códigos habilitados para un dato nuevo;
+  - permisos: `ValidPermissions(scope)` se agrega en E4, junto con el catálogo; no forma parte de `ValidationRules` de E1.
 - El teléfono no tiene regla en `ValidationRules`: lo interpreta el servicio con `IPhoneNumberParser.Parse(country, number, usage)`, y el error (`Users.Phone.*`) se ata al campo `phone` con `FieldErrors.On` ([telefonos](telefonos.md)).
 - El texto ya llega limpio (trim, NFC, sin caracteres invisibles) gracias al conversor global: no se vuelve a limpiar.
 - Los mensajes salen de `ValidationTexts` (`Validation.resx`), nunca de un literal.
@@ -27,7 +27,7 @@
 - `Application/Validation/Roles/CreateRoleRequestValidator.cs` (E4)
 
 ## Lo verifica
-- `RequestValidatorTests` (E1), `PagedRequestValidatorTests` (E1).
+- `RequestValidatorTests` (E1), `PagedRequestValidatorTests` (E1), `ReferenceDataValidationTests` (E1).
 - `ValidationProblemTests` (E1): forma del 400 con `errors`.
 - `ServiceDependencyCountTests` (E1): evita la vuelta a los validadores inyectados por request.
 

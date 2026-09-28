@@ -12,6 +12,7 @@ ArquitecturaBaseMutitenant/
 ├── docs/
 │   ├── architecture/
 │   │   ├── backend.md                                arquitectura canónica
+│   │   ├── datos-de-referencia.md                    [E1] ADR 0036: JSON E1, tablas y seed E2
 │   │   ├── multitenancy.md                           accesos B2C/B2B, tres clases de datos, subdominios, aislamiento
 │   │   ├── arnes.md                                  cómo se guía a quien programa: fichas, punteros, verificación
 │   │   ├── estandares.md                             inventario de estándares transversales (definidos, P1 a P10 adoptados, propuestos)
@@ -40,6 +41,21 @@ ArquitecturaBaseMutitenant/
 │   │   └── AAAA-MM-DD-etapa-N-<tema>.md              plan detallado de cada etapa
 │   └── history/                                      planes cerrados (HISTÓRICO)
 ├── scripts/
+│   ├── datos-de-referencia/                          [E1] generación desde ISO 4217, ISO 3166, IANA y CLDR
+│   │   ├── generar.mjs                               [E1] regenera los cinco JSON de salida; nunca se editan a mano
+│   │   ├── generar.test.mjs                          [E1] snapshots/hashes y salida byte a byte, sin red
+│   │   ├── package.json                              [E1] parser XML, CLDR y libphonenumber exactos
+│   │   ├── package-lock.json                         [E1] dependencias transitivas fijadas
+│   │   ├── .node-version                             [E1] Node/ICU fijados para Intl.DisplayNames
+│   │   ├── sources.lock.json                         [E1] URL, versión y SHA-256 de SIX e IANA
+│   │   ├── habilitados.json                          [E1] configuración fuente de IsEnabled y SortOrder, no lista en código
+│   │   ├── cultures.source.json                      [E1] culturas y patrones editables; cultures.json es salida
+│   │   ├── tax-id-types.source.json                  [E1] tipos fiscales editables; tax-id-types.json es salida
+│   │   ├── sources/                                  [E1] snapshots versionados; solo --refresh los actualiza
+│   │   │   ├── iso4217-list-one.xml                  [E1] SIX ISO 4217 List One
+│   │   │   └── iana-zone1970.tab                    [E1] IANA tzdb, zonas canónicas y países
+│   │   ├── ciudades.es.json                          [E1] excepciones de nombres de ciudad en español
+│   │   └── ciudades.en.json                          [E1] excepciones de nombres de ciudad en inglés
 │   └── secretos/
 │       ├── importar-desde-arquitecturabase.ps1       copia los 5 secretos de ArquitecturaBase sin mostrarlos
 │       ├── cargar-desde-archivo.ps1                  carga un JSON guardado fuera del repo
@@ -81,11 +97,23 @@ ArquitecturaBaseMultitenant.Domain/
 │   ├── Result.cs                                     Result y Result<T>, con conversiones implícitas
 │   └── ValidationError.cs                            "Validation.Failed" + errores por campo
 ├── ValueObjects/                                     [E1]
-│   ├── Money.cs                                      [E1] Amount (decimal) + Currency; suma solo con la misma moneda; Round()
-│   ├── CurrencyCode.cs                               [E1] ISO 4217 + decimales de la moneda
-│   ├── CultureCode.cs                                [E1] es-AR | en-US (SupportedCultures)
+│   ├── Money.cs                                      [E1] Amount (decimal) + Currency; suma solo con la misma moneda; Round(minorUnits)
+│   ├── CurrencyCode.cs                               [E1] solo sintaxis alfa-3; ICurrencyCatalog de Application valida existencia y habilitación
+│   ├── CultureCode.cs                                [E1] sintaxis idioma-región; ICultureCatalog valida habilitación
 │   ├── Email.cs                                      [E1] normalizado (minúsculas, NFC, IDN), validado
 │   └── PhoneNumber.cs                                [E1] E.164; PhoneUsage se suma en E3
+├── ReferenceData/                                    [E2] entidades globales de platform, sin RLS
+│   ├── Currency.cs
+│   ├── CurrencyTranslation.cs
+│   ├── Country.cs
+│   ├── CountryTranslation.cs
+│   ├── ReferenceTimeZone.cs
+│   ├── TimeZoneCountry.cs
+│   ├── TimeZoneTranslation.cs
+│   ├── Culture.cs
+│   ├── CultureTranslation.cs
+│   ├── TaxIdType.cs
+│   └── TaxIdTypeTranslation.cs
 ├── Tenancy/                                          [E2–E3]
 │   ├── Tenant.cs                                     Kind, Status, Name, Slug?; métodos Activate/Suspend/Close
 │   ├── TenantKind.cs                                 Personal | Business
@@ -187,19 +215,19 @@ ArquitecturaBaseMultitenant.Application/
 │   ├── Validation/
 │   │   ├── IRequestValidator.cs                      un solo validador inyectable
 │   │   ├── RequestValidator.cs
-│   │   ├── ValidationRules.cs                        Required, MaxLength, ValidEmail, ValidTimeZone, ValidPermissions…
+│   │   ├── ValidationRules.cs                        [E1] Required, MaxLength, ValidEmail y ValidCurrency/Country/TimeZone/Culture/TaxIdType
+│   │   │                                             contra catálogos; ValidPermissions en [E4]
 │   │   ├── FieldErrors.cs
 │   │   ├── PagedRequestValidator.cs                  página, tamaño permitido, sort en SortableFields, búsqueda ≤ 100
 │   │   └── CursorRequestValidator.cs                 cursor válido, límite ≤ 100
 │   ├── Logging/
 │   │   └── OperationLog.cs                           LogHandling/LogHandled/LogFailed con [LoggerMessage]
 │   ├── Formatting/                                   [E1] presentación unificada del lado del back (backend.md §18)
-│   │   ├── DisplayFormatter.cs                       Date, DateTime, Time, DateLong, Integer, Decimal, Money, Percent,
-│   │   │                                             Phone, Empty; siempre con cultura y zona explícitas; TaxId se suma en la E6
-│   │   ├── CultureProfiles.cs                        es-AR y en-US: patrones, 24/12 h, separadores (espejo del front)
-│   │   └── SupportedCultures.cs                      es-AR (por defecto), en-US
-│   └── Exceptions/
-│       └── UniqueConstraintViolationException.cs
+│   │   ├── DisplayFormatter.cs                       [E1] todos los tipos de formatos.md, con cultura y zona explícitas
+│   │   ├── CultureProfiles.cs                        [E1] adapta patrones de ICultureCatalog (JSON E1, tabla E2), sin lista fija
+│   │   └── SupportedCultures.cs                      [E1] lee ICultureCatalog; es-AR y en-US habilitadas inicialmente
+│   └── Exceptions/                                    [E2]
+│       └── UniqueConstraintViolationException.cs     [E2] con UnitOfWork
 ├── Configuration/                                    [E3]
 │   ├── Auth/                                         [E3]
 │   │   ├── LoginCodeOptions.cs
@@ -228,8 +256,14 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── IPlatformAccountService.cs                [E5]
 │   │   ├── IPlatformOperatorService.cs               [E5]
 │   │   ├── IPlatformAuditService.cs                  [E5]
-│   │   ├── ITimeZoneCatalogService.cs                [E1] catálogo traducido para GET /api/time-zones
+│   │   ├── IReferenceDataService.cs                  [E1] cinco catálogos traducidos, GET /api/reference-data
 │   │   └── IPlatformSettingsService.cs              [E5]
+│   ├── ReferenceData/                                [E1] puertos de Application; Domain no los referencia
+│   │   ├── ICurrencyCatalog.cs                        código, IsEnabled y MinorUnits desde JSON E1 / base E2
+│   │   ├── ICountryCatalog.cs
+│   │   ├── ITimeZoneCatalog.cs
+│   │   ├── ICultureCatalog.cs                         patrones de formato y culturas habilitadas
+│   │   └── ITaxIdTypeCatalog.cs
 │   ├── Persistence/                                  implementados en Infrastructure/Persistence
 │   │   ├── IUnitOfWork.cs                            [E2]
 │   │   ├── CommitPolicy.cs                           [E2] OnSuccess | OnAnyResult
@@ -290,7 +324,7 @@ ArquitecturaBaseMultitenant.Application/
 │       ├── Caching/
 │       │   └── ITenantStatusCache.cs                 [E3] invalidar al suspender o reactivar
 │       ├── Time/
-│       │   └── ITimeZoneService.cs                   [E1] IsValid, GetDayRangeUtc, catálogo
+│       │   └── ITimeZoneService.cs                   [E1] conversión y GetDayRangeUtc con TimeZoneInfo; catálogo en ReferenceData/
 │       └── Phones/
 │           ├── IPhoneNumberParser.cs                [E3] Parse(country, number, PhoneUsage) → Result<PhoneNumber>; Mask
 │           ├── PhoneUsage.cs                        [E3] Any | Mobile; no nombra WhatsApp (sus países los controla el módulo)
@@ -368,8 +402,9 @@ ArquitecturaBaseMultitenant.Application/
 │   │   └── ReadModels/
 │   │       └── AuditEntryRow.cs
 │   ├── Time/                                         [E1]
-│   │   ├── TimeZoneResponse.cs
 │   │   └── DayRangeUtc.cs
+│   ├── ReferenceData/                                [E1]
+│   │   └── ReferenceDataResponse.cs                  cinco catálogos traducidos; zona con ID IANA, CountryCodes[] y ciudad
 │   ├── Platform/                                     [E5]
 │   │   ├── ListTenantsRequest.cs
 │   │   ├── TenantDetailResponse.cs
@@ -474,8 +509,8 @@ ArquitecturaBaseMultitenant.Application/
 │   │   └── TenantSettingsService.cs                  [E6]
 │   ├── Auditing/
 │   │   └── AuditLogService.cs                        [E6]
-│   ├── Time/                                         [E1]
-│   │   └── TimeZoneCatalogService.cs                 usa ITimeZoneService; devuelve TimeZoneResponse
+│   ├── ReferenceData/                                [E1]
+│   │   └── ReferenceDataService.cs                   usa los cinco catálogos, devuelve ReferenceDataResponse
 │   └── Platform/                                     [E5]
 │       ├── TenantAdministrationService.cs
 │       ├── PlatformAccountService.cs
@@ -548,6 +583,18 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   ├── DatabaseBootstrapExtensions.cs                 [E2] solo Development: crea la base con ICU es-AR, crea mt_app, migra y hace el seed (appdb-admin)
 │   ├── Configurations/                                una IEntityTypeConfiguration<T> por entidad
 │   │   ├── Platform/
+│   │   │   ├── ReferenceData/                         [E2] una IEntityTypeConfiguration por tabla global, sin RLS
+│   │   │   │   ├── CurrencyConfiguration.cs
+│   │   │   │   ├── CurrencyTranslationConfiguration.cs
+│   │   │   │   ├── CountryConfiguration.cs
+│   │   │   │   ├── CountryTranslationConfiguration.cs
+│   │   │   │   ├── TimeZoneConfiguration.cs
+│   │   │   │   ├── TimeZoneCountryConfiguration.cs
+│   │   │   │   ├── TimeZoneTranslationConfiguration.cs
+│   │   │   │   ├── CultureConfiguration.cs
+│   │   │   │   ├── CultureTranslationConfiguration.cs
+│   │   │   │   ├── TaxIdTypeConfiguration.cs
+│   │   │   │   └── TaxIdTypeTranslationConfiguration.cs
 │   │   │   ├── TenantConfiguration.cs                 [E3]
 │   │   │   ├── OutboxMessageConfiguration.cs          [E3]
 │   │   │   ├── PlatformSettingsConfiguration.cs       [E3]
@@ -606,6 +653,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   ├── CompanyRepository.cs                       [E6]
 │   │   └── CompanyMembershipRepository.cs           [E6]
 │   ├── Readers/                                       AsNoTracking + proyección a *Row/*Response
+│   │   ├── ReferenceDataReader.cs                     [E2] tablas platform + HybridCache p:ref:<catálogo>
 │   │   ├── TenantReader.cs                            [E3]
 │   │   ├── MemberReader.cs                            [E3] Members ⋈ AspNetUsers (el único camino a la identidad)
 │   │   ├── TenantSettingsReader.cs                    [E3] con caché t:
@@ -620,7 +668,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │       └── SecurityEventReader.cs
 │   ├── Migrations/                                    una sola carpeta; RLS y grants dentro de cada migración
 │   │   ├── <ts>_InitialSchema.cs                      [E2] esquemas, grants a mt_app, funciones de triggers, unaccent,
-│   │   │                                              pg_trgm, public.f_unaccent y platform.IdempotencyKeys
+│   │   │                                              pg_trgm, public.f_unaccent, platform.IdempotencyKeys y tablas de referencia
 │   │   ├── <ts>_IdentityAndTenancy.cs                 [E3] usuarios, tenants, miembros, invitaciones, settings de organización y de plataforma,
 │   │   │                                              eventos de seguridad, outbox
 │   │   ├── <ts>_OpenIddict.cs                         [E3]
@@ -628,7 +676,14 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   ├── <ts>_Platform.cs                           [E5] roles de plataforma
 │   │   ├── <ts>_Companies.cs                          [E6]
 │   │   └── ApplicationDbContextModelSnapshot.cs
-│   └── Seed/
+│   └── Seed/                                          [E1–E2]
+│       ├── ReferenceData/                             [E1] cinco JSON de salida versionados; no se editan a mano
+│       │   ├── currencies.json                        [E1] ISO 4217, MinorUnits y traducciones con DisplaySymbol por cultura
+│       │   ├── countries.json                         [E1] ISO 3166-1, relaciones internas y traducciones
+│       │   ├── time-zones.json                        [E1] IANA/CLDR, IDs, CountryCodes[] y ciudades traducidas
+│       │   ├── cultures.json                          [E1] patrones y nombres traducidos; es-AR y en-US habilitadas inicialmente
+│       │   └── tax-id-types.json                      [E1] normativa fiscal y ValidatorKey
+│       ├── ReferenceDataSeeder.cs                    [E2] upsert idempotente; nunca borra
 │       ├── SeedExtensions.cs                          [E3] orden e idempotencia; corre en todos los ambientes, dentro de un
 │       │                                              límite y con el advisory lock "seed:" (sin carreras entre réplicas)
 │       ├── SeedOptions.cs                             [E3] Seed:PlatformOwner
@@ -723,6 +778,8 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   └── TenantStatusCache.cs                           [E3]
 ├── Time/                                              [E1]
 │   └── TimeZoneService.cs                             [E1] TimeZoneInfo con IDs IANA
+├── ReferenceData/                                     [E1]
+│   └── JsonReferenceDataCatalog.cs                    [E1] implementa los cinco puertos desde JSON; E2 se reemplaza por reader
 ├── Phones/                                            [E3]
 │   └── LibPhoneNumberParser.cs                        [E3]
 └── BackgroundJobs/                                    [E2]
@@ -781,7 +838,8 @@ ArquitecturaBaseMultitenant.Api/
 │   ├── Account/
 │   │   ├── MeController.cs                            [E3] GET/PUT /api/me
 │   │   ├── BusinessSignupController.cs                [E6] POST /api/auth/business-signup ("Registrá tu empresa")
-│   │   └── TimeZonesController.cs                     [E1] GET /api/time-zones
+│   ├── ReferenceData/                                [E1]
+│   │   └── ReferenceDataController.cs                 GET /api/reference-data y /{catálogo} [AllowAnonymous]; lista de AccessDeclarationTests [E3]
 │   ├── Organization/                                  [Access(Business)]; rutas sin prefijo de acceso (el acceso lo declara [Access]); suma
 │   │                                                  PublicPageAdminController (E6: mi página pública)
 │   │   ├── RolesController.cs                         [E4] api/roles ← referencia
@@ -799,6 +857,8 @@ ArquitecturaBaseMultitenant.Api/
 │       ├── PlatformAuditController.cs
 │       └── PlatformSettingsController.cs
 ├── Contracts/                                         entrada HTTP: records sealed, props nullable, ToString() sin PII
+│   ├── ReferenceData/                                [E1]
+│   │   └── ReferenceDataHttpResponse.cs               cinco catálogos traducidos; ETag
 │   ├── Auth/                                          [E3]
 │   │   ├── SignupHttpRequest.cs
 │   │   ├── VerifySignupHttpRequest.cs
@@ -872,8 +932,8 @@ ArquitecturaBaseMultitenant.Api/
 └── Hosting/                                           [E1]
     ├── ForwardedHeadersExtensions.cs
     ├── SecurityHeadersExtensions.cs
-    └── SpaExtensions.cs                               BackendPrefixes (lista a mano), iguales en el dominio principal y en cada subdominio
-                                                       (SPA y Api en el mismo origen: sin CORS)
+    └── SpaExtensions.cs                               BackendPrefixes (lista a mano), iguales en el dominio principal y en cada subdominio;
+                                                       /swagger y /openapi solo en Development (SPA y Api en el mismo origen: sin CORS)
 ```
 
 ## src/ArquitecturaBaseMultitenant.AppHost y .ServiceDefaults `[E0]`
@@ -904,7 +964,8 @@ tests/
 │   │   ├── ResultTests.cs
 │   │   └── ValidationErrorTests.cs
 │   ├── ValueObjects/                                  [E1]
-│   │   ├── MoneyTests.cs                              [E1] redondeo AwayFromZero, monedas distintas no se suman
+│   │   ├── MoneyTests.cs                              [E1] redondeo AwayFromZero con MinorUnits recibidos, monedas distintas no se suman
+│   │   ├── CurrencyCodeTests.cs                       [E1] sintaxis alfa-3; existencia/habilitación en Application
 │   │   ├── EmailTests.cs                              [E1]
 │   │   └── PhoneNumberTests.cs                        [E1]
 │   ├── Tenancy/                                       [E2–E3]
@@ -923,6 +984,9 @@ tests/
 │   │   ├── RequestValidatorTests.cs
 │   │   ├── PagedRequestValidatorTests.cs
 │   │   └── DisplayFormatterTests.cs                   [E1] recorre docs/contracts/format-cases.json
+│   ├── ReferenceData/                                 [E1]
+│   │   ├── ReferenceDataCatalogTests.cs               JSON válidos, referencias internas y traducciones
+│   │   └── ReferenceDataValidationTests.cs            existencia/IsEnabled y MinorUnits desde Application
 │   ├── Resources/                                     [E1]
 │   │   ├── ResourceParityTests.cs                     claves y placeholders es = en
 │   │   ├── ErrorTextsTests.cs
@@ -1016,7 +1080,9 @@ tests/
 │   ├── Json/                                          [E1]
 │   │   ├── UtcDateTimeTests.cs                        [E1]
 │   │   ├── DateOnlyTimeOnlyTests.cs                   [E1]
-│   │   └── MoneyJsonTests.cs                          [E1] { amount, currency }; moneda inválida → 400
+│   │   └── MoneyJsonTests.cs                          [E1] { amount, currency }; sintaxis alfa-3 inválida → 400
+│   ├── ReferenceData/                                 [E1]
+│   │   └── ReferenceDataApiTests.cs                   [AllowAnonymous], ETag, cinco catálogos y rutas por catálogo
 │   ├── Phones/                                        [E3]
 │   │   └── LibPhoneNumberParserTests.cs               parseo de números argentinos y validación de celular
 │   ├── Hosting/                                       [E0–E1]
@@ -1028,6 +1094,7 @@ tests/
 │   │   ├── OpenApiTests.cs                            [E1] cada operación de /api declara su 2xx con esquema y sus errores ProblemDetails; Swagger solo en Development
 │   │   └── OpenApiContractTests.cs                    [E1] openapi.json al día
 │   ├── Persistence/                                   [E2]
+│   │   ├── ReferenceDataSeederTests.cs                [E2] upsert, segundo arranque, zona compartida y deshabilitación sin borrar
 │   │   ├── UnitOfWorkTests.cs
 │   │   ├── PaginationTests.cs                         orden estable, página fuera de rango, sort no permitido
 │   │   ├── CursorPaginationTests.cs                   sin saltos ni repetidos al insertar mientras se pagina
@@ -1096,12 +1163,13 @@ tests/
     │                                                  plataforma o identidad
     ├── DecimalPrecisionTests.cs                       [E1] ningún decimal sin HasPrecision; ningún double o float en entidades
     ├── NoManualFormattingTests.cs                     [E1] sin ToString("N"), ToString("C") ni formatos de fecha fuera de DisplayFormatter
+    ├── ReferenceDataHardcodeTests.cs                  [E1] sin listas ISO/cultura/zona escritas en código fuera de JSON
     ├── TenantScopeUsageTests.cs                       [E2] ITenantScope solo en la lista blanca
     ├── QueryFilterBypassTests.cs                      [E2] IgnoreQueryFilters solo en Readers/Platform (salvo IgnoreQueryFilters(["SoftDelete"]))
     ├── IdentityAccessTests.cs                         [E3] ApplicationUser solo desde Identity/ (con Configurations/Identity), ApplicationDbContext,
     │                                                  UserRepository, MemberReader, Readers/Platform y Seed/
-    ├── AccessDeclarationTests.cs                      [E3] toda ruta declara [Access] o [PublicSite]; solo [AllowAnonymous] si su controller está en la
-    │                                                  lista explícita del test (las rutas anónimas del dominio principal)
+    ├── AccessDeclarationTests.cs                      [E3] toda ruta declara [Access] o [PublicSite]; ReferenceDataController
+    │                                                  está en la lista explícita [AllowAnonymous] del dominio principal
     ├── PermissionAuthorizationTests.cs                [E4] permisos, nunca roles ni Policy a mano; cada [HasPermission]
     │                                                  nombra un permiso que existe en su catálogo
     └── ModuleIsolationTests.cs                        [E8] el núcleo no referencia ningún namespace *.Modules.*
