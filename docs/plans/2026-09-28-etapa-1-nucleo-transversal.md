@@ -113,9 +113,10 @@ No quedan preguntas técnicas pendientes. Según AGENTS.md, una duda nueva se re
 
 **Archivos:** crear src/ArquitecturaBaseMultitenant.Domain/Common/TextLimits.cs; src/ArquitecturaBaseMultitenant.Application/Common/Text/TextNormalizer.cs; tests/ArquitecturaBaseMultitenant.Application.UnitTests/Common/TextNormalizerTests.cs y tests/ArquitecturaBaseMultitenant.ArchitectureTests/TextLimitsTests.cs (nuevos); modificar tests/ArquitecturaBaseMultitenant.Application.UnitTests/ArquitecturaBaseMultitenant.Application.UnitTests.csproj para quitar --ignore-exit-code 8.
 **Respaldo:** plan maestro §Etapa 1, Back 11; backend.md §20; arbol.md back “Piezas de los estándares P4”; rules/textos-libres.md “Cómo se hace” y “Lo verifica”.
-- [ ] Probar `Clean` global con trim, NFC, invisibles y vacío→null, conservando espacios y saltos internos; probar por separado el helper tipado que colapsa solo nombres, y los largos declarados. A/TextNormalizerTests y R/TextLimitsTests en rojo.
-- [ ] Implementar `Clean`, el helper tipado de nombres y las constantes; repetir ambas pruebas en verde. La conexión del conversor JSON global llega en T20.
-- [ ] Commit back: feat: normalizar textos y centralizar límites
+**Decisiones técnicas:** `Clean` reutiliza el tratamiento de sustitutos Unicode inválidos de `WhatsAppText.Sanitize` de ArquitecturaBase; `CleanName` colapsa espacios, tabulaciones y saltos solo para nombres. `TextLimitsTests` excluye migraciones EF generadas, que emiten números literales aunque la configuración fuente use las constantes.
+- [x] Probar `Clean` global con trim, NFC, invisibles y vacío→null, conservando espacios y saltos internos; probar por separado el helper tipado que colapsa solo nombres, y los largos declarados. A/TextNormalizerTests y R/TextLimitsTests en rojo.
+- [x] Implementar `Clean`, el helper tipado de nombres y las constantes; repetir ambas pruebas en verde. La conexión del conversor JSON global llega en T20.
+- [x] Commit back: feat: normalizar textos y centralizar límites
 
 ### Tarea 8. Contrato compartido de formatos
 
