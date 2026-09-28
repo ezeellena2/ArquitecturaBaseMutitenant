@@ -136,11 +136,11 @@ No quedan preguntas técnicas pendientes. Según AGENTS.md, una duda nueva se re
 
 ### Tarea 10. Culturas, resources y paridad
 
-**Archivos:** crear src/ArquitecturaBaseMultitenant.Application/Common/Formatting/SupportedCultures.cs (consulta `ICultureCatalog`, sin lista fija); Resources/{Errors,Errors.en,Validation,Validation.en}.resx ← archivos homónimos de ../ArquitecturaBase/src/ArquitecturaBase.Application/Resources/; Resources/ErrorTexts.cs ← ErrorMessages.cs y ValidationTexts.cs ← ValidationMessages.cs de esa carpeta; Resources/{AGENTS,CLAUDE}.md; src/ArquitecturaBaseMultitenant.Api/Localization/LocalizationExtensions.cs ← ../ArquitecturaBase/src/ArquitecturaBase.Api/Localization/LocalizationExtensions.cs; tests/ArquitecturaBaseMultitenant.Application.UnitTests/Resources/{ResourceParityTests,ErrorTextsTests}.cs ← ResourceParityTests.cs y ErrorMessagesTests.cs de la base; tests/ArquitecturaBaseMultitenant.ArchitectureTests/ErrorCodeTests.cs ← homónimo base. La prueba HTTP de localización se agrega al conectar Program.
+**Archivos:** crear src/ArquitecturaBaseMultitenant.Application/Common/Formatting/{SupportedCultures.cs,AGENTS.md,CLAUDE.md} (consulta `ICultureCatalog`, sin lista fija; los punteros nacen con la carpeta según arnes.md §3); Resources/{Errors,Errors.en,Validation,Validation.en}.resx ← archivos homónimos de ../ArquitecturaBase/src/ArquitecturaBase.Application/Resources/; Resources/ErrorTexts.cs ← ErrorMessages.cs y ValidationTexts.cs ← ValidationMessages.cs de esa carpeta; Resources/{AGENTS,CLAUDE}.md; src/ArquitecturaBaseMultitenant.Api/Localization/LocalizationExtensions.cs ← ../ArquitecturaBase/src/ArquitecturaBase.Api/Localization/LocalizationExtensions.cs; tests/ArquitecturaBaseMultitenant.Application.UnitTests/Resources/{ResourceParityTests,ErrorTextsTests}.cs ← ResourceParityTests.cs y ErrorMessagesTests.cs de la base; tests/ArquitecturaBaseMultitenant.ArchitectureTests/ErrorCodeTests.cs ← homónimo base. La prueba HTTP de localización se agrega al conectar Program.
 **Respaldo:** plan maestro §Etapa 1, Back 3; backend.md §6 “Catálogos” y §12; datos-de-referencia.md §§4–5; arbol.md back “Application/Resources” y tests; rules/textos-y-traducciones.md.
-- [ ] Probar paridad de claves/placeholders, códigos reservados y fallback; A/ResourceParityTests, A/ErrorTextsTests y R/ErrorCodeTests en rojo.
-- [ ] Copiar/adaptar resources y envoltorios, agregar culturas y localización; repetir en verde.
-- [ ] Commit back: feat: localizar errores y validaciones
+- [x] Probar paridad de claves/placeholders, códigos reservados y fallback; A/ResourceParityTests, A/ErrorTextsTests y R/ErrorCodeTests en rojo.
+- [x] Copiar/adaptar resources y envoltorios, agregar culturas y localización; repetir en verde.
+- [x] Commit back: feat: localizar errores y validaciones
 
 ### Tarea 11. Contratos de paginado y orden estable
 

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Title.Failure" xml:space="preserve"><value>Server error</value></data>
+  <data name="Title.Validation" xml:space="preserve"><value>Invalid data</value></data>
+  <data name="Title.Unauthorized" xml:space="preserve"><value>Unauthorized</value></data>
+  <data name="Title.Forbidden" xml:space="preserve"><value>Forbidden</value></data>
+  <data name="Title.NotFound" xml:space="preserve"><value>Not found</value></data>
+  <data name="Title.Conflict" xml:space="preserve"><value>Conflict</value></data>
+  <data name="Title.TooManyRequests" xml:space="preserve"><value>Too many requests</value></data>
+  <data name="Validation.Failed" xml:space="preserve"><value>Check the highlighted fields.</value></data>
+  <data name="Request.Invalid" xml:space="preserve"><value>The request has an invalid format.</value></data>
+  <data name="General.Unexpected" xml:space="preserve"><value>An unexpected error occurred. If the problem persists, report the trace id.</value></data>
+  <data name="Title.MethodNotAllowed" xml:space="preserve"><value>Operation not allowed</value></data>
+  <data name="Http.Unauthorized" xml:space="preserve"><value>You need to sign in to continue.</value></data>
+  <data name="Http.Forbidden" xml:space="preserve"><value>You don't have permission to perform this action.</value></data>
+  <data name="Http.NotFound" xml:space="preserve"><value>We couldn't find what you're looking for.</value></data>
+  <data name="Http.MethodNotAllowed" xml:space="preserve"><value>This operation is not allowed on this resource.</value></data>
+  <data name="Http.Conflict" xml:space="preserve"><value>The request conflicts with the current state of the resource.</value></data>
+  <data name="Http.TooManyRequests" xml:space="preserve"><value>Too many requests. Wait a moment and try again.</value></data>
+  <data name="Auth.LoginCode.Invalid" xml:space="preserve"><value>The code is not valid.</value></data>
+  <data name="Auth.LoginCode.Expired" xml:space="preserve"><value>The code has expired. Request a new one.</value></data>
+  <data name="Auth.LoginCode.AlreadyUsed" xml:space="preserve"><value>The code has already been used. Request a new one.</value></data>
+  <data name="Auth.LoginCode.TooManyAttempts" xml:space="preserve"><value>Too many attempts for this code. Request a new one.</value></data>
+  <data name="Auth.LoginCode.ResendTooSoon" xml:space="preserve"><value>Wait a moment before requesting another code.</value></data>
+  <data name="Auth.LoginCode.TooManyRequests" xml:space="preserve"><value>You requested too many codes. Try again later.</value></data>
+  <data name="Auth.Account.Disabled" xml:space="preserve"><value>Your account is disabled. Contact an administrator.</value></data>
+  <data name="Auth.Account.LockedOut" xml:space="preserve"><value>Your account is locked for a few minutes after too many failed attempts.</value></data>
+  <data name="Auth.Account.NotInvited" xml:space="preserve"><value>You don't have access to this system yet. Ask an administrator to create your account.</value></data>
+  <data name="Auth.ExternalLogin.Failed" xml:space="preserve"><value>We couldn't complete the sign-in with Google.</value></data>
+  <data name="Auth.ExternalLogin.EmailNotVerified" xml:space="preserve"><value>Your Google account doesn't have a verified email.</value></data>
+  <data name="Auth.WhatsApp.CountryNotSupported" xml:space="preserve"><value>We don't send codes to numbers from that country yet.</value></data>
+  <data name="Auth.LoginLink.Invalid" xml:space="preserve"><value>This link no longer works.</value></data>
+  <data name="Auth.LoginLink.TooManyRequests" xml:space="preserve"><value>Wait a moment before requesting another link.</value></data>
+  <data name="Users.Email.Invalid" xml:space="preserve"><value>The email address is not valid.</value></data>
+  <data name="Users.Phone.Invalid" xml:space="preserve"><value>Enter a valid mobile number.</value></data>
+  <data name="Users.Phone.AlreadyExists" xml:space="preserve"><value>An account with that number already exists.</value></data>
+  <data name="Users.User.NotFound" xml:space="preserve"><value>We couldn't find the user.</value></data>
+  <data name="Users.User.CannotModifySelf" xml:space="preserve"><value>You can't apply this change to your own account.</value></data>
+  <data name="Users.User.LastAdmin" xml:space="preserve"><value>The system must keep at least one active administrator.</value></data>
+  <data name="Settings.System.NotFound" xml:space="preserve"><value>We couldn't find the system settings.</value></data>
+  <data name="Users.User.AlreadyExists" xml:space="preserve"><value>An account with that email already exists.</value></data>
+  <data name="Users.User.LastLoginMethod" xml:space="preserve"><value>It's your only way to sign in: add an email before unlinking it.</value></data>
+  <data name="Users.Identity.Required" xml:space="preserve"><value>Enter an email or a WhatsApp number.</value></data>
+  <data name="Users.Invitation.ConsentRequired" xml:space="preserve"><value>Confirm that the person agreed to receive WhatsApp messages.</value></data>
+  <data name="Users.Invitation.NameRequired" xml:space="preserve"><value>To invite by WhatsApp, enter the name of the person.</value></data>
+  <data name="Users.Invitation.TooManyRequests" xml:space="preserve"><value>Wait a minute before inviting this person again.</value></data>
+  <data name="Users.Invitation.UserInactive" xml:space="preserve"><value>The account is disabled: enable it before inviting it.</value></data>
+  <data name="Roles.Role.NotFound" xml:space="preserve"><value>We couldn't find the role.</value></data>
+  <data name="Roles.Role.AlreadyExists" xml:space="preserve"><value>A role with that name already exists.</value></data>
+  <data name="Roles.Role.SystemRoleCannotChange" xml:space="preserve"><value>System roles can't be renamed, deleted or have their permissions changed.</value></data>
+  <data name="Roles.Role.HasUsers" xml:space="preserve"><value>The role still has users assigned. Reassign them before deleting it.</value></data>
+  <data name="General.ConcurrencyConflict" xml:space="preserve"><value>Someone else changed this. Review the latest version before saving.</value></data>
+  <data name="Request.InProgress" xml:space="preserve"><value>The request is still being processed.</value></data>
+  <data name="Request.IdempotencyKeyRequired" xml:space="preserve"><value>A key identifying this request is required.</value></data>
+  <data name="Request.IdempotencyKeyReused" xml:space="preserve"><value>This key was already used for another request.</value></data>
+  <data name="Legal.AcceptanceRequired" xml:space="preserve"><value>Accept the current terms to continue.</value></data>
+  <data name="ReferenceData.Currency.Invalid" xml:space="preserve"><value>Enter a valid currency code.</value></data>
+  <data name="ReferenceData.Culture.Invalid" xml:space="preserve"><value>Enter a valid culture.</value></data>
+</root>

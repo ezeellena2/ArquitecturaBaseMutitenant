@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Title.Failure" xml:space="preserve"><value>Error del servidor</value></data>
+  <data name="Title.Validation" xml:space="preserve"><value>Datos inválidos</value></data>
+  <data name="Title.Unauthorized" xml:space="preserve"><value>No autenticado</value></data>
+  <data name="Title.Forbidden" xml:space="preserve"><value>Acceso denegado</value></data>
+  <data name="Title.NotFound" xml:space="preserve"><value>No encontrado</value></data>
+  <data name="Title.Conflict" xml:space="preserve"><value>Conflicto</value></data>
+  <data name="Title.TooManyRequests" xml:space="preserve"><value>Demasiadas solicitudes</value></data>
+  <data name="Validation.Failed" xml:space="preserve"><value>Revisá los campos marcados.</value></data>
+  <data name="Request.Invalid" xml:space="preserve"><value>La solicitud tiene un formato inválido.</value></data>
+  <data name="General.Unexpected" xml:space="preserve"><value>Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.</value></data>
+  <data name="Title.MethodNotAllowed" xml:space="preserve"><value>Operación no permitida</value></data>
+  <data name="Http.Unauthorized" xml:space="preserve"><value>Tenés que iniciar sesión para continuar.</value></data>
+  <data name="Http.Forbidden" xml:space="preserve"><value>No tenés permiso para realizar esta acción.</value></data>
+  <data name="Http.NotFound" xml:space="preserve"><value>No encontramos lo que buscás.</value></data>
+  <data name="Http.MethodNotAllowed" xml:space="preserve"><value>Esta operación no está permitida en este recurso.</value></data>
+  <data name="Http.Conflict" xml:space="preserve"><value>La solicitud entra en conflicto con el estado actual del recurso.</value></data>
+  <data name="Http.TooManyRequests" xml:space="preserve"><value>Hiciste demasiadas solicitudes. Esperá un momento y volvé a intentar.</value></data>
+  <data name="Auth.LoginCode.Invalid" xml:space="preserve"><value>El código no es válido.</value></data>
+  <data name="Auth.LoginCode.Expired" xml:space="preserve"><value>El código venció. Pedí uno nuevo.</value></data>
+  <data name="Auth.LoginCode.AlreadyUsed" xml:space="preserve"><value>El código ya se usó. Pedí uno nuevo.</value></data>
+  <data name="Auth.LoginCode.TooManyAttempts" xml:space="preserve"><value>Superaste los intentos para este código. Pedí uno nuevo.</value></data>
+  <data name="Auth.LoginCode.ResendTooSoon" xml:space="preserve"><value>Esperá un momento antes de pedir otro código.</value></data>
+  <data name="Auth.LoginCode.TooManyRequests" xml:space="preserve"><value>Pediste demasiados códigos. Probá de nuevo más tarde.</value></data>
+  <data name="Auth.Account.Disabled" xml:space="preserve"><value>Tu cuenta está deshabilitada. Contactá a un administrador.</value></data>
+  <data name="Auth.Account.LockedOut" xml:space="preserve"><value>Tu cuenta está bloqueada por unos minutos por demasiados intentos fallidos.</value></data>
+  <data name="Auth.Account.NotInvited" xml:space="preserve"><value>Todavía no tenés acceso al sistema. Pedile a un administrador que te dé de alta.</value></data>
+  <data name="Auth.ExternalLogin.Failed" xml:space="preserve"><value>No pudimos completar el ingreso con Google.</value></data>
+  <data name="Auth.ExternalLogin.EmailNotVerified" xml:space="preserve"><value>Tu cuenta de Google no tiene el email verificado.</value></data>
+  <data name="Auth.WhatsApp.CountryNotSupported" xml:space="preserve"><value>Todavía no mandamos códigos a números de ese país.</value></data>
+  <data name="Auth.LoginLink.Invalid" xml:space="preserve"><value>Este enlace ya no sirve.</value></data>
+  <data name="Auth.LoginLink.TooManyRequests" xml:space="preserve"><value>Esperá un momento antes de pedir otro enlace.</value></data>
+  <data name="Users.Email.Invalid" xml:space="preserve"><value>El email no es válido.</value></data>
+  <data name="Users.Phone.Invalid" xml:space="preserve"><value>Ingresá un número de celular válido.</value></data>
+  <data name="Users.Phone.AlreadyExists" xml:space="preserve"><value>Ya existe una cuenta con ese número.</value></data>
+  <data name="Users.User.NotFound" xml:space="preserve"><value>No encontramos el usuario.</value></data>
+  <data name="Users.User.CannotModifySelf" xml:space="preserve"><value>No podés aplicar este cambio sobre tu propia cuenta.</value></data>
+  <data name="Users.User.LastAdmin" xml:space="preserve"><value>Tiene que quedar al menos un administrador activo en el sistema.</value></data>
+  <data name="Settings.System.NotFound" xml:space="preserve"><value>No encontramos la configuración del sistema.</value></data>
+  <data name="Users.User.AlreadyExists" xml:space="preserve"><value>Ya existe una cuenta con ese correo.</value></data>
+  <data name="Users.User.LastLoginMethod" xml:space="preserve"><value>Es tu único medio de ingreso: para desvincularlo, primero agregá un correo.</value></data>
+  <data name="Users.Identity.Required" xml:space="preserve"><value>Cargá un correo o un número de WhatsApp.</value></data>
+  <data name="Users.Invitation.ConsentRequired" xml:space="preserve"><value>Confirmá que la persona aceptó recibir mensajes por WhatsApp.</value></data>
+  <data name="Users.Invitation.NameRequired" xml:space="preserve"><value>Para invitar por WhatsApp, cargá el nombre de la persona.</value></data>
+  <data name="Users.Invitation.TooManyRequests" xml:space="preserve"><value>Esperá un minuto antes de volver a invitar a esta persona.</value></data>
+  <data name="Users.Invitation.UserInactive" xml:space="preserve"><value>La cuenta está deshabilitada: habilitala antes de invitarla.</value></data>
+  <data name="Roles.Role.NotFound" xml:space="preserve"><value>No encontramos el rol.</value></data>
+  <data name="Roles.Role.AlreadyExists" xml:space="preserve"><value>Ya existe un rol con ese nombre.</value></data>
+  <data name="Roles.Role.SystemRoleCannotChange" xml:space="preserve"><value>Los roles del sistema no se pueden renombrar, borrar ni cambiarles los permisos.</value></data>
+  <data name="Roles.Role.HasUsers" xml:space="preserve"><value>El rol tiene usuarios asignados. Reasignalos antes de borrarlo.</value></data>
+  <data name="General.ConcurrencyConflict" xml:space="preserve"><value>Otra persona cambió esto. Revisá la versión más reciente antes de guardar.</value></data>
+  <data name="Request.InProgress" xml:space="preserve"><value>La solicitud todavía se está procesando.</value></data>
+  <data name="Request.IdempotencyKeyRequired" xml:space="preserve"><value>Falta la clave para identificar esta solicitud.</value></data>
+  <data name="Request.IdempotencyKeyReused" xml:space="preserve"><value>Esta clave ya se usó para otra solicitud.</value></data>
+  <data name="Legal.AcceptanceRequired" xml:space="preserve"><value>Aceptá los términos vigentes para continuar.</value></data>
+  <data name="ReferenceData.Currency.Invalid" xml:space="preserve"><value>Ingresá un código de moneda válido.</value></data>
+  <data name="ReferenceData.Culture.Invalid" xml:space="preserve"><value>Ingresá una cultura válida.</value></data>
+</root>
