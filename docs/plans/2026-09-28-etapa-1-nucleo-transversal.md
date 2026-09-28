@@ -292,177 +292,177 @@ No quedan preguntas técnicas pendientes. Según AGENTS.md, una duda nueva se re
 
 **Archivos:** crear ../ArquitecturaBaseMutitenantFront/scripts/{generate-contracts,check-contracts}.mjs y ../ArquitecturaBaseMutitenantFront/src/shared/api/generated/schema.d.ts (solo salida generada); crear ../ArquitecturaBaseMutitenantFront/src/shared/api/types.ts; modificar ../ArquitecturaBaseMutitenantFront/{package.json,package-lock.json,.github/workflows/ci.yml,vite.config.ts}; crear ../ArquitecturaBaseMutitenantFront/src/shared/api/{AGENTS,CLAUDE}.md y ../ArquitecturaBaseMutitenantFront/src/shared/api/contracts.test.ts, ../ArquitecturaBaseMutitenantFront/src/test/proxy-prefixes.test.ts (nuevos).
 **Respaldo:** plan maestro §Etapa 1, Front 6 y puerta general 6; frontend.md §4 “Datos y API”; backend.md §19; arbol.md front “Raíz/scripts” y “src/shared/api”; rules/datos-y-api.md; arnes.md front §2; decisiones 2 y 15 de este plan. Depende de OpenAPI backend.
-- [ ] Probar que `contracts:check` detecta schema desactualizado, es obligatorio en local y deja aviso y sale bien en CI solo si falta el repo hermano; generated contiene solo schema.d.ts y el proxy añade `/swagger` y `/openapi` solo en Development. npm test -- src/shared/api/contracts.test.ts src/test/proxy-prefixes.test.ts en rojo.
-- [ ] Crear scripts, alias tipados, scripts npm y CI; agregar prefijos de Development al proxy; ejecutar npm run contracts && npm run contracts:check en local y pruebas focales hasta verde.
-- [ ] Commit front: feat: generar tipos desde OpenAPI
+- [x] Probar que `contracts:check` detecta schema desactualizado, es obligatorio en local y deja aviso y sale bien en CI solo si falta el repo hermano; generated contiene solo schema.d.ts y el proxy añade `/swagger` y `/openapi` solo en Development. npm test -- src/shared/api/contracts.test.ts src/test/proxy-prefixes.test.ts en rojo.
+- [x] Crear scripts, alias tipados, scripts npm y CI; agregar prefijos de Development al proxy; ejecutar npm run contracts && npm run contracts:check en local y pruebas focales hasta verde.
+- [x] Commit front: feat: generar tipos desde OpenAPI
 
 ### Tarea 30. Cliente HTTP y contratos de error
 
 **Archivos:** crear ../ArquitecturaBaseMutitenantFront/src/shared/api/{httpClient.ts,httpClient.test.ts,ApiError.ts,problemDetails.ts,pagedResult.ts} ← homónimos de ../ArquitecturaBaseFront/src/shared/api/ (adaptar cultura, 401 y ProblemDetails).
 **Respaldo:** plan maestro §Etapa 1, Front 1; frontend.md §4 “Datos y API” y “Errores”; arbol.md front “src/shared/api”; rules/datos-y-api.md y rules/errores.md; decisión 13 de este plan. La conexión real de Auth llega en E3.
-- [ ] Probar Bearer opcional, Accept-Language efectivo, error tipado con `retryAfterSeconds` y PagedResult; npm test -- src/shared/api/httpClient.test.ts en rojo.
-- [ ] Copiar/adaptar cliente y tipos sin flujo de sesión vencida E3; repetir en verde.
-- [ ] Commit front: feat: centralizar cliente HTTP y errores
+- [x] Probar Bearer opcional, Accept-Language efectivo, error tipado con `retryAfterSeconds` y PagedResult; npm test -- src/shared/api/httpClient.test.ts en rojo.
+- [x] Copiar/adaptar cliente y tipos sin flujo de sesión vencida E3; repetir en verde.
+- [x] Commit front: feat: centralizar cliente HTTP y errores
 
 ### Tarea 31. Errores globales y formularios
 
 **Archivos:** crear ../ArquitecturaBaseMutitenantFront/src/shared/api/{queryClient.ts,formErrors.ts} ← homónimos de ../ArquitecturaBaseFront/src/shared/api/; queryClient.test.ts ← ../ArquitecturaBaseFront/src/shared/api/queryClient.test.tsx (adaptar la prueba sin JSX al nombre del árbol), formErrors.test.ts ← homónimo base; modificar ../ArquitecturaBaseMutitenantFront/src/app/providers.tsx.
 **Respaldo:** plan maestro §Etapa 1, Front 1 y 9; frontend.md §4 “Errores”; arbol.md front “src/shared/api”; rules/errores.md y rules/formularios.md; decisión 13 de este plan. La sesión vencida se resuelve en E3.
-- [ ] Probar silencio de errores 401/403/meta.silent sin flujo Auth, toast de red/5xx con traceId, 429 sin reintento y con `retryAfterSeconds`, y campos por code; npm test -- src/shared/api/queryClient.test.ts src/shared/api/formErrors.test.ts en rojo.
-- [ ] Adaptar cliente Query y mapeo de campos; repetir en verde.
-- [ ] Commit front: feat: resolver errores globales y de formulario
+- [x] Probar silencio de errores 401/403/meta.silent sin flujo Auth, toast de red/5xx con traceId, 429 sin reintento y con `retryAfterSeconds`, y campos por code; npm test -- src/shared/api/queryClient.test.ts src/shared/api/formErrors.test.ts en rojo.
+- [x] Adaptar cliente Query y mapeo de campos; repetir en verde.
+- [x] Commit front: feat: resolver errores globales y de formulario
 
 ### Tarea 32. Mutación idempotente
 
 **Archivos:** crear ../ArquitecturaBaseMutitenantFront/src/shared/api/{useIdempotentMutation.ts,useIdempotentMutation.test.ts} (nuevos).
 **Respaldo:** plan maestro §Etapa 1, Front 7; arbol.md front “src/shared/api”; rules/datos-y-api.md y back rules/idempotencia.md.
-- [ ] Probar clave estable ante reintento, clave nueva tras éxito y espera de Request.InProgress; npm test -- src/shared/api/useIdempotentMutation.test.ts en rojo.
-- [ ] Implementar hook sobre TanStack Query y httpClient; repetir en verde.
-- [ ] Commit front: feat: agregar mutación idempotente
+- [x] Probar clave estable ante reintento, clave nueva tras éxito y espera de Request.InProgress; npm test -- src/shared/api/useIdempotentMutation.test.ts en rojo.
+- [x] Implementar hook sobre TanStack Query y httpClient; repetir en verde.
+- [x] Commit front: feat: agregar mutación idempotente
 
 ### Tarea 33. Cliente y carga única de referencia en el front
 
 **Archivos:** crear `../ArquitecturaBaseMutitenantFront/src/shared/referenceData/{referenceData.ts,useReferenceData.ts,referenceData.test.ts,AGENTS.md,CLAUDE.md}`; modificar `../ArquitecturaBaseMutitenantFront/src/app/providers.tsx` para cargar al arrancar; ampliar `../ArquitecturaBaseMutitenantFront/src/test/mocks/handlers.ts` con los contratos de referencia; no hay equivalentes en `../ArquitecturaBaseFront`.
 **Respaldo:** datos-de-referencia.md §§4–5 y 8; front arbol.md “src/shared/referenceData”; front rules/datos-y-api.md y back `docs/rules/datos-de-referencia.md`; frontend.md §4 “Datos y API”; plan maestro §Etapa 1, Front 1, 3 y 5.
-- [ ] Probar parseo tipado de cinco catálogos de `GET /api/reference-data`, ETag, cultura efectiva, `staleTime: Infinity`, una sola carga desde el proveedor, nombres de cultura traducidos/fallback y estado de carga; `npm test -- src/shared/referenceData/referenceData.test.ts` en rojo.
-- [ ] Implementar cliente y hook con TanStack Query; ninguna lista de códigos en TS; repetir en verde.
-- [ ] Commit front: feat: cargar datos de referencia una vez
+- [x] Probar parseo tipado de cinco catálogos de `GET /api/reference-data`, ETag, cultura efectiva, `staleTime: Infinity`, una sola carga desde el proveedor, nombres de cultura traducidos/fallback y estado de carga; `npm test -- src/shared/referenceData/referenceData.test.ts` en rojo.
+- [x] Implementar cliente y hook con TanStack Query; ninguna lista de códigos en TS; repetir en verde.
+- [x] Commit front: feat: cargar datos de referencia una vez
 
 ### Tarea 34. Perfiles y formateadores del front
 
 **Archivos:** crear ../ArquitecturaBaseMutitenantFront/src/shared/format/{cultureProfiles,formatters,statusTones}.ts y {formatters.test,format-usage.test,statusTones.test}.ts; ../ArquitecturaBaseMutitenantFront/src/shared/format/{AGENTS,CLAUDE}.md. `cultureProfiles.ts` adapta los perfiles recibidos desde `shared/referenceData`; no declara perfiles fijos.
 **Respaldo:** plan maestro §Etapa 1, Front 3; formatos.md §§2–5; datos-de-referencia.md §§2, 4 y 7; arbol.md front “src/shared/format”; front rules/formatos.md y back `docs/rules/datos-de-referencia.md`; tema.md §Colores; arnes.md front §2; decisiones 1, 5, 6 y 16 de este plan.
-- [ ] Probar **cada** caso compartido, incluidas monedas con 0/2/3 decimales y teléfonos nacionales/internacionales, estado→tono y prohibiciones de formato o catálogos fijos fuera de `shared/format`/JSON; `npm test -- src/shared/format/formatters.test.ts src/shared/format/statusTones.test.ts src/shared/format/format-usage.test.ts` en rojo. `formatters.test.ts` avisa y omite solo la paridad en CI sin repo hermano; en local su ausencia falla.
-- [ ] Implementar todos los tipos de formatos.md con perfiles del catálogo, los tonos `success`, `warning`, `danger`, `neutral`, `pending`, sin usar defaults del navegador; ajustar el texto telefónico a los casos compartidos y repetir en verde.
-- [ ] Commit front: feat: unificar formatos y tonos
+- [x] Probar **cada** caso compartido, incluidas monedas con 0/2/3 decimales y teléfonos nacionales/internacionales, estado→tono y prohibiciones de formato o catálogos fijos fuera de `shared/format`/JSON; `npm test -- src/shared/format/formatters.test.ts src/shared/format/statusTones.test.ts src/shared/format/format-usage.test.ts` en rojo. `formatters.test.ts` avisa y omite solo la paridad en CI sin repo hermano; en local su ausencia falla.
+- [x] Implementar todos los tipos de formatos.md con perfiles del catálogo, los tonos `success`, `warning`, `danger`, `neutral`, `pending`, sin usar defaults del navegador; ajustar el texto telefónico a los casos compartidos y repetir en verde.
+- [x] Commit front: feat: unificar formatos y tonos
 
 ### Tarea 35. Parsers y contexto de formato
 
 **Archivos:** crear ../ArquitecturaBaseMutitenantFront/src/shared/format/{parsers.ts,parsers.test.ts,useFormat.ts,useFormat.test.tsx} (nuevos).
 **Respaldo:** plan maestro §Etapa 1, Front 3; formatos.md §§1, 4–5; frontend.md §4 “Presentación de datos”; rules/formatos.md; decisión 5 de este plan.
-- [ ] Probar parseDecimal, parseMoney, parsePercent, parseDate, estado de carga sin defaults literales, y luego `es-AR`/Buenos Aires/ARS tomados del catálogo más cultura habilitada de localStorage; npm test -- src/shared/format/parsers.test.ts src/shared/format/useFormat.test.tsx en rojo.
-- [ ] Implementar parsers y proveedor E1 con `useReferenceData`; documentar punto de conexión a `/api/me` para E3; repetir en verde.
-- [ ] Commit front: feat: interpretar entradas por cultura
+- [x] Probar parseDecimal, parseMoney, parsePercent, parseDate, estado de carga sin defaults literales, y luego `es-AR`/Buenos Aires/ARS tomados del catálogo más cultura habilitada de localStorage; npm test -- src/shared/format/parsers.test.ts src/shared/format/useFormat.test.tsx en rojo.
+- [x] Implementar parsers y proveedor E1 con `useReferenceData`; documentar punto de conexión a `/api/me` para E3; repetir en verde.
+- [x] Commit front: feat: interpretar entradas por cultura
 
 ### Tarea 36. Banderas e interpretación telefónica
 
 **Archivos:** crear ../ArquitecturaBaseMutitenantFront/src/shared/phone/{countries.ts,CountryFlag.tsx,countries.test.ts,AGENTS.md,CLAUDE.md}; modificar ../ArquitecturaBaseMutitenantFront/{package.json,package-lock.json}. `countries.ts` ordena/filtra `Countries` del catálogo, no contiene lista fija ni `priorityCountries.ts`.
 **Respaldo:** plan maestro §Etapa 1, Front 7; formatos.md §3; datos-de-referencia.md §§1 y 4; arbol.md front “src/shared/phone”; front rules/telefonos.md y back `docs/rules/datos-de-referencia.md`; arnes.md front §2.
-- [ ] Probar que los países y CallingCode provienen de `shared/referenceData`, orden por `SortOrder`, filtrado y bandera SVG diferida; npm test -- src/shared/phone/countries.test.ts en rojo.
-- [ ] Implementar con versiones exactas de `libphonenumber-js` y `country-flag-icons`, sin códigos de país en TS; repetir en verde.
-- [ ] Commit front: feat: interpretar países y mostrar banderas
+- [x] Probar que los países y CallingCode provienen de `shared/referenceData`, orden por `SortOrder`, filtrado y bandera SVG diferida; npm test -- src/shared/phone/countries.test.ts en rojo.
+- [x] Implementar con versiones exactas de `libphonenumber-js` y `country-flag-icons`, sin códigos de país en TS; repetir en verde.
+- [x] Commit front: feat: interpretar países y mostrar banderas
 
 ### Tarea 37. Selectores de datos de referencia
 
 **Archivos:** crear ../ArquitecturaBaseMutitenantFront/src/shared/ui/fields/{CurrencySelect,CountrySelect,TimeZoneSelect,CultureSelect}.tsx y {CurrencySelect,CountrySelect,TimeZoneSelect,CultureSelect}.test.tsx; ampliar ../ArquitecturaBaseMutitenantFront/src/shared/ui/fields/{AGENTS,CLAUDE}.md. No hay selectores equivalentes basados en catálogos en ArquitecturaBaseFront.
 **Respaldo:** plan maestro §Etapa 1, Front 5 y 7; formatos.md §§3–5; datos-de-referencia.md §§4 y 8; arbol.md front “src/shared/referenceData” y “src/shared/ui/fields”; front rules/formatos.md, front rules/datos-y-api.md y back `docs/rules/datos-de-referencia.md`; decisiones 3 y 4 de este plan.
-- [ ] Probar opciones habilitadas/traducidas, búsqueda, `SortOrder`, carga, país con bandera/CallingCode y zona multipaís que conserve todos los `CountryCodes[]` junto con ciudad/offset actual `GMT−3`; npm test -- src/shared/ui/fields/CurrencySelect.test.tsx src/shared/ui/fields/CountrySelect.test.tsx src/shared/ui/fields/TimeZoneSelect.test.tsx src/shared/ui/fields/CultureSelect.test.tsx en rojo.
-- [ ] Implementar los cuatro selectores desde `shared/referenceData`, sin listas fijas ni almacenamiento de offset; repetir en verde.
-- [ ] Commit front: feat: ofrecer selectores de referencia
+- [x] Probar opciones habilitadas/traducidas, búsqueda, `SortOrder`, carga, país con bandera/CallingCode y zona multipaís que conserve todos los `CountryCodes[]` junto con ciudad/offset actual `GMT−3`; npm test -- src/shared/ui/fields/CurrencySelect.test.tsx src/shared/ui/fields/CountrySelect.test.tsx src/shared/ui/fields/TimeZoneSelect.test.tsx src/shared/ui/fields/CultureSelect.test.tsx en rojo.
+- [x] Implementar los cuatro selectores desde `shared/referenceData`, sin listas fijas ni almacenamiento de offset; repetir en verde.
+- [x] Commit front: feat: ofrecer selectores de referencia
 
 ### Tarea 38. Componentes de fecha y números
 
 **Archivos:** crear ../ArquitecturaBaseMutitenantFront/src/shared/ui/format/{DateText,DateRangeText,NumberText,MoneyText,PercentText}.tsx y {DateText,NumberText,MoneyText,PercentText}.test.tsx; {AGENTS,CLAUDE}.md.
 **Respaldo:** plan maestro §Etapa 1, Front 5; formatos.md §§3–5; arbol.md front “src/shared/ui/format”; rules/formatos.md; arnes.md front §2. Depende de perfiles, formateadores, parsers y useFormat.
-- [ ] Probar time dateTime ISO, vacío, tooltips, alineación numérica y aria-label de moneda; npm test -- src/shared/ui/format/DateText.test.tsx src/shared/ui/format/NumberText.test.tsx src/shared/ui/format/MoneyText.test.tsx src/shared/ui/format/PercentText.test.tsx en rojo.
-- [ ] Crear componentes que solo llaman shared/format; repetir en verde.
-- [ ] Commit front: feat: mostrar fechas números y dinero
+- [x] Probar time dateTime ISO, vacío, tooltips, alineación numérica y aria-label de moneda; npm test -- src/shared/ui/format/DateText.test.tsx src/shared/ui/format/NumberText.test.tsx src/shared/ui/format/MoneyText.test.tsx src/shared/ui/format/PercentText.test.tsx en rojo.
+- [x] Crear componentes que solo llaman shared/format; repetir en verde.
+- [x] Commit front: feat: mostrar fechas números y dinero
 
 ### Tarea 39. Demás componentes de presentación
 
 **Archivos:** crear ../ArquitecturaBaseMutitenantFront/src/shared/ui/format/{FileSizeText,DurationText,PhoneText,TaxIdText,TimeZoneText,CultureText,EnumText,StatusBadge,BooleanText,EmptyValue}.tsx y {PhoneText,TaxIdText,TimeZoneText,EnumText,StatusBadge,EmptyValue}.test.tsx.
 **Respaldo:** plan maestro §Etapa 1, Front 5; formatos.md §§3–5; arbol.md front “src/shared/ui/format”; rules/formatos.md y rules/telefonos.md; tema.md §Colores; decisiones 1, 6, 12 y 16 de este plan.
-- [ ] Probar E.164 oculto, sin ID IANA crudo, enum y badge traducidos con tono correcto, booleano, vacío accesible y formato fiscal acordado; npm test -- src/shared/ui/format/PhoneText.test.tsx src/shared/ui/format/TaxIdText.test.tsx src/shared/ui/format/TimeZoneText.test.tsx src/shared/ui/format/EnumText.test.tsx src/shared/ui/format/StatusBadge.test.tsx src/shared/ui/format/EmptyValue.test.tsx en rojo.
-- [ ] Implementar componentes por delegación a shared/format y traducciones; repetir en verde.
-- [ ] Commit front: feat: completar componentes de presentación
+- [x] Probar E.164 oculto, sin ID IANA crudo, enum y badge traducidos con tono correcto, booleano, vacío accesible y formato fiscal acordado; npm test -- src/shared/ui/format/PhoneText.test.tsx src/shared/ui/format/TaxIdText.test.tsx src/shared/ui/format/TimeZoneText.test.tsx src/shared/ui/format/EnumText.test.tsx src/shared/ui/format/StatusBadge.test.tsx src/shared/ui/format/EmptyValue.test.tsx en rojo.
+- [x] Implementar componentes por delegación a shared/format y traducciones; repetir en verde.
+- [x] Commit front: feat: completar componentes de presentación
 
 ### Tarea 40. Campos de fecha y números
 
 **Archivos:** crear ../ArquitecturaBaseMutitenantFront/src/shared/ui/fields/{DateField,DateTimeField,TimeField,NumberField,MoneyField,PercentField}.tsx y {DateField,DateTimeField,MoneyField,PercentField}.test.tsx; {AGENTS,CLAUDE}.md.
 **Respaldo:** plan maestro §Etapa 1, Front 5; formatos.md §§4–5; arbol.md front “src/shared/ui/fields”; rules/formularios.md y rules/formatos.md; arnes.md front §2.
-- [ ] Probar DateOnly sin zona, instante convertido desde zona efectiva, decimal cultural, Money con moneda y porcentaje fraccional; npm test -- src/shared/ui/fields/DateField.test.tsx src/shared/ui/fields/DateTimeField.test.tsx src/shared/ui/fields/MoneyField.test.tsx src/shared/ui/fields/PercentField.test.tsx en rojo.
-- [ ] Crear campos que usan parsers y emiten contratos HTTP; repetir en verde.
-- [ ] Commit front: feat: cargar fechas números y montos
+- [x] Probar DateOnly sin zona, instante convertido desde zona efectiva, decimal cultural, Money con moneda y porcentaje fraccional; npm test -- src/shared/ui/fields/DateField.test.tsx src/shared/ui/fields/DateTimeField.test.tsx src/shared/ui/fields/MoneyField.test.tsx src/shared/ui/fields/PercentField.test.tsx en rojo.
+- [x] Crear campos que usan parsers y emiten contratos HTTP; repetir en verde.
+- [x] Commit front: feat: cargar fechas números y montos
 
 ### Tarea 41. Campos de correo, teléfono e identificación
 
 **Archivos:** crear ../ArquitecturaBaseMutitenantFront/src/shared/ui/fields/{EmailField,PhoneField,TaxIdField}.tsx y {EmailField,PhoneField,TaxIdField}.test.tsx; PhoneField toma como referencia, sin copiar lista fija, ../ArquitecturaBaseFront/src/shared/ui/PhoneField.tsx y su test homónimo; modificar ../ArquitecturaBaseMutitenantFront/{package.json,package-lock.json} por `stdnum` con versión estable exacta.
 **Respaldo:** plan maestro §Etapa 1, Front 7; formatos.md §§3–5; arbol.md front “src/shared/ui/fields”; rules/telefonos.md, rules/formularios.md; decisiones 7 y 12 de este plan.
-- [ ] Probar correo normalizado, país al pegar número, AsYouType, contrato telefónico `{country,number}` y contrato fiscal `{type,number}` sin separadores (`type` = código del catálogo, como `AR-CUIT`), tipos habilitados del catálogo y validación numérica solo con `stdnum`; npm test -- src/shared/ui/fields/EmailField.test.tsx src/shared/ui/fields/PhoneField.test.tsx src/shared/ui/fields/TaxIdField.test.tsx en rojo.
-- [ ] Crear campos manteniendo accesibilidad del PhoneField base; repetir en verde.
-- [ ] Commit front: feat: cargar correo teléfono e identificación
+- [x] Probar correo normalizado, país al pegar número, AsYouType, contrato telefónico `{country,number}` y contrato fiscal `{type,number}` sin separadores (`type` = código del catálogo, como `AR-CUIT`), tipos habilitados del catálogo y validación numérica solo con `stdnum`; npm test -- src/shared/ui/fields/EmailField.test.tsx src/shared/ui/fields/PhoneField.test.tsx src/shared/ui/fields/TaxIdField.test.tsx en rojo.
+- [x] Crear campos manteniendo accesibilidad del PhoneField base; repetir en verde.
+- [x] Commit front: feat: cargar correo teléfono e identificación
 
 ### Tarea 42. Hooks de paginación, cursor y búsqueda
 
 **Archivos:** modificar ../ArquitecturaBaseMutitenantFront/src/shared/hooks/{usePagination.ts,usePagination.test.tsx}; crear {useCursorList.ts,useCursorList.test.tsx,useDebouncedValue.ts,useDebouncedValue.test.tsx}.
 **Respaldo:** plan maestro §Etapa 1, Front 4 y 9; frontend.md §4 “Paginado” y “Errores”; arbol.md front “src/shared/hooks”; rules/paginado-y-listados.md y rules/formularios.md; decisión 14 de este plan.
-- [ ] Probar URL y reset, `usePagination(result?: { items; totalCount })`, salto interno con `replace` cuando llegan `items` vacíos y `totalCount > 0`, sin `correctPage` público ni historial nuevo; cursor sin total y debounce 300 ms. npm test -- src/shared/hooks/usePagination.test.tsx src/shared/hooks/useCursorList.test.tsx src/shared/hooks/useDebouncedValue.test.tsx en rojo.
-- [ ] Adaptar hook existente (o copiar la solución equivalente de ArquitecturaBaseFront) y agregar los otros; repetir en verde.
-- [ ] Commit front: feat: completar hooks de listados y cambios pendientes
+- [x] Probar URL y reset, `usePagination(result?: { items; totalCount })`, salto interno con `replace` cuando llegan `items` vacíos y `totalCount > 0`, sin `correctPage` público ni historial nuevo; cursor sin total y debounce 300 ms. npm test -- src/shared/hooks/usePagination.test.tsx src/shared/hooks/useCursorList.test.tsx src/shared/hooks/useDebouncedValue.test.tsx en rojo.
+- [x] Adaptar hook existente (o copiar la solución equivalente de ArquitecturaBaseFront) y agregar los otros; repetir en verde.
+- [x] Commit front: feat: completar hooks de listados y cambios pendientes
 
 ### Tarea 43. Controles de paginación
 
 **Archivos:** crear ../ArquitecturaBaseMutitenantFront/src/shared/ui/{Pagination.tsx,Pagination.test.tsx} ← homónimos de ../ArquitecturaBaseFront/src/shared/ui/; crear LoadMore.tsx y LoadMore.test.tsx (nuevos).
 **Respaldo:** plan maestro §Etapa 1, Front 4; frontend.md §4 “Paginado”; arbol.md front “src/shared/ui”; rules/paginado-y-listados.md y rules/pantallas-y-ui.md.
-- [ ] Probar 10/20/50/100, “1–10 de 1.234”, página y Cargar más sin total; npm test -- src/shared/ui/Pagination.test.tsx src/shared/ui/LoadMore.test.tsx en rojo.
-- [ ] Adaptar Pagination al formato y tokens; crear LoadMore; repetir en verde.
-- [ ] Commit front: feat: mostrar paginado y carga por cursor
+- [x] Probar 10/20/50/100, “1–10 de 1.234”, página y Cargar más sin total; npm test -- src/shared/ui/Pagination.test.tsx src/shared/ui/LoadMore.test.tsx en rojo.
+- [x] Adaptar Pagination al formato y tokens; crear LoadMore; repetir en verde.
+- [x] Commit front: feat: mostrar paginado y carga por cursor
 
 ### Tarea 44. Piezas genéricas de formulario y aviso
 
 **Archivos:** crear ../ArquitecturaBaseMutitenantFront/src/shared/ui/{Banner,CheckboxField,ConfirmDialog,EmptyState,FormField,IconButton,MultiSelect,RadioGroupField}.tsx ← homónimos de ../ArquitecturaBaseFront/src/shared/ui/; crear/adaptar tests homónimos .test.tsx desde la misma carpeta base; crear ../ArquitecturaBaseMutitenantFront/src/shared/hooks/{useUnsavedChangesGuard.ts,useUnsavedChangesGuard.test.tsx} ← homónimos de ../ArquitecturaBaseFront/src/shared/hooks/.
 **Respaldo:** plan maestro §Etapa 1, Front 8–9; frontend.md §4 “UI y pantallas”; arbol.md front “src/shared/ui”; rules/formularios.md, rules/pantallas-y-ui.md, rules/accesibilidad.md; tema.md §§Colores, Forma.
-- [ ] Adaptar tests de textos traducidos, foco, labels, tokens y bloqueo de salida; npm test -- src/shared/ui/Banner.test.tsx src/shared/ui/ConfirmDialog.test.tsx src/shared/ui/FormField.test.tsx src/shared/hooks/useUnsavedChangesGuard.test.tsx en rojo.
-- [ ] Copiar/adaptar ocho componentes y el guard con ConfirmDialog, con todos los --color-* sustituidos; repetir las pruebas en verde.
-- [ ] Commit front: feat: agregar controles genéricos traducidos
+- [x] Adaptar tests de textos traducidos, foco, labels, tokens y bloqueo de salida; npm test -- src/shared/ui/Banner.test.tsx src/shared/ui/ConfirmDialog.test.tsx src/shared/ui/FormField.test.tsx src/shared/hooks/useUnsavedChangesGuard.test.tsx en rojo.
+- [x] Copiar/adaptar ocho componentes y el guard con ConfirmDialog, con todos los --color-* sustituidos; repetir las pruebas en verde.
+- [x] Commit front: feat: agregar controles genéricos traducidos
 
 ### Tarea 45. Página, acciones e iconos
 
 **Archivos:** crear ../ArquitecturaBaseMutitenantFront/src/shared/ui/{Page,RowActions,SearchInput,SegmentedControl,Spinner,VerificationBadge,icons}.tsx ← homónimos de ../ArquitecturaBaseFront/src/shared/ui/; crear/adaptar {Page,RowActions,SegmentedControl,VerificationBadge,icons}.test.tsx desde sus homónimos base; crear SearchInput.test.tsx y Spinner.test.tsx (nuevos).
 **Respaldo:** plan maestro §Etapa 1, Front 8; frontend.md §4 “UI y pantallas”; arbol.md front “src/shared/ui”; rules/pantallas-y-ui.md y rules/accesibilidad.md; tema.md §§Forma, Colores.
-- [ ] Probar banda Page con resumen/acciones, menú ⋮ con destructivas al final, búsqueda accesible y trazo SVG; npm test -- src/shared/ui/Page.test.tsx src/shared/ui/RowActions.test.tsx src/shared/ui/SearchInput.test.tsx src/shared/ui/icons.test.tsx en rojo.
-- [ ] Copiar/adaptar las siete piezas y tokens; repetir pruebas de la carpeta en verde.
-- [ ] Commit front: feat: agregar página acciones e iconos
+- [x] Probar banda Page con resumen/acciones, menú ⋮ con destructivas al final, búsqueda accesible y trazo SVG; npm test -- src/shared/ui/Page.test.tsx src/shared/ui/RowActions.test.tsx src/shared/ui/SearchInput.test.tsx src/shared/ui/icons.test.tsx en rojo.
+- [x] Copiar/adaptar las siete piezas y tokens; repetir pruebas de la carpeta en verde.
+- [x] Commit front: feat: agregar página acciones e iconos
 
 ### Tarea 46. Tabla tipada y adaptable
 
 **Archivos:** crear ../ArquitecturaBaseMutitenantFront/src/shared/ui/{DataTable.tsx,DataTable.test.tsx} ← homónimos de ../ArquitecturaBaseFront/src/shared/ui/ (reescribir columnas type/mobile); crear ../ArquitecturaBaseMutitenantFront/src/shared/ui/columns-mobile.test.ts.
 **Respaldo:** plan maestro §Etapa 1, Front 5 y 8; formatos.md §4; frontend.md §4 “Paginado” y “UI y pantallas”; arbol.md front “src/shared/ui”; rules/responsive.md y rules/paginado-y-listados.md.
-- [ ] Probar type→ui/format, carga/vacío/error, aria-sort, 390 px solo primary/status/⋮, 768 sin low y exactamente una primary; npm test -- src/shared/ui/DataTable.test.tsx src/shared/ui/columns-mobile.test.ts en rojo.
-- [ ] Adaptar DataTable sin formateo manual ni dos datos en una celda; repetir en verde.
-- [ ] Commit front: feat: agregar tabla tipada y adaptable
+- [x] Probar type→ui/format, carga/vacío/error, aria-sort, 390 px solo primary/status/⋮, 768 sin low y exactamente una primary; npm test -- src/shared/ui/DataTable.test.tsx src/shared/ui/columns-mobile.test.ts en rojo.
+- [x] Adaptar DataTable sin formateo manual ni dos datos en una celda; repetir en verde.
+- [x] Commit front: feat: agregar tabla tipada y adaptable
 
 ### Tarea 47. Filtros, diálogo y hoja móvil
 
 **Archivos:** modificar ../ArquitecturaBaseMutitenantFront/src/shared/ui/{FilterBar.tsx,dialog.tsx}; crear ../ArquitecturaBaseMutitenantFront/src/shared/ui/{Sheet.tsx,Sheet.test.tsx,FilterBar.test.tsx,dialog.mobile.test.tsx}.
 **Respaldo:** plan maestro §Etapa 1, Front 8; frontend.md §4 “UI y pantallas”; arbol.md front “src/shared/ui”; rules/responsive.md; tema.md §Forma y tableros aprobados “Botones”/“Avisos”.
-- [ ] Probar filtros bajo buscador a 390, diálogo como hoja desde abajo y 44×44; npm test -- src/shared/ui/FilterBar.test.tsx src/shared/ui/dialog.mobile.test.tsx src/shared/ui/Sheet.test.tsx en rojo.
-- [ ] Adaptar primitivas E0 y crear Sheet; repetir en verde.
-- [ ] Commit front: feat: adaptar filtros y diálogos al teléfono
+- [x] Probar filtros bajo buscador a 390, diálogo como hoja desde abajo y 44×44; npm test -- src/shared/ui/FilterBar.test.tsx src/shared/ui/dialog.mobile.test.tsx src/shared/ui/Sheet.test.tsx en rojo.
+- [x] Adaptar primitivas E0 y crear Sheet; repetir en verde.
+- [x] Commit front: feat: adaptar filtros y diálogos al teléfono
 
 ### Tarea 48. Avisos transversales y AppShell
 
-**Archivos:** crear ../ArquitecturaBaseMutitenantFront/src/layouts/{AppShell.tsx,AppShell.test.tsx,AGENTS.md,CLAUDE.md}; ../ArquitecturaBaseMutitenantFront/src/layouts/components/{OfflineBanner,NewVersionBanner}.tsx; ../ArquitecturaBaseMutitenantFront/src/shared/ui/{ConcurrencyBanner.tsx,ConcurrencyBanner.test.tsx}; crear ../ArquitecturaBaseMutitenantFront/src/shared/api/{useRetryAfterCountdown.ts,useRetryAfterCountdown.test.tsx} (usa `shared/hooks/useCountdown.ts` de E0); modificar ../ArquitecturaBaseMutitenantFront/src/app/{App.tsx,providers.tsx}; crear ../ArquitecturaBaseMutitenantFront/src/layouts/components/{OfflineBanner,NewVersionBanner}.test.tsx.
+**Archivos:** crear ../ArquitecturaBaseMutitenantFront/src/layouts/{AppShell.tsx,AppShell.test.tsx,AGENTS.md,CLAUDE.md}; ../ArquitecturaBaseMutitenantFront/src/layouts/components/{OfflineBanner,NewVersionBanner}.tsx; ../ArquitecturaBaseMutitenantFront/src/shared/ui/{ConcurrencyBanner.tsx,ConcurrencyBanner.test.tsx}; crear ../ArquitecturaBaseMutitenantFront/src/shared/api/{useRetryAfterCountdown.ts,useRetryAfterCountdown.test.tsx} (usa `shared/hooks/useCountdown.ts` de E0); modificar ../ArquitecturaBaseMutitenantFront/src/app/providers.tsx para envolver el `src/App.tsx` existente; crear ../ArquitecturaBaseMutitenantFront/src/layouts/components/{OfflineBanner,NewVersionBanner}.test.tsx.
 **Respaldo:** plan maestro §Etapa 1, Front 9; frontend.md §4 “Errores”; arbol.md front “src/layouts” y “src/shared/ui”; rules/errores.md, rules/formularios.md; arnes.md front §2; tablero aprobado “Avisos”; decisión 13 de este plan.
-- [ ] Probar online/offline, fallo de chunk→franja sin recarga sola, 409 con dos acciones sin perder formulario y 429 con cuenta regresiva en el botón iniciador (sin reintento automático); npm test -- src/layouts/AppShell.test.tsx src/layouts/components/OfflineBanner.test.tsx src/layouts/components/NewVersionBanner.test.tsx src/shared/ui/ConcurrencyBanner.test.tsx src/shared/api/useRetryAfterCountdown.test.tsx en rojo.
-- [ ] Crear avisos y composición, conectar solo las partes E1; sesión vencida corresponde a E3; repetir en verde.
-- [ ] Commit front: feat: mostrar avisos transversales
+- [x] Probar online/offline, fallo de chunk→franja sin recarga sola, 409 con dos acciones sin perder formulario y 429 con cuenta regresiva en el botón iniciador (sin reintento automático); npm test -- src/layouts/AppShell.test.tsx src/layouts/components/OfflineBanner.test.tsx src/layouts/components/NewVersionBanner.test.tsx src/shared/ui/ConcurrencyBanner.test.tsx src/shared/api/useRetryAfterCountdown.test.tsx en rojo.
+- [x] Crear avisos y composición, conectar solo las partes E1; sesión vencida corresponde a E3; repetir en verde.
+- [x] Commit front: feat: mostrar avisos transversales
 
 ### Tarea 49. Cierre del arnés backend
 
 **Archivos:** modificar tests/ArquitecturaBaseMultitenant.ArchitectureTests/HarnessStage.cs; ajustar solo punteros/fichas back de carpetas E1 creadas en las tareas anteriores si un nombre definitivo cambió. No crear funcionalidad nueva.
 **Respaldo:** plan maestro “Reglas para todas las etapas” 1–8; arnes.md back §5–6; arbol.md back, entradas [E1].
-- [ ] Cambiar HarnessStage.Closed a 1 y ejecutar R/HarnessTests: rojo si queda una referencia E1 incumplida.
-- [ ] Completar enlaces y tests faltantes; ejecutar R/HarnessTests en verde y puerta back.
-- [ ] Commit back: chore: cerrar arnés de Etapa 1
+- [x] Cambiar HarnessStage.Closed a 1 y ejecutar R/HarnessTests: rojo si queda una referencia E1 incumplida.
+- [x] Completar enlaces y tests faltantes; ejecutar R/HarnessTests en verde y puerta back.
+- [x] Commit back: chore: cerrar arnés de Etapa 1
 
 ### Tarea 50. Cierre del arnés frontend
 
 **Archivos:** modificar ../ArquitecturaBaseMutitenantFront/src/test/HarnessStage.ts; ajustar solo punteros/fichas front de carpetas E1 creadas en tareas anteriores si cambió un nombre definitivo. No crear funcionalidad nueva.
 **Respaldo:** plan maestro “Reglas para todas las etapas” 1–8 y “Etapa 1, Puerta”; arnes.md front §4; arbol.md front, entradas [E1].
-- [ ] Cambiar HarnessStage a 1 y ejecutar npm test -- src/test/harness.test.ts: rojo si queda una referencia E1 incumplida.
-- [ ] Completar enlaces y tests faltantes; ejecutar npm test -- src/test/harness.test.ts en verde y la puerta completa de abajo.
-- [ ] Commit front: chore: cerrar arnés de Etapa 1
+- [x] Cambiar HarnessStage a 1 y ejecutar npm test -- src/test/harness.test.ts: rojo si queda una referencia E1 incumplida.
+- [x] Completar enlaces y tests faltantes; ejecutar npm test -- src/test/harness.test.ts en verde y la puerta completa de abajo.
+- [x] Commit front: chore: cerrar arnés de Etapa 1
 
 ## Puerta completa de Etapa 1
 
