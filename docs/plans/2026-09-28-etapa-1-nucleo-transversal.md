@@ -218,9 +218,9 @@ No quedan preguntas técnicas pendientes. Según AGENTS.md, una duda nueva se re
 
 **Archivos:** crear src/ArquitecturaBaseMultitenant.Api/Json/{MoneyJsonConverter,NormalizedStringJsonConverter,RawTextAttribute}.cs; actualizar src/ArquitecturaBaseMultitenant.Api/Json/JsonConfiguration.cs; crear src/ArquitecturaBaseMultitenant.Api/Contracts/{AGENTS,CLAUDE}.md y Common/PhoneInputHttpRequest.cs ← ../ArquitecturaBase/src/ArquitecturaBase.Api/Contracts/Users/PhoneNumberHttpRequest.cs (adaptado); ampliar tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/TestFeatures/TestController.cs con rutas de prueba de Money y un POST de texto; tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Json/MoneyJsonTests.cs y Api/NormalizedInputTests.cs (nuevos).
 **Respaldo:** plan maestro §Etapa 1, Back 5, 10–11; backend.md §§18, 20; arbol.md back “Api/Json” y “Piezas P4”; rules/textos-libres.md y rules/numeros-y-moneda.md; arnes.md back §3; decisión 11 de este plan.
-- [ ] Probar objeto {amount,currency}, sintaxis monetaria inválida→400, limpieza global y excepción RawText; la validación de existencia/habilitación queda en Application. El POST de TestController devuelve el cuerpo normalizado sin persistir. I/MoneyJsonTests e I/NormalizedInputTests en rojo.
-- [ ] Implementar conversores y contrato telefónico según alcance resuelto; repetir en verde.
-- [ ] Commit back: feat: serializar dinero y limpiar entradas
+- [x] Probar objeto {amount,currency}, sintaxis monetaria inválida→400, limpieza global y excepción RawText; la validación de existencia/habilitación queda en Application. El POST de TestController devuelve el cuerpo normalizado sin persistir. I/MoneyJsonTests e I/NormalizedInputTests en rojo.
+- [x] Implementar conversores y contrato telefónico según alcance resuelto; repetir en verde.
+- [x] Commit back: feat: serializar dinero y limpiar entradas
 
 ### Tarea 21. API anónima de datos de referencia e inventario
 

@@ -1,5 +1,7 @@
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
+using ArquitecturaBaseMultitenant.Api.Json;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures;
@@ -43,6 +45,13 @@ public sealed class TestController : ControllerBase
     [HttpPost("civil-time")]
     public ActionResult<TestCivilTimeHttpRequest> CivilTime([FromBody] TestCivilTimeHttpRequest request) => Ok(request);
 
+    [HttpPost("money")]
+    public ActionResult<Money> Money([FromBody] Money money) => Ok(money);
+
+    [HttpPost("normalized-input")]
+    public ActionResult<TestNormalizedInputHttpRequest> NormalizedInput(
+        [FromBody] TestNormalizedInputHttpRequest request) => Ok(request);
+
     [HttpGet("throw")]
     public IActionResult Throw()
     {
@@ -56,3 +65,15 @@ public sealed record TestBodyHttpRequest(string? Value);
 public sealed record TestDatesHttpRequest(DateTime OccurredAtUtc, DateTime? ExpiresAtUtc);
 
 public sealed record TestCivilTimeHttpRequest(DateOnly Date, TimeOnly Time);
+
+public sealed record TestNormalizedInputHttpRequest
+{
+    public string? Name { get; init; }
+
+    public string? Description { get; init; }
+
+    public string? Empty { get; init; }
+
+    [RawText]
+    public string? Raw { get; init; }
+}

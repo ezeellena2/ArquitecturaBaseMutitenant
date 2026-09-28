@@ -12,6 +12,8 @@ public static class JsonConfiguration
         options.Converters.Add(new UtcDateTimeConverter());
         options.Converters.Add(new DateOnlyConverter());
         options.Converters.Add(new TimeOnlyConverter());
+        options.Converters.Add(new MoneyJsonConverter());
+        options.Converters.Add(new NormalizedStringJsonConverter());
         options.Converters.Add(new JsonStringEnumConverter());
     }
 }
