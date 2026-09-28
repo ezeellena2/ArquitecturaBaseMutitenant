@@ -106,10 +106,10 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
 - [x] `.github/workflows/ci.yml` en los dos repos: en la E0, el back hace build + test (con Docker); el front, `npm ci`, build, lint y test. El chequeo de contratos se suma en la E1. Commit `ci: build y test`.
 
 ### Tarea 0.6: front
-- [ ] Borrar `node_modules`, `dist` y `.npm-cache` del scaffold viejo.
-- [ ] `package.json` con las dependencias y versiones de ArquitecturaBaseFront, más `openapi-typescript` y `libphonenumber-js`. Además: `tsconfig*`, `vite.config.ts` (proxy, puerto 5174), `.oxlintrc.json`, `components.json`, `index.html` y `public/favicon.svg`. `silent-renew.html` llega en la E3.
-- [ ] Copiar de la base solo las primitivas de shadcn de `shared/ui`, `shared/lib/utils.ts` y los hooks que compilan sin piezas posteriores. Al copiar, sustituir todo `--color-*` por los tokens de [`tema.md`](../../../ArquitecturaBaseMutitenantFront/docs/architecture/tema.md); armar `index.css` y `theme-tokens.test.ts`. No copiar `Pagination` (E1), `shared/lib/dateTime.ts` (nunca), `PhoneField`, `countries` ni `test/mocks` (E1/E3). Sumar a `shared/ui` `FilterBar`, `StatusDot`, `Avatar`, `FormError`, `Surface` y `tabs.tsx` (shadcn).
-- [ ] `App.tsx` con un router mínimo: `providers.tsx` solo con `QueryClientProvider`, `routes.tsx` con una ruta vacía y `test/setup.ts` mínimo, con jest-dom. Auth, i18n, rutas por host y módulos se agregan en sus etapas. Build, lint y test limpios. Commit `chore: esqueleto del SPA`.
+- [x] Borrar `node_modules`, `dist` y `.npm-cache` del scaffold viejo.
+- [x] `package.json` con las dependencias y versiones de ArquitecturaBaseFront, más `openapi-typescript` y `libphonenumber-js`. Además: `tsconfig*`, `vite.config.ts` (proxy, puerto 5174), `.oxlintrc.json`, `components.json`, `index.html` y `public/favicon.svg`. `silent-renew.html` llega en la E3.
+- [x] Copiar de la base solo las primitivas de shadcn de `shared/ui`, `shared/lib/utils.ts` y los hooks que compilan sin piezas posteriores. Al copiar, sustituir todo `--color-*` por los tokens de [`tema.md`](../../../ArquitecturaBaseMutitenantFront/docs/architecture/tema.md); armar `index.css` y `theme-tokens.test.ts`. No copiar `Pagination` (E1), `shared/lib/dateTime.ts` (nunca), `PhoneField`, `countries` ni `test/mocks` (E1/E3). Sumar a `shared/ui` `FilterBar`, `StatusDot`, `Avatar`, `FormError`, `Surface` y `tabs.tsx` (shadcn).
+- [x] `App.tsx` con un router mínimo: `providers.tsx` solo con `QueryClientProvider`, `routes.tsx` con una ruta vacía y `test/setup.ts` mínimo, con jest-dom. Auth, i18n, rutas por host y módulos se agregan en sus etapas. Build, lint y test limpios. Commit `chore: esqueleto del SPA`.
 
 ### Tarea 0.7: el arnés
 - [ ] `HarnessTests` en ArchitectureTests y `src/test/harness.test.ts` en el front, con las verificaciones de `arnes.md` §5 (back) y §4 (front) y una constante `HarnessStage` que se sube al cerrar cada etapa.
