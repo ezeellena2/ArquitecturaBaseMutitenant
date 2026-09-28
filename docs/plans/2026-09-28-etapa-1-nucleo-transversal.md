@@ -194,9 +194,9 @@ No quedan preguntas técnicas pendientes. Según AGENTS.md, una duda nueva se re
 
 **Archivos:** crear src/ArquitecturaBaseMultitenant.Api/ErrorHandling/{ApiErrorCodes,ProblemDetailsMapper,ControllerResultExtensions}.cs ← homónimos de ../ArquitecturaBase/src/ArquitecturaBase.Api/ErrorHandling/; crear src/ArquitecturaBaseMultitenant.Api/DependencyInjection.cs ← ../ArquitecturaBase/src/ArquitecturaBase.Api/DependencyInjection.cs; actualizar src/ArquitecturaBaseMultitenant.Api/Program.cs ← ../ArquitecturaBase/src/ArquitecturaBase.Api/Program.cs (solo piezas E1); tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/TestFeatures/TestController.cs ← ../ArquitecturaBase/tests/ArquitecturaBase.Api.IntegrationTests/TestFeatures/TestController.cs (rehacer sin BD), TestControllerApplicationPart.cs ← ../ArquitecturaBase/tests/ArquitecturaBase.Api.IntegrationTests/Support/TestControllerApplicationPart.cs; tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ErrorHandling/{ErrorHandlingTests,ValidationProblemTests}.cs (ErrorHandlingTests ← ../ArquitecturaBase/tests/ArquitecturaBase.Api.IntegrationTests/ErrorHandlingTests.cs; ValidationProblemTests nuevo, con referencia a ProblemDetailsMapperTests.cs de la base).
 **Respaldo:** plan maestro §Etapa 1, Back 2 y puerta; backend.md §6 “Mapeo HTTP”; arbol.md back “Api/ErrorHandling”; rules/result-y-errores.md.
-- [ ] Probar los siete ErrorType, status, detail es-AR/en-US, code, traceId, errors y retryAfter; I/ErrorHandlingTests e I/ValidationProblemTests en rojo.
-- [ ] Copiar/adaptar mapper y extensiones; repetir en verde.
-- [ ] Commit back: feat: mapear resultados a ProblemDetails
+- [x] Probar los siete ErrorType, status, detail es-AR/en-US, code, traceId, errors y retryAfter; I/ErrorHandlingTests e I/ValidationProblemTests en rojo.
+- [x] Copiar/adaptar mapper y extensiones; repetir en verde.
+- [x] Commit back: feat: mapear resultados a ProblemDetails
 
 ### Tarea 18. Errores del framework y localización HTTP
 
