@@ -11,7 +11,7 @@
 | 2. Punteros por carpeta | Qué va acá, qué NO va, qué fichas leer y qué archivo copiar | `AGENTS.md` + `CLAUDE.md` (`@AGENTS.md`) en cada carpeta del mapa (§3) | 3 a 8 líneas en las carpetas de capa; una línea, a `docs/features/<área>.md`, en las carpetas de un área |
 | 3. Verificación | Tests de arquitectura, analizadores, `BannedSymbols.txt`, `TreatWarningsAsErrors` | `tests/*.ArchitectureTests`, `.editorconfig` | una verificación por regla |
 
-Además hay **recetas** (`docs/guides/`: agregar un área, permiso nuevo, migración…) y un **área de referencia** (Roles): código real para copiar, no ejemplos inventados.
+Además hay **recetas** (`docs/guides/`: prefijo de backend (E1), migración (E2), agregar un área y permiso nuevo (E4), quitar WhatsApp (E8)) y un **área de referencia** (Roles): código real para copiar, no ejemplos inventados.
 
 **Cómo llega cada nivel al agente:**
 - **Claude Code** carga el `CLAUDE.md` de la raíz al empezar y el de cada subcarpeta cuando lee archivos de ella.
@@ -75,7 +75,7 @@ Cada fila es una carpeta que lleva `AGENTS.md` + `CLAUDE.md`. Los punteros se es
 | `Infrastructure/Features/` | filtro de módulos por tenant | modulos-habilitados | `TenantFeatureFilter.cs` |
 | `Infrastructure/Modules/<Módulo>/` | adaptadores del módulo | modulos | — |
 | `Api/Modules/<Módulo>/` | lo HTTP del módulo (su `*ApiModule`, controllers como el del webhook, convención de rutas condicional); el núcleo no lo referencia | modulos | — |
-| `Api/Controllers/` | controllers finos: contrato → servicio → `ToActionResult`; `[Access]` + permiso (o `[PublicSite]`) | api-http, permisos, multitenancy | `Organization/RolesController.cs` |
+| `Api/Controllers/` | controllers finos: contrato → servicio → `ToActionResult`; `[Access]` + permiso, `[PublicSite]` (subdominio de una organización publicada) o solo `[AllowAnonymous]` si el controller está en la lista de `AccessDeclarationTests` | api-http, permisos, multitenancy | `Organization/RolesController.cs` |
 | `Api/Contracts/` | `*HttpRequest` / `*Query`, props nullable, `ToString()` sin datos personales; los de edición y borrado traen `version` | api-http, paginado-y-busqueda, concurrencia | `Organization/CreateRoleHttpRequest.cs` |
 | `Api/Idempotency/` | `[Idempotent]` y su filtro; nada más va acá | idempotencia | `IdempotencyFilter.cs` |
 | `Api/Json/` | conversores globales (UTC, `Money`, texto normalizado) | textos-libres, fechas-y-zonas, numeros-y-moneda | `NormalizedStringJsonConverter.cs` |

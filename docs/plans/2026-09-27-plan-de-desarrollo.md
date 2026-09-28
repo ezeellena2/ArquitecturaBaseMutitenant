@@ -49,27 +49,27 @@ El resultado tiene que servir para empezar productos reales.
 | 2 | Persistencia multitenant: DbContext, interceptores, UoW, RLS, roles de BD | ✔ | — | 1 |
 | 3 | Identidad global, OpenIddict, **accesos B2C / B2B / plataforma**, **registro de personas** (con código y con Google), cambio de acceso, **métodos de ingreso, términos y baja de la cuenta**, invitaciones, outbox, /api/me. En tres partes: 3a Ingreso, 3b La cuenta y 3c Invitaciones | ✔ | ✔ | 2 |
 | 4 | Autorización y Roles (área de referencia) | ✔ | ✔ | 3 |
-| 5 | Plataforma: organizaciones, aprobaciones, **módulos por organización**, moderación de páginas públicas, dominio verificado, identidades (con la baja iniciada por la plataforma), recuperaciones de cuenta, documentos legales, operadores, auditoría de seguridad | ✔ | ✔ | 4 (y 6 para moderar la página pública) |
-| 6 | Área B2B: **"Registrá tu empresa"**, usuarios, empresas, membresías, configuración, auditoría, **mi página pública** | ✔ | ✔ | 4 (y 5 para el dominio de correo) |
+| 5 | Plataforma: organizaciones, aprobaciones, **módulos por organización**, moderación de páginas públicas, dominio verificado, identidades (con la baja iniciada por la plataforma), recuperaciones de cuenta, documentos legales, operadores, auditoría de seguridad | ✔ | ✔ | 4 y 6 |
+| 6 | Área B2B: **"Registrá tu empresa"**, usuarios, empresas, membresías, configuración, auditoría, **mi página pública** | ✔ | ✔ | 4 |
 | 7 | Área B2C y **sitio público**: el área personal lista para sumar módulos (receta `personal.md`), páginas por subdominio, directorio, ingreso desde un subdominio, y la **mecánica de interacción** persona ↔ empresa probada de punta a punta | ✔ | ✔ | 6 |
-| 8 | WhatsApp (número de la plataforma: códigos, invitaciones, bot de ingreso) | ✔ | ✔ | 3 (su pantalla de plataforma, 5) |
+| 8 | WhatsApp (número de la plataforma: códigos, invitaciones, avisos de la cuenta, bot de ingreso) | ✔ | ✔ | 3 |
 | 9 | Endurecimiento: TOTP para operadores, rate limit, headers, observabilidad, fuzz de aislamiento | ✔ | ✔ | 5–8 |
 | 10 | Despliegue y operación: CI/CD, migration bundle, backup, runbook, exportar mis datos | ✔ | ✔ | 9 |
 | 11 | Opcional: canales de WhatsApp por organización | ✔ | ✔ | 8 |
 
-Las etapas 5, 6 y 8 pueden avanzar en paralelo una vez cerrada la 4. Entre la 5 y la 6 hay dos puntos que se esperan: moderar la página pública (5) necesita `PublicPage` de la 6, y el dominio de correo de la Configuración de la 6 necesita `TenantDomains` de la 5. La 7 necesita la página pública de la 6 (`PublicPage` publicada, el slug y los reservados). La pantalla de plataforma de la 8 (`areas/platform/whatsapp`) necesita el área de plataforma de la 5. Los módulos de negocio del producto (B2B y B2C) se suman después, cada uno con su plan, copiando Roles, **como módulos con `[FeatureGate]`** (P8).
+Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va después de la 6. La 5 usa `TenantProvisioner` de la 6 (aprobar, crear con invitación y reintentar el provisioning) y `PublicPage` (moderar la página pública). El dominio de correo de la Configuración de la 6 necesita `TenantDomains` de la 5, así que esa parte se cierra junto con la 5. La 7 necesita la página pública de la 6 (`PublicPage` publicada, el slug y los reservados). Los módulos de negocio del producto (B2B y B2C) se suman después, cada uno con su plan, copiando Roles, **como módulos con `[FeatureGate]`** (P8).
 
 **Pantallas:** todas están dibujadas y aprobadas en el lienzo "Sistema visual · Multitenant" (versión 33, 67 tableros, en escritorio y teléfono), con el tema de [`tema.md`](../../../ArquitecturaBaseMutitenantFront/docs/architecture/tema.md) del front. Cada etapa programa las suyas **copiando el tablero**, sin rediseñar. Si una pantalla necesita algo que el tablero no tiene, primero se dibuja y se aprueba.
 
 | Etapa | Tableros del lienzo |
 |---|---|
 | 0–1 | el tema, los componentes base, Botones, Palabras y Avisos (errores genéricos) |
-| 3 | Landing, Recorridos y Mapa-Ingreso (de referencia, no se programan), Ingreso (las dos puertas y sus estados, salvo los de WhatsApp y los del operador), Registro (salvo WhatsApp), Enlace, Sesion, Invitacion, Inicio-Personal, Cuenta (métodos de ingreso y baja), Aceptar-Terminos, Legal, Perfil-Suspendido, Error-Org y Mensajes por correo: Código de ingreso, Código para verificar un método, Invitación a una organización, Método de ingreso agregado, quitado y principal cambiado, Membresía terminada, Baja pedida, Baja cancelada y Cuenta eliminada |
+| 3 | Landing, Recorridos y Mapa-Ingreso (de referencia, no se programan), Ingreso (las dos puertas y sus estados, con el paso del código, salvo los de WhatsApp y los del operador), Registro (salvo WhatsApp), Sesion, Invitacion (todos sus estados), Inicio-Personal, Cuenta (métodos de ingreso y baja, salvo WhatsApp), Aceptar-Terminos, Legal, Perfil-Suspendido, Error-Org y Mensajes por correo: Código de ingreso, Código para verificar un método, Invitación a una organización, Método de ingreso agregado, quitado y principal cambiado, Membresía terminada, Baja pedida, Baja cancelada y Cuenta eliminada |
 | 4 | Roles y Rol |
 | 5 | Organizaciones, Organizacion, Cuentas, Cuenta-Plat, Recuperaciones, Recuperar, Legales, Auditoria-Plat y Config-Plat |
 | 6 | Registro-Empresa, Inicio-Org, Inicio-Miembro, Usuarios, Usuario, Empresas, Empresa, Configuracion (con el dominio de correo), Pagina-Org y Auditoria-Org |
 | 7 | Pagina-Publica y Directorio |
-| 8 | Ingreso y Registro (los estados de WhatsApp) y Mensajes (canal WhatsApp, incluido «Enlace para entrar (bot)») |
+| 8 | Ingreso, Registro y Cuenta (los estados de WhatsApp), Enlace y Mensajes (canal WhatsApp, incluido «Enlace para entrar (bot)») |
 | 9 | Ingreso: los estados del operador (segundo factor, código del autenticador incorrecto, código de recuperación, configurar el autenticador y guardar los códigos) |
 | 10 | Cuenta (Privacidad: Exportar mis datos) y Mensajes (Exportación de datos lista, por correo) |
 
@@ -205,9 +205,9 @@ Las etapas 5, 6 y 8 pueden avanzar en paralelo una vez cerrada la 4. Entre la 5 
 ## Etapa 3: identidad, accesos y OpenIddict
 
 **Se hace en tres partes, cada una con su puerta**, porque es la etapa más grande y la prioridad es que el ingreso funcione de punta a punta cuanto antes:
-- **3a · Ingreso:** los puntos 1 a 6c, 8, 9 y 10 del back, y en el front los puntos 1 y 4, los layouts, el inicio personal y las páginas de error del punto 3, el ingreso, el código, el enlace, el registro y el callback del punto 2, y la portada del punto 5. Puerta: el recorrido manual de abajo (registro e ingreso reales, las dos puertas, cambio de lado, F5, logout).
+- **3a · Ingreso:** los puntos 1 a 6c, 8, 9 y 10 del back, y en el front los puntos 1 y 4, los layouts, el inicio personal y las páginas de error del punto 3, el ingreso (con el paso del código), el registro y el callback del punto 2, y la portada del punto 5. Puerta: el recorrido manual de abajo (registro e ingreso reales, las dos puertas, cambio de lado, F5, logout).
 - **3b · La cuenta:** 6c-bis (métodos de ingreso), 6d (términos) y 6e (baja). En el front: la casilla de términos del registro, la aceptación bloqueante, el estado de ingreso con la baja pedida, `areas/personal/account` (métodos de ingreso, Privacidad y la baja) y las páginas legales del punto 5. Puerta: sumar un correo personal, quitar el de la empresa con código en otro método, aceptar términos nuevos, pedir la baja y cancelarla ingresando.
-- **3c · Invitaciones:** el punto 7. En el front: la pantalla de invitación. Puerta: invitar a alguien sin cuenta y a alguien con cuenta, y aceptar las dos.
+- **3c · Invitaciones:** el punto 7. En el front: la pantalla `/invitacion` con todos los estados del tablero Invitacion. Puerta automática: `InvitationsTests` emite con `InvitationIssuer` una invitación a alguien sin cuenta y otra a alguien con cuenta, y las acepta. El recorrido manual (invitar desde Usuarios, que llegue de verdad por Gmail y aceptar las dos) pasa a la puerta de la Etapa 6, porque la 3c no tiene una ruta para invitar.
 
 **Back:**
 1. `ApplicationUser` **global** (IsPlatformOperator, Status, Culture, TimeZoneId, DisplayName, LastBusinessTenantId), sin índice único de email ni teléfono: esos valores viven en `LoginMethods` (ver 6c-bis), y `Email`/`PhoneNumber` son solo una copia del método principal.
@@ -215,14 +215,14 @@ Las etapas 5, 6 y 8 pueden avanzar en paralelo una vez cerrada la 4. Entre la 5 
    - **Sin setters públicos:** las reglas de la cuenta (correo o teléfono obligatorio, largo del nombre, restaurar) viven en métodos de la entidad, con tests unitarios.
    - Un nombre demasiado largo es un error de validación, no un recorte silencioso.
    - `ISignInService` es solo técnico, con 12 miembros como máximo; los datos de la cuenta van por `IUserRepository`. Así queda como en las Etapas 2 y 7 del plan de ArquitecturaBase.
-1b. **Ajustes de plataforma y eventos de seguridad:** `PlatformSettings` (`ConsumerSignup` Open | Closed, `BusinessSignup` Open | RequiresApproval | Closed, `MaxOwnedOrganizations` y `AccountDeletionGraceDays` = 30), con `IPlatformSettingsReader`/`PlatformSettingsReader` y caché `p:`, sembrada por el seed (punto 9). También `SecurityEvent` + `SecurityEventType`, con `ISecurityEventRepository`/`SecurityEventRepository`. Las dos tablas van en la migración de la Etapa 3; su pantalla y su listado llegan en la Etapa 5.
+1b. **Ajustes de plataforma y eventos de seguridad:** `PlatformSettings` (`ConsumerSignup` Open | Closed, `BusinessSignup` Open | RequiresApproval | Closed, `MaxOwnedOrganizations` y `AccountDeletionGraceDays` = 30), con su configuración EF, `IPlatformSettingsRepository`/`PlatformSettingsRepository`, `IPlatformSettingsReader`/`PlatformSettingsReader` con caché `p:` y `PlatformSeeder`, que los siembra (punto 9). Nacen acá porque los usan el registro, la baja y el seed de Production. También `SecurityEvent` + `SecurityEventType`, con `ISecurityEventRepository`/`SecurityEventRepository`. Las dos tablas van en la migración de la Etapa 3; el servicio, el controller y la pantalla para editar los ajustes, y el listado de eventos, llegan en la Etapa 5.
 2. OpenIddict:
    - code + PKCE + refresh y el cliente `web`;
    - `OpenIdPrincipalFactory` (`access`, `tenant_id`, `tenant_kind`);
    - `ConnectController` con `tenant=` en authorize.
-3. `TenantResolutionMiddleware`, `[Access]`, `CurrentUser` y `RequestInfo`. `ConnectService` con `access=` y `tenant=` en authorize (cambio de acceso sin volver a ingresar).
-4. Ingreso sin contraseña por correo: códigos, enlaces, `LoginAudit` y rate limits. El canal del código y el de la invitación pasan por `ILoginCodeChannel` e `IInvitationChannel`: el núcleo trae solo `"email"` y WhatsApp se enchufa en la Etapa 8. `IPhoneLinkObserver` avisa los cambios de teléfono.
-5. **Registro B2C:** identidad + tenant `Personal` + `Member(Owner)` + `TenantSettings` (cultura, zona y moneda del navegador). Respeta `ConsumerSignup`: si está cerrado, el tablero Registro muestra el estado «Registro cerrado».
+3. `TenantResolutionMiddleware` (una organización no disponible responde 403 `Tenancy.Tenant.Suspended`, `Tenancy.Tenant.PendingApproval` o `Tenancy.Tenant.Closed`), `[Access]`, `CurrentUser` y `RequestInfo`. Las rutas anónimas del dominio principal llevan solo `[AllowAnonymous]` y su controller va en la lista explícita de `AccessDeclarationTests`. `ConnectService` con `access=` y `tenant=` en authorize (cambio de acceso sin volver a ingresar).
+4. Ingreso sin contraseña por correo: códigos, `LoginAudit` y rate limits (los enlaces de un solo uso del bot llegan con la Etapa 8). El canal del código, el de la invitación y el de los avisos de la cuenta pasan por `ILoginCodeChannel`, `IInvitationChannel` e `IAccountNoticeChannel` (en `Application/Interfaces/Integrations/Messaging/`): el núcleo trae solo `"email"`, también para los avisos, y WhatsApp se enchufa en la Etapa 8. `IAccountNoticeChannel` recibe un `AccountNotice` cerrado (`LoginMethodChanged`, `ReviewLoginMethods`, `DeletionRequested`, `DeletionCancelled`, `AccountDeleted`, `RecoveryReceived`, `RecoveryApproved` y `RecoveryRejected`), siempre por el outbox y cifrado. `IPhoneLinkObserver` avisa los cambios de teléfono.
+5. **Registro B2C:** identidad + tenant `Personal` + `Member` (la persona es la única miembro y sus permisos son implícitos, `PersonalPermissions` de la Etapa 4) + `TenantSettings` (cultura, zona y moneda del navegador). Respeta `ConsumerSignup`: si está cerrado, el tablero Registro muestra el estado «Registro cerrado».
 6. Outbox persistente y **Gmail por SMTP**, que en desarrollo también envía de verdad (pickup `.eml` como opción), con plantillas de `Notifications.resx` y `DisplayFormatter`.
 6b. **Ingreso y registro con Google** (`Authentication:Google:*`): si la cuenta no existe, crea la identidad y su espacio personal, como el registro por código (solo en el ingreso como persona). Vincular y desvincular Google desde la cuenta.
 6c. **Configuración lista para pegar** ([`docs/operations/configuracion.md`](../operations/configuracion.md)): las mismas claves que ArquitecturaBase; `appsettings.Development.json` con los valores no secretos; los scripts de `scripts/secretos/` probados (importar de ArquitecturaBase, cargar desde un archivo, verificar); validación al arrancar con el nombre de la clave que falta.
@@ -234,12 +234,16 @@ Las etapas 5, 6 y 8 pueden avanzar en paralelo una vez cerrada la 4. Entre la 5 
    - al terminar una membresía, desactivar sus correos administrados y avisar;
    - tests `LoginMethodsTests` y `ManagedEmailTests` (un exmiembro no puede ingresar con el correo de la empresa).
 
-   El **dominio verificado** de la organización (registro TXT) y "Recuperar mi cuenta" asistida por la plataforma van en la Etapa 5.
+   El **dominio verificado** de la organización (registro TXT) va en la Etapa 6 (Configuración), y "Recuperar mi cuenta" asistida por la plataforma en la Etapa 5.
 6d. **Términos y privacidad (P7):** `LegalDocuments` y `LegalDocumentContents` (versión 1 de términos y privacidad, con su texto en es y en, sembrada), `LegalAcceptances`, `acceptedTerms` en el registro (correo, WhatsApp y Google), `LegalAcceptanceMiddleware` y `LegalAcceptanceTests`. En el front, la casilla del registro y la pantalla bloqueante de aceptación.
-6e. **Baja de la cuenta (ADR 0035, multitenancy.md §3.2):** estados `PendingDeletion` y `Deleted` en la identidad, `ReauthTicket`, `AccountDeletionPolicy`, `POST /api/me/deletion` y `POST /api/auth/deletion/cancel`, el `SecurityEvent` `AccountDeletionRequested`, el ingreso durante la gracia (los días salen de `PlatformSettings.AccountDeletionGraceDays`), `AccountDeletionWorker`, `IAccountDeletionParticipant` con los participantes del núcleo que ya tienen tabla (espacio personal, aceptaciones legales y outbox), y los avisos. Los demás participantes del núcleo llegan con su tabla: pedidos de recuperación en la Etapa 5 (junto con el "Dar de baja" de la plataforma), membresías en la Etapa 6, datos compartidos en la Etapa 7 (con `IRetainedOnConsumerDeletion`) y exportaciones en la Etapa 10. Tests `AccountDeletionTests` y `AccountDeletionParticipantsTests`.
-7. Invitaciones a una organización.
+6e. **Baja de la cuenta (ADR 0035, multitenancy.md §3.2):** estados `PendingDeletion` y `Deleted` en la identidad, con la fecha aparte (`DeletionScheduledForUtc`), `ReauthTicket`, `AccountDeletionPolicy` (bloquea a un operador, una baja ya pedida y lo que bloquee un módulo; el bloqueo del único Dueño, `Legal.AccountDeletion.LastAdmin`, se suma en la Etapa 4), `POST /api/me/deletion` y `POST /api/auth/deletion/cancel`, el `SecurityEvent` `AccountDeletionRequested`, el ingreso durante la gracia (los días salen de `PlatformSettings.AccountDeletionGraceDays`), `AccountDeletionWorker`, `IAccountDeletionParticipant` con los participantes del núcleo que ya tienen tabla (espacio personal, aceptaciones legales y outbox), y los avisos por `IAccountNoticeChannel`. Los demás participantes del núcleo llegan con su tabla: pedidos de recuperación en la Etapa 5 (junto con el "Dar de baja" de la plataforma), membresías en la Etapa 6, datos compartidos en la Etapa 7 (con `IRetainedOnConsumerDeletion`) y exportaciones en la Etapa 10. Tests `AccountDeletionTests` y `AccountDeletionParticipantsTests`.
+7. **Invitaciones a una organización** (3c), en `Invitations/` (nunca `UserInvitation`):
+   - `Invitation` + `Member(Invited)`;
+   - `InvitationIssuer`, que emite y encola por `IInvitationChannel`. **No tiene ruta propia:** lo usan `TenantAdministrationService` en la Etapa 5 y `UserService` en la 6 (`POST /api/users/invitations`);
+   - `InvitationService` con la vista previa `POST /api/invitations/preview` (el token va en el cuerpo, nunca en la URL) y `POST /api/invitations/accept`, con cuenta previa y sin ella (aceptar sin cuenta crea la identidad **sin** espacio personal);
+   - `InvitationsTests`: emite con `InvitationIssuer` una invitación a alguien sin cuenta y otra a alguien con cuenta, y las acepta.
 8. `GET /api/me` (cuenta, acceso activo, espacio personal, organizaciones, permisos y las preferencias efectivas de cultura, zona y moneda) y `PUT /api/me`.
-9. Seed idempotente en **todos** los ambientes, dentro de un límite y con el advisory lock `seed:` para que dos réplicas no choquen. En desarrollo, además: operador; Empresa A con Ana y Kevin; Kevin y Carla como personas. Test: arrancar en `Production` contra una base migrada y vacía deja el cliente `web`, los ajustes de plataforma y el operador inicial.
+9. Seed idempotente en **todos** los ambientes, dentro de un límite y con el advisory lock `seed:` para que dos réplicas no choquen. En desarrollo, además: operador (entra sin segundo factor hasta la Etapa 9); Empresa A con Ana y Kevin (el rol `TenantAdmin` de Ana se siembra en la Etapa 4, cuando existen los roles); Kevin y Carla como personas. Test: arrancar en `Production` contra una base migrada y vacía deja el cliente `web`, los ajustes de plataforma y el operador inicial.
 10. Tests:
     - el recorrido real de ingreso;
     - el registro;
@@ -249,8 +253,8 @@ Las etapas 5, 6 y 8 pueden avanzar en paralelo una vez cerrada la 4. Entre la 5 
 
 **Front:**
 1. `auth/` y `tenancy/`: las dos puertas (`/login` y `/login/empresa`), "Ir a mi empresa" / "Ir a Personal" en el menú de la cuenta, elegir organización, y `queryClient.clear()` al cambiar.
-2. `areas/public/auth`: ingreso con los estados del tablero Ingreso (incluida la cuenta con la baja pedida y la sesión vencida; los de WhatsApp llegan en la Etapa 8 y los del segundo factor del operador en la Etapa 9), código, enlace, registro con la casilla de términos, callback, invitación y la aceptación bloqueante de términos nuevos.
-3. Los tres layouts con el menú lateral del tema (el `AdminPanel` suma «Gestión de usuarios › Roles y permisos» en la Etapa 4 y queda completo en la Etapa 6), `areas/personal/home` con el inicio personal, las páginas de `areas/public/errors` (`ForbiddenPage`, `NotFoundPage` y `OrganizationSuspendedPage`) y `areas/personal/account` con los métodos de ingreso, Privacidad (exportar llega en la Etapa 10) y la baja.
+2. `areas/public/auth`: ingreso (`/login` y `/login/empresa`) con los estados del tablero Ingreso, incluido el paso del código, que no tiene ruta propia (también la cuenta con la baja pedida y la sesión vencida; los de WhatsApp y el enlace del bot llegan en la Etapa 8, y los cinco del operador en la Etapa 9), registro con la casilla de términos, callback, invitación y la aceptación bloqueante de términos nuevos.
+3. Los tres layouts con el menú lateral del tema (el `AdminPanel` suma «Gestión de usuarios › Roles y permisos» en la Etapa 4 y queda completo en la Etapa 6), `areas/personal/home` con el inicio personal, las páginas de `areas/public/errors` (`ForbiddenPage`, `NotFoundPage` y `OrganizationUnavailablePage`, con sus estados Suspendida, Espera aprobación y Cerrada para `Tenancy.Tenant.Suspended`, `.PendingApproval` y `.Closed`) y `areas/personal/account` con los métodos de ingreso, Privacidad (exportar llega en la Etapa 10) y la baja.
 4. `useFormat` conectado a las preferencias de `/api/me`.
 5. `SiteLayout` y `areas/public/site` con la portada (`/` sin sesión, tablero Landing, con «Para empresas», que lleva a «Ingresá como empresa»; el directorio de empresas publicadas se suma en la Etapa 7 y «Registrá tu empresa» se enlaza al llegar la Etapa 6), en la 3a. Y `areas/public/legal` con `/terminos` y `/privacidad` (tablero Legal), que leen el documento vigente sin sesión (`LegalController`, 6d), en la 3b.
 
@@ -270,11 +274,12 @@ Las etapas 5, 6 y 8 pueden avanzar en paralelo una vez cerrada la 4. Entre la 5 
 ## Etapa 4: autorización y Roles (área de referencia)
 
 **Back:**
-1. `Permissions` (organización y empresa), `PersonalPermissions`, `PlatformPermissions`, `Role`, `RoleScope`, `RoleAssignment`, `SystemRoles` y `Permissions.resx`.
+1. `Permissions` (organización y empresa, sin prefijo: `users.read`, nunca `tenant.users.read`), `PersonalPermissions`, `PlatformPermissions` (los `platform.*` de la Etapa 5; `platform.whatsapp.manage` no entra hasta la Etapa 11), `Role`, `RoleScope`, `RoleAssignment`, `SystemRoles` y `Permissions.resx`.
 2. `PermissionService` (efectivos por organización y empresa, con caché e invalidación) y `PlatformPermissionService`.
 3. Los atributos `HasPermission`, `HasCompanyPermission` y `HasPlatformPermission`, su policy provider y handlers, y `PermissionAuthorizationTests`.
 4. **RoleService completo como referencia:** listado paginado con filtros y conteos, get by id (con `version`), create (201), update y delete con `version` obligatoria (P1: `Role` es `IVersioned`, 409 `General.ConcurrencyConflict`), catálogo agrupado y protección de los roles de sistema.
 5. Tests unitarios, de integración y de aislamiento, y el 409 de concurrencia del rol (`ConcurrencyTests`).
+6. **El Dueño:** sale solo del rol de sistema `TenantAdmin` (`RoleAssignment`), nunca de un flag de `Member`. El seed le da `TenantAdmin` a Ana en la Empresa A. `AccountDeletionPolicy` suma el bloqueo del único Dueño de una organización no cerrada (`Legal.AccountDeletion.LastAdmin`), con su caso en `AccountDeletionTests`. "Dueños activos" son los `TenantAdmin` con la identidad `Active` (una baja pedida no cuenta); `LastTenantAdminGuard` (Etapa 6) reusa esa misma lectura.
 
 **Front:** `areas/business/roles` (RolesPage con "Vale en" y RoleEditorPage, que manda la `version` de la ficha y muestra el `ConcurrencyBanner` ante un 409), usando `DataTable` con columnas tipadas: es la feature de referencia. Suma su enlace «Roles y permisos» dentro de «Gestión de usuarios» en el `AdminPanel` (`layouts/navigation/business.ts`).
 
@@ -292,30 +297,36 @@ Las etapas 5, 6 y 8 pueden avanzar en paralelo una vez cerrada la 4. Entre la 5 
 ## Etapa 5: plataforma
 
 **Back:**
-1. `TenantAdministrationService`: listar, ver, aprobar, rechazar (con motivo), crear con invitación, suspender, reactivar, cerrar y reintentar el provisioning. Rechazar deja la organización en `Closed` (no hay un estado de rechazo), registra el `SecurityEvent` con el motivo y le avisa a quien la registró; su cuenta y su espacio personal siguen funcionando.
+1. `TenantAdministrationService`: listar, ver, aprobar, rechazar (con motivo), crear con invitación, suspender, reactivar, cerrar y reintentar el provisioning. Aprobar, crear y reintentar usan `TenantProvisioner` de la Etapa 6; crear con invitación, `InvitationIssuer` de la 3c. Rechazar deja la organización en `Closed` (no hay un estado de rechazo), registra el `SecurityEvent` con el motivo y le avisa a quien la registró; su cuenta y su espacio personal siguen funcionando.
 1b. **Módulos por organización (P8):**
     - `Microsoft.FeatureManagement.AspNetCore`, el catálogo `Features.cs`, `platform.TenantFeatures` y `TenantFeatureFilter` con caché;
     - `DisabledFeatureHandler` (404 ProblemDetails) e `IFeatureService`;
     - `features` en `/api/me` y la sección "Módulos" en la ficha de organización de la plataforma;
     - `FeatureGateTests` y `ModuleControllersTests`;
     - en el front, `useFeature`, `<Feature>` y `feature` en las rutas y la navegación; una ruta de un módulo apagado muestra `NotFoundPage`, igual que un 404 (caso "Módulo apagado" del tablero Avisos).
-1c. **Moderar páginas públicas (multitenancy.md §11):** desde la pestaña «Página pública» de la ficha de organización (tablero Organizacion), que muestra solo metadatos (`GET /api/platform/tenants/{id}/public-site`). Despublicar con motivo (`POST /api/platform/tenants/{id}/public-site/unpublish`): la página vuelve a borrador y queda bloqueada, y la organización no puede volver a publicarla hasta que la plataforma use «Permitir publicar» (`POST /api/platform/tenants/{id}/public-site/allow-publish`, también con motivo). Las dos acciones registran el `SecurityEvent` y les avisan a los Dueños. Necesita `PublicPage` de la Etapa 6: si la 5 termina antes, este punto se cierra junto con la 6.
-1d. **Dominio verificado (ADR 0033):** `platform.TenantDomains` (dominio de correo único en todo el sistema, token TXT, `Pending | Verified`) y un puerto de consulta DNS TXT con su adaptador. Al verificarse, los `LoginMethods` de ese dominio (los que ya existen y los nuevos) quedan con `ManagedByTenantId`. La plataforma lo ve, lo verifica (`POST /api/platform/tenants/{id}/domains/{domain}/verify`) y lo quita con motivo desde la pestaña «Dominio verificado» de la ficha de organización, con `SecurityEvent`. La organización lo registra y lo comprueba desde su Configuración en la Etapa 6 (punto 4), sobre el mismo servicio.
-2. Identidades: buscar, suspender (revoca todas sus sesiones), "Cerrar sesiones" con motivo (`POST /api/platform/accounts/{id}/revoke-sessions`, sin cambiar el estado) y "Dar de baja" con motivo (ADR 0035).
+1c. **Moderar páginas públicas (multitenancy.md §11):** desde la pestaña «Página pública» de la ficha de organización (tablero Organizacion), que muestra solo metadatos (`GET /api/platform/tenants/{id}/public-site`). Despublicar con motivo (`POST /api/platform/tenants/{id}/public-site/unpublish`): la página vuelve a borrador y queda bloqueada, y la organización no puede volver a publicarla hasta que la plataforma use «Permitir publicar» (`POST /api/platform/tenants/{id}/public-site/allow-publish`, también con motivo). Las dos acciones registran el `SecurityEvent` y les avisan a los Dueños. Usa `PublicPage` de la Etapa 6, con su bloqueo (`PublishBlockedAtUtc`, `PublishBlockedReason` y `PublishBlockedByUserId`).
+1d. **Dominio verificado desde la plataforma (ADR 0033):** la pestaña «Dominio verificado» de la ficha de organización lo muestra, lo verifica (`POST /api/platform/tenants/{id}/domains/{domain}/verify`) y lo quita con motivo, con `SecurityEvent`, sobre `TenantDomainService` de la Etapa 6.
+2. Identidades: buscar, suspender (revoca todas sus sesiones), "Cerrar sesiones" con motivo (`POST /api/platform/accounts/{id}/revoke-sessions`, sin cambiar el estado) y "Dar de baja" con motivo (ADR 0035). Una cuenta suspendida a la que se le inicia la baja sigue `Suspended` con la fecha de eliminación y no puede cancelarla; si la plataforma la reactiva antes de la fecha, pasa a `PendingDeletion` (no a `Active`) y ahí sí puede ingresar y cancelar.
 2b. **«Recuperar mi cuenta» (ADR 0033):** `platform.AccountRecoveryRequests` (`Pending | Approved | Rejected`). El pedido es público (`POST /api/account-recovery`, desde `/recuperar`, sin revelar si la cuenta existe) y lleva el método de antes y uno nuevo, verificado con código. Un operador lo revisa en la bandeja Recuperaciones (`GET /api/platform/recoveries`) y lo aprueba o lo rechaza con motivo (`POST /api/platform/recoveries/{id}/approve` y `/reject`), con `SecurityEvent`. Aprobar suma el método nuevo y saca la cuenta de «Necesita recuperación», el estado que muestra su ficha. Suma el participante `Recovery` de la baja, que cierra los pedidos pendientes (ADR 0035).
 3. `PlatformOperatorService`; el primer dueño sale del seed.
-4. `PlatformAuditService` + `ISecurityEventReader`/`SecurityEventReader` (listado de Auditoria-Plat) y `PlatformSettingsService` (+ `IPlatformSettingsRepository` para escribir) para la pantalla Config-Plat, que edita lo que muestra su tablero: el registro de personas, el alta de organizaciones y las organizaciones propias por persona. `PlatformSettings` y `SecurityEvent` ya existen desde la Etapa 3 (1b).
-4b. **Documentos legales (P7):** listar las versiones de términos y privacidad (`GET /api/platform/legal-documents`) y publicar una versión nueva (`POST /api/platform/legal-documents`) con su tipo, su fecha de vigencia y el texto en todas las culturas soportadas (hoy es y en), sobre `LegalDocuments` y `LegalDocumentContents`. Una versión nunca se edita. El `POST` es `[Idempotent]`, se protege con `[HasPlatformPermission]` (`platform.settings.manage`) y registra un `SecurityEvent` con motivo. Desde la vigencia, `LegalAcceptanceMiddleware` pide aceptar la versión nueva.
+4. `PlatformAuditService` + `ISecurityEventReader`/`SecurityEventReader` (listado de Auditoria-Plat) y `PlatformSettingsService` y su controller para la pantalla Config-Plat, que edita lo que muestra su tablero: el registro de personas, el alta de organizaciones y las organizaciones propias por persona. `PlatformSettings` (con su configuración EF, repositorio, reader y `PlatformSeeder`) y `SecurityEvent` ya existen desde la Etapa 3 (1b).
+4b. **Documentos legales (P7):** listar las versiones de términos y privacidad (`GET /api/platform/legal-documents`) y publicar una versión nueva (`POST /api/platform/legal-documents`) con su tipo, su fecha de vigencia y el texto en todas las culturas soportadas (hoy es y en), sobre `LegalDocuments` y `LegalDocumentContents`. Una versión nunca se edita. El `POST` es `[Idempotent]`, se protege con `[HasPlatformPermission]` (`platform.legal.manage`) y registra un `SecurityEvent` con motivo. Desde la vigencia, `LegalAcceptanceMiddleware` pide aceptar la versión nueva.
 5. Tests:
    - un operador sin `Enter` no ve datos;
    - un usuario recibe 403 en `/api/platform`, también en las rutas nuevas;
-   - suspender una organización no afecta el acceso B2C de sus usuarios;
+   - suspender una organización no afecta el acceso B2C de sus usuarios (que su página pública muestre «No disponible» se prueba en la Etapa 7, con el sitio público);
    - el pedido de recuperación no revela si la cuenta existe, y aprobarlo deja la cuenta con el método nuevo;
    - el dominio es único, y verificarlo deja administrados los correos de ese dominio;
    - publicar un documento legal sin alguna cultura da 400, y una versión nueva bloquea hasta aceptarla;
    - una página despublicada por la plataforma no se puede volver a publicar desde la organización.
 
-**Front:** `areas/platform/{tenants, accounts, operators, recoveries, legal, audit, settings}` y «Recuperar mi cuenta» (`/recuperar`, `RecoverAccountPage` en `areas/public/auth`), copiando los tableros de la Etapa 5.
+**Permisos** (`PlatformPermissions`, [permisos](../rules/permisos.md)):
+- `platform.tenants.read` para ver organizaciones, y `platform.tenants.manage` para aprobar, rechazar, suspender, reactivar y cerrar, prender y apagar módulos, ver el dominio verificado y moderar la página pública;
+- `platform.accounts.read` para buscar y ver cuentas, y `platform.accounts.manage` para suspender, reactivar, cerrar sesiones e iniciar la baja;
+- `platform.recoveries.manage`, `platform.legal.manage`, `platform.operators.manage`, `platform.audit.read` y `platform.settings.manage`, cada uno para su pantalla;
+- roles de plataforma: **Owner** con todos y **Support** con `platform.tenants.read`, `platform.accounts.read`, `platform.recoveries.manage` y `platform.audit.read`.
+
+**Front:** `areas/platform/{tenants, accounts, recoveries, legal, audit, settings}` (`accounts` incluye los operadores; sin `home` ni `whatsapp`) y «Recuperar mi cuenta» (`/recuperar`, `RecoverAccountPage` en `areas/public/auth`), copiando los tableros de la Etapa 5. `/plataforma` es el listado de organizaciones (el inicio del operador), la ficha es `/plataforma/organizaciones/:id`, y además `/plataforma/cuentas` (cuentas y operadores), `/plataforma/cuentas/:id`, `/plataforma/recuperaciones`, `/plataforma/legales`, `/plataforma/auditoria` y `/plataforma/configuracion`. Menú: Organizaciones, Cuentas, Recuperaciones, Auditoría, Documentos legales y Configuración.
 
 **Documentación:** `docs/features/plataforma.md`, con los punteros de una línea en las carpetas del área.
 
@@ -325,20 +336,22 @@ Las etapas 5, 6 y 8 pueden avanzar en paralelo una vez cerrada la 4. Entre la 5 
 
 **Back:**
 1. **"Registrá tu empresa"** (`POST /api/auth/business-signup`, en `/registro/empresa`, desde la portada y la puerta de empresas; nunca desde el acceso B2C), con `TenantProvisioner` idempotente, compartido con la plataforma. Elegir el slug (`Slug`, `ReservedSlugs`) y validar los reservados. Respeta `BusinessSignup` y `MaxOwnedOrganizations` (estados «Espera aprobación», «Alta cerrada» y «Llegó al límite» del tablero Registro-Empresa).
-1b. **Mi página pública:** `PublicPage` (nombre, logo, descripción y contacto; el slug es de la organización y vive en `Tenants`), en borrador o publicada, editable por quien tenga `publicpage.manage`. Si la plataforma la despublicó, queda en borrador bloqueada, con fecha y motivo, y no se puede volver a publicar hasta que la plataforma lo permita (estado «Despublicada por la plataforma» del tablero Pagina-Org).
-2. Usuarios, que parten de `Members`:
+1b. **Mi página pública:** `PublicPage` (nombre, logo, descripción y contacto; el slug es de la organización y vive en `Tenants`), en borrador o publicada, editable por quien tenga `publicpage.manage`. Si la plataforma la despublicó, queda en borrador bloqueada, con fecha y motivo (`PublishBlockedAtUtc`, `PublishBlockedReason` y `PublishBlockedByUserId`; `PublicPageStatus` sigue `Draft | Published`), y no se puede volver a publicar (`PublicSite.PublicPage.PublishBlocked`) hasta que la plataforma lo permita (estado «Despublicada por la plataforma» del tablero Pagina-Org). Ruta: `api/public-site`.
+2. Usuarios (`api/users`), que parten de `Members`:
    - listado con filtros y conteos, y ficha;
-   - invitar, reenviar y revocar la invitación, editar, deshabilitar, habilitar y quitar de la organización;
+   - invitar (`POST /api/users/invitations`, con `InvitationIssuer` de la 3c), reenviar y revocar la invitación (bajo `api/users/invitations/{id}`), editar, deshabilitar, habilitar y quitar de la organización;
    - roles de organización;
-   - protección del último TenantAdmin (una cuenta con la baja pedida no cuenta como Dueño);
+   - protección del último TenantAdmin con `LastTenantAdminGuard`, que reusa la lectura de "Dueños activos" de la Etapa 4 (una cuenta con la baja pedida no cuenta como Dueño);
    - el estado "Baja pedida" en el listado y la ficha, y el participante de la baja para las membresías (ADR 0035).
-3. Empresas (CRUD, CUIT como `TaxId` validado (P5), zona horaria) y membresías de empresa con sus roles, con protección del último CompanyAdmin. `TaxId` + `ArgentineCuitValidator` + `TaxIdTests` y `TaxIdPropertyTests`. Las ediciones de usuario y empresa llevan `version` (P1), como Roles.
-4. Configuración (nombre, cultura, zona y moneda por defecto, y el dominio de correo: registrarlo, ver el registro TXT, comprobarlo y quitarlo, sobre `TenantDomains` de la Etapa 5) y auditoría, con listado traducido.
+3. Empresas (`api/companies`: CRUD, CUIT como `TaxId` validado (P5), zona horaria) y membresías de empresa con sus roles (`api/companies/{companyId}/members`), con protección del último CompanyAdmin. `TaxId` + `ArgentineCuitValidator` + `TaxIdTests` y `TaxIdPropertyTests`. Las ediciones de usuario y empresa llevan `version` (P1), como Roles.
+4. Configuración (`api/settings`: nombre, cultura, zona y moneda por defecto, y el dominio de correo: registrarlo, ver el registro TXT, comprobarlo y quitarlo, con `settings.manage`. Acá nacen `platform.TenantDomains` (dominio único en todo el sistema, token TXT, `Pending | Verified`), `TenantDomainService` y el puerto de consulta DNS TXT con su adaptador: al verificarse, los `LoginMethods` de ese dominio (los que ya existen y los nuevos) quedan con `ManagedByTenantId`) y auditoría, con listado traducido.
 5. Tests de aislamiento para cada ruta nueva.
 
 **Front:** `areas/business/{home, users, companies, settings, audit, public-page}` y el `AdminPanel` completo (tema.md), copiando los tableros de la Etapa 6.
 
 **Documentación:** `docs/features/organizaciones.md` (usuarios, empresas, membresías, filtros y conteos), con los punteros de una línea en las carpetas del área, y la sección del registro de empresas ("Registrá tu empresa") en `docs/features/identidad.md`.
+
+**Puerta:** la general, más un recorrido manual: invitar desde Usuarios a alguien sin cuenta y a alguien con cuenta, que las dos invitaciones lleguen **de verdad** por Gmail, y aceptarlas.
 
 ---
 
@@ -350,9 +363,9 @@ Las etapas 5, 6 y 8 pueden avanzar en paralelo una vez cerrada la 4. Entre la 5 
 1. **Sitio público:**
    - `PublicSiteResolutionMiddleware` (subdominio → organización publicada, usa `ReservedSlugs` de la Etapa 6) y `[PublicSite]`;
    - una organización suspendida o con la página despublicada muestra «No disponible» en su subdominio (tablero Pagina-Publica), probado en `SubdomainTests` con los estados sembrados directamente (`TenantStatus.Suspended` y la página bloqueada), sin depender de los servicios de la Etapa 5;
-   - `SubdomainRedirectUriValidator` para ingresar desde un subdominio;
-   - el directorio de páginas publicadas en el dominio principal;
-   - desarrollo con `*.localtest.me` y el proxy de Vite por host.
+   - `SubdomainRedirectUriValidator` para ingresar desde un subdominio: el issuer es fijo (el dominio principal), `authorize` y `logout` navegan al dominio principal, y el canje del código, la renovación y `userinfo` van a `/connect/*` del propio subdominio;
+   - el directorio de páginas publicadas en el dominio principal (`DirectoryController`, con `[AllowAnonymous]` y no `[PublicSite]`);
+   - el SPA y la Api en el mismo origen en cada host, sin CORS y con `BackendPrefixes` igual en todos; en desarrollo, `*.localtest.me` y el proxy de Vite por host.
 1b. **Mecánica de interacción de punta a punta con `TestFeatures`:** una persona crea un `Deal` desde la página pública, la empresa lo ve en su bandeja y cada parte cambia estados según `PartyPolicy`. Es la guía para que un producto arme su módulo. Suma el participante de la baja para los datos compartidos (`engagement`), que reemplaza la copia de los datos personales por "Cuenta eliminada", e `IRetainedOnConsumerDeletion` para la retención legal que declare un módulo (ADR 0035, multitenancy.md §3.2). El caso se prueba con el `Deal` en `AccountDeletionTests`.
 2. `docs/features/personal.md`, la receta de un módulo B2C:
    - entidad `ITenantOwned`;
@@ -377,14 +390,15 @@ Además, `navigation/personal.ts` queda listo para sumar módulos B2C. El `Perso
 
 **Back:**
 1. Las carpetas `Domain/WhatsApp` y `Modules/WhatsApp` en Application, Infrastructure y Api, con un `AddWhatsAppModule()` por capa llamado desde `Program.cs`. Las configuraciones EF del módulo las aplica el propio módulo.
-2. Adaptadores de los puertos del núcleo: `WhatsAppLoginCodeChannel`, `WhatsAppInvitationChannel` y `WhatsAppPhoneLinkObserver`.
-3. Cliente de Cloud API y opciones validadas, con **las mismas claves `WhatsApp:*` que ArquitecturaBase** y los valores no secretos copiados de allá (`configuracion.md` §3), salvo las plantillas: `WhatsApp:Templates:Invitation` pasa a `invitacion_organizacion` (reemplaza a `invitacion_acceso`) y cada plantilla nueva de [`whatsapp-plantillas.md`](../operations/whatsapp-plantillas.md) suma su clave `WhatsApp:Templates:<Nombre>`. Envío por el outbox (canal `"whatsapp"`), con esas plantillas, creadas en Meta al empezar la etapa (la aprobación tarda). Registro B2C por WhatsApp.
+2. Adaptadores de los puertos del núcleo: `WhatsAppLoginCodeChannel`, `WhatsAppInvitationChannel`, `WhatsAppAccountNoticeChannel` (los avisos de la cuenta a los métodos `Phone`, con las plantillas `aviso_metodo_ingreso`, `revisa_metodos_ingreso`, `baja_cuenta_pedida`, `baja_cuenta_cancelada` y `cuenta_eliminada`; "Exportación lista" sigue solo por correo) y `WhatsAppPhoneLinkObserver`.
+3. Cliente de Cloud API y opciones validadas, con **las mismas claves `WhatsApp:*` que ArquitecturaBase** y los valores no secretos copiados de allá (`configuracion.md` §3), salvo las plantillas: `WhatsApp:Templates:Invitation` pasa a `invitacion_organizacion` (reemplaza a `invitacion_acceso`) y cada plantilla nueva de [`whatsapp-plantillas.md`](../operations/whatsapp-plantillas.md) suma su clave `WhatsApp:Templates:<Nombre>`. Envío por el outbox (canal `"whatsapp"`, cifrado), con esas plantillas, creadas en Meta al empezar la etapa (la aprobación tarda). Registro B2C por WhatsApp.
 4. Webhook con firma e idempotencia, procesador de entrada, bot de ingreso con enlace de un solo uso, retención de 90 días y health check.
 5. **Teléfonos como métodos de ingreso (ADR 0033).** Con el canal `"whatsapp"` registrado, el flujo de métodos de ingreso del núcleo (Etapa 3, 6c-bis) permite sumar a `LoginMethods` un método de tipo `Phone` y verificarlo con un código por WhatsApp. Ese teléfono sirve para ingresar y como el "otro método" que recibe el código para quitar o cambiar un método. Cuando un teléfono se quita o cambia, `WhatsAppPhoneLinkObserver` suelta el contacto e invalida los enlaces. Sin el módulo no se puede verificar un teléfono.
+5b. **Países de WhatsApp:** los controla el módulo en sus adaptadores y flujos (código por WhatsApp, vínculo y registro por WhatsApp), leyendo `WhatsApp:AllowedCountries` solo dentro de `Modules/WhatsApp`, con su propio error sobre el campo `phone`, y solo para un número **nuevo** (achicar la lista no invalida uno existente). `PhoneUsage` del núcleo sigue en `Any | Mobile`. El módulo aporta sus países a `GET /api/auth/methods` (`channels: [{ key: "whatsapp", countries: [...] }]`), de donde los lee `PhoneField usage="whatsapp"` en el front.
 6. `ModuleIsolationTests`: el núcleo no referencia `*.Modules.*`.
 7. `docs/features/whatsapp.md` y `docs/guides/quitar-whatsapp.md`.
 
-**Front:** ingreso y registro por WhatsApp, `PhoneField` en la cuenta y `areas/platform/whatsapp`.
+**Front:** ingreso, registro y enlace por WhatsApp (`/login/enlace`, tablero Enlace), y `PhoneField` en la cuenta (vincular y desvincular), copiando los estados de WhatsApp de Ingreso, Registro, Cuenta y Enlace y el canal WhatsApp de Mensajes. No hay pantalla de WhatsApp de plataforma: si algún día hace falta, primero se dibuja y se aprueba.
 
 **Puerta:** la general, más un recorrido real: con el webhook de Meta apuntando al túnel del multitenant (`configuracion.md` §4), ingresar con un código por WhatsApp y escribirle al bot. Además, **la prueba de fuego**: en una copia descartable, quitar el módulo siguiendo `quitar-whatsapp.md`, y el build y los tests del núcleo tienen que quedar en verde.
 
@@ -392,7 +406,7 @@ Además, `navigation/personal.ts` queda listo para sumar módulos B2C. El `Perso
 
 ## Etapa 9: endurecimiento
 
-- TOTP obligatorio para operadores, con reautenticación reciente en las operaciones sensibles. En el front, los estados del operador del tablero Ingreso.
+- TOTP obligatorio para operadores, con reautenticación reciente en las operaciones sensibles. Hasta esta etapa, el operador del seed entra sin segundo factor. En el front, los cinco estados «Operador: …» del tablero Ingreso (segundo factor, código del autenticador incorrecto, código de recuperación, configurar el autenticador y guardar los códigos).
 - Rate limit por tenant, por identidad y por IP (más estricto en las páginas públicas); cuotas en `PlatformSettings`.
 - Security headers, CSP estricta y revisión de cookies.
 - OpenTelemetry con `tenant.id` y `tenant.kind`.
@@ -409,4 +423,4 @@ Además, `navigation/personal.ts` queda listo para sumar módulos B2C. El `Perso
 
 ## Etapa 11 (opcional)
 
-- Canales de WhatsApp por organización (`WhatsAppChannels`).
+- Canales de WhatsApp por organización (`WhatsAppChannels`). Recién acá entra al catálogo `platform.whatsapp.manage`, porque es la primera ruta que lo usa.

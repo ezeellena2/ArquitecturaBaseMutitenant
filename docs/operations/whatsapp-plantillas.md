@@ -18,7 +18,11 @@
 | `baja_cuenta_pedida` | Utility | la fecha de eliminación | se pidió la baja (§3.2) | E8 |
 | `baja_cuenta_cancelada` | Utility | — | se canceló la baja | E8 |
 | `cuenta_eliminada` | Utility | — | se completó la baja | E8 |
+| `recuperacion_recibida` | Utility | — | recibimos el pedido de «Recuperar mi cuenta»; va al método nuevo | E8 |
+| `recuperacion_aprobada` | Utility | — | se aprobó: el método nuevo ya sirve para ingresar | E8 |
+| `recuperacion_rechazada` | Utility | — | se rechazó, sin revelar datos de la cuenta | E8 |
 
+- **Cómo salen los avisos de la cuenta** (las ocho plantillas Utility desde `aviso_metodo_ingreso`): el núcleo los manda por el puerto `IAccountNoticeChannel` con un `AccountNotice` cerrado, uno por plantilla y en el orden de la tabla: `LoginMethodChanged`, `ReviewLoginMethods`, `DeletionRequested`, `DeletionCancelled`, `AccountDeleted`, `RecoveryReceived`, `RecoveryApproved` y `RecoveryRejected`. Cada implementación atiende un tipo de método: la del núcleo, los correos (canal `"email"`); la del módulo, `WhatsAppAccountNoticeChannel`, los teléfonos (canal `"whatsapp"`), con estas plantillas. Sin el módulo, los teléfonos no reciben aviso y no es un error. Siempre por el outbox, cifrado.
 - **Lo que va solo por correo:** la exportación de datos, porque el enlace de descarga no va por WhatsApp.
 - **Un mensaje nuevo que un producto quiera mandar por WhatsApp:** se agrega a esta tabla con su etapa, y después se crea la plantilla.
 

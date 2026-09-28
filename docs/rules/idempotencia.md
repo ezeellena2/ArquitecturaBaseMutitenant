@@ -20,7 +20,7 @@
 - Confiar solo en deshabilitar el botón.
 
 ## Copiá de
-- `Api/Idempotency/IdempotencyFilter.cs` (E1) · front `src/shared/api/useIdempotentMutation.ts` (E1).
+- `Api/Idempotency/IdempotencyFilter.cs` (E2) · front `src/shared/api/useIdempotentMutation.ts` (E1).
 
 ## Lo verifica
 - `IdempotencyTests`: dos pedidos iguales en paralelo crean uno solo; el reintento devuelve la misma respuesta; otro cuerpo da 422; un 5xx libera la clave.

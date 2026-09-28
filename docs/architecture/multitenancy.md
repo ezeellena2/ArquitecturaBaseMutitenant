@@ -23,7 +23,7 @@ Una **plantilla estándar para cualquier tipo de negocio**. No es un producto: n
 | **Dueño de la empresa** | "Registrá tu empresa" (alta B2B aparte) | crea la organización y queda como **Dueño** (`TenantAdmin`, todos los permisos) | — |
 | **Operador de la plataforma** | acceso aparte, con segundo factor | backoffice: aprobar, rechazar, suspender y cerrar organizaciones, módulos por plan, cuentas, recuperaciones, documentos legales, auditoría | ver los datos de negocio de una empresa o de una persona |
 
-Dentro de una organización, los usuarios se diferencian **solo por rol**: el **Dueño** (`TenantAdmin`, toda la organización), el **Administrador** de cada empresa (`CompanyAdmin`) y los roles que cree la organización. La organización puede tener varias **empresas** (razones sociales o sedes), y son **planas**: no hay empresa matriz ni herencia entre empresas (ADR 0034). Cada rol tiene un alcance, que en pantalla es la columna "Vale en": toda la organización (`Organization`, se asigna sin empresa y vale en todas), cada empresa (`AnyCompany`, la empresa se elige al asignarlo y vale solo en esa) o solo en una empresa (`SpecificCompany`, el rol pertenece a esa empresa y solo se asigna ahí). El detalle y el catálogo de permisos están en [backend.md §14](backend.md#14-autorización).
+Dentro de una organización, los usuarios se diferencian **solo por rol**: el **Dueño** (`TenantAdmin`, toda la organización), el **Administrador** de cada empresa (`CompanyAdmin`) y los roles que cree la organización. El Dueño sale solo del rol de sistema `TenantAdmin` (`RoleAssignment`), nunca de un dato de la membresía. La organización puede tener varias **empresas** (razones sociales o sedes), y son **planas**: no hay empresa matriz ni herencia entre empresas (ADR 0034). Cada rol tiene un alcance, que en pantalla es la columna "Vale en": toda la organización (`Organization`, se asigna sin empresa y vale en todas), cada empresa (`AnyCompany`, la empresa se elige al asignarlo y vale solo en esa) o solo en una empresa (`SpecificCompany`, el rol pertenece a esa empresa y solo se asigna ahí). El detalle y el catálogo de permisos están en [backend.md §14](backend.md#14-autorización).
 
 ## 3. Una cuenta, dos accesos
 
@@ -31,7 +31,7 @@ Dentro de una organización, los usuarios se diferencian **solo por rol**: el **
 - **Dos accesos que no se mezclan:**
   - **Acceso B2C:** su **espacio personal** (tenant `Kind=Personal`). Se crea solo al registrarse como persona o la primera vez que entra como persona.
   - **Acceso B2B:** sus **organizaciones** (tenants `Kind=Business`), por membresía. Solo existe si registró una empresa o lo invitaron a una.
-- **Al ingresar se elige el acceso, con dos puertas:** "Ingresá" (`/login`, como persona) e "Ingresá como empresa" (`/login/empresa`). No se vuelve "al último lado": se entra al de la puerta elegida. Las páginas públicas llevan a la puerta de personas; la portada ofrece las dos. Por la puerta de empresas, con una sola organización entra directo; con varias, a la última que usó dentro del lado empresa; sin ninguna, ve "Registrá tu empresa".
+- **Al ingresar se elige el acceso, con dos puertas:** "Ingresá" (`/login`, como persona) e "Ingresá como empresa" (`/login/empresa`). No se vuelve "al último lado": se entra al de la puerta elegida. Las páginas públicas llevan a la puerta de personas; la portada ofrece las dos. Por la puerta de empresas, con una sola organización entra directo; con varias, a la última que usó dentro del lado empresa; sin ninguna, ve "Registrá tu empresa"; si su única membresía está deshabilitada, ve "Tu acceso a <organización> está deshabilitado" (`Tenancy.Member.Inactive`), con "Ingresá como persona". Con otra membresía activa, entra a esa.
 - **Cambiar de acceso** (de paciente a médico) no pide ingresar de nuevo: el menú de la cuenta muestra «Perfiles», con Personal («Tu perfil personal») y cada organización de la que es miembro, con su rol. El activo lleva ✓ y las suspendidas aparecen con «Suspendida» y no se pueden elegir. La lista es la misma en los dos lados. Elegir otro perfil cambia de lado o de organización. Por dentro, son tokens nuevos del otro acceso.
 - **Lo que ve cada acceso no se mezcla:** el espacio personal **no muestra organizaciones** (la lista «Perfiles» del menú de la cuenta es de la cuenta, no del lado), y la empresa no ve lo personal.
 - **Ejemplo:** alguien trabaja en la Empresa A y además es cliente de la Empresa B. Tiene **una** cuenta. Como **empresa** ve lo de la Empresa A según su rol. Como **persona** ve lo que le pidió a la Empresa B.
@@ -54,7 +54,7 @@ Dentro de una organización, los usuarios se diferencian **solo por rol**: el **
 - **Reglas:**
   - la persona puede sumar, verificar, elegir el principal y quitar métodos, siempre que le **quede al menos uno propio o activo**;
   - quitar o cambiar un método pide un código en **otro** método ya verificado;
-  - todo cambio queda en `SecurityEvents` y se avisa en **todos** los métodos.
+  - todo cambio queda en `SecurityEvents` y se avisa en **todos** los métodos, por `IAccountNoticeChannel` (sin el módulo de WhatsApp, los teléfonos no reciben aviso).
 
 ### 3.2 Baja de una cuenta (ADR 0035)
 
@@ -68,12 +68,13 @@ Active ──(pide la baja o la inicia la plataforma)──► PendingDeletion �
   └────(ingresa y la cancela)────┘
 
 Active ──(la plataforma suspende)──► Suspended ──(reactiva)──► Active
-Suspended ──(la plataforma inicia la baja)──► PendingDeletion
+Suspended ──(la plataforma inicia la baja)──► Suspended + fecha ──(pasan los días de gracia)──► Deleted
+Suspended + fecha ──(reactiva, con la baja pedida)──► PendingDeletion
 ```
 
 "Necesita recuperación" (§3.1) y "Baja iniciada por la plataforma" son estados que solo se muestran en pantalla, derivados del estado real; no son valores de `ApplicationUser.Status`.
 
-Campos: `DeletionRequestedAtUtc`, `DeletionScheduledForUtc`, `DeletionReason`, `DeletionRequestedByOperatorId?` (null si la pidió la persona; si no, el operador que la inició) y `DeletedAtUtc`.
+Campos: `DeletionRequestedAtUtc`, `DeletionScheduledForUtc`, `DeletionReason`, `DeletionRequestedByOperatorId?` (null si la pidió la persona; si no, el operador que la inició) y `DeletedAtUtc`. El estado y la baja se guardan por separado (`Status` y `DeletionScheduledForUtc`): una cuenta suspendida con la baja iniciada sigue `Suspended`, con la fecha.
 
 **1. Pedir la baja** (`POST /api/me/deletion`, `[Idempotent]`, desde "Mi cuenta" en cualquiera de los dos accesos):
 - **Reautenticación:** un código enviado a un método verificado, validado hace menos de 5 minutos (`ReauthTicket`, el mismo que piden quitar o cambiar un método). Sin eso da `Legal.AccountDeletion.ReauthRequired`.
@@ -103,12 +104,12 @@ Campos: `DeletionRequestedAtUtc`, `DeletionScheduledForUtc`, `DeletionReason`, `
   Solo la persona puede cancelar; la plataforma no.
 - **Sus métodos siguen reservados:** nadie puede registrarse con ese correo o ese teléfono. Una invitación a esos métodos no se puede aceptar sin ingresar, y ingresar lleva a cancelar la baja.
 - **En cada organización**, el usuario se ve con el estado **"Baja pedida"**, que sale del estado de la identidad y no de la membresía. No se le pueden cambiar los roles; sí se lo puede quitar.
-- **No cuenta como Dueño.** La protección del último Dueño exige otro Dueño activo, así que una organización nunca queda sin Dueño cuando se completa la baja.
+- **No cuenta como Dueño.** La protección del último Dueño exige otro Dueño activo (con el rol `TenantAdmin` y la identidad `Active`), así que una organización nunca queda sin Dueño cuando se completa la baja.
 - **La plataforma** ve la cuenta como "Baja pedida", con la fecha.
 
 **3. Eliminación** (`AccountDeletionWorker`):
-- Corre cada hora y toma las cuentas vencidas con `SKIP LOCKED`.
-- Procesa **una cuenta por pasos**: una transacción por cada tenant que toca (el espacio personal y cada organización), entrando con `ITenantScope` antes de abrirla, y una última para la identidad. La cuenta sigue en `PendingDeletion` hasta ese último paso. Cada paso es idempotente, así que si se corta, la próxima corrida la vuelve a tomar y sigue desde donde quedó.
+- Corre cada hora y toma con `SKIP LOCKED` toda cuenta con `DeletionScheduledForUtc` vencido, esté `PendingDeletion` o `Suspended`.
+- Procesa **una cuenta por pasos**: una transacción por cada tenant que toca (el espacio personal y cada organización), entrando con `ITenantScope` antes de abrirla, y una última para la identidad. La cuenta conserva su estado (`PendingDeletion` o `Suspended`) hasta ese último paso. Cada paso es idempotente, así que si se corta, la próxima corrida la vuelve a tomar y sigue desde donde quedó.
 
 | Dato | Qué pasa |
 |---|---|
@@ -131,6 +132,7 @@ El aviso final, "Tu cuenta fue eliminada", va al método principal. Se encola **
 
 **4. Desde la plataforma:**
 - Un operador puede **iniciar la baja** de una cuenta activa o suspendida, por ejemplo ante un pedido legal que llega por fuera de la plataforma.
+- Una cuenta **suspendida** sigue `Suspended`, con la fecha de eliminación. Como no puede ingresar (el ingreso responde cuenta suspendida), **no puede cancelar**. Si la plataforma la reactiva antes de la fecha, pasa a `PendingDeletion` (no a `Active`), y ahí sí puede ingresar y cancelar.
 - Lleva motivo y no pide reautenticar a la persona. Se guarda `DeletionRequestedByOperatorId`, y el `SecurityEvent` `AccountDeletionRequested` se registra con el operador como actor (`ActorKind = PlatformOperator`).
 - Lo bloquean las mismas reglas: si la persona es el **único Dueño** de una organización no cerrada, primero esa organización tiene que sumar otro Dueño, o la plataforma tiene que cerrarla.
 - La cuenta muestra "La plataforma inició la baja el dd/mm/aaaa", en lugar de "Pidió la baja".
@@ -161,10 +163,11 @@ Todo dato nuevo se clasifica **antes** de escribir su entidad:
 - **Resolución por host, solo para lo público:** `PublicSiteResolutionMiddleware` lee el subdominio y fija `IPublicSiteContext.BusinessTenantId`. Sirve **únicamente** para leer datos **públicos** de esa empresa. **Nunca** da acceso a datos privados: para eso sigue mandando el claim `tenant_id` del token.
 - **Un solo front** (el mismo SPA) atiende todos los subdominios: con un subdominio de empresa muestra la página pública; con el dominio principal, el sitio de la plataforma y los accesos.
 - **Ingreso desde un subdominio:**
-  - hay un solo servidor OIDC (`plataforma.com`);
+  - hay un solo servidor OIDC, con el **issuer fijo** en el dominio principal (`plataforma.com`);
   - la página de la empresa pide `authorize` con `redirect_uri = https://<slug>.plataforma.com/auth/callback`, y OpenIddict la acepta si el slug existe y está publicado (`SubdomainRedirectUriValidator`, nunca un comodín abierto);
+  - `authorize` y `logout` son navegaciones al dominio principal, donde vive la cookie de `/connect`; el canje del código, la renovación y `userinfo` van a `/connect/*` del **propio origen del subdominio**. En el front, `oidc-client-ts` usa `authority` = issuer, con un `metadataSeed` que apunta `token_endpoint`, `userinfo_endpoint` y `revocation_endpoint` al origen propio;
   - la sesión del servidor OIDC hace que, si ya ingresó en otro subdominio, no tenga que volver a hacerlo (`prompt=none`).
-- **Infraestructura:** DNS comodín `*.plataforma.com` y certificado comodín. En desarrollo: `*.localtest.me` (resuelve a 127.0.0.1) o `*.plataforma.localhost`.
+- **Infraestructura:** el SPA y la Api se sirven desde el **mismo origen en cada host** (el dominio principal y cada `<slug>.plataforma.com`), así que **no hay CORS**, tampoco en los subdominios, y `BackendPrefixes` se atiende igual en todos los hosts. En producción, desde wwwroot, con DNS comodín `*.plataforma.com` y certificado comodín. En desarrollo, con el proxy de Vite por host, sobre `*.localtest.me` (resuelve a 127.0.0.1).
 - **Reservados:** `www`, `app`, `api`, `auth`, `admin`, `empresas`, `plataforma`… no pueden ser el slug de una empresa (`ReservedSlugs`).
 - **Después, opcional:** dominio propio de una empresa (`www.empresa-a.com.ar`), que es la misma resolución por host, con una tabla de dominios verificados.
 
@@ -193,7 +196,7 @@ Página pública:   Draft ──(publicar)──► Published ──(despublicar
 
 - A una organización que no está activa no se puede entrar. Sus usuarios reciben 403 con el código de su estado: `Tenancy.Tenant.Suspended` si está suspendida, `Tenancy.Tenant.PendingApproval` mientras la plataforma no la aprobó (alta con aprobación) y `Tenancy.Tenant.Closed` si está cerrada. Su página muestra "no disponible". Los datos compartidos quedan visibles para la persona en modo solo lectura.
 - Rechazar una organización que espera aprobación la deja en `Closed`, con motivo y `SecurityEvent`, y se le avisa a quien la registró. Su cuenta y su espacio personal siguen funcionando.
-- Si la plataforma despublica la página, esta vuelve a `Draft` y queda bloqueada, con la fecha y el motivo guardados. La organización ve el motivo y no puede volver a publicarla (`PublicSite.PublicPage.BlockedByPlatform`) hasta que la plataforma use «Permitir publicar». En pantalla se muestra «Despublicada por la plataforma». Se les avisa a los Dueños.
+- `PublicPageStatus` sigue siendo `Draft | Published`: la moderación es un **bloqueo** en `PublicPage` (`PublishBlockedAtUtc`, `PublishBlockedReason` y `PublishBlockedByUserId`). Si la plataforma despublica la página, con motivo (`POST /api/platform/tenants/{id}/public-site/unpublish`, `platform.tenants.manage`), esta vuelve a `Draft` con el bloqueo, se les avisa a los Dueños y queda en la auditoría de seguridad. Mientras esté bloqueada, la organización ve el motivo y «Despublicada por la plataforma», y no puede publicarla (`PublicSite.PublicPage.PublishBlocked`). Solo la plataforma levanta el bloqueo, con «Permitir publicar» (`POST .../public-site/allow-publish`, también con motivo): la página queda en `Draft` y la organización la publica cuando quiera. Mientras no esté publicada, el sitio público responde 404.
 - Suspender una identidad revoca sus sesiones en los dos accesos.
 - El espacio personal no se suspende por separado: la plataforma suspende la identidad (§3.2), lo que corta los dos accesos sin cambiar el estado del tenant `Personal`.
 - La identidad tiene además `PendingDeletion` y `Deleted` (la baja, §3.2).
@@ -213,9 +216,9 @@ Página pública:   Draft ──(publicar)──► Published ──(despublicar
 - `[Access(Consumer)]` para lo de las personas;
 - `[Access(Business)]` + permiso para la administración de la empresa;
 - `[Access(Platform)]` para el backoffice;
-- `[Access(Consumer, Business, Platform)]` para la propia cuenta, que vale con cualquier sesión: `/api/me`, `/api/me/*` y `/api/legal/*`. El operador también lee `GET /api/me`; por eso `POST /api/me/deletion` le responde `Legal.AccountDeletion.PlatformOperator` y no 403;
-- `[PublicSite]` + `[AllowAnonymous]` para la página pública;
-- `[AllowAnonymous]`, sin `[Access]`, solo en `Controllers/Auth/` para el ingreso y el registro: `/api/auth/*` (signup, business-signup, methods, deletion/cancel), la vista previa de una invitación y `/connect/*`. Estas rutas no leen datos de ningún tenant.
+- `[Access(Consumer, Business, Platform)]` para la propia cuenta, que vale con cualquier sesión: `/api/me`, `/api/me/*` y `POST /api/legal/accept`. El operador también lee `GET /api/me`; por eso `POST /api/me/deletion` le responde `Legal.AccountDeletion.PlatformOperator` y no 403;
+- `[PublicSite]` + `[AllowAnonymous]` **solo** para lo que responde en el subdominio de una organización publicada (`PublicPageController`);
+- solo `[AllowAnonymous]`, sin `[Access]`, para las rutas anónimas del dominio principal: el ingreso y el registro (`/api/auth/*` y `/connect/*`), «Registrá tu empresa» (`/api/auth/business-signup`), cancelar la baja (`/api/auth/deletion/cancel`), la invitación (`/api/invitations/*`), el enlace, los documentos legales (`GET /api/legal/*`), el directorio (`DirectoryController`, que no lleva `[PublicSite]`), el pedido de «Recuperar mi cuenta» y los webhooks. `AccessDeclarationTests` las acepta únicamente si su controller está en la lista explícita del test. Estas rutas no dan acceso a datos privados de ningún tenant; el directorio lee solo lo publicado.
 
 Con el acceso equivocado responde 403 `Tenancy.Access.Wrong`. Un recurso de otra organización responde 404, nunca 403, para no revelar que existe.
 
@@ -242,7 +245,7 @@ Con el acceso equivocado responde 403 `Tenancy.Access.Wrong`. Un recurso de otra
 **Registro de una empresa (B2B), "Registrá tu empresa":**
 1. Quien la registra ingresa o crea su identidad (código por correo o WhatsApp, o Google, con la aceptación de términos) y después carga los datos de la organización: nombre de la organización, su primera empresa y, si quiere, el CUIT de esa empresa. Si ya tiene cuenta, entra con ella; si no, se crea la identidad. El slug no se pide en el alta: se elige después en la página pública (`/org/pagina`, «Dirección de la página», con disponibilidad y `ReservedSlugs`).
 2. `BusinessSignupPolicy` aplica `PlatformSettings`: con `BusinessSignup` en `Closed` no se puede registrar («Alta cerrada»), y si la persona ya llegó a su límite de organizaciones propias (`MaxOwnedOrganizations`) tampoco («Llegó al límite»). Si pasa, `Tenant(Business)` queda en `PendingApproval` (modo `RequiresApproval`) o en `Provisioning` (modo `Open`).
-3. `TenantProvisioner` crea la configuración, los roles de sistema, la primera empresa, la membresía de Dueño y la página pública en `Draft`.
+3. `TenantProvisioner` crea la configuración, los roles de sistema, la primera empresa, la membresía con el rol `TenantAdmin` (Dueño) y la página pública en `Draft`.
 4. Tokens con `access=business`.
 
 **Invitar a alguien a la empresa:** si ya tiene cuenta, suma el acceso B2B a esa organización; si no, se crea la identidad al aceptar. **No crea un espacio personal:** ese nace la primera vez que entra como persona.
@@ -261,7 +264,7 @@ Con el acceso equivocado responde 403 `Tenancy.Access.Wrong`. Un recurso de otra
 - **Operador:** `access=platform`, con segundo factor.
   - **Organizaciones:** aprueba o rechaza las que esperan aprobación (rechazar la deja cerrada), y las suspende, reactiva y cierra.
   - Prende y apaga módulos por plan.
-  - Verifica o quita el dominio de correo de una organización (§3.1).
+  - Ve el dominio de correo verificado de cada organización (§3.1), y puede verificarlo o quitarlo con motivo. Normalmente lo registra y lo verifica la propia organización, con `settings.manage`.
   - Modera páginas públicas: puede despublicarlas con motivo, lo que bloquea volver a publicarlas hasta que la plataforma lo permita («Permitir publicar», también con motivo). Las dos acciones quedan en la auditoría (§7).
   - **Cuentas:** suspende y reactiva identidades, cierra sus sesiones e inicia la baja (§3.2, punto 4).
   - Atiende los pedidos de «Recuperar mi cuenta» (`/plataforma/recuperaciones`): los aprueba o los rechaza.

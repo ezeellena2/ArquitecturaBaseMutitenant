@@ -7,7 +7,8 @@
   - `[Access(Consumer)]` para lo de las personas;
   - `[Access(Business)]` + permiso para la administración de una organización;
   - `[Access(Platform)]` para el backoffice;
-  - `[PublicSite][AllowAnonymous]` para la página pública de un subdominio.
+  - `[PublicSite][AllowAnonymous]` solo para lo que responde en el subdominio de una organización publicada (`PublicPageController`);
+  - solo `[AllowAnonymous]` para las rutas anónimas del dominio principal (ingreso, registro, "Registrá tu empresa", invitación, enlace, `GET` de documentos legales, directorio, pedido de "Recuperar mi cuenta", cancelar la baja, webhooks), con su controller en la lista explícita de `AccessDeclarationTests`.
 - **Dato privado:** `: Entity, ITenantOwned`, esquema `tenant`, `migrationBuilder.EnableTenantRls(Schemas.Tenant, "<Tabla>")`.
 - **Dato público:** `IPublishedByBusiness` (`BusinessTenantId`, `IsPublished`), esquema `public_site`, `EnablePublicRls`. Se lee con `IPublicSiteContext` (el subdominio) y solo trae lo publicado.
 - **Dato compartido:** `IConsumerBusinessShared` (`ConsumerTenantId` = espacio personal, `BusinessTenantId` = organización), esquema `engagement`, `EnablePartiesRls`.
@@ -24,7 +25,9 @@
 - Asignar a mano o cambiar `TenantId`, `BusinessTenantId` o `ConsumerTenantId`.
 - Quitar los filtros `"Tenant"`, `"Public"` o `"Parties"` (con `IgnoreQueryFilters()` sin nombres o con alguno de esos nombres) fuera de la lista blanca (`Readers/Platform`). `IgnoreQueryFilters(["SoftDelete"])`, para ver lo borrado, sí se permite ([persistencia-ef](persistencia-ef.md)).
 - Que una empresa lea la cuenta o el espacio personal de una persona: solo ve lo copiado en el dato compartido.
-- Una ruta sin `[Access]` ni `[PublicSite]`.
+- Una ruta sin `[Access]` ni `[PublicSite]`, salvo las anónimas del dominio principal de la lista de `AccessDeclarationTests`.
+- `[PublicSite]` en una ruta del dominio principal (`DirectoryController` es `[AllowAnonymous]`).
+- "tenant" en una ruta: el acceso lo declara `[Access]`, no la ruta ([api-http](api-http.md)).
 - Responder 403 por un recurso ajeno: es 404.
 
 ## Copiá de
@@ -36,7 +39,7 @@
 - `RlsPolicyInventoryTests`, `RlsBarrierTests`, `RuntimeRoleTests`.
 - `CrossTenantIsolationTests`, `PublicAndSharedRowsTests`, `AccessTests` (acceso equivocado, B2C no crea empresas, accesos que no se mezclan).
 - `SubdomainTests`: el host resuelve solo lo público; redirect URI solo para slugs publicados.
-- `DataClassificationTests`, `TenantScopeUsageTests`, `QueryFilterBypassTests`, `IdentityAccessTests`, `AccessDeclarationTests`, `CacheKeyScopeTests`.
+- `DataClassificationTests`, `TenantScopeUsageTests`, `QueryFilterBypassTests`, `IdentityAccessTests`, `AccessDeclarationTests` (con la lista explícita de controllers anónimos del dominio principal), `CacheKeyScopeTests`.
 
 ## Detalle
 [multitenancy.md](../architecture/multitenancy.md)

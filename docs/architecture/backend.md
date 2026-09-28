@@ -107,7 +107,7 @@ Prohibido:
 | Principio | Regla concreta |
 |---|---|
 | **S**, responsabilidad única | Un servicio por área funcional, con **8 dependencias como máximo** (lo verifica un test). Lo que crece se parte en helpers con sufijo fijo: `*Policy` (decide), `*Guard` (verifica invariantes y devuelve `Error?`), `*Issuer` (emite códigos, enlaces o invitaciones), `*Verifier` (valida lo emitido), `*Linker` (vincula entidades). Los helpers no guardan ni reciben `IUnitOfWork` |
-| **O**, abierto/cerrado | Módulos quitables (`Modules/WhatsApp` en Application, Infrastructure y Api), que se enchufan al núcleo por puertos: `ILoginCodeChannel`, `IInvitationChannel`, `IPhoneLinkObserver`. El núcleo no cambia cuando se agrega o se quita un módulo, y no referencia ningún `*.Modules.*` (test). Los errores y permisos nuevos se suman a catálogos, sin tocar el mapper |
+| **O**, abierto/cerrado | Módulos quitables (`Modules/WhatsApp` en Application, Infrastructure y Api), que se enchufan al núcleo por puertos: `ILoginCodeChannel`, `IInvitationChannel`, `IAccountNoticeChannel`, `IPhoneLinkObserver`. El núcleo no cambia cuando se agrega o se quita un módulo, y no referencia ningún `*.Modules.*` (test). Los errores y permisos nuevos se suman a catálogos, sin tocar el mapper |
 | **L**, sustitución de Liskov | Las implementaciones de un puerto respetan el contrato completo, incluido el "fallo cerrado" (por ejemplo, `DisabledWhatsAppAvailability` responde "no disponible", no lanza). Los dobles de test implementan la misma semántica (`FakeUnitOfWork` usa la misma `CommitPolicy`) |
 | **I**, segregación de interfaces | Lectura y escritura separadas (`I<X>Reader` / `I<X>Repository`). `ISignInService` con 12 miembros como máximo (test). `ICurrentUser`, `ITenantContext` e `IRequestInfo` separados |
 | **D**, inversión de dependencias | Application define los puertos; Infrastructure y Api los implementan. Cada capa se registra en su `DependencyInjection.cs` y `Program.cs` solo compone |
@@ -141,8 +141,8 @@ Domain/
 │                                InvitationErrors
 ├─ Companies/                    Company, CompanyStatus, CompanyErrors, CompanyMembership, CompanyMembershipStatus,
 │                                CompanyMembershipErrors
-├─ PublicSite/                   PublicPage (nombre, logo, descripción, contacto), PublicPageStatus (Draft|Published),
-│                                PublicPageErrors
+├─ PublicSite/                   PublicPage (nombre, logo, descripción, contacto; bloqueo de la plataforma: PublishBlockedAtUtc,
+│                                PublishBlockedReason, PublishBlockedByUserId), PublicPageStatus (Draft|Published), PublicPageErrors
 ├─ Users/                        Access (Consumer|Business|Platform), UserStatus (Active|Suspended|PendingDeletion|Deleted),
 │                                UserErrors (las invitaciones están en Tenancy/)
 ├─ Authentication/               LoginCode, LoginLink, LoginAudit, LoginMethod, LoginCodeChannel, *Errors
@@ -198,7 +198,8 @@ Application/
 │     ├─ Legal/                        IAccountDeletionParticipant (CheckAsync, OnRequestedAsync, OnCancelledAsync y ExecuteAsync),
 │     │                                IRetainedOnConsumerDeletion (E7)
 │     ├─ Features/                     IFeatureService
-│     (en Messaging/ y Phones/ están los puertos que usan los módulos: ILoginCodeChannel, IInvitationChannel, IPhoneLinkObserver)
+│     (en Messaging/ y Phones/ están los puertos que usan los módulos: ILoginCodeChannel, IInvitationChannel,
+│      IAccountNoticeChannel, IPhoneLinkObserver)
 ├─ Models/<Área>/                      <Acción>Request, <X>Response, ReadModels/<X>Row
 ├─ Validation/<Área>/                  <Acción>RequestValidator (internal sealed, AbstractValidator<T>)
 ├─ Services/
@@ -209,9 +210,9 @@ Application/
 │  ├─ Invitations/                     InvitationService, InvitationIssuer (lo usan UserService y TenantAdministrationService)
 │  ├─ Profile/                         ProfileService (cuenta, idioma, zona), DestinationCodeVerifier
 │  ├─ Legal/                           LegalService (documentos vigentes y aceptación), AccountDeletionService y AccountDeletionPolicy
-│  │                                   (pedir, cancelar y ejecutar la baja), Participants/ (espacio personal, aceptaciones y outbox;
-│  │                                   Memberships en E6, Recovery en E5, Engagement en E7); sus modelos y validadores van en
-│  │                                   Models/Legal/ y Validation/Legal/
+│  │                                   (pedir, cancelar y ejecutar la baja; el bloqueo del único Dueño, en E4), Participants/
+│  │                                   (espacio personal, aceptaciones y outbox; Memberships en E6, Recovery en E5, Engagement
+│  │                                   en E7); sus modelos y validadores van en Models/Legal/ y Validation/Legal/
 │  ├─ Organizations/                   BusinessSignupService ("Registrá tu empresa", alta B2B), BusinessSignupPolicy (modo de alta
 │  │                                   y límite por persona), TenantProvisioner (idempotente)
 │  ├─ PublicSite/                      PublicPageService (datos de la página pública; publicar y despublicar), DirectoryService
@@ -303,7 +304,8 @@ Infrastructure/
 ├─ Caching/                            CacheKeys (siempre con prefijo de alcance: t: / s: / u: / p:), CachingRegistration
 ├─ Idempotency/                        IdempotencyStore, IdempotencyCleanupWorker (P6)
 ├─ Features/                           FeaturesRegistration, TenantFeatureFilter, FeatureService (P8)
-├─ Legal/                              AccountDeletionWorker (cada hora, SKIP LOCKED, una cuenta por transacción)
+├─ Legal/                              AccountDeletionWorker (cada hora, SKIP LOCKED; toda cuenta con DeletionScheduledForUtc vencido,
+│                                      esté PendingDeletion o Suspended, por pasos: multitenancy.md §3.2)
 └─ BackgroundJobs/                     TenantJobRunner (recorre organizaciones activas y ejecuta en su alcance)
 ```
 
@@ -321,15 +323,19 @@ Api/
 │  │                                   ExternalLoginController, InvitationsController, LoginMethodsController,
 │  │                                   DeletionCancelController (POST /api/auth/deletion/cancel)
 │  ├─ Account/                         MeController (cuenta y accesos), BusinessSignupController ("Registrá tu empresa"),
-│  │                                   TimeZonesController, LegalController (GET /api/legal/current, POST /api/legal/accept),
+│  │                                   TimeZonesController, LegalController (GET /api/legal/current, anónimo; POST /api/legal/accept),
 │  │                                   AccountDeletionController (POST /api/me/deletion)
 │  ├─ Organization/                    [Access(Business)] UsersController, RolesController, PermissionsController,
 │  │                                   CompaniesController, CompanyMembersController, SettingsController, AuditController,
-│  │                                   PublicPageAdminController (mi página pública, /org/pagina, publicpage.manage)
+│  │                                   PublicPageAdminController (api/public-site: mi página pública, pantalla /org/pagina,
+│  │                                   publicpage.manage)
 │  ├─ Personal/                        [Access(Consumer)] los controllers de los módulos B2C del producto
-│  ├─ PublicSite/                      [PublicSite][AllowAnonymous] PublicPageController (página por subdominio), DirectoryController
-│  ├─ Platform/                        PlatformTenantsController, PlatformAccountsController (incluye la baja iniciada por la
-│  │                                   plataforma, POST /api/platform/accounts/{id}/deletion, E5), PlatformOperatorsController,
+│  ├─ PublicSite/                      PublicPageController ([PublicSite][AllowAnonymous], página por subdominio),
+│  │                                   DirectoryController ([AllowAnonymous], dominio principal: lee solo lo publicado)
+│  ├─ Platform/                        PlatformTenantsController (incluye moderar la página pública: POST
+│  │                                   /api/platform/tenants/{id}/public-site/unpublish y .../allow-publish, con motivo),
+│  │                                   PlatformAccountsController (incluye la baja iniciada por la plataforma,
+│  │                                   POST /api/platform/accounts/{id}/deletion, E5), PlatformOperatorsController,
 │  │                                   PlatformAuditController, PlatformSettingsController
 ├─ Contracts/<Área>/                   <Acción>HttpRequest, <X>Query (records sealed, props nullable; ToString() sin PII)
 ├─ Authorization/
@@ -411,7 +417,8 @@ Es un resumen. El árbol completo, con la etapa en que nace cada test, está en 
 - **Solo inyecta interfaces de `Application/Interfaces/Services`.** Nunca EF, repositorios ni readers (test).
 - La entrada es un contrato de `Api/Contracts/<Área>`, mapeado a mano al `*Request` de Application.
 - La salida es siempre `ToActionResult(this)`, `ToCreatedResult(this, nameof(Get), id => new { id })` o `ToAcceptedResult(this)`. Nunca `IsSuccess ? … : …`.
-- Cada acción declara `[Access(...)]` (o `[PublicSite][AllowAnonymous]` si es de una página pública) y, en B2B y plataforma, su permiso (`[HasPermission]`, `[HasCompanyPermission]` o `[HasPlatformPermission]`). Las rutas B2C (`[Access(Consumer)]`) no piden permiso (§14). Además lleva `[ProducesResponseType<T>]`, y los errores extra van con `[ProducesProblem]`.
+- Las rutas de la organización no llevan prefijo de acceso: `api/roles`, `api/permissions`, `api/users`, `api/users/invitations`, `api/companies/{companyId}` y `api/companies/{companyId}/members`, `api/settings` y `api/public-site`. El acceso lo declara `[Access]`, no la ruta, y "tenant" no aparece en ellas. Las excepciones son `/api/platform/...`, `/api/me/...`, `/api/auth/...` e `/api/invitations/...` (anónimo).
+- Cada acción declara `[Access(...)]`, o `[PublicSite][AllowAnonymous]` si responde en el subdominio de una organización publicada (`PublicPageController`). Las rutas anónimas del dominio principal (ingreso, registro, "Registrá tu empresa", invitación, enlace, `GET` de los documentos legales, directorio, pedido de "Recuperar mi cuenta", cancelar la baja y webhooks) declaran solo `[AllowAnonymous]`, y `AccessDeclarationTests` las acepta únicamente si su controller está en la lista explícita del test. En B2B y plataforma, cada acción declara además su permiso (`[HasPermission]`, `[HasCompanyPermission]` o `[HasPlatformPermission]`). Las rutas B2C (`[Access(Consumer)]`) no piden permiso (§14). Además lleva `[ProducesResponseType<T>]`, y los errores extra van con `[ProducesProblem]`.
 - Un `POST` que crea o envía lleva `[Idempotent]`, y una acción de un módulo lleva `[FeatureGate]`. Un `PUT` o `DELETE` de una entidad `IVersioned` recibe `version`, que es obligatoria ([concurrencia](../rules/concurrencia.md)).
 - `POST` que crea → 201 con `Location` y `GET /{id}`. `PUT` → 204. `DELETE` → 204.
 
@@ -470,7 +477,8 @@ public class Result<T> : Result { T Value; implicit from T y from Error }
 ### Catálogos de errores
 
 - Son clases estáticas `<Entidad>Errors` en `Domain/<Área>`, con una constante `…Code` y un `static readonly Error` (o una fábrica si lleva metadata).
-- El código tiene formato **`Area.Entidad.Motivo`**, por ejemplo `Companies.Company.NameTaken`, `Tenancy.Tenant.Suspended` o `Roles.Role.HasUsers`. Es estable y es la clave en `Errors.resx` (lo verifica `ErrorCodeTests`).
+- El código tiene formato **`Area.Entidad.Motivo`** (tres partes o más), por ejemplo `Companies.Company.NameTaken`, `Tenancy.Tenant.Suspended` o `Roles.Role.HasUsers`. Es estable y es la clave en `Errors.resx`.
+- La única excepción es una **lista cerrada de claves reservadas**: `Title.<ErrorType>`, `Validation.Failed`, las de `ApiErrorCodes` (`General.Unexpected`, `General.ConcurrencyConflict`, `Request.Invalid`, `Request.InProgress`, `Request.IdempotencyKeyRequired`, `Request.IdempotencyKeyReused` y `Http.*`) y `Legal.AcceptanceRequired`. Un código nuevo nunca entra en esa lista. `ErrorCodeTests` verifica que toda clave de `Errors.resx` siga el formato, salvo las de `ReservedKeys`, que además tienen que seguir existiendo en el resx.
 - `Description` va en inglés y es el respaldo si falta la traducción.
 
 ### Excepciones vs Result
@@ -494,7 +502,7 @@ public class Result<T> : Result { T Value; implicit from T y from Error }
 El cuerpo es `application/problem+json` con `title` y `detail` traducidos, `code`, `traceId`, `errors` y la metadata pública.
 - Los errores que arma la propia Api sin pasar por un `Result` tienen su código en `ApiErrorCodes`, con su clave en `Errors.resx` y `Errors.en.resx`: `Request.Invalid`, `Http.Unauthorized`, `Http.Forbidden`, `Http.NotFound`, `Http.MethodNotAllowed`, `Http.TooManyRequests`, `General.Unexpected` y `General.ConcurrencyConflict`. También los de idempotencia, que emite `IdempotencyFilter` como ProblemDetails directamente, sin pasar por el mapper: 409 `Request.InProgress`, 422 `Request.IdempotencyKeyReused` y 400 `Request.IdempotencyKeyRequired` (ver [idempotencia](../rules/idempotencia.md)).
 - El 400 de un cuerpo ilegible no trae `errors` a propósito.
-- **Multitenant:** una entidad de otra organización responde **404**, nunca 403, para no revelar que existe. Una organización suspendida responde 403 `Tenancy.Tenant.Suspended`.
+- **Multitenant:** una entidad de otra organización responde **404**, nunca 403, para no revelar que existe. Una organización que no está activa responde 403 con el código de su estado, que decide `TenantResolutionMiddleware`: `Tenancy.Tenant.Suspended`, `Tenancy.Tenant.PendingApproval` o `Tenancy.Tenant.Closed` (multitenancy.md §7).
 
 ### Validación
 
@@ -586,7 +594,7 @@ Hay tres niveles, cada uno con su propósito:
    - Las propiedades marcadas `[NotAudited]` (tokens, hashes) no se guardan.
    - Para eventos que no son un cambio de entidad (exportaciones, reenvío de invitación), el servicio llama a `IAuditLog.Record(action, entity, id, data)` dentro del límite.
    - RLS y un trigger `prevent_update_delete` hacen la tabla inmutable.
-3. **Seguridad (`platform.SecurityEvents` e `identity.LoginAudits`):** ingresos, intentos fallidos, cambios de rol de plataforma, acciones de operadores sobre una organización o una cuenta (aprobar, suspender, iniciar la baja, resolver una recuperación; siempre con la organización o la cuenta afectada y el motivo), cambios de métodos de ingreso y la baja de una cuenta (`AccountDeletionRequested`, su cancelación y `AccountDeleted`). La leen solo los operadores con `platform.audit.read`.
+3. **Seguridad (`platform.SecurityEvents` e `identity.LoginAudits`):** ingresos, intentos fallidos, cambios de rol de plataforma, acciones de operadores sobre una organización o una cuenta (aprobar, suspender, despublicar su página o permitir publicarla, iniciar la baja, resolver una recuperación; siempre con la organización o la cuenta afectada y el motivo), cambios de métodos de ingreso y la baja de una cuenta (`AccountDeletionRequested`, su cancelación y `AccountDeleted`). La leen solo los operadores con `platform.audit.read`.
 
 La pantalla "Auditoría" de la organización lee `AuditEntries` paginadas y filtradas por entidad, actor y fecha, con los textos traducidos desde `Audit.resx`.
 
@@ -623,6 +631,7 @@ La pantalla "Auditoría" de la organización lee `AuditEntries` paginadas y filt
   - Endpoints `connect/authorize|token|logout|userinfo|revoke`.
   - Scopes `openid profile email offline_access api`.
 - **Un solo cliente público, `web`**, para el SPA. El área la decide el claim `access`: `consumer` → espacio personal y páginas públicas; `business` → la organización; `platform` → el backoffice. Las páginas públicas de cada subdominio usan el mismo cliente, con redirect URIs validadas contra los slugs publicados (`SubdomainRedirectUriValidator`).
+- **El issuer es fijo** (el dominio principal). Desde un subdominio, `authorize` y `logout` son navegaciones al dominio principal, donde vive la cookie de `/connect`; el canje del código, la renovación y `userinfo` van a `/connect/*` del propio origen del subdominio (multitenancy.md §5).
 - Duraciones: código 5 min, access token 15 min, refresh 30 días con rotación. `EnableTokenEntryValidation` permite la revocación inmediata.
 - **Claims** (`OpenIdPrincipalFactory`): `sub`, `name`, `email`, `access` (`consumer` | `business` | `platform`) y el tenant del acceso activo: `tenant_id` y `tenant_kind` (`personal` | `business`). **Ni los permisos ni los roles viajan en el token**: se consultan en vivo, con caché.
 - **Ingreso sin contraseña**, igual que la base: código por correo o WhatsApp, enlace de un solo uso, y **Google**. **Autoregistro de personas** (`POST /api/auth/signup`, o el primer ingreso con Google), que crea la identidad y su espacio personal. Está abierto por defecto y se cierra con `PlatformSettings.ConsumerSignup` (`Open` | `Closed`; cerrado, el registro responde «Registro cerrado»). **Una persona no crea empresas:** el alta B2B es aparte (`POST /api/auth/business-signup`, "Registrá tu empresa") y la rigen `PlatformSettings.BusinessSignup` (`Open` | `RequiresApproval` | `Closed`) y el límite de organizaciones por persona (`MaxOwnedOrganizations`), con `BusinessSignupPolicy` (ADR 0020). Los correos salen por **Gmail (SMTP)**, también en desarrollo. La configuración usa las mismas claves que ArquitecturaBase y se carga con los scripts de `scripts/secretos/`: ver [`docs/operations/configuracion.md`](../operations/configuracion.md).
@@ -630,7 +639,7 @@ La pantalla "Auditoría" de la organización lee `AuditEntries` paginadas y filt
 - Cookies de Identity solo para `/account` y `/connect` (HttpOnly, Secure, SameSite Lax). La Api usa bearer.
 - En cada request autenticado, `TenantResolutionMiddleware` verifica (con caché de 60 s, invalidado al cambiar de estado) que la identidad, la membresía y el tenant del acceso activo estén activos. Suspender una organización revoca los tokens emitidos para ella; suspender una identidad, todos los suyos, en los dos accesos.
 - **Operadores de plataforma:** `access=platform`, sin membresías ni espacio personal, con el mismo mecanismo de ingreso. El segundo factor (TOTP) es obligatorio para ellos desde la Etapa 9 (endurecimiento).
-- **Invitaciones a una organización:** `Member(Invited)` + `Invitation` (token con hash, vence) → correo o WhatsApp por outbox → `/api/invitations/accept`. Si la persona no tenía cuenta, la aceptación crea su identidad (sin espacio personal: ese nace la primera vez que entra como persona).
+- **Invitaciones a una organización:** `Member(Invited)` + `Invitation` (token con hash, vence), que emite `InvitationIssuer` → correo o WhatsApp por outbox (`IInvitationChannel`). Desde la organización se invita con `POST /api/users/invitations` (reenviar y revocar, bajo `api/users/invitations/{id}`). El `InvitationsController` anónimo atiende la vista previa (`POST /api/invitations/preview`: el token va en el cuerpo, nunca en la URL) y la aceptación (`POST /api/invitations/accept`), con y sin cuenta previa. Si la persona no tenía cuenta, la aceptación crea su identidad (sin espacio personal: ese nace la primera vez que entra como persona).
 - **Baja de una cuenta** (multitenancy.md §3.2, [ADR 0035](../decisions/README.md)): la pide la persona (`POST /api/me/deletion`) o un operador (`POST /api/platform/accounts/{id}/deletion`), se cancela durante la gracia con `POST /api/auth/deletion/cancel` y la ejecuta `AccountDeletionWorker`; cada módulo participa con `IAccountDeletionParticipant`.
 
 ---
@@ -639,22 +648,30 @@ La pantalla "Auditoría" de la organización lee `AuditEntries` paginadas y filt
 
 - **Acceso B2C (espacio personal):** no tiene roles. La persona tiene implícitos todos los permisos `personal.*` (los que declare cada módulo B2C del producto). Las rutas B2C llevan `[Access(Consumer)]` y no piden permisos. Sobre un dato compartido con una empresa, lo que puede hacer cada parte lo decide `PartyPolicy`.
 - **Cuatro catálogos de permisos** (constantes en `Domain/Authorization`, textos en `Permissions.resx`):
-  - **Organización** (catálogo fino, ADR 0034), en `Permissions.cs`:
+  - **Organización** (catálogo fino, ADR 0034), en `Permissions.cs`, sin prefijo, como en ArquitecturaBase (nunca `tenant.users.read`):
     - `users.read` (ver usuarios), `users.invite` (invitar, reenviar y revocar invitaciones), `users.manage` (editar, deshabilitar y habilitar);
     - `roles.read`, `roles.manage` (crear, editar e inactivar roles), `roles.assign` (dar y quitar roles);
     - `companies.read`, `companies.manage`;
-    - `settings.read`, `settings.manage`;
+    - `settings.read`, `settings.manage` (incluye verificar el dominio de correo);
     - `audit.read`;
     - `publicpage.manage` (la página pública).
   - **Empresa**, también en `Permissions.cs`: `company.members.read`, `company.members.manage` (y los que traigan los módulos).
   - **Personal**, en `PersonalPermissions.cs`: los `personal.*`, implícitos de la persona en su espacio personal. Los declara cada módulo B2C del producto y no se asignan por rol.
-  - **Plataforma**, en `PlatformPermissions.cs`: `platform.tenants.read`, `platform.tenants.manage`, `platform.operators.manage`, `platform.audit.read`, `platform.settings.manage`, `platform.whatsapp.manage`.
+  - **Plataforma**, en `PlatformPermissions.cs`:
+    - `platform.tenants.read`, `platform.tenants.manage` (aprobar, rechazar, suspender, reactivar y cerrar una organización, prender y apagar sus módulos, ver, verificar y quitar con motivo su dominio verificado y moderar su página pública: despublicar y «Permitir publicar»);
+    - `platform.accounts.read` (buscar y ver cuentas), `platform.accounts.manage` (suspender, reactivar, cerrar sesiones e iniciar la baja con motivo);
+    - `platform.recoveries.manage` (aprobar o rechazar «Recuperar mi cuenta»);
+    - `platform.legal.manage` (publicar una versión nueva de términos o privacidad);
+    - `platform.operators.manage`, `platform.audit.read`, `platform.settings.manage`;
+    - `platform.whatsapp.manage` no entra al catálogo hasta la Etapa 11 (canales de WhatsApp por organización), porque ninguna ruta anterior lo usa.
+- **Roles de plataforma** (`PlatformRole`): **Owner** tiene todos los permisos de plataforma; **Support** tiene `platform.tenants.read`, `platform.accounts.read`, `platform.recoveries.manage` y `platform.audit.read`.
 - **Roles de la organización** (`tenant.Roles`), con **tres alcances** (en pantalla, la columna "Vale en"):
   - **`Organization`** ("Toda la organización"): se asigna sin empresa y vale en la organización y en todas sus empresas.
   - **`AnyCompany`** ("Cada empresa"): es un rol de empresa reutilizable; se asigna **con** una empresa y vale solo en esa. Ejemplo: el Administrador de empresa.
   - **`SpecificCompany`** ("Solo en <empresa>"): el rol pertenece a **una** empresa (`Role.CompanyId`) y solo se puede asignar en ella. Sirve para que cada empresa tenga sus propios roles.
   - Las empresas son **planas**: no hay empresa matriz ni herencia entre empresas (ADR 0034).
   - `TenantAdmin` y `CompanyAdmin` son de sistema: inmutables y no se borran. Se protege al último `TenantAdmin` y al último `CompanyAdmin` de cada empresa.
+  - El Dueño sale **solo** del rol `TenantAdmin` (`RoleAssignment`), nunca de un dato de `Member`. "Dueños activos" son los que tienen `TenantAdmin` con la identidad `Active` (una baja pedida no cuenta); esa misma lectura la usan `AccountDeletionPolicy` y `LastTenantAdminGuard`.
 - **Atributos**, nunca roles ni `[Authorize(Policy=…)]` a mano (test):
   - `[HasPermission(Permissions.Users.Manage)]` para la organización.
   - `[HasCompanyPermission(Permissions.Company.Members.Manage)]`: lee `{companyId}` de la ruta y verifica que la empresa sea de la organización y que el usuario tenga el permiso ahí.
@@ -671,8 +688,10 @@ La estructura sigue el diseño de la Etapa 6 del plan maestro de `../Arquitectur
 
 - **Puertos en el núcleo, adaptadores en el módulo.** El núcleo nunca nombra a WhatsApp:
   - `ILoginCodeChannel` e `IInvitationChannel`: el núcleo trae el canal `"email"`. El módulo registra `"whatsapp"`. `LoginCodeChannel` e `InvitationChannel` son **valores**, no enums: el núcleo valida contra los canales registrados.
+  - `IAccountNoticeChannel` (en `Application/Interfaces/Integrations/Messaging/`, Etapa 3), con el mismo patrón: recibe un `AccountNotice` cerrado (`LoginMethodChanged`, con qué pasó, el método enmascarado y la fecha; `ReviewLoginMethods`, con la organización; `DeletionRequested`, con la fecha; `DeletionCancelled`; `AccountDeleted`; y los de «Recuperar mi cuenta», al método nuevo: `RecoveryReceived`, `RecoveryApproved` y `RecoveryRejected`). Cada implementación atiende un tipo de método: el núcleo trae la de `Email` (canal `"email"`) y el módulo registra la de `Phone` (canal `"whatsapp"`). Sin el módulo, los teléfonos no reciben aviso, y no es un error. Siempre sale por el outbox, cifrado. "Exportación lista" sale solo por correo.
   - `IPhoneLinkObserver`: la cuenta y la administración avisan que cambió un teléfono, y el módulo suelta el contacto e invalida los enlaces.
-  - El teléfono como dato de la cuenta e `IPhoneNumberParser` siguen en el núcleo.
+  - El teléfono como dato de la cuenta e `IPhoneNumberParser` siguen en el núcleo. `PhoneUsage` queda en `Any | Mobile` y no nombra WhatsApp (`Mobile`: solo celular, para el ingreso y el registro con teléfono y el teléfono de la cuenta).
+- **Países de WhatsApp:** los controla el módulo en sus adaptadores y flujos (código por WhatsApp, vínculo y registro por WhatsApp), con `WhatsApp:AllowedCountries`, que se lee solo dentro de `Modules/WhatsApp`, y un error propio del módulo sobre el campo `phone`. Se controla solo para un número **nuevo**: achicar la lista no invalida un número existente. `GET /api/auth/methods` (núcleo) devuelve los canales encendidos con un formato neutro, y el módulo aporta sus países (`channels: [{ key: "whatsapp", countries: [...] }]`).
 - **Carpetas:**
   - `Domain/WhatsApp`;
   - `Application/Modules/WhatsApp/{Configuration,Interfaces,Models,Services,Resources}`;
@@ -683,7 +702,7 @@ La estructura sigue el diseño de la Etapa 6 del plan maestro de `../Arquitectur
 - **Registro:** un `AddWhatsAppModule()` por capa, llamado desde `Program.cs`. Infrastructure no registra servicios de Application.
 - **Encendido:** se enciende con `WhatsApp:PhoneNumberId`; sin él quedan las implementaciones de `Disabled/`. Las rutas del webhook se mapean solo si hay `AppSecret` y `VerifyToken`.
 - **Quitarlo:** se sigue `docs/guides/quitar-whatsapp.md`: borrar las tres carpetas `Modules/WhatsApp` y `Domain/WhatsApp`, la línea de `Program.cs` y agregar una migración que borra sus tablas. El build y los tests del núcleo tienen que quedar en verde. `ModuleIsolationTests` verifica que el núcleo no referencie `*.Modules.*`.
-- **Número de la plataforma** (Etapa 8): códigos de ingreso, invitaciones y el bot de ingreso. Plantillas `codigo_ingreso` e `invitacion_organizacion` (es y en), y los avisos de la cuenta. Cuándo y cómo se crea cada plantilla: [`docs/operations/whatsapp-plantillas.md`](../operations/whatsapp-plantillas.md).
+- **Número de la plataforma** (Etapa 8): códigos de ingreso, invitaciones, avisos de la cuenta (`WhatsAppAccountNoticeChannel`) y el bot de ingreso. Plantillas (es y en): `codigo_ingreso`, `invitacion_organizacion` y, para los avisos de la cuenta, `aviso_metodo_ingreso`, `revisa_metodos_ingreso`, `baja_cuenta_pedida`, `baja_cuenta_cancelada` y `cuenta_eliminada`. Cuándo y cómo se crea cada plantilla: [`docs/operations/whatsapp-plantillas.md`](../operations/whatsapp-plantillas.md).
 - **Envío por el outbox persistente** (`platform.OutboxMessages`), no en memoria. Esto **difiere a propósito** de ArquitecturaBase, que usa colas en memoria (`WhatsAppSendQueue`, `EmailQueue`) y documenta que un reinicio las pierde. Con varias organizaciones y réplicas, perder una invitación o un código no es aceptable (ADR 0014):
   - el caso de uso inserta el mensaje dentro de su transacción;
   - `OutboxDispatcher` lo envía;
@@ -764,8 +783,8 @@ Nadie formatea a mano. El catálogo visual completo (cómo se ve cada tipo) est�
 
 ## 19. Front y hosting
 
-- El SPA vive en `../ArquitecturaBaseMutitenantFront` y se sirve desde el mismo origen (wwwroot en producción, proxy de Vite en desarrollo), **sin CORS**.
-- `BackendPrefixes` es una lista a mano: `/api`, `/account`, `/connect`, `/.well-known`, `/webhooks`, `/health` y `/alive`. Un prefijo nuevo se suma ahí, al `SpaHostingTests` y al `server.proxy` de `vite.config.ts`.
+- El SPA vive en `../ArquitecturaBaseMutitenantFront`. El SPA y la Api se sirven desde el **mismo origen en cada host**, el dominio principal y cada `<slug>.plataforma.com`: en producción desde wwwroot, con DNS y certificado comodín; en desarrollo, con el proxy de Vite por host (`*.localtest.me`). **No hay CORS**, tampoco en los subdominios.
+- `BackendPrefixes` es una lista a mano, y se atiende igual en todos los hosts: `/api`, `/account`, `/connect`, `/.well-known`, `/webhooks`, `/health` y `/alive`. Un prefijo nuevo se suma ahí, al `SpaHostingTests` y al `server.proxy` de `vite.config.ts`.
 - La arquitectura del front está en `../ArquitecturaBaseMutitenantFront/docs/architecture/frontend.md`.
 
 ---

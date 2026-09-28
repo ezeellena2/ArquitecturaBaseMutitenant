@@ -10,17 +10,17 @@
 | 2 | **Números y decimales** | `decimal` con precisión explícita, separadores por cultura, alineación a la derecha | BCL; `Intl.NumberFormat` | numeros-y-moneda |
 | 3 | **Moneda** | `Money` (monto + ISO 4217), redondeo `AwayFromZero` en el back, el front no calcula | propio | numeros-y-moneda |
 | 4 | **Porcentajes** | fracción (`0.125`) en la API, `12,5 %` en pantalla | propio | numeros-y-moneda |
-| 5 | **Teléfonos** | E.164, país con bandera, formato al escribir, el 9 argentino, `PhoneUsage` | libphonenumber-csharp · libphonenumber-js · country-flag-icons | telefonos |
+| 5 | **Teléfonos** | E.164, país con bandera, formato al escribir, el 9 argentino, `PhoneUsage` (`Any` o `Mobile`; los países de WhatsApp los controla el módulo) | libphonenumber-csharp · libphonenumber-js · country-flag-icons | telefonos |
 | 6 | **Idioma, región y traducciones** | cultura `es-AR`/`en-US`, resx + i18next con paridad, voseo, enums traducidos | .NET resx · i18next | textos-y-traducciones |
 | 7 | **Paginado, orden y búsqueda** | 10 por defecto, cursor para tablas que solo crecen, búsqueda sin acentos, índices con tenant | Npgsql `unaccent` + `pg_trgm` | paginado-y-busqueda |
-| 8 | **Errores** | `Result`, códigos `Area.Entidad.Motivo`, ProblemDetails, decidir por `code` | propio | result-y-errores · errores |
+| 8 | **Errores** | `Result`, códigos `Area.Entidad.Motivo` (salvo una lista cerrada de claves reservadas), ProblemDetails, decidir por `code` | propio | result-y-errores · errores |
 | 9 | **Validación** | un validador por request, mensajes traducidos, errores por campo | FluentValidation · zod | validacion · formularios |
 | 10 | **Vacíos, enums, estados y booleanos** | `—`, `EnumText`, `StatusBadge` con tonos centrales, Sí/No | propio | formatos |
 | 11 | **Zona horaria e idioma en pantalla** | "Buenos Aires (GMT−3)", "Español (Argentina)", nunca el código | `Intl.DisplayNames` | formatos |
 | 12 | **Tamaños de archivo y duraciones** | `1,5 MB`, `2 h 15 min` | `Intl` | formatos |
 | 13 | **Guardado y transacciones** | una sola forma de guardar | propio | guardado |
-| 14 | **Accesos y multitenancy** | acceso B2C/B2B/plataforma, tres clases de datos, RLS, `[Access]`, páginas públicas por subdominio | EF + Postgres | multitenancy |
-| 15 | **Permisos** | catálogos, atributos, nunca roles | ASP.NET Core authorization | permisos |
+| 14 | **Accesos y multitenancy** | acceso B2C/B2B/plataforma, tres clases de datos, RLS, `[Access]` (o `[PublicSite]` solo en el subdominio; `[AllowAnonymous]` solo en la lista de rutas anónimas del dominio principal), rutas sin "tenant", páginas públicas por subdominio | EF + Postgres | multitenancy |
+| 15 | **Permisos** | catálogos (los de la organización sin prefijo, los de plataforma con `platform.`), atributos, nunca roles | ASP.NET Core authorization | permisos |
 | 16 | **Auditoría** | marcas, rastro de cambios, eventos de seguridad | propio | auditoria |
 | 17 | **Logs** | `[LoggerMessage]`, `OperationLog`, datos enmascarados | M.E.Logging + OpenTelemetry | logs |
 | 18 | **Contratos de API** | contratos de entrada, tipos generados, status fijos | OpenAPI + openapi-typescript | api-http · datos-y-api |
