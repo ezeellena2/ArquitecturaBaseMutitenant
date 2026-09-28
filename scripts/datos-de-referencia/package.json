@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "cldr-core": "48.2.0",
+    "cldr-dates-full": "48.2.0",
     "cldr-localenames-full": "48.2.0",
     "cldr-numbers-full": "48.2.0",
     "fast-xml-parser": "5.11.1",

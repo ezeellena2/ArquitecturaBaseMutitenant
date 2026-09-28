@@ -12,10 +12,17 @@
       "version": "48.2.0",
       "sha256": "e751e0eedd46b52c38f3cdb72b0fab61ac8b48e052e8b28ba74b6ac26c4c8cb1",
       "path": "sources/cldr-region-validity.xml"
+    },
+    "ianaZone1970": {
+      "url": "https://data.iana.org/time-zones/tzdb-2026d/zone1970.tab",
+      "version": "2026d",
+      "sha256": "cf7a21adf7153794a684c03e499e882ee119f828ad77a579ed99db26ceeae87b",
+      "path": "sources/iana-zone1970.tab"
     }
   },
   "packages": {
     "cldr": "48.2.0",
+    "cldrDates": "48.2.0",
     "libphonenumber": "1.13.14",
     "xmlParser": "5.11.1"
   }

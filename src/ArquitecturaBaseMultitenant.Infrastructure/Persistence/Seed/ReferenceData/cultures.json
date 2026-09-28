@@ -1,0 +1,111 @@
+{
+  "Sources": {
+    "AsOf": "2026-09-17",
+    "SIX": {
+      "url": "https://www.six-group.com/dam/download/financial-information/data-center/iso-currrency/lists/list-one.xml",
+      "version": "2026-09-17",
+      "sha256": "33139b438657d1cee116ba737807ea71d19d6de4b90f799a09c56f0cc6a1b0ff",
+      "path": "sources/iso4217-list-one.xml"
+    },
+    "CLDR": {
+      "url": "https://raw.githubusercontent.com/unicode-org/cldr/release-48-2/common/validity/region.xml",
+      "version": "48.2.0",
+      "sha256": "e751e0eedd46b52c38f3cdb72b0fab61ac8b48e052e8b28ba74b6ac26c4c8cb1",
+      "path": "sources/cldr-region-validity.xml"
+    },
+    "IANA": {
+      "url": "https://data.iana.org/time-zones/tzdb-2026d/zone1970.tab",
+      "version": "2026d",
+      "sha256": "cf7a21adf7153794a684c03e499e882ee119f828ad77a579ed99db26ceeae87b",
+      "path": "sources/iana-zone1970.tab"
+    },
+    "Packages": {
+      "cldr-core": {
+        "Version": "48.2.0",
+        "Url": "https://registry.npmjs.org/cldr-core/-/cldr-core-48.2.0.tgz",
+        "Integrity": "sha512-zfmLothncSwfv2jlevoSrgI2VGgH8SDGHXst6jUEotHA8nq9Igeg9jzdJDFtBso9pgJuG89DK16TzrmZDdo2Bg=="
+      },
+      "cldr-dates-full": {
+        "Version": "48.2.0",
+        "Url": "https://registry.npmjs.org/cldr-dates-full/-/cldr-dates-full-48.2.0.tgz",
+        "Integrity": "sha512-zMrKvjMO414HDftLr6vKH1fNQHakFNe+F1h4S0eg+zmL4WRi9pI41fxB3UrTJDY42MEM87jCuAw/qlqCgYKcAQ=="
+      },
+      "cldr-localenames-full": {
+        "Version": "48.2.0",
+        "Url": "https://registry.npmjs.org/cldr-localenames-full/-/cldr-localenames-full-48.2.0.tgz",
+        "Integrity": "sha512-4o0paYDz0UXhfhChAVFkmVl2CP0YTSEqE6WrC0fNafaSC5u5DAXphxH3SZ1Ujczarikr8DToKZfiok6EqWLdNQ=="
+      },
+      "cldr-numbers-full": {
+        "Version": "48.2.0",
+        "Url": "https://registry.npmjs.org/cldr-numbers-full/-/cldr-numbers-full-48.2.0.tgz",
+        "Integrity": "sha512-0EQ+UkVDsyXOlxnWnL1RIENVZFqCnb04D1Yrku0obnOyttbuZz8tHmUd5c5AEvhGS/Gg2zI4fTaCm51LSGITog=="
+      },
+      "libphonenumber-js": {
+        "Version": "1.13.14",
+        "Url": "https://registry.npmjs.org/libphonenumber-js/-/libphonenumber-js-1.13.14.tgz",
+        "Integrity": "sha512-llihgCcx0BFLksecLP+x1J+6JDE1GsXS1RN/LoPF6qcwpeQcnjj0lcvZxY8AzbEpYwyZWPZW/nDuqkqzm3amiw=="
+      },
+      "fast-xml-parser": {
+        "Version": "5.11.1",
+        "Url": "https://registry.npmjs.org/fast-xml-parser/-/fast-xml-parser-5.11.1.tgz",
+        "Integrity": "sha512-TBw6K/fxoQGGjCmZDw9w/ZwP3uDcnTM4YH/g+PFRWr8sbe5idXtxNN6vITh4+1ruCZaho6uBFurElsA7F0zzgw=="
+      }
+    }
+  },
+  "Cultures": [
+    {
+      "Code": "es-AR",
+      "LanguageCode": "es",
+      "CountryCode": "AR",
+      "DatePattern": "dd/MM/yyyy",
+      "TimePattern": "HH:mm",
+      "DateTimePattern": "dd/MM/yyyy HH:mm",
+      "LongDatePattern": "d 'de' MMMM 'de' yyyy",
+      "DecimalSeparator": ",",
+      "GroupSeparator": ".",
+      "CurrencyPattern": "{symbol} {number}",
+      "PercentPattern": "{number} %",
+      "FallbackCulture": null,
+      "IsEnabled": true,
+      "IsDefault": true,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "DisplayCulture": "es-AR",
+          "Name": "Español (Argentina)"
+        },
+        {
+          "DisplayCulture": "en-US",
+          "Name": "Spanish (Argentina)"
+        }
+      ]
+    },
+    {
+      "Code": "en-US",
+      "LanguageCode": "en",
+      "CountryCode": "US",
+      "DatePattern": "MM/dd/yyyy",
+      "TimePattern": "h:mm tt",
+      "DateTimePattern": "MM/dd/yyyy h:mm tt",
+      "LongDatePattern": "MMMM d, yyyy",
+      "DecimalSeparator": ".",
+      "GroupSeparator": ",",
+      "CurrencyPattern": "{symbol}{number}",
+      "PercentPattern": "{number}%",
+      "FallbackCulture": "es-AR",
+      "IsEnabled": true,
+      "IsDefault": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "DisplayCulture": "es-AR",
+          "Name": "Inglés (Estados Unidos)"
+        },
+        {
+          "DisplayCulture": "en-US",
+          "Name": "English (United States)"
+        }
+      ]
+    }
+  ]
+}

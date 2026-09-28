@@ -1,0 +1,31 @@
+{
+  "TaxIdTypes": [
+    {
+      "Code": "AR-CUIT",
+      "CountryCode": "AR",
+      "Label": "CUIT",
+      "Mask": "99-99999999-9",
+      "ValidatorKey": "ar-cuit-mod11",
+      "AppliesTo": "Both",
+      "Names": { "es-AR": "CUIT", "en-US": "CUIT" }
+    },
+    {
+      "Code": "AR-CUIL",
+      "CountryCode": "AR",
+      "Label": "CUIL",
+      "Mask": "99-99999999-9",
+      "ValidatorKey": "ar-cuit-mod11",
+      "AppliesTo": "Person",
+      "Names": { "es-AR": "CUIL", "en-US": "CUIL" }
+    },
+    {
+      "Code": "AR-DNI",
+      "CountryCode": "AR",
+      "Label": "DNI",
+      "Mask": "99999999",
+      "ValidatorKey": "ar-dni-length",
+      "AppliesTo": "Person",
+      "Names": { "es-AR": "DNI", "en-US": "National ID" }
+    }
+  ]
+}

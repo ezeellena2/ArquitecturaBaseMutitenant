@@ -13,11 +13,22 @@
       "sha256": "e751e0eedd46b52c38f3cdb72b0fab61ac8b48e052e8b28ba74b6ac26c4c8cb1",
       "path": "sources/cldr-region-validity.xml"
     },
+    "IANA": {
+      "url": "https://data.iana.org/time-zones/tzdb-2026d/zone1970.tab",
+      "version": "2026d",
+      "sha256": "cf7a21adf7153794a684c03e499e882ee119f828ad77a579ed99db26ceeae87b",
+      "path": "sources/iana-zone1970.tab"
+    },
     "Packages": {
       "cldr-core": {
         "Version": "48.2.0",
         "Url": "https://registry.npmjs.org/cldr-core/-/cldr-core-48.2.0.tgz",
         "Integrity": "sha512-zfmLothncSwfv2jlevoSrgI2VGgH8SDGHXst6jUEotHA8nq9Igeg9jzdJDFtBso9pgJuG89DK16TzrmZDdo2Bg=="
+      },
+      "cldr-dates-full": {
+        "Version": "48.2.0",
+        "Url": "https://registry.npmjs.org/cldr-dates-full/-/cldr-dates-full-48.2.0.tgz",
+        "Integrity": "sha512-zMrKvjMO414HDftLr6vKH1fNQHakFNe+F1h4S0eg+zmL4WRi9pI41fxB3UrTJDY42MEM87jCuAw/qlqCgYKcAQ=="
       },
       "cldr-localenames-full": {
         "Version": "48.2.0",

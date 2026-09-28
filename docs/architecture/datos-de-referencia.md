@@ -30,15 +30,16 @@ Los cinco catálogos principales tienen `IsEnabled` (qué se ofrece en los selec
 | `TimeZones` | `Id` (`America/Argentina/Buenos_Aires`, PK), `IsEnabled`, `SortOrder` |
 | `TimeZoneCountries` | `TimeZoneId` (FK), `CountryCode` (FK), `IsEnabled`; clave compuesta `(TimeZoneId, CountryCode)` para conservar todos los países de una fila IANA |
 | `TimeZoneTranslations` | `TimeZoneId`, `Culture`, `City` ("Buenos Aires") |
-| `Cultures` | `Code` (`es-AR`, PK), `LanguageCode` (`es`), `CountryCode` (FK), `DatePattern` (`dd/MM/yyyy`), `TimePattern` (`HH:mm`), `DateTimePattern`, `LongDatePattern`, `DecimalSeparator`, `GroupSeparator`, `CurrencyPattern` (`$ n` / `-$ n`), `PercentPattern`, `FallbackCulture`, `IsEnabled`, `IsDefault` |
+| `Cultures` | `Code` (`es-AR`, PK), `LanguageCode` (`es`), `CountryCode` (FK), `DatePattern` (`dd/MM/yyyy`), `TimePattern` (`HH:mm`), `DateTimePattern`, `LongDatePattern`, `DecimalSeparator`, `GroupSeparator`, `CurrencyPattern` (`$ n` / `-$ n`), `PercentPattern`, `FallbackCulture`, `IsEnabled`, `IsDefault`, `SortOrder?` |
 | `CultureTranslations` | `CultureCode`, `DisplayCulture`, `Name` (por ejemplo, "Español (Argentina)" en es y "Spanish (Argentina)" en en); clave `(CultureCode, DisplayCulture)` |
-| `TaxIdTypes` | `Code` (`AR-CUIT`, PK), `CountryCode` (FK), `Label`, `Mask` (`99-99999999-9`), `ValidatorKey` (`ar-cuit-mod11`), `AppliesTo` (`Person` \| `Company` \| `Both`), `IsEnabled` |
+| `TaxIdTypes` | `Code` (`AR-CUIT`, PK), `CountryCode` (FK), `Label`, `Mask` (`99-99999999-9`), `ValidatorKey` (`ar-cuit-mod11`), `AppliesTo` (`Person` \| `Company` \| `Both`), `IsEnabled`, `SortOrder?` |
 | `TaxIdTypeTranslations` | `TaxIdTypeCode`, `Culture`, `Name` ("CUIT") |
 
 - **Las demás tablas apuntan con FK**: `Money.Currency` → `Currencies.Code`; `TenantSettings.DefaultCulture` / `DefaultTimeZoneId` / `DefaultCurrency`, `Companies.TimeZoneId` y `Companies.TaxIdType` → sus tablas; `ApplicationUser.Culture` y `TimeZoneId` también.
 - **Los algoritmos sí son código:** el dígito verificador del CUIT es una clase (`ArgentineCuitValidator`) registrada con su `ValidatorKey`. La tabla dice qué tipos existen y cuál valida cada uno. Un país nuevo suma su fila y, si hace falta, su validador.
 - **Los patrones de formato de `Cultures`** son la única fuente de `DisplayFormatter` (back) y de `shared/format` (front). Reemplazan a los perfiles escritos a mano: son CLDR con los ajustes del producto (por ejemplo, 24 h en `es-AR`).
 - **El símbolo visible de una moneda depende de la cultura:** `CurrencyTranslations.DisplaySymbol` acompaña al patrón de `Cultures`. El `Symbol` global de `Currencies` no sustituye ese dato. `format-cases.json` fija los textos exactos de ARS y USD en es-AR/en-US para ambos formateadores.
+- **Espaciado monetario:** al aplicar `CurrencyPattern`, un `DisplaySymbol` alfabético contiguo al número recibe un espacio, según la regla de espaciado de CLDR; un símbolo gráfico como `$` conserva el patrón sin ese espacio. Así `en-US` muestra `ARS 1,234.50` y `$1,234.50` con el mismo perfil, sin una excepción por código en el formateador.
 
 ## 3. De dónde salen los datos (seed)
 

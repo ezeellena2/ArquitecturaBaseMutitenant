@@ -1,0 +1,5800 @@
+{
+  "Sources": {
+    "AsOf": "2026-09-17",
+    "SIX": {
+      "url": "https://www.six-group.com/dam/download/financial-information/data-center/iso-currrency/lists/list-one.xml",
+      "version": "2026-09-17",
+      "sha256": "33139b438657d1cee116ba737807ea71d19d6de4b90f799a09c56f0cc6a1b0ff",
+      "path": "sources/iso4217-list-one.xml"
+    },
+    "CLDR": {
+      "url": "https://raw.githubusercontent.com/unicode-org/cldr/release-48-2/common/validity/region.xml",
+      "version": "48.2.0",
+      "sha256": "e751e0eedd46b52c38f3cdb72b0fab61ac8b48e052e8b28ba74b6ac26c4c8cb1",
+      "path": "sources/cldr-region-validity.xml"
+    },
+    "IANA": {
+      "url": "https://data.iana.org/time-zones/tzdb-2026d/zone1970.tab",
+      "version": "2026d",
+      "sha256": "cf7a21adf7153794a684c03e499e882ee119f828ad77a579ed99db26ceeae87b",
+      "path": "sources/iana-zone1970.tab"
+    },
+    "Packages": {
+      "cldr-core": {
+        "Version": "48.2.0",
+        "Url": "https://registry.npmjs.org/cldr-core/-/cldr-core-48.2.0.tgz",
+        "Integrity": "sha512-zfmLothncSwfv2jlevoSrgI2VGgH8SDGHXst6jUEotHA8nq9Igeg9jzdJDFtBso9pgJuG89DK16TzrmZDdo2Bg=="
+      },
+      "cldr-dates-full": {
+        "Version": "48.2.0",
+        "Url": "https://registry.npmjs.org/cldr-dates-full/-/cldr-dates-full-48.2.0.tgz",
+        "Integrity": "sha512-zMrKvjMO414HDftLr6vKH1fNQHakFNe+F1h4S0eg+zmL4WRi9pI41fxB3UrTJDY42MEM87jCuAw/qlqCgYKcAQ=="
+      },
+      "cldr-localenames-full": {
+        "Version": "48.2.0",
+        "Url": "https://registry.npmjs.org/cldr-localenames-full/-/cldr-localenames-full-48.2.0.tgz",
+        "Integrity": "sha512-4o0paYDz0UXhfhChAVFkmVl2CP0YTSEqE6WrC0fNafaSC5u5DAXphxH3SZ1Ujczarikr8DToKZfiok6EqWLdNQ=="
+      },
+      "cldr-numbers-full": {
+        "Version": "48.2.0",
+        "Url": "https://registry.npmjs.org/cldr-numbers-full/-/cldr-numbers-full-48.2.0.tgz",
+        "Integrity": "sha512-0EQ+UkVDsyXOlxnWnL1RIENVZFqCnb04D1Yrku0obnOyttbuZz8tHmUd5c5AEvhGS/Gg2zI4fTaCm51LSGITog=="
+      },
+      "libphonenumber-js": {
+        "Version": "1.13.14",
+        "Url": "https://registry.npmjs.org/libphonenumber-js/-/libphonenumber-js-1.13.14.tgz",
+        "Integrity": "sha512-llihgCcx0BFLksecLP+x1J+6JDE1GsXS1RN/LoPF6qcwpeQcnjj0lcvZxY8AzbEpYwyZWPZW/nDuqkqzm3amiw=="
+      },
+      "fast-xml-parser": {
+        "Version": "5.11.1",
+        "Url": "https://registry.npmjs.org/fast-xml-parser/-/fast-xml-parser-5.11.1.tgz",
+        "Integrity": "sha512-TBw6K/fxoQGGjCmZDw9w/ZwP3uDcnTM4YH/g+PFRWr8sbe5idXtxNN6vITh4+1ruCZaho6uBFurElsA7F0zzgw=="
+      }
+    }
+  },
+  "TimeZones": [
+    {
+      "Id": "Europe/Andorra",
+      "CountryCodes": [
+        "AD"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Andorra"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Andorra"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Dubai",
+      "CountryCodes": [
+        "AE",
+        "OM",
+        "RE",
+        "SC",
+        "TF"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Dubái"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Dubai"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Kabul",
+      "CountryCodes": [
+        "AF"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Kabul"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Kabul"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Tirane",
+      "CountryCodes": [
+        "AL"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Tirana"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Tirana"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Yerevan",
+      "CountryCodes": [
+        "AM"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Ereván"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Yerevan"
+        }
+      ]
+    },
+    {
+      "Id": "Antarctica/Casey",
+      "CountryCodes": [
+        "AQ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Casey"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Casey Station"
+        }
+      ]
+    },
+    {
+      "Id": "Antarctica/Davis",
+      "CountryCodes": [
+        "AQ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Davis"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Davis"
+        }
+      ]
+    },
+    {
+      "Id": "Antarctica/Mawson",
+      "CountryCodes": [
+        "AQ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Mawson"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Mawson Station"
+        }
+      ]
+    },
+    {
+      "Id": "Antarctica/Palmer",
+      "CountryCodes": [
+        "AQ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Palmer"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Palmer Land"
+        }
+      ]
+    },
+    {
+      "Id": "Antarctica/Rothera",
+      "CountryCodes": [
+        "AQ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Rothera"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Rothera Station"
+        }
+      ]
+    },
+    {
+      "Id": "Antarctica/Troll",
+      "CountryCodes": [
+        "AQ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Troll"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Troll Station"
+        }
+      ]
+    },
+    {
+      "Id": "Antarctica/Vostok",
+      "CountryCodes": [
+        "AQ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Vostok"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Vostok Station"
+        }
+      ]
+    },
+    {
+      "Id": "America/Argentina/Buenos_Aires",
+      "CountryCodes": [
+        "AR"
+      ],
+      "IsEnabled": true,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Buenos Aires"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Buenos Aires"
+        }
+      ]
+    },
+    {
+      "Id": "America/Argentina/Cordoba",
+      "CountryCodes": [
+        "AR"
+      ],
+      "IsEnabled": true,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Córdoba"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Cordoba"
+        }
+      ]
+    },
+    {
+      "Id": "America/Argentina/Salta",
+      "CountryCodes": [
+        "AR"
+      ],
+      "IsEnabled": true,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Salta"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Salta"
+        }
+      ]
+    },
+    {
+      "Id": "America/Argentina/Jujuy",
+      "CountryCodes": [
+        "AR"
+      ],
+      "IsEnabled": true,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Jujuy"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Jujuy"
+        }
+      ]
+    },
+    {
+      "Id": "America/Argentina/Tucuman",
+      "CountryCodes": [
+        "AR"
+      ],
+      "IsEnabled": true,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Tucumán"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Tucumán"
+        }
+      ]
+    },
+    {
+      "Id": "America/Argentina/Catamarca",
+      "CountryCodes": [
+        "AR"
+      ],
+      "IsEnabled": true,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Catamarca"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Catamarca"
+        }
+      ]
+    },
+    {
+      "Id": "America/Argentina/La_Rioja",
+      "CountryCodes": [
+        "AR"
+      ],
+      "IsEnabled": true,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "La Rioja"
+        },
+        {
+          "Culture": "en-US",
+          "City": "La Rioja"
+        }
+      ]
+    },
+    {
+      "Id": "America/Argentina/San_Juan",
+      "CountryCodes": [
+        "AR"
+      ],
+      "IsEnabled": true,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "San Juan"
+        },
+        {
+          "Culture": "en-US",
+          "City": "San Juan"
+        }
+      ]
+    },
+    {
+      "Id": "America/Argentina/Mendoza",
+      "CountryCodes": [
+        "AR"
+      ],
+      "IsEnabled": true,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Mendoza"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Mendoza"
+        }
+      ]
+    },
+    {
+      "Id": "America/Argentina/San_Luis",
+      "CountryCodes": [
+        "AR"
+      ],
+      "IsEnabled": true,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "San Luis"
+        },
+        {
+          "Culture": "en-US",
+          "City": "San Luis"
+        }
+      ]
+    },
+    {
+      "Id": "America/Argentina/Rio_Gallegos",
+      "CountryCodes": [
+        "AR"
+      ],
+      "IsEnabled": true,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Río Gallegos"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Río Gallegos"
+        }
+      ]
+    },
+    {
+      "Id": "America/Argentina/Ushuaia",
+      "CountryCodes": [
+        "AR"
+      ],
+      "IsEnabled": true,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Ushuaia"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Ushuaia"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Pago_Pago",
+      "CountryCodes": [
+        "AS",
+        "UM"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Pago Pago"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Pago Pago"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Vienna",
+      "CountryCodes": [
+        "AT"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Viena"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Vienna"
+        }
+      ]
+    },
+    {
+      "Id": "Australia/Lord_Howe",
+      "CountryCodes": [
+        "AU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Lord Howe"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Lord Howe Island"
+        }
+      ]
+    },
+    {
+      "Id": "Antarctica/Macquarie",
+      "CountryCodes": [
+        "AU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Macquarie"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Macquarie Island"
+        }
+      ]
+    },
+    {
+      "Id": "Australia/Hobart",
+      "CountryCodes": [
+        "AU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Hobart"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Hobart"
+        }
+      ]
+    },
+    {
+      "Id": "Australia/Melbourne",
+      "CountryCodes": [
+        "AU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Melbourne"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Melbourne"
+        }
+      ]
+    },
+    {
+      "Id": "Australia/Sydney",
+      "CountryCodes": [
+        "AU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Sídney"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Sydney"
+        }
+      ]
+    },
+    {
+      "Id": "Australia/Broken_Hill",
+      "CountryCodes": [
+        "AU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Broken Hill"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Broken Hill"
+        }
+      ]
+    },
+    {
+      "Id": "Australia/Brisbane",
+      "CountryCodes": [
+        "AU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Brisbane"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Brisbane"
+        }
+      ]
+    },
+    {
+      "Id": "Australia/Lindeman",
+      "CountryCodes": [
+        "AU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Lindeman"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Lindeman"
+        }
+      ]
+    },
+    {
+      "Id": "Australia/Adelaide",
+      "CountryCodes": [
+        "AU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Adelaida"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Adelaide"
+        }
+      ]
+    },
+    {
+      "Id": "Australia/Darwin",
+      "CountryCodes": [
+        "AU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Darwin"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Darwin"
+        }
+      ]
+    },
+    {
+      "Id": "Australia/Perth",
+      "CountryCodes": [
+        "AU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Perth"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Perth"
+        }
+      ]
+    },
+    {
+      "Id": "Australia/Eucla",
+      "CountryCodes": [
+        "AU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Eucla"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Eucla"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Baku",
+      "CountryCodes": [
+        "AZ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Bakú"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Baku"
+        }
+      ]
+    },
+    {
+      "Id": "America/Barbados",
+      "CountryCodes": [
+        "BB"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Barbados"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Barbados"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Dhaka",
+      "CountryCodes": [
+        "BD"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Daca"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Dhaka"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Brussels",
+      "CountryCodes": [
+        "BE",
+        "LU",
+        "NL"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Bruselas"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Brussels"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Sofia",
+      "CountryCodes": [
+        "BG"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Sofía"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Sofia"
+        }
+      ]
+    },
+    {
+      "Id": "Atlantic/Bermuda",
+      "CountryCodes": [
+        "BM"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Bermudas"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Bermuda"
+        }
+      ]
+    },
+    {
+      "Id": "America/La_Paz",
+      "CountryCodes": [
+        "BO"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "La Paz"
+        },
+        {
+          "Culture": "en-US",
+          "City": "La Paz"
+        }
+      ]
+    },
+    {
+      "Id": "America/Noronha",
+      "CountryCodes": [
+        "BR"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Fernando de Noronha"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Fernando de Noronha"
+        }
+      ]
+    },
+    {
+      "Id": "America/Belem",
+      "CountryCodes": [
+        "BR"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Belén"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Belém"
+        }
+      ]
+    },
+    {
+      "Id": "America/Fortaleza",
+      "CountryCodes": [
+        "BR"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Fortaleza"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Fortaleza"
+        }
+      ]
+    },
+    {
+      "Id": "America/Recife",
+      "CountryCodes": [
+        "BR"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Recife"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Recife"
+        }
+      ]
+    },
+    {
+      "Id": "America/Araguaina",
+      "CountryCodes": [
+        "BR"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Araguaína"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Araguaína"
+        }
+      ]
+    },
+    {
+      "Id": "America/Maceio",
+      "CountryCodes": [
+        "BR"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Maceió"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Maceió"
+        }
+      ]
+    },
+    {
+      "Id": "America/Bahia",
+      "CountryCodes": [
+        "BR"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Bahía"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Bahia"
+        }
+      ]
+    },
+    {
+      "Id": "America/Sao_Paulo",
+      "CountryCodes": [
+        "BR"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "São Paulo"
+        },
+        {
+          "Culture": "en-US",
+          "City": "São Paulo"
+        }
+      ]
+    },
+    {
+      "Id": "America/Campo_Grande",
+      "CountryCodes": [
+        "BR"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Campo Grande"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Campo Grande"
+        }
+      ]
+    },
+    {
+      "Id": "America/Cuiaba",
+      "CountryCodes": [
+        "BR"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Cuiabá"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Cuiabá"
+        }
+      ]
+    },
+    {
+      "Id": "America/Santarem",
+      "CountryCodes": [
+        "BR"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Santarém"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Santarém"
+        }
+      ]
+    },
+    {
+      "Id": "America/Porto_Velho",
+      "CountryCodes": [
+        "BR"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Porto Velho"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Porto Velho"
+        }
+      ]
+    },
+    {
+      "Id": "America/Boa_Vista",
+      "CountryCodes": [
+        "BR"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Boa Vista"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Boa Vista"
+        }
+      ]
+    },
+    {
+      "Id": "America/Manaus",
+      "CountryCodes": [
+        "BR"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Manaos"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Manaus"
+        }
+      ]
+    },
+    {
+      "Id": "America/Eirunepe",
+      "CountryCodes": [
+        "BR"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Eirunepé"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Eirunepé"
+        }
+      ]
+    },
+    {
+      "Id": "America/Rio_Branco",
+      "CountryCodes": [
+        "BR"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Río Branco"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Rio Branco"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Thimphu",
+      "CountryCodes": [
+        "BT"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Timbu"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Thimphu"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Minsk",
+      "CountryCodes": [
+        "BY"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Minsk"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Minsk"
+        }
+      ]
+    },
+    {
+      "Id": "America/Belize",
+      "CountryCodes": [
+        "BZ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Belice"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Belize"
+        }
+      ]
+    },
+    {
+      "Id": "America/St_Johns",
+      "CountryCodes": [
+        "CA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "San Juan de Terranova"
+        },
+        {
+          "Culture": "en-US",
+          "City": "St. John’s"
+        }
+      ]
+    },
+    {
+      "Id": "America/Halifax",
+      "CountryCodes": [
+        "CA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Halifax"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Halifax"
+        }
+      ]
+    },
+    {
+      "Id": "America/Glace_Bay",
+      "CountryCodes": [
+        "CA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Glace Bay"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Glace Bay"
+        }
+      ]
+    },
+    {
+      "Id": "America/Moncton",
+      "CountryCodes": [
+        "CA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Moncton"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Moncton"
+        }
+      ]
+    },
+    {
+      "Id": "America/Goose_Bay",
+      "CountryCodes": [
+        "CA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Goose Bay"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Goose Bay"
+        }
+      ]
+    },
+    {
+      "Id": "America/Toronto",
+      "CountryCodes": [
+        "CA",
+        "BS"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Toronto"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Toronto"
+        }
+      ]
+    },
+    {
+      "Id": "America/Iqaluit",
+      "CountryCodes": [
+        "CA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Iqaluit"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Iqaluit"
+        }
+      ]
+    },
+    {
+      "Id": "America/Winnipeg",
+      "CountryCodes": [
+        "CA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Winnipeg"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Winnipeg"
+        }
+      ]
+    },
+    {
+      "Id": "America/Resolute",
+      "CountryCodes": [
+        "CA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Resolute"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Resolute"
+        }
+      ]
+    },
+    {
+      "Id": "America/Rankin_Inlet",
+      "CountryCodes": [
+        "CA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Rankin Inlet"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Rankin Inlet"
+        }
+      ]
+    },
+    {
+      "Id": "America/Regina",
+      "CountryCodes": [
+        "CA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Regina"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Regina"
+        }
+      ]
+    },
+    {
+      "Id": "America/Swift_Current",
+      "CountryCodes": [
+        "CA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Swift Current"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Swift Current"
+        }
+      ]
+    },
+    {
+      "Id": "America/Edmonton",
+      "CountryCodes": [
+        "CA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Edmonton"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Edmonton"
+        }
+      ]
+    },
+    {
+      "Id": "America/Cambridge_Bay",
+      "CountryCodes": [
+        "CA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Cambridge Bay"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Cambridge Bay"
+        }
+      ]
+    },
+    {
+      "Id": "America/Inuvik",
+      "CountryCodes": [
+        "CA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Inuvik"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Inuvik"
+        }
+      ]
+    },
+    {
+      "Id": "America/Vancouver",
+      "CountryCodes": [
+        "CA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Vancouver"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Vancouver"
+        }
+      ]
+    },
+    {
+      "Id": "America/Dawson_Creek",
+      "CountryCodes": [
+        "CA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Dawson Creek"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Dawson Creek"
+        }
+      ]
+    },
+    {
+      "Id": "America/Fort_Nelson",
+      "CountryCodes": [
+        "CA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Fuerte Nelson"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Fort Nelson"
+        }
+      ]
+    },
+    {
+      "Id": "America/Whitehorse",
+      "CountryCodes": [
+        "CA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Whitehorse"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Whitehorse"
+        }
+      ]
+    },
+    {
+      "Id": "America/Dawson",
+      "CountryCodes": [
+        "CA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Dawson"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Dawson"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Zurich",
+      "CountryCodes": [
+        "CH",
+        "DE",
+        "LI"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Zúrich"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Zurich"
+        }
+      ]
+    },
+    {
+      "Id": "Africa/Abidjan",
+      "CountryCodes": [
+        "CI",
+        "BF",
+        "GH",
+        "GM",
+        "GN",
+        "IS",
+        "ML",
+        "MR",
+        "SH",
+        "SL",
+        "SN",
+        "TG"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Abiyán"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Abidjan"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Rarotonga",
+      "CountryCodes": [
+        "CK"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Rarotonga"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Rarotonga"
+        }
+      ]
+    },
+    {
+      "Id": "America/Santiago",
+      "CountryCodes": [
+        "CL"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Santiago"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Santiago"
+        }
+      ]
+    },
+    {
+      "Id": "America/Coyhaique",
+      "CountryCodes": [
+        "CL"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Coyhaique"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Coyhaique"
+        }
+      ]
+    },
+    {
+      "Id": "America/Punta_Arenas",
+      "CountryCodes": [
+        "CL"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Punta Arenas"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Punta Arenas"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Easter",
+      "CountryCodes": [
+        "CL"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Isla de Pascua"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Easter Island"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Shanghai",
+      "CountryCodes": [
+        "CN"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Shanghái"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Shanghai"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Urumqi",
+      "CountryCodes": [
+        "CN"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Ürümqi"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Ürümqi"
+        }
+      ]
+    },
+    {
+      "Id": "America/Bogota",
+      "CountryCodes": [
+        "CO"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Bogotá"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Bogotá"
+        }
+      ]
+    },
+    {
+      "Id": "America/Costa_Rica",
+      "CountryCodes": [
+        "CR"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Costa Rica"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Costa Rica"
+        }
+      ]
+    },
+    {
+      "Id": "America/Havana",
+      "CountryCodes": [
+        "CU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "La Habana"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Havana"
+        }
+      ]
+    },
+    {
+      "Id": "Atlantic/Cape_Verde",
+      "CountryCodes": [
+        "CV"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Cabo Verde"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Cape Verde"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Nicosia",
+      "CountryCodes": [
+        "CY"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Nicosia"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Nicosia"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Famagusta",
+      "CountryCodes": [
+        "CY"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Famagusta"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Famagusta"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Prague",
+      "CountryCodes": [
+        "CZ",
+        "SK"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Praga"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Prague"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Berlin",
+      "CountryCodes": [
+        "DE",
+        "DK",
+        "NO",
+        "SE",
+        "SJ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Berlín"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Berlin"
+        }
+      ]
+    },
+    {
+      "Id": "America/Santo_Domingo",
+      "CountryCodes": [
+        "DO"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Santo Domingo"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Santo Domingo"
+        }
+      ]
+    },
+    {
+      "Id": "Africa/Algiers",
+      "CountryCodes": [
+        "DZ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Argel"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Algiers"
+        }
+      ]
+    },
+    {
+      "Id": "America/Guayaquil",
+      "CountryCodes": [
+        "EC"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Guayaquil"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Guayaquil"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Galapagos",
+      "CountryCodes": [
+        "EC"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Galápagos"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Galápagos Islands"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Tallinn",
+      "CountryCodes": [
+        "EE"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Tallin"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Tallinn"
+        }
+      ]
+    },
+    {
+      "Id": "Africa/Cairo",
+      "CountryCodes": [
+        "EG"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "El Cairo"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Cairo"
+        }
+      ]
+    },
+    {
+      "Id": "Africa/El_Aaiun",
+      "CountryCodes": [
+        "EH"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "El Aaiún"
+        },
+        {
+          "Culture": "en-US",
+          "City": "El Aaiún"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Madrid",
+      "CountryCodes": [
+        "ES"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Madrid"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Madrid"
+        }
+      ]
+    },
+    {
+      "Id": "Africa/Ceuta",
+      "CountryCodes": [
+        "ES"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Ceuta"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Ceuta"
+        }
+      ]
+    },
+    {
+      "Id": "Atlantic/Canary",
+      "CountryCodes": [
+        "ES"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Islas Canarias"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Canaries"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Helsinki",
+      "CountryCodes": [
+        "FI",
+        "AX"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Helsinki"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Helsinki"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Fiji",
+      "CountryCodes": [
+        "FJ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Fiyi"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Fiji"
+        }
+      ]
+    },
+    {
+      "Id": "Atlantic/Stanley",
+      "CountryCodes": [
+        "FK"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Stanley"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Stanley"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Kosrae",
+      "CountryCodes": [
+        "FM"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Kosrae"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Kosrae"
+        }
+      ]
+    },
+    {
+      "Id": "Atlantic/Faroe",
+      "CountryCodes": [
+        "FO"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Faroe"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Faroe"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Paris",
+      "CountryCodes": [
+        "FR",
+        "MC"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "París"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Paris"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/London",
+      "CountryCodes": [
+        "GB",
+        "GG",
+        "IM",
+        "JE"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Londres"
+        },
+        {
+          "Culture": "en-US",
+          "City": "London"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Tbilisi",
+      "CountryCodes": [
+        "GE"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Tiflis"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Tbilisi"
+        }
+      ]
+    },
+    {
+      "Id": "America/Cayenne",
+      "CountryCodes": [
+        "GF"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Cayena"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Cayenne"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Gibraltar",
+      "CountryCodes": [
+        "GI"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Gibraltar"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Gibraltar"
+        }
+      ]
+    },
+    {
+      "Id": "America/Nuuk",
+      "CountryCodes": [
+        "GL"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Nuuk"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Nuuk"
+        }
+      ]
+    },
+    {
+      "Id": "America/Danmarkshavn",
+      "CountryCodes": [
+        "GL"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Danmarkshavn"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Danmarkshavn"
+        }
+      ]
+    },
+    {
+      "Id": "America/Scoresbysund",
+      "CountryCodes": [
+        "GL"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Ittoqqortoormiit"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Ittoqqortoormiit"
+        }
+      ]
+    },
+    {
+      "Id": "America/Thule",
+      "CountryCodes": [
+        "GL"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Thule"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Thule"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Athens",
+      "CountryCodes": [
+        "GR"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Atenas"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Athens"
+        }
+      ]
+    },
+    {
+      "Id": "Atlantic/South_Georgia",
+      "CountryCodes": [
+        "GS"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Georgia del Sur"
+        },
+        {
+          "Culture": "en-US",
+          "City": "South Georgia"
+        }
+      ]
+    },
+    {
+      "Id": "America/Guatemala",
+      "CountryCodes": [
+        "GT"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Guatemala"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Guatemala"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Guam",
+      "CountryCodes": [
+        "GU",
+        "MP"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Guam"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Guam"
+        }
+      ]
+    },
+    {
+      "Id": "Africa/Bissau",
+      "CountryCodes": [
+        "GW"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Bisáu"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Bissau"
+        }
+      ]
+    },
+    {
+      "Id": "America/Guyana",
+      "CountryCodes": [
+        "GY"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Guyana"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Guyana"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Hong_Kong",
+      "CountryCodes": [
+        "HK"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Hong Kong"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Hong Kong"
+        }
+      ]
+    },
+    {
+      "Id": "America/Tegucigalpa",
+      "CountryCodes": [
+        "HN"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Tegucigalpa"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Tegucigalpa"
+        }
+      ]
+    },
+    {
+      "Id": "America/Port-au-Prince",
+      "CountryCodes": [
+        "HT"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Puerto Príncipe"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Port-au-Prince"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Budapest",
+      "CountryCodes": [
+        "HU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Budapest"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Budapest"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Jakarta",
+      "CountryCodes": [
+        "ID"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Yakarta"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Jakarta"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Pontianak",
+      "CountryCodes": [
+        "ID"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Pontianak"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Pontianak"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Makassar",
+      "CountryCodes": [
+        "ID"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Makasar"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Makassar"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Jayapura",
+      "CountryCodes": [
+        "ID"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Jayapura"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Jayapura"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Dublin",
+      "CountryCodes": [
+        "IE"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Dublín"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Dublin"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Jerusalem",
+      "CountryCodes": [
+        "IL"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Jerusalén"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Jerusalem"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Kolkata",
+      "CountryCodes": [
+        "IN"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Kolkata"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Kolkata"
+        }
+      ]
+    },
+    {
+      "Id": "Indian/Chagos",
+      "CountryCodes": [
+        "IO"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Chagos"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Chagos Archipelago"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Baghdad",
+      "CountryCodes": [
+        "IQ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Bagdad"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Baghdad"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Tehran",
+      "CountryCodes": [
+        "IR"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Teherán"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Tehran"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Rome",
+      "CountryCodes": [
+        "IT",
+        "SM",
+        "VA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Roma"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Rome"
+        }
+      ]
+    },
+    {
+      "Id": "America/Jamaica",
+      "CountryCodes": [
+        "JM"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Jamaica"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Jamaica"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Amman",
+      "CountryCodes": [
+        "JO"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Ammán"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Amman"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Tokyo",
+      "CountryCodes": [
+        "JP",
+        "AU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Tokio"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Tokyo"
+        }
+      ]
+    },
+    {
+      "Id": "Africa/Nairobi",
+      "CountryCodes": [
+        "KE",
+        "DJ",
+        "ER",
+        "ET",
+        "KM",
+        "MG",
+        "SO",
+        "TZ",
+        "UG",
+        "YT"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Nairobi"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Nairobi"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Bishkek",
+      "CountryCodes": [
+        "KG"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Bishkek"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Bishkek"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Tarawa",
+      "CountryCodes": [
+        "KI",
+        "MH",
+        "TV",
+        "UM",
+        "WF"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Tarawa"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Tarawa"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Kanton",
+      "CountryCodes": [
+        "KI"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Kanton"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Kanton"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Kiritimati",
+      "CountryCodes": [
+        "KI"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Kiritimati"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Kiritimati"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Pyongyang",
+      "CountryCodes": [
+        "KP"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Pyongyang"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Pyongyang"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Seoul",
+      "CountryCodes": [
+        "KR"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Seúl"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Seoul"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Almaty",
+      "CountryCodes": [
+        "KZ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Almaty"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Almaty"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Qyzylorda",
+      "CountryCodes": [
+        "KZ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Kyzylorda"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Kyzylorda"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Qostanay",
+      "CountryCodes": [
+        "KZ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Kostanái"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Kostanay"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Aqtobe",
+      "CountryCodes": [
+        "KZ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Aktobe"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Aqtobe"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Aqtau",
+      "CountryCodes": [
+        "KZ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Aktau"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Aktau"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Atyrau",
+      "CountryCodes": [
+        "KZ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Atyrau"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Atyrau"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Oral",
+      "CountryCodes": [
+        "KZ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Oral"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Oral"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Beirut",
+      "CountryCodes": [
+        "LB"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Beirut"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Beirut"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Colombo",
+      "CountryCodes": [
+        "LK"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Colombo"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Colombo"
+        }
+      ]
+    },
+    {
+      "Id": "Africa/Monrovia",
+      "CountryCodes": [
+        "LR"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Monrovia"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Monrovia"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Vilnius",
+      "CountryCodes": [
+        "LT"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Vilna"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Vilnius"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Riga",
+      "CountryCodes": [
+        "LV"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Riga"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Riga"
+        }
+      ]
+    },
+    {
+      "Id": "Africa/Tripoli",
+      "CountryCodes": [
+        "LY"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Trípoli"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Tripoli"
+        }
+      ]
+    },
+    {
+      "Id": "Africa/Casablanca",
+      "CountryCodes": [
+        "MA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Casablanca"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Casablanca"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Chisinau",
+      "CountryCodes": [
+        "MD"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Chisináu"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Chișinău"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Kwajalein",
+      "CountryCodes": [
+        "MH"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Kwajalein"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Kwajalein Atoll"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Yangon",
+      "CountryCodes": [
+        "MM",
+        "CC"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Yangon"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Yangon"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Ulaanbaatar",
+      "CountryCodes": [
+        "MN"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Ulán Bator"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Ulaanbaatar"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Hovd",
+      "CountryCodes": [
+        "MN"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Khovd"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Khovd"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Macau",
+      "CountryCodes": [
+        "MO"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Macao"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Macao"
+        }
+      ]
+    },
+    {
+      "Id": "America/Martinique",
+      "CountryCodes": [
+        "MQ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Martinica"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Martinique"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Malta",
+      "CountryCodes": [
+        "MT"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Malta"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Malta"
+        }
+      ]
+    },
+    {
+      "Id": "Indian/Mauritius",
+      "CountryCodes": [
+        "MU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Mauricio"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Mauritius"
+        }
+      ]
+    },
+    {
+      "Id": "Indian/Maldives",
+      "CountryCodes": [
+        "MV",
+        "TF"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Maldivas"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Maldives"
+        }
+      ]
+    },
+    {
+      "Id": "America/Mexico_City",
+      "CountryCodes": [
+        "MX"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Ciudad de México"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Mexico City"
+        }
+      ]
+    },
+    {
+      "Id": "America/Cancun",
+      "CountryCodes": [
+        "MX"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Cancún"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Cancún"
+        }
+      ]
+    },
+    {
+      "Id": "America/Merida",
+      "CountryCodes": [
+        "MX"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Mérida"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Mérida"
+        }
+      ]
+    },
+    {
+      "Id": "America/Monterrey",
+      "CountryCodes": [
+        "MX"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Monterrey"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Monterrey"
+        }
+      ]
+    },
+    {
+      "Id": "America/Matamoros",
+      "CountryCodes": [
+        "MX"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Matamoros"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Matamoros"
+        }
+      ]
+    },
+    {
+      "Id": "America/Chihuahua",
+      "CountryCodes": [
+        "MX"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Chihuahua"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Chihuahua"
+        }
+      ]
+    },
+    {
+      "Id": "America/Ciudad_Juarez",
+      "CountryCodes": [
+        "MX"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Ciudad Juárez"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Ciudad Juárez"
+        }
+      ]
+    },
+    {
+      "Id": "America/Ojinaga",
+      "CountryCodes": [
+        "MX"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Ojinaga"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Ojinaga"
+        }
+      ]
+    },
+    {
+      "Id": "America/Mazatlan",
+      "CountryCodes": [
+        "MX"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Mazatlán"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Mazatlán"
+        }
+      ]
+    },
+    {
+      "Id": "America/Bahia_Banderas",
+      "CountryCodes": [
+        "MX"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Bahía de Banderas"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Bahía de Banderas"
+        }
+      ]
+    },
+    {
+      "Id": "America/Hermosillo",
+      "CountryCodes": [
+        "MX"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Hermosillo"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Hermosillo"
+        }
+      ]
+    },
+    {
+      "Id": "America/Tijuana",
+      "CountryCodes": [
+        "MX"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Tijuana"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Tijuana"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Kuching",
+      "CountryCodes": [
+        "MY",
+        "BN"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Kuching"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Kuching"
+        }
+      ]
+    },
+    {
+      "Id": "Africa/Maputo",
+      "CountryCodes": [
+        "MZ",
+        "BI",
+        "BW",
+        "CD",
+        "MW",
+        "RW",
+        "ZM",
+        "ZW"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Maputo"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Maputo"
+        }
+      ]
+    },
+    {
+      "Id": "Africa/Windhoek",
+      "CountryCodes": [
+        "NA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Windhoek"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Windhoek"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Noumea",
+      "CountryCodes": [
+        "NC"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Numea"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Nouméa"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Norfolk",
+      "CountryCodes": [
+        "NF"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Norfolk"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Norfolk Island"
+        }
+      ]
+    },
+    {
+      "Id": "Africa/Lagos",
+      "CountryCodes": [
+        "NG",
+        "AO",
+        "BJ",
+        "CD",
+        "CF",
+        "CG",
+        "CM",
+        "GA",
+        "GQ",
+        "NE"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Lagos"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Lagos"
+        }
+      ]
+    },
+    {
+      "Id": "America/Managua",
+      "CountryCodes": [
+        "NI"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Managua"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Managua"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Kathmandu",
+      "CountryCodes": [
+        "NP"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Kathmandu"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Kathmandu"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Nauru",
+      "CountryCodes": [
+        "NR"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Nauru"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Nauru"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Niue",
+      "CountryCodes": [
+        "NU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Niue"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Niue"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Auckland",
+      "CountryCodes": [
+        "NZ",
+        "AQ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Auckland"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Auckland"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Chatham",
+      "CountryCodes": [
+        "NZ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Chatham"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Chatham Islands"
+        }
+      ]
+    },
+    {
+      "Id": "America/Panama",
+      "CountryCodes": [
+        "PA",
+        "CA",
+        "KY"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Panamá"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Panama"
+        }
+      ]
+    },
+    {
+      "Id": "America/Lima",
+      "CountryCodes": [
+        "PE"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Lima"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Lima"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Tahiti",
+      "CountryCodes": [
+        "PF"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Tahití"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Tahiti"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Marquesas",
+      "CountryCodes": [
+        "PF"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Marquesas"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Marquesas Islands"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Gambier",
+      "CountryCodes": [
+        "PF"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Gambier"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Gambier"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Port_Moresby",
+      "CountryCodes": [
+        "PG",
+        "AQ",
+        "FM"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Port Moresby"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Port Moresby"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Bougainville",
+      "CountryCodes": [
+        "PG"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Bougainville"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Bougainville"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Manila",
+      "CountryCodes": [
+        "PH"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Manila"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Manila"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Karachi",
+      "CountryCodes": [
+        "PK"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Karachi"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Karachi"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Warsaw",
+      "CountryCodes": [
+        "PL"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Varsovia"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Warsaw"
+        }
+      ]
+    },
+    {
+      "Id": "America/Miquelon",
+      "CountryCodes": [
+        "PM"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Miquelón"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Saint-Pierre"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Pitcairn",
+      "CountryCodes": [
+        "PN"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Pitcairn"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Pitcairn Islands"
+        }
+      ]
+    },
+    {
+      "Id": "America/Puerto_Rico",
+      "CountryCodes": [
+        "PR",
+        "AG",
+        "CA",
+        "AI",
+        "AW",
+        "BL",
+        "BQ",
+        "CW",
+        "DM",
+        "GD",
+        "GP",
+        "KN",
+        "LC",
+        "MF",
+        "MS",
+        "SX",
+        "TT",
+        "VC",
+        "VG",
+        "VI"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Puerto Rico"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Puerto Rico"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Gaza",
+      "CountryCodes": [
+        "PS"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Gaza"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Gaza"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Hebron",
+      "CountryCodes": [
+        "PS"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Hebrón"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Hebron"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Lisbon",
+      "CountryCodes": [
+        "PT"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Lisboa"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Lisbon"
+        }
+      ]
+    },
+    {
+      "Id": "Atlantic/Madeira",
+      "CountryCodes": [
+        "PT"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Madeira"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Madeira"
+        }
+      ]
+    },
+    {
+      "Id": "Atlantic/Azores",
+      "CountryCodes": [
+        "PT"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Azores"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Azores"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Palau",
+      "CountryCodes": [
+        "PW"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Palaos"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Palau"
+        }
+      ]
+    },
+    {
+      "Id": "America/Asuncion",
+      "CountryCodes": [
+        "PY"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Asunción"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Asunción"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Qatar",
+      "CountryCodes": [
+        "QA",
+        "BH"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Catar"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Qatar"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Bucharest",
+      "CountryCodes": [
+        "RO"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Bucarest"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Bucharest"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Belgrade",
+      "CountryCodes": [
+        "RS",
+        "BA",
+        "HR",
+        "ME",
+        "MK",
+        "SI"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Belgrado"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Belgrade"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Kaliningrad",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Kaliningrado"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Kaliningrad"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Moscow",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Moscú"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Moscow"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Simferopol",
+      "CountryCodes": [
+        "RU",
+        "UA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Simferópol"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Simferopol"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Kirov",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Kírov"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Kirov"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Volgograd",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Volgogrado"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Volgograd"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Astrakhan",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Astracán"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Astrakhan"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Saratov",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Sarátov"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Saratov"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Ulyanovsk",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Uliánovsk"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Ulyanovsk"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Samara",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Samara"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Samara"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Yekaterinburg",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Ekaterimburgo"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Yekaterinburg"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Omsk",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Omsk"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Omsk"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Novosibirsk",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Novosibirsk"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Novosibirsk"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Barnaul",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Barnaúl"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Barnaul"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Tomsk",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Tomsk"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Tomsk"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Novokuznetsk",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Novokuznetsk"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Novokuznetsk"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Krasnoyarsk",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Krasnoyarsk"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Krasnoyarsk"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Irkutsk",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Irkutsk"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Irkutsk"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Chita",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Chitá"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Chita"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Yakutsk",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Yakutsk"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Yakutsk"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Khandyga",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Khandyga"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Khandyga"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Vladivostok",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Vladivostok"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Vladivostok"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Ust-Nera",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Ust-Nera"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Ust-Nera"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Magadan",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Magadán"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Magadan"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Sakhalin",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Sajalín"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Sakhalin"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Srednekolymsk",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Srednekolimsk"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Srednekolymsk"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Kamchatka",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Kamchatka"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Kamchatka"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Anadyr",
+      "CountryCodes": [
+        "RU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Anádyr"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Anadyr"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Riyadh",
+      "CountryCodes": [
+        "SA",
+        "AQ",
+        "KW",
+        "YE"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Riad"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Riyadh"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Guadalcanal",
+      "CountryCodes": [
+        "SB",
+        "FM"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Guadalcanal"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Guadalcanal"
+        }
+      ]
+    },
+    {
+      "Id": "Africa/Khartoum",
+      "CountryCodes": [
+        "SD"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Jartum"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Khartoum"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Singapore",
+      "CountryCodes": [
+        "SG",
+        "AQ",
+        "MY"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Singapur"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Singapore"
+        }
+      ]
+    },
+    {
+      "Id": "America/Paramaribo",
+      "CountryCodes": [
+        "SR"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Paramaribo"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Paramaribo"
+        }
+      ]
+    },
+    {
+      "Id": "Africa/Juba",
+      "CountryCodes": [
+        "SS"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Juba"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Juba"
+        }
+      ]
+    },
+    {
+      "Id": "Africa/Sao_Tome",
+      "CountryCodes": [
+        "ST"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Santo Tomé"
+        },
+        {
+          "Culture": "en-US",
+          "City": "São Tomé"
+        }
+      ]
+    },
+    {
+      "Id": "America/El_Salvador",
+      "CountryCodes": [
+        "SV"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "El Salvador"
+        },
+        {
+          "Culture": "en-US",
+          "City": "El Salvador"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Damascus",
+      "CountryCodes": [
+        "SY"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Damasco"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Damascus"
+        }
+      ]
+    },
+    {
+      "Id": "America/Grand_Turk",
+      "CountryCodes": [
+        "TC"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Gran Turca"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Grand Turk"
+        }
+      ]
+    },
+    {
+      "Id": "Africa/Ndjamena",
+      "CountryCodes": [
+        "TD"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Yamena"
+        },
+        {
+          "Culture": "en-US",
+          "City": "N’Djamena"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Bangkok",
+      "CountryCodes": [
+        "TH",
+        "CX",
+        "KH",
+        "LA",
+        "VN"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Bangkok"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Bangkok"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Dushanbe",
+      "CountryCodes": [
+        "TJ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Dusambé"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Dushanbe"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Fakaofo",
+      "CountryCodes": [
+        "TK"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Fakaofo"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Fakaofo"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Dili",
+      "CountryCodes": [
+        "TL"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Dili"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Dili"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Ashgabat",
+      "CountryCodes": [
+        "TM"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Asjabad"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Ashgabat"
+        }
+      ]
+    },
+    {
+      "Id": "Africa/Tunis",
+      "CountryCodes": [
+        "TN"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Túnez"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Tunis"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Tongatapu",
+      "CountryCodes": [
+        "TO"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Tongatapu"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Tongatapu"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Istanbul",
+      "CountryCodes": [
+        "TR"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Estambul"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Istanbul"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Taipei",
+      "CountryCodes": [
+        "TW"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Taipéi"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Taipei"
+        }
+      ]
+    },
+    {
+      "Id": "Europe/Kyiv",
+      "CountryCodes": [
+        "UA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Kyiv"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Kyiv"
+        }
+      ]
+    },
+    {
+      "Id": "America/New_York",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Nueva York"
+        },
+        {
+          "Culture": "en-US",
+          "City": "New York"
+        }
+      ]
+    },
+    {
+      "Id": "America/Detroit",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Detroit"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Detroit"
+        }
+      ]
+    },
+    {
+      "Id": "America/Kentucky/Louisville",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Louisville"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Louisville"
+        }
+      ]
+    },
+    {
+      "Id": "America/Kentucky/Monticello",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Monticello, Kentucky"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Monticello, Kentucky"
+        }
+      ]
+    },
+    {
+      "Id": "America/Indiana/Indianapolis",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Indianapolis"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Indianapolis"
+        }
+      ]
+    },
+    {
+      "Id": "America/Indiana/Vincennes",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Vincennes, Indiana"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Vincennes, Indiana"
+        }
+      ]
+    },
+    {
+      "Id": "America/Indiana/Winamac",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Winamac, Indiana"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Winamac, Indiana"
+        }
+      ]
+    },
+    {
+      "Id": "America/Indiana/Marengo",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Marengo, Indiana"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Marengo, Indiana"
+        }
+      ]
+    },
+    {
+      "Id": "America/Indiana/Petersburg",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Petersburg, Indiana"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Petersburg, Indiana"
+        }
+      ]
+    },
+    {
+      "Id": "America/Indiana/Vevay",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Vevay, Indiana"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Vevay, Indiana"
+        }
+      ]
+    },
+    {
+      "Id": "America/Chicago",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Chicago"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Chicago"
+        }
+      ]
+    },
+    {
+      "Id": "America/Indiana/Tell_City",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Tell City, Indiana"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Tell City, Indiana"
+        }
+      ]
+    },
+    {
+      "Id": "America/Indiana/Knox",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Knox, Indiana"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Knox, Indiana"
+        }
+      ]
+    },
+    {
+      "Id": "America/Menominee",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Menominee"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Menominee"
+        }
+      ]
+    },
+    {
+      "Id": "America/North_Dakota/Center",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Center, Dakota del Norte"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Center, North Dakota"
+        }
+      ]
+    },
+    {
+      "Id": "America/North_Dakota/New_Salem",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "New Salem, Dakota del Norte"
+        },
+        {
+          "Culture": "en-US",
+          "City": "New Salem, North Dakota"
+        }
+      ]
+    },
+    {
+      "Id": "America/North_Dakota/Beulah",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Beulah, Dakota del Norte"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Beulah, North Dakota"
+        }
+      ]
+    },
+    {
+      "Id": "America/Denver",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Denver"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Denver"
+        }
+      ]
+    },
+    {
+      "Id": "America/Boise",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Boise"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Boise"
+        }
+      ]
+    },
+    {
+      "Id": "America/Phoenix",
+      "CountryCodes": [
+        "US",
+        "CA"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Phoenix"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Phoenix"
+        }
+      ]
+    },
+    {
+      "Id": "America/Los_Angeles",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Los Ángeles"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Los Angeles"
+        }
+      ]
+    },
+    {
+      "Id": "America/Anchorage",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Anchorage"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Anchorage"
+        }
+      ]
+    },
+    {
+      "Id": "America/Juneau",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Juneau"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Juneau"
+        }
+      ]
+    },
+    {
+      "Id": "America/Sitka",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Sitka"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Sitka"
+        }
+      ]
+    },
+    {
+      "Id": "America/Metlakatla",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Metlakatla"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Metlakatla"
+        }
+      ]
+    },
+    {
+      "Id": "America/Yakutat",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Yakutat"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Yakutat"
+        }
+      ]
+    },
+    {
+      "Id": "America/Nome",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Nome"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Nome"
+        }
+      ]
+    },
+    {
+      "Id": "America/Adak",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Adak"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Adak"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Honolulu",
+      "CountryCodes": [
+        "US"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Honolulú"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Honolulu"
+        }
+      ]
+    },
+    {
+      "Id": "America/Montevideo",
+      "CountryCodes": [
+        "UY"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Montevideo"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Montevideo"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Samarkand",
+      "CountryCodes": [
+        "UZ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Samarcanda"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Samarkand"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Tashkent",
+      "CountryCodes": [
+        "UZ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Taskent"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Tashkent"
+        }
+      ]
+    },
+    {
+      "Id": "America/Caracas",
+      "CountryCodes": [
+        "VE"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Caracas"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Caracas"
+        }
+      ]
+    },
+    {
+      "Id": "Asia/Ho_Chi_Minh",
+      "CountryCodes": [
+        "VN"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Ho Chi Minh"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Ho Chi Minh"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Efate",
+      "CountryCodes": [
+        "VU"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Efate"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Efate"
+        }
+      ]
+    },
+    {
+      "Id": "Pacific/Apia",
+      "CountryCodes": [
+        "WS"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Apia"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Apia"
+        }
+      ]
+    },
+    {
+      "Id": "Africa/Johannesburg",
+      "CountryCodes": [
+        "ZA",
+        "LS",
+        "SZ"
+      ],
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "Johannesburgo"
+        },
+        {
+          "Culture": "en-US",
+          "City": "Johannesburg"
+        }
+      ]
+    },
+    {
+      "Id": "UTC",
+      "CountryCodes": [],
+      "IsEnabled": true,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "City": "UTC"
+        },
+        {
+          "Culture": "en-US",
+          "City": "UTC"
+        }
+      ]
+    }
+  ]
+}

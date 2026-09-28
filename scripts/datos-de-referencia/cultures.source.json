@@ -1,0 +1,32 @@
+{
+  "Cultures": [
+    {
+      "Code": "es-AR",
+      "LanguageCode": "es",
+      "CountryCode": "AR",
+      "DatePattern": "dd/MM/yyyy",
+      "TimePattern": "HH:mm",
+      "DateTimePattern": "dd/MM/yyyy HH:mm",
+      "LongDatePattern": "d 'de' MMMM 'de' yyyy",
+      "DecimalSeparator": ",",
+      "GroupSeparator": ".",
+      "CurrencyPattern": "{symbol} {number}",
+      "PercentPattern": "{number} %",
+      "FallbackCulture": null
+    },
+    {
+      "Code": "en-US",
+      "LanguageCode": "en",
+      "CountryCode": "US",
+      "DatePattern": "MM/dd/yyyy",
+      "TimePattern": "h:mm tt",
+      "DateTimePattern": "MM/dd/yyyy h:mm tt",
+      "LongDatePattern": "MMMM d, yyyy",
+      "DecimalSeparator": ".",
+      "GroupSeparator": ",",
+      "CurrencyPattern": "{symbol}{number}",
+      "PercentPattern": "{number}%",
+      "FallbackCulture": "es-AR"
+    }
+  ]
+}

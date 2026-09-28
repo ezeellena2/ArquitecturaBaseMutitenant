@@ -13,11 +13,22 @@
       "sha256": "e751e0eedd46b52c38f3cdb72b0fab61ac8b48e052e8b28ba74b6ac26c4c8cb1",
       "path": "sources/cldr-region-validity.xml"
     },
+    "IANA": {
+      "url": "https://data.iana.org/time-zones/tzdb-2026d/zone1970.tab",
+      "version": "2026d",
+      "sha256": "cf7a21adf7153794a684c03e499e882ee119f828ad77a579ed99db26ceeae87b",
+      "path": "sources/iana-zone1970.tab"
+    },
     "Packages": {
       "cldr-core": {
         "Version": "48.2.0",
         "Url": "https://registry.npmjs.org/cldr-core/-/cldr-core-48.2.0.tgz",
         "Integrity": "sha512-zfmLothncSwfv2jlevoSrgI2VGgH8SDGHXst6jUEotHA8nq9Igeg9jzdJDFtBso9pgJuG89DK16TzrmZDdo2Bg=="
+      },
+      "cldr-dates-full": {
+        "Version": "48.2.0",
+        "Url": "https://registry.npmjs.org/cldr-dates-full/-/cldr-dates-full-48.2.0.tgz",
+        "Integrity": "sha512-zMrKvjMO414HDftLr6vKH1fNQHakFNe+F1h4S0eg+zmL4WRi9pI41fxB3UrTJDY42MEM87jCuAw/qlqCgYKcAQ=="
       },
       "cldr-localenames-full": {
         "Version": "48.2.0",
@@ -48,7 +59,7 @@
       "NumericCode": "020",
       "CallingCode": "376",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Andorra",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -68,7 +79,7 @@
       "NumericCode": "784",
       "CallingCode": "971",
       "DefaultCurrencyCode": "AED",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Dubai",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -88,7 +99,7 @@
       "NumericCode": "004",
       "CallingCode": "93",
       "DefaultCurrencyCode": "AFN",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Kabul",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -108,7 +119,7 @@
       "NumericCode": "028",
       "CallingCode": "1",
       "DefaultCurrencyCode": "XCD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Puerto_Rico",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -128,7 +139,7 @@
       "NumericCode": "660",
       "CallingCode": "1",
       "DefaultCurrencyCode": "XCD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Puerto_Rico",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -148,7 +159,7 @@
       "NumericCode": "008",
       "CallingCode": "355",
       "DefaultCurrencyCode": "ALL",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Tirane",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -168,7 +179,7 @@
       "NumericCode": "051",
       "CallingCode": "374",
       "DefaultCurrencyCode": "AMD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Yerevan",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -188,7 +199,7 @@
       "NumericCode": "024",
       "CallingCode": "244",
       "DefaultCurrencyCode": "AOA",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Lagos",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -208,7 +219,7 @@
       "NumericCode": "010",
       "CallingCode": null,
       "DefaultCurrencyCode": null,
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Antarctica/Casey",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -228,7 +239,7 @@
       "NumericCode": "032",
       "CallingCode": "54",
       "DefaultCurrencyCode": "ARS",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Argentina/Buenos_Aires",
       "IsEnabled": true,
       "SortOrder": 0,
       "Translations": [
@@ -248,7 +259,7 @@
       "NumericCode": "016",
       "CallingCode": "1",
       "DefaultCurrencyCode": "USD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Pago_Pago",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -268,7 +279,7 @@
       "NumericCode": "040",
       "CallingCode": "43",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Vienna",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -288,7 +299,7 @@
       "NumericCode": "036",
       "CallingCode": "61",
       "DefaultCurrencyCode": "AUD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Australia/Lord_Howe",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -308,7 +319,7 @@
       "NumericCode": "533",
       "CallingCode": "297",
       "DefaultCurrencyCode": "AWG",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Puerto_Rico",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -328,7 +339,7 @@
       "NumericCode": "248",
       "CallingCode": "358",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Helsinki",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -348,7 +359,7 @@
       "NumericCode": "031",
       "CallingCode": "994",
       "DefaultCurrencyCode": "AZN",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Baku",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -368,7 +379,7 @@
       "NumericCode": "070",
       "CallingCode": "387",
       "DefaultCurrencyCode": "BAM",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Belgrade",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -388,7 +399,7 @@
       "NumericCode": "052",
       "CallingCode": "1",
       "DefaultCurrencyCode": "BBD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Barbados",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -408,7 +419,7 @@
       "NumericCode": "050",
       "CallingCode": "880",
       "DefaultCurrencyCode": "BDT",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Dhaka",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -428,7 +439,7 @@
       "NumericCode": "056",
       "CallingCode": "32",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Brussels",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -448,7 +459,7 @@
       "NumericCode": "854",
       "CallingCode": "226",
       "DefaultCurrencyCode": "XOF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Abidjan",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -468,7 +479,7 @@
       "NumericCode": "100",
       "CallingCode": "359",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Sofia",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -488,7 +499,7 @@
       "NumericCode": "048",
       "CallingCode": "973",
       "DefaultCurrencyCode": "BHD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Qatar",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -508,7 +519,7 @@
       "NumericCode": "108",
       "CallingCode": "257",
       "DefaultCurrencyCode": "BIF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Maputo",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -528,7 +539,7 @@
       "NumericCode": "204",
       "CallingCode": "229",
       "DefaultCurrencyCode": "XOF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Lagos",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -548,7 +559,7 @@
       "NumericCode": "652",
       "CallingCode": "590",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Puerto_Rico",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -568,7 +579,7 @@
       "NumericCode": "060",
       "CallingCode": "1",
       "DefaultCurrencyCode": "BMD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Atlantic/Bermuda",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -588,7 +599,7 @@
       "NumericCode": "096",
       "CallingCode": "673",
       "DefaultCurrencyCode": "BND",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Kuching",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -608,7 +619,7 @@
       "NumericCode": "068",
       "CallingCode": "591",
       "DefaultCurrencyCode": "BOB",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/La_Paz",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -628,7 +639,7 @@
       "NumericCode": "535",
       "CallingCode": "599",
       "DefaultCurrencyCode": "USD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Puerto_Rico",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -648,7 +659,7 @@
       "NumericCode": "076",
       "CallingCode": "55",
       "DefaultCurrencyCode": "BRL",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Noronha",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -668,7 +679,7 @@
       "NumericCode": "044",
       "CallingCode": "1",
       "DefaultCurrencyCode": "BSD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Toronto",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -688,7 +699,7 @@
       "NumericCode": "064",
       "CallingCode": "975",
       "DefaultCurrencyCode": "BTN",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Thimphu",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -728,7 +739,7 @@
       "NumericCode": "072",
       "CallingCode": "267",
       "DefaultCurrencyCode": "BWP",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Maputo",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -748,7 +759,7 @@
       "NumericCode": "112",
       "CallingCode": "375",
       "DefaultCurrencyCode": "BYN",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Minsk",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -768,7 +779,7 @@
       "NumericCode": "084",
       "CallingCode": "501",
       "DefaultCurrencyCode": "BZD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Belize",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -788,7 +799,7 @@
       "NumericCode": "124",
       "CallingCode": "1",
       "DefaultCurrencyCode": "CAD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/St_Johns",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -808,7 +819,7 @@
       "NumericCode": "166",
       "CallingCode": "61",
       "DefaultCurrencyCode": "AUD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Yangon",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -828,7 +839,7 @@
       "NumericCode": "180",
       "CallingCode": "243",
       "DefaultCurrencyCode": "CDF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Maputo",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -848,7 +859,7 @@
       "NumericCode": "140",
       "CallingCode": "236",
       "DefaultCurrencyCode": "XAF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Lagos",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -868,7 +879,7 @@
       "NumericCode": "178",
       "CallingCode": "242",
       "DefaultCurrencyCode": "XAF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Lagos",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -888,7 +899,7 @@
       "NumericCode": "756",
       "CallingCode": "41",
       "DefaultCurrencyCode": "CHF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Zurich",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -908,7 +919,7 @@
       "NumericCode": "384",
       "CallingCode": "225",
       "DefaultCurrencyCode": "XOF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Abidjan",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -928,7 +939,7 @@
       "NumericCode": "184",
       "CallingCode": "682",
       "DefaultCurrencyCode": "NZD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Rarotonga",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -948,7 +959,7 @@
       "NumericCode": "152",
       "CallingCode": "56",
       "DefaultCurrencyCode": "CLP",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Santiago",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -968,7 +979,7 @@
       "NumericCode": "120",
       "CallingCode": "237",
       "DefaultCurrencyCode": "XAF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Lagos",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -988,7 +999,7 @@
       "NumericCode": "156",
       "CallingCode": "86",
       "DefaultCurrencyCode": "CNY",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Shanghai",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1008,7 +1019,7 @@
       "NumericCode": "170",
       "CallingCode": "57",
       "DefaultCurrencyCode": "COP",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Bogota",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1028,7 +1039,7 @@
       "NumericCode": "188",
       "CallingCode": "506",
       "DefaultCurrencyCode": "CRC",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Costa_Rica",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1048,7 +1059,7 @@
       "NumericCode": "192",
       "CallingCode": "53",
       "DefaultCurrencyCode": "CUP",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Havana",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1068,7 +1079,7 @@
       "NumericCode": "132",
       "CallingCode": "238",
       "DefaultCurrencyCode": "CVE",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Atlantic/Cape_Verde",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1088,7 +1099,7 @@
       "NumericCode": "531",
       "CallingCode": "599",
       "DefaultCurrencyCode": "XCG",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Puerto_Rico",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1108,7 +1119,7 @@
       "NumericCode": "162",
       "CallingCode": "61",
       "DefaultCurrencyCode": "AUD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Bangkok",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1128,7 +1139,7 @@
       "NumericCode": "196",
       "CallingCode": "357",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Nicosia",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1148,7 +1159,7 @@
       "NumericCode": "203",
       "CallingCode": "420",
       "DefaultCurrencyCode": "CZK",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Prague",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1168,7 +1179,7 @@
       "NumericCode": "276",
       "CallingCode": "49",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Zurich",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1188,7 +1199,7 @@
       "NumericCode": "262",
       "CallingCode": "253",
       "DefaultCurrencyCode": "DJF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Nairobi",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1208,7 +1219,7 @@
       "NumericCode": "208",
       "CallingCode": "45",
       "DefaultCurrencyCode": "DKK",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Berlin",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1228,7 +1239,7 @@
       "NumericCode": "212",
       "CallingCode": "1",
       "DefaultCurrencyCode": "XCD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Puerto_Rico",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1248,7 +1259,7 @@
       "NumericCode": "214",
       "CallingCode": "1",
       "DefaultCurrencyCode": "DOP",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Santo_Domingo",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1268,7 +1279,7 @@
       "NumericCode": "012",
       "CallingCode": "213",
       "DefaultCurrencyCode": "DZD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Algiers",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1288,7 +1299,7 @@
       "NumericCode": "218",
       "CallingCode": "593",
       "DefaultCurrencyCode": "USD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Guayaquil",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1308,7 +1319,7 @@
       "NumericCode": "233",
       "CallingCode": "372",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Tallinn",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1328,7 +1339,7 @@
       "NumericCode": "818",
       "CallingCode": "20",
       "DefaultCurrencyCode": "EGP",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Cairo",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1348,7 +1359,7 @@
       "NumericCode": "732",
       "CallingCode": "212",
       "DefaultCurrencyCode": "MAD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/El_Aaiun",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1368,7 +1379,7 @@
       "NumericCode": "232",
       "CallingCode": "291",
       "DefaultCurrencyCode": "ERN",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Nairobi",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1388,7 +1399,7 @@
       "NumericCode": "724",
       "CallingCode": "34",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Madrid",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1408,7 +1419,7 @@
       "NumericCode": "231",
       "CallingCode": "251",
       "DefaultCurrencyCode": "ETB",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Nairobi",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1428,7 +1439,7 @@
       "NumericCode": "246",
       "CallingCode": "358",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Helsinki",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1448,7 +1459,7 @@
       "NumericCode": "242",
       "CallingCode": "679",
       "DefaultCurrencyCode": "FJD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Fiji",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1468,7 +1479,7 @@
       "NumericCode": "238",
       "CallingCode": "500",
       "DefaultCurrencyCode": "FKP",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Atlantic/Stanley",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1488,7 +1499,7 @@
       "NumericCode": "583",
       "CallingCode": "691",
       "DefaultCurrencyCode": "USD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Kosrae",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1508,7 +1519,7 @@
       "NumericCode": "234",
       "CallingCode": "298",
       "DefaultCurrencyCode": "DKK",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Atlantic/Faroe",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1528,7 +1539,7 @@
       "NumericCode": "250",
       "CallingCode": "33",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Paris",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1548,7 +1559,7 @@
       "NumericCode": "266",
       "CallingCode": "241",
       "DefaultCurrencyCode": "XAF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Lagos",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1568,7 +1579,7 @@
       "NumericCode": "826",
       "CallingCode": "44",
       "DefaultCurrencyCode": "GBP",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/London",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1588,7 +1599,7 @@
       "NumericCode": "308",
       "CallingCode": "1",
       "DefaultCurrencyCode": "XCD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Puerto_Rico",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1608,7 +1619,7 @@
       "NumericCode": "268",
       "CallingCode": "995",
       "DefaultCurrencyCode": "GEL",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Tbilisi",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1628,7 +1639,7 @@
       "NumericCode": "254",
       "CallingCode": "594",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Cayenne",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1648,7 +1659,7 @@
       "NumericCode": "831",
       "CallingCode": "44",
       "DefaultCurrencyCode": "GBP",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/London",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1668,7 +1679,7 @@
       "NumericCode": "288",
       "CallingCode": "233",
       "DefaultCurrencyCode": "GHS",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Abidjan",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1688,7 +1699,7 @@
       "NumericCode": "292",
       "CallingCode": "350",
       "DefaultCurrencyCode": "GIP",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Gibraltar",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1708,7 +1719,7 @@
       "NumericCode": "304",
       "CallingCode": "299",
       "DefaultCurrencyCode": "DKK",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Nuuk",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1728,7 +1739,7 @@
       "NumericCode": "270",
       "CallingCode": "220",
       "DefaultCurrencyCode": "GMD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Abidjan",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1748,7 +1759,7 @@
       "NumericCode": "324",
       "CallingCode": "224",
       "DefaultCurrencyCode": "GNF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Abidjan",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1768,7 +1779,7 @@
       "NumericCode": "312",
       "CallingCode": "590",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Puerto_Rico",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1788,7 +1799,7 @@
       "NumericCode": "226",
       "CallingCode": "240",
       "DefaultCurrencyCode": "XAF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Lagos",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1808,7 +1819,7 @@
       "NumericCode": "300",
       "CallingCode": "30",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Athens",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1828,7 +1839,7 @@
       "NumericCode": "239",
       "CallingCode": null,
       "DefaultCurrencyCode": "GBP",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Atlantic/South_Georgia",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1848,7 +1859,7 @@
       "NumericCode": "320",
       "CallingCode": "502",
       "DefaultCurrencyCode": "GTQ",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Guatemala",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1868,7 +1879,7 @@
       "NumericCode": "316",
       "CallingCode": "1",
       "DefaultCurrencyCode": "USD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Guam",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1888,7 +1899,7 @@
       "NumericCode": "624",
       "CallingCode": "245",
       "DefaultCurrencyCode": "XOF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Bissau",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1908,7 +1919,7 @@
       "NumericCode": "328",
       "CallingCode": "592",
       "DefaultCurrencyCode": "GYD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Guyana",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1928,7 +1939,7 @@
       "NumericCode": "344",
       "CallingCode": "852",
       "DefaultCurrencyCode": "HKD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Hong_Kong",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1968,7 +1979,7 @@
       "NumericCode": "340",
       "CallingCode": "504",
       "DefaultCurrencyCode": "HNL",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Tegucigalpa",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -1988,7 +1999,7 @@
       "NumericCode": "191",
       "CallingCode": "385",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Belgrade",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2008,7 +2019,7 @@
       "NumericCode": "332",
       "CallingCode": "509",
       "DefaultCurrencyCode": "HTG",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Port-au-Prince",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2028,7 +2039,7 @@
       "NumericCode": "348",
       "CallingCode": "36",
       "DefaultCurrencyCode": "HUF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Budapest",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2048,7 +2059,7 @@
       "NumericCode": "360",
       "CallingCode": "62",
       "DefaultCurrencyCode": "IDR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Jakarta",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2068,7 +2079,7 @@
       "NumericCode": "372",
       "CallingCode": "353",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Dublin",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2088,7 +2099,7 @@
       "NumericCode": "376",
       "CallingCode": "972",
       "DefaultCurrencyCode": "ILS",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Jerusalem",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2108,7 +2119,7 @@
       "NumericCode": "833",
       "CallingCode": "44",
       "DefaultCurrencyCode": "GBP",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/London",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2128,7 +2139,7 @@
       "NumericCode": "356",
       "CallingCode": "91",
       "DefaultCurrencyCode": "INR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Kolkata",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2148,7 +2159,7 @@
       "NumericCode": "086",
       "CallingCode": "246",
       "DefaultCurrencyCode": "USD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Indian/Chagos",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2168,7 +2179,7 @@
       "NumericCode": "368",
       "CallingCode": "964",
       "DefaultCurrencyCode": "IQD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Baghdad",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2188,7 +2199,7 @@
       "NumericCode": "364",
       "CallingCode": "98",
       "DefaultCurrencyCode": "IRR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Tehran",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2208,7 +2219,7 @@
       "NumericCode": "352",
       "CallingCode": "354",
       "DefaultCurrencyCode": "ISK",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Abidjan",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2228,7 +2239,7 @@
       "NumericCode": "380",
       "CallingCode": "39",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Rome",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2248,7 +2259,7 @@
       "NumericCode": "832",
       "CallingCode": "44",
       "DefaultCurrencyCode": "GBP",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/London",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2268,7 +2279,7 @@
       "NumericCode": "388",
       "CallingCode": "1",
       "DefaultCurrencyCode": "JMD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Jamaica",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2288,7 +2299,7 @@
       "NumericCode": "400",
       "CallingCode": "962",
       "DefaultCurrencyCode": "JOD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Amman",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2308,7 +2319,7 @@
       "NumericCode": "392",
       "CallingCode": "81",
       "DefaultCurrencyCode": "JPY",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Tokyo",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2328,7 +2339,7 @@
       "NumericCode": "404",
       "CallingCode": "254",
       "DefaultCurrencyCode": "KES",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Nairobi",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2348,7 +2359,7 @@
       "NumericCode": "417",
       "CallingCode": "996",
       "DefaultCurrencyCode": "KGS",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Bishkek",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2368,7 +2379,7 @@
       "NumericCode": "116",
       "CallingCode": "855",
       "DefaultCurrencyCode": "KHR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Bangkok",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2388,7 +2399,7 @@
       "NumericCode": "296",
       "CallingCode": "686",
       "DefaultCurrencyCode": "AUD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Tarawa",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2408,7 +2419,7 @@
       "NumericCode": "174",
       "CallingCode": "269",
       "DefaultCurrencyCode": "KMF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Nairobi",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2428,7 +2439,7 @@
       "NumericCode": "659",
       "CallingCode": "1",
       "DefaultCurrencyCode": "XCD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Puerto_Rico",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2448,7 +2459,7 @@
       "NumericCode": "408",
       "CallingCode": "850",
       "DefaultCurrencyCode": "KPW",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Pyongyang",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2468,7 +2479,7 @@
       "NumericCode": "410",
       "CallingCode": "82",
       "DefaultCurrencyCode": "KRW",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Seoul",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2488,7 +2499,7 @@
       "NumericCode": "414",
       "CallingCode": "965",
       "DefaultCurrencyCode": "KWD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Riyadh",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2508,7 +2519,7 @@
       "NumericCode": "136",
       "CallingCode": "1",
       "DefaultCurrencyCode": "KYD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Panama",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2528,7 +2539,7 @@
       "NumericCode": "398",
       "CallingCode": "7",
       "DefaultCurrencyCode": "KZT",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Almaty",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2548,7 +2559,7 @@
       "NumericCode": "418",
       "CallingCode": "856",
       "DefaultCurrencyCode": "LAK",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Bangkok",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2568,7 +2579,7 @@
       "NumericCode": "422",
       "CallingCode": "961",
       "DefaultCurrencyCode": "LBP",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Beirut",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2588,7 +2599,7 @@
       "NumericCode": "662",
       "CallingCode": "1",
       "DefaultCurrencyCode": "XCD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Puerto_Rico",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2608,7 +2619,7 @@
       "NumericCode": "438",
       "CallingCode": "423",
       "DefaultCurrencyCode": "CHF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Zurich",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2628,7 +2639,7 @@
       "NumericCode": "144",
       "CallingCode": "94",
       "DefaultCurrencyCode": "LKR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Colombo",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2648,7 +2659,7 @@
       "NumericCode": "430",
       "CallingCode": "231",
       "DefaultCurrencyCode": "LRD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Monrovia",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2668,7 +2679,7 @@
       "NumericCode": "426",
       "CallingCode": "266",
       "DefaultCurrencyCode": "ZAR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Johannesburg",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2688,7 +2699,7 @@
       "NumericCode": "440",
       "CallingCode": "370",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Vilnius",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2708,7 +2719,7 @@
       "NumericCode": "442",
       "CallingCode": "352",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Brussels",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2728,7 +2739,7 @@
       "NumericCode": "428",
       "CallingCode": "371",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Riga",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2748,7 +2759,7 @@
       "NumericCode": "434",
       "CallingCode": "218",
       "DefaultCurrencyCode": "LYD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Tripoli",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2768,7 +2779,7 @@
       "NumericCode": "504",
       "CallingCode": "212",
       "DefaultCurrencyCode": "MAD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Casablanca",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2788,7 +2799,7 @@
       "NumericCode": "492",
       "CallingCode": "377",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Paris",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2808,7 +2819,7 @@
       "NumericCode": "498",
       "CallingCode": "373",
       "DefaultCurrencyCode": "MDL",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Chisinau",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2828,7 +2839,7 @@
       "NumericCode": "499",
       "CallingCode": "382",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Belgrade",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2848,7 +2859,7 @@
       "NumericCode": "663",
       "CallingCode": "590",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Puerto_Rico",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2868,7 +2879,7 @@
       "NumericCode": "450",
       "CallingCode": "261",
       "DefaultCurrencyCode": "MGA",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Nairobi",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2888,7 +2899,7 @@
       "NumericCode": "584",
       "CallingCode": "692",
       "DefaultCurrencyCode": "USD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Tarawa",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2908,7 +2919,7 @@
       "NumericCode": "807",
       "CallingCode": "389",
       "DefaultCurrencyCode": "MKD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Belgrade",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2928,7 +2939,7 @@
       "NumericCode": "466",
       "CallingCode": "223",
       "DefaultCurrencyCode": "XOF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Abidjan",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2948,7 +2959,7 @@
       "NumericCode": "104",
       "CallingCode": "95",
       "DefaultCurrencyCode": "MMK",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Yangon",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2968,7 +2979,7 @@
       "NumericCode": "496",
       "CallingCode": "976",
       "DefaultCurrencyCode": "MNT",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Ulaanbaatar",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -2988,7 +2999,7 @@
       "NumericCode": "446",
       "CallingCode": "853",
       "DefaultCurrencyCode": "MOP",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Macau",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3008,7 +3019,7 @@
       "NumericCode": "580",
       "CallingCode": "1",
       "DefaultCurrencyCode": "USD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Guam",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3028,7 +3039,7 @@
       "NumericCode": "474",
       "CallingCode": "596",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Martinique",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3048,7 +3059,7 @@
       "NumericCode": "478",
       "CallingCode": "222",
       "DefaultCurrencyCode": "MRU",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Abidjan",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3068,7 +3079,7 @@
       "NumericCode": "500",
       "CallingCode": "1",
       "DefaultCurrencyCode": "XCD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Puerto_Rico",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3088,7 +3099,7 @@
       "NumericCode": "470",
       "CallingCode": "356",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Malta",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3108,7 +3119,7 @@
       "NumericCode": "480",
       "CallingCode": "230",
       "DefaultCurrencyCode": "MUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Indian/Mauritius",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3128,7 +3139,7 @@
       "NumericCode": "462",
       "CallingCode": "960",
       "DefaultCurrencyCode": "MVR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Indian/Maldives",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3148,7 +3159,7 @@
       "NumericCode": "454",
       "CallingCode": "265",
       "DefaultCurrencyCode": "MWK",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Maputo",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3168,7 +3179,7 @@
       "NumericCode": "484",
       "CallingCode": "52",
       "DefaultCurrencyCode": "MXN",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Mexico_City",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3188,7 +3199,7 @@
       "NumericCode": "458",
       "CallingCode": "60",
       "DefaultCurrencyCode": "MYR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Kuching",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3208,7 +3219,7 @@
       "NumericCode": "508",
       "CallingCode": "258",
       "DefaultCurrencyCode": "MZN",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Maputo",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3228,7 +3239,7 @@
       "NumericCode": "516",
       "CallingCode": "264",
       "DefaultCurrencyCode": "NAD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Windhoek",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3248,7 +3259,7 @@
       "NumericCode": "540",
       "CallingCode": "687",
       "DefaultCurrencyCode": "XPF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Noumea",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3268,7 +3279,7 @@
       "NumericCode": "562",
       "CallingCode": "227",
       "DefaultCurrencyCode": "XOF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Lagos",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3288,7 +3299,7 @@
       "NumericCode": "574",
       "CallingCode": "672",
       "DefaultCurrencyCode": "AUD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Norfolk",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3308,7 +3319,7 @@
       "NumericCode": "566",
       "CallingCode": "234",
       "DefaultCurrencyCode": "NGN",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Lagos",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3328,7 +3339,7 @@
       "NumericCode": "558",
       "CallingCode": "505",
       "DefaultCurrencyCode": "NIO",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Managua",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3348,7 +3359,7 @@
       "NumericCode": "528",
       "CallingCode": "31",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Brussels",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3368,7 +3379,7 @@
       "NumericCode": "578",
       "CallingCode": "47",
       "DefaultCurrencyCode": "NOK",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Berlin",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3388,7 +3399,7 @@
       "NumericCode": "524",
       "CallingCode": "977",
       "DefaultCurrencyCode": "NPR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Kathmandu",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3408,7 +3419,7 @@
       "NumericCode": "520",
       "CallingCode": "674",
       "DefaultCurrencyCode": "AUD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Nauru",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3428,7 +3439,7 @@
       "NumericCode": "570",
       "CallingCode": "683",
       "DefaultCurrencyCode": "NZD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Niue",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3448,7 +3459,7 @@
       "NumericCode": "554",
       "CallingCode": "64",
       "DefaultCurrencyCode": "NZD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Auckland",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3468,7 +3479,7 @@
       "NumericCode": "512",
       "CallingCode": "968",
       "DefaultCurrencyCode": "OMR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Dubai",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3488,7 +3499,7 @@
       "NumericCode": "591",
       "CallingCode": "507",
       "DefaultCurrencyCode": "PAB",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Panama",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3508,7 +3519,7 @@
       "NumericCode": "604",
       "CallingCode": "51",
       "DefaultCurrencyCode": "PEN",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Lima",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3528,7 +3539,7 @@
       "NumericCode": "258",
       "CallingCode": "689",
       "DefaultCurrencyCode": "XPF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Tahiti",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3548,7 +3559,7 @@
       "NumericCode": "598",
       "CallingCode": "675",
       "DefaultCurrencyCode": "PGK",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Port_Moresby",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3568,7 +3579,7 @@
       "NumericCode": "608",
       "CallingCode": "63",
       "DefaultCurrencyCode": "PHP",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Manila",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3588,7 +3599,7 @@
       "NumericCode": "586",
       "CallingCode": "92",
       "DefaultCurrencyCode": "PKR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Karachi",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3608,7 +3619,7 @@
       "NumericCode": "616",
       "CallingCode": "48",
       "DefaultCurrencyCode": "PLN",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Warsaw",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3628,7 +3639,7 @@
       "NumericCode": "666",
       "CallingCode": "508",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Miquelon",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3648,7 +3659,7 @@
       "NumericCode": "612",
       "CallingCode": null,
       "DefaultCurrencyCode": "NZD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Pitcairn",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3668,7 +3679,7 @@
       "NumericCode": "630",
       "CallingCode": "1",
       "DefaultCurrencyCode": "USD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Puerto_Rico",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3688,7 +3699,7 @@
       "NumericCode": "275",
       "CallingCode": "970",
       "DefaultCurrencyCode": "ILS",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Gaza",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3708,7 +3719,7 @@
       "NumericCode": "620",
       "CallingCode": "351",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Lisbon",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3728,7 +3739,7 @@
       "NumericCode": "585",
       "CallingCode": "680",
       "DefaultCurrencyCode": "USD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Palau",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3748,7 +3759,7 @@
       "NumericCode": "600",
       "CallingCode": "595",
       "DefaultCurrencyCode": "PYG",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Asuncion",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3768,7 +3779,7 @@
       "NumericCode": "634",
       "CallingCode": "974",
       "DefaultCurrencyCode": "QAR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Qatar",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3788,7 +3799,7 @@
       "NumericCode": "638",
       "CallingCode": "262",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Dubai",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3808,7 +3819,7 @@
       "NumericCode": "642",
       "CallingCode": "40",
       "DefaultCurrencyCode": "RON",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Bucharest",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3828,7 +3839,7 @@
       "NumericCode": "688",
       "CallingCode": "381",
       "DefaultCurrencyCode": "RSD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Belgrade",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3848,7 +3859,7 @@
       "NumericCode": "643",
       "CallingCode": "7",
       "DefaultCurrencyCode": "RUB",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Kaliningrad",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3868,7 +3879,7 @@
       "NumericCode": "646",
       "CallingCode": "250",
       "DefaultCurrencyCode": "RWF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Maputo",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3888,7 +3899,7 @@
       "NumericCode": "682",
       "CallingCode": "966",
       "DefaultCurrencyCode": "SAR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Riyadh",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3908,7 +3919,7 @@
       "NumericCode": "090",
       "CallingCode": "677",
       "DefaultCurrencyCode": "SBD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Guadalcanal",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3928,7 +3939,7 @@
       "NumericCode": "690",
       "CallingCode": "248",
       "DefaultCurrencyCode": "SCR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Dubai",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3948,7 +3959,7 @@
       "NumericCode": "729",
       "CallingCode": "249",
       "DefaultCurrencyCode": "SDG",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Khartoum",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3968,7 +3979,7 @@
       "NumericCode": "752",
       "CallingCode": "46",
       "DefaultCurrencyCode": "SEK",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Berlin",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -3988,7 +3999,7 @@
       "NumericCode": "702",
       "CallingCode": "65",
       "DefaultCurrencyCode": "SGD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Singapore",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4008,7 +4019,7 @@
       "NumericCode": "654",
       "CallingCode": "290",
       "DefaultCurrencyCode": "SHP",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Abidjan",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4028,7 +4039,7 @@
       "NumericCode": "705",
       "CallingCode": "386",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Belgrade",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4048,7 +4059,7 @@
       "NumericCode": "744",
       "CallingCode": "47",
       "DefaultCurrencyCode": "NOK",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Berlin",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4068,7 +4079,7 @@
       "NumericCode": "703",
       "CallingCode": "421",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Prague",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4088,7 +4099,7 @@
       "NumericCode": "694",
       "CallingCode": "232",
       "DefaultCurrencyCode": "SLE",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Abidjan",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4108,7 +4119,7 @@
       "NumericCode": "674",
       "CallingCode": "378",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Rome",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4128,7 +4139,7 @@
       "NumericCode": "686",
       "CallingCode": "221",
       "DefaultCurrencyCode": "XOF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Abidjan",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4148,7 +4159,7 @@
       "NumericCode": "706",
       "CallingCode": "252",
       "DefaultCurrencyCode": "SOS",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Nairobi",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4168,7 +4179,7 @@
       "NumericCode": "740",
       "CallingCode": "597",
       "DefaultCurrencyCode": "SRD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Paramaribo",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4188,7 +4199,7 @@
       "NumericCode": "728",
       "CallingCode": "211",
       "DefaultCurrencyCode": "SSP",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Juba",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4208,7 +4219,7 @@
       "NumericCode": "678",
       "CallingCode": "239",
       "DefaultCurrencyCode": "STN",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Sao_Tome",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4228,7 +4239,7 @@
       "NumericCode": "222",
       "CallingCode": "503",
       "DefaultCurrencyCode": "USD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/El_Salvador",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4248,7 +4259,7 @@
       "NumericCode": "534",
       "CallingCode": "1",
       "DefaultCurrencyCode": "XCG",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Puerto_Rico",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4268,7 +4279,7 @@
       "NumericCode": "760",
       "CallingCode": "963",
       "DefaultCurrencyCode": "SYP",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Damascus",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4288,7 +4299,7 @@
       "NumericCode": "748",
       "CallingCode": "268",
       "DefaultCurrencyCode": "SZL",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Johannesburg",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4308,7 +4319,7 @@
       "NumericCode": "796",
       "CallingCode": "1",
       "DefaultCurrencyCode": "USD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Grand_Turk",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4328,7 +4339,7 @@
       "NumericCode": "148",
       "CallingCode": "235",
       "DefaultCurrencyCode": "XAF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Ndjamena",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4348,7 +4359,7 @@
       "NumericCode": "260",
       "CallingCode": null,
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Dubai",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4368,7 +4379,7 @@
       "NumericCode": "768",
       "CallingCode": "228",
       "DefaultCurrencyCode": "XOF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Abidjan",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4388,7 +4399,7 @@
       "NumericCode": "764",
       "CallingCode": "66",
       "DefaultCurrencyCode": "THB",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Bangkok",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4408,7 +4419,7 @@
       "NumericCode": "762",
       "CallingCode": "992",
       "DefaultCurrencyCode": "TJS",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Dushanbe",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4428,7 +4439,7 @@
       "NumericCode": "772",
       "CallingCode": "690",
       "DefaultCurrencyCode": "NZD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Fakaofo",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4448,7 +4459,7 @@
       "NumericCode": "626",
       "CallingCode": "670",
       "DefaultCurrencyCode": "USD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Dili",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4468,7 +4479,7 @@
       "NumericCode": "795",
       "CallingCode": "993",
       "DefaultCurrencyCode": "TMT",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Ashgabat",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4488,7 +4499,7 @@
       "NumericCode": "788",
       "CallingCode": "216",
       "DefaultCurrencyCode": "TND",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Tunis",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4508,7 +4519,7 @@
       "NumericCode": "776",
       "CallingCode": "676",
       "DefaultCurrencyCode": "TOP",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Tongatapu",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4528,7 +4539,7 @@
       "NumericCode": "792",
       "CallingCode": "90",
       "DefaultCurrencyCode": "TRY",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Istanbul",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4548,7 +4559,7 @@
       "NumericCode": "780",
       "CallingCode": "1",
       "DefaultCurrencyCode": "TTD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Puerto_Rico",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4568,7 +4579,7 @@
       "NumericCode": "798",
       "CallingCode": "688",
       "DefaultCurrencyCode": "AUD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Tarawa",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4588,7 +4599,7 @@
       "NumericCode": "158",
       "CallingCode": "886",
       "DefaultCurrencyCode": "TWD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Taipei",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4608,7 +4619,7 @@
       "NumericCode": "834",
       "CallingCode": "255",
       "DefaultCurrencyCode": "TZS",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Nairobi",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4628,7 +4639,7 @@
       "NumericCode": "804",
       "CallingCode": "380",
       "DefaultCurrencyCode": "UAH",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Simferopol",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4648,7 +4659,7 @@
       "NumericCode": "800",
       "CallingCode": "256",
       "DefaultCurrencyCode": "UGX",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Nairobi",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4668,7 +4679,7 @@
       "NumericCode": "581",
       "CallingCode": null,
       "DefaultCurrencyCode": "USD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Pago_Pago",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4688,7 +4699,7 @@
       "NumericCode": "840",
       "CallingCode": "1",
       "DefaultCurrencyCode": "USD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/New_York",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4708,7 +4719,7 @@
       "NumericCode": "858",
       "CallingCode": "598",
       "DefaultCurrencyCode": "UYU",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Montevideo",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4728,7 +4739,7 @@
       "NumericCode": "860",
       "CallingCode": "998",
       "DefaultCurrencyCode": "UZS",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Samarkand",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4748,7 +4759,7 @@
       "NumericCode": "336",
       "CallingCode": "39",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Europe/Rome",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4768,7 +4779,7 @@
       "NumericCode": "670",
       "CallingCode": "1",
       "DefaultCurrencyCode": "XCD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Puerto_Rico",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4788,7 +4799,7 @@
       "NumericCode": "862",
       "CallingCode": "58",
       "DefaultCurrencyCode": "VES",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Caracas",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4808,7 +4819,7 @@
       "NumericCode": "092",
       "CallingCode": "1",
       "DefaultCurrencyCode": "USD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Puerto_Rico",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4828,7 +4839,7 @@
       "NumericCode": "850",
       "CallingCode": "1",
       "DefaultCurrencyCode": "USD",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "America/Puerto_Rico",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4848,7 +4859,7 @@
       "NumericCode": "704",
       "CallingCode": "84",
       "DefaultCurrencyCode": "VND",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Bangkok",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4868,7 +4879,7 @@
       "NumericCode": "548",
       "CallingCode": "678",
       "DefaultCurrencyCode": "VUV",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Efate",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4888,7 +4899,7 @@
       "NumericCode": "876",
       "CallingCode": "681",
       "DefaultCurrencyCode": "XPF",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Tarawa",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4908,7 +4919,7 @@
       "NumericCode": "882",
       "CallingCode": "685",
       "DefaultCurrencyCode": "WST",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Pacific/Apia",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4928,7 +4939,7 @@
       "NumericCode": "887",
       "CallingCode": "967",
       "DefaultCurrencyCode": "YER",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Asia/Riyadh",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4948,7 +4959,7 @@
       "NumericCode": "175",
       "CallingCode": "262",
       "DefaultCurrencyCode": "EUR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Nairobi",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4968,7 +4979,7 @@
       "NumericCode": "710",
       "CallingCode": "27",
       "DefaultCurrencyCode": "ZAR",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Johannesburg",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -4988,7 +4999,7 @@
       "NumericCode": "894",
       "CallingCode": "260",
       "DefaultCurrencyCode": "ZMW",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Maputo",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
@@ -5008,7 +5019,7 @@
       "NumericCode": "716",
       "CallingCode": "263",
       "DefaultCurrencyCode": "ZWG",
-      "DefaultTimeZoneId": null,
+      "DefaultTimeZoneId": "Africa/Maputo",
       "IsEnabled": false,
       "SortOrder": null,
       "Translations": [
