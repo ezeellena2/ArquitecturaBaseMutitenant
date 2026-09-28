@@ -17,6 +17,7 @@ Las decisiones están en [`docs/decisions/README.md`](docs/decisions/README.md) 
 | guardar algo en la base | [guardado](docs/rules/guardado.md) |
 | devolver un error o validar | [result-y-errores](docs/rules/result-y-errores.md), [validacion](docs/rules/validacion.md) |
 | usar una fecha u hora | [fechas-y-zonas](docs/rules/fechas-y-zonas.md) |
+| usar una moneda, un país, una zona horaria, una cultura o un tipo de identificación fiscal | [datos-de-referencia](docs/rules/datos-de-referencia.md) (nunca una lista en el código) |
 | usar un monto, decimal o porcentaje | [numeros-y-moneda](docs/rules/numeros-y-moneda.md) |
 | hacer un listado | [paginado-y-busqueda](docs/rules/paginado-y-busqueda.md) |
 | guardar o validar un teléfono | [telefonos](docs/rules/telefonos.md) |

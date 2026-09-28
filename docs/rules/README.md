@@ -11,6 +11,7 @@ Una ficha por tema, todas con el mismo formato: **Regla · Cómo se hace · Proh
 | [multitenancy](multitenancy.md) | accesos B2C/B2B, `[Access]`, datos privados, públicos y compartidos, subdominios, RLS |
 | [permisos](permisos.md) | permisos de organización, empresa, personal y plataforma |
 | [fechas-y-zonas](fechas-y-zonas.md) | UTC, `DateOnly`, zona efectiva |
+| [datos-de-referencia](datos-de-referencia.md) | monedas, países, zonas, culturas y tipos fiscales en tablas; nada en el código |
 | [numeros-y-moneda](numeros-y-moneda.md) | `decimal`, `Money`, porcentajes, redondeo, formato |
 | [telefonos](telefonos.md) | E.164, `IPhoneNumberParser`, `PhoneUsage`, el 9 argentino |
 | [paginado-y-busqueda](paginado-y-busqueda.md) | por páginas, por cursor, orden, búsqueda, conteos |
