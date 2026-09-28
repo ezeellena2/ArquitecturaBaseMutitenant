@@ -162,9 +162,9 @@ No quedan preguntas técnicas pendientes. Según AGENTS.md, una duda nueva se re
 
 **Archivos:** crear `src/ArquitecturaBaseMultitenant.Application/Interfaces/Services/{IReferenceDataService.cs,AGENTS.md,CLAUDE.md}`, `src/ArquitecturaBaseMultitenant.Application/Models/{AGENTS,CLAUDE}.md`, `src/ArquitecturaBaseMultitenant.Application/Models/ReferenceData/{ReferenceDataResponse.cs,AGENTS.md,CLAUDE.md}`, `src/ArquitecturaBaseMultitenant.Application/Services/{AGENTS,CLAUDE}.md`, `src/ArquitecturaBaseMultitenant.Application/Services/ReferenceData/{ReferenceDataService.cs,AGENTS.md,CLAUDE.md}` y `tests/ArquitecturaBaseMultitenant.Application.UnitTests/ReferenceData/ReferenceDataServiceTests.cs` (nuevos; sin equivalentes en ArquitecturaBase); actualizar `src/ArquitecturaBaseMultitenant.Application/DependencyInjection.cs`.
 **Respaldo:** datos-de-referencia.md §§4–5 y 8; backend.md §§3, 5 y 17; arbol.md back “Application/Interfaces/Services/IReferenceDataService”, “Models/ReferenceData” y “Services/ReferenceData”; rules/datos-de-referencia.md y rules/logs.md.
-- [ ] Probar agregado de cinco catálogos habilitados, traducción/fallback, filtros de búsqueda y `OperationLog.RunAsync`; A/ReferenceDataServiceTests en rojo.
-- [ ] Implementar servicio tras los cinco puertos con `OperationLog.RunAsync` y DI explícita; repetir en verde.
-- [ ] Commit back: feat: reunir catálogos de referencia en un servicio
+- [x] Probar agregado de cinco catálogos habilitados, traducción/fallback, filtros de búsqueda y `OperationLog.RunAsync`; A/ReferenceDataServiceTests en rojo.
+- [x] Implementar servicio tras los cinco puertos con `OperationLog.RunAsync` y DI explícita; repetir en verde.
+- [x] Commit back: feat: reunir catálogos de referencia en un servicio
 
 ### Tarea 14. Aritmética de zonas horarias
 
@@ -276,17 +276,17 @@ No quedan preguntas técnicas pendientes. Según AGENTS.md, una duda nueva se re
 
 **Archivos:** crear ../ArquitecturaBaseMutitenantFront/src/shared/i18n/{index.ts,i18n.test.tsx} ← homónimos de ../ArquitecturaBaseFront/src/shared/i18n/ (adaptar es-AR/en-US y clave local); ../ArquitecturaBaseMutitenantFront/src/locales/es/{common,errors,enums}.json y en/{common,errors,enums}.json (common ← homónimo de ../ArquitecturaBaseFront/src/locales/es/ y en/; errors/enums nuevos); ../ArquitecturaBaseMutitenantFront/src/locales/parity.test.ts ← homónimo base; ../ArquitecturaBaseMutitenantFront/src/locales/{AGENTS,CLAUDE}.md; modificar ../ArquitecturaBaseMutitenantFront/src/app/providers.tsx.
 **Respaldo:** plan maestro §Etapa 1, Front 2; frontend.md §4 “Idioma y cultura”; arbol.md front “src/locales” y “src/shared/i18n”; rules/textos-y-traducciones.md; arnes.md front §2.
-- [ ] Probar idioma efectivo, fallback y mismas claves/placeholders; npm test -- src/shared/i18n/i18n.test.tsx src/locales/parity.test.ts en rojo.
-- [ ] Copiar/adaptar inicialización y textos del tablero aprobados; repetir en verde.
-- [ ] Commit front: feat: incorporar traducciones y paridad
+- [x] Probar idioma efectivo, fallback y mismas claves/placeholders; npm test -- src/shared/i18n/i18n.test.tsx src/locales/parity.test.ts en rojo.
+- [x] Copiar/adaptar inicialización y textos del tablero aprobados; repetir en verde.
+- [x] Commit front: feat: incorporar traducciones y paridad
 
 ### Tarea 28. Soporte de tests HTTP y componentes
 
 **Archivos:** crear ../ArquitecturaBaseMutitenantFront/src/test/mocks/{server,handlers}.ts ← homónimos de ../ArquitecturaBaseFront/src/test/mocks/ (sin /api/me ni auth E3); ../ArquitecturaBaseMutitenantFront/src/test/utils/renderWithProviders.tsx ← homónimo base (sin access ni host); modificar ../ArquitecturaBaseMutitenantFront/src/test/setup.ts; crear ../ArquitecturaBaseMutitenantFront/src/test/mocks/mocks.test.ts (nuevo).
 **Respaldo:** plan maestro §Etapa 1, Front 1–2; arbol.md front “src/test”; rules/tests.md “Cómo se hace”.
-- [ ] Probar MSW con onUnhandledRequest:error y render con i18n/Query, sin proveedor Auth; npm test -- src/test/mocks/mocks.test.ts en rojo.
-- [ ] Copiar/adaptar soporte y setup; repetir en verde.
-- [ ] Commit front: test: preparar MSW y render con proveedores
+- [x] Probar MSW con onUnhandledRequest:error y render con i18n/Query, sin proveedor Auth; npm test -- src/test/mocks/mocks.test.ts en rojo.
+- [x] Copiar/adaptar soporte y setup; repetir en verde.
+- [x] Commit front: test: preparar MSW y render con proveedores
 
 ### Tarea 29. Contratos generados del backend
 
