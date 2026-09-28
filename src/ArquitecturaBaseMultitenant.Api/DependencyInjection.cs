@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
+using ArquitecturaBaseMultitenant.Api.Json;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.Api;
@@ -15,7 +16,9 @@ public static class DependencyInjection
             ProblemDetailsMapper.AddTraceId(context.ProblemDetails, context.HttpContext);
         });
         services.AddExceptionHandler<GlobalExceptionHandler>();
-        services.AddControllers(options => options.Filters.Add(new EmptyJsonBodyContentTypeFilter()));
+        services.ConfigureHttpJsonOptions(options => JsonConfiguration.ConfigureJson(options.SerializerOptions));
+        services.AddControllers(options => options.Filters.Add(new EmptyJsonBodyContentTypeFilter()))
+            .AddJsonOptions(options => JsonConfiguration.ConfigureJson(options.JsonSerializerOptions));
         services.Configure<ApiBehaviorOptions>(options =>
             options.InvalidModelStateResponseFactory = MvcInvalidModelStateResponseFactory.Create);
 

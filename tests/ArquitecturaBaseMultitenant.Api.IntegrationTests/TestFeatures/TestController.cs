@@ -37,6 +37,12 @@ public sealed class TestController : ControllerBase
     [HttpPost("body")]
     public IActionResult Body([FromBody] TestBodyHttpRequest request) => NoContent();
 
+    [HttpPost("dates")]
+    public ActionResult<TestDatesHttpRequest> Dates([FromBody] TestDatesHttpRequest request) => Ok(request);
+
+    [HttpPost("civil-time")]
+    public ActionResult<TestCivilTimeHttpRequest> CivilTime([FromBody] TestCivilTimeHttpRequest request) => Ok(request);
+
     [HttpGet("throw")]
     public IActionResult Throw()
     {
@@ -46,3 +52,7 @@ public sealed class TestController : ControllerBase
 }
 
 public sealed record TestBodyHttpRequest(string? Value);
+
+public sealed record TestDatesHttpRequest(DateTime OccurredAtUtc, DateTime? ExpiresAtUtc);
+
+public sealed record TestCivilTimeHttpRequest(DateOnly Date, TimeOnly Time);

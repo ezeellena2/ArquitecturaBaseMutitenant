@@ -210,9 +210,9 @@ No quedan preguntas técnicas pendientes. Según AGENTS.md, una duda nueva se re
 
 **Archivos:** crear src/ArquitecturaBaseMultitenant.Api/Json/{JsonConfiguration,DateOnlyConverter,TimeOnlyConverter}.cs y {AGENTS,CLAUDE}.md; UtcDateTimeConverter.cs ← ../ArquitecturaBase/src/ArquitecturaBase.Api/Json/UtcDateTimeConverter.cs; ampliar tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/TestFeatures/TestController.cs con rutas de prueba de fecha/hora; tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Json/UtcDateTimeTests.cs ← ../ArquitecturaBase/tests/ArquitecturaBase.Api.IntegrationTests/Json/UtcDateTimeConverterTests.cs, y DateOnlyTimeOnlyTests.cs (nuevo).
 **Respaldo:** plan maestro §Etapa 1, Back 4 y 10; backend.md §§11, 18; arbol.md back “Api/Json” y tests; rules/fechas-y-zonas.md; arnes.md back §3.
-- [ ] Probar ISO Z, rechazo sin offset, yyyy-MM-dd y HH:mm:ss; I/UtcDateTimeTests e I/DateOnlyTimeOnlyTests en rojo.
-- [ ] Registrar los conversores en un único ConfigureJson; repetir en verde.
-- [ ] Commit back: feat: serializar tiempo con contratos UTC
+- [x] Probar ISO Z, rechazo sin offset, yyyy-MM-dd y HH:mm:ss; I/UtcDateTimeTests e I/DateOnlyTimeOnlyTests en rojo.
+- [x] Registrar los conversores en un único ConfigureJson; repetir en verde.
+- [x] Commit back: feat: serializar tiempo con contratos UTC
 
 ### Tarea 20. JSON de dinero y texto de entrada
 
