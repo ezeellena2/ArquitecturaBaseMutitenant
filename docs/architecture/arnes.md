@@ -93,6 +93,8 @@ Copiá de: Services/Roles/RoleService.cs (E4, el área de referencia).
 
 **Carpeta de un área** (`Services/Roles/`, `Models/Roles/`, `Validation/Roles/`, `Domain/Authorization/`…): no es una fila del mapa. Lleva un `AGENTS.md` de una línea, "Antes de tocar esto, leé `docs/features/<área>.md`", más su `CLAUDE.md`, y se escribe cuando nace ese documento: Roles es la primera, en la Etapa 4. Las carpetas que se agrupan por acceso y no por área (`Api/Controllers/Organization/`, `Api/Contracts/Organization/`, `tests/*.Api.IntegrationTests/Organization/`) juntan varias áreas: su puntero lleva una línea por área, cada una con su `docs/features/<área>.md`, como `Api/Controllers/AGENTS.md` de ArquitecturaBase.
 
+La correspondencia verificable entre `docs/features/` y las carpetas de área o agrupadas se define en la Etapa 4, junto con la receta de Roles; ahí se amplía `HarnessTests`. Los punteros de cada carpeta se siguen escribiendo en la etapa en que nace.
+
 ## 4. La tabla "si vas a tocar X, leé Y" (vive en el `AGENTS.md` raíz)
 
 La tabla está solo en el [`AGENTS.md` raíz](../../AGENTS.md#antes-de-escribir-código-el-arnés) y no se copia en otro lado. Cada fila lleva a una ficha de `docs/rules/` o, si el tema es operativo, a una guía de `docs/guides/` o `docs/operations/`.
@@ -108,6 +110,8 @@ La tabla está solo en el [`AGENTS.md` raíz](../../AGENTS.md#antes-de-escribir-
 La última etapa cerrada vive en una sola constante del arnés, `HarnessStage`, que usa `HarnessTests` y se actualiza en la puerta de cada etapa (plan, puerta 7). Mientras la etapa de un enlace o test no haya cerrado, su ausencia no falla; cuando cierra, sí.
 
 Así, mover un archivo modelo o renombrar un test rompe el build hasta que se actualiza la guía: la documentación no puede quedar vieja en silencio.
+
+Hasta que ambos repos estén en GitHub, cada CI usa solo su propio checkout. Los enlaces al repo hermano se verifican cuando ese checkout está presente; el checkout cruzado y su verificación obligatoria se incorporan cuando ambos repos estén en GitHub.
 
 ## 6. Mantenimiento
 

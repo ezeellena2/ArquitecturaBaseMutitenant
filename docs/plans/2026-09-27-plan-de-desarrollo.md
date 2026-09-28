@@ -158,7 +158,7 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
    - `cultureProfiles`, `formatters`, `parsers`, `useFormat` y `statusTones`;
    - `formatters.test.ts`, que recorre el **mismo** `format-cases.json` del back;
    - `format-usage.test.ts`.
-4. **Paginado:** `usePagination` (vuelve a la página 1 y corrige una página fuera de rango), `useCursorList` y `useDebouncedValue` (ambos nuevos en esta etapa), `Pagination` con el selector 10/20/50/100 (10 por defecto) y `LoadMore`.
+4. **Paginado:** `usePagination` (vuelve a la página 1 y corrige internamente una página fuera de rango, sin exponer `correctPage`), `useCursorList` y `useDebouncedValue` (ambos nuevos en esta etapa), `Pagination` con el selector 10/20/50/100 (10 por defecto) y `LoadMore`.
 5. **`shared/ui/format`** (DateText, MoneyText, NumberText, PercentText, EnumText, StatusBadge, EmptyValue, TimeZoneText y CultureText) y **`shared/ui/fields`** (DateField, MoneyField, NumberField, PercentField, PhoneField…). `shared/format` incluye `formatTimeZone` y `formatCulture`, y `shared/time/timeZones.ts` nace acá. `DataTable` ya resuelve el formato por el `type` de cada columna.
 6. `scripts/generate-contracts.mjs`, `npm run contracts` y `contracts:check`; `shared/api/generated/` contiene solo `schema.d.ts` y `shared/api/types.ts` declara los alias a mano reexportando desde él.
 7. **Campos con forma propia:** `EmailField`, `PhoneField` con `shared/phone` (países, banderas SVG y `CountrySelect`) y `TaxIdField` (`stdnum`), más `useIdempotentMutation` (P6).
@@ -284,7 +284,7 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
 **Documentación de la receta** (como las Etapas 4 y 5 de ArquitecturaBase):
 - `docs/guides/agregar-un-area.md`: los pasos en orden, con la ruta de cada archivo y un enlace al equivalente de Roles, más una lista de verificación. Cubre B2B, B2C y los datos públicos o compartidos: cambian el `[Access]`, los permisos y la clase del dato.
 - `docs/guides/permiso-nuevo.md`.
-- `docs/features/roles.md`, y un `AGENTS.md` de una línea (más su `CLAUDE.md` con `@AGENTS.md`) en cada carpeta de código del área, que apunta a su documento.
+- `docs/features/roles.md`, y un `AGENTS.md` de una línea (más su `CLAUDE.md` con `@AGENTS.md`) en cada carpeta de código del área, que apunta a su documento. La receta de Roles define la correspondencia de `docs/features/` con carpetas de área y agrupadas por acceso; `HarnessTests` empieza a verificarla en esta etapa.
 
 **Puerta:** la general, más dos pruebas:
 - **Probar la receta:** un subagente sin contexto sigue `agregar-un-area.md` y agrega un área de prueba (por ejemplo `Tags`) sin preguntar nada que la guía no responda. Se corrige la guía y se descarta el área.

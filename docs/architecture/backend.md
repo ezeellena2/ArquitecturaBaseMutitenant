@@ -370,7 +370,7 @@ Api/
 - **`AppHost/AppHost.cs`:**
   - `AddPostgres("postgres", password, port: 5434)`, con un volumen persistente `arquitecturabase-multitenant-pgdata` y `ContainerLifetime.Persistent`.
   - `AddDatabase("appdb")`.
-  - Api en `https://localhost:7280` (ArquitecturaBase usa 7180, así los dos pueden correr a la vez), con dos cadenas: `appdb`, del login de runtime `mt_app`, y `appdb-admin`, del dueño, solo en Development.
+  - Api en `https://localhost:7280` (ArquitecturaBase usa 7180, así los dos pueden correr a la vez). En [E0] recibe `appdb` de Aspire. En [E2], `appdb` pasa al login de runtime `mt_app` y se agrega `appdb-admin`, del dueño, solo en Development.
   - `AddViteApp("front", "../../../ArquitecturaBaseMutitenantFront")` en https 5174.
   - DevTunnel opcional para el webhook de WhatsApp.
 - **`ServiceDefaults/Extensions.cs`:** como la base (OpenTelemetry, resiliencia, service discovery, `/health` y `/alive`).
