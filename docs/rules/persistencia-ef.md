@@ -7,6 +7,7 @@
   - hereda de `Entity` (Id Guid v7);
   - tiene constructor privado para EF, fábrica estática que valida con `ArgumentException` (un bug) y métodos que devuelven `Result` (reglas);
   - sus propiedades son `private set`.
+- **Excepción de referencias globales:** las once entidades de `Domain/ReferenceData` usan las claves naturales `Code`/`Id` y las claves compuestas de traducciones y `TimeZoneCountries`, como fija [`datos-de-referencia.md` §2](../architecture/datos-de-referencia.md#2-las-tablas-esquema-platform-globales-sin-rls). No heredan de `Entity` ni reciben Guid artificial; viven en `platform` sin RLS.
 - **Configuración:**
   - `internal sealed class XConfiguration : IEntityTypeConfiguration<X>` en `Configurations/<Esquema>/`;
   - enums como texto (`HasConversion<string>().HasMaxLength(n)`) y `decimal` con `HasPrecision`;
