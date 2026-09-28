@@ -33,10 +33,11 @@ El resultado tiene que servir para empezar productos reales.
    - los "Copiá de" marcados con esta etapa ya apuntan a archivos reales;
    - `HarnessTests` y `harness.test.ts` están en verde; `HarnessStage` se sube al cerrar la etapa y exige los tests nombrados en las fichas hasta esa etapa.
 8. `aspire stop` si se levantó el AppHost.
+9. Desde la E3, si la etapa programa pantallas: **comparación visual con el lienzo**. Por cada pantalla y cada estado de su tablero en `docs/design/lienzo/`, una captura de la pantalla real y otra del tablero, las dos a 1440 × 900 y a 390 × 844 (Playwright), guardadas en `docs/design/capturas/etapa-N/`. Tienen que coincidir: la estructura, los textos, el orden, los colores (tokens de tema.md), los controles y los estados. Cualquier diferencia se corrige, o se anota con su motivo en el informe de la etapa para que el usuario la apruebe. **No se inventa nada que el tablero no tenga:** ni campos, ni textos, ni pantallas, ni acciones. Si falta algo, se dibuja primero.
 
 **Forma de trabajo:**
 - Commits chicos, en español, con conventional commits. **Cada tarea termina en un commit.**
-- En el front, toda pantalla se dibuja y el usuario la aprueba antes de programarla.
+- En el front, toda pantalla se dibuja y el usuario la aprueba antes de programarla. **Las pantallas ya aprobadas son los tableros de `docs/design/lienzo/`:** se programan copiando su estructura, sus textos y sus estados.
 
 ---
 
