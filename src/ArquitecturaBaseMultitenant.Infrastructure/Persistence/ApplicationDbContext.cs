@@ -1,5 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Rls;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -23,6 +25,8 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
 
     protected ITenantContext TenantContext { get; }
 
+    internal Guid? ActiveTenantId => TenantContext.TenantId;
+
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -35,8 +39,11 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
         builder.Ignore<IdentityUserLogin<Guid>>();
         builder.Ignore<IdentityUserToken<Guid>>();
         builder.Ignore<IdentityUserPasskey<Guid>>();
+        builder.Ignore<IdentityPasskeyData>();
 
         builder.HasDefaultSchema(Schemas.Platform);
         builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+        builder.ApplyIsolationQueryFilters(this);
+        TenantIsolationModelValidator.Validate(builder.Model);
     }
 }

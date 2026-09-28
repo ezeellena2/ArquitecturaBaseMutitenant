@@ -1105,6 +1105,8 @@ tests/
 │   │   ├── OpenApiTests.cs                            [E1] cada operación de /api declara su 2xx con esquema y sus errores ProblemDetails; Swagger solo en Development
 │   │   └── OpenApiContractTests.cs                    [E1] openapi.json al día
 │   ├── Persistence/                                   [E2]
+│   │   ├── DbContextModelTests.cs                     [E2] contexto único, DataProtection en platform e Identity sin tablas
+│   │   ├── ModelFiltersTests.cs                       [E2] filtros con nombre y clasificación de las tres clases
 │   │   ├── ReferenceDataSeederTests.cs                [E2] upsert, segundo arranque, zona compartida y deshabilitación sin borrar
 │   │   ├── UnitOfWorkTests.cs
 │   │   ├── PaginationTests.cs                         orden estable, página fuera de rango, sort no permitido
