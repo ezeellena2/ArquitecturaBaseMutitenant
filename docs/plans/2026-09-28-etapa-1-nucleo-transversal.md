@@ -266,9 +266,9 @@ No quedan preguntas técnicas pendientes. Según AGENTS.md, una duda nueva se re
 
 **Archivos:** crear `tests/ArquitecturaBaseMultitenant.ArchitectureTests/ReferenceDataHardcodeTests.cs` (nuevo); ajustar solo código E1 que la prueba descubra. No hay archivo equivalente en ArquitecturaBase.
 **Respaldo:** datos-de-referencia.md §§1, 3–4 y 8; rules/datos-de-referencia.md “Prohibido” y “Lo verifica”; arbol.md back “ArchitectureTests”; plan maestro “Reglas para todas las etapas”.
-- [ ] Escribir la guarda para detectar listas, `enum`, `switch` y comparaciones de códigos ISO/IANA/culturas fuera de los JSON/tests y demostrar rojo con una violación temporal, retirada antes del commit.
-- [ ] Quitar hardcodes de E1 y ejecutar R/ReferenceDataHardcodeTests en verde; conservar los defaults como datos del catálogo.
-- [ ] Commit back: test: impedir catálogos escritos en código
+- [x] Escribir la guarda para detectar listas, `enum`, `switch` y comparaciones de códigos ISO/IANA/culturas fuera de los JSON/tests y demostrar rojo con una violación temporal, retirada antes del commit.
+- [x] Quitar hardcodes de E1 y ejecutar R/ReferenceDataHardcodeTests en verde; conservar los defaults como datos del catálogo.
+- [x] Commit back: test: impedir catálogos escritos en código
 
 ## Tareas frontend
 

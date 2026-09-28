@@ -160,16 +160,16 @@ public sealed class DisplayFormatter(
         var bytes = input.GetDecimal();
         var magnitude = Math.Abs(bytes);
         var (divisor, unit) = magnitude >= 1_000_000_000_000m
-            ? (1_000_000_000_000m, "TB")
+            ? (1_000_000_000_000m, "FileSize.TB")
             : magnitude >= 1_000_000_000m
-                ? (1_000_000_000m, "GB")
+                ? (1_000_000_000m, "FileSize.GB")
                 : magnitude >= 1_000_000m
-                    ? (1_000_000m, "MB")
+                    ? (1_000_000m, "FileSize.MB")
                     : magnitude >= 1_000m
-                        ? (1_000m, "KB")
-                        : (1m, "B");
+                        ? (1_000m, "FileSize.KB")
+                        : (1m, "FileSize.B");
         return FormatNumber(bytes / divisor, 0, divisor == 1m ? 0 : 1, profile)
-            + FormattingTexts.Get("FileSize." + unit, profile.Culture);
+            + FormattingTexts.Get(unit, profile.Culture);
     }
 
     private static string FormatDuration(JsonElement input, CultureProfile profile)
