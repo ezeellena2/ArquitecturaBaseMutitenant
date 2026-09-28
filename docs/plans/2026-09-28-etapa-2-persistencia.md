@@ -38,7 +38,7 @@
 
 ### Tarea 2. Estados puros de organización y miembro
 
-**Archivos:** crear `src/ArquitecturaBaseMultitenant.Domain/Tenancy/{Tenant,TenantKind,TenantStatus,TenantErrors,Member,MemberStatus,MemberErrors,AccessErrors}.cs`; `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Tenancy/{TenantTests,MemberTests}.cs`; punteros de `Domain/Tenancy`.
+**Archivos:** crear `src/ArquitecturaBaseMultitenant.Domain/Tenancy/{Tenant,TenantKind,TenantStatus,TenantErrors,Member,MemberStatus,MemberErrors,AccessErrors}.cs`; `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Tenancy/{TenantTests,MemberTests}.cs`; agregar las claves nuevas a `src/ArquitecturaBaseMultitenant.Application/Resources/{Errors,Errors.en}.resx`; punteros de `Domain/Tenancy`.
 
 **Respaldo:** plan maestro E2.1; `arbol.md` Domain/Tenancy; `multitenancy.md` §§2, 7; fichas `multitenancy.md`, `result-y-errores.md`.
 

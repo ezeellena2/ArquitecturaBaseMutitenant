@@ -68,4 +68,14 @@
   <data name="Legal.AcceptanceRequired" xml:space="preserve"><value>Aceptá los términos vigentes para continuar.</value></data>
   <data name="ReferenceData.Currency.Invalid" xml:space="preserve"><value>Ingresá un código de moneda válido.</value></data>
   <data name="ReferenceData.Culture.Invalid" xml:space="preserve"><value>Ingresá una cultura válida.</value></data>
+  <data name="Tenancy.Tenant.Suspended" xml:space="preserve"><value>La organización está suspendida.</value></data>
+  <data name="Tenancy.Tenant.PendingApproval" xml:space="preserve"><value>La organización espera aprobación.</value></data>
+  <data name="Tenancy.Tenant.Provisioning" xml:space="preserve"><value>La organización se está preparando.</value></data>
+  <data name="Tenancy.Tenant.Closed" xml:space="preserve"><value>La organización está cerrada.</value></data>
+  <data name="Tenancy.Tenant.InvalidTransition" xml:space="preserve"><value>La organización no puede pasar a ese estado.</value></data>
+  <data name="Tenancy.Member.Inactive" xml:space="preserve"><value>Tu acceso a esta organización está deshabilitado.</value></data>
+  <data name="Tenancy.Member.InvalidTransition" xml:space="preserve"><value>La membresía no puede pasar a ese estado.</value></data>
+  <data name="Tenancy.Access.Wrong" xml:space="preserve"><value>Este acceso no permite realizar la acción.</value></data>
+  <data name="Tenancy.Access.NotMember" xml:space="preserve"><value>No sos miembro de esta organización.</value></data>
+  <data name="Tenancy.Access.ConsumerCannotCreateBusiness" xml:space="preserve"><value>Para crear una organización, usá «Registrá tu empresa».</value></data>
 </root>
