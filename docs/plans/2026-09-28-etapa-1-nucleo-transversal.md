@@ -250,9 +250,9 @@ No quedan preguntas técnicas pendientes. Según AGENTS.md, una duda nueva se re
 
 **Archivos:** crear src/ArquitecturaBaseMultitenant.Api/Idempotency/{IdempotentAttribute.cs,AGENTS.md,CLAUDE.md}; tests/ArquitecturaBaseMultitenant.ArchitectureTests/IdempotentActionsTests.cs (nuevo).
 **Respaldo:** plan maestro §Etapa 1, Back 12; arbol.md back “Piezas P6”; rules/idempotencia.md; arnes.md back §3.
-- [ ] Probar que todo POST con respuesta 201/202 declara la marca; R/IdempotentActionsTests en rojo con caso de control.
-- [ ] Crear solo el atributo, sin filtro/tabla/worker E2; repetir en verde.
-- [ ] Commit back: feat: marcar acciones idempotentes
+- [x] Probar que todo POST con respuesta 201/202 declara la marca; R/IdempotentActionsTests en rojo con caso de control.
+- [x] Crear solo el atributo, sin filtro/tabla/worker E2; repetir en verde.
+- [x] Commit back: feat: marcar acciones idempotentes
 
 ### Tarea 25. Guardas de arquitectura del núcleo
 
