@@ -130,9 +130,9 @@ No quedan preguntas técnicas pendientes. Según AGENTS.md, una duda nueva se re
 
 **Archivos:** crear src/ArquitecturaBaseMultitenant.Domain/ValueObjects/Email.cs ← ../ArquitecturaBase/src/ArquitecturaBase.Domain/ValueObjects/Email.cs (adaptar NFC/IDN); PhoneNumber.cs ← archivo homónimo base; src/ArquitecturaBaseMultitenant.Domain/Users/{EmailErrors,PhoneErrors}.cs (nuevos); tests/ArquitecturaBaseMultitenant.Domain.UnitTests/ValueObjects/{EmailTests,PhoneNumberTests}.cs ← homónimos de ../ArquitecturaBase/tests/ArquitecturaBase.Domain.UnitTests/ValueObjects/; tests/ArquitecturaBaseMultitenant.ArchitectureTests/EmailPropertyTests.cs (nuevo).
 **Respaldo:** plan maestro §Etapa 1, Back 11; arbol.md back “Domain/ValueObjects”, “Domain/Users” y “Piezas P3”; rules/emails.md, rules/telefonos.md.
-- [ ] Tests de correo normalizado/IDN, con casos de correo del format-cases.json, error Users.Email.Invalid, E.164 y propiedades sin correo suelto; D/EmailTests, D/PhoneNumberTests y R/EmailPropertyTests en rojo.
-- [ ] Copiar/adaptar tipos y errores; repetir en verde.
-- [ ] Commit back: feat: definir correo y teléfono normalizados
+- [x] Tests de correo normalizado/IDN, con casos de correo del format-cases.json, error Users.Email.Invalid, E.164 y propiedades sin correo suelto; D/EmailTests, D/PhoneNumberTests y R/EmailPropertyTests en rojo.
+- [x] Copiar/adaptar tipos y errores; repetir en verde.
+- [x] Commit back: feat: definir correo y teléfono normalizados
 
 ### Tarea 10. Culturas, resources y paridad
 
