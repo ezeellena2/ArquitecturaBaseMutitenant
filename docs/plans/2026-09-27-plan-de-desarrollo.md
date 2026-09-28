@@ -87,12 +87,12 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
 ### Tarea 0.1: repo y archivos de raíz (back)
 - [x] `.gitignore`: la plantilla de VisualStudio más `.local/`, `*.env`, `**/appsettings.*.local.json` y `.artifacts/`.
 - [x] `global.json`, `Directory.Build.props`, `Directory.Packages.props` (copiados de ArquitecturaBase y completados con los paquetes que falten, según backend.md §1), `BannedSymbols.txt`, `.editorconfig` y `aspire.config.json`.
-- [ ] Commit `chore: archivos de raíz y análisis estático`.
+- [x] Commit `chore: archivos de raíz y análisis estático`.
 
 ### Tarea 0.2: proyectos y referencias
-- [ ] `ArquitecturaBaseMultitenant.slnx` con los 6 proyectos de `src/` y los 4 de `tests/`, y las referencias de la tabla de capas.
-- [ ] `tests/Directory.Build.props` (xunit.v3, OutputType Exe).
-- [ ] `dotnet build` sin advertencias. Commit `chore: solución y proyectos`.
+- [x] `ArquitecturaBaseMultitenant.slnx` con los 6 proyectos de `src/` y los 4 de `tests/`, y las referencias de la tabla de capas.
+- [x] `tests/Directory.Build.props` (xunit.v3, OutputType Exe).
+- [x] `dotnet build` sin advertencias. Commit `chore: solución y proyectos`.
 
 ### Tarea 0.3: Aspire y health
 - [ ] Copiar `ServiceDefaults/Extensions.cs` de la base.

@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\ArquitecturaBaseMultitenant.Application\ArquitecturaBaseMultitenant.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Identity (UserManager, SignInManager), Data Protection y autenticación son parte de ASP.NET Core. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" />
+    <PackageReference Include="MailKit" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
+    <PackageReference Include="OpenIddict.EntityFrameworkCore" />
+    <PackageReference Include="OpenIddict.Server.AspNetCore" />
+    <PackageReference Include="OpenIddict.Validation.AspNetCore" />
+    <PackageReference Include="OpenIddict.Validation.ServerIntegration" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" />
+    <PackageReference Include="libphonenumber-csharp" />
+    <!-- El cliente de WhatsApp reemplaza la resiliencia estándar de ServiceDefaults por una que no reintenta los POST. -->
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ArquitecturaBaseMultitenant.Api.IntegrationTests" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <!-- Los .resx sin sufijo están en español. -->
+    <NeutralLanguage>es</NeutralLanguage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Nombre fijo: "EmailTemplates.<archivo>", sin depender de cómo MSBuild arma el nombre desde la carpeta. -->
+    <EmbeddedResource Include="Emails\Templates\*.html" LogicalName="EmailTemplates.%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

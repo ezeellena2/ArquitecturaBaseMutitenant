@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Los .resx sin sufijo están en español. -->
+    <NeutralLanguage>es</NeutralLanguage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ArquitecturaBaseMultitenant.Domain\ArquitecturaBaseMultitenant.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+    <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ArquitecturaBaseMultitenant.Application.UnitTests" />
+    <!-- Los tests de integración emiten enlaces de ingreso con LoginLinkIssuer, sin pasar por el bot. -->
+    <InternalsVisibleTo Include="ArquitecturaBaseMultitenant.Api.IntegrationTests" />
+  </ItemGroup>
+</Project>

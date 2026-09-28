@@ -1,0 +1,17 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.5.4">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <UserSecretsId>dfdf2a75-d636-4ea7-ad5d-bb5ecfcee388</UserSecretsId>
+    <AspireUseCliBundle>true</AspireUseCliBundle>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.DevTunnels" />
+    <PackageReference Include="Aspire.Hosting.JavaScript" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ArquitecturaBaseMultitenant.Api\ArquitecturaBaseMultitenant.Api.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+</Project>

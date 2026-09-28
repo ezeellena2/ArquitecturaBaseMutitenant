@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="NetArchTest.Rules" />
+    <PackageReference Include="Mono.Cecil" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ArquitecturaBaseMultitenant.Domain\ArquitecturaBaseMultitenant.Domain.csproj" />
+    <ProjectReference Include="..\..\src\ArquitecturaBaseMultitenant.Application\ArquitecturaBaseMultitenant.Application.csproj" />
+    <ProjectReference Include="..\..\src\ArquitecturaBaseMultitenant.Infrastructure\ArquitecturaBaseMultitenant.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\ArquitecturaBaseMultitenant.Api\ArquitecturaBaseMultitenant.Api.csproj" />
+  </ItemGroup>
+</Project>

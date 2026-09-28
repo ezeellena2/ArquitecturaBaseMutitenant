@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ArquitecturaBaseMultitenant.Api/ArquitecturaBaseMultitenant.Api.csproj" />
+    <Project Path="src/ArquitecturaBaseMultitenant.AppHost/ArquitecturaBaseMultitenant.AppHost.csproj" />
+    <Project Path="src/ArquitecturaBaseMultitenant.Application/ArquitecturaBaseMultitenant.Application.csproj" />
+    <Project Path="src/ArquitecturaBaseMultitenant.Domain/ArquitecturaBaseMultitenant.Domain.csproj" />
+    <Project Path="src/ArquitecturaBaseMultitenant.Infrastructure/ArquitecturaBaseMultitenant.Infrastructure.csproj" />
+    <Project Path="src/ArquitecturaBaseMultitenant.ServiceDefaults/ArquitecturaBaseMultitenant.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj" />
+    <Project Path="tests/ArquitecturaBaseMultitenant.Application.UnitTests/ArquitecturaBaseMultitenant.Application.UnitTests.csproj" />
+    <Project Path="tests/ArquitecturaBaseMultitenant.ArchitectureTests/ArquitecturaBaseMultitenant.ArchitectureTests.csproj" />
+    <Project Path="tests/ArquitecturaBaseMultitenant.Domain.UnitTests/ArquitecturaBaseMultitenant.Domain.UnitTests.csproj" />
+  </Folder>
+</Solution>

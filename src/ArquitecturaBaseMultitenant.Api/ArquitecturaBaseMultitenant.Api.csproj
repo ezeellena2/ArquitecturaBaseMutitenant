@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <UserSecretsId>c4a6c457-e035-4525-9016-e348c3ff7302</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ArquitecturaBaseMultitenant.Application\ArquitecturaBaseMultitenant.Application.csproj" />
+    <ProjectReference Include="..\ArquitecturaBaseMultitenant.Infrastructure\ArquitecturaBaseMultitenant.Infrastructure.csproj" />
+    <ProjectReference Include="..\ArquitecturaBaseMultitenant.ServiceDefaults\ArquitecturaBaseMultitenant.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" />
+    <PackageReference Include="OpenIddict.Server.AspNetCore" />
+    <PackageReference Include="OpenIddict.Validation.AspNetCore" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ArquitecturaBaseMultitenant.Api.IntegrationTests" />
+  </ItemGroup>
+</Project>
