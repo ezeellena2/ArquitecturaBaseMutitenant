@@ -33,10 +33,10 @@
 - `Infrastructure/Persistence/Configurations/Tenant/RoleConfiguration.cs`, `Repositories/RoleRepository.cs` y `Readers/RoleReader.cs` (E4)
 
 ## Lo verifica
-- `EntityConfigurationTests`, `DataClassificationTests`, `DecimalPrecisionTests`, `TextLimitsTests`.
-- `CollationTests`: orden real de "Álvarez", "Ñandú", "Nuñez" y "Zapata" contra la base de los tests (Testcontainers creada con ICU `es-AR`).
-- `MigrationsTests`: falla si falta una migración.
-- `RlsPolicyInventoryTests`, `SortIndexTests`, `TransactionBoundaryTests`.
+- `EntityConfigurationTests` (E2), `DataClassificationTests` (E2), `DecimalPrecisionTests` (E1), `TextLimitsTests` (E1).
+- `CollationTests` (E2): orden real de "Álvarez", "Ñandú", "Nuñez" y "Zapata" contra la base de los tests (Testcontainers creada con ICU `es-AR`).
+- `MigrationsTests` (E2): falla si falta una migración.
+- `RlsPolicyInventoryTests` (E2), `SortIndexTests` (E2), `TransactionBoundaryTests` (E2).
 
 ## Detalle
 [backend.md §9](../architecture/backend.md#9-persistencia)

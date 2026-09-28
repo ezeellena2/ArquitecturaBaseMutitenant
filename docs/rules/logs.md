@@ -18,8 +18,8 @@
 - `Application/Common/Logging/OperationLog.cs` (E1)
 
 ## Lo verifica
-- `CA1848` como warning con `TreatWarningsAsErrors`: un `logger.LogX` directo rompe el build.
-- Los contratos con datos sensibles sobrescriben `ToString()` (`ControllerInputContractTests`).
+- `CA1848` (E0) como warning con `TreatWarningsAsErrors`: un `logger.LogX` directo rompe el build.
+- Los contratos con datos sensibles sobrescriben `ToString()` (`ControllerInputContractTests` (E1)).
 
 ## Detalle
 [backend.md §17](../architecture/backend.md#17-logging-openapi-health-rate-limiting-caché)

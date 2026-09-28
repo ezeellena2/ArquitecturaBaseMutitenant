@@ -23,8 +23,8 @@
 - `Api/Idempotency/IdempotencyFilter.cs` (E2) · front `src/shared/api/useIdempotentMutation.ts` (E1).
 
 ## Lo verifica
-- `IdempotencyTests`: dos pedidos iguales en paralelo crean uno solo; el reintento devuelve la misma respuesta; otro cuerpo da 422; un 5xx libera la clave.
-- `IdempotentActionsTests` (arquitectura): todo `POST` que devuelve 201 o 202 tiene `[Idempotent]`.
+- `IdempotencyTests` (E2): dos pedidos iguales en paralelo crean uno solo; el reintento devuelve la misma respuesta; otro cuerpo da 422; un 5xx libera la clave.
+- `IdempotentActionsTests` (E1): todo `POST` que devuelve 201 o 202 tiene `[Idempotent]` (test de arquitectura).
 
 ## Detalle
 [backend.md §20](../architecture/backend.md#20-reglas-de-datos-que-se-aplican-solas)

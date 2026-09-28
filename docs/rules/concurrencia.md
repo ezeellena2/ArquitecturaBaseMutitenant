@@ -21,11 +21,11 @@
 - "El último que guarda gana" en silencio.
 
 ## Copiá de
-- `Domain/Common/IVersioned.cs` y `Infrastructure/Persistence/Configurations/Tenant/RoleConfiguration.cs` (E2 y E4).
+- `Domain/Common/IVersioned.cs` (E2) y `Infrastructure/Persistence/Configurations/Tenant/RoleConfiguration.cs` (E4).
 
 ## Lo verifica
-- `ConcurrencyTests`: dos ediciones con la misma versión, y la segunda da 409 sin cambiar nada.
-- `VersionedContractTests` (arquitectura): todo contrato de edición o borrado de una entidad `IVersioned` tiene `Version`.
+- `ConcurrencyTests` (E2): dos ediciones con la misma versión, y la segunda da 409 sin cambiar nada.
+- `VersionedContractTests` (E2): todo contrato de edición o borrado de una entidad `IVersioned` tiene `Version` (test de arquitectura).
 
 ## Detalle
 [backend.md §20](../architecture/backend.md#20-reglas-de-datos-que-se-aplican-solas) · front: `docs/rules/formularios.md`, "Ediciones simultáneas".

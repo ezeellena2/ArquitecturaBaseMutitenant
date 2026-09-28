@@ -21,10 +21,10 @@
 - La receta: [`docs/guides/agregar-un-area.md`](../guides/agregar-un-area.md) (E4).
 
 ## Lo verifica
-- `LayerDependencyTests`, `ProjectReferencesTests`, `ApplicationPackagesTests`: dependencias entre capas y paquetes permitidos.
-- `ControllerServiceRepositoryTests`: los controllers inyectan solo `I*Service`.
-- `ApplicationPublicApiTests`: sin `IQueryable` ni `Expression`.
-- `ApplicationServicesTests`, `ServiceDependencyCountTests`, `MinimalApiRoutesTests`.
+- `LayerDependencyTests` (E0), `ProjectReferencesTests` (E0), `ApplicationPackagesTests` (E0): dependencias entre capas y paquetes permitidos.
+- `ControllerServiceRepositoryTests` (E1): los controllers inyectan solo `I*Service`.
+- `ApplicationPublicApiTests` (E1): sin `IQueryable` ni `Expression`.
+- `ApplicationServicesTests` (E1), `ServiceDependencyCountTests` (E1), `MinimalApiRoutesTests` (E0).
 
 ## Detalle
 [backend.md §3–§5 y §7](../architecture/backend.md#3-capas-y-dependencias)

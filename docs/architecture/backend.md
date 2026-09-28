@@ -211,7 +211,7 @@ Application/
 │  ├─ Profile/                         ProfileService (cuenta, idioma, zona), DestinationCodeVerifier
 │  ├─ Legal/                           LegalService (documentos vigentes y aceptación), AccountDeletionService y AccountDeletionPolicy
 │  │                                   (pedir, cancelar y ejecutar la baja; el bloqueo del único Dueño, en E4), Participants/
-│  │                                   (espacio personal, aceptaciones y outbox; Memberships en E6, Recovery en E5, Engagement
+│  │                                   (espacio personal, aceptaciones, outbox y Memberships en E3; Recovery en E5, Engagement
 │  │                                   en E7); sus modelos y validadores van en Models/Legal/ y Validation/Legal/
 │  ├─ Organizations/                   BusinessSignupService ("Registrá tu empresa", alta B2B), BusinessSignupPolicy (modo de alta
 │  │                                   y límite por persona), TenantProvisioner (idempotente)
@@ -233,7 +233,7 @@ Application/
    ├─ Permissions.resx / .en.resx               Area.<x>, Permission.<code>, PermissionDescription.<code>, Role.<system>
    ├─ Notifications.resx / .en.resx             textos de correo y WhatsApp (asunto, cuerpo, bot)
    ├─ Audit.resx / .en.resx                     AuditAction.<code>, Entity.<tipo>
-   └─ ErrorMessages.cs, ValidationMessages.cs, PermissionTexts.cs, NotificationTexts.cs, AuditTexts.cs
+   └─ ErrorTexts.cs, ValidationTexts.cs, PermissionTexts.cs, NotificationTexts.cs, AuditTexts.cs
 ```
 
 `NeutralLanguage=es` y `InternalsVisibleTo` para Application.UnitTests y Api.IntegrationTests. Los servicios y helpers son `internal sealed partial`: `partial` porque llevan `[LoggerMessage]`.
@@ -507,7 +507,7 @@ El cuerpo es `application/problem+json` con `title` y `detail` traducidos, `code
 ### Validación
 
 - **Un solo `IRequestValidator`**, inyectado una vez por servicio: `Task<ValidationError?> ValidateAsync<T>(T request, CancellationToken ct)`. Resuelve los `IValidator<T>` y agrupa los errores por campo en camelCase con puntos.
-- Los validadores son `internal sealed`, en `Validation/<Área>`, y usan `ValidationRules` (`Required()`, `MaxLength()`, `ValidEmail()`, `ValidTimeZone()`, `ValidPermissions(scope)`), con mensajes de `ValidationMessages`.
+- Los validadores son `internal sealed`, en `Validation/<Área>`, y usan `ValidationRules` (`Required()`, `MaxLength()`, `ValidEmail()`, `ValidTimeZone()`, `ValidPermissions(scope)`), con mensajes de `ValidationTexts`.
 - `FieldErrors.On(error, "name")` ata un error de negocio a un campo del formulario.
 
 ---
@@ -617,7 +617,7 @@ La pantalla "Auditoría" de la organización lee `AuditEntries` paginadas y filt
 - Culturas soportadas: `es-AR` (por defecto) y `en-US`. Se agregan otras sumándolas a `SupportedCultures`.
 - La fuente en un request es `Accept-Language`: el front manda la cultura efectiva. `UseRequestLocalization` va antes de `UseExceptionHandler`.
 - En segundo plano (correo y WhatsApp), la cultura es `User.Culture` → `TenantSettings.DefaultCulture` → `es-AR`, y se pasa **explícita** (`NotificationTexts.Get(key, culture, args)`).
-- No se usa `IStringLocalizer`. Hay envoltorios estáticos sobre `ResourceManager`: `ErrorMessages`, `ValidationMessages`, `PermissionTexts`, `NotificationTexts` y `AuditTexts`.
+- No se usa `IStringLocalizer`. Hay envoltorios estáticos sobre `ResourceManager`: `ErrorTexts`, `ValidationTexts`, `PermissionTexts`, `NotificationTexts` y `AuditTexts`.
 - Toda clave va en los dos idiomas (`ResourceParityTests` compara claves y placeholders).
 - Textos en español rioplatense con voseo. Identificadores, logs y mensajes de excepción, en inglés.
 - **En pantalla nunca se dice "tenant"**: se dice "Organización". `TenantAdmin` se muestra como "Dueño" y `CompanyAdmin` como "Administrador". En el código sigue `Tenant`.
@@ -634,7 +634,7 @@ La pantalla "Auditoría" de la organización lee `AuditEntries` paginadas y filt
 - **El issuer es fijo** (el dominio principal). Desde un subdominio, `authorize` y `logout` son navegaciones al dominio principal, donde vive la cookie de `/connect`; el canje del código, la renovación y `userinfo` van a `/connect/*` del propio origen del subdominio (multitenancy.md §5).
 - Duraciones: código 5 min, access token 15 min, refresh 30 días con rotación. `EnableTokenEntryValidation` permite la revocación inmediata.
 - **Claims** (`OpenIdPrincipalFactory`): `sub`, `name`, `email`, `access` (`consumer` | `business` | `platform`) y el tenant del acceso activo: `tenant_id` y `tenant_kind` (`personal` | `business`). **Ni los permisos ni los roles viajan en el token**: se consultan en vivo, con caché.
-- **Ingreso sin contraseña**, igual que la base: código por correo o WhatsApp, enlace de un solo uso, y **Google**. **Autoregistro de personas** (`POST /api/auth/signup`, o el primer ingreso con Google), que crea la identidad y su espacio personal. Está abierto por defecto y se cierra con `PlatformSettings.ConsumerSignup` (`Open` | `Closed`; cerrado, el registro responde «Registro cerrado»). **Una persona no crea empresas:** el alta B2B es aparte (`POST /api/auth/business-signup`, "Registrá tu empresa") y la rigen `PlatformSettings.BusinessSignup` (`Open` | `RequiresApproval` | `Closed`) y el límite de organizaciones por persona (`MaxOwnedOrganizations`), con `BusinessSignupPolicy` (ADR 0020). Los correos salen por **Gmail (SMTP)**, también en desarrollo. La configuración usa las mismas claves que ArquitecturaBase y se carga con los scripts de `scripts/secretos/`: ver [`docs/operations/configuracion.md`](../operations/configuracion.md).
+- **Ingreso sin contraseña**, igual que la base: en la E3, código por correo y **Google**; el módulo de WhatsApp suma código por teléfono y enlace de un solo uso en la E8. **Autoregistro de personas** (`POST /api/auth/signup`, o el primer ingreso con Google), que crea la identidad y su espacio personal. Está abierto por defecto y se cierra con `PlatformSettings.ConsumerSignup` (`Open` | `Closed`; cerrado, el registro responde «Registro cerrado»). **Una persona no crea empresas:** el alta B2B es aparte (`POST /api/auth/business-signup`, "Registrá tu empresa") y la rigen `PlatformSettings.BusinessSignup` (`Open` | `RequiresApproval` | `Closed`) y el límite de organizaciones por persona (`MaxOwnedOrganizations`), con `BusinessSignupPolicy` (ADR 0020). Los correos salen por **Gmail (SMTP)**, también en desarrollo. La configuración usa las mismas claves que ArquitecturaBase y se carga con los scripts de `scripts/secretos/`: ver [`docs/operations/configuracion.md`](../operations/configuracion.md).
 - **Identidad global, dos accesos:** cada método de ingreso (`LoginMethods`: correo, teléfono o Google, tipo + valor) es único en todo el sistema, y una cuenta puede tener varios; `AspNetUsers.Email` y `PhoneNumber` son solo una copia del método principal (multitenancy.md §3.1 y §12). Una persona tiene **una** cuenta. Ingresa **como persona** (por "Ingresá", `/login`: su espacio personal y las páginas públicas) o **como empresa** (por "Ingresá como empresa", `/login/empresa`: sus organizaciones, en `/org`). No se vuelve "al último lado": se entra al de la puerta elegida. **Para cambiar de acceso o de organización** se pide `/connect/authorize?prompt=none&access=<consumer|business>&tenant=<id>`: `ConnectService` valida la membresía y emite tokens nuevos (multitenancy.md §3 y §10).
 - Cookies de Identity solo para `/account` y `/connect` (HttpOnly, Secure, SameSite Lax). La Api usa bearer.
 - En cada request autenticado, `TenantResolutionMiddleware` verifica (con caché de 60 s, invalidado al cambiar de estado) que la identidad, la membresía y el tenant del acceso activo estén activos. Suspender una organización revoca los tokens emitidos para ella; suspender una identidad, todos los suyos, en los dos accesos.
@@ -690,7 +690,7 @@ La estructura sigue el diseño de la Etapa 6 del plan maestro de `../Arquitectur
   - `ILoginCodeChannel` e `IInvitationChannel`: el núcleo trae el canal `"email"`. El módulo registra `"whatsapp"`. `LoginCodeChannel` e `InvitationChannel` son **valores**, no enums: el núcleo valida contra los canales registrados.
   - `IAccountNoticeChannel` (en `Application/Interfaces/Integrations/Messaging/`, Etapa 3), con el mismo patrón: recibe un `AccountNotice` cerrado (`LoginMethodChanged`, con qué pasó, el método enmascarado y la fecha; `ReviewLoginMethods`, con la organización; `DeletionRequested`, con la fecha; `DeletionCancelled`; `AccountDeleted`; y los de «Recuperar mi cuenta», al método nuevo: `RecoveryReceived`, `RecoveryApproved` y `RecoveryRejected`). Cada implementación atiende un tipo de método: el núcleo trae la de `Email` (canal `"email"`) y el módulo registra la de `Phone` (canal `"whatsapp"`). Sin el módulo, los teléfonos no reciben aviso, y no es un error. Siempre sale por el outbox, cifrado. "Exportación lista" sale solo por correo.
   - `IPhoneLinkObserver`: la cuenta y la administración avisan que cambió un teléfono, y el módulo suelta el contacto e invalida los enlaces.
-  - El teléfono como dato de la cuenta e `IPhoneNumberParser` siguen en el núcleo. `PhoneUsage` queda en `Any | Mobile` y no nombra WhatsApp (`Mobile`: solo celular, para el ingreso y el registro con teléfono y el teléfono de la cuenta).
+  - El teléfono como dato de la cuenta e `IPhoneNumberParser` siguen en el núcleo. `PhoneUsage` queda en `Any | Mobile` y no nombra WhatsApp (`Mobile`: solo celular). En la E3 `Phone` es solo modelo; el ingreso, registro y la gestión de un teléfono se habilitan al registrar el canal del módulo en la E8.
 - **Países de WhatsApp:** los controla el módulo en sus adaptadores y flujos (código por WhatsApp, vínculo y registro por WhatsApp), con `WhatsApp:AllowedCountries`, que se lee solo dentro de `Modules/WhatsApp`, y un error propio del módulo sobre el campo `phone`. Se controla solo para un número **nuevo**: achicar la lista no invalida un número existente. `GET /api/auth/methods` (núcleo) devuelve los canales encendidos con un formato neutro, y el módulo aporta sus países (`channels: [{ key: "whatsapp", countries: [...] }]`).
 - **Carpetas:**
   - `Domain/WhatsApp`;
@@ -775,7 +775,7 @@ Nadie formatea a mano. El catálogo visual completo (cómo se ve cada tipo) est�
 
 ### Formato del lado del backend
 
-- `Application/Common/Formatting/DisplayFormatter.cs` (BCL pura, `CultureInfo`) expone `Date`, `DateTime`, `Time`, `DateLong`, `Integer`, `Decimal`, `Money`, `Percent`, `Phone`, `TaxId` y `Empty`, siempre con la **cultura y la zona explícitas**.
+- `Application/Common/Formatting/DisplayFormatter.cs` (BCL pura, `CultureInfo`) expone en E1 `Date`, `DateTime`, `Time`, `DateLong`, `Integer`, `Decimal`, `Money`, `Percent`, `Phone` y `Empty`; suma `TaxId` en E6, junto con el value object. Siempre recibe la **cultura y la zona explícitas**.
 - Lo usan las plantillas de correo, los textos de WhatsApp y las exportaciones.
 - `DisplayFormatterTests` recorre `docs/contracts/format-cases.json`; el front corre el mismo archivo. Si los dos lados no producen el mismo texto, falla el CI.
 
@@ -784,7 +784,7 @@ Nadie formatea a mano. El catálogo visual completo (cómo se ve cada tipo) est�
 ## 19. Front y hosting
 
 - El SPA vive en `../ArquitecturaBaseMutitenantFront`. El SPA y la Api se sirven desde el **mismo origen en cada host**, el dominio principal y cada `<slug>.plataforma.com`: en producción desde wwwroot, con DNS y certificado comodín; en desarrollo, con el proxy de Vite por host (`*.localtest.me`). **No hay CORS**, tampoco en los subdominios.
-- `BackendPrefixes` es una lista a mano, y se atiende igual en todos los hosts: `/api`, `/account`, `/connect`, `/.well-known`, `/webhooks`, `/health` y `/alive`. Un prefijo nuevo se suma ahí, al `SpaHostingTests` y al `server.proxy` de `vite.config.ts`.
+- `BackendPrefixes` es una lista a mano, y se atiende igual en todos los hosts: `/api`, `/account`, `/connect`, `/signin-google`, `/.well-known`, `/webhooks`, `/health` y `/alive`. Un prefijo nuevo se suma ahí, al `SpaHostingTests` y al `server.proxy` de `vite.config.ts`.
 - La arquitectura del front está en `../ArquitecturaBaseMutitenantFront/docs/architecture/frontend.md`.
 
 ---
@@ -805,4 +805,4 @@ Estándares adoptados el 2026-09-27 (P1 a P8 de [`estandares.md`](estandares.md)
 | Términos y privacidad | `LegalDocuments` versionados, `LegalAcceptances`, `LegalAcceptanceMiddleware` | [datos-personales](../rules/datos-personales.md) |
 | Módulos por organización | `Microsoft.FeatureManagement` + `TenantFeatureFilter` + `[FeatureGate]` (404 si está apagado) | [modulos-habilitados](../rules/modulos-habilitados.md) |
 
-**Pipeline:** `LegalAcceptanceMiddleware` va después de `TenantResolutionMiddleware` y antes de `UseAuthorization`. `IdempotencyFilter` y `[FeatureGate]` son filtros de MVC, así que corren en la acción.
+**Pipeline:** `LegalAcceptanceMiddleware` va después de `TenantResolutionMiddleware` y antes de `UseAuthorization`; actúa solo con identidades autenticadas, nunca en rutas anónimas. `IdempotencyFilter` y `[FeatureGate]` son filtros de MVC, así que corren en la acción.

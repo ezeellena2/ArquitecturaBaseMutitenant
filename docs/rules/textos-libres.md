@@ -34,9 +34,9 @@
 - `Application/Common/Text/TextNormalizer.cs` y `Api/Json/NormalizedStringJsonConverter.cs` (E1).
 
 ## Lo verifica
-- `TextNormalizerTests`: "José" con el acento separado es igual a "José", "Grupo  La Cosecha " queda "Grupo La Cosecha", y caracteres de ancho cero.
-- `NormalizedInputTests` (integración): un POST con esos textos guarda el valor limpio.
-- `TextLimitsTests` (arquitectura): ningún `HasMaxLength` ni `MaxLength` con un número literal.
+- `TextNormalizerTests` (E1): "José" con el acento separado es igual a "José", "Grupo  La Cosecha " queda "Grupo La Cosecha", y caracteres de ancho cero.
+- `NormalizedInputTests` (E1): un POST con esos textos guarda el valor limpio (integración).
+- `TextLimitsTests` (E1): ningún `HasMaxLength` ni `MaxLength` con un número literal (arquitectura).
 
 ## Detalle
 [backend.md §20](../architecture/backend.md#20-reglas-de-datos-que-se-aplican-solas)

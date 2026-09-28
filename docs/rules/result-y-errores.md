@@ -32,9 +32,9 @@ public static Error HasUsers(int userCount) => Error.Conflict(HasUsersCode, "The
 - `Domain/Authorization/RoleErrors.cs` (E4) · `Api/ErrorHandling/ControllerResultExtensions.cs` (E1)
 
 ## Lo verifica
-- `ErrorCodeTests`: toda clave de `Errors.resx` sigue el formato `Area.Entidad.Motivo`, salvo las de `ReservedKeys`, que además tienen que seguir existiendo en el resx; y cada código declarado tiene su clave.
-- `ResourceParityTests`: la misma clave en es y en.
-- `ErrorHandlingTests`, `FrameworkErrorsTests`: status y forma del ProblemDetails.
+- `ErrorCodeTests` (E1): toda clave de `Errors.resx` sigue el formato `Area.Entidad.Motivo`, salvo las de `ReservedKeys`, que además tienen que seguir existiendo en el resx; y cada código declarado tiene su clave.
+- `ResourceParityTests` (E1): la misma clave en es y en.
+- `ErrorHandlingTests` (E1), `FrameworkErrorsTests` (E1): status y forma del ProblemDetails.
 
 ## Detalle
 [backend.md §6](../architecture/backend.md#6-result-pattern-y-manejo-de-errores)

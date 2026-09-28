@@ -45,42 +45,42 @@ Por eso cada carpeta lleva los dos archivos: el `CLAUDE.md` solo importa el `AGE
 - enlace a la sección de backend.md o multitenancy.md
 ```
 
-Una ficha sin "Lo verifica" está **incompleta**. Un archivo de "Copiá de" o un test de "Lo verifica" que nace en una etapa posterior lleva la marca `(E#)` de la etapa donde nace, y `HarnessTests` lo exige recién cuando esa etapa cierra. Si la regla todavía no tiene un test previsto en ninguna etapa, se escribe `Pendiente: <test que falta>` y se suma a una etapa del plan, y desde ahí pasa a llevar `(E#)`.
+Una ficha sin "Lo verifica" está **incompleta**. Todo test de "Lo verifica" lleva la marca `(E#)` de la etapa donde nace; también la lleva un archivo de "Copiá de" que nace en una etapa posterior. `HarnessTests` exige su existencia recién cuando esa etapa cierra. Si la regla todavía no tiene un test previsto en ninguna etapa, se escribe `Pendiente: <test que falta>` y se suma a una etapa del plan, y desde ahí pasa a llevar `(E#)`.
 
 ## 3. Mapa de carpetas → punteros
 
-Cada fila es una carpeta que lleva `AGENTS.md` + `CLAUDE.md`. Los punteros se escriben **al crear la carpeta**, en la misma tarea, en la etapa del plan donde nace. Rutas relativas a `src/ArquitecturaBaseMultitenant.<Proyecto>/`.
+Cada fila es una carpeta que lleva `AGENTS.md` + `CLAUDE.md`. Los punteros se escriben **al crear la carpeta**, en la misma tarea, en la etapa del plan donde nace. La primera parte de cada ruta indica la capa: `Domain/X` significa `src/ArquitecturaBaseMultitenant.Domain/X`, `Application/X` significa `src/ArquitecturaBaseMultitenant.Application/X`, y lo mismo para Infrastructure y Api.
 
 | Carpeta | Qué va / qué no | Fichas | Copiá de |
 |---|---|---|---|
-| `Domain/` | entidades, value objects, `<X>Errors`, catálogos. Sin paquetes, sin EF ni Identity | capas-y-flujo, result-y-errores, persistencia-ef | `Domain/Authorization/Role.cs` |
+| `Domain/` | entidades, value objects, `<X>Errors`, catálogos. Sin paquetes, sin EF ni Identity | capas-y-flujo, result-y-errores, persistencia-ef | `Domain/Authorization/Role.cs` (E4) |
 | `Domain/Common/` | `Entity`, `ValueObject`; marcas `IAuditable`, `ISoftDeletable`, `IVersioned` y las de las tres clases de datos: `ITenantOwned` (+ `ICompanyOwned`), `IPublishedByBusiness`, `IConsumerBusinessShared`; `Party`/`PartyPolicy`, `NotAuditedAttribute` y `TextLimits`. **No** se agregan marcas sin ADR | multitenancy, auditoria, concurrencia, textos-libres | — |
-| `Domain/ValueObjects/` | `Money`, `Email`, `PhoneNumber`, `TaxId`: un dato con forma propia es un value object, nunca un `string` suelto | numeros-y-moneda, emails, telefonos, identificacion-fiscal | `Money.cs`, `Email.cs` |
-| `Domain/Features/` | catálogo de módulos | modulos-habilitados | `Features.cs` |
+| `Domain/ValueObjects/` | `Money`, `Email`, `PhoneNumber`, `TaxId`: un dato con forma propia es un value object, nunca un `string` suelto | numeros-y-moneda, emails, telefonos, identificacion-fiscal | `Money.cs`, `Email.cs` (E1) |
+| `Domain/Features/` | catálogo de módulos | modulos-habilitados | `Features.cs` (E5) |
 | `Domain/<Módulo>/` | entidades y `<X>Errors` del módulo (hoy `Domain/WhatsApp/`); se borra junto con sus `Modules/` | modulos | — |
-| `Application/Services/` | servicio + helpers (`Policy`, `Guard`, `Issuer`, `Verifier`, `Linker`) | guardado, result-y-errores, validacion, logs, multitenancy | `Services/Roles/RoleService.cs` |
-| `Application/Interfaces/Services/` | una interfaz por servicio; lo único que inyecta un controller | capas-y-flujo | `IRoleService.cs` |
-| `Application/Interfaces/Persistence/` | `I<X>Repository` (escribe), `I<X>Reader` (lee), `IUnitOfWork`, `ITenantScope`. Nada de `IQueryable` | persistencia-ef, paginado-y-busqueda | `IRoleRepository.cs`, `IRoleReader.cs` |
+| `Application/Services/` | servicio + helpers (`Policy`, `Guard`, `Issuer`, `Verifier`, `Linker`) | guardado, result-y-errores, validacion, logs, multitenancy | `Services/Roles/RoleService.cs` (E4) |
+| `Application/Interfaces/Services/` | una interfaz por servicio; lo único que inyecta un controller | capas-y-flujo | `IRoleService.cs` (E4) |
+| `Application/Interfaces/Persistence/` | `I<X>Repository` (escribe), `I<X>Reader` (lee), `IUnitOfWork`, `ITenantScope`. Nada de `IQueryable` | persistencia-ef, paginado-y-busqueda | `IRoleRepository.cs`, `IRoleReader.cs` (E4) |
 | `Application/Interfaces/Integrations/` | puertos a lo externo, por tema | capas-y-flujo, modulos | — |
-| `Application/Models/` | `*Request`, `*Response`, `ReadModels/*Row`; montos en `Money`, fechas `*Utc`/`DateOnly` | numeros-y-moneda, fechas-y-zonas, paginado-y-busqueda | `Models/Roles/` |
-| `Application/Validation/` | un validador por request, con `ValidationRules` | validacion, textos-y-traducciones | `CreateRoleRequestValidator.cs` |
-| `Application/Resources/` | `.resx` es + en; la clave de un error es su código | textos-y-traducciones | `Errors.resx` |
+| `Application/Models/` | `*Request`, `*Response`, `ReadModels/*Row`; montos en `Money`, fechas `*Utc`/`DateOnly` | numeros-y-moneda, fechas-y-zonas, paginado-y-busqueda | `Models/Roles/` (E4) |
+| `Application/Validation/` | un validador por request, con `ValidationRules` | validacion, textos-y-traducciones | `CreateRoleRequestValidator.cs` (E4) |
+| `Application/Resources/` | `.resx` es + en; la clave de un error es su código | textos-y-traducciones | `Errors.resx` (E1) |
 | `Application/Common/Formatting/` | `DisplayFormatter` y perfiles de cultura. **Único** lugar que formatea en el back | numeros-y-moneda, fechas-y-zonas | — |
-| `Application/Modules/<Módulo>/` | un módulo quitable; el núcleo no lo referencia | modulos | `Modules/WhatsApp/` |
-| `Infrastructure/Persistence/Configurations/<Esquema>/` | una `IEntityTypeConfiguration` por entidad; `decimal` con precisión; enums como texto | persistencia-ef, numeros-y-moneda, multitenancy | `Tenant/RoleConfiguration.cs` |
-| `Infrastructure/Persistence/Migrations/` | se generan con el comando de la guía; cada tabla nueva llama al helper RLS de su clase (`EnableTenantRls`, `EnablePublicRls` o `EnablePartiesRls`) + índices del `SortMap` | persistencia-ef, multitenancy, paginado-y-busqueda | `docs/guides/migracion.md` |
-| `Infrastructure/Persistence/Repositories/` | EF para escribir un agregado; exige la transacción del caso de uso | guardado, persistencia-ef | `RoleRepository.cs` |
-| `Infrastructure/Persistence/Readers/` | proyecciones `AsNoTracking` → `*Row`; `SortMap`, `ApplySearch`, `ToPagedResultAsync` | paginado-y-busqueda, multitenancy | `RoleReader.cs` |
+| `Application/Modules/<Módulo>/` | un módulo quitable; el núcleo no lo referencia | modulos | `Modules/WhatsApp/` (E8) |
+| `Infrastructure/Persistence/Configurations/<Esquema>/` | una `IEntityTypeConfiguration` por entidad; `decimal` con precisión; enums como texto | persistencia-ef, numeros-y-moneda, multitenancy | `Tenant/RoleConfiguration.cs` (E4) |
+| `Infrastructure/Persistence/Migrations/` | se generan con el comando de la guía; cada tabla nueva llama al helper RLS de su clase (`EnableTenantRls`, `EnablePublicRls` o `EnablePartiesRls`) + índices del `SortMap` | persistencia-ef, multitenancy, paginado-y-busqueda | `docs/guides/migracion.md` (E2) |
+| `Infrastructure/Persistence/Repositories/` | EF para escribir un agregado; exige la transacción del caso de uso | guardado, persistencia-ef | `RoleRepository.cs` (E4) |
+| `Infrastructure/Persistence/Readers/` | proyecciones `AsNoTracking` → `*Row`; `SortMap`, `ApplySearch`, `ToPagedResultAsync` | paginado-y-busqueda, multitenancy | `RoleReader.cs` (E4) |
 | `Infrastructure/Persistence/Readers/Platform/` | **única** lista blanca para ignorar el filtro `"Tenant"` | multitenancy | — |
-| `Infrastructure/Features/` | filtro de módulos por tenant | modulos-habilitados | `TenantFeatureFilter.cs` |
+| `Infrastructure/Features/` | filtro de módulos por tenant | modulos-habilitados | `TenantFeatureFilter.cs` (E5) |
 | `Infrastructure/Modules/<Módulo>/` | adaptadores del módulo | modulos | — |
 | `Api/Modules/<Módulo>/` | lo HTTP del módulo (su `*ApiModule`, controllers como el del webhook, convención de rutas condicional); el núcleo no lo referencia | modulos | — |
-| `Api/Controllers/` | controllers finos: contrato → servicio → `ToActionResult`; `[Access]` + permiso, `[PublicSite]` (subdominio de una organización publicada) o solo `[AllowAnonymous]` si el controller está en la lista de `AccessDeclarationTests` | api-http, permisos, multitenancy | `Organization/RolesController.cs` |
-| `Api/Contracts/` | `*HttpRequest` / `*Query`, props nullable, `ToString()` sin datos personales; los de edición y borrado traen `version` | api-http, paginado-y-busqueda, concurrencia | `Organization/CreateRoleHttpRequest.cs` |
-| `Api/Idempotency/` | `[Idempotent]` y su filtro; nada más va acá | idempotencia | `IdempotencyFilter.cs` |
-| `Api/Json/` | conversores globales (UTC, `Money`, texto normalizado) | textos-libres, fechas-y-zonas, numeros-y-moneda | `NormalizedStringJsonConverter.cs` |
-| `tests/*.Application.UnitTests/Services/` | tests del servicio con dobles a mano | tests | `Services/Roles/RoleServiceWriteTests.cs` |
-| `tests/*.Api.IntegrationTests/` | rutas + aislamiento entre tenants | tests, multitenancy | `Organization/RolesTests.cs` |
+| `Api/Controllers/` | controllers finos: contrato → servicio → `ToActionResult`; `[Access]` + permiso, `[PublicSite]` (subdominio de una organización publicada) o solo `[AllowAnonymous]` si el controller está en la lista de `AccessDeclarationTests` | api-http, permisos, multitenancy | `Organization/RolesController.cs` (E4) |
+| `Api/Contracts/` | `*HttpRequest` / `*Query`, props nullable, `ToString()` sin datos personales; los de edición y borrado traen `version` | api-http, paginado-y-busqueda, concurrencia | `Organization/CreateRoleHttpRequest.cs` (E4) |
+| `Api/Idempotency/` | `[Idempotent]` y su filtro; nada más va acá | idempotencia | `IdempotencyFilter.cs` (E2) |
+| `Api/Json/` | conversores globales (UTC, `Money`, texto normalizado) | textos-libres, fechas-y-zonas, numeros-y-moneda | `NormalizedStringJsonConverter.cs` (E1) |
+| `tests/*.Application.UnitTests/Services/` | tests del servicio con dobles a mano | tests | `Services/Roles/RoleServiceWriteTests.cs` (E4) |
+| `tests/*.Api.IntegrationTests/` | rutas + aislamiento entre tenants | tests, multitenancy | `Organization/RolesTests.cs` (E4) |
 
 **Ejemplo de puntero** (`Application/Services/AGENTS.md`):
 
@@ -88,7 +88,7 @@ Cada fila es una carpeta que lleva `AGENTS.md` + `CLAUDE.md`. Los punteros se es
 Servicios de casos de uso. Uno por área, con sus helpers (`Policy`, `Guard`, `Issuer`, `Verifier`, `Linker`).
 No va acá: EF, HttpContext ni tipos de Infrastructure o Api.
 Antes de escribir, leé: docs/rules/guardado.md · result-y-errores.md · validacion.md · logs.md · multitenancy.md
-Copiá de: Services/Roles/RoleService.cs (el área de referencia).
+Copiá de: Services/Roles/RoleService.cs (E4, el área de referencia).
 ```
 
 **Carpeta de un área** (`Services/Roles/`, `Models/Roles/`, `Validation/Roles/`, `Domain/Authorization/`…): no es una fila del mapa. Lleva un `AGENTS.md` de una línea, "Antes de tocar esto, leé `docs/features/<área>.md`", más su `CLAUDE.md`, y se escribe cuando nace ese documento: Roles es la primera, en la Etapa 4. Las carpetas que se agrupan por acceso y no por área (`Api/Controllers/Organization/`, `Api/Contracts/Organization/`, `tests/*.Api.IntegrationTests/Organization/`) juntan varias áreas: su puntero lleva una línea por área, cada una con su `docs/features/<área>.md`, como `Api/Controllers/AGENTS.md` de ArquitecturaBase.
@@ -105,7 +105,7 @@ La tabla está solo en el [`AGENTS.md` raíz](../../AGENTS.md#antes-de-escribir-
 3. una ficha no tiene las secciones del formato (§2), o su "Lo verifica" nombra un test que no existe, salvo que lleve `(E#)` de una etapa que todavía no cerró o diga `Pendiente:`;
 4. el `AGENTS.md` raíz pasa las 120 líneas, o un puntero pasa las 8.
 
-La última etapa cerrada la conoce `HarnessTests`, y se actualiza en la puerta de cada etapa (plan, puerta 7).
+La última etapa cerrada vive en una sola constante del arnés, `HarnessStage`, que usa `HarnessTests` y se actualiza en la puerta de cada etapa (plan, puerta 7). Mientras la etapa de un enlace o test no haya cerrado, su ausencia no falla; cuando cierra, sí.
 
 Así, mover un archivo modelo o renombrar un test rompe el build hasta que se actualiza la guía: la documentación no puede quedar vieja en silencio.
 

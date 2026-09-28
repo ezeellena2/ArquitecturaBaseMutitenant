@@ -24,10 +24,10 @@
 - `Application/Modules/WhatsApp/WhatsAppModule.cs` (E8) · la guía [`quitar-whatsapp.md`](../guides/quitar-whatsapp.md) (E8)
 
 ## Lo verifica
-- `ModuleIsolationTests`.
+- `ModuleIsolationTests` (E8).
 - La prueba de fuego de la Etapa 8: quitar el módulo y que el núcleo siga en verde.
-- `WhatsAppWebhookTests` (firma, idempotencia, 413, 401).
-- El test del catálogo de plantillas: cada plantilla configurada y el orden de sus variables.
+- `WhatsAppWebhookTests` (E8): firma, idempotencia, 413, 401.
+- `WhatsAppTemplateCatalogTests` (E8): cada plantilla configurada y el orden de sus variables.
 
 ## Detalle
 [backend.md §15](../architecture/backend.md#15-whatsapp-un-módulo-quitable) · ADR 0007

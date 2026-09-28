@@ -32,10 +32,10 @@
 - `Api/Controllers/Organization/RolesController.cs` y `Api/Contracts/Organization/*Role*` (E4)
 
 ## Lo verifica
-- `ControllerInputContractTests`, `ControllerServiceRepositoryTests`, `MinimalApiRoutesTests`.
-- `AccessDeclarationTests`: toda ruta declara `[Access]` o `[PublicSite]`; una con solo `[AllowAnonymous]` pasa únicamente si su controller está en la lista explícita del test.
-- `ExplicitRouteInventoryTests`: cada ruta con su test.
-- `OpenApiContractTests`: openapi.json al día. `OpenApiTests`: esquema de éxito y de errores.
+- `ControllerInputContractTests` (E1), `ControllerServiceRepositoryTests` (E1), `MinimalApiRoutesTests` (E0).
+- `AccessDeclarationTests` (E3): toda ruta declara `[Access]` o `[PublicSite]`; una con solo `[AllowAnonymous]` pasa únicamente si su controller está en la lista explícita del test.
+- `ExplicitRouteInventoryTests` (E1): cada ruta con su test.
+- `OpenApiContractTests` (E1): openapi.json al día. `OpenApiTests` (E1): esquema de éxito y de errores.
 
 ## Detalle
 [backend.md §5 y §17](../architecture/backend.md#controller) · ADR 0002

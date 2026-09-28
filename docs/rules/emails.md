@@ -27,10 +27,10 @@
 - `Domain/ValueObjects/Email.cs` (E1), que parte del de `../ArquitecturaBase` y le suma la normalización.
 
 ## Lo verifica
-- `EmailTests`: la tabla de casos de `format-cases.json` (`"  Juan@Gmail.COM "` → `juan@gmail.com`, IDN, límites).
-- `EmailPropertyTests` (arquitectura): ninguna entidad ni modelo tiene una propiedad `string` llamada `*Email`, salvo `ApplicationUser.Email`, que está en su lista blanca.
-- `SignupTests`: dos registros que solo difieren en mayúsculas dan `Auth.Signup.EmailTaken`.
-- `LoginMethodsTests` y `ManagedEmailTests`: cada correo es único en todo el sistema, y un exmiembro no puede ingresar con el correo de la empresa.
+- `EmailTests` (E1): la tabla de casos de `format-cases.json` (`"  Juan@Gmail.COM "` → `juan@gmail.com`, IDN, límites).
+- `EmailPropertyTests` (E1): ninguna entidad ni modelo tiene una propiedad `string` llamada `*Email`, salvo `ApplicationUser.Email`, que está en su lista blanca (test de arquitectura).
+- `SignupTests` (E3): dos registros que solo difieren en mayúsculas dan `Auth.Signup.EmailTaken`.
+- `LoginMethodsTests` (E3) verifica la unicidad de cada correo; `ManagedEmailTests` (E6) comprueba que un exmiembro no pueda ingresar con el correo de la empresa.
 
 ## Detalle
 [backend.md §20](../architecture/backend.md#20-reglas-de-datos-que-se-aplican-solas)

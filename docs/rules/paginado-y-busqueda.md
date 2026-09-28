@@ -31,9 +31,9 @@
 - `Infrastructure/Persistence/Readers/RoleReader.cs` y `Application/Models/Roles/ListRolesRequest.cs` (E4)
 
 ## Lo verifica
-- `PaginationTests`, `CursorPaginationTests`, `SearchTests`.
-- `SortIndexTests`: índice por cada campo de un `SortMap`.
-- `PagedRequestValidatorTests`.
+- `PaginationTests` (E2), `CursorPaginationTests` (E2), `SearchTests` (E2).
+- `SortIndexTests` (E2): índice por cada campo de un `SortMap`.
+- `PagedRequestValidatorTests` (E1).
 
 ## Detalle
 [backend.md §9, "Paginado, orden y búsqueda"](../architecture/backend.md#paginado-orden-y-búsqueda)

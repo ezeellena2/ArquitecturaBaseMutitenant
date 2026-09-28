@@ -14,6 +14,7 @@
 - **Ruta nueva:** fila en `ExplicitRouteInventoryTests`, test de éxito, errores, 401/403 y **un test de aislamiento** (el id de otro tenant da 404).
 - **Datos de prueba:** se preparan dentro de un límite real (`factory.InTransactionAsync`).
 - Lo que existe solo para probar va en `TestFeatures/`, nunca en `src/`.
+- Para aislar `Widget`, `Poster` y `Deal`, la fixture aplica primero las migraciones reales y después llama a `IsolationSchema.ApplyAsync(connection)` del proyecto de tests. Ese helper crea sus tablas con SQL generado por las mismas plantillas de `RlsSql`: `EnableTenantRls`, `EnablePublicRls` y `EnablePartiesRls`. Estas tablas no llevan migraciones productivas.
 - `TestContext.Current.CancellationToken` en lugar de `CancellationToken.None`.
 
 ## Prohibido
@@ -25,8 +26,8 @@
 - `Application.UnitTests/Services/Roles/RoleServiceWriteTests.cs` y `Api.IntegrationTests/Organization/RolesTests.cs` (E4)
 
 ## Lo verifica
-- CI: build + test en cada push.
-- `ExplicitRouteInventoryTests`: una ruta sin su fila falla.
+- CI (E0): build + test en cada push; chequeo de contratos desde la E1.
+- `ExplicitRouteInventoryTests` (E1): una ruta sin su fila falla.
 
 ## Detalle
 [backend.md §4.6](../architecture/backend.md#46-tests)

@@ -31,8 +31,8 @@
 - `Infrastructure/Features/TenantFeatureFilter.cs` (E5) · la guía [`agregar-un-area.md`](../guides/agregar-un-area.md) (E4), paso "¿es un módulo?" (E5).
 
 ## Lo verifica
-- `FeatureGateTests`: un módulo apagado da 404 y prendido da 200; el apagado de emergencia gana sobre la organización.
-- `ModuleControllersTests` (arquitectura): todo controller fuera del núcleo (el núcleo incluye `PublicSite/` y `Organization/PublicPageAdminController`) tiene `[FeatureGate]` con una clave del catálogo.
+- `FeatureGateTests` (E5): un módulo apagado da 404 y prendido da 200; el apagado de emergencia gana sobre la organización.
+- `ModuleControllersTests` (E5): todo controller fuera del núcleo (el núcleo incluye `PublicSite/` y `Organization/PublicPageAdminController`) tiene `[FeatureGate]` con una clave del catálogo (test de arquitectura).
 
 ## Detalle
 [backend.md §20](../architecture/backend.md#20-reglas-de-datos-que-se-aplican-solas) · front: `docs/rules/accesos-y-permisos.md`

@@ -23,10 +23,10 @@
 - `Domain/ValueObjects/Money.cs` (E1) · `Application/Common/Formatting/DisplayFormatter.cs` (E1) · `docs/contracts/format-cases.json` (E1)
 
 ## Lo verifica
-- `DecimalPrecisionTests`: ningún `decimal` sin precisión y ningún `double` o `float` en entidades.
-- `MoneyTests`, `MoneyJsonTests`.
-- `DisplayFormatterTests`: los mismos casos que el front.
-- `NoManualFormattingTests`.
+- `DecimalPrecisionTests` (E1): ningún `decimal` sin precisión y ningún `double` o `float` en entidades.
+- `MoneyTests` (E1), `MoneyJsonTests` (E1).
+- `DisplayFormatterTests` (E1): los mismos casos que el front.
+- `NoManualFormattingTests` (E1).
 
 ## Detalle
 [backend.md §18](../architecture/backend.md#18-representación-y-formato-de-datos-unificado) · catálogo visual en el front: `docs/architecture/formatos.md`

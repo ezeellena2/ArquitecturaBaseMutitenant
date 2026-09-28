@@ -49,7 +49,7 @@ P1 a P10 se adoptaron el 2026-09-27. Su fila está en el §1; acá, la etapa en 
 | P4 | **Sí, en E1.** Barato, y evita duplicados como "Grupo  La Cosecha" | 0025 |
 | P5 | **Sí, en E6** (la empresa ya tiene CUIT en el lienzo) | 0025 |
 | P6 | **Sí, en E1**, al menos para altas e invitaciones | 0026 |
-| P7 | **Sí, en E3**, parte 3b (términos y privacidad aceptados en el registro, punto 6d; baja de la cuenta, punto 6e) y E10 (exportar mis datos) | 0027 y 0035 (la baja) |
+| P7 | **Sí, en E3**: aceptación base de términos y privacidad en el registro (3a), bloqueo ante una versión nueva (3b) y baja de la cuenta; E10 suma exportar mis datos | 0027 y 0035 (la baja) |
 | P8 | **Sí, en E5.** Es la base para vender módulos B2B y B2C por separado | 0028 |
 | P9 | **Sí, en E0** (una línea por test de pantalla) | 0029 |
 | P10 | **Sí, en E1** (front, punto 8: `DataTable` con columnas `mobile`, `FilterBar`, `Dialog` como hoja y `columns-mobile.test.ts`) y en E7 (el B2C se dibuja primero a 390 px). Los tableros del teléfono (M-*, a 390 px) ya están en el lienzo | 0029 |

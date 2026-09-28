@@ -30,7 +30,7 @@
 
 ## Lo verifica
 - `LibPhoneNumberParserTests` (E3): el 9 argentino, números con 0 y 15, letras rechazadas, fijo contra celular. El país no permitido para WhatsApp lo prueban los tests del módulo (E8).
-- `PhoneNumberTests` (Domain) y `DisplayFormatterTests` (E1), con los casos de teléfono de `docs/contracts/format-cases.json`, los mismos que corre el front.
+- `PhoneNumberTests` (E1) de Domain y `DisplayFormatterTests` (E1), con los casos de teléfono de `docs/contracts/format-cases.json`, los mismos que corre el front.
 
 ## Detalle
 El componente y el formato en pantalla: `../ArquitecturaBaseMutitenantFront/docs/rules/telefonos.md`.

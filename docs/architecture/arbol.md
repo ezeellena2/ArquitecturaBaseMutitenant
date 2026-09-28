@@ -8,7 +8,7 @@
 ArquitecturaBaseMutitenant/
 ├── .github/
 │   └── workflows/
-│       └── ci.yml                                    [E0] build + test (Docker) + verificación de docs/contracts/openapi.json
+│       └── ci.yml                                    [E0] build + test (Docker); desde la E1 verifica docs/contracts/openapi.json
 ├── docs/
 │   ├── architecture/
 │   │   ├── backend.md                                arquitectura canónica
@@ -110,13 +110,13 @@ ArquitecturaBaseMultitenant.Domain/
 │   ├── LoginCodeChannel.cs                          valor ("email", …): los módulos suman canales (IsKnown lo valida)
 │   ├── LoginCodePurpose.cs                           Login | Signup | VerifyDestination | Reauthenticate (lo usa ReauthVerifier)
 │   ├── LoginCodeDestination.cs
-│   ├── LoginLink.cs
-│   ├── LoginMethod.cs                                entidad de identity.LoginMethods (ADR 0033, parte 3b): Type, Value único por tipo, IsPrimary, VerifiedAtUtc, ManagedByTenantId?
-│   ├── LoginMethodType.cs                            Email | Phone | Google
+│   ├── LoginLink.cs                                 [E8]
+│   ├── LoginMethod.cs                                entidad de identity.LoginMethods (ADR 0033, parte 3a): Type, Value único por tipo, IsPrimary, VerifiedAtUtc, ManagedByTenantId?
+│   ├── LoginMethodType.cs                            Email | Phone | Google; Phone es solo modelo hasta que WhatsApp registra su canal en la E8
 │   ├── LoginAudit.cs
 │   ├── LoginAuditMethod.cs                           Code | Google | WhatsAppCode | WhatsAppLink: con qué se entró; lo usa LoginAudit (en ArquitecturaBase se llama LoginMethod)
 │   ├── LoginCodeErrors.cs                            Auth.LoginCode.*
-│   ├── LoginLinkErrors.cs                            Auth.LoginLink.*
+│   ├── LoginLinkErrors.cs                            [E8] Auth.LoginLink.*
 │   ├── SignupErrors.cs                               Auth.Signup.* (cerrado, email tomado…)
 │   └── AccountErrors.cs                              Identity.Account.* (LockedOut, Suspended, PendingDeletion con la fecha y el cancelTicket)
 ├── Authorization/                                    [E4]
@@ -195,7 +195,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   └── OperationLog.cs                           LogHandling/LogHandled/LogFailed con [LoggerMessage]
 │   ├── Formatting/                                   [E1] presentación unificada del lado del back (backend.md §18)
 │   │   ├── DisplayFormatter.cs                       Date, DateTime, Time, DateLong, Integer, Decimal, Money, Percent,
-│   │   │                                             Phone, TaxId, Empty; siempre con cultura y zona explícitas
+│   │   │                                             Phone, Empty; siempre con cultura y zona explícitas; TaxId se suma en la E6
 │   │   ├── CultureProfiles.cs                        es-AR y en-US: patrones, 24/12 h, separadores (espejo del front)
 │   │   └── SupportedCultures.cs                      es-AR (por defecto), en-US
 │   └── Exceptions/
@@ -203,7 +203,7 @@ ArquitecturaBaseMultitenant.Application/
 ├── Configuration/                                    [E3]
 │   ├── Auth/                                         [E3]
 │   │   ├── LoginCodeOptions.cs
-│   │   ├── LoginLinkOptions.cs
+│   │   ├── LoginLinkOptions.cs                       [E8]
 │   │   ├── SignupOptions.cs
 │   │   └── InvitationOptions.cs
 │   └── Messaging/
@@ -264,10 +264,10 @@ ArquitecturaBaseMultitenant.Application/
 │   │   └── IAuditEntryReader.cs                     [E6]
 │   └── Integrations/
 │       ├── Request/                                  [E2–E3]
-│       │   ├── ICurrentUser.cs                       UserId, Access (Consumer | Business | Platform)
-│       │   ├── ITenantContext.cs                     TenantId, TenantKind, RequiredTenantId (del acceso activo)
-│       │   ├── IRequestInfo.cs                       IP, user agent
-│       │   └── IPublicOrigin.cs                      origen público para armar enlaces
+│       │   ├── ICurrentUser.cs                       [E3] UserId, Access (Consumer | Business | Platform)
+│       │   ├── ITenantContext.cs                     [E2] TenantId, TenantKind, RequiredTenantId (del acceso activo)
+│       │   ├── IRequestInfo.cs                       [E3] IP, user agent
+│       │   └── IPublicOrigin.cs                      [E3] origen público para armar enlaces
 │       ├── Identity/                                 [E3–E4]
 │       │   ├── ISignInService.cs                     técnico: sign-in, bloqueos, revocar sesiones (≤12 miembros)
 │       │   ├── IUserLookup.cs                        búsqueda global por email o teléfono
@@ -303,11 +303,11 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── RequestLoginCodeResponse.cs
 │   │   ├── VerifyLoginCodeRequest.cs
 │   │   ├── VerifyLoginCodeResponse.cs
-│   │   ├── RequestLoginLinkRequest.cs
-│   │   ├── ConsumeLoginLinkRequest.cs
-│   │   ├── LoginLinkPreviewResponse.cs
-│   │   ├── LoginMethodsResponse.cs                   respuesta de GET /api/auth/methods: canales encendidos en formato neutro; el módulo
-│   │   │                                             suma sus países (channels: [{ key: "whatsapp", countries: [...] }])
+│   │   ├── RequestLoginLinkRequest.cs                [E8]
+│   │   ├── ConsumeLoginLinkRequest.cs                [E8]
+│   │   ├── LoginLinkPreviewResponse.cs               [E8]
+│   │   ├── LoginMethodsResponse.cs                   respuesta de GET /api/auth/methods: canales encendidos en formato neutro; en E3, correo y Google;
+│   │   │                                             en E8, el módulo suma WhatsApp y sus países (channels: [{ key: "whatsapp", countries: [...] }])
 │   │   ├── ConnectUser.cs                            identidad + acceso y tenant elegidos, para armar el principal
 │   │   ├── AccessSelectionRequest.cs                 acceso (consumer|business) y tenant pedidos en authorize
 │   │   └── ReturnUrls.cs
@@ -396,7 +396,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── VerifySignupRequestValidator.cs
 │   │   ├── RequestLoginCodeRequestValidator.cs
 │   │   ├── VerifyLoginCodeRequestValidator.cs
-│   │   └── RequestLoginLinkRequestValidator.cs
+│   │   └── RequestLoginLinkRequestValidator.cs      [E8]
 │   ├── Invitations/                                  [E3]
 │   │   └── AcceptInvitationRequestValidator.cs
 │   ├── Profile/                                      [E3]
@@ -439,8 +439,8 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── LoginCodeService.cs
 │   │   ├── LoginCodeIssuer.cs
 │   │   ├── LoginCodeVerifier.cs
-│   │   ├── LoginLinkService.cs
-│   │   ├── LoginLinkIssuer.cs
+│   │   ├── LoginLinkService.cs                       [E8]
+│   │   ├── LoginLinkIssuer.cs                        [E8]
 │   │   ├── ConnectService.cs
 │   │   ├── AccessSwitchPolicy.cs                     acceso pedido válido: membresía activa (B2B) o identidad activa (B2C)
 │   │   ├── UserCultures.cs                           cultura efectiva para mensajes en segundo plano
@@ -519,16 +519,16 @@ ArquitecturaBaseMultitenant.Application/
     ├── Validation.resx                               [E1]
     ├── Validation.en.resx
     ├── Permissions.resx                              [E4] Area.*, Permission.*, PermissionDescription.*, Role.*
-    ├── Permissions.en.resx
+    ├── Permissions.en.resx                          [E4]
     ├── Notifications.resx                            [E3] asuntos y cuerpos de correo (también los avisos de la cuenta por correo)
-    ├── Notifications.en.resx
+    ├── Notifications.en.resx                        [E3]
     ├── Audit.resx                                    [E6] AuditAction.*, Entity.*
-    ├── Audit.en.resx
-    ├── ErrorMessages.cs
-    ├── ValidationMessages.cs
-    ├── PermissionTexts.cs
-    ├── NotificationTexts.cs                          con cultura explícita
-    └── AuditTexts.cs
+    ├── Audit.en.resx                                [E6]
+    ├── ErrorTexts.cs                                [E1]
+    ├── ValidationTexts.cs                           [E1]
+    ├── PermissionTexts.cs                           [E4]
+    ├── NotificationTexts.cs                         [E3] con cultura explícita
+    └── AuditTexts.cs                                [E6]
 ```
 
 ## src/ArquitecturaBaseMultitenant.Infrastructure `[E0]`
@@ -555,6 +555,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   │   └── SecurityEventConfiguration.cs          [E3]
 │   │   ├── Identity/
 │   │   │   ├── ApplicationUserConfiguration.cs        [E3] Email y PhoneNumber sin índice único (copia del método principal)
+│   │   │   ├── LoginMethodConfiguration.cs            [E3] 3a: índice único (Type, Value)
 │   │   │   ├── LoginCodeConfiguration.cs              [E3]
 │   │   │   ├── LoginLinkConfiguration.cs              [E8]
 │   │   │   └── LoginAuditConfiguration.cs             [E3]
@@ -633,6 +634,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │       ├── SeedOptions.cs                             [E3] Seed:PlatformOwner
 │       ├── OpenIddictSeeder.cs                        [E3] cliente web + scope api
 │       ├── PlatformSeeder.cs                          [E3] ajustes de plataforma + operador inicial (Seed:PlatformOwner); la E5 le asigna el rol Owner
+│       ├── LegalDocumentSeeder.cs                     [E3] 3a: versión base de términos y privacidad, con contenidos es y en
 │       └── DevelopmentSeeder.cs                       [E3] operador; Empresa A (Ana, Kevin); Kevin y Carla como personas; desde la E4, Ana
 │                                                      es Dueña (TenantAdmin) de la Empresa A
 ├── Identity/                                          [E3]
@@ -672,7 +674,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │           ├── SignupCode.html
 │           ├── Invitation.html
 │           ├── LoginMethodChanged.html                método agregado, quitado o principal cambiado; va a todos los métodos (multitenancy.md §3.1)
-│           ├── ReviewLoginMethods.html                membresía terminada: "Revisá tus métodos de ingreso"
+│           ├── ReviewLoginMethods.html                [E6] membresía terminada: "Revisá tus métodos de ingreso"
 │           ├── AccountDeletionRequested.html
 │           ├── AccountDeletionCancelled.html
 │           ├── AccountDeleted.html                    va al método principal y se encola antes de borrar los métodos (multitenancy.md §3.2)
@@ -772,8 +774,8 @@ ArquitecturaBaseMultitenant.Api/
 │   │   ├── ConnectController.cs                       authorize (access=, tenant=), token, logout, userinfo
 │   │   ├── SignupController.cs                        POST /api/auth/signup, /verify
 │   │   ├── LoginCodeController.cs
-│   │   ├── LoginLinkController.cs
-│   │   ├── LoginMethodsController.cs                  GET /api/auth/methods [AllowAnonymous]: canales encendidos (Google con su ClientId; WhatsApp con los países que aporta el módulo)
+│   │   ├── LoginLinkController.cs                    [E8]
+│   │   ├── LoginMethodsController.cs                  GET /api/auth/methods [AllowAnonymous]: en E3, correo y Google; WhatsApp aparece en E8 con los países del módulo
 │   │   ├── InvitationsController.cs                   [AllowAnonymous] POST /api/invitations/preview (el token, en el cuerpo) y POST /api/invitations/accept
 │   │   └── ExternalLoginController.cs                 [E3]
 │   ├── Account/
@@ -802,8 +804,8 @@ ArquitecturaBaseMultitenant.Api/
 │   │   ├── VerifySignupHttpRequest.cs
 │   │   ├── RequestLoginCodeHttpRequest.cs
 │   │   ├── VerifyLoginCodeHttpRequest.cs
-│   │   ├── RequestLoginLinkHttpRequest.cs
-│   │   ├── ConsumeLoginLinkHttpRequest.cs
+│   │   ├── RequestLoginLinkHttpRequest.cs            [E8]
+│   │   ├── ConsumeLoginLinkHttpRequest.cs            [E8]
 │   │   ├── PreviewInvitationHttpRequest.cs
 │   │   └── AcceptInvitationHttpRequest.cs
 │   ├── Account/
@@ -923,13 +925,13 @@ tests/
 │   │   └── DisplayFormatterTests.cs                   [E1] recorre docs/contracts/format-cases.json
 │   ├── Resources/                                     [E1]
 │   │   ├── ResourceParityTests.cs                     claves y placeholders es = en
-│   │   ├── ErrorMessagesTests.cs
+│   │   ├── ErrorTextsTests.cs
 │   │   └── PermissionTextsTests.cs                    [E4]
 │   ├── Services/                                      [E3]
 │   │   ├── Auth/                                      [E3]
 │   │   │   ├── AccountServiceTests.cs                 el registro crea identidad + espacio personal
 │   │   │   ├── LoginCodeServiceTests.cs
-│   │   │   ├── LoginLinkServiceTests.cs
+│   │   │   ├── LoginLinkServiceTests.cs              [E8]
 │   │   │   ├── ConnectServiceTests.cs
 │   │   │   └── AccessSwitchPolicyTests.cs  
 │   │   ├── Invitations/
@@ -956,15 +958,15 @@ tests/
 │   │   └── Modules/WhatsApp/                        [E8]
 │   │       ├── WhatsAppInboundServiceTests.cs
 │   │       └── BotReplyTests.cs
-│   └── TestDoubles/                                   [E1]
-│       ├── FakeUnitOfWork.cs                          misma CommitPolicy; cuenta commits y rollbacks
-│       ├── FakeTenantContext.cs
-│       ├── FakeCurrentUser.cs
-│       ├── FakeOutbox.cs
-│       ├── FakePermissionService.cs
-│       ├── FakeSignInService.cs
-│       ├── ServiceFixture.cs                          FakeTimeProvider + FakeLogger + RequestValidator real
-│       └── InMemory/                                  un InMemory<X>Repository por puerto que se use en tests
+│   └── TestDoubles/                                   [E1–E6] cada fake nace con la interfaz que implementa
+│       ├── FakeUnitOfWork.cs                          [E2] misma CommitPolicy; cuenta commits y rollbacks
+│       ├── FakeTenantContext.cs                       [E2]
+│       ├── FakeCurrentUser.cs                         [E3]
+│       ├── FakeOutbox.cs                              [E3]
+│       ├── FakePermissionService.cs                   [E4]
+│       ├── FakeSignInService.cs                       [E3]
+│       ├── ServiceFixture.cs                          [E1] FakeTimeProvider + FakeLogger + RequestValidator real
+│       └── InMemory/                                  [E2–E6] cada InMemory<X>Repository se etiqueta al incorporarlo, en la etapa de su puerto
 │
 ├── ArquitecturaBaseMultitenant.Api.IntegrationTests/  [E0]
 │   ├── ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj
@@ -987,6 +989,8 @@ tests/
 │   │       ├── Poster.cs                              IPublishedByBusiness: la referencia de un dato público
 │   │       ├── Deal.cs                                IConsumerBusinessShared + PartyPolicy: la referencia de un dato compartido
 │   │       ├── IsolationModelCustomizer.cs
+│   │       ├── IsolationSchema.cs                    [E2] tras las migraciones reales, ApplyAsync(connection) crea estas tablas con las plantillas
+│   │       │                                          de RlsSql (EnableTenantRls, EnablePublicRls, EnablePartiesRls), sin migraciones productivas
 │   │       ├── WidgetsController.cs                   [E2] el 409 de ConcurrencyTests; [Access(Business)] desde la E3
 │   │       ├── PostersController.cs                   [E7] [PublicSite]
 │   │       ├── DealsController.cs                     [E7] [Access(Consumer)] + [Access(Business)]: el flujo persona → empresa con PartyPolicy
@@ -1013,6 +1017,8 @@ tests/
 │   │   ├── UtcDateTimeTests.cs                        [E1]
 │   │   ├── DateOnlyTimeOnlyTests.cs                   [E1]
 │   │   └── MoneyJsonTests.cs                          [E1] { amount, currency }; moneda inválida → 400
+│   ├── Phones/                                        [E3]
+│   │   └── LibPhoneNumberParserTests.cs               parseo de números argentinos y validación de celular
 │   ├── Hosting/                                       [E0–E1]
 │   │   ├── HealthCheckTests.cs                        [E0]
 │   │   ├── SpaHostingTests.cs                         [E1]
@@ -1037,10 +1043,10 @@ tests/
 │   ├── Auth/                                          [E3]
 │   │   ├── SignupTests.cs
 │   │   ├── LoginCodeTests.cs
-│   │   ├── LoginLinkTests.cs
+│   │   ├── LoginLinkTests.cs                          [E8]
 │   │   ├── ConnectTests.cs
 │   │   ├── AuthMethodsTests.cs                        qué medios de ingreso están encendidos según la configuración (GET /api/auth/methods)
-│   │   ├── ManagedEmailTests.cs                       un exmiembro no puede ingresar con el correo de la empresa
+│   │   ├── ManagedEmailTests.cs                       [E6] un exmiembro no puede ingresar con el correo de la empresa
 │   │   └── InvitationsTests.cs                        puerta de la 3c: InvitationIssuer invita a alguien sin cuenta y a alguien con cuenta, y las dos se aceptan
 │   ├── Account/                                       [E3]
 │   │   ├── MeTests.cs
@@ -1071,7 +1077,8 @@ tests/
     ├── SolutionRoot.cs
     ├── Support/
     │   └── CallSites.cs                               lectura de IL con Mono.Cecil
-    ├── HarnessTests.cs                                [E0] punteros por carpeta, enlaces vivos, fichas completas
+    ├── HarnessStage.cs                               [E0] única constante de la última etapa cerrada
+    ├── HarnessTests.cs                                [E0] punteros por carpeta, enlaces vivos y fichas completas; exige tests al cerrar su etapa según HarnessStage
     ├── LayerDependencyTests.cs                        [E0]
     ├── ProjectReferencesTests.cs                      [E0]
     ├── ApplicationPackagesTests.cs                    [E0] lista blanca de paquetes
@@ -1132,7 +1139,7 @@ src/ArquitecturaBaseMultitenant.Domain/
 ├── ValueObjects/TaxId.cs                                 [E6] P5  país + tipo + dígitos
 ├── ValueObjects/TaxIdValidators/ArgentineCuitValidator.cs [E6] P5 dígito verificador módulo 11 (CUIT y CUIL)
 ├── ValueObjects/TaxIdValidators/ArgentineDniValidator.cs  [E6] P5
-├── Legal/LegalDocument.cs · LegalDocumentKind.cs · LegalAcceptance.cs · LegalErrors.cs   [E3] P7
+├── Legal/LegalDocument.cs · LegalDocumentKind.cs · LegalAcceptance.cs · LegalErrors.cs   [E3] 3a, P7
 └── Features/Features.cs                                  [E5] P8  catálogo de módulos (clave, lado: Consumer, Business o los dos, prendido por defecto)
 
 src/ArquitecturaBaseMultitenant.Application/
@@ -1145,9 +1152,9 @@ src/ArquitecturaBaseMultitenant.Application/
 
 src/ArquitecturaBaseMultitenant.Infrastructure/
 ├── Persistence/Configurations/Platform/IdempotencyKeyConfiguration.cs   [E2] P6
-├── Persistence/Configurations/Platform/LegalDocumentConfiguration.cs    [E3] P7
+├── Persistence/Configurations/Platform/LegalDocumentConfiguration.cs    [E3] 3a, P7
 ├── Persistence/Configurations/Platform/TenantFeatureConfiguration.cs    [E5] P8
-├── Persistence/Configurations/Identity/LegalAcceptanceConfiguration.cs  [E3] P7
+├── Persistence/Configurations/Identity/LegalAcceptanceConfiguration.cs  [E3] 3a, P7
 ├── Persistence/Conventions/VersionedConvention.cs        [E2] P1  IVersioned → xmin IsRowVersion
 ├── Persistence/Conventions/EmailConvention.cs            [E2] P3  conversor de valor de Email
 ├── Idempotency/IdempotencyStore.cs · IdempotencyCleanupWorker.cs        [E2] P6
@@ -1158,20 +1165,20 @@ src/ArquitecturaBaseMultitenant.Api/
 ├── Idempotency/IdempotentAttribute.cs                                   [E1] P6
 ├── Idempotency/IdempotencyFilter.cs                                     [E2] P6
 ├── Features/DisabledFeatureHandler.cs                    [E5] P8  módulo apagado → 404 ProblemDetails
-├── Legal/LegalAcceptanceMiddleware.cs                    [E3] P7
-├── Controllers/Account/LegalController.cs                [E3] P7  GET /api/legal/current, POST /api/legal/accept
+├── Legal/LegalAcceptanceMiddleware.cs                    [E3] 3b, P7; solo para identidades autenticadas: las rutas anónimas no pasan por él
+├── Controllers/Account/LegalController.cs                [E3] P7  GET /api/legal/current (3a), POST /api/legal/accept (3b)
 ├── Contracts/Common/PhoneInputHttpRequest.cs                            [E1] teléfono
 └── Contracts/Common/TaxIdHttpRequest.cs                                 [E6] P5
 
 tests/
-├── *.Domain.UnitTests/ValueObjects/EmailTests.cs · TaxIdTests.cs        P3 · P5
+├── *.Domain.UnitTests/ValueObjects/EmailTests.cs (E1) · TaxIdTests.cs (E6)   P3 · P5
 ├── *.Application.UnitTests/Common/TextNormalizerTests.cs                P4
-├── *.Api.IntegrationTests/Persistence/ConcurrencyTests.cs · CollationTests.cs   P1 · P2
-├── *.Api.IntegrationTests/Api/IdempotencyTests.cs (E2) · NormalizedInputTests.cs   P6 · P4
-├── *.Api.IntegrationTests/Features/FeatureGateTests.cs                  P8
-├── *.Api.IntegrationTests/Legal/LegalAcceptanceTests.cs                 P7
-└── *.ArchitectureTests/VersionedContractTests.cs · TextLimitsTests.cs · EmailPropertyTests.cs ·
-    TaxIdPropertyTests.cs · IdempotentActionsTests.cs · ModuleControllersTests.cs          P1 · P4 · P3 · P5 · P6 · P8
+├── *.Api.IntegrationTests/Persistence/ConcurrencyTests.cs (E2) · CollationTests.cs (E2)   P1 · P2
+├── *.Api.IntegrationTests/Api/IdempotencyTests.cs (E2) · NormalizedInputTests.cs (E1)   P6 · P4
+├── *.Api.IntegrationTests/Features/FeatureGateTests.cs (E5)             P8
+├── *.Api.IntegrationTests/Legal/LegalAcceptanceTests.cs (E3)            P7  registro en 3a, nueva versión bloqueante en 3b
+└── *.ArchitectureTests/VersionedContractTests.cs (E2) · TextLimitsTests.cs (E1) · EmailPropertyTests.cs (E1) ·
+    TaxIdPropertyTests.cs (E6) · IdempotentActionsTests.cs (E1) · ModuleControllersTests.cs (E5)   P1 · P4 · P3 · P5 · P6 · P8
 ```
 
 ## Piezas del modelo de accesos, sitio público e interacción (ADR 0030 a 0032)
@@ -1213,39 +1220,39 @@ tests/
 
 ## Piezas de los métodos de ingreso (ADR 0033)
 
-La entidad y su configuración EF están en "Tablas que completan los flujos del lienzo". Parte 3b de la Etapa 3.
+La entidad, su índice único (`Type`, `Value`) y el registro e ingreso con un método nacen en la 3a de la Etapa 3, junto con la aceptación legal base. La 3b suma gestionar métodos: agregar, verificar, elegir principal y quitar. `Phone` queda solo como modelo hasta que el módulo de WhatsApp registra su canal en la E8.
 
 ```
 src/ArquitecturaBaseMultitenant.Domain/
 └── Authentication/LoginMethodErrors.cs                                  [E3] Auth.LoginMethod.* (valor ya tomado, no queda ningún método propio o activo, falta la reautenticación, no encontrado)
 
 src/ArquitecturaBaseMultitenant.Application/
-├── Interfaces/Services/ILoginMethodService.cs                           [E3]
-├── Interfaces/Persistence/ILoginMethodRepository.cs · ILoginMethodReader.cs  [E3]
-├── Models/Identity/AddLoginMethodRequest.cs · SetPrimaryLoginMethodRequest.cs  [E3] la verificación reusa Models/Profile/VerifyDestinationRequest
-├── Models/Identity/RemoveLoginMethodRequest.cs                          [E3] con el ReauthTicket
-├── Models/Identity/ReadModels/LoginMethodRow.cs                         [E3] los métodos de la cuenta, enmascarados (no es Models/Auth/LoginMethodsResponse)
-├── Validation/Identity/AddLoginMethodRequestValidator.cs                [E3] y los de SetPrimary y Remove, si los necesitan
-├── Services/Identity/LoginMethodService.cs                              [E3] lista, suma, verifica (DestinationCodeVerifier, LoginCodePurpose.VerifyDestination),
+├── Interfaces/Services/ILoginMethodService.cs                           [E3] 3b: gestión de métodos
+├── Interfaces/Persistence/ILoginMethodRepository.cs · ILoginMethodReader.cs  [E3] 3a: registro e ingreso con un método
+├── Models/Identity/AddLoginMethodRequest.cs · SetPrimaryLoginMethodRequest.cs  [E3] 3b; la verificación reusa Models/Profile/VerifyDestinationRequest
+├── Models/Identity/RemoveLoginMethodRequest.cs                          [E3] 3b, con el ReauthTicket
+├── Models/Identity/ReadModels/LoginMethodRow.cs                         [E3] 3b: métodos de la cuenta, enmascarados (no es Models/Auth/LoginMethodsResponse)
+├── Validation/Identity/AddLoginMethodRequestValidator.cs                [E3] 3b; y los de SetPrimary y Remove, si los necesitan
+├── Services/Identity/LoginMethodService.cs                              [E3] 3b: lista, suma, verifica (DestinationCodeVerifier, LoginCodePurpose.VerifyDestination),
 │                                                                        elige el principal y quita (los dos, con ReauthVerifier); al cambiar el principal copia el valor
 │                                                                        a AspNetUsers.Email/PhoneNumber por IUserRepository; registra el SecurityEvent y avisa en todos
 │                                                                        los métodos
-└── Services/Identity/ManagedLoginMethodRevoker.cs                       [E3] helper sin IUnitOfWork: desactiva los correos administrados y avisa; lo llama quien termina la
+└── Services/Identity/ManagedLoginMethodRevoker.cs                       [E6] helper sin IUnitOfWork: desactiva los correos administrados y avisa; lo llama quien termina la
                                                                          membresía, dentro de su transacción (E6: UserService, AccountAccessRevoker)
 
 src/ArquitecturaBaseMultitenant.Infrastructure/
-├── Persistence/Repositories/LoginMethodRepository.cs                    [E3]
-└── Persistence/Readers/LoginMethodReader.cs                             [E3]
+├── Persistence/Repositories/LoginMethodRepository.cs                    [E3] 3a
+└── Persistence/Readers/LoginMethodReader.cs                             [E3] 3a
 
 src/ArquitecturaBaseMultitenant.Api/
-├── Controllers/Account/AccountLoginMethodsController.cs                 [E3] rutas bajo /api/me/login-methods (las fija el plan detallado de la Etapa 3); distinto
+├── Controllers/Account/AccountLoginMethodsController.cs                 [E3] 3b: rutas bajo /api/me/login-methods (las fija el plan detallado de la Etapa 3); distinto
 │                                                                        de Auth/LoginMethodsController, el GET anónimo de los medios encendidos
-└── Contracts/Account/AddLoginMethodHttpRequest.cs · SetPrimaryLoginMethodHttpRequest.cs · RemoveLoginMethodHttpRequest.cs  [E3] la verificación reusa VerifyDestinationHttpRequest
+└── Contracts/Account/AddLoginMethodHttpRequest.cs · SetPrimaryLoginMethodHttpRequest.cs · RemoveLoginMethodHttpRequest.cs  [E3] 3b; la verificación reusa VerifyDestinationHttpRequest
 
 tests/
-├── *.Api.IntegrationTests/Account/LoginMethodsTests.cs                  [E3] sumar, verificar, principal, quitar con código en otro método; siempre queda al
+├── *.Api.IntegrationTests/Account/LoginMethodsTests.cs                  [E3] 3b: sumar, verificar, principal, quitar con código en otro método; siempre queda al
 │                                                                        menos uno propio o activo; aviso en todos
-├── *.Api.IntegrationTests/Auth/ManagedEmailTests.cs                     [E3] un exmiembro no puede ingresar con el correo de la empresa
+├── *.Api.IntegrationTests/Auth/ManagedEmailTests.cs                     [E6] un exmiembro no puede ingresar con el correo de la empresa
 └── *.Application.UnitTests/Services/Identity/LoginMethodServiceTests.cs  [E3]
 ```
 
@@ -1263,7 +1270,7 @@ src/ArquitecturaBaseMultitenant.Application/
 ├── Services/Legal/AccountDeletionPolicy.cs                              [E3–E4] operador, baja ya pedida y módulos (E3); único Dueño, con los Dueños
 │                                                                        activos = TenantAdmin con identidad Active (E4, Legal.AccountDeletion.LastAdmin)
 ├── Services/Identity/ReauthVerifier.cs                                  [E3] ReauthTicket de 5 minutos (baja y cambios de métodos)
-└── Services/Legal/Participants/                                         [E3–E10] PersonalSpace, LegalAcceptances, Outbox, Recovery (E5), Memberships (E6), Engagement (E7), Exports (E10)
+└── Services/Legal/Participants/                                         [E3–E10] PersonalSpace, LegalAcceptances, Outbox y Memberships (E3), Recovery (E5), Engagement (E7), Exports (E10)
 
 src/ArquitecturaBaseMultitenant.Infrastructure/
 └── Legal/AccountDeletionWorker.cs                                       [E3] cada hora, SKIP LOCKED, una transacción por cada tenant que toca: toda cuenta con DeletionScheduledForUtc vencido,
@@ -1283,14 +1290,14 @@ tests/
 
 ```
 src/ArquitecturaBaseMultitenant.Domain/
-├── Authentication/LoginMethod.cs                                        [E3] identity.LoginMethods: Type, Value (único por tipo), IsPrimary, VerifiedAtUtc, ManagedByTenantId?
-├── Legal/LegalDocument.cs · LegalDocumentContent.cs                     [E3] versión + una fila de texto por cultura
+├── Authentication/LoginMethod.cs                                        [E3] 3a: identity.LoginMethods; Type, Value (único por tipo), IsPrimary, VerifiedAtUtc, ManagedByTenantId?
+├── Legal/LegalDocument.cs · LegalDocumentContent.cs                     [E3] 3a: versión base sembrada + una fila de texto por cultura
 ├── Tenancy/TenantDomain.cs · TenantDomainStatus.cs                      [E6] platform.TenantDomains: Domain (único), TxtToken, Pending | Verified
 ├── Users/AccountRecoveryRequest.cs · RecoveryRequestStatus.cs           [E5] platform.AccountRecoveryRequests: Pending | Approved | Rejected
 └── Legal/DataExport.cs · DataExportStatus.cs                            [E10] platform.DataExports: archivo, vence a las 48 h
 
 src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Configurations/
-├── Identity/LoginMethodConfiguration.cs                                 [E3] índice único (Type, Value)
+├── Identity/LoginMethodConfiguration.cs                                 [E3] 3a: índice único (Type, Value)
 ├── Platform/LegalDocumentContentConfiguration.cs                        [E3] clave (LegalDocumentId, Culture)
 ├── Platform/TenantDomainConfiguration.cs                                [E6] índice único Domain
 ├── Platform/AccountRecoveryRequestConfiguration.cs                      [E5]

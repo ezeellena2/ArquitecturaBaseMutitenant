@@ -19,9 +19,9 @@
 - `Infrastructure/Persistence/Interceptors/AuditTrailInterceptor.cs` (E2)
 
 ## Lo verifica
-- `AuditingTests`, `AuditTrailTests`.
-- Trigger `prevent_update_delete`.
-- `TenantColumnsImmutabilityTests`.
+- `AuditingTests` (E2), `AuditTrailTests` (E2).
+- Trigger `prevent_update_delete` (E2).
+- `TenantColumnsImmutabilityTests` (E2).
 
 ## Detalle
 [backend.md §10](../architecture/backend.md#10-auditoría)

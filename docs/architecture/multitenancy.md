@@ -6,12 +6,12 @@
 
 Una **plantilla estándar para cualquier tipo de negocio**. No es un producto: no sabe de médicos, de gimnasios ni de ventas. Lo que resuelve es **quién ingresa y cómo**, y la mecánica para que dos mundos se encuentren, como en Mercado Libre:
 
-- **Empresas (B2B):** se registran como empresa, tienen sus usuarios con roles, y opcionalmente una **página pública** en su subdominio (`<empresa>.plataforma.com`).
+- **Organizaciones (B2B):** se registran como empresa, tienen sus usuarios con roles, y opcionalmente una **página pública por organización** en su subdominio (`<slug>.plataforma.com`).
 - **Personas (B2C):** se registran solas como personas y pueden **interactuar con una empresa** a través de lo que esa empresa publica: pedir, contratar, reservar… lo que defina cada producto.
 
 **El núcleo de la plantilla son los accesos:** quién puede ingresar, por dónde, qué ve cada tipo de usuario y cómo pasa de un acceso al otro (§2 y §3). Las páginas públicas y los datos compartidos (§4 y §5) son la **mecánica genérica** que cada producto usa para sus módulos.
 
-> **Ejemplo (solo para entender; la plantilla no trae nada de esto):** una empresa de salud tiene médicos como usuarios B2B. Un kinesiólogo de esa empresa también ingresa **como persona** y le pide un turno a un traumatólogo desde la página de la empresa. El turno lo ven el paciente y el profesional; nadie más. Otro producto usaría lo mismo para clases de un gimnasio, visitas de una inmobiliaria o servicios de un estudio contable.
+> **Ejemplo (solo para entender; la plantilla no trae nada de esto):** una empresa de salud tiene médicos como usuarios B2B. Un kinesiólogo de esa empresa también ingresa **como persona** y le pide un turno a un traumatólogo desde la página de la organización. El turno lo ven el paciente y el profesional; nadie más. Otro producto usaría lo mismo para clases de un gimnasio, visitas de una inmobiliaria o servicios de un estudio contable.
 
 ## 2. Quiénes entran
 
@@ -243,7 +243,7 @@ Con el acceso equivocado responde 403 `Tenancy.Access.Wrong`. Un recurso de otra
 3. Tokens con `access=consumer`.
 
 **Registro de una empresa (B2B), "Registrá tu empresa":**
-1. Quien la registra ingresa o crea su identidad (código por correo o WhatsApp, o Google, con la aceptación de términos) y después carga los datos de la organización: nombre de la organización, su primera empresa y, si quiere, el CUIT de esa empresa. Si ya tiene cuenta, entra con ella; si no, se crea la identidad. El slug no se pide en el alta: se elige después en la página pública (`/org/pagina`, «Dirección de la página», con disponibilidad y `ReservedSlugs`).
+1. Quien la registra ingresa o crea su identidad (código por correo o WhatsApp, o Google, con la aceptación de términos) y después carga los datos de la organización: nombre, slug obligatorio con comprobación de disponibilidad y `ReservedSlugs`, su primera empresa y, si quiere, el CUIT de esa empresa. Si ya tiene cuenta, entra con ella; si no, se crea la identidad. El slug se puede cambiar después en «Página pública» (`/org/pagina`, «Dirección de la página»).
 2. `BusinessSignupPolicy` aplica `PlatformSettings`: con `BusinessSignup` en `Closed` no se puede registrar («Alta cerrada»), y si la persona ya llegó a su límite de organizaciones propias (`MaxOwnedOrganizations`) tampoco («Llegó al límite»). Si pasa, `Tenant(Business)` queda en `PendingApproval` (modo `RequiresApproval`) o en `Provisioning` (modo `Open`).
 3. `TenantProvisioner` crea la configuración, los roles de sistema, la primera empresa, la membresía con el rol `TenantAdmin` (Dueño) y la página pública en `Draft`.
 4. Tokens con `access=business`.

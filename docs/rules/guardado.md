@@ -32,9 +32,9 @@ public Task<Result> UpdateAsync(UpdateRoleRequest request, CancellationToken ct)
 - `Application/Services/Roles/RoleService.cs`, métodos `UpdateAsync` y `UpdateCoreAsync` (E4).
 
 ## Lo verifica
-- `TransactionBoundaryTests` (lee el IL): solo los puntos de entrada de `Interfaces/Services` reciben `IUnitOfWork` y nadie más llama a `SaveChanges`.
-- `UnitOfWorkTests`: rollback, no anidar, 23505 → `UniqueConstraintViolationException`.
-- `FakeUnitOfWork` en los tests unitarios aplica la misma `CommitPolicy`.
+- `TransactionBoundaryTests` (E2): lee el IL; solo los puntos de entrada de `Interfaces/Services` reciben `IUnitOfWork` y nadie más llama a `SaveChanges`.
+- `UnitOfWorkTests` (E2): rollback, no anidar, 23505 → `UniqueConstraintViolationException`.
+- `FakeUnitOfWork` (E2) en los tests unitarios aplica la misma `CommitPolicy`.
 
 ## Detalle
 [backend.md §5, "Repositorio, reader y UnitOfWork"](../architecture/backend.md#repositorio-reader-y-unitofwork) · ADR 0001

@@ -33,9 +33,9 @@
 - `Api/Controllers/Organization/RolesController.cs` (E4) · la guía [`permiso-nuevo.md`](../guides/permiso-nuevo.md) (E4)
 
 ## Lo verifica
-- `PermissionAuthorizationTests`: sin `Policy` ni roles a mano, y cada `[Has*Permission]` nombra un permiso de su catálogo.
-- `PermissionTextsTests`: textos en los dos idiomas.
-- Tests de integración: 401 sin sesión y 403 sin el permiso.
+- `PermissionAuthorizationTests` (E4): sin `Policy` ni roles a mano, y cada `[Has*Permission]` nombra un permiso de su catálogo.
+- `PermissionTextsTests` (E4): textos en los dos idiomas.
+- Tests de integración (E4): 401 sin sesión y 403 sin el permiso.
 
 ## Detalle
 [backend.md §14](../architecture/backend.md#14-autorización)

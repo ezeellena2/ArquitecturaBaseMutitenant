@@ -35,11 +35,11 @@
 - Datos público y compartido: `TestFeatures/Isolation/Poster.cs` y `Deal.cs` (E2). La plantilla no trae módulos de negocio, así que estos son la referencia.
 
 ## Lo verifica
-- `TenantIsolationModelValidator` al arrancar: toda entidad está clasificada, con su esquema y su filtro.
-- `RlsPolicyInventoryTests`, `RlsBarrierTests`, `RuntimeRoleTests`.
-- `CrossTenantIsolationTests`, `PublicAndSharedRowsTests`, `AccessTests` (acceso equivocado, B2C no crea empresas, accesos que no se mezclan).
-- `SubdomainTests`: el host resuelve solo lo público; redirect URI solo para slugs publicados.
-- `DataClassificationTests`, `TenantScopeUsageTests`, `QueryFilterBypassTests`, `IdentityAccessTests`, `AccessDeclarationTests` (con la lista explícita de controllers anónimos del dominio principal), `CacheKeyScopeTests`.
+- `TenantIsolationModelValidator` (E2) al arrancar: toda entidad está clasificada, con su esquema y su filtro.
+- `RlsPolicyInventoryTests` (E2), `RlsBarrierTests` (E2), `RuntimeRoleTests` (E2).
+- `CrossTenantIsolationTests` (E2), `PublicAndSharedRowsTests` (E2), `AccessTests` (E3): acceso equivocado, B2C no crea empresas, accesos que no se mezclan.
+- `SubdomainTests` (E7): el host resuelve solo lo público; redirect URI solo para slugs publicados.
+- `DataClassificationTests` (E2), `TenantScopeUsageTests` (E2), `QueryFilterBypassTests` (E2), `IdentityAccessTests` (E3), `AccessDeclarationTests` (E3) con la lista explícita de controllers anónimos del dominio principal, `CacheKeyScopeTests` (E2).
 
 ## Detalle
 [multitenancy.md](../architecture/multitenancy.md)

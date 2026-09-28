@@ -11,7 +11,7 @@
   - permisos: `ValidPermissions(scope)`.
 - El teléfono no tiene regla en `ValidationRules`: lo interpreta el servicio con `IPhoneNumberParser.Parse(country, number, usage)`, y el error (`Users.Phone.*`) se ata al campo `phone` con `FieldErrors.On` ([telefonos](telefonos.md)).
 - El texto ya llega limpio (trim, NFC, sin caracteres invisibles) gracias al conversor global: no se vuelve a limpiar.
-- Los mensajes salen de `ValidationMessages` (resx), nunca de un literal.
+- Los mensajes salen de `ValidationTexts` (`Validation.resx`), nunca de un literal.
 - Un listado usa `PagedRequestValidator<T>` o `CursorRequestValidator<T>`, que ya validan página, tamaño, orden y búsqueda.
 - El servicio recibe `IRequestValidator` y llama `if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;`.
 - Los campos del error van en camelCase con puntos (`permissions.0`), que es como los ve el front.
@@ -27,9 +27,9 @@
 - `Application/Validation/Roles/CreateRoleRequestValidator.cs` (E4)
 
 ## Lo verifica
-- `RequestValidatorTests`, `PagedRequestValidatorTests`.
-- `ValidationProblemTests`: forma del 400 con `errors`.
-- `ServiceDependencyCountTests`: evita la vuelta a los validadores inyectados por request.
+- `RequestValidatorTests` (E1), `PagedRequestValidatorTests` (E1).
+- `ValidationProblemTests` (E1): forma del 400 con `errors`.
+- `ServiceDependencyCountTests` (E1): evita la vuelta a los validadores inyectados por request.
 
 ## Detalle
 [backend.md §6, "Validación"](../architecture/backend.md#validación)

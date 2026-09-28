@@ -25,8 +25,8 @@
 - `Domain/ValueObjects/TaxId.cs` y `Domain/ValueObjects/TaxIdValidators/ArgentineCuitValidator.cs` (E6).
 
 ## Lo verifica
-- `TaxIdTests`: los casos válidos e inválidos de `format-cases.json`, que también corre el front con `stdnum`.
-- `TaxIdPropertyTests` (arquitectura): ninguna propiedad `Cuit`, `Cuil` o `Dni` de tipo `string`.
+- `TaxIdTests` (E6): los casos válidos e inválidos de `format-cases.json`, que también corre el front con `stdnum`.
+- `TaxIdPropertyTests` (E6): ninguna propiedad `Cuit`, `Cuil` o `Dni` de tipo `string` (test de arquitectura).
 
 ## Detalle
 [backend.md §20](../architecture/backend.md#20-reglas-de-datos-que-se-aplican-solas)
