@@ -97,9 +97,9 @@ No quedan preguntas técnicas pendientes. Según AGENTS.md, una duda nueva se re
 
 **Archivos:** crear `src/ArquitecturaBaseMultitenant.Application/Interfaces/ReferenceData/{ICurrencyCatalog,ICountryCatalog,ITimeZoneCatalog,ICultureCatalog,ITaxIdTypeCatalog}.cs` y `{AGENTS,CLAUDE}.md`; `src/ArquitecturaBaseMultitenant.Infrastructure/ReferenceData/JsonReferenceDataCatalog.cs` y `{AGENTS,CLAUDE}.md`; actualizar `src/ArquitecturaBaseMultitenant.Infrastructure/{ArquitecturaBaseMultitenant.Infrastructure.csproj,DependencyInjection.cs}` para incluir los cinco JSON como `EmbeddedResource` y cargar siempre desde el ensamblado; actualizar el `.csproj` de Application.UnitTests para referenciar Infrastructure solo desde tests; crear `tests/ArquitecturaBaseMultitenant.Application.UnitTests/ReferenceData/ReferenceDataCatalogTests.cs` (JSON reales embebidos). No hay homónimos en `../ArquitecturaBase`.
 **Respaldo:** datos-de-referencia.md §§2, 4 y 8; rules/datos-de-referencia.md “Cómo se hace” y “Lo verifica”; backend.md §§3 y 18; arbol.md back “Application/Interfaces/ReferenceData”, “Infrastructure/ReferenceData”.
-- [ ] Probar lectura de cinco catálogos desde recursos embebidos, aun sin checkout en el directorio de trabajo, búsqueda, vigencia, `IsEnabled`, nombres traducidos de culturas con fallback, `CountryCodes[]` completo en zonas multipaís/UTC, FK internas no nulas y `MinorUnits` 0/2/3; A/ReferenceDataCatalogTests en rojo.
-- [ ] Implementar los puertos en Application y el único adaptador JSON en Infrastructure, con registros DI explícitos; repetir en verde.
-- [ ] Commit back: feat: leer catálogos de referencia desde JSON
+- [x] Probar lectura de cinco catálogos desde recursos embebidos, aun sin checkout en el directorio de trabajo, búsqueda, vigencia, `IsEnabled`, nombres traducidos de culturas con fallback, `CountryCodes[]` completo en zonas multipaís/UTC, FK internas no nulas y `MinorUnits` 0/2/3; A/ReferenceDataCatalogTests en rojo.
+- [x] Implementar los puertos en Application y el único adaptador JSON en Infrastructure, con registros DI explícitos; repetir en verde.
+- [x] Commit back: feat: leer catálogos de referencia desde JSON
 
 ### Tarea 6. Dinero, moneda y cultura
 
