@@ -202,9 +202,9 @@ No quedan preguntas técnicas pendientes. Según AGENTS.md, una duda nueva se re
 
 **Archivos:** crear src/ArquitecturaBaseMultitenant.Api/ErrorHandling/{GlobalExceptionHandler,MvcInvalidModelStateResponseFactory,EmptyJsonBodyContentTypeFilter}.cs ← homónimos de ../ArquitecturaBase/src/ArquitecturaBase.Api/ErrorHandling/; actualizar src/ArquitecturaBaseMultitenant.Api/{DependencyInjection,Program}.cs; crear tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ErrorHandling/FrameworkErrorsTests.cs ← ../ArquitecturaBase/tests/ArquitecturaBase.Api.IntegrationTests/FrameworkErrorsTests.cs y Localization/LocalizationTests.cs ← ../ArquitecturaBase/tests/ArquitecturaBase.Api.IntegrationTests/LocalizationTests.cs.
 **Respaldo:** plan maestro §Etapa 1, Back 2 y 10; backend.md §§6, 7, 16; arbol.md back “Api/ErrorHandling” y “TestFeatures”; rules/api-http.md y rules/result-y-errores.md; decisión 17 de este plan.
-- [ ] Probar cuerpo ilegible, tipo incorrecto, 401/403/404/405/429, excepción 500 sin mensaje interno y Accept-Language; I/FrameworkErrorsTests e I/LocalizationTests en rojo.
-- [ ] Conectar errores MVC y localización en Program; repetir ambas clases en verde.
-- [ ] Commit back: feat: unificar errores HTTP del framework
+- [x] Probar cuerpo ilegible, tipo incorrecto, 401/403/404/405/429, excepción 500 sin mensaje interno y Accept-Language; I/FrameworkErrorsTests e I/LocalizationTests en rojo.
+- [x] Conectar errores MVC y localización en Program; repetir ambas clases en verde.
+- [x] Commit back: feat: unificar errores HTTP del framework
 
 ### Tarea 19. JSON de fechas civiles e instantes
 

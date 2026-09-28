@@ -30,4 +30,19 @@ public sealed class TestController : ControllerBase
     [HttpGet("validation")]
     public IActionResult Validation() => Result.Failure(new ValidationError(
         new Dictionary<string, string[]> { ["email"] = ["Ingresá un correo válido."] })).ToActionResult(this);
+
+    [HttpGet("status/{status:int}")]
+    public IActionResult EmptyStatus(int status) => StatusCode(status);
+
+    [HttpPost("body")]
+    public IActionResult Body([FromBody] TestBodyHttpRequest request) => NoContent();
+
+    [HttpGet("throw")]
+    public IActionResult Throw()
+    {
+        ArgumentNullException.ThrowIfNull(HttpContext);
+        throw new InvalidOperationException("PRIVATE_TEST_EXCEPTION");
+    }
 }
+
+public sealed record TestBodyHttpRequest(string? Value);

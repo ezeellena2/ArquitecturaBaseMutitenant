@@ -16,7 +16,38 @@ internal static class LocalizationExtensions
             .AddSupportedCultures(codes)
             .AddSupportedUICultures(codes);
 
-        options.RequestCultureProviders = [new AcceptLanguageHeaderRequestCultureProvider()];
+        var headerProvider = new AcceptLanguageHeaderRequestCultureProvider();
+        options.RequestCultureProviders =
+        [
+            new CustomRequestCultureProvider(async context =>
+            {
+                var requested = await headerProvider.DetermineProviderCultureResult(context);
+                if (requested is null)
+                {
+                    return null;
+                }
+
+                foreach (var candidate in requested.Cultures)
+                {
+                    if (string.IsNullOrWhiteSpace(candidate.Value))
+                    {
+                        continue;
+                    }
+
+                    var language = candidate.Value;
+                    var match = codes.FirstOrDefault(code =>
+                        string.Equals(code, language, StringComparison.OrdinalIgnoreCase));
+                    match ??= codes.FirstOrDefault(code =>
+                        string.Equals(code.Split('-')[0], language.Split('-')[0], StringComparison.OrdinalIgnoreCase));
+                    if (match is not null)
+                    {
+                        return new ProviderCultureResult(match);
+                    }
+                }
+
+                return null;
+            }),
+        ];
         options.ApplyCurrentCultureToResponseHeaders = true;
         options.FallBackToParentCultures = false;
         options.FallBackToParentUICultures = false;

@@ -20,6 +20,9 @@ var cultures = await SupportedCultures.LoadAsync(
     app.Services.GetRequiredService<ICultureCatalog>(), CancellationToken.None);
 app.UseRequestLocalization(cultures.CreateRequestLocalizationOptions());
 
+app.UseExceptionHandler();
+app.UseStatusCodePages();
+
 app.MapDefaultEndpoints();
 app.MapControllers();
 
