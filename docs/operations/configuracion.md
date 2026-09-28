@@ -8,7 +8,7 @@
 |---|---|---|
 | **Google OAuth** | ingresar y **registrarse** con Google (B2C), y vincular Google a una cuenta | E3 |
 | **Gmail por SMTP** | todos los correos: códigos, enlaces, invitaciones. En desarrollo también se envían de verdad | E3 |
-| **WhatsApp Cloud API (Meta)** | códigos de ingreso, registro e invitaciones por WhatsApp, y el bot de ingreso por webhook | E8 |
+| **WhatsApp Cloud API (Meta)** | códigos de ingreso, registro e invitaciones por WhatsApp, los avisos de la cuenta ([whatsapp-plantillas.md](whatsapp-plantillas.md)) y el bot de ingreso por webhook | E8 |
 
 ## 2. Los secretos (user-secrets de `src/ArquitecturaBaseMultitenant.Api`)
 
@@ -47,7 +47,7 @@ Remove-Variable s
 
 ## 3. Lo que no es secreto (`appsettings.Development.json` de la Api, en el repo)
 
-Mismos valores que `../ArquitecturaBase/src/ArquitecturaBase.Api/appsettings.Development.json` y `appsettings.json`. Se copian en la Etapa 3 (Google y Gmail) y en la Etapa 8 (WhatsApp).
+Mismos valores que `../ArquitecturaBase/src/ArquitecturaBase.Api/appsettings.Development.json` y `appsettings.json`, salvo las plantillas de WhatsApp nuevas del multitenant (ver la tabla). Se copian en la Etapa 3 (Google y Gmail) y en la Etapa 8 (WhatsApp).
 
 | Clave | Valor |
 |---|---|
@@ -59,7 +59,8 @@ Mismos valores que `../ArquitecturaBase/src/ArquitecturaBase.Api/appsettings.Dev
 | `Email:Smtp:FromName` | el nombre del producto |
 | `WhatsApp:PhoneNumberId` | el mismo de ArquitecturaBase. **Es el interruptor**: sin él, WhatsApp queda apagado y la app arranca igual |
 | `WhatsApp:BusinessAccountId`, `DisplayPhoneNumber`, `SendArgentineMobilesWithoutNine` | los mismos de ArquitecturaBase (el último, solo con el número de prueba) |
-| `WhatsApp:GraphApiVersion`, `Templates:LoginCode`, `Templates:Invitation`, `AllowedCountries`, `DailyAuthCodeLimit`, `MessageRetentionDays` | los mismos de `appsettings.json` de ArquitecturaBase (`v25.0`, `codigo_ingreso`, `invitacion_acceso`, `["AR"]`, `100`, `90`) |
+| `WhatsApp:GraphApiVersion`, `Templates:LoginCode`, `AllowedCountries`, `DailyAuthCodeLimit`, `MessageRetentionDays` | los mismos de `appsettings.json` de ArquitecturaBase (`v25.0`, `codigo_ingreso`, `["AR"]`, `100`, `90`) |
+| `WhatsApp:Templates:Invitation` y las demás `WhatsApp:Templates:<Nombre>` | **no se copian** de ArquitecturaBase: `Invitation` es `invitacion_organizacion`, que reemplaza a `invitacion_acceso` (no nombra la organización) y se crea en Meta en la Etapa 8, igual que los avisos de la cuenta. Cada clave se agrega al crear su plantilla: [whatsapp-plantillas.md](whatsapp-plantillas.md) |
 
 ## 4. Lo que tenés que hacer vos, una sola vez, fuera del código
 
@@ -91,7 +92,7 @@ Las opciones se validan **al arrancar**, como en ArquitecturaBase:
 | `AppSecret` sin `VerifyToken`, o al revés | la Api no arranca. Sin ninguno, el webhook queda apagado, con un Warning, y el envío funciona igual |
 | Sin `WhatsApp:PhoneNumberId` | WhatsApp apagado: el login y el registro muestran solo correo y Google |
 
-Lo verifican `SmtpOptionsValidatorTests`, `GoogleOptionsTests`, `WhatsAppOptionsValidatorTests` y `LoginMethodsTests`.
+Lo verifican `SmtpOptionsValidatorTests`, `GoogleOptionsTests`, `WhatsAppOptionsValidatorTests` y `AuthMethodsTests`.
 
 ## 6. Producción
 

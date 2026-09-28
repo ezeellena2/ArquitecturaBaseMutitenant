@@ -10,7 +10,7 @@
   - `PhoneUsage.WhatsApp`: celular **y** de un país de `WhatsApp:AllowedCountries`.
 - **Errores**, atados al campo `phone` con `FieldErrors.On`: `Users.Phone.Invalid`, `Users.Phone.NotMobile` y `Users.Phone.CountryNotAllowed`.
 - **Argentina:** si falta el 9 de un celular (o viene con 0 o 15), el parser lo completa. Se guarda siempre `+549…`. El número de prueba de Meta sin el 9 es una opción del módulo WhatsApp (`SendArgentineMobilesWithoutNine`), no un dato guardado.
-- **Base de datos:** `varchar(16)` en E.164. El teléfono de una identidad es **único en todo el sistema** (índice sobre el E.164).
+- **Base de datos:** siempre el E.164; una columna que guarda solo teléfonos es `varchar(16)`. Los teléfonos de una cuenta viven únicamente en `identity.LoginMethods` (`Type=Phone`, `Value` en E.164) y son **únicos en todo el sistema** por el índice `(Type, Value)`; esa columna `Value` es compartida con los correos, así que su largo no es el del teléfono. `AspNetUsers.PhoneNumber` es solo una copia del método principal, **sin índice único**, y la mantiene el servicio de métodos de ingreso ([multitenancy.md §12](../architecture/multitenancy.md#12-caché-locks-unicidad)).
 - **Buscar por teléfono:** se normaliza lo buscado con el mismo parser (o se compara por dígitos) y se busca por el E.164.
 - **Salida (JSON):** el E.164 como texto. El país no se manda: sale del número.
 - **Correo y WhatsApp:** `DisplayFormatter.Phone(phone, culture)` usa las mismas reglas que `PhoneText`.
@@ -24,11 +24,11 @@
 - Loguear un número completo.
 
 ## Copiá de
-- `../ArquitecturaBase/src/ArquitecturaBase.Infrastructure/Phones/LibPhoneNumberParser.cs` y `Domain/ValueObjects/PhoneNumber.cs`: se copian y se les suma `PhoneUsage` (E3).
+- `Domain/ValueObjects/PhoneNumber.cs` (E1), que se copia de `../ArquitecturaBase` (solo verifica el E.164; interpretar lo que escribe la persona es trabajo del parser) · `../ArquitecturaBase/src/ArquitecturaBase.Infrastructure/Phones/LibPhoneNumberParser.cs`, que se copia y se le suma `PhoneUsage` (E3).
 
 ## Lo verifica
-- `LibPhoneNumberParserTests`: el 9 argentino, números con 0 y 15, letras rechazadas, fijo contra celular, país no permitido.
-- `PhoneNumberTests` (Domain) y `DisplayFormatterTests`, con los casos de teléfono de `docs/contracts/format-cases.json`, los mismos que corre el front.
+- `LibPhoneNumberParserTests` (E3): el 9 argentino, números con 0 y 15, letras rechazadas, fijo contra celular, país no permitido.
+- `PhoneNumberTests` (Domain) y `DisplayFormatterTests` (E1), con los casos de teléfono de `docs/contracts/format-cases.json`, los mismos que corre el front.
 
 ## Detalle
 El componente y el formato en pantalla: `../ArquitecturaBaseMutitenantFront/docs/rules/telefonos.md`.

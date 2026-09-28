@@ -1,6 +1,6 @@
 # Permisos
 
-**Regla:** las rutas piden **permisos, nunca roles**. Hay cuatro catálogos: organización, empresa, personal (implícitos del dueño) y plataforma.
+**Regla:** las rutas piden **permisos, nunca roles**. Hay cuatro catálogos: organización, empresa, personal (implícitos de la persona en su espacio personal) y plataforma.
 
 ## Cómo se hace
 - **Organización:** `[Access(Business)] [HasPermission(Permissions.Users.Manage)]`.
@@ -8,9 +8,9 @@
 - **Plataforma:** `[HasPlatformPermission(PlatformPermissions.Tenants.Manage)]`.
 - **Persona (B2C):** `[Access(Consumer)]` sin permiso, porque la persona los tiene todos sobre su espacio personal. Sobre un dato compartido, lo que puede hacer cada parte lo decide `PartyPolicy`, no un permiso.
 - **Un permiso nuevo:**
-  1. se declara en `Permissions.cs` (o `PlatformPermissions.cs`) y en su lista `All` / `OrganizationScoped` / `CompanyScoped`;
+  1. se declara en `Permissions.cs` (organización y empresa), `PersonalPermissions.cs` (`personal.*`) o `PlatformPermissions.cs` (`platform.*`), y en su lista `All` / `OrganizationScoped` / `CompanyScoped` (el personal y el de plataforma, en su `All`);
   2. lleva `Permission.<código>` y `PermissionDescription.<código>` en `Permissions.resx` y `.en.resx`;
-  3. el seed se lo da a TenantAdmin (o CompanyAdmin, si es de empresa);
+  3. el seed se lo da a TenantAdmin (o CompanyAdmin, si es de empresa); uno `personal.*` no va al seed ni a ningún rol, porque la persona lo tiene implícito en su espacio personal;
   4. cuando cambian los permisos de un rol, se llama a `IPermissionService.InvalidateRoleAsync`.
 
 ## Prohibido

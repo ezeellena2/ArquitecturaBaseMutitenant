@@ -18,7 +18,7 @@
 - **Workers y correos del módulo:** preguntan `IFeatureService.IsEnabledAsync(Features.X)` (un puerto de Application, sobre `IFeatureManager`) antes de hacer algo por un tenant.
 - **`GET /api/me`** devuelve `features: ["reportes", …]` del acceso activo. Un módulo de datos compartidos está prendido para una persona si lo está para la organización con la que interactúa.
 - **Plataforma:** la ficha de una organización tiene la sección "Módulos", para prenderlos, apagarlos y fijar la fecha de fin de una prueba, con motivo y `SecurityEvent`.
-- **El núcleo no es un módulo:** usuarios, roles, empresas, configuración y auditoría están siempre prendidos.
+- **El núcleo no es un módulo:** usuarios, roles, empresas, configuración, auditoría y la página pública (con el directorio) están siempre prendidos. Que una organización publique su página o no es su estado (`Draft`/`Published`), no un módulo.
 
 ## Prohibido
 - `if (tenant.Plan == "Pro")` en el código.
@@ -28,11 +28,11 @@
 - Dejar flags viejos: un módulo que ya está prendido para todos se saca del catálogo con su ADR.
 
 ## Copiá de
-- `Infrastructure/Features/TenantFeatureFilter.cs` (E5) · la guía `docs/guides/agregar-un-area.md`, paso "¿es un módulo?".
+- `Infrastructure/Features/TenantFeatureFilter.cs` (E5) · la guía [`agregar-un-area.md`](../guides/agregar-un-area.md) (E4), paso "¿es un módulo?" (E5).
 
 ## Lo verifica
 - `FeatureGateTests`: un módulo apagado da 404 y prendido da 200; el apagado de emergencia gana sobre la organización.
-- `ModuleControllersTests` (arquitectura): todo controller fuera del núcleo tiene `[FeatureGate]` con una clave del catálogo.
+- `ModuleControllersTests` (arquitectura): todo controller fuera del núcleo (el núcleo incluye `PublicSite/` y `Organization/PublicPageAdminController`) tiene `[FeatureGate]` con una clave del catálogo.
 
 ## Detalle
 [backend.md §20](../architecture/backend.md#20-reglas-de-datos-que-se-aplican-solas) · front: `docs/rules/accesos-y-permisos.md`

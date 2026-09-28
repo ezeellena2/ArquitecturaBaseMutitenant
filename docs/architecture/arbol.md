@@ -1,6 +1,6 @@
 # Árbol del backend
 
-> Estructura objetivo, archivo por archivo. `[E#]` indica la etapa del [plan](../plans/2026-09-27-plan-de-desarrollo.md) en que nace la carpeta o el archivo; sin marca, hereda la etapa de su carpeta. Los detalles de cada pieza están en [backend.md](backend.md) y [multitenancy.md](multitenancy.md). `bin/`, `obj/` y `wwwroot/` compilado no se listan.
+> Estructura objetivo, archivo por archivo. `[E#]` indica la etapa del [plan](../plans/2026-09-27-plan-de-desarrollo.md) en que nace la carpeta o el archivo; sin marca, hereda la etapa de su carpeta. Cada proyecto nace vacío en la E0 (tarea 0.2) y sus carpetas llevan su propia marca. Los detalles de cada pieza están en [backend.md](backend.md) y [multitenancy.md](multitenancy.md). `bin/`, `obj/` y `wwwroot/` compilado no se listan.
 
 ## Raíz
 
@@ -14,6 +14,7 @@ ArquitecturaBaseMutitenant/
 │   │   ├── backend.md                                arquitectura canónica
 │   │   ├── multitenancy.md                           accesos B2C/B2B, tres clases de datos, subdominios, aislamiento
 │   │   ├── arnes.md                                  cómo se guía a quien programa: fichas, punteros, verificación
+│   │   ├── estandares.md                             inventario de estándares transversales (definidos, P1 a P10 adoptados, propuestos)
 │   │   └── arbol.md                                  este archivo
 │   ├── contracts/
 │   │   ├── openapi.json                              [E1] generado por el build; el front genera sus tipos desde acá
@@ -21,17 +22,18 @@ ArquitecturaBaseMutitenant/
 │   ├── decisions/
 │   │   ├── README.md                                 índice de los ADR
 │   │   └── NNNN-<titulo>.md                          uno por decisión, al implementarla
-│   ├── rules/                                        fichas del arnés: README + 16 temas (guardado, fechas, números…)
+│   ├── rules/                                        fichas del arnés: README + una ficha por tema (guardado, fechas, números…); índice en rules/README.md
 │   ├── features/                                     reglas funcionales por área
 │   │   ├── identidad.md                              [E3] registro de personas y de empresas, accesos, invitaciones
 │   │   ├── roles.md                                  [E4] cómo copiar el área de referencia
 │   │   ├── plataforma.md                             [E5]
 │   │   ├── organizaciones.md                         [E6] usuarios, empresas, membresías, filtros y conteos
 │   │   ├── personal.md                               [E7]
-│   │   ├── whatsapp.md                               [E8]
+│   │   └── whatsapp.md                               [E8]
 │   ├── operations/
 │   │   ├── configuracion.md                          Google, Gmail y WhatsApp: claves, secretos y pasos en Google y Meta
 │   │   ├── secretos.plantilla.json                   forma del archivo de secretos (se copia FUERA del repo)
+│   │   ├── whatsapp-plantillas.md                    cuándo y cómo crear cada plantilla de WhatsApp en Meta
 │   │   └── runbook.md                                [E10]
 │   ├── plans/
 │   │   ├── 2026-09-27-plan-de-desarrollo.md          plan maestro
@@ -58,7 +60,7 @@ ArquitecturaBaseMutitenant/
 └── README.md                                         cómo levantar, probar y desplegar
 ```
 
-## src/ArquitecturaBaseMultitenant.Domain `[E1]`
+## src/ArquitecturaBaseMultitenant.Domain `[E0]`
 
 Sin paquetes. Entidades, reglas puras y catálogos.
 
@@ -73,46 +75,50 @@ ArquitecturaBaseMultitenant.Domain/
 │   ├── ITenantOwned.cs                               [E2] dato privado: TenantId
 │   ├── ICompanyOwned.cs                              [E2] CompanyId (además de ITenantOwned)
 │   └── NotAuditedAttribute.cs                        [E2] excluye la propiedad del rastro de auditoría
-├── Results/
+├── Results/                                          [E1]
 │   ├── Error.cs                                      record + fábricas Failure/Validation/NotFound/Conflict…
 │   ├── ErrorType.cs
 │   ├── Result.cs                                     Result y Result<T>, con conversiones implícitas
 │   └── ValidationError.cs                            "Validation.Failed" + errores por campo
-├── ValueObjects/
+├── ValueObjects/                                     [E1]
 │   ├── Money.cs                                      [E1] Amount (decimal) + Currency; suma solo con la misma moneda; Round()
 │   ├── CurrencyCode.cs                               [E1] ISO 4217 + decimales de la moneda
 │   ├── CultureCode.cs                                [E1] es-AR | en-US (SupportedCultures)
-│   ├── Email.cs                                      [E3]
-│   └── PhoneNumber.cs                                [E3]
+│   ├── Email.cs                                      [E1] normalizado (minúsculas, NFC, IDN), validado
+│   └── PhoneNumber.cs                                [E1] E.164; PhoneUsage se suma en E3
 ├── Tenancy/                                          [E2–E3]
 │   ├── Tenant.cs                                     Kind, Status, Name, Slug?; métodos Activate/Suspend/Close
 │   ├── TenantKind.cs                                 Personal | Business
 │   ├── TenantStatus.cs                               PendingApproval | Provisioning | Active | Suspended | Closed
-│   ├── TenantErrors.cs                               Tenancy.Tenant.*
+│   ├── TenantErrors.cs                               Tenancy.Tenant.* (Suspended → 403, organización o espacio personal suspendido)
 │   ├── Member.cs                                     UserId, TenantId, Status, IsOwner, JoinedAtUtc
 │   ├── MemberStatus.cs                               Invited | Active | Inactive | Removed
 │   ├── MemberErrors.cs                               Tenancy.Member.*
-│   ├── AccessErrors.cs                               Tenancy.Access.Wrong, .NotMember, .Suspended, .ConsumerCannotCreateBusiness
+│   ├── AccessErrors.cs                               Tenancy.Access.Wrong, .NotMember, .ConsumerCannotCreateBusiness
 │   ├── Invitation.cs                                 [E3] TenantId, email/teléfono, TokenHash, ExpiresAtUtc, roles iniciales
 │   ├── InvitationChannel.cs                         [E3] valor ("email", …): cada módulo registra el suyo
 │   ├── InvitationStatus.cs                           [E3] Pending | Accepted | Revoked | Expired
 │   └── InvitationErrors.cs                           [E3]
-├── Users/                                            [E3] la identidad global (la entidad EF está en Infrastructure)
-│   ├── Access.cs                                     Consumer | Business | Platform (el acceso; un usuario no-plataforma puede tener los dos primeros)
-│   ├── UserStatus.cs                                 Active | Suspended | PendingDeletion | Deleted
-│   └── UserErrors.cs                                 Users.User.*
+├── Users/                                            [E1–E3] la identidad global (la entidad EF está en Infrastructure)
+│   ├── Access.cs                                     [E3] Consumer | Business | Platform (el acceso; un usuario no-plataforma puede tener los dos primeros)
+│   ├── UserStatus.cs                                 [E3] Active | Suspended | PendingDeletion | Deleted
+│   ├── EmailErrors.cs                                [E1] Users.Email.Invalid (lo devuelve Email.Create)
+│   ├── PhoneErrors.cs                                [E1] Users.Phone.Invalid; .NotMobile y .CountryNotAllowed en E3, con PhoneUsage
+│   └── UserErrors.cs                                 [E3] Users.User.*
 ├── Authentication/                                   [E3]
 │   ├── LoginCode.cs
 │   ├── LoginCodeChannel.cs                          valor ("email", …): los módulos suman canales (IsKnown lo valida)
-│   ├── LoginCodePurpose.cs                           Login | Signup | VerifyDestination
+│   ├── LoginCodePurpose.cs                           Login | Signup | VerifyDestination | Reauthenticate (lo usa ReauthVerifier)
 │   ├── LoginCodeDestination.cs
 │   ├── LoginLink.cs
-│   ├── LoginMethod.cs
+│   ├── LoginMethod.cs                                entidad de identity.LoginMethods (ADR 0033, parte 3b): Type, Value único por tipo, IsPrimary, VerifiedAtUtc, ManagedByTenantId?
+│   ├── LoginMethodType.cs                            Email | Phone | Google
 │   ├── LoginAudit.cs
+│   ├── LoginAuditMethod.cs                           Code | Google | WhatsAppCode | WhatsAppLink: con qué se entró; lo usa LoginAudit (en ArquitecturaBase se llama LoginMethod)
 │   ├── LoginCodeErrors.cs                            Auth.LoginCode.*
 │   ├── LoginLinkErrors.cs                            Auth.LoginLink.*
 │   ├── SignupErrors.cs                               Auth.Signup.* (cerrado, email tomado…)
-│   └── AccountErrors.cs                              Auth.Account.*
+│   └── AccountErrors.cs                              Identity.Account.* (LockedOut, Suspended, PendingDeletion con la fecha y el cancelTicket)
 ├── Authorization/                                    [E4]
 │   ├── Permissions.cs                                organización + empresa, con All, OrganizationScoped, CompanyScoped
 │   ├── PersonalPermissions.cs                        personal.*, implícitos de la persona en su espacio personal
@@ -131,20 +137,20 @@ ArquitecturaBaseMultitenant.Domain/
 │   └── CompanyMembershipErrors.cs                    Companies.Membership.* (último CompanyAdmin…)
 ├── Settings/                                         [E3–E5]
 │   ├── TenantSettings.cs                             DefaultCulture, DefaultTimeZoneId, DefaultCurrency
-│   ├── PlatformSettings.cs                           [E5] ConsumerSignup, BusinessSignup, MaxOwnedOrganizations
-│   ├── ConsumerSignupMode.cs                         [E5] Open | Closed
+│   ├── PlatformSettings.cs                           [E3] ConsumerSignup, AccountDeletionGraceDays (30); la E5 suma BusinessSignup y MaxOwnedOrganizations
+│   ├── ConsumerSignupMode.cs                         [E3] Open | Closed
 │   ├── BusinessSignupMode.cs                         [E5] Open | RequiresApproval | Closed
 │   └── SettingsErrors.cs
 ├── Platform/                                         [E5]
 │   ├── PlatformRole.cs                               Owner | Support
 │   ├── PlatformRoleAssignment.cs
 │   └── PlatformErrors.cs                             Platform.*
-├── Auditing/                                         [E2–E5]
+├── Auditing/                                         [E2–E3]
 │   ├── AuditEntry.cs                                 [E2] tenant, append-only
 │   ├── AuditAction.cs                                [E2] Created | Updated | Deleted | Restored | Custom
 │   ├── AuditActorKind.cs                             [E2] User | PlatformOperator | System
-│   ├── SecurityEvent.cs                              [E5] plataforma: TargetTenantId?, Reason
-│   └── SecurityEventType.cs                          [E5]
+│   ├── SecurityEvent.cs                              [E3] esquema platform, append-only: Type, ActorId, TargetTenantId?, Reason? (cuenta: métodos de ingreso y baja; plataforma: acciones de operadores, siempre con TargetTenantId y motivo)
+│   └── SecurityEventType.cs                          [E3] los de la cuenta; la E5 suma los de los operadores
 ├── Messaging/                                        [E3]
 │   ├── OutboxMessage.cs                              Channel, payload cifrado, Attempts, NextAttemptAtUtc
 │   ├── OutboxChannel.cs                             valor ("email", …): cada módulo suma el suyo
@@ -160,15 +166,15 @@ ArquitecturaBaseMultitenant.Domain/
     └── WhatsAppChannel.cs                            [E11] PhoneNumberId → TenantId
 ```
 
-## src/ArquitecturaBaseMultitenant.Application `[E1]`
+## src/ArquitecturaBaseMultitenant.Application `[E0]`
 
 Casos de uso, puertos, modelos, validación y textos. Referencia solo a Domain.
 
 ```
 ArquitecturaBaseMultitenant.Application/
 ├── ArquitecturaBaseMultitenant.Application.csproj    NeutralLanguage=es, InternalsVisibleTo tests
-├── DependencyInjection.cs                            AddApplication(): registro explícito
-├── Common/
+├── DependencyInjection.cs                            [E1] AddApplication(): registro explícito
+├── Common/                                           [E1]
 │   ├── Pagination/
 │   │   ├── PagedRequest.cs                           Page, PageSize (10 por defecto | 20 | 50 | 100), Sort, Search
 │   │   ├── PagedResult.cs                            Items, Page, PageSize, TotalCount, TotalPages, HasPrevious, HasNext
@@ -191,7 +197,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   └── SupportedCultures.cs                      es-AR (por defecto), en-US
 │   └── Exceptions/
 │       └── UniqueConstraintViolationException.cs
-├── Configuration/
+├── Configuration/                                    [E3]
 │   ├── Auth/                                         [E3]
 │   │   ├── LoginCodeOptions.cs
 │   │   ├── LoginLinkOptions.cs
@@ -199,12 +205,12 @@ ArquitecturaBaseMultitenant.Application/
 │   │   └── InvitationOptions.cs
 │   └── Messaging/
 │       └── OutboxOptions.cs                         [E3] reintentos y backoff
-├── Interfaces/
+├── Interfaces/                                       [E1]
 │   ├── Services/                                     lo que inyectan los controllers
 │   │   ├── IAccountService.cs                        [E3] registro B2C
 │   │   ├── ILoginCodeService.cs                      [E3]
 │   │   ├── ILoginLinkService.cs                      [E3]
-│   │   ├── IExternalLoginService.cs                  [E11]
+│   │   ├── IExternalLoginService.cs                  [E3]
 │   │   ├── IConnectService.cs                        [E3] emisión de tokens y cambio de acceso u organización
 │   │   ├── IInvitationService.cs                     [E3] vista previa y aceptación
 │   │   ├── IProfileService.cs                        [E3] /api/me
@@ -219,6 +225,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── IPlatformAccountService.cs                [E5]
 │   │   ├── IPlatformOperatorService.cs               [E5]
 │   │   ├── IPlatformAuditService.cs                  [E5]
+│   │   ├── ITimeZoneCatalogService.cs                [E1] catálogo traducido para GET /api/time-zones
 │   │   └── IPlatformSettingsService.cs              [E5]
 │   ├── Persistence/                                  implementados en Infrastructure/Persistence
 │   │   ├── IUnitOfWork.cs                            [E2]
@@ -227,7 +234,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── ITenantScope.cs                           [E2] Enter(tenantId)
 │   │   ├── IAuditLog.cs                              [E2] eventos explícitos de auditoría
 │   │   ├── ITenantRepository.cs                      [E3]
-│   │   ├── ITenantReader.cs                          [E3] también lo usa TenantJobRunner
+│   │   ├── ITenantReader.cs                          [E3] desde acá TenantJobRunner recorre las organizaciones activas
 │   │   ├── IMemberRepository.cs                      [E3]
 │   │   ├── IMemberReader.cs                          [E3] punto de partida de "usuarios de mi organización"
 │   │   ├── IUserRepository.cs                        [E3] escrituras de la identidad
@@ -242,10 +249,10 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── IRoleAssignmentRepository.cs              [E4]
 │   │   ├── IPermissionReader.cs                      [E4]
 │   │   ├── IPlatformSettingsRepository.cs            [E5]
-│   │   ├── IPlatformSettingsReader.cs                [E5]
+│   │   ├── IPlatformSettingsReader.cs                [E3]
 │   │   ├── IPlatformRoleAssignmentRepository.cs      [E5]
 │   │   ├── IPlatformReader.cs                        [E5] organizaciones, identidades y operadores (vista de plataforma)
-│   │   ├── ISecurityEventRepository.cs               [E5]
+│   │   ├── ISecurityEventRepository.cs               [E3]
 │   │   ├── ISecurityEventReader.cs                   [E5]
 │   │   ├── ICompanyRepository.cs                     [E6]
 │   │   ├── ICompanyReader.cs                         [E6]
@@ -262,7 +269,7 @@ ArquitecturaBaseMultitenant.Application/
 │       │   ├── ISignInService.cs                     técnico: sign-in, bloqueos, revocar sesiones (≤12 miembros)
 │       │   ├── IUserLookup.cs                        búsqueda global por email o teléfono
 │       │   ├── IPermissionService.cs                 [E4] permisos efectivos en la organización + invalidación
-│       │   ├── IPlatformPermissionService.cs         [E5]
+│       │   ├── IPlatformPermissionService.cs         [E4]
 │       │   ├── ITokenRevoker.cs
 │       │   └── IGoogleAvailability.cs                [E3]
 │       ├── Security/                                 [E3]
@@ -271,9 +278,10 @@ ArquitecturaBaseMultitenant.Application/
 │       │   ├── ILoginCodeHasher.cs
 │       │   └── IPayloadProtector.cs                  cifrado del payload del outbox
 │       ├── Messaging/                                [E3]
-│       │   ├── IOutbox.cs                            Enqueue(email o WhatsApp) dentro del límite
+│       │   ├── IOutbox.cs                            Enqueue(canal registrado) dentro del límite
 │       │   ├── ILoginCodeChannel.cs                 [E3] envía un código por un canal; el núcleo trae "email"
 │       │   ├── IInvitationChannel.cs                [E3] envía una invitación; el núcleo trae "email"
+│       │   ├── IAccountNoticeChannel.cs              [E3] envía un aviso de la cuenta a un método de ingreso; el núcleo trae "email"
 │       │   └── IEmailTemplateRenderer.cs
 │       ├── Caching/
 │       │   └── ITenantStatusCache.cs                 [E3] invalidar al suspender o reactivar
@@ -283,7 +291,7 @@ ArquitecturaBaseMultitenant.Application/
 │           ├── IPhoneNumberParser.cs                [E3] Parse(country, number, PhoneUsage) → Result<PhoneNumber>; Mask
 │           ├── PhoneUsage.cs                        [E3] Any | Mobile | WhatsApp
 │           └── IPhoneLinkObserver.cs                [E3] el núcleo avisa cambios de teléfono; el módulo suelta el contacto
-├── Models/                                           *Request (entrada), *Response (salida), ReadModels/*Row (proyección)
+├── Models/                                           [E1] *Request (entrada), *Response (salida), ReadModels/*Row (proyección)
 │   ├── Auth/                                         [E3]
 │   │   ├── SignupRequest.cs
 │   │   ├── VerifySignupRequest.cs
@@ -294,22 +302,27 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── RequestLoginLinkRequest.cs
 │   │   ├── ConsumeLoginLinkRequest.cs
 │   │   ├── LoginLinkPreviewResponse.cs
-│   │   ├── LoginMethodsResponse.cs
+│   │   ├── LoginMethodsResponse.cs                   respuesta de GET /api/auth/methods (medios de ingreso encendidos)
 │   │   ├── ConnectUser.cs                            identidad + acceso y tenant elegidos, para armar el principal
-│   │   ├── ProfileSelectionRequest.cs                tenant pedido en authorize
+│   │   ├── AccessSelectionRequest.cs                 acceso (consumer|business) y tenant pedidos en authorize
 │   │   └── ReturnUrls.cs
 │   ├── Invitations/                                  [E3]
 │   │   ├── AcceptInvitationRequest.cs
 │   │   └── InvitationPreviewResponse.cs
 │   ├── Profile/                                      [E3]
-│   │   ├── MeResponse.cs                             cuenta + acceso activo + espacio personal + organizaciones + permisos + features
+│   │   ├── MeResponse.cs                             cuenta + acceso activo + espacio personal + organizaciones + permisos + preferencias efectivas (cultura, zona, moneda) + features
 │   │   ├── OrganizationSummary.cs                         id, nombre, slug y estado (para elegir organización)
 │   │   ├── EffectivePermissions.cs                   organización + por empresa
 │   │   ├── UpdateMeRequest.cs
-│   │   ├── VerifyDestinationRequest.cs
-│   │   ├── CreateOrganizationRequest.cs              [E6]
+│   │   └── VerifyDestinationRequest.cs
+│   ├── Organizations/                                [E6]
+│   │   └── BusinessSignupRequest.cs                  nombre, slug y CUIT de la empresa, y datos de quien la registra
+│   ├── PublicSite/                                   [E6–E7]
+│   │   ├── PublicPageResponse.cs                     [E6] nombre, logo, descripción, contacto, slug y estado
+│   │   ├── UpdatePublicPageRequest.cs                [E6]
+│   │   ├── ListDirectoryRequest.cs                   [E7] paginado del directorio
 │   │   └── ReadModels/
-│   │       └── PublicPageResponse.cs                 [E6]
+│   │       └── DirectoryEntryRow.cs                  [E7]
 │   ├── Users/                                        [E6]
 │   │   ├── ListUsersRequest.cs                       SortableFields
 │   │   ├── UserDetailResponse.cs
@@ -351,7 +364,6 @@ ArquitecturaBaseMultitenant.Application/
 │   ├── Time/                                         [E1]
 │   │   ├── TimeZoneResponse.cs
 │   │   └── DayRangeUtc.cs
-│   │   └── ReadModels/
 │   ├── Platform/                                     [E5]
 │   │   ├── ListTenantsRequest.cs
 │   │   ├── TenantDetailResponse.cs
@@ -368,19 +380,26 @@ ArquitecturaBaseMultitenant.Application/
 │   │       ├── AccountRow.cs
 │   │       ├── OperatorRow.cs
 │   │       └── SecurityEventRow.cs
+│   ├── Notifications/                                [E3]
+│   │   └── AccountNotice.cs                          jerarquía cerrada: LoginMethodChanged (qué pasó, método enmascarado, fecha), ReviewLoginMethods (organización), DeletionRequested (fecha), DeletionCancelled, AccountDeleted
 │   └── Messaging/                                    [E3]
 │       └── EmailMessage.cs
-├── Validation/                                       un *RequestValidator (internal sealed) por request que lo necesite
+├── Validation/                                       [E1] un *RequestValidator (internal sealed) por request que lo necesite
 │   ├── Auth/                                         [E3]
 │   │   ├── SignupRequestValidator.cs
 │   │   ├── VerifySignupRequestValidator.cs
 │   │   ├── RequestLoginCodeRequestValidator.cs
 │   │   ├── VerifyLoginCodeRequestValidator.cs
-│   │   ├── RequestLoginLinkRequestValidator.cs
+│   │   └── RequestLoginLinkRequestValidator.cs
+│   ├── Invitations/                                  [E3]
 │   │   └── AcceptInvitationRequestValidator.cs
 │   ├── Profile/                                      [E3]
-│   │   ├── UpdateMeRequestValidator.cs
-│   │   └── CreateOrganizationRequestValidator.cs     [E6]
+│   │   └── UpdateMeRequestValidator.cs
+│   ├── Organizations/                                [E6]
+│   │   └── BusinessSignupRequestValidator.cs
+│   ├── PublicSite/                                   [E6–E7]
+│   │   ├── UpdatePublicPageRequestValidator.cs       [E6]
+│   │   └── ListDirectoryRequestValidator.cs          [E7]
 │   ├── Users/                                        [E6]
 │   │   ├── ListUsersRequestValidator.cs
 │   │   ├── InviteUserRequestValidator.cs
@@ -407,7 +426,7 @@ ArquitecturaBaseMultitenant.Application/
 │       ├── ChangeAccountStatusRequestValidator.cs
 │       ├── AddOperatorRequestValidator.cs
 │       └── UpdatePlatformSettingsRequestValidator.cs
-├── Services/                                         internal sealed partial; helpers con sufijo fijo y sin IUnitOfWork
+├── Services/                                         [E1] internal sealed partial; helpers con sufijo fijo y sin IUnitOfWork
 │   ├── Auth/                                         [E3]
 │   │   ├── AccountService.cs                         registro de personas (identidad + espacio personal)
 │   │   ├── SignupPolicy.cs                           ¿el registro está abierto? ¿el email está libre?
@@ -419,7 +438,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── ConnectService.cs
 │   │   ├── AccessSwitchPolicy.cs                     acceso pedido válido: membresía activa (B2B) o identidad activa (B2C)
 │   │   ├── UserCultures.cs                           cultura efectiva para mensajes en segundo plano
-│   │   └── ExternalLoginService.cs                   [E11]
+│   │   └── ExternalLoginService.cs                   [E3]
 │   ├── Invitations/                                  [E3]
 │   │   ├── InvitationService.cs
 │   │   └── InvitationIssuer.cs                       lo usan UserService y TenantAdministrationService
@@ -429,7 +448,7 @@ ArquitecturaBaseMultitenant.Application/
 │   ├── Organizations/                                [E6]
 │   │   ├── BusinessSignupService.cs    
 │   │   ├── BusinessSignupPolicy.cs                   modo de alta y límite por persona
-│   │   └── TenantProvisioner.cs                      idempotente: settings, roles de sistema, 1ª empresa, admin
+│   │   └── TenantProvisioner.cs                      idempotente: settings, roles de sistema, 1ª empresa, membresía de Dueño (TenantAdmin) y página pública en Draft
 │   ├── Users/                                        [E6]
 │   │   ├── UserService.cs
 │   │   ├── UserGuard.cs
@@ -437,7 +456,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   └── AccountAccessRevoker.cs
 │   ├── Roles/                                        [E4] ← ÁREA DE REFERENCIA
 │   │   ├── RoleService.cs
-│   │   ├── RoleGuard.cs
+│   │   └── RoleGuard.cs
 │   ├── Companies/                                    [E6]
 │   │   ├── CompanyService.cs
 │   │   ├── CompanyGuard.cs
@@ -447,7 +466,8 @@ ArquitecturaBaseMultitenant.Application/
 │   │   └── TenantSettingsService.cs                  [E6]
 │   ├── Auditing/
 │   │   └── AuditLogService.cs                        [E6]
-│   ├── Time/
+│   ├── Time/                                         [E1]
+│   │   └── TimeZoneCatalogService.cs                 usa ITimeZoneService; devuelve TimeZoneResponse
 │   └── Platform/                                     [E5]
 │       ├── TenantAdministrationService.cs
 │       ├── PlatformAccountService.cs
@@ -470,7 +490,7 @@ ArquitecturaBaseMultitenant.Application/
 │       │   ├── IWhatsAppWebhookReader.cs
 │       │   └── IWhatsAppInboundSignal.cs
 │       ├── Models/
-│       │   ├── WhatsAppOutboundMessage.cs            jerarquía cerrada: texto, botones, código, invitación
+│       │   ├── WhatsAppOutboundMessage.cs            jerarquía cerrada: texto, botones, código, invitación, aviso
 │       │   ├── WhatsAppWebhookBatch.cs
 │       │   └── BotButtons.cs
 │       ├── Services/
@@ -479,19 +499,20 @@ ArquitecturaBaseMultitenant.Application/
 │       │   ├── WhatsAppContactLinker.cs
 │       │   ├── WhatsAppLoginCodeChannel.cs           implementa ILoginCodeChannel ("whatsapp")
 │       │   ├── WhatsAppInvitationChannel.cs          implementa IInvitationChannel ("whatsapp")
+│       │   ├── WhatsAppAccountNoticeChannel.cs       implementa IAccountNoticeChannel ("whatsapp")
 │       │   ├── WhatsAppPhoneLinkObserver.cs          implementa IPhoneLinkObserver
 │       │   └── BotReply.cs
 │       └── Resources/
 │           ├── WhatsAppTexts.resx / .en.resx         textos del bot y de las plantillas
 │           └── WhatsAppTexts.cs
-└── Resources/                                        es (neutral) + en; claves en paridad
+└── Resources/                                        [E1] es (neutral) + en; claves en paridad
     ├── Errors.resx                                   [E1] código del error → texto; Title.<ErrorType>
     ├── Errors.en.resx
     ├── Validation.resx                               [E1]
     ├── Validation.en.resx
     ├── Permissions.resx                              [E4] Area.*, Permission.*, PermissionDescription.*, Role.*
     ├── Permissions.en.resx
-    ├── Notifications.resx                            [E3] asuntos y cuerpos de correo, textos de WhatsApp y bot
+    ├── Notifications.resx                            [E3] asuntos y cuerpos de correo (también los avisos de la cuenta por correo)
     ├── Notifications.en.resx
     ├── Audit.resx                                    [E6] AuditAction.*, Entity.*
     ├── Audit.en.resx
@@ -502,42 +523,42 @@ ArquitecturaBaseMultitenant.Application/
     └── AuditTexts.cs
 ```
 
-## src/ArquitecturaBaseMultitenant.Infrastructure `[E2]`
+## src/ArquitecturaBaseMultitenant.Infrastructure `[E0]`
 
 EF Core, Identity, OpenIddict, mensajería, WhatsApp y adaptadores técnicos. Referencia a Application.
 
 ```
 ArquitecturaBaseMultitenant.Infrastructure/
 ├── ArquitecturaBaseMultitenant.Infrastructure.csproj  FrameworkReference AspNetCore; Templates como EmbeddedResource
-├── DependencyInjection.cs                             AddInfrastructure(cfg, env) → llama a cada *Registration
-├── Persistence/
-│   ├── ApplicationDbContext.cs                        IdentityUserContext<ApplicationUser,Guid> + IDataProtectionKeyContext
-│   ├── PersistenceRegistration.cs                     DbContext (appdb), interceptores, UoW, repositorios, readers
-│   ├── UnitOfWork.cs
-│   ├── TenantContext.cs                               implementa ITenantContext + ITenantScope
-│   ├── UniqueViolations.cs                            nombre de índice → error de negocio
-│   ├── DatabaseBootstrapExtensions.cs                 solo Development: crea mt_app, migra y hace el seed (appdb-admin)
+├── DependencyInjection.cs                             [E1] AddInfrastructure(cfg, env) → llama a cada *Registration
+├── Persistence/                                       [E1–E2]
+│   ├── ApplicationDbContext.cs                        [E2] IdentityUserContext<ApplicationUser,Guid> + IDataProtectionKeyContext
+│   ├── PersistenceRegistration.cs                     [E2] DbContext (appdb), interceptores, UoW, repositorios, readers
+│   ├── UnitOfWork.cs                                  [E2]
+│   ├── TenantContext.cs                               [E2] implementa ITenantContext + ITenantScope
+│   ├── UniqueViolations.cs                            [E2] nombre de índice → error de negocio
+│   ├── DatabaseBootstrapExtensions.cs                 [E2] solo Development: crea la base con ICU es-AR, crea mt_app, migra y hace el seed (appdb-admin)
 │   ├── Configurations/                                una IEntityTypeConfiguration<T> por entidad
 │   │   ├── Platform/
 │   │   │   ├── TenantConfiguration.cs                 [E3]
 │   │   │   ├── OutboxMessageConfiguration.cs          [E3]
-│   │   │   ├── PlatformSettingsConfiguration.cs       [E5]
+│   │   │   ├── PlatformSettingsConfiguration.cs       [E3]
 │   │   │   ├── PlatformRoleAssignmentConfiguration.cs [E5]
-│   │   │   └── SecurityEventConfiguration.cs        [E5]
+│   │   │   └── SecurityEventConfiguration.cs          [E3]
 │   │   ├── Identity/
 │   │   │   ├── ApplicationUserConfiguration.cs        [E3] Email y PhoneNumber sin índice único (copia del método principal)
 │   │   │   ├── LoginCodeConfiguration.cs              [E3]
 │   │   │   ├── LoginLinkConfiguration.cs              [E3]
-│   │   │   └── LoginAuditConfiguration.cs           [E3]
-│   │   ├── Tenant/                                    datos privados (RLS)
-│   │   │   ├── AuditEntryConfiguration.cs             [E2]
-│   │   │   ├── MemberConfiguration.cs                 [E3]
-│   │   │   ├── InvitationConfiguration.cs             [E3]
-│   │   │   ├── TenantSettingsConfiguration.cs         [E3]
-│   │   │   ├── RoleConfiguration.cs                   [E4]
-│   │   │   ├── RoleAssignmentConfiguration.cs         [E4]
-│   │   │   ├── CompanyConfiguration.cs                [E6]
-│   │   │   ├── CompanyMembershipConfiguration.cs      [E6]
+│   │   │   └── LoginAuditConfiguration.cs             [E3]
+│   │   └── Tenant/                                    datos privados (RLS)
+│   │       ├── AuditEntryConfiguration.cs             [E2]
+│   │       ├── MemberConfiguration.cs                 [E3]
+│   │       ├── InvitationConfiguration.cs             [E3]
+│   │       ├── TenantSettingsConfiguration.cs         [E3]
+│   │       ├── RoleConfiguration.cs                   [E4]
+│   │       ├── RoleAssignmentConfiguration.cs         [E4]
+│   │       ├── CompanyConfiguration.cs                [E6]
+│   │       └── CompanyMembershipConfiguration.cs      [E6]
 │   ├── Interceptors/                                  [E2]
 │   │   ├── TenantConnectionInterceptor.cs             set_config('app.tenant_id') al abrir la conexión
 │   │   ├── TenantStampInterceptor.cs                  sella y protege las columnas de tenant
@@ -548,8 +569,8 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   ├── RlsMigrationBuilderExtensions.cs           EnableTenantRls / EnablePublicRls / EnablePartiesRls + triggers
 │   │   ├── RlsSql.cs                                  plantillas SQL de políticas y triggers
 │   │   ├── TenantIsolationModelValidator.cs           toda entidad clasificada, con esquema y filtro correctos
-│   │   └── RuntimeRoleValidator.cs                    aborta si mt_app es privilegiado
-│   ├── Extensions/
+│   │   └── RuntimeRoleValidator.cs                    aborta si mt_app es privilegiado o si la base no es ICU es-AR
+│   ├── Extensions/                                    [E1–E2]
 │   │   ├── ModelBuilderExtensions.cs                  [E2] filtros "Tenant", "Public", "Parties", "SoftDelete"
 │   │   ├── QueryableExtensions.cs                     [E1–E2] ApplySort, ApplySearch, ToPagedResultAsync, ToCursorResultAsync
 │   │   ├── SortMap.cs                                 [E1] campo del contrato → expresión; cada reader declara el suyo
@@ -572,7 +593,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   ├── RoleAssignmentRepository.cs                [E4]
 │   │   ├── PlatformSettingsRepository.cs              [E5]
 │   │   ├── PlatformRoleAssignmentRepository.cs        [E5]
-│   │   ├── SecurityEventRepository.cs                 [E5]
+│   │   ├── SecurityEventRepository.cs                 [E3]
 │   │   ├── CompanyRepository.cs                       [E6]
 │   │   └── CompanyMembershipRepository.cs           [E6]
 │   ├── Readers/                                       AsNoTracking + proyección a *Row/*Response
@@ -581,7 +602,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   ├── TenantSettingsReader.cs                    [E3] con caché t:
 │   │   ├── RoleReader.cs                              [E4]
 │   │   ├── PermissionReader.cs                        [E4]
-│   │   ├── PlatformSettingsReader.cs                  [E5] con caché p:
+│   │   ├── PlatformSettingsReader.cs                  [E3] con caché p:
 │   │   ├── CompanyReader.cs                           [E6]
 │   │   ├── CompanyMembershipReader.cs                 [E6]
 │   │   ├── AuditEntryReader.cs                        [E6]
@@ -590,27 +611,29 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │       └── SecurityEventReader.cs
 │   ├── Migrations/                                    una sola carpeta; RLS y grants dentro de cada migración
 │   │   ├── <ts>_InitialSchema.cs                      [E2] esquemas, grants a mt_app, funciones de triggers, unaccent,
-│   │   │                                              pg_trgm y public.f_unaccent
-│   │   ├── <ts>_IdentityAndTenancy.cs                 [E3] usuarios, tenants, miembros, invitaciones, settings, outbox
+│   │   │                                              pg_trgm, public.f_unaccent y platform.IdempotencyKeys
+│   │   ├── <ts>_IdentityAndTenancy.cs                 [E3] usuarios, tenants, miembros, invitaciones, settings de organización y de plataforma,
+│   │   │                                              eventos de seguridad, outbox
 │   │   ├── <ts>_OpenIddict.cs                         [E3]
 │   │   ├── <ts>_Roles.cs                              [E4]
-│   │   ├── <ts>_Platform.cs                           [E5]
+│   │   ├── <ts>_Platform.cs                           [E5] roles de plataforma; PlatformSettings suma BusinessSignup y MaxOwnedOrganizations
 │   │   ├── <ts>_Companies.cs                          [E6]
 │   │   └── ApplicationDbContextModelSnapshot.cs
 │   └── Seed/
 │       ├── SeedExtensions.cs                          [E3] orden e idempotencia; corre en todos los ambientes, dentro de un
 │       │                                              límite y con el advisory lock "seed:" (sin carreras entre réplicas)
-│       ├── SeedOptions.cs                             [E3] Seed:PlatformOwner, Seed:Demo
+│       ├── SeedOptions.cs                             [E3] Seed:PlatformOwner
 │       ├── OpenIddictSeeder.cs                        [E3] cliente web + scope api
-│       ├── PlatformSeeder.cs                          [E5] PlatformSettings + primer dueño
-│       └── DevelopmentSeeder.cs                       [E3] Ana (Personal + "Demo"), Beto (Personal)
+│       ├── PlatformSeeder.cs                          [E3] ajustes de plataforma + operador inicial (Seed:PlatformOwner); la E5 le asigna el rol Owner
+│       └── DevelopmentSeeder.cs                       [E3] operador; Empresa A (Ana, Kevin); Kevin y Carla como personas
 ├── Identity/                                          [E3]
-│   ├── ApplicationUser.cs                             IsPlatformOperator, Status, Culture, TimeZoneId, DisplayName, LastActiveTenantId
+│   ├── ApplicationUser.cs                             IsPlatformOperator, Status, Culture, TimeZoneId, DisplayName, LastBusinessTenantId,
+│   │                                                  DeletionRequestedAtUtc, DeletionScheduledForUtc, DeletionReason, DeletedAtUtc
 │   ├── IdentityRegistration.cs                        Identity core, cookies /account y /connect, DataProtection
 │   ├── SignInService.cs
 │   ├── UserLookup.cs                                  búsqueda global (lista blanca)
 │   ├── PermissionService.cs                           [E4] HybridCache t:{tenant}:perm:{user}
-│   ├── PlatformPermissionService.cs                   [E5]
+│   ├── PlatformPermissionService.cs                   [E4]
 │   ├── IdentityResultExtensions.cs
 │   ├── GoogleAvailability.cs                          [E3] Google se enciende con Authentication:Google:ClientId
 │   └── OpenIddict/
@@ -636,14 +659,23 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │       ├── SmtpOptionsValidator.cs
 │       └── Templates/
 │           ├── _Layout.html
-│           ├── LoginCode.html
+│           ├── LoginCode.html                         código de ingreso y código para verificar un correo nuevo (textos VerifyEmail, como en ArquitecturaBase)
 │           ├── SignupCode.html
-│           └── Invitation.html
+│           ├── Invitation.html
+│           ├── LoginMethodChanged.html                método agregado, quitado o principal cambiado; va a todos los métodos (multitenancy.md §3.1)
+│           ├── ReviewLoginMethods.html                membresía terminada: "Revisá tus métodos de ingreso"
+│           ├── AccountDeletionRequested.html
+│           ├── AccountDeletionCancelled.html
+│           ├── AccountDeleted.html                    va al método principal y se encola antes de borrar los métodos (multitenancy.md §3.2)
+│           └── DataExportReady.html                   [E10] enlace de descarga que vence a las 48 h; solo por correo
 ├── Modules/                                         [E8]
 │   └── WhatsApp/                                    módulo opcional: se enciende con WhatsApp:PhoneNumberId
 │       ├── WhatsAppInfrastructureModule.cs          AddWhatsAppModule(cfg): cliente, workers, health, persistencia
 │       ├── WhatsAppOptions.cs
 │       ├── WhatsAppOptionsValidator.cs
+│       ├── WhatsAppTemplateCatalog.cs                las 7 plantillas de whatsapp-plantillas.md (codigo_ingreso, invitacion_organizacion, aviso_metodo_ingreso,
+│       │                                             revisa_metodos_ingreso, baja_cuenta_pedida, baja_cuenta_cancelada, cuenta_eliminada): su clave
+│       │                                             WhatsApp:Templates:<Nombre> y el orden de sus variables; lo usa Cloud/WhatsAppMessagePayload
 │       ├── Cloud/
 │       │   ├── IWhatsAppCloudClient.cs               internal
 │       │   ├── WhatsAppCloudClient.cs                Graph v25.0, POST sin reintentos
@@ -676,15 +708,16 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   └── PayloadProtector.cs                            DataProtection
 ├── Caching/                                           [E2–E3]
 │   ├── CachingRegistration.cs
-│   ├── CacheKeys.cs                                   t: / u: / p:
+│   ├── CacheKeys.cs                                   t: / s: / u: / p:
 │   └── TenantStatusCache.cs                           [E3]
-├── Time/
+├── Time/                                              [E1]
 │   └── TimeZoneService.cs                             [E1] TimeZoneInfo con IDs IANA
-├── Phones/
+├── Phones/                                            [E3]
 │   └── LibPhoneNumberParser.cs                        [E3]
 └── BackgroundJobs/                                    [E2]
     ├── BackgroundJobsRegistration.cs
-    └── TenantJobRunner.cs                             un scope DI por tenant + Enter
+    └── TenantJobRunner.cs                             un scope DI por tenant + Enter; en la E2 recibe los tenantId (se prueba con Widget), y desde la E3
+                                                       recorre las organizaciones activas con ITenantReader
 ```
 
 ## src/ArquitecturaBaseMultitenant.Api `[E0]`
@@ -705,18 +738,21 @@ ArquitecturaBaseMultitenant.Api/
 ├── Authorization/                                     [E4]
 │   ├── HasPermissionAttribute.cs
 │   ├── HasCompanyPermissionAttribute.cs
-│   ├── HasPlatformPermissionAttribute.cs              [E5]
+│   ├── HasPlatformPermissionAttribute.cs
 │   ├── PermissionPolicyProvider.cs                    perm: / cperm: / pperm:
 │   ├── PermissionRequirement.cs
 │   ├── CompanyPermissionRequirement.cs
-│   ├── PlatformPermissionRequirement.cs               [E5]
+│   ├── PlatformPermissionRequirement.cs
 │   ├── PermissionAuthorizationHandler.cs
 │   ├── CompanyPermissionAuthorizationHandler.cs       lee {companyId} de la ruta
-│   └── PlatformPermissionAuthorizationHandler.cs      [E5]
+│   └── PlatformPermissionAuthorizationHandler.cs
 ├── Tenancy/                                           [E3]
 │   ├── TenantResolutionMiddleware.cs
-│   ├── AccessAttribute.cs                             [Access(Consumer|Business|Platform)] y [PublicSite]
-│   ├── AccessFilter.cs                                403 Tenancy.Access.Wrong; PublicSiteResolutionMiddleware.cs (host → datos públicos)
+│   ├── AccessAttribute.cs                             [Access(Consumer|Business|Platform)]
+│   ├── AccessFilter.cs                                403 Tenancy.Access.Wrong
+│   ├── PublicSiteResolutionMiddleware.cs              [E7] subdominio → IPublicSiteContext (solo datos públicos)
+│   ├── PublicSiteAttribute.cs                         [E7] [PublicSite]: la ruta necesita un subdominio de empresa publicado
+│   ├── PublicSiteContext.cs                           [E7]
 │   └── TenantClaimTypes.cs
 ├── RequestContext/                                    [E3]
 │   ├── CurrentUser.cs
@@ -724,13 +760,13 @@ ArquitecturaBaseMultitenant.Api/
 │   └── PublicOrigin.cs
 ├── Controllers/
 │   ├── Auth/                                          [E3]
-│   │   ├── ConnectController.cs                       authorize (con tenant=), token, logout, userinfo
+│   │   ├── ConnectController.cs                       authorize (access=, tenant=), token, logout, userinfo
 │   │   ├── SignupController.cs                        POST /api/auth/signup, /verify
 │   │   ├── LoginCodeController.cs
 │   │   ├── LoginLinkController.cs
-│   │   ├── LoginMethodsController.cs
+│   │   ├── LoginMethodsController.cs                  GET /api/auth/methods [AllowAnonymous]: medios de ingreso encendidos (Google con su ClientId, WhatsApp)
 │   │   ├── InvitationsController.cs                   GET preview, POST accept
-│   │   └── ExternalLoginController.cs                 [E11]
+│   │   └── ExternalLoginController.cs                 [E3]
 │   ├── Account/
 │   │   ├── MeController.cs                            [E3] GET/PUT /api/me
 │   │   ├── BusinessSignupController.cs                [E6] POST /api/auth/business-signup ("Registrá tu empresa")
@@ -762,7 +798,7 @@ ArquitecturaBaseMultitenant.Api/
 │   ├── Account/
 │   │   ├── UpdateMeHttpRequest.cs                     [E3]
 │   │   ├── VerifyDestinationHttpRequest.cs            [E3]
-│   │   └── CreateOrganizationHttpRequest.cs           [E6]
+│   │   └── BusinessSignupHttpRequest.cs               [E6] POST /api/auth/business-signup ("Registrá tu empresa")
 │   ├── Organization/
 │   │   ├── RolesQuery.cs                              [E4]
 │   │   ├── CreateRoleHttpRequest.cs                   [E4]
@@ -778,7 +814,10 @@ ArquitecturaBaseMultitenant.Api/
 │   │   ├── AddCompanyMemberHttpRequest.cs             [E6]
 │   │   ├── UpdateCompanyMemberRolesHttpRequest.cs     [E6]
 │   │   ├── UpdateSettingsHttpRequest.cs               [E6]
+│   │   ├── UpdatePublicPageHttpRequest.cs             [E6]
 │   │   └── AuditQuery.cs                              [E6]
+│   ├── PublicSite/                                    [E7]
+│   │   └── DirectoryQuery.cs
 │   └── Platform/                                      [E5]
 │       ├── TenantsQuery.cs
 │       ├── CreateTenantHttpRequest.cs
@@ -810,7 +849,7 @@ ArquitecturaBaseMultitenant.Api/
 ├── RateLimiting/                                      [E3]
 │   ├── RateLimitingExtensions.cs
 │   ├── RateLimitingOptions.cs
-│   └── RateLimitPolicies.cs                           login-code, login-verify, signup, invitation-accept, whatsapp-webhook, profile-api
+│   └── RateLimitPolicies.cs                           por IP: login-code, login-verify, invitation-accept, whatsapp-webhook; por organización: tenant-api
 ├── Modules/                                         [E8]
 │   └── WhatsApp/
 │       ├── WhatsAppApiModule.cs                      AddWhatsAppModule(): convención de rutas y rate limit del webhook
@@ -845,36 +884,36 @@ ArquitecturaBaseMultitenant.ServiceDefaults/
 tests/
 ├── Directory.Build.props                              [E0] OutputType Exe, xunit.v3, <Using Include="Xunit"/>
 │
-├── ArquitecturaBaseMultitenant.Domain.UnitTests/      [E1]
+├── ArquitecturaBaseMultitenant.Domain.UnitTests/      [E0]
 │   ├── ArquitecturaBaseMultitenant.Domain.UnitTests.csproj
-│   ├── Results/
+│   ├── Results/                                       [E1]
 │   │   ├── ResultTests.cs
 │   │   └── ValidationErrorTests.cs
-│   ├── ValueObjects/
+│   ├── ValueObjects/                                  [E1]
 │   │   ├── MoneyTests.cs                              [E1] redondeo AwayFromZero, monedas distintas no se suman
-│   │   ├── EmailTests.cs                              [E3]
-│   │   └── PhoneNumberTests.cs                        [E3]
-│   ├── Tenancy/
+│   │   ├── EmailTests.cs                              [E1]
+│   │   └── PhoneNumberTests.cs                        [E1]
+│   ├── Tenancy/                                       [E2–E3]
 │   │   ├── TenantTests.cs                             [E2] transiciones de estado
 │   │   ├── MemberTests.cs                             [E3]
 │   │   └── InvitationTests.cs                         [E3]
-│   ├── Authorization/
+│   ├── Authorization/                                 [E4]
 │   │   ├── PermissionsTests.cs                        [E4] catálogos separados y sin duplicados
 │   │   └── RoleTests.cs                               [E4]
-│   ├── Companies/
-│   │   └── CompanyTests.cs                            [E6]
+│   └── Companies/                                     [E6]
+│       └── CompanyTests.cs
 │
-├── ArquitecturaBaseMultitenant.Application.UnitTests/ [E1]
+├── ArquitecturaBaseMultitenant.Application.UnitTests/ [E0]
 │   ├── ArquitecturaBaseMultitenant.Application.UnitTests.csproj
-│   ├── Common/
+│   ├── Common/                                        [E1]
 │   │   ├── RequestValidatorTests.cs
 │   │   ├── PagedRequestValidatorTests.cs
 │   │   └── DisplayFormatterTests.cs                   [E1] recorre docs/contracts/format-cases.json
-│   ├── Resources/
+│   ├── Resources/                                     [E1]
 │   │   ├── ResourceParityTests.cs                     claves y placeholders es = en
 │   │   ├── ErrorMessagesTests.cs
 │   │   └── PermissionTextsTests.cs                    [E4]
-│   ├── Services/
+│   ├── Services/                                      [E3]
 │   │   ├── Auth/                                      [E3]
 │   │   │   ├── AccountServiceTests.cs                 el registro crea identidad + espacio personal
 │   │   │   ├── LoginCodeServiceTests.cs
@@ -905,7 +944,7 @@ tests/
 │   │   └── Modules/WhatsApp/                        [E8]
 │   │       ├── WhatsAppInboundServiceTests.cs
 │   │       └── BotReplyTests.cs
-│   └── TestDoubles/
+│   └── TestDoubles/                                   [E1]
 │       ├── FakeUnitOfWork.cs                          misma CommitPolicy; cuenta commits y rollbacks
 │       ├── FakeTenantContext.cs
 │       ├── FakeCurrentUser.cs
@@ -915,19 +954,20 @@ tests/
 │       ├── ServiceFixture.cs                          FakeTimeProvider + FakeLogger + RequestValidator real
 │       └── InMemory/                                  un InMemory<X>Repository por puerto que se use en tests
 │
-├── ArquitecturaBaseMultitenant.Api.IntegrationTests/  [E1]
+├── ArquitecturaBaseMultitenant.Api.IntegrationTests/  [E0]
 │   ├── ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj
-│   ├── Support/
-│   │   ├── ApiFactory.cs                              WebApplicationFactory + Testcontainers postgres:18.x (con mt_app real)
+│   ├── Support/                                       [E0–E3]
+│   │   ├── ApiFactory.cs                              [E0] WebApplicationFactory; desde la E2, Testcontainers postgres:18.x (base ICU es-AR, con mt_app real)
 │   │   ├── ApiTestGroup.cs                            colección única, en serie
-│   │   ├── TenantFixture.cs                           [E2] Empresa A (Ana, Kevin), Empresa B (Beto), Kevin y Carla como personas
-│   │   ├── AuthFlow.cs                                [E3] login real: código → authorize (tenant=) → token
+│   │   ├── TenantFixture.cs                           [E2] en la E2, los tenantId de Empresa A, Empresa B y los espacios personales, para RLS; en la E3 suma
+│   │   │                                              los usuarios Ana, Kevin, Beto y Carla
+│   │   ├── AuthFlow.cs                                [E3] login real: código → authorize (access=, tenant=) → token
 │   │   ├── TestAuthHandler.cs                         atajo: X-Test-UserId + X-Test-TenantId
 │   │   ├── RuntimeRoleConnection.cs                   [E2] consultas crudas como mt_app para probar RLS
 │   │   ├── CapturingOutbox.cs                         [E3]
 │   │   ├── FailingCommitUnitOfWork.cs                 [E2]
 │   │   └── HttpExtensions.cs
-│   ├── TestFeatures/                                  solo para tests, nunca en src/
+│   ├── TestFeatures/                                  [E1] solo para tests, nunca en src/
 │   │   ├── TestController.cs                          [E1] devuelve cada ErrorType
 │   │   ├── TestControllerApplicationPart.cs
 │   │   └── Isolation/                                 [E2]
@@ -935,34 +975,38 @@ tests/
 │   │       ├── Poster.cs                              IPublishedByBusiness: la referencia de un dato público
 │   │       ├── Deal.cs                                IConsumerBusinessShared + PartyPolicy: la referencia de un dato compartido
 │   │       ├── IsolationModelCustomizer.cs
-│   │       ├── WidgetsController.cs                   [Access(Business)]
+│   │       ├── WidgetsController.cs                   [E2] el 409 de ConcurrencyTests; [Access(Business)] desde la E3
+│   │       ├── PostersController.cs                   [E7] [PublicSite]
+│   │       ├── DealsController.cs                     [E7] [Access(Consumer)] + [Access(Business)]: el flujo persona → empresa con PartyPolicy
 │   │       └── PersonalWidgetsController.cs           [E7] [Access(Consumer)]: la receta de un módulo B2C
-│   ├── Tenancy/                                       [E2] los tests de multitenancy.md §11
+│   ├── Tenancy/                                       [E2] los tests de multitenancy.md §13
 │   │   ├── CrossTenantIsolationTests.cs
 │   │   ├── RlsBarrierTests.cs
 │   │   ├── RlsPolicyInventoryTests.cs
 │   │   ├── RuntimeRoleTests.cs
 │   │   ├── TenantColumnsImmutabilityTests.cs
-│   │   ├── AccessTests.cs                             [E3]
-│   │   ├── WrongProfileKindTests.cs                   [E3]
-│   │   ├── SuspensionTests.cs                         [E5]
+│   │   ├── PublicAndSharedRowsTests.cs                datos públicos y compartidos, con RLS; los casos por la página pública se suman en la E7
+│   │   ├── AccessTests.cs                             [E3] acceso equivocado, cambio de acceso con membresía, B2C no crea empresas
+│   │   ├── SuspensionTests.cs                         [E3–E5] identidad y organización suspendidas (E3); suspender desde la plataforma, B2C intacto y página "no disponible" (E5)
+│   │   ├── SubdomainTests.cs                          [E7]
 │   │   └── CacheKeyScopeTests.cs
 │   ├── ErrorHandling/                                 [E1]
 │   │   ├── ErrorHandlingTests.cs
 │   │   ├── FrameworkErrorsTests.cs
 │   │   └── ValidationProblemTests.cs
-│   ├── Localization/
+│   ├── Localization/                                  [E1]
 │   │   └── LocalizationTests.cs                       [E1]
-│   ├── Json/
+│   ├── Json/                                          [E1]
 │   │   ├── UtcDateTimeTests.cs                        [E1]
 │   │   ├── DateOnlyTimeOnlyTests.cs                   [E1]
 │   │   └── MoneyJsonTests.cs                          [E1] { amount, currency }; moneda inválida → 400
-│   ├── Hosting/                                       [E1]
-│   │   ├── HealthCheckTests.cs
-│   │   ├── SpaHostingTests.cs
-│   │   └── SecurityHeadersTests.cs
-│   ├── Contracts/
+│   ├── Hosting/                                       [E0–E1]
+│   │   ├── HealthCheckTests.cs                        [E0]
+│   │   ├── SpaHostingTests.cs                         [E1]
+│   │   └── SecurityHeadersTests.cs                    [E1]
+│   ├── Contracts/                                     [E1]
 │   │   ├── ExplicitRouteInventoryTests.cs             [E1] inventario verbo + ruta
+│   │   ├── OpenApiTests.cs                            [E1] cada operación de /api declara su 2xx con esquema y sus errores ProblemDetails; Swagger solo en Development
 │   │   └── OpenApiContractTests.cs                    [E1] openapi.json al día
 │   ├── Persistence/                                   [E2]
 │   │   ├── UnitOfWorkTests.cs
@@ -974,16 +1018,22 @@ tests/
 │   │   ├── AuditTrailTests.cs
 │   │   ├── SoftDeleteTests.cs
 │   │   └── MigrationsTests.cs                         falta una migración → falla
+│   ├── Configuration/                                 [E3] la Api no arranca y nombra la clave que falta
+│   │   ├── SmtpOptionsValidatorTests.cs
+│   │   └── GoogleOptionsTests.cs
 │   ├── Auth/                                          [E3]
 │   │   ├── SignupTests.cs
 │   │   ├── LoginCodeTests.cs
 │   │   ├── LoginLinkTests.cs
 │   │   ├── ConnectTests.cs
+│   │   ├── AuthMethodsTests.cs                        qué medios de ingreso están encendidos según la configuración (GET /api/auth/methods)
+│   │   ├── ManagedEmailTests.cs                       un exmiembro no puede ingresar con el correo de la empresa
 │   │   └── InvitationsTests.cs
-│   ├── Account/
-│   │   ├── MeTests.cs                                 [E3]
+│   ├── Account/                                       [E3]
+│   │   ├── MeTests.cs
+│   │   ├── LoginMethodsTests.cs                       sumar, verificar, elegir el principal y quitar (con código en otro método); aviso en todos
 │   │   └── BusinessSignupTests.cs                     [E6]
-│   ├── Organization/
+│   ├── Organization/                                  [E4]
 │   │   ├── RolesTests.cs                              [E4]
 │   │   ├── PermissionAuthorizationTests.cs            [E4]
 │   │   ├── UsersTests.cs                              [E6]
@@ -998,6 +1048,9 @@ tests/
 │   │   └── PlatformAuditTests.cs
 │   └── Modules/WhatsApp/                            [E8] tests de integración del módulo
 │       ├── WhatsAppWebhookTests.cs
+│       ├── WhatsAppOptionsValidatorTests.cs
+│       ├── WhatsAppTemplateCatalogTests.cs            cada plantilla del catálogo tiene su WhatsApp:Templates:<Nombre> en appsettings.json y el orden de sus
+│       │                                              variables coincide con el payload que se envía
 │       └── WhatsAppInboundProcessorTests.cs
 │
 └── ArquitecturaBaseMultitenant.ArchitectureTests/     [E0]
@@ -1018,12 +1071,14 @@ tests/
     ├── ServiceDependencyCountTests.cs                 [E1] ≤ 8 dependencias
     ├── TransactionBoundaryTests.cs                    [E2] solo los servicios reciben IUnitOfWork; nadie más guarda
     ├── EntityConfigurationTests.cs                    [E2] una configuración por entidad
-    ├── DataClassificationTests.cs                     [E2] toda entidad es ITenantOwned o está en la lista de plataforma o identidad
+    ├── DataClassificationTests.cs                     [E2] toda entidad es ITenantOwned, IPublishedByBusiness o IConsumerBusinessShared, o está en la lista de
+    │                                                  plataforma o identidad
     ├── DecimalPrecisionTests.cs                       [E1] ningún decimal sin HasPrecision; ningún double o float en entidades
     ├── NoManualFormattingTests.cs                     [E1] sin ToString("N"), ToString("C") ni formatos de fecha fuera de DisplayFormatter
     ├── TenantScopeUsageTests.cs                       [E2] ITenantScope solo en la lista blanca
-    ├── QueryFilterBypassTests.cs                      [E2] IgnoreQueryFilters solo en Readers/Platform e Identity
-    ├── IdentityAccessTests.cs                         [E3] ApplicationUser solo desde Identity/ y MemberReader
+    ├── QueryFilterBypassTests.cs                      [E2] IgnoreQueryFilters solo en Readers/Platform (salvo IgnoreQueryFilters(["SoftDelete"]))
+    ├── IdentityAccessTests.cs                         [E3] ApplicationUser solo desde Identity/ (con Configurations/Identity), ApplicationDbContext,
+    │                                                  UserRepository, MemberReader, Readers/Platform y Seed/
     ├── AccessDeclarationTests.cs                      [E3] toda ruta de negocio declara [Access] o [PublicSite]
     ├── PermissionAuthorizationTests.cs                [E4] permisos, nunca roles ni Policy a mano; cada [HasPermission]
     │                                                  nombra un permiso que existe en su catálogo
@@ -1041,10 +1096,12 @@ docs/
 │   ├── permiso-nuevo.md                               [E4]
 │   ├── migracion.md                                   [E2] comando + EnableTenantRls + índices de SortMap
 │   ├── prefijo-de-backend.md                          [E1]
-│   └── quitar-whatsapp.md                             [E8] borrar Modules/WhatsApp en las tres capas + la línea de Program.cs
+│   └── quitar-whatsapp.md                             [E8] borrar Domain/WhatsApp, Modules/WhatsApp en las tres capas y la
+│                                                      línea de Program.cs; agregar una migración que borra sus tablas
 └── features/<área>.md                                 reglas funcionales de cada área
 
-src/**/<carpeta de un área>/AGENTS.md                  una línea: "Antes de tocar esto, leé docs/features/<área>.md"
+src/**/<carpeta de un área>/AGENTS.md                  el puntero del arnés (arnes.md §3: qué va, qué no va, fichas, copiá de) más la línea
+                                                       "Antes de tocar esto, leé docs/features/<área>.md"; en total, 3 a 8 líneas
 src/**/<carpeta de un área>/CLAUDE.md                  @AGENTS.md
 ```
 
@@ -1064,37 +1121,40 @@ src/ArquitecturaBaseMultitenant.Domain/
 └── Features/Features.cs                                  [E5] P8  catálogo de módulos (clave, lado: Consumer, Business o los dos, prendido por defecto)
 
 src/ArquitecturaBaseMultitenant.Application/
+├── Common/Exceptions/ConcurrencyConflictException.cs     [E2] P1  la lanza UnitOfWork ante DbUpdateConcurrencyException; ProblemDetailsMapper → 409 General.ConcurrencyConflict
 ├── Common/Text/TextNormalizer.cs                         [E1] P4  trim, NFC, sin caracteres de control ni de ancho cero
 ├── Interfaces/Integrations/Features/IFeatureService.cs   [E5] P8
 ├── Interfaces/Persistence/ILegalRepository.cs · ILegalReader.cs   [E3] P7
-├── Services/Legal/LegalService.cs                        [E3] P7  documentos vigentes y aceptación; exportar y dar de baja en E10
+├── Services/Legal/LegalService.cs                        [E3] P7  documentos vigentes y aceptación; exportar mis datos en E10 (la baja es AccountDeletionService, E3)
 └── Models/Legal/ · Validation/Legal/                     [E3] P7
 
 src/ArquitecturaBaseMultitenant.Infrastructure/
-├── Persistence/Configurations/Platform/IdempotencyKeyConfiguration.cs   [E1] P6
+├── Persistence/Configurations/Platform/IdempotencyKeyConfiguration.cs   [E2] P6
 ├── Persistence/Configurations/Platform/LegalDocumentConfiguration.cs    [E3] P7
 ├── Persistence/Configurations/Platform/TenantFeatureConfiguration.cs    [E5] P8
 ├── Persistence/Configurations/Identity/LegalAcceptanceConfiguration.cs  [E3] P7
 ├── Persistence/Conventions/VersionedConvention.cs        [E2] P1  IVersioned → xmin IsRowVersion
-├── Persistence/Conventions/EmailConvention.cs            [E1] P3  conversor de valor de Email
-├── Idempotency/IdempotencyStore.cs · IdempotencyCleanupWorker.cs        [E1] P6
+├── Persistence/Conventions/EmailConvention.cs            [E2] P3  conversor de valor de Email
+├── Idempotency/IdempotencyStore.cs · IdempotencyCleanupWorker.cs        [E2] P6
 └── Features/FeaturesRegistration.cs · TenantFeatureFilter.cs · FeatureService.cs   [E5] P8
 
 src/ArquitecturaBaseMultitenant.Api/
 ├── Json/NormalizedStringJsonConverter.cs · RawTextAttribute.cs          [E1] P4
-├── Idempotency/IdempotentAttribute.cs · IdempotencyFilter.cs            [E1] P6
+├── Idempotency/IdempotentAttribute.cs                                   [E1] P6
+├── Idempotency/IdempotencyFilter.cs                                     [E2] P6
 ├── Features/DisabledFeatureHandler.cs                    [E5] P8  módulo apagado → 404 ProblemDetails
 ├── Legal/LegalAcceptanceMiddleware.cs                    [E3] P7
 ├── Controllers/Account/LegalController.cs                [E3] P7  GET /api/legal/current, POST /api/legal/accept
-└── Contracts/Common/PhoneInputHttpRequest.cs · TaxIdHttpRequest.cs      [E1] teléfono y P5
+├── Contracts/Common/PhoneInputHttpRequest.cs                            [E1] teléfono
+└── Contracts/Common/TaxIdHttpRequest.cs                                 [E6] P5
 
 tests/
 ├── *.Domain.UnitTests/ValueObjects/EmailTests.cs · TaxIdTests.cs        P3 · P5
 ├── *.Application.UnitTests/Common/TextNormalizerTests.cs                P4
 ├── *.Api.IntegrationTests/Persistence/ConcurrencyTests.cs · CollationTests.cs   P1 · P2
-├── *.Api.IntegrationTests/Api/IdempotencyTests.cs · NormalizedInputTests.cs     P6 · P4
+├── *.Api.IntegrationTests/Api/IdempotencyTests.cs (E2) · NormalizedInputTests.cs   P6 · P4
 ├── *.Api.IntegrationTests/Features/FeatureGateTests.cs                  P8
-├── *.Api.IntegrationTests/Legal/LegalAcceptanceTests.cs · AccountDeletionTests.cs (E10)   P7
+├── *.Api.IntegrationTests/Legal/LegalAcceptanceTests.cs                 P7
 └── *.ArchitectureTests/VersionedContractTests.cs · TextLimitsTests.cs · EmailPropertyTests.cs ·
     TaxIdPropertyTests.cs · IdempotentActionsTests.cs · ModuleControllersTests.cs          P1 · P4 · P3 · P5 · P6 · P8
 ```
@@ -1106,7 +1166,7 @@ src/ArquitecturaBaseMultitenant.Domain/
 ├── Common/IPublishedByBusiness.cs · IConsumerBusinessShared.cs          [E2] clases pública y compartida
 ├── Common/Party.cs · PartyPolicy.cs                                     [E2] Consumer | Business; qué parte puede hacer qué
 ├── Tenancy/Slug.cs · ReservedSlugs.cs                                   [E6] slug único de la organización (subdominio)
-└── PublicSite/PublicPage.cs · PublicPageStatus.cs · PublicPageErrors.cs [E6] nombre, logo, descripción, contacto; Draft | Published
+└── PublicSite/PublicPage.cs · PublicPageStatus.cs · PublicPageErrors.cs [E6] nombre, logo, descripción, contacto; Draft | Published; bloqueo de la plataforma (fecha UTC y motivo)
 
 src/ArquitecturaBaseMultitenant.Application/
 ├── Interfaces/Integrations/Request/IPublicSiteContext.cs                [E7] organización del subdominio (solo lo público)
@@ -1122,11 +1182,52 @@ src/ArquitecturaBaseMultitenant.Api/
 ├── Tenancy/PublicSiteResolutionMiddleware.cs · PublicSiteAttribute.cs · PublicSiteContext.cs   [E7]
 ├── Controllers/PublicSite/PublicPageController.cs · DirectoryController.cs   [E7] [PublicSite][AllowAnonymous]
 ├── Controllers/Organization/PublicPageAdminController.cs               [E6] [Access(Business)] mi página pública
-└── Controllers/Auth/BusinessSignupController.cs                          [E6] POST /api/auth/business-signup
+└── Controllers/Account/BusinessSignupController.cs                       [E6] POST /api/auth/business-signup
 
 tests/
-├── *.Api.IntegrationTests/Tenancy/AccessTests.cs · SubdomainTests.cs · PublicAndSharedRowsTests.cs
-└── *.Api.IntegrationTests/TestFeatures/Isolation/Poster.cs · Deal.cs · PostersController.cs · DealsController.cs
+├── *.Api.IntegrationTests/Tenancy/AccessTests.cs                        [E3]
+├── *.Api.IntegrationTests/Tenancy/SubdomainTests.cs                     [E7]
+├── *.Api.IntegrationTests/Tenancy/PublicAndSharedRowsTests.cs           [E2] casos de datos y RLS; los de la página pública se suman en la E7
+├── *.Api.IntegrationTests/TestFeatures/Isolation/Poster.cs · Deal.cs    [E2]
+└── *.Api.IntegrationTests/TestFeatures/Isolation/PostersController.cs · DealsController.cs  [E7] [PublicSite] y [Access(Consumer)]/[Access(Business)] (plan E7, puntos 1b y 3)
+```
+
+## Piezas de los métodos de ingreso (ADR 0033)
+
+La entidad y su configuración EF están en "Tablas que completan los flujos del lienzo". Parte 3b de la Etapa 3.
+
+```
+src/ArquitecturaBaseMultitenant.Domain/
+└── Authentication/LoginMethodErrors.cs                                  [E3] Auth.LoginMethod.* (valor ya tomado, no queda ningún método propio o activo, falta la reautenticación, no encontrado)
+
+src/ArquitecturaBaseMultitenant.Application/
+├── Interfaces/Services/ILoginMethodService.cs                           [E3]
+├── Interfaces/Persistence/ILoginMethodRepository.cs · ILoginMethodReader.cs  [E3]
+├── Models/Identity/AddLoginMethodRequest.cs · SetPrimaryLoginMethodRequest.cs  [E3] la verificación reusa Models/Profile/VerifyDestinationRequest
+├── Models/Identity/RemoveLoginMethodRequest.cs                          [E3] con el ReauthTicket
+├── Models/Identity/ReadModels/LoginMethodRow.cs                         [E3] los métodos de la cuenta, enmascarados (no es Models/Auth/LoginMethodsResponse)
+├── Validation/Identity/AddLoginMethodRequestValidator.cs                [E3] y los de SetPrimary y Remove, si los necesitan
+├── Services/Identity/LoginMethodService.cs                              [E3] lista, suma, verifica (DestinationCodeVerifier, LoginCodePurpose.VerifyDestination),
+│                                                                        elige el principal y quita (los dos, con ReauthVerifier); al cambiar el principal copia el valor
+│                                                                        a AspNetUsers.Email/PhoneNumber por IUserRepository; registra el SecurityEvent y avisa en todos
+│                                                                        los métodos
+└── Services/Identity/ManagedLoginMethodRevoker.cs                       [E3] helper sin IUnitOfWork: desactiva los correos administrados y avisa; lo llama quien termina la
+                                                                         membresía, dentro de su transacción (E6: UserService, AccountAccessRevoker)
+
+src/ArquitecturaBaseMultitenant.Infrastructure/
+├── Persistence/Repositories/LoginMethodRepository.cs                    [E3]
+└── Persistence/Readers/LoginMethodReader.cs                             [E3]
+
+src/ArquitecturaBaseMultitenant.Api/
+├── Controllers/Account/AccountLoginMethodsController.cs                 [E3] rutas bajo /api/me/login-methods (las fija el plan detallado de la Etapa 3); distinto
+│                                                                        de Auth/LoginMethodsController, el GET anónimo de los medios encendidos
+└── Contracts/Account/AddLoginMethodHttpRequest.cs · SetPrimaryLoginMethodHttpRequest.cs · RemoveLoginMethodHttpRequest.cs  [E3] la verificación reusa VerifyDestinationHttpRequest
+
+tests/
+├── *.Api.IntegrationTests/Account/LoginMethodsTests.cs                  [E3] sumar, verificar, principal, quitar con código en otro método; siempre queda al
+│                                                                        menos uno propio o activo; aviso en todos
+├── *.Api.IntegrationTests/Auth/ManagedEmailTests.cs                     [E3] un exmiembro no puede ingresar con el correo de la empresa
+└── *.Application.UnitTests/Services/Identity/LoginMethodServiceTests.cs  [E3]
 ```
 
 ## Piezas de la baja de una cuenta (ADR 0035)
@@ -1141,15 +1242,15 @@ src/ArquitecturaBaseMultitenant.Application/
 ├── Interfaces/Integrations/Legal/IRetainedOnConsumerDeletion.cs         [E7] retención legal declarada por un módulo
 ├── Services/Legal/AccountDeletionService.cs · AccountDeletionPolicy.cs  [E3] pedir, cancelar y ejecutar
 ├── Services/Identity/ReauthVerifier.cs                                  [E3] ReauthTicket de 5 minutos (baja y cambios de métodos)
-└── Services/Legal/Participants/                                         [E3–E7] PersonalSpace, LegalAcceptances, Outbox, Exports, Recovery (E5), Memberships (E6), Engagement (E7)
+└── Services/Legal/Participants/                                         [E3–E10] PersonalSpace, LegalAcceptances, Outbox, Recovery (E5), Memberships (E6), Engagement (E7), Exports (E10)
 
 src/ArquitecturaBaseMultitenant.Infrastructure/
-└── Legal/AccountDeletionWorker.cs                                       [E3] cada hora, SKIP LOCKED, una cuenta por transacción
+└── Legal/AccountDeletionWorker.cs                                       [E3] cada hora, SKIP LOCKED, una cuenta por transacción; ejecuta IAccountDeletionService (la identidad se anonimiza por IUserRepository)
 
 src/ArquitecturaBaseMultitenant.Api/
 ├── Controllers/Account/AccountDeletionController.cs                     [E3] POST /api/me/deletion
 ├── Controllers/Auth/DeletionCancelController.cs                         [E3] POST /api/auth/deletion/cancel
-└── Controllers/Platform/AccountsController.cs                           [E5] + POST /api/platform/accounts/{id}/deletion
+└── Controllers/Platform/PlatformAccountsController.cs                   [E5] + POST /api/platform/accounts/{id}/deletion
 
 tests/
 ├── *.Api.IntegrationTests/Legal/AccountDeletionTests.cs                 [E3]
@@ -1163,7 +1264,7 @@ src/ArquitecturaBaseMultitenant.Domain/
 ├── Authentication/LoginMethod.cs                                        [E3] identity.LoginMethods: Type, Value (único por tipo), IsPrimary, VerifiedAtUtc, ManagedByTenantId?
 ├── Legal/LegalDocument.cs · LegalDocumentContent.cs                     [E3] versión + una fila de texto por cultura
 ├── Tenancy/TenantDomain.cs · TenantDomainStatus.cs                      [E5] platform.TenantDomains: Domain (único), TxtToken, Pending | Verified
-├── Identity/AccountRecoveryRequest.cs · RecoveryRequestStatus.cs        [E5] platform.AccountRecoveryRequests: Pending | Approved | Rejected
+├── Users/AccountRecoveryRequest.cs · RecoveryRequestStatus.cs           [E5] platform.AccountRecoveryRequests: Pending | Approved | Rejected
 └── Legal/DataExport.cs · DataExportStatus.cs                            [E10] platform.DataExports: archivo, vence a las 48 h
 
 src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Configurations/
@@ -1172,4 +1273,58 @@ src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Configurations/
 ├── Platform/TenantDomainConfiguration.cs                                [E5] índice único Domain
 ├── Platform/AccountRecoveryRequestConfiguration.cs                      [E5]
 └── Platform/DataExportConfiguration.cs                                  [E10]
+```
+
+## Piezas que completan los flujos del lienzo
+
+Servicios, rutas y tests de las tablas de arriba: Recuperar mi cuenta, dominio verificado, Legales, la ficha de la cuenta en la plataforma, la moderación de la página pública y Exportar mis datos. Recuperaciones, legales y cuentas suman sus permisos de plataforma en `PlatformPermissions.cs`, `Permissions.resx` y `.en.resx`, y el seed.
+
+```
+src/ArquitecturaBaseMultitenant.Application/
+├── Interfaces/Services/IAccountRecoveryService.cs · ITenantDomainService.cs  [E5]
+├── Interfaces/Services/IPlatformLegalService.cs                         [E5]
+├── Interfaces/Services/IDataExportService.cs                            [E10]
+├── Interfaces/Persistence/IAccountRecoveryRequestRepository.cs · IAccountRecoveryRequestReader.cs  [E5]
+├── Interfaces/Persistence/ITenantDomainRepository.cs · ITenantDomainReader.cs  [E5]
+├── Interfaces/Persistence/IDataExportRepository.cs                      [E10]
+├── Interfaces/Integrations/Dns/IDnsTxtResolver.cs                       [E5] consulta el registro TXT del dominio
+├── Services/Identity/AccountRecoveryService.cs                          [E5] el pedido público en tres pasos (método de antes → método nuevo verificado con
+│                                                                        código → pedido recibido) y la revisión del operador (aprobar o rechazar con motivo)
+├── Services/Organizations/TenantDomainService.cs · TenantDomainVerifier.cs  [E5] pedir el dominio, emitir el TxtToken, verificar y quitar; al quedar Verified,
+│                                                                        marca ManagedByTenantId en los LoginMethods de ese dominio
+├── Services/Platform/PlatformLegalService.cs                            [E5] lista versiones y publica una nueva (nunca edita una publicada); reusa ILegalRepository
+│                                                                        e ILegalReader (E3)
+├── Services/Legal/DataExportService.cs                                  [E10]
+├── Models/Identity/StartAccountRecoveryRequest.cs · VerifyAccountRecoveryRequest.cs  [E5]
+├── Models/Platform/ListAccountRecoveryRequestsRequest.cs · ReviewAccountRecoveryRequest.cs  [E5] la revisión lleva motivo
+├── Models/Platform/PublishLegalDocumentRequest.cs · ListLegalDocumentsRequest.cs  [E5] tipo, vigencia y el texto en todas las culturas soportadas
+├── Models/Platform/AccountDetailResponse.cs                             [E5] métodos enmascarados, organizaciones y estado (incluida "Baja iniciada por la
+│                                                                        plataforma"); el historial sale de ISecurityEventReader
+├── Models/Platform/PlatformAccountDeletionRequest.cs                    [E5] con motivo; lo ejecuta IAccountDeletionService (E3) con la plataforma como iniciadora
+├── Models/Platform/ReadModels/AccountRecoveryRequestRow.cs · LegalDocumentRow.cs  [E5]
+├── Models/PublicSite/UnpublishPublicPageRequest.cs                      [E6] con motivo: la plataforma despublica con PublicPageService y bloquea la publicación
+└── Validation/Identity/ · Validation/Platform/ · Validation/PublicSite/  [E5–E6] un validador por request; el de PublishLegalDocumentRequest exige todas las culturas
+
+src/ArquitecturaBaseMultitenant.Infrastructure/
+├── Dns/DnsTxtResolver.cs                                                [E5]
+├── Persistence/Repositories/AccountRecoveryRequestRepository.cs · TenantDomainRepository.cs  [E5]
+├── Persistence/Readers/AccountRecoveryRequestReader.cs · TenantDomainReader.cs  [E5]
+├── Persistence/Repositories/DataExportRepository.cs                     [E10]
+└── Legal/DataExportWorker.cs                                            [E10] arma el archivo y lo borra a las 48 h
+
+src/ArquitecturaBaseMultitenant.Api/
+├── Controllers/Auth/AccountRecoveryController.cs                        [E5] [AllowAnonymous], con límite de pedidos y [Idempotent] en el POST: los tres pasos de /recuperar
+├── Controllers/Platform/PlatformRecoveriesController.cs                 [E5] listar, aprobar o rechazar con motivo (/plataforma/recuperaciones)
+├── Controllers/Platform/PlatformLegalController.cs                      [E5] listar y publicar una versión nueva (/plataforma/legales)
+├── Controllers/Platform/PlatformAccountsController.cs                   [E5] + la ficha de la cuenta (AccountDetailResponse)
+├── Controllers/Platform/PlatformTenantsController.cs                    [E5] + la pestaña Dominio verificado; [E6] + despublicar la página pública con motivo
+├── Controllers/Organization/TenantDomainsController.cs                  [E6] [Access(Business)]: sumar el dominio, ver el TXT y verificar (/org/configuracion)
+├── Controllers/Account/DataExportController.cs                          [E10] POST /api/me/data-export [Idempotent] y la descarga del enlace que vence a las 48 h
+└── Contracts/Auth/ · Contracts/Platform/ · Contracts/Organization/ · Contracts/Account/  [E5–E10] un *HttpRequest o *Query por cada request de arriba
+
+tests/
+├── *.Api.IntegrationTests/Auth/AccountRecoveryTests.cs                  [E5]
+├── *.Api.IntegrationTests/Platform/LegalPublishingTests.cs              [E5]
+├── *.Api.IntegrationTests/Organization/TenantDomainsTests.cs            [E6] aislamiento y dominio único en todo el sistema
+└── *.Api.IntegrationTests/Account/DataExportTests.cs                    [E10]
 ```

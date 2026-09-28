@@ -13,9 +13,9 @@
   - `GET` → 200;
   - un trabajo aceptado → `ToAcceptedResult`.
 - Un `POST` que crea o envía lleva `[Idempotent]` ([idempotencia](idempotencia.md)). Una acción de un módulo lleva `[FeatureGate]` ([modulos-habilitados](modulos-habilitados.md)). Un `PUT` o `DELETE` de una entidad `IVersioned` recibe `version` ([concurrencia](concurrencia.md)).
-- Cada acción lleva `[Access]` + permiso (o `[PublicSite][AllowAnonymous]` si es de una página pública), `[ProducesResponseType<T>(status)]` y los errores extra con `[ProducesProblem(status)]`.
+- Cada acción declara su acceso ([multitenancy](multitenancy.md), [permisos](permisos.md)): `[Access(Business)]` + `[HasPermission]` o `[HasCompanyPermission]`; `[Access(Platform)]` + `[HasPlatformPermission]`; `[Access(Consumer)]` sin permiso (la persona tiene implícitos los `personal.*`); o `[PublicSite][AllowAnonymous]` si es de una página pública. Además lleva `[ProducesResponseType<T>(status)]` y los errores extra con `[ProducesProblem(status)]`.
 - Rutas en inglés, plural y kebab-case (`api/companies/{companyId}/members`). Sin versionado (ADR 0005).
-- **Prefijo nuevo** (fuera de `/api`): se suma en `BackendPrefixes`, en `SpaHostingTests` y en el proxy de `vite.config.ts` ([guía](../guides/prefijo-de-backend.md), E1).
+- **Prefijo nuevo** (fuera de `/api`): se suma en `BackendPrefixes`, en `SpaHostingTests` y en el proxy de `vite.config.ts` ([guía](../guides/prefijo-de-backend.md), E4).
 - **Después de cambiar un contrato:** regenerar `docs/contracts/openapi.json` (lo hace el build) y avisar al front (`npm run contracts`).
 
 ## Prohibido
@@ -30,6 +30,7 @@
 
 ## Lo verifica
 - `ControllerInputContractTests`, `ControllerServiceRepositoryTests`, `MinimalApiRoutesTests`.
+- `AccessDeclarationTests`: toda ruta de negocio declara `[Access]` o `[PublicSite]`.
 - `ExplicitRouteInventoryTests`: cada ruta con su test.
 - `OpenApiContractTests`: openapi.json al día. `OpenApiTests`: esquema de éxito y de errores.
 

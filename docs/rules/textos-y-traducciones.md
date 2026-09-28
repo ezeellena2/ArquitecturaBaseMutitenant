@@ -2,6 +2,8 @@
 
 **Regla:** todo texto que ve el usuario sale de resources, en **es** (neutral) y **en**. La cultura (`es-AR`, `en-US`) define el idioma y el formato.
 
+**Excepción:** los términos y la política de privacidad no van en resources; su texto está en `platform.LegalDocumentContents`, una fila por cultura ([datos-personales](datos-personales.md)).
+
 ## Cómo se hace
 - **Archivos:** `Application/Resources/{Errors,Validation,Permissions,Notifications,Audit}.resx` + `.en.resx`. Los módulos tienen los suyos (`Modules/WhatsApp/Resources/`).
 - **Acceso:** con los envoltorios `ErrorMessages`, `ValidationMessages`, `PermissionTexts`, `NotificationTexts` y `AuditTexts`. Sin `IStringLocalizer`.
@@ -10,7 +12,7 @@
   - errores: el código (`Roles.Role.HasUsers`) y `Title.<ErrorType>`;
   - permisos: `Permission.<código>`;
   - auditoría: `AuditAction.<código>`.
-- **Estilo:** español rioplatense con voseo ("Ingresá", "Revisá"). "Tenant" nunca aparece: se dice "Organización". TenantAdmin es "Dueño" y CompanyAdmin, "Administrador".
+- **Estilo:** español rioplatense con voseo ("Ingresá", "Revisá"). "Tenant" nunca aparece: se dice "Organización". TenantAdmin es "Dueño" (nunca "Administrador general") y CompanyAdmin, "Administrador". El acceso B2C se llama "Personal". Persona y empresa son los dos "lados" de la cuenta; la plataforma no es un lado. También se dice "Empresa", "Usuario" y "Miembro". Sobre usuarios: "Deshabilitar" / "Habilitar" (nunca "Activar") y "Revocar invitación". La lista completa está en el tablero "Palabras" del lienzo "Sistema visual · Multitenant" (https://claude.ai/artifact/WzoVTM574QGka8nCU4iFEK).
 - Identificadores, logs y mensajes de excepción, en inglés.
 
 ## Prohibido

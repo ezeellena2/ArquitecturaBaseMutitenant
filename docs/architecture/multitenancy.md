@@ -18,22 +18,22 @@ Una **plantilla estándar para cualquier tipo de negocio**. No es un producto: n
 | Tipo | Cómo entra | Qué hace | Qué **no** puede |
 |---|---|---|---|
 | **Visitante** | sin sesión | ve el sitio de la plataforma y las páginas públicas de las empresas | contratar nada |
-| **Persona (acceso B2C)** | "Ingresá" o "Creá tu cuenta" (correo, WhatsApp o Google) | busca empresas, contrata o pide servicios, ve "Mis turnos" o "Mis contrataciones", su cuenta | **crear una empresa**, ver la administración de una empresa |
+| **Persona (acceso B2C)** | "Ingresá" o "Creá tu cuenta" (correo, WhatsApp o Google) | busca empresas, interactúa con ellas desde su página (pedir, contratar, reservar: lo que defina cada producto), ve lo que le pidió a cada una y su cuenta (la plantilla trae solo el inicio, vacío, y Mi cuenta) | **crear una empresa**, ver la administración de una empresa |
 | **Usuario de empresa (acceso B2B)** | "Ingresá como empresa" | según su rol: administrar la empresa, armar su página y atender lo que piden las personas (lo que defina cada producto) | ver datos de otras empresas, o de personas fuera de lo que ellas le compartieron |
 | **Dueño de la empresa** | "Registrá tu empresa" (alta B2B aparte) | crea la organización y queda como **Dueño** (`TenantAdmin`, todos los permisos) | — |
-| **Operador de la plataforma** | acceso aparte, con segundo factor | backoffice: aprobar y suspender empresas, módulos por plan, cuentas, auditoría | ver los datos de negocio de una empresa o de una persona |
+| **Operador de la plataforma** | acceso aparte, con segundo factor | backoffice: aprobar, rechazar, suspender y cerrar organizaciones, módulos por plan, cuentas, recuperaciones, documentos legales, auditoría | ver los datos de negocio de una empresa o de una persona |
 
-Dentro de una empresa, los usuarios se diferencian **solo por rol**: el Dueño, el Administrador de una empresa del grupo y los roles que cree cada organización. La organización puede tener varias **empresas** (razones sociales o sedes).
+Dentro de una organización, los usuarios se diferencian **solo por rol**: el **Dueño** (`TenantAdmin`, toda la organización), el **Administrador** de cada empresa (`CompanyAdmin`) y los roles que cree la organización. La organización puede tener varias **empresas** (razones sociales o sedes), y son **planas**: no hay empresa matriz ni herencia entre empresas (ADR 0034). Cada rol tiene un alcance, que en pantalla es la columna "Vale en": toda la organización (`Organization`, se asigna sin empresa y vale en todas), cada empresa (`AnyCompany`, la empresa se elige al asignarlo y vale solo en esa) o solo en una empresa (`SpecificCompany`, el rol pertenece a esa empresa y solo se asigna ahí). El detalle y el catálogo de permisos están en [backend.md §14](backend.md#14-autorización).
 
 ## 3. Una cuenta, dos accesos
 
-- **Identidad global:** una persona tiene **una sola cuenta** (un correo, un teléfono, un Google). No hay dos contraseñas ni dos registros.
+- **Identidad global:** una persona tiene **una sola cuenta**, con uno o varios métodos de ingreso (correos, teléfonos y Google, todos verificados y cada uno único en todo el sistema; §3.1). No hay dos registros ni contraseñas: se ingresa con un código, un enlace o Google.
 - **Dos accesos que no se mezclan:**
   - **Acceso B2C:** su **espacio personal** (tenant `Kind=Personal`). Se crea solo al registrarse como persona o la primera vez que entra como persona.
   - **Acceso B2B:** sus **organizaciones** (tenants `Kind=Business`), por membresía. Solo existe si registró una empresa o lo invitaron a una.
 - **Al ingresar se elige el acceso, con dos puertas:** "Ingresá" (`/login`, como persona) e "Ingresá como empresa" (`/login/empresa`). No se vuelve "al último lado": se entra al de la puerta elegida. Las páginas públicas llevan a la puerta de personas; la portada ofrece las dos. Por la puerta de empresas, con una sola organización entra directo; con varias, a la última que usó dentro del lado empresa; sin ninguna, ve "Registrá tu empresa".
-- **Cambiar de acceso** (de paciente a médico) no pide ingresar de nuevo: el menú de la cuenta tiene "Ir a mi empresa" o "Ir a Personal". Por dentro, son tokens nuevos del otro acceso.
-- **Lo que ve cada acceso no se mezcla:** el espacio personal **no muestra organizaciones**, y la empresa no ve lo personal.
+- **Cambiar de acceso** (de paciente a médico) no pide ingresar de nuevo: el menú de la cuenta muestra «Perfiles», con Personal («Tu perfil personal») y cada organización de la que es miembro, con su rol. El activo lleva ✓ y las suspendidas aparecen con «Suspendida» y no se pueden elegir. La lista es la misma en los dos lados. Elegir otro perfil cambia de lado o de organización. Por dentro, son tokens nuevos del otro acceso.
+- **Lo que ve cada acceso no se mezcla:** el espacio personal **no muestra organizaciones** (la lista «Perfiles» del menú de la cuenta es de la cuenta, no del lado), y la empresa no ve lo personal.
 - **Ejemplo:** alguien trabaja en la Empresa A y además es cliente de la Empresa B. Tiene **una** cuenta. Como **empresa** ve lo de la Empresa A según su rol. Como **persona** ve lo que le pidió a la Empresa B.
 
 ### 3.1 Métodos de ingreso: la cuenta no depende de un solo correo
@@ -48,7 +48,7 @@ Dentro de una empresa, los usuarios se diferencian **solo por rol**: el Dueño, 
 - **Correos administrados por una empresa:** una organización puede verificar su **dominio** (`empresa-a.com`, con un registro DNS TXT). Los correos de ese dominio quedan marcados `ManagedByTenantId` = esa organización.
   - **Mientras la persona es miembro**, un correo administrado sirve para ingresar a los **dos** accesos.
   - **Cuando la membresía termina**, el correo administrado **deja de servir para ingresar**, y se le avisa a la persona por sus otros métodos. Así la empresa nunca entra a lo personal de alguien que ya no trabaja ahí.
-  - **Si ese era su único método**, la cuenta queda en "necesita recuperación": puede entrar con "Recuperar mi cuenta", verificando otro correo o teléfono con la ayuda de un operador de la plataforma. Esto es la excepción: lo normal es que ya haya agregado uno propio (ver lo que sigue).
+  - **Si ese era su único método**, la cuenta **necesita recuperación**. No es un valor de `UserStatus` ni una columna guardada: es un estado **derivado** que calcula `IPlatformReader` (vista de plataforma). Una cuenta necesita recuperación cuando su `Status` es `Active` y no le queda ningún método de ingreso que sirva; un método sirve cuando está verificado y, si es administrado (`ManagedByTenantId`), la membresía de la persona en esa organización no terminó. `Suspended`, `PendingDeletion` y `Deleted` tienen prioridad y se muestran como tales. El cálculo va en la consulta, porque lo usan la ficha (`/plataforma/cuentas/:id`) y el filtro "Necesitan recuperación" del listado de cuentas. Con ese estado, la persona puede entrar con "Recuperar mi cuenta" (`platform.AccountRecoveryRequests`), verificando otro correo o teléfono con la ayuda de un operador de la plataforma. Esto es la excepción: lo normal es que ya haya agregado uno propio (ver lo que sigue).
 - **Aviso para que no se llegue a eso:** si **todos** los métodos de ingreso de una cuenta son administrados por una organización (o es un correo de la invitación y no hay otro), la cuenta muestra un aviso fijo: "Agregá un correo personal o tu WhatsApp para no perder tu cuenta si dejás la empresa". Aparece al aceptar la invitación, en "Mi cuenta" y al entrar al espacio personal. El aviso se va solo cuando hay un método propio verificado.
 - **Sin dominio verificado** (la regla por defecto): se aplica igual el aviso cuando el correo con el que llegó por invitación **no** es el mismo con el que ya tenía cuenta. Además, al terminar una membresía, la persona recibe el aviso "Revisá tus métodos de ingreso" en sus otros métodos.
 - **Reglas:**
@@ -63,20 +63,23 @@ La persona elimina **toda su cuenta**: la identidad, sus métodos de ingreso, su
 **Estados de la identidad** (`ApplicationUser.Status`):
 
 ```
-Active ──(pide la baja)──► PendingDeletion ──(pasan los días de gracia)──► Deleted
+Active ──(pide la baja o la inicia la plataforma)──► PendingDeletion ──(pasan los días de gracia)──► Deleted
   ▲                              │
   └────(ingresa y la cancela)────┘
 
 Active ──(la plataforma suspende)──► Suspended ──(reactiva)──► Active
+Suspended ──(la plataforma inicia la baja)──► PendingDeletion
 ```
 
-Campos: `DeletionRequestedAtUtc`, `DeletionScheduledForUtc`, `DeletionReason` y `DeletedAtUtc`.
+"Necesita recuperación" (§3.1) y "Baja iniciada por la plataforma" son estados que solo se muestran en pantalla, derivados del estado real; no son valores de `ApplicationUser.Status`.
+
+Campos: `DeletionRequestedAtUtc`, `DeletionScheduledForUtc`, `DeletionReason`, `DeletionRequestedByOperatorId?` (null si la pidió la persona; si no, el operador que la inició) y `DeletedAtUtc`.
 
 **1. Pedir la baja** (`POST /api/me/deletion`, `[Idempotent]`, desde "Mi cuenta" en cualquiera de los dos accesos):
 - **Reautenticación:** un código enviado a un método verificado, validado hace menos de 5 minutos (`ReauthTicket`, el mismo que piden quitar o cambiar un método). Sin eso da `Legal.AccountDeletion.ReauthRequired`.
 - **Motivo** obligatorio (texto libre, `TextLimits`).
 - **`AccountDeletionPolicy` bloquea cuando:**
-  - es el **único Dueño** de una organización que no está cerrada (activa, en espera de aprobación o suspendida). Da `Legal.AccountDeletion.LastAdmin`, con la lista de organizaciones. La salida es sumar otro Dueño, o pedirle a la plataforma que cierre la organización;
+  - es el **único Dueño** de una organización que no está cerrada (cualquier estado menos `Closed`: `PendingApproval`, `Provisioning`, `Active` o `Suspended`). Da `Legal.AccountDeletion.LastAdmin`, con la lista de organizaciones. La salida es sumar otro Dueño, o pedirle a la plataforma que cierre la organización;
   - es **operador de la plataforma**: `Legal.AccountDeletion.PlatformOperator`. A un operador lo da de baja otro operador;
   - la baja **ya está pedida**: `Legal.AccountDeletion.AlreadyPending`;
   - un **módulo** tiene algo pendiente, según su `IAccountDeletionParticipant.CheckAsync`: `Legal.AccountDeletion.Blocked`, con los motivos traducidos que devuelve cada módulo. La plantilla no trae módulos, así que no bloquea nada por esto.
@@ -93,7 +96,7 @@ Campos: `DeletionRequestedAtUtc`, `DeletionScheduledForUtc`, `DeletionReason` y 
   - Al ingresar (código o Google, por cualquiera de las dos puertas), el servidor **no emite tokens**. Responde `Identity.Account.PendingDeletion`, con la fecha y un `cancelTicket` que vale 5 minutos.
   - El front muestra "Tu cuenta tiene la baja pedida · Se elimina el dd/mm/aaaa", con "Cancelar la baja y entrar" y "Salir".
 - **Cancelar** (`POST /api/auth/deletion/cancel`):
-  - la identidad vuelve a `Active` y cada participante corre `OnCancelledAsync`;
+  - la identidad vuelve a `Active`, se limpian `DeletionRequestedAtUtc`, `DeletionScheduledForUtc`, `DeletionReason` y `DeletionRequestedByOperatorId`, y cada participante corre `OnCancelledAsync`;
   - se avisa en todos los métodos y se registra el `SecurityEvent`;
   - el ingreso sigue por la puerta que había elegido.
 
@@ -105,7 +108,7 @@ Campos: `DeletionRequestedAtUtc`, `DeletionScheduledForUtc`, `DeletionReason` y 
 
 **3. Eliminación** (`AccountDeletionWorker`):
 - Corre cada hora y toma las cuentas vencidas con `SKIP LOCKED`.
-- Procesa **una cuenta por transacción**, entra a cada tenant con `ITenantScope` y es idempotente: si se corta, la próxima corrida sigue desde donde quedó.
+- Procesa **una cuenta por pasos**: una transacción por cada tenant que toca (el espacio personal y cada organización), entrando con `ITenantScope` antes de abrirla, y una última para la identidad. La cuenta sigue en `PendingDeletion` hasta ese último paso. Cada paso es idempotente, así que si se corta, la próxima corrida la vuelve a tomar y sigue desde donde quedó.
 
 | Dato | Qué pasa |
 |---|---|
@@ -128,7 +131,7 @@ El aviso final, "Tu cuenta fue eliminada", va al método principal. Se encola **
 
 **4. Desde la plataforma:**
 - Un operador puede **iniciar la baja** de una cuenta activa o suspendida, por ejemplo ante un pedido legal que llega por fuera de la plataforma.
-- Lleva motivo y no pide reautenticar a la persona.
+- Lleva motivo y no pide reautenticar a la persona. Se guarda `DeletionRequestedByOperatorId`, y el `SecurityEvent` `AccountDeletionRequested` se registra con el operador como actor (`ActorKind = PlatformOperator`).
 - Lo bloquean las mismas reglas: si la persona es el **único Dueño** de una organización no cerrada, primero esa organización tiene que sumar otro Dueño, o la plataforma tiene que cerrarla.
 - La cuenta muestra "La plataforma inició la baja el dd/mm/aaaa", en lugar de "Pidió la baja".
 - Sigue el mismo camino: 30 días de gracia, avisos y eliminación.
@@ -173,19 +176,26 @@ Todo dato nuevo se clasifica **antes** de escribir su entidad:
 | Identidad | Global: una persona, una cuenta (correo y teléfono únicos) |
 | Accesos | `access` = `consumer` \| `business` \| `platform` en el token. B2C nunca crea empresas; el alta B2B es "Registrá tu empresa" |
 | Tenant activo | Solo del claim `tenant_id` (el espacio personal en B2C; la organización elegida en B2B). El host solo resuelve lo **público** |
+| Empresas y roles | Empresas planas dentro de la organización, sin matriz ni herencia; roles con alcance `Organization`, `AnyCompany` o `SpecificCompany`; `companyId` en la URL, nunca en el token (ADR 0012 y 0034) |
 | Páginas públicas | Subdominio por organización, slug único, redirect URI validada contra los slugs |
 | Interacción B2C ↔ B2B | La base trae la mecánica (públicos, compartidos, `PartyPolicy`); los módulos que la usan los pone cada producto con `[FeatureGate]`. La plantilla **no trae ningún módulo de negocio** |
 
 ## 7. Estados
 
 ```
-Espacio personal: Active ──(la plataforma suspende)──► Suspended ──► Active | Closed
+Espacio personal: Active ──(se elimina la cuenta, §3.2)──► Closed
 Organización:     PendingApproval ─► Provisioning ─► Active ──► Suspended ──► Active | Closed
+                  PendingApproval ──(la plataforma rechaza, con motivo)──► Closed
 Página pública:   Draft ──(publicar)──► Published ──(despublicar)──► Draft
+                  Published ──(la plataforma despublica, con motivo)──► Draft + publicación bloqueada (fecha y motivo)
+                  publicación bloqueada ──(la plataforma permite publicar, con motivo)──► Draft sin bloqueo
 ```
 
-- Una organización suspendida: su página muestra "no disponible" y sus usuarios reciben 403 `Tenancy.Tenant.Suspended`. Los datos compartidos quedan visibles para la persona en modo solo lectura.
+- A una organización que no está activa no se puede entrar. Sus usuarios reciben 403 con el código de su estado: `Tenancy.Tenant.Suspended` si está suspendida, `Tenancy.Tenant.PendingApproval` mientras la plataforma no la aprobó (alta con aprobación) y `Tenancy.Tenant.Closed` si está cerrada. Su página muestra "no disponible". Los datos compartidos quedan visibles para la persona en modo solo lectura.
+- Rechazar una organización que espera aprobación la deja en `Closed`, con motivo y `SecurityEvent`, y se le avisa a quien la registró. Su cuenta y su espacio personal siguen funcionando.
+- Si la plataforma despublica la página, esta vuelve a `Draft` y queda bloqueada, con la fecha y el motivo guardados. La organización ve el motivo y no puede volver a publicarla (`PublicSite.PublicPage.BlockedByPlatform`) hasta que la plataforma use «Permitir publicar». En pantalla se muestra «Despublicada por la plataforma». Se les avisa a los Dueños.
 - Suspender una identidad revoca sus sesiones en los dos accesos.
+- El espacio personal no se suspende por separado: la plataforma suspende la identidad (§3.2), lo que corta los dos accesos sin cambiar el estado del tenant `Personal`.
 - La identidad tiene además `PendingDeletion` y `Deleted` (la baja, §3.2).
 
 ## 8. Contexto de la petición
@@ -196,16 +206,18 @@ Página pública:   Draft ──(publicar)──► Published ──(despublicar
 | `ITenantContext` | Application | `TenantId?` y `TenantKind?` del acceso activo |
 | `IPublicSiteContext` | Application | `BusinessTenantId?` resuelto por el subdominio (solo para datos públicos) |
 | `ITenantScope` | Application | `Enter(tenantId)` para plataforma, workers y altas |
-| `TenantResolutionMiddleware` | Api | lee `access`, `tenant_id` y `tenant_kind` del token; verifica en caché que estén activos |
+| `TenantResolutionMiddleware` | Api | lee `access`, `tenant_id` y `tenant_kind` del token; verifica en caché que estén activos; si la organización no está activa, responde el 403 de su estado (§7) |
 | `PublicSiteResolutionMiddleware` | Api | subdominio → `BusinessTenantId` de una página publicada |
 
-**Rutas:** cada una declara su acceso:
+**Rutas:** cada una declara su acceso. `[Access]` acepta uno o varios accesos:
 - `[Access(Consumer)]` para lo de las personas;
 - `[Access(Business)]` + permiso para la administración de la empresa;
 - `[Access(Platform)]` para el backoffice;
-- `[PublicSite]` + `[AllowAnonymous]` para la página pública.
+- `[Access(Consumer, Business, Platform)]` para la propia cuenta, que vale con cualquier sesión: `/api/me`, `/api/me/*` y `/api/legal/*`. El operador también lee `GET /api/me`; por eso `POST /api/me/deletion` le responde `Legal.AccountDeletion.PlatformOperator` y no 403;
+- `[PublicSite]` + `[AllowAnonymous]` para la página pública;
+- `[AllowAnonymous]`, sin `[Access]`, solo en `Controllers/Auth/` para el ingreso y el registro: `/api/auth/*` (signup, business-signup, methods, deletion/cancel), la vista previa de una invitación y `/connect/*`. Estas rutas no leen datos de ningún tenant.
 
-Con el acceso equivocado responde 403 `Tenancy.Access.Wrong`.
+Con el acceso equivocado responde 403 `Tenancy.Access.Wrong`. Un recurso de otra organización responde 404, nunca 403, para no revelar que existe.
 
 ## 9. Barreras
 
@@ -228,8 +240,8 @@ Con el acceso equivocado responde 403 `Tenancy.Access.Wrong`.
 3. Tokens con `access=consumer`.
 
 **Registro de una empresa (B2B), "Registrá tu empresa":**
-1. Datos de la empresa (nombre, slug, CUIT) y de quien la registra. Si esa persona ya tiene cuenta, ingresa con ella; si no, se crea la identidad.
-2. `Tenant(Business)` queda en `PendingApproval` o en `Provisioning`, según `BusinessSignup`.
+1. Quien la registra ingresa o crea su identidad (código por correo o WhatsApp, o Google, con la aceptación de términos) y después carga los datos de la organización: nombre de la organización, su primera empresa y, si quiere, el CUIT de esa empresa. Si ya tiene cuenta, entra con ella; si no, se crea la identidad. El slug no se pide en el alta: se elige después en la página pública (`/org/pagina`, «Dirección de la página», con disponibilidad y `ReservedSlugs`).
+2. `BusinessSignupPolicy` aplica `PlatformSettings`: con `BusinessSignup` en `Closed` no se puede registrar («Alta cerrada»), y si la persona ya llegó a su límite de organizaciones propias (`MaxOwnedOrganizations`) tampoco («Llegó al límite»). Si pasa, `Tenant(Business)` queda en `PendingApproval` (modo `RequiresApproval`) o en `Provisioning` (modo `Open`).
 3. `TenantProvisioner` crea la configuración, los roles de sistema, la primera empresa, la membresía de Dueño y la página pública en `Draft`.
 4. Tokens con `access=business`.
 
@@ -247,10 +259,14 @@ Con el acceso equivocado responde 403 `Tenancy.Access.Wrong`.
 ## 11. Plataforma
 
 - **Operador:** `access=platform`, con segundo factor.
-  - Aprueba y suspende organizaciones.
+  - **Organizaciones:** aprueba o rechaza las que esperan aprobación (rechazar la deja cerrada), y las suspende, reactiva y cierra.
   - Prende y apaga módulos por plan.
-  - Modera páginas públicas: puede despublicarlas con motivo.
-  - Suspende identidades.
+  - Verifica o quita el dominio de correo de una organización (§3.1).
+  - Modera páginas públicas: puede despublicarlas con motivo, lo que bloquea volver a publicarlas hasta que la plataforma lo permita («Permitir publicar», también con motivo). Las dos acciones quedan en la auditoría (§7).
+  - **Cuentas:** suspende y reactiva identidades, cierra sus sesiones e inicia la baja (§3.2, punto 4).
+  - Atiende los pedidos de «Recuperar mi cuenta» (`/plataforma/recuperaciones`): los aprueba o los rechaza.
+  - Publica versiones nuevas de los documentos legales, por idioma; nunca edita una ya publicada.
+  - Administra a los otros operadores y la configuración de la plataforma (`PlatformSettings`).
   - Nunca ve datos privados ni compartidos: la auditoría registra cada acción con su motivo.
 
 ## 12. Caché, locks, unicidad

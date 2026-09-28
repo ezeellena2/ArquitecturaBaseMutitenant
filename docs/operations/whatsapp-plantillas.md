@@ -15,7 +15,7 @@
 | `invitacion_organizacion` | Utility | quien invita, la organización y el vencimiento; botón con el enlace | invitación a una organización. **Reemplaza a** `invitacion_acceso` de ArquitecturaBase, que no nombra la organización | E8 |
 | `aviso_metodo_ingreso` | Utility | qué pasó (agregado, quitado o principal), el método enmascarado y la fecha | aviso en todos los métodos cuando cambia uno (multitenancy §3.1) | E8 |
 | `revisa_metodos_ingreso` | Utility | la organización | terminó una membresía y sus correos administrados dejaron de servir | E8 |
-| `baja_cuenta_pedida` | Utility | la fecha de eliminación | se pidió la baja (§3.2) | E8, si la baja ya está hecha |
+| `baja_cuenta_pedida` | Utility | la fecha de eliminación | se pidió la baja (§3.2) | E8 |
 | `baja_cuenta_cancelada` | Utility | — | se canceló la baja | E8 |
 | `cuenta_eliminada` | Utility | — | se completó la baja | E8 |
 

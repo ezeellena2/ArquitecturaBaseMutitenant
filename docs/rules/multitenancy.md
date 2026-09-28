@@ -14,7 +14,7 @@
   - Guarda una **copia** de lo que la otra parte necesita ver.
   - Cada cambio de estado pasa por `PartyPolicy.Require(entity, Party.Consumer|Party.Business)`.
 - **El host del subdominio nunca da acceso a datos privados:** solo `IPublicSiteContext`, para lo público.
-- **Plataforma, workers y altas:** `using (tenantScope.Enter(tenantId)) { … }` después de autorizar, y antes de abrir el límite.
+- **Plataforma, workers y altas:** `using (tenantScope.Enter(tenantId)) { … }` después de autorizar, y antes de abrir el límite. En plataforma, además, con motivo obligatorio y el `SecurityEvent` registrado antes de `Enter` (`PlatformActionGuard`).
 - **Una persona (B2C) nunca crea una organización:** el alta es "Registrá tu empresa" (`BusinessSignupService`).
 - **Caché y locks:** `CacheKeys.Tenant(…)`, `CacheKeys.PublicSite(…)`, `AdvisoryLockKeys.For(tenantId, …)`; en un recurso compartido, lock de fila.
 
@@ -22,7 +22,7 @@
 - Leer el tenant de un header, del body o de la query.
 - Usar el subdominio para autorizar datos privados.
 - Asignar a mano o cambiar `TenantId`, `BusinessTenantId` o `ConsumerTenantId`.
-- `IgnoreQueryFilters` fuera de la lista blanca (`Readers/Platform`).
+- Quitar los filtros `"Tenant"`, `"Public"` o `"Parties"` (con `IgnoreQueryFilters()` sin nombres o con alguno de esos nombres) fuera de la lista blanca (`Readers/Platform`). `IgnoreQueryFilters(["SoftDelete"])`, para ver lo borrado, sí se permite ([persistencia-ef](persistencia-ef.md)).
 - Que una empresa lea la cuenta o el espacio personal de una persona: solo ve lo copiado en el dato compartido.
 - Una ruta sin `[Access]` ni `[PublicSite]`.
 - Responder 403 por un recurso ajeno: es 404.

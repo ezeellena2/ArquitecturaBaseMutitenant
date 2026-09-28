@@ -8,12 +8,15 @@
 - **Apagado:** sin `WhatsApp:PhoneNumberId` se registran las implementaciones de `Disabled/`, que responden "no disponible" sin lanzar.
 - **Reglas del producto:** un mensaje entrante nunca abre una sesión, solo produce un enlace de un solo uso. Los números van enmascarados y el texto se borra a los 90 días.
 - **Envío:** siempre por el outbox (canal `"whatsapp"`), nunca en línea con el request.
+- **Plantillas:** un mensaje que la plataforma inicia (fuera de las 24 horas posteriores a que la persona escribió) usa una plantilla aprobada por Meta. Se crea en Meta al empezar la etapa que la usa, antes de programar el envío, y se registra en `WhatsApp:Templates:<Nombre>` y en el catálogo de plantillas del módulo, con el orden de sus variables. Cuáles son y cómo se crean: [whatsapp-plantillas.md](../operations/whatsapp-plantillas.md).
 
 ## Prohibido
 - `using …Modules.WhatsApp` en el núcleo.
 - `if (channel == "whatsapp")` en el núcleo.
 - Registrar servicios de Application desde Infrastructure.
 - Llamar a la Cloud API desde un servicio del núcleo.
+- Un mensaje libre fuera de la ventana de 24 horas.
+- Editar una plantilla aprobada: se crea otra con sufijo (`_v2`) y se cambia la configuración.
 
 ## Copiá de
 - `Application/Modules/WhatsApp/WhatsAppModule.cs` (E8) · la guía [`quitar-whatsapp.md`](../guides/quitar-whatsapp.md) (E8)
@@ -22,6 +25,7 @@
 - `ModuleIsolationTests`.
 - La prueba de fuego de la Etapa 8: quitar el módulo y que el núcleo siga en verde.
 - `WhatsAppWebhookTests` (firma, idempotencia, 413, 401).
+- El test del catálogo de plantillas: cada plantilla configurada y el orden de sus variables.
 
 ## Detalle
 [backend.md §15](../architecture/backend.md#15-whatsapp-un-módulo-quitable) · ADR 0007

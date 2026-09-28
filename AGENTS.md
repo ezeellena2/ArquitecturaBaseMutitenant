@@ -67,7 +67,7 @@ El inventario de todos los estándares transversales (los definidos y los propue
 | Modelos / validadores / opciones | `Application/Models/<Área>/` · `Application/Validation/<Área>/` · `Application/Configuration/<Área>/` |
 | Textos | `Application/Resources/*.resx` + `.en.resx` |
 | Entidad y errores | `Domain/<Área>/` |
-| Permisos | `Domain/Authorization/Permissions.cs`, `PlatformPermissions.cs` |
+| Permisos | `Domain/Authorization/Permissions.cs` (organización y empresa), `PersonalPermissions.cs`, `PlatformPermissions.cs` |
 | EF: repositorio / reader / configuración / migración | `Infrastructure/Persistence/{Repositories,Readers,Configurations/<Esquema>,Migrations}/` |
 | Adaptador técnico o worker | `Infrastructure/<Tema>/` |
 | Módulo quitable (WhatsApp) | `Domain/WhatsApp/` y `Modules/WhatsApp/` en Application, Infrastructure y Api; se enchufa por puertos del núcleo; el núcleo nunca referencia `*.Modules.*` |
