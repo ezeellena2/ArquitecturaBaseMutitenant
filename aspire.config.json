@@ -1,0 +1,5 @@
+{
+  "appHost": {
+    "path": "src/ArquitecturaBaseMultitenant.AppHost/ArquitecturaBaseMultitenant.AppHost.csproj"
+  }
+}

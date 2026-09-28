@@ -428,5 +428,19 @@ FodyWeavers.xsd
 *.msm
 *.msp
 
-# Capturas de Playwright MCP
+# Credenciales descargadas de Google Cloud (nunca al repo)
+client_secret_*.json
+
+# Emails de desarrollo guardados como .eml (Email:Delivery = PickupDirectory)
+.emails/
+
+# Notas sueltas con identificadores de clientes OAuth (nunca al repo)
+id de cliente.txt
+
+# Capturas y registros que deja el MCP de Playwright al probar en el navegador
 .playwright-mcp/
+
+# Configuración y artefactos locales del multitenant
+.local/
+**/appsettings.*.local.json
+.claude/

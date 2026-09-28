@@ -85,8 +85,8 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
 **Objetivo:** que las dos soluciones compilen vacías, con toda la maquinaria de calidad encendida, y que el AppHost levante Postgres, la Api y el front.
 
 ### Tarea 0.1: repo y archivos de raíz (back)
-- [ ] `.gitignore`: la plantilla de VisualStudio más `.local/`, `*.env`, `**/appsettings.*.local.json` y `.artifacts/`.
-- [ ] `global.json`, `Directory.Build.props`, `Directory.Packages.props` (copiados de ArquitecturaBase y completados con los paquetes que falten, según backend.md §1), `BannedSymbols.txt`, `.editorconfig` y `aspire.config.json`.
+- [x] `.gitignore`: la plantilla de VisualStudio más `.local/`, `*.env`, `**/appsettings.*.local.json` y `.artifacts/`.
+- [x] `global.json`, `Directory.Build.props`, `Directory.Packages.props` (copiados de ArquitecturaBase y completados con los paquetes que falten, según backend.md §1), `BannedSymbols.txt`, `.editorconfig` y `aspire.config.json`.
 - [ ] Commit `chore: archivos de raíz y análisis estático`.
 
 ### Tarea 0.2: proyectos y referencias
