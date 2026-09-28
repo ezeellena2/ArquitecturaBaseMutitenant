@@ -47,12 +47,13 @@ ArquitecturaBaseMutitenant/
 │   │   ├── package.json                              [E1] parser XML, CLDR y libphonenumber exactos
 │   │   ├── package-lock.json                         [E1] dependencias transitivas fijadas
 │   │   ├── .node-version                             [E1] Node/ICU fijados para Intl.DisplayNames
-│   │   ├── sources.lock.json                         [E1] URL, versión y SHA-256 de SIX e IANA
+│   │   ├── sources.lock.json                         [E1] URL, versión y SHA-256 de SIX, validez CLDR e IANA
 │   │   ├── habilitados.json                          [E1] configuración fuente de IsEnabled y SortOrder, no lista en código
 │   │   ├── cultures.source.json                      [E1] culturas y patrones editables; cultures.json es salida
 │   │   ├── tax-id-types.source.json                  [E1] tipos fiscales editables; tax-id-types.json es salida
 │   │   ├── sources/                                  [E1] snapshots versionados; solo --refresh los actualiza
 │   │   │   ├── iso4217-list-one.xml                  [E1] SIX ISO 4217 List One
+│   │   │   ├── cldr-region-validity.xml              [E1] CLDR 48.2, regiones regulares para ISO 3166-1
 │   │   │   └── iana-zone1970.tab                    [E1] IANA tzdb, zonas canónicas y países
 │   │   ├── ciudades.es.json                          [E1] excepciones de nombres de ciudad en español
 │   │   └── ciudades.en.json                          [E1] excepciones de nombres de ciudad en inglés
