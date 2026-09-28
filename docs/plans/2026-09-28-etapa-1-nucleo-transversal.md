@@ -170,9 +170,9 @@ No quedan preguntas técnicas pendientes. Según AGENTS.md, una duda nueva se re
 
 **Archivos:** crear src/ArquitecturaBaseMultitenant.Application/Interfaces/Integrations/{AGENTS,CLAUDE}.md y Time/ITimeZoneService.cs; Models/Time/DayRangeUtc.cs; src/ArquitecturaBaseMultitenant.Infrastructure/Time/TimeZoneService.cs y actualizar DependencyInjection.cs ← ../ArquitecturaBase/src/ArquitecturaBase.Infrastructure/DependencyInjection.cs; src/ArquitecturaBaseMultitenant.Application/DependencyInjection.cs ← ../ArquitecturaBase/src/ArquitecturaBase.Application/DependencyInjection.cs; tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Time/TimeZoneServiceTests.cs (nuevo). El catálogo ya pertenece a `ITimeZoneCatalog` y `JsonReferenceDataCatalog`.
 **Respaldo:** plan maestro §Etapa 1, Back 4; backend.md §§7, 11; datos-de-referencia.md §§1, 4 y 8; arbol.md back “Interfaces/Integrations/Time”, “Models/Time” e “Infrastructure/Time”; rules/fechas-y-zonas.md; arnes.md back §3.
-- [ ] Probar ID IANA del catálogo, límites UTC con DST, reloj falso y offset numérico calculado desde `TimeProvider`; I/TimeZoneServiceTests en rojo. El texto `GMT−3` lo prueba DisplayFormatter.
-- [ ] Crear puerto, servicio, modelo y registros explícitos; repetir en verde.
-- [ ] Commit back: feat: calcular días y offsets por zona horaria
+- [x] Probar ID IANA del catálogo, límites UTC con DST, reloj falso y offset numérico calculado desde `TimeProvider`; I/TimeZoneServiceTests en rojo. El texto `GMT−3` lo prueba DisplayFormatter.
+- [x] Crear puerto, servicio, modelo y registros explícitos; repetir en verde.
+- [x] Commit back: feat: calcular días y offsets por zona horaria
 
 ### Tarea 15. Validación de requests
 
