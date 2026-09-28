@@ -122,9 +122,9 @@ No quedan preguntas técnicas pendientes. Según AGENTS.md, una duda nueva se re
 
 **Archivos:** crear docs/contracts/format-cases.json y tests/ArquitecturaBaseMultitenant.Application.UnitTests/Common/FormatCasesContractTests.cs (nuevos); el EmailTests de la tarea siguiente leerá los casos de correo de este contrato.
 **Respaldo:** plan maestro §Etapa 1, Back 5 y puerta; backend.md §18; datos-de-referencia.md §7; arbol.md back “Raíz/docs/contracts”; formatos.md front §§2–3; decisiones 1 y 6 de este plan.
-- [ ] Probar `now` fijo, `id/type/culture/timeZone/input/expected` por caso, todos los tipos de formatos.md y ambas culturas habilitadas; ARS y USD con sus símbolos visibles distintos por cultura, monedas de 0/2/3 decimales y teléfonos nacionales/internacionales; A/FormatCasesContractTests en rojo.
-- [ ] Versionar `{ "now": "2026-09-27T15:00:00Z", "cases": [...] }` conforme ADR 0036 §7, con textos esperados exactos; repetir en verde.
-- [ ] Commit back: test: fijar casos de formato compartidos
+- [x] Probar `now` fijo, `id/type/culture/timeZone/input/expected` por caso, todos los tipos de formatos.md y ambas culturas habilitadas; ARS y USD con sus símbolos visibles distintos por cultura, monedas de 0/2/3 decimales y teléfonos nacionales/internacionales; A/FormatCasesContractTests en rojo.
+- [x] Versionar `{ "now": "2026-09-27T15:00:00Z", "cases": [...] }` conforme ADR 0036 §7, con textos esperados exactos; repetir en verde.
+- [x] Commit back: test: fijar casos de formato compartidos
 
 ### Tarea 9. Correo y teléfono de dominio
 

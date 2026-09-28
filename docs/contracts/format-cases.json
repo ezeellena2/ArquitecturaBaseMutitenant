@@ -1,0 +1,663 @@
+{
+  "now": "2026-09-27T15:00:00Z",
+  "cases": [
+    {
+      "id": "date-utc-es-AR",
+      "type": "date",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "2026-09-27T17:35:00Z",
+      "expected": "27/09/2026"
+    },
+    {
+      "id": "date-utc-en-US",
+      "type": "date",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "2026-09-27T17:35:00Z",
+      "expected": "09/27/2026"
+    },
+    {
+      "id": "date-civil-es-AR",
+      "type": "date",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "2026-09-27",
+      "expected": "27/09/2026"
+    },
+    {
+      "id": "date-civil-en-US",
+      "type": "date",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "2026-09-27",
+      "expected": "09/27/2026"
+    },
+    {
+      "id": "date-time-es-AR",
+      "type": "dateTime",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "2026-09-27T17:35:00Z",
+      "expected": "27/09/2026 14:35"
+    },
+    {
+      "id": "date-time-en-US",
+      "type": "dateTime",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "2026-09-27T17:35:00Z",
+      "expected": "09/27/2026 2:35 PM"
+    },
+    {
+      "id": "time-utc-es-AR",
+      "type": "time",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "2026-09-27T17:35:00Z",
+      "expected": "14:35"
+    },
+    {
+      "id": "time-utc-en-US",
+      "type": "time",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "2026-09-27T17:35:00Z",
+      "expected": "2:35 PM"
+    },
+    {
+      "id": "time-civil-es-AR",
+      "type": "time",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "14:35:00",
+      "expected": "14:35"
+    },
+    {
+      "id": "time-civil-en-US",
+      "type": "time",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "14:35:00",
+      "expected": "2:35 PM"
+    },
+    {
+      "id": "date-long-es-AR",
+      "type": "dateLong",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "2026-09-27T17:35:00Z",
+      "expected": "27 de septiembre de 2026"
+    },
+    {
+      "id": "date-long-en-US",
+      "type": "dateLong",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "2026-09-27T17:35:00Z",
+      "expected": "September 27, 2026"
+    },
+    {
+      "id": "relative-recent-es-AR",
+      "type": "relative",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "2026-09-27T14:55:00Z",
+      "expected": "hace 5 minutos"
+    },
+    {
+      "id": "relative-recent-en-US",
+      "type": "relative",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "2026-09-27T14:55:00Z",
+      "expected": "5 minutes ago"
+    },
+    {
+      "id": "relative-old-es-AR",
+      "type": "relative",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "2026-09-20T15:00:00Z",
+      "expected": "20/09/2026"
+    },
+    {
+      "id": "relative-old-en-US",
+      "type": "relative",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "2026-09-20T15:00:00Z",
+      "expected": "09/20/2026"
+    },
+    {
+      "id": "date-range-es-AR",
+      "type": "dateRange",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": {
+        "start": "2026-09-27",
+        "end": "2026-10-03"
+      },
+      "expected": "27/09/2026 – 03/10/2026"
+    },
+    {
+      "id": "date-range-en-US",
+      "type": "dateRange",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": {
+        "start": "2026-09-27",
+        "end": "2026-10-03"
+      },
+      "expected": "09/27/2026 – 10/03/2026"
+    },
+    {
+      "id": "integer-es-AR",
+      "type": "integer",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": 1234567,
+      "expected": "1.234.567"
+    },
+    {
+      "id": "integer-en-US",
+      "type": "integer",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": 1234567,
+      "expected": "1,234,567"
+    },
+    {
+      "id": "decimal-es-AR",
+      "type": "decimal",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": {
+        "value": 1234.5,
+        "digits": 2
+      },
+      "expected": "1.234,50"
+    },
+    {
+      "id": "decimal-en-US",
+      "type": "decimal",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": {
+        "value": 1234.5,
+        "digits": 2
+      },
+      "expected": "1,234.50"
+    },
+    {
+      "id": "quantity-es-AR",
+      "type": "quantity",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": 12.5,
+      "expected": "12,5"
+    },
+    {
+      "id": "quantity-en-US",
+      "type": "quantity",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": 12.5,
+      "expected": "12.5"
+    },
+    {
+      "id": "percent-es-AR",
+      "type": "percent",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": 0.125,
+      "expected": "12,5 %"
+    },
+    {
+      "id": "percent-en-US",
+      "type": "percent",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": 0.125,
+      "expected": "12.5%"
+    },
+    {
+      "id": "money-ars-es-AR",
+      "type": "money",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": {
+        "amount": 1234.5,
+        "currency": "ARS"
+      },
+      "expected": "$ 1.234,50"
+    },
+    {
+      "id": "money-ars-en-US",
+      "type": "money",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": {
+        "amount": 1234.5,
+        "currency": "ARS"
+      },
+      "expected": "ARS 1,234.50"
+    },
+    {
+      "id": "money-usd-es-AR",
+      "type": "money",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": {
+        "amount": 1234.5,
+        "currency": "USD"
+      },
+      "expected": "US$ 1.234,50"
+    },
+    {
+      "id": "money-usd-en-US",
+      "type": "money",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": {
+        "amount": 1234.5,
+        "currency": "USD"
+      },
+      "expected": "$1,234.50"
+    },
+    {
+      "id": "money-clp-es-AR",
+      "type": "money",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": {
+        "amount": 1234,
+        "currency": "CLP"
+      },
+      "expected": "CLP 1.234"
+    },
+    {
+      "id": "money-clp-en-US",
+      "type": "money",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": {
+        "amount": 1234,
+        "currency": "CLP"
+      },
+      "expected": "CLP 1,234"
+    },
+    {
+      "id": "money-bhd-es-AR",
+      "type": "money",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": {
+        "amount": 1234.567,
+        "currency": "BHD"
+      },
+      "expected": "BHD 1.234,567"
+    },
+    {
+      "id": "money-bhd-en-US",
+      "type": "money",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": {
+        "amount": 1234.567,
+        "currency": "BHD"
+      },
+      "expected": "BHD 1,234.567"
+    },
+    {
+      "id": "money-ars-negative-es-AR",
+      "type": "money",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": {
+        "amount": -1234.5,
+        "currency": "ARS"
+      },
+      "expected": "-$ 1.234,50"
+    },
+    {
+      "id": "money-ars-negative-en-US",
+      "type": "money",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": {
+        "amount": -1234.5,
+        "currency": "ARS"
+      },
+      "expected": "-ARS 1,234.50"
+    },
+    {
+      "id": "compact-es-AR",
+      "type": "compact",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": 1300000,
+      "expected": "1,3 M"
+    },
+    {
+      "id": "compact-en-US",
+      "type": "compact",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": 1300000,
+      "expected": "1.3M"
+    },
+    {
+      "id": "file-size-es-AR",
+      "type": "fileSize",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": 1500000,
+      "expected": "1,5 MB"
+    },
+    {
+      "id": "file-size-en-US",
+      "type": "fileSize",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": 1500000,
+      "expected": "1.5 MB"
+    },
+    {
+      "id": "duration-es-AR",
+      "type": "duration",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": 8100,
+      "expected": "2 h 15 min"
+    },
+    {
+      "id": "duration-en-US",
+      "type": "duration",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": 8100,
+      "expected": "2 h 15 min"
+    },
+    {
+      "id": "phone-ar-es-AR",
+      "type": "phone",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "+5491123456789",
+      "expected": "011 15-2345-6789"
+    },
+    {
+      "id": "phone-ar-en-US",
+      "type": "phone",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "+5491123456789",
+      "expected": "+54 9 11 2345 6789"
+    },
+    {
+      "id": "phone-us-es-AR",
+      "type": "phone",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "+12125550123",
+      "expected": "+1 212 555 0123"
+    },
+    {
+      "id": "phone-us-en-US",
+      "type": "phone",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "+12125550123",
+      "expected": "(212) 555-0123"
+    },
+    {
+      "id": "phone-uy-es-AR",
+      "type": "phone",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "+59894123456",
+      "expected": "+598 94 123 456"
+    },
+    {
+      "id": "phone-uy-en-US",
+      "type": "phone",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "+59894123456",
+      "expected": "+598 94 123 456"
+    },
+    {
+      "id": "time-zone-buenos-aires-es-AR",
+      "type": "timeZone",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "America/Argentina/Buenos_Aires",
+      "expected": "Buenos Aires (GMT−3)"
+    },
+    {
+      "id": "time-zone-buenos-aires-en-US",
+      "type": "timeZone",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "America/Argentina/Buenos_Aires",
+      "expected": "Buenos Aires (GMT−3)"
+    },
+    {
+      "id": "time-zone-new-york-es-AR",
+      "type": "timeZone",
+      "culture": "es-AR",
+      "timeZone": "America/New_York",
+      "input": "America/New_York",
+      "expected": "Nueva York (GMT−4)"
+    },
+    {
+      "id": "time-zone-new-york-en-US",
+      "type": "timeZone",
+      "culture": "en-US",
+      "timeZone": "America/New_York",
+      "input": "America/New_York",
+      "expected": "New York (GMT−4)"
+    },
+    {
+      "id": "culture-es-AR-es-AR",
+      "type": "culture",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "es-AR",
+      "expected": "Español (Argentina)"
+    },
+    {
+      "id": "culture-es-AR-en-US",
+      "type": "culture",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "es-AR",
+      "expected": "Spanish (Argentina)"
+    },
+    {
+      "id": "culture-en-US-es-AR",
+      "type": "culture",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "en-US",
+      "expected": "Inglés (Estados Unidos)"
+    },
+    {
+      "id": "culture-en-US-en-US",
+      "type": "culture",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "en-US",
+      "expected": "English (United States)"
+    },
+    {
+      "id": "tax-id-cuit-es-AR",
+      "type": "taxId",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": {
+        "type": "AR-CUIT",
+        "number": "20123456786"
+      },
+      "expected": "20-12345678-6"
+    },
+    {
+      "id": "tax-id-cuit-en-US",
+      "type": "taxId",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": {
+        "type": "AR-CUIT",
+        "number": "20123456786"
+      },
+      "expected": "20-12345678-6"
+    },
+    {
+      "id": "tax-id-cuil-es-AR",
+      "type": "taxId",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": {
+        "type": "AR-CUIL",
+        "number": "20123456786"
+      },
+      "expected": "20-12345678-6"
+    },
+    {
+      "id": "tax-id-cuil-en-US",
+      "type": "taxId",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": {
+        "type": "AR-CUIL",
+        "number": "20123456786"
+      },
+      "expected": "20-12345678-6"
+    },
+    {
+      "id": "tax-id-dni-es-AR",
+      "type": "taxId",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": {
+        "type": "AR-DNI",
+        "number": "12345678"
+      },
+      "expected": "12345678"
+    },
+    {
+      "id": "tax-id-dni-en-US",
+      "type": "taxId",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": {
+        "type": "AR-DNI",
+        "number": "12345678"
+      },
+      "expected": "12345678"
+    },
+    {
+      "id": "email-es-AR",
+      "type": "email",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "  Juan@Gmail.COM ",
+      "expected": "juan@gmail.com"
+    },
+    {
+      "id": "email-en-US",
+      "type": "email",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "  Juan@Gmail.COM ",
+      "expected": "juan@gmail.com"
+    },
+    {
+      "id": "enum-test-status-es-AR",
+      "type": "enum",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": {
+        "enum": "TestStatus",
+        "value": "Active"
+      },
+      "expected": "Activo"
+    },
+    {
+      "id": "enum-test-status-en-US",
+      "type": "enum",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": {
+        "enum": "TestStatus",
+        "value": "Active"
+      },
+      "expected": "Active"
+    },
+    {
+      "id": "boolean-true-es-AR",
+      "type": "boolean",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": true,
+      "expected": "Sí"
+    },
+    {
+      "id": "boolean-true-en-US",
+      "type": "boolean",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": true,
+      "expected": "Yes"
+    },
+    {
+      "id": "boolean-false-es-AR",
+      "type": "boolean",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": false,
+      "expected": "No"
+    },
+    {
+      "id": "boolean-false-en-US",
+      "type": "boolean",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": false,
+      "expected": "No"
+    },
+    {
+      "id": "empty-es-AR",
+      "type": "empty",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": null,
+      "expected": "—"
+    },
+    {
+      "id": "empty-en-US",
+      "type": "empty",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": null,
+      "expected": "—"
+    },
+    {
+      "id": "text-es-AR",
+      "type": "text",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "Grupo Delta",
+      "expected": "Grupo Delta"
+    },
+    {
+      "id": "text-en-US",
+      "type": "text",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "Grupo Delta",
+      "expected": "Grupo Delta"
+    }
+  ]
+}
