@@ -242,9 +242,9 @@ No quedan preguntas técnicas pendientes. Según AGENTS.md, una duda nueva se re
 
 **Archivos:** crear src/ArquitecturaBaseMultitenant.Api/Hosting/{ForwardedHeadersExtensions,SecurityHeadersExtensions,SpaExtensions}.cs ← homónimos de ../ArquitecturaBase/src/ArquitecturaBase.Api/Hosting/; actualizar src/ArquitecturaBaseMultitenant.Api/Program.cs; crear docs/guides/prefijo-de-backend.md; tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Hosting/SpaHostingTests.cs ← ../ArquitecturaBase/tests/ArquitecturaBase.Api.IntegrationTests/Hosting/SpaHostingTests.cs y SecurityHeadersTests.cs (nuevo, tomando ForwardedHeadersTests.cs de base como referencia).
 **Respaldo:** plan maestro §Etapa 1, Back 9; backend.md §§16, 19; arbol.md back “Api/Hosting” y “Documentación en capas”; rules/api-http.md; decisiones 15 y 17 de este plan. El proxy del front se actualiza en la tarea de contratos generados.
-- [ ] Probar prefijos backend, `/swagger` y `/openapi` solo en Development, fallback SPA en host principal/subdominio y headers; I/SpaHostingTests e I/SecurityHeadersTests en rojo.
-- [ ] Copiar/adaptar hosting y guía; conectar las piezas operativas de §16 en orden y dejar comentados los lugares de autenticación, resolución tenant, autorización, bootstrap y middleware de etapas posteriores; repetir en verde.
-- [ ] Commit back: feat: completar hosting y documentar prefijos
+- [x] Probar prefijos backend, `/swagger` y `/openapi` solo en Development, fallback SPA en host principal/subdominio y headers; I/SpaHostingTests e I/SecurityHeadersTests en rojo.
+- [x] Copiar/adaptar hosting y guía; conectar las piezas operativas de §16 en orden y dejar comentados los lugares de autenticación, resolución tenant, autorización, bootstrap y middleware de etapas posteriores; repetir en verde.
+- [x] Commit back: feat: completar hosting y documentar prefijos
 
 ### Tarea 24. Marca de idempotencia
 

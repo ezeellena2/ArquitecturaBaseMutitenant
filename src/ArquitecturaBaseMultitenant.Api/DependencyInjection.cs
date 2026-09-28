@@ -18,6 +18,7 @@ public static class DependencyInjection
         });
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddOpenApiDocumentation();
+        services.AddRateLimiter(_ => { });
         services.ConfigureHttpJsonOptions(options => JsonConfiguration.ConfigureJson(options.SerializerOptions));
         services.AddControllers(options => options.Filters.Add(new EmptyJsonBodyContentTypeFilter()))
             .AddJsonOptions(options => JsonConfiguration.ConfigureJson(options.JsonSerializerOptions));
