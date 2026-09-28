@@ -100,7 +100,7 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
 - [x] Api mínima (`AddServiceDefaults`, `MapDefaultEndpoints`) y `HealthCheckTests` (`/alive` → 200). Commit `feat: AppHost y health`.
 
 ### Tarea 0.4: tests de arquitectura de base
-- [ ] `LayerDependencyTests`, `ProjectReferencesTests`, `ApplicationPackagesTests`, `MinimalApiRoutesTests` y `Support/CallSites.cs`, copiados y adaptados de la base. Commit `test: reglas de capas`.
+- [x] `LayerDependencyTests`, `ProjectReferencesTests`, `ApplicationPackagesTests`, `MinimalApiRoutesTests` y `Support/CallSites.cs`, copiados y adaptados de la base. Commit `test: reglas de capas`.
 
 ### Tarea 0.5: CI
 - [ ] `.github/workflows/ci.yml` en los dos repos: en la E0, el back hace build + test (con Docker); el front, `npm ci`, build, lint y test. El chequeo de contratos se suma en la E1. Commit `ci: build y test`.
