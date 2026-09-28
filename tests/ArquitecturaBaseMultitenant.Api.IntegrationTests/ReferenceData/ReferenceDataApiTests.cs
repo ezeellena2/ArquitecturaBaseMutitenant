@@ -13,7 +13,7 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.ReferenceData;
 public sealed class ReferenceDataApiTests(ApiFactory factory)
 {
     [Fact]
-    public async Task Whole_catalog_contains_only_enabled_rows_translated_to_the_request_culture()
+    public async Task Whole_catalog_contains_enabled_and_disabled_rows_translated_to_the_request_culture()
     {
         using var client = factory.CreateClient();
         using var request = new HttpRequestMessage(HttpMethod.Get, "/api/reference-data");
@@ -29,15 +29,23 @@ public sealed class ReferenceDataApiTests(ApiFactory factory)
         {
             var entries = body.GetProperty(catalog).EnumerateArray().ToArray();
             Assert.NotEmpty(entries);
-            Assert.All(entries, entry => Assert.True(entry.GetProperty("isEnabled").GetBoolean()));
+            Assert.All(entries, entry => Assert.True(entry.GetProperty("isEnabled").ValueKind is
+                JsonValueKind.True or JsonValueKind.False));
         }
 
-        var currency = Assert.Single(body.GetProperty("currencies").EnumerateArray());
+        var currency = Assert.Single(body.GetProperty("currencies").EnumerateArray(),
+            item => item.GetProperty("code").GetString() == "ARS");
         Assert.Equal("ARS", currency.GetProperty("code").GetString());
         Assert.Equal("Argentine Peso", currency.GetProperty("name").GetString());
         Assert.Equal("ARS", currency.GetProperty("displaySymbol").GetString());
-        Assert.DoesNotContain(body.GetProperty("currencies").EnumerateArray(),
-            item => item.GetProperty("code").GetString() == "USD");
+        Assert.Contains(body.GetProperty("currencies").EnumerateArray(),
+            item => item.GetProperty("code").GetString() == "AED"
+                && !item.GetProperty("isEnabled").GetBoolean()
+                && item.GetProperty("name").GetString() == "United Arab Emirates Dirham");
+        Assert.Contains(body.GetProperty("countries").EnumerateArray(),
+            item => item.GetProperty("code").GetString() == "AD" && !item.GetProperty("isEnabled").GetBoolean());
+        Assert.Contains(body.GetProperty("timeZones").EnumerateArray(),
+            item => item.GetProperty("id").GetString() == "Europe/Andorra" && !item.GetProperty("isEnabled").GetBoolean());
     }
 
     [Theory]
@@ -56,8 +64,26 @@ public sealed class ReferenceDataApiTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var entries = document.RootElement.EnumerateArray().ToArray();
         Assert.NotEmpty(entries);
-        Assert.All(entries, item => Assert.True(item.GetProperty("isEnabled").GetBoolean()));
+        Assert.All(entries, item => Assert.True(item.GetProperty("isEnabled").ValueKind is
+            JsonValueKind.True or JsonValueKind.False));
         Assert.Contains(entries, item => item.GetProperty(key).GetString()!.Contains(search, StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Theory]
+    [InlineData("currencies", "AED", "code")]
+    [InlineData("countries", "AD", "code")]
+    [InlineData("time-zones", "Europe/Andorra", "id")]
+    public async Task Per_catalog_search_keeps_disabled_rows_readable(string catalog, string search, string key)
+    {
+        using var client = factory.CreateClient();
+        using var response = await client.GetAsync($"/api/reference-data/{catalog}?search={Uri.EscapeDataString(search)}",
+            TestContext.Current.CancellationToken);
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var row = Assert.Single(document.RootElement.EnumerateArray(),
+            item => item.GetProperty(key).GetString() == search);
+        Assert.False(row.GetProperty("isEnabled").GetBoolean());
     }
 
     [Fact]

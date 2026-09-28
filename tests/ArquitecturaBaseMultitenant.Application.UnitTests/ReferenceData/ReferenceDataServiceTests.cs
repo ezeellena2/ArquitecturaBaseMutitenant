@@ -11,7 +11,7 @@ namespace ArquitecturaBaseMultitenant.Application.UnitTests.ReferenceData;
 public sealed class ReferenceDataServiceTests
 {
     [Fact]
-    public async Task Aggregate_returns_five_enabled_catalogs_translated_to_request_culture()
+    public async Task Aggregate_returns_all_five_catalogs_with_enabled_state_and_translations()
     {
         var (service, logger) = CreateService();
 
@@ -20,12 +20,14 @@ public sealed class ReferenceDataServiceTests
         Assert.True(result.IsSuccess);
         var response = result.Value;
         Assert.Equal("en-US", response.Culture);
-        Assert.All(response.Currencies, item => Assert.True(item.IsEnabled));
-        Assert.All(response.Countries, item => Assert.True(item.IsEnabled));
-        Assert.All(response.TimeZones, item => Assert.True(item.IsEnabled));
+        Assert.Contains(response.Currencies, item => item.Code == "AED" && !item.IsEnabled
+            && item.Name == "United Arab Emirates Dirham");
+        Assert.Contains(response.Countries, item => item.Code == "AD" && !item.IsEnabled
+            && item.Name == "Andorra");
+        Assert.Contains(response.TimeZones, item => item.Id == "Europe/Andorra" && !item.IsEnabled
+            && item.City == "Andorra");
         Assert.All(response.Cultures, item => Assert.True(item.IsEnabled));
         Assert.All(response.TaxIdTypes, item => Assert.True(item.IsEnabled));
-        Assert.DoesNotContain(response.Currencies, item => item.Code == "AED");
         Assert.Equal("Argentine Peso", Assert.Single(response.Currencies, item => item.Code == "ARS").Name);
         Assert.Equal("ARS", Assert.Single(response.Currencies, item => item.Code == "ARS").DisplaySymbol);
         Assert.Equal(2, Assert.Single(response.Currencies, item => item.Code == "ARS").MinorUnits);
@@ -71,6 +73,35 @@ public sealed class ReferenceDataServiceTests
     }
 
     [Fact]
+    public async Task Per_catalog_search_also_finds_disabled_historical_rows()
+    {
+        var (service, _) = CreateService();
+        var ct = TestContext.Current.CancellationToken;
+
+        var currency = await service.GetCurrenciesAsync("en-US", "AED", ct);
+        var country = await service.GetCountriesAsync("en-US", "AD", ct);
+        var zone = await service.GetTimeZonesAsync("en-US", "Europe/Andorra", ct);
+
+        Assert.False(Assert.Single(currency.Value, item => item.Code == "AED").IsEnabled);
+        Assert.False(Assert.Single(country.Value, item => item.Code == "AD").IsEnabled);
+        Assert.False(Assert.Single(zone.Value, item => item.Id == "Europe/Andorra").IsEnabled);
+    }
+
+    [Fact]
+    public async Task Tax_id_type_route_keeps_a_disabled_type_readable()
+    {
+        var catalog = new JsonReferenceDataCatalog();
+        var service = new ReferenceDataService(
+            catalog, catalog, catalog, catalog, new DisabledTaxIdTypeCatalog(catalog),
+            new FakeTimeProvider(), new FakeLogger<ReferenceDataService>());
+
+        var result = await service.GetTaxIdTypesAsync("es-AR", "AR-DNI", TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsSuccess);
+        Assert.False(Assert.Single(result.Value).IsEnabled);
+    }
+
+    [Fact]
     public async Task Time_zone_preserves_every_country_code_in_a_shared_iana_row()
     {
         var catalog = new JsonReferenceDataCatalog();
@@ -81,15 +112,9 @@ public sealed class ReferenceDataServiceTests
 
         var result = await service.GetTimeZonesAsync("es-AR", shared.Id, TestContext.Current.CancellationToken);
 
-        // A disabled historical zone is intentionally absent from selection responses.
-        if (shared.IsEnabled)
-        {
-            Assert.Equal(shared.CountryCodes, Assert.Single(result.Value).CountryCodes);
-        }
-        else
-        {
-            Assert.Empty(result.Value);
-        }
+        var returned = Assert.Single(result.Value);
+        Assert.Equal(shared.CountryCodes, returned.CountryCodes);
+        Assert.Equal(shared.IsEnabled, returned.IsEnabled);
     }
 
     [Fact]
@@ -105,6 +130,8 @@ public sealed class ReferenceDataServiceTests
 
         Assert.True(result.IsSuccess);
         Assert.Equal("peso en francés", Assert.Single(result.Value).Name);
+        var disabledCulture = await service.GetCulturesAsync("es-AR", "fr-FR", TestContext.Current.CancellationToken);
+        Assert.False(Assert.Single(disabledCulture.Value).IsEnabled);
     }
 
     [Fact]
@@ -174,5 +201,16 @@ public sealed class ReferenceDataServiceTests
 
         Task<CultureCatalogEntry?> ICultureCatalog.FindAsync(string code, CancellationToken cancellationToken) =>
             Task.FromResult(Cultures.FirstOrDefault(entry => entry.Code == code));
+    }
+
+    private sealed class DisabledTaxIdTypeCatalog(ITaxIdTypeCatalog source) : ITaxIdTypeCatalog
+    {
+        public async Task<IReadOnlyList<TaxIdTypeCatalogEntry>> ListAsync(CancellationToken cancellationToken) =>
+            (await source.ListAsync(cancellationToken))
+                .Select(entry => entry.Code == "AR-DNI" ? entry with { IsEnabled = false } : entry)
+                .ToArray();
+
+        public async Task<TaxIdTypeCatalogEntry?> FindAsync(string code, CancellationToken cancellationToken) =>
+            (await ListAsync(cancellationToken)).FirstOrDefault(entry => entry.Code == code);
     }
 }

@@ -13,8 +13,8 @@
 - **Territorios incompletos:** si ISO no aporta prefijo, moneda o zona propia, el campo queda `null` y el registro no se habilita para selección nueva. Las FK se prueban solo para valores presentes; no se inventa un valor de reemplazo.
 - **Zona compartida:** `time-zones.json` conserva todos los países de cada fila IANA en `CountryCodes[]`; en E2 `platform.TimeZoneCountries` los persiste con FK y deshabilita asociaciones que IANA retire. No reduzcas la relación a un solo `TimeZones.CountryCode`. `UTC` tiene `CountryCodes: []`.
 - **Habilitación inicial:** generador habilita país y moneda de la cultura por defecto, culturas soportadas, zonas asociadas por IANA a un país habilitado más `UTC`, y tipos fiscales de país habilitado. `habilitados.json` puede cambiar estas selecciones sin un `switch` en código. `ReferenceDataCatalogTests` exige que TimeZoneSelect y TaxIdField tengan opciones iniciales.
-- **En el front:** leé los catálogos de `shared/referenceData` (`GET /api/reference-data`) y usá los selectores de `shared/ui/fields`.
-- **Etapas:** E1 lee los JSON versionados con `JsonReferenceDataCatalog`; E2 agrega tablas, `ReferenceDataSeeder` y `ReferenceDataReader`. `GET /api/reference-data` reemplaza `GET /api/time-zones` y lleva `[AllowAnonymous]`.
+- **En el front:** leé todas las filas de `shared/referenceData` (`GET /api/reference-data`), filtrá `isEnabled` en los selectores de `shared/ui/fields` y usá cualquier fila para mostrar un valor existente con `shared/format`.
+- **Etapas:** E1 lee los JSON versionados con `JsonReferenceDataCatalog`; E2 agrega tablas, `ReferenceDataSeeder` y `ReferenceDataReader`, que también devuelve todas las filas. `GET /api/reference-data` reemplaza `GET /api/time-zones`, lleva `[AllowAnonymous]` e incluye `isEnabled` en cada fila.
 
 ## Prohibido
 - Un `enum`, una constante o un `switch` con monedas, países, zonas o culturas (`if (currency == "ARS")`, `["ARS", "USD"]`).

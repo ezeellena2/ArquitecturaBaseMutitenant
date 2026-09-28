@@ -75,7 +75,7 @@ internal sealed class ReferenceDataService(
         SelectedCulture selectedCulture, string? search, CancellationToken cancellationToken)
     {
         var entries = await currencies.ListAsync(cancellationToken);
-        return entries.Where(entry => entry.IsEnabled)
+        return entries
             .Select(entry =>
             {
                 var translation = Translate(entry.Translations, item => item.Culture, selectedCulture);
@@ -94,7 +94,7 @@ internal sealed class ReferenceDataService(
         SelectedCulture selectedCulture, string? search, CancellationToken cancellationToken)
     {
         var entries = await countries.ListAsync(cancellationToken);
-        return entries.Where(entry => entry.IsEnabled)
+        return entries
             .Select(entry => new CountryReferenceItem(
                 entry.Code, entry.Alpha3, entry.NumericCode, entry.CallingCode,
                 entry.DefaultCurrencyCode, entry.DefaultTimeZoneId,
@@ -110,7 +110,7 @@ internal sealed class ReferenceDataService(
         SelectedCulture selectedCulture, string? search, CancellationToken cancellationToken)
     {
         var entries = await timeZones.ListAsync(cancellationToken);
-        return entries.Where(entry => entry.IsEnabled)
+        return entries
             .Select(entry => new TimeZoneReferenceItem(
                 entry.Id, entry.CountryCodes,
                 Translate(entry.Translations, item => item.Culture, selectedCulture).City,
@@ -125,7 +125,7 @@ internal sealed class ReferenceDataService(
         SelectedCulture selectedCulture, string? search, CancellationToken cancellationToken)
     {
         var entries = await cultures.ListAsync(cancellationToken);
-        return entries.Where(entry => entry.IsEnabled)
+        return entries
             .Select(entry => new CultureReferenceItem(
                 entry.Code, entry.LanguageCode, entry.CountryCode,
                 entry.DatePattern, entry.TimePattern, entry.DateTimePattern,
@@ -144,7 +144,7 @@ internal sealed class ReferenceDataService(
         SelectedCulture selectedCulture, string? search, CancellationToken cancellationToken)
     {
         var entries = await taxIdTypes.ListAsync(cancellationToken);
-        return entries.Where(entry => entry.IsEnabled)
+        return entries
             .Select(entry => new TaxIdTypeReferenceItem(
                 entry.Code, entry.CountryCode, entry.Label, entry.Mask,
                 entry.ValidatorKey, entry.AppliesTo,
