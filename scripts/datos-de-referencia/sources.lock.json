@@ -1,0 +1,22 @@
+{
+  "asOf": "2026-09-17",
+  "sources": {
+    "sixIso4217": {
+      "url": "https://www.six-group.com/dam/download/financial-information/data-center/iso-currrency/lists/list-one.xml",
+      "version": "2026-09-17",
+      "sha256": "33139b438657d1cee116ba737807ea71d19d6de4b90f799a09c56f0cc6a1b0ff",
+      "path": "sources/iso4217-list-one.xml"
+    },
+    "cldrRegionValidity": {
+      "url": "https://raw.githubusercontent.com/unicode-org/cldr/release-48-2/common/validity/region.xml",
+      "version": "48.2.0",
+      "sha256": "e751e0eedd46b52c38f3cdb72b0fab61ac8b48e052e8b28ba74b6ac26c4c8cb1",
+      "path": "sources/cldr-region-validity.xml"
+    }
+  },
+  "packages": {
+    "cldr": "48.2.0",
+    "libphonenumber": "1.13.14",
+    "xmlParser": "5.11.1"
+  }
+}

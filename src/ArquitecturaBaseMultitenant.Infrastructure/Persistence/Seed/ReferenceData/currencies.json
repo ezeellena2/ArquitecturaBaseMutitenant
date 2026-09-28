@@ -1,0 +1,3676 @@
+{
+  "Sources": {
+    "AsOf": "2026-09-17",
+    "SIX": {
+      "url": "https://www.six-group.com/dam/download/financial-information/data-center/iso-currrency/lists/list-one.xml",
+      "version": "2026-09-17",
+      "sha256": "33139b438657d1cee116ba737807ea71d19d6de4b90f799a09c56f0cc6a1b0ff",
+      "path": "sources/iso4217-list-one.xml"
+    },
+    "CLDR": {
+      "url": "https://raw.githubusercontent.com/unicode-org/cldr/release-48-2/common/validity/region.xml",
+      "version": "48.2.0",
+      "sha256": "e751e0eedd46b52c38f3cdb72b0fab61ac8b48e052e8b28ba74b6ac26c4c8cb1",
+      "path": "sources/cldr-region-validity.xml"
+    },
+    "Packages": {
+      "cldr-core": {
+        "Version": "48.2.0",
+        "Url": "https://registry.npmjs.org/cldr-core/-/cldr-core-48.2.0.tgz",
+        "Integrity": "sha512-zfmLothncSwfv2jlevoSrgI2VGgH8SDGHXst6jUEotHA8nq9Igeg9jzdJDFtBso9pgJuG89DK16TzrmZDdo2Bg=="
+      },
+      "cldr-localenames-full": {
+        "Version": "48.2.0",
+        "Url": "https://registry.npmjs.org/cldr-localenames-full/-/cldr-localenames-full-48.2.0.tgz",
+        "Integrity": "sha512-4o0paYDz0UXhfhChAVFkmVl2CP0YTSEqE6WrC0fNafaSC5u5DAXphxH3SZ1Ujczarikr8DToKZfiok6EqWLdNQ=="
+      },
+      "cldr-numbers-full": {
+        "Version": "48.2.0",
+        "Url": "https://registry.npmjs.org/cldr-numbers-full/-/cldr-numbers-full-48.2.0.tgz",
+        "Integrity": "sha512-0EQ+UkVDsyXOlxnWnL1RIENVZFqCnb04D1Yrku0obnOyttbuZz8tHmUd5c5AEvhGS/Gg2zI4fTaCm51LSGITog=="
+      },
+      "libphonenumber-js": {
+        "Version": "1.13.14",
+        "Url": "https://registry.npmjs.org/libphonenumber-js/-/libphonenumber-js-1.13.14.tgz",
+        "Integrity": "sha512-llihgCcx0BFLksecLP+x1J+6JDE1GsXS1RN/LoPF6qcwpeQcnjj0lcvZxY8AzbEpYwyZWPZW/nDuqkqzm3amiw=="
+      },
+      "fast-xml-parser": {
+        "Version": "5.11.1",
+        "Url": "https://registry.npmjs.org/fast-xml-parser/-/fast-xml-parser-5.11.1.tgz",
+        "Integrity": "sha512-TBw6K/fxoQGGjCmZDw9w/ZwP3uDcnTM4YH/g+PFRWr8sbe5idXtxNN6vITh4+1ruCZaho6uBFurElsA7F0zzgw=="
+      }
+    }
+  },
+  "Currencies": [
+    {
+      "Code": "AED",
+      "NumericCode": "784",
+      "MinorUnits": 2,
+      "Symbol": "AED",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dírham de los Emiratos Árabes Unidos",
+          "NamePlural": "dírhams de los Emiratos Árabes Unidos",
+          "DisplaySymbol": "AED"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "United Arab Emirates Dirham",
+          "NamePlural": "UAE dirhams",
+          "DisplaySymbol": "AED"
+        }
+      ]
+    },
+    {
+      "Code": "AFN",
+      "NumericCode": "971",
+      "MinorUnits": 2,
+      "Symbol": "AFN",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "afgani afgano",
+          "NamePlural": "afganis afganos",
+          "DisplaySymbol": "AFN"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Afghan Afghani",
+          "NamePlural": "Afghan Afghanis",
+          "DisplaySymbol": "AFN"
+        }
+      ]
+    },
+    {
+      "Code": "ALL",
+      "NumericCode": "008",
+      "MinorUnits": 2,
+      "Symbol": "ALL",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "lek albanés",
+          "NamePlural": "leks albaneses",
+          "DisplaySymbol": "ALL"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Albanian Lek",
+          "NamePlural": "Albanian lekë",
+          "DisplaySymbol": "ALL"
+        }
+      ]
+    },
+    {
+      "Code": "AMD",
+      "NumericCode": "051",
+      "MinorUnits": 2,
+      "Symbol": "AMD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dram armenio",
+          "NamePlural": "drams armenios",
+          "DisplaySymbol": "AMD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Armenian Dram",
+          "NamePlural": "Armenian drams",
+          "DisplaySymbol": "AMD"
+        }
+      ]
+    },
+    {
+      "Code": "AOA",
+      "NumericCode": "973",
+      "MinorUnits": 2,
+      "Symbol": "AOA",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "kuanza angoleño",
+          "NamePlural": "kuanzas angoleños",
+          "DisplaySymbol": "AOA"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Angolan Kwanza",
+          "NamePlural": "Angolan kwanzas",
+          "DisplaySymbol": "AOA"
+        }
+      ]
+    },
+    {
+      "Code": "ARS",
+      "NumericCode": "032",
+      "MinorUnits": 2,
+      "Symbol": "$",
+      "IsEnabled": true,
+      "SortOrder": 0,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "peso argentino",
+          "NamePlural": "pesos argentinos",
+          "DisplaySymbol": "$"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Argentine Peso",
+          "NamePlural": "Argentine pesos",
+          "DisplaySymbol": "ARS"
+        }
+      ]
+    },
+    {
+      "Code": "AUD",
+      "NumericCode": "036",
+      "MinorUnits": 2,
+      "Symbol": "AUD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dólar australiano",
+          "NamePlural": "dólares australianos",
+          "DisplaySymbol": "AUD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Australian Dollar",
+          "NamePlural": "Australian dollars",
+          "DisplaySymbol": "A$"
+        }
+      ]
+    },
+    {
+      "Code": "AWG",
+      "NumericCode": "533",
+      "MinorUnits": 2,
+      "Symbol": "AWG",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "florín arubeño",
+          "NamePlural": "florines arubeños",
+          "DisplaySymbol": "AWG"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Aruban Florin",
+          "NamePlural": "Aruban florin",
+          "DisplaySymbol": "AWG"
+        }
+      ]
+    },
+    {
+      "Code": "AZN",
+      "NumericCode": "944",
+      "MinorUnits": 2,
+      "Symbol": "AZN",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "manat azerbaiyano",
+          "NamePlural": "manats azerbaiyanos",
+          "DisplaySymbol": "AZN"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Azerbaijani Manat",
+          "NamePlural": "Azerbaijani manats",
+          "DisplaySymbol": "AZN"
+        }
+      ]
+    },
+    {
+      "Code": "BAM",
+      "NumericCode": "977",
+      "MinorUnits": 2,
+      "Symbol": "BAM",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "marco convertible de Bosnia y Herzegovina",
+          "NamePlural": "marcos convertibles de Bosnia y Herzegovina",
+          "DisplaySymbol": "BAM"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Bosnia-Herzegovina Convertible Mark",
+          "NamePlural": "Bosnia-Herzegovina convertible marks",
+          "DisplaySymbol": "BAM"
+        }
+      ]
+    },
+    {
+      "Code": "BBD",
+      "NumericCode": "052",
+      "MinorUnits": 2,
+      "Symbol": "BBD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dólar barbadense",
+          "NamePlural": "dólares barbadenses",
+          "DisplaySymbol": "BBD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Barbadian Dollar",
+          "NamePlural": "Barbadian dollars",
+          "DisplaySymbol": "BBD"
+        }
+      ]
+    },
+    {
+      "Code": "BDT",
+      "NumericCode": "050",
+      "MinorUnits": 2,
+      "Symbol": "BDT",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "taka bangladesí",
+          "NamePlural": "takas bangladesíes",
+          "DisplaySymbol": "BDT"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Bangladeshi Taka",
+          "NamePlural": "Bangladeshi takas",
+          "DisplaySymbol": "BDT"
+        }
+      ]
+    },
+    {
+      "Code": "BHD",
+      "NumericCode": "048",
+      "MinorUnits": 3,
+      "Symbol": "BHD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dinar bareiní",
+          "NamePlural": "dinares bareiníes",
+          "DisplaySymbol": "BHD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Bahraini Dinar",
+          "NamePlural": "Bahraini dinars",
+          "DisplaySymbol": "BHD"
+        }
+      ]
+    },
+    {
+      "Code": "BIF",
+      "NumericCode": "108",
+      "MinorUnits": 0,
+      "Symbol": "BIF",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "franco burundés",
+          "NamePlural": "francos burundeses",
+          "DisplaySymbol": "BIF"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Burundian Franc",
+          "NamePlural": "Burundian francs",
+          "DisplaySymbol": "BIF"
+        }
+      ]
+    },
+    {
+      "Code": "BMD",
+      "NumericCode": "060",
+      "MinorUnits": 2,
+      "Symbol": "BMD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dólar de Bermudas",
+          "NamePlural": "dólares de Bermudas",
+          "DisplaySymbol": "BMD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Bermudan Dollar",
+          "NamePlural": "Bermudan dollars",
+          "DisplaySymbol": "BMD"
+        }
+      ]
+    },
+    {
+      "Code": "BND",
+      "NumericCode": "096",
+      "MinorUnits": 2,
+      "Symbol": "BND",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dólar bruneano",
+          "NamePlural": "dólares bruneanos",
+          "DisplaySymbol": "BND"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Brunei Dollar",
+          "NamePlural": "Brunei dollars",
+          "DisplaySymbol": "BND"
+        }
+      ]
+    },
+    {
+      "Code": "BOB",
+      "NumericCode": "068",
+      "MinorUnits": 2,
+      "Symbol": "BOB",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "boliviano",
+          "NamePlural": "bolivianos",
+          "DisplaySymbol": "BOB"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Bolivian Boliviano",
+          "NamePlural": "Bolivian bolivianos",
+          "DisplaySymbol": "BOB"
+        }
+      ]
+    },
+    {
+      "Code": "BOV",
+      "NumericCode": "984",
+      "MinorUnits": 2,
+      "Symbol": "BOV",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "MVDOL boliviano",
+          "NamePlural": "MVDOL bolivianos",
+          "DisplaySymbol": "BOV"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Bolivian Mvdol",
+          "NamePlural": "Bolivian mvdols",
+          "DisplaySymbol": "BOV"
+        }
+      ]
+    },
+    {
+      "Code": "BRL",
+      "NumericCode": "986",
+      "MinorUnits": 2,
+      "Symbol": "BRL",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "real brasileño",
+          "NamePlural": "reales brasileños",
+          "DisplaySymbol": "BRL"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Brazilian Real",
+          "NamePlural": "Brazilian reals",
+          "DisplaySymbol": "R$"
+        }
+      ]
+    },
+    {
+      "Code": "BSD",
+      "NumericCode": "044",
+      "MinorUnits": 2,
+      "Symbol": "BSD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dólar bahameño",
+          "NamePlural": "dólares bahameños",
+          "DisplaySymbol": "BSD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Bahamian Dollar",
+          "NamePlural": "Bahamian dollars",
+          "DisplaySymbol": "BSD"
+        }
+      ]
+    },
+    {
+      "Code": "BTN",
+      "NumericCode": "064",
+      "MinorUnits": 2,
+      "Symbol": "BTN",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "gultrum butanés",
+          "NamePlural": "gultrums butaneses",
+          "DisplaySymbol": "BTN"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Bhutanese Ngultrum",
+          "NamePlural": "Bhutanese ngultrums",
+          "DisplaySymbol": "BTN"
+        }
+      ]
+    },
+    {
+      "Code": "BWP",
+      "NumericCode": "072",
+      "MinorUnits": 2,
+      "Symbol": "BWP",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "pula botsuano",
+          "NamePlural": "pulas botsuanos",
+          "DisplaySymbol": "BWP"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Botswanan Pula",
+          "NamePlural": "Botswanan pulas",
+          "DisplaySymbol": "BWP"
+        }
+      ]
+    },
+    {
+      "Code": "BYN",
+      "NumericCode": "933",
+      "MinorUnits": 2,
+      "Symbol": "BYN",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "rublo bielorruso",
+          "NamePlural": "rublos bielorrusos",
+          "DisplaySymbol": "BYN"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Belarusian Ruble",
+          "NamePlural": "Belarusian rubles",
+          "DisplaySymbol": "BYN"
+        }
+      ]
+    },
+    {
+      "Code": "BZD",
+      "NumericCode": "084",
+      "MinorUnits": 2,
+      "Symbol": "BZD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dólar beliceño",
+          "NamePlural": "dólares beliceños",
+          "DisplaySymbol": "BZD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Belize Dollar",
+          "NamePlural": "Belize dollars",
+          "DisplaySymbol": "BZD"
+        }
+      ]
+    },
+    {
+      "Code": "CAD",
+      "NumericCode": "124",
+      "MinorUnits": 2,
+      "Symbol": "CAD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dólar canadiense",
+          "NamePlural": "dólares canadienses",
+          "DisplaySymbol": "CAD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Canadian Dollar",
+          "NamePlural": "Canadian dollars",
+          "DisplaySymbol": "CA$"
+        }
+      ]
+    },
+    {
+      "Code": "CDF",
+      "NumericCode": "976",
+      "MinorUnits": 2,
+      "Symbol": "CDF",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "franco congoleño",
+          "NamePlural": "francos congoleños",
+          "DisplaySymbol": "CDF"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Congolese Franc",
+          "NamePlural": "Congolese francs",
+          "DisplaySymbol": "CDF"
+        }
+      ]
+    },
+    {
+      "Code": "CHE",
+      "NumericCode": "947",
+      "MinorUnits": 2,
+      "Symbol": "CHE",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "euro WIR",
+          "NamePlural": "euros WIR",
+          "DisplaySymbol": "CHE"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "WIR Euro",
+          "NamePlural": "WIR euros",
+          "DisplaySymbol": "CHE"
+        }
+      ]
+    },
+    {
+      "Code": "CHF",
+      "NumericCode": "756",
+      "MinorUnits": 2,
+      "Symbol": "CHF",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "franco suizo",
+          "NamePlural": "francos suizos",
+          "DisplaySymbol": "CHF"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Swiss Franc",
+          "NamePlural": "Swiss francs",
+          "DisplaySymbol": "CHF"
+        }
+      ]
+    },
+    {
+      "Code": "CHW",
+      "NumericCode": "948",
+      "MinorUnits": 2,
+      "Symbol": "CHW",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "franco WIR",
+          "NamePlural": "francos WIR",
+          "DisplaySymbol": "CHW"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "WIR Franc",
+          "NamePlural": "WIR francs",
+          "DisplaySymbol": "CHW"
+        }
+      ]
+    },
+    {
+      "Code": "CLF",
+      "NumericCode": "990",
+      "MinorUnits": 4,
+      "Symbol": "CLF",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "unidad de fomento chilena",
+          "NamePlural": "unidades de fomento chilenas",
+          "DisplaySymbol": "CLF"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Chilean Unit of Account (UF)",
+          "NamePlural": "Chilean units of account (UF)",
+          "DisplaySymbol": "CLF"
+        }
+      ]
+    },
+    {
+      "Code": "CLP",
+      "NumericCode": "152",
+      "MinorUnits": 0,
+      "Symbol": "CLP",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "peso chileno",
+          "NamePlural": "pesos chilenos",
+          "DisplaySymbol": "CLP"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Chilean Peso",
+          "NamePlural": "Chilean pesos",
+          "DisplaySymbol": "CLP"
+        }
+      ]
+    },
+    {
+      "Code": "CNY",
+      "NumericCode": "156",
+      "MinorUnits": 2,
+      "Symbol": "CNY",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "yuan renminbi",
+          "NamePlural": "yuanes renminbi",
+          "DisplaySymbol": "CNY"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Chinese Yuan",
+          "NamePlural": "Chinese yuan",
+          "DisplaySymbol": "CN¥"
+        }
+      ]
+    },
+    {
+      "Code": "COP",
+      "NumericCode": "170",
+      "MinorUnits": 2,
+      "Symbol": "COP",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "peso colombiano",
+          "NamePlural": "pesos colombianos",
+          "DisplaySymbol": "COP"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Colombian Peso",
+          "NamePlural": "Colombian pesos",
+          "DisplaySymbol": "COP"
+        }
+      ]
+    },
+    {
+      "Code": "COU",
+      "NumericCode": "970",
+      "MinorUnits": 2,
+      "Symbol": "COU",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "unidad de valor real colombiana",
+          "NamePlural": "unidades de valor reales",
+          "DisplaySymbol": "COU"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Colombian Real Value Unit",
+          "NamePlural": "Colombian real value units",
+          "DisplaySymbol": "COU"
+        }
+      ]
+    },
+    {
+      "Code": "CRC",
+      "NumericCode": "188",
+      "MinorUnits": 2,
+      "Symbol": "CRC",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "colón costarricense",
+          "NamePlural": "colones costarricenses",
+          "DisplaySymbol": "CRC"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Costa Rican Colón",
+          "NamePlural": "Costa Rican colóns",
+          "DisplaySymbol": "CRC"
+        }
+      ]
+    },
+    {
+      "Code": "CUP",
+      "NumericCode": "192",
+      "MinorUnits": 2,
+      "Symbol": "CUP",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "peso cubano",
+          "NamePlural": "pesos cubanos",
+          "DisplaySymbol": "CUP"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Cuban Peso",
+          "NamePlural": "Cuban pesos",
+          "DisplaySymbol": "CUP"
+        }
+      ]
+    },
+    {
+      "Code": "CVE",
+      "NumericCode": "132",
+      "MinorUnits": 2,
+      "Symbol": "CVE",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "escudo de Cabo Verde",
+          "NamePlural": "escudos de Cabo Verde",
+          "DisplaySymbol": "CVE"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Cape Verdean Escudo",
+          "NamePlural": "Cape Verdean escudos",
+          "DisplaySymbol": "CVE"
+        }
+      ]
+    },
+    {
+      "Code": "CZK",
+      "NumericCode": "203",
+      "MinorUnits": 2,
+      "Symbol": "CZK",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "corona checa",
+          "NamePlural": "coronas checas",
+          "DisplaySymbol": "CZK"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Czech Koruna",
+          "NamePlural": "Czech korunas",
+          "DisplaySymbol": "CZK"
+        }
+      ]
+    },
+    {
+      "Code": "DJF",
+      "NumericCode": "262",
+      "MinorUnits": 0,
+      "Symbol": "DJF",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "franco yibutiano",
+          "NamePlural": "francos yibutianos",
+          "DisplaySymbol": "DJF"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Djiboutian Franc",
+          "NamePlural": "Djiboutian francs",
+          "DisplaySymbol": "DJF"
+        }
+      ]
+    },
+    {
+      "Code": "DKK",
+      "NumericCode": "208",
+      "MinorUnits": 2,
+      "Symbol": "DKK",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "corona danesa",
+          "NamePlural": "coronas danesas",
+          "DisplaySymbol": "DKK"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Danish Krone",
+          "NamePlural": "Danish kroner",
+          "DisplaySymbol": "DKK"
+        }
+      ]
+    },
+    {
+      "Code": "DOP",
+      "NumericCode": "214",
+      "MinorUnits": 2,
+      "Symbol": "DOP",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "peso dominicano",
+          "NamePlural": "pesos dominicanos",
+          "DisplaySymbol": "DOP"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Dominican Peso",
+          "NamePlural": "Dominican pesos",
+          "DisplaySymbol": "DOP"
+        }
+      ]
+    },
+    {
+      "Code": "DZD",
+      "NumericCode": "012",
+      "MinorUnits": 2,
+      "Symbol": "DZD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dinar argelino",
+          "NamePlural": "dinares argelinos",
+          "DisplaySymbol": "DZD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Algerian Dinar",
+          "NamePlural": "Algerian dinars",
+          "DisplaySymbol": "DZD"
+        }
+      ]
+    },
+    {
+      "Code": "EGP",
+      "NumericCode": "818",
+      "MinorUnits": 2,
+      "Symbol": "EGP",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "libra egipcia",
+          "NamePlural": "libras egipcias",
+          "DisplaySymbol": "EGP"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Egyptian Pound",
+          "NamePlural": "Egyptian pounds",
+          "DisplaySymbol": "EGP"
+        }
+      ]
+    },
+    {
+      "Code": "ERN",
+      "NumericCode": "232",
+      "MinorUnits": 2,
+      "Symbol": "ERN",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "nakfa eritreo",
+          "NamePlural": "nakfas eritreos",
+          "DisplaySymbol": "ERN"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Eritrean Nakfa",
+          "NamePlural": "Eritrean nakfas",
+          "DisplaySymbol": "ERN"
+        }
+      ]
+    },
+    {
+      "Code": "ETB",
+      "NumericCode": "230",
+      "MinorUnits": 2,
+      "Symbol": "ETB",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "bir etíope",
+          "NamePlural": "bires etíopes",
+          "DisplaySymbol": "ETB"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Ethiopian Birr",
+          "NamePlural": "Ethiopian birrs",
+          "DisplaySymbol": "ETB"
+        }
+      ]
+    },
+    {
+      "Code": "EUR",
+      "NumericCode": "978",
+      "MinorUnits": 2,
+      "Symbol": "EUR",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "euro",
+          "NamePlural": "euros",
+          "DisplaySymbol": "EUR"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Euro",
+          "NamePlural": "euros",
+          "DisplaySymbol": "€"
+        }
+      ]
+    },
+    {
+      "Code": "FJD",
+      "NumericCode": "242",
+      "MinorUnits": 2,
+      "Symbol": "FJD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dólar fiyiano",
+          "NamePlural": "dólares fiyianos",
+          "DisplaySymbol": "FJD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Fijian Dollar",
+          "NamePlural": "Fijian dollars",
+          "DisplaySymbol": "FJD"
+        }
+      ]
+    },
+    {
+      "Code": "FKP",
+      "NumericCode": "238",
+      "MinorUnits": 2,
+      "Symbol": "FKP",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "libra malvinense",
+          "NamePlural": "libras malvinenses",
+          "DisplaySymbol": "FKP"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Falkland Islands Pound",
+          "NamePlural": "Falkland Islands pounds",
+          "DisplaySymbol": "FKP"
+        }
+      ]
+    },
+    {
+      "Code": "GBP",
+      "NumericCode": "826",
+      "MinorUnits": 2,
+      "Symbol": "GBP",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "libra esterlina",
+          "NamePlural": "libras esterlinas",
+          "DisplaySymbol": "GBP"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "British Pound",
+          "NamePlural": "British pounds",
+          "DisplaySymbol": "£"
+        }
+      ]
+    },
+    {
+      "Code": "GEL",
+      "NumericCode": "981",
+      "MinorUnits": 2,
+      "Symbol": "GEL",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "lari georgiano",
+          "NamePlural": "laris georgianos",
+          "DisplaySymbol": "GEL"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Georgian Lari",
+          "NamePlural": "Georgian laris",
+          "DisplaySymbol": "GEL"
+        }
+      ]
+    },
+    {
+      "Code": "GHS",
+      "NumericCode": "936",
+      "MinorUnits": 2,
+      "Symbol": "GHS",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "cedi ghanés",
+          "NamePlural": "cedis ghaneses",
+          "DisplaySymbol": "GHS"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Ghanaian Cedi",
+          "NamePlural": "Ghanaian cedis",
+          "DisplaySymbol": "GHS"
+        }
+      ]
+    },
+    {
+      "Code": "GIP",
+      "NumericCode": "292",
+      "MinorUnits": 2,
+      "Symbol": "GIP",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "libra gibraltareña",
+          "NamePlural": "libras gibraltareñas",
+          "DisplaySymbol": "GIP"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Gibraltar Pound",
+          "NamePlural": "Gibraltar pounds",
+          "DisplaySymbol": "GIP"
+        }
+      ]
+    },
+    {
+      "Code": "GMD",
+      "NumericCode": "270",
+      "MinorUnits": 2,
+      "Symbol": "GMD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dalasi gambiano",
+          "NamePlural": "dalasis gambianos",
+          "DisplaySymbol": "GMD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Gambian Dalasi",
+          "NamePlural": "Gambian dalasis",
+          "DisplaySymbol": "GMD"
+        }
+      ]
+    },
+    {
+      "Code": "GNF",
+      "NumericCode": "324",
+      "MinorUnits": 0,
+      "Symbol": "GNF",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "franco guineano",
+          "NamePlural": "francos guineanos",
+          "DisplaySymbol": "GNF"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Guinean Franc",
+          "NamePlural": "Guinean francs",
+          "DisplaySymbol": "GNF"
+        }
+      ]
+    },
+    {
+      "Code": "GTQ",
+      "NumericCode": "320",
+      "MinorUnits": 2,
+      "Symbol": "GTQ",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "quetzal guatemalteco",
+          "NamePlural": "quetzales guatemaltecos",
+          "DisplaySymbol": "GTQ"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Guatemalan Quetzal",
+          "NamePlural": "Guatemalan quetzals",
+          "DisplaySymbol": "GTQ"
+        }
+      ]
+    },
+    {
+      "Code": "GYD",
+      "NumericCode": "328",
+      "MinorUnits": 2,
+      "Symbol": "GYD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dólar guyanés",
+          "NamePlural": "dólares guyaneses",
+          "DisplaySymbol": "GYD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Guyanaese Dollar",
+          "NamePlural": "Guyanaese dollars",
+          "DisplaySymbol": "GYD"
+        }
+      ]
+    },
+    {
+      "Code": "HKD",
+      "NumericCode": "344",
+      "MinorUnits": 2,
+      "Symbol": "HKD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dólar hongkonés",
+          "NamePlural": "dólares hongkoneses",
+          "DisplaySymbol": "HKD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Hong Kong Dollar",
+          "NamePlural": "Hong Kong dollars",
+          "DisplaySymbol": "HK$"
+        }
+      ]
+    },
+    {
+      "Code": "HNL",
+      "NumericCode": "340",
+      "MinorUnits": 2,
+      "Symbol": "HNL",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "lempira hondureño",
+          "NamePlural": "lempiras hondureños",
+          "DisplaySymbol": "HNL"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Honduran Lempira",
+          "NamePlural": "Honduran lempiras",
+          "DisplaySymbol": "HNL"
+        }
+      ]
+    },
+    {
+      "Code": "HTG",
+      "NumericCode": "332",
+      "MinorUnits": 2,
+      "Symbol": "HTG",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "gourde haitiano",
+          "NamePlural": "gourdes haitianos",
+          "DisplaySymbol": "HTG"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Haitian Gourde",
+          "NamePlural": "Haitian gourdes",
+          "DisplaySymbol": "HTG"
+        }
+      ]
+    },
+    {
+      "Code": "HUF",
+      "NumericCode": "348",
+      "MinorUnits": 2,
+      "Symbol": "HUF",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "forinto húngaro",
+          "NamePlural": "forintos húngaros",
+          "DisplaySymbol": "HUF"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Hungarian Forint",
+          "NamePlural": "Hungarian forints",
+          "DisplaySymbol": "HUF"
+        }
+      ]
+    },
+    {
+      "Code": "IDR",
+      "NumericCode": "360",
+      "MinorUnits": 2,
+      "Symbol": "IDR",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "rupia indonesia",
+          "NamePlural": "rupias indonesias",
+          "DisplaySymbol": "IDR"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Indonesian Rupiah",
+          "NamePlural": "Indonesian rupiahs",
+          "DisplaySymbol": "IDR"
+        }
+      ]
+    },
+    {
+      "Code": "ILS",
+      "NumericCode": "376",
+      "MinorUnits": 2,
+      "Symbol": "ILS",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "nuevo séquel israelí",
+          "NamePlural": "nuevos séqueles israelíes",
+          "DisplaySymbol": "ILS"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Israeli New Shekel",
+          "NamePlural": "Israeli new shekels",
+          "DisplaySymbol": "₪"
+        }
+      ]
+    },
+    {
+      "Code": "INR",
+      "NumericCode": "356",
+      "MinorUnits": 2,
+      "Symbol": "INR",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "rupia india",
+          "NamePlural": "rupias indias",
+          "DisplaySymbol": "INR"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Indian Rupee",
+          "NamePlural": "Indian rupees",
+          "DisplaySymbol": "₹"
+        }
+      ]
+    },
+    {
+      "Code": "IQD",
+      "NumericCode": "368",
+      "MinorUnits": 3,
+      "Symbol": "IQD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dinar iraquí",
+          "NamePlural": "dinares iraquíes",
+          "DisplaySymbol": "IQD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Iraqi Dinar",
+          "NamePlural": "Iraqi dinars",
+          "DisplaySymbol": "IQD"
+        }
+      ]
+    },
+    {
+      "Code": "IRR",
+      "NumericCode": "364",
+      "MinorUnits": 2,
+      "Symbol": "IRR",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "rial iraní",
+          "NamePlural": "riales iraníes",
+          "DisplaySymbol": "IRR"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Iranian Rial",
+          "NamePlural": "Iranian rials",
+          "DisplaySymbol": "IRR"
+        }
+      ]
+    },
+    {
+      "Code": "ISK",
+      "NumericCode": "352",
+      "MinorUnits": 0,
+      "Symbol": "ISK",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "corona islandesa",
+          "NamePlural": "coronas islandesas",
+          "DisplaySymbol": "ISK"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Icelandic Króna",
+          "NamePlural": "Icelandic krónur",
+          "DisplaySymbol": "ISK"
+        }
+      ]
+    },
+    {
+      "Code": "JMD",
+      "NumericCode": "388",
+      "MinorUnits": 2,
+      "Symbol": "JMD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dólar jamaicano",
+          "NamePlural": "dólares jamaicanos",
+          "DisplaySymbol": "JMD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Jamaican Dollar",
+          "NamePlural": "Jamaican dollars",
+          "DisplaySymbol": "JMD"
+        }
+      ]
+    },
+    {
+      "Code": "JOD",
+      "NumericCode": "400",
+      "MinorUnits": 3,
+      "Symbol": "JOD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dinar jordano",
+          "NamePlural": "dinares jordanos",
+          "DisplaySymbol": "JOD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Jordanian Dinar",
+          "NamePlural": "Jordanian dinars",
+          "DisplaySymbol": "JOD"
+        }
+      ]
+    },
+    {
+      "Code": "JPY",
+      "NumericCode": "392",
+      "MinorUnits": 0,
+      "Symbol": "JPY",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "yen japonés",
+          "NamePlural": "yenes japoneses",
+          "DisplaySymbol": "JPY"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Japanese Yen",
+          "NamePlural": "Japanese yen",
+          "DisplaySymbol": "¥"
+        }
+      ]
+    },
+    {
+      "Code": "KES",
+      "NumericCode": "404",
+      "MinorUnits": 2,
+      "Symbol": "KES",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "chelín keniano",
+          "NamePlural": "chelines kenianos",
+          "DisplaySymbol": "KES"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Kenyan Shilling",
+          "NamePlural": "Kenyan shillings",
+          "DisplaySymbol": "KES"
+        }
+      ]
+    },
+    {
+      "Code": "KGS",
+      "NumericCode": "417",
+      "MinorUnits": 2,
+      "Symbol": "KGS",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "som kirguís",
+          "NamePlural": "soms kirguises",
+          "DisplaySymbol": "KGS"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Kyrgyz Som",
+          "NamePlural": "Kyrgyz soms",
+          "DisplaySymbol": "KGS"
+        }
+      ]
+    },
+    {
+      "Code": "KHR",
+      "NumericCode": "116",
+      "MinorUnits": 2,
+      "Symbol": "KHR",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "riel camboyano",
+          "NamePlural": "rieles camboyanos",
+          "DisplaySymbol": "KHR"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Cambodian Riel",
+          "NamePlural": "Cambodian riels",
+          "DisplaySymbol": "KHR"
+        }
+      ]
+    },
+    {
+      "Code": "KMF",
+      "NumericCode": "174",
+      "MinorUnits": 0,
+      "Symbol": "KMF",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "franco comorense",
+          "NamePlural": "francos comorenses",
+          "DisplaySymbol": "KMF"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Comorian Franc",
+          "NamePlural": "Comorian francs",
+          "DisplaySymbol": "KMF"
+        }
+      ]
+    },
+    {
+      "Code": "KPW",
+      "NumericCode": "408",
+      "MinorUnits": 2,
+      "Symbol": "KPW",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "won norcoreano",
+          "NamePlural": "wons norcoreanos",
+          "DisplaySymbol": "KPW"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "North Korean Won",
+          "NamePlural": "North Korean won",
+          "DisplaySymbol": "KPW"
+        }
+      ]
+    },
+    {
+      "Code": "KRW",
+      "NumericCode": "410",
+      "MinorUnits": 0,
+      "Symbol": "KRW",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "won surcoreano",
+          "NamePlural": "wons surcoreanos",
+          "DisplaySymbol": "KRW"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "South Korean Won",
+          "NamePlural": "South Korean won",
+          "DisplaySymbol": "₩"
+        }
+      ]
+    },
+    {
+      "Code": "KWD",
+      "NumericCode": "414",
+      "MinorUnits": 3,
+      "Symbol": "KWD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dinar kuwaití",
+          "NamePlural": "dinares kuwaitíes",
+          "DisplaySymbol": "KWD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Kuwaiti Dinar",
+          "NamePlural": "Kuwaiti dinars",
+          "DisplaySymbol": "KWD"
+        }
+      ]
+    },
+    {
+      "Code": "KYD",
+      "NumericCode": "136",
+      "MinorUnits": 2,
+      "Symbol": "KYD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dólar de las Islas Caimán",
+          "NamePlural": "dólares de las Islas Caimán",
+          "DisplaySymbol": "KYD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Cayman Islands Dollar",
+          "NamePlural": "Cayman Islands dollars",
+          "DisplaySymbol": "KYD"
+        }
+      ]
+    },
+    {
+      "Code": "KZT",
+      "NumericCode": "398",
+      "MinorUnits": 2,
+      "Symbol": "KZT",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "tenge kazajo",
+          "NamePlural": "tengues kazajos",
+          "DisplaySymbol": "KZT"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Kazakhstani Tenge",
+          "NamePlural": "Kazakhstani tenges",
+          "DisplaySymbol": "KZT"
+        }
+      ]
+    },
+    {
+      "Code": "LAK",
+      "NumericCode": "418",
+      "MinorUnits": 2,
+      "Symbol": "LAK",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "kip laosiano",
+          "NamePlural": "kips laosianos",
+          "DisplaySymbol": "LAK"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Laotian Kip",
+          "NamePlural": "Laotian kips",
+          "DisplaySymbol": "LAK"
+        }
+      ]
+    },
+    {
+      "Code": "LBP",
+      "NumericCode": "422",
+      "MinorUnits": 2,
+      "Symbol": "LBP",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "libra libanesa",
+          "NamePlural": "libras libanesas",
+          "DisplaySymbol": "LBP"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Lebanese Pound",
+          "NamePlural": "Lebanese pounds",
+          "DisplaySymbol": "LBP"
+        }
+      ]
+    },
+    {
+      "Code": "LKR",
+      "NumericCode": "144",
+      "MinorUnits": 2,
+      "Symbol": "LKR",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "rupia esrilanquesa",
+          "NamePlural": "rupias esrilanquesas",
+          "DisplaySymbol": "LKR"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Sri Lankan Rupee",
+          "NamePlural": "Sri Lankan rupees",
+          "DisplaySymbol": "LKR"
+        }
+      ]
+    },
+    {
+      "Code": "LRD",
+      "NumericCode": "430",
+      "MinorUnits": 2,
+      "Symbol": "LRD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dólar liberiano",
+          "NamePlural": "dólares liberianos",
+          "DisplaySymbol": "LRD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Liberian Dollar",
+          "NamePlural": "Liberian dollars",
+          "DisplaySymbol": "LRD"
+        }
+      ]
+    },
+    {
+      "Code": "LSL",
+      "NumericCode": "426",
+      "MinorUnits": 2,
+      "Symbol": "LSL",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "loti lesotense",
+          "NamePlural": "lotis lesotenses",
+          "DisplaySymbol": "LSL"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Lesotho Loti",
+          "NamePlural": "Lesotho lotis",
+          "DisplaySymbol": "LSL"
+        }
+      ]
+    },
+    {
+      "Code": "LYD",
+      "NumericCode": "434",
+      "MinorUnits": 3,
+      "Symbol": "LYD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dinar libio",
+          "NamePlural": "dinares libios",
+          "DisplaySymbol": "LYD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Libyan Dinar",
+          "NamePlural": "Libyan dinars",
+          "DisplaySymbol": "LYD"
+        }
+      ]
+    },
+    {
+      "Code": "MAD",
+      "NumericCode": "504",
+      "MinorUnits": 2,
+      "Symbol": "MAD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dírham marroquí",
+          "NamePlural": "dírhams marroquíes",
+          "DisplaySymbol": "MAD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Moroccan Dirham",
+          "NamePlural": "Moroccan dirhams",
+          "DisplaySymbol": "MAD"
+        }
+      ]
+    },
+    {
+      "Code": "MDL",
+      "NumericCode": "498",
+      "MinorUnits": 2,
+      "Symbol": "MDL",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "leu moldavo",
+          "NamePlural": "leus moldavos",
+          "DisplaySymbol": "MDL"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Moldovan Leu",
+          "NamePlural": "Moldovan lei",
+          "DisplaySymbol": "MDL"
+        }
+      ]
+    },
+    {
+      "Code": "MGA",
+      "NumericCode": "969",
+      "MinorUnits": 2,
+      "Symbol": "MGA",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "ariari malgache",
+          "NamePlural": "ariaris malgaches",
+          "DisplaySymbol": "MGA"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Malagasy Ariary",
+          "NamePlural": "Malagasy ariaries",
+          "DisplaySymbol": "MGA"
+        }
+      ]
+    },
+    {
+      "Code": "MKD",
+      "NumericCode": "807",
+      "MinorUnits": 2,
+      "Symbol": "MKD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dinar macedonio",
+          "NamePlural": "dinares macedonios",
+          "DisplaySymbol": "MKD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Macedonian Denar",
+          "NamePlural": "Macedonian denari",
+          "DisplaySymbol": "MKD"
+        }
+      ]
+    },
+    {
+      "Code": "MMK",
+      "NumericCode": "104",
+      "MinorUnits": 2,
+      "Symbol": "MMK",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "kiat de Myanmar",
+          "NamePlural": "kiats de Myanmar",
+          "DisplaySymbol": "MMK"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Myanmar Kyat",
+          "NamePlural": "Myanmar kyats",
+          "DisplaySymbol": "MMK"
+        }
+      ]
+    },
+    {
+      "Code": "MNT",
+      "NumericCode": "496",
+      "MinorUnits": 2,
+      "Symbol": "MNT",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "tugrik mongol",
+          "NamePlural": "tugriks mongoles",
+          "DisplaySymbol": "MNT"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Mongolian Tugrik",
+          "NamePlural": "Mongolian tugriks",
+          "DisplaySymbol": "MNT"
+        }
+      ]
+    },
+    {
+      "Code": "MOP",
+      "NumericCode": "446",
+      "MinorUnits": 2,
+      "Symbol": "MOP",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "pataca macaense",
+          "NamePlural": "patacas macaenses",
+          "DisplaySymbol": "MOP"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Macanese Pataca",
+          "NamePlural": "Macanese patacas",
+          "DisplaySymbol": "MOP"
+        }
+      ]
+    },
+    {
+      "Code": "MRU",
+      "NumericCode": "929",
+      "MinorUnits": 2,
+      "Symbol": "MRU",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "uguiya mauritano",
+          "NamePlural": "uguiyas mauritanos",
+          "DisplaySymbol": "MRU"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Mauritanian Ouguiya",
+          "NamePlural": "Mauritanian ouguiyas",
+          "DisplaySymbol": "MRU"
+        }
+      ]
+    },
+    {
+      "Code": "MUR",
+      "NumericCode": "480",
+      "MinorUnits": 2,
+      "Symbol": "MUR",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "rupia mauriciana",
+          "NamePlural": "rupias mauricianas",
+          "DisplaySymbol": "MUR"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Mauritian Rupee",
+          "NamePlural": "Mauritian rupees",
+          "DisplaySymbol": "MUR"
+        }
+      ]
+    },
+    {
+      "Code": "MVR",
+      "NumericCode": "462",
+      "MinorUnits": 2,
+      "Symbol": "MVR",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "rufiya maldiva",
+          "NamePlural": "rufiyas maldivas",
+          "DisplaySymbol": "MVR"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Maldivian Rufiyaa",
+          "NamePlural": "Maldivian rufiyaas",
+          "DisplaySymbol": "MVR"
+        }
+      ]
+    },
+    {
+      "Code": "MWK",
+      "NumericCode": "454",
+      "MinorUnits": 2,
+      "Symbol": "MWK",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "kwacha malauí",
+          "NamePlural": "kwachas malauíes",
+          "DisplaySymbol": "MWK"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Malawian Kwacha",
+          "NamePlural": "Malawian kwachas",
+          "DisplaySymbol": "MWK"
+        }
+      ]
+    },
+    {
+      "Code": "MXN",
+      "NumericCode": "484",
+      "MinorUnits": 2,
+      "Symbol": "MXN",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "peso mexicano",
+          "NamePlural": "pesos mexicanos",
+          "DisplaySymbol": "MXN"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Mexican Peso",
+          "NamePlural": "Mexican pesos",
+          "DisplaySymbol": "MX$"
+        }
+      ]
+    },
+    {
+      "Code": "MXV",
+      "NumericCode": "979",
+      "MinorUnits": 2,
+      "Symbol": "MXV",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "unidad de inversión (UDI) mexicana",
+          "NamePlural": "unidades de inversión (UDI) mexicanas",
+          "DisplaySymbol": "MXV"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Mexican Investment Unit",
+          "NamePlural": "Mexican investment units",
+          "DisplaySymbol": "MXV"
+        }
+      ]
+    },
+    {
+      "Code": "MYR",
+      "NumericCode": "458",
+      "MinorUnits": 2,
+      "Symbol": "MYR",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "ringit malasio",
+          "NamePlural": "ringits malasios",
+          "DisplaySymbol": "MYR"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Malaysian Ringgit",
+          "NamePlural": "Malaysian ringgits",
+          "DisplaySymbol": "MYR"
+        }
+      ]
+    },
+    {
+      "Code": "MZN",
+      "NumericCode": "943",
+      "MinorUnits": 2,
+      "Symbol": "MZN",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "metical mozambiqueño",
+          "NamePlural": "meticales mozambiqueños",
+          "DisplaySymbol": "MZN"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Mozambican Metical",
+          "NamePlural": "Mozambican meticals",
+          "DisplaySymbol": "MZN"
+        }
+      ]
+    },
+    {
+      "Code": "NAD",
+      "NumericCode": "516",
+      "MinorUnits": 2,
+      "Symbol": "NAD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dólar namibio",
+          "NamePlural": "dólares namibios",
+          "DisplaySymbol": "NAD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Namibian Dollar",
+          "NamePlural": "Namibian dollars",
+          "DisplaySymbol": "NAD"
+        }
+      ]
+    },
+    {
+      "Code": "NGN",
+      "NumericCode": "566",
+      "MinorUnits": 2,
+      "Symbol": "NGN",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "naira nigeriano",
+          "NamePlural": "nairas nigerianos",
+          "DisplaySymbol": "NGN"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Nigerian Naira",
+          "NamePlural": "Nigerian nairas",
+          "DisplaySymbol": "NGN"
+        }
+      ]
+    },
+    {
+      "Code": "NIO",
+      "NumericCode": "558",
+      "MinorUnits": 2,
+      "Symbol": "NIO",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "córdoba nicaragüense",
+          "NamePlural": "córdobas nicaragüenses",
+          "DisplaySymbol": "NIO"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Nicaraguan Córdoba",
+          "NamePlural": "Nicaraguan córdobas",
+          "DisplaySymbol": "NIO"
+        }
+      ]
+    },
+    {
+      "Code": "NOK",
+      "NumericCode": "578",
+      "MinorUnits": 2,
+      "Symbol": "NOK",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "corona noruega",
+          "NamePlural": "coronas noruegas",
+          "DisplaySymbol": "NOK"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Norwegian Krone",
+          "NamePlural": "Norwegian kroner",
+          "DisplaySymbol": "NOK"
+        }
+      ]
+    },
+    {
+      "Code": "NPR",
+      "NumericCode": "524",
+      "MinorUnits": 2,
+      "Symbol": "NPR",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "rupia nepalí",
+          "NamePlural": "rupias nepalíes",
+          "DisplaySymbol": "NPR"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Nepalese Rupee",
+          "NamePlural": "Nepalese rupees",
+          "DisplaySymbol": "NPR"
+        }
+      ]
+    },
+    {
+      "Code": "NZD",
+      "NumericCode": "554",
+      "MinorUnits": 2,
+      "Symbol": "NZD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dólar neozelandés",
+          "NamePlural": "dólares neozelandeses",
+          "DisplaySymbol": "NZD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "New Zealand Dollar",
+          "NamePlural": "New Zealand dollars",
+          "DisplaySymbol": "NZ$"
+        }
+      ]
+    },
+    {
+      "Code": "OMR",
+      "NumericCode": "512",
+      "MinorUnits": 3,
+      "Symbol": "OMR",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "rial omaní",
+          "NamePlural": "riales omaníes",
+          "DisplaySymbol": "OMR"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Omani Rial",
+          "NamePlural": "Omani rials",
+          "DisplaySymbol": "OMR"
+        }
+      ]
+    },
+    {
+      "Code": "PAB",
+      "NumericCode": "590",
+      "MinorUnits": 2,
+      "Symbol": "PAB",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "balboa panameño",
+          "NamePlural": "balboas panameños",
+          "DisplaySymbol": "PAB"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Panamanian Balboa",
+          "NamePlural": "Panamanian balboas",
+          "DisplaySymbol": "PAB"
+        }
+      ]
+    },
+    {
+      "Code": "PEN",
+      "NumericCode": "604",
+      "MinorUnits": 2,
+      "Symbol": "PEN",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "sol peruano",
+          "NamePlural": "soles peruanos",
+          "DisplaySymbol": "PEN"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Peruvian Sol",
+          "NamePlural": "Peruvian soles",
+          "DisplaySymbol": "PEN"
+        }
+      ]
+    },
+    {
+      "Code": "PGK",
+      "NumericCode": "598",
+      "MinorUnits": 2,
+      "Symbol": "PGK",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "kina papú",
+          "NamePlural": "kinas papúes",
+          "DisplaySymbol": "PGK"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Papua New Guinean Kina",
+          "NamePlural": "Papua New Guinean kina",
+          "DisplaySymbol": "PGK"
+        }
+      ]
+    },
+    {
+      "Code": "PHP",
+      "NumericCode": "608",
+      "MinorUnits": 2,
+      "Symbol": "PHP",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "peso filipino",
+          "NamePlural": "pesos filipinos",
+          "DisplaySymbol": "PHP"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Philippine Peso",
+          "NamePlural": "Philippine pesos",
+          "DisplaySymbol": "₱"
+        }
+      ]
+    },
+    {
+      "Code": "PKR",
+      "NumericCode": "586",
+      "MinorUnits": 2,
+      "Symbol": "PKR",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "rupia pakistaní",
+          "NamePlural": "rupias pakistaníes",
+          "DisplaySymbol": "PKR"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Pakistani Rupee",
+          "NamePlural": "Pakistani rupees",
+          "DisplaySymbol": "PKR"
+        }
+      ]
+    },
+    {
+      "Code": "PLN",
+      "NumericCode": "985",
+      "MinorUnits": 2,
+      "Symbol": "PLN",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "esloti polaco",
+          "NamePlural": "eslotis polacos",
+          "DisplaySymbol": "PLN"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Polish Zloty",
+          "NamePlural": "Polish zlotys",
+          "DisplaySymbol": "PLN"
+        }
+      ]
+    },
+    {
+      "Code": "PYG",
+      "NumericCode": "600",
+      "MinorUnits": 0,
+      "Symbol": "PYG",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "guaraní paraguayo",
+          "NamePlural": "guaraníes paraguayos",
+          "DisplaySymbol": "PYG"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Paraguayan Guarani",
+          "NamePlural": "Paraguayan guaranis",
+          "DisplaySymbol": "PYG"
+        }
+      ]
+    },
+    {
+      "Code": "QAR",
+      "NumericCode": "634",
+      "MinorUnits": 2,
+      "Symbol": "QAR",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "rial catarí",
+          "NamePlural": "riales cataríes",
+          "DisplaySymbol": "QAR"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Qatari Riyal",
+          "NamePlural": "Qatari riyals",
+          "DisplaySymbol": "QAR"
+        }
+      ]
+    },
+    {
+      "Code": "RON",
+      "NumericCode": "946",
+      "MinorUnits": 2,
+      "Symbol": "RON",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "leu rumano",
+          "NamePlural": "leus rumanos",
+          "DisplaySymbol": "RON"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Romanian Leu",
+          "NamePlural": "Romanian lei",
+          "DisplaySymbol": "RON"
+        }
+      ]
+    },
+    {
+      "Code": "RSD",
+      "NumericCode": "941",
+      "MinorUnits": 2,
+      "Symbol": "RSD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dinar serbio",
+          "NamePlural": "dinares serbios",
+          "DisplaySymbol": "RSD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Serbian Dinar",
+          "NamePlural": "Serbian dinars",
+          "DisplaySymbol": "RSD"
+        }
+      ]
+    },
+    {
+      "Code": "RUB",
+      "NumericCode": "643",
+      "MinorUnits": 2,
+      "Symbol": "RUB",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "rublo ruso",
+          "NamePlural": "rublos rusos",
+          "DisplaySymbol": "RUB"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Russian Ruble",
+          "NamePlural": "Russian rubles",
+          "DisplaySymbol": "RUB"
+        }
+      ]
+    },
+    {
+      "Code": "RWF",
+      "NumericCode": "646",
+      "MinorUnits": 0,
+      "Symbol": "RWF",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "franco ruandés",
+          "NamePlural": "francos ruandeses",
+          "DisplaySymbol": "RWF"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Rwandan Franc",
+          "NamePlural": "Rwandan francs",
+          "DisplaySymbol": "RWF"
+        }
+      ]
+    },
+    {
+      "Code": "SAR",
+      "NumericCode": "682",
+      "MinorUnits": 2,
+      "Symbol": "SAR",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "rial saudí",
+          "NamePlural": "riales saudíes",
+          "DisplaySymbol": "SAR"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Saudi Riyal",
+          "NamePlural": "Saudi riyals",
+          "DisplaySymbol": "SAR"
+        }
+      ]
+    },
+    {
+      "Code": "SBD",
+      "NumericCode": "090",
+      "MinorUnits": 2,
+      "Symbol": "SBD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dólar salomonense",
+          "NamePlural": "dólares salomonenses",
+          "DisplaySymbol": "SBD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Solomon Islands Dollar",
+          "NamePlural": "Solomon Islands dollars",
+          "DisplaySymbol": "SBD"
+        }
+      ]
+    },
+    {
+      "Code": "SCR",
+      "NumericCode": "690",
+      "MinorUnits": 2,
+      "Symbol": "SCR",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "rupia seychellense",
+          "NamePlural": "rupias seychellenses",
+          "DisplaySymbol": "SCR"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Seychellois Rupee",
+          "NamePlural": "Seychellois rupees",
+          "DisplaySymbol": "SCR"
+        }
+      ]
+    },
+    {
+      "Code": "SDG",
+      "NumericCode": "938",
+      "MinorUnits": 2,
+      "Symbol": "SDG",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "libra sudanesa",
+          "NamePlural": "libras sudanesas",
+          "DisplaySymbol": "SDG"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Sudanese Pound",
+          "NamePlural": "Sudanese pounds",
+          "DisplaySymbol": "SDG"
+        }
+      ]
+    },
+    {
+      "Code": "SEK",
+      "NumericCode": "752",
+      "MinorUnits": 2,
+      "Symbol": "SEK",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "corona sueca",
+          "NamePlural": "coronas suecas",
+          "DisplaySymbol": "SEK"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Swedish Krona",
+          "NamePlural": "Swedish kronor",
+          "DisplaySymbol": "SEK"
+        }
+      ]
+    },
+    {
+      "Code": "SGD",
+      "NumericCode": "702",
+      "MinorUnits": 2,
+      "Symbol": "SGD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dólar singapurense",
+          "NamePlural": "dólares singapurenses",
+          "DisplaySymbol": "SGD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Singapore Dollar",
+          "NamePlural": "Singapore dollars",
+          "DisplaySymbol": "SGD"
+        }
+      ]
+    },
+    {
+      "Code": "SHP",
+      "NumericCode": "654",
+      "MinorUnits": 2,
+      "Symbol": "SHP",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "libra de Santa Elena",
+          "NamePlural": "libras de Santa Elena",
+          "DisplaySymbol": "SHP"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "St. Helena Pound",
+          "NamePlural": "St. Helena pounds",
+          "DisplaySymbol": "SHP"
+        }
+      ]
+    },
+    {
+      "Code": "SLE",
+      "NumericCode": "925",
+      "MinorUnits": 2,
+      "Symbol": "SLE",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "leone",
+          "NamePlural": "leones",
+          "DisplaySymbol": "SLE"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Sierra Leonean Leone",
+          "NamePlural": "Sierra Leonean leones",
+          "DisplaySymbol": "SLE"
+        }
+      ]
+    },
+    {
+      "Code": "SOS",
+      "NumericCode": "706",
+      "MinorUnits": 2,
+      "Symbol": "SOS",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "chelín somalí",
+          "NamePlural": "chelines somalíes",
+          "DisplaySymbol": "SOS"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Somali Shilling",
+          "NamePlural": "Somali shillings",
+          "DisplaySymbol": "SOS"
+        }
+      ]
+    },
+    {
+      "Code": "SRD",
+      "NumericCode": "968",
+      "MinorUnits": 2,
+      "Symbol": "SRD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dólar surinamés",
+          "NamePlural": "dólares surinameses",
+          "DisplaySymbol": "SRD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Surinamese Dollar",
+          "NamePlural": "Surinamese dollars",
+          "DisplaySymbol": "SRD"
+        }
+      ]
+    },
+    {
+      "Code": "SSP",
+      "NumericCode": "728",
+      "MinorUnits": 2,
+      "Symbol": "SSP",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "libra sursudanesa",
+          "NamePlural": "libras sursudanesas",
+          "DisplaySymbol": "SSP"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "South Sudanese Pound",
+          "NamePlural": "South Sudanese pounds",
+          "DisplaySymbol": "SSP"
+        }
+      ]
+    },
+    {
+      "Code": "STN",
+      "NumericCode": "930",
+      "MinorUnits": 2,
+      "Symbol": "STN",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dobra santotomense",
+          "NamePlural": "dobras santotomenses",
+          "DisplaySymbol": "STN"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "São Tomé & Príncipe Dobra",
+          "NamePlural": "São Tomé & Príncipe dobras",
+          "DisplaySymbol": "STN"
+        }
+      ]
+    },
+    {
+      "Code": "SVC",
+      "NumericCode": "222",
+      "MinorUnits": 2,
+      "Symbol": "SVC",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "colón salvadoreño",
+          "NamePlural": "colones salvadoreños",
+          "DisplaySymbol": "SVC"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Salvadoran Colón",
+          "NamePlural": "Salvadoran colones",
+          "DisplaySymbol": "SVC"
+        }
+      ]
+    },
+    {
+      "Code": "SYP",
+      "NumericCode": "760",
+      "MinorUnits": 2,
+      "Symbol": "SYP",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "libra siria",
+          "NamePlural": "libras sirias",
+          "DisplaySymbol": "SYP"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Syrian Pound",
+          "NamePlural": "Syrian pounds",
+          "DisplaySymbol": "SYP"
+        }
+      ]
+    },
+    {
+      "Code": "SZL",
+      "NumericCode": "748",
+      "MinorUnits": 2,
+      "Symbol": "SZL",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "lilangeni esuatiní",
+          "NamePlural": "lilangenis esuatiníes",
+          "DisplaySymbol": "SZL"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Swazi Lilangeni",
+          "NamePlural": "Swazi emalangeni",
+          "DisplaySymbol": "SZL"
+        }
+      ]
+    },
+    {
+      "Code": "THB",
+      "NumericCode": "764",
+      "MinorUnits": 2,
+      "Symbol": "THB",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "baht tailandes",
+          "NamePlural": "bahts tailandeses",
+          "DisplaySymbol": "THB"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Thai Baht",
+          "NamePlural": "Thai baht",
+          "DisplaySymbol": "THB"
+        }
+      ]
+    },
+    {
+      "Code": "TJS",
+      "NumericCode": "972",
+      "MinorUnits": 2,
+      "Symbol": "TJS",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "somoni tayiko",
+          "NamePlural": "somonis tayikos",
+          "DisplaySymbol": "TJS"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Tajikistani Somoni",
+          "NamePlural": "Tajikistani somonis",
+          "DisplaySymbol": "TJS"
+        }
+      ]
+    },
+    {
+      "Code": "TMT",
+      "NumericCode": "934",
+      "MinorUnits": 2,
+      "Symbol": "TMT",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "manat turcomano",
+          "NamePlural": "manats turcomanos",
+          "DisplaySymbol": "TMT"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Turkmenistani Manat",
+          "NamePlural": "Turkmenistani manat",
+          "DisplaySymbol": "TMT"
+        }
+      ]
+    },
+    {
+      "Code": "TND",
+      "NumericCode": "788",
+      "MinorUnits": 3,
+      "Symbol": "TND",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dinar tunecino",
+          "NamePlural": "dinares tunecinos",
+          "DisplaySymbol": "TND"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Tunisian Dinar",
+          "NamePlural": "Tunisian dinars",
+          "DisplaySymbol": "TND"
+        }
+      ]
+    },
+    {
+      "Code": "TOP",
+      "NumericCode": "776",
+      "MinorUnits": 2,
+      "Symbol": "TOP",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "paanga tongano",
+          "NamePlural": "paangas tonganos",
+          "DisplaySymbol": "TOP"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Tongan Paʻanga",
+          "NamePlural": "Tongan paʻanga",
+          "DisplaySymbol": "TOP"
+        }
+      ]
+    },
+    {
+      "Code": "TRY",
+      "NumericCode": "949",
+      "MinorUnits": 2,
+      "Symbol": "TRY",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "lira turca",
+          "NamePlural": "liras turcas",
+          "DisplaySymbol": "TRY"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Turkish Lira",
+          "NamePlural": "Turkish Lira",
+          "DisplaySymbol": "TRY"
+        }
+      ]
+    },
+    {
+      "Code": "TTD",
+      "NumericCode": "780",
+      "MinorUnits": 2,
+      "Symbol": "TTD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dólar de Trinidad y Tobago",
+          "NamePlural": "dólares de Trinidad y Tobago",
+          "DisplaySymbol": "TTD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Trinidad & Tobago Dollar",
+          "NamePlural": "Trinidad & Tobago dollars",
+          "DisplaySymbol": "TTD"
+        }
+      ]
+    },
+    {
+      "Code": "TWD",
+      "NumericCode": "901",
+      "MinorUnits": 2,
+      "Symbol": "TWD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "nuevo dólar taiwanés",
+          "NamePlural": "nuevos dólares taiwaneses",
+          "DisplaySymbol": "TWD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "New Taiwan Dollar",
+          "NamePlural": "New Taiwan dollars",
+          "DisplaySymbol": "NT$"
+        }
+      ]
+    },
+    {
+      "Code": "TZS",
+      "NumericCode": "834",
+      "MinorUnits": 2,
+      "Symbol": "TZS",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "chelín tanzano",
+          "NamePlural": "chelines tanzanos",
+          "DisplaySymbol": "TZS"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Tanzanian Shilling",
+          "NamePlural": "Tanzanian shillings",
+          "DisplaySymbol": "TZS"
+        }
+      ]
+    },
+    {
+      "Code": "UAH",
+      "NumericCode": "980",
+      "MinorUnits": 2,
+      "Symbol": "UAH",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "grivna ucraniana",
+          "NamePlural": "grivnas ucranianas",
+          "DisplaySymbol": "UAH"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Ukrainian Hryvnia",
+          "NamePlural": "Ukrainian hryvnias",
+          "DisplaySymbol": "UAH"
+        }
+      ]
+    },
+    {
+      "Code": "UGX",
+      "NumericCode": "800",
+      "MinorUnits": 0,
+      "Symbol": "UGX",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "chelín ugandés",
+          "NamePlural": "chelines ugandeses",
+          "DisplaySymbol": "UGX"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Ugandan Shilling",
+          "NamePlural": "Ugandan shillings",
+          "DisplaySymbol": "UGX"
+        }
+      ]
+    },
+    {
+      "Code": "USD",
+      "NumericCode": "840",
+      "MinorUnits": 2,
+      "Symbol": "US$",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dólar estadounidense",
+          "NamePlural": "dólares estadounidenses",
+          "DisplaySymbol": "US$"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "US Dollar",
+          "NamePlural": "US dollars",
+          "DisplaySymbol": "$"
+        }
+      ]
+    },
+    {
+      "Code": "USN",
+      "NumericCode": "997",
+      "MinorUnits": 2,
+      "Symbol": "USN",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dólar estadounidense (día siguiente)",
+          "NamePlural": "dólares estadounidenses (día siguiente)",
+          "DisplaySymbol": "USN"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "US Dollar (Next day)",
+          "NamePlural": "US dollars (next day)",
+          "DisplaySymbol": "USN"
+        }
+      ]
+    },
+    {
+      "Code": "UYI",
+      "NumericCode": "940",
+      "MinorUnits": 0,
+      "Symbol": "UYI",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "peso uruguayo en unidades indexadas",
+          "NamePlural": "pesos uruguayos en unidades indexadas",
+          "DisplaySymbol": "UYI"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Uruguayan Peso (Indexed Units)",
+          "NamePlural": "Uruguayan pesos (indexed units)",
+          "DisplaySymbol": "UYI"
+        }
+      ]
+    },
+    {
+      "Code": "UYU",
+      "NumericCode": "858",
+      "MinorUnits": 2,
+      "Symbol": "UYU",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "peso uruguayo",
+          "NamePlural": "pesos uruguayos",
+          "DisplaySymbol": "UYU"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Uruguayan Peso",
+          "NamePlural": "Uruguayan pesos",
+          "DisplaySymbol": "UYU"
+        }
+      ]
+    },
+    {
+      "Code": "UYW",
+      "NumericCode": "927",
+      "MinorUnits": 4,
+      "Symbol": "UYW",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "unidad previsional uruguayo",
+          "NamePlural": "unidades previsionales uruguayos",
+          "DisplaySymbol": "UYW"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Uruguayan Nominal Wage Index Unit",
+          "NamePlural": "Uruguayan nominal wage index units",
+          "DisplaySymbol": "UYW"
+        }
+      ]
+    },
+    {
+      "Code": "UZS",
+      "NumericCode": "860",
+      "MinorUnits": 2,
+      "Symbol": "UZS",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "som uzbeko",
+          "NamePlural": "soms uzbekos",
+          "DisplaySymbol": "UZS"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Uzbekistani Som",
+          "NamePlural": "Uzbekistani som",
+          "DisplaySymbol": "UZS"
+        }
+      ]
+    },
+    {
+      "Code": "VED",
+      "NumericCode": "926",
+      "MinorUnits": 2,
+      "Symbol": "VED",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "Bolívar Soberano",
+          "NamePlural": "Bolívar Soberano",
+          "DisplaySymbol": "VED"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Bolívar Soberano",
+          "NamePlural": "Bolívar Soberanos",
+          "DisplaySymbol": "VED"
+        }
+      ]
+    },
+    {
+      "Code": "VES",
+      "NumericCode": "928",
+      "MinorUnits": 2,
+      "Symbol": "VES",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "bolívar venezolano",
+          "NamePlural": "bolívares venezolanos",
+          "DisplaySymbol": "VES"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Venezuelan Bolívar",
+          "NamePlural": "Venezuelan bolívars",
+          "DisplaySymbol": "VES"
+        }
+      ]
+    },
+    {
+      "Code": "VND",
+      "NumericCode": "704",
+      "MinorUnits": 0,
+      "Symbol": "VND",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dong vietnamita",
+          "NamePlural": "dongs vietnamitas",
+          "DisplaySymbol": "VND"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Vietnamese Dong",
+          "NamePlural": "Vietnamese dong",
+          "DisplaySymbol": "₫"
+        }
+      ]
+    },
+    {
+      "Code": "VUV",
+      "NumericCode": "548",
+      "MinorUnits": 0,
+      "Symbol": "VUV",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "vatu vanuatense",
+          "NamePlural": "vatus vanuatenses",
+          "DisplaySymbol": "VUV"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Vanuatu Vatu",
+          "NamePlural": "Vanuatu vatus",
+          "DisplaySymbol": "VUV"
+        }
+      ]
+    },
+    {
+      "Code": "WST",
+      "NumericCode": "882",
+      "MinorUnits": 2,
+      "Symbol": "WST",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "tala samoano",
+          "NamePlural": "talas samoanos",
+          "DisplaySymbol": "WST"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Samoan Tala",
+          "NamePlural": "Samoan tala",
+          "DisplaySymbol": "WST"
+        }
+      ]
+    },
+    {
+      "Code": "XAD",
+      "NumericCode": "396",
+      "MinorUnits": 2,
+      "Symbol": "XAD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "Arab Accounting Dinar",
+          "NamePlural": "Arab Accounting Dinar",
+          "DisplaySymbol": "XAD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Arab Accounting Dinar",
+          "NamePlural": "Arab Accounting Dinar",
+          "DisplaySymbol": "XAD"
+        }
+      ]
+    },
+    {
+      "Code": "XAF",
+      "NumericCode": "950",
+      "MinorUnits": 0,
+      "Symbol": "XAF",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "franco CFA de África Central",
+          "NamePlural": "francos CFA de África Central",
+          "DisplaySymbol": "XAF"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Central African CFA Franc",
+          "NamePlural": "Central African CFA francs",
+          "DisplaySymbol": "FCFA"
+        }
+      ]
+    },
+    {
+      "Code": "XCD",
+      "NumericCode": "951",
+      "MinorUnits": 2,
+      "Symbol": "XCD",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "dólar del Caribe Oriental",
+          "NamePlural": "dólares del Caribe Oriental",
+          "DisplaySymbol": "XCD"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "East Caribbean Dollar",
+          "NamePlural": "East Caribbean dollars",
+          "DisplaySymbol": "EC$"
+        }
+      ]
+    },
+    {
+      "Code": "XCG",
+      "NumericCode": "532",
+      "MinorUnits": 2,
+      "Symbol": "Cg.",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "florín caribeño",
+          "NamePlural": "florines caribeños",
+          "DisplaySymbol": "Cg."
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Caribbean guilder",
+          "NamePlural": "Caribbean guilders",
+          "DisplaySymbol": "Cg."
+        }
+      ]
+    },
+    {
+      "Code": "XOF",
+      "NumericCode": "952",
+      "MinorUnits": 0,
+      "Symbol": "XOF",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "franco CFA de África Occidental",
+          "NamePlural": "francos CFA de África Occidental",
+          "DisplaySymbol": "XOF"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "West African CFA Franc",
+          "NamePlural": "West African CFA francs",
+          "DisplaySymbol": "F CFA"
+        }
+      ]
+    },
+    {
+      "Code": "XPF",
+      "NumericCode": "953",
+      "MinorUnits": 0,
+      "Symbol": "CFPF",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "franco CFP",
+          "NamePlural": "francos CFP",
+          "DisplaySymbol": "CFPF"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "CFP Franc",
+          "NamePlural": "CFP francs",
+          "DisplaySymbol": "CFPF"
+        }
+      ]
+    },
+    {
+      "Code": "YER",
+      "NumericCode": "886",
+      "MinorUnits": 2,
+      "Symbol": "YER",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "rial yemení",
+          "NamePlural": "riales yemeníes",
+          "DisplaySymbol": "YER"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Yemeni Rial",
+          "NamePlural": "Yemeni rials",
+          "DisplaySymbol": "YER"
+        }
+      ]
+    },
+    {
+      "Code": "ZAR",
+      "NumericCode": "710",
+      "MinorUnits": 2,
+      "Symbol": "ZAR",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "rand sudafricano",
+          "NamePlural": "rands sudafricanos",
+          "DisplaySymbol": "ZAR"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "South African Rand",
+          "NamePlural": "South African rand",
+          "DisplaySymbol": "ZAR"
+        }
+      ]
+    },
+    {
+      "Code": "ZMW",
+      "NumericCode": "967",
+      "MinorUnits": 2,
+      "Symbol": "ZMW",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "kuacha zambiano",
+          "NamePlural": "kuachas zambianos",
+          "DisplaySymbol": "ZMW"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Zambian Kwacha",
+          "NamePlural": "Zambian kwachas",
+          "DisplaySymbol": "ZMW"
+        }
+      ]
+    },
+    {
+      "Code": "ZWG",
+      "NumericCode": "924",
+      "MinorUnits": 2,
+      "Symbol": "ZWG",
+      "IsEnabled": false,
+      "SortOrder": null,
+      "Translations": [
+        {
+          "Culture": "es-AR",
+          "Name": "oro zimbabuense",
+          "NamePlural": "oro zimbabuense",
+          "DisplaySymbol": "ZWG"
+        },
+        {
+          "Culture": "en-US",
+          "Name": "Zimbabwean Gold",
+          "NamePlural": "Zimbabwean gold",
+          "DisplaySymbol": "ZWG"
+        }
+      ]
+    }
+  ]
+}

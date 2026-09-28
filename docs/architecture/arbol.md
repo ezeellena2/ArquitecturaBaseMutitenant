@@ -65,6 +65,7 @@ ArquitecturaBaseMutitenant/
 ├── tests/                                            ver abajo
 ├── .editorconfig                                     [E0] estilo y supresiones justificadas
 ├── .gitignore                                        [E0] VisualStudio + .local/ + *.env + appsettings.*.local.json
+├── .gitattributes                                    [E1] snapshots sin conversión de bytes y LF fijo para JSON generados
 ├── AGENTS.md                                         índice de reglas
 ├── CLAUDE.md                                         @AGENTS.md
 ├── ArquitecturaBaseMultitenant.slnx                  [E0]

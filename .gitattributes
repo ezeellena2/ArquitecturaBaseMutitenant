@@ -1,0 +1,2 @@
+/scripts/datos-de-referencia/sources/* -text -diff
+/src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Seed/ReferenceData/*.json text eol=lf

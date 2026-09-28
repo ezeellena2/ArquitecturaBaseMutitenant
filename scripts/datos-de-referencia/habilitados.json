@@ -1,0 +1,21 @@
+{
+  "defaults": {
+    "country": "AR",
+    "currency": "ARS",
+    "culture": "es-AR",
+    "timeZone": "America/Argentina/Buenos_Aires"
+  },
+  "displayCultures": {
+    "es-AR": "es-AR",
+    "en-US": "en"
+  },
+  "currencies": {
+    "ARS": { "sortOrder": 0 }
+  },
+  "countries": {
+    "AR": { "sortOrder": 0 }
+  },
+  "timeZones": {},
+  "cultures": {},
+  "taxIdTypes": {}
+}

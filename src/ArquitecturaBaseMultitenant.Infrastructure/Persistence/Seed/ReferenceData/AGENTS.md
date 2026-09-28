@@ -1,0 +1,1 @@
+JSON generados de monedas, países, zonas, culturas y tipos fiscales. Antes de tocar esto, leé `docs/rules/datos-de-referencia.md`. Modificá las fuentes y ejecutá `scripts/datos-de-referencia/generar.mjs`; nunca edites una salida a mano.

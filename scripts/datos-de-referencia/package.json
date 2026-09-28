@@ -1,0 +1,19 @@
+{
+  "name": "arquitecturabase-multitenant-datos-de-referencia",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "24.14.0"
+  },
+  "scripts": {
+    "generate": "node generar.mjs",
+    "test": "node --test generar.test.mjs"
+  },
+  "dependencies": {
+    "cldr-core": "48.2.0",
+    "cldr-localenames-full": "48.2.0",
+    "cldr-numbers-full": "48.2.0",
+    "fast-xml-parser": "5.11.1",
+    "libphonenumber-js": "1.13.14"
+  }
+}

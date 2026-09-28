@@ -1,0 +1,1 @@
+Generador de los catálogos oficiales. Antes de tocar esto, leé `docs/rules/datos-de-referencia.md` y `docs/architecture/datos-de-referencia.md`. Las salidas se regeneran desde fuentes fijadas; nunca se editan a mano.
