@@ -103,11 +103,11 @@ No quedan preguntas técnicas pendientes. Según AGENTS.md, una duda nueva se re
 
 ### Tarea 6. Dinero, moneda y cultura
 
-**Archivos:** crear src/ArquitecturaBaseMultitenant.Domain/ValueObjects/{Money,CurrencyCode,CultureCode}.cs y ValueObjects/{AGENTS,CLAUDE}.md; tests/ArquitecturaBaseMultitenant.Domain.UnitTests/ValueObjects/{Money,CurrencyCode,CultureCode}Tests.cs (nuevos).
+**Archivos:** crear src/ArquitecturaBaseMultitenant.Domain/ValueObjects/{Money,CurrencyCode,CultureCode,CurrencyCodeErrors,CultureCodeErrors}.cs y ValueObjects/{AGENTS,CLAUDE}.md; tests/ArquitecturaBaseMultitenant.Domain.UnitTests/ValueObjects/{Money,CurrencyCode,CultureCode}Tests.cs (nuevos). Las claves `ReferenceData.Currency.Invalid` y `ReferenceData.Culture.Invalid` entran a ambos `Errors.resx` en la tarea 10.
 **Respaldo:** plan maestro §Etapa 1, Back 1; backend.md §18 “Contrato en la API”; datos-de-referencia.md §§2, 4 y 8; arbol.md back “Domain/ValueObjects”; rules/numeros-y-moneda.md y rules/datos-de-referencia.md; arnes.md back §3; decisión 8 de este plan.
-- [ ] Escribir tests de suma solo con igual moneda, `Money.Round(minorUnits)` con 0/2/3 y AwayFromZero, `CurrencyCode` alfa-3 y `CultureCode` con forma BCP 47; D por clase debe fallar.
-- [ ] Implementar VOs sin catálogo ni lista de monedas/culturas en Domain; la existencia y habilitación se validan en Application. D por clase en verde.
-- [ ] Commit back: feat: agregar dinero moneda y cultura
+- [x] Escribir tests de suma solo con igual moneda, `Money.Round(minorUnits)` con 0/2/3 y AwayFromZero, `CurrencyCode` alfa-3 y `CultureCode` con forma BCP 47; D por clase debe fallar.
+- [x] Implementar VOs sin catálogo ni lista de monedas/culturas en Domain; la existencia y habilitación se validan en Application. D por clase en verde.
+- [x] Commit back: feat: agregar dinero moneda y cultura
 
 ### Tarea 7. Normalización y límites de texto
 

@@ -102,6 +102,8 @@ ArquitecturaBaseMultitenant.Domain/
 │   ├── Money.cs                                      [E1] Amount (decimal) + Currency; suma solo con la misma moneda; Round(minorUnits)
 │   ├── CurrencyCode.cs                               [E1] solo sintaxis alfa-3; ICurrencyCatalog de Application valida existencia y habilitación
 │   ├── CultureCode.cs                                [E1] sintaxis idioma-región; ICultureCatalog valida habilitación
+│   ├── CurrencyCodeErrors.cs                         [E1] ReferenceData.Currency.Invalid; texto localizado en E1 tarea 10
+│   ├── CultureCodeErrors.cs                          [E1] ReferenceData.Culture.Invalid; texto localizado en E1 tarea 10
 │   ├── Email.cs                                      [E1] normalizado (minúsculas, NFC, IDN), validado
 │   └── PhoneNumber.cs                                [E1] E.164; PhoneUsage se suma en E3
 ├── ReferenceData/                                    [E2] entidades globales de platform, sin RLS
