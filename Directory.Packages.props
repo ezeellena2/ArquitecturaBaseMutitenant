@@ -62,6 +62,7 @@
 
   <ItemGroup Label="Api">
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.ApiDescription.Server" Version="10.0.12" />
     <PackageVersion Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.2.3" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12" />
   </ItemGroup>

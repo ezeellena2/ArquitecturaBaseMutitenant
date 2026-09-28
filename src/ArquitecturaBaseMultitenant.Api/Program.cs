@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Api;
 using ArquitecturaBaseMultitenant.Api.Localization;
+using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Application;
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
@@ -22,6 +23,11 @@ app.UseRequestLocalization(cultures.CreateRequestLocalizationOptions());
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApiDocumentation();
+}
 
 app.MapDefaultEndpoints();
 app.MapControllers();

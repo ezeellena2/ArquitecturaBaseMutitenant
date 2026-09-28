@@ -234,9 +234,9 @@ No quedan preguntas técnicas pendientes. Según AGENTS.md, una duda nueva se re
 
 **Archivos:** crear src/ArquitecturaBaseMultitenant.Api/OpenApi/{OpenApiExtensions,ProblemResponsesConvention,ProducesProblemAttribute}.cs ← homónimos de ../ArquitecturaBase/src/ArquitecturaBase.Api/OpenApi/; actualizar src/ArquitecturaBaseMultitenant.Api/ArquitecturaBaseMultitenant.Api.csproj, Directory.Packages.props, Program.cs y .github/workflows/ci.yml; generar docs/contracts/openapi.json; crear tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Contracts/{OpenApiTests,OpenApiContractTests}.cs (OpenApiTests ← ../ArquitecturaBase/tests/ArquitecturaBase.Api.IntegrationTests/OpenApiTests.cs).
 **Respaldo:** plan maestro §Etapa 1, Back 8 y puerta general 6; backend.md §17; datos-de-referencia.md §4; arbol.md back “Api/OpenApi”, “Raíz/docs/contracts” y “Api.IntegrationTests/Contracts”; rules/api-http.md; decisión 7 de este plan.
-- [ ] Probar esquemas 2xx, ProblemDetails, las seis rutas de referencia, Swagger solo Development y artefacto al día; I/OpenApiTests e I/OpenApiContractTests en rojo.
-- [ ] Integrar `Microsoft.Extensions.ApiDescription.Server`, fijar su versión exacta en `Directory.Packages.props`, exportar durante el build a `docs/contracts/openapi.json` y comprobarlo en CI; repetir en verde.
-- [ ] Commit back: feat: versionar contrato OpenAPI
+- [x] Probar esquemas 2xx, ProblemDetails, las seis rutas de referencia, Swagger solo Development y artefacto al día; I/OpenApiTests e I/OpenApiContractTests en rojo.
+- [x] Integrar `Microsoft.Extensions.ApiDescription.Server`, fijar su versión exacta en `Directory.Packages.props`, exportar durante el build a `docs/contracts/openapi.json` y comprobarlo en CI; repetir en verde.
+- [x] Commit back: feat: versionar contrato OpenAPI
 
 ### Tarea 23. Hosting y guía de prefijos
 

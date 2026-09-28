@@ -1,0 +1,745 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "ArquitecturaBaseMultitenant.Api | v1",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/reference-data": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceDataHttpResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceDataHttpResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceDataHttpResponse"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not Modified"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reference-data/currencies": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CurrencyReferenceHttpResponse"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CurrencyReferenceHttpResponse"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CurrencyReferenceHttpResponse"
+                  }
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not Modified"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reference-data/countries": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CountryReferenceHttpResponse"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CountryReferenceHttpResponse"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CountryReferenceHttpResponse"
+                  }
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not Modified"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reference-data/time-zones": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TimeZoneReferenceHttpResponse"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TimeZoneReferenceHttpResponse"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TimeZoneReferenceHttpResponse"
+                  }
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not Modified"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reference-data/cultures": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CultureReferenceHttpResponse"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CultureReferenceHttpResponse"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CultureReferenceHttpResponse"
+                  }
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not Modified"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reference-data/tax-id-types": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaxIdTypeReferenceHttpResponse"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaxIdTypeReferenceHttpResponse"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaxIdTypeReferenceHttpResponse"
+                  }
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not Modified"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CountryReferenceHttpResponse": {
+        "required": [
+          "code",
+          "alpha3",
+          "numericCode",
+          "callingCode",
+          "defaultCurrencyCode",
+          "defaultTimeZoneId",
+          "name",
+          "isEnabled",
+          "sortOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "alpha3": {
+            "type": "string"
+          },
+          "numericCode": {
+            "type": "string"
+          },
+          "callingCode": {
+            "type": "string"
+          },
+          "defaultCurrencyCode": {
+            "type": "string"
+          },
+          "defaultTimeZoneId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "CultureReferenceHttpResponse": {
+        "required": [
+          "code",
+          "languageCode",
+          "countryCode",
+          "datePattern",
+          "timePattern",
+          "dateTimePattern",
+          "longDatePattern",
+          "decimalSeparator",
+          "groupSeparator",
+          "currencyPattern",
+          "percentPattern",
+          "fallbackCulture",
+          "isDefault",
+          "name",
+          "isEnabled",
+          "sortOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "languageCode": {
+            "type": "string"
+          },
+          "countryCode": {
+            "type": "string"
+          },
+          "datePattern": {
+            "type": "string"
+          },
+          "timePattern": {
+            "type": "string"
+          },
+          "dateTimePattern": {
+            "type": "string"
+          },
+          "longDatePattern": {
+            "type": "string"
+          },
+          "decimalSeparator": {
+            "type": "string"
+          },
+          "groupSeparator": {
+            "type": "string"
+          },
+          "currencyPattern": {
+            "type": "string"
+          },
+          "percentPattern": {
+            "type": "string"
+          },
+          "fallbackCulture": {
+            "type": "string"
+          },
+          "isDefault": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "CurrencyReferenceHttpResponse": {
+        "required": [
+          "code",
+          "numericCode",
+          "minorUnits",
+          "symbol",
+          "displaySymbol",
+          "name",
+          "namePlural",
+          "isEnabled",
+          "sortOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "numericCode": {
+            "type": "string"
+          },
+          "minorUnits": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "displaySymbol": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "namePlural": {
+            "type": "string"
+          },
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "instance": {
+            "type": "string"
+          }
+        }
+      },
+      "ReferenceDataHttpResponse": {
+        "required": [
+          "culture",
+          "currencies",
+          "countries",
+          "timeZones",
+          "cultures",
+          "taxIdTypes"
+        ],
+        "type": "object",
+        "properties": {
+          "culture": {
+            "type": "string"
+          },
+          "currencies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CurrencyReferenceHttpResponse"
+            }
+          },
+          "countries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CountryReferenceHttpResponse"
+            }
+          },
+          "timeZones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TimeZoneReferenceHttpResponse"
+            }
+          },
+          "cultures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CultureReferenceHttpResponse"
+            }
+          },
+          "taxIdTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaxIdTypeReferenceHttpResponse"
+            }
+          }
+        }
+      },
+      "TaxIdTypeReferenceHttpResponse": {
+        "required": [
+          "code",
+          "countryCode",
+          "label",
+          "mask",
+          "validatorKey",
+          "appliesTo",
+          "name",
+          "isEnabled",
+          "sortOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "countryCode": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "mask": {
+            "type": "string"
+          },
+          "validatorKey": {
+            "type": "string"
+          },
+          "appliesTo": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "TimeZoneReferenceHttpResponse": {
+        "required": [
+          "id",
+          "countryCodes",
+          "city",
+          "isEnabled",
+          "sortOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "countryCodes": {
+            "type": "array"
+          },
+          "city": {
+            "type": "string"
+          },
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "ReferenceData"
+    }
+  ]
+}

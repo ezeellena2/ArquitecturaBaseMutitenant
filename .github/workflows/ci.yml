@@ -25,5 +25,10 @@ jobs:
       - name: Compilar
         run: dotnet build ArquitecturaBaseMultitenant.slnx --configuration Release --no-restore
 
+      - name: Verificar contrato OpenAPI versionado
+        run: |
+          test -f docs/contracts/openapi.json
+          git diff --exit-code -- docs/contracts/openapi.json
+
       - name: Probar
         run: dotnet test ArquitecturaBaseMultitenant.slnx --configuration Release --no-build

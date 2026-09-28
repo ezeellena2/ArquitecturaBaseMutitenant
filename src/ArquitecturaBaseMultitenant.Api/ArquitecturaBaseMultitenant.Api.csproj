@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <UserSecretsId>c4a6c457-e035-4525-9016-e348c3ff7302</UserSecretsId>
+    <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)/obj/openapi</OpenApiDocumentsDirectory>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,6 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.Extensions.ApiDescription.Server" PrivateAssets="all" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" />
     <PackageReference Include="OpenIddict.Server.AspNetCore" />
     <PackageReference Include="OpenIddict.Validation.AspNetCore" />
@@ -24,4 +26,9 @@
   <ItemGroup>
     <InternalsVisibleTo Include="ArquitecturaBaseMultitenant.Api.IntegrationTests" />
   </ItemGroup>
+
+  <Target Name="CopyVersionedOpenApi" AfterTargets="GenerateOpenApiDocuments">
+    <Copy SourceFiles="$(OpenApiDocumentsDirectory)/$(MSBuildProjectName).json"
+          DestinationFiles="$(MSBuildProjectDirectory)/../../docs/contracts/openapi.json" />
+  </Target>
 </Project>
