@@ -226,9 +226,9 @@ No quedan preguntas técnicas pendientes. Según AGENTS.md, una duda nueva se re
 
 **Archivos:** crear src/ArquitecturaBaseMultitenant.Api/Controllers/{AGENTS,CLAUDE}.md y ReferenceData/{ReferenceDataController.cs,AGENTS.md,CLAUDE.md}; src/ArquitecturaBaseMultitenant.Api/Contracts/ReferenceData/{ReferenceDataHttpResponse.cs,AGENTS.md,CLAUDE.md}; tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Contracts/ExplicitRouteInventoryTests.cs y ReferenceData/ReferenceDataApiTests.cs (nuevos). No hay controller equivalente en ArquitecturaBase.
 **Respaldo:** datos-de-referencia.md §§4–5 y 8; plan maestro §Etapa 1, Back 4 y puerta general 3; backend.md §§5, 11; arbol.md back “Api/Controllers/ReferenceData” y “Api.IntegrationTests/Contracts”; rules/api-http.md y rules/datos-de-referencia.md; arnes.md back §3; decisión 3 de este plan.
-- [ ] Probar `GET /api/reference-data` y `/api/reference-data/{currencies,countries,time-zones,cultures,tax-id-types}` con búsqueda, `[AllowAnonymous]`, solo habilitados, `CountryCodes[]` completo de una zona multipaís, traducción/fallback por cultura, ETag y caché HTTP; I/ExplicitRouteInventoryTests e I/ReferenceDataApiTests en rojo. Incluir las rutas en la lista explícita de `AccessDeclarationTests` cuando nazca en E3.
-- [ ] Crear controller fino, contratos HTTP y caché; actualizar inventario de todas las rutas existentes; repetir en verde.
-- [ ] Commit back: feat: exponer datos de referencia por API
+- [x] Probar `GET /api/reference-data` y `/api/reference-data/{currencies,countries,time-zones,cultures,tax-id-types}` con búsqueda, `[AllowAnonymous]`, solo habilitados, `CountryCodes[]` completo de una zona multipaís, traducción/fallback por cultura, ETag y caché HTTP; I/ExplicitRouteInventoryTests e I/ReferenceDataApiTests en rojo. Incluir las rutas en la lista explícita de `AccessDeclarationTests` cuando nazca en E3.
+- [x] Crear controller fino, contratos HTTP y caché; actualizar inventario de todas las rutas existentes; repetir en verde.
+- [x] Commit back: feat: exponer datos de referencia por API
 
 ### Tarea 22. OpenAPI versionado
 
