@@ -258,9 +258,9 @@ No quedan preguntas técnicas pendientes. Según AGENTS.md, una duda nueva se re
 
 **Archivos:** crear tests/ArquitecturaBaseMultitenant.ArchitectureTests/{ApplicationPublicApiTests,ControllerInputContractTests,ControllerServiceRepositoryTests,ApplicationServicesTests}.cs ← homónimos de ../ArquitecturaBase/tests/ArquitecturaBase.ArchitectureTests/; ServiceDependencyCountTests.cs, DecimalPrecisionTests.cs y NoManualFormattingTests.cs (nuevos).
 **Respaldo:** plan maestro §Etapa 1, Back 10 y “Reglas para todas las etapas”; backend.md §§3, 5, 18; arbol.md back “ArchitectureTests”; rules/capas-y-flujo.md, rules/numeros-y-moneda.md y rules/tests.md.
-- [ ] Escribir/adaptar cada guarda y demostrar rojo con una violación de prueba local, retirada antes del commit; R con cada una de las siete clases.
-- [ ] Ajustar únicamente código E1 que incumpla la guarda y repetir R completo en verde.
-- [ ] Commit back: test: proteger arquitectura del núcleo transversal
+- [x] Escribir/adaptar cada guarda y demostrar rojo con una violación de prueba local, retirada antes del commit; R con cada una de las siete clases.
+- [x] Ajustar únicamente código E1 que incumpla la guarda y repetir R completo en verde.
+- [x] Commit back: test: proteger arquitectura del núcleo transversal
 
 ### Tarea 26. Guarda de catálogos sin literales
 
