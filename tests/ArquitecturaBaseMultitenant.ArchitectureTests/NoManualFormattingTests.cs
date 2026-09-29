@@ -18,12 +18,13 @@ public sealed class NoManualFormattingTests
     private const string FormatterType =
         "ArquitecturaBaseMultitenant.Application.Common.Formatting.DisplayFormatter";
 
-    // These converters serialize the invariant wire contract, not text shown to a person.
-    private static readonly HashSet<string> WireDateConverters = new(StringComparer.Ordinal)
+    // These converters serialize invariant wire values, not text shown to a person.
+    private static readonly HashSet<string> WireFormatters = new(StringComparer.Ordinal)
     {
         "ArquitecturaBaseMultitenant.Api.Json.DateOnlyConverter",
         "ArquitecturaBaseMultitenant.Api.Json.TimeOnlyConverter",
         "ArquitecturaBaseMultitenant.Api.Json.UtcDateTimeConverter",
+        "ArquitecturaBaseMultitenant.Api.ErrorHandling.RetryAfterHeaderFormatter",
     };
 
     [Fact]
@@ -34,7 +35,7 @@ public sealed class NoManualFormattingTests
             .SelectMany(ManualFormattingCalls)
             .Where(call => call.Owner != FormatterType
                 && !call.Owner.StartsWith(FormatterType + "/", StringComparison.Ordinal)
-                && !WireDateConverters.Contains(call.Owner));
+                && !WireFormatters.Contains(call.Owner));
 
         var violations = offenders.Select(call => $"{call.Owner}.{call.SourceMethod}: {call.Target}").ToArray();
         Assert.True(violations.Length == 0, string.Join(Environment.NewLine, violations));

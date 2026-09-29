@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Threading.RateLimiting;
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
 using ArquitecturaBaseMultitenant.Api.Idempotency;
@@ -34,7 +33,7 @@ public static class DependencyInjection
                 var seconds = (int)Math.Clamp(Math.Ceiling(delay.TotalSeconds), 1, int.MaxValue);
                 var httpContext = context.HttpContext;
                 httpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-                httpContext.Response.Headers.RetryAfter = seconds.ToString(CultureInfo.InvariantCulture);
+                httpContext.Response.Headers.RetryAfter = RetryAfterHeaderFormatter.Format(seconds);
 
                 var code = ApiErrorCodes.TooManyRequests;
                 var problem = ProblemDetailsMapper.Create(
