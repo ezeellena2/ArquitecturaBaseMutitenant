@@ -15,21 +15,15 @@ public sealed class TenantSettings : Entity, ITenantOwned, IAuditable
     public DateTime? ModifiedAtUtc { get; private set; }
     public Guid? ModifiedBy { get; private set; }
 
-    public static TenantSettings Create(Guid tenantId, string defaultCulture, string defaultTimeZoneId,
+    public static TenantSettings Create(string defaultCulture, string defaultTimeZoneId,
         string defaultCurrency)
     {
-        if (tenantId == Guid.Empty)
-        {
-            throw new ArgumentException("The tenant id cannot be empty.", nameof(tenantId));
-        }
-
         ArgumentException.ThrowIfNullOrWhiteSpace(defaultCulture);
         ArgumentException.ThrowIfNullOrWhiteSpace(defaultTimeZoneId);
         ArgumentException.ThrowIfNullOrWhiteSpace(defaultCurrency);
 
         return new TenantSettings
         {
-            TenantId = tenantId,
             DefaultCulture = defaultCulture,
             DefaultTimeZoneId = defaultTimeZoneId,
             DefaultCurrency = defaultCurrency,

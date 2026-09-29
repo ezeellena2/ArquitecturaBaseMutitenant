@@ -8,7 +8,7 @@ public sealed class MemberTests
     [Fact]
     public void Member_moves_from_invited_through_active_and_inactive_to_removed()
     {
-        var member = Member.Invite(Guid.CreateVersion7(), Guid.CreateVersion7());
+        var member = Member.Invite(Guid.CreateVersion7());
         var joinedAtUtc = new DateTime(2026, 9, 28, 12, 0, 0, DateTimeKind.Utc);
 
         Assert.Equal(MemberStatus.Invited, member.Status);
@@ -27,7 +27,7 @@ public sealed class MemberTests
     [Fact]
     public void Member_rejects_invalid_transitions()
     {
-        var member = Member.Invite(Guid.CreateVersion7(), Guid.CreateVersion7());
+        var member = Member.Invite(Guid.CreateVersion7());
 
         Assert.Equal(MemberErrors.InvalidTransition, member.Deactivate().Error);
         Assert.True(member.Remove().IsSuccess);
@@ -39,5 +39,13 @@ public sealed class MemberTests
     {
         Assert.Null(typeof(Member).GetProperty("IsOwner"));
         Assert.True(typeof(ITenantOwned).IsAssignableFrom(typeof(Member)));
+    }
+
+    [Fact]
+    public void Tenant_column_starts_unset_for_the_interceptor_to_stamp()
+    {
+        var member = Member.Invite(Guid.CreateVersion7());
+
+        Assert.Equal(Guid.Empty, member.TenantId);
     }
 }

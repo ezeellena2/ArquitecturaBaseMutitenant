@@ -1,5 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Settings;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Conventions;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
@@ -33,6 +35,9 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
     public DbSet<LoginMethod> LoginMethods => Set<LoginMethod>();
     public DbSet<LoginCode> LoginCodes => Set<LoginCode>();
     public DbSet<LoginAudit> LoginAudits => Set<LoginAudit>();
+    public DbSet<Tenant> Tenants => Set<Tenant>();
+    public DbSet<Member> Members => Set<Member>();
+    public DbSet<TenantSettings> TenantSettings => Set<TenantSettings>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {

@@ -30,13 +30,19 @@ public sealed class PlatformSettingsTests
     [Fact]
     public void Personal_defaults_are_supplied_by_reference_data_not_a_domain_list()
     {
-        var tenantId = Guid.CreateVersion7();
+        var settings = TenantSettings.Create("en-US", "America/New_York", "USD");
 
-        var settings = TenantSettings.Create(tenantId, "en-US", "America/New_York", "USD");
-
-        Assert.Equal(tenantId, settings.TenantId);
+        Assert.Equal(Guid.Empty, settings.TenantId);
         Assert.Equal("en-US", settings.DefaultCulture);
         Assert.Equal("America/New_York", settings.DefaultTimeZoneId);
         Assert.Equal("USD", settings.DefaultCurrency);
+    }
+
+    [Fact]
+    public void Tenant_settings_column_starts_unset_for_the_interceptor_to_stamp()
+    {
+        var settings = TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS");
+
+        Assert.Equal(Guid.Empty, settings.TenantId);
     }
 }

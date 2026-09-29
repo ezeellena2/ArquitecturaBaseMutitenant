@@ -9,19 +9,13 @@ public sealed class Member : Entity, ITenantOwned
     {
     }
 
-    private Member(Guid tenantId, Guid userId)
+    private Member(Guid userId)
     {
-        if (tenantId == Guid.Empty)
-        {
-            throw new ArgumentException("The tenant id cannot be empty.", nameof(tenantId));
-        }
-
         if (userId == Guid.Empty)
         {
             throw new ArgumentException("The user id cannot be empty.", nameof(userId));
         }
 
-        TenantId = tenantId;
         UserId = userId;
         Status = MemberStatus.Invited;
     }
@@ -34,7 +28,7 @@ public sealed class Member : Entity, ITenantOwned
 
     public DateTime? JoinedAtUtc { get; private set; }
 
-    public static Member Invite(Guid tenantId, Guid userId) => new(tenantId, userId);
+    public static Member Invite(Guid userId) => new(userId);
 
     public Result Activate(DateTime joinedAtUtc)
     {

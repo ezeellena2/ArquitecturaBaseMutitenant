@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.ReferenceData;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
@@ -18,6 +19,7 @@ public sealed class DataClassificationTests
         typeof(LoginMethod).FullName!,
         typeof(LoginCode).FullName!,
         typeof(LoginAudit).FullName!,
+        typeof(Tenant).FullName!,
         typeof(IdentityUserClaim<Guid>).FullName!,
         typeof(IdentityUserLogin<Guid>).FullName!,
         typeof(IdentityUserToken<Guid>).FullName!,
