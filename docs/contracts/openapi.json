@@ -1308,6 +1308,13 @@
         },
         "description": "Permisos efectivos del acceso activo; los permisos por empresa llegan en E4–E6."
       },
+      "Email": {
+        "type": [
+          "null",
+          "string"
+        ],
+        "description": "Correo normalizado para comparar y enviar; el dominio IDN se guarda en ASCII."
+      },
       "LegalDocumentKind": {
         "enum": [
           "Terms",
@@ -1416,9 +1423,13 @@
             ]
           },
           "email": {
-            "type": [
-              "null",
-              "string"
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Email"
+              }
             ]
           },
           "access": {

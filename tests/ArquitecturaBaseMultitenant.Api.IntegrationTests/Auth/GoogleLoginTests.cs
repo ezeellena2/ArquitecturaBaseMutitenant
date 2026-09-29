@@ -25,7 +25,7 @@ public sealed class GoogleLoginTests(ApiFactory factory)
         await factory.Services.SeedDatabaseAsync(Ct);
         var subject = Guid.NewGuid().ToString("N");
         var google = new GoogleSignInDouble(new ExternalLogin("Google", subject,
-            $"google-{subject}@example.test", true, "Persona nueva"));
+            Email.Create($"google-{subject}@example.test").Value, true, "Persona nueva"));
         await using var host = HostWith(google);
         await using var scope = host.Services.CreateAsyncScope();
 
@@ -44,7 +44,7 @@ public sealed class GoogleLoginTests(ApiFactory factory)
         await factory.Services.SeedDatabaseAsync(Ct);
         var subject = Guid.NewGuid().ToString("N");
         var google = new GoogleSignInDouble(new ExternalLogin("Google", subject,
-            $"google-{subject}@example.test", true, "Persona nueva"));
+            Email.Create($"google-{subject}@example.test").Value, true, "Persona nueva"));
         await using var host = HostWith(google);
         await using var scope = host.Services.CreateAsyncScope();
 
@@ -63,7 +63,7 @@ public sealed class GoogleLoginTests(ApiFactory factory)
         await factory.Services.SeedDatabaseAsync(Ct);
         var subject = Guid.NewGuid().ToString("N");
         var google = new GoogleSignInDouble(new ExternalLogin("Google", subject,
-            $"google-{subject}@example.test", false, "Persona nueva"));
+            Email.Create($"google-{subject}@example.test").Value, false, "Persona nueva"));
         await using var host = HostWith(google);
         await using var scope = host.Services.CreateAsyncScope();
 
@@ -81,7 +81,7 @@ public sealed class GoogleLoginTests(ApiFactory factory)
         await factory.Services.SeedDatabaseAsync(Ct);
         var subject = Guid.NewGuid().ToString("N");
         var google = new GoogleSignInDouble(new ExternalLogin("Google", subject,
-            $"google-{subject}@example.test", true, "Persona nueva"));
+            Email.Create($"google-{subject}@example.test").Value, true, "Persona nueva"));
         await using var host = HostWith(google);
         await using var scope = host.Services.CreateAsyncScope();
 
@@ -121,7 +121,8 @@ public sealed class GoogleLoginTests(ApiFactory factory)
             }, CommitPolicy.OnSuccess, Ct);
         }
         var subject = Guid.NewGuid().ToString("N");
-        var google = new GoogleSignInDouble(new ExternalLogin("Google", subject, address, true, "Nombre"));
+        var google = new GoogleSignInDouble(new ExternalLogin("Google", subject,
+            Email.Create(address).Value, true, "Nombre"));
         await using var host = HostWith(google);
         await using var scope = host.Services.CreateAsyncScope();
 

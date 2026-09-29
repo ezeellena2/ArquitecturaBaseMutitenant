@@ -5,7 +5,6 @@ using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
-using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
@@ -30,8 +29,7 @@ internal sealed class GoogleAccountResolver(
             return ExternalLoginErrors.Failed;
         }
 
-        var parsedEmail = Email.Create(login.Email);
-        var email = login.EmailVerified && parsedEmail.IsSuccess ? parsedEmail.Value : null;
+        var email = login.EmailVerified ? login.Email : null;
         await loginLock.AcquireAsync(login.ProviderKey, email, cancellationToken);
         var googleMethod = await lookup.FindMethodAsync(LoginMethodType.Google,
             login.ProviderKey, cancellationToken);

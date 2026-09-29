@@ -81,6 +81,25 @@ public sealed class OpenApiTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Profile_email_value_object_is_exposed_as_a_nullable_string()
+    {
+        await using var development = factory.WithWebHostBuilder(builder => builder.UseEnvironment("Development"));
+        using var client = development.CreateClient();
+        using var response = await client.GetAsync("/openapi/v1.json", TestContext.Current.CancellationToken);
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+
+        var schemas = document.RootElement.GetProperty("components").GetProperty("schemas");
+        var types = schemas.GetProperty("Email").GetProperty("type").EnumerateArray()
+            .Select(item => item.GetString()).ToArray();
+        Assert.Contains("string", types);
+        Assert.Contains("null", types);
+        var email = schemas.GetProperty("MeResponse").GetProperty("properties").GetProperty("email");
+        Assert.Contains(email.GetProperty("oneOf").EnumerateArray(), item =>
+            item.TryGetProperty("$ref", out var reference)
+            && reference.GetString() == "#/components/schemas/Email");
+    }
+
+    [Fact]
     public async Task Page_size_options_are_published_as_an_integer_enum()
     {
         await using var development = factory.WithWebHostBuilder(builder => builder.UseEnvironment("Development"));

@@ -2,6 +2,7 @@ using System.Security.Claims;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.AspNetCore.Authentication;
@@ -54,9 +55,15 @@ internal sealed class SignInService(
         return info is null ? null : new ExternalLogin(
             info.LoginProvider,
             info.ProviderKey,
-            info.Principal.FindFirstValue(ClaimTypes.Email),
+            ParseEmail(info.Principal.FindFirstValue(ClaimTypes.Email)),
             string.Equals(info.Principal.FindFirstValue("email_verified"), "true", StringComparison.OrdinalIgnoreCase),
             info.Principal.FindFirstValue(ClaimTypes.Name));
+    }
+
+    private static Email? ParseEmail(string? value)
+    {
+        var result = Email.Create(value);
+        return result.IsSuccess ? result.Value : null;
     }
 
     public Task SignOutExternalAsync(CancellationToken cancellationToken) =>

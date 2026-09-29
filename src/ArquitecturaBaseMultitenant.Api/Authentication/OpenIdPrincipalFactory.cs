@@ -78,8 +78,8 @@ public sealed class OpenIdPrincipalFactory(IConnectService service, IOpenIddictS
     private static void SetUserClaims(ClaimsIdentity identity, ConnectUser user)
     {
         identity.SetClaim(Claims.Subject, user.Account.Id.ToString("D", CultureInfo.InvariantCulture));
-        identity.SetClaim(Claims.Name, user.Account.DisplayName ?? user.Account.PrimaryEmail);
-        identity.SetClaim(Claims.Email, user.Account.PrimaryEmail);
+        identity.SetClaim(Claims.Name, user.Account.DisplayName ?? user.Account.PrimaryEmail?.Value);
+        identity.SetClaim(Claims.Email, user.Account.PrimaryEmail?.Value);
         identity.SetClaim(TenantClaimTypes.Access, user.Access.ToString().ToLowerInvariant());
         identity.SetClaim(TenantClaimTypes.TenantId, user.TenantId?.ToString("D", CultureInfo.InvariantCulture));
         identity.SetClaim(TenantClaimTypes.TenantKind, user.TenantKind?.ToString().ToLowerInvariant());

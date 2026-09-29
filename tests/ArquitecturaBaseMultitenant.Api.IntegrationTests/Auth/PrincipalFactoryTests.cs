@@ -8,6 +8,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using OpenIddict.Abstractions;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
@@ -100,7 +101,8 @@ public sealed class PrincipalFactoryTests
     }
 
     private static UserAccountRow Account(string? email = "ana@example.test", string? name = "Ana") =>
-        new(UserId, name, "es-AR", "America/Argentina/Buenos_Aires", UserStatus.Active, false, email, null);
+        new(UserId, name, "es-AR", "America/Argentina/Buenos_Aires", UserStatus.Active, false,
+            email is null ? null : Email.Create(email).Value, null);
 
     private static (OpenIdPrincipalFactory Factory, ConnectProxy Connect) CreateFactory(ConnectUser user)
     {

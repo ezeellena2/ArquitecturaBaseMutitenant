@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization.Metadata;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi;
 
@@ -18,7 +19,8 @@ internal static class OpenApiExtensions
             options.AddSchemaTransformer((schema, context, _) =>
             {
                 // Per-property input converters can otherwise leave string schemas empty.
-                if (context.JsonTypeInfo.Type == typeof(string))
+                if (context.JsonTypeInfo.Type == typeof(string)
+                    || context.JsonTypeInfo.Type == typeof(Email))
                 {
                     schema.Type = IsNullable(context.JsonPropertyInfo)
                         ? JsonSchemaType.String | JsonSchemaType.Null

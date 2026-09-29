@@ -121,7 +121,7 @@ public sealed class LoginPersistenceTests(ApiFactory factory)
         Assert.Equal("Ana", account.DisplayName);
         Assert.Equal("en-US", account.Culture);
         Assert.Equal("America/New_York", account.TimeZoneId);
-        Assert.Equal(email.Value, account.PrimaryEmail);
+        Assert.Equal(email, account.PrimaryEmail);
         Assert.Equal(tenantId, account.LastBusinessTenantId);
     }
 }

@@ -15,6 +15,7 @@ public static class JsonConfiguration
         options.Converters.Add(new DateOnlyConverter());
         options.Converters.Add(new TimeOnlyConverter());
         options.Converters.Add(new MoneyJsonConverter());
+        options.Converters.Add(new EmailJsonConverter());
         options.Converters.Add(new JsonStringEnumConverter<Access>(JsonNamingPolicy.CamelCase,
             allowIntegerValues: false));
         options.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false));

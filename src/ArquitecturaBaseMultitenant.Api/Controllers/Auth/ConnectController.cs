@@ -139,12 +139,12 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
         };
         if (principal!.HasScope(Scopes.Email) && account.PrimaryEmail is { } email)
         {
-            claims[Claims.Email] = email;
+            claims[Claims.Email] = email.Value;
             claims[Claims.EmailVerified] = true;
         }
         if (principal!.HasScope(Scopes.Profile))
         {
-            if ((account.DisplayName ?? account.PrimaryEmail) is { } name)
+            if ((account.DisplayName ?? account.PrimaryEmail?.Value) is { } name)
             {
                 claims[Claims.Name] = name;
             }

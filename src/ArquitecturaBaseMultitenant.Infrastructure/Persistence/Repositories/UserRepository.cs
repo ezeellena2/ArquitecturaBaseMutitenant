@@ -26,12 +26,12 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
         return ToRow(user);
     }
 
-    public Task<UserAccountRow?> GetByIdAsync(Guid userId, CancellationToken cancellationToken) =>
-        context.Users.AsNoTracking()
-            .Where(user => user.Id == userId)
-            .Select(user => new UserAccountRow(user.Id, user.DisplayName, user.Culture, user.TimeZoneId,
-                user.Status, user.IsPlatformOperator, user.Email, user.LastBusinessTenantId))
-            .SingleOrDefaultAsync(cancellationToken);
+    public async Task<UserAccountRow?> GetByIdAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var user = await context.Users.AsNoTracking()
+            .SingleOrDefaultAsync(candidate => candidate.Id == userId, cancellationToken);
+        return user is null ? null : ToRow(user);
+    }
 
     public async Task SetPrimaryEmailAsync(Guid userId, Email email, CancellationToken cancellationToken)
     {
@@ -71,7 +71,8 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
 
     private static UserAccountRow ToRow(ApplicationUser user) =>
         new(user.Id, user.DisplayName, user.Culture, user.TimeZoneId, user.Status,
-            user.IsPlatformOperator, user.Email, user.LastBusinessTenantId);
+            user.IsPlatformOperator, user.Email is null ? null : Email.Create(user.Email).Value,
+            user.LastBusinessTenantId);
 
     private static void EnsureSucceeded(IdentityResult result, string action)
     {
