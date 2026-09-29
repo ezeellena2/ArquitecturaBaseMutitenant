@@ -50,8 +50,8 @@ public sealed class DisplayFormatter(
             "taxId" => await FormatTaxIdAsync(input, cancellationToken),
             "email" => FormatEmail(input),
             "enum" => FormatEnum(input, profile),
-            "boolean" => FormattingTexts.Get(input.GetBoolean() ? "Boolean.True" : "Boolean.False", profile.Culture),
-            "empty" => FormattingTexts.Get("Empty.Value", profile.Culture),
+            "boolean" => FormattingTexts.Get(input.GetBoolean() ? "Boolean.True" : "Boolean.False", profile),
+            "empty" => FormattingTexts.Get("Empty.Value", profile),
             "text" => input.GetString() ?? string.Empty,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unknown display format."),
         };
@@ -81,7 +81,7 @@ public sealed class DisplayFormatter(
 
         if (elapsed < TimeSpan.FromMinutes(1))
         {
-            return FormattingTexts.Get("Relative.JustNow", profile.Culture);
+            return FormattingTexts.Get("Relative.JustNow", profile);
         }
 
         var (count, key) = elapsed.TotalDays >= 1
@@ -89,7 +89,7 @@ public sealed class DisplayFormatter(
             : elapsed.TotalHours >= 1
                 ? ((int)elapsed.TotalHours, "HoursAgo")
                 : ((int)elapsed.TotalMinutes, "MinutesAgo");
-        var template = FormattingTexts.Get($"Relative.{key}{(count == 1 ? "Singular" : "Plural")}", profile.Culture);
+        var template = FormattingTexts.Get($"Relative.{key}{(count == 1 ? "Singular" : "Plural")}", profile);
         return string.Format(profile.Culture, template, count);
     }
 
@@ -152,7 +152,7 @@ public sealed class DisplayFormatter(
                     ? (1_000m, "Compact.Thousand")
                     : (1m, string.Empty);
         return FormatNumber(value / divisor, 0, divisor == 1m ? 0 : 1, profile)
-            + (unit.Length == 0 ? string.Empty : FormattingTexts.Get(unit, profile.Culture));
+            + (unit.Length == 0 ? string.Empty : FormattingTexts.Get(unit, profile));
     }
 
     private static string FormatFileSize(JsonElement input, CultureProfile profile)
@@ -169,7 +169,7 @@ public sealed class DisplayFormatter(
                         ? (1_000m, "FileSize.KB")
                         : (1m, "FileSize.B");
         return FormatNumber(bytes / divisor, 0, divisor == 1m ? 0 : 1, profile)
-            + FormattingTexts.Get(unit, profile.Culture);
+            + FormattingTexts.Get(unit, profile);
     }
 
     private static string FormatDuration(JsonElement input, CultureProfile profile)
@@ -186,17 +186,17 @@ public sealed class DisplayFormatter(
         var parts = new List<string>();
         if (hours > 0)
         {
-            parts.Add(string.Format(profile.Culture, FormattingTexts.Get("Duration.Hours", profile.Culture), hours));
+            parts.Add(string.Format(profile.Culture, FormattingTexts.Get("Duration.Hours", profile), hours));
         }
 
         if (minutes > 0)
         {
-            parts.Add(string.Format(profile.Culture, FormattingTexts.Get("Duration.Minutes", profile.Culture), minutes));
+            parts.Add(string.Format(profile.Culture, FormattingTexts.Get("Duration.Minutes", profile), minutes));
         }
 
         if (seconds > 0 || parts.Count == 0)
         {
-            parts.Add(string.Format(profile.Culture, FormattingTexts.Get("Duration.Seconds", profile.Culture), seconds));
+            parts.Add(string.Format(profile.Culture, FormattingTexts.Get("Duration.Seconds", profile), seconds));
         }
 
         return string.Join(" ", parts);
@@ -274,7 +274,7 @@ public sealed class DisplayFormatter(
     private static string FormatEnum(JsonElement input, CultureProfile profile)
     {
         var key = "Enum." + input.GetProperty("enum").GetString() + "." + input.GetProperty("value").GetString();
-        return FormattingTexts.Get(key, profile.Culture);
+        return FormattingTexts.Get(key, profile);
     }
 
     private DateTime LocalDateTime(JsonElement input, string timeZone)

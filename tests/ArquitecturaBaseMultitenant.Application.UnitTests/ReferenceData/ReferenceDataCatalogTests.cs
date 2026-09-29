@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
 
@@ -134,8 +135,13 @@ public sealed class ReferenceDataCatalogTests
         var taxTypes = await ((ITaxIdTypeCatalog)catalog).ListAsync(CancellationToken);
         var defaultCulture = Assert.Single(cultures, culture => culture.IsDefault);
 
-        Assert.Equal("Español (Argentina)", defaultCulture.DisplayName("fr-FR", defaultCulture.Code));
-        Assert.Equal("Spanish (Argentina)", defaultCulture.DisplayName("en-US", defaultCulture.Code));
+        var resolver = new CultureProfiles((ICultureCatalog)catalog);
+        var defaultProfile = await resolver.LoadAsync("fr-FR", CancellationToken);
+        var englishProfile = await resolver.LoadAsync("en-US", CancellationToken);
+        Assert.Equal("Español (Argentina)", defaultProfile.Translate(
+            defaultCulture.Translations, translation => translation.DisplayCulture).Name);
+        Assert.Equal("Spanish (Argentina)", englishProfile.Translate(
+            defaultCulture.Translations, translation => translation.DisplayCulture).Name);
         Assert.All(cultures, culture => Assert.All(cultures.Where(display => display.IsEnabled), display =>
             Assert.Contains(culture.Translations, translation => translation.DisplayCulture == display.Code)));
         Assert.All(taxTypes, taxType => Assert.Contains(taxType.CountryCode, countries));

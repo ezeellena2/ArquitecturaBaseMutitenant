@@ -126,12 +126,15 @@ public sealed class ReferenceDataServiceTests
             data, otherCatalogs, otherCatalogs, data, otherCatalogs,
             new FakeTimeProvider(), new FakeLogger<ReferenceDataService>());
 
-        var result = await service.GetCurrenciesAsync("fr-CA", null, TestContext.Current.CancellationToken);
+        var result = await service.GetCurrenciesAsync("FR-ca", null, TestContext.Current.CancellationToken);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal("peso en francés", Assert.Single(result.Value).Name);
+        Assert.Equal("peso argentino", Assert.Single(result.Value).Name);
         var disabledCulture = await service.GetCulturesAsync("es-AR", "fr-FR", TestContext.Current.CancellationToken);
         Assert.False(Assert.Single(disabledCulture.Value).IsEnabled);
+
+        var disabledRequest = await service.GetAllAsync("fr-FR", TestContext.Current.CancellationToken);
+        Assert.Equal("es-AR", disabledRequest.Value.Culture);
     }
 
     [Fact]

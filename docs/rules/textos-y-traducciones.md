@@ -9,6 +9,7 @@ Los nombres de monedas, países, ciudades horarias y tipos fiscales son **datos 
 - **Archivos:** `Application/Resources/{Errors,Validation,Formatting,Permissions,Notifications,Audit}.resx` + `.en.resx`. `Formatting` guarda relativos, unidades, booleanos y enums que aparecen en mensajes/documentos. Los módulos tienen los suyos (`Modules/WhatsApp/Resources/`).
 - **Acceso:** con los envoltorios `ErrorTexts`, `ValidationTexts`, `FormattingTexts`, `PermissionTexts`, `NotificationTexts` y `AuditTexts`. Sin `IStringLocalizer`.
 - **En un request**, la cultura sale de `Accept-Language` y se acepta si está habilitada en `ICultureCatalog`. **En segundo plano** (correo, WhatsApp), se pasa explícita: la de la cuenta; si no hay, la de la organización; si no, la cultura marcada como predeterminada (`es-AR` en E1).
+- **Caída de idioma:** `CultureProfiles` resuelve una sola vez la cultura pedida (sin distinguir mayúsculas), exige `IsEnabled` tanto en la pedida como en cada `FallbackCulture` y termina en la predeterminada habilitada. `FormattingTexts` sigue esa misma cadena para elegir resources; no usa el fallback implícito del ICU del host.
 - **Claves:**
   - errores: el código (`Roles.Role.HasUsers`) y `Title.<ErrorType>`;
   - permisos: `Permission.<código>`;
