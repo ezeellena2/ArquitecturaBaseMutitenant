@@ -1,10 +1,14 @@
+using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using ArquitecturaBaseMultitenant.ArchitectureTests.Support;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
 public sealed class ReferenceDataHardcodeTests
 {
+    private enum UnrelatedChoice { ARS }
+
     [Fact]
     public void Rule_detects_catalog_codes_in_lists_comparisons_switches_and_enums()
     {
@@ -41,9 +45,15 @@ public sealed class ReferenceDataHardcodeTests
                 return ReferenceDataHardcodeScanner.FindViolations(source)
                     .Where(violation => !IsDatabaseLocaleDeclaration(relativePath, source, violation))
                     .Select(violation => $"{relativePath}: {violation}");
-            });
+            })
+            .Concat(new[] { "Domain", "Application", "Infrastructure", "Api" }
+                .Select(name => Assembly.Load("ArquitecturaBaseMultitenant." + name))
+                .SelectMany(assembly => ReferenceDataHardcodeScanner.EnumMemberViolations(assembly)
+                    .Concat(ReferenceDataHardcodeScanner.IlLiteralViolations(assembly))))
+            .Concat(ReferenceDataHardcodeScanner.JsonViolations(sourceRoot));
 
-        Assert.Empty(violations);
+        var found = violations.ToArray();
+        Assert.True(found.Length == 0, string.Join(Environment.NewLine, found));
     }
 
     [Fact]
@@ -56,6 +66,57 @@ public sealed class ReferenceDataHardcodeTests
         Assert.False(IsDatabaseLocaleDeclaration(bootstrap, "var culture = \"es-AR\";", "line 1: es-AR"));
         Assert.False(IsDatabaseLocaleDeclaration("Other.cs", declaration, "line 1: es-AR"));
         Assert.False(IsDatabaseLocaleDeclaration(bootstrap, declaration, "line 2: es-AR"));
+    }
+
+    [Fact]
+    public void Enum_members_are_checked_independently_of_enum_name()
+    {
+        var violations = ReferenceDataHardcodeScanner.EnumMemberViolations(typeof(UnrelatedChoice).Assembly);
+
+        Assert.Contains(violations, value => value.Contains("UnrelatedChoice.ARS", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Compiled_literals_are_checked_even_if_source_spelling_changes()
+    {
+        var violations = ReferenceDataHardcodeScanner.IlLiteralViolations(typeof(ReferenceDataHardcodeTests).Assembly);
+
+        Assert.Contains(violations, value => value.Contains(nameof(ReferenceDataHardcodeTests), StringComparison.Ordinal)
+            && value.EndsWith(": ARS", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Only_database_icu_bootstrap_and_its_validator_are_exempt_in_IL()
+    {
+        Assert.True(ReferenceDataHardcodeScanner.IsAllowedIcuLiteral(new CallSites.Literal(
+            "ArquitecturaBaseMultitenant.Infrastructure.Persistence.DatabaseBootstrapExtensions", "es-AR")));
+        Assert.True(ReferenceDataHardcodeScanner.IsAllowedIcuLiteral(new CallSites.Literal(
+            "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Rls.RuntimeRoleValidator", "es-AR")));
+        Assert.False(ReferenceDataHardcodeScanner.IsAllowedIcuLiteral(new CallSites.Literal("Other", "es-AR")));
+    }
+
+    [Fact]
+    public void Json_files_outside_the_generated_reference_catalogs_are_checked()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "reference-hardcodes-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Directory.CreateDirectory(root);
+            File.WriteAllText(Path.Combine(root, "appsettings.json"), "{\"currency\":\"ARS\"}");
+            var approved = Path.Combine(root, "ArquitecturaBaseMultitenant.Infrastructure", "Persistence", "Seed", "ReferenceData");
+            Directory.CreateDirectory(approved);
+            File.WriteAllText(Path.Combine(approved, "currencies.json"), "{\"currency\":\"USD\"}");
+
+            var violations = ReferenceDataHardcodeScanner.JsonViolations(root).ToArray();
+
+            Assert.Contains(violations, value => value.Contains("appsettings.json", StringComparison.Ordinal)
+                && value.Contains("ARS", StringComparison.Ordinal));
+            Assert.DoesNotContain(violations, value => value.Contains("USD", StringComparison.Ordinal));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
     }
 
     private static bool IsDatabaseLocaleDeclaration(string relativePath, string source, string violation)
@@ -76,6 +137,37 @@ public sealed class ReferenceDataHardcodeTests
 internal static partial class ReferenceDataHardcodeScanner
 {
     private static readonly HashSet<string> CatalogCodes = LoadCodes();
+
+    public static IEnumerable<string> EnumMemberViolations(Assembly assembly) =>
+        assembly.GetTypes()
+            .Where(type => type.IsEnum)
+            .SelectMany(type => Enum.GetNames(type)
+                .Where(CatalogCodes.Contains)
+                .Select(member => $"{type.FullName}.{member}"));
+
+    public static IEnumerable<string> IlLiteralViolations(Assembly assembly) =>
+        CallSites.Literals(assembly)
+            .Where(literal => CatalogCodes.Contains(literal.Value))
+            .Where(literal => !IsAllowedIcuLiteral(literal))
+            .Select(literal => $"{literal.Owner}: {literal.Value}");
+
+    public static bool IsAllowedIcuLiteral(CallSites.Literal literal) =>
+        literal.Value == "es-AR"
+        && (literal.Owner == "ArquitecturaBaseMultitenant.Infrastructure.Persistence.DatabaseBootstrapExtensions"
+            || literal.Owner == "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Rls.RuntimeRoleValidator");
+
+    public static IEnumerable<string> JsonViolations(string sourceRoot) =>
+        Directory.EnumerateFiles(sourceRoot, "*.json", SearchOption.AllDirectories)
+            .Where(path => !Path.GetRelativePath(sourceRoot, path)
+                .Split(Path.DirectorySeparatorChar)
+                .Any(segment => segment is "obj" or "bin"))
+            .Where(path => !IsGeneratedCatalog(Path.GetRelativePath(sourceRoot, path).Replace('\\', '/')))
+            .SelectMany(path => FindViolations(File.ReadAllText(path))
+                .Select(violation => $"{Path.GetRelativePath(sourceRoot, path).Replace('\\', '/')}: {violation}"));
+
+    private static bool IsGeneratedCatalog(string relativePath) =>
+        relativePath.StartsWith("ArquitecturaBaseMultitenant.Infrastructure/Persistence/Seed/ReferenceData/", StringComparison.Ordinal)
+        && Path.GetFileName(relativePath) is "currencies.json" or "countries.json" or "time-zones.json" or "cultures.json" or "tax-id-types.json";
 
     public static IEnumerable<string> FindViolations(string source)
     {
