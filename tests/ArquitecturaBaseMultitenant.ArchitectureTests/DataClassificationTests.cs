@@ -20,6 +20,7 @@ public sealed class DataClassificationTests
     [
         typeof(DataProtectionKey).FullName!,
         typeof(ApplicationUser).FullName!,
+        "ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.UserTenantAccess",
         typeof(LoginMethod).FullName!,
         typeof(LoginCode).FullName!,
         typeof(LoginAudit).FullName!,
@@ -111,6 +112,7 @@ public sealed class DataClassificationTests
     }
 
     private static bool IsIdentityGlobal(Type type) => type == typeof(ApplicationUser)
+        || type.FullName == "ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.UserTenantAccess"
         || type == typeof(LoginMethod) || type == typeof(LoginCode) || type == typeof(LoginAudit)
         || type == typeof(IdentityUserClaim<Guid>) || type == typeof(IdentityUserLogin<Guid>)
         || type == typeof(IdentityUserToken<Guid>) || type == typeof(LegalAcceptance);
