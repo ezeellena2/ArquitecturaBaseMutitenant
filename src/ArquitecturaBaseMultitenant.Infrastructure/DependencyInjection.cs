@@ -13,6 +13,7 @@ using ArquitecturaBaseMultitenant.Infrastructure.Time;
 using ArquitecturaBaseMultitenant.Infrastructure.Phones;
 using ArquitecturaBaseMultitenant.Infrastructure.Security;
 using ArquitecturaBaseMultitenant.Infrastructure.Messaging;
+using ArquitecturaBaseMultitenant.Infrastructure.Identity.OpenIddict;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -50,6 +51,11 @@ public static class DependencyInjection
 
         services.AddPersistence(configuration);
         services.AddIdentityServices(configuration);
+        // La exportación OpenAPI no atiende requests ni tiene claves de firma o base de datos.
+        if (System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name is not "GetDocument.Insider")
+        {
+            services.AddOpenIddictServer(configuration, environment);
+        }
         services.AddMessaging();
         services.AddBackgroundJobs();
 
