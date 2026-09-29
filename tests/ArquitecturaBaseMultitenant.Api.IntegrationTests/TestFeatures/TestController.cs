@@ -46,6 +46,9 @@ public sealed class TestController : ControllerBase
     [HttpGet("status/{status:int}")]
     public IActionResult EmptyStatus(int status) => StatusCode(status);
 
+    [HttpGet("paged")]
+    public IActionResult Paged([FromQuery] int pageSize) => Ok(pageSize);
+
     [HttpPost("body")]
     public IActionResult Body([FromBody] TestBodyHttpRequest request) => NoContent();
 

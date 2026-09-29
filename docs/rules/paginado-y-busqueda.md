@@ -3,8 +3,8 @@
 **Regla:** todo listado pagina en el backend. La regla es **por páginas**, con 10 filas por defecto. Las tablas que solo crecen (auditoría, eventos, mensajes) paginan **por cursor**.
 
 ## Cómo se hace
-- **Pedido:** `record ListXRequest : PagedRequest` con `SortableFields = ["name", "createdAtUtc"]`. `pageSize` admite 10 (por defecto), 20, 50 o 100.
-- **Validador:** `PagedRequestValidator<ListXRequest>`.
+- **Pedido:** `record ListXRequest : PagedRequest` con `SortableFields = ["name", "createdAtUtc"]`. `PagedRequest.AllowedPageSizes` es la colección inmutable única de tamaños: 10 (por defecto), 20, 50 o 100.
+- **Validador y contrato:** `PagedRequestValidator<ListXRequest>` valida contra esa colección; OpenAPI publica el mismo enum numérico en `PagedRequest.pageSize` y en el parámetro `pageSize` de cada ruta paginada.
 - **Reader:**
   ```csharp
   private static readonly SortMap<Role> Sort = new() { ["name"] = r => r.Name, ["createdAtUtc"] = r => r.CreatedAtUtc };
@@ -35,7 +35,7 @@
 ## Lo verifica
 - `PaginationTests` (E2), `CursorPaginationTests` (E2), `SearchTests` (E2).
 - `SortIndexTests` (E2): índice por cada campo de un `SortMap`.
-- `PagedRequestValidatorTests` (E1).
+- `PagedRequestValidatorTests` (E1) y `OpenApiTests` (contrato de tamaños de página).
 
 ## Detalle
 [backend.md §9, "Paginado, orden y búsqueda"](../architecture/backend.md#paginado-orden-y-búsqueda)

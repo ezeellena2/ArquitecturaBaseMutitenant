@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Api.Json;
 using Microsoft.AspNetCore.Hosting;
@@ -77,6 +78,28 @@ public sealed class OpenApiTests(ApiFactory factory)
             .GetProperty("culture").GetProperty("type").GetString());
         Assert.Equal("string", schemas.GetProperty("CurrencyReferenceHttpResponse").GetProperty("properties")
             .GetProperty("code").GetProperty("type").GetString());
+    }
+
+    [Fact]
+    public async Task Page_size_options_are_published_as_an_integer_enum()
+    {
+        await using var development = factory.WithWebHostBuilder(builder => builder.UseEnvironment("Development"));
+        using var client = development.CreateClient();
+        using var response = await client.GetAsync("/openapi/v1.json", TestContext.Current.CancellationToken);
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+
+        var schema = document.RootElement.GetProperty("components").GetProperty("schemas")
+            .GetProperty("PagedRequest").GetProperty("properties").GetProperty("pageSize");
+        Assert.Equal("integer", schema.GetProperty("type").GetString());
+        Assert.Equal(PagedRequest.AllowedPageSizes,
+            schema.GetProperty("enum").EnumerateArray().Select(value => value.GetInt32()).ToArray());
+
+        var queryParameter = document.RootElement.GetProperty("paths").GetProperty("/test/paged")
+            .GetProperty("get").GetProperty("parameters").EnumerateArray()
+            .Single(parameter => parameter.GetProperty("name").GetString() == "pageSize");
+        Assert.Equal(PagedRequest.AllowedPageSizes,
+            queryParameter.GetProperty("schema").GetProperty("enum").EnumerateArray()
+                .Select(value => value.GetInt32()).ToArray());
     }
 
     [Fact]

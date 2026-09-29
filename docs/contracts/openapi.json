@@ -585,6 +585,37 @@
           }
         }
       },
+      "PagedRequest": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "enum": [
+              10,
+              20,
+              50,
+              100
+            ],
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "search": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "ProblemDetails": {
         "required": [
           "code",

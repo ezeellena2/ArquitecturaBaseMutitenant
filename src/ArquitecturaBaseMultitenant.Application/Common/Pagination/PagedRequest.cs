@@ -7,10 +7,11 @@ namespace ArquitecturaBaseMultitenant.Application.Common.Pagination;
 public abstract record PagedRequest
 {
     public const int DefaultPage = 1;
-    public const int DefaultPageSize = 10;
-    public const int MaxPageSize = 100;
+    public static IReadOnlyList<int> AllowedPageSizes { get; } = Array.AsReadOnly(new[] { 10, 20, 50, 100 });
+    public static int DefaultPageSize => AllowedPageSizes[0];
+    public static int MaxPageSize => AllowedPageSizes[^1];
 
-    // Con MaxPageSize = 100, el OFFSET (Page - 1) * PageSize queda muy por debajo de int.MaxValue.
+    // Con el máximo permitido, el OFFSET (Page - 1) * PageSize queda muy por debajo de int.MaxValue.
     public const int MaxPage = 1_000_000;
 
     public const int MaxSearchLength = 100;

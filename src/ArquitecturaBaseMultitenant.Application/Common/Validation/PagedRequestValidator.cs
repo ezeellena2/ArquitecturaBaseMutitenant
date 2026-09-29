@@ -16,7 +16,7 @@ public abstract class PagedRequestValidator<TRequest> : AbstractValidator<TReque
             .InclusiveBetween(1, PagedRequest.MaxPage).WithMessage(_ => ValidationTexts.PageInvalid);
 
         RuleFor(request => request.PageSize)
-            .Must(size => size is 10 or 20 or 50 or 100).WithMessage(_ => ValidationTexts.PageSizeInvalid);
+            .Must(size => PagedRequest.AllowedPageSizes.Contains(size)).WithMessage(_ => ValidationTexts.PageSizeInvalid);
 
         RuleFor(request => request.Sort)
             .Must(sort => IsSortable(sort, sortableFields)).WithMessage(_ => ValidationTexts.SortNotAllowed);

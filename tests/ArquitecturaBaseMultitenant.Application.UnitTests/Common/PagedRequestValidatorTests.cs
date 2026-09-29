@@ -14,6 +14,20 @@ public sealed class PagedRequestValidatorTests
     private static readonly ProductsQueryValidator Validator = new();
 
     [Fact]
+    public void Allowed_page_sizes_drive_defaults_limits_and_validation()
+    {
+        Assert.Equal([10, 20, 50, 100], PagedRequest.AllowedPageSizes);
+        Assert.Equal(PagedRequest.AllowedPageSizes[0], PagedRequest.DefaultPageSize);
+        Assert.Equal(PagedRequest.AllowedPageSizes[^1], PagedRequest.MaxPageSize);
+
+        foreach (var size in Enumerable.Range(1, PagedRequest.MaxPageSize + 1))
+        {
+            Assert.Equal(PagedRequest.AllowedPageSizes.Contains(size),
+                Validator.Validate(new ProductsQuery { PageSize = size }).IsValid);
+        }
+    }
+
+    [Fact]
     public void Defaults_are_valid()
     {
         Assert.True(Validator.Validate(new ProductsQuery()).IsValid);

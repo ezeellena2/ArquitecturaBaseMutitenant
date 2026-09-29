@@ -1,5 +1,7 @@
 using System.Reflection;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization.Metadata;
+using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi;
 
@@ -11,34 +13,83 @@ internal static class OpenApiExtensions
 
     public static IServiceCollection AddOpenApiDocumentation(this IServiceCollection services)
     {
-        services.AddOpenApi(options => options.AddSchemaTransformer((schema, context, _) =>
+        services.AddOpenApi(options =>
         {
-            // Per-property input converters can otherwise leave string schemas empty.
-            if (context.JsonTypeInfo.Type == typeof(string))
+            options.AddSchemaTransformer((schema, context, _) =>
             {
-                schema.Type = IsNullable(context.JsonPropertyInfo)
-                    ? JsonSchemaType.String | JsonSchemaType.Null
-                    : JsonSchemaType.String;
-            }
-
-            if (context.JsonTypeInfo.Kind == JsonTypeInfoKind.Object && schema.Required is not null)
-            {
-                foreach (var property in context.JsonTypeInfo.Properties.Where(IsNullable))
+                // Per-property input converters can otherwise leave string schemas empty.
+                if (context.JsonTypeInfo.Type == typeof(string))
                 {
-                    schema.Required.Remove(property.Name);
+                    schema.Type = IsNullable(context.JsonPropertyInfo)
+                        ? JsonSchemaType.String | JsonSchemaType.Null
+                        : JsonSchemaType.String;
                 }
-            }
 
-            if (context.JsonTypeInfo.Type == typeof(ProblemDetails))
+                if (context.JsonTypeInfo.Kind == JsonTypeInfoKind.Object && schema.Required is not null)
+                {
+                    foreach (var property in context.JsonTypeInfo.Properties.Where(IsNullable))
+                    {
+                        schema.Required.Remove(property.Name);
+                    }
+                }
+
+                if (typeof(PagedRequest).IsAssignableFrom(context.JsonTypeInfo.Type) && schema.Properties is not null)
+                {
+                    schema.Properties["pageSize"] = CreatePageSizeSchema();
+                }
+
+                if (context.JsonTypeInfo.Type == typeof(ProblemDetails))
+                {
+                    DescribeProblemExtensions(schema);
+                }
+
+                return Task.CompletedTask;
+            });
+
+            options.AddOperationTransformer((operation, _, _) =>
             {
-                DescribeProblemExtensions(schema);
-            }
+                if (operation.Parameters is not null)
+                {
+                    foreach (var parameter in operation.Parameters.OfType<OpenApiParameter>()
+                        .Where(parameter => parameter.In == ParameterLocation.Query &&
+                            string.Equals(parameter.Name, "pageSize", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        parameter.Schema = CreatePageSizeSchema();
+                    }
+                }
 
-            return Task.CompletedTask;
-        }));
+                return Task.CompletedTask;
+            });
+
+            options.AddDocumentTransformer((document, _, _) =>
+            {
+                document.Components ??= new OpenApiComponents();
+                document.Components.Schemas ??= new Dictionary<string, IOpenApiSchema>(StringComparer.Ordinal);
+                document.Components.Schemas["PagedRequest"] = new OpenApiSchema
+                {
+                    Type = JsonSchemaType.Object,
+                    Properties = new Dictionary<string, IOpenApiSchema>(StringComparer.Ordinal)
+                    {
+                        ["page"] = new OpenApiSchema { Type = JsonSchemaType.Integer, Format = "int32" },
+                        ["pageSize"] = CreatePageSizeSchema(),
+                        ["sort"] = new OpenApiSchema { Type = JsonSchemaType.String | JsonSchemaType.Null },
+                        ["search"] = new OpenApiSchema { Type = JsonSchemaType.String | JsonSchemaType.Null },
+                    },
+                };
+
+                return Task.CompletedTask;
+            });
+        });
         services.Configure<MvcOptions>(options => options.Conventions.Add(new ProblemResponsesConvention()));
         return services;
     }
+
+    private static OpenApiSchema CreatePageSizeSchema() => new()
+    {
+        Type = JsonSchemaType.Integer,
+        Format = "int32",
+        Enum = PagedRequest.AllowedPageSizes.Select(size => (JsonNode)JsonValue.Create(size)!).ToList(),
+    };
 
     private static bool IsNullable(JsonPropertyInfo? property) =>
         property?.AttributeProvider is PropertyInfo source

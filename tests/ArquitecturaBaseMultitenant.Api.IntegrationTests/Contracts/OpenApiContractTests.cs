@@ -35,6 +35,11 @@ public sealed class OpenApiContractTests(ApiFactory factory)
             Assert.True(JsonNode.DeepEquals(versionedPaths[path.Key], path.Value), $"Stale OpenAPI path {path.Key}.");
         }
 
+        Assert.True(JsonNode.DeepEquals(
+            versioned["components"]?["schemas"]?["PagedRequest"],
+            runtime["components"]?["schemas"]?["PagedRequest"]),
+            "Stale OpenAPI PagedRequest schema.");
+
         Assert.DoesNotContain(versionedPaths, path => path.Key.StartsWith("/test/", StringComparison.Ordinal));
     }
 
