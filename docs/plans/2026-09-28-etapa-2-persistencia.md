@@ -215,7 +215,7 @@
 
 ### Tarea 24. Cursor estable para listados cambiantes
 
-**Archivos:** crear `src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Extensions/{CursorCodec,InvalidCursorException}.cs`; ampliar `QueryableExtensions.cs` y `Api/ErrorHandling/GlobalExceptionHandler.cs`; crear `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Persistence/CursorPaginationTests.cs` y `ErrorHandling/CursorErrorMappingTests.cs`.
+**Archivos:** crear `src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Extensions/CursorCodec.cs` y `src/ArquitecturaBaseMultitenant.Application/Common/Exceptions/InvalidCursorException.cs`; ampliar `QueryableExtensions.cs` y `Api/ErrorHandling/GlobalExceptionHandler.cs`; crear `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Persistence/CursorPaginationTests.cs` y `ErrorHandling/CursorErrorMappingTests.cs`. La excepción cruza al borde HTTP por Application, sin una referencia Api → Infrastructure.
 
 **Respaldo:** plan maestro E2.9; `backend.md` §9 «Paginado, orden y búsqueda»; `arbol.md` CursorCodec; ficha `paginado-y-busqueda.md`.
 
@@ -223,7 +223,7 @@
 
 ### Tarea 25. Reserva, replay y limpieza de idempotencia
 
-**Archivos:** crear `src/ArquitecturaBaseMultitenant.Infrastructure/Idempotency/{IdempotencyStore,IdempotencyCleanupWorker}.cs`, `src/ArquitecturaBaseMultitenant.Api/Idempotency/IdempotencyFilter.cs`; modificar DI, atributo E1 y registro de filtro; crear `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Api/IdempotencyTests.cs`; punteros de `Idempotency` en Api e Infrastructure.
+**Archivos:** crear `src/ArquitecturaBaseMultitenant.Application/Interfaces/Persistence/IIdempotencyStore.cs` (puerto y resultado de reserva), `src/ArquitecturaBaseMultitenant.Infrastructure/Idempotency/{IdempotencyStore,IdempotencyCleanupWorker}.cs`, `src/ArquitecturaBaseMultitenant.Api/Idempotency/IdempotencyFilter.cs`; modificar DI, atributo E1 y registro de filtro; crear `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Api/IdempotencyTests.cs`; punteros de `Idempotency` en Api e Infrastructure. El filtro depende del puerto de Application; la implementación conserva la transacción independiente que exige la ficha.
 
 **Respaldo:** plan maestro E2.14; `backend.md` §20; `arbol.md` P6; ficha `idempotencia.md`.
 
@@ -251,7 +251,7 @@
 
 **Respaldo:** plan maestro E2.10; `arbol.md` ArchitectureTests; `rules/tests.md`, `guardado.md`, `multitenancy.md`, `persistencia-ef.md`.
 
-**TDD:** solo servicios públicos de Application reciben UoW; cada entidad tiene una configuración; ninguna entidad queda sin clase o excepción explícita; `ITenantScope` y `IgnoreQueryFilters` solo se usan en listas blancas. Los tests fallan ante una violación deliberada en fixture/IL. **Commit:** `test: cerrar guardas de arquitectura de persistencia`.
+**TDD:** solo servicios públicos de Application y el seed nominal reciben UoW; únicamente UnitOfWork llama SaveChanges, mientras IdempotencyStore puede abrir la transacción propia documentada. Cada entidad tiene configuración, clase de datos o excepción explícita; `ITenantScope` y `IgnoreQueryFilters` solo se usan en listas blancas. Solo HybridCacheExtensions llena HybridCache con scope propio. Los tests fallan ante una violación deliberada en fixture/IL. El rojo de `LayerDependencyTests` obliga a ubicar la excepción de cursor y el puerto de idempotencia en Application, preservando Api → Application. **Commit:** `test: cerrar guardas de arquitectura de persistencia`.
 
 ### Tarea 29. Cierre del arnés E2
 

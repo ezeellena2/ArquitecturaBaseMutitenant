@@ -2,9 +2,9 @@ using System.Security.Cryptography;
 using System.Text;
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Results;
-using ArquitecturaBaseMultitenant.Infrastructure.Idempotency;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
@@ -12,7 +12,7 @@ namespace ArquitecturaBaseMultitenant.Api.Idempotency;
 
 /// <summary>Reserva antes del model binding y guarda el resultado solo cuando la acción terminó.</summary>
 public sealed class IdempotencyFilter(
-    IdempotencyStore store,
+    IIdempotencyStore store,
     ICurrentUser currentUser,
     ITenantContext tenantContext) : IAsyncResourceFilter
 {

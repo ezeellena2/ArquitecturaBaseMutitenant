@@ -1,23 +1,10 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using Npgsql;
 using NpgsqlTypes;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Idempotency;
 
-public enum IdempotencyReservationState
-{
-    Reserved,
-    InProgress,
-    Reused,
-    Replay,
-}
-
-public sealed record IdempotencyReservation(
-    Guid Id,
-    IdempotencyReservationState State,
-    int? ResponseStatusCode = null,
-    string? ResponseBody = null);
-
-public sealed class IdempotencyStore
+public sealed class IdempotencyStore : IIdempotencyStore
 {
     private static readonly TimeSpan Validity = TimeSpan.FromHours(24);
     private readonly string _connectionString;

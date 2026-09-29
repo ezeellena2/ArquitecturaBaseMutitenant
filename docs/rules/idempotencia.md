@@ -3,7 +3,7 @@
 **Regla:** todo `POST` que **crea** algo o **dispara** un envío (alta, invitación, reenvío, crear organización) lleva `[Idempotent]`. El front manda `Idempotency-Key`, **generada al abrir el formulario** y repetida en cada reintento.
 
 ## Cómo se hace
-- **Back:** `[Idempotent]` en la acción. `IdempotencyFilter` hace el resto:
+- **Back:** `[Idempotent]` en la acción. `IdempotencyFilter` depende de `IIdempotencyStore` en Application; Infrastructure implementa la reserva. El filtro hace el resto:
   1. **Reserva** `(TenantId?, UserId, Key)` en `platform.IdempotencyKeys` (índice único) **en su propia transacción**, junto con el hash del cuerpo y la ruta.
   2. **Clave nueva:** ejecuta la acción. Si la respuesta es 2xx o 4xx, **después del commit del caso de uso** guarda status + cuerpo en la misma fila. Si es 5xx, libera la reserva para permitir el reintento.
   3. **Clave terminada:** devuelve la respuesta guardada, con el encabezado `Idempotent-Replayed: true`, sin ejecutar nada.

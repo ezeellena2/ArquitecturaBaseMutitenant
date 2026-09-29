@@ -231,7 +231,8 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── CultureProfiles.cs                        [E1] adapta patrones de ICultureCatalog (JSON E1, tabla E2), sin lista fija
 │   │   └── SupportedCultures.cs                      [E1] lee ICultureCatalog; es-AR y en-US habilitadas inicialmente
 │   └── Exceptions/                                    [E2]
-│       └── UniqueConstraintViolationException.cs     [E2] con UnitOfWork
+│       ├── UniqueConstraintViolationException.cs     [E2] con UnitOfWork
+│       └── InvalidCursorException.cs                  [E2] Api la traduce sin depender de Infrastructure
 ├── Configuration/                                    [E3]
 │   ├── Auth/                                         [E3]
 │   │   ├── LoginCodeOptions.cs
@@ -274,6 +275,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── CommitPolicyExtensions.cs                 [E2]
 │   │   ├── ITenantScope.cs                           [E2] Enter(tenantId)
 │   │   ├── IAuditLog.cs                              [E2] eventos explícitos de auditoría
+│   │   ├── IIdempotencyStore.cs                      [E2] reserva técnica y respuesta; Api depende del puerto
 │   │   ├── ITenantRepository.cs                      [E3]
 │   │   ├── ITenantReader.cs                          [E3] desde acá TenantJobRunner recorre las organizaciones activas
 │   │   ├── IMemberRepository.cs                      [E3]
@@ -641,7 +643,6 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   ├── QueryableExtensions.cs                     [E1–E2] ApplySort, ApplySearch, ToPagedResultAsync, ToCursorResultAsync
 │   │   ├── SortMap.cs                                 [E1] campo del contrato → expresión; cada reader declara el suyo
 │   │   ├── CursorCodec.cs                             [E2] (campo de orden, Id) ↔ base64url
-│   │   ├── InvalidCursorException.cs                  [E2] cursor inválido → Validation.Failed / after
 │   │   ├── SearchFunctions.cs                         [E2] f_unaccent para EF (búsqueda sin acentos ni mayúsculas)
 │   │   ├── AdvisoryLockExtensions.cs                  [E2]
 │   │   ├── AdvisoryLockKeys.cs                        [E2] siempre con tenant
@@ -1162,8 +1163,7 @@ tests/
 └── ArquitecturaBaseMultitenant.ArchitectureTests/     [E0]
     ├── ArquitecturaBaseMultitenant.ArchitectureTests.csproj
     ├── SolutionRoot.cs
-    ├── Support/
-    │   └── CallSites.cs                               lectura de IL con Mono.Cecil
+    ├── TransactionBoundaryTests.cs                    [E2] incluye ArchitectureIl para lectura de IL con Mono.Cecil
     ├── HarnessStage.cs                               [E0] única constante de la última etapa cerrada
     ├── HarnessTests.cs                                [E0] punteros por carpeta, enlaces vivos y fichas completas; exige tests al cerrar su etapa según HarnessStage
     ├── LayerDependencyTests.cs                        [E0]
@@ -1177,7 +1177,6 @@ tests/
     ├── ControllerServiceRepositoryTests.cs            [E1] los controllers solo inyectan I*Service
     ├── ApplicationServicesTests.cs                    [E1] cada *Service implementa su interfaz
     ├── ServiceDependencyCountTests.cs                 [E1] ≤ 8 dependencias
-    ├── TransactionBoundaryTests.cs                    [E2] solo los servicios reciben IUnitOfWork; nadie más guarda
     ├── EntityConfigurationTests.cs                    [E2] una configuración por entidad
     ├── DataClassificationTests.cs                     [E2] toda entidad es ITenantOwned, IPublishedByBusiness o IConsumerBusinessShared, o está en la lista de
     │                                                  plataforma o identidad

@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Npgsql;
@@ -6,7 +7,7 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Idempotency;
 
 /// <summary>Retira reservas vencidas; una falla temporal no detiene las demás rutas de la Api.</summary>
 public sealed partial class IdempotencyCleanupWorker(
-    IdempotencyStore store,
+    IIdempotencyStore store,
     TimeProvider timeProvider,
     ILogger<IdempotencyCleanupWorker> logger) : BackgroundService
 {
