@@ -13,6 +13,7 @@ using ArquitecturaBaseMultitenant.Infrastructure.Time;
 using ArquitecturaBaseMultitenant.Infrastructure.Phones;
 using ArquitecturaBaseMultitenant.Infrastructure.Security;
 using ArquitecturaBaseMultitenant.Infrastructure.Messaging;
+using ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity.OpenIddict;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using Microsoft.Extensions.Configuration;
@@ -57,6 +58,7 @@ public static class DependencyInjection
             services.AddOpenIddictServer(configuration, environment);
         }
         services.AddMessaging(configuration, environment);
+        services.AddEmail(configuration, environment);
         services.AddBackgroundJobs();
 
         // El exportador construye el host sin PostgreSQL; solo allí usa el JSON que alimenta el seed.
