@@ -145,7 +145,8 @@ public sealed class ProfileServiceTests
     }
 
     private static UserAccountRow Account(Guid id) => new(id, "Ana", "es-AR",
-        "America/Argentina/Buenos_Aires", UserStatus.Active, false, "ana@example.test", null);
+        "America/Argentina/Buenos_Aires", UserStatus.Active, false,
+        Email.Create("ana@example.test").Value, null);
 
     private sealed class StubCurrentUser(Guid userId, Access access) : ICurrentUser
     {
