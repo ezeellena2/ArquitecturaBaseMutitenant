@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Services.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Services.Messaging;
+using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,6 +17,10 @@ public static class DependencyInjection
 
         services.AddScoped<IReferenceDataService, ReferenceDataService>();
         services.AddScoped<IOutboxDispatchService, OutboxDispatchService>();
+        services.AddScoped<ILoginCodeService, LoginCodeService>();
+        services.AddScoped<LoginCodeIssuer>();
+        services.AddScoped<LoginCodeVerifier>();
+        services.AddScoped<UserCultures>();
         services.AddScoped<DisplayFormatter>();
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
         services.AddScoped<IRequestValidator, RequestValidator>();

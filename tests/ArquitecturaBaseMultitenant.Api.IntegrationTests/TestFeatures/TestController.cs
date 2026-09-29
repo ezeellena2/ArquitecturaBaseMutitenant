@@ -3,6 +3,8 @@ using ArquitecturaBaseMultitenant.Api.Json;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -82,7 +84,22 @@ public sealed class TestController : ControllerBase
         ArgumentNullException.ThrowIfNull(HttpContext);
         throw new InvalidOperationException("PRIVATE_TEST_EXCEPTION");
     }
+
+    [HttpPost("auth/request-code")]
+    public async Task<IActionResult> RequestCode([FromBody] TestRequestCode body,
+        [FromServices] ILoginCodeService loginCodes, CancellationToken cancellationToken) =>
+        (await loginCodes.RequestLoginCodeAsync(new RequestLoginCodeRequest(Email.Create(body.Email).Value),
+            cancellationToken)).ToActionResult(this);
+
+    [HttpPost("auth/verify-code")]
+    public async Task<IActionResult> VerifyCode([FromBody] TestVerifyCode body,
+        [FromServices] ILoginCodeService loginCodes, CancellationToken cancellationToken) =>
+        (await loginCodes.VerifyLoginCodeAsync(new VerifyLoginCodeRequest(Email.Create(body.Email).Value,
+            body.Code, body.ReturnUrl), cancellationToken)).ToActionResult(this);
 }
+
+public sealed record TestRequestCode(string Email);
+public sealed record TestVerifyCode(string Email, string Code, string ReturnUrl);
 
 public sealed record TestBodyHttpRequest(string? Value);
 

@@ -61,6 +61,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("ConnectionStrings:appdb-admin", AdminConnectionString);
         builder.UseSetting("ConnectionStrings:appdb", RuntimeConnectionString);
         builder.UseSetting("Authentication:Issuer", "https://localhost:5174/");
+        builder.UseSetting("Authentication:LoginCode:HashKey",
+            Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)));
         builder.UseSetting("Authentication:Clients:Web:RedirectUris:0", "https://localhost:5174/callback");
         builder.UseSetting("Authentication:Clients:Web:PostLogoutRedirectUris:0", "https://localhost:5174/");
         builder.ConfigureLogging(logging => logging.ClearProviders().AddConsole());
