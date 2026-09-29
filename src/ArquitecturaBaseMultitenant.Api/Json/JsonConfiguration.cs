@@ -14,7 +14,7 @@ public static class JsonConfiguration
         options.Converters.Add(new DateOnlyConverter());
         options.Converters.Add(new TimeOnlyConverter());
         options.Converters.Add(new MoneyJsonConverter());
-        options.Converters.Add(new JsonStringEnumConverter());
+        options.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false));
         options.NumberHandling = JsonNumberHandling.Strict;
 
         var resolver = new DefaultJsonTypeInfoResolver();

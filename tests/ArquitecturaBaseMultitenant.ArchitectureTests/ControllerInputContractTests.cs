@@ -13,7 +13,7 @@ public sealed class ControllerInputContractTests
     // Los valores sueltos que MVC arma desde un texto: un id, un número de página, un filtro o un enum.
     private static readonly Type[] SimpleValueTypes =
     [
-        typeof(string), typeof(decimal), typeof(Guid), typeof(DateTime), typeof(DateTimeOffset), typeof(DateOnly),
+        typeof(string), typeof(decimal), typeof(Guid), typeof(DateTime), typeof(DateOnly),
         typeof(TimeOnly), typeof(TimeSpan),
     ];
 
@@ -61,11 +61,56 @@ public sealed class ControllerInputContractTests
     [InlineData(typeof(int?), true)]
     [InlineData(typeof(bool?), true)]
     [InlineData(typeof(Guid), true)]
+    [InlineData(typeof(DateTimeOffset), false)]
+    [InlineData(typeof(DateTimeOffset?), false)]
     [InlineData(typeof(CancellationToken), true)]
     [InlineData(typeof(ProbeInputModel), false)]
     [InlineData(typeof(Dictionary<string, string>), false)]
     public void Only_contracts_and_simple_values_are_allowed_as_input(Type type, bool expected) =>
         Assert.Equal(expected, IsAllowedInput(type));
+
+    [Fact]
+    public void Http_contracts_and_controller_parameters_do_not_use_DateTimeOffset()
+    {
+        var types = ApiAssembly.GetTypes();
+        var offenders = types
+            .Where(type => IsInNamespace(type, ContractsNamespace))
+            .SelectMany(OffsetPropertyViolations)
+            .Concat(types.Where(IsController).SelectMany(OffsetParameterViolations))
+            .ToArray();
+
+        Assert.True(offenders.Length == 0,
+            "Use DateTime with an Utc suffix for instants or DateOnly/TimeOnly for civil values: "
+            + string.Join(", ", offenders));
+    }
+
+    [Fact]
+    public void Offset_guard_detects_nullable_and_nested_contract_members_and_action_parameters()
+    {
+        Assert.Equal(
+            ["ProbeOffsetHttpRequest.At", "ProbeOffsetHttpRequest.History"],
+            OffsetPropertyViolations(typeof(ProbeOffsetHttpRequest)).ToArray());
+        Assert.Equal(
+            ["ProbeOffsetController.Read(at)"],
+            OffsetParameterViolations(typeof(ProbeOffsetController)).ToArray());
+    }
+
+    private static IEnumerable<string> OffsetPropertyViolations(Type type) =>
+        type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(property => ContainsDateTimeOffset(property.PropertyType))
+            .Select(property => $"{type.Name}.{property.Name}");
+
+    private static IEnumerable<string> OffsetParameterViolations(Type controller) =>
+        controller.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+            .Where(method => !method.IsSpecialName && !method.IsDefined(typeof(NonActionAttribute), inherit: true))
+            .SelectMany(method => method.GetParameters()
+                .Where(parameter => ContainsDateTimeOffset(parameter.ParameterType))
+                .Select(parameter => $"{controller.Name}.{method.Name}({parameter.Name})"));
+
+    private static bool ContainsDateTimeOffset(Type type) =>
+        type == typeof(DateTimeOffset)
+        || (type.HasElementType && type.GetElementType() is { } elementType && ContainsDateTimeOffset(elementType))
+        || type.GetGenericArguments().Any(ContainsDateTimeOffset);
 
     private static bool IsController(Type type) =>
         type is { IsClass: true, IsAbstract: false } && typeof(ControllerBase).IsAssignableFrom(type);
@@ -124,6 +169,14 @@ public sealed class ControllerInputContractTests
     private sealed record ActionInput(string Action, ParameterInfo Parameter, BindingSource Source);
 
     private sealed record ProbeInputModel(string Value);
+
+    private sealed record ProbeOffsetHttpRequest(DateTimeOffset? At, IReadOnlyList<DateTimeOffset> History);
+
+    private sealed class ProbeOffsetController : ControllerBase
+    {
+        [HttpGet("probe-offset/{at}")]
+        public OkResult Read([FromRoute] DateTimeOffset at) => Ok();
+    }
 
     [ApiController]
     [Route("probe")]

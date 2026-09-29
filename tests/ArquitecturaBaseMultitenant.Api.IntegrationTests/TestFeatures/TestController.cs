@@ -58,6 +58,9 @@ public sealed class TestController : ControllerBase
     [HttpPost("civil-time")]
     public ActionResult<TestCivilTimeHttpRequest> CivilTime([FromBody] TestCivilTimeHttpRequest request) => Ok(request);
 
+    [HttpPost("enum")]
+    public ActionResult<TestEnumHttpRequest> Enum([FromBody] TestEnumHttpRequest request) => Ok(request);
+
     [HttpPost("money")]
     public ActionResult<Money> Money([FromBody] Money money) => Ok(money);
 
@@ -78,6 +81,14 @@ public sealed record TestBodyHttpRequest(string? Value);
 public sealed record TestDatesHttpRequest(DateTime OccurredAtUtc, DateTime? ExpiresAtUtc);
 
 public sealed record TestCivilTimeHttpRequest(DateOnly Date, TimeOnly Time);
+
+public sealed record TestEnumHttpRequest(TestStatus Status);
+
+public enum TestStatus
+{
+    Pending,
+    Ready,
+}
 
 public sealed record TestNormalizedInputHttpRequest
 {
