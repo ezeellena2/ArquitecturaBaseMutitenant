@@ -2,6 +2,7 @@ using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Auditing;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Interceptors;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories;
@@ -145,6 +146,26 @@ public sealed class AuditTrailTests
     }
 
     [Fact]
+    public void Global_settings_require_a_security_event_with_reason_in_the_same_transaction()
+    {
+        using var context = CreateApplicationContext();
+        context.Add(PlatformSettings.Create(ConsumerSignupMode.Open,
+            BusinessSignupMode.RequiresApproval, 1));
+        var trail = new AuditTrailInterceptor(new TestCurrentUser(), new TestTenantContext(null),
+            new FakeTimeProvider(Instant));
+
+        Assert.Throws<InvalidOperationException>(() => trail.PrepareAuditEntries(context));
+
+        context.Add(SecurityEvent.ForPlatformSettings(AuditActorKind.System, Guid.Empty,
+            "Initial platform settings", Instant.UtcDateTime));
+        var counterparts = trail.PrepareAuditEntries(context);
+
+        Assert.Empty(counterparts);
+        Assert.Empty(context.ChangeTracker.Entries<AuditEntry>());
+        Assert.Single(context.ChangeTracker.Entries<SecurityEvent>());
+    }
+
+    [Fact]
     public void Explicit_audit_event_uses_the_active_tenant_and_platform_actor()
     {
         var tenantId = Guid.NewGuid();
@@ -184,6 +205,12 @@ public sealed class AuditTrailTests
         new DbContextOptionsBuilder<AuditTestDbContext>()
             .UseNpgsql("Host=localhost;Database=audit_model_test")
             .Options);
+
+    private static ApplicationDbContext CreateApplicationContext() => new(
+        new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseNpgsql("Host=localhost;Database=audit_model_test")
+            .Options,
+        new TestTenantContext(null));
 
     private static DbContextEventData Event(DbContext context) =>
         new(null!, (_, _) => string.Empty, context);

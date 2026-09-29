@@ -39,4 +39,37 @@ public sealed class SecurityEvent : Entity
             OccurredAtUtc = occurredAtUtc,
         };
     }
+
+    public static SecurityEvent ForPlatformSettings(AuditActorKind actorKind, Guid actorId,
+        string reason, DateTime occurredAtUtc)
+    {
+        if (actorKind is not (AuditActorKind.System or AuditActorKind.PlatformOperator))
+        {
+            throw new ArgumentOutOfRangeException(nameof(actorKind));
+        }
+
+        if (actorKind == AuditActorKind.PlatformOperator && actorId == Guid.Empty)
+        {
+            throw new ArgumentException("The operator id cannot be empty.", nameof(actorId));
+        }
+
+        if (string.IsNullOrWhiteSpace(reason) || reason.Length > TextLimits.Description)
+        {
+            throw new ArgumentException("A reason is required within the description limit.", nameof(reason));
+        }
+
+        if (occurredAtUtc.Kind != DateTimeKind.Utc)
+        {
+            throw new ArgumentException("The occurrence instant must be UTC.", nameof(occurredAtUtc));
+        }
+
+        return new SecurityEvent
+        {
+            Type = SecurityEventType.PlatformSettingsChanged,
+            ActorKind = actorKind,
+            ActorId = actorId,
+            Reason = reason.Trim(),
+            OccurredAtUtc = occurredAtUtc,
+        };
+    }
 }

@@ -3,6 +3,7 @@ using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Common;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -49,9 +50,11 @@ internal sealed class AuditTrailInterceptor(
     {
         ArgumentNullException.ThrowIfNull(context);
         RejectHistoryMutations(context);
-        var changed = context.ChangeTracker.Entries<IAuditable>()
+        var allChanged = context.ChangeTracker.Entries<IAuditable>()
             .Where(entry => entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
             .ToArray();
+        RequireGlobalSecurityEvents(context, allChanged);
+        var changed = allChanged.Where(entry => entry.Entity is not PlatformSettings).ToArray();
         if (changed.Length == 0)
         {
             return [];
@@ -85,6 +88,24 @@ internal sealed class AuditTrailInterceptor(
         }
 
         return counterparts;
+    }
+
+    private static void RequireGlobalSecurityEvents(DbContext context,
+        IReadOnlyCollection<EntityEntry<IAuditable>> changed)
+    {
+        if (!changed.Any(entry => entry.Entity is PlatformSettings))
+        {
+            return;
+        }
+
+        if (!context.ChangeTracker.Entries<SecurityEvent>().Any(entry =>
+                entry.State == EntityState.Added &&
+                entry.Entity.Type == SecurityEventType.PlatformSettingsChanged &&
+                !string.IsNullOrWhiteSpace(entry.Entity.Reason)))
+        {
+            throw new InvalidOperationException(
+                "Global settings changes require a security event with reason in the same transaction.");
+        }
     }
 
     private static void RejectHistoryMutations(DbContext context)

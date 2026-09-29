@@ -66,6 +66,11 @@ internal static class PersistenceRegistration
         services.AddScoped<ITenantSettingsRepository, TenantSettingsRepository>();
         services.AddScoped<ITenantSettingsReader, TenantSettingsReader>();
         services.AddScoped<TenantSettingsLoader>();
+        services.AddScoped<IPlatformSettingsRepository, PlatformSettingsRepository>();
+        services.AddScoped<IPlatformSettingsReader, PlatformSettingsReader>();
+        services.AddScoped<ISecurityEventRepository, SecurityEventRepository>();
+        services.AddScoped<ILegalRepository, LegalRepository>();
+        services.AddScoped<ILegalReader, LegalReader>();
         services.AddReferenceCatalogs();
 
         return services;

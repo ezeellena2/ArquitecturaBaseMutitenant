@@ -593,12 +593,14 @@ Hay tres niveles, cada uno con su propósito:
 
 1. **Marcas en la fila (`IAuditable`):** `CreatedAtUtc/CreatedBy/ModifiedAtUtc/ModifiedBy`. Las completa `AuditableEntityInterceptor` con `ICurrentUser.UserId` y `TimeProvider`. Nunca se setean a mano.
 2. **Rastro de cambios (`tenant.AuditEntries`, append-only):**
-   - `AuditTrailInterceptor` genera una entrada por cada `IAuditable` agregada, modificada o borrada. Guarda TenantId, `ActorKind` (User, PlatformOperator, System), ActorId, `Action` (Created, Updated, Deleted, Restored), EntityType, EntityId, `Changes` (jsonb con campo → anterior y nuevo) y `OccurredAtUtc`.
+   - `AuditTrailInterceptor` genera una entrada por cada `IAuditable` de tenant agregada, modificada o borrada. Guarda TenantId, `ActorKind` (User, PlatformOperator, System), ActorId, `Action` (Created, Updated, Deleted, Restored), EntityType, EntityId, `Changes` (jsonb con campo → anterior y nuevo) y `OccurredAtUtc`.
    - Se escribe **en la misma transacción** que el cambio.
    - Las propiedades marcadas `[NotAudited]` (tokens, hashes) no se guardan.
    - Para eventos que no son un cambio de entidad (exportaciones, reenvío de invitación), el servicio llama a `IAuditLog.Record(action, entity, id, data)` dentro del límite.
    - RLS y un trigger `prevent_update_delete` hacen la tabla inmutable.
 3. **Seguridad (`platform.SecurityEvents` e `identity.LoginAudits`):** ingresos, intentos fallidos, cambios de rol de plataforma, acciones de operadores sobre una organización o una cuenta (aprobar, suspender, despublicar su página o permitir publicarla, iniciar la baja, resolver una recuperación; siempre con la organización o la cuenta afectada y el motivo), cambios de métodos de ingreso y la baja de una cuenta (`AccountDeletionRequested`, su cancelación y `AccountDeleted`). La leen solo los operadores con `platform.audit.read`.
+
+`PlatformSettings` es global: sus cambios (incluido el seed inicial) requieren un `SecurityEvent` con motivo en la misma transacción, sin `AuditEntry` tenant. `AuditTrailInterceptor` comprueba esa presencia.
 
 La pantalla "Auditoría" de la organización lee `AuditEntries` paginadas y filtradas por entidad, actor y fecha, con los textos traducidos desde `Audit.resx`.
 
