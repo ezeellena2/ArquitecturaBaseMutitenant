@@ -1106,6 +1106,7 @@ tests/
 │   │   ├── OpenApiTests.cs                            [E1] cada operación de /api declara su 2xx con esquema y sus errores ProblemDetails; Swagger solo en Development
 │   │   └── OpenApiContractTests.cs                    [E1] openapi.json al día
 │   ├── Persistence/                                   [E2]
+│   │   ├── WidgetQueryFixture.cs                      [E2] datos Widget y conexión mt_app para búsqueda, orden y cursor
 │   │   ├── DbContextModelTests.cs                     [E2] contexto único, DataProtection en platform e Identity sin tablas
 │   │   ├── ModelFiltersTests.cs                       [E2] filtros con nombre y clasificación de las tres clases
 │   │   ├── ReferenceDataSeederTests.cs                [E2] upsert, segundo arranque, zona compartida y deshabilitación sin borrar
@@ -1114,6 +1115,7 @@ tests/
 │   │   ├── CursorPaginationTests.cs                   sin saltos ni repetidos al insertar mientras se pagina
 │   │   ├── SearchTests.cs                             "perez" encuentra "Pérez"; % y _ se escapan
 │   │   ├── SortIndexTests.cs                          todo campo de un SortMap tiene índice (TenantId, campo, Id)
+│   │   ├── CollationTests.cs                          orden real con ICU es-AR
 │   │   ├── AuditingTests.cs
 │   │   ├── AuditTrailTests.cs
 │   │   ├── SoftDeleteTests.cs

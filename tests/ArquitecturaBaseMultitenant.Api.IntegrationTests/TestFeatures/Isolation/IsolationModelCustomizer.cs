@@ -12,6 +12,7 @@ internal sealed class IsolationModelCustomizer(ModelCustomizerDependencies depen
         var widget = modelBuilder.Entity<Widget>().ToTable("Widgets", Schemas.Tenant);
         widget.HasKey(entity => new { entity.TenantId, entity.Id });
         widget.HasIndex(entity => new { entity.TenantId, entity.Name, entity.Id });
+        widget.HasIndex(entity => new { entity.TenantId, entity.CreatedAtUtc, entity.Id });
 
         var poster = modelBuilder.Entity<Poster>().ToTable("Posters", Schemas.PublicSite);
         poster.HasKey(entity => new { entity.BusinessTenantId, entity.Id });

@@ -49,6 +49,7 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
         builder.Ignore<IdentityPasskeyData>();
 
         builder.HasDefaultSchema(Schemas.Platform);
+        builder.HasDbFunction(() => SearchFunctions.Unaccent(default!));
         builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
         VersionedConvention.Apply(builder);
         builder.ApplyIsolationQueryFilters(this);

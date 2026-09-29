@@ -1,10 +1,17 @@
 using System.Linq.Expressions;
+using System.Reflection;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 
 public static class QueryableExtensions
 {
+    private static readonly MethodInfo LowerMethod = typeof(string).GetMethod(nameof(string.ToLower), Type.EmptyTypes)!;
+    private static readonly MethodInfo UnaccentMethod = typeof(SearchFunctions).GetMethod(nameof(SearchFunctions.Unaccent))!;
+    private static readonly MethodInfo LikeMethod = typeof(DbFunctionsExtensions).GetMethod(nameof(DbFunctionsExtensions.Like),
+        [typeof(DbFunctions), typeof(string), typeof(string), typeof(string)])!;
+
     /// <summary>
     /// Ordena por un campo de la lista blanca (sin distinguir mayúsculas) y siempre desempata en forma
     /// ascendente con <paramref name="tieBreaker"/>, que debe ser una clave única (normalmente el Id):
@@ -34,6 +41,75 @@ public static class QueryableExtensions
         var ordered = effectiveSort.Descending ? query.OrderByDescending(keySelector) : query.OrderBy(keySelector);
 
         return ordered.ThenBy(tieBreaker);
+    }
+
+    public static IQueryable<T> ApplySearch<T>(
+        this IQueryable<T> query,
+        string? search,
+        params Expression<Func<T, string?>>[] searchableFields)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+        ArgumentNullException.ThrowIfNull(searchableFields);
+        if (string.IsNullOrWhiteSpace(search))
+        {
+            return query;
+        }
+
+        if (searchableFields.Length == 0)
+        {
+            throw new ArgumentException("At least one searchable field is required.", nameof(searchableFields));
+        }
+
+        var parameter = Expression.Parameter(typeof(T), "entry");
+        var pattern = Expression.Constant($"%{EscapeLike(search.Trim())}%");
+        var normalizedPattern = Expression.Call(UnaccentMethod, Expression.Call(pattern, LowerMethod));
+        var efFunctions = Expression.Property(null, typeof(EF), nameof(EF.Functions));
+        Expression? predicate = null;
+
+        foreach (var field in searchableFields)
+        {
+            ArgumentNullException.ThrowIfNull(field);
+            var column = new ReplaceParameterVisitor(field.Parameters[0], parameter).Visit(field.Body)!;
+            var normalizedColumn = Expression.Call(UnaccentMethod, Expression.Call(column, LowerMethod));
+            var match = Expression.Call(LikeMethod, efFunctions, normalizedColumn,
+                normalizedPattern, Expression.Constant("\\"));
+            predicate = predicate is null ? match : Expression.OrElse(predicate, match);
+        }
+
+        return query.Where(Expression.Lambda<Func<T, bool>>(predicate!, parameter));
+    }
+
+    public static Task<PagedResult<T>> ToPagedResultAsync<T>(
+        this IQueryable<T> query,
+        PagedRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentOutOfRangeException.ThrowIfLessThan(request.Page, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(request.PageSize, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(request.Page, int.MaxValue / request.PageSize);
+        return CountAndPageAsync(query, request, cancellationToken);
+    }
+
+    private static async Task<PagedResult<T>> CountAndPageAsync<T>(
+        IQueryable<T> query, PagedRequest request, CancellationToken cancellationToken)
+    {
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query.Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize).ToListAsync(cancellationToken);
+        return new PagedResult<T>(items, request.Page, request.PageSize, totalCount);
+    }
+
+    private static string EscapeLike(string value) => value
+        .Replace("\\", "\\\\", StringComparison.Ordinal)
+        .Replace("%", "\\%", StringComparison.Ordinal)
+        .Replace("_", "\\_", StringComparison.Ordinal);
+
+    private sealed class ReplaceParameterVisitor(ParameterExpression from, ParameterExpression to) : ExpressionVisitor
+    {
+        protected override Expression VisitParameter(ParameterExpression node) =>
+            node == from ? to : base.VisitParameter(node);
     }
 
 }

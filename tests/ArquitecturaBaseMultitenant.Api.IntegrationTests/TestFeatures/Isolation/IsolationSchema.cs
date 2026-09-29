@@ -49,6 +49,9 @@ internal static class IsolationSchema
             CONSTRAINT "PK_Widgets" PRIMARY KEY ("TenantId", "Id")
         );
         CREATE INDEX "IX_Widgets_TenantId_Name_Id" ON "{Schemas.Tenant}"."Widgets" ("TenantId", "Name", "Id");
+        CREATE INDEX "IX_Widgets_TenantId_CreatedAtUtc_Id" ON "{Schemas.Tenant}"."Widgets" ("TenantId", "CreatedAtUtc", "Id");
+        CREATE INDEX "IX_Widgets_Name_Search" ON "{Schemas.Tenant}"."Widgets"
+            USING gin (public.f_unaccent(lower("Name")) gin_trgm_ops);
 
         CREATE TABLE "{Schemas.PublicSite}"."Posters" (
             "BusinessTenantId" uuid NOT NULL,

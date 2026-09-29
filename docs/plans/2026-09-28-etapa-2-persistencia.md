@@ -206,7 +206,7 @@
 
 ### Tarea 23. Búsqueda PostgreSQL e índices de orden
 
-**Archivos:** crear `src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Extensions/SearchFunctions.cs`; ampliar `QueryableExtensions.cs`; crear `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Persistence/{SearchTests,PaginationTests,SortIndexTests,CollationTests}.cs`; actualizar migración y guía si el SQL revela una omisión.
+**Archivos:** crear `src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Extensions/SearchFunctions.cs`; ampliar `QueryableExtensions.cs` y registrar la función en `ApplicationDbContext.cs`; crear `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Persistence/{SearchTests,PaginationTests,SortIndexTests,CollationTests,WidgetQueryFixture}.cs`; agregar los índices de prueba en `TestFeatures/Isolation/{IsolationSchema,IsolationModelCustomizer}.cs`; actualizar migración y guía si el SQL revela una omisión.
 
 **Respaldo:** plan maestro E2.9 y E2.12; `backend.md` §9 «Paginado, orden y búsqueda»; `arbol.md` Extensions/tests; fichas `paginado-y-busqueda.md`, `persistencia-ef.md`.
 
