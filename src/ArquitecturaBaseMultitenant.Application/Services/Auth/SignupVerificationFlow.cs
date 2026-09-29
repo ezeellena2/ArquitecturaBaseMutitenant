@@ -1,26 +1,16 @@
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
-/// <summary>Fija el nuevo tenant antes de la única transacción y abre sesión tras el commit.</summary>
+/// <summary>Prepara el espacio y aplica las reglas de verificación dentro del límite del servicio.</summary>
 internal sealed class SignupVerificationFlow(IPersonalSpaceProvisioner personalSpaces,
-    ITenantScope tenantScope, IUnitOfWork unitOfWork, ISignInService signIn,
     SignupVerificationCore core)
 {
-    internal async Task<Result> VerifyAsync(VerifySignupRequest request,
-        CancellationToken cancellationToken)
-    {
-        // La cuenta existente no usa el candidato, pero comparte la política de scope.
-        var draft = await personalSpaces.PrepareAsync(request.Culture, request.TimeZoneId, cancellationToken);
-        using var scope = tenantScope.Enter(draft.Tenant.Id);
-        var verified = await unitOfWork.ExecuteInTransactionAsync(
-            ct => core.VerifyAsync(request, draft, ct), CommitPolicy.OnAnyResult, cancellationToken);
-        if (verified.IsFailure) return verified.Error;
+    internal Task<PersonalSpaceDraft> PrepareAsync(VerifySignupRequest request,
+        CancellationToken cancellationToken) =>
+        personalSpaces.PrepareAsync(request.Culture, request.TimeZoneId, cancellationToken);
 
-        await signIn.SignInAsync(verified.Value, cancellationToken);
-        return Result.Success();
-    }
+    internal Task<Result<Guid>> VerifyAsync(VerifySignupRequest request, PersonalSpaceDraft draft,
+        CancellationToken cancellationToken) => core.VerifyAsync(request, draft, cancellationToken);
 }

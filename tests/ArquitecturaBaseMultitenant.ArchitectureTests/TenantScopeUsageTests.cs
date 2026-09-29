@@ -9,9 +9,13 @@ public sealed class TenantScopeUsageTests
     private const string TenantJobRunner = "ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs.TenantJobRunner";
     private const string TenantSettingsLoader =
         "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers.TenantSettingsLoader";
+    private const string AccountService = "ArquitecturaBaseMultitenant.Application.Services.Auth.AccountService";
+    private const string ConnectService = "ArquitecturaBaseMultitenant.Application.Services.Auth.ConnectService";
+    private const string ExternalLoginService = "ArquitecturaBaseMultitenant.Application.Services.Auth.ExternalLoginService";
+    private const string DatabaseSeeder = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed.DatabaseSeeder";
 
     [Fact]
-    public void Only_declared_infrastructure_adapters_enter_a_technical_tenant_scope()
+    public void Only_declared_adapters_and_signup_services_enter_a_tenant_scope()
     {
         var calls = new[]
         {
@@ -22,6 +26,10 @@ public sealed class TenantScopeUsageTests
 
         Assert.Contains(calls, call => call.Owner == TenantJobRunner);
         Assert.Contains(calls, call => call.Owner == TenantSettingsLoader);
+        Assert.Contains(calls, call => call.Owner == AccountService);
+        Assert.Contains(calls, call => call.Owner == ConnectService);
+        Assert.Contains(calls, call => call.Owner == ExternalLoginService);
+        Assert.Contains(calls, call => call.Owner == DatabaseSeeder);
         Assert.Empty(UnauthorizedCallers(calls));
     }
 
@@ -44,7 +52,8 @@ public sealed class TenantScopeUsageTests
 
     private static string[] UnauthorizedCallers(IEnumerable<ArchitectureIl.Call> calls) =>
         [.. calls.Where(IsEnterCall)
-            .Where(call => call.Owner is not (TenantJobRunner or TenantSettingsLoader))
+            .Where(call => call.Owner is not (TenantJobRunner or TenantSettingsLoader
+                or AccountService or ConnectService or ExternalLoginService or DatabaseSeeder))
             .Select(call => $"{call.Owner}.{call.OwnerMethod}")
             .Distinct(StringComparer.Ordinal)];
 
