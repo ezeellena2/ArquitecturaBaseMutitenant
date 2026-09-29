@@ -11,6 +11,7 @@
 - **Sin dato:** `null`, nunca `0` ni `""`.
 - **Moneda por defecto** de la organización: `TenantSettings.DefaultCurrency`. Sirve solo para precargar un formulario; el dato guardado lleva siempre su moneda.
 - **Mostrar un número** en un correo o WhatsApp: crear una vez `ctx = await DisplayFormatter.CreateAsync(culture, timeZone)` y usar `await FormatMoneyAsync(money, ctx)`, `FormatDecimal(value, digits, ctx)` o `FormatPercent(fraction, ctx)`. Son métodos tipados; el despachador JSON es interno y se usa solo para `format-cases.json`. Los patrones salen de `ICultureCatalog` y `CurrencyTranslations.DisplaySymbol` da el símbolo para esa cultura. El símbolo global de `Currencies` no basta (ARS se muestra `$` en es-AR y `ARS` en en-US).
+- Al mostrar dinero, primero se redondea a los `MinorUnits` de la moneda y luego se decide el signo. Los formatos compactos y de tamaño promueven la unidad si la magnitud presentada llega a 1000 tras redondear.
 
 ## Prohibido
 - `double` o `float` en una entidad o un modelo.

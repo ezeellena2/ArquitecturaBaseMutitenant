@@ -19,6 +19,23 @@ public sealed class DisplayFormatter(
     ITimeZoneService zoneService,
     TimeProvider clock)
 {
+    private static readonly (decimal Divisor, string Unit)[] CompactUnits =
+    [
+        (1m, string.Empty),
+        (1_000m, "Compact.Thousand"),
+        (1_000_000m, "Compact.Million"),
+        (1_000_000_000m, "Compact.Billion"),
+    ];
+
+    private static readonly (decimal Divisor, string Unit)[] FileSizeUnits =
+    [
+        (1m, "FileSize.B"),
+        (1_000m, "FileSize.KB"),
+        (1_000_000m, "FileSize.MB"),
+        (1_000_000_000m, "FileSize.GB"),
+        (1_000_000_000_000m, "FileSize.TB"),
+    ];
+
     public async Task<DisplayFormatContext> CreateAsync(string culture, string timeZone,
         CancellationToken cancellationToken = default)
     {
@@ -72,7 +89,8 @@ public sealed class DisplayFormatter(
         var minorUnits = currency.MinorUnits
             ?? throw new InvalidOperationException("The currency has no numeric minor unit count.");
         var translation = context.Profile.Translate(currency.Translations, item => item.Culture);
-        var number = FormatNumber(Math.Abs(value.Amount), minorUnits, minorUnits, context.Profile);
+        var roundedAmount = Math.Round(value.Amount, minorUnits, MidpointRounding.AwayFromZero);
+        var number = FormatNumber(Math.Abs(roundedAmount), minorUnits, minorUnits, context.Profile);
 
         var pattern = context.Profile.Entry.CurrencyPattern;
         if (pattern.Contains("{symbol}{number}", StringComparison.Ordinal) &&
@@ -83,7 +101,7 @@ public sealed class DisplayFormatter(
 
         var positive = pattern.Replace("{symbol}", translation.DisplaySymbol, StringComparison.Ordinal)
             .Replace("{number}", number, StringComparison.Ordinal);
-        return value.Amount < 0 ? "-" + positive : positive;
+        return roundedAmount < 0 ? "-" + positive : positive;
     }
 
     public async Task<string> FormatPhoneAsync(PhoneNumber value, DisplayFormatContext context,
@@ -194,33 +212,41 @@ public sealed class DisplayFormatter(
     private static string FormatCompact(JsonElement input, CultureProfile profile)
     {
         var value = input.GetDecimal();
-        var magnitude = Math.Abs(value);
-        var (divisor, unit) = magnitude >= 1_000_000_000m
-            ? (1_000_000_000m, "Compact.Billion")
-            : magnitude >= 1_000_000m
-                ? (1_000_000m, "Compact.Million")
-                : magnitude >= 1_000m
-                    ? (1_000m, "Compact.Thousand")
-                    : (1m, string.Empty);
-        return FormatNumber(value / divisor, 0, divisor == 1m ? 0 : 1, profile)
+        var (rounded, unit, digits) = SelectRoundedUnit(value, CompactUnits);
+        return FormatNumber(rounded, 0, digits, profile)
             + (unit.Length == 0 ? string.Empty : FormattingTexts.Get(unit, profile));
     }
 
     private static string FormatFileSize(JsonElement input, CultureProfile profile)
     {
         var bytes = input.GetDecimal();
-        var magnitude = Math.Abs(bytes);
-        var (divisor, unit) = magnitude >= 1_000_000_000_000m
-            ? (1_000_000_000_000m, "FileSize.TB")
-            : magnitude >= 1_000_000_000m
-                ? (1_000_000_000m, "FileSize.GB")
-                : magnitude >= 1_000_000m
-                    ? (1_000_000m, "FileSize.MB")
-                    : magnitude >= 1_000m
-                        ? (1_000m, "FileSize.KB")
-                        : (1m, "FileSize.B");
-        return FormatNumber(bytes / divisor, 0, divisor == 1m ? 0 : 1, profile)
+        var (rounded, unit, digits) = SelectRoundedUnit(bytes, FileSizeUnits);
+        return FormatNumber(rounded, 0, digits, profile)
             + FormattingTexts.Get(unit, profile);
+    }
+
+    private static (decimal Rounded, string Unit, int Digits) SelectRoundedUnit(
+        decimal value, (decimal Divisor, string Unit)[] units)
+    {
+        var magnitude = Math.Abs(value);
+        var index = 0;
+        while (index + 1 < units.Length && magnitude >= units[index + 1].Divisor)
+        {
+            index++;
+        }
+
+        while (true)
+        {
+            var digits = index == 0 ? 0 : 1;
+            var rounded = Math.Round(value / units[index].Divisor, digits, MidpointRounding.AwayFromZero);
+            if (index + 1 < units.Length && Math.Abs(rounded) >= 1_000m)
+            {
+                index++;
+                continue;
+            }
+
+            return (rounded == 0m ? 0m : rounded, units[index].Unit, digits);
+        }
     }
 
     private static string FormatDuration(JsonElement input, CultureProfile profile)

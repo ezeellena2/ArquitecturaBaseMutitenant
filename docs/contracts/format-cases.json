@@ -348,6 +348,22 @@
       "expected": "-ARS 1,234.50"
     },
     {
+      "id": "money-ars-rounds-zero-es-AR",
+      "type": "money",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": { "amount": -0.001, "currency": "ARS" },
+      "expected": "$ 0,00"
+    },
+    {
+      "id": "money-ars-rounds-zero-en-US",
+      "type": "money",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": { "amount": -0.001, "currency": "ARS" },
+      "expected": "ARS 0.00"
+    },
+    {
       "id": "compact-es-AR",
       "type": "compact",
       "culture": "es-AR",
@@ -364,6 +380,22 @@
       "expected": "1.3M"
     },
     {
+      "id": "compact-promotes-es-AR",
+      "type": "compact",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": 999950,
+      "expected": "1 M"
+    },
+    {
+      "id": "compact-promotes-en-US",
+      "type": "compact",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": 999950,
+      "expected": "1M"
+    },
+    {
       "id": "file-size-es-AR",
       "type": "fileSize",
       "culture": "es-AR",
@@ -378,6 +410,22 @@
       "timeZone": "America/Argentina/Buenos_Aires",
       "input": 1500000,
       "expected": "1.5 MB"
+    },
+    {
+      "id": "file-size-promotes-es-AR",
+      "type": "fileSize",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": 999950,
+      "expected": "1 MB"
+    },
+    {
+      "id": "file-size-promotes-en-US",
+      "type": "fileSize",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": 999950,
+      "expected": "1 MB"
     },
     {
       "id": "duration-es-AR",
