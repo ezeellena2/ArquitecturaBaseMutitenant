@@ -74,6 +74,7 @@
   <data name="Request.IdempotencyKeyRequired" xml:space="preserve"><value>Falta la clave para identificar esta solicitud.</value></data>
   <data name="Request.IdempotencyKeyReused" xml:space="preserve"><value>Esta clave ya se usó para otra solicitud.</value></data>
   <data name="Legal.AcceptanceRequired" xml:space="preserve"><value>Aceptá los términos vigentes para continuar.</value></data>
+  <data name="Legal.Document.NotFound" xml:space="preserve"><value>El documento legal no está disponible.</value></data>
   <data name="ReferenceData.Currency.Invalid" xml:space="preserve"><value>Ingresá un código de moneda válido.</value></data>
   <data name="ReferenceData.Culture.Invalid" xml:space="preserve"><value>Ingresá una cultura válida.</value></data>
   <data name="Tenancy.Tenant.Suspended" xml:space="preserve"><value>La organización está suspendida.</value></data>

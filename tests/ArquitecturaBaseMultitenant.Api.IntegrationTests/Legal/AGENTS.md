@@ -1,0 +1,1 @@
+Pruebas de documentos legales, aceptaciones y baja de cuenta. Leé `docs/rules/datos-personales.md` y `docs/rules/tests.md`; verificá el guardado en la misma transacción que el alta y las versiones publicadas.
