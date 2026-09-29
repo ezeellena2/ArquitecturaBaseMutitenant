@@ -14,6 +14,7 @@
 - **Dato compartido:** `IConsumerBusinessShared` (`ConsumerTenantId` = espacio personal, `BusinessTenantId` = organización), esquema `engagement`, `EnablePartiesRls`.
   - Guarda una **copia** de lo que la otra parte necesita ver.
   - Cada cambio de estado pasa por `PartyPolicy.Require(entity, Party.Consumer|Party.Business)`.
+- **Trigger de columnas tenant:** `prevent_tenant_change` recibe los nombres como literales sin comillas dobles dentro (`'TenantId'`, no `'"TenantId"'`). Al corregir un helper de RLS, agregá una migración que recree los triggers ya instalados; cambiar solo el helper no actualiza bases migradas.
 - **El host del subdominio nunca da acceso a datos privados:** solo `IPublicSiteContext`, para lo público.
 - **Plataforma, workers y altas:** `using (tenantScope.Enter(tenantId)) { … }` después de autorizar, y antes de abrir el límite. En plataforma, además, con motivo obligatorio y el `SecurityEvent` registrado antes de `Enter` (`PlatformActionGuard`).
 - **Una persona (B2C) nunca crea una organización:** el alta es "Registrá tu empresa" (`BusinessSignupService`).

@@ -79,7 +79,7 @@ public static class RlsSql
 
     private static string PreventTenantChange(string schema, string table, params string[] columns)
     {
-        var arguments = string.Join(", ", columns.Select(column => $"'{Identifier(column)}'"));
+        var arguments = string.Join(", ", columns.Select(TriggerArgument));
         return $"""
             CREATE TRIGGER prevent_tenant_change BEFORE UPDATE ON {Table(schema, table)}
             FOR EACH ROW EXECUTE FUNCTION "platform"."prevent_tenant_change"({arguments});
@@ -87,6 +87,12 @@ public static class RlsSql
     }
 
     private static string Table(string schema, string table) => $"{Identifier(schema)}.{Identifier(table)}";
+
+    private static string TriggerArgument(string column)
+    {
+        _ = Identifier(column);
+        return $"'{column}'";
+    }
 
     private static string Identifier(string value)
     {

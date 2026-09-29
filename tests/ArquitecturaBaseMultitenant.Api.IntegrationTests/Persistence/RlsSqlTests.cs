@@ -16,6 +16,7 @@ public sealed class RlsSqlTests
         Assert.Contains("WITH CHECK", sql, StringComparison.Ordinal);
         Assert.Contains("prevent_tenant_change", sql, StringComparison.Ordinal);
         Assert.Contains("\"TenantId\"", sql, StringComparison.Ordinal);
+        Assert.Contains("\"prevent_tenant_change\"('TenantId')", sql, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -31,6 +32,7 @@ public sealed class RlsSqlTests
         Assert.Contains("WITH CHECK", sql, StringComparison.Ordinal);
         Assert.DoesNotContain("FOR ALL", sql, StringComparison.Ordinal);
         Assert.Contains("prevent_tenant_change", sql, StringComparison.Ordinal);
+        Assert.Contains("\"prevent_tenant_change\"('BusinessTenantId')", sql, StringComparison.Ordinal);
 
         var updatePolicy = sql.Split("CREATE POLICY public_update", StringSplitOptions.None)[1].Split(';')[0];
         var deletePolicy = sql.Split("CREATE POLICY public_delete", StringSplitOptions.None)[1].Split(';')[0];
@@ -48,6 +50,7 @@ public sealed class RlsSqlTests
         Assert.Contains(" WITH CHECK ", sql, StringComparison.Ordinal);
         Assert.Contains("FORCE ROW LEVEL SECURITY", sql, StringComparison.Ordinal);
         Assert.Contains("prevent_tenant_change", sql, StringComparison.Ordinal);
+        Assert.Contains("\"prevent_tenant_change\"('ConsumerTenantId', 'BusinessTenantId')", sql, StringComparison.Ordinal);
     }
 
     [Fact]
