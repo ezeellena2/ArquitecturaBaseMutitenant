@@ -13,6 +13,7 @@ using ArquitecturaBaseMultitenant.Infrastructure.Time;
 using ArquitecturaBaseMultitenant.Infrastructure.Phones;
 using ArquitecturaBaseMultitenant.Infrastructure.Security;
 using ArquitecturaBaseMultitenant.Infrastructure.Messaging;
+using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -48,6 +49,7 @@ public static class DependencyInjection
         services.AddCaching();
 
         services.AddPersistence(configuration);
+        services.AddIdentityServices(configuration);
         services.AddMessaging();
         services.AddBackgroundJobs();
 
