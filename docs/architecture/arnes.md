@@ -116,7 +116,7 @@ La tabla está solo en el [`AGENTS.md` raíz](../../AGENTS.md#antes-de-escribir-
 `HarnessTests`, en `ArchitectureTests`, falla si:
 1. una carpeta del mapa (§3) que ya existe, o una carpeta de un área que ya tiene su `docs/features/<área>.md`, no tiene `AGENTS.md` y `CLAUDE.md`, o su `CLAUDE.md` no es `@AGENTS.md`;
 2. un `AGENTS.md` o una ficha tiene un enlace roto, sea a una ficha, a un archivo "Copiá de" o a una sección (salvo los marcados `(E#)` de una etapa que todavía no cerró);
-3. una ficha no tiene las secciones del formato (§2), o su "Lo verifica" nombra un test que no existe, salvo que lleve `(E#)` de una etapa que todavía no cerró o diga `Pendiente:`;
+3. una ficha no tiene las secciones del formato (§2), o su "Lo verifica" nombra una clase C# `*Tests` sin método `[Fact]`/`[Theory]` o un archivo `.test.mjs`, `.test.ts` o `.test.tsx` que no existe, salvo que lleve `(E#)` de una etapa que todavía no cerró o diga `Pendiente:`; revisa el repo hermano cuando está presente;
 4. el `AGENTS.md` raíz pasa las 120 líneas, o un puntero pasa las 8.
 
 La última etapa cerrada vive en una sola constante del arnés, `HarnessStage`, que usa `HarnessTests` y se actualiza en la puerta de cada etapa (plan, puerta 7). Mientras la etapa de un enlace o test no haya cerrado, su ausencia no falla; cuando cierra, sí.

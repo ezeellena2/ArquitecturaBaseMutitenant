@@ -26,7 +26,7 @@
 - `Application.UnitTests/Services/Roles/RoleServiceWriteTests.cs` y `Api.IntegrationTests/Organization/RolesTests.cs` (E4)
 
 ## Lo verifica
-- CI (E0): build + test en cada push; chequeo de contratos desde la E1.
+- CI (E0): build + test en cada push; chequeo de contratos desde la E1. `HarnessTests` (E0) exige cada clase C# `*Tests` con un método `[Fact]`/`[Theory]` y los archivos `.test.mjs`/`.test.ts[x]` de «Lo verifica» en la etapa cerrada, también en el front si está el checkout.
 - `ExplicitRouteInventoryTests` (E1): una ruta sin su fila falla.
 
 ## Detalle

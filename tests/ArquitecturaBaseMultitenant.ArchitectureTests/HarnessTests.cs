@@ -6,8 +6,80 @@ namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 public sealed class HarnessTests
 {
     private static readonly string Root = SolutionRoot.FullPath;
-    private static readonly string Rules = Path.Combine(Root, "docs", "rules");
+    private static readonly string FrontRoot = Path.GetFullPath(Path.Combine(Root, "..", "ArquitecturaBaseMutitenantFront"));
     private static readonly string HarnessDocument = Path.Combine(Root, "docs", "architecture", "arnes.md");
+
+    [Fact]
+    public void Test_inventory_discovers_Node_and_TypeScript_in_available_checkouts()
+    {
+        var backend = Path.Combine(Path.GetTempPath(), "harness-back-" + Guid.NewGuid().ToString("N"));
+        var frontend = Path.Combine(Path.GetTempPath(), "harness-front-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(backend, "tests"));
+            Directory.CreateDirectory(Path.Combine(backend, "scripts"));
+            Directory.CreateDirectory(Path.Combine(frontend, "src"));
+            File.WriteAllText(Path.Combine(backend, "scripts", "generator.test.mjs"), "test('works', () => {});");
+            File.WriteAllText(Path.Combine(frontend, "src", "data.test.ts"), "it('works', () => {});");
+            File.WriteAllText(Path.Combine(frontend, "src", "screen.test.tsx"), "it('works', () => {});");
+
+            var names = TestNames(backend, frontend);
+
+            Assert.Contains("generator.test.mjs", names);
+            Assert.Contains("data.test.ts", names);
+            Assert.Contains("screen.test.tsx", names);
+        }
+        finally
+        {
+            if (Directory.Exists(backend)) Directory.Delete(backend, recursive: true);
+            if (Directory.Exists(frontend)) Directory.Delete(frontend, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void CSharp_test_class_without_Fact_or_Theory_is_rejected()
+    {
+        var backend = Path.Combine(Path.GetTempPath(), "harness-csharp-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var tests = Path.Combine(backend, "tests");
+            Directory.CreateDirectory(tests);
+            File.WriteAllText(Path.Combine(tests, "Probe.cs"), """
+                public sealed class EmptyProbeTests
+                {
+                    // [Fact] no es una prueba.
+                    public void Helper() { }
+                }
+                public sealed class ActiveProbeTests
+                {
+                    [Theory]
+                    [InlineData(1)]
+                    public void Works(int value) { }
+                }
+                """);
+
+            var empty = EmptyCSharpTestClasses(backend).ToArray();
+
+            Assert.Contains(empty, value => value.Contains("EmptyProbeTests", StringComparison.Ordinal));
+            Assert.DoesNotContain(empty, value => value.Contains("ActiveProbeTests", StringComparison.Ordinal));
+        }
+        finally
+        {
+            if (Directory.Exists(backend)) Directory.Delete(backend, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Lo_verifica_requires_closed_stage_Node_and_TypeScript_tests()
+    {
+        var line = "- `missing.test.mjs` (E1), `missing.test.ts` (E1), `missing.test.tsx` (E1), `future.test.tsx` (E3).";
+        var failures = MissingVerificationTests(line, 7, "docs/rules/probe.md", new HashSet<string>(StringComparer.Ordinal), closedStage: 2).ToArray();
+
+        Assert.Contains(failures, value => value.Contains("missing.test.mjs", StringComparison.Ordinal));
+        Assert.Contains(failures, value => value.Contains("missing.test.ts", StringComparison.Ordinal));
+        Assert.Contains(failures, value => value.Contains("missing.test.tsx", StringComparison.Ordinal));
+        Assert.DoesNotContain(failures, value => value.Contains("future.test.tsx", StringComparison.Ordinal));
+    }
 
     [Fact]
     public void Persistence_stage_is_closed()
@@ -85,9 +157,13 @@ public sealed class HarnessTests
     public void Closed_stage_verification_tests_and_tools_exist()
     {
         var failures = new List<string>();
-        var testNames = TestClassNames();
+        var frontExists = Directory.Exists(FrontRoot);
+        var testNames = TestNames(Root, frontExists ? FrontRoot : null);
+        failures.AddRange(EmptyCSharpTestClasses(Root));
 
-        foreach (var file in RuleCards())
+        var cards = RuleCards().Select(file => (File: file, Stage: HarnessStage.Closed))
+            .Concat(frontExists ? RuleCards(FrontRoot).Select(file => (File: file, Stage: FrontClosedStage())) : []);
+        foreach (var (file, closedStage) in cards)
         {
             foreach (var (line, number) in SectionLinesWithNumbers(File.ReadAllLines(file), "Lo verifica"))
             {
@@ -96,18 +172,7 @@ public sealed class HarnessTests
                     continue;
                 }
 
-                foreach (Match match in Regex.Matches(line, @"\b[A-Za-z][A-Za-z0-9_]*Tests\b", RegexOptions.CultureInvariant))
-                {
-                    var stage = StageForReference(line, match.Index + match.Length);
-                    if (stage is null)
-                    {
-                        failures.Add($"{Relative(file)}:{number}: {match.Value} no indica (E#).");
-                    }
-                    else if (stage <= HarnessStage.Closed && !testNames.Contains(match.Value))
-                    {
-                        failures.Add($"{Relative(file)}:{number}: falta el test {match.Value} (E{stage}).");
-                    }
-                }
+                failures.AddRange(MissingVerificationTests(line, number, Relative(file), testNames, closedStage));
 
                 if (line.Contains("`BannedSymbols.txt` (E0)", StringComparison.Ordinal)
                     && !File.Exists(Path.Combine(Root, "BannedSymbols.txt")))
@@ -286,7 +351,10 @@ public sealed class HarnessTests
     }
 
     private static IEnumerable<string> RuleCards() =>
-        Directory.EnumerateFiles(Rules, "*.md")
+        RuleCards(Root);
+
+    private static IEnumerable<string> RuleCards(string root) =>
+        Directory.EnumerateFiles(Path.Combine(root, "docs", "rules"), "*.md")
             .Where(file => Path.GetFileName(file) != "README.md");
 
     private static IEnumerable<string> BrokenMarkdownLinks(string file, string[] lines)
@@ -451,12 +519,191 @@ public sealed class HarnessTests
         return known && !Directory.Exists(Path.Combine(Directory.GetParent(Root)!.FullName, sibling));
     }
 
-    private static HashSet<string> TestClassNames() =>
-        Directory.EnumerateFiles(Path.Combine(Root, "tests"), "*.cs", SearchOption.AllDirectories)
-            .Where(file => !file.Split(Path.DirectorySeparatorChar).Any(segment => segment is "bin" or "obj"))
-            .SelectMany(file => Regex.Matches(File.ReadAllText(file), @"\bclass\s+(?<name>[A-Za-z][A-Za-z0-9_]*Tests)\b", RegexOptions.CultureInvariant)
-                .Select(match => match.Groups["name"].Value))
+    private sealed record CSharpTestClass(string Name, string File, bool HasTestMethod);
+
+    private static HashSet<string> TestNames(string backendRoot, string? frontendRoot)
+    {
+        var names = CSharpTestClasses(backendRoot)
+            .Where(testClass => testClass.HasTestMethod)
+            .Select(testClass => testClass.Name)
             .ToHashSet(StringComparer.Ordinal);
+        foreach (var folder in new[] { Path.Combine(backendRoot, "scripts"), Path.Combine(backendRoot, "tests") })
+        {
+            names.UnionWith(WorkFiles(folder).Where(IsScriptTest).Select(Path.GetFileName)!);
+        }
+        if (frontendRoot is not null)
+        {
+            foreach (var folder in new[] { Path.Combine(frontendRoot, "src"), Path.Combine(frontendRoot, "tests"), Path.Combine(frontendRoot, "scripts") })
+            {
+                names.UnionWith(WorkFiles(folder).Where(IsScriptTest).Select(Path.GetFileName)!);
+            }
+        }
+
+        return names;
+    }
+
+    private static bool IsScriptTest(string file) =>
+        file.EndsWith(".test.mjs", StringComparison.Ordinal)
+        || file.EndsWith(".test.ts", StringComparison.Ordinal)
+        || file.EndsWith(".test.tsx", StringComparison.Ordinal);
+
+    private static IEnumerable<string> WorkFiles(string folder)
+    {
+        if (!Directory.Exists(folder)) yield break;
+        var pending = new Stack<string>();
+        pending.Push(folder);
+        while (pending.Count > 0)
+        {
+            var current = pending.Pop();
+            foreach (var file in Directory.EnumerateFiles(current)) yield return file;
+            foreach (var child in Directory.EnumerateDirectories(current).Where(child => !IsBuildDirectory(child))) pending.Push(child);
+        }
+    }
+
+    private static IEnumerable<CSharpTestClass> CSharpTestClasses(string backendRoot)
+    {
+        foreach (var file in WorkFiles(Path.Combine(backendRoot, "tests")).Where(file => file.EndsWith(".cs", StringComparison.Ordinal)))
+        {
+            var code = MaskNonCode(File.ReadAllText(file));
+            foreach (Match match in Regex.Matches(code, @"\bclass\s+(?<name>[A-Za-z][A-Za-z0-9_]*Tests)\b", RegexOptions.CultureInvariant))
+            {
+                var open = code.IndexOf('{', match.Index + match.Length);
+                if (open < 0) continue;
+                var close = ClosingBrace(code, open);
+                if (close < 0) continue;
+                yield return new CSharpTestClass(match.Groups["name"].Value, file, HasTestMethod(code, open, close));
+            }
+        }
+    }
+
+    private static int ClosingBrace(string code, int open)
+    {
+        var depth = 0;
+        for (var index = open; index < code.Length; index++)
+        {
+            if (code[index] == '{') depth++;
+            if (code[index] == '}' && --depth == 0) return index;
+        }
+        return -1;
+    }
+
+    private static bool HasTestMethod(string code, int open, int close)
+    {
+        var body = code[(open + 1)..close];
+        const string pattern = @"(?m)^[ \t]*\[(?:Fact|Theory)(?:Attribute)?(?:\([^\r\n]*\))?\](?:\s*\[[^\]]+\])*\s*(?:(?:public|internal|protected|private|static|async|virtual|override|sealed|new)\s+)*[A-Za-z_][A-Za-z0-9_<>,.?\[\]]*\s+[A-Za-z_][A-Za-z0-9_]*\s*\(";
+        foreach (Match match in Regex.Matches(body, pattern, RegexOptions.CultureInvariant))
+        {
+            var depth = 1;
+            for (var index = open + 1; index < open + 1 + match.Index; index++)
+            {
+                if (code[index] == '{') depth++;
+                if (code[index] == '}') depth--;
+            }
+            if (depth == 1) return true;
+        }
+        return false;
+    }
+
+    private static string MaskNonCode(string source)
+    {
+        var masked = source.ToCharArray();
+        for (var index = 0; index < source.Length;)
+        {
+            var start = index;
+            if (source[index] == '/' && index + 1 < source.Length && source[index + 1] == '/')
+            {
+                index = source.IndexOf('\n', index + 2);
+                if (index < 0) index = source.Length;
+            }
+            else if (source[index] == '/' && index + 1 < source.Length && source[index + 1] == '*')
+            {
+                var end = source.IndexOf("*/", index + 2, StringComparison.Ordinal);
+                index = end < 0 ? source.Length : end + 2;
+            }
+            else if (source[index] == '"')
+            {
+                var quoteCount = 1;
+                while (index + quoteCount < source.Length && source[index + quoteCount] == '"') quoteCount++;
+                if (quoteCount >= 3)
+                {
+                    index += quoteCount;
+                    while (index < source.Length)
+                    {
+                        var run = 0;
+                        while (index + run < source.Length && source[index + run] == '"') run++;
+                        if (run >= quoteCount) { index += run; break; }
+                        index += Math.Max(1, run);
+                    }
+                }
+                else
+                {
+                    var verbatim = start > 0 && source[start - 1] == '@';
+                    index++;
+                    while (index < source.Length)
+                    {
+                        if (!verbatim && source[index] == '\\') { index += Math.Min(2, source.Length - index); continue; }
+                        if (source[index] == '"')
+                        {
+                            if (verbatim && index + 1 < source.Length && source[index + 1] == '"') { index += 2; continue; }
+                            index++;
+                            break;
+                        }
+                        index++;
+                    }
+                }
+            }
+            else if (source[index] == '\'')
+            {
+                index++;
+                while (index < source.Length)
+                {
+                    if (source[index] == '\\') { index += Math.Min(2, source.Length - index); continue; }
+                    if (source[index++] == '\'') break;
+                }
+            }
+            else
+            {
+                index++;
+                continue;
+            }
+
+            for (var cursor = start; cursor < index; cursor++)
+            {
+                if (masked[cursor] is not '\r' and not '\n') masked[cursor] = ' ';
+            }
+        }
+        return new string(masked);
+    }
+
+    private static IEnumerable<string> EmptyCSharpTestClasses(string backendRoot) =>
+        CSharpTestClasses(backendRoot)
+            .Where(testClass => !testClass.HasTestMethod)
+            .Select(testClass => $"{Path.GetRelativePath(backendRoot, testClass.File).Replace('\\', '/')}: {testClass.Name} no tiene [Fact] ni [Theory] en un método.");
+
+    private static IEnumerable<string> MissingVerificationTests(string line, int number, string file, HashSet<string> testNames, int closedStage)
+    {
+        const string pattern = @"\b(?:[A-Za-z][A-Za-z0-9_]*Tests|[A-Za-z][A-Za-z0-9_-]*\.test\.(?:mjs|tsx?))\b";
+        foreach (Match match in Regex.Matches(line, pattern, RegexOptions.CultureInvariant))
+        {
+            var stage = StageForReference(line, match.Index + match.Length);
+            if (stage is null)
+            {
+                yield return $"{file}:{number}: {match.Value} no indica (E#).";
+            }
+            else if (stage <= closedStage && !testNames.Contains(match.Value))
+            {
+                yield return $"{file}:{number}: falta el test {match.Value} (E{stage}).";
+            }
+        }
+    }
+
+    private static int FrontClosedStage()
+    {
+        var path = Path.Combine(FrontRoot, "src", "test", "HarnessStage.ts");
+        var match = Regex.Match(File.ReadAllText(path), @"\bHarnessStage\s*=\s*(?<stage>\d+)", RegexOptions.CultureInvariant);
+        Assert.True(match.Success, $"No se pudo leer HarnessStage en {Relative(path)}.");
+        return int.Parse(match.Groups["stage"].Value, System.Globalization.CultureInfo.InvariantCulture);
+    }
 
     private static int? StageForReference(string line, int end)
     {
