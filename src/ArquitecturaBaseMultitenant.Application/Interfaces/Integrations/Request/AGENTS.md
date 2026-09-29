@@ -2,4 +2,4 @@ Contratos de contexto de la petición disponibles para Application. El tenant ac
 
 Antes de escribir, leé: [multitenancy](../../../../../docs/rules/multitenancy.md) · [capas-y-flujo](../../../../../docs/rules/capas-y-flujo.md).
 
-Copiá de: `ITenantContext.cs`; Infrastructure conserva el contexto scoped y Api resuelve claims en E3.
+Copiá de: `ITenantContext.cs` y `ICurrentUser.cs`; Infrastructure conserva el contexto scoped y Api resuelve claims en E3. En E2, `ICurrentUser` usa un actor System por defecto para auditoría.

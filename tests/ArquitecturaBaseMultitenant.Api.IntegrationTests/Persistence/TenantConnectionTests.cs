@@ -28,6 +28,7 @@ public sealed class TenantConnectionTests(ApiFactory factory)
             })
             .Build();
         await using var services = new ServiceCollection()
+            .AddSingleton(TimeProvider.System)
             .AddPersistence(configuration)
             .BuildServiceProvider();
 

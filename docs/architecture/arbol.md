@@ -302,7 +302,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   └── IAuditEntryReader.cs                     [E6]
 │   └── Integrations/
 │       ├── Request/                                  [E2–E3]
-│       │   ├── ICurrentUser.cs                       [E3] UserId, Access (Consumer | Business | Platform)
+│       │   ├── ICurrentUser.cs                       [E2 shell] UserId, Access (Consumer | Business | Platform); claims reales E3
 │       │   ├── ITenantContext.cs                     [E2] TenantId, TenantKind, RequiredTenantId (del acceso activo)
 │       │   ├── IRequestInfo.cs                       [E3] IP, user agent
 │       │   └── IPublicOrigin.cs                      [E3] origen público para armar enlaces
