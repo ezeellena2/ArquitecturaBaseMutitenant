@@ -18,7 +18,8 @@ internal static class IdentityRegistration
 {
     private const string GoogleSection = "Authentication:Google";
 
-    public static IServiceCollection AddIdentityServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddIdentityServices(this IServiceCollection services, IConfiguration configuration,
+        bool? isOpenApiExporter = null)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
@@ -63,9 +64,18 @@ internal static class IdentityRegistration
         });
         services.Configure<SecurityStampValidatorOptions>(options => options.ValidationInterval = TimeSpan.Zero);
 
-        services.AddDataProtection()
-            .SetApplicationName("ArquitecturaBaseMultitenant")
-            .PersistKeysToDbContext<ApplicationDbContext>();
+        var dataProtection = services.AddDataProtection()
+            .SetApplicationName("ArquitecturaBaseMultitenant");
+        if (isOpenApiExporter ??
+            System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name is "GetDocument.Insider")
+        {
+            // MSBuild construye el host para exportar OpenAPI sin appdb: no necesita claves persistentes.
+            dataProtection.UseEphemeralDataProtectionProvider();
+        }
+        else
+        {
+            dataProtection.PersistKeysToDbContext<ApplicationDbContext>();
+        }
 
         services.AddScoped<ISignInService, SignInService>();
         services.AddScoped<IUserLookup, UserLookup>();

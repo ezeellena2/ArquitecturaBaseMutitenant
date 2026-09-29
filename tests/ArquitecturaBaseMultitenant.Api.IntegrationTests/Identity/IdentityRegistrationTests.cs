@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
@@ -69,6 +70,22 @@ public sealed class IdentityRegistrationTests(ApiFactory factory)
             Assert.NotNull(await configured.GetRequiredService<IAuthenticationSchemeProvider>()
                 .GetSchemeAsync(GoogleDefaults.AuthenticationScheme));
         }
+    }
+
+    [Fact]
+    public async Task OpenApi_exporter_uses_ephemeral_data_protection_without_database()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddDbContext<ApplicationDbContext>();
+        services.AddIdentityServices(new ConfigurationBuilder().Build(), isOpenApiExporter: true);
+        await using var provider = services.BuildServiceProvider();
+
+        var protector = provider.GetRequiredService<IDataProtectionProvider>().CreateProtector("openapi-export");
+        var protectedValue = protector.Protect("schema");
+
+        Assert.Equal("schema", protector.Unprotect(protectedValue));
+        Assert.Null(provider.GetRequiredService<IOptions<KeyManagementOptions>>().Value.XmlRepository);
     }
 
     private static ServiceProvider BuildProvider(IConfiguration configuration)
