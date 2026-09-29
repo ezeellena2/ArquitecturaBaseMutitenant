@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,7 +17,14 @@ internal sealed partial class GlobalExceptionHandler(
     {
         ProblemDetails problem;
 
-        if (exception is BadHttpRequestException badRequest)
+        if (exception is InvalidCursorException)
+        {
+            problem = ProblemDetailsMapper.Create(
+                ErrorType.Validation, ValidationError.ErrorCode, ErrorTexts.Get(ValidationError.ErrorCode));
+            problem.Extensions[ProblemDetailsMapper.ErrorsExtension] =
+                new Dictionary<string, string[]> { ["after"] = [ValidationTexts.CursorInvalid] };
+        }
+        else if (exception is BadHttpRequestException badRequest)
         {
             problem = ProblemDetailsMapper.Create(
                 ErrorType.Validation, ApiErrorCodes.InvalidRequest, ErrorTexts.Get(ApiErrorCodes.InvalidRequest), badRequest.StatusCode);

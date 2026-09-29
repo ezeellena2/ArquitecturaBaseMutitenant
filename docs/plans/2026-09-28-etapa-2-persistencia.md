@@ -214,7 +214,7 @@
 
 ### Tarea 24. Cursor estable para listados cambiantes
 
-**Archivos:** crear `src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Extensions/CursorCodec.cs`; ampliar `QueryableExtensions.cs`; crear `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Persistence/CursorPaginationTests.cs`.
+**Archivos:** crear `src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Extensions/{CursorCodec,InvalidCursorException}.cs`; ampliar `QueryableExtensions.cs` y `Api/ErrorHandling/GlobalExceptionHandler.cs`; crear `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Persistence/CursorPaginationTests.cs` y `ErrorHandling/CursorErrorMappingTests.cs`.
 
 **Respaldo:** plan maestro E2.9; `backend.md` §9 «Paginado, orden y búsqueda»; `arbol.md` CursorCodec; ficha `paginado-y-busqueda.md`.
 

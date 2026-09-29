@@ -641,6 +641,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   ├── QueryableExtensions.cs                     [E1–E2] ApplySort, ApplySearch, ToPagedResultAsync, ToCursorResultAsync
 │   │   ├── SortMap.cs                                 [E1] campo del contrato → expresión; cada reader declara el suyo
 │   │   ├── CursorCodec.cs                             [E2] (campo de orden, Id) ↔ base64url
+│   │   ├── InvalidCursorException.cs                  [E2] cursor inválido → Validation.Failed / after
 │   │   ├── SearchFunctions.cs                         [E2] f_unaccent para EF (búsqueda sin acentos ni mayúsculas)
 │   │   ├── AdvisoryLockExtensions.cs                  [E2]
 │   │   ├── AdvisoryLockKeys.cs                        [E2] siempre con tenant
@@ -1085,6 +1086,7 @@ tests/
 │   │   └── CacheKeyScopeTests.cs
 │   ├── ErrorHandling/                                 [E1]
 │   │   ├── ErrorHandlingTests.cs
+│   │   ├── CursorErrorMappingTests.cs                 [E2] cursor inválido → 400 con errors.after
 │   │   ├── FrameworkErrorsTests.cs
 │   │   └── ValidationProblemTests.cs
 │   ├── Localization/                                  [E1]

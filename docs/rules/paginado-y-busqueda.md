@@ -19,7 +19,7 @@
 - **Búsqueda:** siempre `ApplySearch`. No distingue acentos ni mayúsculas y escapa `%` y `_`. Cada columna buscable lleva un índice GIN trigram sobre `f_unaccent(lower(col))`.
 - **Índices:** cada campo del `SortMap` tiene `(TenantId, campo, Id)`.
 - **Orden de textos:** lo da la collation ICU `es-AR` de la base ([persistencia-ef](persistencia-ef.md)), sin `ToLower` ni `COLLATE` a mano.
-- **Cursor:** `CursorRequest`, `CursorResult<T>` y `ToCursorResultAsync`. Orden fijo, del más nuevo al más viejo; sin total.
+- **Cursor:** `CursorRequest`, `CursorResult<T>` y `ToCursorResultAsync`. Orden fijo por instante UTC e Id, del más nuevo al más viejo; sin total. `CursorCodec` codifica ambos en base64url; un cursor inválido devuelve 400 `Validation.Failed` con `errors.after`.
 - **Contrato HTTP:** `XQuery` con `page`, `pageSize`, `sort`, `search` y los filtros, mapeado a mano.
 
 ## Prohibido
