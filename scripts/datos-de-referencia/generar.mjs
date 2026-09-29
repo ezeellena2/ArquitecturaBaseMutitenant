@@ -290,7 +290,7 @@ function validatedCultureSource(document, countrySet, displayCultures, defaultCu
       `Cultura ${row.Code} tiene código o FK de país inválidos.`);
     assert(!codes.has(row.Code), `Cultura duplicada: ${row.Code}`);
     codes.add(row.Code);
-    for (const key of ['DatePattern', 'TimePattern', 'DateTimePattern', 'LongDatePattern', 'DecimalSeparator', 'GroupSeparator', 'CurrencyPattern', 'PercentPattern']) {
+    for (const key of ['DatePattern', 'TimePattern', 'DateTimePattern', 'LongDatePattern', 'AmDesignator', 'PmDesignator', 'DecimalSeparator', 'GroupSeparator', 'CurrencyPattern', 'PercentPattern']) {
       assert(typeof row[key] === 'string' && row[key], `${row.Code}.${key} falta en cultures.source.json.`);
     }
   }

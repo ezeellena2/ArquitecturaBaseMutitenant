@@ -123,7 +123,8 @@ internal sealed class ReferenceDataReader(
 
         return rows.Select(row => new CultureCatalogEntry(
                 row.Code, row.LanguageCode, Code(row.CountryCode), row.DatePattern,
-                row.TimePattern, row.DateTimePattern, row.LongDatePattern, row.DecimalSeparator,
+                row.TimePattern, row.DateTimePattern, row.LongDatePattern,
+                row.AmDesignator, row.PmDesignator, row.DecimalSeparator,
                 row.GroupSeparator, row.CurrencyPattern, row.PercentPattern, row.FallbackCulture,
                 row.IsEnabled, row.IsDefault, row.SortOrder,
                 translations[row.Code].Select(item => new CultureCatalogTranslation(

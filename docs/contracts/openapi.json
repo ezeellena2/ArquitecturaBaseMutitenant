@@ -458,6 +458,8 @@
           "timePattern",
           "dateTimePattern",
           "longDatePattern",
+          "amDesignator",
+          "pmDesignator",
           "decimalSeparator",
           "groupSeparator",
           "currencyPattern",
@@ -489,6 +491,12 @@
             "type": "string"
           },
           "longDatePattern": {
+            "type": "string"
+          },
+          "amDesignator": {
+            "type": "string"
+          },
+          "pmDesignator": {
             "type": "string"
           },
           "decimalSeparator": {

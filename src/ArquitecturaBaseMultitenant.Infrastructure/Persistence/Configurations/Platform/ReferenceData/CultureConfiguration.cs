@@ -17,6 +17,8 @@ internal sealed class CultureConfiguration : IEntityTypeConfiguration<Culture>
         builder.Property(culture => culture.TimePattern).IsRequired();
         builder.Property(culture => culture.DateTimePattern).IsRequired();
         builder.Property(culture => culture.LongDatePattern).IsRequired();
+        builder.Property(culture => culture.AmDesignator).IsRequired();
+        builder.Property(culture => culture.PmDesignator).IsRequired();
         builder.Property(culture => culture.DecimalSeparator).IsRequired();
         builder.Property(culture => culture.GroupSeparator).IsRequired();
         builder.Property(culture => culture.CurrencyPattern).IsRequired();

@@ -26,6 +26,10 @@ public sealed class ReferenceDataSeederTests(ApiFactory factory)
         Assert.Equal(snapshot.TimeZones.Count, await CountAsync<ReferenceTimeZone>(context));
         Assert.Equal(snapshot.Cultures.Count, await CountAsync<Culture>(context));
         Assert.Equal(snapshot.TaxIdTypes.Count, await CountAsync<TaxIdType>(context));
+        var english = await context.Set<Culture>().SingleAsync(
+            item => item.Code == "en-US", TestContext.Current.CancellationToken);
+        Assert.Equal("AM", english.AmDesignator);
+        Assert.Equal("PM", english.PmDesignator);
     }
 
     [Fact]

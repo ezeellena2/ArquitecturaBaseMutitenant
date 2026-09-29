@@ -15,10 +15,19 @@ public sealed class CultureProfiles(ICultureCatalog cultures)
         var row = requestedCode is not null && byCode.TryGetValue(requestedCode, out var requested)
             && requested.IsEnabled ? requested : defaultRow;
 
-        var cultureInfo = CultureInfo.GetCultureInfo(row.Code);
+        var cultureInfo = (CultureInfo)CultureInfo.GetCultureInfo(row.Code).Clone();
+        var dateTimes = (DateTimeFormatInfo)cultureInfo.DateTimeFormat.Clone();
+        dateTimes.Calendar = new GregorianCalendar();
+        dateTimes.DateSeparator = "/";
+        dateTimes.TimeSeparator = ":";
+        dateTimes.AMDesignator = row.AmDesignator;
+        dateTimes.PMDesignator = row.PmDesignator;
+        cultureInfo.DateTimeFormat = dateTimes;
         var numbers = (NumberFormatInfo)cultureInfo.NumberFormat.Clone();
         numbers.NumberDecimalSeparator = row.DecimalSeparator;
         numbers.NumberGroupSeparator = row.GroupSeparator;
+        numbers.NegativeSign = "-";
+        cultureInfo.NumberFormat = numbers;
 
         var translationOrder = new List<string>();
         var resourceLanguages = new List<string>();

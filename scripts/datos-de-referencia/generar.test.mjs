@@ -32,8 +32,8 @@ JP\t+353916+1394441\tAsia/Tokyo
 US\t+404251-0740023\tAmerica/New_York
 `;
 const cultureSource = { Cultures: [
-  { Code: 'es-AR', LanguageCode: 'es', CountryCode: 'AR', DatePattern: 'dd/MM/yyyy', TimePattern: 'HH:mm', DateTimePattern: 'dd/MM/yyyy HH:mm', LongDatePattern: "d 'de' MMMM 'de' yyyy", DecimalSeparator: ',', GroupSeparator: '.', CurrencyPattern: '{symbol} {number}', PercentPattern: '{number} %', FallbackCulture: null },
-  { Code: 'en-US', LanguageCode: 'en', CountryCode: 'US', DatePattern: 'MM/dd/yyyy', TimePattern: 'h:mm tt', DateTimePattern: 'MM/dd/yyyy h:mm tt', LongDatePattern: 'MMMM d, yyyy', DecimalSeparator: '.', GroupSeparator: ',', CurrencyPattern: '{symbol}{number}', PercentPattern: '{number}%', FallbackCulture: 'es-AR' }
+  { Code: 'es-AR', LanguageCode: 'es', CountryCode: 'AR', DatePattern: 'dd/MM/yyyy', TimePattern: 'HH:mm', DateTimePattern: 'dd/MM/yyyy HH:mm', LongDatePattern: "d 'de' MMMM 'de' yyyy", AmDesignator: 'a. m.', PmDesignator: 'p. m.', DecimalSeparator: ',', GroupSeparator: '.', CurrencyPattern: '{symbol} {number}', PercentPattern: '{number} %', FallbackCulture: null },
+  { Code: 'en-US', LanguageCode: 'en', CountryCode: 'US', DatePattern: 'MM/dd/yyyy', TimePattern: 'h:mm tt', DateTimePattern: 'MM/dd/yyyy h:mm tt', LongDatePattern: 'MMMM d, yyyy', AmDesignator: 'AM', PmDesignator: 'PM', DecimalSeparator: '.', GroupSeparator: ',', CurrencyPattern: '{symbol}{number}', PercentPattern: '{number}%', FallbackCulture: 'es-AR' }
 ] };
 const taxIdSource = { TaxIdTypes: [
   { Code: 'AR-CUIT', CountryCode: 'AR', Label: 'CUIT', Mask: '99-99999999-9', ValidatorKey: 'ar-cuit-mod11', AppliesTo: 'Both', Names: { 'es-AR': 'CUIT', 'en-US': 'CUIT' } },
@@ -229,6 +229,8 @@ test('genera culturas traducidas y patrones editables con un único default', as
   assert.deepEqual(rows.map(value => [value.Code, value.IsEnabled, value.IsDefault]), [['es-AR', true, true], ['en-US', true, false]]);
   assert.equal(rows.find(value => value.Code === 'es-AR').DatePattern, 'dd/MM/yyyy');
   assert.equal(rows.find(value => value.Code === 'en-US').TimePattern, 'h:mm tt');
+  assert.equal(rows.find(value => value.Code === 'es-AR').AmDesignator, 'a. m.');
+  assert.equal(rows.find(value => value.Code === 'en-US').PmDesignator, 'PM');
   assert.equal(rows.find(value => value.Code === 'es-AR').Translations.find(value => value.DisplayCulture === 'es-AR').Name, 'Español (Argentina)');
   assert.equal(rows.find(value => value.Code === 'es-AR').Translations.find(value => value.DisplayCulture === 'en-US').Name, 'Spanish (Argentina)');
   assert.equal(rows.filter(value => value.IsDefault).length, 1);
@@ -347,11 +349,20 @@ test('rechaza FK IANA y default incompatibles, y traducciones fiscales faltantes
 test('los patrones y nombres fiscales salen de source y no del generador', async () => {
   const customCultures = structuredClone(cultureSource);
   customCultures.Cultures[0].DatePattern = 'yyyy-MM-dd';
+  customCultures.Cultures[0].AmDesignator = 'mañana';
   const customTaxIds = structuredClone(taxIdSource);
   customTaxIds.TaxIdTypes[0].Names['en-US'] = 'Tax number';
   const { cultures, taxIdTypes } = await generated(await fixture({ cultureRows: customCultures, taxRows: customTaxIds }));
   assert.equal(cultures.Cultures.find(value => value.Code === 'es-AR').DatePattern, 'yyyy-MM-dd');
+  assert.equal(cultures.Cultures.find(value => value.Code === 'es-AR').AmDesignator, 'mañana');
   assert.equal(taxIdTypes.TaxIdTypes.find(value => value.Code === 'AR-CUIT').Translations[1].Name, 'Tax number');
+});
+
+test('rechaza culturas sin designadores de mañana y tarde', async () => {
+  const customCultures = structuredClone(cultureSource);
+  delete customCultures.Cultures[0].AmDesignator;
+  const options = await fixture({ cultureRows: customCultures });
+  await assert.rejects(generateReferenceData(options), /es-AR\.AmDesignator/);
 });
 
 test('expande el rango regular AQ~R de CLDR antes del cruce ISO', async () => {

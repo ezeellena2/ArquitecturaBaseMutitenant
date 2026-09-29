@@ -11,6 +11,8 @@ public sealed class Culture
     public string TimePattern { get; private set; } = string.Empty;
     public string DateTimePattern { get; private set; } = string.Empty;
     public string LongDatePattern { get; private set; } = string.Empty;
+    public string AmDesignator { get; private set; } = string.Empty;
+    public string PmDesignator { get; private set; } = string.Empty;
     public string DecimalSeparator { get; private set; } = string.Empty;
     public string GroupSeparator { get; private set; } = string.Empty;
     public string CurrencyPattern { get; private set; } = string.Empty;
@@ -22,6 +24,7 @@ public sealed class Culture
 
     public static Culture Create(string code, string languageCode, string countryCode,
         string datePattern, string timePattern, string dateTimePattern, string longDatePattern,
+        string amDesignator, string pmDesignator,
         string decimalSeparator, string groupSeparator, string currencyPattern, string percentPattern,
         string? fallbackCulture, bool isEnabled, bool isDefault, int? sortOrder)
     {
@@ -32,6 +35,8 @@ public sealed class Culture
         ArgumentException.ThrowIfNullOrWhiteSpace(timePattern);
         ArgumentException.ThrowIfNullOrWhiteSpace(dateTimePattern);
         ArgumentException.ThrowIfNullOrWhiteSpace(longDatePattern);
+        ArgumentException.ThrowIfNullOrWhiteSpace(amDesignator);
+        ArgumentException.ThrowIfNullOrWhiteSpace(pmDesignator);
         ArgumentException.ThrowIfNullOrWhiteSpace(decimalSeparator);
         ArgumentException.ThrowIfNullOrWhiteSpace(groupSeparator);
         ArgumentException.ThrowIfNullOrWhiteSpace(currencyPattern);
@@ -46,6 +51,8 @@ public sealed class Culture
             TimePattern = timePattern,
             DateTimePattern = dateTimePattern,
             LongDatePattern = longDatePattern,
+            AmDesignator = amDesignator,
+            PmDesignator = pmDesignator,
             DecimalSeparator = decimalSeparator,
             GroupSeparator = groupSeparator,
             CurrencyPattern = currencyPattern,

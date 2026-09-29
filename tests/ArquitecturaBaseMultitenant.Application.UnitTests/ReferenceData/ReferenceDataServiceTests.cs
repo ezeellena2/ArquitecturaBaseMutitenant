@@ -108,13 +108,15 @@ public sealed class ReferenceDataServiceTests
         var zones = await ((ITimeZoneCatalog)catalog).ListAsync(TestContext.Current.CancellationToken);
         var shared = zones.FirstOrDefault(zone => zone.CountryCodes.Count > 1);
         Assert.NotNull(shared);
-        var (service, _) = CreateService();
+        var service = new ReferenceDataService(
+            catalog, catalog, new EnabledSharedTimeZoneCatalog(shared with { IsEnabled = true }), catalog, catalog,
+            new FakeTimeProvider(), new FakeLogger<ReferenceDataService>());
 
         var result = await service.GetTimeZonesAsync("es-AR", shared.Id, TestContext.Current.CancellationToken);
 
         var returned = Assert.Single(result.Value);
         Assert.Equal(shared.CountryCodes, returned.CountryCodes);
-        Assert.Equal(shared.IsEnabled, returned.IsEnabled);
+        Assert.True(returned.IsEnabled, "La zona compartida de la sonda debe estar habilitada.");
     }
 
     [Fact]
@@ -183,13 +185,13 @@ public sealed class ReferenceDataServiceTests
         private static readonly IReadOnlyList<CultureCatalogEntry> Cultures =
         [
             new("es-AR", "es", "AR", "dd/MM/yyyy", "HH:mm", "dd/MM/yyyy HH:mm",
-                "d MMMM yyyy", ",", ".", "{symbol} {number}", "{number} %",
+                "d MMMM yyyy", "a. m.", "p. m.", ",", ".", "{symbol} {number}", "{number} %",
                 null, true, true, null, [new("es-AR", "Español")]),
             new("fr-FR", "fr", "FR", "dd/MM/yyyy", "HH:mm", "dd/MM/yyyy HH:mm",
-                "d MMMM yyyy", ",", " ", "{symbol} {number}", "{number} %",
+                "d MMMM yyyy", "AM", "PM", ",", " ", "{symbol} {number}", "{number} %",
                 "es-AR", false, false, null, [new("es-AR", "Francés")]),
             new("fr-CA", "fr", "CA", "dd/MM/yyyy", "HH:mm", "dd/MM/yyyy HH:mm",
-                "d MMMM yyyy", ",", " ", "{symbol} {number}", "{number} %",
+                "d MMMM yyyy", "AM", "PM", ",", " ", "{symbol} {number}", "{number} %",
                 "fr-FR", true, false, null, [new("es-AR", "Francés canadiense")]),
         ];
 
@@ -215,5 +217,14 @@ public sealed class ReferenceDataServiceTests
 
         public async Task<TaxIdTypeCatalogEntry?> FindAsync(string code, CancellationToken cancellationToken) =>
             (await ListAsync(cancellationToken)).FirstOrDefault(entry => entry.Code == code);
+    }
+
+    private sealed class EnabledSharedTimeZoneCatalog(TimeZoneCatalogEntry zone) : ITimeZoneCatalog
+    {
+        public Task<IReadOnlyList<TimeZoneCatalogEntry>> ListAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<TimeZoneCatalogEntry>>([zone]);
+
+        public Task<TimeZoneCatalogEntry?> FindAsync(string id, CancellationToken cancellationToken) =>
+            Task.FromResult<TimeZoneCatalogEntry?>(id == zone.Id ? zone : null);
     }
 }

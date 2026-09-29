@@ -130,7 +130,8 @@ internal sealed class ReferenceDataService(
             .Select(entry => new CultureReferenceItem(
                 entry.Code, entry.LanguageCode, entry.CountryCode,
                 entry.DatePattern, entry.TimePattern, entry.DateTimePattern,
-                entry.LongDatePattern, entry.DecimalSeparator, entry.GroupSeparator,
+                entry.LongDatePattern, entry.AmDesignator, entry.PmDesignator,
+                entry.DecimalSeparator, entry.GroupSeparator,
                 entry.CurrencyPattern, entry.PercentPattern, entry.FallbackCulture,
                 entry.IsDefault,
                 selectedCulture.Translate(entry.Translations, item => item.DisplayCulture).Name,

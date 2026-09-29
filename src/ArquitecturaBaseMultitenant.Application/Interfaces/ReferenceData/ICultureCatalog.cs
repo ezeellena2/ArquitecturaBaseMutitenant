@@ -14,6 +14,8 @@ public sealed record CultureCatalogEntry(
     string TimePattern,
     string DateTimePattern,
     string LongDatePattern,
+    string AmDesignator,
+    string PmDesignator,
     string DecimalSeparator,
     string GroupSeparator,
     string CurrencyPattern,

@@ -46,6 +46,10 @@ public sealed class ReferenceDataApiTests(ApiFactory factory)
             item => item.GetProperty("code").GetString() == "AD" && !item.GetProperty("isEnabled").GetBoolean());
         Assert.Contains(body.GetProperty("timeZones").EnumerateArray(),
             item => item.GetProperty("id").GetString() == "Europe/Andorra" && !item.GetProperty("isEnabled").GetBoolean());
+        var english = Assert.Single(body.GetProperty("cultures").EnumerateArray(),
+            item => item.GetProperty("code").GetString() == "en-US");
+        Assert.Equal("AM", english.GetProperty("amDesignator").GetString());
+        Assert.Equal("PM", english.GetProperty("pmDesignator").GetString());
     }
 
     [Theory]
@@ -133,5 +137,18 @@ public sealed class ReferenceDataApiTests(ApiFactory factory)
         var response = ReferenceDataHttpResponse.FromModel(model);
 
         Assert.Equal(["AR", "UY"], Assert.Single(response.TimeZones).CountryCodes);
+    }
+
+    [Fact]
+    public void Culture_http_contract_exposes_catalog_day_periods()
+    {
+        var model = new CultureReferenceItem("en-US", "en", "US", "MM/dd/yyyy", "h:mm tt",
+            "MM/dd/yyyy h:mm tt", "MMMM d, yyyy", "AM", "PM", ".", ",", "{symbol}{number}",
+            "{number}%", "es-AR", false, "English", true, null);
+
+        var response = CultureReferenceHttpResponse.FromModel(model);
+
+        Assert.Equal("AM", response.AmDesignator);
+        Assert.Equal("PM", response.PmDesignator);
     }
 }

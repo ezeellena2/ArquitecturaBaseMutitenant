@@ -53,6 +53,18 @@ public sealed class MigrationsTests
         Assert.DoesNotContain("Deals", script, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Culture_day_periods_have_a_forward_migration()
+    {
+        using var context = CreateContext();
+        var script = context.GetService<IMigrator>().GenerateScript();
+
+        Assert.Contains("ALTER TABLE platform.\"Cultures\" ADD \"AmDesignator\" text NOT NULL", script,
+            StringComparison.Ordinal);
+        Assert.Contains("ALTER TABLE platform.\"Cultures\" ADD \"PmDesignator\" text NOT NULL", script,
+            StringComparison.Ordinal);
+    }
+
     private static ApplicationDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()

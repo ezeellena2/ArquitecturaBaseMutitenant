@@ -23,6 +23,7 @@ public sealed record TimeZoneReferenceItem(
 public sealed record CultureReferenceItem(
     string Code, string LanguageCode, string CountryCode,
     string DatePattern, string TimePattern, string DateTimePattern, string LongDatePattern,
+    string AmDesignator, string PmDesignator,
     string DecimalSeparator, string GroupSeparator, string CurrencyPattern,
     string PercentPattern, string? FallbackCulture, bool IsDefault, string Name,
     bool IsEnabled, int? SortOrder);

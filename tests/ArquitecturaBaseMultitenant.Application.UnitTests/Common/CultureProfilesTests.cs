@@ -1,3 +1,4 @@
+using System.Globalization;
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Resources;
@@ -6,6 +7,34 @@ namespace ArquitecturaBaseMultitenant.Application.UnitTests.Common;
 
 public sealed class CultureProfilesTests
 {
+    [Theory]
+    [InlineData("en-US", "9:05 pre-noon", "9:05 post-noon")]
+    [InlineData("es-AR", "9:05 a. m.", "9:05 p. m.")]
+    public async Task Profile_uses_catalog_day_periods_and_fixed_date_time_separators(
+        string code, string expectedMorning, string expectedAfternoon)
+    {
+        var previousCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
+            var profile = await new CultureProfiles(new TestCatalog()).LoadAsync(
+                code, TestContext.Current.CancellationToken);
+
+            Assert.IsType<GregorianCalendar>(profile.Culture.DateTimeFormat.Calendar);
+            Assert.Equal("/", profile.Culture.DateTimeFormat.DateSeparator);
+            Assert.Equal(":", profile.Culture.DateTimeFormat.TimeSeparator);
+            Assert.Equal("-", profile.Numbers.NegativeSign);
+            Assert.Equal(expectedMorning,
+                new DateTime(2026, 9, 27, 9, 5, 0).ToString("h:mm tt", profile.Culture));
+            Assert.Equal(expectedAfternoon,
+                new DateTime(2026, 9, 27, 21, 5, 0).ToString("h:mm tt", profile.Culture));
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+        }
+    }
+
     [Fact]
     public async Task Disabled_requested_and_fallback_cultures_are_not_used()
     {
@@ -48,7 +77,9 @@ public sealed class CultureProfilesTests
         private static CultureCatalogEntry Row(string code, string language, string? fallback,
             bool enabled, bool isDefault = false) => new(
                 code, language, "AR", "dd/MM/yyyy", "HH:mm", "dd/MM/yyyy HH:mm",
-                "d MMMM yyyy", ",", ".", "{symbol} {number}", "{number} %",
+                "d MMMM yyyy", code == "en-US" ? "pre-noon" : "a. m.",
+                code == "en-US" ? "post-noon" : "p. m.",
+                ",", ".", "{symbol} {number}", "{number} %",
                 fallback, enabled, isDefault, null, []);
     }
 }

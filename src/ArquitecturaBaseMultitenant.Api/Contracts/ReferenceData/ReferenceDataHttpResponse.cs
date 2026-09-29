@@ -47,12 +47,14 @@ public sealed record TimeZoneReferenceHttpResponse(
 public sealed record CultureReferenceHttpResponse(
     string Code, string LanguageCode, string CountryCode,
     string DatePattern, string TimePattern, string DateTimePattern, string LongDatePattern,
+    string AmDesignator, string PmDesignator,
     string DecimalSeparator, string GroupSeparator, string CurrencyPattern, string PercentPattern,
     string? FallbackCulture, bool IsDefault, string Name, bool IsEnabled, int? SortOrder)
 {
     public static CultureReferenceHttpResponse FromModel(CultureReferenceItem item) => new(
         item.Code, item.LanguageCode, item.CountryCode, item.DatePattern, item.TimePattern,
-        item.DateTimePattern, item.LongDatePattern, item.DecimalSeparator, item.GroupSeparator,
+        item.DateTimePattern, item.LongDatePattern, item.AmDesignator, item.PmDesignator,
+        item.DecimalSeparator, item.GroupSeparator,
         item.CurrencyPattern, item.PercentPattern, item.FallbackCulture, item.IsDefault,
         item.Name, item.IsEnabled, item.SortOrder);
 }

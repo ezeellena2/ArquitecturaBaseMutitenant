@@ -69,7 +69,8 @@ public sealed class ReferenceEntitiesTests
     public void Culture_keeps_format_profile_fallback_default_and_display_culture_translation()
     {
         var culture = Culture.Create("es-AR", "es", "AR", "dd/MM/yyyy", "HH:mm",
-            "dd/MM/yyyy HH:mm", "d 'de' MMMM 'de' yyyy", ",", ".", "{symbol} {number}",
+            "dd/MM/yyyy HH:mm", "d 'de' MMMM 'de' yyyy", "a. m.", "p. m.",
+            ",", ".", "{symbol} {number}",
             "{number} %", null, isEnabled: true, isDefault: true, sortOrder: 1);
         var translation = CultureTranslation.Create("es-AR", "en-US", "Spanish (Argentina)");
 
@@ -80,6 +81,8 @@ public sealed class ReferenceEntitiesTests
         Assert.Equal("HH:mm", culture.TimePattern);
         Assert.Equal("dd/MM/yyyy HH:mm", culture.DateTimePattern);
         Assert.Equal("d 'de' MMMM 'de' yyyy", culture.LongDatePattern);
+        Assert.Equal("a. m.", culture.AmDesignator);
+        Assert.Equal("p. m.", culture.PmDesignator);
         Assert.Equal(",", culture.DecimalSeparator);
         Assert.Equal(".", culture.GroupSeparator);
         Assert.Equal("{symbol} {number}", culture.CurrencyPattern);

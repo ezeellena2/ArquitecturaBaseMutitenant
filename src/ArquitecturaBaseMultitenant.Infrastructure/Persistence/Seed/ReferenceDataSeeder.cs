@@ -62,6 +62,7 @@ internal sealed class ReferenceDataSeeder
         await UpsertAsync(_dbContext.Set<Culture>(), snapshot.Cultures.Select(item =>
             Culture.Create(item.Code, item.LanguageCode, item.CountryCode, item.DatePattern,
                 item.TimePattern, item.DateTimePattern, item.LongDatePattern,
+                item.AmDesignator, item.PmDesignator,
                 item.DecimalSeparator, item.GroupSeparator, item.CurrencyPattern,
                 item.PercentPattern, item.FallbackCulture, item.IsEnabled, item.IsDefault,
                 item.SortOrder)), item => Key(item.Code), disableMissing: true, cancellationToken);
