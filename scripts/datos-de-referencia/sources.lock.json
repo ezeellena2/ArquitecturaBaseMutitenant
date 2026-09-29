@@ -22,6 +22,7 @@
   },
   "packages": {
     "cldr": "48.2.0",
+    "cldrBcp47": "48.2.0",
     "cldrDates": "48.2.0",
     "libphonenumber": "1.13.14",
     "xmlParser": "5.11.1"

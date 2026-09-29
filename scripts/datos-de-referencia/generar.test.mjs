@@ -107,7 +107,7 @@ async function fixture({ xml = isoXml, validity = validityXml, iana = ianaTab, r
       cldrRegionValidity: { url: 'https://example.test/region.xml', version: '48.2.0', sha256: sha256(validity), path: 'sources/cldr-region-validity.xml' },
       ianaZone1970: { url: 'https://example.test/tzdb-2026d/zone1970.tab', version: '2026d', sha256: sha256(iana), path: 'sources/iana-zone1970.tab' }
     },
-    packages: { cldr: '48.2.0', cldrDates: '48.2.0', libphonenumber: '1.13.14', xmlParser: '5.11.1' }
+    packages: { cldr: '48.2.0', cldrBcp47: '48.2.0', cldrDates: '48.2.0', libphonenumber: '1.13.14', xmlParser: '5.11.1' }
   });
   await putJson(join(root, 'habilitados.json'), enabled ?? {
     defaults: { country: 'AR', currency: 'ARS', culture: 'es-AR', timeZone: 'America/Argentina/Buenos_Aires' },
@@ -122,6 +122,8 @@ async function fixture({ xml = isoXml, validity = validityXml, iana = ianaTab, r
   await putJson(join(root, 'ciudades.en.json'), {});
   await putJson(join(cldrRoot, 'cldr-core/supplemental/codeMappings.json'), codeMappings);
   await putJson(join(cldrRoot, 'cldr-core/supplemental/currencyData.json'), region);
+  await putJson(join(cldrRoot, 'cldr-core/supplemental/primaryZones.json'), { supplemental: { primaryZones: {} } });
+  await putJson(join(cldrRoot, 'cldr-bcp47/bcp47/timezone.json'), { keyword: { u: { tz: {} } } });
   for (const [locale, values] of Object.entries(cultures)) {
     await putJson(join(cldrRoot, `cldr-numbers-full/main/${locale}/currencies.json`), { main: { [locale]: { numbers: { currencies: values.currencies } } } });
     await putJson(join(cldrRoot, `cldr-localenames-full/main/${locale}/territories.json`), { main: { [locale]: { localeDisplayNames: { territories: values.territories } } } });
@@ -188,7 +190,8 @@ test('conserva todos los países de una zona IANA y añade UTC sin país', async
   assert.deepEqual(timeZones.TimeZones.find(value => value.Id === 'UTC').CountryCodes, []);
   assert.equal(timeZones.TimeZones.find(value => value.Id === 'UTC').IsEnabled, true);
   assert.equal(timeZones.TimeZones.find(value => value.Id === 'America/New_York').IsEnabled, false);
-  assert.equal(countries.Countries.find(value => value.Code === 'BH').DefaultTimeZoneId, 'Asia/Qatar');
+  assert.equal(countries.Countries.find(value => value.Code === 'BH').DefaultTimeZoneId, null,
+    'un país con varias zonas y sin zona principal CLDR no debe recibir la primera de IANA');
   assert.equal(countries.Countries.find(value => value.Code === 'AQ').DefaultTimeZoneId, null);
 });
 
@@ -486,6 +489,10 @@ test('snapshots oficiales regeneran los cinco JSON versionados byte a byte sin r
   const cultures = JSON.parse(await readFile(join(outputDir, 'cultures.json'), 'utf8'));
   const taxIdTypes = JSON.parse(await readFile(join(outputDir, 'tax-id-types.json'), 'utf8'));
   assert.equal(countries.Countries.length, 249);
+  assert.equal(countries.Countries.find(value => value.Code === 'DE').DefaultTimeZoneId, 'Europe/Berlin');
+  assert.equal(countries.Countries.find(value => value.Code === 'UA').DefaultTimeZoneId, 'Europe/Kyiv');
+  assert.equal(countries.Countries.find(value => value.Code === 'AR').DefaultTimeZoneId, 'America/Argentina/Buenos_Aires');
+  assert.equal(countries.Countries.find(value => value.Code === 'US').DefaultTimeZoneId, null);
   assert.equal(currencies.Currencies.some(value => value.MinorUnits === 0), true);
   assert.equal(currencies.Currencies.some(value => value.MinorUnits === 2), true);
   assert.equal(currencies.Currencies.some(value => value.MinorUnits === 3), true);

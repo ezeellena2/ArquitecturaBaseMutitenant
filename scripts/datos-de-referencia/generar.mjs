@@ -140,6 +140,30 @@ function parseIanaZones(tab, countrySet = null) {
   return zones;
 }
 
+function timeZoneAliases(document, zones) {
+  const zoneIds = new Set(zones.map(zone => zone.Id));
+  const canonicalByAlias = new Map();
+  const aliasesByCanonical = new Map();
+  const entries = document?.keyword?.u?.tz;
+  assert(entries && typeof entries === 'object', 'CLDR bcp47/timezone.json no contiene keyword.u.tz.');
+  for (const entry of Object.values(entries)) {
+    if (typeof entry?._alias !== 'string') continue;
+    const aliases = entry._alias.split(/\s+/).filter(Boolean);
+    const canonical = zoneIds.has(entry._iana) ? entry._iana : aliases.find(alias => zoneIds.has(alias));
+    if (!canonical) continue;
+    aliasesByCanonical.set(canonical, [...new Set([canonical, ...aliases])]);
+    for (const alias of aliases) {
+      const previous = canonicalByAlias.get(alias);
+      assert(!previous || previous === canonical, `Alias horario CLDR ambiguo: ${alias}.`);
+      canonicalByAlias.set(alias, canonical);
+    }
+  }
+  return {
+    resolve: id => zoneIds.has(id) ? id : canonicalByAlias.get(id) ?? null,
+    candidates: id => aliasesByCanonical.get(id) ?? [id]
+  };
+}
+
 function currentTenderCurrency(entries, asOf) {
   for (const row of [].concat(entries ?? [])) {
     const [code, attributes] = Object.entries(row)[0] ?? [];
@@ -157,9 +181,10 @@ function validateOverrideMap(config, key, codes) {
   for (const [code, value] of Object.entries(overrides)) {
     assert(codes.has(code), `${code} es un override desconocido en ${key}.`);
     assert(value && typeof value === 'object' && !Array.isArray(value), `${key}.${code} debe ser un objeto.`);
-    for (const field of Object.keys(value)) assert(field === 'isEnabled' || field === 'sortOrder', `${key}.${code}.${field} no es un override conocido.`);
+    for (const field of Object.keys(value)) assert(field === 'isEnabled' || field === 'sortOrder' || key === 'countries' && field === 'defaultTimeZoneId', `${key}.${code}.${field} no es un override conocido.`);
     if ('isEnabled' in value) assert(typeof value.isEnabled === 'boolean', `${key}.${code}.isEnabled debe ser booleano.`);
     if ('sortOrder' in value) assert(Number.isInteger(value.sortOrder), `${key}.${code}.sortOrder debe ser entero.`);
+    if ('defaultTimeZoneId' in value) assert(typeof value.defaultTimeZoneId === 'string' && value.defaultTimeZoneId, `${key}.${code}.defaultTimeZoneId debe ser un ID IANA.`);
   }
   return overrides;
 }
@@ -297,6 +322,7 @@ async function checkPinnedPackages(lock) {
   const manifest = await readJson(join(scriptRoot, 'package.json'));
   const installation = await readJson(join(scriptRoot, 'package-lock.json'));
   const expected = {
+    'cldr-bcp47': lock.packages?.cldrBcp47,
     'cldr-core': lock.packages?.cldr,
     'cldr-dates-full': lock.packages?.cldrDates,
     'cldr-localenames-full': lock.packages?.cldr,
@@ -359,12 +385,14 @@ export async function generateReferenceData({
   const packageSources = await checkPinnedPackages(lock);
   const refreshed = refresh ? await refreshSnapshots(root, lock, fetchImpl) : null;
   if (refreshed) lock = refreshed.lock;
-  const [sixXml, validityXml, ianaTab, mappingsDocument, currencyDocument, config, culturesDocument, taxIdTypesDocument] = await Promise.all([
+  const [sixXml, validityXml, ianaTab, mappingsDocument, currencyDocument, primaryZonesDocument, aliasesDocument, config, culturesDocument, taxIdTypesDocument] = await Promise.all([
     refreshed ? refreshed.sourceTexts.get('sixIso4217') : verifiedSource(root, lock.sources.sixIso4217),
     refreshed ? refreshed.sourceTexts.get('cldrRegionValidity') : verifiedSource(root, lock.sources.cldrRegionValidity),
     refreshed ? refreshed.sourceTexts.get('ianaZone1970') : verifiedSource(root, lock.sources.ianaZone1970),
     readJson(join(cldrRoot, 'cldr-core/supplemental/codeMappings.json')),
     readJson(join(cldrRoot, 'cldr-core/supplemental/currencyData.json')),
+    readJson(join(cldrRoot, 'cldr-core/supplemental/primaryZones.json')),
+    readJson(join(cldrRoot, 'cldr-bcp47/bcp47/timezone.json')),
     readJson(join(root, 'habilitados.json')),
     readJson(join(root, 'cultures.source.json')),
     readJson(join(root, 'tax-id-types.source.json'))
@@ -394,10 +422,13 @@ export async function generateReferenceData({
   const currencySet = new Set(currencyCodes);
   const countrySet = new Set(countryCodes);
   const ianaZones = parseIanaZones(ianaTab, countrySet);
+  const aliases = timeZoneAliases(aliasesDocument, ianaZones);
   const zonesByCountry = new Map();
   for (const zone of ianaZones) {
     for (const code of zone.CountryCodes) {
-      if (!zonesByCountry.has(code)) zonesByCountry.set(code, zone.Id);
+      const existing = zonesByCountry.get(code) ?? [];
+      existing.push(zone.Id);
+      zonesByCountry.set(code, existing);
     }
   }
   const currencyOverrides = validateOverrideMap(config, 'currencies', currencySet);
@@ -408,7 +439,17 @@ export async function generateReferenceData({
   const defaultZone = ianaZones.find(value => value.Id === config.defaults?.timeZone);
   assert(defaultZone?.CountryCodes.includes(config.defaults.country),
     `${config.defaults?.timeZone} no pertenece al país predeterminado ${config.defaults?.country}.`);
-  zonesByCountry.set(config.defaults.country, defaultZone.Id);
+  const primaryZones = primaryZonesDocument?.supplemental?.primaryZones;
+  assert(primaryZones && typeof primaryZones === 'object', 'CLDR primaryZones.json no contiene supplemental.primaryZones.');
+  const defaultZoneByCountry = new Map();
+  for (const code of countryCodes) {
+    const countryZones = zonesByCountry.get(code) ?? [];
+    const cldrPrimary = aliases.resolve(primaryZones[code]);
+    const resolvedPrimary = cldrPrimary && countryZones.includes(cldrPrimary) ? cldrPrimary : null;
+    const override = countryOverrides[code]?.defaultTimeZoneId ?? (code === config.defaults.country ? defaultZone.Id : null);
+    assert(!override || countryZones.includes(override), `${override} no pertenece al país ${code}.`);
+    defaultZoneByCountry.set(code, override ?? (countryZones.length === 1 ? countryZones[0] : resolvedPrimary));
+  }
   const locales = await loadTranslations(cldrRoot, config.displayCultures, config.defaults.culture);
   assert(locales.some(locale => locale.culture === config.defaults.culture), `Cultura predeterminada desconocida: ${config.defaults.culture}`);
   const cultureRows = validatedCultureSource(culturesDocument, countrySet, config.displayCultures, config.defaults.culture);
@@ -442,7 +483,7 @@ export async function generateReferenceData({
   const countries = countryCodes.map(code => {
     const currency = countryCurrency.get(code);
     const callingCode = callingCodeForCountry(code);
-    const timeZone = zonesByCountry.get(code) ?? null;
+    const timeZone = defaultZoneByCountry.get(code) ?? null;
     assert(currency === null || currencySet.has(currency), `${currency} es referencia activa de CLDR pero falta en SIX List One (FK rota del país ${code}).`);
     assert(callingCode === null || /^[0-9]+$/.test(String(callingCode)), `Prefijo telefónico inválido para ${code}.`);
     const selected = selection(code, config.defaults.country, countryOverrides);

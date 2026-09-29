@@ -20,6 +20,11 @@
       "path": "sources/iana-zone1970.tab"
     },
     "Packages": {
+      "cldr-bcp47": {
+        "Version": "48.2.0",
+        "Url": "https://registry.npmjs.org/cldr-bcp47/-/cldr-bcp47-48.2.0.tgz",
+        "Integrity": "sha512-ks3zN+Wbg1zMqvJNeDai1zA0JBGHbAnxv2Ko4rjVohvXscDGmTa7VNy1T+QRlQw3QVPzQcCm2EOiEtAfOU4d+g=="
+      },
       "cldr-core": {
         "Version": "48.2.0",
         "Url": "https://registry.npmjs.org/cldr-core/-/cldr-core-48.2.0.tgz",
