@@ -35,6 +35,7 @@ internal static class PersistenceRegistration
                     provider.GetRequiredService<SoftDeleteInterceptor>(),
                     provider.GetRequiredService<AuditableEntityInterceptor>(),
                     provider.GetRequiredService<AuditTrailInterceptor>()));
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         return services;
     }

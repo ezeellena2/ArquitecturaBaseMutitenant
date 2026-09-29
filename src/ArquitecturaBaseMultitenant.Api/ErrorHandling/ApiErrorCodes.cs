@@ -13,5 +13,6 @@ internal static class ApiErrorCodes
     public const string NotFound = "Http.NotFound";
     public const string MethodNotAllowed = "Http.MethodNotAllowed";
     public const string Conflict = "Http.Conflict";
+    public const string ConcurrencyConflict = "General.ConcurrencyConflict";
     public const string TooManyRequests = "Http.TooManyRequests";
 }

@@ -154,11 +154,11 @@
 
 **Respaldo:** plan maestro E2.4; `backend.md` §§5, 9; `arbol.md` Interceptors/Repositories; fichas `auditoria.md`, `persistencia-ef.md`.
 
-**TDD:** un delete pasa a marca lógica; auditoría usa `TimeProvider`, actor y diff sin propiedades `[NotAudited]`; `AuditEntry` se inserta en la misma transacción y no se actualiza/borra. **Commit:** `feat: aplicar borrado lógico y auditoría transaccional`.
+**TDD:** un delete pasa a marca lógica; auditoría usa `TimeProvider`, actor y diff sin propiedades `[NotAudited]`; `AuditEntry` se inserta en la misma transacción y no se actualiza/borra. Un `Deal` compartido genera una entrada por cada parte; el interceptor deriva los tenant IDs de contraparte del `ChangeTracker` y los fija en `app.audit_counterpart_tenant_ids` como GUC local de la transacción. Una política RLS adicional permite solo esos INSERT en `AuditEntries`; SELECT, UPDATE y DELETE conservan la barrera normal. El límite de confianza de esa GUC es el mismo de `app.tenant_id` en el runtime. **Commit:** `feat: aplicar borrado lógico y auditoría transaccional`.
 
 ### Tarea 17. UnitOfWork único, errores de base y concurrencia
 
-**Archivos:** crear `src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/UnitOfWork.cs`; modificar `PersistenceRegistration.cs`, `src/ArquitecturaBaseMultitenant.Api/Errors/ProblemDetailsMapper.cs`; crear `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Persistence/{UnitOfWorkTests,ConcurrencyTests}.cs`, `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/TestFeatures/Isolation/WidgetsController.cs`, `tests/ArquitecturaBaseMultitenant.ArchitectureTests/VersionedContractTests.cs`. Adaptar `../ArquitecturaBase/src/ArquitecturaBase.Infrastructure/Persistence/{UnitOfWork,UniqueViolations}.cs`.
+**Archivos:** crear `src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/UnitOfWork.cs`; modificar `PersistenceRegistration.cs`, `src/ArquitecturaBaseMultitenant.Api/ErrorHandling/{ApiErrorCodes,GlobalExceptionHandler}.cs`, `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Support/TestControllerApplicationPart.cs`; crear `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Persistence/{UnitOfWorkTests,ConcurrencyTests}.cs`, `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/TestFeatures/Isolation/WidgetsController.cs`, `tests/ArquitecturaBaseMultitenant.ArchitectureTests/VersionedContractTests.cs`. Adaptar `../ArquitecturaBase/src/ArquitecturaBase.Infrastructure/Persistence/{UnitOfWork,UniqueViolations}.cs` (`UniqueViolations` ya nació en T13).
 
 **Respaldo:** plan maestro E2.5 y E2.11; `backend.md` §5; `arbol.md` UnitOfWork/P1; fichas `guardado.md`, `concurrencia.md`.
 

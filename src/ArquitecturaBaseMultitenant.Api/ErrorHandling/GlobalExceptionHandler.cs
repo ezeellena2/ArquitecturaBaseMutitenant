@@ -1,11 +1,12 @@
 using ArquitecturaBaseMultitenant.Application.Resources;
+using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.Api.ErrorHandling;
 
-/// <summary>Convierte errores de lectura HTTP en 400 y demás excepciones en un 500 sin detalles internos.</summary>
+/// <summary>Convierte errores HTTP y conflictos de versión; reserva 500 sin detalles para fallos inesperados.</summary>
 internal sealed partial class GlobalExceptionHandler(
     IProblemDetailsService problemDetailsService,
     ILogger<GlobalExceptionHandler> logger)
@@ -19,6 +20,13 @@ internal sealed partial class GlobalExceptionHandler(
         {
             problem = ProblemDetailsMapper.Create(
                 ErrorType.Validation, ApiErrorCodes.InvalidRequest, ErrorTexts.Get(ApiErrorCodes.InvalidRequest), badRequest.StatusCode);
+        }
+        else if (exception is ConcurrencyConflictException)
+        {
+            problem = ProblemDetailsMapper.Create(
+                ErrorType.Conflict,
+                ApiErrorCodes.ConcurrencyConflict,
+                ErrorTexts.Get(ApiErrorCodes.ConcurrencyConflict));
         }
         else
         {
