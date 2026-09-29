@@ -327,7 +327,8 @@ Api/
 │  │                                   ExternalLoginController, InvitationsController, LoginMethodsController,
 │  │                                   DeletionCancelController (POST /api/auth/deletion/cancel)
 │  ├─ Account/                         MeController (cuenta y accesos), BusinessSignupController ("Registrá tu empresa"),
-│  │                                   LegalController (GET /api/legal/current, anónimo; POST /api/legal/accept),
+│  │                                   LegalController (GET /api/legal/terms y /privacy, anónimos en 3a;
+│  │                                   GET /api/legal/current y POST /api/legal/accept en 3b),
 │  │                                   AccountDeletionController (POST /api/me/deletion)
 │  ├─ ReferenceData/                   ReferenceDataController ([AllowAnonymous]; GET /api/reference-data y por catálogo)
 │  ├─ Organization/                    [Access(Business)] UsersController, RolesController, PermissionsController,

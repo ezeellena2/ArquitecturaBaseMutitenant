@@ -483,6 +483,8 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── TenantSpaceProvisioner.cs                 [E3] agrega Tenant, miembros y ajustes en el scope activo; lo reutiliza el seed Development y luego E6
 │   │   ├── SignupPolicy.cs                           ¿el registro está abierto? ¿el email está libre?
 │   │   ├── LoginCodeService.cs
+│   │   ├── LoginCodeRequester.cs                     [E3] emisión y mensaje dentro de la UoW de LoginCodeService
+│   │   ├── LoginCodeVerificationFlow.cs              [E3] verificación, intentos y auditoría dentro de esa UoW
 │   │   ├── LoginCodeIssuer.cs
 │   │   ├── LoginCodeVerifier.cs
 │   │   ├── LoginLinkService.cs                       [E8]
@@ -1260,7 +1262,7 @@ src/ArquitecturaBaseMultitenant.Api/
 ├── Idempotency/IdempotencyFilter.cs                                     [E2] P6
 ├── Features/DisabledFeatureHandler.cs                    [E5] P8  módulo apagado → 404 ProblemDetails
 ├── Legal/LegalAcceptanceMiddleware.cs                    [E3] 3b, P7; solo para identidades autenticadas: las rutas anónimas no pasan por él
-├── Controllers/Account/LegalController.cs                [E3] P7  GET /api/legal/current (3a), POST /api/legal/accept (3b)
+├── Controllers/Account/LegalController.cs                [E3] P7  GET /api/legal/terms y /privacy (3a); GET /api/legal/current y POST /api/legal/accept (3b)
 ├── Contracts/Common/PhoneInputHttpRequest.cs                            [E1] teléfono
 └── Contracts/Common/TaxIdHttpRequest.cs                                 [E6] P5
 
