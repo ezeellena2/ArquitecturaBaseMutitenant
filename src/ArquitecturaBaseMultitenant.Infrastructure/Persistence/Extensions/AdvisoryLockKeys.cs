@@ -9,6 +9,16 @@ internal static class AdvisoryLockKeys
     public const string ReferenceDataSeed = "p:ref:seed";
     public const string Seed = "seed:database";
 
+    public static string PersonalSpace(Guid userId)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("A personal space lock requires a user ID.", nameof(userId));
+        }
+
+        return "u:" + userId.ToString("N", CultureInfo.InvariantCulture) + ":lock:personal-space";
+    }
+
     /// <summary>Un lock global por destino normalizado, compartido entre propósitos de ingreso.</summary>
     public static string LoginCode(LoginCodeDestination destination)
     {

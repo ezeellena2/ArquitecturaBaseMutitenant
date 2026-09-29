@@ -13,6 +13,7 @@ public sealed partial class IdentityStorageAccessTests
         "Repositories/LegalRepository.cs",
         "Readers/LoginMethodReader.cs",
         "Readers/MemberReader.cs",
+        "Readers/UserTenantAccessReader.cs",
     };
 
     [Fact]
@@ -47,7 +48,7 @@ public sealed partial class IdentityStorageAccessTests
         Assert.DoesNotContain(files, file => GlobalMethodValueLookup().IsMatch(File.ReadAllText(file)));
     }
 
-    [GeneratedRegex(@"\b(?:context|dbContext)\.(?:Users|LoginMethods|LoginCodes|LoginAudits|LegalAcceptances)\b")]
+    [GeneratedRegex(@"\b(?:context|dbContext)\.(?:Users|LoginMethods|LoginCodes|LoginAudits|LegalAcceptances|UserTenantAccesses)\b")]
     private static partial Regex GlobalIdentityDbSet();
 
     [GeneratedRegex(@"\bmethod\.(?:Value|NormalizedValue)\s*==")]

@@ -19,6 +19,7 @@ public static class DependencyInjection
         services.AddScoped<IOutboxDispatchService, OutboxDispatchService>();
         services.AddScoped<ILoginCodeService, LoginCodeService>();
         services.AddScoped<IAccountService, AccountService>();
+        services.AddScoped<IConnectService, ConnectService>();
         services.AddScoped<SignupPolicy>();
         services.AddScoped<IPersonalSpaceProvisioner, PersonalSpaceProvisioner>();
         services.AddScoped<LoginCodeIssuer>();
