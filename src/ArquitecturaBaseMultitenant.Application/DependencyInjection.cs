@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Services.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Services.Messaging;
+using ArquitecturaBaseMultitenant.Application.Services.Profile;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Application.Services.Legal;
 using FluentValidation;
@@ -21,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<ILoginCodeService, LoginCodeService>();
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IConnectService, ConnectService>();
+        services.AddScoped<IProfileService, ProfileService>();
         services.AddScoped<ILegalService, LegalService>();
         services.AddScoped<SignupPolicy>();
         services.AddScoped<IPersonalSpaceProvisioner, PersonalSpaceProvisioner>();
