@@ -8,6 +8,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Infrastructure;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Rls;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +41,11 @@ if (!isOpenApiExporter)
     else
     {
         await RuntimeRoleValidator.ValidateAsync(runtimeConnection, CancellationToken.None);
+    }
+
+    if (!app.Environment.IsEnvironment("Testing"))
+    {
+        await app.Services.SeedDatabaseAsync(CancellationToken.None);
     }
 }
 

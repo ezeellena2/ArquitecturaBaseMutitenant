@@ -9,7 +9,7 @@
 4. **Afuera y después del commit:** invalidar el caché. Todo el método va dentro de `OperationLog.RunAsync`.
 - `CommitPolicy.OnAnyResult` solo cuando también hay que guardar si falla: intentos, códigos consumidos, auditoría de seguridad.
 - Los locks usan `AdvisoryLockKeys.For(tenantId, recurso, id)` o `FOR NO KEY UPDATE`, y exigen la transacción del caso de uso.
-- El bootstrap de referencias es la única excepción nominal fuera de los servicios de Application: `ReferenceDataSeeder` recibe `IUnitOfWork`, toma `AdvisoryLockKeys.ReferenceDataSeed` dentro del límite y prepara el upsert; solo `UnitOfWork` llama `SaveChanges`. Es un seed técnico, no un servicio de negocio.
+- Hay dos excepciones nominales fuera de los servicios de Application: `ReferenceDataSeeder` y `DatabaseSeeder`. El primero toma `AdvisoryLockKeys.ReferenceDataSeed` para el bootstrap de catálogos; el segundo toma `AdvisoryLockKeys.Seed` y coordina en un límite el seed de todos los ambientes, llamando a `ReferenceDataSeeder.StageAsync` sin anidar una UoW. Son seeds técnicos, no servicios de negocio. Solo `UnitOfWork` llama `SaveChanges`.
 
 ```csharp
 public Task<Result> UpdateAsync(UpdateRoleRequest request, CancellationToken ct) =>
@@ -33,7 +33,7 @@ public Task<Result> UpdateAsync(UpdateRoleRequest request, CancellationToken ct)
 - `Application/Services/Roles/RoleService.cs`, métodos `UpdateAsync` y `UpdateCoreAsync` (E4).
 
 ## Lo verifica
-- `TransactionBoundaryTests` (E2): lee el IL; solo los puntos de entrada de `Interfaces/Services` y `ReferenceDataSeeder` reciben `IUnitOfWork`, y nadie salvo `UnitOfWork` llama a `SaveChanges`.
+- `TransactionBoundaryTests` (E2): lee el IL; solo los puntos de entrada de `Interfaces/Services`, `ReferenceDataSeeder` y `DatabaseSeeder` reciben `IUnitOfWork`, y nadie salvo `UnitOfWork` llama a `SaveChanges`.
 - `UnitOfWorkTests` (E2): rollback, no anidar, 23505 → `UniqueConstraintViolationException`.
 - `FakeUnitOfWork` (E2) en los tests unitarios aplica la misma `CommitPolicy`.
 

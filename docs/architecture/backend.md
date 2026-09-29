@@ -463,7 +463,7 @@ public sealed class RolesController(IRoleService service) : ControllerBase
 - Locks de un caso de uso tenant: `pg_advisory_xact_lock` con `AdvisoryLockKeys.For(tenantId, recurso, id)`, que siempre incluye el `TenantId`, o `FOR NO KEY UPDATE`. El seed global de referencias usa `AdvisoryLockKeys.ReferenceDataSeed`, sin tenant. Ambos exigen un límite de `IUnitOfWork` abierto.
 - Prohibido `ExecuteUpdate` y `ExecuteDelete` sobre entidades `IAuditable` o `ISoftDeletable`.
 
-`TransactionBoundaryTests` verifica con el IL que solo los servicios que implementan `Interfaces/Services` y el seed técnico `ReferenceDataSeeder` reciben `IUnitOfWork`, y que nadie salvo `UnitOfWork` llama a `SaveChanges`.
+`TransactionBoundaryTests` verifica con el IL que solo los servicios que implementan `Interfaces/Services` y los dos seeds técnicos `ReferenceDataSeeder` y `DatabaseSeeder` reciben `IUnitOfWork`, y que nadie salvo `UnitOfWork` llama a `SaveChanges`.
 
 ---
 

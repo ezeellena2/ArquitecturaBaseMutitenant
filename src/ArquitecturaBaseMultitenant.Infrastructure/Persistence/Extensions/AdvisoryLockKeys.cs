@@ -7,6 +7,7 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 internal static class AdvisoryLockKeys
 {
     public const string ReferenceDataSeed = "p:ref:seed";
+    public const string Seed = "seed:database";
 
     /// <summary>Un lock global por destino normalizado, compartido entre propósitos de ingreso.</summary>
     public static string LoginCode(LoginCodeDestination destination)

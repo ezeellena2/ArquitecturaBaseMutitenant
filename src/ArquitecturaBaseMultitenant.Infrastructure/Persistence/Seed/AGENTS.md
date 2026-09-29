@@ -1,5 +1,5 @@
-Seed de datos globales de referencia. Lee los cinco JSON generados, hace upsert en las once tablas de `platform`, deshabilita códigos y asociaciones retirados y nunca borra filas.
+Seed global. `ReferenceDataSeeder` lee los cinco JSON generados y prepara el upsert de las once tablas de `platform`; `DatabaseSeeder` toma el lock `seed:database` y guarda referencias, cliente web, ajustes, operador y documentos legales dentro de una sola UoW. Los seeders de piezas no abren límites propios.
 
-Antes de editar, leé: [datos-de-referencia](../../../../docs/rules/datos-de-referencia.md) · [datos-de-referencia.md §§2–4](../../../../docs/architecture/datos-de-referencia.md#2-las-tablas-esquema-platform-globales-sin-rls) · [tests](../../../../docs/rules/tests.md).
+Antes de editar, leé: [datos-de-referencia](../../../../docs/rules/datos-de-referencia.md) · [datos-de-referencia.md §§2–4](../../../../docs/architecture/datos-de-referencia.md#2-las-tablas-esquema-platform-globales-sin-rls) · [guardado](../../../../docs/rules/guardado.md) · [datos-personales](../../../../docs/rules/datos-personales.md) · [tests](../../../../docs/rules/tests.md).
 
-Copiá de: `Infrastructure/Persistence/Seed/ReferenceDataSeeder.cs` y `Infrastructure/Persistence/Seed/ReferenceData/currencies.json` como muestra de las fuentes generadas. Lo verifica `Api.IntegrationTests/Persistence/ReferenceDataSeederTests.cs`.
+Copiá de: `Infrastructure/Persistence/Seed/ReferenceDataSeeder.cs`, `Infrastructure/Persistence/Seed/ReferenceData/currencies.json` y `../ArquitecturaBase/src/ArquitecturaBase.Infrastructure/Persistence/Seed/{DatabaseSeeder,OpenIddictSeeder}.cs`. Lo verifican `Api.IntegrationTests/Persistence/ReferenceDataSeederTests.cs` y `Api.IntegrationTests/Identity/ProductionSeedTests.cs`.

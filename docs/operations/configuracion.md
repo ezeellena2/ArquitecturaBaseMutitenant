@@ -17,6 +17,8 @@
 | `Authentication:Google:ClientSecret` | secreto del cliente OAuth | Google Cloud Console › Credenciales (el mismo cliente de ArquitecturaBase) |
 | `Authentication:LoginCode:HashKey` | clave HMAC de los códigos de ingreso y registro | `appsettings.Development.json` de ArquitecturaBase; el importador la traslada a user-secrets sin mostrarla |
 | `Email:Smtp:Password` | contraseña de **aplicación** de Gmail (no la de la cuenta) | https://myaccount.google.com/apppasswords |
+| `Seed:PlatformOwner:Email` | correo del operador inicial; obligatorio en Production mientras no exista un operador | Buzón controlado por quien administra la plataforma |
+| `Seed:PlatformOwner:DisplayName` | nombre visible opcional del operador inicial | Quien administra la plataforma |
 | `WhatsApp:AccessToken` | token del usuario del sistema | Meta Business › Usuarios del sistema (`whatsapp_business_messaging`, `whatsapp_business_management`) |
 | `WhatsApp:AppSecret` | con lo que Meta firma cada webhook | Meta for Developers › la app › Configuración › Básica |
 | `WhatsApp:VerifyToken` | la palabra de verificación del webhook | la misma que cargaste en Meta |
@@ -45,6 +47,8 @@ Remove-Variable s
 ```powershell
 ./scripts/secretos/verificar.ps1
 ```
+
+El importador de ArquitecturaBase no conoce al operador de esta plataforma: cargá `Seed:PlatformOwner:Email` por separado en user-secrets o como `Seed__PlatformOwner__Email` en el gestor de secretos de Production. `Seed:PlatformOwner:DisplayName` es opcional. El seed crea una identidad global sin espacio Personal ni contraseña, con el correo como método principal verificado; cada ingreso exige el código enviado a ese buzón. Si ya existe ese método de correo, marca su cuenta como operadora. Si ya hay un operador, los siguientes arranques no exigen la clave ni alteran esa cuenta. En Development, sin la clave se omite el operador inicial; en Production, si aún no hay operador, falta de clave detiene el arranque.
 
 ## 3. Lo que no es secreto (`appsettings.Development.json` de la Api, en el repo)
 
@@ -88,6 +92,7 @@ Las opciones se validan **al arrancar**, como en ArquitecturaBase:
 | Situación | Resultado |
 |---|---|
 | `Email:Delivery=Smtp` sin `Email:Smtp:Password` | la Api no arranca y nombra la clave que falta |
+| Production sin operador y sin `Seed:PlatformOwner:Email` | la Api no arranca y nombra la clave que falta |
 | `Authentication:Google:ClientId` sin `ClientSecret` | la Api no arranca. Sin `ClientId`, el botón de Google no aparece (`GET /api/auth/methods`) |
 | `WhatsApp:PhoneNumberId` sin `AccessToken` | la Api no arranca |
 | `AppSecret` sin `VerifyToken`, o al revés | la Api no arranca. Sin ninguno, el webhook queda apagado, con un Warning, y el envío funciona igual |

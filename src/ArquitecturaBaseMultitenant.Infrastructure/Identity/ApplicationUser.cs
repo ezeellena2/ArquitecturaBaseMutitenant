@@ -95,6 +95,8 @@ public sealed class ApplicationUser : IdentityUser<Guid>
         LastBusinessTenantId = tenantId;
     }
 
+    public void GrantPlatformOperator() => IsPlatformOperator = true;
+
     private static bool IsValidDisplayName(string? displayName) =>
         displayName is null || displayName.Length <= TextLimits.PersonName;
 }

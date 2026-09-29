@@ -702,11 +702,11 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │       ├── ReferenceDataSeeder.cs                    [E2] upsert idempotente; nunca borra
 │       ├── SeedExtensions.cs                          [E3] orden e idempotencia; corre en todos los ambientes, dentro de un
 │       │                                              límite y con el advisory lock "seed:" (sin carreras entre réplicas)
-│       ├── SeedOptions.cs                             [E3] Seed:PlatformOwner
+│       ├── DatabaseSeeder.cs                          [E3] límite único y lock `seed:database` para todas las piezas globales
 │       ├── OpenIddictSeeder.cs                        [E3] cliente web + scope api
-│       ├── PlatformSeeder.cs                          [E3] ajustes de plataforma + operador inicial (Seed:PlatformOwner); la E5 le asigna el rol Owner
+│       ├── PlatformSeeder.cs                          [E3] ajustes de plataforma + operador inicial (Seed:PlatformOwner:Email y DisplayName); la E5 le asigna el rol Owner
 │       ├── LegalDocumentSeeder.cs                     [E3] 3a: versión base de términos y privacidad, con contenidos es y en
-│       └── DevelopmentSeeder.cs                       [E3] operador; Empresa A (Ana, Kevin); Kevin y Carla como personas; desde la E4, Ana
+│       └── DevelopmentSeeder.cs                       [E3] Empresa A (Ana, Kevin); Kevin y Carla como personas; desde la E4, Ana
 │                                                      es Dueña (TenantAdmin) de la Empresa A
 ├── Identity/                                          [E2 shell CLR; modelo de cuenta E3]
 │   ├── ApplicationUser.cs                             [E2 shell sin mapeo; E3] IsPlatformOperator, Status, Culture, TimeZoneId, DisplayName, LastBusinessTenantId,

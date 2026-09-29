@@ -80,6 +80,12 @@ internal static class PersistenceRegistration
         services.AddScoped<ILoginMethodReader, LoginMethodReader>();
         services.AddScoped<ILoginCodeRepository, LoginCodeRepository>();
         services.AddScoped<ILoginAuditRepository, LoginAuditRepository>();
+        services.AddSingleton<JsonReferenceDataCatalog>();
+        services.AddScoped<ReferenceDataSeeder>();
+        services.AddScoped<DatabaseSeeder>();
+        services.AddScoped<OpenIddictSeeder>();
+        services.AddScoped<PlatformSeeder>();
+        services.AddScoped<LegalDocumentSeeder>();
         services.AddReferenceCatalogs();
 
         return services;

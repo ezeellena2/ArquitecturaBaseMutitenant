@@ -14,7 +14,8 @@ public sealed class TransactionBoundaryTests
 {
     private const string UnitOfWorkClass = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.UnitOfWork";
     private const string Registration = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.PersistenceRegistration";
-    private const string Seed = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed.ReferenceDataSeeder";
+    private const string ReferenceSeed = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed.ReferenceDataSeeder";
+    private const string DatabaseSeed = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed.DatabaseSeeder";
     private const string IdempotencyStore = "ArquitecturaBaseMultitenant.Infrastructure.Idempotency.IdempotencyStore";
     private const string CacheExtensions = "ArquitecturaBaseMultitenant.Infrastructure.Caching.HybridCacheExtensions";
     private const string ApplicationServices = "ArquitecturaBaseMultitenant.Application.Services";
@@ -28,13 +29,14 @@ public sealed class TransactionBoundaryTests
     ];
 
     [Fact]
-    public void Only_use_case_services_and_the_reference_seed_receive_unit_of_work()
+    public void Only_use_case_services_and_the_two_named_seeds_receive_unit_of_work()
     {
         var receivers = Receivers(Production.SelectMany(assembly => assembly.GetTypes())).ToArray();
 
-        // El seed de arranque es la única excepción: usa el mismo límite, no guarda por su cuenta.
-        Assert.Contains(receivers, type => type.FullName == Seed);
-        Assert.Empty(receivers.Where(type => !IsService(type) && type.FullName != Seed)
+        // La lista cerrada admite dos seeds técnicos; ningún otro adaptador abre el límite.
+        Assert.Contains(receivers, type => type.FullName == ReferenceSeed);
+        Assert.Contains(receivers, type => type.FullName == DatabaseSeed);
+        Assert.Empty(receivers.Where(type => !IsService(type) && type.FullName is not (ReferenceSeed or DatabaseSeed))
             .Select(type => type.FullName));
 
         Assert.Contains(typeof(RogueReceiver), Receivers([typeof(RogueReceiver)]));
@@ -42,7 +44,7 @@ public sealed class TransactionBoundaryTests
     }
 
     [Fact]
-    public void Only_use_case_services_and_the_reference_seed_call_unit_of_work()
+    public void Only_use_case_services_and_the_two_named_seeds_call_unit_of_work()
     {
         var callers = Production.SelectMany(ArchitectureIl.Calls)
             .Where(call => call.DeclaringType == typeof(IUnitOfWork).FullName
@@ -51,8 +53,9 @@ public sealed class TransactionBoundaryTests
             .Distinct(StringComparer.Ordinal)
             .ToArray();
 
-        Assert.Contains(Seed, callers);
-        Assert.DoesNotContain(callers, owner => owner != Seed && !IsService(owner));
+        Assert.Contains(ReferenceSeed, callers);
+        Assert.Contains(DatabaseSeed, callers);
+        Assert.DoesNotContain(callers, owner => owner is not (ReferenceSeed or DatabaseSeed) && !IsService(owner));
 
         var control = ArchitectureIl.Calls(typeof(TransactionBoundaryTests).Assembly);
         Assert.Contains(control, call => call.Owner == typeof(TransactionBoundaryTests).FullName

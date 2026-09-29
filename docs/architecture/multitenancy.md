@@ -239,6 +239,8 @@ Con el acceso equivocado responde 403 `Tenancy.Access.Wrong`. Un recurso de otra
 
 ## 10. Flujos
 
+El seed inicial de `PlatformSettings` deja `ConsumerSignup = Open`, `BusinessSignup = Open` y `MaxOwnedOrganizations = 1`. Los cambios posteriores se hacen desde la plataforma y no se pisan al reiniciar.
+
 **Registro de una persona (B2C):**
 1. "Creá tu cuenta" → código (o Google).
 2. Se crea la identidad y su espacio personal, con aceptación de términos.
