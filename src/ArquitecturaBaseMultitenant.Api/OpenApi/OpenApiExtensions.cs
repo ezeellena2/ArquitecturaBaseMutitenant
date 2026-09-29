@@ -1,3 +1,5 @@
+using System.Reflection;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi;
 
@@ -11,11 +13,20 @@ internal static class OpenApiExtensions
     {
         services.AddOpenApi(options => options.AddSchemaTransformer((schema, context, _) =>
         {
-            // The input normalizer is a JsonConverter<string>; OpenAPI otherwise emits
-            // an empty schema for every string, producing `unknown` in generated clients.
+            // Per-property input converters can otherwise leave string schemas empty.
             if (context.JsonTypeInfo.Type == typeof(string))
             {
-                schema.Type = JsonSchemaType.String;
+                schema.Type = IsNullable(context.JsonPropertyInfo)
+                    ? JsonSchemaType.String | JsonSchemaType.Null
+                    : JsonSchemaType.String;
+            }
+
+            if (context.JsonTypeInfo.Kind == JsonTypeInfoKind.Object && schema.Required is not null)
+            {
+                foreach (var property in context.JsonTypeInfo.Properties.Where(IsNullable))
+                {
+                    schema.Required.Remove(property.Name);
+                }
             }
 
             return Task.CompletedTask;
@@ -23,6 +34,10 @@ internal static class OpenApiExtensions
         services.Configure<MvcOptions>(options => options.Conventions.Add(new ProblemResponsesConvention()));
         return services;
     }
+
+    private static bool IsNullable(JsonPropertyInfo? property) =>
+        property?.AttributeProvider is PropertyInfo source
+        && new NullabilityInfoContext().Create(source).ReadState == NullabilityState.Nullable;
 
     public static WebApplication MapOpenApiDocumentation(this WebApplication app)
     {

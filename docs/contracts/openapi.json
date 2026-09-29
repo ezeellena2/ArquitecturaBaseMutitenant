@@ -405,12 +405,8 @@
           "code",
           "alpha3",
           "numericCode",
-          "callingCode",
-          "defaultCurrencyCode",
-          "defaultTimeZoneId",
           "name",
-          "isEnabled",
-          "sortOrder"
+          "isEnabled"
         ],
         "type": "object",
         "properties": {
@@ -424,13 +420,22 @@
             "type": "string"
           },
           "callingCode": {
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "defaultCurrencyCode": {
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "defaultTimeZoneId": {
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "name": {
             "type": "string"
@@ -439,11 +444,9 @@
             "type": "boolean"
           },
           "sortOrder": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "null",
-              "integer",
-              "string"
+              "integer"
             ],
             "format": "int32"
           }
@@ -464,11 +467,9 @@
           "groupSeparator",
           "currencyPattern",
           "percentPattern",
-          "fallbackCulture",
           "isDefault",
           "name",
-          "isEnabled",
-          "sortOrder"
+          "isEnabled"
         ],
         "type": "object",
         "properties": {
@@ -512,7 +513,10 @@
             "type": "string"
           },
           "fallbackCulture": {
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "isDefault": {
             "type": "boolean"
@@ -524,11 +528,9 @@
             "type": "boolean"
           },
           "sortOrder": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "null",
-              "integer",
-              "string"
+              "integer"
             ],
             "format": "int32"
           }
@@ -538,13 +540,11 @@
         "required": [
           "code",
           "numericCode",
-          "minorUnits",
           "symbol",
           "displaySymbol",
           "name",
           "namePlural",
-          "isEnabled",
-          "sortOrder"
+          "isEnabled"
         ],
         "type": "object",
         "properties": {
@@ -555,11 +555,9 @@
             "type": "string"
           },
           "minorUnits": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "null",
-              "integer",
-              "string"
+              "integer"
             ],
             "format": "int32"
           },
@@ -579,11 +577,9 @@
             "type": "boolean"
           },
           "sortOrder": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "null",
-              "integer",
-              "string"
+              "integer"
             ],
             "format": "int32"
           }
@@ -593,25 +589,35 @@
         "type": "object",
         "properties": {
           "type": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "status": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "null",
-              "integer",
               "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": [
+              "null",
+              "integer"
             ],
             "format": "int32"
           },
           "detail": {
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "instance": {
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -670,8 +676,7 @@
           "validatorKey",
           "appliesTo",
           "name",
-          "isEnabled",
-          "sortOrder"
+          "isEnabled"
         ],
         "type": "object",
         "properties": {
@@ -700,11 +705,9 @@
             "type": "boolean"
           },
           "sortOrder": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "null",
-              "integer",
-              "string"
+              "integer"
             ],
             "format": "int32"
           }
@@ -715,8 +718,7 @@
           "id",
           "countryCodes",
           "city",
-          "isEnabled",
-          "sortOrder"
+          "isEnabled"
         ],
         "type": "object",
         "properties": {
@@ -724,7 +726,10 @@
             "type": "string"
           },
           "countryCodes": {
-            "type": "array"
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "city": {
             "type": "string"
@@ -733,11 +738,9 @@
             "type": "boolean"
           },
           "sortOrder": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "null",
-              "integer",
-              "string"
+              "integer"
             ],
             "format": "int32"
           }

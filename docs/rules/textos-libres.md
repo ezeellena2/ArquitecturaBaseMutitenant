@@ -3,7 +3,7 @@
 **Regla:** todo texto que entra a la API se **limpia solo**: sin espacios en los bordes, Unicode NFC y sin caracteres invisibles. Además, cada campo declara su **tipo de texto**, que fija su largo y si se colapsan los espacios. Los largos son constantes compartidas por la base, el validador y el front.
 
 ## Cómo se hace
-- **Nivel 1, automático:** `NormalizedStringJsonConverter` (registrado en `JsonConfiguration`) aplica `TextNormalizer.Clean` a **todo** `string` de un contrato:
+- **Nivel 1, automático:** el resolver de `JsonConfiguration` aplica `NormalizedStringJsonConverter` a las propiedades `string` de los contratos HTTP de entrada (`*HttpRequest`) y ejecuta `TextNormalizer.Clean`:
   - trim;
   - normalización NFC;
   - saca los caracteres de control y los de ancho cero, salvo `\n` y `\t`;

@@ -1,6 +1,8 @@
 using System.Net;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Api.Json;
 using Microsoft.AspNetCore.Hosting;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Contracts;
@@ -75,6 +77,57 @@ public sealed class OpenApiTests(ApiFactory factory)
             .GetProperty("culture").GetProperty("type").GetString());
         Assert.Equal("string", schemas.GetProperty("CurrencyReferenceHttpResponse").GetProperty("properties")
             .GetProperty("code").GetProperty("type").GetString());
+    }
+
+    [Fact]
+    public async Task Reference_schemas_preserve_nullable_strings_array_items_and_numeric_types()
+    {
+        await using var development = factory.WithWebHostBuilder(builder => builder.UseEnvironment("Development"));
+        using var client = development.CreateClient();
+        using var response = await client.GetAsync("/openapi/v1.json", TestContext.Current.CancellationToken);
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        var schemas = document.RootElement.GetProperty("components").GetProperty("schemas");
+
+        var country = schemas.GetProperty("CountryReferenceHttpResponse");
+        var required = country.GetProperty("required").EnumerateArray()
+            .Select(item => item.GetString()).ToArray();
+        Assert.DoesNotContain("callingCode", required);
+        Assert.DoesNotContain("defaultCurrencyCode", required);
+        Assert.DoesNotContain("defaultTimeZoneId", required);
+        var nullableStringTypes = country.GetProperty("properties").GetProperty("defaultTimeZoneId")
+            .GetProperty("type").EnumerateArray().Select(item => item.GetString()).ToArray();
+        Assert.Contains("string", nullableStringTypes);
+        Assert.Contains("null", nullableStringTypes);
+        Assert.Equal("string", schemas.GetProperty("TimeZoneReferenceHttpResponse")
+            .GetProperty("properties").GetProperty("countryCodes").GetProperty("items")
+            .GetProperty("type").GetString());
+
+        foreach (var property in new[] { "minorUnits", "sortOrder" })
+        {
+            var types = schemas.GetProperty("CurrencyReferenceHttpResponse")
+                .GetProperty("properties").GetProperty(property).GetProperty("type")
+                .EnumerateArray().Select(item => item.GetString()).ToArray();
+            Assert.Contains("integer", types);
+            Assert.Contains("null", types);
+            Assert.DoesNotContain("string", types);
+        }
+
+        using var payload = await client.GetAsync("/api/reference-data/currencies", TestContext.Current.CancellationToken);
+        using var data = JsonDocument.Parse(await payload.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        Assert.Equal(HttpStatusCode.OK, payload.StatusCode);
+        Assert.Contains(data.RootElement.EnumerateArray(), item =>
+            item.GetProperty("minorUnits").ValueKind == JsonValueKind.Number);
+    }
+
+    [Fact]
+    public void Json_options_reject_numbers_encoded_as_strings()
+    {
+        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        JsonConfiguration.ConfigureJson(options);
+
+        Assert.Equal(JsonNumberHandling.Strict, options.NumberHandling);
+        Assert.Throws<JsonException>(() =>
+            JsonSerializer.Deserialize<Dictionary<string, int>>("""{"value":"42"}""", options));
     }
 
     [Theory]

@@ -10,7 +10,7 @@
   - datos de referencia: `ValidCurrency()`, `ValidCountry()`, `ValidTimeZone()`, `ValidCulture()` y `ValidTaxIdType()` consultan los cinco catálogos de Application; solo aceptan códigos habilitados para un dato nuevo;
   - permisos: `ValidPermissions(scope)` se agrega en E4, junto con el catálogo; no forma parte de `ValidationRules` de E1.
 - El teléfono no tiene regla en `ValidationRules`: lo interpreta el servicio con `IPhoneNumberParser.Parse(country, number, usage)`, y el error (`Users.Phone.*`) se ata al campo `phone` con `FieldErrors.On` ([telefonos](telefonos.md)).
-- El texto ya llega limpio (trim, NFC, sin caracteres invisibles) gracias al conversor global: no se vuelve a limpiar.
+- El texto de cada propiedad `string` del contrato HTTP de entrada ya llega limpio (trim, NFC, sin caracteres invisibles) gracias al modificador del resolver JSON; `[RawText]` conserva el valor literal. No se vuelve a limpiar en el servicio.
 - Los mensajes salen de `ValidationTexts` (`Validation.resx`), nunca de un literal.
 - Un listado usa `PagedRequestValidator<T>` o `CursorRequestValidator<T>`, que ya validan página, tamaño, orden y búsqueda.
 - El servicio recibe `IRequestValidator` y llama `if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;`.
