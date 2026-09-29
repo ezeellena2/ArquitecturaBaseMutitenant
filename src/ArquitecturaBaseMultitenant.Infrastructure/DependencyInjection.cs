@@ -56,7 +56,7 @@ public static class DependencyInjection
         {
             services.AddOpenIddictServer(configuration, environment);
         }
-        services.AddMessaging();
+        services.AddMessaging(configuration, environment);
         services.AddBackgroundJobs();
 
         // El exportador construye el host sin PostgreSQL; solo allí usa el JSON que alimenta el seed.

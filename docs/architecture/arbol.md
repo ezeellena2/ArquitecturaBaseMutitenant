@@ -261,6 +261,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── IPlatformOperatorService.cs               [E5]
 │   │   ├── IPlatformAuditService.cs                  [E5]
 │   │   ├── IReferenceDataService.cs                  [E1] cinco catálogos traducidos, GET /api/reference-data
+│   │   ├── IOutboxDispatchService.cs                 [E3] límite de envío/reintento del outbox
 │   │   └── IPlatformSettingsService.cs              [E5]
 │   ├── ReferenceData/                                [E1] puertos de Application; Domain no los referencia
 │   │   ├── ICurrencyCatalog.cs                        código, IsEnabled y MinorUnits desde JSON E1 / base E2
@@ -270,6 +271,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   └── ITaxIdTypeCatalog.cs
 │   ├── Persistence/                                  implementados en Infrastructure/Persistence
 │   │   ├── IUnitOfWork.cs                            [E2]
+│   │   ├── IOutboxDispatchStore.cs                   [E3] SKIP LOCKED y estados dentro del límite del servicio
 │   │   ├── CommitPolicy.cs                           [E2] OnSuccess | OnAnyResult
 │   │   ├── CommitPolicyExtensions.cs                 [E2]
 │   │   ├── ITenantScope.cs                           [E2] Enter(tenantId)
@@ -321,6 +323,7 @@ ArquitecturaBaseMultitenant.Application/
 │       │   └── IPayloadProtector.cs                  cifrado del payload del outbox
 │       ├── Messaging/                                [E3]
 │       │   ├── IOutbox.cs                            Enqueue(canal registrado) dentro del límite
+│       │   ├── IChannelSender.cs                    emisor técnico por canal, consumido por OutboxDispatchService
 │       │   ├── ILoginCodeChannel.cs                 [E3] envía un código por un canal; el núcleo trae "email"
 │       │   ├── IInvitationChannel.cs                [E3] envía una invitación; el núcleo trae "email"
 │       │   ├── IAccountNoticeChannel.cs              [E3] envía un AccountNotice a un método de ingreso; el núcleo trae "email" (Email) y el
@@ -517,6 +520,8 @@ ArquitecturaBaseMultitenant.Application/
 │   │   └── AuditLogService.cs                        [E6]
 │   ├── ReferenceData/                                [E1]
 │   │   └── ReferenceDataService.cs                   usa los cinco catálogos, devuelve ReferenceDataResponse
+│   ├── Messaging/                                    [E3]
+│   │   └── OutboxDispatchService.cs                 único límite IUnitOfWork para seleccionar, entregar y guardar el estado
 │   └── Platform/                                     [E5]
 │       ├── TenantAdministrationService.cs
 │       ├── PlatformAccountService.cs
@@ -722,8 +727,8 @@ ArquitecturaBaseMultitenant.Infrastructure/
 ├── Messaging/                                         [E3]
 │   ├── MessagingRegistration.cs
 │   ├── Outbox.cs                                      IOutbox
-│   ├── OutboxDispatcher.cs                            BackgroundService: SKIP LOCKED, backoff
-│   ├── IChannelSender.cs                              internal: un emisor por canal
+│   ├── OutboxDispatcher.cs                            BackgroundService: sondea y llama al servicio de Application
+│   ├── OutboxDispatchStore.cs                         SKIP LOCKED, entrega y backoff dentro de la transacción del servicio
 │   └── Email/
 │       ├── EmailChannelSender.cs
 │       ├── IEmailTransport.cs
