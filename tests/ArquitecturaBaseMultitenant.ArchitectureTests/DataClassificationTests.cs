@@ -1,6 +1,10 @@
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Auditing;
+using ArquitecturaBaseMultitenant.Domain.Legal;
+using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.ReferenceData;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
@@ -20,6 +24,12 @@ public sealed class DataClassificationTests
         typeof(LoginCode).FullName!,
         typeof(LoginAudit).FullName!,
         typeof(Tenant).FullName!,
+        typeof(PlatformSettings).FullName!,
+        typeof(SecurityEvent).FullName!,
+        typeof(OutboxMessage).FullName!,
+        typeof(LegalDocument).FullName!,
+        typeof(LegalDocumentContent).FullName!,
+        typeof(LegalAcceptance).FullName!,
         typeof(IdentityUserClaim<Guid>).FullName!,
         typeof(IdentityUserLogin<Guid>).FullName!,
         typeof(IdentityUserToken<Guid>).FullName!,
@@ -103,7 +113,7 @@ public sealed class DataClassificationTests
     private static bool IsIdentityGlobal(Type type) => type == typeof(ApplicationUser)
         || type == typeof(LoginMethod) || type == typeof(LoginCode) || type == typeof(LoginAudit)
         || type == typeof(IdentityUserClaim<Guid>) || type == typeof(IdentityUserLogin<Guid>)
-        || type == typeof(IdentityUserToken<Guid>);
+        || type == typeof(IdentityUserToken<Guid>) || type == typeof(LegalAcceptance);
 
 #pragma warning disable CA1812 // Casos de control que solo se inspeccionan por tipo.
     private sealed class UnclassifiedProbe;

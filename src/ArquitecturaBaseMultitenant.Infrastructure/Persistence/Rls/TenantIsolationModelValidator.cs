@@ -1,6 +1,10 @@
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Auditing;
+using ArquitecturaBaseMultitenant.Domain.Legal;
+using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.ReferenceData;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
@@ -55,6 +59,12 @@ internal static class TenantIsolationModelValidator
         type == typeof(LoginCode) ||
         type == typeof(LoginAudit) ||
         type == typeof(Tenant) ||
+        type == typeof(PlatformSettings) ||
+        type == typeof(SecurityEvent) ||
+        type == typeof(OutboxMessage) ||
+        type == typeof(LegalDocument) ||
+        type == typeof(LegalDocumentContent) ||
+        type == typeof(LegalAcceptance) ||
         type == typeof(IdentityUserClaim<Guid>) ||
         type == typeof(IdentityUserLogin<Guid>) ||
         type == typeof(IdentityUserToken<Guid>) ||
