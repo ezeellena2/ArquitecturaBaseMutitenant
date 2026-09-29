@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Time;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Phones;
 using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
+using ArquitecturaBaseMultitenant.Infrastructure.Caching;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Time;
 using ArquitecturaBaseMultitenant.Infrastructure.Phones;
@@ -26,6 +27,7 @@ public static class DependencyInjection
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<ITimeZoneService, TimeZoneService>();
         services.AddSingleton<IPhoneNumberDisplayFormatter, LibPhoneNumberDisplayFormatter>();
+        services.AddCaching();
 
         services.AddSingleton<JsonReferenceDataCatalog>();
         services.AddSingleton<ICurrencyCatalog>(provider => provider.GetRequiredService<JsonReferenceDataCatalog>());

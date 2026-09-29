@@ -18,7 +18,7 @@
 - **El host del subdominio nunca da acceso a datos privados:** solo `IPublicSiteContext`, para lo público.
 - **Plataforma, workers y altas:** `using (tenantScope.Enter(tenantId)) { … }` después de autorizar, y antes de abrir el límite. En plataforma, además, con motivo obligatorio y el `SecurityEvent` registrado antes de `Enter` (`PlatformActionGuard`).
 - **Una persona (B2C) nunca crea una organización:** el alta es "Registrá tu empresa" (`BusinessSignupService`).
-- **Caché y locks:** `CacheKeys.Tenant(…)`, `CacheKeys.PublicSite(…)`, `AdvisoryLockKeys.For(tenantId, …)`; en un recurso compartido, lock de fila.
+- **Caché y locks:** `CacheKeys.Tenant(…)`, `CacheKeys.PublicSite(…)`, `CacheKeys.User(…)` y `CacheKeys.Platform(…)` producen claves `t:`, `s:`, `u:` y `p:`; los identificadores son GUID en formato `N`. `AdvisoryLockKeys.For(tenantId, recurso, id)` produce `t:{tenantId:N}:lock:{recurso}:{id}` y se toma dentro del límite del caso de uso. En un recurso compartido, lock de fila.
 
 ## Prohibido
 - Leer el tenant de un header, del body o de la query.
