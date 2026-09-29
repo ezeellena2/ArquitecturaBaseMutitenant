@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Api.ErrorHandling;
 using ArquitecturaBaseMultitenant.Api.Idempotency;
 using ArquitecturaBaseMultitenant.Api.Json;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
+using ArquitecturaBaseMultitenant.Api.RateLimiting;
 using ArquitecturaBaseMultitenant.Api.RequestContext;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Resources;
@@ -55,6 +56,7 @@ public static class DependencyInjection
                     });
             };
         });
+        services.AddLoginRateLimitingPolicies();
         services.ConfigureHttpJsonOptions(options => JsonConfiguration.ConfigureJson(options.SerializerOptions));
         services.AddControllers(options => options.Filters.Add(new EmptyJsonBodyContentTypeFilter()))
             .AddJsonOptions(options => JsonConfiguration.ConfigureJson(options.JsonSerializerOptions));

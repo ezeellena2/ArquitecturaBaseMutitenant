@@ -43,6 +43,14 @@ public sealed class TestController : ControllerBase
     [EnableRateLimiting("test-rejection")]
     public IActionResult RateLimit() => NoContent();
 
+    [HttpGet("login-code-rate-limit")]
+    [EnableRateLimiting("login-code")]
+    public IActionResult LoginCodeRateLimit() => NoContent();
+
+    [HttpGet("login-verify-rate-limit")]
+    [EnableRateLimiting("login-verify")]
+    public IActionResult LoginVerifyRateLimit() => NoContent();
+
     [HttpGet("status/{status:int}")]
     public IActionResult EmptyStatus(int status) => StatusCode(status);
 
