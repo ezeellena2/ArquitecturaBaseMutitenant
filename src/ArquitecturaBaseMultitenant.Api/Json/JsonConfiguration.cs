@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Api.Json;
 
@@ -14,6 +15,8 @@ public static class JsonConfiguration
         options.Converters.Add(new DateOnlyConverter());
         options.Converters.Add(new TimeOnlyConverter());
         options.Converters.Add(new MoneyJsonConverter());
+        options.Converters.Add(new JsonStringEnumConverter<Access>(JsonNamingPolicy.CamelCase,
+            allowIntegerValues: false));
         options.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false));
         options.NumberHandling = JsonNumberHandling.Strict;
 

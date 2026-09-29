@@ -25,6 +25,24 @@ internal static class OpenApiExtensions
                         : JsonSchemaType.String;
                 }
 
+                var valueType = Nullable.GetUnderlyingType(context.JsonTypeInfo.Type)
+                    ?? context.JsonTypeInfo.Type;
+                if (valueType.IsEnum)
+                {
+                    schema.Type = IsNullable(context.JsonPropertyInfo)
+                        || Nullable.GetUnderlyingType(context.JsonTypeInfo.Type) is not null
+                            ? JsonSchemaType.String | JsonSchemaType.Null
+                            : JsonSchemaType.String;
+                }
+                if (valueType == typeof(DateTime) || valueType == typeof(DateTimeOffset))
+                {
+                    schema.Type = IsNullable(context.JsonPropertyInfo)
+                        || Nullable.GetUnderlyingType(context.JsonTypeInfo.Type) is not null
+                            ? JsonSchemaType.String | JsonSchemaType.Null
+                            : JsonSchemaType.String;
+                    schema.Format = "date-time";
+                }
+
                 if (context.JsonTypeInfo.Kind == JsonTypeInfoKind.Object && schema.Required is not null)
                 {
                     foreach (var property in context.JsonTypeInfo.Properties.Where(IsNullable))

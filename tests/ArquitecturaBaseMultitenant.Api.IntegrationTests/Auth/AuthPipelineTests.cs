@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
+using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Api.Tenancy;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
@@ -10,6 +11,7 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
@@ -17,6 +19,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
@@ -61,7 +64,65 @@ public sealed class AuthPipelineTests(ApiFactory factory)
         Assert.Null(result.TenantKind);
     }
 
-    private WebApplicationFactory<Program> TestApp() => factory.WithWebHostBuilder(builder =>
+    [Fact]
+    public async Task Authenticated_me_update_persists_culture_and_get_reads_it()
+    {
+        await using var app = TestApp(development: true);
+        using var client = app.CreateClient();
+        await using var connection = new NpgsqlConnection(factory.AdminConnectionString);
+        await connection.OpenAsync(Ct);
+        await using var lookup = connection.CreateCommand();
+        lookup.CommandText = """
+            SELECT u."Id", a."TenantId"
+            FROM identity."AspNetUsers" u
+            JOIN identity."UserTenantAccesses" a ON a."UserId" = u."Id"
+            JOIN platform."Tenants" t ON t."Id" = a."TenantId"
+            WHERE u."DisplayName" = 'Carla' AND t."Kind" = 'Personal'
+            """;
+        await using var rows = await lookup.ExecuteReaderAsync(Ct);
+        Assert.True(await rows.ReadAsync(Ct));
+        var userId = rows.GetGuid(0);
+        var tenantId = rows.GetGuid(1);
+        await rows.DisposeAsync();
+
+        using var put = AuthorizedRequest(HttpMethod.Put, "/api/me", userId, tenantId);
+        put.Content = JsonContent.Create(new
+        {
+            displayName = "Carla",
+            culture = "en-US",
+            timeZoneId = "America/Argentina/Buenos_Aires",
+        });
+        using var updated = await client.SendAsync(put, Ct);
+        Assert.Equal(HttpStatusCode.NoContent, updated.StatusCode);
+
+        using var get = AuthorizedRequest(HttpMethod.Get, "/api/me", userId, tenantId);
+        using var read = await client.SendAsync(get, Ct);
+        Assert.Equal(HttpStatusCode.OK, read.StatusCode);
+        using var body = JsonDocument.Parse(await read.Content.ReadAsStringAsync(Ct));
+        Assert.Equal("en-US", body.RootElement.GetProperty("culture").GetString());
+        Assert.Equal("consumer", body.RootElement.GetProperty("access").GetString());
+        Assert.Equal(userId, body.RootElement.GetProperty("id").GetGuid());
+        Assert.Equal(tenantId, body.RootElement.GetProperty("activeTenantId").GetGuid());
+    }
+
+    private static HttpRequestMessage AuthorizedRequest(HttpMethod method, string path, Guid userId,
+        Guid tenantId)
+    {
+        var request = new HttpRequestMessage(method, path);
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Test");
+        request.Headers.Add("X-Test-User-Id", userId.ToString("D"));
+        request.Headers.Add("X-Test-Tenant-Id", tenantId.ToString("D"));
+        return request;
+    }
+
+    private WebApplicationFactory<Program> TestApp(bool development = false) => factory.WithWebHostBuilder(builder =>
+    {
+        if (development)
+        {
+            builder.UseEnvironment("Development");
+            builder.UseSetting("Email:Delivery", "PickupDirectory");
+            builder.UseSetting("Authentication:Google:ClientId", string.Empty);
+        }
         builder.ConfigureTestServices(services =>
         {
             services.AddAuthentication(options =>
@@ -75,7 +136,8 @@ public sealed class AuthPipelineTests(ApiFactory factory)
             services.RemoveAll<ITenantStatusCache>();
             services.AddSingleton<IAccessStatusCache, ActiveAccessStatusCache>();
             services.AddSingleton<ITenantStatusCache, ActiveTenantStatusCache>();
-        }));
+        });
+    });
 
     private sealed class PipelineAuthHandler(
         IOptionsMonitor<AuthenticationSchemeOptions> options,
@@ -91,12 +153,18 @@ public sealed class AuthPipelineTests(ApiFactory factory)
                 return Task.FromResult(AuthenticateResult.NoResult());
             }
 
+            var userId = Guid.TryParse(Request.Headers["X-Test-User-Id"], out var fromHeaderUser)
+                ? fromHeaderUser : UserId;
+            var tenantId = Guid.TryParse(Request.Headers["X-Test-Tenant-Id"], out var fromHeaderTenant)
+                ? fromHeaderTenant : TenantId;
             Claim[] claims =
             [
-                new("sub", UserId.ToString("D")),
-                new(TenantClaimTypes.Access, "business"),
-                new(TenantClaimTypes.TenantId, TenantId.ToString("D")),
-                new(TenantClaimTypes.TenantKind, "business"),
+                new("sub", userId.ToString("D")),
+                new(TenantClaimTypes.Access, Request.Headers.ContainsKey("X-Test-Tenant-Id")
+                    ? "consumer" : "business"),
+                new(TenantClaimTypes.TenantId, tenantId.ToString("D")),
+                new(TenantClaimTypes.TenantKind, Request.Headers.ContainsKey("X-Test-Tenant-Id")
+                    ? "personal" : "business"),
             ];
             var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, SchemeName));
             return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(principal, SchemeName)));

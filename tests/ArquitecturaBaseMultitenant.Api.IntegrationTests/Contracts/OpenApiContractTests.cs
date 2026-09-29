@@ -39,8 +39,27 @@ public sealed class OpenApiContractTests(ApiFactory factory)
             versioned["components"]?["schemas"]?["PagedRequest"],
             runtime["components"]?["schemas"]?["PagedRequest"]),
             "Stale OpenAPI PagedRequest schema.");
+        var accessValues = versioned["components"]?["schemas"]?["Access"]?["enum"]?.AsArray();
+        Assert.NotNull(accessValues);
+        Assert.Equal(["consumer", "business", "platform"],
+            accessValues.Select(value => value!.GetValue<string>()).ToArray());
+        Assert.Equal("string", versioned["components"]?["schemas"]?["Access"]?
+            ["type"]?.GetValue<string>());
+        Assert.Equal("string", versioned["components"]?["schemas"]?["TenantStatus"]?
+            ["type"]?.GetValue<string>());
 
         Assert.DoesNotContain(versionedPaths, path => path.Key.StartsWith("/test/", StringComparison.Ordinal));
+        Assert.DoesNotContain(versionedPaths, path => path.Key.StartsWith("/connect/", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Date_time_fields_are_strings_in_the_generated_contract()
+    {
+        var contractPath = Path.Combine(FindRepositoryRoot(), "docs", "contracts", "openapi.json");
+        var contract = JsonNode.Parse(await File.ReadAllTextAsync(contractPath,
+            TestContext.Current.CancellationToken))!;
+        Assert.Equal("string", contract["components"]?["schemas"]?["LegalDocumentRow"]?
+            ["properties"]?["effectiveAtUtc"]?["type"]?.GetValue<string>());
     }
 
     private static string FindRepositoryRoot()

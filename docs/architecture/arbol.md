@@ -247,6 +247,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── ILoginLinkService.cs                      [E8] enlace de un solo uso del bot
 │   │   ├── IExternalLoginService.cs                  [E3]
 │   │   ├── IConnectService.cs                        [E3] emisión de tokens y cambio de acceso u organización
+│   │   ├── IConnectLogoutService.cs                  [E3] cierre de la sesión Identity y revocación OpenIddict
 │   │   ├── IInvitationService.cs                     [E3] vista previa y aceptación
 │   │   ├── IProfileService.cs                        [E3] /api/me
 │   │   ├── IBusinessSignupService.cs                  [E6] "Registrá tu empresa" (alta B2B, aparte del acceso B2C)
@@ -490,6 +491,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── LoginLinkService.cs                       [E8]
 │   │   ├── LoginLinkIssuer.cs                        [E8]
 │   │   ├── ConnectService.cs
+│   │   ├── ConnectLogoutService.cs                   [E3]
 │   │   ├── AccessSwitchPolicy.cs                     acceso pedido válido: membresía activa (B2B) o identidad activa (B2C)
 │   │   ├── UserCultures.cs                           cultura efectiva para mensajes en segundo plano
 │   │   └── ExternalLoginService.cs                   [E3]
@@ -1021,6 +1023,7 @@ tests/
 │   │   │   ├── LoginCodeServiceTests.cs
 │   │   │   ├── LoginLinkServiceTests.cs              [E8]
 │   │   │   ├── ConnectServiceTests.cs
+│   │   │   ├── ConnectLogoutServiceTests.cs          [E3]
 │   │   │   └── AccessSwitchPolicyTests.cs  
 │   │   ├── Invitations/
 │   │   │   └── InvitationServiceTests.cs              [E3]
@@ -1142,6 +1145,7 @@ tests/
 │   │   ├── LoginCodeTests.cs
 │   │   ├── LoginLinkTests.cs                          [E8]
 │   │   ├── ConnectTests.cs
+│   │   ├── LogoutTests.cs                            [E3] GET/POST /connect/logout
 │   │   ├── AuthMethodsTests.cs                        qué medios de ingreso están encendidos según la configuración (GET /api/auth/methods)
 │   │   ├── ManagedEmailTests.cs                       [E6] un exmiembro no puede ingresar con el correo de la empresa
 │   │   └── InvitationsTests.cs                        puerta de la 3c: InvitationIssuer invita a alguien sin cuenta y a alguien con cuenta, y las dos se aceptan
@@ -1194,8 +1198,10 @@ tests/
     ├── ReferenceDataHardcodeTests.cs                  [E1] sin listas ISO/cultura/zona escritas en código fuera de JSON
     ├── TenantScopeUsageTests.cs                       [E2] ITenantScope solo en la lista blanca
     ├── QueryFilterBypassTests.cs                      [E2] IgnoreQueryFilters solo en Readers/Platform (salvo IgnoreQueryFilters(["SoftDelete"]))
-    ├── IdentityAccessTests.cs                         [E3] ApplicationUser solo desde Identity/ (con Configurations/Identity), ApplicationDbContext,
-    │                                                  UserRepository, MemberReader, Readers/Platform y Seed/
+    ├── IdentityAccessTests.cs                         [E3] ApplicationUser solo desde Identity/, ApplicationDbContext,
+    │                                                  Configurations/Identity y Tenant/MemberConfiguration,
+    │                                                  UserRepository, MemberReader, Readers/Platform, Seed/,
+    │                                                  Migrations/ y Rls/TenantIsolationModelValidator
     ├── AccessDeclarationTests.cs                      [E3] toda ruta declara [Access] o [PublicSite]; ReferenceDataController
     │                                                  está en la lista explícita [AllowAnonymous] del dominio principal
     ├── PermissionAuthorizationTests.cs                [E4] permisos, nunca roles ni Policy a mano; cada [HasPermission]

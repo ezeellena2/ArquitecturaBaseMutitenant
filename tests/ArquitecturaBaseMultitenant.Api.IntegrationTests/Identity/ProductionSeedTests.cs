@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Settings;
+using ArquitecturaBaseMultitenant.Domain.ReferenceData;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Hosting;
@@ -58,6 +59,10 @@ public sealed class ProductionSeedTests
         Assert.Equal(BusinessSignupMode.Open, settings.BusinessSignup);
         Assert.Equal(1, settings.MaxOwnedOrganizations);
         Assert.Equal(30, settings.AccountDeletionGraceDays);
+        Assert.True(await context.Set<Culture>().AnyAsync(culture => culture.IsEnabled,
+            TestContext.Current.CancellationToken));
+        Assert.True(await context.Set<Currency>().AnyAsync(currency => currency.IsEnabled,
+            TestContext.Current.CancellationToken));
         Assert.Single(await context.SecurityEvents.ToListAsync(TestContext.Current.CancellationToken));
 
         var operatorUser = await context.Users.SingleAsync(TestContext.Current.CancellationToken);

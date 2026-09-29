@@ -1092,10 +1092,11 @@
     "schemas": {
       "Access": {
         "enum": [
-          "Consumer",
-          "Business",
-          "Platform"
-        ]
+          "consumer",
+          "business",
+          "platform"
+        ],
+        "type": "string"
       },
       "CountryReferenceHttpResponse": {
         "required": [
@@ -1311,7 +1312,8 @@
         "enum": [
           "Terms",
           "Privacy"
-        ]
+        ],
+        "type": "string"
       },
       "LegalDocumentRow": {
         "required": [
@@ -1336,6 +1338,7 @@
             "format": "int32"
           },
           "effectiveAtUtc": {
+            "type": "string",
             "format": "date-time"
           },
           "culture": {
@@ -1386,7 +1389,8 @@
           "Active",
           "Inactive",
           "Removed"
-        ]
+        ],
+        "type": "string"
       },
       "MeResponse": {
         "required": [
@@ -1756,7 +1760,8 @@
           "Active",
           "Suspended",
           "Closed"
-        ]
+        ],
+        "type": "string"
       },
       "TimeZoneReferenceHttpResponse": {
         "required": [
