@@ -34,6 +34,7 @@ internal static class EmailRegistration
                 ? ActivatorUtilities.CreateInstance<SmtpEmailTransport>(provider)
                 : ActivatorUtilities.CreateInstance<PickupDirectoryEmailTransport>(provider));
         services.AddScoped<IChannelSender, EmailChannelSender>();
+        services.AddScoped<IEmailTemplateRenderer, EmailTemplateRenderer>();
         return services;
     }
 }
