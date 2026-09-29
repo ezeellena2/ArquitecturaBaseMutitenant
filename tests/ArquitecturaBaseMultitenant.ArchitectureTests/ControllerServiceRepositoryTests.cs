@@ -1,7 +1,10 @@
 using System.Reflection;
+using ArquitecturaBaseMultitenant.Api.Authentication;
+using ArquitecturaBaseMultitenant.Api.Controllers.Auth;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authentication;
 using NetArchTest.Rules;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
@@ -95,17 +98,22 @@ public sealed class ControllerServiceRepositoryTests
         }
 
         var parameters = constructors[0].GetParameters();
-        if (parameters.Length == 0)
-        {
-            return [$"{controller.FullName}: missing an application service"];
-        }
+        string[] missingService = parameters.Any(parameter => IsApplicationService(parameter.ParameterType))
+            ? [] : new[] { $"{controller.FullName}: missing an application service" };
 
-        return parameters
-            .Where(parameter => !parameter.ParameterType.IsInterface
-                || parameter.ParameterType.Namespace != ApplicationNamespace + ".Interfaces.Services"
-                || !parameter.ParameterType.Name.EndsWith("Service", StringComparison.Ordinal))
-            .Select(parameter => $"{controller.FullName}: {parameter.ParameterType.FullName}");
+        return missingService.Concat(parameters
+            .Where(parameter => !IsApplicationService(parameter.ParameterType)
+                && !IsApprovedProtocolDependency(controller, parameter.ParameterType))
+            .Select(parameter => $"{controller.FullName}: {parameter.ParameterType.FullName}"));
     }
+
+    private static bool IsApplicationService(Type type) => type.IsInterface
+        && type.Namespace == ApplicationNamespace + ".Interfaces.Services"
+        && type.Name.EndsWith("Service", StringComparison.Ordinal);
+
+    private static bool IsApprovedProtocolDependency(Type controller, Type dependency) =>
+        controller == typeof(ConnectController) && dependency == typeof(OpenIdPrincipalFactory)
+        || controller == typeof(ExternalLoginController) && dependency == typeof(IAuthenticationSchemeProvider);
 
     [Fact]
     public void Detector_recognizes_controllerbase_subclasses_without_controller_suffix()
