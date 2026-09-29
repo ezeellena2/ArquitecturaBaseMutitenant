@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -15,6 +16,7 @@ internal sealed class LoginCodeVerificationFlow(
     IUserRepository users,
     ILoginAuditRepository audits,
     ISignInService signIn,
+    IConnectService connect,
     TimeProvider timeProvider)
 {
     internal async Task<Result<Guid>> VerifyAsync(
@@ -43,6 +45,15 @@ internal sealed class LoginCodeVerificationFlow(
             return Fail(userId, AccountErrors.Suspended);
         if (account.Status == UserStatus.PendingDeletion)
             return Fail(userId, AccountErrors.PendingDeletion);
+
+        if (!ReturnUrls.TryReadAccessSelection(request.ReturnUrl, out var selection))
+            throw new InvalidOperationException("A validated return URL became invalid.");
+        if (selection.Access == Access.Business)
+        {
+            var selected = await connect.GetActiveUserAsync(userId.Value, selection.Access,
+                selection.TenantId, cancellationToken);
+            if (selected.IsFailure) return Fail(userId, selected.Error);
+        }
 
         await signIn.ResetFailedAttemptsAsync(userId.Value, cancellationToken);
         audits.Add(LoginAudit.Success(userId.Value, LoginAuditMethod.Code,

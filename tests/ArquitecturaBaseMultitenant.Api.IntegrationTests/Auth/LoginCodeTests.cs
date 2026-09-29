@@ -9,6 +9,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -94,6 +95,31 @@ public sealed class LoginCodeTests(ApiFactory factory)
             new { email = address, code, returnUrl = "/connect/authorize?client_id=web" }, Ct);
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.False(response.Headers.Contains("Set-Cookie"));
+    }
+
+    [Fact]
+    public async Task Business_login_without_membership_rejects_before_issuing_a_cookie()
+    {
+        using var client = factory.CreateClient();
+        var email = $"business-gate-{Guid.NewGuid():N}@example.test";
+        await CreateVerifiedEmailAccountAsync(email);
+
+        var requested = await client.PostAsJsonAsync("/test/auth/request-code", new { email }, Ct);
+        Assert.Equal(HttpStatusCode.OK, requested.StatusCode);
+        var code = await ReadPickupCodeAsync(email);
+
+        var rejected = await client.PostAsJsonAsync("/test/auth/verify-code",
+            new { email, code, returnUrl = "/connect/authorize?client_id=web&access=business" }, Ct);
+
+        Assert.Equal(HttpStatusCode.Forbidden, rejected.StatusCode);
+        Assert.Contains(AccessErrors.NotMemberCode, await rejected.Content.ReadAsStringAsync(Ct),
+            StringComparison.Ordinal);
+        Assert.False(rejected.Headers.Contains("Set-Cookie"));
+
+        var replay = await client.PostAsJsonAsync("/test/auth/verify-code",
+            new { email, code, returnUrl = "/connect/authorize?client_id=web&access=consumer" }, Ct);
+        Assert.Equal(HttpStatusCode.BadRequest, replay.StatusCode);
+        Assert.False(replay.Headers.Contains("Set-Cookie"));
     }
 
     [Fact]

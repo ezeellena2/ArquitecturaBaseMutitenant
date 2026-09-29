@@ -89,6 +89,25 @@ public sealed class ConnectServiceTests
     }
 
     [Fact]
+    public async Task Inactive_business_membership_returns_organization_name_for_the_login_state()
+    {
+        using var fixture = new ServiceFixture<ConnectService>();
+        var account = Account();
+        var membership = AccessRow(Guid.CreateVersion7(), TenantKind.Business) with
+        {
+            MemberStatus = MemberStatus.Inactive,
+        };
+        var service = new ConnectService(new StubUsers(account), new StubAccesses([membership]),
+            new StubPersonalSpaceProvisioner(), new StubPersonalSpaceLock(), new StubTenantScope(),
+            new FakeUnitOfWork(), fixture.TimeProvider, fixture.Logger);
+
+        var result = await service.GetActiveUserAsync(account.Id, Access.Business, null, Ct);
+
+        Assert.Equal(MemberErrors.InactiveCode, result.Error.Code);
+        Assert.Equal("Empresa A", result.Error.Metadata?["organizationName"]);
+    }
+
+    [Fact]
     public async Task First_consumer_access_creates_personal_space_inside_one_scoped_transaction()
     {
         using var fixture = new ServiceFixture<ConnectService>();
