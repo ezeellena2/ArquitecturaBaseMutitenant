@@ -31,15 +31,19 @@ public static class DependencyInjection
         services.AddSingleton<IPhoneNumberDisplayFormatter, LibPhoneNumberDisplayFormatter>();
         services.AddCaching();
 
-        services.AddSingleton<JsonReferenceDataCatalog>();
-        services.AddSingleton<ICurrencyCatalog>(provider => provider.GetRequiredService<JsonReferenceDataCatalog>());
-        services.AddSingleton<ICountryCatalog>(provider => provider.GetRequiredService<JsonReferenceDataCatalog>());
-        services.AddSingleton<ITimeZoneCatalog>(provider => provider.GetRequiredService<JsonReferenceDataCatalog>());
-        services.AddSingleton<ICultureCatalog>(provider => provider.GetRequiredService<JsonReferenceDataCatalog>());
-        services.AddSingleton<ITaxIdTypeCatalog>(provider => provider.GetRequiredService<JsonReferenceDataCatalog>());
-
         services.AddPersistence(configuration);
         services.AddBackgroundJobs();
+
+        // El exportador construye el host sin PostgreSQL; solo allí usa el JSON que alimenta el seed.
+        if (System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name is "GetDocument.Insider")
+        {
+            services.AddSingleton<JsonReferenceDataCatalog>();
+            services.AddSingleton<ICurrencyCatalog>(provider => provider.GetRequiredService<JsonReferenceDataCatalog>());
+            services.AddSingleton<ICountryCatalog>(provider => provider.GetRequiredService<JsonReferenceDataCatalog>());
+            services.AddSingleton<ITimeZoneCatalog>(provider => provider.GetRequiredService<JsonReferenceDataCatalog>());
+            services.AddSingleton<ICultureCatalog>(provider => provider.GetRequiredService<JsonReferenceDataCatalog>());
+            services.AddSingleton<ITaxIdTypeCatalog>(provider => provider.GetRequiredService<JsonReferenceDataCatalog>());
+        }
 
         // El exportador OpenAPI construye el host sin conexiones de Aspire.
         if (configuration.GetConnectionString("appdb") is { } runtimeConnection)

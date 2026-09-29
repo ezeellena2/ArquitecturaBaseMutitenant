@@ -76,10 +76,10 @@ Cada fila es una carpeta que lleva `AGENTS.md` + `CLAUDE.md`. Los punteros se es
 | `Infrastructure/Persistence/Configurations/Platform/ReferenceData/` | una configuración EF por tabla de referencia global, sin RLS | datos-de-referencia, persistencia-ef | `CurrencyConfiguration.cs` (E2) |
 | `Infrastructure/Persistence/Migrations/` | se generan con el comando de la guía; cada tabla nueva llama al helper RLS de su clase (`EnableTenantRls`, `EnablePublicRls` o `EnablePartiesRls`) + índices del `SortMap` | persistencia-ef, multitenancy, paginado-y-busqueda | `docs/guides/migracion.md` (E2) |
 | `Infrastructure/Persistence/Repositories/` | EF para escribir un agregado; exige la transacción del caso de uso | guardado, persistencia-ef | `RoleRepository.cs` (E4) |
-| `Infrastructure/Persistence/Readers/` | proyecciones `AsNoTracking` → `*Row`; `SortMap`, `ApplySearch`, `ToPagedResultAsync` | paginado-y-busqueda, multitenancy | `RoleReader.cs` (E4) |
+| `Infrastructure/Persistence/Readers/` | proyecciones `AsNoTracking` → `*Row`; desde E2, `ReferenceDataReader` lee catálogos globales con HybridCache y scope propio; `SortMap`, `ApplySearch`, `ToPagedResultAsync` | datos-de-referencia, paginado-y-busqueda, multitenancy | `ReferenceDataReader.cs` (E2), `RoleReader.cs` (E4) |
 | `Infrastructure/Persistence/Seed/ReferenceData/` | cinco JSON generados de ISO/IANA/CLDR y fuentes editables del script; no se editan a mano | datos-de-referencia | `currencies.json` (E1) |
 | `scripts/datos-de-referencia/` | fuentes editables, snapshots/lock fijados y generador de los cinco JSON; tests sin red | datos-de-referencia | `generar.mjs` (E1) |
-| `Infrastructure/ReferenceData/` | adaptador JSON de los cinco catálogos en E1; E2 pasa a Reader con HybridCache | datos-de-referencia, capas-y-flujo | `JsonReferenceDataCatalog.cs` (E1) |
+| `Infrastructure/ReferenceData/` | adaptador JSON de los cinco catálogos en E1; desde E2 solo alimenta el seed y el exportador OpenAPI, mientras el runtime usa Reader con HybridCache | datos-de-referencia, capas-y-flujo | `JsonReferenceDataCatalog.cs` (E1) |
 | `Infrastructure/Phones/` | adaptador libphonenumber de presentación E1; parser de entrada E3 | telefonos, capas-y-flujo | `LibPhoneNumberDisplayFormatter.cs` (E1) |
 | `Infrastructure/Persistence/Readers/Platform/` | **única** lista blanca para ignorar el filtro `"Tenant"` | multitenancy | — |
 | `Infrastructure/Features/` | filtro de módulos por tenant | modulos-habilitados | `TenantFeatureFilter.cs` (E5) |

@@ -786,6 +786,8 @@ ArquitecturaBaseMultitenant.Infrastructure/
 ├── Caching/                                           [E2–E3]
 │   ├── CachingRegistration.cs
 │   ├── CacheKeys.cs                                   t: / s: / u: / p:
+│   ├── HybridCacheExtensions.cs                       [E2] fábrica que lee en scope propio (adaptada de ArquitecturaBase)
+│   ├── ReferenceDataCache.cs                          [E2] cinco claves p:ref: e invalidación después del seed
 │   └── TenantStatusCache.cs                           [E3]
 ├── Time/                                              [E1]
 │   └── TimeZoneService.cs                             [E1] TimeZoneInfo con IDs IANA

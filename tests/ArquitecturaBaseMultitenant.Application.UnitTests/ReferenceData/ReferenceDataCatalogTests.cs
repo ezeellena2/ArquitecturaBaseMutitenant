@@ -1,10 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
-using ArquitecturaBaseMultitenant.Infrastructure;
 using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.Hosting;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.ReferenceData;
 
@@ -15,30 +10,6 @@ public sealed class ReferenceDataCatalogTestsGroup;
 public sealed class ReferenceDataCatalogTests
 {
     private static CancellationToken CancellationToken => TestContext.Current.CancellationToken;
-
-    [Fact]
-    public async Task Five_catalogs_are_registered_as_one_json_adapter()
-    {
-        var services = new ServiceCollection();
-        services.AddInfrastructure(new ConfigurationBuilder().Build(), new TestHostEnvironment());
-
-        using var provider = services.BuildServiceProvider();
-        var currencies = provider.GetRequiredService<ICurrencyCatalog>();
-        var countries = provider.GetRequiredService<ICountryCatalog>();
-        var zones = provider.GetRequiredService<ITimeZoneCatalog>();
-        var cultures = provider.GetRequiredService<ICultureCatalog>();
-        var taxTypes = provider.GetRequiredService<ITaxIdTypeCatalog>();
-
-        Assert.Same(currencies, countries);
-        Assert.Same(currencies, zones);
-        Assert.Same(currencies, cultures);
-        Assert.Same(currencies, taxTypes);
-        Assert.NotEmpty(await currencies.ListAsync(CancellationToken));
-        Assert.NotEmpty(await countries.ListAsync(CancellationToken));
-        Assert.NotEmpty(await zones.ListAsync(CancellationToken));
-        Assert.NotEmpty(await cultures.ListAsync(CancellationToken));
-        Assert.NotEmpty(await taxTypes.ListAsync(CancellationToken));
-    }
 
     [Fact]
     public async Task Embedded_catalogs_can_be_read_without_the_checkout_as_current_directory()
@@ -197,11 +168,4 @@ public sealed class ReferenceDataCatalogTests
         }
     }
 
-    private sealed class TestHostEnvironment : IHostEnvironment
-    {
-        public string EnvironmentName { get; set; } = Environments.Development;
-        public string ApplicationName { get; set; } = nameof(ReferenceDataCatalogTests);
-        public string ContentRootPath { get; set; } = Path.GetTempPath();
-        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
-    }
 }

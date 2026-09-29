@@ -2,4 +2,4 @@ Caché con HybridCache: toda clave pasa por `CacheKeys` y tiene prefijo de alcan
 
 Antes de escribir, leé: [multitenancy](../../../docs/rules/multitenancy.md) · [guardado](../../../docs/rules/guardado.md) · [backend §17](../../../docs/architecture/backend.md#17-logging-openapi-health-rate-limiting-caché).
 
-Copiá de: `../ArquitecturaBase/src/ArquitecturaBase.Infrastructure/Caching/HybridCacheExtensions.cs` para el patrón de lectura (si se necesita en un reader). Lo prueba `CacheKeyScopeTests` (E2).
+Copiá de: `HybridCacheExtensions.cs` (adaptado de `../ArquitecturaBase/src/ArquitecturaBase.Infrastructure/Caching/HybridCacheExtensions.cs`) para llenar caché desde otro scope; `ReferenceDataCache.cs` para las claves globales y su invalidación. Lo prueban `CacheKeyScopeTests` y `ReferenceDataReaderTests` (E2).

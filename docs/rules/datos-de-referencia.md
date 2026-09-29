@@ -31,6 +31,7 @@
 - `generar.test.mjs` (E1): fuentes locales con hashes válidos, incluido `cldr-region-validity.xml`; filtro ISO que conserva 249 países en CLDR 48.2 y excluye `AN`, `AA` y `XK`; refresh separado y los cinco JSON reproducibles byte a byte sin red.
 - `CurrencyCodeTests` y `MoneyTests` (E1): sintaxis alfa-3 y redondeo con `MinorUnits` explícitos; los tests de validación en Application cubren existencia y habilitación de la moneda.
 - `ReferenceDataSeederTests` (E2): el seed es idempotente y nunca borra.
+- `ReferenceDataReaderTests` (E2): los cinco puertos leen todas las filas y traducciones de `platform` (incluidas las deshabilitadas), conservan relaciones IANA multipaís y el seed invalida HybridCache después del commit cuando hubo cambios.
 - `DisplayFormatterTests` (E1) y `formatters.test.ts` (E1): mismo texto para cada caso de `format-cases.json`.
 
 ## Detalle

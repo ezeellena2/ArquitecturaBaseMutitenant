@@ -1,6 +1,9 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
+using ArquitecturaBaseMultitenant.Infrastructure.Caching;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Interceptors;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
@@ -20,12 +23,14 @@ internal static class PersistenceRegistration
 
         var services = new ServiceCollection();
         services.AddLogging();
+        services.AddCaching();
         services.AddScoped<TenantContext>(_ => new TenantContext());
         services.AddScoped<ITenantContext>(provider => provider.GetRequiredService<TenantContext>());
         services.AddDbContext<ApplicationDbContext>((_, options) => options.UseNpgsql(adminConnectionString));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<ReferenceDataSeeder>();
         services.AddSingleton<JsonReferenceDataCatalog>();
+        services.AddReferenceCatalogs();
         return services.BuildServiceProvider();
     }
 
@@ -54,6 +59,19 @@ internal static class PersistenceRegistration
                     provider.GetRequiredService<AuditableEntityInterceptor>(),
                     provider.GetRequiredService<AuditTrailInterceptor>()));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddReferenceCatalogs();
+
+        return services;
+    }
+
+    private static IServiceCollection AddReferenceCatalogs(this IServiceCollection services)
+    {
+        services.AddScoped<ReferenceDataReader>();
+        services.AddScoped<ICurrencyCatalog>(provider => provider.GetRequiredService<ReferenceDataReader>());
+        services.AddScoped<ICountryCatalog>(provider => provider.GetRequiredService<ReferenceDataReader>());
+        services.AddScoped<ITimeZoneCatalog>(provider => provider.GetRequiredService<ReferenceDataReader>());
+        services.AddScoped<ICultureCatalog>(provider => provider.GetRequiredService<ReferenceDataReader>());
+        services.AddScoped<ITaxIdTypeCatalog>(provider => provider.GetRequiredService<ReferenceDataReader>());
 
         return services;
     }

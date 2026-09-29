@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.ReferenceData;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Infrastructure.Caching;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
 using Microsoft.EntityFrameworkCore;
@@ -13,13 +14,15 @@ internal sealed class ReferenceDataSeeder
     private readonly ApplicationDbContext _dbContext;
     private readonly IUnitOfWork _unitOfWork;
     private readonly JsonReferenceDataCatalog _source;
+    private readonly ReferenceDataCache _referenceCache;
 
     public ReferenceDataSeeder(ApplicationDbContext dbContext, IUnitOfWork unitOfWork,
-        JsonReferenceDataCatalog source)
+        JsonReferenceDataCatalog source, ReferenceDataCache referenceCache)
     {
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _source = source ?? throw new ArgumentNullException(nameof(source));
+        _referenceCache = referenceCache ?? throw new ArgumentNullException(nameof(referenceCache));
     }
 
     public async Task<bool> SeedAsync(CancellationToken cancellationToken)
@@ -30,6 +33,11 @@ internal sealed class ReferenceDataSeeder
             await _dbContext.AcquireAdvisoryLocksAsync([AdvisoryLockKeys.ReferenceDataSeed], ct);
             return Result.Success(await StageAsync(snapshot, ct));
         }, CommitPolicy.OnSuccess, cancellationToken);
+        if (result.Value)
+        {
+            await _referenceCache.InvalidateAsync(cancellationToken);
+        }
+
         return result.Value;
     }
 

@@ -8,6 +8,7 @@ internal static class CachingRegistration
     {
         ArgumentNullException.ThrowIfNull(services);
         services.AddHybridCache();
+        services.AddSingleton<ReferenceDataCache>();
         return services;
     }
 }

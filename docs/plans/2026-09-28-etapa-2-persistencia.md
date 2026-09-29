@@ -18,6 +18,7 @@
 - Aspire 13.5.4 `AddDatabase("appdb")` crea la base antes de arrancar Api y no garantiza ICU `es-AR`; E2 lo reemplaza por referencias explícitas a `appdb`, `appdb-admin` y la conexión bootstrap del superusuario, todas con parámetros secretos. El bootstrap crea la base con ICU. Si ya existe la base del volumen E0, solo la recrea tras comprobar que no contiene tablas de usuario; si contiene datos, falla sin borrarlos y explica el paso de migración.
 - Los tests de §13 que dependen de autenticación, subdominio, cuenta o rutas E3/E7 empiezan en su etapa. E2 ejecuta los de RLS, rol, clases pública/compartida, columnas, políticas y ámbito con `TestFeatures/Isolation`, sin fingir HTTP de identidad.
 - Para la carga de `TestFeatures`, el proyecto de tests agrega las tres entidades al modelo de un contexto de test derivado del productivo. `IsolationSchema.ApplyAsync` crea solo sus tablas después de las migraciones reales y reutiliza `RlsSql`; ninguna migración productiva contiene `Widget`, `Poster` o `Deal`.
+- La exportación OpenAPI construye el host sin conexión de Aspire: solo si el proceso es `GetDocument.Insider`, los cinco puertos usan temporalmente `JsonReferenceDataCatalog` para cargar culturas. Con `appdb` real siempre resuelven `ReferenceDataReader`; una Api sin conexión fuera del exportador sigue fallando.
 
 ## Método para cada tarea
 
