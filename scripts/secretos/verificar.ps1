@@ -7,6 +7,7 @@ param([string]$Destino = (Join-Path $PSScriptRoot '..\..\src\ArquitecturaBaseMul
 $requeridas = [ordered]@{
     'Email:Smtp:Password'               = 'Gmail (contraseña de aplicación). Sin ella la Api no arranca con Email:Delivery=Smtp'
     'Authentication:Google:ClientSecret' = 'Ingreso y registro con Google'
+    'Authentication:LoginCode:HashKey'    = 'Firma HMAC de los códigos de ingreso y registro'
     'WhatsApp:AccessToken'              = 'Enviar por WhatsApp (obligatoria si hay WhatsApp:PhoneNumberId)'
     'WhatsApp:AppSecret'                = 'Webhook de WhatsApp (va junto con VerifyToken)'
     'WhatsApp:VerifyToken'              = 'Webhook de WhatsApp (va junto con AppSecret)'

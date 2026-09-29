@@ -14,8 +14,10 @@ param(
 $ErrorActionPreference = 'Stop'
 
 # Las mismas claves que ArquitecturaBase (docs/operations/configuracion.md).
+# La Base conserva HashKey en appsettings.Development.json; aquí sólo se escribe en user-secrets.
 $claves = @(
     'Authentication:Google:ClientSecret',
+    'Authentication:LoginCode:HashKey',
     'Email:Smtp:Password',
     'WhatsApp:AccessToken',
     'WhatsApp:AppSecret',
@@ -29,8 +31,19 @@ $lineas = dotnet user-secrets list --project $Origen
 $copiadas = 0
 foreach ($clave in $claves) {
     $linea = $lineas | Where-Object { $_.StartsWith("$clave = ") } | Select-Object -First 1
-    if (-not $linea) { Write-Warning "No está en el origen: $clave"; continue }
-    $valor = $linea.Substring($clave.Length + 3)
+    if ($linea) {
+        $valor = $linea.Substring($clave.Length + 3)
+    }
+    elseif ($clave -eq 'Authentication:LoginCode:HashKey') {
+        $configuracionBase = Get-Content -LiteralPath (Join-Path $Origen 'appsettings.Development.json') -Raw | ConvertFrom-Json
+        $valor = $configuracionBase.Authentication.LoginCode.HashKey
+        Remove-Variable configuracionBase
+    }
+    if ([string]::IsNullOrWhiteSpace($valor)) {
+        Write-Warning "No está en el origen: $clave"
+        Remove-Variable valor -ErrorAction SilentlyContinue
+        continue
+    }
     dotnet user-secrets set $clave $valor --project $Destino | Out-Null
     Remove-Variable valor
     Write-Host "Copiada: $clave"

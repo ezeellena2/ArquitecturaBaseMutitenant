@@ -15,6 +15,7 @@
 | Clave | Qué es | De dónde sale |
 |---|---|---|
 | `Authentication:Google:ClientSecret` | secreto del cliente OAuth | Google Cloud Console › Credenciales (el mismo cliente de ArquitecturaBase) |
+| `Authentication:LoginCode:HashKey` | clave HMAC de los códigos de ingreso y registro | `appsettings.Development.json` de ArquitecturaBase; el importador la traslada a user-secrets sin mostrarla |
 | `Email:Smtp:Password` | contraseña de **aplicación** de Gmail (no la de la cuenta) | https://myaccount.google.com/apppasswords |
 | `WhatsApp:AccessToken` | token del usuario del sistema | Meta Business › Usuarios del sistema (`whatsapp_business_messaging`, `whatsapp_business_management`) |
 | `WhatsApp:AppSecret` | con lo que Meta firma cada webhook | Meta for Developers › la app › Configuración › Básica |
@@ -22,7 +23,7 @@
 
 ### Tres formas de cargarlos
 
-**A. Copiarlos de ArquitecturaBase (esta máquina, cero pegado).** Los cinco ya están en los user-secrets de ArquitecturaBase. El script los copia sin mostrarlos:
+**A. Copiarlos de ArquitecturaBase (esta máquina, cero pegado).** Cinco están en los user-secrets de ArquitecturaBase y la clave HMAC en su configuración de desarrollo. El script copia los seis a user-secrets del multitenant sin mostrarlos:
 ```powershell
 ./scripts/secretos/importar-desde-arquitecturabase.ps1
 ```
