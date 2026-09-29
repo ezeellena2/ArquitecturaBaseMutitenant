@@ -1,0 +1,26 @@
+# Identidad e ingreso
+
+La identidad de una persona es global. Una cuenta puede tener acceso como persona a su espacio `Personal` y, si pertenece a una organización, acceso como empresa a sus espacios `Business`. Los dos accesos no mezclan datos ni se eligen a partir del subdominio. Fuente: [multitenancy.md §2–§3](../architecture/multitenancy.md#2-quiénes-entran) y [plan maestro, Etapa 3](../plans/2026-09-27-plan-de-desarrollo.md#etapa-3-identidad-accesos-y-openiddict).
+
+## 3a · Ingreso
+
+- Hay dos puertas: `/login` elige `consumer`; `/login/empresa` elige `business`. Una sesión ya iniciada puede cambiar de perfil sin volver a ingresar; el servidor emite tokens nuevos para el acceso elegido. `LastBusinessTenantId` solo recuerda la última organización del lado empresa. El tenant privado sale del claim `tenant_id`, nunca del host.
+- El registro como persona crea una identidad global, un método de ingreso verificado, un espacio personal y su membresía. `acceptedTerms: true` es obligatorio y la aceptación de los documentos legales vigentes se guarda en la misma transacción. `ConsumerSignup = Closed` impide el alta. Una persona no crea empresas por esta puerta.
+- En 3a se ingresa por código de correo o Google, sin contraseña. `identity.LoginMethods` guarda los valores por tipo y tiene unicidad global `(Type, Value)`; `AspNetUsers.Email` y `PhoneNumber` son solo copias del método principal, sin unicidad propia. `Phone` es parte del modelo pero no habilita ingreso hasta que el módulo de WhatsApp registre su canal en la E8.
+- Los métodos se verifican antes de servir para ingresar. El código es de un solo uso, caduca y limita intentos; el transporte es `ILoginCodeChannel`. El intento se audita sin guardar ni registrar el código o la dirección completa.
+- El acceso como empresa exige una membresía activa. Sin membresías se presenta el estado del tablero Ingreso; con una organización activa se entra directamente; con varias se elige la última organización usada dentro del lado empresa. El acceso como persona crea o usa su espacio personal sin exponer los datos de empresa.
+- Los documentos legales públicos se leen sin sesión. En 3a se siembra la primera versión de términos y privacidad con texto en es y en. El front implementa los estados aprobados de Ingreso, Registro, Sesión, Landing, Legal, inicio personal, inicio vacío de `/org` y errores que pertenecen a esta parte.
+
+## 3b · La cuenta (pendiente)
+
+Gestión de métodos de ingreso, aceptación bloqueante de versiones legales nuevas y baja con gracia. Los estados `PendingDeletion` y `Deleted` y sus fechas se reservan en el modelo de 3a sin implementar todavía el flujo de baja. Fuente: [multitenancy.md §3.1–§3.2](../architecture/multitenancy.md#31-métodos-de-ingreso-la-cuenta-no-depende-de-un-solo-correo).
+
+## 3c · Invitaciones (pendiente)
+
+La invitación permite crear una identidad sin espacio personal o vincular una identidad existente a una organización. Su emisión, aceptación y pantalla pertenecen a 3c.
+
+## Reglas de implementación
+
+- Seguir las fichas [datos-personales](../rules/datos-personales.md), [multitenancy](../rules/multitenancy.md), [guardado](../rules/guardado.md), [result-y-errores](../rules/result-y-errores.md), [emails](../rules/emails.md), [telefonos](../rules/telefonos.md), [api-http](../rules/api-http.md) y [tests](../rules/tests.md).
+- `ApplicationUser` vive en `Infrastructure/Identity`; las reglas sin dependencia de Identity, en `Domain/Users` y `Domain/Authentication`. Los servicios usan repositorios y readers explícitos; una escritura pública tiene un solo límite `IUnitOfWork`.
+- Probar las reglas puras en `Domain.UnitTests`, la cuenta Identity en `Application.UnitTests`, las rutas y el aislamiento en `Api.IntegrationTests`, y la presencia de piezas de 3a en `Stage3aInventoryTests`.
