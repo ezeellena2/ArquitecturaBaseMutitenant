@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Application.Models.Notifications;
 using ArquitecturaBaseMultitenant.Application.Resources;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
@@ -13,6 +14,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
 /// <summary>Renders embedded email templates with escaped replacement values.</summary>
 internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> options) : IEmailTemplateRenderer
 {
+    private DisplayFormatter? _formatter;
+    public EmailTemplateRenderer(IOptions<EmailOptions> options, DisplayFormatter formatter) : this(options) =>
+        _formatter = formatter;
     private const string LayoutTemplate = "_Layout.html";
     private const string LoginCodeTemplate = "LoginCode.html";
     private const string SignupCodeTemplate = "SignupCode.html";
@@ -27,8 +31,101 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
     public EmailMessage RenderInvitation(string to, string loginUrl, CultureProfile culture) =>
         throw new NotSupportedException("Invitation templates are introduced with invitations.");
 
-    public EmailMessage RenderAccountNotice(string to, AccountNotice notice, CultureProfile culture) =>
-        throw new NotSupportedException("Account notice templates are introduced in a later task.");
+    public async Task<EmailMessage> RenderAccountNoticeAsync(string to, AccountNotice notice, CultureProfile culture,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(notice);
+        var greeting = string.IsNullOrWhiteSpace(notice.RecipientName)
+            ? NotificationTexts.Get("Greeting.Unnamed", culture)
+            : NotificationTexts.Format("Greeting.Named", culture, notice.RecipientName);
+
+        var appName = options.Value.AppName;
+        var (key, template, paragraphs, actionLabel, actionUrl, note) = notice switch
+        {
+            AccountNotice.LoginMethodChanged changed => await MethodChangedAsync(changed, greeting, appName, culture, cancellationToken),
+            AccountNotice.DeletionRequested requested => await DeletionRequestedAsync(requested, greeting, appName, culture, cancellationToken),
+            AccountNotice.DeletionCancelled cancelled => await DeletionCancelledAsync(cancelled, greeting, appName, culture, cancellationToken),
+            AccountNotice.AccountDeleted => ("AccountDeleted", "AccountDeleted.html",
+                new[] { NotificationTexts.Format("AccountDeleted.Body", culture, greeting, appName),
+                    NotificationTexts.Get("AccountDeleted.After", culture) }, string.Empty, string.Empty, string.Empty),
+            _ => throw new NotSupportedException("This account notice template belongs to a later stage."),
+        };
+        var title = NotificationTexts.Get(key + ".Title", culture);
+        var subject = NotificationTexts.Get(key + ".Subject", culture);
+        var htmlContent = Fill(template, new Dictionary<string, string>
+        {
+            ["Title"] = Encode(title),
+            ["Paragraphs"] = string.Join(string.Empty, paragraphs.Select(value => $"<p style=\"margin:0 0 16px;\">{Encode(value)}</p>")),
+            ["Action"] = actionLabel.Length == 0 ? string.Empty :
+                $"<p style=\"margin:0 0 16px;\"><a href=\"{Encode(actionUrl)}\">{Encode(actionLabel)}</a></p>",
+            ["Note"] = note.Length == 0 ? string.Empty : $"<p style=\"margin:0;\">{Encode(note)}</p>",
+        });
+        var html = Fill(LayoutTemplate, new Dictionary<string, string>
+        {
+            ["Lang"] = Encode(culture.Entry.LanguageCode),
+            ["Title"] = Encode(title),
+            ["Header"] = HeaderHtml(),
+            ["Content"] = htmlContent,
+            ["Footer"] = Encode(NotificationTexts.Format("Layout.Footer", culture, appName)),
+        });
+        var textParts = new List<string> { title };
+        textParts.AddRange(paragraphs);
+        if (actionLabel.Length > 0) textParts.Add($"{actionLabel}: {actionUrl}");
+        if (note.Length > 0) textParts.Add(note);
+        textParts.Add(NotificationTexts.Format("Layout.Footer", culture, appName));
+        return new EmailMessage(to, subject, html, string.Join(Environment.NewLine + Environment.NewLine, textParts));
+    }
+
+    private async Task<(string Key, string Template, string[] Paragraphs, string Action, string Url, string Note)>
+        MethodChangedAsync(AccountNotice.LoginMethodChanged notice, string name, string appName,
+            CultureProfile culture, CancellationToken ct)
+    {
+        var formatter = _formatter ?? throw new InvalidOperationException("DisplayFormatter is required for account notices.");
+        var context = await formatter.CreateAsync(culture.Entry.Code, notice.TimeZoneId, ct);
+        var date = formatter.FormatDate(notice.OccurredAtUtc, context);
+        var time = formatter.FormatTime(notice.OccurredAtUtc, context);
+        var key = (notice.Change, notice.MethodType) switch
+        {
+            ("Added", LoginMethodType.Phone) => "LoginMethodAddedPhone",
+            ("Removed", LoginMethodType.Email) => "LoginMethodRemovedEmail",
+            ("Primary", LoginMethodType.Email) => "LoginMethodPrimaryEmail",
+            _ => throw new NotSupportedException("This login method notice has no approved copy."),
+        };
+        return (key, "LoginMethodChanged.html",
+            [NotificationTexts.Format(key + ".Body", culture, name, date, time, notice.MaskedMethod, appName)],
+            NotificationTexts.Get("Action.MyAccount", culture), notice.ActionUrl,
+            NotificationTexts.Get("Notice.NotMe", culture));
+    }
+
+    private async Task<(string Key, string Template, string[] Paragraphs, string Action, string Url, string Note)>
+        DeletionRequestedAsync(AccountNotice.DeletionRequested notice, string name, string appName,
+            CultureProfile culture, CancellationToken ct)
+    {
+        var formatter = _formatter ?? throw new InvalidOperationException("DisplayFormatter is required for account notices.");
+        var context = await formatter.CreateAsync(culture.Entry.Code, notice.TimeZoneId, ct);
+        var date = formatter.FormatDate(notice.RequestedAtUtc, context);
+        var time = formatter.FormatTime(notice.RequestedAtUtc, context);
+        var scheduled = formatter.FormatDate(notice.ScheduledForUtc, context);
+        return ("DeletionRequested", "AccountDeletionRequested.html",
+            [NotificationTexts.Format("DeletionRequested.Body", culture, name, date, time, appName),
+                NotificationTexts.Format("DeletionRequested.Scheduled", culture, scheduled)],
+            NotificationTexts.Get("Action.Login", culture), notice.ActionUrl,
+            NotificationTexts.Get("DeletionRequested.Note", culture));
+    }
+
+    private async Task<(string Key, string Template, string[] Paragraphs, string Action, string Url, string Note)>
+        DeletionCancelledAsync(AccountNotice.DeletionCancelled notice, string name, string appName,
+            CultureProfile culture, CancellationToken ct)
+    {
+        var formatter = _formatter ?? throw new InvalidOperationException("DisplayFormatter is required for account notices.");
+        var context = await formatter.CreateAsync(culture.Entry.Code, notice.TimeZoneId, ct);
+        var date = formatter.FormatDate(notice.OccurredAtUtc, context);
+        var time = formatter.FormatTime(notice.OccurredAtUtc, context);
+        return ("DeletionCancelled", "AccountDeletionCancelled.html",
+            [NotificationTexts.Format("DeletionCancelled.Body", culture, name, date, time, appName)],
+            NotificationTexts.Get("Action.MyAccount", culture), notice.ActionUrl,
+            NotificationTexts.Get("Notice.NotMe", culture));
+    }
 
     private EmailMessage RenderCode(string template, string to, string code, int lifetimeMinutes, CultureProfile culture)
     {

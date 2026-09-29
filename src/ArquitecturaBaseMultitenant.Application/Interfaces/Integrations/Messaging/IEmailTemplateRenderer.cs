@@ -9,5 +9,6 @@ public interface IEmailTemplateRenderer
     EmailMessage RenderLoginCode(string to, string code, int lifetimeMinutes, CultureProfile culture);
     EmailMessage RenderSignupCode(string to, string code, int lifetimeMinutes, CultureProfile culture);
     EmailMessage RenderInvitation(string to, string loginUrl, CultureProfile culture);
-    EmailMessage RenderAccountNotice(string to, AccountNotice notice, CultureProfile culture);
+    Task<EmailMessage> RenderAccountNoticeAsync(string to, AccountNotice notice, CultureProfile culture,
+        CancellationToken cancellationToken);
 }

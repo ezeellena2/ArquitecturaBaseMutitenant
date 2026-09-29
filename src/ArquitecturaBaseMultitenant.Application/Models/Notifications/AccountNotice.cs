@@ -5,14 +5,20 @@ public abstract record AccountNotice
 {
     private AccountNotice() { }
 
-    public sealed record LoginMethodChanged(string Change, string MaskedMethod, DateTime OccurredAtUtc)
+    public string? RecipientName { get; init; }
+
+    public sealed record LoginMethodChanged(string Change,
+        ArquitecturaBaseMultitenant.Domain.Authentication.LoginMethodType MethodType,
+        string MaskedMethod, DateTime OccurredAtUtc, string TimeZoneId, string ActionUrl)
         : AccountNotice;
 
     public sealed record ReviewLoginMethods(string OrganizationName) : AccountNotice;
 
-    public sealed record DeletionRequested(DateTime ScheduledForUtc) : AccountNotice;
+    public sealed record DeletionRequested(DateTime RequestedAtUtc, DateTime ScheduledForUtc,
+        string TimeZoneId, string ActionUrl) : AccountNotice;
 
-    public sealed record DeletionCancelled : AccountNotice;
+    public sealed record DeletionCancelled(DateTime OccurredAtUtc, string TimeZoneId,
+        string ActionUrl) : AccountNotice;
 
     public sealed record AccountDeleted : AccountNotice;
 

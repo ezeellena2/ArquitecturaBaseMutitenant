@@ -48,14 +48,27 @@ public sealed class DisplayFormatter(
 
     public string FormatInstant(DateTime instantUtc, DisplayFormatContext context)
     {
+        return LocalInstant(instantUtc, context)
+            .ToString(context.Profile.Entry.DateTimePattern, context.Profile.Culture);
+    }
+
+    public string FormatDate(DateTime instantUtc, DisplayFormatContext context) =>
+        LocalInstant(instantUtc, context)
+            .ToString(context.Profile.Entry.DatePattern, context.Profile.Culture);
+
+    public string FormatTime(DateTime instantUtc, DisplayFormatContext context) =>
+        LocalInstant(instantUtc, context)
+            .ToString(context.Profile.Entry.TimePattern, context.Profile.Culture);
+
+    private DateTime LocalInstant(DateTime instantUtc, DisplayFormatContext context)
+    {
         ArgumentNullException.ThrowIfNull(context);
         if (instantUtc.Kind != DateTimeKind.Utc)
         {
             throw new ArgumentException("The instant must be UTC.", nameof(instantUtc));
         }
 
-        return zoneService.ConvertToLocal(instantUtc, context.TimeZoneId)
-            .ToString(context.Profile.Entry.DateTimePattern, context.Profile.Culture);
+        return zoneService.ConvertToLocal(instantUtc, context.TimeZoneId);
     }
 
     // Keep one instance API for callers composing sync and async formatted fields.

@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Application.Models.Notifications;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Messaging;
 
@@ -38,5 +39,25 @@ public sealed class ChannelContractsTests
 
         Assert.DoesNotContain("secret@example.com", message.ToString(), StringComparison.Ordinal);
         Assert.DoesNotContain("123456", message.ToString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Account_notices_carry_the_approved_template_data()
+    {
+        var occurred = new DateTime(2026, 9, 27, 17, 35, 0, DateTimeKind.Utc);
+        var scheduled = occurred.AddDays(30);
+        var changed = new AccountNotice.LoginMethodChanged("Added", LoginMethodType.Phone,
+            "+54 9 11 •••• 4521", occurred, "America/Argentina/Buenos_Aires", "https://example.test/cuenta")
+        { RecipientName = "Lucía" };
+        var requested = new AccountNotice.DeletionRequested(occurred, scheduled,
+            "America/Argentina/Buenos_Aires", "https://example.test/login")
+        { RecipientName = "Diego" };
+
+        Assert.Equal(LoginMethodType.Phone, changed.MethodType);
+        Assert.Equal("Lucía", changed.RecipientName);
+        Assert.Equal(occurred, changed.OccurredAtUtc);
+        Assert.Equal("https://example.test/cuenta", changed.ActionUrl);
+        Assert.Equal(scheduled, requested.ScheduledForUtc);
+        Assert.Equal("Diego", requested.RecipientName);
     }
 }

@@ -9,4 +9,30 @@
   <data name="LoginCode.Intro" xml:space="preserve"><value>Usá este código para ingresar a {0}:</value></data>
   <data name="LoginCode.Expiry" xml:space="preserve"><value>Vence en {0} minutos. Si no lo pediste, ignorá este email: nadie puede entrar a tu cuenta sin el código.</value></data>
   <data name="Layout.Footer" xml:space="preserve"><value>Este email lo envió {0} automáticamente. No lo respondas.</value></data>
+  <data name="Greeting.Named" xml:space="preserve"><value>Hola, {0}.</value></data>
+  <data name="Greeting.Unnamed" xml:space="preserve"><value>Hola.</value></data>
+  <data name="Action.MyAccount" xml:space="preserve"><value>Ir a Mi cuenta</value></data>
+  <data name="Action.Login" xml:space="preserve"><value>Ingresar</value></data>
+  <data name="Notice.NotMe" xml:space="preserve"><value>Si no fuiste vos, entrá a tu cuenta y revisá tus métodos de ingreso. Si no podés entrar, usá «Recuperá tu cuenta».</value></data>
+  <data name="LoginMethodAddedPhone.Subject" xml:space="preserve"><value>Agregaste un WhatsApp a tu cuenta</value></data>
+  <data name="LoginMethodAddedPhone.Title" xml:space="preserve"><value>Agregaste un método de ingreso</value></data>
+  <data name="LoginMethodAddedPhone.Body" xml:space="preserve"><value>{0} El {1} a las {2} agregaste el WhatsApp {3} a tu cuenta de {4}.</value></data>
+  <data name="LoginMethodRemovedEmail.Subject" xml:space="preserve"><value>Quitaste un correo de tu cuenta</value></data>
+  <data name="LoginMethodRemovedEmail.Title" xml:space="preserve"><value>Quitaste un método de ingreso</value></data>
+  <data name="LoginMethodRemovedEmail.Body" xml:space="preserve"><value>{0} El {1} a las {2} quitaste el correo {3} de tu cuenta de {4}. Ya no sirve para ingresar.</value></data>
+  <data name="LoginMethodPrimaryEmail.Subject" xml:space="preserve"><value>Cambiaste el método principal de tu cuenta</value></data>
+  <data name="LoginMethodPrimaryEmail.Title" xml:space="preserve"><value>Cambiaste tu método principal</value></data>
+  <data name="LoginMethodPrimaryEmail.Body" xml:space="preserve"><value>{0} El {1} a las {2} elegiste {3} como método principal de tu cuenta de {4}. Desde ahora, los avisos llegan ahí.</value></data>
+  <data name="DeletionRequested.Subject" xml:space="preserve"><value>Pediste la baja de tu cuenta</value></data>
+  <data name="DeletionRequested.Title" xml:space="preserve"><value>Pediste la baja de tu cuenta</value></data>
+  <data name="DeletionRequested.Body" xml:space="preserve"><value>{0} El {1} a las {2} pediste la baja de tu cuenta de {3} y cerramos todas tus sesiones.</value></data>
+  <data name="DeletionRequested.Scheduled" xml:space="preserve"><value>Tu cuenta se elimina el {0}.</value></data>
+  <data name="DeletionRequested.Note" xml:space="preserve"><value>Si no fuiste vos o te arrepentiste, ingresá antes de esa fecha para cancelarla.</value></data>
+  <data name="DeletionCancelled.Subject" xml:space="preserve"><value>Cancelaste la baja de tu cuenta</value></data>
+  <data name="DeletionCancelled.Title" xml:space="preserve"><value>Cancelaste la baja de tu cuenta</value></data>
+  <data name="DeletionCancelled.Body" xml:space="preserve"><value>{0} El {1} a las {2} cancelaste la baja de tu cuenta de {3}. Tu cuenta sigue activa.</value></data>
+  <data name="AccountDeleted.Subject" xml:space="preserve"><value>Tu cuenta fue eliminada</value></data>
+  <data name="AccountDeleted.Title" xml:space="preserve"><value>Tu cuenta fue eliminada</value></data>
+  <data name="AccountDeleted.Body" xml:space="preserve"><value>{0} Eliminamos tu cuenta de {1}, con sus métodos de ingreso y tu espacio personal.</value></data>
+  <data name="AccountDeleted.After" xml:space="preserve"><value>Este correo ya no está asociado a ninguna cuenta.</value></data>
 </root>

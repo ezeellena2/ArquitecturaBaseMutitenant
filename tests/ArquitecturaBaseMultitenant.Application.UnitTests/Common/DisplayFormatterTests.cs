@@ -38,6 +38,27 @@ public sealed class DisplayFormatterTests
         Assert.Equal(1, countedCultures.ListCalls);
     }
 
+    [Fact]
+    public async Task Typed_date_and_time_use_the_same_catalog_patterns_as_the_shared_contract()
+    {
+        var catalog = new JsonReferenceDataCatalog();
+        var clock = new FakeTimeProvider(DateTimeOffset.Parse("2026-09-27T15:00:00Z", CultureInfo.InvariantCulture));
+        var formatter = new DisplayFormatter(catalog, catalog, catalog, catalog, catalog,
+            new LibPhoneNumberDisplayFormatter(), new TimeZoneService(clock), clock);
+        var instantUtc = new DateTime(2026, 9, 27, 17, 35, 0, DateTimeKind.Utc);
+        var spanish = await formatter.CreateAsync("es-AR", "America/Argentina/Buenos_Aires",
+            TestContext.Current.CancellationToken);
+        var english = await formatter.CreateAsync("en-US", "America/Argentina/Buenos_Aires",
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal("27/09/2026", formatter.FormatDate(instantUtc, spanish));
+        Assert.Equal("14:35", formatter.FormatTime(instantUtc, spanish));
+        Assert.Equal("09/27/2026", formatter.FormatDate(instantUtc, english));
+        Assert.Equal("2:35 PM", formatter.FormatTime(instantUtc, english));
+        Assert.Throws<ArgumentException>(() => formatter.FormatDate(DateTime.SpecifyKind(instantUtc,
+            DateTimeKind.Unspecified), spanish));
+    }
+
     [Theory]
     [MemberData(nameof(Cases))]
     public async Task Matches_shared_format_contract(
