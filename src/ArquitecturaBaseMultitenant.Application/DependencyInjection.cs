@@ -22,11 +22,17 @@ public static class DependencyInjection
         services.AddScoped<ILoginCodeService, LoginCodeService>();
         services.AddScoped<ILoginMethodsService, LoginMethodsService>();
         services.AddScoped<IAccountService, AccountService>();
+        services.AddScoped<SignupCodeRequester>();
+        services.AddScoped<SignupVerificationFlow>();
+        services.AddScoped<SignupVerificationCore>();
+        services.AddScoped<SignupAccountRegistrar>();
+        services.AddScoped<SignupExistingMethodVerifier>();
         services.AddScoped<IExternalLoginService, ExternalLoginService>();
         services.AddScoped<GoogleAccountResolver>();
         services.AddScoped<GoogleAccountRegistrar>();
         services.AddScoped<IConnectService, ConnectService>();
         services.AddScoped<IProfileService, ProfileService>();
+        services.AddScoped<ProfileSnapshotBuilder>();
         services.AddScoped<ILegalService, LegalService>();
         services.AddScoped<SignupPolicy>();
         services.AddScoped<IPersonalSpaceProvisioner, PersonalSpaceProvisioner>();

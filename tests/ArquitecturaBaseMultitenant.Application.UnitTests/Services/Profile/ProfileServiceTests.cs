@@ -158,8 +158,9 @@ public sealed class ProfileServiceTests
         ServiceFixture<ProfileService> fixture, IUnitOfWork? unitOfWork = null)
     {
         var catalog = new JsonReferenceDataCatalog();
-        return new ProfileService(current, context, users, accesses, settings, catalog, catalog,
-            fixture.Validator, unitOfWork ?? new FakeUnitOfWork(), fixture.TimeProvider, fixture.Logger);
+        var snapshots = new ProfileSnapshotBuilder(users, accesses, settings, catalog, catalog);
+        return new ProfileService(current, context, snapshots, users, fixture.Validator,
+            unitOfWork ?? new FakeUnitOfWork(), fixture.TimeProvider, fixture.Logger);
     }
 
     private sealed class StubAccesses(IReadOnlyList<UserTenantAccessRow> rows) : IUserTenantAccessReader
