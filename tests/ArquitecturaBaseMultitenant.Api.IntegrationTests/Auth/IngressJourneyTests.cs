@@ -10,6 +10,7 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -89,11 +90,16 @@ public sealed class IngressJourneyTests(ApiFactory factory)
 
         var business = await AuthorizeAndExchangeAsync(client, businessAuthorize, verifier);
         using var businessMe = await GetMeAsync(client, business.AccessToken);
-        Assert.Equal("Business", businessMe.RootElement.GetProperty("access").GetString());
+        Assert.Equal("business", businessMe.RootElement.GetProperty("access").GetString());
         var organization = Assert.Single(businessMe.RootElement.GetProperty("organizations").EnumerateArray());
         Assert.Equal("Empresa A", organization.GetProperty("name").GetString());
         var businessTenantId = businessMe.RootElement.GetProperty("activeTenantId").GetGuid();
         Assert.Equal(organization.GetProperty("id").GetGuid(), businessTenantId);
+        using var businessProbe = await PostAsBearerAsync(client,
+            "/test/access/business-signup", business.AccessToken);
+        Assert.Equal(HttpStatusCode.OK, businessProbe.StatusCode);
+        using var anonymousProbe = await client.PostAsync("/test/access/business-signup", null, Ct);
+        Assert.Equal(HttpStatusCode.Unauthorized, anonymousProbe.StatusCode);
 
         var refreshed = await ExchangeTokenAsync(client, new Dictionary<string, string>
         {
@@ -102,13 +108,21 @@ public sealed class IngressJourneyTests(ApiFactory factory)
             ["client_id"] = "web",
         });
         using var refreshedMe = await GetMeAsync(client, refreshed.AccessToken);
-        Assert.Equal("Business", refreshedMe.RootElement.GetProperty("access").GetString());
+        Assert.Equal("business", refreshedMe.RootElement.GetProperty("access").GetString());
         Assert.Equal(businessTenantId, refreshedMe.RootElement.GetProperty("activeTenantId").GetGuid());
 
         var consumer = await AuthorizeAndExchangeAsync(client, AuthorizePath("consumer", challenge), verifier);
         using var consumerMe = await GetMeAsync(client, consumer.AccessToken);
-        Assert.Equal("Consumer", consumerMe.RootElement.GetProperty("access").GetString());
+        Assert.Equal("consumer", consumerMe.RootElement.GetProperty("access").GetString());
         Assert.NotEqual(businessTenantId, consumerMe.RootElement.GetProperty("activeTenantId").GetGuid());
+        using var personalProbe = await PostAsBearerAsync(client,
+            "/test/access/business-signup", consumer.AccessToken);
+        Assert.Equal(HttpStatusCode.Forbidden, personalProbe.StatusCode);
+        using var problem = await personalProbe.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+        Assert.Equal(AccessErrors.WrongCode, problem?.RootElement.GetProperty("code").GetString());
+        using var missingBusinessSignup = await PostAsBearerAsync(client,
+            "/api/auth/business-signup", consumer.AccessToken);
+        Assert.Equal(HttpStatusCode.NotFound, missingBusinessSignup.StatusCode);
 
         using var update = new HttpRequestMessage(HttpMethod.Put, "/api/me")
         {
@@ -206,6 +220,14 @@ public sealed class IngressJourneyTests(ApiFactory factory)
         using var response = await client.SendAsync(request, Ct);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         return (await response.Content.ReadFromJsonAsync<JsonDocument>(Ct))!;
+    }
+
+    private static async Task<HttpResponseMessage> PostAsBearerAsync(HttpClient client,
+        string path, string accessToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, path);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        return await client.SendAsync(request, Ct);
     }
 
     private sealed record JourneyTokens(string AccessToken, string RefreshToken, string IdToken);

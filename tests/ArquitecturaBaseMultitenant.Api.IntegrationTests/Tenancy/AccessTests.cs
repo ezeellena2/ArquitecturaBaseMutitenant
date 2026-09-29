@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using ArquitecturaBaseMultitenant.Api.Tenancy;
+using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.BusinessAccess;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.AspNetCore.Http;
@@ -48,6 +49,15 @@ public sealed class AccessTests
         var attribute = new AccessAttribute(Access.Consumer, Access.Business, Access.Platform);
 
         Assert.Equal([Access.Consumer, Access.Business, Access.Platform], attribute.Allowed);
+    }
+
+    [Fact]
+    public void Business_signup_probe_is_limited_to_business_access()
+    {
+        var access = Assert.IsType<AccessAttribute>(
+            Attribute.GetCustomAttribute(typeof(BusinessOnlyController), typeof(AccessAttribute)));
+
+        Assert.Equal([Access.Business], access.Allowed);
     }
 
     private static AuthorizationFilterContext NewContext(Access access)

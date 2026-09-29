@@ -1075,6 +1075,8 @@ tests/
 │   ├── TestFeatures/                                  [E1] solo para tests, nunca en src/
 │   │   ├── TestController.cs                          [E1] devuelve cada ErrorType
 │   │   ├── TestControllerApplicationPart.cs
+│   │   ├── Access/                                   [E3] probe de ruta exclusiva Business, sólo para tests
+│   │   │   └── BusinessOnlyController.cs             [E3] demuestra 403 Consumer sin adelantar alta productiva E6
 │   │   └── Isolation/                                 [E2]
 │   │       ├── Widget.cs                              ITenantOwned, IAuditable, ISoftDeletable
 │   │       ├── Poster.cs                              IPublishedByBusiness: la referencia de un dato público
