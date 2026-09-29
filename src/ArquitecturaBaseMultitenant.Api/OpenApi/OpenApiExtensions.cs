@@ -29,6 +29,11 @@ internal static class OpenApiExtensions
                 }
             }
 
+            if (context.JsonTypeInfo.Type == typeof(ProblemDetails))
+            {
+                DescribeProblemExtensions(schema);
+            }
+
             return Task.CompletedTask;
         }));
         services.Configure<MvcOptions>(options => options.Conventions.Add(new ProblemResponsesConvention()));
@@ -38,6 +43,30 @@ internal static class OpenApiExtensions
     private static bool IsNullable(JsonPropertyInfo? property) =>
         property?.AttributeProvider is PropertyInfo source
         && new NullabilityInfoContext().Create(source).ReadState == NullabilityState.Nullable;
+
+    private static void DescribeProblemExtensions(OpenApiSchema schema)
+    {
+        schema.Properties ??= new Dictionary<string, IOpenApiSchema>(StringComparer.Ordinal);
+        schema.Properties["code"] = new OpenApiSchema { Type = JsonSchemaType.String };
+        schema.Properties["traceId"] = new OpenApiSchema { Type = JsonSchemaType.String };
+        schema.Properties["errors"] = new OpenApiSchema
+        {
+            Type = JsonSchemaType.Object,
+            AdditionalProperties = new OpenApiSchema
+            {
+                Type = JsonSchemaType.Array,
+                Items = new OpenApiSchema { Type = JsonSchemaType.String },
+            },
+        };
+        schema.Properties["retryAfter"] = new OpenApiSchema
+        {
+            Type = JsonSchemaType.Integer | JsonSchemaType.Null,
+            Format = "int32",
+        };
+        schema.Required ??= new HashSet<string>(StringComparer.Ordinal);
+        schema.Required.Add("code");
+        schema.Required.Add("traceId");
+    }
 
     public static WebApplication MapOpenApiDocumentation(this WebApplication app)
     {

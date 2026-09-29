@@ -586,6 +586,10 @@
         }
       },
       "ProblemDetails": {
+        "required": [
+          "code",
+          "traceId"
+        ],
         "type": "object",
         "properties": {
           "type": {
@@ -618,6 +622,28 @@
               "null",
               "string"
             ]
+          },
+          "code": {
+            "type": "string"
+          },
+          "traceId": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "retryAfter": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
           }
         }
       },

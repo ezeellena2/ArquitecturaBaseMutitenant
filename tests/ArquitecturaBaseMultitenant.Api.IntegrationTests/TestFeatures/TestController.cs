@@ -1,7 +1,9 @@
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
 using ArquitecturaBaseMultitenant.Api.Json;
+using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures;
@@ -12,6 +14,9 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures;
 public sealed class TestController : ControllerBase
 {
     [HttpGet("result/{type}")]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
+    [ProducesProblem(StatusCodes.Status409Conflict)]
+    [ProducesProblem(StatusCodes.Status429TooManyRequests)]
     public IActionResult ResultByType(ErrorType type)
     {
         Error error = type switch

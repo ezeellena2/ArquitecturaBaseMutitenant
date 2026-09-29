@@ -130,6 +130,42 @@ public sealed class OpenApiTests(ApiFactory factory)
             JsonSerializer.Deserialize<Dictionary<string, int>>("""{"value":"42"}""", options));
     }
 
+    [Fact]
+    public async Task Problem_responses_document_code_trace_fields_and_retry_after()
+    {
+        await using var development = factory.WithWebHostBuilder(builder => builder.UseEnvironment("Development"));
+        using var client = development.CreateClient();
+        using var response = await client.GetAsync("/openapi/v1.json", TestContext.Current.CancellationToken);
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        var root = document.RootElement;
+        var responses = root.GetProperty("paths").GetProperty("/test/result/{type}")
+            .GetProperty("get").GetProperty("responses");
+
+        foreach (var status in new[] { "400", "409", "429" })
+        {
+            Assert.True(IsProblemDetails(responses.GetProperty(status)), status);
+        }
+
+        var schema = root.GetProperty("components").GetProperty("schemas").GetProperty("ProblemDetails");
+        var properties = schema.GetProperty("properties");
+        Assert.Equal("string", properties.GetProperty("code").GetProperty("type").GetString());
+        Assert.Equal("string", properties.GetProperty("traceId").GetProperty("type").GetString());
+        Assert.Equal("array", properties.GetProperty("errors").GetProperty("additionalProperties")
+            .GetProperty("type").GetString());
+        Assert.Equal("string", properties.GetProperty("errors").GetProperty("additionalProperties")
+            .GetProperty("items").GetProperty("type").GetString());
+        var retryAfterTypes = properties.GetProperty("retryAfter").GetProperty("type").EnumerateArray()
+            .Select(item => item.GetString()).ToArray();
+        Assert.Contains("integer", retryAfterTypes);
+        Assert.Contains("null", retryAfterTypes);
+        var required = schema.GetProperty("required").EnumerateArray()
+            .Select(item => item.GetString()).ToArray();
+        Assert.Contains("code", required);
+        Assert.Contains("traceId", required);
+        Assert.DoesNotContain("errors", required);
+        Assert.DoesNotContain("retryAfter", required);
+    }
+
     [Theory]
     [InlineData("/swagger/index.html")]
     [InlineData("/openapi/v1.json")]
