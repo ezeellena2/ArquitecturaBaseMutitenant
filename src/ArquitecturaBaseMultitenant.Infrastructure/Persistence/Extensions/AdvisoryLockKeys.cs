@@ -9,6 +9,10 @@ internal static class AdvisoryLockKeys
     public const string ReferenceDataSeed = "p:ref:seed";
     public const string Seed = "seed:database";
 
+    public static string ExternalGoogleSubject(string subject) => "google:subject:" + subject;
+
+    public static string ExternalGoogleEmail(string email) => "google:email:" + email;
+
     public static string PersonalSpace(Guid userId)
     {
         if (userId == Guid.Empty)

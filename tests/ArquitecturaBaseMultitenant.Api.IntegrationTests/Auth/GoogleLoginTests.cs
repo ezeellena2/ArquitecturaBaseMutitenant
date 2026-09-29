@@ -1,0 +1,199 @@
+using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Models.Auth;
+using ArquitecturaBaseMultitenant.Application.Models.Identity;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Npgsql;
+
+namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
+
+[Collection(ApiTestGroup.Name)]
+public sealed class GoogleLoginTests(ApiFactory factory)
+{
+    private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    [Fact]
+    public async Task Login_door_does_not_create_an_account_for_an_unknown_Google_subject()
+    {
+        await factory.Services.SeedDatabaseAsync(Ct);
+        var subject = Guid.NewGuid().ToString("N");
+        var google = new GoogleSignInDouble(new ExternalLogin("Google", subject,
+            $"google-{subject}@example.test", true, "Persona nueva"));
+        await using var host = HostWith(google);
+        await using var scope = host.Services.CreateAsyncScope();
+
+        var result = await scope.ServiceProvider.GetRequiredService<IExternalLoginService>()
+            .SignInAsync(new ExternalSignInRequest("/connect/authorize?client_id=web", false, false), Ct);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("Auth.Google.AccountNotFound", result.Error.Code);
+        Assert.Null(google.SignedInUserId);
+        Assert.Equal(0, await CountMethodsAsync(subject));
+    }
+
+    [Fact]
+    public async Task Registration_without_terms_is_rejected_before_creating_any_account()
+    {
+        await factory.Services.SeedDatabaseAsync(Ct);
+        var subject = Guid.NewGuid().ToString("N");
+        var google = new GoogleSignInDouble(new ExternalLogin("Google", subject,
+            $"google-{subject}@example.test", true, "Persona nueva"));
+        await using var host = HostWith(google);
+        await using var scope = host.Services.CreateAsyncScope();
+
+        var result = await scope.ServiceProvider.GetRequiredService<IExternalLoginService>()
+            .SignInAsync(new ExternalSignInRequest("/connect/authorize?client_id=web", true, false), Ct);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("Validation.Failed", result.Error.Code);
+        Assert.Contains("acceptedTerms", Assert.IsType<ValidationError>(result.Error).Errors.Keys);
+        Assert.Equal(0, await CountMethodsAsync(subject));
+    }
+
+    [Fact]
+    public async Task Unverified_Google_email_cannot_create_or_link_an_account()
+    {
+        await factory.Services.SeedDatabaseAsync(Ct);
+        var subject = Guid.NewGuid().ToString("N");
+        var google = new GoogleSignInDouble(new ExternalLogin("Google", subject,
+            $"google-{subject}@example.test", false, "Persona nueva"));
+        await using var host = HostWith(google);
+        await using var scope = host.Services.CreateAsyncScope();
+
+        var result = await scope.ServiceProvider.GetRequiredService<IExternalLoginService>()
+            .SignInAsync(new ExternalSignInRequest("/connect/authorize?client_id=web", true, true), Ct);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("Auth.ExternalLogin.EmailNotVerified", result.Error.Code);
+        Assert.Equal(0, await CountMethodsAsync(subject));
+    }
+
+    [Fact]
+    public async Task Registration_creates_verified_Google_method_personal_space_and_both_legal_acceptances()
+    {
+        await factory.Services.SeedDatabaseAsync(Ct);
+        var subject = Guid.NewGuid().ToString("N");
+        var google = new GoogleSignInDouble(new ExternalLogin("Google", subject,
+            $"google-{subject}@example.test", true, "Persona nueva"));
+        await using var host = HostWith(google);
+        await using var scope = host.Services.CreateAsyncScope();
+
+        var result = await scope.ServiceProvider.GetRequiredService<IExternalLoginService>()
+            .SignInAsync(new ExternalSignInRequest("/connect/authorize?client_id=web", true, true,
+                "es-AR", "America/Argentina/Buenos_Aires"), Ct);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(google.SignedInUserId);
+        Assert.Equal(1, await CountMethodsAsync(subject));
+        Assert.Equal(2, await CountAcceptancesAsync(google.SignedInUserId.Value));
+        Assert.Equal(1, await CountPersonalSpacesAsync(google.SignedInUserId.Value));
+    }
+
+    [Fact]
+    public async Task Verified_Google_email_links_an_existing_account_without_a_second_identity()
+    {
+        await factory.Services.SeedDatabaseAsync(Ct);
+        var address = $"google-link-{Guid.NewGuid():N}@example.test";
+        var originalUserId = Guid.Empty;
+        await using (var seedScope = factory.Services.CreateAsyncScope())
+        {
+            var services = seedScope.ServiceProvider;
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                var users = services.GetRequiredService<IUserRepository>();
+                var methods = services.GetRequiredService<ILoginMethodRepository>();
+                var user = await users.CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct);
+                originalUserId = user.Id;
+                var email = Email.Create(address).Value;
+                var method = ArquitecturaBaseMultitenant.Domain.Authentication.LoginMethod.CreateEmail(user.Id, email);
+                method.Verify(services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime);
+                method.MakePrimary();
+                methods.Add(method);
+                await users.SetPrimaryEmailAsync(user.Id, email, ct);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+        var subject = Guid.NewGuid().ToString("N");
+        var google = new GoogleSignInDouble(new ExternalLogin("Google", subject, address, true, "Nombre"));
+        await using var host = HostWith(google);
+        await using var scope = host.Services.CreateAsyncScope();
+
+        var result = await scope.ServiceProvider.GetRequiredService<IExternalLoginService>()
+            .SignInAsync(new ExternalSignInRequest("/connect/authorize?client_id=web", false, false), Ct);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1, await CountMethodsAsync(subject));
+        Assert.Equal(originalUserId, google.SignedInUserId);
+        Assert.Equal(1, await CountUsersByEmailAsync(address));
+    }
+
+    private Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program> HostWith(GoogleSignInDouble google) =>
+        factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+        {
+            services.RemoveAll<ISignInService>();
+            services.AddSingleton<ISignInService>(google);
+        }));
+
+    private async Task<long> CountMethodsAsync(string subject) => await ScalarAsync(
+        "SELECT count(*) FROM identity.\"LoginMethods\" WHERE \"Type\" = 'Google' AND \"Value\" = @value", subject);
+
+    private async Task<long> CountUsersByEmailAsync(string address) => await ScalarAsync(
+        "SELECT count(*) FROM identity.\"LoginMethods\" WHERE \"Type\" = 'Email' AND \"Value\" = @value", address);
+
+    private async Task<long> ScalarAsync(string sql, string value)
+    {
+        await using var connection = new NpgsqlConnection(factory.AdminConnectionString);
+        await connection.OpenAsync(Ct);
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        command.Parameters.AddWithValue("value", value);
+        return (long)(await command.ExecuteScalarAsync(Ct) ?? 0L);
+    }
+
+    private async Task<long> CountAcceptancesAsync(Guid userId) => await CountByUserAsync(
+        "SELECT count(*) FROM identity.\"LegalAcceptances\" WHERE \"UserId\" = @userId", userId);
+
+    private async Task<long> CountPersonalSpacesAsync(Guid userId) => await CountByUserAsync(
+        "SELECT count(*) FROM identity.\"UserTenantAccesses\" a JOIN platform.\"Tenants\" t ON t.\"Id\" = a.\"TenantId\" WHERE a.\"UserId\" = @userId AND t.\"Kind\" = 'Personal'", userId);
+
+    private async Task<long> CountByUserAsync(string sql, Guid userId)
+    {
+        await using var connection = new NpgsqlConnection(factory.AdminConnectionString);
+        await connection.OpenAsync(Ct);
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        command.Parameters.AddWithValue("userId", userId);
+        return (long)(await command.ExecuteScalarAsync(Ct) ?? 0L);
+    }
+
+    private sealed class GoogleSignInDouble(ExternalLogin login) : ISignInService
+    {
+        public Guid? SignedInUserId { get; private set; }
+
+        public Task<ExternalLogin?> GetExternalLoginAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<ExternalLogin?>(login);
+
+        public Task SignOutExternalAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public Task<bool> IsLockedOutAsync(Guid userId, CancellationToken cancellationToken) => Task.FromResult(false);
+
+        public Task RegisterFailedAttemptAsync(Guid userId, CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public Task ResetFailedAttemptsAsync(Guid userId, CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public Task RevokeSessionsAsync(Guid userId, CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public Task SignInAsync(Guid userId, CancellationToken cancellationToken)
+        {
+            SignedInUserId = userId;
+            return Task.CompletedTask;
+        }
+    }
+}

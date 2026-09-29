@@ -21,6 +21,9 @@ public static class DependencyInjection
         services.AddScoped<IOutboxDispatchService, OutboxDispatchService>();
         services.AddScoped<ILoginCodeService, LoginCodeService>();
         services.AddScoped<IAccountService, AccountService>();
+        services.AddScoped<IExternalLoginService, ExternalLoginService>();
+        services.AddScoped<GoogleAccountResolver>();
+        services.AddScoped<GoogleAccountRegistrar>();
         services.AddScoped<IConnectService, ConnectService>();
         services.AddScoped<IProfileService, ProfileService>();
         services.AddScoped<ILegalService, LegalService>();
