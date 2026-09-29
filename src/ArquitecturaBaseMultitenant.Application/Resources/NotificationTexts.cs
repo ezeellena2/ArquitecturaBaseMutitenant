@@ -26,5 +26,5 @@ public static class NotificationTexts
     }
 
     public static string Format(string key, CultureProfile profile, params object[] args) =>
-        string.Format(profile.Culture, Get(key, profile), args);
+        DisplayFormatter.FormatResource(Get(key, profile), profile, args);
 }

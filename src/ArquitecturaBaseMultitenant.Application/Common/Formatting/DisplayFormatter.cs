@@ -19,6 +19,9 @@ public sealed class DisplayFormatter(
     ITimeZoneService zoneService,
     TimeProvider clock)
 {
+    internal static string FormatResource(string template, CultureProfile profile, params object[] args) =>
+        string.Format(profile.Culture, template, args);
+
     private static readonly (decimal Divisor, string Unit)[] CompactUnits =
     [
         (1m, string.Empty),

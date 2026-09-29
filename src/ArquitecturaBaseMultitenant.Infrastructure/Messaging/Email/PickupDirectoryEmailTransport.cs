@@ -1,4 +1,3 @@
-using System.Globalization;
 using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -10,15 +9,13 @@ internal sealed partial class PickupDirectoryEmailTransport(
     IOptions<EmailOptions> emailOptions,
     IOptions<SmtpOptions> smtpOptions,
     IHostEnvironment environment,
-    TimeProvider timeProvider,
     ILogger<PickupDirectoryEmailTransport> logger) : IEmailTransport
 {
     public async Task SendAsync(EmailMessage message, CancellationToken cancellationToken)
     {
         var directory = Path.Combine(environment.ContentRootPath, emailOptions.Value.PickupDirectory);
         Directory.CreateDirectory(directory);
-        var name = string.Create(CultureInfo.InvariantCulture,
-            $"{timeProvider.GetUtcNow():yyyyMMdd-HHmmss}-{Guid.NewGuid():N}.eml");
+        var name = $"{Guid.NewGuid():N}.eml";
         var path = Path.Combine(directory, name);
         using var mime = MimeMessageFactory.Create(message, smtpOptions.Value);
         await mime.WriteToAsync(path, cancellationToken);

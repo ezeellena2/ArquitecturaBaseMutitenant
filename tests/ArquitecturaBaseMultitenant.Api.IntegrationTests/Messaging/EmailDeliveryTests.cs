@@ -45,7 +45,7 @@ public sealed class EmailDeliveryTests
             var pickup = new PickupDirectoryEmailTransport(
                 Options.Create(new EmailOptions { Delivery = EmailDelivery.PickupDirectory, PickupDirectory = "pickup" }),
                 Options.Create(new SmtpOptions { FromAddress = "sender@example.test", FromName = "Test" }),
-                new StubHostEnvironment(directory), TimeProvider.System,
+                new StubHostEnvironment(directory),
                 NullLogger<PickupDirectoryEmailTransport>.Instance);
 
             await pickup.SendAsync(new EmailMessage("recipient@example.test", "Your code", "<b>123456</b>",
