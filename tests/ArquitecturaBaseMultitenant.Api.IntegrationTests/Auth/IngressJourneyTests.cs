@@ -63,7 +63,9 @@ public sealed class IngressJourneyTests(ApiFactory factory)
     public async Task Ana_enters_business_refreshes_switches_to_personal_changes_culture_and_logs_out()
     {
         var email = $"ana-journey-{Guid.NewGuid():N}@example.test";
-        using var host = factory.WithWebHostBuilder(builder =>
+        await using var isolatedFactory = new ApiFactory();
+        await isolatedFactory.InitializeAsync();
+        using var host = isolatedFactory.WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Development");
             builder.UseSetting("Email:Delivery", "PickupDirectory");
