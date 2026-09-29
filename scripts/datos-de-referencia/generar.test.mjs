@@ -253,7 +253,7 @@ test('nombres de culturas salen de CLDR sin consultar Intl.DisplayNames', async 
 test('CI fija Node y prueba el generador con npm ci y npm test', async () => {
   const workflow = await readFile(join(dirname(fileURLToPath(import.meta.url)), '../../.github/workflows/ci.yml'), 'utf8');
   const setup = workflow.match(/      - name: Configurar Node[\s\S]*?(?=\n      - name:|$)/)?.[0] ?? '';
-  assert.match(setup, /uses:\s*actions\/setup-node@v\d+/);
+  assert.match(setup, /uses:\s*actions\/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020\s+# v4\.4\.0/);
   assert.match(setup, /node-version-file:\s*scripts\/datos-de-referencia\/\.node-version/);
   const generator = workflow.match(/      - name: Probar generador de datos de referencia[\s\S]*?(?=\n      - name:|$)/)?.[0] ?? '';
   assert.match(generator, /working-directory:\s*scripts\/datos-de-referencia/);
