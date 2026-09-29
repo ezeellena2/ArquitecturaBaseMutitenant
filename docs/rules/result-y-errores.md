@@ -32,7 +32,7 @@ public static Error HasUsers(int userCount) => Error.Conflict(HasUsersCode, "The
 - `Domain/Authorization/RoleErrors.cs` (E4) · `Api/ErrorHandling/ControllerResultExtensions.cs` (E1)
 
 ## Lo verifica
-- `ErrorCodeTests` (E1): toda clave de `Errors.resx` sigue el formato `Area.Entidad.Motivo`, salvo las de `ReservedKeys`, que además tienen que seguir existiendo en el resx; y cada código declarado tiene su clave.
+- `ErrorCodeTests` (E1): toda clave de `Errors.resx` sigue el formato `Area.Entidad.Motivo`, salvo las de `ReservedKeys`, que además tienen que seguir existiendo en el resx; las constantes `…Code` y los campos `static Error` de `*Errors` tienen clave, y los códigos de esos campos no se duplican ni tienen formato inválido.
 - `ResourceParityTests` (E1): la misma clave en es y en.
 - `ErrorHandlingTests` (E1), `FrameworkErrorsTests` (E1): status y forma del ProblemDetails.
 
