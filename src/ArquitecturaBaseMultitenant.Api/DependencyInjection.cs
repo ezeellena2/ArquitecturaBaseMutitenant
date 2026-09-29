@@ -1,5 +1,6 @@
 using System.Threading.RateLimiting;
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
+using ArquitecturaBaseMultitenant.Api.Authentication;
 using ArquitecturaBaseMultitenant.Api.Idempotency;
 using ArquitecturaBaseMultitenant.Api.Json;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
@@ -20,6 +21,7 @@ public static class DependencyInjection
 
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUser, CurrentUser>();
+        services.AddScoped<OpenIdPrincipalFactory>();
         services.AddScoped<IRequestInfo, RequestInfo>();
         services.AddSingleton<IPublicOrigin, PublicOrigin>();
 
