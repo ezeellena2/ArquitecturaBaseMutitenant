@@ -1,0 +1,7 @@
+namespace ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
+
+public interface ILoginCodeGenerator
+{
+    /// <summary>Un código numérico aleatorio con la cantidad de dígitos configurada.</summary>
+    string Generate();
+}

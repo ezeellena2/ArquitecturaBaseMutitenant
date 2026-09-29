@@ -1,6 +1,8 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Time;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Phones;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
+using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
 using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
@@ -9,6 +11,7 @@ using ArquitecturaBaseMultitenant.Infrastructure.Idempotency;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Time;
 using ArquitecturaBaseMultitenant.Infrastructure.Phones;
+using ArquitecturaBaseMultitenant.Infrastructure.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -30,6 +33,17 @@ public static class DependencyInjection
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<ITimeZoneService, TimeZoneService>();
         services.AddSingleton<IPhoneNumberDisplayFormatter, LibPhoneNumberDisplayFormatter>();
+        services.AddOptions<LoginCodeOptions>()
+            .BindConfiguration(LoginCodeOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.AddOptions<LoginCodeHashOptions>()
+            .BindConfiguration(LoginCodeHashOptions.SectionName)
+            .ValidateDataAnnotations();
+        services.AddSingleton<ILoginCodeGenerator, LoginCodeGenerator>();
+        services.AddSingleton<ILoginCodeHasher, LoginCodeHasher>();
+        services.AddSingleton<ISecureTokenGenerator, SecureTokenGenerator>();
+        services.AddSingleton<IPayloadProtector, PayloadProtector>();
         services.AddCaching();
 
         services.AddPersistence(configuration);
