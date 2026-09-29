@@ -17,7 +17,7 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Identity;
 public sealed class DevelopmentSeedTests
 {
     [Fact]
-    public async Task Development_seed_creates_empresa_a_with_ana_and_kevin_once()
+    public async Task Development_seed_creates_business_and_two_personal_spaces_once()
     {
         await using var postgres = new PostgreSqlBuilder("postgres:18.3")
             .WithDatabase("postgres")
@@ -35,21 +35,43 @@ public sealed class DevelopmentSeedTests
 
         await using var scope = host.Services.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var business = await context.Tenants.SingleAsync(TestContext.Current.CancellationToken);
+        var tenants = await context.Tenants.AsNoTracking().ToArrayAsync(TestContext.Current.CancellationToken);
+        Assert.Equal(3, tenants.Length);
+        var business = Assert.Single(tenants, tenant => tenant.Kind == TenantKind.Business);
+        var personal = tenants.Where(tenant => tenant.Kind == TenantKind.Personal).ToArray();
+        Assert.Equal(2, personal.Length);
         Assert.Equal("Empresa A", business.Name);
         Assert.Equal(TenantKind.Business, business.Kind);
         Assert.Equal(TenantStatus.Active, business.Status);
         var users = await context.Users.OrderBy(user => user.DisplayName)
             .ToArrayAsync(TestContext.Current.CancellationToken);
-        Assert.Equal(["Ana", "Kevin"], users.Select(user => user.DisplayName));
+        Assert.Equal(["Ana", "Carla", "Kevin"], users.Select(user => user.DisplayName));
         Assert.Contains(users, user => user.DisplayName == "Ana" && user.Email == "ana@example.test");
-        Assert.Equal(2, await context.LoginMethods.CountAsync(TestContext.Current.CancellationToken));
+        Assert.Equal(3, await context.LoginMethods.CountAsync(TestContext.Current.CancellationToken));
+
+        var personalOwners = new List<Guid>();
+        foreach (var tenant in personal)
+        {
+            using (scope.ServiceProvider.GetRequiredService<ITenantScope>().Enter(tenant.Id))
+            {
+                var member = Assert.Single(await context.Members.AsNoTracking()
+                    .ToArrayAsync(TestContext.Current.CancellationToken));
+                Assert.Equal(MemberStatus.Active, member.Status);
+                personalOwners.Add(member.UserId);
+                Assert.Single(await context.TenantSettings.AsNoTracking()
+                    .ToArrayAsync(TestContext.Current.CancellationToken));
+            }
+        }
+        Assert.Equal(users.Where(user => user.DisplayName is "Carla" or "Kevin").Select(user => user.Id)
+            .Order(), personalOwners.Order());
 
         using var changedConfigurationHost = NewHost("another@example.test");
         using var changedConfigurationClient = changedConfigurationHost.CreateClient();
+        await changedConfigurationHost.Services.SeedDatabaseAsync(TestContext.Current.CancellationToken);
         Assert.False(await context.LoginMethods.AnyAsync(method => method.Value == "another@example.test",
             TestContext.Current.CancellationToken));
-        Assert.Equal(2, await context.LoginMethods.CountAsync(TestContext.Current.CancellationToken));
+        Assert.Equal(3, await context.LoginMethods.CountAsync(TestContext.Current.CancellationToken));
+        Assert.Equal(3, await context.Tenants.CountAsync(TestContext.Current.CancellationToken));
 
         using (scope.ServiceProvider.GetRequiredService<ITenantScope>().Enter(business.Id))
         {

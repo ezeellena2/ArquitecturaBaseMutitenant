@@ -36,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<ILegalService, LegalService>();
         services.AddScoped<SignupPolicy>();
         services.AddScoped<IPersonalSpaceProvisioner, PersonalSpaceProvisioner>();
+        services.AddScoped<TenantSpaceProvisioner>();
         services.AddScoped<LoginCodeIssuer>();
         services.AddScoped<LoginCodeVerifier>();
         services.AddScoped<UserCultures>();

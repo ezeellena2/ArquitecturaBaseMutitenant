@@ -476,9 +476,11 @@ ArquitecturaBaseMultitenant.Application/
 │       ├── ChangeAccountStatusRequestValidator.cs
 │       ├── AddOperatorRequestValidator.cs
 │       └── UpdatePlatformSettingsRequestValidator.cs
-├── Services/                                         [E1] internal sealed partial; helpers con sufijo fijo y sin IUnitOfWork
+├── Services/                                         [E1] servicios internal sealed partial; helpers sin IUnitOfWork
 │   ├── Auth/                                         [E3]
 │   │   ├── AccountService.cs                         registro de personas (identidad + espacio personal)
+│   │   ├── PersonalSpaceProvisioner.cs               [E3] prepara Personal antes de la UoW y delega las escrituras comunes
+│   │   ├── TenantSpaceProvisioner.cs                 [E3] agrega Tenant, miembros y ajustes en el scope activo; lo reutiliza el seed Development y luego E6
 │   │   ├── SignupPolicy.cs                           ¿el registro está abierto? ¿el email está libre?
 │   │   ├── LoginCodeService.cs
 │   │   ├── LoginCodeIssuer.cs
@@ -700,13 +702,14 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │       │   ├── cultures.json                          [E1] patrones y nombres traducidos; es-AR y en-US habilitadas inicialmente
 │       │   └── tax-id-types.json                      [E1] normativa fiscal y ValidatorKey
 │       ├── ReferenceDataSeeder.cs                    [E2] upsert idempotente; nunca borra
-│       ├── SeedExtensions.cs                          [E3] orden e idempotencia; corre en todos los ambientes, dentro de un
-│       │                                              límite y con el advisory lock "seed:" (sin carreras entre réplicas)
-│       ├── DatabaseSeeder.cs                          [E3] límite único y lock `seed:database` para todas las piezas globales
+│       ├── SeedExtensions.cs                          [E3] orden e idempotencia; global en una UoW; Development, una UoW por espacio
+│       │                                              con el advisory lock "seed:" en cada límite (sin carreras entre réplicas)
+│       ├── DatabaseSeeder.cs                          [E3] límite global y lock `seed:database`; coordina límites separados de Development
 │       ├── OpenIddictSeeder.cs                        [E3] cliente web + scope api
 │       ├── PlatformSeeder.cs                          [E3] ajustes de plataforma + operador inicial (Seed:PlatformOwner:Email y DisplayName); la E5 le asigna el rol Owner
 │       ├── LegalDocumentSeeder.cs                     [E3] 3a: versión base de términos y privacidad, con contenidos es y en
-│       └── DevelopmentSeeder.cs                       [E3] Empresa A (Ana, Kevin); Kevin y Carla como personas; desde la E4, Ana
+│       └── DevelopmentSeeder.cs                       [E3] solo prepara/stagea Empresa A (Ana, Kevin) y Personal de Kevin/Carla por
+│                                                      provisioners compartidos; desde la E4, Ana
 │                                                      es Dueña (TenantAdmin) de la Empresa A
 ├── Identity/                                          [E2 shell CLR; modelo de cuenta E3]
 │   ├── ApplicationUser.cs                             [E2 shell sin mapeo; E3] IsPlatformOperator, Status, Culture, TimeZoneId, DisplayName, LastBusinessTenantId,

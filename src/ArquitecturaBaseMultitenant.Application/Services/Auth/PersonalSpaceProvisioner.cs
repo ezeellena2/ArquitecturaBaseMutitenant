@@ -1,4 +1,3 @@
-using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -6,7 +5,7 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
 /// <summary>Prepara el espacio antes de fijar tenant y lo agrega dentro de la UoW del llamador.</summary>
-internal interface IPersonalSpaceProvisioner
+public interface IPersonalSpaceProvisioner
 {
     Task<PersonalSpaceDraft> PrepareAsync(string? cultureCode, string? browserTimeZoneId,
         CancellationToken cancellationToken);
@@ -14,7 +13,7 @@ internal interface IPersonalSpaceProvisioner
     void Stage(PersonalSpaceDraft draft, Guid userId);
 }
 
-internal sealed record PersonalSpaceDraft(
+public sealed record PersonalSpaceDraft(
     Tenant Tenant,
     TenantSettings Settings,
     string Culture,
@@ -25,10 +24,7 @@ internal sealed class PersonalSpaceProvisioner(
     ICountryCatalog countries,
     ICurrencyCatalog currencies,
     ITimeZoneCatalog timeZones,
-    ITenantRepository tenants,
-    IMemberRepository members,
-    ITenantSettingsRepository settings,
-    TimeProvider timeProvider) : IPersonalSpaceProvisioner
+    TenantSpaceProvisioner provisioner) : IPersonalSpaceProvisioner
 {
     public async Task<PersonalSpaceDraft> PrepareAsync(string? cultureCode, string? browserTimeZoneId,
         CancellationToken cancellationToken)
@@ -74,14 +70,6 @@ internal sealed class PersonalSpaceProvisioner(
     public void Stage(PersonalSpaceDraft draft, Guid userId)
     {
         ArgumentNullException.ThrowIfNull(draft);
-        tenants.Add(draft.Tenant);
-        var member = Member.Invite(userId);
-        if (member.Activate(timeProvider.GetUtcNow().UtcDateTime).IsFailure)
-        {
-            throw new InvalidOperationException("The initial personal member could not be activated.");
-        }
-
-        members.Add(member);
-        settings.Add(draft.Settings);
+        provisioner.Stage(draft.Tenant, draft.Settings, [userId]);
     }
 }

@@ -465,6 +465,8 @@ public sealed class RolesController(IRoleService service) : ControllerBase
 
 `TransactionBoundaryTests` verifica con el IL que solo los servicios que implementan `Interfaces/Services` y los dos seeds técnicos `ReferenceDataSeeder` y `DatabaseSeeder` reciben `IUnitOfWork`, y que nadie salvo `UnitOfWork` llama a `SaveChanges`.
 
+En Development, `DatabaseSeeder` confirma primero el seed global (referencias, cliente web, ajustes, operador si está configurado y legales). Después abre una UoW por espacio de muestra, con `ITenantScope.Enter` antes de cada transacción y `seed:database` dentro. `DevelopmentSeeder` reutiliza los puertos de identidad y los provisioners de alta; no recibe `IUnitOfWork` ni escribe tablas tenant con EF. Production conserva el seed transversal y no crea usuarios ni organizaciones de demostración.
+
 ---
 
 ## 6. Result pattern y manejo de errores
