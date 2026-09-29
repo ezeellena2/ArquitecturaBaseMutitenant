@@ -59,6 +59,7 @@ const currencyData = { supplemental: { currencyData: { region: {
 } } } };
 const cultures = {
   'es-AR': {
+    languages: { es: 'español', en: 'inglés' },
     currencies: {
       ARS: { displayName: 'peso argentino', 'displayName-count-other': 'pesos argentinos', symbol: '$' },
       USD: { displayName: 'dólar estadounidense', 'displayName-count-other': 'dólares estadounidenses', symbol: 'US$' },
@@ -68,6 +69,7 @@ const cultures = {
     territories: { AR: 'Argentina', BH: 'Baréin', JP: 'Japón', US: 'Estados Unidos', AQ: 'Antártida' }
   },
   en: {
+    languages: { es: 'Spanish', en: 'English' },
     currencies: {
       ARS: { displayName: 'Argentine Peso', 'displayName-count-other': 'Argentine pesos', symbol: 'ARS' },
       USD: { displayName: 'US Dollar', 'displayName-count-other': 'US dollars', symbol: '$' },
@@ -127,6 +129,7 @@ async function fixture({ xml = isoXml, validity = validityXml, iana = ianaTab, r
   for (const [locale, values] of Object.entries(cultures)) {
     await putJson(join(cldrRoot, `cldr-numbers-full/main/${locale}/currencies.json`), { main: { [locale]: { numbers: { currencies: values.currencies } } } });
     await putJson(join(cldrRoot, `cldr-localenames-full/main/${locale}/territories.json`), { main: { [locale]: { localeDisplayNames: { territories: values.territories } } } });
+    await putJson(join(cldrRoot, `cldr-localenames-full/main/${locale}/languages.json`), { main: { [locale]: { localeDisplayNames: { languages: values.languages } } } });
     await putJson(join(cldrRoot, `cldr-localenames-full/main/${locale}/localeDisplayNames.json`), { main: { [locale]: { localeDisplayNames: { localeDisplayPattern: { localePattern: '{0} ({1})' } } } } });
     await putJson(join(cldrRoot, `cldr-dates-full/main/${locale}/timeZoneNames.json`), { main: { [locale]: { dates: { timeZoneNames: { zone: {
       America: { Argentina: { Buenos_Aires: { exemplarCity: 'Buenos Aires' }, Cordoba: { exemplarCity: 'Cordoba' } }, New_York: { exemplarCity: 'New York' } },
@@ -229,6 +232,30 @@ test('genera culturas traducidas y patrones editables con un único default', as
   assert.equal(rows.find(value => value.Code === 'es-AR').Translations.find(value => value.DisplayCulture === 'es-AR').Name, 'Español (Argentina)');
   assert.equal(rows.find(value => value.Code === 'es-AR').Translations.find(value => value.DisplayCulture === 'en-US').Name, 'Spanish (Argentina)');
   assert.equal(rows.filter(value => value.IsDefault).length, 1);
+});
+
+test('nombres de culturas salen de CLDR sin consultar Intl.DisplayNames', async () => {
+  const options = await fixture();
+  const path = join(options.cldrRoot, 'cldr-localenames-full/main/es-AR/languages.json');
+  await putJson(path, { main: { 'es-AR': { localeDisplayNames: { languages: { es: 'castellano del fixture', en: 'inglés' } } } } });
+  const original = Intl.DisplayNames;
+  Intl.DisplayNames = class { constructor() { throw new Error('Intl.DisplayNames no debe usarse'); } };
+  try {
+    const { cultures } = await generated(options);
+    assert.equal(cultures.Cultures.find(value => value.Code === 'es-AR').Translations[0].Name, 'Castellano del fixture (Argentina)');
+  } finally {
+    Intl.DisplayNames = original;
+  }
+});
+
+test('CI fija Node y prueba el generador con npm ci y npm test', async () => {
+  const workflow = await readFile(join(dirname(fileURLToPath(import.meta.url)), '../../.github/workflows/ci.yml'), 'utf8');
+  const setup = workflow.match(/      - name: Configurar Node[\s\S]*?(?=\n      - name:|$)/)?.[0] ?? '';
+  assert.match(setup, /uses:\s*actions\/setup-node@v\d+/);
+  assert.match(setup, /node-version-file:\s*scripts\/datos-de-referencia\/\.node-version/);
+  const generator = workflow.match(/      - name: Probar generador de datos de referencia[\s\S]*?(?=\n      - name:|$)/)?.[0] ?? '';
+  assert.match(generator, /working-directory:\s*scripts\/datos-de-referencia/);
+  assert.match(generator, /run:\s*\|\s*\n\s*npm ci\s*\n\s*npm test/);
 });
 
 test('genera tipos fiscales desde source y los habilita por país', async () => {

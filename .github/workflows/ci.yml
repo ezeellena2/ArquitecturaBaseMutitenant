@@ -15,6 +15,19 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: scripts/datos-de-referencia/.node-version
+          cache: npm
+          cache-dependency-path: scripts/datos-de-referencia/package-lock.json
+
+      - name: Probar generador de datos de referencia
+        working-directory: scripts/datos-de-referencia
+        run: |
+          npm ci
+          npm test
+
       # El runner de Ubuntu trae Docker para los tests de integración con Testcontainers.
       - name: Verificar Docker
         run: docker info

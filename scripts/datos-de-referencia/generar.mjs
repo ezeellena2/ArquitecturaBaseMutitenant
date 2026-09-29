@@ -221,13 +221,14 @@ async function loadTranslations(cldrRoot, displayCultures, defaultCulture) {
   const result = [];
   for (const [culture, sourceLocale] of Object.entries(displayCultures).sort(([left], [right]) =>
     Number(right === defaultCulture) - Number(left === defaultCulture) || left.localeCompare(right, 'en'))) {
-    const [currencies, countries, timeZones, localePattern] = await Promise.all([
+    const [currencies, countries, languages, timeZones, localePattern] = await Promise.all([
       cldrLocale(cldrRoot, 'cldr-numbers-full', sourceLocale, 'currencies.json', value => value.numbers.currencies),
       cldrLocale(cldrRoot, 'cldr-localenames-full', sourceLocale, 'territories.json', value => value.localeDisplayNames.territories),
+      cldrLocale(cldrRoot, 'cldr-localenames-full', sourceLocale, 'languages.json', value => value.localeDisplayNames.languages),
       cldrLocale(cldrRoot, 'cldr-dates-full', sourceLocale, 'timeZoneNames.json', value => value.dates.timeZoneNames.zone),
       cldrLocale(cldrRoot, 'cldr-localenames-full', sourceLocale, 'localeDisplayNames.json', value => value.localeDisplayNames.localeDisplayPattern)
     ]);
-    result.push({ culture, currencies, countries, timeZones, localePattern: localePattern.localePattern });
+    result.push({ culture, currencies, countries, languages, timeZones, localePattern: localePattern.localePattern });
   }
   return result;
 }
@@ -271,8 +272,8 @@ function timeZoneTranslations(zone, locales, cityOverrides, aliases) {
 
 function cultureTranslations(row, locales) {
   return locales.map(locale => {
-    const language = new Intl.DisplayNames([locale.culture], { type: 'language' }).of(row.LanguageCode);
-    const region = new Intl.DisplayNames([locale.culture], { type: 'region' }).of(row.CountryCode);
+    const language = locale.languages[row.LanguageCode];
+    const region = locale.countries[row.CountryCode];
     assert(language && language !== row.LanguageCode && region && region !== row.CountryCode && locale.localePattern,
       `Falta traducción CLDR de cultura ${row.Code} en ${locale.culture}.`);
     const name = locale.localePattern.replace('{0}', language).replace('{1}', region);
