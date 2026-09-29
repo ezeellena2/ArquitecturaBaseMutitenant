@@ -20,6 +20,8 @@ public static class DependencyInjection
         services.AddScoped<IReferenceDataService, ReferenceDataService>();
         services.AddScoped<IOutboxDispatchService, OutboxDispatchService>();
         services.AddScoped<ILoginCodeService, LoginCodeService>();
+        services.AddScoped<LoginCodeRequester>();
+        services.AddScoped<LoginCodeVerificationFlow>();
         services.AddScoped<ILoginMethodsService, LoginMethodsService>();
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<SignupCodeRequester>();
