@@ -13,4 +13,8 @@ internal sealed class EmailLoginCodeChannel(IEmailTemplateRenderer templates, IO
     public void Enqueue(string destination, string code, int lifetimeMinutes, CultureProfile culture) =>
         outbox.Enqueue(Key, JsonSerializer.Serialize(
             templates.RenderLoginCode(destination, code, lifetimeMinutes, culture)));
+
+    public void EnqueueSignup(string destination, string code, int lifetimeMinutes, CultureProfile culture) =>
+        outbox.Enqueue(Key, JsonSerializer.Serialize(
+            templates.RenderSignupCode(destination, code, lifetimeMinutes, culture)));
 }

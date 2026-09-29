@@ -8,4 +8,6 @@ public interface ILoginCodeChannel
     string Key { get; }
 
     void Enqueue(string destination, string code, int lifetimeMinutes, CultureProfile culture);
+
+    void EnqueueSignup(string destination, string code, int lifetimeMinutes, CultureProfile culture);
 }

@@ -96,10 +96,25 @@ public sealed class TestController : ControllerBase
         [FromServices] ILoginCodeService loginCodes, CancellationToken cancellationToken) =>
         (await loginCodes.VerifyLoginCodeAsync(new VerifyLoginCodeRequest(Email.Create(body.Email).Value,
             body.Code, body.ReturnUrl), cancellationToken)).ToActionResult(this);
+
+    [HttpPost("auth/signup")]
+    public async Task<IActionResult> Signup([FromBody] TestSignup body,
+        [FromServices] IAccountService accounts, CancellationToken cancellationToken) =>
+        (await accounts.RequestSignupCodeAsync(new SignupRequest(Email.Create(body.Email).Value,
+            body.AcceptedTerms, body.Culture, body.TimeZoneId), cancellationToken)).ToAcceptedResult(this);
+
+    [HttpPost("auth/signup/verify")]
+    public async Task<IActionResult> VerifySignup([FromBody] TestVerifySignup body,
+        [FromServices] IAccountService accounts, CancellationToken cancellationToken) =>
+        (await accounts.VerifySignupAsync(new VerifySignupRequest(Email.Create(body.Email).Value,
+            body.Code, body.AcceptedTerms, body.Culture, body.TimeZoneId), cancellationToken)).ToActionResult(this);
 }
 
 public sealed record TestRequestCode(string Email);
 public sealed record TestVerifyCode(string Email, string Code, string ReturnUrl);
+public sealed record TestSignup(string Email, bool AcceptedTerms, string? Culture, string? TimeZoneId);
+public sealed record TestVerifySignup(string Email, string Code, bool AcceptedTerms,
+    string? Culture, string? TimeZoneId);
 
 public sealed record TestBodyHttpRequest(string? Value);
 
