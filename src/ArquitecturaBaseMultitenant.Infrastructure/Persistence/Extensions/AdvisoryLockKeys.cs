@@ -1,4 +1,5 @@
 using System.Globalization;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 
@@ -6,6 +7,13 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 internal static class AdvisoryLockKeys
 {
     public const string ReferenceDataSeed = "p:ref:seed";
+
+    /// <summary>Un lock global por destino normalizado, compartido entre propósitos de ingreso.</summary>
+    public static string LoginCode(LoginCodeDestination destination)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        return "login-code:" + destination.Value;
+    }
 
     public static string For(Guid tenantId, string resource, Guid id)
     {

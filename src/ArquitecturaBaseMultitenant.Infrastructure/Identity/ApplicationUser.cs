@@ -55,6 +55,14 @@ public sealed class ApplicationUser : IdentityUser<Guid>
         return Result.Success();
     }
 
+    public void UpdatePreferences(string culture, string timeZoneId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(culture);
+        ArgumentException.ThrowIfNullOrWhiteSpace(timeZoneId);
+        Culture = culture;
+        TimeZoneId = timeZoneId;
+    }
+
     public Result Suspend()
     {
         if (Status != UserStatus.Active)

@@ -75,6 +75,11 @@ internal static class PersistenceRegistration
         services.AddScoped<ISecurityEventRepository, SecurityEventRepository>();
         services.AddScoped<ILegalRepository, LegalRepository>();
         services.AddScoped<ILegalReader, LegalReader>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<ILoginMethodRepository, LoginMethodRepository>();
+        services.AddScoped<ILoginMethodReader, LoginMethodReader>();
+        services.AddScoped<ILoginCodeRepository, LoginCodeRepository>();
+        services.AddScoped<ILoginAuditRepository, LoginAuditRepository>();
         services.AddReferenceCatalogs();
 
         return services;
