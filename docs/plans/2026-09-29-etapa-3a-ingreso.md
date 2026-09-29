@@ -56,6 +56,8 @@ Los nombres de proyecto de test son `ArquitecturaBaseMultitenant.Domain.UnitTest
 | 16 | `src/ArquitecturaBaseMultitenant.Application/Interfaces/Persistence/{IPlatformSettingsRepository,IPlatformSettingsReader,ISecurityEventRepository,ILegalRepository,ILegalReader}.cs`; adaptadores `src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/{Repositories,Readers}/`; `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Persistence/PlatformAndLegalRepositoryTests.cs` | Plan E3.1b, 6d; `arbol.md` Persistence/Legal; fichas `persistencia-ef`, `datos-personales` | settings con caché `p:`, documento vigente por cultura y evento append-only | `feat: persistir ajustes eventos y documentos legales` |
 | 17 | `src/ArquitecturaBaseMultitenant.Application/Interfaces/Integrations/Caching/ITenantStatusCache.cs`; `src/ArquitecturaBaseMultitenant.Infrastructure/Caching/TenantStatusCache.cs`; modificar `src/ArquitecturaBaseMultitenant.Infrastructure/BackgroundJobs/TenantJobRunner.cs`; `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Tenancy/TenantJobRunnerIdentityTests.cs` | Plan E3.3, E3.9; `multitenancy.md` §§8, 12; `arbol.md` BackgroundJobs | worker recorre solo organizaciones activas y entra en scope antes de transacción | `feat: habilitar trabajos por organizaciones activas` |
 
+La tarea 14 incluye también las proyecciones `Application/Models/Tenancy/{TenantRow,MemberRow,TenantSettingsRow}.cs`, el registro explícito en `PersistenceRegistration.cs` y la actualización de `TenantScopeUsageTests` para el loader de ajustes en scope propio. El lector de ajustes usa `CacheKeys.Tenant` y el helper `HybridCacheExtensions` de E2.
+
 ## B. Servicios, autenticación y API (back)
 
 | # | Archivos de la tarea | Respaldo | Test rojo → verde | Commit |

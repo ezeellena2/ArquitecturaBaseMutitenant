@@ -7,9 +7,11 @@ public sealed class TenantScopeUsageTests
 {
     private const string TenantContext = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.TenantContext";
     private const string TenantJobRunner = "ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs.TenantJobRunner";
+    private const string TenantSettingsLoader =
+        "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers.TenantSettingsLoader";
 
     [Fact]
-    public void Only_tenant_job_runner_enters_a_technical_tenant_scope_in_e2()
+    public void Only_declared_infrastructure_adapters_enter_a_technical_tenant_scope()
     {
         var calls = new[]
         {
@@ -19,6 +21,7 @@ public sealed class TenantScopeUsageTests
         }.SelectMany(ArchitectureIl.Calls).Where(IsEnterCall).ToArray();
 
         Assert.Contains(calls, call => call.Owner == TenantJobRunner);
+        Assert.Contains(calls, call => call.Owner == TenantSettingsLoader);
         Assert.Empty(UnauthorizedCallers(calls));
     }
 
@@ -41,7 +44,7 @@ public sealed class TenantScopeUsageTests
 
     private static string[] UnauthorizedCallers(IEnumerable<ArchitectureIl.Call> calls) =>
         [.. calls.Where(IsEnterCall)
-            .Where(call => call.Owner != TenantJobRunner)
+            .Where(call => call.Owner is not (TenantJobRunner or TenantSettingsLoader))
             .Select(call => $"{call.Owner}.{call.OwnerMethod}")
             .Distinct(StringComparer.Ordinal)];
 

@@ -59,6 +59,13 @@ internal static class PersistenceRegistration
                     provider.GetRequiredService<AuditableEntityInterceptor>(),
                     provider.GetRequiredService<AuditTrailInterceptor>()));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<ITenantRepository, TenantRepository>();
+        services.AddScoped<ITenantReader, TenantReader>();
+        services.AddScoped<IMemberRepository, MemberRepository>();
+        services.AddScoped<IMemberReader, MemberReader>();
+        services.AddScoped<ITenantSettingsRepository, TenantSettingsRepository>();
+        services.AddScoped<ITenantSettingsReader, TenantSettingsReader>();
+        services.AddScoped<TenantSettingsLoader>();
         services.AddReferenceCatalogs();
 
         return services;
