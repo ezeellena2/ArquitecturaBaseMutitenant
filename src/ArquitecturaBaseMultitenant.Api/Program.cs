@@ -46,8 +46,12 @@ if (!isOpenApiExporter)
 app.UseForwardedHeaders();
 app.UseSecurityHeaders();
 
-var cultures = await SupportedCultures.LoadAsync(
-    app.Services.GetRequiredService<ICultureCatalog>(), CancellationToken.None);
+SupportedCultures cultures;
+await using (var cultureScope = app.Services.CreateAsyncScope())
+{
+    cultures = await SupportedCultures.LoadAsync(
+        cultureScope.ServiceProvider.GetRequiredService<ICultureCatalog>(), CancellationToken.None);
+}
 app.UseRequestLocalization(cultures.CreateRequestLocalizationOptions());
 
 app.UseExceptionHandler();
