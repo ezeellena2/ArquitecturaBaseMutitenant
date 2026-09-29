@@ -1,6 +1,9 @@
 using System.Security.Cryptography;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Services.Auth;
+using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
@@ -65,13 +68,33 @@ public sealed class DevelopmentSeedTests
         Assert.Equal(users.Where(user => user.DisplayName is "Carla" or "Kevin").Select(user => user.Id)
             .Order(), personalOwners.Order());
 
+        // Otra organización puede usar el mismo nombre público; no es el identificador del seed.
+        TenantSettings businessSettings;
+        using (scope.ServiceProvider.GetRequiredService<ITenantScope>().Enter(business.Id))
+        {
+            businessSettings = Assert.Single(await context.TenantSettings.AsNoTracking()
+                .ToArrayAsync(TestContext.Current.CancellationToken));
+        }
+        var homonym = Tenant.CreateBusiness("Empresa A", requiresApproval: false);
+        Assert.True(homonym.Activate().IsSuccess);
+        using (scope.ServiceProvider.GetRequiredService<ITenantScope>().Enter(homonym.Id))
+        {
+            await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+            {
+                scope.ServiceProvider.GetRequiredService<TenantSpaceProvisioner>().Stage(homonym,
+                    TenantSettings.Create(businessSettings.DefaultCulture, businessSettings.DefaultTimeZoneId,
+                        businessSettings.DefaultCurrency), [users.Single(user => user.DisplayName == "Carla").Id]);
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, TestContext.Current.CancellationToken);
+        }
+
         using var changedConfigurationHost = NewHost("another@example.test");
         using var changedConfigurationClient = changedConfigurationHost.CreateClient();
         await changedConfigurationHost.Services.SeedDatabaseAsync(TestContext.Current.CancellationToken);
         Assert.False(await context.LoginMethods.AnyAsync(method => method.Value == "another@example.test",
             TestContext.Current.CancellationToken));
         Assert.Equal(3, await context.LoginMethods.CountAsync(TestContext.Current.CancellationToken));
-        Assert.Equal(3, await context.Tenants.CountAsync(TestContext.Current.CancellationToken));
+        Assert.Equal(4, await context.Tenants.CountAsync(TestContext.Current.CancellationToken));
 
         using (scope.ServiceProvider.GetRequiredService<ITenantScope>().Enter(business.Id))
         {

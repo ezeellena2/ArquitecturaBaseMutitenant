@@ -4,6 +4,27 @@ namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 public sealed class IdentityAccessTests
 {
     [Fact]
+    public void Global_access_reader_is_consumed_only_by_access_selection_and_me()
+    {
+        var source = Path.Combine(SolutionRoot.FullPath, "src");
+        var consumers = Directory.EnumerateFiles(source, "*.cs", SearchOption.AllDirectories)
+            .Where(file => !IsGenerated(file))
+            .Where(file => File.ReadLines(file).Any(line =>
+                line.Contains("IUserTenantAccessReader", StringComparison.Ordinal)))
+            .Select(file => Path.GetRelativePath(source, file).Replace('\\', '/'))
+            .Where(path => path is not
+                ("ArquitecturaBaseMultitenant.Application/Interfaces/Persistence/IUserTenantAccessReader.cs"
+                or "ArquitecturaBaseMultitenant.Infrastructure/Persistence/Readers/UserTenantAccessReader.cs"
+                or "ArquitecturaBaseMultitenant.Infrastructure/Persistence/PersistenceRegistration.cs"))
+            .ToArray();
+
+        Assert.Equal([
+            "ArquitecturaBaseMultitenant.Application/Services/Auth/ConnectService.cs",
+            "ArquitecturaBaseMultitenant.Application/Services/Profile/ProfileSnapshotBuilder.cs",
+        ], consumers.Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
     public void ApplicationUser_is_referenced_only_by_declared_infrastructure_adapters()
     {
         var source = Path.Combine(SolutionRoot.FullPath, "src");

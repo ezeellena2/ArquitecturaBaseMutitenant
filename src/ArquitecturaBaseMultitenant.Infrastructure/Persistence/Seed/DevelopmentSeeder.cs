@@ -17,7 +17,7 @@ internal sealed class DevelopmentSeeder(
     IUserLookup lookup,
     IUserRepository users,
     ILoginMethodRepository methods,
-    IUserTenantAccessReader accesses,
+    ITenantScope tenantScope,
     IPersonalSpaceProvisioner personalSpaces,
     TenantSpaceProvisioner spaces,
     IConfiguration configuration,
@@ -43,12 +43,16 @@ internal sealed class DevelopmentSeeder(
         CancellationToken cancellationToken)
     {
         context.RequireTransaction();
-        var existing = await FindBusinessAsync(cancellationToken);
-        if (existing is not null)
+        if (await context.Tenants.AsNoTracking().AnyAsync(tenant =>
+                tenant.Id == candidate.Tenant.Id, cancellationToken))
         {
-            if (existing.Id != candidate.Tenant.Id) throw new DevelopmentSeedScopeChangedException();
             return;
         }
+
+        // Otro seed pudo confirmar Empresa A después de PrepareBusinessAsync.
+        if (await lookup.FindMethodAsync(LoginMethodType.Email,
+                Email.Create(KevinEmail).Value.Value, cancellationToken) is not null)
+            throw new DevelopmentSeedScopeChangedException();
 
         var culture = references.Cultures.Single(item => item.IsEnabled && item.IsDefault);
         var country = references.Countries.Single(item => item.Code == culture.CountryCode);
@@ -88,21 +92,48 @@ internal sealed class DevelopmentSeeder(
             candidate.Email.Value, cancellationToken);
         if (method is { VerifiedAtUtc: null })
             throw new InvalidOperationException("A sample account email exists without verification.");
-        if (method is not null && await HasPersonalAsync(method.UserId, cancellationToken))
-            throw new DevelopmentSeedScopeChangedException();
-
         var userId = method?.UserId ?? await FindOrCreateUserAsync(candidate.Name, candidate.Email,
             candidate.Draft.Culture, candidate.Draft.TimeZoneId, cancellationToken);
         personalSpaces.Stage(candidate.Draft, userId);
     }
 
-    private Task<Tenant?> FindBusinessAsync(CancellationToken cancellationToken) =>
-        context.Tenants.AsNoTracking().SingleOrDefaultAsync(tenant =>
-            tenant.Kind == TenantKind.Business && tenant.Name == BusinessName, cancellationToken);
+    private async Task<Tenant?> FindBusinessAsync(CancellationToken cancellationToken)
+    {
+        var kevin = await lookup.FindMethodAsync(LoginMethodType.Email,
+            Email.Create(KevinEmail).Value.Value, cancellationToken);
+        if (kevin is null) return null;
 
-    private async Task<bool> HasPersonalAsync(Guid userId, CancellationToken cancellationToken) =>
-        (await accesses.ListForUserAsync(userId, cancellationToken))
-            .Any(access => access.Kind == TenantKind.Personal);
+        var candidates = await context.Tenants.AsNoTracking()
+            .Where(tenant => tenant.Kind == TenantKind.Business && tenant.Name == BusinessName)
+            .OrderBy(tenant => tenant.Id)
+            .ToArrayAsync(cancellationToken);
+        foreach (var candidate in candidates)
+        {
+            using var scope = tenantScope.Enter(candidate.Id);
+            if (await context.Members.AsNoTracking().AnyAsync(member =>
+                    member.UserId == kevin.UserId, cancellationToken))
+                return candidate;
+        }
+
+        return null;
+    }
+
+    private async Task<bool> HasPersonalAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var personalIds = await context.Tenants.AsNoTracking()
+            .Where(tenant => tenant.Kind == TenantKind.Personal)
+            .Select(tenant => tenant.Id)
+            .ToArrayAsync(cancellationToken);
+        foreach (var personalId in personalIds)
+        {
+            using var scope = tenantScope.Enter(personalId);
+            if (await context.Members.AsNoTracking().AnyAsync(member =>
+                    member.UserId == userId, cancellationToken))
+                return true;
+        }
+
+        return false;
+    }
 
     private async Task<Guid> FindOrCreateUserAsync(string name, Email email, string culture,
         string timeZoneId, CancellationToken cancellationToken)
