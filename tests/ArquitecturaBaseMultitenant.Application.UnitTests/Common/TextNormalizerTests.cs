@@ -8,7 +8,23 @@ public sealed class TextNormalizerTests
     public void Clean_trims_normalizes_nfc_and_removes_invisible_characters()
     {
         Assert.Equal("José", TextNormalizer.Clean("  Jose\u0301\u200B\u0007  "));
-        Assert.Equal("Nombre", TextNormalizer.Clean("\uFEFF\u2060Nombre\u200D"));
+        Assert.Equal("Nombre\u200D", TextNormalizer.Clean("\uFEFF\u2060Nombre\u200D"));
+    }
+
+    [Fact]
+    public void Clean_preserves_joiners_in_legitimate_written_text()
+    {
+        Assert.Equal("می\u200Cخواهم", TextNormalizer.Clean("می\u200Cخواهم"));
+        Assert.Equal("👩\u200D💻", TextNormalizer.Clean("👩\u200D💻"));
+        Assert.Equal("می\u200Cخواهم", TextNormalizer.CleanName("می\u200Cخواهم"));
+    }
+
+    [Fact]
+    public void Clean_removes_only_the_declared_unsafe_invisibles_and_controls()
+    {
+        Assert.Equal("ab", TextNormalizer.Clean(
+            "a\u00AD\u200B\uFEFF\u2060\u061C\u200E\u200F\u202A\u202E\u2066\u2069\u0007b"));
+        Assert.Equal("a\u200Cb\u200Dc", TextNormalizer.Clean("a\u200Cb\u200Dc"));
     }
 
     [Fact]

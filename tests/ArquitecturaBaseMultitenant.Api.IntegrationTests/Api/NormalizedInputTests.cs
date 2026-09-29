@@ -15,7 +15,7 @@ public sealed class NormalizedInputTests(ApiFactory factory)
         var json = JsonSerializer.Serialize(new
         {
             name = "  Jose\u0301\u200B  ",
-            description = "  Grupo  La Cosecha\nLínea 2  ",
+            description = "  Grupo  La Cosecha\nLínea 2 👩\u200D💻 می\u200Cخواهم  ",
             empty = " \u200B ",
             raw,
         });
@@ -28,7 +28,7 @@ public sealed class NormalizedInputTests(ApiFactory factory)
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("José", value.GetProperty("name").GetString());
-        Assert.Equal("Grupo  La Cosecha\nLínea 2", value.GetProperty("description").GetString());
+        Assert.Equal("Grupo  La Cosecha\nLínea 2 👩\u200D💻 می\u200Cخواهم", value.GetProperty("description").GetString());
         Assert.Equal(JsonValueKind.Null, value.GetProperty("empty").ValueKind);
         Assert.Equal(raw, value.GetProperty("raw").GetString());
     }

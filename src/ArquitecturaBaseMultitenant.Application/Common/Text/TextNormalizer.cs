@@ -18,7 +18,8 @@ public static class TextNormalizer
         foreach (var rune in text.EnumerateRunes())
         {
             var category = Rune.GetUnicodeCategory(rune);
-            if (rune.Value is not ('\n' or '\t') && category is UnicodeCategory.Control or UnicodeCategory.Format)
+            if (rune.Value is not ('\n' or '\t') &&
+                (category == UnicodeCategory.Control || IsUnsafeInvisible(rune.Value)))
             {
                 continue;
             }
@@ -61,4 +62,12 @@ public static class TextNormalizer
 
         return builder.ToString();
     }
+
+    private static bool IsUnsafeInvisible(int scalar) => scalar switch
+    {
+        0x00AD or 0x061C or 0x200B or 0x200E or 0x200F or 0x2060 or 0xFEFF => true,
+        >= 0x202A and <= 0x202E => true,
+        >= 0x2066 and <= 0x2069 => true,
+        _ => false
+    };
 }

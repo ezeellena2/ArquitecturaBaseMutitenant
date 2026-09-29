@@ -1,12 +1,13 @@
 # Nombres y textos libres
 
-**Regla:** todo texto que entra a la API se **limpia solo**: sin espacios en los bordes, Unicode NFC y sin caracteres invisibles. Además, cada campo declara su **tipo de texto**, que fija su largo y si se colapsan los espacios. Los largos son constantes compartidas por la base, el validador y el front.
+**Regla:** todo texto que entra a la API se **limpia solo**: sin espacios en los bordes, Unicode NFC y sin invisibles peligrosos. Además, cada campo declara su **tipo de texto**, que fija su largo y si se colapsan los espacios. Los largos son constantes compartidas por la base, el validador y el front.
 
 ## Cómo se hace
 - **Nivel 1, automático:** el resolver de `JsonConfiguration` aplica `NormalizedStringJsonConverter` a las propiedades `string` de los contratos HTTP de entrada (`*HttpRequest`) y ejecuta `TextNormalizer.Clean`:
   - trim;
   - normalización NFC;
-  - saca los caracteres de control y los de ancho cero, salvo `\n` y `\t`;
+  - saca los controles Unicode salvo `\n` y `\t`, y una lista cerrada de invisibles peligrosos: soft hyphen (`U+00AD`), marca árabe (`U+061C`), zero-width space (`U+200B`), marcas de dirección (`U+200E`, `U+200F`, `U+202A`–`U+202E`, `U+2066`–`U+2069`), word joiner (`U+2060`) y BOM (`U+FEFF`);
+  - conserva ZWNJ (`U+200C`) y ZWJ (`U+200D`), necesarios para escritura y secuencias emoji legítimas;
   - conserva los espacios y saltos de línea internos: no colapsa globalmente los nombres ni las descripciones;
   - un texto que queda vacío pasa a `null`.
   
@@ -36,9 +37,9 @@
 - `Application/Common/Text/TextNormalizer.cs` y `Api/Json/NormalizedStringJsonConverter.cs` (E1).
 
 ## Lo verifica
-- `TextNormalizerTests` (E1): `Clean` iguala "José" con acento separado a "José", elimina ancho cero y transforma "Grupo  La Cosecha " en "Grupo  La Cosecha" (solo trim); el helper tipado de nombre produce "Grupo La Cosecha" sin alterar una descripción.
+- `TextNormalizerTests` (E1): `Clean` iguala "José" con acento separado a "José", elimina los invisibles de la lista cerrada, conserva ZWNJ/ZWJ y transforma "Grupo  La Cosecha " en "Grupo  La Cosecha" (solo trim); el helper tipado de nombre produce "Grupo La Cosecha" sin alterar una descripción.
 - `NormalizedInputTests` (E1): un POST de `TestFeatures/TestController` devuelve el cuerpo ya normalizado; no hay persistencia antes de E2.
-- `TextLimitsTests` (E1): ningún `HasMaxLength` ni `MaxLength` con un número literal (arquitectura).
+- `TextLimitsTests` (E1): ningún `HasMaxLength`, `MaxLength`, `MaximumLength`, `Length` ni `StringLength` con un número literal (arquitectura).
 
 ## Detalle
 [backend.md §20](../architecture/backend.md#20-reglas-de-datos-que-se-aplican-solas)
