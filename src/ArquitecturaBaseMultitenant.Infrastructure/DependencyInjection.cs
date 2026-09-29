@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Phones;
 using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
 using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
 using ArquitecturaBaseMultitenant.Infrastructure.Caching;
+using ArquitecturaBaseMultitenant.Infrastructure.Idempotency;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Time;
 using ArquitecturaBaseMultitenant.Infrastructure.Phones;
@@ -39,6 +40,14 @@ public static class DependencyInjection
 
         services.AddPersistence(configuration);
         services.AddBackgroundJobs();
+
+        // El exportador OpenAPI construye el host sin conexiones de Aspire.
+        if (configuration.GetConnectionString("appdb") is { } runtimeConnection)
+        {
+            services.AddSingleton(provider => new IdempotencyStore(
+                runtimeConnection, provider.GetRequiredService<TimeProvider>()));
+            services.AddHostedService<IdempotencyCleanupWorker>();
+        }
 
         return services;
     }

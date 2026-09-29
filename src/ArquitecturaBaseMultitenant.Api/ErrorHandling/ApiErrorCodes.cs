@@ -8,6 +8,9 @@ internal static class ApiErrorCodes
 {
     public const string Unexpected = "General.Unexpected";
     public const string InvalidRequest = "Request.Invalid";
+    public const string InProgress = "Request.InProgress";
+    public const string IdempotencyKeyRequired = "Request.IdempotencyKeyRequired";
+    public const string IdempotencyKeyReused = "Request.IdempotencyKeyReused";
     public const string Unauthorized = "Http.Unauthorized";
     public const string Forbidden = "Http.Forbidden";
     public const string NotFound = "Http.NotFound";

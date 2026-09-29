@@ -1,3 +1,3 @@
-Persistencia técnica de claves idempotentes. La reserva y la respuesta se guardan en `platform` y nunca se usan como dato de un tenant.
+Persistencia técnica de claves idempotentes. `IdempotencyStore` reserva en una transacción propia, completa la respuesta después de la acción y libera la reserva ante un 5xx. `IdempotencyCleanupWorker` retira las vencidas. Todo vive en `platform`, sin RLS de tenant.
 
-Leé: [idempotencia](../../../docs/rules/idempotencia.md) · [persistencia-ef](../../../docs/rules/persistencia-ef.md). La configuración de la tabla está en `../Persistence/Configurations/Platform/IdempotencyKeyConfiguration.cs`.
+Leé: [idempotencia](../../../docs/rules/idempotencia.md) · [persistencia-ef](../../../docs/rules/persistencia-ef.md). La tabla se mapea en `../Persistence/Configurations/Platform/IdempotencyKeyConfiguration.cs`; `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Api/IdempotencyTests.cs` verifica reserva, replay y limpieza con PostgreSQL real.

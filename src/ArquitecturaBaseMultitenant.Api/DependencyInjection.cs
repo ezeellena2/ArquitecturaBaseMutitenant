@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
+using ArquitecturaBaseMultitenant.Api.Idempotency;
 using ArquitecturaBaseMultitenant.Api.Json;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +18,7 @@ public static class DependencyInjection
             ProblemDetailsMapper.AddTraceId(context.ProblemDetails, context.HttpContext);
         });
         services.AddExceptionHandler<GlobalExceptionHandler>();
+        services.AddScoped<IdempotencyFilter>();
         services.AddOpenApiDocumentation();
         services.AddRateLimiter(_ => { });
         services.ConfigureHttpJsonOptions(options => JsonConfiguration.ConfigureJson(options.SerializerOptions));

@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Mvc;
+
 namespace ArquitecturaBaseMultitenant.Api.Idempotency;
 
-/// <summary>Marca los POST de creación y envío que el filtro de E2 protegerá con Idempotency-Key.</summary>
+/// <summary>Aplica el filtro de reserva y replay a cada POST que crea o envía.</summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
-public sealed class IdempotentAttribute : Attribute;
+public sealed class IdempotentAttribute() : ServiceFilterAttribute(typeof(IdempotencyFilter));
