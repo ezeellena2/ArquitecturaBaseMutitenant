@@ -260,7 +260,7 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
 4. `useFormat` conectado a las preferencias de `/api/me`.
 5. `SiteLayout` y `areas/public/site` con la portada (`/` sin sesión, tablero Landing, con «Para empresas», que lleva a «Ingresá como empresa»; el directorio de empresas publicadas se suma en la Etapa 7 y «Registrá tu empresa» se enlaza al llegar la Etapa 6), en la 3a. También en 3a, `areas/public/legal` con `/terminos` y `/privacidad` (tablero Legal), que leen el documento vigente sin sesión (`LegalController`, 6d).
 
-**Documentación:** `docs/features/identidad.md`, y un `AGENTS.md` de una línea (más su `CLAUDE.md` con `@AGENTS.md`) en cada carpeta de código del área, que apunta a su documento. Nace en la 3a con las dos puertas, el registro de personas y la aceptación inicial de términos, los accesos y el cambio de lado. La 3b le suma la gestión de métodos de ingreso, la aceptación bloqueante de términos nuevos y la baja, y la 3c las invitaciones. Cada parte lo actualiza en su propio commit.
+**Documentación:** `docs/features/identidad.md` y punteros `AGENTS.md` (más `CLAUDE.md` con `@AGENTS.md`) en cada carpeta de código del área, según el arnés de cada repo: en el back son de una línea y en el front tienen de 3 a 8 líneas. La ficha nace en la 3a con las dos puertas, el registro de personas y la aceptación inicial de términos, los accesos y el cambio de lado. La 3b le suma la gestión de métodos de ingreso, la aceptación bloqueante de términos nuevos y la baja, y la 3c las invitaciones. Cada parte lo actualiza en su propio commit.
 
 **Puerta:** la general, más un recorrido manual:
 0. `./scripts/secretos/importar-desde-arquitecturabase.ps1` y `verificar.ps1` con todo `[ok]`;
