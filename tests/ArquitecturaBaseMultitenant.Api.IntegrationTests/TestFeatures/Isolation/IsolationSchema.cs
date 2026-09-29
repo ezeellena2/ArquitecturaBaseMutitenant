@@ -61,6 +61,7 @@ internal static class IsolationSchema
             "ConsumerTenantId" uuid NOT NULL,
             "BusinessTenantId" uuid NOT NULL,
             "Id" uuid NOT NULL,
+            "SharedSummary" text NOT NULL DEFAULT '',
             CONSTRAINT "PK_Deals" PRIMARY KEY ("ConsumerTenantId", "BusinessTenantId", "Id")
         );
         CREATE INDEX "IX_Deals_BusinessTenantId_Id" ON "{Schemas.Engagement}"."Deals" ("BusinessTenantId", "Id");
