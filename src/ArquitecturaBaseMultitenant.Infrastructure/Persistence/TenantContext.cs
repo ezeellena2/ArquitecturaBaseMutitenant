@@ -5,7 +5,7 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 
 /// <summary>Contexto scoped del acceso activo y del alcance técnico temporal.</summary>
-internal sealed class TenantContext(Func<bool>? hasActiveTransaction = null) : ITenantContext, ITenantScope
+internal sealed class TenantContext(Func<bool>? hasActiveTransaction = null) : ITenantContext, ITenantScope, ITenantAccessInitializer
 {
     private readonly Func<bool> _hasActiveTransaction = hasActiveTransaction ?? (() => false);
     private Scope? _activeScope;
@@ -37,6 +37,8 @@ internal sealed class TenantContext(Func<bool>? hasActiveTransaction = null) : I
         TenantId = tenantId;
         TenantKind = kind;
     }
+
+    void ITenantAccessInitializer.SetFromAccess(Guid tenantId, TenantKind kind) => SetFromAccess(tenantId, kind);
 
     public IDisposable Enter(Guid tenantId)
     {

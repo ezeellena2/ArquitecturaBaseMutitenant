@@ -40,6 +40,7 @@ internal static class PersistenceRegistration
             provider.GetRequiredService<ApplicationDbContext>().Database.CurrentTransaction is not null));
         services.AddScoped<ITenantContext>(provider => provider.GetRequiredService<TenantContext>());
         services.AddScoped<ITenantScope>(provider => provider.GetRequiredService<TenantContext>());
+        services.AddScoped<ITenantAccessInitializer>(provider => provider.GetRequiredService<TenantContext>());
         services.TryAddScoped<ICurrentUser, SystemCurrentUser>();
         services.AddScoped<TenantConnectionInterceptor>();
         services.AddScoped<TenantStampInterceptor>();

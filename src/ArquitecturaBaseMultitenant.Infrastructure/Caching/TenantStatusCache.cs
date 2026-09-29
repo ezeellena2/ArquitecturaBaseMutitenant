@@ -11,8 +11,8 @@ internal sealed class TenantStatusCache(HybridCache cache, IServiceScopeFactory 
 {
     private static readonly HybridCacheEntryOptions CacheOptions = new()
     {
-        Expiration = TimeSpan.FromMinutes(5),
-        LocalCacheExpiration = TimeSpan.FromMinutes(5),
+        Expiration = TimeSpan.FromSeconds(60),
+        LocalCacheExpiration = TimeSpan.FromSeconds(60),
     };
 
     public async Task<TenantStatus?> GetStatusAsync(Guid tenantId, CancellationToken cancellationToken)
