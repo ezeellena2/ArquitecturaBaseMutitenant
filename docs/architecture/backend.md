@@ -374,8 +374,8 @@ Api/
 
 - **`AppHost/AppHost.cs`:**
   - `AddPostgres("postgres", password, port: 5434)`, con un volumen persistente `arquitecturabase-multitenant-pgdata` y `ContainerLifetime.Persistent`.
-  - `AddDatabase("appdb")`.
-  - Api en `https://localhost:7280` (ArquitecturaBase usa 7180, así los dos pueden correr a la vez). En [E0] recibe `appdb` de Aspire. En [E2], `appdb` pasa al login de runtime `mt_app` y se agrega `appdb-admin`, del dueño, solo en Development.
+  - Desde [E2], tres cadenas explícitas: `postgres-bootstrap` (superusuario, solo para preparar roles y base en Development), `appdb-admin` (`mt_owner`, migraciones y seed en Development) y `appdb` (`mt_app`, operaciones de la Api). Las contraseñas son parámetros secretos de Aspire; `AddDatabase("appdb")` de [E0] se retira porque crearía la base antes de elegir ICU `es-AR`.
+  - Api en `https://localhost:7280` (ArquitecturaBase usa 7180, así los dos pueden correr a la vez). El bootstrap crea o comprueba la base ICU `es-AR` antes de servir requests y rechaza una base preexistente con tablas y collation equivocada; el arranque normal comprueba que `mt_app` no tenga privilegios para saltar RLS.
   - `AddViteApp("front", "../../../ArquitecturaBaseMutitenantFront")` en https 5174.
   - DevTunnel opcional para el webhook de WhatsApp.
 - **`ServiceDefaults/Extensions.cs`:** como la base (OpenTelemetry, resiliencia, service discovery, `/health` y `/alive`).
@@ -562,11 +562,10 @@ El cuerpo es `application/problem+json` con `title` y `detail` traducidos, `code
 
 ```
 dotnet ef migrations add <Nombre> --project src/ArquitecturaBaseMultitenant.Infrastructure \
-  --startup-project src/ArquitecturaBaseMultitenant.Api --output-dir Persistence/Migrations \
-  -- --environment Development --ConnectionStrings:appdb-admin "Host=localhost;Port=5434;..."
+  --startup-project src/ArquitecturaBaseMultitenant.Api --output-dir Persistence/Migrations
 ```
 
-- En Development se aplican al arrancar (`DatabaseBootstrapExtensions`, con la cadena `appdb-admin`). Fuera de Development: `dotnet ef migrations bundle`, como paso del despliegue. El seed es idempotente siempre.
+- `DesignTimeApplicationDbContextFactory` permite generar la migración sin arrancar la Api ni conectarse a una base. En Development se aplican al arrancar (`DatabaseBootstrapExtensions`, con la cadena `appdb-admin`). Fuera de Development: `dotnet ef migrations bundle`, como paso del despliegue. El seed es idempotente siempre.
 
 ### Paginado, orden y búsqueda
 
