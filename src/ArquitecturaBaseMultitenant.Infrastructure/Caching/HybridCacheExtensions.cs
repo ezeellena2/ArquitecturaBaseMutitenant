@@ -44,6 +44,30 @@ internal static class HybridCacheExtensions
             cancellationToken: cancellationToken);
     }
 
+    /// <summary>Abre un único scope cuando la lectura requiere varios servicios scoped.</summary>
+    public static ValueTask<TValue> GetOrCreateInOwnScopeAsync<TState, TValue>(
+        this HybridCache cache,
+        string key,
+        IServiceScopeFactory scopes,
+        TState state,
+        Func<IServiceProvider, TState, CancellationToken, Task<TValue>> read,
+        HybridCacheEntryOptions options,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(cache);
+
+        return cache.GetOrCreateAsync(
+            key,
+            (scopes, state, read),
+            static async (factory, token) =>
+            {
+                await using var scope = factory.scopes.CreateAsyncScope();
+                return await factory.read(scope.ServiceProvider, factory.state, token);
+            },
+            options,
+            cancellationToken: cancellationToken);
+    }
+
     /// <summary>Como la sobrecarga con estado, para una lectura que no necesita ninguno.</summary>
     public static ValueTask<TValue> GetOrCreateInOwnScopeAsync<TReader, TValue>(
         this HybridCache cache,

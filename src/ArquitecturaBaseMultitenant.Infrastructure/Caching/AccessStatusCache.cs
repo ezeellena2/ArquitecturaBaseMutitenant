@@ -31,12 +31,10 @@ internal sealed class AccessStatusCache(HybridCache cache, IServiceScopeFactory 
             throw new ArgumentOutOfRangeException(nameof(kind), kind, "An access member requires a tenant kind.");
         }
 
-        return await cache.GetOrCreateAsync(MemberKey(userId, tenantId),
-            (scopes, userId, tenantId, kind),
-            static async (state, ct) =>
+        return await cache.GetOrCreateInOwnScopeAsync(MemberKey(userId, tenantId),
+            scopes, (userId, tenantId, kind),
+            static async (services, state, ct) =>
             {
-                await using var scope = state.scopes.CreateAsyncScope();
-                var services = scope.ServiceProvider;
                 services.GetRequiredService<ITenantAccessInitializer>()
                     .SetFromAccess(state.tenantId, state.kind);
                 var member = await services.GetRequiredService<IMemberReader>()
