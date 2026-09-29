@@ -12,6 +12,7 @@ using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Time;
 using ArquitecturaBaseMultitenant.Infrastructure.Phones;
 using ArquitecturaBaseMultitenant.Infrastructure.Security;
+using ArquitecturaBaseMultitenant.Infrastructure.Messaging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -47,6 +48,7 @@ public static class DependencyInjection
         services.AddCaching();
 
         services.AddPersistence(configuration);
+        services.AddMessaging();
         services.AddBackgroundJobs();
 
         // El exportador construye el host sin PostgreSQL; solo allí usa el JSON que alimenta el seed.
