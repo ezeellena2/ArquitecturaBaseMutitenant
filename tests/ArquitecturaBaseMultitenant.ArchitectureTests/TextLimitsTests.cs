@@ -1,5 +1,7 @@
 using System.Text.RegularExpressions;
 using ArquitecturaBaseMultitenant.Domain.Common;
+using ArquitecturaBaseMultitenant.Application.Common.Validation;
+using FluentValidation;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
@@ -29,6 +31,26 @@ public sealed partial class TextLimitsTests
         Assert.Empty(violations);
     }
 
-    [GeneratedRegex(@"\b(?:HasMaxLength|MaxLength)\s*\(\s*\d", RegexOptions.CultureInvariant)]
+    [Theory]
+    [InlineData("MaximumLength(100)")]
+    [InlineData("Length(1, 100)")]
+    [InlineData("StringLength(100)")]
+    [InlineData("HasMaxLength(100)")]
+    public void Detector_recognizes_all_literal_length_rules(string source) =>
+        Assert.Matches(LiteralLengthCall(), source);
+
+    [Fact]
+    public void Person_name_accepts_the_exact_limit_and_rejects_the_next_character()
+    {
+        var validator = new InlineValidator<TextProbe>();
+        validator.RuleFor(probe => probe.Name).PersonName();
+
+        Assert.True(validator.Validate(new TextProbe(new string('a', TextLimits.PersonName))).IsValid);
+        Assert.False(validator.Validate(new TextProbe(new string('a', TextLimits.PersonName + 1))).IsValid);
+    }
+
+    [GeneratedRegex(@"\b(?:HasMaxLength|MaxLength|MaximumLength|Length|StringLength)\s*\(\s*\d", RegexOptions.CultureInvariant)]
     private static partial Regex LiteralLengthCall();
+
+    private sealed record TextProbe(string? Name);
 }

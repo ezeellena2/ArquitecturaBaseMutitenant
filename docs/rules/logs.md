@@ -19,7 +19,7 @@
 
 ## Lo verifica
 - `CA1848` (E0) como warning con `TreatWarningsAsErrors`: un `logger.LogX` directo rompe el build.
-- Los contratos con datos sensibles sobrescriben `ToString()` (`ControllerInputContractTests` (E1)).
+- `SensitiveToStringLoggingTests` (E1): instancia los contratos HTTP de entrada con un valor centinela y comprueba que `ToString()` no lo revele. `ControllerInputContractTests` (E1) comprueba que los parámetros de entrada sean contratos de Api.
 
 ## Detalle
 [backend.md §17](../architecture/backend.md#17-logging-openapi-health-rate-limiting-caché)
