@@ -10,7 +10,7 @@ namespace ArquitecturaBaseMultitenant.Domain.ValueObjects;
 public sealed class Email : ValueObject
 {
     public const int MaxLength = 254;
-    private const int MaxLocalPartLength = 64;
+    private const int MaxLocalPartBytes = 64;
 
     private Email(string value, string displayValue)
     {
@@ -50,7 +50,7 @@ public sealed class Email : ValueObject
             }
 
             var canonical = localPart + "@" + asciiDomain;
-            if (canonical.Length > MaxLength)
+            if (Encoding.UTF8.GetByteCount(canonical) > MaxLength)
             {
                 return EmailErrors.Invalid;
             }
@@ -73,10 +73,20 @@ public sealed class Email : ValueObject
 
     private static bool HasValidFormat(string value, int at)
     {
-        if (at is < 1 or > MaxLocalPartLength
+        if (at < 1
             || at != value.LastIndexOf('@')
             || at >= value.Length - 1
-            || value.Any(char.IsWhiteSpace))
+            || value.Any(character => char.IsWhiteSpace(character)
+                || char.GetUnicodeCategory(character) is UnicodeCategory.Control or UnicodeCategory.Format or UnicodeCategory.Surrogate))
+        {
+            return false;
+        }
+
+        var local = value[..at];
+        if (Encoding.UTF8.GetByteCount(local) > MaxLocalPartBytes
+            || local[0] == '.' || local[^1] == '.' || local.Contains("..", StringComparison.Ordinal)
+            || local.Any(character => character is ',' or ';' or '<' or '>' or '(' or ')' or '[' or ']'
+                or '"' or '\\' or ':'))
         {
             return false;
         }

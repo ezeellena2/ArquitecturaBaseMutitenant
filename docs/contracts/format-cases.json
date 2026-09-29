@@ -574,6 +574,54 @@
       "expected": "juan@gmail.com"
     },
     {
+      "id": "email-idn-es-AR",
+      "culture": "es-AR",
+      "input": "  JUAN@ÑANDÚ.com.ar  ",
+      "expected": "juan@ñandú.com.ar",
+      "type": "email",
+      "timeZone": "America/Argentina/Buenos_Aires"
+    },
+    {
+      "id": "email-local-limit-en-US",
+      "culture": "en-US",
+      "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com",
+      "expected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com",
+      "type": "email",
+      "timeZone": "America/Argentina/Buenos_Aires"
+    },
+    {
+      "id": "email-local-too-long-en-US",
+      "culture": "en-US",
+      "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com",
+      "error": "Users.Email.Invalid",
+      "type": "email",
+      "timeZone": "America/Argentina/Buenos_Aires"
+    },
+    {
+      "id": "email-utf8-too-long-es-AR",
+      "culture": "es-AR",
+      "input": "ééééééééééééééééééééééééééééééééé@example.com",
+      "error": "Users.Email.Invalid",
+      "type": "email",
+      "timeZone": "America/Argentina/Buenos_Aires"
+    },
+    {
+      "id": "email-invalid-dots-es-AR",
+      "type": "email",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "an..a@example.com",
+      "error": "Users.Email.Invalid"
+    },
+    {
+      "id": "email-invalid-punctuation-en-US",
+      "type": "email",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": "an,a@example.com",
+      "error": "Users.Email.Invalid"
+    },
+    {
       "id": "enum-test-status-es-AR",
       "type": "enum",
       "culture": "es-AR",

@@ -84,7 +84,7 @@ Los cinco catálogos principales tienen `IsEnabled` (qué se ofrece en los selec
 
 ## 7. `format-cases.json`
 
-`docs/contracts/format-cases.json` es el contrato común de formato: `{ "now": "2026-09-27T15:00:00Z", "cases": [{ "id", "type", "culture", "timeZone", "input", "expected" }] }`, con `now` fijo para los tiempos relativos. Tiene al menos un caso por tipo de dato y por cultura habilitada, con monedas de 0, 2 y 3 decimales y teléfonos nacionales e internacionales. Lo recorren `DisplayFormatterTests` (back) y `formatters.test.ts` (front), y los dos tienen que dar exactamente el mismo texto. Los patrones salen de los mismos datos de `cultures.json`.
+`docs/contracts/format-cases.json` es el contrato común de formato: `{ "now": "2026-09-27T15:00:00Z", "cases": [{ "id", "type", "culture", "timeZone", "input", "expected" | "error" }] }`, con `now` fijo para los tiempos relativos. Cada caso tiene exactamente uno de `expected` (texto) o `error` (código de validación esperado); los casos con `error` deben ser rechazados por ambos lados. Tiene al menos un caso válido por tipo de dato y por cultura habilitada, con monedas de 0, 2 y 3 decimales y teléfonos nacionales e internacionales. Lo recorren `DisplayFormatterTests` (back) y `formatters.test.ts` (front), y los dos tienen que dar exactamente el mismo texto en los casos válidos. Los patrones salen de los mismos datos de `cultures.json`.
 
 ## 8. Etapas
 

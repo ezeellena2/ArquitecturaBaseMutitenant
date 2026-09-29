@@ -27,6 +27,22 @@ public sealed class EmailTests
     [InlineData("ana@example")]
     [InlineData("ana maria@example.com")]
     [InlineData("ana@example.com.")]
+    [InlineData(".ana@example.com")]
+    [InlineData("ana.@example.com")]
+    [InlineData("an..a@example.com")]
+    [InlineData("an,a@example.com")]
+    [InlineData("an;a@example.com")]
+    [InlineData("an<a@example.com")]
+    [InlineData("an>a@example.com")]
+    [InlineData("an(a@example.com")]
+    [InlineData("an)a@example.com")]
+    [InlineData("an[a@example.com")]
+    [InlineData("an]a@example.com")]
+    [InlineData("an\"a@example.com")]
+    [InlineData("an\\a@example.com")]
+    [InlineData("an:a@example.com")]
+    [InlineData("an\u0001a@example.com")]
+    [InlineData("an\u200ba@example.com")]
     public void Invalid_emails_are_rejected(string? value)
     {
         var result = Email.Create(value);
@@ -49,6 +65,18 @@ public sealed class EmailTests
     {
         Assert.Equal(EmailErrors.Invalid, Email.Create(new string('a', 65) + "@example.com").Error);
         Assert.True(Email.Create(new string('a', 64) + "@example.com").IsSuccess);
+    }
+
+    [Fact]
+    public void Local_and_total_limits_count_utf8_bytes_after_normalization()
+    {
+        Assert.True(Email.Create(new string('é', 32) + "@example.com").IsSuccess);
+        Assert.Equal(EmailErrors.Invalid, Email.Create(new string('é', 33) + "@example.com").Error);
+
+        var acceptedDomain = $"{new string('a', 63)}.{new string('b', 63)}.{new string('c', 61)}";
+        Assert.Equal(Email.MaxLength, System.Text.Encoding.UTF8.GetByteCount(
+            Email.Create(new string('é', 32) + "@" + acceptedDomain).Value.Value));
+        Assert.Equal(EmailErrors.Invalid, Email.Create(new string('é', 32) + "@" + acceptedDomain + "a").Error);
     }
 
     [Fact]
@@ -120,8 +148,16 @@ public sealed class EmailTests
         foreach (var item in cases)
         {
             var result = Email.Create(item.GetProperty("input").GetString());
-            Assert.True(result.IsSuccess, item.GetProperty("id").GetString());
-            Assert.Equal(item.GetProperty("expected").GetString(), result.Value.DisplayValue);
+            if (item.TryGetProperty("error", out var error))
+            {
+                Assert.True(result.IsFailure, item.GetProperty("id").GetString());
+                Assert.Equal(error.GetString(), result.Error.Code);
+            }
+            else
+            {
+                Assert.True(result.IsSuccess, item.GetProperty("id").GetString());
+                Assert.Equal(item.GetProperty("expected").GetString(), result.Value.DisplayValue);
+            }
         }
     }
 

@@ -7,7 +7,7 @@
   1. saca los espacios de los bordes y normaliza a Unicode NFC;
   2. pasa **todo a minúsculas**;
   3. convierte el dominio con acentos a su forma ASCII (IDN: `ñandú.com.ar` → `xn--and-6ma2c.com.ar`) para compararlo y enviarlo, y guarda la forma legible para mostrar;
-  4. valida: una sola `@`, parte local de 1 a 64 caracteres, dominio con punto y sin espacios, total de hasta 254.
+  4. valida: una sola `@`, parte local dot-atom de 1 a 64 **bytes UTF-8** (sin separadores, controles ni caracteres de formato), dominio con punto y sin espacios, total canónico de hasta 254 **bytes UTF-8**.
 - **Error:** `Users.Email.Invalid`, atado al campo.
 - **En la base:** `varchar(254)`, ya normalizado. La unicidad en todo el sistema la da el índice único `(Type, Value)` de `identity.LoginMethods`, la única fuente de los correos de una cuenta (ADR 0033, [multitenancy.md §12](../architecture/multitenancy.md#12-caché-locks-unicidad)). Las invitaciones pendientes tienen su propio índice único por tenant.
 - **Métodos de ingreso:** `LoginMethod.Value` es un texto genérico por tipo. Cuando `Type = Email`, se llena solo con el valor de `Email.Create`, nunca con el texto que llegó en la petición.
@@ -27,7 +27,7 @@
 - `Domain/ValueObjects/Email.cs` (E1), que parte del de `../ArquitecturaBase` y le suma la normalización.
 
 ## Lo verifica
-- `EmailTests` (E1): la tabla de casos de `format-cases.json` (`"  Juan@Gmail.COM "` → `juan@gmail.com`, IDN, límites).
+- `EmailTests` (E1): la tabla de casos de `format-cases.json` (`"  Juan@Gmail.COM "` → `juan@gmail.com`, IDN, límites por bytes y `error` para inválidos).
 - `EmailPropertyTests` (E1): ninguna entidad ni modelo tiene una propiedad `string` llamada `*Email`, salvo las copias heredadas `ApplicationUser.Email` y `ApplicationUser.NormalizedEmail`, que están en su lista blanca (test de arquitectura).
 - `SignupTests` (E3): dos registros que solo difieren en mayúsculas dan `Auth.Signup.EmailTaken`.
 - `LoginMethodsTests` (E3) verifica la unicidad de cada correo; `ManagedEmailTests` (E6) comprueba que un exmiembro no pueda ingresar con el correo de la empresa.

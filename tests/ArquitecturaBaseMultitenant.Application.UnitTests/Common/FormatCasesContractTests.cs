@@ -36,7 +36,19 @@ public sealed class FormatCasesContractTests
             RequiredString(item, "culture");
             RequiredString(item, "timeZone");
             Assert.True(item.TryGetProperty("input", out _), $"Missing input: {id}");
-            RequiredString(item, "expected");
+            var hasExpected = item.TryGetProperty("expected", out var expected);
+            var hasError = item.TryGetProperty("error", out var error);
+            Assert.True(hasExpected != hasError, $"El caso {id} debe tener expected o error.");
+            if (hasExpected)
+            {
+                Assert.Equal(JsonValueKind.String, expected.ValueKind);
+            }
+            else
+            {
+                Assert.Equal(JsonValueKind.String, error.ValueKind);
+                Assert.Equal("Users.Email.Invalid", error.GetString());
+                Assert.Equal("email", item.GetProperty("type").GetString());
+            }
         }
     }
 
