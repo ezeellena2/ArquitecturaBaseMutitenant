@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 using System.Security.Cryptography;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
+using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Isolation;
 using Testcontainers.PostgreSql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
@@ -42,6 +43,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             AdminConnectionString,
             RuntimeConnectionString,
             TestContext.Current.CancellationToken);
+
+        await using var connection = new NpgsqlConnection(AdminConnectionString);
+        await IsolationSchema.ApplyAsync(connection, TestContext.Current.CancellationToken);
     }
 
     public override async ValueTask DisposeAsync()
