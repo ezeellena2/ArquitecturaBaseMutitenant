@@ -222,6 +222,22 @@
       "expected": "12.5%"
     },
     {
+      "id": "percent-precision-es-AR",
+      "type": "percent",
+      "culture": "es-AR",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": 0.00115,
+      "expected": "0,12 %"
+    },
+    {
+      "id": "percent-precision-en-US",
+      "type": "percent",
+      "culture": "en-US",
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "input": 0.00115,
+      "expected": "0.12%"
+    },
+    {
       "id": "money-ars-es-AR",
       "type": "money",
       "culture": "es-AR",
