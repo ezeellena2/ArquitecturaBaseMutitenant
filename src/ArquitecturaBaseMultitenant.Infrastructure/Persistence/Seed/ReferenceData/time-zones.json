@@ -310,7 +310,7 @@
         },
         {
           "Culture": "en-US",
-          "City": "Cordoba"
+          "City": "Córdoba"
         }
       ]
     },
@@ -2165,11 +2165,11 @@
       "Translations": [
         {
           "Culture": "es-AR",
-          "City": "Faroe"
+          "City": "Islas Feroe"
         },
         {
           "Culture": "en-US",
-          "City": "Faroe"
+          "City": "Faroes"
         }
       ]
     },
@@ -2638,7 +2638,7 @@
       "Translations": [
         {
           "Culture": "es-AR",
-          "City": "Kolkata"
+          "City": "Calcuta"
         },
         {
           "Culture": "en-US",
@@ -2852,11 +2852,11 @@
       "Translations": [
         {
           "Culture": "es-AR",
-          "City": "Kanton"
+          "City": "Isla Kanton"
         },
         {
           "Culture": "en-US",
-          "City": "Kanton"
+          "City": "Canton Island"
         }
       ]
     },
@@ -3213,7 +3213,7 @@
       "Translations": [
         {
           "Culture": "es-AR",
-          "City": "Yangon"
+          "City": "Yangón (Rangún)"
         },
         {
           "Culture": "en-US",
@@ -3717,7 +3717,7 @@
       "Translations": [
         {
           "Culture": "es-AR",
-          "City": "Kathmandu"
+          "City": "Katmandú"
         },
         {
           "Culture": "en-US",
@@ -5108,7 +5108,7 @@
       "Translations": [
         {
           "Culture": "es-AR",
-          "City": "Kyiv"
+          "City": "Kiev"
         },
         {
           "Culture": "en-US",
@@ -5198,7 +5198,7 @@
       "Translations": [
         {
           "Culture": "es-AR",
-          "City": "Indianapolis"
+          "City": "Indianápolis"
         },
         {
           "Culture": "en-US",
@@ -5721,11 +5721,11 @@
       "Translations": [
         {
           "Culture": "es-AR",
-          "City": "Ho Chi Minh"
+          "City": "Ciudad Ho Chi Minh"
         },
         {
           "Culture": "en-US",
-          "City": "Ho Chi Minh"
+          "City": "Ho Chi Minh City"
         }
       ]
     },

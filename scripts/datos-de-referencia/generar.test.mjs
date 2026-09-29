@@ -205,6 +205,21 @@ test('usa exemplarCity CLDR, override de ciudad y fallback del ID', async () => 
   assert.deepEqual(translations('UTC').map(value => value.City), ['UTC', 'UTC']);
 });
 
+test('resuelve exemplarCity del alias histórico sin override manual', async () => {
+  const options = await fixture();
+  await putJson(join(options.root, 'ciudades.es.json'), { 'America/New_York': 'Nueva York' });
+  await putJson(join(options.cldrRoot, 'cldr-bcp47/bcp47/timezone.json'), { keyword: { u: { tz: {
+    arcor: { _alias: 'America/Cordoba America/Argentina/Cordoba', _iana: 'America/Argentina/Cordoba' }
+  } } } });
+  const path = join(options.cldrRoot, 'cldr-dates-full/main/es-AR/timeZoneNames.json');
+  const names = JSON.parse(await readFile(path, 'utf8'));
+  delete names.main['es-AR'].dates.timeZoneNames.zone.America.Argentina.Cordoba;
+  names.main['es-AR'].dates.timeZoneNames.zone.America.Cordoba = { exemplarCity: 'Córdoba' };
+  await putJson(path, names);
+  const { timeZones } = await generated(options);
+  assert.equal(timeZones.TimeZones.find(value => value.Id === 'America/Argentina/Cordoba').Translations[0].City, 'Córdoba');
+});
+
 test('genera culturas traducidas y patrones editables con un único default', async () => {
   const { cultures } = await generated(await fixture());
   const rows = cultures.Cultures;
@@ -501,6 +516,8 @@ test('snapshots oficiales regeneran los cinco JSON versionados byte a byte sin r
   assert.equal(timeZones.TimeZones.length, 313);
   assert.deepEqual(timeZones.TimeZones.find(value => value.Id === 'Asia/Dubai').CountryCodes, ['AE', 'OM', 'RE', 'SC', 'TF']);
   assert.deepEqual(timeZones.TimeZones.find(value => value.Id === 'UTC').CountryCodes, []);
+  assert.equal(timeZones.TimeZones.find(value => value.Id === 'Asia/Kolkata').Translations.find(value => value.Culture === 'es-AR').City, 'Calcuta');
+  assert.equal(timeZones.TimeZones.find(value => value.Id === 'Europe/Kyiv').Translations.find(value => value.Culture === 'es-AR').City, 'Kiev');
   assert.equal(timeZones.TimeZones.find(value => value.Id === 'America/Argentina/Cordoba').Translations.find(value => value.Culture === 'es-AR').City, 'Córdoba');
   for (const code of ['BV', 'HM']) {
     assert.equal(countries.Countries.find(value => value.Code === code).DefaultTimeZoneId, null);

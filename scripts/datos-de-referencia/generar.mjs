@@ -255,11 +255,13 @@ function countryTranslations(code, locales) {
   });
 }
 
-function timeZoneTranslations(zone, locales, cityOverrides) {
+function timeZoneTranslations(zone, locales, cityOverrides, aliases) {
   const parts = zone.Id.split('/');
   const finalPart = parts.at(-1);
   return locales.map(locale => {
-    const cldrCity = parts.reduce((entry, part) => entry?.[part], locale.timeZones)?.exemplarCity;
+    const cldrCity = aliases.candidates(zone.Id)
+      .map(id => id.split('/').reduce((entry, part) => entry?.[part], locale.timeZones)?.exemplarCity)
+      .find(city => typeof city === 'string' && city.trim());
     const overrides = cityOverrides[locale.culture.split('-')[0]];
     const city = overrides?.[zone.Id] ?? overrides?.[finalPart] ?? cldrCity ?? finalPart.replaceAll('_', ' ');
     assert(typeof city === 'string' && city.trim(), `Falta ciudad de ${zone.Id} en ${locale.culture}.`);
@@ -507,7 +509,7 @@ export async function generateReferenceData({
       CountryCodes: zone.CountryCodes,
       IsEnabled: selected.IsEnabled,
       SortOrder: selected.SortOrder,
-      Translations: timeZoneTranslations(zone, locales, cityOverrides)
+      Translations: timeZoneTranslations(zone, locales, cityOverrides, aliases)
     };
   });
   const enabledCurrenciesByCode = new Map(currencies.map(value => [value.Code, value.IsEnabled]));
