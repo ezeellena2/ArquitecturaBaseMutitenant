@@ -21,7 +21,8 @@ public sealed class MigrationsTests
     public void Initial_migration_creates_e2_schema_without_business_test_tables_or_identity_users()
     {
         using var context = CreateContext();
-        var script = context.GetService<IMigrator>().GenerateScript();
+        var initialMigration = context.Database.GetMigrations().First();
+        var script = context.GetService<IMigrator>().GenerateScript(toMigration: initialMigration);
 
         foreach (var schema in new[] { "platform", "identity", "tenant", "public_site", "engagement" })
         {
