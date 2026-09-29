@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
+using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Interceptors;
 
@@ -13,7 +14,7 @@ internal static class AuditActorResolver
             return (AuditActorKind.System, null);
         }
 
-        return (currentUser.Access == AccessKind.Platform
+        return (currentUser.Access == Access.Platform
             ? AuditActorKind.PlatformOperator
             : AuditActorKind.User, userId);
     }

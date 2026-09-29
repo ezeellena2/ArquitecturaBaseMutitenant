@@ -3,6 +3,8 @@ using ArquitecturaBaseMultitenant.Api.ErrorHandling;
 using ArquitecturaBaseMultitenant.Api.Idempotency;
 using ArquitecturaBaseMultitenant.Api.Json;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
+using ArquitecturaBaseMultitenant.Api.RequestContext;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using Microsoft.AspNetCore.Mvc;
@@ -14,6 +16,11 @@ public static class DependencyInjection
     public static IServiceCollection AddPresentation(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
+
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUser, CurrentUser>();
+        services.AddScoped<IRequestInfo, RequestInfo>();
+        services.AddSingleton<IPublicOrigin, PublicOrigin>();
 
         services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
         {

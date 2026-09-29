@@ -1,8 +1,8 @@
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Auditing;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Settings;
+using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Interceptors;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories;
@@ -25,7 +25,7 @@ public sealed class AuditTrailTests
         var record = new AuditedRecord(tenantId, "Before", "super-secret", "alice@example.com");
         context.Add(record);
 
-        ApplyAudit(context, tenantId, new TestCurrentUser(actorId, AccessKind.Business));
+        ApplyAudit(context, tenantId, new TestCurrentUser(actorId, Access.Business));
 
         var audit = Assert.Single(context.ChangeTracker.Entries<AuditEntry>()).Entity;
         Assert.Equal(tenantId, audit.TenantId);
@@ -176,7 +176,7 @@ public sealed class AuditTrailTests
             .UseNpgsql("Host=localhost;Database=explicit_audit_model_test")
             .Options;
         using var context = new ApplicationDbContext(options, tenant);
-        var log = new AuditLog(context, tenant, new TestCurrentUser(actorId, AccessKind.Platform),
+        var log = new AuditLog(context, tenant, new TestCurrentUser(actorId, Access.Platform),
             new FakeTimeProvider(Instant));
 
         log.Record(AuditAction.Custom, "Export", subjectId,

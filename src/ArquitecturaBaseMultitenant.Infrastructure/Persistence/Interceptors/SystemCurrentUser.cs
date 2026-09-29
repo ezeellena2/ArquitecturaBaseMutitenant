@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
+using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Interceptors;
 
@@ -7,5 +8,5 @@ internal sealed class SystemCurrentUser : ICurrentUser
 {
     public Guid? UserId => null;
 
-    public AccessKind? Access => null;
+    public Access? Access => null;
 }
