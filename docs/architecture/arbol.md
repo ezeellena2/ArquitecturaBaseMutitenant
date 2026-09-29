@@ -237,7 +237,6 @@ ArquitecturaBaseMultitenant.Application/
 │   ├── Auth/                                         [E3]
 │   │   ├── LoginCodeOptions.cs
 │   │   ├── LoginLinkOptions.cs                       [E8]
-│   │   ├── SignupOptions.cs
 │   │   └── InvitationOptions.cs
 │   └── Messaging/
 │       └── OutboxOptions.cs                         [E3] reintentos y backoff
