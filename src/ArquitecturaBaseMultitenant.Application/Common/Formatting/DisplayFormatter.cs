@@ -259,7 +259,7 @@ public sealed class DisplayFormatter(
         var zone = await timeZones.FindAsync(id, cancellationToken)
             ?? throw new ArgumentException("The time zone is not in the reference catalog.", nameof(input));
         var city = profile.Translate(zone.Translations, item => item.Culture).City;
-        var totalMinutes = (int)zoneService.GetUtcOffset(zone.Id).TotalMinutes;
+        var totalMinutes = (int)zoneService.GetUtcOffset(zone.Id, clock.GetUtcNow().UtcDateTime).TotalMinutes;
         var sign = totalMinutes < 0 ? '−' : '+';
         var absolute = Math.Abs(totalMinutes);
         var hours = (absolute / 60).ToString(CultureInfo.InvariantCulture);

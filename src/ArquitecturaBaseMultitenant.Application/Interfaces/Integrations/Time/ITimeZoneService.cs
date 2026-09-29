@@ -8,6 +8,8 @@ public interface ITimeZoneService
 
     TimeSpan GetUtcOffset(string timeZoneId);
 
+    TimeSpan GetUtcOffset(string timeZoneId, DateTime instantUtc);
+
     DateTime ConvertToLocal(DateTime instantUtc, string timeZoneId);
 
     DateTime ConvertToUtc(DateTime localDateTime, string timeZoneId);

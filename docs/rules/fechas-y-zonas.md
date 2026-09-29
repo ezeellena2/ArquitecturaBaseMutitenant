@@ -10,6 +10,7 @@
 - **Zona efectiva:** la de la cuenta; si no hay, la de la empresa de la pantalla; si no, `TenantSettings.DefaultTimeZoneId`; al comienzo, la zona por defecto de la cultura. Son IDs IANA. `ValidTimeZone()` consulta `ITimeZoneCatalog` para aceptar una zona habilitada en datos nuevos; `ITimeZoneService` hace la aritmética temporal.
 - "Hoy" o "este mes" para una regla (reportes, vencimientos): `ITimeZoneService.GetDayRangeUtc(DateOnly, tz)`, nunca la cuenta a mano.
 - **Catálogo:** `GET /api/reference-data` o `/api/reference-data/time-zones` devuelve los IDs y ciudades traducidas desde JSON E1 / tablas E2. Reemplaza `GET /api/time-zones`. El offset se calcula con el reloj al mostrar, nunca se almacena.
+- **Offset:** `ITimeZoneService.GetUtcOffset(id, instantUtc)` calcula el desfase de un instante UTC explícito (incluido un instante histórico); la sobrecarga sin instante usa el `TimeProvider` inyectado para «ahora». No se reutiliza el offset de hoy para otra fecha.
 - **Perfil de cultura:** `Cultures` contiene los patrones y `AmDesignator`/`PmDesignator`. `CultureProfiles` clona la cultura .NET y fija calendario gregoriano, separadores de fecha `/` y hora `:`, designadores del catálogo y signo negativo `-`; `DisplayFormatter` no hereda esos valores del ICU del host.
 - En los tests, `FakeTimeProvider`.
 

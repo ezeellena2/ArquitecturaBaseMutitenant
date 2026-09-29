@@ -67,6 +67,21 @@ public sealed class TimeZoneServiceTests
     }
 
     [Fact]
+    public void Numeric_offset_for_an_explicit_instant_respects_historical_daylight_saving()
+    {
+        var clock = new FakeTimeProvider(new DateTimeOffset(2026, 1, 15, 12, 0, 0, TimeSpan.Zero));
+        var service = CreateService(clock);
+        var winterUtc = new DateTime(2026, 1, 15, 12, 0, 0, DateTimeKind.Utc);
+        var summerUtc = new DateTime(2026, 7, 15, 12, 0, 0, DateTimeKind.Utc);
+
+        Assert.Equal(TimeSpan.FromHours(-5), service.GetUtcOffset("America/New_York", winterUtc));
+        Assert.Equal(TimeSpan.FromHours(-4), service.GetUtcOffset("America/New_York", summerUtc));
+        Assert.Equal(TimeSpan.FromHours(-5), service.GetUtcOffset("America/New_York"));
+        Assert.Throws<ArgumentException>(() => service.GetUtcOffset("America/New_York",
+            new DateTime(2026, 7, 15, 12, 0, 0, DateTimeKind.Unspecified)));
+    }
+
+    [Fact]
     public void Conversion_requires_utc_instants_and_keeps_civil_time_without_utc_kind()
     {
         var service = CreateService();

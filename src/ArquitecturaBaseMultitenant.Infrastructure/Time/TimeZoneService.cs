@@ -17,7 +17,17 @@ public sealed class TimeZoneService(TimeProvider timeProvider) : ITimeZoneServic
     }
 
     public TimeSpan GetUtcOffset(string timeZoneId) =>
-        FindZone(timeZoneId).GetUtcOffset(timeProvider.GetUtcNow());
+        GetUtcOffset(timeZoneId, timeProvider.GetUtcNow().UtcDateTime);
+
+    public TimeSpan GetUtcOffset(string timeZoneId, DateTime instantUtc)
+    {
+        if (instantUtc.Kind != DateTimeKind.Utc)
+        {
+            throw new ArgumentException("The instant must be UTC.", nameof(instantUtc));
+        }
+
+        return FindZone(timeZoneId).GetUtcOffset(instantUtc);
+    }
 
     public DateTime ConvertToLocal(DateTime instantUtc, string timeZoneId)
     {
