@@ -15,7 +15,7 @@
 - **Buscar por teléfono:** se normaliza lo buscado con el mismo parser (o se compara por dígitos) y se busca por el E.164.
 - **Salida (JSON):** el E.164 como texto. El país no se manda: sale del número.
 - **País de entrada:** `ValidCountry()` de Application consulta `ICountryCatalog`; `GET /api/reference-data` abastece el selector, sin una lista de países en el código.
-- **Correo y WhatsApp:** `DisplayFormatter.Phone(phone, culture, timeZone)` usa las mismas reglas que `PhoneText`: nacional si el país coincide con la cultura, internacional si no. `format-cases.json` fija el texto exacto si las librerías difieren.
+- **Correo y WhatsApp:** crear `ctx = await DisplayFormatter.CreateAsync(culture, timeZone)` y llamar `await FormatPhoneAsync(phone, ctx)` con `PhoneNumber`. Usa las mismas reglas que `PhoneText`: nacional si el país coincide con la cultura, internacional si no. `format-cases.json` fija el texto exacto si las librerías difieren.
 - **Logs:** siempre `IPhoneNumberParser.Mask(phone)` (`+54 9 11 •••• 6789`).
 
 ## Prohibido

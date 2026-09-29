@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Globalization;
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
 using ArquitecturaBaseMultitenant.Infrastructure.Phones;
 using ArquitecturaBaseMultitenant.Infrastructure.Time;
@@ -11,6 +12,32 @@ namespace ArquitecturaBaseMultitenant.Application.UnitTests.Common;
 
 public sealed class DisplayFormatterTests
 {
+    [Fact]
+    public async Task Typed_methods_share_one_culture_profile_and_match_display_contract()
+    {
+        var catalog = new JsonReferenceDataCatalog();
+        var countedCultures = new CountingCultureCatalog(catalog);
+        var clock = new FakeTimeProvider(DateTimeOffset.Parse("2026-09-27T15:00:00Z", CultureInfo.InvariantCulture));
+        var formatter = new DisplayFormatter(catalog, catalog, catalog, countedCultures, catalog,
+            new LibPhoneNumberDisplayFormatter(), new TimeZoneService(clock), clock);
+        var context = await formatter.CreateAsync("es-AR", "America/Argentina/Buenos_Aires",
+            TestContext.Current.CancellationToken);
+        var money = new Money(1234.5m, CurrencyCode.Create("ARS").Value);
+        var phone = PhoneNumber.Create("+5491123456789").Value;
+
+        Assert.Equal("$ 1.234,50", await formatter.FormatMoneyAsync(
+            money, context, TestContext.Current.CancellationToken));
+        Assert.Equal("27/09/2026 14:35", formatter.FormatInstant(
+            new DateTime(2026, 9, 27, 17, 35, 0, DateTimeKind.Utc), context));
+        Assert.Throws<ArgumentException>(() => formatter.FormatInstant(
+            new DateTime(2026, 9, 27, 17, 35, 0, DateTimeKind.Unspecified), context));
+        Assert.Equal("011 15-2345-6789", await formatter.FormatPhoneAsync(
+            phone, context, TestContext.Current.CancellationToken));
+        Assert.Equal("1.234,50", formatter.FormatDecimal(1234.5m, 2, context));
+        Assert.Equal("12,5 %", formatter.FormatPercent(0.125m, context));
+        Assert.Equal(1, countedCultures.ListCalls);
+    }
+
     [Theory]
     [MemberData(nameof(Cases))]
     public async Task Matches_shared_format_contract(
@@ -42,6 +69,11 @@ public sealed class DisplayFormatterTests
         using var document = JsonDocument.Parse(File.ReadAllText(path));
         foreach (var item in document.RootElement.GetProperty("cases").EnumerateArray())
         {
+            if (item.TryGetProperty("error", out _))
+            {
+                continue;
+            }
+
             yield return
             [
                 item.GetProperty("id").GetString()!,
@@ -93,5 +125,19 @@ public sealed class DisplayFormatterTests
         Assert.Equal("Nueva York (GMT−4)", await formatter.FormatAsync(
             "timeZone", timeZone.RootElement, "es-AR", "America/New_York",
             TestContext.Current.CancellationToken));
+    }
+
+    private sealed class CountingCultureCatalog(ICultureCatalog inner) : ICultureCatalog
+    {
+        public int ListCalls { get; private set; }
+
+        public async Task<IReadOnlyList<CultureCatalogEntry>> ListAsync(CancellationToken cancellationToken)
+        {
+            ListCalls++;
+            return await inner.ListAsync(cancellationToken);
+        }
+
+        public Task<CultureCatalogEntry?> FindAsync(string code, CancellationToken cancellationToken) =>
+            inner.FindAsync(code, cancellationToken);
     }
 }

@@ -19,32 +19,108 @@ public sealed class DisplayFormatter(
     ITimeZoneService zoneService,
     TimeProvider clock)
 {
-    public async Task<string> FormatAsync(string type, JsonElement input, string culture, string timeZone,
+    public async Task<DisplayFormatContext> CreateAsync(string culture, string timeZone,
         CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(type);
         ArgumentException.ThrowIfNullOrWhiteSpace(culture);
         ArgumentException.ThrowIfNullOrWhiteSpace(timeZone);
         cancellationToken.ThrowIfCancellationRequested();
+        return new DisplayFormatContext(
+            await new CultureProfiles(cultures).LoadAsync(culture, cancellationToken), timeZone);
+    }
 
-        var profile = await new CultureProfiles(cultures).LoadAsync(culture, cancellationToken);
+    public string FormatInstant(DateTime instantUtc, DisplayFormatContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (instantUtc.Kind != DateTimeKind.Utc)
+        {
+            throw new ArgumentException("The instant must be UTC.", nameof(instantUtc));
+        }
+
+        return zoneService.ConvertToLocal(instantUtc, context.TimeZoneId)
+            .ToString(context.Profile.Entry.DateTimePattern, context.Profile.Culture);
+    }
+
+    // Keep one instance API for callers composing sync and async formatted fields.
+#pragma warning disable CA1822
+    public string FormatDecimal(decimal value, int digits, DisplayFormatContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (digits is < 0 or > 28)
+        {
+            throw new ArgumentOutOfRangeException(nameof(digits), "Decimal digits must be between 0 and 28.");
+        }
+
+        return FormatNumber(value, digits, digits, context.Profile);
+    }
+
+    public string FormatPercent(decimal fraction, DisplayFormatContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        var number = FormatNumber(fraction * 100m, 0, 2, context.Profile);
+        return context.Profile.Entry.PercentPattern.Replace("{number}", number, StringComparison.Ordinal);
+    }
+#pragma warning restore CA1822
+
+    public async Task<string> FormatMoneyAsync(Money value, DisplayFormatContext context,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        ArgumentNullException.ThrowIfNull(context);
+        var currency = await currencies.FindAsync(value.Currency.Value, cancellationToken)
+            ?? throw new ArgumentException("The currency is not in the reference catalog.", nameof(value));
+        var minorUnits = currency.MinorUnits
+            ?? throw new InvalidOperationException("The currency has no numeric minor unit count.");
+        var translation = context.Profile.Translate(currency.Translations, item => item.Culture);
+        var number = FormatNumber(Math.Abs(value.Amount), minorUnits, minorUnits, context.Profile);
+
+        var pattern = context.Profile.Entry.CurrencyPattern;
+        if (pattern.Contains("{symbol}{number}", StringComparison.Ordinal) &&
+            translation.DisplaySymbol.Length > 0 && char.IsLetter(translation.DisplaySymbol[^1]))
+        {
+            pattern = pattern.Replace("{symbol}{number}", "{symbol} {number}", StringComparison.Ordinal);
+        }
+
+        var positive = pattern.Replace("{symbol}", translation.DisplaySymbol, StringComparison.Ordinal)
+            .Replace("{number}", number, StringComparison.Ordinal);
+        return value.Amount < 0 ? "-" + positive : positive;
+    }
+
+    public async Task<string> FormatPhoneAsync(PhoneNumber value, DisplayFormatContext context,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        ArgumentNullException.ThrowIfNull(context);
+        var homeCountry = await countries.FindAsync(context.Profile.Entry.CountryCode, cancellationToken)
+            ?? throw new InvalidOperationException("The culture country is not in the reference catalog.");
+        return phoneFormatter.Format(value.Value, homeCountry.Code);
+    }
+
+    /// <summary>Adaptador exclusivo del contrato compartido de format-cases.json.</summary>
+    internal async Task<string> FormatAsync(string type, JsonElement input, string culture, string timeZone,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(type);
+        var context = await CreateAsync(culture, timeZone, cancellationToken);
+        var profile = context.Profile;
         return type switch
         {
             "date" => FormatDate(input, profile, timeZone),
-            "dateTime" => FormatDateTime(input, profile, timeZone),
+            "dateTime" => FormatInstant(ParseInstant(input.GetString()!), context),
             "time" => FormatTime(input, profile, timeZone),
             "dateLong" => FormatDateLong(input, profile, timeZone),
             "relative" => FormatRelative(input, profile, timeZone),
             "dateRange" => FormatDateRange(input, profile),
             "integer" => FormatNumber(input.GetDecimal(), 0, 0, profile),
-            "decimal" => FormatFixedDecimal(input, profile),
+            "decimal" => FormatDecimal(input.GetProperty("value").GetDecimal(),
+                input.GetProperty("digits").GetInt32(), context),
             "quantity" => FormatNumber(input.GetDecimal(), 0, 3, profile),
-            "percent" => FormatPercent(input, profile),
-            "money" => await FormatMoneyAsync(input, profile, cancellationToken),
+            "percent" => FormatPercent(input.GetDecimal(), context),
+            "money" => await FormatMoneyAsync(ParseMoney(input), context, cancellationToken),
             "compact" => FormatCompact(input, profile),
             "fileSize" => FormatFileSize(input, profile),
             "duration" => FormatDuration(input, profile),
-            "phone" => await FormatPhoneAsync(input, profile, cancellationToken),
+            "phone" => await FormatPhoneAsync(ParsePhone(input), context, cancellationToken),
             "timeZone" => await FormatTimeZoneAsync(input, profile, cancellationToken),
             "culture" => await FormatCultureAsync(input, profile, cancellationToken),
             "taxId" => await FormatTaxIdAsync(input, cancellationToken),
@@ -59,9 +135,6 @@ public sealed class DisplayFormatter(
 
     private string FormatDate(JsonElement input, CultureProfile profile, string timeZone) =>
         LocalDateTime(input, timeZone).ToString(profile.Entry.DatePattern, profile.Culture);
-
-    private string FormatDateTime(JsonElement input, CultureProfile profile, string timeZone) =>
-        LocalDateTime(input, timeZone).ToString(profile.Entry.DateTimePattern, profile.Culture);
 
     private string FormatTime(JsonElement input, CultureProfile profile, string timeZone) =>
         LocalDateTime(input, timeZone).ToString(profile.Entry.TimePattern, profile.Culture);
@@ -100,44 +173,22 @@ public sealed class DisplayFormatter(
         return $"{start.ToString(profile.Entry.DatePattern, profile.Culture)} – {end.ToString(profile.Entry.DatePattern, profile.Culture)}";
     }
 
-    private static string FormatFixedDecimal(JsonElement input, CultureProfile profile)
+    private static Money ParseMoney(JsonElement input)
     {
-        var digits = input.GetProperty("digits").GetInt32();
-        if (digits is < 0 or > 28)
+        var currency = CurrencyCode.Create(input.GetProperty("currency").GetString());
+        if (currency.IsFailure)
         {
-            throw new ArgumentOutOfRangeException(nameof(input), "Decimal digits must be between 0 and 28.");
+            throw new ArgumentException("The currency code is invalid.", nameof(input));
         }
 
-        return FormatNumber(input.GetProperty("value").GetDecimal(), digits, digits, profile);
+        return new Money(input.GetProperty("amount").GetDecimal(), currency.Value);
     }
 
-    private static string FormatPercent(JsonElement input, CultureProfile profile)
+    private static PhoneNumber ParsePhone(JsonElement input)
     {
-        var number = FormatNumber(input.GetDecimal() * 100m, 0, 2, profile);
-        return profile.Entry.PercentPattern.Replace("{number}", number, StringComparison.Ordinal);
-    }
-
-    private async Task<string> FormatMoneyAsync(JsonElement input, CultureProfile profile, CancellationToken cancellationToken)
-    {
-        var code = input.GetProperty("currency").GetString()!;
-        var currency = await currencies.FindAsync(code, cancellationToken)
-            ?? throw new ArgumentException("The currency is not in the reference catalog.", nameof(input));
-        var minorUnits = currency.MinorUnits
-            ?? throw new InvalidOperationException("The currency has no numeric minor unit count.");
-        var translation = profile.Translate(currency.Translations, item => item.Culture);
-        var amount = input.GetProperty("amount").GetDecimal();
-        var number = FormatNumber(Math.Abs(amount), minorUnits, minorUnits, profile);
-
-        var pattern = profile.Entry.CurrencyPattern;
-        if (pattern.Contains("{symbol}{number}", StringComparison.Ordinal) &&
-            translation.DisplaySymbol.Length > 0 && char.IsLetter(translation.DisplaySymbol[^1]))
-        {
-            pattern = pattern.Replace("{symbol}{number}", "{symbol} {number}", StringComparison.Ordinal);
-        }
-
-        var positive = pattern.Replace("{symbol}", translation.DisplaySymbol, StringComparison.Ordinal)
-            .Replace("{number}", number, StringComparison.Ordinal);
-        return amount < 0 ? "-" + positive : positive;
+        var phone = PhoneNumber.Create(input.GetString());
+        return phone.IsSuccess ? phone.Value
+            : throw new ArgumentException("The phone number is invalid.", nameof(input));
     }
 
     private static string FormatCompact(JsonElement input, CultureProfile profile)
@@ -200,13 +251,6 @@ public sealed class DisplayFormatter(
         }
 
         return string.Join(" ", parts);
-    }
-
-    private async Task<string> FormatPhoneAsync(JsonElement input, CultureProfile profile, CancellationToken cancellationToken)
-    {
-        var homeCountry = await countries.FindAsync(profile.Entry.CountryCode, cancellationToken)
-            ?? throw new InvalidOperationException("The culture country is not in the reference catalog.");
-        return phoneFormatter.Format(input.GetString()!, homeCountry.Code);
     }
 
     private async Task<string> FormatTimeZoneAsync(JsonElement input, CultureProfile profile, CancellationToken cancellationToken)
