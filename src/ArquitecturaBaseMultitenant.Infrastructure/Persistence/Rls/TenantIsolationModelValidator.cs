@@ -7,6 +7,7 @@ using ArquitecturaBaseMultitenant.Domain.ReferenceData;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
@@ -59,6 +60,7 @@ internal static class TenantIsolationModelValidator
         type == typeof(LoginMethod) ||
         type == typeof(LoginCode) ||
         type == typeof(LoginAudit) ||
+        type == typeof(UserTenantAccess) ||
         type == typeof(Tenant) ||
         type == typeof(PlatformSettings) ||
         type == typeof(SecurityEvent) ||

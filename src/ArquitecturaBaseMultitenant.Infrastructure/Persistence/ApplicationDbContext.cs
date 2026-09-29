@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Conventions;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Rls;
@@ -38,6 +39,7 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
     public DbSet<LoginMethod> LoginMethods => Set<LoginMethod>();
     public DbSet<LoginCode> LoginCodes => Set<LoginCode>();
     public DbSet<LoginAudit> LoginAudits => Set<LoginAudit>();
+    internal DbSet<UserTenantAccess> UserTenantAccesses => Set<UserTenantAccess>();
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Member> Members => Set<Member>();
     public DbSet<TenantSettings> TenantSettings => Set<TenantSettings>();
