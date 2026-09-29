@@ -23,7 +23,8 @@ namespace ArquitecturaBaseMultitenant.Api.Controllers.Auth;
 [ApiExplorerSettings(IgnoreApi = true)]
 [OwnProtocol]
 [Route("connect")]
-public sealed class ConnectController(IConnectService service, OpenIdPrincipalFactory principalFactory) : ControllerBase
+public sealed class ConnectController(IConnectService service, IConnectLogoutService logoutService,
+    OpenIdPrincipalFactory principalFactory) : ControllerBase
 {
     [HttpGet("authorize")]
     [HttpPost("authorize")]
@@ -88,6 +89,22 @@ public sealed class ConnectController(IConnectService service, OpenIdPrincipalFa
             ? Forbid(ErrorProperties(Errors.InvalidGrant, "The user can no longer sign in."),
                 OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)
             : SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+    }
+
+    [HttpGet("logout")]
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout(CancellationToken cancellationToken)
+    {
+        var hint = await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+        var authorizationId = hint.Principal?.GetAuthorizationId();
+        if (!string.IsNullOrEmpty(authorizationId))
+        {
+            await logoutService.RevokeAuthorizationAsync(authorizationId, cancellationToken);
+        }
+
+        await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+        return SignOut(new AuthenticationProperties { RedirectUri = "/" },
+            OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
 
     [HttpGet("userinfo")]

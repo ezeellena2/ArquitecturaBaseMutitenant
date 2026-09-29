@@ -16,6 +16,19 @@ internal sealed class TokenRevoker(
     internal const string AccessProperty = "access";
     internal const string TenantIdProperty = "tenant_id";
 
+    public async Task RevokeAuthorizationAsync(string authorizationId, CancellationToken cancellationToken)
+    {
+        context.RequireTransaction();
+        var authorization = await authorizations.FindByIdAsync(authorizationId, cancellationToken);
+        if (authorization is null)
+        {
+            return;
+        }
+
+        await tokens.RevokeByAuthorizationIdAsync(authorizationId, cancellationToken);
+        await authorizations.TryRevokeAsync(authorization, cancellationToken);
+    }
+
     public async Task RevokeUserAsync(Guid userId, CancellationToken cancellationToken)
     {
         context.RequireTransaction();
