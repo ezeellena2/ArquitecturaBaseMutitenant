@@ -26,7 +26,9 @@ internal static class PersistenceRegistration
         services.AddCaching();
         services.AddScoped<TenantContext>(_ => new TenantContext());
         services.AddScoped<ITenantContext>(provider => provider.GetRequiredService<TenantContext>());
-        services.AddDbContext<ApplicationDbContext>((_, options) => options.UseNpgsql(adminConnectionString));
+        services.AddDbContext<ApplicationDbContext>((_, options) => options
+            .UseNpgsql(adminConnectionString)
+            .UseOpenIddict<Guid>());
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<ReferenceDataSeeder>();
         services.AddSingleton<JsonReferenceDataCatalog>();
@@ -53,6 +55,7 @@ internal static class PersistenceRegistration
             options.UseNpgsql(configuration.GetConnectionString("appdb")
                     ?? throw new InvalidOperationException(
                         "Missing connection string 'ConnectionStrings:appdb'. Start the API from the AppHost."))
+                .UseOpenIddict<Guid>()
                 .AddInterceptors(
                     provider.GetRequiredService<TenantConnectionInterceptor>(),
                     provider.GetRequiredService<TenantStampInterceptor>(),

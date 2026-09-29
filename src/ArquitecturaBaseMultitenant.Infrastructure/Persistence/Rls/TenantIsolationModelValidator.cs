@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using OpenIddict.EntityFrameworkCore.Models;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Rls;
 
@@ -68,6 +69,10 @@ internal static class TenantIsolationModelValidator
         type == typeof(IdentityUserClaim<Guid>) ||
         type == typeof(IdentityUserLogin<Guid>) ||
         type == typeof(IdentityUserToken<Guid>) ||
+        type == typeof(OpenIddictEntityFrameworkCoreApplication<Guid>) ||
+        type == typeof(OpenIddictEntityFrameworkCoreAuthorization<Guid>) ||
+        type == typeof(OpenIddictEntityFrameworkCoreScope<Guid>) ||
+        type == typeof(OpenIddictEntityFrameworkCoreToken<Guid>) ||
         type.Namespace == typeof(Currency).Namespace ||
         type.FullName == "ArquitecturaBaseMultitenant.Infrastructure.Idempotency.IdempotencyKey";
 }

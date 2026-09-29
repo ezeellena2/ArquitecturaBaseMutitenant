@@ -69,9 +69,9 @@ public sealed class MigrationsTests
     private static ApplicationDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseNpgsql("Host=localhost;Database=migration_model_test")
-            .Options;
-        return new ApplicationDbContext(options, new TestTenantContext());
+            .UseNpgsql("Host=localhost;Database=migration_model_test");
+        options.UseOpenIddict<Guid>();
+        return new ApplicationDbContext(options.Options, new TestTenantContext());
     }
 
     private sealed class TestTenantContext : ITenantContext

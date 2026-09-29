@@ -10,8 +10,8 @@ public sealed class DesignTimeApplicationDbContextFactory : IDesignTimeDbContext
     {
         // Solo describe el proveedor: el scaffolding no conecta a esta dirección.
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseNpgsql("Host=localhost;Database=appdb;Username=mt_owner")
-            .Options;
-        return new ApplicationDbContext(options, new TenantContext());
+            .UseNpgsql("Host=localhost;Database=appdb;Username=mt_owner");
+        options.UseOpenIddict<Guid>();
+        return new ApplicationDbContext(options.Options, new TenantContext());
     }
 }

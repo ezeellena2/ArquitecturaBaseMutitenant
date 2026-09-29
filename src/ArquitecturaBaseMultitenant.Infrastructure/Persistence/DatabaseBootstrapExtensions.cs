@@ -66,9 +66,9 @@ public static class DatabaseBootstrapExtensions
         }
 
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseNpgsql(adminConnectionString)
-            .Options;
-        await using (var context = new ApplicationDbContext(options, new TenantContext()))
+            .UseNpgsql(adminConnectionString);
+        options.UseOpenIddict<Guid>();
+        await using (var context = new ApplicationDbContext(options.Options, new TenantContext()))
         {
             await context.Database.MigrateAsync(cancellationToken);
         }
