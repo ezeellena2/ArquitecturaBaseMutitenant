@@ -33,9 +33,9 @@
 - `Api/Controllers/Organization/RolesController.cs` y `Api/Contracts/Organization/*Role*` (E4)
 
 ## Lo verifica
-- `ControllerInputContractTests` (E1), `ControllerServiceRepositoryTests` (E1), `MinimalApiRoutesTests` (E0).
+- `ControllerInputContractTests` (E1), `ControllerServiceRepositoryTests` (E1): reconoce todo tipo derivado de `ControllerBase`, incluso si no termina en `Controller`, y revisa constructor, parámetros de acción y dependencias; `MinimalApiRoutesTests` (E0).
 - `AccessDeclarationTests` (E3): toda ruta declara `[Access]` o `[PublicSite]`; una con solo `[AllowAnonymous]` pasa únicamente si su controller está en la lista explícita del test.
-- `ExplicitRouteInventoryTests` (E1): cada ruta con su test.
+- `ExplicitRouteInventoryTests` (E1): inventaría cada endpoint de producción salvo health, exige verbo HTTP y que su ruta tenga un prefijo declarado en `BackendPrefixes`.
 - `OpenApiContractTests` (E1): openapi.json al día. `OpenApiTests` (E1): esquema de éxito y de errores.
 - `ReferenceDataApiTests` (E1): catálogos, traducción, ETag y rutas anónimas.
 

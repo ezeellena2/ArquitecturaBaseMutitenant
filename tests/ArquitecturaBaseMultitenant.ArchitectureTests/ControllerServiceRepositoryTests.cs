@@ -1,6 +1,7 @@
 using System.Reflection;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Mvc;
 using NetArchTest.Rules;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
@@ -41,19 +42,11 @@ public sealed class ControllerServiceRepositoryTests
     [Fact]
     public void Controllers_do_not_access_persistence_integrations_or_handlers_directly()
     {
-        var controllersNamespace = ApiNamespace + ".Controllers";
-
         var result = Types.InAssembly(ApiAssembly)
             .That()
-            .ResideInNamespace(controllersNamespace)
+            .Inherit(typeof(ControllerBase))
             .ShouldNot()
-            .HaveDependencyOnAny(
-                ApplicationNamespace + ".Interfaces.Persistence",
-                ApplicationNamespace + ".Interfaces.Integrations",
-                ApplicationNamespace + ".Abstractions.Messaging",
-                ApplicationNamespace + ".Features",
-                "ArquitecturaBaseMultitenant.Infrastructure",
-                "Microsoft.EntityFrameworkCore")
+            .HaveDependencyOnAny(ForbiddenControllerDependencies().ToArray())
             .GetResult();
 
         AssertSuccessful(result);
@@ -62,13 +55,11 @@ public sealed class ControllerServiceRepositoryTests
     [Fact]
     public void Every_controller_injects_an_application_service_interface()
     {
-        var controllers = ApiAssembly.GetTypes()
-            .Where(type => type is { IsAbstract: false, IsClass: true }
-                && IsInNamespace(type, ApiNamespace + ".Controllers")
-                && type.Name.EndsWith("Controller", StringComparison.Ordinal))
-            .ToArray();
+        var violations = ControllerTypes(ApiAssembly)
+            .SelectMany(controller => InvalidConstructorDependencies(controller)
+                .Concat(InvalidActionDependencies(controller)));
 
-        Assert.Empty(controllers.SelectMany(InvalidConstructorDependencies));
+        Assert.Empty(violations);
     }
 
     [Fact]
@@ -116,13 +107,62 @@ public sealed class ControllerServiceRepositoryTests
             .Select(parameter => $"{controller.FullName}: {parameter.ParameterType.FullName}");
     }
 
-    private static bool IsInNamespace(Type type, string @namespace) =>
-        type.Namespace == @namespace
-        || type.Namespace?.StartsWith(@namespace + ".", StringComparison.Ordinal) == true;
+    [Fact]
+    public void Detector_recognizes_controllerbase_subclasses_without_controller_suffix()
+    {
+        Assert.Contains(ControllerTypes(typeof(ControllerServiceRepositoryTests).Assembly),
+            type => type == typeof(UnconventionallyNamedEndpoint));
+    }
+
+    [Fact]
+    public void Detector_rejects_reference_catalogs_in_action_parameters()
+    {
+        Assert.Contains(InvalidActionDependencies(typeof(UnconventionallyNamedEndpoint)),
+            description => description.Contains(nameof(ICurrencyCatalog), StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Detector_rejects_reference_catalog_dependencies()
+    {
+        Assert.Contains(ForbiddenControllerDependencies(),
+            dependency => dependency == ApplicationNamespace + ".Interfaces.ReferenceData");
+    }
+
+    private static IEnumerable<Type> ControllerTypes(Assembly assembly) =>
+        assembly.GetTypes().Where(type => type is { IsAbstract: false, IsClass: true }
+            && type.IsSubclassOf(typeof(ControllerBase)));
+
+    private static IEnumerable<string> InvalidActionDependencies(Type controller) =>
+        controller.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)
+            .SelectMany(method => method.GetParameters()
+                .Where(parameter => IsForbiddenActionParameter(parameter.ParameterType))
+                .Select(parameter => $"{controller.FullName}.{method.Name}: {parameter.ParameterType.FullName}"));
+
+    private static bool IsForbiddenActionParameter(Type type) =>
+        type.Namespace?.StartsWith(ApplicationNamespace + ".Interfaces", StringComparison.Ordinal) == true
+        || type.Namespace?.StartsWith("ArquitecturaBaseMultitenant.Infrastructure", StringComparison.Ordinal) == true
+        || type.Namespace?.StartsWith("Microsoft.EntityFrameworkCore", StringComparison.Ordinal) == true;
+
+    private static IEnumerable<string> ForbiddenControllerDependencies() =>
+    [
+        ApplicationNamespace + ".Interfaces.Persistence",
+        ApplicationNamespace + ".Interfaces.Integrations",
+        ApplicationNamespace + ".Interfaces.ReferenceData",
+        ApplicationNamespace + ".Abstractions.Messaging",
+        ApplicationNamespace + ".Features",
+        "ArquitecturaBaseMultitenant.Infrastructure",
+        "Microsoft.EntityFrameworkCore",
+    ];
 
 #pragma warning disable CA1812, CS9113 // Signature-only test probes.
     private sealed class ValidController(IReferenceDataService service);
 
     private sealed class InvalidController(ICurrencyCatalog catalog);
+
+    private sealed class UnconventionallyNamedEndpoint(IReferenceDataService service) : ControllerBase
+    {
+        [HttpGet]
+        public OkObjectResult Get(ICurrencyCatalog catalog) => Ok(catalog);
+    }
 #pragma warning restore CA1812, CS9113
 }

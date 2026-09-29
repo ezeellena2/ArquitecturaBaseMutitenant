@@ -24,7 +24,7 @@
 
 ## Lo verifica
 - `IdempotencyTests` (E2): dos pedidos iguales en paralelo crean uno solo; el reintento devuelve la misma respuesta; otro cuerpo da 422; un 5xx libera la clave.
-- `IdempotentActionsTests` (E1): todo `POST` que devuelve 201 o 202 tiene `[Idempotent]` (test de arquitectura).
+- `IdempotentActionsTests` (E1): todo `POST` que declara 201/202 o llama a `ToCreatedResult`/`ToAcceptedResult` (también desde una acción async) tiene `[Idempotent]` (test de arquitectura).
 
 ## Detalle
 [backend.md §20](../architecture/backend.md#20-reglas-de-datos-que-se-aplican-solas)
