@@ -23,6 +23,12 @@ public sealed class AdvisoryLockKeysTests
     }
 
     [Fact]
+    public void Reference_seed_has_one_global_lock_key()
+    {
+        Assert.Equal("p:ref:seed", AdvisoryLockKeys.ReferenceDataSeed);
+    }
+
+    [Fact]
     public void Different_tenants_never_share_a_resource_lock()
     {
         Assert.NotEqual(

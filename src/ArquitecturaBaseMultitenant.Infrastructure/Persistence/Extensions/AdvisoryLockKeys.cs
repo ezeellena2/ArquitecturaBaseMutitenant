@@ -2,9 +2,11 @@ using System.Globalization;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 
-/// <summary>La clave de cada lock tenant forma parte del protocolo entre réplicas de la Api.</summary>
+/// <summary>Claves estables de locks tenant y del seed global entre réplicas de la Api.</summary>
 internal static class AdvisoryLockKeys
 {
+    public const string ReferenceDataSeed = "p:ref:seed";
+
     public static string For(Guid tenantId, string resource, Guid id)
     {
         if (id == Guid.Empty)

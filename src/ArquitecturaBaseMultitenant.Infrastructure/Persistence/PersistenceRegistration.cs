@@ -2,6 +2,8 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Interceptors;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
+using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +13,22 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 
 internal static class PersistenceRegistration
 {
+    /// <summary>Scope técnico del bootstrap: siembra con mt_owner, nunca con mt_app.</summary>
+    internal static ServiceProvider CreateReferenceSeedProvider(string adminConnectionString)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(adminConnectionString);
+
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddScoped<TenantContext>(_ => new TenantContext());
+        services.AddScoped<ITenantContext>(provider => provider.GetRequiredService<TenantContext>());
+        services.AddDbContext<ApplicationDbContext>((_, options) => options.UseNpgsql(adminConnectionString));
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<ReferenceDataSeeder>();
+        services.AddSingleton<JsonReferenceDataCatalog>();
+        return services.BuildServiceProvider();
+    }
+
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<TenantContext>(provider => new TenantContext(() =>

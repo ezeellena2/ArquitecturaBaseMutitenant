@@ -32,7 +32,8 @@ public static class RuntimeRoleValidator
             && !reader.GetBoolean(5) // database owner
             && reader.GetString(6) == "i"
             && !reader.IsDBNull(7)
-            && reader.GetString(7).Equals("es-AR", StringComparison.OrdinalIgnoreCase);
+            && reader.GetString(7).Equals(DatabaseBootstrapExtensions.DatabaseIcuLocale,
+                StringComparison.OrdinalIgnoreCase);
 
         if (!valid)
         {

@@ -460,10 +460,10 @@ public sealed class RolesController(IRoleService service) : ControllerBase
 - `CommitPolicy.OnSuccess` es la regla; `OnAnyResult` se usa cuando también hay que guardar un fallo (intentos, códigos consumidos, auditoría de seguridad).
 - La transacción es READ COMMITTED, un solo `SaveChanges`, sin anidar (anidar lanza). Ante una excepción: rollback y `ChangeTracker.Clear()`. El error 23505 se traduce a `UniqueConstraintViolationException`, y el servicio lo convierte en su `Error`. `DbUpdateConcurrencyException` se traduce a `ConcurrencyConflictException` (P1, ver [concurrencia](../rules/concurrencia.md)), y el servicio no la atrapa.
 - **Multitenant:** al abrir el límite, `UnitOfWork` ejecuta `SELECT set_config('app.tenant_id', @id, true)` con el tenant del `ITenantContext`. El detalle está en [`multitenancy.md`](multitenancy.md).
-- Locks: `pg_advisory_xact_lock` con las claves de `AdvisoryLockKeys`, que **siempre incluyen el TenantId**, o `FOR NO KEY UPDATE`. Exigen la transacción del caso de uso.
+- Locks de un caso de uso tenant: `pg_advisory_xact_lock` con `AdvisoryLockKeys.For(tenantId, recurso, id)`, que siempre incluye el `TenantId`, o `FOR NO KEY UPDATE`. El seed global de referencias usa `AdvisoryLockKeys.ReferenceDataSeed`, sin tenant. Ambos exigen un límite de `IUnitOfWork` abierto.
 - Prohibido `ExecuteUpdate` y `ExecuteDelete` sobre entidades `IAuditable` o `ISoftDeletable`.
 
-`TransactionBoundaryTests` verifica con el IL que solo los servicios que implementan `Interfaces/Services` reciben `IUnitOfWork`, y que nadie más llama a `SaveChanges`.
+`TransactionBoundaryTests` verifica con el IL que solo los servicios que implementan `Interfaces/Services` y el seed técnico `ReferenceDataSeeder` reciben `IUnitOfWork`, y que nadie salvo `UnitOfWork` llama a `SaveChanges`.
 
 ---
 

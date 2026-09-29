@@ -1,6 +1,8 @@
 using System.Text.RegularExpressions;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Rls;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence;
@@ -8,6 +10,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 /// <summary>Prepara roles, base ICU y migraciones antes de abrir el servicio en Development o tests.</summary>
 public static class DatabaseBootstrapExtensions
 {
+    internal const string DatabaseIcuLocale = "es-AR";
+
     public static async Task BootstrapAsync(
         string bootstrapConnectionString,
         string adminConnectionString,
@@ -36,7 +40,7 @@ public static class DatabaseBootstrapExtensions
         var existing = await FindDatabaseAsync(postgres, admin.Database, cancellationToken);
         if (existing is not null &&
             (existing.Value.Provider != "i" ||
-             !string.Equals(existing.Value.IcuLocale, "es-AR", StringComparison.OrdinalIgnoreCase) ||
+             !string.Equals(existing.Value.IcuLocale, DatabaseIcuLocale, StringComparison.OrdinalIgnoreCase) ||
              existing.Value.Owner != "mt_owner"))
         {
             var databaseConnection = new NpgsqlConnectionStringBuilder(bootstrapConnectionString)
@@ -57,7 +61,7 @@ public static class DatabaseBootstrapExtensions
         if (existing is null)
         {
             await ExecuteAsync(postgres,
-                $"CREATE DATABASE {database} OWNER mt_owner LOCALE_PROVIDER icu ICU_LOCALE 'es-AR' TEMPLATE template0;",
+                $"CREATE DATABASE {database} OWNER mt_owner LOCALE_PROVIDER icu ICU_LOCALE '{DatabaseIcuLocale}' TEMPLATE template0;",
                 cancellationToken);
         }
 
@@ -69,7 +73,17 @@ public static class DatabaseBootstrapExtensions
             await context.Database.MigrateAsync(cancellationToken);
         }
 
+        await SeedReferenceDataAsync(adminConnectionString, cancellationToken);
         await RuntimeRoleValidator.ValidateAsync(runtimeConnectionString, cancellationToken);
+    }
+
+    internal static async Task<bool> SeedReferenceDataAsync(
+        string adminConnectionString, CancellationToken cancellationToken)
+    {
+        await using var provider = PersistenceRegistration.CreateReferenceSeedProvider(adminConnectionString);
+        await using var scope = provider.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<ReferenceDataSeeder>()
+            .SeedAsync(cancellationToken);
     }
 
     private static async Task EnsureRoleAsync(

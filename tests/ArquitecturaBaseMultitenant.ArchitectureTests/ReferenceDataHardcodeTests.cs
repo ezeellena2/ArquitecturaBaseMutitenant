@@ -34,10 +34,42 @@ public sealed class ReferenceDataHardcodeTests
             .Where(path => !Path.GetRelativePath(sourceRoot, path)
                 .Split(Path.DirectorySeparatorChar)
                 .Any(segment => segment is "obj" or "bin" or "Migrations"))
-            .SelectMany(path => ReferenceDataHardcodeScanner.FindViolations(File.ReadAllText(path))
-                .Select(violation => $"{Path.GetRelativePath(sourceRoot, path)}: {violation}"));
+            .SelectMany(path =>
+            {
+                var relativePath = Path.GetRelativePath(sourceRoot, path).Replace('\\', '/');
+                var source = File.ReadAllText(path);
+                return ReferenceDataHardcodeScanner.FindViolations(source)
+                    .Where(violation => !IsDatabaseLocaleDeclaration(relativePath, source, violation))
+                    .Select(violation => $"{relativePath}: {violation}");
+            });
 
         Assert.Empty(violations);
+    }
+
+    [Fact]
+    public void Only_the_exact_bootstrap_icu_locale_declaration_is_exempt()
+    {
+        const string bootstrap = "ArquitecturaBaseMultitenant.Infrastructure/Persistence/DatabaseBootstrapExtensions.cs";
+        const string declaration = "internal const string DatabaseIcuLocale = \"es-AR\";";
+
+        Assert.True(IsDatabaseLocaleDeclaration(bootstrap, declaration, "line 1: es-AR"));
+        Assert.False(IsDatabaseLocaleDeclaration(bootstrap, "var culture = \"es-AR\";", "line 1: es-AR"));
+        Assert.False(IsDatabaseLocaleDeclaration("Other.cs", declaration, "line 1: es-AR"));
+        Assert.False(IsDatabaseLocaleDeclaration(bootstrap, declaration, "line 2: es-AR"));
+    }
+
+    private static bool IsDatabaseLocaleDeclaration(string relativePath, string source, string violation)
+    {
+        const string bootstrap = "ArquitecturaBaseMultitenant.Infrastructure/Persistence/DatabaseBootstrapExtensions.cs";
+        if (!string.Equals(relativePath, bootstrap, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var lines = source.Split('\n');
+        return Enumerable.Range(0, lines.Length).Any(index =>
+            lines[index].Trim() == "internal const string DatabaseIcuLocale = \"es-AR\";"
+            && violation == $"line {index + 1}: es-AR");
     }
 }
 
