@@ -8,6 +8,7 @@
 - **Redondear un monto:** Application obtiene `MinorUnits` de `ICurrencyCatalog` y llama `Money.Round(minorUnits)`; Domain redondea `AwayFromZero` sin consultar el catálogo.
 - **Formatear:** siempre con `DisplayFormatter` o `shared/format`, que toman sus patrones de `Cultures`.
 - **Resolver cultura:** `CultureProfiles` es el único resolver del backend para la respuesta HTTP y el formato; compara códigos sin distinguir mayúsculas, ignora culturas pedidas o de caída deshabilitadas y acaba en la predeterminada habilitada. Traducciones de catálogo y `FormattingTexts` siguen la misma cadena.
+- **Ordenar listas:** `SortOrder` es la clave principal; a igual valor, compará el nombre o la ciudad traducida con la cultura efectiva del perfil, no con orden ordinal.
 - **Una tabla nueva que guarda un código** (moneda, país, zona, cultura o tipo fiscal) lleva FK a su tabla de referencia.
 - **Sumar datos:** actualizá fuentes con `generar.mjs --refresh` cuando cambien ISO/IANA/CLDR, ajustá `scripts/datos-de-referencia/habilitados.json` para `IsEnabled`/`SortOrder`, o editá `cultures.source.json`/`tax-id-types.source.json` si cambia una decisión del producto; revisá snapshots y hashes en `sources.lock.json`, luego regenerá. Los cinco JSON en Infrastructure son salidas: nunca los edites a mano. La generación normal y `generar.test.mjs` corren sin red con Node, paquetes y snapshots fijados y comprueban salida byte a byte.
 - **Filtrar países ISO:** usá `sources/cldr-region-validity.xml` de CLDR `release-48-2` (URL y SHA-256 en `sources.lock.json`), expandí solo sus regiones `regular` y cruzalas con `codeMappings` de `cldr-core` 48.2 que tengan alfa-3 y numérico de tres dígitos menor que 900. `AN`, `AA` y `XK` no son países ISO vigentes, aunque aparezcan en algún dato de CLDR. La versión fijada debe producir 249 países; no mantengas una lista manual.
@@ -34,6 +35,7 @@
 - `CurrencyCodeTests` y `MoneyTests` (E1): sintaxis alfa-3 y redondeo con `MinorUnits` explícitos; los tests de validación en Application cubren existencia y habilitación de la moneda.
 - `ReferenceDataSeederTests` (E2): el seed es idempotente y nunca borra.
 - `ReferenceDataReaderTests` (E2): los cinco puertos leen todas las filas y traducciones de `platform` (incluidas las deshabilitadas), conservan relaciones IANA multipaís y el seed invalida HybridCache después del commit cuando hubo cambios.
+- `ReferenceDataServiceTests` (E1): las filas con el mismo `SortOrder` siguen el orden cultural del nombre traducido para la cultura solicitada.
 - `DisplayFormatterTests` (E1) y `formatters.test.ts` (E1): mismo texto para cada caso de `format-cases.json`.
 
 ## Detalle

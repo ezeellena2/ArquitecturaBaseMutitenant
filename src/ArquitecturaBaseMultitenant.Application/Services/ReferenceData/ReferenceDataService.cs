@@ -87,7 +87,7 @@ internal sealed class ReferenceDataService(
             })
             .Where(item => Matches(search, item.Code, item.Name))
             .OrderBy(item => item.SortOrder ?? int.MaxValue)
-            .ThenBy(item => item.Name, StringComparer.Ordinal)
+            .ThenBy(item => item.Name, StringComparer.Create(selectedCulture.Culture, ignoreCase: false))
             .ToArray();
     }
 
@@ -103,7 +103,7 @@ internal sealed class ReferenceDataService(
                 entry.IsEnabled, entry.SortOrder))
             .Where(item => Matches(search, item.Code, item.Name))
             .OrderBy(item => item.SortOrder ?? int.MaxValue)
-            .ThenBy(item => item.Name, StringComparer.Ordinal)
+            .ThenBy(item => item.Name, StringComparer.Create(selectedCulture.Culture, ignoreCase: false))
             .ToArray();
     }
 
@@ -118,7 +118,7 @@ internal sealed class ReferenceDataService(
                 entry.IsEnabled, entry.SortOrder))
             .Where(item => Matches(search, item.Id, item.City))
             .OrderBy(item => item.SortOrder ?? int.MaxValue)
-            .ThenBy(item => item.City, StringComparer.Ordinal)
+            .ThenBy(item => item.City, StringComparer.Create(selectedCulture.Culture, ignoreCase: false))
             .ToArray();
     }
 
@@ -138,7 +138,7 @@ internal sealed class ReferenceDataService(
                 entry.IsEnabled, entry.SortOrder))
             .Where(item => Matches(search, item.Code, item.Name))
             .OrderBy(item => item.SortOrder ?? int.MaxValue)
-            .ThenBy(item => item.Name, StringComparer.Ordinal)
+            .ThenBy(item => item.Name, StringComparer.Create(selectedCulture.Culture, ignoreCase: false))
             .ToArray();
     }
 
@@ -154,7 +154,7 @@ internal sealed class ReferenceDataService(
                 entry.IsEnabled, entry.SortOrder))
             .Where(item => Matches(search, item.Code, item.Name))
             .OrderBy(item => item.SortOrder ?? int.MaxValue)
-            .ThenBy(item => item.Name, StringComparer.Ordinal)
+            .ThenBy(item => item.Name, StringComparer.Create(selectedCulture.Culture, ignoreCase: false))
             .ToArray();
     }
 

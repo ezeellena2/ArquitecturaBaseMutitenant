@@ -152,6 +152,22 @@ public sealed class ReferenceDataServiceTests
     }
 
     [Fact]
+    public async Task Equal_sort_order_uses_the_requested_cultures_name_collation()
+    {
+        var catalog = new JsonReferenceDataCatalog();
+        var service = new ReferenceDataService(
+            catalog, new SortingCountryCatalog(), catalog, catalog, catalog,
+            new FakeTimeProvider(), new FakeLogger<ReferenceDataService>());
+        var ct = TestContext.Current.CancellationToken;
+
+        var spanish = await service.GetCountriesAsync("es-AR", null, ct);
+        var english = await service.GetCountriesAsync("en-US", null, ct);
+
+        Assert.Equal(["AT", "ZW"], spanish.Value.Select(country => country.Code));
+        Assert.Equal(["ZW", "AT"], english.Value.Select(country => country.Code));
+    }
+
+    [Fact]
     public void Application_registers_the_service_explicitly()
     {
         var services = new ServiceCollection();
@@ -226,5 +242,22 @@ public sealed class ReferenceDataServiceTests
 
         public Task<TimeZoneCatalogEntry?> FindAsync(string id, CancellationToken cancellationToken) =>
             Task.FromResult<TimeZoneCatalogEntry?>(id == zone.Id ? zone : null);
+    }
+
+    private sealed class SortingCountryCatalog : ICountryCatalog
+    {
+        private static readonly IReadOnlyList<CountryCatalogEntry> Countries =
+        [
+            new("AT", "AUT", "040", null, null, null, true, 10,
+                [new("es-AR", "Álamo"), new("en-US", "Zebra")]),
+            new("ZW", "ZWE", "716", null, null, null, true, 10,
+                [new("es-AR", "Zorro"), new("en-US", "apple")]),
+        ];
+
+        public Task<IReadOnlyList<CountryCatalogEntry>> ListAsync(CancellationToken cancellationToken) =>
+            Task.FromResult(Countries);
+
+        public Task<CountryCatalogEntry?> FindAsync(string code, CancellationToken cancellationToken) =>
+            Task.FromResult(Countries.FirstOrDefault(country => country.Code == code));
     }
 }
