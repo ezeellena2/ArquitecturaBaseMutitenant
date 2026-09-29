@@ -15,6 +15,7 @@ La identidad de una persona es global. Una cuenta puede tener acceso como person
 - Los cambios de métodos y la baja dejan además un `SecurityEvent` global e inmutable. En la 3a se modelan los tipos de evento de la cuenta; su emisión acompaña las transacciones que implementan esas acciones.
 - El acceso como empresa exige una membresía activa. Sin membresías se presenta el estado del tablero Ingreso; con una organización activa se entra directamente; con varias se elige la última organización usada dentro del lado empresa. El acceso como persona crea o usa su espacio personal sin exponer los datos de empresa.
 - Los documentos legales públicos se leen sin sesión. En 3a se siembra la primera versión de términos y privacidad con texto en es y en. El front implementa los estados aprobados de Ingreso, Registro, Sesión, Landing, Legal, inicio personal, inicio vacío de `/org` y errores que pertenecen a esta parte.
+- Cada aceptación conserva el documento, su versión y el instante UTC. Solo al eliminar la cuenta se limpian IP y user agent, sin borrar la prueba de aceptación.
 
 ## 3b · La cuenta (pendiente)
 
