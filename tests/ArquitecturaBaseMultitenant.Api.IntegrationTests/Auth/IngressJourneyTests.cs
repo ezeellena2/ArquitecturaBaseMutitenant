@@ -1,13 +1,19 @@
 using System.Collections.Concurrent;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -48,7 +54,161 @@ public sealed class IngressJourneyTests(ApiFactory factory)
         await AssertPersonalSignupAsync(email);
         Assert.True(!logs.Entries.Any(entry => entry.Contains(code, StringComparison.Ordinal)),
             "Un código de ingreso apareció en logs.");
+        Assert.True(!logs.Entries.Any(entry => entry.Contains(email, StringComparison.OrdinalIgnoreCase)),
+            "Un correo completo apareció en logs.");
     }
+
+    [Fact]
+    public async Task Ana_enters_business_refreshes_switches_to_personal_changes_culture_and_logs_out()
+    {
+        var email = $"ana-journey-{Guid.NewGuid():N}@example.test";
+        using var host = factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Development");
+            builder.UseSetting("Email:Delivery", "PickupDirectory");
+            builder.UseSetting("Authentication:Google:ClientId", "");
+            builder.UseSetting("Seed:Development:AnaEmail", email);
+        });
+        using var client = host.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
+        });
+        const string verifier = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~";
+        var challenge = WebEncoders.Base64UrlEncode(SHA256.HashData(Encoding.ASCII.GetBytes(verifier)));
+        var businessAuthorize = AuthorizePath("business", challenge);
+
+        using var requested = await PostOnceAsync(client, "/api/auth/login-code", new { email });
+        Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
+        var code = await ReadPickupCodeAsync(host.Services, email);
+        using var verified = await PostOnceAsync(client, "/api/auth/login-code/verify",
+            new { email, code, returnUrl = businessAuthorize });
+        Assert.Equal(HttpStatusCode.OK, verified.StatusCode);
+        Assert.Contains(verified.Headers.GetValues("Set-Cookie"),
+            cookie => cookie.Contains("Identity.Application", StringComparison.Ordinal));
+
+        var business = await AuthorizeAndExchangeAsync(client, businessAuthorize, verifier);
+        using var businessMe = await GetMeAsync(client, business.AccessToken);
+        Assert.Equal("Business", businessMe.RootElement.GetProperty("access").GetString());
+        var organization = Assert.Single(businessMe.RootElement.GetProperty("organizations").EnumerateArray());
+        Assert.Equal("Empresa A", organization.GetProperty("name").GetString());
+        var businessTenantId = businessMe.RootElement.GetProperty("activeTenantId").GetGuid();
+        Assert.Equal(organization.GetProperty("id").GetGuid(), businessTenantId);
+
+        var refreshed = await ExchangeTokenAsync(client, new Dictionary<string, string>
+        {
+            ["grant_type"] = "refresh_token",
+            ["refresh_token"] = business.RefreshToken,
+            ["client_id"] = "web",
+        });
+        using var refreshedMe = await GetMeAsync(client, refreshed.AccessToken);
+        Assert.Equal("Business", refreshedMe.RootElement.GetProperty("access").GetString());
+        Assert.Equal(businessTenantId, refreshedMe.RootElement.GetProperty("activeTenantId").GetGuid());
+
+        var consumer = await AuthorizeAndExchangeAsync(client, AuthorizePath("consumer", challenge), verifier);
+        using var consumerMe = await GetMeAsync(client, consumer.AccessToken);
+        Assert.Equal("Consumer", consumerMe.RootElement.GetProperty("access").GetString());
+        Assert.NotEqual(businessTenantId, consumerMe.RootElement.GetProperty("activeTenantId").GetGuid());
+
+        using var update = new HttpRequestMessage(HttpMethod.Put, "/api/me")
+        {
+            Content = JsonContent.Create(new
+            {
+                displayName = "Ana",
+                culture = "en-US",
+                timeZoneId = "America/Argentina/Buenos_Aires",
+            }),
+        };
+        update.Headers.Authorization = new AuthenticationHeaderValue("Bearer", consumer.AccessToken);
+        using var updated = await client.SendAsync(update, Ct);
+        Assert.Equal(HttpStatusCode.NoContent, updated.StatusCode);
+        using var englishMe = await GetMeAsync(client, consumer.AccessToken);
+        Assert.Equal("en-US", englishMe.RootElement.GetProperty("culture").GetString());
+
+        await using (var scope = host.Services.CreateAsyncScope())
+        {
+            var formatter = scope.ServiceProvider.GetRequiredService<DisplayFormatter>();
+            var spanish = await formatter.CreateAsync("es-AR", "America/Argentina/Buenos_Aires", Ct);
+            var english = await formatter.CreateAsync(
+                englishMe.RootElement.GetProperty("culture").GetString()!,
+                englishMe.RootElement.GetProperty("timeZoneId").GetString()!, Ct);
+            var day = new DateTime(2026, 9, 28, 15, 0, 0, DateTimeKind.Utc);
+            Assert.NotEqual(formatter.FormatDate(day, spanish), formatter.FormatDate(day, english));
+            Assert.NotEqual(formatter.FormatDecimal(1234.5m, 2, spanish),
+                formatter.FormatDecimal(1234.5m, 2, english));
+        }
+
+        using var logout = await client.PostAsync("/connect/logout", new FormUrlEncodedContent(
+            new Dictionary<string, string>
+            {
+                ["client_id"] = "web",
+                ["id_token_hint"] = consumer.IdToken,
+                ["post_logout_redirect_uri"] = "https://localhost:5174/",
+            }), Ct);
+        Assert.Equal(HttpStatusCode.Redirect, logout.StatusCode);
+        Assert.Equal("https://localhost:5174/", logout.Headers.Location?.ToString());
+        Assert.Contains(logout.Headers.GetValues("Set-Cookie"), cookie =>
+            cookie.StartsWith(".AspNetCore.Identity.Application=;", StringComparison.Ordinal));
+
+        using var revoked = await client.PostAsync("/connect/token", new FormUrlEncodedContent(
+            new Dictionary<string, string>
+            {
+                ["grant_type"] = "refresh_token",
+                ["refresh_token"] = consumer.RefreshToken,
+                ["client_id"] = "web",
+            }), Ct);
+        Assert.Equal(HttpStatusCode.BadRequest, revoked.StatusCode);
+    }
+
+    private static string AuthorizePath(string access, string challenge) =>
+        "/connect/authorize?client_id=web&response_type=code" +
+        "&redirect_uri=https%3A%2F%2Flocalhost%3A5174%2Fcallback" +
+        "&scope=openid%20profile%20email%20offline_access%20api" +
+        "&code_challenge=" + challenge + "&code_challenge_method=S256&access=" + access;
+
+    private static async Task<JourneyTokens> AuthorizeAndExchangeAsync(HttpClient client,
+        string authorizePath, string verifier)
+    {
+        using var authorized = await client.GetAsync(authorizePath, Ct);
+        Assert.Equal(HttpStatusCode.Redirect, authorized.StatusCode);
+        var location = authorized.Headers.Location;
+        Assert.NotNull(location);
+        var parameters = QueryHelpers.ParseQuery(location.Query);
+        Assert.True(parameters.TryGetValue("code", out var authorizationCode),
+            "La autorización no entregó un código OIDC.");
+        return await ExchangeTokenAsync(client, new Dictionary<string, string>
+        {
+            ["grant_type"] = "authorization_code",
+            ["code"] = authorizationCode.ToString(),
+            ["client_id"] = "web",
+            ["redirect_uri"] = "https://localhost:5174/callback",
+            ["code_verifier"] = verifier,
+        });
+    }
+
+    private static async Task<JourneyTokens> ExchangeTokenAsync(HttpClient client,
+        Dictionary<string, string> form)
+    {
+        using var response = await client.PostAsync("/connect/token", new FormUrlEncodedContent(form), Ct);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var body = await response.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+        Assert.NotNull(body);
+        return new JourneyTokens(
+            body.RootElement.GetProperty("access_token").GetString()!,
+            body.RootElement.GetProperty("refresh_token").GetString()!,
+            body.RootElement.GetProperty("id_token").GetString()!);
+    }
+
+    private static async Task<JsonDocument> GetMeAsync(HttpClient client, string accessToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/me");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        using var response = await client.SendAsync(request, Ct);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        return (await response.Content.ReadFromJsonAsync<JsonDocument>(Ct))!;
+    }
+
+    private sealed record JourneyTokens(string AccessToken, string RefreshToken, string IdToken);
 
     private static async Task<HttpResponseMessage> PostOnceAsync(HttpClient client, string path, object body)
     {
