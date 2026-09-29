@@ -54,7 +54,7 @@ El resultado tiene que servir para empezar productos reales.
 | 6 | Área B2B: **"Registrá tu empresa"**, usuarios, empresas, membresías, configuración, auditoría, **mi página pública** | ✔ | ✔ | 4 |
 | 7 | Área B2C y **sitio público**: el área personal lista para sumar módulos (receta `personal.md`), páginas por subdominio, directorio, ingreso desde un subdominio, y la **mecánica de interacción** persona ↔ empresa probada de punta a punta | ✔ | ✔ | 6 |
 | 8 | WhatsApp (número de la plataforma: códigos, invitaciones, avisos de la cuenta, bot de ingreso) | ✔ | ✔ | 3 |
-| 9 | Endurecimiento: TOTP para operadores, rate limit, headers, observabilidad, fuzz de aislamiento | ✔ | ✔ | 5–8 |
+| 9 | Endurecimiento: TOTP para operadores, **caché en Redis**, rate limit, headers, observabilidad, fuzz de aislamiento | ✔ | ✔ | 5–8 |
 | 10 | Despliegue y operación: CI/CD, migration bundle, backup, runbook, exportar mis datos | ✔ | ✔ | 9 |
 | 11 | Opcional: canales de WhatsApp por organización | ✔ | ✔ | 8 |
 
@@ -409,6 +409,15 @@ Además, `navigation/personal.ts` queda listo para sumar módulos B2C. El `Perso
 ## Etapa 9: endurecimiento
 
 - TOTP obligatorio para operadores, con reautenticación reciente en las operaciones sensibles. Hasta esta etapa, el operador del seed entra sin segundo factor. En el front, los cinco estados «Operador: …» del tablero Ingreso (segundo factor, código del autenticador incorrecto, código de recuperación, configurar el autenticador y guardar los códigos).
+- **Caché en Redis.** Hasta esta etapa, `HybridCache` vive en la memoria de la API. Acá **toda la caché pasa a Redis**, pensada antes de programar en una ADR que fija qué se cachea, cuánto dura, quién invalida y cuándo:
+  - **Redis en el AppHost**, junto con PostgreSQL, la API y el front, con volumen persistente y contraseña en user-secrets; en producción, Redis administrado con TLS.
+  - **Ningún dato viejo después de una invalidación.** `HybridCache` usa Redis como caché compartida por todas las instancias de la API. La ADR decide si queda una capa local corta con su invalidación propagada por Redis o si se lee siempre de Redis. El estado de organizaciones, membresías y permisos se ve invalidado en todas las instancias al instante.
+  - **Claves e invalidación:** las claves siguen saliendo de `CacheKeys` (`t:`, `s:`, `u:`, `p:`), con un prefijo de aplicación y ambiente para compartir un Redis. Se invalida por etiquetas, después del commit.
+  - **Qué se guarda:** serialización explícita y versionada, para que un cambio de forma del dato no rompa al leer una entrada vieja. Nunca se cachean secretos, tokens ni correos o teléfonos completos.
+  - **Si Redis se cae:** la app sigue leyendo de PostgreSQL, con log y métrica, sin devolver errores. El health check de Redis entra en la preparación (readiness).
+  - **Rate limit compartido** entre instancias, sobre el mismo Redis.
+  - **Documentación:** la estrategia va en una tabla de `backend.md` §17 y en la ficha nueva `docs/rules/cache.md` con su test.
+  - **Tests con Testcontainers Redis:** dos instancias de la API contra el mismo Redis (se invalida en una y la otra lee el valor nuevo); Redis caído → la app responde; una clave `t:` de una organización nunca se lee desde otra.
 - Rate limit por tenant, por identidad y por IP (más estricto en las páginas públicas); cuotas en `PlatformSettings`.
 - Security headers, CSP estricta y revisión de cookies.
 - OpenTelemetry con `tenant.id` y `tenant.kind`.

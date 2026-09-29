@@ -22,7 +22,7 @@ Las mejoras que el plan maestro de ArquitecturaBase dejó para después ya viene
 | Datos | PostgreSQL 18 + EF Core 10 (Npgsql). Una base, esquemas `platform`, `identity`, `tenant`, `public_site` y `engagement` |
 | Identidad | ASP.NET Core Identity (solo usuarios, sin roles de Identity) + OpenIddict 7 (servidor y validación en la misma Api) |
 | Validación | FluentValidation 12 |
-| Caché | `HybridCache` |
+| Caché | `HybridCache`: en memoria hasta la Etapa 9; desde ahí, Redis como caché compartida entre instancias (plan, Etapa 9) |
 | Orquestación local | Aspire 13.5 (AppHost + ServiceDefaults) |
 | Observabilidad | `Microsoft.Extensions.Logging` + OpenTelemetry (sin Serilog) |
 | Tests | xUnit v3, Testcontainers (`postgres:18.x`), NetArchTest + Mono.Cecil, `FakeTimeProvider`, dobles a mano (sin Moq ni FluentAssertions) |
