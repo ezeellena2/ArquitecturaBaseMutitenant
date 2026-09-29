@@ -1077,6 +1077,7 @@ tests/
 │   │   ├── RuntimeRoleTests.cs
 │   │   ├── TenantColumnsImmutabilityTests.cs
 │   │   ├── PublicAndSharedRowsTests.cs                datos públicos y compartidos, con RLS; los casos por la página pública se suman en la E7
+│   │   ├── TenantJobRunnerTests.cs                    [E2] un scope DI y un ITenantScope por tenant, sin herencia entre trabajos
 │   │   ├── AccessTests.cs                             [E3] acceso equivocado, cambio de acceso con membresía, B2C no crea empresas
 │   │   ├── SuspensionTests.cs                         [E3–E7] identidad y organización suspendidas (E3); suspender desde la plataforma y B2C intacto (E5);
 │   │   │                                              la página pública de una organización suspendida, "no disponible" (E7)

@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Time;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Phones;
 using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
+using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
 using ArquitecturaBaseMultitenant.Infrastructure.Caching;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Time;
@@ -37,6 +38,7 @@ public static class DependencyInjection
         services.AddSingleton<ITaxIdTypeCatalog>(provider => provider.GetRequiredService<JsonReferenceDataCatalog>());
 
         services.AddPersistence(configuration);
+        services.AddBackgroundJobs();
 
         return services;
     }
