@@ -19,6 +19,7 @@
 | `Email:Smtp:Password` | contraseña de **aplicación** de Gmail (no la de la cuenta) | https://myaccount.google.com/apppasswords |
 | `Seed:PlatformOwner:Email` | correo del operador inicial; obligatorio en Production mientras no exista un operador | Buzón controlado por quien administra la plataforma |
 | `Seed:PlatformOwner:DisplayName` | nombre visible opcional del operador inicial | Quien administra la plataforma |
+| `Seed:Development:AnaEmail` | buzón para ingresar como Ana en la Empresa A del seed local | Tu propio buzón para el recorrido manual; sólo Development |
 | `WhatsApp:AccessToken` | token del usuario del sistema | Meta Business › Usuarios del sistema (`whatsapp_business_messaging`, `whatsapp_business_management`) |
 | `WhatsApp:AppSecret` | con lo que Meta firma cada webhook | Meta for Developers › la app › Configuración › Básica |
 | `WhatsApp:VerifyToken` | la palabra de verificación del webhook | la misma que cargaste en Meta |
@@ -49,6 +50,8 @@ Remove-Variable s
 ```
 
 El importador de ArquitecturaBase no conoce al operador de esta plataforma: cargá `Seed:PlatformOwner:Email` por separado en user-secrets o como `Seed__PlatformOwner__Email` en el gestor de secretos de Production. `Seed:PlatformOwner:DisplayName` es opcional. El seed crea una identidad global sin espacio Personal ni contraseña, con el correo como método principal verificado; cada ingreso exige el código enviado a ese buzón. Si ya existe ese método de correo, marca su cuenta como operadora. Si ya hay un operador, los siguientes arranques no exigen la clave ni alteran esa cuenta. En Development, sin la clave se omite el operador inicial; en Production, si aún no hay operador, falta de clave detiene el arranque.
+
+Para el recorrido de Ana, cargá `Seed:Development:AnaEmail` en user-secrets **antes del primer arranque de Development**. Si falta, el ejemplo usa `ana@example.test`, útil sólo con `Email:Delivery=PickupDirectory`. El seed no cambia métodos de ingreso en reinicios: para cambiar el buzón de Ana antes de la gestión de métodos de la 3b, recreá la base local de desarrollo. No cambies el correo directamente en la tabla.
 
 ## 3. Lo que no es secreto (`appsettings.Development.json` de la Api, en el repo)
 

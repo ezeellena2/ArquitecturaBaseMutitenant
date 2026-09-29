@@ -86,6 +86,7 @@ internal static class PersistenceRegistration
         services.AddScoped<OpenIddictSeeder>();
         services.AddScoped<PlatformSeeder>();
         services.AddScoped<LegalDocumentSeeder>();
+        services.AddScoped<DevelopmentSeeder>();
         services.AddReferenceCatalogs();
 
         return services;
