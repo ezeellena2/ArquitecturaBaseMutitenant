@@ -1,0 +1,1 @@
+Rutas anónimas de ingreso y registro del dominio principal. Leé `docs/rules/api-http.md`, `docs/rules/multitenancy.md`, `docs/rules/idempotencia.md` y `docs/rules/datos-personales.md`. Controllers finos: contrato → servicio → `ToActionResult`; ninguna ruta obtiene tenant del subdominio.

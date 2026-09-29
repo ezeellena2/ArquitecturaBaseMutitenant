@@ -15,6 +15,7 @@ internal sealed class ProblemResponsesConvention : IApplicationModelConvention
 
         foreach (var controller in application.Controllers)
         {
+            if (controller.ControllerType.IsDefined(typeof(OwnProtocolAttribute), inherit: true)) continue;
             foreach (var action in controller.Actions)
             {
                 var declared = controller.Filters.Concat(action.Filters)

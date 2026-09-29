@@ -99,6 +99,8 @@ La tarea 14 incluye también las proyecciones `Application/Models/Tenancy/{Tenan
 
 ## C. Cliente OIDC, accesos y pantallas (front)
 
+**Ajuste técnico de T39:** `GET /api/auth/methods` usa además `Application/Interfaces/Services/ILoginMethodsService.cs` y `Application/Services/Auth/LoginMethodsService.cs`, adaptados de `../ArquitecturaBase/src/ArquitecturaBase.Application/{Interfaces/Services/ILoginMethodsService.cs,Services/Auth/LoginMethodsService.cs}`. Los cuatro contratos HTTP usan `Api/Contracts/Auth/AuthEmailMapping.cs` para convertir el correo a `Email` y producir errores de campo sin exponerlo. La navegación de Google copia `Api/OpenApi/OwnProtocolAttribute.cs` y omite las respuestas automáticas de `ProblemResponsesConvention`; guarda el contexto de Registro en el estado protegido del desafío. `AuthEndpointsTests` cubre disponibilidad de canales, aceptación y callback sin estado.
+
 Cada tarea de pantalla usa su tablero de escritorio **y** móvil, los estados 3a nombrados en «Alcance», los tokens de `tema.md` y el test de axe. Las rutas de copia de `../ArquitecturaBaseFront` aportan sólo patrón de código, nunca sus textos ni estilos.
 
 | # | Archivos de la tarea | Respaldo/tablero | Test rojo → verde | Commit |
