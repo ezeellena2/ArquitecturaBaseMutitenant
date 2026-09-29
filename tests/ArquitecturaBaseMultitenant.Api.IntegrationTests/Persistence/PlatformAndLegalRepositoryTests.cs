@@ -4,6 +4,8 @@ using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
@@ -44,14 +46,25 @@ public sealed class PlatformAndLegalRepositoryTests(ApiFactory factory)
         var legalRepository = services.GetRequiredService<ILegalRepository>();
         var legalReader = services.GetRequiredService<ILegalReader>();
         var securityEventRepository = services.GetRequiredService<ISecurityEventRepository>();
+        var context = services.GetRequiredService<ApplicationDbContext>();
         var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
-        var terms = LegalDocument.Create(LegalDocumentKind.Terms, 1, nowUtc.AddMinutes(-1));
-        var privacy = LegalDocument.Create(LegalDocumentKind.Privacy, 1, nowUtc.AddMinutes(-1));
+        // Consultar el fixture sin cargar un null en el caché del reader antes del commit.
+        var existingSettings = await context.PlatformSettings.AsNoTracking().SingleOrDefaultAsync(Ct);
+        var highestVersion = await context.LegalDocuments.AsNoTracking()
+            .Select(document => (int?)document.Version).MaxAsync(Ct) ?? 0;
+        var testVersion = Math.Max(1000, highestVersion + 1);
+        var effectiveUtc = new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var asOfUtc = new DateTime(2001, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var terms = LegalDocument.Create(LegalDocumentKind.Terms, testVersion, effectiveUtc);
+        var privacy = LegalDocument.Create(LegalDocumentKind.Privacy, testVersion, effectiveUtc);
 
         await unitOfWork.ExecuteInTransactionAsync(ct =>
         {
-            settingsRepository.Add(PlatformSettings.Create(
-                ConsumerSignupMode.Open, BusinessSignupMode.RequiresApproval, 1));
+            if (existingSettings is null)
+            {
+                settingsRepository.Add(PlatformSettings.Create(
+                    ConsumerSignupMode.Open, BusinessSignupMode.Open, 1));
+            }
             securityEventRepository.Add(SecurityEvent.ForPlatformSettings(AuditActorKind.System,
                 Guid.Empty, "Initial platform settings", nowUtc));
             legalRepository.AddDocument(terms);
@@ -63,12 +76,13 @@ public sealed class PlatformAndLegalRepositoryTests(ApiFactory factory)
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, Ct);
 
-        Assert.Equal(ConsumerSignupMode.Open, (await settingsReader.FindAsync(Ct))?.ConsumerSignup);
+        Assert.Equal(existingSettings?.ConsumerSignup ?? ConsumerSignupMode.Open,
+            (await settingsReader.FindAsync(Ct))?.ConsumerSignup);
         Assert.Equal("Términos de prueba",
-            (await legalReader.FindCurrentAsync(LegalDocumentKind.Terms, "es-AR", nowUtc, Ct))?.Text);
+            (await legalReader.FindCurrentAsync(LegalDocumentKind.Terms, "es-AR", asOfUtc, Ct))?.Text);
         Assert.Equal("Test terms",
-            (await legalReader.FindCurrentAsync(LegalDocumentKind.Terms, "en-US", nowUtc, Ct))?.Text);
+            (await legalReader.FindCurrentAsync(LegalDocumentKind.Terms, "en-US", asOfUtc, Ct))?.Text);
         Assert.Equal("Test privacy",
-            (await legalReader.FindCurrentAsync(LegalDocumentKind.Privacy, "en-US", nowUtc, Ct))?.Text);
+            (await legalReader.FindCurrentAsync(LegalDocumentKind.Privacy, "en-US", asOfUtc, Ct))?.Text);
     }
 }
