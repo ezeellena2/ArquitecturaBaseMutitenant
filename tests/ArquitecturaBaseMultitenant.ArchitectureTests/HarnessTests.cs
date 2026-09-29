@@ -10,6 +10,12 @@ public sealed class HarnessTests
     private static readonly string HarnessDocument = Path.Combine(Root, "docs", "architecture", "arnes.md");
 
     [Fact]
+    public void Persistence_stage_is_closed()
+    {
+        Assert.True(HarnessStage.Closed >= 2);
+    }
+
+    [Fact]
     public void Root_and_existing_mapped_folders_have_both_agent_files()
     {
         var folders = new[] { Root }
