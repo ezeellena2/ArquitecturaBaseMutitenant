@@ -2,6 +2,7 @@ using System.Reflection;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Isolation;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Idempotency;
+using ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
@@ -15,5 +16,6 @@ internal sealed class TestControllerApplicationPart : ApplicationPart, IApplicat
         typeof(TestController).GetTypeInfo(),
         typeof(WidgetsController).GetTypeInfo(),
         typeof(IdempotencyTestController).GetTypeInfo(),
+        typeof(AuthPipelineProbeController).GetTypeInfo(),
     ];
 }

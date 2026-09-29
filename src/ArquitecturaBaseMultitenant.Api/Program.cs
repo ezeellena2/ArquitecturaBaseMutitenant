@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Api;
 using ArquitecturaBaseMultitenant.Api.Hosting;
 using ArquitecturaBaseMultitenant.Api.Localization;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
+using ArquitecturaBaseMultitenant.Api.Tenancy;
 using ArquitecturaBaseMultitenant.Application;
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
@@ -64,9 +65,11 @@ app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseRateLimiter();
 
-// E3: UseAuthentication → TenantResolutionMiddleware.
+app.UseAuthentication();
+app.UseMiddleware<TenantResolutionMiddleware>();
 // E7: PublicSiteResolutionMiddleware.
-// E3: LegalAcceptanceMiddleware → UseAuthorization.
+// E3b: LegalAcceptanceMiddleware.
+app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {

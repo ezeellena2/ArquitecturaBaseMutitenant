@@ -20,6 +20,7 @@ public static class DependencyInjection
         ArgumentNullException.ThrowIfNull(services);
 
         services.AddHttpContextAccessor();
+        services.AddAuthorization();
         services.AddScoped<ICurrentUser, CurrentUser>();
         services.AddScoped<OpenIdPrincipalFactory>();
         services.AddScoped<IRequestInfo, RequestInfo>();
