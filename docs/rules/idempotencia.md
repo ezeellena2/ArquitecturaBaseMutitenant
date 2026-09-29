@@ -11,7 +11,7 @@
   5. **Misma clave con otro cuerpo u otra ruta:** 422 `Request.IdempotencyKeyReused`.
   6. **Sin encabezado** en una acción `[Idempotent]`: 400 `Request.IdempotencyKeyRequired`.
 - La clave es un UUID, válido 24 h. Las vencidas las borra un worker.
-- **Front:** `useIdempotentMutation(fn)`. Crea la clave al montar el formulario o el diálogo, la manda en cada intento (también en el reintento automático del `httpClient`) y la renueva solo después de un éxito o al cerrar. Un 409 `Request.InProgress` no muestra error: espera y reintenta.
+- **Front:** `useIdempotentMutation(fn)`. Crea la clave al montar el formulario o el diálogo y la manda en cada intento (también en el reintento automático del `httpClient`). Conserva la clave ante red o 5xx; la renueva después de un éxito o un 4xx definitivo para permitir corregir el formulario. Un 409 `Request.InProgress` conserva la clave, espera y reintenta hasta 30 veces; al desmontar cancela la espera y no vuelve a enviar.
 
 ## Prohibido
 - Generar la clave en cada envío: el reintento traería otra y se duplicaría igual.
