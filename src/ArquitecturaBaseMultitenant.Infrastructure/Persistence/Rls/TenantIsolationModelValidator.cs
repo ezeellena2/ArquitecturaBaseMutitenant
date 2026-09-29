@@ -1,7 +1,10 @@
 using ArquitecturaBaseMultitenant.Domain.Common;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.ReferenceData;
+using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
@@ -46,6 +49,13 @@ internal static class TenantIsolationModelValidator
 
     private static bool IsKnownGlobal(Type type) =>
         type == typeof(DataProtectionKey) ||
+        type == typeof(ApplicationUser) ||
+        type == typeof(LoginMethod) ||
+        type == typeof(LoginCode) ||
+        type == typeof(LoginAudit) ||
+        type == typeof(IdentityUserClaim<Guid>) ||
+        type == typeof(IdentityUserLogin<Guid>) ||
+        type == typeof(IdentityUserToken<Guid>) ||
         type.Namespace == typeof(Currency).Namespace ||
         type.FullName == "ArquitecturaBaseMultitenant.Infrastructure.Idempotency.IdempotencyKey";
 }

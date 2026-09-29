@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Conventions;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
@@ -29,6 +30,9 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
     internal Guid? ActiveTenantId => TenantContext.TenantId;
 
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+    public DbSet<LoginMethod> LoginMethods => Set<LoginMethod>();
+    public DbSet<LoginCode> LoginCodes => Set<LoginCode>();
+    public DbSet<LoginAudit> LoginAudits => Set<LoginAudit>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -40,11 +44,7 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
     {
         base.OnModelCreating(builder);
 
-        // El tipo CLR existe para heredar de IdentityUserContext, pero las tablas de cuenta nacen en E3.
-        builder.Ignore<ApplicationUser>();
-        builder.Ignore<IdentityUserClaim<Guid>>();
-        builder.Ignore<IdentityUserLogin<Guid>>();
-        builder.Ignore<IdentityUserToken<Guid>>();
+        // El ingreso de la plantilla usa código o Google; passkeys no pertenecen a E3.
         builder.Ignore<IdentityUserPasskey<Guid>>();
         builder.Ignore<IdentityPasskeyData>();
 

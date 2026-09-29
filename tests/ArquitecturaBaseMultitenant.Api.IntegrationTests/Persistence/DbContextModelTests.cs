@@ -24,7 +24,7 @@ public sealed class DbContextModelTests
     }
 
     [Fact]
-    public void E2_model_maps_data_protection_in_platform_without_identity_tables()
+    public void E3_model_keeps_data_protection_in_platform_and_identity_users_in_identity()
     {
         using var context = CreateContext();
         var model = context.Model;
@@ -33,11 +33,10 @@ public sealed class DbContextModelTests
         Assert.NotNull(keys);
         Assert.Equal("platform", keys.GetSchema());
         Assert.Equal("DataProtectionKeys", keys.GetTableName());
-        Assert.DoesNotContain(model.GetEntityTypes(), entity => entity.ClrType == typeof(ApplicationUser));
-        Assert.DoesNotContain(model.GetEntityTypes(), entity =>
-            entity.GetTableName()?.StartsWith("AspNet", StringComparison.Ordinal) == true);
-        Assert.DoesNotContain(model.GetEntityTypes(), entity =>
-            entity.ClrType.Namespace == "Microsoft.AspNetCore.Identity");
+        Assert.Equal(Schemas.Identity, model.FindEntityType(typeof(ApplicationUser))?.GetSchema());
+        Assert.All(model.GetEntityTypes().Where(entity =>
+            entity.GetTableName()?.StartsWith("AspNet", StringComparison.Ordinal) == true),
+            entity => Assert.Equal(Schemas.Identity, entity.GetSchema()));
     }
 
     [Fact]

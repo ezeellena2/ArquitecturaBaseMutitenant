@@ -1,6 +1,9 @@
 using ArquitecturaBaseMultitenant.Domain.Common;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.ReferenceData;
+using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
@@ -11,6 +14,13 @@ public sealed class DataClassificationTests
     private static readonly HashSet<string> GlobalTypes =
     [
         typeof(DataProtectionKey).FullName!,
+        typeof(ApplicationUser).FullName!,
+        typeof(LoginMethod).FullName!,
+        typeof(LoginCode).FullName!,
+        typeof(LoginAudit).FullName!,
+        typeof(IdentityUserClaim<Guid>).FullName!,
+        typeof(IdentityUserLogin<Guid>).FullName!,
+        typeof(IdentityUserToken<Guid>).FullName!,
         "ArquitecturaBaseMultitenant.Infrastructure.Idempotency.IdempotencyKey",
         typeof(Currency).FullName!,
         typeof(CurrencyTranslation).FullName!,
@@ -61,7 +71,8 @@ public sealed class DataClassificationTests
         var categories = (hasTenant ? 1 : 0) + (hasPublic ? 1 : 0) + (hasParties ? 1 : 0);
         var filters = filterNames.ToHashSet(StringComparer.Ordinal);
         var expectedSchema = hasTenant ? "tenant" : hasPublic ? "public_site"
-            : hasParties ? "engagement" : "platform";
+            : hasParties ? "engagement"
+            : IsIdentityGlobal(type) ? "identity" : "platform";
         var expectedFilter = hasTenant ? "Tenant" : hasPublic ? "Public"
             : hasParties ? "Parties" : null;
         var isolationFilters = new[] { "Tenant", "Public", "Parties" };
@@ -86,6 +97,11 @@ public sealed class DataClassificationTests
 
         return null;
     }
+
+    private static bool IsIdentityGlobal(Type type) => type == typeof(ApplicationUser)
+        || type == typeof(LoginMethod) || type == typeof(LoginCode) || type == typeof(LoginAudit)
+        || type == typeof(IdentityUserClaim<Guid>) || type == typeof(IdentityUserLogin<Guid>)
+        || type == typeof(IdentityUserToken<Guid>);
 
 #pragma warning disable CA1812 // Casos de control que solo se inspeccionan por tipo.
     private sealed class UnclassifiedProbe;

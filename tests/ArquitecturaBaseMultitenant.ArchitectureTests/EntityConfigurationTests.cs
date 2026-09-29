@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Domain.ReferenceData;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
@@ -46,6 +47,11 @@ public sealed class EntityConfigurationTests
         var expected = domainEntities.Concat(
         [
             typeof(DataProtectionKey),
+            infrastructure.GetType("ArquitecturaBaseMultitenant.Infrastructure.Identity.ApplicationUser",
+                throwOnError: true)!,
+            typeof(IdentityUserClaim<Guid>),
+            typeof(IdentityUserLogin<Guid>),
+            typeof(IdentityUserToken<Guid>),
             infrastructure.GetType("ArquitecturaBaseMultitenant.Infrastructure.Idempotency.IdempotencyKey",
                 throwOnError: true)!,
         ]).ToArray();
