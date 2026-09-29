@@ -40,6 +40,10 @@ public static partial class OperationLog
 
             return result;
         }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
         catch (Exception exception)
         {
             // Exception.Message can contain values from a request or an external provider.

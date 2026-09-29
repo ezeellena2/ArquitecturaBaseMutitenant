@@ -66,4 +66,21 @@ public sealed class OperationLogTests
         Assert.Equal(LogLevel.Error, records[^1].Level);
         Assert.DoesNotContain(secret, string.Join(' ', records.Select(record => record.Message)));
     }
+
+    [Fact]
+    public async Task Cancellation_is_rethrown_without_error_event_103()
+    {
+        var logger = new FakeLogger<OperationLogTests>();
+        var clock = new FakeTimeProvider();
+        var cancellation = new OperationCanceledException();
+
+        var thrown = await Assert.ThrowsAsync<OperationCanceledException>(() =>
+            OperationLog.RunAsync(logger, clock, "CancelledWork",
+                () => Task.FromException<Result>(cancellation)));
+
+        Assert.Same(cancellation, thrown);
+        var records = logger.Collector.GetSnapshot();
+        Assert.Equal(["Handling CancelledWork"], records.Select(record => record.Message));
+        Assert.DoesNotContain(records, record => record.Level == LogLevel.Error || record.Id.Id == 103);
+    }
 }
