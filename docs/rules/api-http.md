@@ -19,6 +19,7 @@
 - **Prefijo nuevo** (fuera de `/api`): se suma en `BackendPrefixes`, en `SpaHostingTests` y en el proxy de `vite.config.ts` ([guía](../guides/prefijo-de-backend.md), E1). `/swagger` y `/openapi` están en la lista y en el proxy solo en Development.
 - **Después de cambiar un contrato:** regenerar `docs/contracts/openapi.json` (lo hace el build) y avisar al front (`npm run contracts`).
 - El esquema de `application/problem+json` declara `code` y `traceId` obligatorios, y `errors` (campo → mensajes) y `retryAfter` (segundos) opcionales; es la misma forma que devuelve el mapper HTTP.
+- Un rechazo del rate limiter responde 429 con ProblemDetails (`Http.TooManyRequests`, `traceId`, `retryAfter`) y el header `Retry-After` con los mismos segundos enteros.
 - **Datos de referencia:** `GET /api/reference-data` y sus rutas por catálogo son `[AllowAnonymous]`, devuelven todas las filas traducidas a `Accept-Language` con `isEnabled` y llevan `ETag` para caché del navegador ([datos-de-referencia](datos-de-referencia.md)). Los selectores filtran las habilitadas; las filas deshabilitadas siguen disponibles para mostrar valores guardados. Sustituyen `GET /api/time-zones`.
 
 ## Prohibido

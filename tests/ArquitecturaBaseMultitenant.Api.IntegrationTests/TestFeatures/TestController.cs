@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures;
 
@@ -37,6 +38,10 @@ public sealed class TestController : ControllerBase
     [HttpGet("validation")]
     public IActionResult Validation() => Result.Failure(new ValidationError(
         new Dictionary<string, string[]> { ["email"] = ["Ingresá un correo válido."] })).ToActionResult(this);
+
+    [HttpGet("rate-limit")]
+    [EnableRateLimiting("test-rejection")]
+    public IActionResult RateLimit() => NoContent();
 
     [HttpGet("status/{status:int}")]
     public IActionResult EmptyStatus(int status) => StatusCode(status);
