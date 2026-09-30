@@ -197,6 +197,22 @@ public sealed class HarnessTests
         AssertNoFailures(failures);
     }
 
+    [Fact]
+    public void Configuration_documentation_names_existing_tests()
+    {
+        var path = Path.Combine(Root, "docs", "operations", "configuracion.md");
+        var names = TestNames(Root, null);
+        var missing = Regex.Matches(File.ReadAllText(path), @"\b[A-Za-z][A-Za-z0-9_]*Tests\b",
+                RegexOptions.CultureInvariant)
+            .Select(match => match.Value)
+            .Distinct(StringComparer.Ordinal)
+            .Where(name => !names.Contains(name))
+            .Select(name => $"docs/operations/configuracion.md: falta el test {name}.")
+            .ToArray();
+
+        AssertNoFailures(missing);
+    }
+
     private static IEnumerable<string> MissingPointerFiles(string folder)
     {
         var agents = Path.Combine(folder, "AGENTS.md");

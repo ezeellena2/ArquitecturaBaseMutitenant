@@ -110,7 +110,7 @@ Las opciones se validan **al arrancar**, como en ArquitecturaBase:
 | `AppSecret` sin `VerifyToken`, o al revés | la Api no arranca. Sin ninguno, el webhook queda apagado, con un Warning, y el envío funciona igual |
 | Sin `WhatsApp:PhoneNumberId` | WhatsApp apagado: el login y el registro muestran solo correo y Google |
 
-Lo verifican `SmtpOptionsValidatorTests`, `GoogleOptionsTests`, `WhatsAppOptionsValidatorTests` y `AuthMethodsTests`.
+Lo verifican `StartupConfigurationTests`, `EmailDeliveryTests` y `ProductionSeedTests` (WhatsApp se verifica en E8).
 
 ## 6. Producción
 
