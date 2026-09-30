@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 
+/// <summary>Lee la configuración global en una proyección cacheada. Llena el caché desde un scope propio para no compartir el DbContext de otra operación.</summary>
 internal sealed class PlatformSettingsReader(
     IServiceScopeFactory scopes,
     HybridCache cache) : IPlatformSettingsReader

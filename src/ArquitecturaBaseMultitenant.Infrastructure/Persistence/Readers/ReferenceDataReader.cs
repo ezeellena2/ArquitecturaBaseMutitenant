@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 
-/// <summary>Lee los cinco catálogos globales de platform sin filtrar filas históricas deshabilitadas.</summary>
+/// <summary>Proyecta los catálogos globales de platform, incluidas las filas deshabilitadas que siguen en uso histórico. Usa caché por catálogo para las lecturas repetidas.</summary>
 internal sealed class ReferenceDataReader(
     IServiceScopeFactory scopes,
     HybridCache cache) :

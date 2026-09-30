@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories;
 
+/// <summary>Recupera y agrega comprobantes de reautenticación por hash dentro del caso de uso. Permite consumirlos sin persistir el token en claro.</summary>
 internal sealed class ReauthTicketRepository(ApplicationDbContext context) : IReauthTicketRepository
 {
     public Task<Guid?> GetUserIdByHashAsync(string tokenHash, CancellationToken cancellationToken)

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories;
 
+/// <summary>Prepara desafíos de ingreso por destino y propósito dentro de la transacción. Su lock y lecturas permiten limitar reenvíos e intentos sin carreras.</summary>
 internal sealed class LoginCodeRepository(ApplicationDbContext context) : ILoginCodeRepository
 {
     public Task LockDestinationAsync(LoginCodeDestination destination, CancellationToken cancellationToken) =>

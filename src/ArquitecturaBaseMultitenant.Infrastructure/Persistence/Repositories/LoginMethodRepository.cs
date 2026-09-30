@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories;
 
+/// <summary>Prepara los métodos de ingreso de una cuenta para altas y cambios transaccionales. Incluye el lock de cuenta y el retiro inmediato de la marca principal antes de elegir otra.</summary>
 internal sealed class LoginMethodRepository(ApplicationDbContext context) : ILoginMethodRepository
 {
     public Task LockUserAsync(Guid userId, CancellationToken cancellationToken) =>

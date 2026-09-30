@@ -6,6 +6,7 @@ using OpenIddict.EntityFrameworkCore.Models;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories;
 
+/// <summary>Reclama cuentas vencidas con un lease durable y bloquea cada paso de la baja para revalidarlo. Coordina además la purga global dentro de transacciones; los participantes tratan cada tenant por separado.</summary>
 internal sealed class AccountDeletionRepository(ApplicationDbContext context) : IAccountDeletionRepository
 {
     public async Task<Guid?> ClaimAsync(Guid leaseId, DateTime nowUtc, DateTime leaseExpiresAtUtc, CancellationToken ct)

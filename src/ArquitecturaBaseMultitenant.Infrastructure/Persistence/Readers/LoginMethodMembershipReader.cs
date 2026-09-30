@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 
+/// <summary>Comprueba si la cuenta conserva una membresía y una organización activas antes de usar un método administrado. Lee el índice global de accesos, sin saltar RLS de Members.</summary>
 internal sealed class LoginMethodMembershipReader(ApplicationDbContext context) : ILoginMethodMembershipReader
 {
     public Task<bool> IsActiveAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken) =>

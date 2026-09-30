@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 
+/// <summary>Proyecta datos globales de espacios y organizaciones sin seguimiento de EF. Sirve para verificar estado y listar empresas activas sin entrar a sus filas privadas.</summary>
 internal sealed class TenantReader(ApplicationDbContext context) : ITenantReader
 {
     public Task<TenantRow?> FindByIdAsync(Guid tenantId, CancellationToken cancellationToken) =>

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories;
 
+/// <summary>Prepara las membresías privadas del tenant activo para los casos de uso de alta o cambio. Exige alcance de tenant y transacción antes de leer o agregar.</summary>
 internal sealed class MemberRepository(ApplicationDbContext context, ITenantContext tenantContext) : IMemberRepository
 {
     public Task<Member?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken)

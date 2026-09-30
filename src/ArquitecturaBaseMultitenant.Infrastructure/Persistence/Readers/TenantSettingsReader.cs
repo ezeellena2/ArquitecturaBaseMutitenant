@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 
+/// <summary>Lee las preferencias del tenant activo desde caché o una proyección sin seguimiento. La carga en otro scope evita cachear datos de una transacción todavía reversible.</summary>
 internal sealed class TenantSettingsReader(
     ITenantContext tenantContext,
     IServiceScopeFactory scopes,

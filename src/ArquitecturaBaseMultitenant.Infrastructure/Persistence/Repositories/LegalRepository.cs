@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories;
 
+/// <summary>Prepara documentos legales vigentes y aceptaciones de una cuenta dentro del caso de uso. El UnitOfWork confirma las aceptaciones junto con el alta.</summary>
 internal sealed class LegalRepository(ApplicationDbContext context) : ILegalRepository
 {
     public Task<bool> HasAcceptedAsync(Guid userId, Guid documentId, CancellationToken cancellationToken)

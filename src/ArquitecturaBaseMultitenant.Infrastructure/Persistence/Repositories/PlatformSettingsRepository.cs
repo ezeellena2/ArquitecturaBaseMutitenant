@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories;
 
+/// <summary>Lee y agrega la fila única de configuración global para casos de uso que la modifican. Exige una transacción y no guarda directamente.</summary>
 internal sealed class PlatformSettingsRepository(ApplicationDbContext context) : IPlatformSettingsRepository
 {
     public Task<PlatformSettings?> GetAsync(CancellationToken cancellationToken)

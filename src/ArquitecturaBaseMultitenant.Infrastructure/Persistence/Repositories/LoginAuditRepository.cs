@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories;
 
+/// <summary>Agrega el resultado estable de intentos de ingreso a la transacción y consulta el último éxito de una cuenta. No almacena el código recibido.</summary>
 internal sealed class LoginAuditRepository(ApplicationDbContext context) : ILoginAuditRepository
 {
     public void Add(LoginAudit audit)

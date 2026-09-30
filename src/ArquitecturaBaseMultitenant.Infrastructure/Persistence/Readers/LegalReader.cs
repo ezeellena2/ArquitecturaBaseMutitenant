@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 
+/// <summary>Proyecta la versión legal vigente por cultura y las aceptaciones pendientes de una cuenta. Las consultas son de lectura y no modifican la prueba de aceptación.</summary>
 internal sealed class LegalReader(ApplicationDbContext context) : ILegalReader
 {
     public async Task<IReadOnlyList<PendingLegalDocumentResponse>> ListPendingAsync(Guid userId, DateTime nowUtc,

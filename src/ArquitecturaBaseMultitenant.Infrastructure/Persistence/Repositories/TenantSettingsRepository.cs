@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories;
 
+/// <summary>Prepara la lectura y alta de preferencias del tenant activo dentro de una transacción. La organización se toma del alcance técnico, nunca del request.</summary>
 internal sealed class TenantSettingsRepository(
     ApplicationDbContext context, ITenantContext tenantContext) : ITenantSettingsRepository
 {

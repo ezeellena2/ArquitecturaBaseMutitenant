@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 
+/// <summary>Proyecta solo IDs y clases de tenant relacionados con la cuenta para planificar su baja. Usa el índice global de accesos, sin leer datos privados de otra organización.</summary>
 internal sealed class AccountDeletionTenantReader(ApplicationDbContext context) : IAccountDeletionTenantReader
 {
     public async Task<IReadOnlyList<AccountDeletionTenant>> ListAsync(Guid userId, CancellationToken ct) =>
