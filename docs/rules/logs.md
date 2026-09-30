@@ -8,6 +8,7 @@
 - Mensajes en inglés, con parámetros estructurados (`{RoleId}`), no concatenados.
 - Teléfonos enmascarados con `IPhoneNumberParser.Mask` (`+54 9 11 •••• 6789`); correos enmascarados con la primera letra y el dominio (`j***@gmail.com`), como dice [emails](emails.md).
 - El `TenantId` va en el scope del request (lo pone el middleware) y en la traza (`tenant.id`).
+- OpenIddict emite parámetros OIDC y claims personales en sus trazas internas. Su categoría se limita a `Warning` mediante `LoggerFilterOptions` después de cargar la configuración; una captura de pruebas en `Trace` sigue observando los logs de la aplicación sin exponer esos valores.
 
 ## Prohibido
 - `logger.LogInformation(...)` directo.
@@ -21,6 +22,7 @@
 - `CA1848` (E0) como warning con `TreatWarningsAsErrors`: un `logger.LogX` directo rompe el build.
 - `SensitiveToStringLoggingTests` (E1): instancia los contratos HTTP de entrada con un valor centinela y comprueba que `ToString()` no lo revele. `ControllerInputContractTests` (E1) comprueba que los parámetros de entrada sean contratos de Api.
 - `OperationLogTests` (E1): una cancelación conserva la excepción y no produce el evento 103; una excepción real sí lo produce sin revelar su mensaje.
+- `IngressJourneyTests` (E3a) captura `Trace`, scopes y excepciones en registro e ingreso empresarial; comprueba que no aparezcan códigos, correos completos ni refresh tokens.
 
 ## Detalle
 [backend.md §17](../architecture/backend.md#17-logging-openapi-health-rate-limiting-caché)

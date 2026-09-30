@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Identity.OpenIddict;
@@ -19,6 +20,9 @@ internal static class OpenIddictRegistration
         IConfiguration configuration,
         IHostEnvironment environment)
     {
+        // Los traces internos de OpenIddict incluyen parámetros OIDC y claims personales.
+        services.PostConfigure<LoggerFilterOptions>(options => options.Rules.Add(
+            new LoggerFilterRule(null, "OpenIddict", LogLevel.Warning, null)));
         var webClient = services.AddOptions<WebClientOptions>()
             .BindConfiguration(WebClientOptions.SectionName)
             .ValidateDataAnnotations();

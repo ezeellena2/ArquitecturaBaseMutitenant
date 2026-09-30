@@ -5,11 +5,8 @@ using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Hosting;
@@ -18,7 +15,6 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using MimeKit;
 using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
@@ -34,11 +30,24 @@ public sealed class IngressJourneyTests(ApiFactory factory)
         await factory.Services.SeedDatabaseAsync(Ct);
         var logs = new CapturedLogs();
         using var host = factory.WithWebHostBuilder(builder =>
-            builder.ConfigureLogging(logging => logging.AddProvider(logs)));
+            builder.ConfigureLogging(logging => logging.ClearProviders().SetMinimumLevel(LogLevel.Trace)
+                .AddFilter((_, _) => true).AddProvider(logs)));
         using var client = host.CreateClient(new WebApplicationFactoryClientOptions
         {
             AllowAutoRedirect = false,
         });
+        var diagnostic = host.Services.GetRequiredService<ILoggerFactory>()
+            .CreateLogger("IngressJourneyCaptureProbe");
+        using (diagnostic.BeginScope(new Dictionary<string, object?>
+               {
+                   ["marker"] = "scope-capture-probe",
+               }))
+        {
+            diagnostic.Log(LogLevel.Trace, new EventId(10_001), "trace-capture-probe", null,
+                static (state, _) => state);
+        }
+        Assert.Contains(logs.Entries, entry => entry.Contains("trace-capture-probe", StringComparison.Ordinal));
+        Assert.Contains(logs.Entries, entry => entry.Contains("scope-capture-probe", StringComparison.Ordinal));
         var email = $"journey-{Guid.NewGuid():N}@example.test";
 
         using var requested = await PostOnceAsync(client, "/api/auth/signup",
@@ -57,6 +66,11 @@ public sealed class IngressJourneyTests(ApiFactory factory)
             "Un código de ingreso apareció en logs.");
         Assert.True(!logs.Entries.Any(entry => entry.Contains(email, StringComparison.OrdinalIgnoreCase)),
             "Un correo completo apareció en logs.");
+        Assert.True(!logs.Entries.Any(entry => entry.Contains("refresh_token=", StringComparison.OrdinalIgnoreCase)),
+            "Un refresh token apareció en logs.");
+        Assert.True(!logs.Entries.Any(entry => entry.Contains("?code=", StringComparison.OrdinalIgnoreCase)
+            || entry.Contains("&code=", StringComparison.OrdinalIgnoreCase)),
+            "Un código de autorización apareció en logs.");
     }
 
     [Fact]
@@ -65,12 +79,15 @@ public sealed class IngressJourneyTests(ApiFactory factory)
         var email = $"ana-journey-{Guid.NewGuid():N}@example.test";
         await using var isolatedFactory = new ApiFactory();
         await isolatedFactory.InitializeAsync();
+        var logs = new CapturedLogs();
         using var host = isolatedFactory.WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Development");
             builder.UseSetting("Email:Delivery", "PickupDirectory");
             builder.UseSetting("Authentication:Google:ClientId", "");
             builder.UseSetting("Seed:Development:AnaEmail", email);
+            builder.ConfigureLogging(logging => logging.ClearProviders().SetMinimumLevel(LogLevel.Trace)
+                .AddFilter((_, _) => true).AddProvider(logs));
         });
         using var client = host.CreateClient(new WebApplicationFactoryClientOptions
         {
@@ -199,6 +216,24 @@ public sealed class IngressJourneyTests(ApiFactory factory)
                 }), Ct);
             Assert.Equal(HttpStatusCode.BadRequest, earlier.StatusCode);
         }
+
+        foreach (var (kind, secret) in new[] { ("code", code), ("email", email),
+                     ("business refresh", business.RefreshToken),
+                     ("rotated refresh", refreshed.RefreshToken),
+                     ("consumer refresh", consumer.RefreshToken) })
+        {
+            var leakingCategories = logs.Entries
+                .Where(entry => entry.Contains(secret, StringComparison.OrdinalIgnoreCase))
+                .Select(entry => entry.Split('|', 2)[0])
+                .Distinct(StringComparer.Ordinal).ToArray();
+            Assert.True(leakingCategories.Length == 0,
+                $"El {kind} apareció en logs de {string.Join(", ", leakingCategories)}.");
+        }
+        Assert.True(!logs.Entries.Any(entry => entry.Contains("refresh_token=", StringComparison.OrdinalIgnoreCase)),
+            "Un refresh token apareció en logs.");
+        Assert.True(!logs.Entries.Any(entry => entry.Contains("?code=", StringComparison.OrdinalIgnoreCase)
+            || entry.Contains("&code=", StringComparison.OrdinalIgnoreCase)),
+            "Un código de autorización apareció en logs.");
     }
 
     private static string AuthorizePath(string access, string challenge) =>
@@ -281,33 +316,8 @@ public sealed class IngressJourneyTests(ApiFactory factory)
         return await client.SendAsync(request, Ct);
     }
 
-    private static async Task<string> ReadPickupCodeAsync(IServiceProvider provider, string email)
-    {
-        await using var scope = provider.CreateAsyncScope();
-        var services = scope.ServiceProvider;
-        var directory = Path.Combine(services.GetRequiredService<IHostEnvironment>().ContentRootPath, ".emails");
-        for (var attempt = 0; attempt < 20; attempt++)
-        {
-            await services.GetRequiredService<IOutboxDispatchService>().DispatchOnceAsync(
-                services.GetServices<IChannelSender>().ToArray(), Ct);
-            foreach (var path in Directory.Exists(directory) ? Directory.GetFiles(directory, "*.eml") : [])
-            {
-                string code;
-                await using (var stream = File.OpenRead(path))
-                {
-                    using var message = await MimeMessage.LoadAsync(stream, Ct);
-                    if (!message.To.Mailboxes.Any(mailbox => mailbox.Address == email)) continue;
-                    var match = Regex.Match(message.TextBody ?? string.Empty, @"(?<!\d)\d{6}(?!\d)");
-                    Assert.True(match.Success, "El correo pickup no contiene un código de seis dígitos.");
-                    code = match.Value;
-                }
-                File.Delete(path);
-                return code;
-            }
-            await Task.Delay(100, Ct);
-        }
-        throw new Xunit.Sdk.XunitException("No se encontró el correo pickup de registro.");
-    }
+    private static Task<string> ReadPickupCodeAsync(IServiceProvider provider, string email) =>
+        PickupCodeReader.ReadAsync(provider, email, Ct);
 
     private async Task AssertPersonalSignupAsync(string email)
     {
@@ -330,32 +340,41 @@ public sealed class IngressJourneyTests(ApiFactory factory)
         Assert.Equal(2, reader.GetInt64(1));
     }
 
-    private sealed class CapturedLogs : ILoggerProvider
+    private sealed class CapturedLogs : ILoggerProvider, ISupportExternalScope
     {
         private readonly ConcurrentQueue<string> _entries = new();
+        private IExternalScopeProvider _scopes = new LoggerExternalScopeProvider();
 
         public IEnumerable<string> Entries => _entries;
 
-        public ILogger CreateLogger(string categoryName) => new CaptureLogger(_entries);
+        public ILogger CreateLogger(string categoryName) =>
+            new CaptureLogger(_entries, categoryName, () => _scopes);
+
+        public void SetScopeProvider(IExternalScopeProvider scopeProvider) => _scopes = scopeProvider;
 
         public void Dispose() { }
 
-        private sealed class CaptureLogger(ConcurrentQueue<string> entries) : ILogger
+        private sealed class CaptureLogger(ConcurrentQueue<string> entries,
+            string category, Func<IExternalScopeProvider> scopes) : ILogger
         {
-            public IDisposable BeginScope<TState>(TState state) where TState : notnull => EmptyScope.Instance;
+            public IDisposable BeginScope<TState>(TState state) where TState : notnull =>
+                scopes().Push(state);
 
             public bool IsEnabled(LogLevel logLevel) => true;
 
             public void Log<TState>(LogLevel logLevel, EventId eventId, TState state,
-                Exception? exception, Func<TState, Exception?, string> formatter) =>
-                entries.Enqueue(formatter(state, exception));
-        }
+                Exception? exception, Func<TState, Exception?, string> formatter)
+            {
+                entries.Enqueue(category + "|" + formatter(state, exception));
+                if (exception is not null) entries.Enqueue(category + "|" + exception);
+                scopes().ForEachScope((scope, queue) =>
+                    queue.Enqueue(category + "|" + FormatScope(scope)), entries);
+            }
 
-        private sealed class EmptyScope : IDisposable
-        {
-            public static EmptyScope Instance { get; } = new();
-
-            public void Dispose() { }
+            private static string FormatScope(object? scope) => scope is
+                IEnumerable<KeyValuePair<string, object?>> values
+                    ? string.Join(' ', values.Select(value => $"{value.Key}={value.Value}"))
+                    : scope?.ToString() ?? string.Empty;
         }
     }
 }
