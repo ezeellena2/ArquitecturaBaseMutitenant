@@ -41,7 +41,7 @@ public sealed class OpenIddictServerTests(ApiFactory factory)
         Assert.Contains(new Uri("connect/token", UriKind.Relative), server.TokenEndpointUris);
         Assert.True(validation.EnableTokenEntryValidation);
         var web = factory.Services.GetRequiredService<IOptions<WebClientOptions>>().Value;
-        Assert.Equal(new Uri("https://localhost:5174/callback"), Assert.Single(web.RedirectUris));
+        Assert.Equal(new Uri("https://localhost:5174/auth/callback"), Assert.Single(web.RedirectUris));
         Assert.Equal(new Uri("https://localhost:5174/"), Assert.Single(web.PostLogoutRedirectUris));
         using var scope = factory.Services.CreateScope();
         Assert.NotNull(scope.ServiceProvider.GetService<ITokenRevoker>());

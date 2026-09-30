@@ -181,7 +181,7 @@ public sealed class IngressJourneyTests(ApiFactory factory)
 
     private static string AuthorizePath(string access, string challenge) =>
         "/connect/authorize?client_id=web&response_type=code" +
-        "&redirect_uri=https%3A%2F%2Flocalhost%3A5174%2Fcallback" +
+        "&redirect_uri=https%3A%2F%2Flocalhost%3A5174%2Fauth%2Fcallback" +
         "&scope=openid%20profile%20email%20offline_access%20api" +
         "&code_challenge=" + challenge + "&code_challenge_method=S256&access=" + access;
 
@@ -200,7 +200,7 @@ public sealed class IngressJourneyTests(ApiFactory factory)
             ["grant_type"] = "authorization_code",
             ["code"] = authorizationCode.ToString(),
             ["client_id"] = "web",
-            ["redirect_uri"] = "https://localhost:5174/callback",
+            ["redirect_uri"] = "https://localhost:5174/auth/callback",
             ["code_verifier"] = verifier,
         });
     }

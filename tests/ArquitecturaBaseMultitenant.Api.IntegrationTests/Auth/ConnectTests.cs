@@ -55,7 +55,7 @@ public sealed class ConnectTests(ApiFactory factory)
 
     private static string AuthorizePath(string access) =>
         "/connect/authorize?client_id=web&response_type=code" +
-        "&redirect_uri=https%3A%2F%2Flocalhost%3A5174%2Fcallback" +
+        "&redirect_uri=https%3A%2F%2Flocalhost%3A5174%2Fauth%2Fcallback" +
         "&scope=openid%20profile%20email%20api" +
         "&code_challenge=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
         "&code_challenge_method=S256&access=" + access;

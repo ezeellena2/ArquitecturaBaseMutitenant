@@ -55,6 +55,31 @@ public sealed partial class BuildConfigurationTests
         AssertActionPins(File.ReadAllText(workflowPath), ["checkout", "setup-node"]);
     }
 
+    [Fact]
+    public void Development_web_callback_matches_the_front_route_when_the_sibling_checkout_is_present()
+    {
+        const string callbackPath = "/auth/callback";
+        var front = Path.GetFullPath(Path.Combine(SolutionRoot.FullPath, "..", "ArquitecturaBaseMutitenantFront"));
+        var authConfigPath = Path.Combine(front, "src", "auth", "authConfig.ts");
+        var routesPath = Path.Combine(front, "src", "app", "routes.tsx");
+        if (!File.Exists(authConfigPath) || !File.Exists(routesPath))
+        {
+            Console.WriteLine("Front checkout absent; skipping the cross-repository OIDC callback check.");
+            return;
+        }
+
+        Assert.Contains($"redirect_uri: `${{origin}}{callbackPath}`", File.ReadAllText(authConfigPath), StringComparison.Ordinal);
+        Assert.Contains($"path: \"{callbackPath}\"", File.ReadAllText(routesPath), StringComparison.Ordinal);
+
+        var developmentSettings = Path.Combine(SolutionRoot.FullPath, "src", "ArquitecturaBaseMultitenant.Api", "appsettings.Development.json");
+        using var document = JsonDocument.Parse(File.ReadAllText(developmentSettings));
+        var redirectUris = document.RootElement.GetProperty("Authentication").GetProperty("Clients")
+            .GetProperty("Web").GetProperty("RedirectUris").EnumerateArray()
+            .Select(uri => uri.GetString()).ToArray();
+        Assert.Contains($"https://localhost:5174{callbackPath}", redirectUris);
+        Assert.DoesNotContain("https://localhost:5174/callback", redirectUris);
+    }
+
     private static void AssertActionPins(string workflow, IReadOnlyCollection<string> expectedActions)
     {
         var matches = ActionReference().Matches(workflow);

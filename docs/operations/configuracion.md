@@ -77,6 +77,8 @@ Mismos valores que `../ArquitecturaBase/src/ArquitecturaBase.Api/appsettings.Dev
 - `https://localhost:7280/signin-google` (la Api directa)
 - en producción, `https://<dominio>/signin-google`
 
+El cliente OIDC público `web` usa `https://localhost:5174/auth/callback` para volver al front después de `/connect/authorize`. Esa URI se registra en `Authentication:Clients:Web:RedirectUris`; es distinta de `/signin-google`, que pertenece al callback de Google. El front la fija en `src/auth/authConfig.ts` y la ruta está en `src/app/routes.tsx`.
+
 **Meta (webhook).** Una app de Meta tiene **una sola** URL de webhook. Hay dos caminos:
 - **Mientras se desarrolla:** cuando pruebes el multitenant, cambiá la URL de devolución de llamada a `https://<túnel del multitenant>/webhooks/whatsapp`, con la misma palabra de verificación. Al volver a ArquitecturaBase, la volvés a cambiar. Como la URL del túnel de cada AppHost es fija, siempre son las mismas dos direcciones.
 - **Para producción:** una app y un número propios del multitenant, con sus plantillas cargadas otra vez en esa cuenta. Cuáles son, cuándo se crean y cómo: [whatsapp-plantillas.md](whatsapp-plantillas.md).
