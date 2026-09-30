@@ -60,7 +60,7 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
             ["Title"] = Encode(title),
             ["Paragraphs"] = string.Join(string.Empty, paragraphs.Select(value => $"<p style=\"margin:0 0 16px;\">{Encode(value)}</p>")),
             ["Action"] = actionLabel.Length == 0 ? string.Empty :
-                $"<p style=\"margin:0 0 20px;\"><a href=\"{Encode(actionUrl)}\" style=\"display:inline-block;padding:10px 20px;border-radius:8px;background-color:oklch(0.5 0.1 195);color:#fff;font-weight:bold;text-decoration:none;\">{Encode(actionLabel)}</a></p>",
+                $"<p style=\"margin:0 0 20px;\"><a href=\"{Encode(actionUrl)}\" style=\"display:inline-block;padding:10px 20px;border-radius:8px;background-color:#007475;background-color:oklch(0.5 0.1 195);color:#fff;font-weight:bold;text-decoration:none;\">{Encode(actionLabel)}</a></p>",
             ["Note"] = note.Length == 0 ? string.Empty : $"<p style=\"margin:0;color:#6b7280;font-size:14px;\">{Encode(note)}</p>",
         });
         var html = Fill(LayoutTemplate, new Dictionary<string, string>

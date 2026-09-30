@@ -4,7 +4,7 @@
 
 - Publicación administrativa de versiones legales: usar la administración prevista para plataforma cuando nazca su pantalla. La 3b permite leer/aceptar; el E2E publica solo en su propia base y el recorrido manual tiene SQL local explícito.
 - Propagar `maxLength` desde las validaciones de texto al OpenAPI para que el formulario derive límites del contrato. El límite actual de nombre se valida en ambos lados y el backend sigue siendo autoridad.
-- Revisar compatibilidad de colores CSS modernos del botón de correo en clientes que no soportan `oklch`, conservando el token de marca con fallback equivalente. Chromium muestra el diseño aprobado; no se probó la matriz de clientes de correo.
+- Probar las plantillas en la matriz de clientes de correo (Gmail, Outlook y otros). La 3b ya incluye el fallback sRGB equivalente al token de marca para clientes sin `oklch`; se verificó el HTML real en Chromium.
 
 Detalle y alcance de cada punto: [revisión del 2026-09-29](reviews/2026-09-29-revision-etapas-0-2.md). Los puntos 1, 5, 10, 22 y 23 se corrigen antes de la Etapa 3b.
 
