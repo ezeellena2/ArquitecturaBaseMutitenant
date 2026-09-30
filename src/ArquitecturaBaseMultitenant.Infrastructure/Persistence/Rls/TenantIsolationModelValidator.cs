@@ -59,6 +59,7 @@ internal static class TenantIsolationModelValidator
         type == typeof(ApplicationUser) ||
         type == typeof(LoginMethod) ||
         type == typeof(LoginCode) ||
+        type == typeof(ReauthTicket) ||
         type == typeof(LoginAudit) ||
         type == typeof(UserTenantAccess) ||
         type == typeof(Tenant) ||

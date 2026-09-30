@@ -9,6 +9,12 @@ internal static class AdvisoryLockKeys
     public const string ReferenceDataSeed = "p:ref:seed";
     public const string Seed = "seed:database";
 
+    public static string Account(Guid userId)
+    {
+        if (userId == Guid.Empty) throw new ArgumentException("A user ID is required.", nameof(userId));
+        return "u:" + userId.ToString("N", CultureInfo.InvariantCulture) + ":lock:account";
+    }
+
     public static string ExternalGoogleSubject(string subject) => "google:subject:" + subject;
 
     public static string ExternalGoogleEmail(string email) => "google:email:" + email;

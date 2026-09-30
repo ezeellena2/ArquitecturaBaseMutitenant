@@ -10,8 +10,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Identity;
 /// Identidad global. Los métodos verificados viven en identity.LoginMethods;
 /// las propiedades heredadas Email y PhoneNumber son solo copias del método principal.
 /// </summary>
-public sealed class ApplicationUser : IdentityUser<Guid>
+public sealed class ApplicationUser : IdentityUser<Guid>, IVersioned
 {
+    public uint Version { get; private set; }
     public string? DisplayName { get; private set; }
     public string Culture { get; private set; } = string.Empty;
     public string TimeZoneId { get; private set; } = string.Empty;

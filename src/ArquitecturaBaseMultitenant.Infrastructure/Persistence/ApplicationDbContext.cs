@@ -38,6 +38,7 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
     public DbSet<LoginMethod> LoginMethods => Set<LoginMethod>();
     public DbSet<LoginCode> LoginCodes => Set<LoginCode>();
+    public DbSet<ReauthTicket> ReauthTickets => Set<ReauthTicket>();
     public DbSet<LoginAudit> LoginAudits => Set<LoginAudit>();
     internal DbSet<UserTenantAccess> UserTenantAccesses => Set<UserTenantAccess>();
     public DbSet<Tenant> Tenants => Set<Tenant>();

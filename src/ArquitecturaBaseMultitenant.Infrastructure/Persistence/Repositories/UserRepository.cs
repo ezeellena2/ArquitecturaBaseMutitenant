@@ -72,7 +72,7 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
     private static UserAccountRow ToRow(ApplicationUser user) =>
         new(user.Id, user.DisplayName, user.Culture, user.TimeZoneId, user.Status,
             user.IsPlatformOperator, user.Email is null ? null : Email.Create(user.Email).Value,
-            user.LastBusinessTenantId);
+            user.LastBusinessTenantId, user.Version, user.DeletionScheduledForUtc);
 
     private static void EnsureSucceeded(IdentityResult result, string action)
     {
