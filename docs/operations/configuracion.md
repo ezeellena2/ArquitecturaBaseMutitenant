@@ -1,6 +1,6 @@
 # Configuración: Google, Gmail y WhatsApp
 
-> **Objetivo:** pegar las credenciales y que funcione. El multitenant usa **las mismas claves de configuración que ArquitecturaBase**, así que las credenciales que ya usás allá sirven tal cual. Regla de siempre: **lo secreto va en user-secrets** (o en variables de entorno en producción) y **nunca en el repo**; el resto va en `appsettings`.
+> **Objetivo:** pegar las credenciales y que funcione. El multitenant conserva las claves de configuración compartidas con ArquitecturaBase y suma un certificado propio para cifrar Data Protection en Production. Regla de siempre: **lo secreto va en user-secrets** (o en variables de entorno en producción) y **nunca en el repo**; el resto va en `appsettings`.
 
 ## 1. Qué se usa
 
@@ -17,6 +17,8 @@
 | `Authentication:Google:ClientSecret` | secreto del cliente OAuth | Google Cloud Console › Credenciales (el mismo cliente de ArquitecturaBase) |
 | `Authentication:LoginCode:HashKey` | clave HMAC de los códigos de ingreso y registro | `appsettings.Development.json` de ArquitecturaBase; el importador la traslada a user-secrets sin mostrarla |
 | `Email:Smtp:Password` | contraseña de **aplicación** de Gmail (no la de la cuenta) | https://myaccount.google.com/apppasswords |
+| `DataProtection:Certificate:Base64` | PFX RSA con clave privada, codificado en base64, que cifra en reposo las claves de Data Protection fuera de Development y Testing | Certificado propio de la instalación; guardalo separado de la base y sus backups |
+| `DataProtection:Certificate:Password` | contraseña del PFX, si tiene una | La definida al exportar ese PFX |
 | `Seed:PlatformOwner:Email` | correo del operador inicial; obligatorio en Production mientras no exista un operador | Buzón controlado por quien administra la plataforma |
 | `Seed:PlatformOwner:DisplayName` | nombre visible opcional del operador inicial | Quien administra la plataforma |
 | `Seed:Development:AnaEmail` | buzón para ingresar como Ana en la Empresa A del seed local | Tu propio buzón para el recorrido manual; sólo Development |
@@ -49,7 +51,7 @@ Remove-Variable s
 ./scripts/secretos/verificar.ps1
 ```
 
-El importador de ArquitecturaBase no conoce al operador de esta plataforma: cargá `Seed:PlatformOwner:Email` por separado en user-secrets o como `Seed__PlatformOwner__Email` en el gestor de secretos de Production. `Seed:PlatformOwner:DisplayName` es opcional. El seed crea una identidad global sin espacio Personal ni contraseña, con el correo como método principal verificado; cada ingreso exige el código enviado a ese buzón. Si ya existe ese método de correo, marca su cuenta como operadora. Si ya hay un operador, los siguientes arranques no exigen la clave ni alteran esa cuenta. En Development, sin la clave se omite el operador inicial; en Production, si aún no hay operador, falta de clave detiene el arranque.
+El importador de ArquitecturaBase no conoce al operador ni al certificado Data Protection de esta plataforma: cargá `Seed:PlatformOwner:Email` y `DataProtection:Certificate:Base64` por separado en user-secrets o en el gestor de secretos de Production (`Seed__PlatformOwner__Email`, `DataProtection__Certificate__Base64`). `Seed:PlatformOwner:DisplayName` y `DataProtection:Certificate:Password` son opcionales. El seed crea una identidad global sin espacio Personal ni contraseña, con el correo como método principal verificado; cada ingreso exige el código enviado a ese buzón. Si ya existe ese método de correo, marca su cuenta como operadora. Si ya hay un operador, los siguientes arranques no exigen la clave ni alteran esa cuenta. En Development, sin la clave se omite el operador inicial; en Production, si aún no hay operador, falta de clave detiene el arranque.
 
 Para el recorrido de Ana, cargá `Seed:Development:AnaEmail` en user-secrets **antes del primer arranque de Development**. Si falta, el ejemplo usa `ana@example.test`, útil sólo con `Email:Delivery=PickupDirectory`. El seed no cambia métodos de ingreso en reinicios: para cambiar el buzón de Ana antes de la gestión de métodos de la 3b, recreá la base local de desarrollo. No cambies el correo directamente en la tabla.
 
@@ -98,6 +100,7 @@ Las opciones se validan **al arrancar**, como en ArquitecturaBase:
 |---|---|
 | `Email:Delivery=Smtp` sin `Email:Smtp:Password` | la Api no arranca y nombra la clave que falta |
 | Production sin operador y sin `Seed:PlatformOwner:Email` | la Api no arranca y nombra la clave que falta |
+| Fuera de Development y Testing sin `DataProtection:Certificate:Base64`, o con PFX inválido o sin clave privada | la Api no arranca y nombra la clave del certificado |
 | `Authentication:Google:ClientId` sin `ClientSecret` | la Api no arranca. Sin `ClientId`, el botón de Google no aparece (`GET /api/auth/methods`) |
 | `WhatsApp:PhoneNumberId` sin `AccessToken` | la Api no arranca |
 | `AppSecret` sin `VerifyToken`, o al revés | la Api no arranca. Sin ninguno, el webhook queda apagado, con un Warning, y el envío funciona igual |
@@ -107,4 +110,4 @@ Lo verifican `SmtpOptionsValidatorTests`, `GoogleOptionsTests`, `WhatsAppOptions
 
 ## 6. Producción
 
-Las mismas claves, como variables de entorno con doble guion bajo (`Email__Smtp__Password`, `WhatsApp__AccessToken`…), en el gestor de secretos del proveedor. Nunca en `appsettings.Production.json`. La lista completa de lo obligatorio fuera de Development está en `runbook.md` (Etapa 10).
+Las mismas claves, como variables de entorno con doble guion bajo (`Email__Smtp__Password`, `DataProtection__Certificate__Base64`, `WhatsApp__AccessToken`…), en el gestor de secretos del proveedor. Nunca en `appsettings.Production.json`. `DataProtection:Certificate:Base64` es un PFX RSA distinto de los certificados OIDC: el proceso necesita su clave privada para leer el anillo persistido en `platform.DataProtectionKeys`; conservá el mismo certificado en todas las réplicas y en los reinicios. Perderlo impide leer cookies y payloads cifrados con esas claves. `ProtectKeysWithCertificate` cifra las claves **nuevas**; una instalación que ya haya escrito claves sin cifrar necesita tratar ese anillo antes de exponer sus backups. La lista completa de lo obligatorio fuera de Development está en `runbook.md` (Etapa 10).

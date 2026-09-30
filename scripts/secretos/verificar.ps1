@@ -8,6 +8,7 @@ $requeridas = [ordered]@{
     'Email:Smtp:Password'               = 'Gmail (contraseña de aplicación). Sin ella la Api no arranca con Email:Delivery=Smtp'
     'Authentication:Google:ClientSecret' = 'Ingreso y registro con Google'
     'Authentication:LoginCode:HashKey'    = 'Firma HMAC de los códigos de ingreso y registro'
+    'DataProtection:Certificate:Base64'  = 'PFX que cifra las claves de Data Protection en Production y otros ambientes no locales'
     'Seed:PlatformOwner:Email'          = 'Operador inicial; obligatoria en Production si aún no existe uno'
     'WhatsApp:AccessToken'              = 'Enviar por WhatsApp (obligatoria si hay WhatsApp:PhoneNumberId)'
     'WhatsApp:AppSecret'                = 'Webhook de WhatsApp (va junto con VerifyToken)'

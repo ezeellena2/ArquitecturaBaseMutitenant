@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
@@ -9,6 +11,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using OpenIddict.Validation.AspNetCore;
 
@@ -17,12 +20,16 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Identity;
 internal static class IdentityRegistration
 {
     private const string GoogleSection = "Authentication:Google";
+    private const string DataProtectionCertificateKey = "DataProtection:Certificate:Base64";
+    private const string DataProtectionPasswordKey = "DataProtection:Certificate:Password";
 
     public static IServiceCollection AddIdentityServices(this IServiceCollection services, IConfiguration configuration,
+        IHostEnvironment environment,
         bool? isOpenApiExporter = null)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
+        ArgumentNullException.ThrowIfNull(environment);
 
         // AddIdentityCore evita que la cookie autentique las rutas /api: allí se valida el bearer de OpenIddict.
         var authentication = services.AddAuthentication(OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme);
@@ -75,12 +82,57 @@ internal static class IdentityRegistration
         else
         {
             dataProtection.PersistKeysToDbContext<ApplicationDbContext>();
+            if (!environment.IsDevelopment() && !environment.IsEnvironment("Testing"))
+            {
+                dataProtection.ProtectKeysWithCertificate(LoadDataProtectionCertificate(configuration));
+            }
         }
 
         services.AddScoped<ISignInService, SignInService>();
         services.AddScoped<IUserLookup, UserLookup>();
         services.AddScoped<IUserStatusReader, UserStatusReader>();
         return services;
+    }
+
+    private static X509Certificate2 LoadDataProtectionCertificate(IConfiguration configuration)
+    {
+        var base64 = configuration[DataProtectionCertificateKey];
+        if (string.IsNullOrWhiteSpace(base64))
+        {
+            throw new InvalidOperationException($"Missing {DataProtectionCertificateKey} outside Development and Testing.");
+        }
+
+        byte[] pfx;
+        try
+        {
+            pfx = Convert.FromBase64String(base64);
+        }
+        catch (FormatException exception)
+        {
+            throw new InvalidOperationException($"Invalid {DataProtectionCertificateKey}.", exception);
+        }
+
+        try
+        {
+            var certificate = X509CertificateLoader.LoadPkcs12(pfx,
+                configuration[DataProtectionPasswordKey]);
+            if (certificate.HasPrivateKey)
+            {
+                return certificate;
+            }
+
+            certificate.Dispose();
+            throw new InvalidOperationException($"{DataProtectionCertificateKey} must contain a private key.");
+        }
+        catch (CryptographicException exception)
+        {
+            throw new InvalidOperationException($"Invalid {DataProtectionCertificateKey} or {DataProtectionPasswordKey}.",
+                exception);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(pfx);
+        }
     }
 
     private static void AddGoogle(

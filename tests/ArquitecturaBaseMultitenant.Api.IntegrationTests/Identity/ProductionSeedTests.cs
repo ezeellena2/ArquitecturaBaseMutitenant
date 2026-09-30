@@ -9,6 +9,7 @@ using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Abstractions;
@@ -54,6 +55,16 @@ public sealed class ProductionSeedTests
 
         await using var scope = host.Services.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        host.Services.GetRequiredService<IDataProtectionProvider>()
+            .CreateProtector("production-key-encryption-test").Protect("probe");
+        var keyXml = await context.DataProtectionKeys.AsNoTracking()
+            .Select(key => key.Xml).ToListAsync(TestContext.Current.CancellationToken);
+        Assert.NotEmpty(keyXml);
+        Assert.All(keyXml, xml =>
+        {
+            Assert.Contains("encryptedSecret", xml, StringComparison.Ordinal);
+            Assert.DoesNotContain("<masterKey", xml, StringComparison.Ordinal);
+        });
         var settings = await context.PlatformSettings.SingleAsync(TestContext.Current.CancellationToken);
         Assert.Equal(ConsumerSignupMode.Open, settings.ConsumerSignup);
         Assert.Equal(BusinessSignupMode.Open, settings.BusinessSignup);
@@ -102,6 +113,7 @@ public sealed class ProductionSeedTests
             builder.UseSetting("Authentication:Clients:Web:PostLogoutRedirectUris:0", "https://example.test/");
             builder.UseSetting("Authentication:Certificates:Encryption:Base64", certificate);
             builder.UseSetting("Authentication:Certificates:Signing:Base64", certificate);
+            builder.UseSetting("DataProtection:Certificate:Base64", certificate);
             builder.UseSetting("Email:Delivery", "PickupDirectory");
             builder.UseSetting("Seed:PlatformOwner:Email", ownerEmail);
             builder.UseSetting("Seed:PlatformOwner:DisplayName", "Operator Example");

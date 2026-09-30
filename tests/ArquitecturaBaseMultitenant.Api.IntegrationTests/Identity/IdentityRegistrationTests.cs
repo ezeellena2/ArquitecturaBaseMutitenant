@@ -1,5 +1,8 @@
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
+using ArquitecturaBaseMultitenant.Infrastructure;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication;
@@ -11,6 +14,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using OpenIddict.Validation.AspNetCore;
 
@@ -78,7 +82,8 @@ public sealed class IdentityRegistrationTests(ApiFactory factory)
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddDbContext<ApplicationDbContext>();
-        services.AddIdentityServices(new ConfigurationBuilder().Build(), isOpenApiExporter: true);
+        services.AddIdentityServices(new ConfigurationBuilder().Build(), new TestEnvironment("Testing"),
+            isOpenApiExporter: true);
         await using var provider = services.BuildServiceProvider();
 
         var protector = provider.GetRequiredService<IDataProtectionProvider>().CreateProtector("openapi-export");
@@ -88,12 +93,49 @@ public sealed class IdentityRegistrationTests(ApiFactory factory)
         Assert.Null(provider.GetRequiredService<IOptions<KeyManagementOptions>>().Value.XmlRepository);
     }
 
+    [Fact]
+    public void Production_requires_data_protection_key_encryption()
+    {
+        var services = new ServiceCollection();
+        var certificate = TestCertificate();
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(
+            new Dictionary<string, string?>
+            {
+                ["Authentication:Certificates:Encryption:Base64"] = certificate,
+                ["Authentication:Certificates:Signing:Base64"] = certificate,
+            }).Build();
+
+        var failure = Assert.Throws<InvalidOperationException>(() =>
+            services.AddInfrastructure(configuration, new TestEnvironment("Production")));
+
+        Assert.Contains("DataProtection:Certificate:Base64", failure.Message, StringComparison.Ordinal);
+    }
+
     private static ServiceProvider BuildProvider(IConfiguration configuration)
     {
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddDbContext<ApplicationDbContext>();
-        services.AddIdentityServices(configuration);
+        services.AddIdentityServices(configuration, new TestEnvironment("Testing"));
         return services.BuildServiceProvider();
+    }
+
+    private sealed class TestEnvironment(string name) : IHostEnvironment
+    {
+        public string EnvironmentName { get; set; } = name;
+        public string ApplicationName { get; set; } = "Tests";
+        public string ContentRootPath { get; set; } = Path.GetTempPath();
+        public Microsoft.Extensions.FileProviders.IFileProvider ContentRootFileProvider { get; set; } = null!;
+    }
+
+    private static string TestCertificate()
+    {
+        using var rsa = RSA.Create(2048);
+        var request = new CertificateRequest("CN=data-protection-test", rsa,
+            HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        using var certificate = request.CreateSelfSigned(
+            TimeProvider.System.GetUtcNow().AddMinutes(-1),
+            TimeProvider.System.GetUtcNow().AddDays(1));
+        return Convert.ToBase64String(certificate.Export(X509ContentType.Pkcs12));
     }
 }

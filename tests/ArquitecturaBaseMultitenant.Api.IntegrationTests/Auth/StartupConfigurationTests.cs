@@ -73,7 +73,7 @@ public sealed class StartupConfigurationTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddDbContext<ApplicationDbContext>();
-        services.AddIdentityServices(configuration);
+        services.AddIdentityServices(configuration, new TestHostEnvironment());
         using var provider = services.BuildServiceProvider();
 
         var exception = Assert.ThrowsAny<Exception>(

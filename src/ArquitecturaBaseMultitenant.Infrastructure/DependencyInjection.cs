@@ -51,7 +51,7 @@ public static class DependencyInjection
         services.AddCaching();
 
         services.AddPersistence(configuration);
-        services.AddIdentityServices(configuration);
+        services.AddIdentityServices(configuration, environment);
         // La exportación OpenAPI no atiende requests ni tiene claves de firma o base de datos.
         if (System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name is not "GetDocument.Insider")
         {
