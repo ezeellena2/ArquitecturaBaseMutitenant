@@ -115,6 +115,102 @@ public sealed class BootstrapTests(ApiFactory factory)
                 TestContext.Current.CancellationToken));
     }
 
+    [Fact]
+    public async Task Runtime_role_validator_rejects_owner_membership()
+    {
+        await WithBootstrapChangeAsync("GRANT mt_owner TO mt_app", "REVOKE mt_owner FROM mt_app", () =>
+            Assert.ThrowsAsync<InvalidOperationException>(() =>
+                RuntimeRoleValidator.ValidateAsync(factory.RuntimeConnectionString,
+                    TestContext.Current.CancellationToken)));
+    }
+
+    [Theory]
+    [InlineData("SUPERUSER", "runtime_super_probe")]
+    [InlineData("BYPASSRLS", "runtime_bypass_probe")]
+    public async Task Runtime_role_validator_rejects_privileged_role_membership(string privilege, string role)
+    {
+        await WithBootstrapChangeAsync($"CREATE ROLE {role} {privilege}; GRANT {role} TO mt_app",
+            $"REVOKE {role} FROM mt_app; DROP ROLE {role}", () =>
+                Assert.ThrowsAsync<InvalidOperationException>(() =>
+                    RuntimeRoleValidator.ValidateAsync(factory.RuntimeConnectionString,
+                        TestContext.Current.CancellationToken)));
+    }
+
+    [Theory]
+    [InlineData("platform")]
+    [InlineData("identity")]
+    [InlineData("tenant")]
+    [InlineData("public_site")]
+    [InlineData("engagement")]
+    public async Task Runtime_role_validator_rejects_schema_create(string schema)
+    {
+        await WithBootstrapChangeAsync($"GRANT CREATE ON SCHEMA {schema} TO mt_app",
+            $"REVOKE CREATE ON SCHEMA {schema} FROM mt_app", () =>
+                Assert.ThrowsAsync<InvalidOperationException>(() =>
+                    RuntimeRoleValidator.ValidateAsync(factory.RuntimeConnectionString,
+                        TestContext.Current.CancellationToken)));
+    }
+
+    [Fact]
+    public async Task Runtime_role_validator_rejects_runtime_owned_relation()
+    {
+        await WithBootstrapChangeAsync("""
+            CREATE TABLE tenant."RuntimeRoleProbe" ("Id" integer);
+            ALTER TABLE tenant."RuntimeRoleProbe" OWNER TO mt_app;
+            """, "DROP TABLE tenant.\"RuntimeRoleProbe\"", () =>
+                Assert.ThrowsAsync<InvalidOperationException>(() =>
+                    RuntimeRoleValidator.ValidateAsync(factory.RuntimeConnectionString,
+                        TestContext.Current.CancellationToken)));
+    }
+
+    [Fact]
+    public async Task Bootstrap_removes_runtime_role_memberships()
+    {
+        await WithBootstrapChangeAsync("""
+            CREATE ROLE runtime_membership_probe;
+            GRANT mt_owner, runtime_membership_probe TO mt_app;
+            """, """
+            REVOKE mt_owner, runtime_membership_probe FROM mt_app;
+            DROP ROLE runtime_membership_probe;
+            """, async () =>
+        {
+            await DatabaseBootstrapExtensions.BootstrapAsync(factory.BootstrapConnectionString,
+                factory.AdminConnectionString, factory.RuntimeConnectionString,
+                TestContext.Current.CancellationToken);
+
+            await using var connection = new NpgsqlConnection(factory.RuntimeConnectionString);
+            await connection.OpenAsync(TestContext.Current.CancellationToken);
+            await using var command = new NpgsqlCommand("""
+                SELECT pg_has_role(current_user, 'mt_owner', 'MEMBER'),
+                       pg_has_role(current_user, 'runtime_membership_probe', 'MEMBER')
+                """, connection);
+            await using var reader = await command.ExecuteReaderAsync(TestContext.Current.CancellationToken);
+            Assert.True(await reader.ReadAsync(TestContext.Current.CancellationToken));
+            Assert.False(reader.GetBoolean(0));
+            Assert.False(reader.GetBoolean(1));
+        });
+    }
+
+    private async Task WithBootstrapChangeAsync(string setupSql, string cleanupSql, Func<Task> assertion)
+    {
+        await using var connection = new NpgsqlConnection(ForDatabase(factory.BootstrapConnectionString, "appdb"));
+        await connection.OpenAsync(TestContext.Current.CancellationToken);
+        await using (var setup = new NpgsqlCommand(setupSql, connection))
+        {
+            await setup.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+        }
+
+        try
+        {
+            await assertion();
+        }
+        finally
+        {
+            await using var cleanup = new NpgsqlCommand(cleanupSql, connection);
+            await cleanup.ExecuteNonQueryAsync(CancellationToken.None);
+        }
+    }
+
     private async Task CreateLegacyDatabaseAsync(string database)
     {
         await using var connection = new NpgsqlConnection(factory.BootstrapConnectionString);

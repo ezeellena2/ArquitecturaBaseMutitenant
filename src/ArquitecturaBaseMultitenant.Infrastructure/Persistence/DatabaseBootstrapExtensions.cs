@@ -100,6 +100,35 @@ public static class DatabaseBootstrapExtensions
         await ExecuteAsync(connection,
             $"{verb} ROLE {Identifier(role)} WITH LOGIN PASSWORD {quotedPassword} NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE NOREPLICATION;",
             cancellationToken);
+
+        if (role == "mt_app")
+        {
+            await RevokeRuntimeMembershipsAsync(connection, cancellationToken);
+        }
+    }
+
+    private static async Task RevokeRuntimeMembershipsAsync(
+        NpgsqlConnection connection, CancellationToken cancellationToken)
+    {
+        var grantedRoles = new List<string>();
+        await using (var command = new NpgsqlCommand("""
+            SELECT quote_ident(parent.rolname)
+            FROM pg_auth_members membership
+            JOIN pg_roles parent ON parent.oid = membership.roleid
+            WHERE membership.member = 'mt_app'::regrole
+            """, connection))
+        await using (var reader = await command.ExecuteReaderAsync(cancellationToken))
+        {
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                grantedRoles.Add(reader.GetString(0));
+            }
+        }
+
+        foreach (var quotedRole in grantedRoles)
+        {
+            await ExecuteAsync(connection, $"REVOKE {quotedRole} FROM mt_app;", cancellationToken);
+        }
     }
 
     private static async Task<(string Owner, string Provider, string? IcuLocale)?> FindDatabaseAsync(
