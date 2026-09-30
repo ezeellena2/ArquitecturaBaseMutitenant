@@ -72,6 +72,7 @@ internal sealed class TokenRevoker(
         Func<IReadOnlyDictionary<string, JsonElement>, bool> matches,
         CancellationToken cancellationToken)
     {
+        var matchingIds = new List<string>();
         await foreach (var authorization in source.WithCancellation(cancellationToken))
         {
             if (!matches(await authorizations.GetPropertiesAsync(authorization, cancellationToken)))
@@ -82,8 +83,21 @@ internal sealed class TokenRevoker(
             var id = await authorizations.GetIdAsync(authorization, cancellationToken);
             if (id is not null)
             {
-                await tokens.RevokeByAuthorizationIdAsync(id, cancellationToken);
+                matchingIds.Add(id);
             }
+        }
+
+        // Terminar de leer antes de actualizar: PostgreSQL no permite dos comandos
+        // simultáneos en la misma conexión de esta UoW.
+        foreach (var id in matchingIds)
+        {
+            var authorization = await authorizations.FindByIdAsync(id, cancellationToken);
+            if (authorization is null)
+            {
+                continue;
+            }
+
+            await tokens.RevokeByAuthorizationIdAsync(id, cancellationToken);
             await authorizations.TryRevokeAsync(authorization, cancellationToken);
         }
     }

@@ -33,6 +33,13 @@ internal sealed class ConnectAuthorizationStore(
         };
         descriptor.Scopes.UnionWith(scopes);
         descriptor.Properties[SessionIdProperty] = JsonSerializer.SerializeToElement(sessionId);
+        descriptor.Properties[TokenRevoker.AccessProperty] = JsonSerializer.SerializeToElement(
+            access.ToString().ToLowerInvariant());
+        if (tenantId is { } organizationId)
+        {
+            descriptor.Properties[TokenRevoker.TenantIdProperty] = JsonSerializer.SerializeToElement(
+                organizationId.ToString("D"));
+        }
 
         var authorization = await authorizations.CreateAsync(descriptor, cancellationToken);
         return await authorizations.GetIdAsync(authorization, cancellationToken)
