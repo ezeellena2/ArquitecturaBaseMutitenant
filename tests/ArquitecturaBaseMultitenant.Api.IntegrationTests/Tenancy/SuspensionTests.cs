@@ -3,6 +3,8 @@ using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.Tenancy;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Models.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.AspNetCore.Http;
@@ -24,7 +26,7 @@ public sealed class SuspensionTests
         var initializer = new RecordingInitializer();
         var middleware = NewMiddleware(new StubStatusCache(status), initializer);
 
-        await middleware.InvokeAsync(context, ActiveAccessCache(), initializer);
+        await middleware.InvokeAsync(context, ActiveAccessCache(), initializer, new StubTenantReader());
 
         Assert.Equal(StatusCodes.Status403Forbidden, context.Response.StatusCode);
         Assert.StartsWith("application/problem+json", context.Response.ContentType, StringComparison.OrdinalIgnoreCase);
@@ -33,6 +35,8 @@ public sealed class SuspensionTests
         using var body = await JsonDocument.ParseAsync(context.Response.Body,
             cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(expectedCode, body.RootElement.GetProperty("code").GetString());
+        Assert.Equal("Empresa A", body.RootElement.GetProperty("organizationName").GetString());
+        Assert.Equal(tenantId.ToString("D"), body.RootElement.GetProperty("tenantId").GetString());
         Assert.False(string.IsNullOrWhiteSpace(body.RootElement.GetProperty("traceId").GetString()));
     }
 
@@ -44,7 +48,7 @@ public sealed class SuspensionTests
         var initializer = new RecordingInitializer();
         var middleware = NewMiddleware(new StubStatusCache(TenantStatus.Active), initializer);
 
-        await middleware.InvokeAsync(context, ActiveAccessCache(), initializer);
+        await middleware.InvokeAsync(context, ActiveAccessCache(), initializer, new StubTenantReader());
 
         Assert.Equal(tenantId, initializer.TenantId);
         Assert.Equal(TenantKind.Business, initializer.Kind);
@@ -59,7 +63,7 @@ public sealed class SuspensionTests
         var initializer = new RecordingInitializer();
         var middleware = NewMiddleware(new StubStatusCache(TenantStatus.Active), initializer);
 
-        await middleware.InvokeAsync(context, ActiveAccessCache(), initializer);
+        await middleware.InvokeAsync(context, ActiveAccessCache(), initializer, new StubTenantReader());
 
         Assert.Equal(StatusCodes.Status403Forbidden, context.Response.StatusCode);
         Assert.Null(initializer.TenantId);
@@ -72,7 +76,7 @@ public sealed class SuspensionTests
         var initializer = new RecordingInitializer();
         var middleware = NewMiddleware(new StubStatusCache(TenantStatus.Active), initializer);
 
-        await middleware.InvokeAsync(context, ActiveAccessCache(), initializer);
+        await middleware.InvokeAsync(context, ActiveAccessCache(), initializer, new StubTenantReader());
 
         Assert.Null(initializer.TenantId);
         Assert.Equal(StatusCodes.Status204NoContent, context.Response.StatusCode);
@@ -88,7 +92,7 @@ public sealed class SuspensionTests
         var initializer = new RecordingInitializer();
         var middleware = NewMiddleware(new StubStatusCache(TenantStatus.Active), initializer);
 
-        await middleware.InvokeAsync(context, ActiveAccessCache(), initializer);
+        await middleware.InvokeAsync(context, ActiveAccessCache(), initializer, new StubTenantReader());
 
         Assert.Null(initializer.TenantId);
         Assert.Equal(StatusCodes.Status204NoContent, context.Response.StatusCode);
@@ -101,7 +105,8 @@ public sealed class SuspensionTests
         var initializer = new RecordingInitializer();
         var middleware = NewMiddleware(new StubStatusCache(TenantStatus.Active), initializer);
 
-        await middleware.InvokeAsync(context, new StubAccessStatusCache(UserStatus.Suspended), initializer);
+        await middleware.InvokeAsync(context, new StubAccessStatusCache(UserStatus.Suspended), initializer,
+            new StubTenantReader());
 
         Assert.Equal(StatusCodes.Status401Unauthorized, context.Response.StatusCode);
         Assert.Null(initializer.TenantId);
@@ -115,7 +120,8 @@ public sealed class SuspensionTests
         var middleware = NewMiddleware(new StubStatusCache(TenantStatus.Active), initializer);
 
         await middleware.InvokeAsync(context,
-            new StubAccessStatusCache(UserStatus.Active, MemberStatus.Inactive), initializer);
+            new StubAccessStatusCache(UserStatus.Active, MemberStatus.Inactive), initializer,
+            new StubTenantReader());
 
         Assert.Equal(StatusCodes.Status403Forbidden, context.Response.StatusCode);
         Assert.Null(initializer.TenantId);
@@ -134,7 +140,8 @@ public sealed class SuspensionTests
         var middleware = NewMiddleware(new StubStatusCache(status), initializer);
 
         await middleware.InvokeAsync(context,
-            new StubAccessStatusCache(UserStatus.Active, MemberStatus.Inactive), initializer);
+            new StubAccessStatusCache(UserStatus.Active, MemberStatus.Inactive), initializer,
+            new StubTenantReader());
 
         Assert.Equal(StatusCodes.Status204NoContent, context.Response.StatusCode);
         Assert.Equal(tenantId, initializer.TenantId);
@@ -149,7 +156,7 @@ public sealed class SuspensionTests
         var initializer = new RecordingInitializer();
         var middleware = NewMiddleware(new StubStatusCache(TenantStatus.Suspended), initializer);
 
-        await middleware.InvokeAsync(context, ActiveAccessCache(), initializer);
+        await middleware.InvokeAsync(context, ActiveAccessCache(), initializer, new StubTenantReader());
 
         Assert.Equal(StatusCodes.Status403Forbidden, context.Response.StatusCode);
         Assert.Null(initializer.TenantId);
@@ -164,7 +171,7 @@ public sealed class SuspensionTests
         var initializer = new RecordingInitializer();
         var middleware = NewMiddleware(new StubStatusCache(TenantStatus.Suspended), initializer);
 
-        await middleware.InvokeAsync(context, ActiveAccessCache(), initializer);
+        await middleware.InvokeAsync(context, ActiveAccessCache(), initializer, new StubTenantReader());
 
         Assert.Equal(StatusCodes.Status204NoContent, context.Response.StatusCode);
     }
@@ -219,6 +226,16 @@ public sealed class SuspensionTests
             Task.FromResult(status);
 
         public ValueTask InvalidateAsync(Guid tenantId, CancellationToken cancellationToken) => ValueTask.CompletedTask;
+    }
+
+    private sealed class StubTenantReader : ITenantReader
+    {
+        public Task<TenantRow?> FindByIdAsync(Guid tenantId, CancellationToken cancellationToken) =>
+            Task.FromResult<TenantRow?>(new TenantRow(tenantId, TenantKind.Business,
+                TenantStatus.Suspended, "Empresa A"));
+
+        public Task<IReadOnlyList<TenantRow>> ListActiveBusinessesAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<TenantRow>>([]);
     }
 
     private sealed class StubAccessStatusCache(

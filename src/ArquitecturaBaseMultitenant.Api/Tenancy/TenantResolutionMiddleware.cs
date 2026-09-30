@@ -3,6 +3,7 @@ using System.Security.Claims;
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
@@ -15,7 +16,7 @@ namespace ArquitecturaBaseMultitenant.Api.Tenancy;
 public sealed class TenantResolutionMiddleware(RequestDelegate next, ITenantStatusCache tenantStatuses)
 {
     public async Task InvokeAsync(HttpContext context, IAccessStatusCache accessStatuses,
-        ITenantAccessInitializer tenantInitializer)
+        ITenantAccessInitializer tenantInitializer, ITenantReader tenantReader)
     {
         ArgumentNullException.ThrowIfNull(context);
         if (context.User.Identity?.IsAuthenticated != true)
@@ -97,6 +98,23 @@ public sealed class TenantResolutionMiddleware(RequestDelegate next, ITenantStat
         };
         if (tenantError is not null)
         {
+            if (tenantStatus is TenantStatus.Suspended or TenantStatus.PendingApproval
+                or TenantStatus.Provisioning or TenantStatus.Closed)
+            {
+                var tenant = await tenantReader.FindByIdAsync(tenantId, context.RequestAborted);
+                if (tenant is not null)
+                {
+                    tenantError = tenantError with
+                    {
+                        Metadata = new Dictionary<string, object?>(StringComparer.Ordinal)
+                        {
+                            ["organizationName"] = tenant.Name,
+                            ["tenantId"] = tenantId.ToString("D", CultureInfo.InvariantCulture),
+                        },
+                    };
+                }
+            }
+
             await RejectAsync(context, tenantError);
             return;
         }
