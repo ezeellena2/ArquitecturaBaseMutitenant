@@ -223,11 +223,11 @@ En cada tarea se guarda evidencia de rojo y verde con el comando y resultado. Si
 **Archivos:** back: `Api/Controllers/Auth/AccountDeletionCancelController.cs`, `Contracts/Auth/CancelAccountDeletionHttpRequest.cs`; `Services/Legal/{AccountDeletionService,AccountDeletionCanceller}.cs`; tests `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Legal/AccountDeletionTests.cs`.
 **Comportamiento exacto:** POST /api/auth/deletion/cancel anónimo Idempotent, lock y ticket válido: limpiar baja, participantes, aviso todos, SecurityEvent en transacción; cookie solo después commit y returnUrl validado del ticket, conserva consumer/business. Ticket expirado/repetido/otra cuenta/fecha vencida rechazado. Refresh previo no revive.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Cancelación inexistente; se prueba éxito para ambas puertas y replay rechazado.
-- [ ] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class '*AccountDeletionTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: cancelar baja durante la gracia"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Cancelación inexistente; se prueba éxito para ambas puertas y replay rechazado.
+- [x] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class '*AccountDeletionTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: cancelar baja durante la gracia"`. Registrar hash back/front.
 
 ### T17 · Worker reanudable y eliminación final
 

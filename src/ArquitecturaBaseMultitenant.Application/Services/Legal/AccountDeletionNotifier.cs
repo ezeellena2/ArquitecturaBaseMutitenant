@@ -10,6 +10,14 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
 
 internal sealed class AccountDeletionNotifier(AccountNoticeIssuer notices, ISecurityEventRepository events, IPublicOrigin origin)
 {
+    internal Task CancelledAsync(UserAccountRow account, IReadOnlyList<LoginMethod> methods, DateTime nowUtc, CancellationToken ct)
+    {
+        events.Add(SecurityEvent.ForAccount(SecurityEventType.AccountDeletionCancelled, account.Id, nowUtc));
+        var url = origin.Value is { } value ? new Uri(value, "/cuenta").AbsoluteUri : "/cuenta";
+        return notices.EnqueueAsync(account.Id, methods, new AccountNotice.DeletionCancelled(nowUtc, account.TimeZoneId, url)
+            { RecipientName = account.DisplayName }, account.Culture, false, ct);
+    }
+
     internal Task RequestedAsync(UserAccountRow account, IReadOnlyList<LoginMethod> methods,
         DateTime nowUtc, DateTime scheduledForUtc, CancellationToken ct)
     {

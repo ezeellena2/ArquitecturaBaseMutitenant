@@ -7,6 +7,13 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories;
 
 internal sealed class ReauthTicketRepository(ApplicationDbContext context) : IReauthTicketRepository
 {
+    public Task<Guid?> GetUserIdByHashAsync(string tokenHash, CancellationToken cancellationToken)
+    {
+        context.RequireTransaction();
+        return context.ReauthTickets.AsNoTracking().Where(ticket => ticket.TokenHash == tokenHash)
+            .Select(ticket => (Guid?)ticket.UserId).SingleOrDefaultAsync(cancellationToken);
+    }
+
     public Task<ReauthTicket?> GetByHashAsync(string tokenHash, CancellationToken cancellationToken)
     {
         context.RequireTransaction();
@@ -20,4 +27,3 @@ internal sealed class ReauthTicketRepository(ApplicationDbContext context) : IRe
         context.ReauthTickets.Add(ticket);
     }
 }
-

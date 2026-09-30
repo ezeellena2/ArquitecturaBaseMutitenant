@@ -80,4 +80,83 @@ public sealed class AccountDeletionLoginTests(ApiFactory factory)
         Assert.Equal(returnUrl, ticket.ReturnUrl);
         Assert.Equal(TimeSpan.FromMinutes(5), ticket.ExpiresAtUtc - ticket.IssuedAtUtc);
     }
+
+    [Theory]
+    [InlineData("consumer")]
+    [InlineData("business")]
+    public async Task Cancellation_uses_the_proved_account_and_return_door_and_rejects_replay(string access)
+    {
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var account = await AccountJourney.RegisterAsync(factory, client, Ct);
+        var oldToken = client.DefaultRequestHeaders.Authorization;
+        var returnUrl = "/connect/authorize?client_id=web&access=" + access;
+        string secret;
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            var secrets = services.GetRequiredService<ISecureTokenGenerator>();
+            secret = secrets.Generate();
+            var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                await services.GetRequiredService<IUserRepository>().RequestDeletionAsync(account.UserId, "Prueba", nowUtc, 30, ct);
+                await services.GetRequiredService<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity.ISignInService>()
+                    .RevokeSessionsAsync(account.UserId, ct);
+                services.GetRequiredService<IReauthTicketRepository>().Add(ReauthTicket.Issue(account.UserId,
+                    ReauthAction.CancelDeletion, null, null, secrets.Hash(secret), nowUtc, returnUrl).Value);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+        client.DefaultRequestHeaders.Authorization = null;
+        using var cancelled = await AccountJourney.PostAsync(client, "/api/auth/deletion/cancel", new { cancelTicket = secret }, Ct);
+        Assert.Equal(HttpStatusCode.OK, cancelled.StatusCode);
+        using var body = await cancelled.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+        Assert.Equal(returnUrl, body!.RootElement.GetProperty("returnUrl").GetString());
+        Assert.Contains(cancelled.Headers.GetValues("Set-Cookie"), value =>
+            value.StartsWith(".AspNetCore.Identity.Application=", StringComparison.Ordinal));
+        using var replay = await AccountJourney.PostAsync(client, "/api/auth/deletion/cancel", new { cancelTicket = secret }, Ct);
+        Assert.Equal(HttpStatusCode.Forbidden, replay.StatusCode);
+        client.DefaultRequestHeaders.Authorization = oldToken;
+        using var oldSession = await client.GetAsync("/api/me", Ct);
+        Assert.Equal(HttpStatusCode.Unauthorized, oldSession.StatusCode);
+        await using var checkedScope = factory.Services.CreateAsyncScope();
+        var row = await checkedScope.ServiceProvider.GetRequiredService<IUserRepository>().GetByIdAsync(account.UserId, Ct);
+        Assert.Equal(ArquitecturaBaseMultitenant.Domain.Users.UserStatus.Active, row!.Status);
+        Assert.Null(row.DeletionScheduledForUtc);
+        Assert.Null((await checkedScope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Users.AsNoTracking()
+            .SingleAsync(user => user.Id == account.UserId, Ct)).DeletionReason);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Cancellation_rejects_expired_ticket_or_expired_grace_without_changing_state(bool expiredTicket)
+    {
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var account = await AccountJourney.RegisterAsync(factory, client, Ct);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var secrets = services.GetRequiredService<ISecureTokenGenerator>();
+        var secret = secrets.Generate();
+        var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+        {
+            await services.GetRequiredService<IUserRepository>().RequestDeletionAsync(account.UserId, "Prueba",
+                expiredTicket ? nowUtc : nowUtc.AddDays(-31), 30, ct);
+            services.GetRequiredService<IReauthTicketRepository>().Add(ReauthTicket.Issue(account.UserId,
+                ReauthAction.CancelDeletion, null, null, secrets.Hash(secret), expiredTicket ? nowUtc.AddMinutes(-6) : nowUtc,
+                "/connect/authorize?client_id=web&access=consumer").Value);
+            return Result.Success();
+        }, CommitPolicy.OnSuccess, Ct);
+        client.DefaultRequestHeaders.Authorization = null;
+        using var denied = await AccountJourney.PostAsync(client, "/api/auth/deletion/cancel", new { cancelTicket = secret }, Ct);
+        Assert.Equal(expiredTicket ? HttpStatusCode.Forbidden : HttpStatusCode.Conflict, denied.StatusCode);
+        Assert.Equal(ArquitecturaBaseMultitenant.Domain.Users.UserStatus.PendingDeletion,
+            (await services.GetRequiredService<IUserRepository>().GetByIdAsync(account.UserId, Ct))!.Status);
+        var hash = secrets.Hash(secret);
+        Assert.Null((await services.GetRequiredService<ApplicationDbContext>().ReauthTickets.AsNoTracking()
+            .SingleAsync(ticket => ticket.TokenHash == hash, Ct)).ConsumedAtUtc);
+    }
 }

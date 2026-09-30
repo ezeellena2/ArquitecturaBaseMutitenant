@@ -28,7 +28,9 @@ Estado: en ejecución. La 3c queda pendiente. No declarar cerrada esta etapa sin
 
 | T14 · pedir baja y revocar sesiones | `ebce448` | — | Rojo: 404; integración 7/7; operador/sin ticket rechazados, módulo conserva estado y ticket, tokens Consumer y Business revocados y cookie cerrada |
 
-| T15 · ingreso de gracia | este commit | — | Rojo: no .eml, metadata y cookie ausentes; integración 20/20. Ticket cinco minutos, puerta preservada, cookie HttpOnly Secure sin secreto en URL, expiración servidor |
+| T15 · ingreso de gracia | `42fb0c4` | — | Rojo: no .eml, metadata y cookie ausentes; integración 20/20. Ticket cinco minutos, puerta preservada, cookie HttpOnly Secure sin secreto en URL, expiración servidor |
+
+| T16 · cancelar baja | este commit | — | Rojo 404; integración 13/13; returnUrl consumer/business, replay 403, vencimientos sin cambios y sesión previa 401 |
 
 ## Evidencia del E2E real antes de programar
 
@@ -82,6 +84,8 @@ Ocultaciones solicitadas: WhatsApp (E8), exportación/sugerencia de exportar (E1
 - T14: se reutiliza SignInService.RevokeSessions para revocar cookie por SecurityStamp y autorizaciones/tokens OpenIddict de ambos accesos en la UoW. La API cierra la cookie después del commit. Los mensajes anteriores se cancelan antes de encolar el aviso de baja; la razón permanece únicamente en la identidad y se limpia al anonimizar.
 
 - T15: lock cuenta antes del destino y propiedad releída para evitar inversión con reauth. Google conserva returnUrl y comprobante dentro de una cookie Data Protection HttpOnly/Secure de cinco minutos, recuperada por POST no-store; el servidor también exige vigencia. Suspensión y bloqueo prevalecen antes de emitir el ticket.
+
+- T16: el hash se proyecta a UserId sin tracking antes del lock; el ticket se relee bajo ese lock. La cookie nueva se emite después del commit; la sesión anterior permanece revocada. No se permite cambiar UserId ni returnUrl desde la petición anónima.
 
 ## Recorrido manual
 
