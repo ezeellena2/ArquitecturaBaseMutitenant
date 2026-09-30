@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Identity.Deletion;
 
+/// <summary>Cancela avisos pendientes de una cuenta al pedir o ejecutar su baja, para que no se envíen después. Actúa sobre el tramo global de la transacción del worker.</summary>
 internal sealed class OutboxDeletionParticipant(ApplicationDbContext database) : AccountDeletionParticipant
 {
     public override Task OnRequestedAsync(AccountDeletionContext context, CancellationToken ct) => ExecuteAsync(context, ct);

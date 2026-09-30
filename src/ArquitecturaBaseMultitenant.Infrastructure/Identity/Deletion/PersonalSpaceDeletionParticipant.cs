@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Identity.Deletion;
 
+/// <summary>Cierra el espacio Personal y retira sus ajustes y membresías durante la baja de la cuenta. Solo actúa dentro del alcance de ese tenant y de la transacción del worker.</summary>
 internal sealed class PersonalSpaceDeletionParticipant(ApplicationDbContext database, ITenantContext tenantContext)
     : AccountDeletionParticipant
 {

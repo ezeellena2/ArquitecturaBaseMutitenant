@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
 
+/// <summary>Envía correos por SMTP mediante una conexión reutilizable durante un lote. Si falla el envío, descarta la conexión para que el próximo intento empiece limpio.</summary>
 internal sealed class SmtpEmailTransport(IOptions<SmtpOptions> options) : IEmailTransport, IDisposable
 {
     private const int TimeoutMilliseconds = 30_000;

@@ -3,6 +3,7 @@ using MailKit.Security;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
 
+/// <summary>Contiene el host, las credenciales y el remitente del transporte SMTP. Sus valores sensibles provienen de configuración externa, no del repositorio.</summary>
 internal sealed class SmtpOptions
 {
     public const string SectionName = "Email:Smtp";

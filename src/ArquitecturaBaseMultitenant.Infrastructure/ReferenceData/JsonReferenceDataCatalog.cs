@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
 
+/// <summary>Lee los JSON de referencia embebidos para alimentar el seed y la exportación OpenAPI sin depender de archivos del directorio de trabajo. El runtime con base migrada consulta las tablas mediante ReferenceDataReader.</summary>
 public sealed class JsonReferenceDataCatalog :
     ICurrencyCatalog,
     ICountryCatalog,

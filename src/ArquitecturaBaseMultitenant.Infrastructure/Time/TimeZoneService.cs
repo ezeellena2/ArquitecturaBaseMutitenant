@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Time;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Time;
 
+/// <summary>Convierte fechas civiles y horas entre una zona IANA y UTC para que los casos de uso no hagan cálculos de zona por su cuenta. Rechaza horas locales inexistentes y resuelve explícitamente las ambiguas.</summary>
 public sealed class TimeZoneService(TimeProvider timeProvider) : ITimeZoneService
 {
     public DayRangeUtc GetDayRangeUtc(DateOnly date, string timeZoneId)

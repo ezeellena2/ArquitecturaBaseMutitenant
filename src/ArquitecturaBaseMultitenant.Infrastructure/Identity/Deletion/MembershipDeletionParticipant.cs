@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Identity.Deletion;
 
+/// <summary>Retira una membresía de la organización durante la baja de una cuenta y deja su auditoría en la transacción ya abierta. Exige que el worker haya entrado primero al tenant correcto.</summary>
 internal sealed class MembershipDeletionParticipant(ApplicationDbContext database, ITenantContext tenantContext,
     IAuditLog audit) : AccountDeletionParticipant
 {

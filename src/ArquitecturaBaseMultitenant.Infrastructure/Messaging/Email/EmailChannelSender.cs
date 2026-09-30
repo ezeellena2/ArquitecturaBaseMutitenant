@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Domain.Messaging;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
 
+/// <summary>Adapta los mensajes de correo del outbox al transporte configurado. El dispatcher le entrega un payload ya descifrado fuera del request original.</summary>
 internal sealed class EmailChannelSender(IEmailTransport transport) : IChannelSender
 {
     public string Key => OutboxChannel.Email;

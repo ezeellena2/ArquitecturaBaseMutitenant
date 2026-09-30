@@ -7,6 +7,7 @@ using ArquitecturaBaseMultitenant.Domain.Messaging;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
 
+/// <summary>Prepara los avisos de seguridad y cambios de cuenta para enviarlos por correo. Renderiza el texto localizado y lo encola en el outbox dentro del caso de uso.</summary>
 internal sealed class EmailAccountNoticeChannel(IEmailTemplateRenderer templates, IOutbox outbox) : IAccountNoticeChannel
 {
     public string Key => OutboxChannel.Email;

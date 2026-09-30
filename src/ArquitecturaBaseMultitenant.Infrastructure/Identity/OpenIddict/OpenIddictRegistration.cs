@@ -9,6 +9,7 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Identity.OpenIddict;
 
+/// <summary>Configura el servidor OIDC, sus endpoints y credenciales para emitir y validar tokens del cliente web. Mantiene el issuer único y restringe las trazas internas que podrían incluir datos de sesión.</summary>
 internal static class OpenIddictRegistration
 {
     public const string TestingEnvironment = "Testing";

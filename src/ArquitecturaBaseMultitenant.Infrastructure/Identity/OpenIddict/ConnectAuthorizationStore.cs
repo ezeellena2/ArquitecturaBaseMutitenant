@@ -8,6 +8,7 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Identity.OpenIddict;
 
+/// <summary>Crea la autorización OIDC que vincula una sesión con la cuenta, el acceso y la organización elegida. Guarda ese alcance en propiedades de la autorización dentro de la transacción del ingreso.</summary>
 internal sealed class ConnectAuthorizationStore(
     IOpenIddictApplicationManager applications,
     IOpenIddictAuthorizationManager authorizations,

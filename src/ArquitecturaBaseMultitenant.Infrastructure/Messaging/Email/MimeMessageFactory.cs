@@ -3,6 +3,7 @@ using MimeKit;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
 
+/// <summary>Construye el mensaje MIME con remitente, destinatario y cuerpos HTML y texto. Lo comparten el transporte SMTP y el pickup para que ambos entreguen el mismo contenido.</summary>
 internal static class MimeMessageFactory
 {
     public static MimeMessage Create(EmailMessage message, SmtpOptions sender)

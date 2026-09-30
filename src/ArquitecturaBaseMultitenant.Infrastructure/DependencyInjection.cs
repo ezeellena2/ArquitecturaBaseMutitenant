@@ -25,6 +25,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure;
 
+/// <summary>Compone los adaptadores de Infrastructure para que Application use persistencia, identidad, mensajería y caché a través de sus puertos. Elige las implementaciones según la configuración del host.</summary>
 public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(

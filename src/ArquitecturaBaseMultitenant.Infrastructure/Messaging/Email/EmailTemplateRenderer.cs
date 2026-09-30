@@ -11,7 +11,7 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
 
-/// <summary>Renders embedded email templates with escaped replacement values.</summary>
+/// <summary>Combina plantillas HTML embebidas con textos localizados para producir correos de ingreso y avisos. Escapa los valores variables antes de insertarlos en el HTML.</summary>
 internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> options) : IEmailTemplateRenderer
 {
     private DisplayFormatter? _formatter;

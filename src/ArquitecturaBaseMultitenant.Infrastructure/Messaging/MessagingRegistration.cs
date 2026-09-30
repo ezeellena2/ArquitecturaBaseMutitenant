@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Messaging;
 
+/// <summary>Registra el outbox y su despacho periódico. En Testing deja el despacho bajo control del test para evitar carreras con el worker.</summary>
 internal static class MessagingRegistration
 {
     internal static IServiceCollection AddMessaging(this IServiceCollection services,

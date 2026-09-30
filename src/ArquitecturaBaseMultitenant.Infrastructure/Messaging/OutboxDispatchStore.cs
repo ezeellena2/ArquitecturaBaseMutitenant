@@ -11,7 +11,7 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Messaging;
 
-/// <summary>Locks one due row with SKIP LOCKED and tracks its send within the caller's transaction.</summary>
+/// <summary>Reclama un aviso vencido con SKIP LOCKED y marca el resultado en la transacción del despachador. Un fallo programa otro intento sin exponer el payload cifrado en logs.</summary>
 internal sealed partial class OutboxDispatchStore(
     ApplicationDbContext context,
     IPayloadProtector protector,

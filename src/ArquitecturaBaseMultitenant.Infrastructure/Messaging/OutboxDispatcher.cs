@@ -8,7 +8,7 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Messaging;
 
-/// <summary>Periodic worker; the Application service commits each message separately.</summary>
+/// <summary>Busca periódicamente avisos pendientes y entrega cada uno mediante el servicio de Application. Cada aviso tiene su propio scope y commit para aislar reintentos.</summary>
 internal sealed partial class OutboxDispatcher(
     IServiceScopeFactory scopeFactory,
     TimeProvider timeProvider,

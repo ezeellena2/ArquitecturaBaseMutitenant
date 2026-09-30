@@ -18,6 +18,7 @@ using OpenIddict.Validation.AspNetCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Identity;
 
+/// <summary>Configura Identity, los esquemas de autenticación y el acceso con Google. Las rutas API validan tokens de OpenIddict, mientras las cookies sirven solo al recorrido de conexión.</summary>
 internal static class IdentityRegistration
 {
     private const string GoogleSection = "Authentication:Google";

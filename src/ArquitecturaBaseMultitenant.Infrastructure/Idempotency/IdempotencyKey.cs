@@ -1,5 +1,6 @@
 namespace ArquitecturaBaseMultitenant.Infrastructure.Idempotency;
 
+/// <summary>Representa la reserva técnica de una petición idempotente y la respuesta que se puede reproducir. Vive en platform y evita ejecutar de nuevo una acción ya completada.</summary>
 internal sealed class IdempotencyKey
 {
     private IdempotencyKey()

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Identity.Deletion;
 
+/// <summary>Quita los metadatos personales de las aceptaciones legales al completar la baja. Conserva la prueba de qué versiones se aceptaron.</summary>
 internal sealed class LegalAcceptanceDeletionParticipant(ApplicationDbContext database) : AccountDeletionParticipant
 {
     public override async Task ExecuteAsync(AccountDeletionContext context, CancellationToken ct)

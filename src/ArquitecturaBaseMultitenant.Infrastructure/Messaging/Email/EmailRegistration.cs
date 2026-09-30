@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
 
+/// <summary>Elige y registra el transporte de correo, los renderizadores y las opciones de envío. Development puede escribir archivos .eml; el envío real usa SMTP.</summary>
 internal static class EmailRegistration
 {
     internal static IServiceCollection AddEmail(this IServiceCollection services,

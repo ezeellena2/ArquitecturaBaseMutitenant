@@ -2,7 +2,7 @@ using Microsoft.Extensions.Caching.Hybrid;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Caching;
 
-/// <summary>Claves globales de los cinco catálogos e invalidación después del commit del seed.</summary>
+/// <summary>Centraliza las claves globales de los catálogos y su invalidación después del commit del seed.</summary>
 internal sealed class ReferenceDataCache(HybridCache cache)
 {
     internal static readonly string CurrenciesKey = CacheKeys.Platform("ref:currencies");

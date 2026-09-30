@@ -4,6 +4,7 @@ using NpgsqlTypes;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Idempotency;
 
+/// <summary>Reserva y completa claves idempotentes en transacciones PostgreSQL propias, fuera de la transacción del caso de uso. Permite reproducir la respuesta después de un corte del cliente y liberar la reserva ante un fallo del servidor.</summary>
 public sealed class IdempotencyStore : IIdempotencyStore
 {
     private static readonly TimeSpan Validity = TimeSpan.FromHours(24);

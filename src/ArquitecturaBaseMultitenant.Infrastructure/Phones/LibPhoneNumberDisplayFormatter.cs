@@ -3,7 +3,7 @@ using PhoneNumbers;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Phones;
 
-/// <summary>Display formatting from libphonenumber metadata; input is already E.164.</summary>
+/// <summary>Presenta un número E.164 usando los metadatos de libphonenumber. Muestra formato nacional si coincide con el país de visualización e internacional en los demás casos.</summary>
 public sealed class LibPhoneNumberDisplayFormatter : IPhoneNumberDisplayFormatter
 {
     private static readonly PhoneNumberUtil Util = PhoneNumberUtil.GetInstance();

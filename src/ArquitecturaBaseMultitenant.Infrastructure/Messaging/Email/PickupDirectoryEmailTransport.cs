@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
 
+/// <summary>Escribe cada correo como archivo .eml para inspección y pruebas locales. No contacta un servidor SMTP.</summary>
 internal sealed partial class PickupDirectoryEmailTransport(
     IOptions<EmailOptions> emailOptions,
     IOptions<SmtpOptions> smtpOptions,
