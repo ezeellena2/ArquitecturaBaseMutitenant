@@ -36,3 +36,5 @@ Este recorrido vincula Google a una **cuenta existente**. El registro o ingreso 
 - Si una clase tiene `/// <summary>`, leelo al pasar el cursor sobre el nombre. Resume la responsabilidad y orienta el siguiente salto; el código y los tests muestran el detalle.
 
 Las reglas generales de carpetas y capas están en [`backend.md`](../architecture/backend.md); los recorridos del producto están en `docs/features/`.
+
+Al crear o modificar una clase con lógica, mantené su `summary` en una a tres frases sobre responsabilidad y motivo. Un DTO, enum o marcador cuyo nombre y miembros ya lo explican no necesita un comentario que repita lo mismo.
