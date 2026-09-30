@@ -24,7 +24,20 @@ public sealed class Stage3aInventoryTests
         "docs/contracts/openapi.json",
         "tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Auth/AuthPipelineTests.cs",
         "tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Auth/LogoutTests.cs",
+        "tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Auth/IngressJourneyTests.cs",
+        "tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Legal/LegalAcceptanceTests.cs",
+        "tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Identity/ProductionSeedTests.cs",
+        "tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Identity/DevelopmentSeedTests.cs",
+        "tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Tenancy/SuspensionTests.cs",
+        "tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Tenancy/AccessTests.cs",
+        "tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Auth/SignupTests.cs",
+        "tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Auth/GoogleLoginTests.cs",
+        "tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Auth/LoginCodeTests.cs",
+        "tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Contracts/ExplicitRouteInventoryTests.cs",
+        "tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/TestFeatures/Access/BusinessOnlyController.cs",
         "tests/ArquitecturaBaseMultitenant.Application.UnitTests/Services/Auth/ConnectLogoutServiceTests.cs",
+        "tests/ArquitecturaBaseMultitenant.Application.UnitTests/Services/Auth/ConnectServiceTests.cs",
+        "tests/ArquitecturaBaseMultitenant.Application.UnitTests/Services/Auth/AccessSwitchPolicyTests.cs",
     ];
 
     [Fact]
@@ -33,6 +46,23 @@ public sealed class Stage3aInventoryTests
         Assert.DoesNotContain(RequiredFiles, path => !File.Exists(Path.Combine(SolutionRoot.FullPath,
             path.Replace('/', Path.DirectorySeparatorChar))));
     }
+
+    [Theory]
+    [InlineData("tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Auth/IngressJourneyTests.cs")]
+    [InlineData("tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Legal/LegalAcceptanceTests.cs")]
+    [InlineData("tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Identity/ProductionSeedTests.cs")]
+    [InlineData("tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Identity/DevelopmentSeedTests.cs")]
+    [InlineData("tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Tenancy/SuspensionTests.cs")]
+    [InlineData("tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Tenancy/AccessTests.cs")]
+    [InlineData("tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Auth/SignupTests.cs")]
+    [InlineData("tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Auth/GoogleLoginTests.cs")]
+    [InlineData("tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Auth/LoginCodeTests.cs")]
+    [InlineData("tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Contracts/ExplicitRouteInventoryTests.cs")]
+    [InlineData("tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/TestFeatures/Access/BusinessOnlyController.cs")]
+    [InlineData("tests/ArquitecturaBaseMultitenant.Application.UnitTests/Services/Auth/ConnectServiceTests.cs")]
+    [InlineData("tests/ArquitecturaBaseMultitenant.Application.UnitTests/Services/Auth/AccessSwitchPolicyTests.cs")]
+    public void Stage3a_gate_files_are_guarded_by_the_inventory(string path) =>
+        Assert.Contains(path, RequiredFiles);
 
     [Fact]
     public void Split_stage_keeps_harness_at_two_until_3c_closes() =>
