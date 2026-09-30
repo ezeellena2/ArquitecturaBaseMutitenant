@@ -146,11 +146,11 @@ En cada tarea se guarda evidencia de rojo y verde con el comando y resultado. Si
 **Archivos:** back: `Api/Controllers/Account/{AccountLoginMethodsController,ReauthController}.cs`, `Api/Contracts/Account/*HttpRequest.cs`; tests `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Identity/LoginMethodsTests.cs`, inventarios existentes de rutas/accesos.
 **Comportamiento exacto:** GET /api/me/login-methods; POST para alta y código/verificación; POST /api/me/reauth y /verify; PUT /api/me/login-methods/{id}/primary; DELETE /api/me/login-methods/{id}. Access Consumer/Business/Platform para cuenta global, Idempotent en POST, contratos RawText para tokens/códigos y ToString seguro; 404 ajeno. Actualizar solo inventarios existentes requeridos.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Rutas faltantes, 401 anónimo y 404 de método ajeno demostrados.
-- [ ] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class '*LoginMethodsTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: exponer gestión de métodos de cuenta"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Rutas faltantes, 401 anónimo y 404 de método ajeno demostrados.
+- [x] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class '*LoginMethodsTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: exponer gestión de métodos de cuenta"`. Registrar hash back/front.
 
 ### T10 · Perfil versionado y aviso de método propio
 

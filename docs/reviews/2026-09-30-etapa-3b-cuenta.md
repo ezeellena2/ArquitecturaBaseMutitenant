@@ -15,7 +15,8 @@ Estado: en ejecución. La 3c queda pendiente. No declarar cerrada esta etapa sin
 | T06 · agregar y verificar correo | `0d6f226` | — | Rojo CS0246/CS0117; LoginMethodsTests 5/5 y plantillas: total 17/17; código Login rechazado, intento guardado, código propio consumido y reserva global |
 | T07 · quitar y elegir principal | `ba150f2` | — | Rojo CS0246/CS1061; integración 8/8, inventario existente de identidad 3/3; contexto/replay/vencimiento, último método y principal/copias atómicos |
 | T06 bis · aislar registro y correo pendiente | `2097c3b` | — | Rojo: 204 con cookie en lugar de 400; SignupTests 8/8; registro no confirma métodos pendientes agregados desde otra cuenta |
-| T08 · vincular Google | este commit | — | Rojo CS0246; Google 13/13 + protocolo 1/1; sesión distinta/correo no verificado/conflicto rechazados; OAuth state protegido y antiforgery |
+| T08 · vincular Google | `457f569` | — | Rojo CS0246; Google 13/13 + protocolo 1/1; sesión distinta/correo no verificado/conflicto rechazados; OAuth state protegido y antiforgery |
+| T09 · HTTP de métodos y reautenticación | este commit | — | Rojo: 404 en rutas inexistentes y código sin traducir bajo campo; HTTP + inventario 5/5; 401, 404 ajeno real, replay y verificación pickup |
 
 ## Evidencia del E2E real antes de programar
 
@@ -55,6 +56,7 @@ Ocultaciones solicitadas: WhatsApp (E8), exportación/sugerencia de exportar (E1
 - T07: el código también conserva acción/respaldo/objetivo, antes del ticket; de otro modo, la misma prueba podría presentarse como una acción diferente al verificar. Los métodos administrados consultan un booleano de membresía/organización activa mediante un puerto específico, declarado en el inventario existente; no consultan Members fuera de RLS.
 - T06 bis: un correo pendiente agregado desde Mi cuenta solo se confirma con VerifyDestination y su UserId. El registro anónimo no lo activa ni inicia una sesión de su propietario; devuelve el error existente de dirección asociada después de probar el código. Las invitaciones se implementan con su protocolo en 3c.
 - T08: para iniciar OAuth desde una API bearer, el vínculo recibe JSON con redirectUrl generado por el middleware; la navegación Google sigue después. El callback existente compara el UserId del state protegido con la cookie Identity validada, sin usar query para cuenta o retorno. Locks externos antes del lock de cuenta. Contactos Google existentes sin dato se completan con el correo probado en su próximo ingreso.
+- T09: el listado es lectura por puerto separado, devuelve acciones/respaldo calculados y días de gracia de PlatformSettings. El subject Google queda fuera del contrato. Los códigos de resources que Domain usa como errores de campo se traducen centralmente en ProblemDetailsMapper; los mensajes de validación ya traducidos siguen igual.
 
 ## Recorrido manual
 

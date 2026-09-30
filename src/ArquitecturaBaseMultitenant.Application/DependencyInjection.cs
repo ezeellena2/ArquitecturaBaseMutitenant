@@ -59,6 +59,7 @@ public static class DependencyInjection
         services.AddScoped<ReauthTicketConsumer>();
         services.AddScoped<IAccountGoogleService, AccountGoogleService>();
         services.AddScoped<GoogleMethodLinker>();
+        services.AddScoped<IAccountLoginMethodsService, AccountLoginMethodsService>();
         services.AddScoped<DisplayFormatter>();
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
         services.AddScoped<IRequestValidator, RequestValidator>();

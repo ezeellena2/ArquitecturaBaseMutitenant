@@ -104,7 +104,8 @@ internal static class ProblemDetailsMapper
     {
         if (error is ValidationError validationError)
         {
-            problem.Extensions[ErrorsExtension] = validationError.Errors;
+            problem.Extensions[ErrorsExtension] = validationError.Errors.ToDictionary(pair => pair.Key,
+                pair => pair.Value.Select(message => ErrorTexts.Find(message) ?? message).ToArray(), StringComparer.Ordinal);
         }
 
         if (error.Metadata is null)

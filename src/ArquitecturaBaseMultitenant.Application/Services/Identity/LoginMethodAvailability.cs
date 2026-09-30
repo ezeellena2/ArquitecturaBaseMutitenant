@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 
@@ -29,6 +30,22 @@ internal sealed class LoginMethodAvailability(IEnumerable<ILoginCodeChannel> cha
 
     public bool CanReceiveCode(LoginMethod method) => method.Type is LoginMethodType.Email or LoginMethodType.Google
         && LoginMethodNotifier.Contact(method) is not null && channels.Any(channel => channel.Key == LoginCodeChannel.Email);
+
+    public bool CanReceiveCode(LoginMethodRow method) => (method.Type == LoginMethodType.Email
+        || (method.Type == LoginMethodType.Google && method.ContactEmail is not null))
+        && channels.Any(channel => channel.Key == LoginCodeChannel.Email);
+
+    public async Task<bool> IsAvailableAsync(Guid userId, LoginMethodRow method, CancellationToken ct)
+    {
+        var channelAvailable = method.Type switch
+        {
+            LoginMethodType.Email => channels.Any(channel => channel.Key == LoginCodeChannel.Email),
+            LoginMethodType.Google => google.IsEnabled,
+            _ => false,
+        };
+        return method.VerifiedAtUtc is not null && channelAvailable
+            && (method.ManagedByTenantId is not { } tenantId || await memberships.IsActiveAsync(userId, tenantId, ct));
+    }
 
     public static Error? CheckRemoval(LoginMethod target, IReadOnlyList<LoginMethod> available)
     {
