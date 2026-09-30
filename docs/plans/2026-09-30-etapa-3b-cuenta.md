@@ -245,11 +245,11 @@ En cada tarea se guarda evidencia de rojo y verde con el comando y resultado. Si
 **Archivos:** back: `docs/contracts/openapi.json`; front: `src/shared/api/generated/schema.d.ts`, `src/shared/api/types.ts`, `src/test/account-contract.test.ts`.
 **Comportamiento exacto:** Regenerar por build back + npm run contracts. Test de contrato lee controllers/contratos/error codes/returnUrls back y rutas/clientes/claims/redirects front, verifica cada cruce 3b y metadatos de baja sin duplicar textos. Actualizar inventarios existentes. No crear guardas de arquitectura adicionales.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Test rojo antes de clientes/rutas front; schema generado coincide al terminar.
-- [ ] 2. Ejecutar `npm run contracts && npm run contracts:check` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "test: fijar contratos cruzados de la cuenta"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Test rojo antes de clientes/rutas front; schema generado coincide al terminar.
+- [x] 2. Ejecutar `npm run contracts && npm run contracts:check` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "test: fijar contratos cruzados de la cuenta"`. Registrar hash back/front.
 
 ### T19 · Clientes API y recursos de cuenta
 

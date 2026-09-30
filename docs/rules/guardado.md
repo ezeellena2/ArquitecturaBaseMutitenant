@@ -26,7 +26,7 @@ public Task<Result> UpdateAsync(UpdateRoleRequest request, CancellationToken ct)
 - `SaveChanges` en un repositorio, un helper o un controller.
 - Anidar límites: lanza, porque es un bug.
 - Que un helper reciba `IUnitOfWork`.
-- `ExecuteUpdate` o `ExecuteDelete` sobre entidades `IAuditable` o `ISoftDeletable`, porque se saltean la auditoría y el soft delete.
+- `ExecuteUpdate` o `ExecuteDelete` sobre entidades `IAuditable` o `ISoftDeletable`, porque se saltean la auditoría y el soft delete. La única llamada bulk declarada es `LoginMethodRepository.ClearPrimaryAsync` sobre `LoginMethod` técnico global: retira el principal anterior antes de activar el siguiente por el índice parcial inmediato, dentro de la misma UoW. No guarda ni tiene tenant, auditoría o soft-delete; el test real verifica cambio/rollback.
 - Abrir un límite para una consulta.
 
 ## Copiá de

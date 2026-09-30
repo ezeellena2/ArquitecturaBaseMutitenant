@@ -115,14 +115,16 @@ public sealed class TransactionBoundaryTests
     [Fact]
     public void Ef_bulk_writes_require_an_explicit_exception()
     {
-        var owners = Production.SelectMany(ArchitectureIl.Calls)
+        var calls = Production.SelectMany(ArchitectureIl.Calls)
             .Where(IsEfBulkWrite)
-            .Select(call => call.Owner)
-            .Distinct(StringComparer.Ordinal)
             .ToArray();
 
-        // E2 no tiene excepción de negocio: ExecuteUpdate/Delete omitiría interceptores.
-        Assert.Empty(owners);
+        // E3b: LoginMethod es identidad técnica sin auditoría ni soft-delete.
+        // Solo esta operación retira el principal antes del índice parcial inmediato;
+        // exige la UoW y la prueba real cubre cambio de principal/rollback.
+        var allowed = Assert.Single(calls);
+        Assert.Equal("ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories.LoginMethodRepository", allowed.Owner);
+        Assert.Equal("ExecuteUpdateAsync", allowed.Method);
         Assert.True(IsEfBulkWrite(new ArchitectureIl.Call("Rogue",
             "Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions", "ExecuteDeleteAsync", 2, [])));
     }
