@@ -82,6 +82,29 @@ public sealed class HarnessTests
     }
 
     [Fact]
+    public void Front_test_names_are_skipped_when_sibling_checkout_is_absent()
+    {
+        var backend = Path.Combine(Path.GetTempPath(), "harness-back-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(backend, "scripts"));
+            File.WriteAllText(Path.Combine(backend, "scripts", "generator.test.mjs"), "test('works', () => {});");
+            var names = TestNames(backend, frontendRoot: null);
+            var line = "- `generator.test.mjs` (E1), `missing.test.mjs` (E1), `formatters.test.ts` (E1), `screen.test.tsx` (E1).";
+
+            var failures = MissingVerificationTests(line, 7, "docs/rules/probe.md", names,
+                closedStage: 2, frontExists: false).ToArray();
+
+            Assert.Single(failures);
+            Assert.Contains("missing.test.mjs", failures[0], StringComparison.Ordinal);
+        }
+        finally
+        {
+            if (Directory.Exists(backend)) Directory.Delete(backend, recursive: true);
+        }
+    }
+
+    [Fact]
     public void Persistence_stage_is_closed()
     {
         Assert.True(HarnessStage.Closed >= 2);
@@ -172,7 +195,8 @@ public sealed class HarnessTests
                     continue;
                 }
 
-                failures.AddRange(MissingVerificationTests(line, number, Relative(file), testNames, closedStage));
+                failures.AddRange(MissingVerificationTests(line, number, Relative(file), testNames, closedStage,
+                    frontExists));
 
                 if (line.Contains("`BannedSymbols.txt` (E0)", StringComparison.Ordinal)
                     && !File.Exists(Path.Combine(Root, "BannedSymbols.txt")))
@@ -696,7 +720,8 @@ public sealed class HarnessTests
             .Where(testClass => !testClass.HasTestMethod)
             .Select(testClass => $"{Path.GetRelativePath(backendRoot, testClass.File).Replace('\\', '/')}: {testClass.Name} no tiene [Fact] ni [Theory] en un método.");
 
-    private static IEnumerable<string> MissingVerificationTests(string line, int number, string file, HashSet<string> testNames, int closedStage)
+    private static IEnumerable<string> MissingVerificationTests(string line, int number, string file, HashSet<string> testNames,
+        int closedStage, bool frontExists = true)
     {
         const string pattern = @"\b(?:[A-Za-z][A-Za-z0-9_]*Tests|[A-Za-z][A-Za-z0-9_-]*\.test\.(?:mjs|tsx?))\b";
         foreach (Match match in Regex.Matches(line, pattern, RegexOptions.CultureInvariant))
@@ -706,7 +731,9 @@ public sealed class HarnessTests
             {
                 yield return $"{file}:{number}: {match.Value} no indica (E#).";
             }
-            else if (stage <= closedStage && !testNames.Contains(match.Value))
+            else if (stage <= closedStage && !testNames.Contains(match.Value)
+                && (frontExists || !match.Value.EndsWith(".test.ts", StringComparison.Ordinal)
+                    && !match.Value.EndsWith(".test.tsx", StringComparison.Ordinal)))
             {
                 yield return $"{file}:{number}: falta el test {match.Value} (E{stage}).";
             }
