@@ -1,3 +1,4 @@
+// Orquesta Postgres, API y front para desarrollo; el recorrido E2E usa una base y correo pickup aislados.
 var builder = DistributedApplication.CreateBuilder(args);
 
 var postgresPassword = builder.AddParameter("postgres-password", secret: true);
