@@ -61,11 +61,11 @@ public sealed class IdempotencyTests(ApiFactory factory)
         }
         catch (HttpRequestException)
         {
-            // El servidor abortó la conexión después de serializar la respuesta capturada.
+            // La escritura al cliente puede fallar con el RequestAborted simulado.
         }
         catch (TaskCanceledException)
         {
-            // TestServer puede traducir el aborto de la conexión a cancelación del cliente.
+            // TestServer puede propagar el RequestAborted simulado como cancelación.
         }
 
         using var replay = await SendAsync(client, "create-abort-after-result", body, key);
