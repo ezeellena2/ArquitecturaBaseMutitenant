@@ -33,8 +33,9 @@ public sealed class OutboxDispatcherTests(ApiFactory factory)
         var protector = CreateProtector();
         var clock = CreateClock();
         const string payload = "delivery payload";
-        var id = await SeedAsync(context, unitOfWork, protector, payload, clock, Ct);
-        var sender = new TestSender();
+        const string channel = "email-dispatch-once-test";
+        var id = await SeedAsync(context, unitOfWork, protector, payload, clock, Ct, channel);
+        var sender = new TestSender { Key = channel };
         var dispatcher = CreateDispatcher(services, protector, clock);
 
         Assert.Equal(1, (await dispatcher.DispatchOnceAsync([sender], Ct)).Value);
