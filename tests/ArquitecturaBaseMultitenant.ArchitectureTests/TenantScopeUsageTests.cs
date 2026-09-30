@@ -13,7 +13,6 @@ public sealed class TenantScopeUsageTests
     private const string ConnectService = "ArquitecturaBaseMultitenant.Application.Services.Auth.ConnectService";
     private const string ExternalLoginService = "ArquitecturaBaseMultitenant.Application.Services.Auth.ExternalLoginService";
     private const string DatabaseSeeder = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed.DatabaseSeeder";
-    private const string DevelopmentSeeder = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed.DevelopmentSeeder";
 
     [Fact]
     public void Only_declared_adapters_and_signup_services_enter_a_tenant_scope()
@@ -31,7 +30,6 @@ public sealed class TenantScopeUsageTests
         Assert.Contains(calls, call => call.Owner == ConnectService);
         Assert.Contains(calls, call => call.Owner == ExternalLoginService);
         Assert.Contains(calls, call => call.Owner == DatabaseSeeder);
-        Assert.Contains(calls, call => call.Owner == DevelopmentSeeder);
         Assert.Empty(UnauthorizedCallers(calls));
     }
 
@@ -55,8 +53,7 @@ public sealed class TenantScopeUsageTests
     private static string[] UnauthorizedCallers(IEnumerable<ArchitectureIl.Call> calls) =>
         [.. calls.Where(IsEnterCall)
             .Where(call => call.Owner is not (TenantJobRunner or TenantSettingsLoader
-                or AccountService or ConnectService or ExternalLoginService or DatabaseSeeder
-                or DevelopmentSeeder))
+                or AccountService or ConnectService or ExternalLoginService or DatabaseSeeder))
             .Select(call => $"{call.Owner}.{call.OwnerMethod}")
             .Distinct(StringComparer.Ordinal)];
 

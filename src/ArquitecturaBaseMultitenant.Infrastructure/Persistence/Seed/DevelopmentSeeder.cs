@@ -17,7 +17,6 @@ internal sealed class DevelopmentSeeder(
     IUserLookup lookup,
     IUserRepository users,
     ILoginMethodRepository methods,
-    ITenantScope tenantScope,
     IUserTenantAccessReader accesses,
     IPersonalSpaceLock personalSpaceLock,
     IPersonalSpaceProvisioner personalSpaces,
@@ -109,36 +108,18 @@ internal sealed class DevelopmentSeeder(
             Email.Create(KevinEmail).Value.Value, cancellationToken);
         if (kevin is null) return null;
 
-        var candidates = await context.Tenants.AsNoTracking()
-            .Where(tenant => tenant.Kind == TenantKind.Business && tenant.Name == BusinessName)
-            .OrderBy(tenant => tenant.Id)
-            .ToArrayAsync(cancellationToken);
-        foreach (var candidate in candidates)
-        {
-            using var scope = tenantScope.Enter(candidate.Id);
-            if (await context.Members.AsNoTracking().AnyAsync(member =>
-                    member.UserId == kevin.UserId, cancellationToken))
-                return candidate;
-        }
-
-        return null;
+        var access = (await accesses.ListForUserAsync(kevin.UserId, cancellationToken))
+            .Where(row => row.Kind == TenantKind.Business && row.Name == BusinessName)
+            .OrderBy(row => row.TenantId)
+            .FirstOrDefault();
+        return access is null ? null : await context.Tenants.AsNoTracking()
+            .SingleAsync(tenant => tenant.Id == access.TenantId, cancellationToken);
     }
 
     private async Task<bool> HasPersonalAsync(Guid userId, CancellationToken cancellationToken)
     {
-        var personalIds = await context.Tenants.AsNoTracking()
-            .Where(tenant => tenant.Kind == TenantKind.Personal)
-            .Select(tenant => tenant.Id)
-            .ToArrayAsync(cancellationToken);
-        foreach (var personalId in personalIds)
-        {
-            using var scope = tenantScope.Enter(personalId);
-            if (await context.Members.AsNoTracking().AnyAsync(member =>
-                    member.UserId == userId, cancellationToken))
-                return true;
-        }
-
-        return false;
+        return (await accesses.ListForUserAsync(userId, cancellationToken))
+            .Any(access => access.Kind == TenantKind.Personal);
     }
 
     private async Task<Guid> FindOrCreateUserAsync(string name, Email email, string culture,
