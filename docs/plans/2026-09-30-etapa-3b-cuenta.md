@@ -423,3 +423,54 @@ Guardar manifest e informe en front `docs/design/capturas/etapa-3b/`; cada caso 
 ## Estado de ejecución al terminar el trabajo técnico
 
 T01–T30 ejecutadas y commiteadas. Puerta automática verde: backend 1110/1110, front 655/655, generador 30/30, arnés 10/10 y 20/20, contratos, builds y E2E real 6/6. Comparación visual: 118 pares presentes y revisados. El cierre formal de 3b queda pendiente de aprobación del usuario de las diferencias residuales de presentación, por el punto 9 del plan maestro. La 3c no se inició y conserva su propia puerta. Informe y manual: `docs/reviews/2026-09-30-etapa-3b-cuenta.md`.
+
+## Correcciones de seguridad solicitadas antes del cierre
+
+Alcance exclusivo: impedir agregar métodos con solo una sesión abierta y liberar métodos pendientes ajenos. La puerta anterior se debe repetir completa. Los pasos de implementación y verificación dirigida se ejecutan en bloques de 2–5 minutos; las suites completas y el E2E real pueden durar más. No se agregan guardas ni tests del arnés nuevos.
+
+### T31 · Regresiones reales de ambos problemas
+
+- [ ] Escribir un caso HTTP sin ticket para agregar correo y vincular Google; comprobar que no produce método ni desafío. Ejecutarlo y guardar el rojo.
+- [ ] Escribir un caso de reauth que excluye un método verificado después de la sesión, incluidos verificación manipulada y refresh/cambio de acceso. Ejecutarlo y guardar el rojo.
+- [ ] Cambiar el caso de registro con pendiente ajeno: el código crea otra cuenta y elimina el pendiente; no activa la cuenta anterior. Ejecutarlo y guardar el rojo.
+- [ ] Agregar ambos casos al runner real, con identidades y PostgreSQL propios, sin mocks; ejecutarlo antes de implementar y registrar ambos fallos.
+
+### T32 · Reautenticación para agregar correo y vincular Google (back)
+
+Archivos: sesión y claims (`SignInService`, `BrowserSessionKeys`, `ConnectController`, `OpenIdPrincipalFactory`, `CurrentUser`), servicios/modelos/validadores/contratos de cuenta y reauth, tests de Identity/Auth y contratos OpenAPI.
+
+- [ ] Sellar el inicio UTC en las propiedades protegidas de la cookie; emitirlo en el token y conservarlo al renovar/cambiar acceso. Ausencia o valor inválido no permite reauth.
+- [ ] Agregar acciones específicas para correo y Google; seleccionar y verificar solamente fuentes anteriores al inicio de sesión.
+- [ ] Consumir el ticket una vez y dentro de la UoW para agregar correo y preparar el desafío Google; conservar antiforgery y la identidad protegida del callback.
+- [ ] Ejecutar los tests dirigidos verdes y los contratos cruzados. Actualizar `datos-personales.md` y ADR 0033 en este mismo commit: `fix: exigir reautenticación para sumar métodos de ingreso`.
+
+### T33 · Diálogo existente de reautenticación para las dos altas (front)
+
+Archivos: componentes/API/tests de Mi cuenta, resources es/en, contrato cruzado y schema generado.
+
+- [ ] Escribir primero los tests que exigen confirmar el código del método anterior antes del POST de alta o desafío; ejecutarlos rojos.
+- [ ] Reusar el diálogo, controles y estados de cambio de método para correo/Google; mantener tickets solo en memoria y cuerpo HTTP.
+- [ ] Adaptar el recorrido real de agregar correo y registrar/verificar los contratos de acciones y cuerpos leyendo los dos repos.
+- [ ] Tests dirigidos, lint/build verdes y commit: `fix: reautenticar antes de agregar correo o Google`.
+
+### T34 · Posesión y vencimiento de pendientes (back)
+
+Archivos: entidad/configuración/migración/repositorio `LoginMethod`, registro, alta y vínculo Google, tests existentes de Signup/LoginMethods/GoogleLogin.
+
+- [ ] Escribir casos rojos de pendiente ajeno en alta y Google, vencimiento igual al código, reenvío, rechazo de código anterior y conservación de métodos verificados ajenos.
+- [ ] Eliminar el pendiente ajeno bajo el mismo lock del destino antes de continuar; registrar una cuenta nueva solo tras probar posesión. El borrado y la nueva escritura se confirman o revierten juntos.
+- [ ] Persistir el vencimiento UTC del pendiente desde su código y renovarlo al reenviar; un pendiente vencido deja de reservar el destino y de admitir verificación. Migración revisada, sin datos de ejemplo ni modificar Development.
+- [ ] Tests dirigidos verdes y commit: `fix: liberar métodos pendientes y vencerlos con su código`.
+
+### T35 · E2E real, comparación visual y puerta completa
+
+- [ ] Actualizar los recorridos reales con la reauth legítima y comprobar que ambos ataques quedan bloqueados, que el pendiente se recupera y que el método nuevo no sirve como fuente en la sesión anterior. Ejecutar `npm run test:e2e:real` completo verde.
+- [ ] Capturar las nuevas reautenticaciones desktop/móvil en `docs/design/capturas/etapa-3b/`, comparar con el diálogo existente y documentar la extensión autorizada por el pedido de seguridad. Repetir comparación general.
+- [ ] Repetir build back 0 advertencias, `dotnet test` con Docker; lint/test/build/contracts:check front; generador, arnés y contratos existentes.
+- [ ] Detener Aspire; registrar commits, rojos/verdes, salida literal E2E, diferencias y decisiones. Actualizar manual real para ambos controles. Commit de evidencia: `docs: registrar correcciones y puerta de seguridad de la 3b`.
+
+### Decisiones tomadas para las correcciones
+
+- El inicio de sesión se obtiene de autenticación emitida por el servidor; refresh y cambio de acceso conservan ese instante. No se usa la fecha de emisión de cada token ni un dato enviado por el cliente.
+- Las acciones de alta de correo y vínculo Google tienen tickets distintos y de un solo uso. La reauth existente conserva su selección automática de destino y cooldown.
+- La posesión de un correo pendiente no otorga acceso a la cuenta que lo reservó: el registro crea la identidad del dueño comprobado. Un método verificado ajeno sigue protegido.
