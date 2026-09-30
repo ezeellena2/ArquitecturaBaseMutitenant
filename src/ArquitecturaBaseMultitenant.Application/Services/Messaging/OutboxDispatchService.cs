@@ -23,8 +23,11 @@ internal sealed class OutboxDispatchService(
                 return Result.Success(0);
             }
 
+            cancellationToken.ThrowIfCancellationRequested();
+            // Una entrega iniciada debe confirmar su estado aunque el worker reciba stop.
+            // El worker comprueba la cancelación antes de empezar el siguiente mensaje.
             return await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 Result.Success(await store.DispatchDueAsync(senders, ct)),
-                CommitPolicy.OnSuccess, cancellationToken);
+                CommitPolicy.OnSuccess, CancellationToken.None);
         });
 }

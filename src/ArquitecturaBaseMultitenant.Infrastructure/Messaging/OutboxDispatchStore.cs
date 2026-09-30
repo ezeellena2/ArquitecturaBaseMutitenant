@@ -11,7 +11,7 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Messaging;
 
-/// <summary>Locks due rows with SKIP LOCKED and tracks sends within the caller's transaction.</summary>
+/// <summary>Locks one due row with SKIP LOCKED and tracks its send within the caller's transaction.</summary>
 internal sealed partial class OutboxDispatchStore(
     ApplicationDbContext context,
     IPayloadProtector protector,
@@ -31,7 +31,7 @@ internal sealed partial class OutboxDispatchStore(
         var byChannel = senders.ToDictionary(sender => sender.Key, StringComparer.Ordinal);
         var settings = options.Value;
         var ids = await LockDueIdsAsync(byChannel.Keys.ToArray(), timeProvider.GetUtcNow().UtcDateTime,
-            settings.BatchSize, cancellationToken);
+            1, cancellationToken);
         if (ids.Count == 0)
         {
             return 0;

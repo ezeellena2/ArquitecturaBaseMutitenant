@@ -716,8 +716,10 @@ La estructura sigue el diseño de la Etapa 6 del plan maestro de `../Arquitectur
 - **Envío por el outbox persistente** (`platform.OutboxMessages`), no en memoria. Esto **difiere a propósito** de ArquitecturaBase, que usa colas en memoria (`WhatsAppSendQueue`, `EmailQueue`) y documenta que un reinicio las pierde. Con varias organizaciones y réplicas, perder una invitación o un código no es aceptable (ADR 0014):
   - el caso de uso inserta el mensaje dentro de su transacción;
   - `OutboxDispatcher` lo envía;
+  - cada entrega toma una fila con `SKIP LOCKED` y confirma su estado en una UoW propia; un pedido de parada impide iniciar la siguiente entrega, pero no cancela la confirmación de la ya iniciada;
   - el payload con códigos o enlaces va cifrado con DataProtection;
   - un reinicio no pierde mensajes.
+  SMTP y PostgreSQL no comparten transacción: si el proceso cae después de que SMTP acepta el mensaje y antes de confirmar `Sent`, un reintento puede duplicarlo. La garantía es que un mensaje **confirmado** como `Sent` no se vuelve a despachar.
 - **Webhook** `GET/POST /webhooks/whatsapp`: anónimo, con rate limit y cuerpo de 5 MB como máximo.
   - Firma HMAC `X-Hub-Signature-256` sobre los bytes exactos del cuerpo.
   - Idempotente por `wamid`.

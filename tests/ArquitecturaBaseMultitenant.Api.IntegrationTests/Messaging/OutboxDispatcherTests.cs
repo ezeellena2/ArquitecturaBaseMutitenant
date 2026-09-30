@@ -143,6 +143,39 @@ public sealed class OutboxDispatcherTests(ApiFactory factory)
         Assert.Equal(OutboxStatus.Sent, saved.Status);
     }
 
+    [Fact]
+    public async Task Stopping_after_first_delivery_commits_it_without_resending_on_restart()
+    {
+        using var client = factory.CreateClient();
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var protector = CreateProtector();
+        var clock = CreateClock();
+        const string channel = "email-stop";
+        var unitOfWork = services.GetRequiredService<IUnitOfWork>();
+        var firstId = await SeedAsync(context, unitOfWork, protector, "first", clock, Ct, channel);
+        var secondId = await SeedAsync(context, unitOfWork, protector, "second", clock, Ct, channel);
+        using var stop = new CancellationTokenSource();
+        var sender = new TestSender(() =>
+        {
+            stop.Cancel();
+            return Task.CompletedTask;
+        }) { Key = channel };
+        var dispatcher = CreateDispatcher(services, protector, clock);
+
+        Assert.Equal(1, (await dispatcher.DispatchOnceAsync([sender], stop.Token)).Value);
+
+        var states = await context.OutboxMessages.AsNoTracking()
+            .Where(message => message.Id == firstId || message.Id == secondId)
+            .Select(message => message.Status).ToListAsync(Ct);
+        Assert.Equal(1, states.Count(status => status == OutboxStatus.Sent));
+        Assert.Equal(1, states.Count(status => status == OutboxStatus.Pending));
+        Assert.Single(sender.Payloads);
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
+            await dispatcher.DispatchOnceAsync([sender], stop.Token));
+    }
+
     private static OutboxDispatchService CreateDispatcher(IServiceProvider services, PayloadProtector protector,
         FakeTimeProvider clock,
         int maxAttempts = 5) =>
@@ -184,6 +217,7 @@ public sealed class OutboxDispatcherTests(ApiFactory factory)
 
         public async Task SendAsync(string payload, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             Payloads.Add(payload);
             if (beforeSend is not null)
             {
