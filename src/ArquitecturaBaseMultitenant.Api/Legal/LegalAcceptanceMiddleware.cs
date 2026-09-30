@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 
 namespace ArquitecturaBaseMultitenant.Api.Legal;
 
+/// <summary>Bloquea rutas autenticadas mientras falte aceptar documentos vigentes; exceptúa perfil, lectura y aceptación legal.</summary>
 public sealed class LegalAcceptanceMiddleware(RequestDelegate next)
 {
     public async Task InvokeAsync(HttpContext context, ILegalAcceptanceService service)

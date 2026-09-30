@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Account;
 
+/// <summary>Entrega perfiles incluso si el acceso empresa está suspendido y delega la edición de preferencias globales.</summary>
 [ApiController]
 [Route("api/me")]
 [Tags("Account")]

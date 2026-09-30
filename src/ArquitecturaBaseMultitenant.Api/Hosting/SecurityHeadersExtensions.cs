@@ -1,5 +1,6 @@
 namespace ArquitecturaBaseMultitenant.Api.Hosting;
 
+/// <summary>Agrega cabeceras de seguridad a toda respuesta, incluso las que produce el manejador de excepciones.</summary>
 internal static class SecurityHeadersExtensions
 {
     /// <summary>

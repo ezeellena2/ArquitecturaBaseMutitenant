@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.RateLimiting;
 
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Auth;
 
+/// <summary>Expone el alta personal por correo en dos pasos; la creación de cuenta y espacio queda en Application.</summary>
 [ApiController]
 [AllowAnonymous]
 [Route("api/auth/signup")]

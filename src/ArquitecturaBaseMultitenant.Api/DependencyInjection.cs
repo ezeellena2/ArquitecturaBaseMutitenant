@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.Api;
 
+/// <summary>Registra los adaptadores HTTP de la API y uniforma JSON, errores, OpenAPI y límites de ingreso.</summary>
 public static class DependencyInjection
 {
     public static IServiceCollection AddPresentation(this IServiceCollection services)

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Api.RateLimiting;
 
+/// <summary>Registra ventanas independientes por IP para pedir y verificar códigos de ingreso.</summary>
 internal static class RateLimitingExtensions
 {
     public static IServiceCollection AddLoginRateLimitingPolicies(this IServiceCollection services)

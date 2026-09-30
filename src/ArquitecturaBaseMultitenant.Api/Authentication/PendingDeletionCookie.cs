@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.DataProtection;
 
 namespace ArquitecturaBaseMultitenant.Api.Authentication;
 
-/// <summary>Transporta el comprobante OAuth sin exponerlo en una URL ni abrir una sesión.</summary>
+/// <summary>Protege el estado de baja pendiente en una cookie breve para mostrarlo sin abrir sesión; la cancelación usa su ticket.</summary>
 public sealed class PendingDeletionCookie(IDataProtectionProvider protection, TimeProvider timeProvider)
 {
     private const string Name = "MtPendingDeletion";

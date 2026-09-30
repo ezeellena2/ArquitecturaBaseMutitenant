@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Account;
 
+/// <summary>Expone los métodos de la cuenta y delega su alta, verificación, elección principal y baja al servicio de identidad.</summary>
 [ApiController]
 [Route("api/me/login-methods")]
 [Access(Access.Consumer, Access.Business, Access.Platform)]

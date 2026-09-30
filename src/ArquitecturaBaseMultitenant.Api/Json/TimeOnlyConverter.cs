@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace ArquitecturaBaseMultitenant.Api.Json;
 
+/// <summary>Exige y emite horas civiles sin fecha ni zona en el formato fijo HH:mm:ss del contrato.</summary>
 public sealed class TimeOnlyConverter : JsonConverter<TimeOnly>
 {
     private const string Format = "HH:mm:ss";

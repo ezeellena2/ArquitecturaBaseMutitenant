@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace ArquitecturaBaseMultitenant.Api.Json;
 
+/// <summary>Exige y emite fechas civiles sin zona en el formato fijo yyyy-MM-dd del contrato.</summary>
 public sealed class DateOnlyConverter : JsonConverter<DateOnly>
 {
     private const string Format = "yyyy-MM-dd";

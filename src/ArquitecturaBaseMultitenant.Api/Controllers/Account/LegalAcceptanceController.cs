@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Account;
 
+/// <summary>Recibe la aceptación de documentos vigentes para desbloquear las rutas de una cuenta autenticada.</summary>
 [ApiController]
 [Route("api/legal/accept")]
 [Access(Access.Consumer, Access.Business, Access.Platform)]

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 
 namespace ArquitecturaBaseMultitenant.Api.Hosting;
 
+/// <summary>Configura la confianza en X-Forwarded-For y X-Forwarded-Proto mediante proxies conocidos o TrustAll explícito.</summary>
 internal static class ForwardedHeadersExtensions
 {
     private const string SectionName = "ForwardedHeaders";

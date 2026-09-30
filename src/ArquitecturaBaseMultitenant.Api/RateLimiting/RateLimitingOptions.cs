@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ArquitecturaBaseMultitenant.Api.RateLimiting;
 
+/// <summary>Define los cupos y ventanas configurables para pedir y verificar códigos de ingreso.</summary>
 internal sealed class RateLimitingOptions
 {
     public const string SectionName = "RateLimiting";

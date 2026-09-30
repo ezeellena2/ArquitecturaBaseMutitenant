@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.RateLimiting;
 
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Auth;
 
+/// <summary>Inicia y verifica el ingreso por código de correo; el servicio decide qué identidad puede acceder.</summary>
 [ApiController]
 [AllowAnonymous]
 [Route("api/auth/login-code")]

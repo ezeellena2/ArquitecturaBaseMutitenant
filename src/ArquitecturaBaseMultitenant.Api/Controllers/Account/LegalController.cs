@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Account;
 
+/// <summary>Sirve sin sesión la versión vigente de términos y privacidad en la cultura elegida por la petición.</summary>
 [ApiController]
 [AllowAnonymous]
 [Route("api/legal")]

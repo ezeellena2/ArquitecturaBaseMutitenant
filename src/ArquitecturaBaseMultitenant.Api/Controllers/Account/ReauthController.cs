@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Account;
 
+/// <summary>Pide y verifica una prueba de posesión ligada a la acción de cuenta que se quiere realizar.</summary>
 [ApiController]
 [Route("api/me/reauth")]
 [Access(Access.Consumer, Access.Business, Access.Platform)]

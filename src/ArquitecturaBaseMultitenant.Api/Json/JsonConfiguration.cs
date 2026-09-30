@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Api.Json;
 
+/// <summary>Aplica a MVC y respuestas HTTP los formatos del contrato y normaliza strings de entrada salvo los marcados RawText.</summary>
 public static class JsonConfiguration
 {
     public static void ConfigureJson(JsonSerializerOptions options)

@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Account;
 
+/// <summary>Inicia el desafío de Google para vincularlo a la cuenta actual; la vinculación ocurre tras el callback validado.</summary>
 [ApiController]
 [Route("api/me/external/google")]
 [Access(Access.Consumer, Access.Business, Access.Platform)]

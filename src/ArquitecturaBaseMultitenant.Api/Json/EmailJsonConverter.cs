@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Api.Json;
 
+/// <summary>Usa el value object Email al deserializar para entregar al dominio una dirección ya normalizada.</summary>
 internal sealed class EmailJsonConverter : JsonConverter<Email>
 {
     public override Email Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)

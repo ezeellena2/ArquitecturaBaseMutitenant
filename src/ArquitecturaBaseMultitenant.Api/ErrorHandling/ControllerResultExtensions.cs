@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.Api.ErrorHandling;
 
+/// <summary>Convierte Result de Application en respuestas HTTP consistentes y delega los errores al mapper de ProblemDetails.</summary>
 public static class ControllerResultExtensions
 {
     public static IActionResult ToActionResult(this Result result, ControllerBase controller)

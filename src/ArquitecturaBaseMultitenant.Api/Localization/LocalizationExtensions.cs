@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Localization;
 
 namespace ArquitecturaBaseMultitenant.Api.Localization;
 
+/// <summary>Limita Accept-Language a las culturas habilitadas del catálogo y define su fallback.</summary>
 internal static class LocalizationExtensions
 {
     /// <summary>La cultura de la petición sale solo de Accept-Language y de las filas habilitadas del catálogo.</summary>

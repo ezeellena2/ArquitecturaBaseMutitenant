@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.Api.Controllers.ReferenceData;
 
+/// <summary>Expone catálogos completos o por tipo con traducciones y ETag; Application realiza las consultas.</summary>
 [ApiController]
 [AllowAnonymous]
 [Route("api/reference-data")]

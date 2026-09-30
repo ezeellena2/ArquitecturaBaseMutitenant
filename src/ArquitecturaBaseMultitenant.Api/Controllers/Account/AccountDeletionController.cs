@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Account;
 
+/// <summary>Solicita la baja de la cuenta actual con un comprobante de reautenticación y cierra su cookie al aceptarla.</summary>
 [ApiController]
 [Route("api/me/deletion")]
 [Access(Access.Consumer, Access.Business, Access.Platform)]

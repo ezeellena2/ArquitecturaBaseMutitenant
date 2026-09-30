@@ -8,6 +8,7 @@ using Microsoft.OpenApi;
 
 namespace ArquitecturaBaseMultitenant.Api.OpenApi;
 
+/// <summary>Ajusta el contrato OpenAPI a la serialización real de la API y publica la documentación solo en Development.</summary>
 internal static class OpenApiExtensions
 {
     private const string DocumentUrl = "/openapi/v1.json";

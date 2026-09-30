@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Auth;
 
+/// <summary>Expone sin sesión el estado de baja pendiente desde una cookie protegida y permite cancelarla con un ticket.</summary>
 [ApiController]
 [AllowAnonymous]
 [Route("api/auth/deletion")]

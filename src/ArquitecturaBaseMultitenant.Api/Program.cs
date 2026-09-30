@@ -12,6 +12,7 @@ using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Rls;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 
+// Compone la API y su pipeline; prepara la base y sus datos antes de aceptar peticiones.
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();

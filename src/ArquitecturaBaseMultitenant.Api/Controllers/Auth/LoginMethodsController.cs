@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Auth;
 
+/// <summary>Publica los canales de ingreso disponibles antes de tener una sesión; no enumera métodos de una cuenta.</summary>
 [ApiController]
 [AllowAnonymous]
 [Route("api/auth/methods")]

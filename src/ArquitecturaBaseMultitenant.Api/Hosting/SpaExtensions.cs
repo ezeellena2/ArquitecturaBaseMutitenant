@@ -1,5 +1,6 @@
 namespace ArquitecturaBaseMultitenant.Api.Hosting;
 
+/// <summary>Entrega el SPA solo en navegaciones sin endpoint, sin ocultar errores ni rutas del backend.</summary>
 internal static class SpaExtensions
 {
     /// <summary>
