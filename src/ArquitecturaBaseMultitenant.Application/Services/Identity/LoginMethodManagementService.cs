@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
+/// <summary>Coordina alta, verificación, elección del principal y baja de métodos de ingreso con validación y una UnitOfWork por cambio.</summary>
 internal sealed class LoginMethodManagementService(ICurrentUser currentUser, LoginMethodIssuer issuer,
     LoginMethodVerifier verifier, LoginMethodChanger changer, IRequestValidator validator, IUnitOfWork unitOfWork,
     TimeProvider timeProvider, ILogger<LoginMethodManagementService> logger) : ILoginMethodManagementService

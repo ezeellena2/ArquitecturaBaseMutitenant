@@ -8,6 +8,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
 
+/// <summary>Ejecuta la limpieza de cada organización y luego purga credenciales y cierra la cuenta; invalida cachés después del commit.</summary>
 internal sealed class AccountDeletionProcessor(IAccountDeletionRepository repository, IUserRepository users,
     ILoginMethodRepository methods, IEnumerable<IAccountDeletionParticipant> participants, AccountDeletionNotifier notifier,
     IAccessStatusCache statuses, ITenantStatusCache tenantStatuses)

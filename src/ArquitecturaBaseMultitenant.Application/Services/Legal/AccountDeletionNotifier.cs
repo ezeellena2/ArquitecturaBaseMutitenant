@@ -8,6 +8,7 @@ using ArquitecturaBaseMultitenant.Domain.Authentication;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
 
+/// <summary>Registra eventos de seguridad y encola avisos de solicitud, cancelación o finalización de la baja.</summary>
 internal sealed class AccountDeletionNotifier(AccountNoticeIssuer notices, ISecurityEventRepository events, IPublicOrigin origin)
 {
     internal Task DeletedAsync(UserAccountRow account, IReadOnlyList<LoginMethod> methods, DateTime nowUtc, CancellationToken ct)

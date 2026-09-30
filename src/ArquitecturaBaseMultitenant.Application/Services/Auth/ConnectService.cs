@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
+/// <summary>Resuelve el acceso Personal, Empresa o Plataforma de una cuenta a partir de membresías válidas. Recuerda la última empresa y crea el espacio Personal si aún falta al elegir ese acceso.</summary>
 internal sealed class ConnectService(IUserRepository users, IUserTenantAccessReader accesses,
     IPersonalSpaceProvisioner personalSpaces, IPersonalSpaceLock personalSpaceLock,
     ITenantScope tenantScope, IUnitOfWork unitOfWork, TimeProvider timeProvider,

@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
 
+/// <summary>Impide pedir la baja cuando la cuenta es operadora, ya está pendiente o no está activa.</summary>
 internal static class AccountDeletionPolicy
 {
     internal static Error? CheckRequest(UserAccountRow account)

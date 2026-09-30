@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
 
+/// <summary>Entrega documentos pendientes y registra su aceptación con validación previa y guardado transaccional.</summary>
 internal sealed class LegalAcceptanceService(ICurrentUser currentUser, LegalAcceptanceWriter writer, LegalAcceptanceGuard guard,
     IRequestValidator validator, IUnitOfWork unitOfWork, TimeProvider timeProvider,
     ILogger<LegalAcceptanceService> logger) : ILegalAcceptanceService

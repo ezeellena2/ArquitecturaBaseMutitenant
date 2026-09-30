@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
+/// <summary>Revoca los tokens de la sesión y la autorización actuales dentro de una transacción para que el logout invalide ambos.</summary>
 internal sealed class ConnectLogoutService(ITokenRevoker tokens, IUnitOfWork unitOfWork,
     TimeProvider timeProvider, ILogger<ConnectLogoutService> logger) : IConnectLogoutService
 {

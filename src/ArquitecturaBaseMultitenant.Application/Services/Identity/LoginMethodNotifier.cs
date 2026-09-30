@@ -7,6 +7,7 @@ using ArquitecturaBaseMultitenant.Domain.Authentication;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
+/// <summary>Registra un evento de seguridad y encola el aviso de un cambio de método sin incluir el contacto completo en el mensaje.</summary>
 internal sealed class LoginMethodNotifier(AccountNoticeIssuer notices, ISecurityEventRepository events,
     IPublicOrigin origin, TimeProvider timeProvider)
 {

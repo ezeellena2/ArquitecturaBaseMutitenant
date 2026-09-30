@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Profile;
 
+/// <summary>Lee el perfil efectivo del acceso actual y actualiza preferencias globales de la cuenta con control de versión.</summary>
 internal sealed class ProfileService(ICurrentUser currentUser, ITenantContext tenantContext,
     ProfileSnapshotBuilder snapshots, IUserRepository users, IRequestValidator validator,
     IUnitOfWork unitOfWork, TimeProvider timeProvider, ILogger<ProfileService> logger) : IProfileService

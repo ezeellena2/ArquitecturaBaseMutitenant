@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
 
+/// <summary>Expone solicitud y cancelación de baja con su UnitOfWork; después del commit invalida o restablece la sesión.</summary>
 internal sealed class AccountDeletionService(ICurrentUser currentUser, AccountDeletionRequester requester,
     IRequestValidator validator, IUnitOfWork unitOfWork, AccountDeletionSessionRestorer sessions,
     AccountDeletionCanceller canceller,

@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
+/// <summary>Abre la transacción para pedir o verificar reautenticación; delega las reglas de emisión y comprobación a sus helpers.</summary>
 internal sealed class ReauthService(ICurrentUser currentUser, ReauthIssuer issuer, ReauthVerifier verifier,
     IRequestValidator validator, IUnitOfWork unitOfWork, TimeProvider timeProvider, ILogger<ReauthService> logger) : IReauthService
 {

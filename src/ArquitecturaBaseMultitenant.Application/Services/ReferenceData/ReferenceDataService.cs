@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.ReferenceData;
 
+/// <summary>Combina los cinco catálogos globales en respuestas traducidas y buscables. Incluye filas deshabilitadas para mostrar datos ya guardados; los selectores filtran aparte.</summary>
 internal sealed class ReferenceDataService(
     ICurrencyCatalog currencies,
     ICountryCatalog countries,

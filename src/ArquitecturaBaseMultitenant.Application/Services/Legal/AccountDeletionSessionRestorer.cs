@@ -3,7 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
 
-/// <summary>Solo se invoca después del commit de la cuenta.</summary>
+/// <summary>Después del commit de una baja o cancelación, invalida el estado de acceso en caché y restablece la sesión cuando corresponde.</summary>
 internal sealed class AccountDeletionSessionRestorer(IAccessStatusCache statuses, ISignInService signIn)
 {
     internal ValueTask InvalidateAsync(Guid userId, CancellationToken ct) => statuses.InvalidateUserAsync(userId, ct);

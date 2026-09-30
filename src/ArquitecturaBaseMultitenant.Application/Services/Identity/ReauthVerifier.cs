@@ -7,6 +7,7 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
+/// <summary>Comprueba el código de respaldo vinculado a la acción y emite un ticket de uso único para completarla.</summary>
 internal sealed class ReauthVerifier(LoginMethodGuard guard, ILoginMethodRepository methods,
     LoginMethodAvailability availability, ILoginCodeRepository codes, ILoginCodeHasher hasher,
     IReauthTicketRepository tickets, ISecureTokenGenerator secrets, TimeProvider timeProvider)

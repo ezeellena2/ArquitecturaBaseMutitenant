@@ -9,6 +9,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
 
+/// <summary>Valida y consume el comprobante de cancelación de baja, reactiva la cuenta y avisa a los módulos participantes dentro de la transacción.</summary>
 internal sealed class AccountDeletionCanceller(IReauthTicketRepository tickets, ISecureTokenGenerator secrets,
     ILoginMethodRepository methods, IUserRepository users, IEnumerable<IAccountDeletionParticipant> participants,
     AccountDeletionNotifier notifier, TimeProvider timeProvider)

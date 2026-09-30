@@ -9,7 +9,7 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
 
-/// <summary>La prueba ya validada y el lock de cuenta preceden a este comprobante sin sesión.</summary>
+/// <summary>Emite un comprobante de cancelación para una cuenta pendiente de baja tras validar su estado; permite volver al acceso elegido sin sesión activa.</summary>
 internal sealed class AccountDeletionCancelIssuer(IReauthTicketRepository tickets, ISecureTokenGenerator secrets,
     TimeProvider timeProvider)
 {

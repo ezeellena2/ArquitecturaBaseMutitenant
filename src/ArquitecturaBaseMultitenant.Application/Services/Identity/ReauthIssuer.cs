@@ -9,6 +9,7 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
+/// <summary>Elige un método de respaldo distinto del objetivo y emite el código que prueba la autorización para una acción sensible.</summary>
 internal sealed class ReauthIssuer(LoginMethodGuard guard, ILoginMethodRepository methods,
     LoginMethodAvailability availability, LoginCodeIssuer codes, IEnumerable<ILoginCodeChannel> channels,
     UserCultures cultures)

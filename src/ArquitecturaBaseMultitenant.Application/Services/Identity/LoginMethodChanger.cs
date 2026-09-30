@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
+/// <summary>Dentro de la transacción del servicio, consume la reautenticación y cambia o quita un método sin dejar la cuenta sin alternativa válida.</summary>
 internal sealed class LoginMethodChanger(LoginMethodGuard guard, ILoginMethodRepository methods,
     LoginMethodAvailability availability, ReauthTicketConsumer tickets, IUserRepository users, LoginMethodNotifier notifier)
 {

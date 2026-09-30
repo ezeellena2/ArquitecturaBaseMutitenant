@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
+/// <summary>Consume un ticket de reautenticación por hash solo si su método de origen sigue disponible para la cuenta y acción esperadas.</summary>
 internal sealed class ReauthTicketConsumer(IReauthTicketRepository tickets, ISecureTokenGenerator secrets,
     ILoginMethodRepository methods, LoginMethodAvailability availability, TimeProvider timeProvider)
 {

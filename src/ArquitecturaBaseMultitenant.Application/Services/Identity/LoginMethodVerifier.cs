@@ -7,6 +7,7 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
+/// <summary>Verifica el código de un correo nuevo y, si la cuenta no tiene principal, lo promueve antes de avisar el cambio.</summary>
 internal sealed class LoginMethodVerifier(LoginMethodGuard guard, ILoginMethodRepository methods,
     LoginCodeVerifier codes, LoginMethodNotifier notifier, IUserRepository users, TimeProvider timeProvider)
 {

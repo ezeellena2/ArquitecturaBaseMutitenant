@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
 
+/// <summary>Bloquea la cuenta, relee las versiones legales vigentes y guarda solo aceptaciones de esas versiones para evitar consentimientos obsoletos.</summary>
 internal sealed class LegalAcceptanceWriter(ILegalRepository legal, ILoginMethodRepository methods,
     IRequestInfo requestInfo, TimeProvider timeProvider)
 {

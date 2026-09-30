@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
 
+/// <summary>Reclama bajas vencidas y procesa cada tenant en una transacción con alcance propio antes del cierre global.</summary>
 internal sealed class AccountDeletionProcessingService(IAccountDeletionRepository repository, IAccountDeletionTenantReader tenants,
     AccountDeletionProcessor processor, ITenantScope tenantScope, IUnitOfWork unitOfWork,
     TimeProvider timeProvider, ILogger<AccountDeletionProcessingService> logger) : IAccountDeletionProcessingService

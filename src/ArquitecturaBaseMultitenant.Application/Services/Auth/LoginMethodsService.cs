@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
-/// <summary>Copia el patrón de ArquitecturaBase sin anunciar proveedores no configurados.</summary>
+/// <summary>Informa al front qué canales de código y proveedores externos están configurados para ofrecer solo métodos de ingreso disponibles.</summary>
 internal sealed class LoginMethodsService(
     IEnumerable<ILoginCodeChannel> channels,
     IGoogleAvailability google,

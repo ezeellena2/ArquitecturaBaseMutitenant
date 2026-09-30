@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
+/// <summary>Guarda una autorización OpenID Connect para la cuenta, acceso y cliente ya seleccionados; el controller se ocupa de devolverla al protocolo.</summary>
 internal sealed class ConnectAuthorizationService(
     IConnectAuthorizationStore store, IUnitOfWork unitOfWork,
     TimeProvider timeProvider, ILogger<ConnectAuthorizationService> logger) : IConnectAuthorizationService

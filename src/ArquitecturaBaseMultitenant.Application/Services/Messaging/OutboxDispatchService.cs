@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Messaging;
 
+/// <summary>Entrega una tanda del outbox bajo lock y confirma su estado en una UnitOfWork aunque el worker reciba cancelación después de iniciarla.</summary>
 internal sealed class OutboxDispatchService(
     IUnitOfWork unitOfWork,
     IOutboxDispatchStore store,

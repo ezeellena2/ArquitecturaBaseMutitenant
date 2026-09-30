@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Domain.Settings;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
+/// <summary>Consulta la configuración global y aplica la política que permite o cierra el registro de personas.</summary>
 internal sealed class SignupPolicy(IPlatformSettingsReader settings)
 {
     public async Task<Result> CanRegisterAsync(CancellationToken cancellationToken)

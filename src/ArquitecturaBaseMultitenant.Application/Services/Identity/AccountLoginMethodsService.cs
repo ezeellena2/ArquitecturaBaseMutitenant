@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
+/// <summary>Construye la lista de métodos de ingreso de la cuenta, con disponibilidad, contacto de respaldo y acciones permitidas para cada uno.</summary>
 internal sealed class AccountLoginMethodsService(ICurrentUser currentUser, ILoginMethodReader methods,
     ITenantReader tenants, LoginMethodAvailability availability, IGoogleAvailability google,
     IPlatformSettingsReader settings, TimeProvider timeProvider, ILogger<AccountLoginMethodsService> logger) : IAccountLoginMethodsService

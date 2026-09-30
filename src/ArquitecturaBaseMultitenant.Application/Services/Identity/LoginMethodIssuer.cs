@@ -9,6 +9,7 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
+/// <summary>Agrega un correo de ingreso no usado o reenvía su código de verificación; trabaja dentro de la transacción abierta por el servicio.</summary>
 internal sealed class LoginMethodIssuer(LoginMethodGuard guard, ILoginMethodRepository methods,
     IUserLookup lookup, ILoginCodeRepository codeRepository, LoginCodeIssuer codes,
     IEnumerable<ILoginCodeChannel> channels, UserCultures cultures)

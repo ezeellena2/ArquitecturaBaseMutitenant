@@ -11,6 +11,7 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
 
+/// <summary>Comprueba bloqueos de los módulos y reautenticación antes de programar la baja y revocar sesiones.</summary>
 internal sealed class AccountDeletionRequester(ILoginMethodRepository methods, IUserRepository users,
     ReauthTicketConsumer tickets, IEnumerable<IAccountDeletionParticipant> participants, ISignInService sessions,
     IPlatformSettingsReader settings, AccountDeletionNotifier notifier, TimeProvider timeProvider)

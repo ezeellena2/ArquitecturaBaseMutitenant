@@ -13,12 +13,14 @@ public interface IPersonalSpaceProvisioner
     void Stage(PersonalSpaceDraft draft, Guid userId);
 }
 
+/// <summary>Contiene el espacio Personal y sus preferencias ya elegidas para agregarlos bajo el tenant de una sola transacción.</summary>
 public sealed record PersonalSpaceDraft(
     Tenant Tenant,
     TenantSettings Settings,
     string Culture,
     string TimeZoneId);
 
+/// <summary>Selecciona cultura, país, moneda y zona habilitados para un espacio Personal nuevo; el aprovisionador compartido prepara sus escrituras.</summary>
 internal sealed class PersonalSpaceProvisioner(
     ICultureCatalog cultures,
     ICountryCatalog countries,

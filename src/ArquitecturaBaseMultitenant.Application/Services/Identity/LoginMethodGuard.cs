@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
+/// <summary>Bloquea la identidad global y verifica que la cuenta permita gestionar métodos antes de modificarla.</summary>
 internal sealed class LoginMethodGuard(ILoginMethodRepository methods, IUserRepository users)
 {
     public async Task<Result<UserAccountRow>> LockAccountAsync(Guid userId, CancellationToken ct)
