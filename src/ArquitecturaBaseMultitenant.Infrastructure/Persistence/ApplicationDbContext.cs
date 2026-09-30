@@ -17,6 +17,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 
+/// <summary>Reúne las tablas globales y privadas en un único modelo EF. Aplica convenciones, filtros del tenant activo y validación de clasificación antes de que la Api consulte datos.</summary>
 public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, IDataProtectionKeyContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ITenantContext tenantContext)

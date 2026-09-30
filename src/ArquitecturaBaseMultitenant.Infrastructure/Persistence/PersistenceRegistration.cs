@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 
+/// <summary>Compone el DbContext, el límite de guardado y los adaptadores de lectura y escritura. Separa el proveedor técnico del seed con mt_owner de la conexión operativa con mt_app.</summary>
 internal static class PersistenceRegistration
 {
     /// <summary>Scope técnico del bootstrap: siembra con mt_owner, nunca con mt_app.</summary>

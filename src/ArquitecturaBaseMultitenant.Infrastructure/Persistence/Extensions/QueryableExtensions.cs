@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 
+/// <summary>Construye orden, búsqueda y paginación con expresiones EF traducibles a PostgreSQL. Solo acepta campos declarados por el reader y mantiene un desempate estable entre páginas.</summary>
 public static class QueryableExtensions
 {
     private static readonly MethodInfo LowerMethod = typeof(string).GetMethod(nameof(string.ToLower), Type.EmptyTypes)!;

@@ -3,7 +3,7 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Interceptors;
 
-/// <summary>Actor técnico E2; la Api leerá los claims en E3.</summary>
+/// <summary>Representa una operación sin usuario autenticado, como el bootstrap de la base. La Api sustituye este valor por el contexto del request cuando hay una sesión.</summary>
 internal sealed class SystemCurrentUser : ICurrentUser
 {
     public Guid? UserId => null;

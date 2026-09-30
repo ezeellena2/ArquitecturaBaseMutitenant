@@ -2,8 +2,10 @@ using System.Buffers.Binary;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 
+/// <summary>Ubica una página por instante UTC y un ID que desempata filas con la misma fecha.</summary>
 internal readonly record struct CursorPosition(DateTime SortUtc, Guid Id);
 
+/// <summary>Codifica y valida un cursor opaco de paginación con instante UTC e ID de desempate. Rechaza versiones y representaciones no canónicas antes de reutilizarlo en una consulta.</summary>
 internal static class CursorCodec
 {
     private const byte Version = 1;

@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 
+/// <summary>Sincroniza las tablas globales con los JSON generados de referencia. Deshabilita claves retiradas sin borrar datos históricos e invalida la caché después del commit de su ruta independiente.</summary>
 internal sealed class ReferenceDataSeeder
 {
     private readonly ApplicationDbContext _dbContext;
@@ -147,6 +148,7 @@ internal sealed class ReferenceDataSeeder
     private static string Key(string value) => value.TrimEnd();
 }
 
+/// <summary>Agrupa las fuentes JSON que el seed aplica juntas a las tablas de referencia.</summary>
 internal sealed record ReferenceDataSeedSnapshot(
     IReadOnlyList<CurrencyCatalogEntry> Currencies,
     IReadOnlyList<CountryCatalogEntry> Countries,

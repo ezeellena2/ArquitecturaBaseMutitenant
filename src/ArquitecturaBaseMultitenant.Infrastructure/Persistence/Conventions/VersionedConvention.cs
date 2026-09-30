@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Conventions;
 
+/// <summary>Vincula la versión de cada entidad editable a xmin de PostgreSQL. Así EF detecta escrituras concurrentes sin una columna de versión mantenida a mano.</summary>
 internal static class VersionedConvention
 {
     public static void Apply(ModelBuilder modelBuilder)

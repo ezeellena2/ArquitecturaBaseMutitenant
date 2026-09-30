@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 
+/// <summary>Aplica los filtros de consulta con nombre según la clase de dato y el tenant activo. También oculta las entidades borradas lógicamente sin quitar las protecciones de aislamiento.</summary>
 internal static class ModelBuilderExtensions
 {
     public const string TenantFilter = "Tenant";

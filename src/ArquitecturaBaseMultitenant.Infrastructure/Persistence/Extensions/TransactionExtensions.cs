@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 
+/// <summary>Comprueba si una operación técnica se ejecuta dentro o fuera del límite de guardado correcto. Evita que locks, escrituras y lecturas para caché usen una transacción equivocada.</summary>
 internal static class TransactionExtensions
 {
     /// <summary>Un lock dura lo que la transacción del único límite de guardado.</summary>

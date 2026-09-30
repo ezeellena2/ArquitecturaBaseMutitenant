@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 
+/// <summary>Adquiere locks consultivos de PostgreSQL dentro de la transacción del caso de uso. Ordena las claves para que operaciones concurrentes tomen los locks en el mismo orden.</summary>
 internal static class AdvisoryLockExtensions
 {
     /// <summary>Toma locks de transacción ordenados y sin duplicar; el texto viaja parametrizado a PostgreSQL.</summary>

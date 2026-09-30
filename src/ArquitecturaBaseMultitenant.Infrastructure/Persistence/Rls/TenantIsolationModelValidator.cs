@@ -17,6 +17,7 @@ using OpenIddict.EntityFrameworkCore.Models;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Rls;
 
+/// <summary>Revisa al construir el modelo que cada entidad sea global permitida o tenga exactamente una clase, esquema y filtro de aislamiento. Falla al arrancar si aparece una tabla sin esa protección.</summary>
 internal static class TenantIsolationModelValidator
 {
     public static void Validate(IReadOnlyModel model)

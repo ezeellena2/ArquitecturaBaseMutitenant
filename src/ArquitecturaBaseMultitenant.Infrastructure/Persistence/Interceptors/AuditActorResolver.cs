@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Interceptors;
 
+/// <summary>Traduce el usuario y acceso actuales al actor que guarda la auditoría. Si no hay identidad, registra una acción de sistema.</summary>
 internal static class AuditActorResolver
 {
     public static (AuditActorKind Kind, Guid? Id) Resolve(ICurrentUser currentUser)
