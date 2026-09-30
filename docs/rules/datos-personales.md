@@ -26,6 +26,7 @@
   - El estado y la baja se guardan por separado: `Status` y `DeletionScheduledForUtc`. Una identidad activa pasa a `PendingDeletion` con la fecha, se revocan todas las sesiones y se avisa en todos los métodos.
   - Durante los 30 días de gracia, ingresar responde `Identity.Account.PendingDeletion` con un `cancelTicket`, y `POST /api/auth/deletion/cancel` la cancela.
   - `AccountDeletionWorker` elimina toda cuenta con `DeletionScheduledForUtc` vencido, esté `PendingDeletion` o `Suspended`, una por transacción: anonimiza la identidad, borra los métodos y el espacio personal, quita las membresías, anonimiza la copia en los datos compartidos, borra la IP y el user agent de las aceptaciones legales y conserva la auditoría.
+  - El worker reclama con `FOR UPDATE SKIP LOCKED` y un lease durable de 15 minutos en dos columnas técnicas de la identidad. Cada organización usa un scope nuevo, `Enter` antes de su UoW y revalida lease/fecha/estado con lock de cuenta y fila. El cierre global se confirma después de todos los pasos; un fallo deja el lease vencer y el siguiente lote reanuda participantes idempotentes. La purga de credenciales usa filas tracked y el único guardado UoW. Cachés u:/t: se invalidan después de cada commit.
   - Cada módulo que guarda datos de una persona registra un `IAccountDeletionParticipant`.
 
 ## Prohibido

@@ -10,6 +10,13 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
 
 internal sealed class AccountDeletionNotifier(AccountNoticeIssuer notices, ISecurityEventRepository events, IPublicOrigin origin)
 {
+    internal Task DeletedAsync(UserAccountRow account, IReadOnlyList<LoginMethod> methods, DateTime nowUtc, CancellationToken ct)
+    {
+        events.Add(SecurityEvent.ForAccount(SecurityEventType.AccountDeleted, account.Id, nowUtc));
+        return notices.EnqueueAsync(account.Id, methods, new AccountNotice.AccountDeleted
+            { RecipientName = account.DisplayName }, account.Culture, true, ct);
+    }
+
     internal Task CancelledAsync(UserAccountRow account, IReadOnlyList<LoginMethod> methods, DateTime nowUtc, CancellationToken ct)
     {
         events.Add(SecurityEvent.ForAccount(SecurityEventType.AccountDeletionCancelled, account.Id, nowUtc));

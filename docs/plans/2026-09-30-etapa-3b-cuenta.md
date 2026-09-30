@@ -234,11 +234,11 @@ En cada tarea se guarda evidencia de rojo y verde con el comando y resultado. Si
 **Archivos:** back: `Interfaces/Services/IAccountDeletionProcessingService.cs`, `Services/Legal/AccountDeletionProcessingService.cs`; `Infrastructure/BackgroundJobs/AccountDeletionWorker.cs`; `Interfaces/Persistence/IAccountDeletionRepository.cs`, repo, DI; tests `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Legal/{AccountDeletionTests,AccountDeletionParticipantsTests}.cs`.
 **Comportamiento exacto:** Cada hora, SKIP LOCKED reclama cuentas vencidas con lease durable, sin sostener transacción al Enter. Pasos tenant separados, luego identidad. Revalidar vencimiento/estado contra cancelación antes de paso irreversible; desde vencimiento no cancelar. Mantener PendingDeletion/Suspended hasta final. Aviso final cifrado antes de quitar métodos; purgar sesiones/códigos/tickets/contactos, anonimizar, SecurityEvent. Reanudar tras fallo; invalidar u:/t:.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Cuenta vencida sigue intacta; probar Suspended+fecha, corrida doble y recuperación tras fallo de participante.
-- [ ] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class '*AccountDeletion*Tests'` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: completar eliminación reanudable de cuentas"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Cuenta vencida sigue intacta; probar Suspended+fecha, corrida doble y recuperación tras fallo de participante.
+- [x] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class '*AccountDeletion*Tests'` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: completar eliminación reanudable de cuentas"`. Registrar hash back/front.
 
 ### T18 · Contratos compartidos regenerados
 

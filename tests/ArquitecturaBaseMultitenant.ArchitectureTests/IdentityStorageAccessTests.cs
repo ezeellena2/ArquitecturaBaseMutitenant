@@ -25,6 +25,7 @@ public sealed partial class IdentityStorageAccessTests
         Infrastructure + "Persistence.Repositories.LoginCodeRepository",
         Infrastructure + "Persistence.Repositories.LoginMethodRepository",
         Infrastructure + "Persistence.Repositories.UserRepository",
+        Infrastructure + "Persistence.Repositories.AccountDeletionRepository",
         Infrastructure + "Persistence.Seed.PlatformSeeder",
     ];
 

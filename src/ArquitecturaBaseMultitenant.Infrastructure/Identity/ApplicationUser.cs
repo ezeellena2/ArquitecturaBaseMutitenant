@@ -26,6 +26,8 @@ public sealed class ApplicationUser : IdentityUser<Guid>, IVersioned
     public string? DeletionReason { get; private set; }
     public Guid? DeletionRequestedByOperatorId { get; private set; }
     public DateTime? DeletedAtUtc { get; private set; }
+    public Guid? DeletionLeaseId { get; private set; }
+    public DateTime? DeletionLeaseExpiresAtUtc { get; private set; }
 
     public static Result<ApplicationUser> Create(string? displayName, string culture, string timeZoneId)
     {
@@ -147,6 +149,8 @@ public sealed class ApplicationUser : IdentityUser<Guid>, IVersioned
         LastBusinessTenantId = null;
         DeletionReason = null;
         SecurityStamp = Guid.CreateVersion7().ToString("N");
+        DeletionLeaseId = null;
+        DeletionLeaseExpiresAtUtc = null;
         LockoutEnd = null;
         AccessFailedCount = 0;
         return Result.Success();

@@ -30,7 +30,9 @@ Estado: en ejecución. La 3c queda pendiente. No declarar cerrada esta etapa sin
 
 | T15 · ingreso de gracia | `42fb0c4` | — | Rojo: no .eml, metadata y cookie ausentes; integración 20/20. Ticket cinco minutos, puerta preservada, cookie HttpOnly Secure sin secreto en URL, expiración servidor |
 
-| T16 · cancelar baja | este commit | — | Rojo 404; integración 13/13; returnUrl consumer/business, replay 403, vencimientos sin cambios y sesión previa 401 |
+| T16 · cancelar baja | `a487445` | — | Rojo 404; integración 13/13; returnUrl consumer/business, replay 403, vencimientos sin cambios y sesión previa 401 |
+
+| T17 · eliminación final | este commit | — | Rojo CS0246; integración 3/3, ampliación 2/2; lease excluye segundo reclamo, fallo tras Personal cerrado se recupera, Pending/Suspended terminan Deleted, un evento y aviso final. Inventario bulk existente de T04 se ajusta nominalmente en T18 |
 
 ## Evidencia del E2E real antes de programar
 
@@ -86,6 +88,8 @@ Ocultaciones solicitadas: WhatsApp (E8), exportación/sugerencia de exportar (E1
 - T15: lock cuenta antes del destino y propiedad releída para evitar inversión con reauth. Google conserva returnUrl y comprobante dentro de una cookie Data Protection HttpOnly/Secure de cinco minutos, recuperada por POST no-store; el servidor también exige vigencia. Suspensión y bloqueo prevalecen antes de emitir el ticket.
 
 - T16: el hash se proyecta a UserId sin tracking antes del lock; el ticket se relee bajo ese lock. La cookie nueva se emite después del commit; la sesión anterior permanece revocada. No se permite cambiar UserId ni returnUrl desde la petición anónima.
+
+- T17: dos columnas técnicas de lease en la identidad evitan una tabla de trabajo adicional; CTE SKIP LOCKED y vigencia de quince minutos. Cada paso mantiene lock de fila hasta commit para impedir otro reclamo en medio de la limpieza. La purga usa RemoveRange tracked, sin ampliar excepciones bulk. SQL revisado: solo dos columnas nullable, sin grants nuevos. En Testing el worker se despacha explícitamente; en el runtime comienza al arrancar y continúa cada hora.
 
 ## Recorrido manual
 
