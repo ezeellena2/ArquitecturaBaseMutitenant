@@ -43,7 +43,7 @@
 - `Domain/Authentication/LoginMethod.cs` y `Application/Services/Identity/ReauthVerifier.cs` (E3).
 
 ## Lo verifica
-- `AuthEndpointsTests` y `GoogleLoginTests` (3a): el registro sin aceptar da 400 `Validation.Failed` con `acceptedTerms` en correo y Google. `LegalAcceptanceTests` (3a) comprueba lectura de Términos y Privacidad vigentes en ambas culturas. La invitación (3c), el alta de empresa (E6) y WhatsApp (E8) suman sus casos cuando nacen; en 3b se comprueba que una versión nueva exija `Legal.AcceptanceRequired` hasta aceptarla.
+- `AuthEndpointsTests`, `SignupValidationTests` y `GoogleLoginTests` (3a): el registro sin aceptar da 400 `Validation.Failed` con `acceptedTerms` en correo y Google. `LegalAcceptanceTests` (3a) comprueba la lectura de Términos y Privacidad vigentes en ambas culturas y que el alta por correo guarde exactamente ambos documentos y sus versiones vigentes. La invitación (3c), el alta de empresa (E6) y WhatsApp (E8) suman sus casos cuando nacen; en 3b se comprueba que una versión nueva exija `Legal.AcceptanceRequired` hasta aceptarla.
 - `AccountDeletionTests` (E3) y `AccountDeletionParticipantsTests` (E3); el caso del único Dueño se suma en la E4.
 - `LoginMethodsTests` (E3) cubre la gestión; `ManagedEmailTests` (E6) comprueba que un exmiembro no pueda ingresar con el correo de la empresa.
 
