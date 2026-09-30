@@ -50,6 +50,10 @@ Remove-Variable s
 ```powershell
 ./scripts/secretos/verificar.ps1
 ```
+Para comprobar lo obligatorio en Production (incluido el certificado de Data Protection):
+```powershell
+./scripts/secretos/verificar.ps1 -Ambiente Production
+```
 
 El importador de ArquitecturaBase no conoce al operador ni al certificado Data Protection de esta plataforma: cargá `Seed:PlatformOwner:Email` y `DataProtection:Certificate:Base64` por separado en user-secrets o en el gestor de secretos de Production (`Seed__PlatformOwner__Email`, `DataProtection__Certificate__Base64`). `Seed:PlatformOwner:DisplayName` y `DataProtection:Certificate:Password` son opcionales. El seed crea una identidad global sin espacio Personal ni contraseña, con el correo como método principal verificado; cada ingreso exige el código enviado a ese buzón. Si ya existe ese método de correo, marca su cuenta como operadora. Si ya hay un operador, los siguientes arranques no exigen la clave ni alteran esa cuenta. En Development, sin la clave se omite el operador inicial; en Production, si aún no hay operador, falta de clave detiene el arranque.
 
