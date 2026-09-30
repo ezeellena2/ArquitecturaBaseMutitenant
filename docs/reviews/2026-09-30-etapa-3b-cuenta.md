@@ -1,6 +1,6 @@
 # Etapa 3b · La cuenta — informe de ejecución
 
-Estado: en ejecución. La 3c queda pendiente. No declarar cerrada esta etapa sin puerta completa y E2E real verde.
+Estado: implementación de 3b completa y puerta automática verde. Comparación visual realizada; el cierre formal queda pendiente de aprobación de las diferencias residuales de presentación, según el punto 9 del plan maestro. La 3c no se inició y mantiene su propia puerta.
 
 ## Tareas y commits
 
@@ -17,37 +17,29 @@ Estado: en ejecución. La 3c queda pendiente. No declarar cerrada esta etapa sin
 | T06 bis · aislar registro y correo pendiente | `2097c3b` | — | Rojo: 204 con cookie en lugar de 400; SignupTests 8/8; registro no confirma métodos pendientes agregados desde otra cuenta |
 | T08 · vincular Google | `457f569` | — | Rojo CS0246; Google 13/13 + protocolo 1/1; sesión distinta/correo no verificado/conflicto rechazados; OAuth state protegido y antiforgery |
 | T09 · HTTP de métodos y reautenticación | `38112e8` | — | Rojo: 404 en rutas inexistentes y código sin traducir bajo campo; HTTP + inventario 5/5; 401, 404 ajeno real, replay y verificación pickup |
-
 | T10 · perfil versionado y aviso | `a533f5c` | — | Rojo: falta version y luego 204 en vez de 409; integración 19/19, unit 24/24; guardado viejo conserva datos e idioma; aviso usa disponibilidad |
-
 | T11 · términos bloqueantes | `6d8be73` | — | Rojo: 200 en vez de 403; integración 8/8 y perfil unit 13/13; versión nueva entre lectura/aceptación devuelve 409, aceptación append-only y repetible |
-
 | T12 · reglas de baja y gracia | `0fbce93` | — | Rojo CS1061/CS0103; AccountDeletionPolicyTests 6/6; operador, pendiente, suspensión, límite inclusivo y anonimización |
-
 | T13 · participantes de eliminación | `e5bb79c` | — | Rojo CS0246/CS1061 y falta de grant 42501; runtime 1/1 + inventarios existentes 12/12; limpieza doble, auditoría única, mensajes ajenos intactos y DELETE B2B devuelve cero |
-
 | T14 · pedir baja y revocar sesiones | `ebce448` | — | Rojo: 404; integración 7/7; operador/sin ticket rechazados, módulo conserva estado y ticket, tokens Consumer y Business revocados y cookie cerrada |
-
 | T15 · ingreso de gracia | `42fb0c4` | — | Rojo: no .eml, metadata y cookie ausentes; integración 20/20. Ticket cinco minutos, puerta preservada, cookie HttpOnly Secure sin secreto en URL, expiración servidor |
-
 | T16 · cancelar baja | `a487445` | — | Rojo 404; integración 13/13; returnUrl consumer/business, replay 403, vencimientos sin cambios y sesión previa 401 |
-
 | T17 · eliminación final | `6bdd516` | — | Rojo CS0246; integración 3/3, ampliación 2/2; lease excluye segundo reclamo, fallo tras Personal cerrado se recupera, Pending/Suspended terminan Deleted, un evento y aviso final. Inventario bulk existente de T04 se ajusta nominalmente en T18 |
-
 | T18 · contratos cruzados | `97e7469` | `0c315cc` | Rojo ENOENT; 2/2 verdes, schema regenerado, contracts:check y tsc verdes; inventarios existentes back 13/13 |
-
 | T19 · clientes y recursos | — | `690aade` | Rojo clientes ausentes; API y paridad 6/6, tsc y lint verdes |
 | T20 · perfil y menú | — | `303d767` | Rojo ruta 404, menú ausente y versión faltante; 20/20 funcionales y axe, build verde; 409 conserva draft |
-
 | T21 · tabla y aviso | — | `013aeb2` | Rojo componente/aviso ausentes; 8/8 cuenta/home, build/lint verdes |
 | T22 · agregar y verificar | — | `f58c52e` | Rojo import ausente; 10/10 verdes, OTP incorrecto conserva diálogo, código corregido confirma |
 | T23 · cambiar método y Google | — | `8771cac` | Rojo import ausente; 11/11 verdes, prueba usa respaldo y DELETE ticket en cuerpo, tsc/lint verdes |
-
 | T24 · aceptación bloqueante | — | `296c8d4` | Rojo pantalla/gate ausentes; casos de aceptación y httpClient 12/12 verdes, tsc/lint verdes |
 | T24 bis · F5 conserva puerta | — | `f940874` | Rojo recuperaba consumer en /cuenta desde Business; 11/11 recuperación/auth/ruta verdes |
 | T25 · pedir baja | — | `3209dfb` | Rojo diálogo ausente; 23/23 cuenta/home/shell verdes; motivo y código obligatorios, sesión cerrada y fecha |
 | T26 · cancelar durante gracia | — | `053b4e6` | Rojo estado genérico; LoginPage 21/21 verdes por correo/Google sin sesión previa a cancelación |
-| T23 bis · cooldown de prueba | — | `0778296` | E2E sin .eml tras registro; test rojo sin OTP después del plazo, corrección 3/3 verdes |
+| T23 bis · cooldown de prueba | — | `0778296`, luego `3c05b47` | Primera corrección superada: el reintento final es manual, según E1; test rojo → verde |
+| T27 · recorridos reales | `fc66c58` | `a50b5b0`, `3c05b47` | Cinco recorridos inicialmente rojos, final real 6/6; reintento 429 explícito |
+| T28 · comparación y correos | `165d927`, `8b054d1` | `59dc2cd`, `f81d2eb` | 118 pares revisados; validación incompleta 3 rojos → 4 verdes; preview 1 rojo → 4 verdes; Salir ocupado rojo → verde |
+| T29 · documentación y recorrido | `d143c0f` | — | Identidad, manual operador/segunda Gmail, publicación legal local y limpieza por gracia |
+| T30 · puerta e informe | `1b96685` y commit que contiene este informe | `f81d2eb` | Backend completo 1110/1110; front 655/655; E2E 6/6; cierre formal espera aprobación visual |
 ## Evidencia del E2E real antes de programar
 
 `npm run test:e2e:real`, 30/09/2026. AppHost y PostgreSQL efímero exclusivos; datos del preparador y de /registro en esa base. Registro/puerta empresa/F5/cambio Personal/logout de 3a se recorrieron antes de los casos nuevos.
@@ -66,11 +58,55 @@ La sexta prueba es el padre, que falla porque sus cinco subrecorridos fallan. Se
 
 ## Puerta
 
-Pendiente de la implementación.
+Comandos ejecutados en el repo dueño el 30/09/2026. Docker activo para integración y E2E; ninguna cuenta fixture se crea en Development.
+
+| Punto general | Resultado y evidencia |
+|---|---|
+| 1 · build y tests back | `dotnet build ArquitecturaBaseMultitenant.slnx`: 0 advertencias/0 errores. `dotnet test` final con Docker: 1110/1110, 0 errores/0 omitidos, 3m 12s 828ms. Plantillas después del ajuste final: 12/12 |
+| 2 · front | `npm run lint`: exit 0; `npm test`: 134 archivos y 655 tests en verde; `npm run build`: exit 0. Después del último ajuste de presentación: 36/36 dirigidos, lint/build verdes |
+| 3 · rutas | Inventarios existentes actualizados; cada ruta nueva ejercida en HTTP/integración. ArchitectureTests 153/153, incluidos inventarios de accesos, rutas y transacciones |
+| 4 · aislamiento | Incluido en suite completa Docker; métodos ajenos 404, tickets ligados a cuenta/acción/objetivo, DELETE runtime limitado a Personal y datos de otro usuario intactos |
+| 5 · formatos | Preferencias/cultura/zona desde catálogos; fechas de baja y avisos usan formateador central con cultura/zona explícitas. Paridad de formatos incluida en suites; ejemplo del selector usa los mismos formateadores |
+| 6 · contratos | OpenAPI y schema TS regenerados. `npm run contracts:check`: `Generated TypeScript schema matches OpenAPI.` Dos tests cruzados leen ambos repos: rutas, claims, redirecciones y códigos |
+| 7 · generador y arnés | Generador 30/30; JSON oficiales idénticos byte a byte. HarnessTests back 10/10; `harness.test.ts` incluido en 655. Arnés existente de capturas 20/20. HarnessStage permanece 2 hasta cerrar 3c |
+| 8 · apagado | `aspire stop` y `aspire ps`: `No running AppHost found.` Servidor visual detenido al terminar. Main en ambos repos, commits locales con rutas explícitas, sin push |
+| 9 · comparación visual | 118 pares presentes: 236 PNG, 14 HTML y 10 hojas, escritorio/móvil. Todos revisados; diferencias y motivo en la sección siguiente y en el informe visual. Aprobación residual del usuario pendiente |
+| 10 · E2E real | 6/6, 0 fallos/omitidos, 294732.1232 ms; base efímera E2E, navegador/API/pickup reales, sin mocks. Salida literal debajo |
+
+Puerta propia 3b: agregar correo personal leyendo código `.eml`, quitar otro método con prueba en respaldo, aceptar versión legal nueva bloqueante, pedir baja/cancelar al ingresar durante gracia y guardar `en-US` en `/cuenta`: **todos verdes**. Se mantuvieron registro, puerta Empresa, F5, cambio a Personal y logout de 3a.
+
+```text
+> arquitecturabase-multitenant-front@0.0.0 test:e2e:real
+> node --test scripts/test-e2e-real.test.mjs
+
+▶ registro real y puerta empresa usan un PostgreSQL aislado, front, Api y pickup sin mocks
+  ✔ 3b: sumar correo personal con código leído del .eml (16834.3814ms)
+  ✔ 3b: quitar un método con código enviado a otro (71845.841ms)
+  ✔ 3b: pedir baja y cancelarla ingresando durante la gracia (128263.1623ms)
+  ✔ 3b: cambiar el idioma a en-US desde /cuenta (12456.6686ms)
+  ✔ 3b: aceptar versión nueva de términos que bloquea el ingreso (10141.4868ms)
+✔ registro real y puerta empresa usan un PostgreSQL aislado, front, Api y pickup sin mocks (294189.9573ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 294732.1232
+```
+
+La suite front emite avisos conocidos de jsdom sobre canvas/pseudoelementos; no son fallos ni advertencias del build. No se agregó una dependencia o test del arnés para silenciarlos. Build/lint y todos los casos requeridos pasaron.
 
 ## Diferencias con el lienzo
 
-Ocultaciones solicitadas: WhatsApp (E8), exportación/sugerencia de exportar (E10) y bloqueo del único Dueño (E4). Comparación visual todavía pendiente.
+Evidencia: [informe visual](../../../ArquitecturaBaseMutitenantFront/docs/design/capturas/etapa-3b/informe.md), [manifest](../../../ArquitecturaBaseMutitenantFront/docs/design/capturas/etapa-3b/manifest.json) y pares app/lienzo en esa carpeta.
+
+- Ocultaciones autorizadas: WhatsApp (E8), exportación/sugerencia de exportar (E10) y bloqueo del único Dueño (E4). Reducen altura de lista/tarjeta/diálogo.
+- Nombres/opciones de idiomas y zonas salen del catálogo traducido: en español aparece «Inglés (Estados Unidos)» frente a «English (United States)» del ejemplo del tablero. Los ejemplos de fecha/número sí se copian usando sus patrones.
+- Versiones, fecha de eliminación, máscara del destinatario y disponibilidad de métodos vienen del contrato. La política de operador muestra el error resource y no emite OTP; el tablero no incluye esa variante.
+- Mensajes solo trae referencia española de escritorio; se capturó además HTML real en inglés y móvil. «Método agregado» usa correo en 3b, mientras el ejemplo del tablero es WhatsApp de E8.
+- Quedan diferencias menores de iconografía, interlineado, foco visible y posicionamiento de menús/toasts por los controles Radix/Sonner existentes. No se declara identidad de píxeles; no se agregaron campos/acciones ni se cambió el orden o estados. Se presentan para aprobación conforme a la puerta 9.
 
 ## Decisiones tomadas
 
@@ -107,6 +143,9 @@ Ocultaciones solicitadas: WhatsApp (E8), exportación/sugerencia de exportar (E1
 
 - T18: el mapa compartido de API se consume desde las features sin importarlas entre sí. El contrato lee ambos repos y verifica rutas/metadata/claims/retornos/errores y schema. La guardia bulk de E2 se actualiza en su prueba existente para declarar la única llamada técnica de principal de T04 (una llamada en el repositorio exacto); no se agregan guardas ni tests de arnés nuevos.
 
+- T20: selectores compartidos ofrecen variante compacta del lienzo. El perfil congela versión con el draft, aplica cultura solo tras guardar y mantiene layout del acceso actual. Mi cuenta vive en el menú de identidad y en el lateral personal que ya muestra el lienzo.
+- T21–23: el aviso vive en shared/ui para compartirlo con Inicio sin importar áreas. La tabla obedece flags del backend. El comprobante de reautenticación se conserva en memoria para reintentar si se pierde la respuesta de la mutación. Google enlaza antiforgery y errores de callback por códigos traducidos.
+
 ## Recorrido manual con cuentas reales
 
 Preparación: Docker activo; Google y Gmail configurados según [configuración](../operations/configuracion.md). En la raíz del back ejecutá `aspire run` y abrí `https://localhost:5174`. Usá Gmail SMTP en Development para recibir correos reales. Si aparece una cuenta de ejemplo, no la crea el seed de esta etapa: Development solo siembra `Seed:PlatformOwner:*`. No ejecutes el preparador E2E contra esta base.
@@ -115,7 +154,7 @@ Preparación: Docker activo; Google y Gmail configurados según [configuración]
 2. En «Tus datos», editá el nombre, seleccioná «Inglés (Estados Unidos)» en «Idioma y región» y guardá. Verificá «My account» y que F5 conserve inglés. Volvé a Español (Argentina) y guardá para seguir este recorrido.
 3. Pulsá «Agregar correo o teléfono», ingresá otra dirección que controles (distinta del correo que vas a usar para registrar la segunda persona), «Enviar código» y verificá el código recibido en ese buzón. Aparece verificado y llega el aviso del cambio. WhatsApp todavía está oculto.
 4. En ⋮ de ese correo, «Hacer principal» pide un código enviado al otro método disponible; ingresalo y confirmá. Verificá la marca Principal y los avisos. Volvé a hacer principal el correo original, usando el código que llega al nuevo.
-5. En ⋮ del correo nuevo, «Quitar» pide otro código al principal original. Ingresalo y confirmá: desaparece y llega el aviso. Si aparece cuenta regresiva, esperá y pulsá el mismo botón otra vez para pedir el código; nunca se reenvía solo. En el único método propio no aparece Quitar.
+5. En ⋮ del correo nuevo, «Quitar» pide otro código al principal original. Ingresalo y confirmá: desaparece y llega el aviso. Si aparece cuenta regresiva, esperá y pulsá el mismo botón otra vez para pedir el código; nunca se reenvía solo. En el único método propio Quitar queda deshabilitado.
 6. Si Google está configurado, «Vincular Google» abre el proveedor. Elegí una cuenta Google libre, autorizá y verificá el regreso a `/cuenta` con el aviso. Para desvincularla, ⋮ → «Desvincular», código en otro método → confirmar. Google nunca se vincula automáticamente por coincidir el correo.
 7. Para probar términos nuevos con cuentas reales, abrí la conexión **propietaria de appdb de Development** desde tu cliente PostgreSQL y ejecutá **una sola vez** [etapa-3b-publicar-terminos.sql](etapa-3b-publicar-terminos.sql). El script solo agrega otra versión del texto legal vigente es/en; no cambia personas ni aceptaciones. La pantalla administrativa para publicarlos nace más adelante. Volvé a la aplicación y F5: aparece «Actualizamos los términos», con el número recién publicado. Abrí el enlace legal, volvé, marcá la casilla y «Aceptar y seguir». F5 ya no vuelve a bloquear. La publicación también exigirá aceptar a las demás cuentas activas.
 8. El operador no puede darse de baja. Para probar la baja, cerrá su sesión y abrí `/registro`. Usá **un Gmail distinto del método del operador**, aceptá Términos/Privacidad, enviá el código y completá el registro con el correo recibido. Esto crea la segunda cuenta real y su espacio Personal; no crea ninguna empresa.
@@ -125,9 +164,7 @@ Preparación: Docker activo; Google y Gmail configurados según [configuración]
 12. Terminá con `aspire stop` desde la raíz del back.
 
 
-- T20: selectores compartidos ofrecen variante compacta del lienzo. El perfil congela versión con el draft, aplica cultura solo tras guardar y mantiene layout del acceso actual. Mi cuenta vive en el menú de identidad y en el lateral personal que ya muestra el lienzo.
 
-- T21–23: el aviso vive en shared/ui para compartirlo con Inicio sin importar áreas. La tabla obedece flags del backend. El comprobante de reautenticación se conserva en memoria para reintentar si se pierde la respuesta de la mutación. Google enlaza antiforgery y errores de callback por códigos traducidos.
 
 
 ## Últimas tareas verificadas
@@ -136,8 +173,8 @@ Preparación: Docker activo; Google y Gmail configurados según [configuración]
 |---|---|---|---|
 | T27 · recorridos reales completos | `fc66c58` | `a50b5b0` | Cinco recorridos + padre, 6/6 reales; publicación legal por archivo en base exclusiva |
 | T27 bis · respetar 429 manual | — | `3c05b47` | Test rojo: el botón permanecía bloqueado/reintento automático; verde 3/3, runner pulsa otra vez tras RetryAfter |
-| T30 correcciones de la puerta | `1b96685` | pendiente en T28 | Arquitectura 153/153 y afectados de integración 13/13; suite completa 1110/1110 |
-| T28 correos reales | `165d927` | pendiente en T28 | HTML real de siete avisos en es/en sin conectar ninguna base; plantillas 12/12 |
+| T30 correcciones de la puerta | `1b96685` | `f81d2eb` | Arquitectura 153/153 y afectados de integración 13/13; suite completa 1110/1110 |
+| T28 correos reales | `165d927`, `8b054d1` | `f81d2eb` | HTML real de siete avisos en es/en sin conectar ninguna base; plantillas 12/12 |
 
 ## Decisiones tomadas durante la puerta
 
@@ -148,4 +185,5 @@ Preparación: Docker activo; Google y Gmail configurados según [configuración]
 - Componer los correos visuales a través del renderer real, el catálogo JSON y DisplayFormatter; el modo de captura no abre conexiones ni envía correo. En el navegador solo se sirve el logo local de la plantilla.
 - Los botones HTML incluyen `#007475`, equivalente sRGB del token de marca, antes de `oklch`, para que el fondo sea visible también en clientes de correo sin CSS moderno. Plantillas 12/12 y build final 0 advertencias/0 errores.
 - T28 bis: los tres diálogos validan al confirmar un código incompleto, como el lienzo, sin enviar esa prueba al servidor. Tres tests existentes rojos y cuatro casos verdes; front `59dc2cd`. Durante cancelación, Salir queda deshabilitado hasta la respuesta (test rojo → verde).
+- El selector compacto muestra el ejemplo fijo aprobado (27/09/2026 14:35 y 1234,50) por los patrones del catálogo, con UTC solo para ilustrar la cultura. La descripción queda fuera de ItemText para que el valor del selector muestre solo el nombre. Test rojo → verde 4/4; se conserva `en-US` al elegir.
 - El chat paralelo de comentarios fue autorizado expresamente por el usuario. Los commits de backend se hicieron con patches funcionales revisados: la revisión automática rechazó stage de archivos completos por el riesgo de mezclar comentarios ajenos. No quedó bloqueada ninguna acción necesaria.

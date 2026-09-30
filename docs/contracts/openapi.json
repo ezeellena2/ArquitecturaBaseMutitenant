@@ -2182,7 +2182,8 @@
               "string"
             ]
           }
-        }
+        },
+        "description": "Describe disponibilidad y acciones de un método sin incluir su contacto completo en la representación de diagnóstico."
       },
       "AccountLoginMethodsResponse": {
         "required": [
@@ -2209,7 +2210,8 @@
             "type": "integer",
             "format": "int32"
           }
-        }
+        },
+        "description": "Entrega métodos de ingreso y capacidades de gestión de la cuenta sin exponer los objetos de persistencia."
       },
       "AddLoginEmailHttpRequest": {
         "type": "object",
@@ -2481,7 +2483,8 @@
           "redirectUrl": {
             "type": "string"
           }
-        }
+        },
+        "description": "Entrega la URL del desafío Google al controller sin exponerla en la representación textual del objeto."
       },
       "GoogleSignupAntiforgeryResponse": {
         "required": [
@@ -2817,7 +2820,8 @@
             "type": "string",
             "format": "date-time"
           }
-        }
+        },
+        "description": "Expone la fecha programada y el comprobante temporal para cancelar una baja sin iniciar sesión."
       },
       "PendingLegalDocumentResponse": {
         "required": [
@@ -2934,7 +2938,8 @@
             "type": "integer",
             "format": "int32"
           }
-        }
+        },
+        "description": "Informa a qué método de respaldo se envió el código, con el destino enmascarado y el tiempo hasta un nuevo pedido."
       },
       "ReauthResponse": {
         "required": [
@@ -2945,7 +2950,8 @@
           "reauthTicket": {
             "type": "string"
           }
-        }
+        },
+        "description": "Devuelve el ticket temporal para completar una acción sensible sin mostrarlo en diagnósticos del objeto."
       },
       "ReferenceDataHttpResponse": {
         "required": [

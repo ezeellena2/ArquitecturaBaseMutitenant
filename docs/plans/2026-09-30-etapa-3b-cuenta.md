@@ -355,11 +355,11 @@ En cada tarea se guarda evidencia de rojo y verde con el comando y resultado. Si
 **Archivos:** front: `scripts/capturar-etapa-3b.mjs`, `src/test/accountCaptureHarness.tsx` y html si se requieren; `docs/design/capturas/etapa-3b/{manifest.json,informe.md,*/**.png}`.
 **Comportamiento exacto:** Reusar renderer de lienzo y helpers de 3a. Capturas app y lienzo 1440×900/390×844 de cada caso de matriz visual abajo, incluyendo diálogos, menús, invalidaciones, avisos y mensajes. Inspeccionar imágenes, corregir geometría/textos/tokens. Arnés visual puede fijar datos para estados inalcanzables todavía; E2E real independiente. Reportar ocultaciones autorizadas, datos/versión reales y cualquier diferencia residual.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Todos los pares presentes; estructura/textos/orden/colores/controles coinciden salvo ocultaciones autorizadas.
-- [ ] 2. Ejecutar `node scripts/capturar-etapa-3b.mjs` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "test: comparar pantallas y avisos de la cuenta"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Todos los pares presentes; estructura/textos/orden/colores/controles coinciden salvo ocultaciones autorizadas.
+- [x] 2. Ejecutar `node scripts/capturar-etapa-3b.mjs` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "test: comparar pantallas y avisos de la cuenta"`. Registrar hash back/front.
 
 ### T29 · Documentación funcional y recorrido manual
 
@@ -377,11 +377,11 @@ En cada tarea se guarda evidencia de rojo y verde con el comando y resultado. Si
 **Archivos:** back: informe y este plan; front: informe de capturas.
 **Comportamiento exacto:** Ejecutar puerta completa abajo. Si falla, corregir solo flujo/seguridad o checks obligatorios y commitear; demás backlog. Adjuntar salida literal saneada E2E, tarea→commit, diferencias y decisiones. Aspire stop al terminar. No declarar 3b cerrada hasta verde real.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Build 0 advertencias, toda suite Docker/front/generador/arnés/contratos/capturas/E2E verdes.
-- [ ] 2. Ejecutar `dotnet build ArquitecturaBaseMultitenant.slnx; dotnet test; npm run lint; npm test; npm run build; npm run contracts:check; node --test scripts/datos-de-referencia/generar.test.mjs; npm run test:e2e:real` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "docs: registrar puerta completa de la etapa 3b"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Build 0 advertencias, toda suite Docker/front/generador/arnés/contratos/capturas/E2E verdes.
+- [x] 2. Ejecutar `dotnet build ArquitecturaBaseMultitenant.slnx; dotnet test; npm run lint; npm test; npm run build; npm run contracts:check; node --test scripts/datos-de-referencia/generar.test.mjs; npm run test:e2e:real` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "docs: registrar puerta completa de la etapa 3b"`. Registrar hash back/front.
 
 ## Matriz visual obligatoria
 
@@ -419,3 +419,7 @@ Guardar manifest e informe en front `docs/design/capturas/etapa-3b/`; cada caso 
 
 
 
+
+## Estado de ejecución al terminar el trabajo técnico
+
+T01–T30 ejecutadas y commiteadas. Puerta automática verde: backend 1110/1110, front 655/655, generador 30/30, arnés 10/10 y 20/20, contratos, builds y E2E real 6/6. Comparación visual: 118 pares presentes y revisados. El cierre formal de 3b queda pendiente de aprobación del usuario de las diferencias residuales de presentación, por el punto 9 del plan maestro. La 3c no se inició y conserva su propia puerta. Informe y manual: `docs/reviews/2026-09-30-etapa-3b-cuenta.md`.
