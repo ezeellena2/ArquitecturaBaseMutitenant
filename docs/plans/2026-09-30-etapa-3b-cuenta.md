@@ -168,11 +168,11 @@ En cada tarea se guarda evidencia de rojo y verde con el comando y resultado. Si
 **Archivos:** back: `Interfaces/Services/ILegalAcceptanceService.cs`, `Services/Legal/{LegalAcceptanceService,LegalAcceptanceGuard}.cs`, `Interfaces/Persistence/{ILegalReader,ILegalRepository}.cs`, adaptadores; `Api/Legal/LegalAcceptanceMiddleware.cs`, `Controllers/Account/LegalAcceptanceController.cs`, `Contracts/Account/AcceptLegalHttpRequest.cs`, Program/DI; ampliar `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Legal/LegalAcceptanceTests.cs`.
 **Comportamiento exacto:** 403 Legal.AcceptanceRequired para API autenticada mientras faltan documentos vigentes; exenciones GET /api/me, GET /api/legal/*, POST /api/legal/accept y rutas anónimas. POST acepta exactamente documentos/versión mostrados: nueva publicación entre lectura y confirmación vuelve a bloquear. Append-only, timestamp/IP/UA en misma UoW, idempotencia. Prueba publica versiones solo en su propia base y limpia o usa fixture propia.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: API sigue permitida antes de implementar bloqueo; luego solo desbloquea al aceptar versión vigente.
-- [ ] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class '*LegalAcceptanceTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: exigir aceptación de versiones legales nuevas"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: API sigue permitida antes de implementar bloqueo; luego solo desbloquea al aceptar versión vigente.
+- [x] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class '*LegalAcceptanceTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: exigir aceptación de versiones legales nuevas"`. Registrar hash back/front.
 
 ### T12 · Reglas de baja y cancelación
 

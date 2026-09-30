@@ -18,7 +18,9 @@ Estado: en ejecución. La 3c queda pendiente. No declarar cerrada esta etapa sin
 | T08 · vincular Google | `457f569` | — | Rojo CS0246; Google 13/13 + protocolo 1/1; sesión distinta/correo no verificado/conflicto rechazados; OAuth state protegido y antiforgery |
 | T09 · HTTP de métodos y reautenticación | `38112e8` | — | Rojo: 404 en rutas inexistentes y código sin traducir bajo campo; HTTP + inventario 5/5; 401, 404 ajeno real, replay y verificación pickup |
 
-| T10 · perfil versionado y aviso | este commit | — | Rojo: falta version y luego 204 en vez de 409; integración 19/19, unit 24/24; guardado viejo conserva datos e idioma; aviso usa disponibilidad |
+| T10 · perfil versionado y aviso | `a533f5c` | — | Rojo: falta version y luego 204 en vez de 409; integración 19/19, unit 24/24; guardado viejo conserva datos e idioma; aviso usa disponibilidad |
+
+| T11 · términos bloqueantes | este commit | — | Rojo: 200 en vez de 403; integración 8/8 y perfil unit 13/13; versión nueva entre lectura/aceptación devuelve 409, aceptación append-only y repetible |
 
 ## Evidencia del E2E real antes de programar
 
@@ -61,6 +63,8 @@ Ocultaciones solicitadas: WhatsApp (E8), exportación/sugerencia de exportar (E1
 - T09: el listado es lectura por puerto separado, devuelve acciones/respaldo calculados y días de gracia de PlatformSettings. El subject Google queda fuera del contrato. Los códigos de resources que Domain usa como errores de campo se traducen centralmente en ProblemDetailsMapper; los mensajes de validación ya traducidos siguen igual.
 
 - T10: las preferencias y el nombre se guardan al confirmar la UoW con OriginalValue=xmin recibido. UserStore.Update vuelve a adjuntar y elimina la expectativa del cliente; no se usa para este guardado sin campos de Identity. El conflicto real devuelve 409 y conserva los primeros datos.
+
+- T11: lector legal por UserId explícitamente autorizado en inventario existente. La prueba de publicaciones usa ApiFactory propia para conservar los documentos v1 de otras pruebas. El preparador E2E acepta v1 para su cuenta fixture; no cambia el seed ni registra aceptación ficticia del operador.
 
 ## Recorrido manual
 

@@ -1426,6 +1426,68 @@
         }
       }
     },
+    "/api/legal/accept": {
+      "post": {
+        "tags": [
+          "Legal"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptLegalHttpRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptLegalHttpRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptLegalHttpRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/legal/terms": {
       "get": {
         "tags": [
@@ -1834,6 +1896,20 @@
   },
   "components": {
     "schemas": {
+      "AcceptLegalHttpRequest": {
+        "type": "object",
+        "properties": {
+          "documents": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/LegalAcceptanceItem"
+            }
+          }
+        }
+      },
       "Access": {
         "enum": [
           "consumer",
@@ -2187,6 +2263,23 @@
           }
         },
         "description": "Token de formulario de un solo origen para iniciar Registro con Google."
+      },
+      "LegalAcceptanceItem": {
+        "required": [
+          "id",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
       },
       "LegalDocumentKind": {
         "enum": [

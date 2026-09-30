@@ -96,4 +96,5 @@
   <data name="Identity.LoginMethod.LastMethod" xml:space="preserve"><value>No podés quitar tu único método de ingreso. Agregá y verificá otro antes.</value></data>
   <data name="Identity.LoginMethod.LastPersonalMethod" xml:space="preserve"><value>Agregá y verificá otro método personal antes de quitar este.</value></data>
   <data name="Identity.Google.AlreadyUsed" xml:space="preserve"><value>Esta cuenta de Google ya está asociada a otra cuenta.</value></data>
+  <data name="Legal.Document.VersionChanged" xml:space="preserve"><value>Los términos cambiaron. Volvé a leerlos y aceptá la versión vigente.</value></data>
 </root>

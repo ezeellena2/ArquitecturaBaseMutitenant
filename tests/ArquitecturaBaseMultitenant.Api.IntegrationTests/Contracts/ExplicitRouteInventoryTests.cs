@@ -30,6 +30,7 @@ public sealed class ExplicitRouteInventoryTests(ApiFactory factory)
         "POST /api/auth/signup/verify",
         "GET /api/legal/terms",
         "GET /api/legal/privacy",
+        "POST /api/legal/accept",
         "GET /api/me",
         "PUT /api/me",
         "POST /api/me/external/google",

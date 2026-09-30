@@ -39,6 +39,9 @@ public static class DependencyInjection
         services.AddScoped<IProfileService, ProfileService>();
         services.AddScoped<ProfileSnapshotBuilder>();
         services.AddScoped<ILegalService, LegalService>();
+        services.AddScoped<ILegalAcceptanceService, LegalAcceptanceService>();
+        services.AddScoped<LegalAcceptanceGuard>();
+        services.AddScoped<LegalAcceptanceWriter>();
         services.AddScoped<SignupPolicy>();
         services.AddScoped<IPersonalSpaceProvisioner, PersonalSpaceProvisioner>();
         services.AddScoped<TenantSpaceProvisioner>();

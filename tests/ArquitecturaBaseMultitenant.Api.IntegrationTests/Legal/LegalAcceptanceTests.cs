@@ -1,5 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Domain.Legal;
@@ -7,6 +10,7 @@ using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Legal;
 
@@ -14,6 +18,66 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Legal;
 public sealed class LegalAcceptanceTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    [Fact]
+    public async Task New_terms_block_authenticated_routes_until_the_exact_current_version_is_accepted()
+    {
+        await using var isolated = new ApiFactory();
+        await isolated.InitializeAsync();
+        using var client = isolated.CreateClient(new WebApplicationFactoryClientOptions
+            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var account = await AccountJourney.RegisterAsync(isolated, client, Ct);
+        var second = await PublishAsync(isolated, 2);
+        using var blocked = await client.GetAsync("/api/me/login-methods", Ct);
+        Assert.Equal(HttpStatusCode.Forbidden, blocked.StatusCode);
+        using var problem = await blocked.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+        Assert.Equal("Legal.AcceptanceRequired", problem!.RootElement.GetProperty("code").GetString());
+        using var me = await client.GetAsync("/api/me", Ct);
+        Assert.Equal(HttpStatusCode.OK, me.StatusCode);
+        using var snapshot = await me.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+        Assert.Equal(second.Id, snapshot!.RootElement.GetProperty("pendingLegalDocuments")[0].GetProperty("id").GetGuid());
+        using var legal = await client.GetAsync("/api/legal/terms", Ct);
+        Assert.Equal(HttpStatusCode.OK, legal.StatusCode);
+        using var anonymous = await client.GetAsync("/api/auth/methods", Ct);
+        Assert.Equal(HttpStatusCode.OK, anonymous.StatusCode);
+
+        var third = await PublishAsync(isolated, 3);
+        using var stale = await AccountJourney.PostAsync(client, "/api/legal/accept",
+            new { documents = new[] { new { id = second.Id, version = 2 } } }, Ct);
+        Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
+        using var accepted = await AccountJourney.PostAsync(client, "/api/legal/accept",
+            new { documents = new[] { new { id = third.Id, version = 3 } } }, Ct);
+        Assert.Equal(HttpStatusCode.NoContent, accepted.StatusCode);
+        using var repeated = await AccountJourney.PostAsync(client, "/api/legal/accept",
+            new { documents = new[] { new { id = third.Id, version = 3 } } }, Ct);
+        Assert.Equal(HttpStatusCode.NoContent, repeated.StatusCode);
+        using var unblocked = await client.GetAsync("/api/me/login-methods", Ct);
+        Assert.Equal(HttpStatusCode.OK, unblocked.StatusCode);
+        await using var scope = isolated.Services.CreateAsyncScope();
+        var row = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().LegalAcceptances
+            .AsNoTracking().SingleAsync(row => row.UserId == account.UserId && row.LegalDocumentId == third.Id, Ct);
+        Assert.Equal(3, row.Version);
+        Assert.Equal(DateTimeKind.Utc, row.AcceptedAtUtc.Kind);
+        Assert.DoesNotContain(await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().LegalAcceptances
+            .AsNoTracking().Where(row => row.UserId == account.UserId).ToArrayAsync(Ct), row => row.LegalDocumentId == second.Id);
+    }
+
+    private static async Task<LegalDocument> PublishAsync(ApiFactory isolated, int version)
+    {
+        await using var scope = isolated.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        var document = LegalDocument.Create(LegalDocumentKind.Terms, version, nowUtc);
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+        {
+            var repository = services.GetRequiredService<ILegalRepository>();
+            repository.AddDocument(document);
+            repository.AddContent(LegalDocumentContent.Create(document.Id, "es-AR", "Términos nuevos de prueba."));
+            repository.AddContent(LegalDocumentContent.Create(document.Id, "en-US", "New test terms."));
+            return Task.FromResult(Result.Success());
+        }, CommitPolicy.OnSuccess, Ct);
+        return document;
+    }
 
     [Fact]
     public async Task Seeded_legal_documents_are_readable_in_both_enabled_cultures()

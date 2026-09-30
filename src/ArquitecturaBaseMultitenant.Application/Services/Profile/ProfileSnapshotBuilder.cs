@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Models.Profile;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
+using ArquitecturaBaseMultitenant.Application.Services.Legal;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 
@@ -10,7 +11,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Profile;
 /// <summary>Compone la cuenta y sus accesos globales con las preferencias del tenant activo.</summary>
 internal sealed class ProfileSnapshotBuilder(IUserRepository users, IUserTenantAccessReader accesses,
     ITenantSettingsReader settings, ICultureCatalog cultures, ICountryCatalog countries,
-    ILoginMethodReader loginMethods, LoginMethodAvailability availability)
+    ILoginMethodReader loginMethods, LoginMethodAvailability availability, LegalAcceptanceGuard legal)
 {
     internal async Task<MeResponse?> BuildAsync(Guid userId, Access access, Guid? activeTenantId,
         CancellationToken cancellationToken)
@@ -45,6 +46,7 @@ internal sealed class ProfileSnapshotBuilder(IUserRepository users, IUserTenantA
             account.Culture, account.TimeZoneId, currencyCode, [])
         {
             Version = account.Version,
+            PendingLegalDocuments = await legal.PendingAsync(userId, cancellationToken),
             NeedsPersonalLoginMethod = !hasPersonalMethod,
         };
     }

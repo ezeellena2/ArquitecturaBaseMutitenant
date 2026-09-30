@@ -4,6 +4,7 @@ namespace ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 
 public interface ILegalRepository
 {
+    Task<bool> HasAcceptedAsync(Guid userId, Guid documentId, CancellationToken cancellationToken);
     Task<LegalDocument?> GetCurrentDocumentAsync(LegalDocumentKind kind,
         DateTime nowUtc, CancellationToken cancellationToken);
 

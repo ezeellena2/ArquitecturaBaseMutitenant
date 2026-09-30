@@ -4,6 +4,9 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Application.Models.Profile;
 using ArquitecturaBaseMultitenant.Application.Models.Tenancy;
+using ArquitecturaBaseMultitenant.Application.Models.Legal;
+using ArquitecturaBaseMultitenant.Application.Services.Legal;
+using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Application.Services.Profile;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Application.UnitTests.TestDoubles;
@@ -36,7 +39,8 @@ public sealed class ProfileServiceTests
             verified ? fixture.TimeProvider.GetUtcNow().UtcDateTime : null, managed ? Guid.CreateVersion7() : null);
         var snapshots = new ProfileSnapshotBuilder(new StubUsers(Account(id)), new StubAccesses([]),
             new StubSettings(null), catalog, catalog, new StubMethods([method]),
-            new LoginMethodAvailability([], new StubGoogle(available), new StubMemberships()));
+            new LoginMethodAvailability([], new StubGoogle(available), new StubMemberships()),
+            new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider));
 
         var profile = await snapshots.BuildAsync(id, Access.Consumer, null, Ct);
 
@@ -185,7 +189,8 @@ public sealed class ProfileServiceTests
     {
         var catalog = new JsonReferenceDataCatalog();
         var availability = new LoginMethodAvailability([], new StubGoogle(), new StubMemberships());
-        var snapshots = new ProfileSnapshotBuilder(users, accesses, settings, catalog, catalog, new StubMethods(), availability);
+        var snapshots = new ProfileSnapshotBuilder(users, accesses, settings, catalog, catalog, new StubMethods(),
+            availability, new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider));
         return new ProfileService(current, context, snapshots, users, fixture.Validator,
             unitOfWork ?? new FakeUnitOfWork(), fixture.TimeProvider, fixture.Logger);
     }
@@ -249,5 +254,12 @@ public sealed class ProfileServiceTests
     private sealed class StubMemberships : ILoginMethodMembershipReader
     {
         public Task<bool> IsActiveAsync(Guid userId, Guid tenantId, CancellationToken ct) => Task.FromResult(false);
+    }
+    private sealed class StubLegal : ILegalReader
+    {
+        public Task<IReadOnlyList<PendingLegalDocumentResponse>> ListPendingAsync(Guid userId, DateTime nowUtc,
+            CancellationToken ct) => Task.FromResult<IReadOnlyList<PendingLegalDocumentResponse>>([]);
+        public Task<LegalDocumentRow?> FindCurrentAsync(LegalDocumentKind kind, string culture, DateTime nowUtc,
+            CancellationToken ct) => throw new NotSupportedException();
     }
 }

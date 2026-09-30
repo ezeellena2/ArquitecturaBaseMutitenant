@@ -7,6 +7,13 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories;
 
 internal sealed class LegalRepository(ApplicationDbContext context) : ILegalRepository
 {
+    public Task<bool> HasAcceptedAsync(Guid userId, Guid documentId, CancellationToken cancellationToken)
+    {
+        context.RequireTransaction();
+        return context.LegalAcceptances.AnyAsync(row => row.UserId == userId
+            && row.LegalDocumentId == documentId, cancellationToken);
+    }
+
     public Task<LegalDocument?> GetCurrentDocumentAsync(LegalDocumentKind kind,
         DateTime nowUtc, CancellationToken cancellationToken)
     {

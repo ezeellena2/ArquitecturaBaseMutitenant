@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -63,6 +64,13 @@ try
             throw new InvalidOperationException("The E2E login method could not become primary.");
         methods.Add(method);
         await users.SetPrimaryEmailAsync(user.Id, email.Value, ct);
+        var legal = services.GetRequiredService<ILegalRepository>();
+        foreach (var kind in Enum.GetValues<LegalDocumentKind>())
+        {
+            var document = await legal.GetCurrentDocumentAsync(kind, nowUtc, ct)
+                ?? throw new InvalidOperationException("The E2E legal documents have not been seeded.");
+            legal.AddAcceptance(LegalAcceptance.Create(user.Id, document, nowUtc, null, null));
+        }
         return Result.Success(user.Id);
     }, CommitPolicy.OnSuccess, cancellationToken);
 
