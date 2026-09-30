@@ -19,9 +19,9 @@
 | `Email:Smtp:Password` | contraseña de **aplicación** de Gmail (no la de la cuenta) | https://myaccount.google.com/apppasswords |
 | `DataProtection:Certificate:Base64` | PFX RSA con clave privada, codificado en base64, que cifra en reposo las claves de Data Protection fuera de Development y Testing | Certificado propio de la instalación; guardalo separado de la base y sus backups |
 | `DataProtection:Certificate:Password` | contraseña del PFX, si tiene una | La definida al exportar ese PFX |
-| `Seed:PlatformOwner:Email` | correo del operador inicial; obligatorio en Production mientras no exista un operador | Buzón controlado por quien administra la plataforma |
-| `Seed:PlatformOwner:DisplayName` | nombre visible opcional del operador inicial | Quien administra la plataforma |
-| `Seed:Development:AnaEmail` | buzón para ingresar como Ana en la Empresa A del seed local | Tu propio buzón para el recorrido manual; sólo Development |
+| `Seed:PlatformOwner:Email` | correo del operador inicial; obligatorio en Development y Production mientras no exista un operador | Buzón controlado por quien administra la plataforma |
+| `Seed:PlatformOwner:DisplayName` | nombre visible opcional del operador inicial; se aplica solo al crear la cuenta | Quien administra la plataforma |
+| `Seed:PlatformOwner:Phone` | teléfono E.164 del operador; opcional hasta la Etapa 8 y todavía no se usa como método de ingreso | Número controlado por quien administra la plataforma |
 | `WhatsApp:AccessToken` | token del usuario del sistema | Meta Business › Usuarios del sistema (`whatsapp_business_messaging`, `whatsapp_business_management`) |
 | `WhatsApp:AppSecret` | con lo que Meta firma cada webhook | Meta for Developers › la app › Configuración › Básica |
 | `WhatsApp:VerifyToken` | la palabra de verificación del webhook | la misma que cargaste en Meta |
@@ -55,9 +55,7 @@ Para comprobar lo obligatorio en Production (incluido el certificado de Data Pro
 ./scripts/secretos/verificar.ps1 -Ambiente Production
 ```
 
-El importador de ArquitecturaBase no conoce al operador ni al certificado Data Protection de esta plataforma: cargá `Seed:PlatformOwner:Email` y `DataProtection:Certificate:Base64` por separado en user-secrets o en el gestor de secretos de Production (`Seed__PlatformOwner__Email`, `DataProtection__Certificate__Base64`). `Seed:PlatformOwner:DisplayName` y `DataProtection:Certificate:Password` son opcionales. El seed crea una identidad global sin espacio Personal ni contraseña, con el correo como método principal verificado; cada ingreso exige el código enviado a ese buzón. Si ya existe ese método de correo, marca su cuenta como operadora. Si ya hay un operador, los siguientes arranques no exigen la clave ni alteran esa cuenta. En Development, sin la clave se omite el operador inicial; en Production, si aún no hay operador, falta de clave detiene el arranque.
-
-Para el recorrido de Ana, cargá `Seed:Development:AnaEmail` en user-secrets **antes del primer arranque de Development**. Si falta, el ejemplo usa `ana@example.test`, útil sólo con `Email:Delivery=PickupDirectory`. El seed no cambia métodos de ingreso en reinicios: para cambiar el buzón de Ana antes de la gestión de métodos de la 3b, recreá la base local de desarrollo. No cambies el correo directamente en la tabla.
+El importador de ArquitecturaBase no conoce al operador ni al certificado Data Protection de esta plataforma: cargá `Seed:PlatformOwner:Email`, `Seed:PlatformOwner:DisplayName` y, si ya lo tenés, `Seed:PlatformOwner:Phone` por separado en los user-secrets del proyecto Api. En Production usá el gestor de secretos (`Seed__PlatformOwner__Email`, `Seed__PlatformOwner__DisplayName`, `Seed__PlatformOwner__Phone`). Cargá también `DataProtection:Certificate:Base64` por separado; `DataProtection:Certificate:Password` es opcional. El seed de Development y Production crea exactamente los mismos datos: referencias, documentos legales v1, ajustes de plataforma, cliente web y una identidad global de operador sin espacio Personal ni contraseña. El correo es su método principal verificado y cada ingreso exige el código enviado a ese buzón. `DisplayName` se aplica solo al crear la cuenta; el seed no reescribe una cuenta existente en cada arranque. `Phone` queda guardado solo como configuración hasta que la Etapa 8 implemente el ingreso por WhatsApp. Si ya existe el método de correo verificado y propio, el seed marca esa cuenta como operadora. Si ya hay un operador, los siguientes arranques no alteran esa cuenta. En Development y Production, si aún no hay operador, faltar `Seed:PlatformOwner:Email` detiene el arranque. Ninguno de los dos ambientes siembra personas u organizaciones de ejemplo.
 
 ## 3. Lo que no es secreto (`appsettings.Development.json` de la Api, en el repo)
 
@@ -105,7 +103,7 @@ Las opciones se validan **al arrancar**, como en ArquitecturaBase:
 | `Email:Delivery=Smtp` sin `Email:Smtp:Password` | la Api no arranca y nombra la clave que falta |
 | Fuera de Development y Testing con `Email:Delivery=PickupDirectory` | la Api no arranca y nombra `Email:Delivery` |
 | SMTP con `Email:Smtp:Security` distinto de `StartTls` o `SslOnConnect` | la Api no arranca y nombra `Email:Smtp:Security` |
-| Production sin operador y sin `Seed:PlatformOwner:Email` | la Api no arranca y nombra la clave que falta |
+| Development o Production sin operador y sin `Seed:PlatformOwner:Email` | la Api no arranca y nombra la clave que falta |
 | Fuera de Development y Testing sin `DataProtection:Certificate:Base64`, o con PFX inválido o sin clave privada | la Api no arranca y nombra la clave del certificado |
 | `Authentication:Google:ClientId` sin `ClientSecret` | la Api no arranca. Sin `ClientId`, el botón de Google no aparece (`GET /api/auth/methods`) |
 | `WhatsApp:PhoneNumberId` sin `AccessToken` | la Api no arranca |

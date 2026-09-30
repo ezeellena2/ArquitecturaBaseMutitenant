@@ -706,15 +706,12 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │       │   ├── cultures.json                          [E1] patrones y nombres traducidos; es-AR y en-US habilitadas inicialmente
 │       │   └── tax-id-types.json                      [E1] normativa fiscal y ValidatorKey
 │       ├── ReferenceDataSeeder.cs                    [E2] upsert idempotente; nunca borra
-│       ├── SeedExtensions.cs                          [E3] orden e idempotencia; global en una UoW; Development, una UoW por espacio
-│       │                                              con el advisory lock "seed:" en cada límite (sin carreras entre réplicas)
-│       ├── DatabaseSeeder.cs                          [E3] límite global y lock `seed:database`; coordina límites separados de Development
+│       ├── SeedExtensions.cs                          [E3] orden e idempotencia; mismo seed global en una UoW en Development y Production
+│       │                                              con el advisory lock "seed:" (sin carreras entre réplicas)
+│       ├── DatabaseSeeder.cs                          [E3] límite global y lock `seed:database`; no crea cuentas ni organizaciones de muestra
 │       ├── OpenIddictSeeder.cs                        [E3] cliente web + scope api
-│       ├── PlatformSeeder.cs                          [E3] ajustes de plataforma + operador inicial (Seed:PlatformOwner:Email y DisplayName); la E5 le asigna el rol Owner
-│       ├── LegalDocumentSeeder.cs                     [E3] 3a: versión base de términos y privacidad, con contenidos es y en
-│       └── DevelopmentSeeder.cs                       [E3] solo prepara/stagea Empresa A (Ana, Kevin) y Personal de Kevin/Carla por
-│                                                      provisioners compartidos; desde la E4, Ana
-│                                                      es Dueña (TenantAdmin) de la Empresa A
+│       ├── PlatformSeeder.cs                          [E3] ajustes de plataforma + operador inicial (Seed:PlatformOwner:Email y DisplayName; Phone opcional hasta E8); la E5 le asigna el rol Owner
+│       └── LegalDocumentSeeder.cs                     [E3] 3a: versión base de términos y privacidad, con contenidos es y en
 ├── Identity/                                          [E2 shell CLR; modelo de cuenta E3]
 │   ├── ApplicationUser.cs                             [E2 shell sin mapeo; E3] IsPlatformOperator, Status, Culture, TimeZoneId, DisplayName, LastBusinessTenantId,
 │   │                                                  DeletionRequestedAtUtc, DeletionScheduledForUtc, DeletionReason, DeletedAtUtc

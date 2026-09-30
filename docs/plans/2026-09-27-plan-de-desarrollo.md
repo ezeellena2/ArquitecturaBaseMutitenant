@@ -34,7 +34,7 @@ El resultado tiene que servir para empezar productos reales.
    - `HarnessTests` y `harness.test.ts` están en verde; `HarnessStage` se sube al cerrar la etapa y exige los tests nombrados en las fichas hasta esa etapa.
 8. `aspire stop` si se levantó el AppHost.
 9. Desde la E3, si la etapa programa pantallas: **comparación visual con el lienzo**. Por cada pantalla y cada estado de su tablero en `docs/design/lienzo/`, una captura de la pantalla real y otra del tablero, las dos a 1440 × 900 y a 390 × 844 (Playwright), guardadas en `docs/design/capturas/etapa-N/`. Tienen que coincidir: la estructura, los textos, el orden, los colores (tokens de tema.md), los controles y los estados. Cualquier diferencia se corrige, o se anota con su motivo en el informe de la etapa para que el usuario la apruebe. **No se inventa nada que el tablero no tenga:** ni campos, ni textos, ni pantallas, ni acciones. Si falta algo, se dibuja primero.
-10. Desde la E3a y en **cada etapa posterior**, `npm run test:e2e:real` del front pasa contra el front y la Api reales de Aspire en Development, con `Email:Delivery=PickupDirectory` y un directorio temporal de `.eml`. Playwright no intercepta peticiones ni usa mocks: registra una cuenta por código leído del `.eml`, sale, hace entrar a Ana por la puerta empresa con otro `.eml`, comprueba Empresa A, F5, cambio a Personal y logout. La prueba exige `E2E_PICKUP_DIR` absoluto y `E2E_ANA_EMAIL` del seed Development; ningún valor de secreto ni código se imprime. Sin esta prueba verde, la etapa no se cierra aunque pasen build, tests de integración y capturas.
+10. Desde la E3a y en **cada etapa posterior**, `npm run test:e2e:real` del front pasa contra el front y la Api reales, con una base PostgreSQL exclusiva del E2E, separada del volumen de Development de Aspire, `Email:Delivery=PickupDirectory` y un directorio temporal de `.eml`. Playwright no intercepta peticiones ni usa mocks: el runner crea en esa base la persona y la organización necesarias, registra una cuenta por código leído del `.eml`, sale, entra por la puerta empresa con su propia cuenta, comprueba `/org`, F5, cambio a Personal y logout. La prueba exige `E2E_PICKUP_DIR` absoluto; ningún valor de secreto, correo ni código se imprime. Sin esta prueba verde, la etapa no se cierra aunque pasen build, tests de integración y capturas.
 
 **Forma de trabajo:**
 - Commits chicos, en español, con conventional commits. **Cada tarea termina en un commit.**
@@ -211,7 +211,7 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
 ## Etapa 3: identidad, accesos y OpenIddict
 
 **Se hace en tres partes, cada una con su puerta**, porque es la etapa más grande y la prioridad es que el ingreso funcione de punta a punta cuanto antes:
-- **3a · Ingreso:** los puntos 1 a 6c, la base de 6c-bis y 6d, y los puntos 8, 9 y 10 del back; en el front, los puntos 1 y 4, los layouts y el inicio personal, las páginas de error del punto 3, el ingreso (con el paso del código), el registro con casilla de términos y el callback del punto 2, y la portada y las páginas legales del punto 5. Puerta: el recorrido manual de abajo (registro e ingreso reales, las dos puertas, cambio de lado, F5, logout).
+- **3a · Ingreso:** los puntos 1 a 6c, la base de 6c-bis y 6d, y los puntos 8, 9 y 10 del back; en el front, los puntos 1 y 4, los layouts y el inicio personal, las páginas de error del punto 3, el ingreso (con el paso del código), el registro con casilla de términos y el callback del punto 2, y la portada y las páginas legales del punto 5. Puerta: el recorrido manual de abajo (registro e ingreso como persona, F5 y logout); la puerta empresa se cubre con el E2E aislado hasta la Etapa 6.
 - **3b · La cuenta:** gestión de 6c-bis, versión nueva bloqueante de 6d y 6e (baja). En el front: la aceptación bloqueante, el estado de ingreso con la baja pedida y `areas/personal/account` (métodos de ingreso, Privacidad y la baja). Puerta: sumar un correo personal, quitar un método con código en otro, aceptar términos nuevos, pedir la baja y cancelarla ingresando.
 - **3c · Invitaciones:** el punto 7. En el front: la pantalla `/invitacion` con todos los estados del tablero Invitacion. Puerta automática: `InvitationsTests` emite con `InvitationIssuer` una invitación a alguien sin cuenta y otra a alguien con cuenta, y las acepta. El recorrido manual (invitar desde Usuarios, que llegue de verdad por Gmail y aceptar las dos) pasa a la puerta de la Etapa 6, porque la 3c no tiene una ruta para invitar.
 
@@ -246,7 +246,7 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
    - `InvitationService` con la vista previa `POST /api/invitations/preview` (el token va en el cuerpo, nunca en la URL) y `POST /api/invitations/accept`, con cuenta previa y sin ella (aceptar sin cuenta crea la identidad **sin** espacio personal);
    - `InvitationsTests`: emite con `InvitationIssuer` una invitación a alguien sin cuenta y otra a alguien con cuenta, y las acepta.
 8. `GET /api/me` (cuenta, acceso activo, espacio personal, organizaciones, permisos y las preferencias efectivas de cultura, zona y moneda) y `PUT /api/me`.
-9. Seed global idempotente en **todos** los ambientes, dentro de una UoW y con el advisory lock `seed:` para que dos réplicas no choquen: referencias, cliente `web`, ajustes de plataforma, operador inicial y Términos/Privacidad v1. En Development, además, se siembran por los mismos puertos y provisioners de alta tres espacios de muestra, **cada uno en su propia UoW con `ITenantScope.Enter` previo y el mismo lock dentro**: Empresa A con Ana y Kevin (el rol `TenantAdmin` de Ana se siembra en la Etapa 4, cuando existen los roles; el correo de Ana en el alta inicial viene de `Seed:Development:AnaEmail` o del ejemplo `ana@example.test`), Personal de Kevin y Personal de Carla. Solo `DatabaseSeeder` coordina esos límites; `DevelopmentSeeder` no recibe `IUnitOfWork` ni escribe directamente tablas tenant. El seed no cambia métodos de ingreso de una identidad ya creada ni inventa aceptaciones legales para las identidades de muestra: en la 3b deberán aceptar los documentos vigentes por el flujo real. Test: arrancar en `Production` contra una base migrada y vacía deja las referencias, el cliente `web`, los ajustes, el operador y los documentos legales, sin datos de demostración.
+9. Seed global idempotente en **todos** los ambientes, dentro de una UoW y con el advisory lock `seed:` para que dos réplicas no choquen: referencias, cliente `web`, ajustes de plataforma, operador inicial y Términos/Privacidad v1. Development y Production siembran exactamente lo mismo. El operador se configura con `Seed:PlatformOwner:Email` y `Seed:PlatformOwner:DisplayName`; `Seed:PlatformOwner:Phone` queda documentado y es opcional hasta la Etapa 8. Su identidad no tiene espacio personal ni contraseña. Ningún ambiente siembra cuentas ni organizaciones de ejemplo. Test: arrancar con una base migrada y vacía deja referencias, cliente `web`, ajustes, un operador y documentos legales, sin datos de demostración; un segundo arranque no duplica esos datos.
 10. Tests:
     - el recorrido real de ingreso;
     - el registro;
@@ -264,13 +264,11 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
 **Documentación:** `docs/features/identidad.md` y punteros `AGENTS.md` (más `CLAUDE.md` con `@AGENTS.md`) en cada carpeta de código del área, según el arnés de cada repo: en el back son de una línea y en el front tienen de 3 a 8 líneas. La ficha nace en la 3a con las dos puertas, el registro de personas y la aceptación inicial de términos, los accesos y el cambio de lado. La 3b le suma la gestión de métodos de ingreso, la aceptación bloqueante de términos nuevos y la baja, y la 3c las invitaciones. Cada parte lo actualiza en su propio commit.
 
 **Puerta:** la general, más un recorrido manual:
-0. `./scripts/secretos/importar-desde-arquitecturabase.ps1` y `verificar.ps1` con `[ok]` en todas las claves requeridas para Development. `Seed:PlatformOwner:Email` puede figurar `[falta]` en Development porque allí el operador inicial es opcional; en Production es obligatoria si aún no existe un operador;
+0. `./scripts/secretos/importar-desde-arquitecturabase.ps1` y `verificar.ps1` con `[ok]` en todas las claves requeridas para Development, incluida `Seed:PlatformOwner:Email` si todavía no existe el operador;
 1. registrarse como persona con un código que llega **de verdad** por Gmail, y otra vez con Google → queda en su espacio personal;
-2. entrar por "Ingresá como empresa" con Ana → Empresa A (del seed);
-3. F5 → sigue en Empresa A;
-4. volver a Personal;
-5. cambiar la cultura a en-US → fechas y números cambian en todas partes;
-6. logout.
+2. F5 → sigue en Personal;
+3. cambiar la cultura a en-US → fechas y números cambian en todas partes;
+4. logout. El recorrido manual de la puerta empresa se realiza en la Etapa 6, después de «Registrá tu empresa»; hasta entonces lo cubre `test:e2e:real` con su base y datos propios.
 
 ---
 
@@ -282,7 +280,7 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
 3. Los atributos `HasPermission`, `HasCompanyPermission` y `HasPlatformPermission`, su policy provider y handlers, y `PermissionAuthorizationTests`.
 4. **RoleService completo como referencia:** listado paginado con filtros y conteos, get by id (con `version`), create (201), update y delete con `version` obligatoria (P1: `Role` es `IVersioned`, 409 `General.ConcurrencyConflict`), catálogo agrupado y protección de los roles de sistema.
 5. Tests unitarios, de integración y de aislamiento, y el 409 de concurrencia del rol (`ConcurrencyTests`).
-6. **El Dueño:** sale solo del rol de sistema `TenantAdmin` (`RoleAssignment`), nunca de un flag de `Member`. El seed le da `TenantAdmin` a Ana en la Empresa A. `AccountDeletionPolicy` suma el bloqueo del único Dueño de una organización no cerrada (`Legal.AccountDeletion.LastAdmin`), con su caso en `AccountDeletionTests`. "Dueños activos" son los `TenantAdmin` con la identidad `Active` (una baja pedida no cuenta); `LastTenantAdminGuard` (Etapa 6) reusa esa misma lectura.
+6. **El Dueño:** sale solo del rol de sistema `TenantAdmin` (`RoleAssignment`), nunca de un flag de `Member`. `AccountDeletionPolicy` suma el bloqueo del único Dueño de una organización no cerrada (`Legal.AccountDeletion.LastAdmin`), con su caso en `AccountDeletionTests`. "Dueños activos" son los `TenantAdmin` con la identidad `Active` (una baja pedida no cuenta); `LastTenantAdminGuard` (Etapa 6) reusa esa misma lectura.
 
 **Front:** `areas/business/roles` (RolesPage con "Vale en" y RoleEditorPage, que manda la `version` de la ficha y muestra el `ConcurrencyBanner` ante un 409), usando `DataTable` con columnas tipadas: es la feature de referencia. Suma su enlace «Roles y permisos» dentro de «Gestión de usuarios» en el `AdminPanel` (`layouts/navigation/business.ts`).
 
@@ -354,7 +352,7 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
 
 **Documentación:** `docs/features/organizaciones.md` (usuarios, empresas, membresías, filtros y conteos), con los punteros de una línea en las carpetas del área, y la sección del registro de empresas ("Registrá tu empresa") en `docs/features/identidad.md`.
 
-**Puerta:** la general, más un recorrido manual: invitar desde Usuarios a alguien sin cuenta y a alguien con cuenta, que las dos invitaciones lleguen **de verdad** por Gmail, y aceptarlas.
+**Puerta:** la general, más un recorrido manual: crear una organización desde «Registrá tu empresa», entrar por «Ingresá como empresa» y comprobar `/org`, F5 y el cambio a Personal; invitar desde Usuarios a alguien sin cuenta y a alguien con cuenta, que las dos invitaciones lleguen **de verdad** por Gmail, y aceptarlas.
 
 ---
 
