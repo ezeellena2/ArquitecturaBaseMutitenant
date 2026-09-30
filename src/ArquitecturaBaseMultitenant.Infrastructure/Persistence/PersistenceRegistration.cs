@@ -77,6 +77,7 @@ internal static class PersistenceRegistration
         services.AddScoped<ISecurityEventRepository, SecurityEventRepository>();
         services.AddScoped<ILegalRepository, LegalRepository>();
         services.AddScoped<ILegalReader, LegalReader>();
+        services.AddScoped<IAccountDeletionTenantReader, AccountDeletionTenantReader>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IExternalLoginLock, ExternalLoginLock>();
         services.AddScoped<ILoginMethodRepository, LoginMethodRepository>();

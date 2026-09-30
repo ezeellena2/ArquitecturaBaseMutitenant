@@ -25,6 +25,7 @@ public sealed class Member : Entity, ITenantOwned
     public Guid UserId { get; private set; }
 
     public MemberStatus Status { get; private set; }
+    public MemberRemovalReason? RemovalReason { get; private set; }
 
     public DateTime? JoinedAtUtc { get; private set; }
 
@@ -58,7 +59,7 @@ public sealed class Member : Entity, ITenantOwned
         return Result.Success();
     }
 
-    public Result Remove()
+    public Result Remove(MemberRemovalReason? reason = null)
     {
         if (Status == MemberStatus.Removed)
         {
@@ -66,6 +67,7 @@ public sealed class Member : Entity, ITenantOwned
         }
 
         Status = MemberStatus.Removed;
+        RemovalReason = reason;
         return Result.Success();
     }
 }

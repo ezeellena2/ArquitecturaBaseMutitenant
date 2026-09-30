@@ -187,14 +187,14 @@ En cada tarea se guarda evidencia de rojo y verde con el comando y resultado. Si
 
 ### T13 · Participantes actuales de eliminación
 
-**Archivos:** back: `Interfaces/Integrations/Identity/IAccountDeletionParticipant.cs`, `Models/Legal/AccountDeletionContext.cs`; `Infrastructure/Identity/Deletion/{PersonalSpaceDeletionParticipant,MembershipDeletionParticipant,LegalAcceptanceDeletionParticipant,OutboxDeletionParticipant}.cs`, puertos/adaptadores concretos; tests `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Legal/AccountDeletionParticipantsTests.cs`.
+**Archivos:** back: `Interfaces/Integrations/Legal/IAccountDeletionParticipant.cs`, `Models/Legal/AccountDeletionContext.cs`; `Infrastructure/Identity/Deletion/{PersonalSpaceDeletionParticipant,MembershipDeletionParticipant,LegalAcceptanceDeletionParticipant,OutboxDeletionParticipant}.cs`, puertos/adaptadores concretos; tests `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Legal/AccountDeletionParticipantsTests.cs`.
 **Comportamiento exacto:** Check/OnRequested/OnCancelled/Execute idempotentes. Planificar tenants por proyección propia de eliminación; Enter antes de UoW. Personal Closed + borrar privados actuales; Member Removed con AccountDeleted y AuditLog; anonimizar IP/UA legal; cancelar pendientes propios outbox. No implementar tablas futuras. Tabla UserTenantAccesses deriva por trigger. LoginCodes, tickets y datos técnicos de Identity se purgan en paso final.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Sin participantes, quedan datos personales y membresías activas; comprobar reejecución y auditoría conservada.
-- [ ] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class '*AccountDeletionParticipantsTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: eliminar datos actuales con participantes de cuenta"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Sin participantes, quedan datos personales y membresías activas; comprobar reejecución y auditoría conservada.
+- [x] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class '*AccountDeletionParticipantsTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: eliminar datos actuales con participantes de cuenta"`. Registrar hash back/front.
 
 ### T14 · Pedir baja transaccional
 

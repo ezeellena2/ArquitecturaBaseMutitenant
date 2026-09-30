@@ -16,6 +16,8 @@ using ArquitecturaBaseMultitenant.Infrastructure.Messaging;
 using ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity.OpenIddict;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
+using ArquitecturaBaseMultitenant.Infrastructure.Identity.Deletion;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Legal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -52,6 +54,10 @@ public static class DependencyInjection
 
         services.AddPersistence(configuration);
         services.AddIdentityServices(configuration, environment);
+        services.AddScoped<IAccountDeletionParticipant, MembershipDeletionParticipant>();
+        services.AddScoped<IAccountDeletionParticipant, PersonalSpaceDeletionParticipant>();
+        services.AddScoped<IAccountDeletionParticipant, LegalAcceptanceDeletionParticipant>();
+        services.AddScoped<IAccountDeletionParticipant, OutboxDeletionParticipant>();
         // La exportación OpenAPI no atiende requests ni tiene claves de firma o base de datos.
         if (System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name is not "GetDocument.Insider")
         {

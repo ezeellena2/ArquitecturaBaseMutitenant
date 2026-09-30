@@ -22,7 +22,9 @@ Estado: en ejecución. La 3c queda pendiente. No declarar cerrada esta etapa sin
 
 | T11 · términos bloqueantes | `6d8be73` | — | Rojo: 200 en vez de 403; integración 8/8 y perfil unit 13/13; versión nueva entre lectura/aceptación devuelve 409, aceptación append-only y repetible |
 
-| T12 · reglas de baja y gracia | este commit | — | Rojo CS1061/CS0103; AccountDeletionPolicyTests 6/6; operador, pendiente, suspensión, límite inclusivo y anonimización |
+| T12 · reglas de baja y gracia | `0fbce93` | — | Rojo CS1061/CS0103; AccountDeletionPolicyTests 6/6; operador, pendiente, suspensión, límite inclusivo y anonimización |
+
+| T13 · participantes de eliminación | este commit | — | Rojo CS0246/CS1061 y falta de grant 42501; runtime 1/1 + inventarios existentes 12/12; limpieza doble, auditoría única, mensajes ajenos intactos y DELETE B2B devuelve cero |
 
 ## Evidencia del E2E real antes de programar
 
@@ -69,6 +71,9 @@ Ocultaciones solicitadas: WhatsApp (E8), exportación/sugerencia de exportar (E1
 - T11: lector legal por UserId explícitamente autorizado en inventario existente. La prueba de publicaciones usa ApiFactory propia para conservar los documentos v1 de otras pruebas. El preparador E2E acepta v1 para su cuenta fixture; no cambia el seed ni registra aceptación ficticia del operador.
 
 - T12: el estado y la fecha permanecen separados. Suspended con fecha solo vuelve a PendingDeletion al reactivar; nunca cancela suspendida ni al vencer. El cierre conserva Id/fechas para referencias y auditoría y limpia la razón de texto libre. Los cambios de estado quedan pendientes del único guardado UoW y rotan SecurityStamp al pedir baja.
+
+- T13: el puerto queda en Integrations/Legal, como el documento canónico. La proyección de eliminación es un lector específico de TenantId/Kind sobre el índice técnico existente, sin reutilizar el lector reservado de perfiles. La limpieza Personal borra sus filas y su índice en la misma transacción; un reintento omite el alcance ya limpiado. Membresías B2B quedan Removed con motivo AccountDeleted y evento de auditoría único.
+- T13: revisión automática rechazó el grant general DELETE por ampliar el alcance de mt_app. La alternativa aprobada agrega una política AS RESTRICTIVE solo para Personal, combinada con tenant_scope y FORCE RLS; el test demuestra que DELETE en Business no borra nada incluso con el alcance correcto. No se alteró Development.
 
 ## Recorrido manual
 

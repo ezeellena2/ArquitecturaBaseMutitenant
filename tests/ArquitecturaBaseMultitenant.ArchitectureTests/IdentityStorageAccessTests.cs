@@ -15,6 +15,8 @@ public sealed partial class IdentityStorageAccessTests
         Infrastructure + "Identity.UserStatusReader",
         Infrastructure + "Persistence.Readers.LoginMethodReader",
         Infrastructure + "Persistence.Readers.LegalReader",
+        Infrastructure + "Persistence.Readers.AccountDeletionTenantReader",
+        Infrastructure + "Identity.Deletion.LegalAcceptanceDeletionParticipant",
         Infrastructure + "Persistence.Readers.LoginMethodMembershipReader",
         Infrastructure + "Persistence.Readers.MemberReader",
         Infrastructure + "Persistence.Readers.UserTenantAccessReader",

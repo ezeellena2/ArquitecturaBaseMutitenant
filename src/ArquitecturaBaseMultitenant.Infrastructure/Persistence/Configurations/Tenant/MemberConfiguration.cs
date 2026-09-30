@@ -14,6 +14,7 @@ internal sealed class MemberConfiguration : IEntityTypeConfiguration<Member>
         builder.ToTable("Members", Schemas.Tenant);
         builder.HasKey(member => new { member.TenantId, member.Id });
         builder.Property(member => member.Status).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
+        builder.Property(member => member.RemovalReason).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.HasIndex(member => new { member.TenantId, member.UserId }).IsUnique();
         builder.HasOne<TenantEntity>().WithMany()
             .HasForeignKey(member => member.TenantId).OnDelete(DeleteBehavior.Restrict);
