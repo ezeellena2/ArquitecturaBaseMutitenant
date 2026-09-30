@@ -27,7 +27,7 @@ internal sealed class DevelopmentSeeder(
 {
     private const string BusinessName = "Empresa A";
     private const string DefaultAnaEmail = "ana@example.test";
-    private const string KevinEmail = "kevin@empresa-a.com";
+    private const string KevinEmail = "kevin@empresa-a.test";
     private const string CarlaEmail = "carla@example.test";
 
     internal async Task<DevelopmentSeedCandidate> PrepareBusinessAsync(CancellationToken cancellationToken)

@@ -51,6 +51,8 @@ public sealed class DevelopmentSeedTests
             .ToArrayAsync(TestContext.Current.CancellationToken);
         Assert.Equal(["Ana", "Carla", "Kevin"], users.Select(user => user.DisplayName));
         Assert.Contains(users, user => user.DisplayName == "Ana" && user.Email == "ana@example.test");
+        Assert.All(users.Where(user => user.Email != "ana@example.test"), user =>
+            Assert.Matches(@"(?i)\.(test|example)$", user.Email!));
         Assert.Equal(3, await context.LoginMethods.CountAsync(TestContext.Current.CancellationToken));
 
         var personalOwners = new List<Guid>();
@@ -109,7 +111,7 @@ public sealed class DevelopmentSeedTests
         var staleDraft = await scope.ServiceProvider.GetRequiredService<IPersonalSpaceProvisioner>()
             .PrepareAsync(null, null, TestContext.Current.CancellationToken);
         var staleCandidate = new DevelopmentPersonalCandidate(staleDraft, "Kevin",
-            Email.Create("kevin@empresa-a.com").Value);
+            Email.Create("kevin@empresa-a.test").Value);
         using (scope.ServiceProvider.GetRequiredService<ITenantScope>().Enter(staleDraft.Tenant.Id))
         {
             await Assert.ThrowsAsync<DevelopmentSeedScopeChangedException>(async () =>

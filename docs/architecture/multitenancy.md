@@ -38,7 +38,7 @@ Dentro de una organización, los usuarios se diferencian **solo por rol**: el **
 
 ### 3.1 Métodos de ingreso: la cuenta no depende de un solo correo
 
-**El problema:** a una persona la invitan con su correo de la empresa (`kevin@empresa-a.com`). Con ese correo ingresa como empresa **y también como persona**. Si después la desvinculan, pasan dos cosas:
+**El problema:** a una persona la invitan con su correo de la empresa (`kevin@empresa-a.test`). Con ese correo ingresa como empresa **y también como persona**. Si después la desvinculan, pasan dos cosas:
 - **pierde su cuenta**, incluido su espacio personal;
 - **peor aún, la empresa sigue siendo dueña de ese buzón**: cualquiera con acceso a él podría pedir un código y entrar a lo personal de Kevin.
 
