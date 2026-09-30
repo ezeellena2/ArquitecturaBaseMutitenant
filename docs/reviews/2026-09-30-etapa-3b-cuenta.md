@@ -39,7 +39,7 @@ Estado: implementación de 3b completa y puerta automática verde. Comparación 
 | T27 · recorridos reales | `fc66c58` | `a50b5b0`, `3c05b47` | Cinco recorridos inicialmente rojos, final real 6/6; reintento 429 explícito |
 | T28 · comparación y correos | `165d927`, `8b054d1` | `59dc2cd`, `f81d2eb` | 118 pares revisados; validación incompleta 3 rojos → 4 verdes; preview 1 rojo → 4 verdes; Salir ocupado rojo → verde |
 | T29 · documentación y recorrido | `d143c0f` | — | Identidad, manual operador/segunda Gmail, publicación legal local y limpieza por gracia |
-| T30 · puerta e informe | `1b96685` y commit que contiene este informe | `f81d2eb` | Backend completo 1110/1110; front 655/655; E2E 6/6; cierre formal espera aprobación visual |
+| T30 · puerta e informe | `1b96685`, `5f95acd` | `f81d2eb` | Backend completo 1110/1110; front 655/655; E2E 6/6; cierre formal espera aprobación visual |
 ## Evidencia del E2E real antes de programar
 
 `npm run test:e2e:real`, 30/09/2026. AppHost y PostgreSQL efímero exclusivos; datos del preparador y de /registro en esa base. Registro/puerta empresa/F5/cambio Personal/logout de 3a se recorrieron antes de los casos nuevos.
