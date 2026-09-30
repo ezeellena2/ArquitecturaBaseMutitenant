@@ -179,11 +179,11 @@ En cada tarea se guarda evidencia de rojo y verde con el comando y resultado. Si
 **Archivos:** back: `Domain/Legal/AccountDeletionErrors.cs`, `Infrastructure/Identity/ApplicationUser.cs`, `Interfaces/Persistence/IUserRepository.cs`, repo; `Services/Legal/AccountDeletionPolicy.cs`; tests `tests/ArquitecturaBaseMultitenant.Application.UnitTests/Identity/AccountDeletionPolicyTests.cs`.
 **Comportamiento exacto:** Transiciones Active→PendingDeletion→Active y PendingDeletion/Suspended vencida→Deleted. Motivo TextLimits, fechas UTC, gracia de ajustes, rechazar operador/ya pedida y bloqueos de participantes. Dejar LastAdmin para E4. La anonimización conserva Id y auditoría y elimina preferencias/copias.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Faltan transiciones y bloqueos; ningún test agrega datos Development.
-- [ ] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Application.UnitTests/ArquitecturaBaseMultitenant.Application.UnitTests.csproj -- --filter-class '*AccountDeletionPolicyTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: modelar baja y gracia de la cuenta"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Faltan transiciones y bloqueos; ningún test agrega datos Development.
+- [x] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Application.UnitTests/ArquitecturaBaseMultitenant.Application.UnitTests.csproj -- --filter-class '*AccountDeletionPolicyTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: modelar baja y gracia de la cuenta"`. Registrar hash back/front.
 
 ### T13 · Participantes actuales de eliminación
 

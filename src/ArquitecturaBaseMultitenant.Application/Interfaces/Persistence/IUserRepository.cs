@@ -1,11 +1,17 @@
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 
 /// <summary>Escrituras y relectura transaccional de la identidad global sin filtrar por tenant.</summary>
 public interface IUserRepository
 {
+    Task<Result> RequestDeletionAsync(Guid userId, string reason, DateTime requestedAtUtc, int graceDays,
+        CancellationToken cancellationToken);
+    Task<Result> CancelDeletionAsync(Guid userId, DateTime cancelledAtUtc, CancellationToken cancellationToken);
+    Task<Result> CompleteDeletionAsync(Guid userId, DateTime deletedAtUtc, string deletedDisplayName,
+        CancellationToken cancellationToken);
     Task<UserAccountRow> CreateAsync(string? displayName, string culture, string timeZoneId,
         CancellationToken cancellationToken);
 

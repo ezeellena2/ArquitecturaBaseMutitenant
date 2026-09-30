@@ -222,6 +222,12 @@ public sealed class ProfileServiceTests
     {
         public (Guid UserId, string? DisplayName, string Culture, string TimeZoneId)? LastUpdate { get; private set; }
 
+        public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> RequestDeletionAsync(Guid userId, string reason,
+            DateTime requestedAtUtc, int graceDays, CancellationToken ct) => throw new NotSupportedException();
+        public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> CancelDeletionAsync(Guid userId,
+            DateTime cancelledAtUtc, CancellationToken ct) => throw new NotSupportedException();
+        public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> CompleteDeletionAsync(Guid userId,
+            DateTime deletedAtUtc, string deletedDisplayName, CancellationToken ct) => throw new NotSupportedException();
         public Task<UserAccountRow> CreateAsync(string? displayName, string culture, string timeZoneId,
             CancellationToken cancellationToken) => throw new NotSupportedException();
 

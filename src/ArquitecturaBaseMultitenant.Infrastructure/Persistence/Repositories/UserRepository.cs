@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.AspNetCore.Identity;
@@ -12,6 +13,29 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories;
 /// <summary>Identidad global; UserManager escribe solo dentro de la UoW del caso de uso.</summary>
 internal sealed class UserRepository(UserManager<ApplicationUser> manager, ApplicationDbContext context) : IUserRepository
 {
+    public async Task<Result> RequestDeletionAsync(Guid userId, string reason, DateTime requestedAtUtc, int graceDays,
+        CancellationToken cancellationToken)
+    {
+        context.RequireTransaction();
+        var user = await RequireUserAsync(userId, cancellationToken);
+        var result = user.RequestDeletion(reason, requestedAtUtc, graceDays);
+        if (result.IsSuccess) user.SecurityStamp = Guid.CreateVersion7().ToString("N");
+        return result;
+    }
+
+    public async Task<Result> CancelDeletionAsync(Guid userId, DateTime cancelledAtUtc, CancellationToken cancellationToken)
+    {
+        context.RequireTransaction();
+        return (await RequireUserAsync(userId, cancellationToken)).CancelDeletion(cancelledAtUtc);
+    }
+
+    public async Task<Result> CompleteDeletionAsync(Guid userId, DateTime deletedAtUtc, string deletedDisplayName,
+        CancellationToken cancellationToken)
+    {
+        context.RequireTransaction();
+        return (await RequireUserAsync(userId, cancellationToken)).CompleteDeletion(deletedAtUtc, deletedDisplayName);
+    }
+
     public async Task<UserAccountRow> CreateAsync(string? displayName, string culture, string timeZoneId,
         CancellationToken cancellationToken)
     {

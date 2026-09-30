@@ -20,7 +20,9 @@ Estado: en ejecución. La 3c queda pendiente. No declarar cerrada esta etapa sin
 
 | T10 · perfil versionado y aviso | `a533f5c` | — | Rojo: falta version y luego 204 en vez de 409; integración 19/19, unit 24/24; guardado viejo conserva datos e idioma; aviso usa disponibilidad |
 
-| T11 · términos bloqueantes | este commit | — | Rojo: 200 en vez de 403; integración 8/8 y perfil unit 13/13; versión nueva entre lectura/aceptación devuelve 409, aceptación append-only y repetible |
+| T11 · términos bloqueantes | `6d8be73` | — | Rojo: 200 en vez de 403; integración 8/8 y perfil unit 13/13; versión nueva entre lectura/aceptación devuelve 409, aceptación append-only y repetible |
+
+| T12 · reglas de baja y gracia | este commit | — | Rojo CS1061/CS0103; AccountDeletionPolicyTests 6/6; operador, pendiente, suspensión, límite inclusivo y anonimización |
 
 ## Evidencia del E2E real antes de programar
 
@@ -65,6 +67,8 @@ Ocultaciones solicitadas: WhatsApp (E8), exportación/sugerencia de exportar (E1
 - T10: las preferencias y el nombre se guardan al confirmar la UoW con OriginalValue=xmin recibido. UserStore.Update vuelve a adjuntar y elimina la expectativa del cliente; no se usa para este guardado sin campos de Identity. El conflicto real devuelve 409 y conserva los primeros datos.
 
 - T11: lector legal por UserId explícitamente autorizado en inventario existente. La prueba de publicaciones usa ApiFactory propia para conservar los documentos v1 de otras pruebas. El preparador E2E acepta v1 para su cuenta fixture; no cambia el seed ni registra aceptación ficticia del operador.
+
+- T12: el estado y la fecha permanecen separados. Suspended con fecha solo vuelve a PendingDeletion al reactivar; nunca cancela suspendida ni al vencer. El cierre conserva Id/fechas para referencias y auditoría y limpia la razón de texto libre. Los cambios de estado quedan pendientes del único guardado UoW y rotan SecurityStamp al pedir baja.
 
 ## Recorrido manual
 

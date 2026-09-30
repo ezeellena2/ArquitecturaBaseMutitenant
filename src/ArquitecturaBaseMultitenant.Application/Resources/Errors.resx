@@ -97,4 +97,11 @@
   <data name="Identity.LoginMethod.LastPersonalMethod" xml:space="preserve"><value>Agregá y verificá otro método personal antes de quitar este.</value></data>
   <data name="Identity.Google.AlreadyUsed" xml:space="preserve"><value>Esta cuenta de Google ya está asociada a otra cuenta.</value></data>
   <data name="Legal.Document.VersionChanged" xml:space="preserve"><value>Los términos cambiaron. Volvé a leerlos y aceptá la versión vigente.</value></data>
+  <data name="Legal.AccountDeletion.AlreadyPending" xml:space="preserve"><value>Ya pediste la baja de tu cuenta.</value></data>
+  <data name="Legal.AccountDeletion.Blocked" xml:space="preserve"><value>Hay pendientes que impiden dar de baja tu cuenta.</value></data>
+  <data name="Legal.AccountDeletion.DeletedDisplayName" xml:space="preserve"><value>Cuenta eliminada</value></data>
+  <data name="Legal.AccountDeletion.GraceExpired" xml:space="preserve"><value>El plazo para cancelar la baja venció.</value></data>
+  <data name="Legal.AccountDeletion.InvalidReason" xml:space="preserve"><value>Escribí un motivo de hasta 500 caracteres.</value></data>
+  <data name="Legal.AccountDeletion.PlatformOperator" xml:space="preserve"><value>Tu cuenta de operador no puede darse de baja desde acá.</value></data>
+  <data name="Legal.AccountDeletion.ReauthRequired" xml:space="preserve"><value>Confirmá el código que te mandamos para pedir la baja.</value></data>
 </root>

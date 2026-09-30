@@ -97,4 +97,11 @@
   <data name="Identity.LoginMethod.LastPersonalMethod" xml:space="preserve"><value>Add and verify another personal method before removing this one.</value></data>
   <data name="Identity.Google.AlreadyUsed" xml:space="preserve"><value>This Google account is already associated with another account.</value></data>
   <data name="Legal.Document.VersionChanged" xml:space="preserve"><value>The terms changed. Read them again and accept the current version.</value></data>
+  <data name="Legal.AccountDeletion.AlreadyPending" xml:space="preserve"><value>You already requested account deletion.</value></data>
+  <data name="Legal.AccountDeletion.Blocked" xml:space="preserve"><value>Pending items prevent account deletion.</value></data>
+  <data name="Legal.AccountDeletion.DeletedDisplayName" xml:space="preserve"><value>Deleted account</value></data>
+  <data name="Legal.AccountDeletion.GraceExpired" xml:space="preserve"><value>The period to cancel deletion has expired.</value></data>
+  <data name="Legal.AccountDeletion.InvalidReason" xml:space="preserve"><value>Enter a reason up to 500 characters.</value></data>
+  <data name="Legal.AccountDeletion.PlatformOperator" xml:space="preserve"><value>Your operator account cannot be deleted from here.</value></data>
+  <data name="Legal.AccountDeletion.ReauthRequired" xml:space="preserve"><value>Confirm the code we sent to request account deletion.</value></data>
 </root>
