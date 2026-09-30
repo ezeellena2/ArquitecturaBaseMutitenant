@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MimeKit;
+using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
@@ -132,19 +133,33 @@ public sealed class LoginCodeTests(ApiFactory factory)
         var userId = await CreateVerifiedEmailAccountAsync(address);
         var request = await client.PostAsJsonAsync("/test/auth/request-code", new { email = address }, Ct);
         Assert.Equal(HttpStatusCode.OK, request.StatusCode);
+        var firstCode = await ReadPickupCodeAsync(address);
+        var firstInvalid = firstCode == "000000" ? "999999" : "000000";
 
-        for (var attempt = 0; attempt < 10; attempt++)
+        for (var attempt = 0; attempt < 5; attempt++)
         {
             var rejected = await client.PostAsJsonAsync("/test/auth/verify-code",
-                new { email = address, code = "000000", returnUrl = "/connect/authorize?client_id=web" }, Ct);
+                new { email = address, code = firstInvalid, returnUrl = "/connect/authorize?client_id=web" }, Ct);
             Assert.NotEqual(HttpStatusCode.OK, rejected.StatusCode);
         }
 
+        await AgeLoginCodesAsync(address);
+        var secondRequest = await client.PostAsJsonAsync("/test/auth/request-code", new { email = address }, Ct);
+        Assert.Equal(HttpStatusCode.OK, secondRequest.StatusCode);
+        var secondCode = await ReadPickupCodeAsync(address);
+        var secondInvalid = secondCode == "000000" ? "999999" : "000000";
+        for (var attempt = 0; attempt < 4; attempt++)
+        {
+            var rejected = await client.PostAsJsonAsync("/test/auth/verify-code",
+                new { email = address, code = secondInvalid, returnUrl = "/connect/authorize?client_id=web" }, Ct);
+            Assert.Equal(HttpStatusCode.BadRequest, rejected.StatusCode);
+        }
+        var locked = await client.PostAsJsonAsync("/test/auth/verify-code",
+            new { email = address, code = secondInvalid, returnUrl = "/connect/authorize?client_id=web" }, Ct);
+        Assert.Equal(HttpStatusCode.TooManyRequests, locked.StatusCode);
+
         await using var scope = factory.Services.CreateAsyncScope();
         Assert.True(await scope.ServiceProvider.GetRequiredService<ISignInService>().IsLockedOutAsync(userId, Ct));
-        var locked = await client.PostAsJsonAsync("/test/auth/verify-code",
-            new { email = address, code = "000000", returnUrl = "/connect/authorize?client_id=web" }, Ct);
-        Assert.Equal(HttpStatusCode.TooManyRequests, locked.StatusCode);
     }
 
     [Fact]
@@ -179,8 +194,51 @@ public sealed class LoginCodeTests(ApiFactory factory)
         Assert.False(rejected.Headers.Contains("Set-Cookie"));
     }
 
+    [Fact]
+    public async Task Verifying_without_a_requested_code_does_not_lock_or_disclose_an_account()
+    {
+        using var client = factory.CreateClient();
+        var known = $"no-code-known-{Guid.NewGuid():N}@example.test";
+        var unknown = $"no-code-unknown-{Guid.NewGuid():N}@example.test";
+        var userId = await CreateVerifiedEmailAccountAsync(known);
+        const string returnUrl = "/connect/authorize?client_id=web";
+
+        for (var attempt = 0; attempt < 11; attempt++)
+        {
+            var knownResponse = await client.PostAsJsonAsync("/test/auth/verify-code",
+                new { email = known, code = "000000", returnUrl }, Ct);
+            var unknownResponse = await client.PostAsJsonAsync("/test/auth/verify-code",
+                new { email = unknown, code = "000000", returnUrl }, Ct);
+
+            Assert.Equal(HttpStatusCode.BadRequest, knownResponse.StatusCode);
+            Assert.Equal(knownResponse.StatusCode, unknownResponse.StatusCode);
+            var knownProblem = await knownResponse.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>(Ct);
+            var unknownProblem = await unknownResponse.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>(Ct);
+            Assert.Equal(LoginCodeErrors.InvalidCode, knownProblem.GetProperty("code").GetString());
+            Assert.Equal(knownProblem.GetProperty("code").GetString(), unknownProblem.GetProperty("code").GetString());
+        }
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        Assert.False(await scope.ServiceProvider.GetRequiredService<ISignInService>()
+            .IsLockedOutAsync(userId, Ct));
+    }
+
     private Task<Guid> CreateVerifiedEmailAccountAsync(string address) =>
         CreateEmailAccountAsync(address, verified: true);
+
+    private async Task AgeLoginCodesAsync(string address)
+    {
+        await using var connection = new NpgsqlConnection(factory.AdminConnectionString);
+        await connection.OpenAsync(Ct);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE identity."LoginCodes"
+            SET "CreatedAtUtc" = "CreatedAtUtc" - interval '1 hour'
+            WHERE "Destination" = @email
+            """;
+        command.Parameters.AddWithValue("email", address);
+        await command.ExecuteNonQueryAsync(Ct);
+    }
 
     private async Task<Guid> CreateEmailAccountAsync(string address, bool verified)
     {

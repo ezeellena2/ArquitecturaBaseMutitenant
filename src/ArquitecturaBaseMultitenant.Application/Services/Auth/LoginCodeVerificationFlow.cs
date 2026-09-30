@@ -26,19 +26,25 @@ internal sealed class LoginCodeVerificationFlow(
         await codes.LockDestinationAsync(destination, cancellationToken);
         var userId = await userLookup.FindVerifiedUserIdAsync(
             LoginMethodType.Email, destination.Value, cancellationToken);
-        if (userId is { } id && await signIn.IsLockedOutAsync(id, cancellationToken))
-            return Fail(userId, AccountErrors.LockedOut);
-
+        var currentCode = await codes.GetLatestAsync(destination, LoginCodePurpose.Login,
+            requestedByUserId: null, cancellationToken);
+        var hadActiveCode = currentCode?.IsActive(timeProvider.GetUtcNow().UtcDateTime) == true;
         var verified = await verifier.VerifyAsync(destination, LoginCodePurpose.Login,
             requestedByUserId: null, request.Code!, cancellationToken);
         if (verified.IsFailure)
         {
-            if (userId is { } existingUserId)
+            if (userId is { } existingUserId && hadActiveCode && IsFailedCodeAttempt(verified.Error))
+            {
                 await signIn.RegisterFailedAttemptAsync(existingUserId, cancellationToken);
+                if (await signIn.IsLockedOutAsync(existingUserId, cancellationToken))
+                    return Fail(userId, AccountErrors.LockedOut);
+            }
             return Fail(userId, verified.Error);
         }
 
         if (userId is null) return Fail(null, LoginCodeErrors.Invalid(attemptsLeft: null));
+        if (await signIn.IsLockedOutAsync(userId.Value, cancellationToken))
+            return Fail(userId, AccountErrors.LockedOut);
 
         var account = await users.GetByIdAsync(userId.Value, cancellationToken);
         if (account is null || account.Status is UserStatus.Suspended or UserStatus.Deleted)
@@ -60,6 +66,11 @@ internal sealed class LoginCodeVerificationFlow(
             timeProvider.GetUtcNow().UtcDateTime));
         return userId.Value;
     }
+
+    private static bool IsFailedCodeAttempt(Error error) =>
+        error.Code == LoginCodeErrors.TooManyAttemptsCode
+        || (error.Code == LoginCodeErrors.InvalidCode
+            && error.Metadata?.ContainsKey(LoginCodeErrors.AttemptsLeftKey) == true);
 
     private Error Fail(Guid? userId, Error error)
     {
