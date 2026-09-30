@@ -141,6 +141,17 @@ public sealed class IngressJourneyTests(ApiFactory factory)
         Assert.Equal("business", refreshedMe.RootElement.GetProperty("access").GetString());
         Assert.Equal(businessTenantId, refreshedMe.RootElement.GetProperty("activeTenantId").GetGuid());
 
+        using var replay = await client.PostAsync("/connect/token", new FormUrlEncodedContent(
+            new Dictionary<string, string>
+            {
+                ["grant_type"] = "refresh_token",
+                ["refresh_token"] = business.RefreshToken,
+                ["client_id"] = "web",
+            }), Ct);
+        Assert.Equal(HttpStatusCode.BadRequest, replay.StatusCode);
+        using var replayError = await replay.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+        Assert.Equal("invalid_grant", replayError?.RootElement.GetProperty("error").GetString());
+
         var consumer = await AuthorizeAndExchangeAsync(client, AuthorizePath("consumer", challenge), verifier);
         using var consumerMe = await GetMeAsync(client, consumer.AccessToken);
         Assert.Equal("consumer", consumerMe.RootElement.GetProperty("access").GetString());

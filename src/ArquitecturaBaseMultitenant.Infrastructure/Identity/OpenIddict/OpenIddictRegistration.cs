@@ -52,6 +52,7 @@ internal static class OpenIddictRegistration
                     .AllowAuthorizationCodeFlow()
                     .RequireProofKeyForCodeExchange()
                     .AllowRefreshTokenFlow();
+                options.Configure(server => server.CodeChallengeMethods.Remove(CodeChallengeMethods.Plain));
 
                 options.RegisterScopes(
                     Scopes.OpenId, Scopes.Profile, Scopes.Email, Scopes.OfflineAccess, AuthServerDefaults.ApiScope);

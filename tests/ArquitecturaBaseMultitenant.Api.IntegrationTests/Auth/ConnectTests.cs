@@ -1,12 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.RegularExpressions;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
@@ -17,7 +14,6 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using MimeKit;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
@@ -25,6 +21,29 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 public sealed class ConnectTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("&code_challenge=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&code_challenge_method=plain")]
+    public async Task Authorize_rejects_missing_or_plain_pkce(string pkceQuery)
+    {
+        await factory.Services.SeedDatabaseAsync(Ct);
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
+        });
+        var path = "/connect/authorize?client_id=web&response_type=code" +
+            "&redirect_uri=https%3A%2F%2Flocalhost%3A5174%2Fauth%2Fcallback" +
+            "&scope=openid%20profile%20email%20api&access=consumer" + pkceQuery;
+
+        using var response = await client.GetAsync(path, Ct);
+
+        var result = response.Headers.Location?.ToString() ??
+            await response.Content.ReadAsStringAsync(Ct);
+        Assert.Contains("invalid_request", result, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("/login", result, StringComparison.OrdinalIgnoreCase);
+    }
 
     [Theory]
     [InlineData("consumer", "/login")]
@@ -182,33 +201,8 @@ public sealed class ConnectTests(ApiFactory factory)
         return await client.SendAsync(request, Ct);
     }
 
-    private static async Task<string> ReadPickupCodeAsync(IServiceProvider provider, string email)
-    {
-        await using var scope = provider.CreateAsyncScope();
-        var services = scope.ServiceProvider;
-        var directory = Path.Combine(services.GetRequiredService<IHostEnvironment>().ContentRootPath, ".emails");
-        for (var attempt = 0; attempt < 20; attempt++)
-        {
-            await services.GetRequiredService<IOutboxDispatchService>().DispatchOnceAsync(
-                services.GetServices<IChannelSender>().ToArray(), Ct);
-            foreach (var path in Directory.Exists(directory) ? Directory.GetFiles(directory, "*.eml") : [])
-            {
-                string? code;
-                await using (var stream = File.OpenRead(path))
-                {
-                    using var message = await MimeMessage.LoadAsync(stream, Ct);
-                    if (!message.To.Mailboxes.Any(mailbox => mailbox.Address == email)) continue;
-                    var match = Regex.Match(message.TextBody ?? string.Empty, @"(?<!\d)\d{6}(?!\d)");
-                    Assert.True(match.Success, "El correo pickup no contiene un código de seis dígitos.");
-                    code = match.Value;
-                }
-                File.Delete(path);
-                return code;
-            }
-            await Task.Delay(100, Ct);
-        }
-        throw new Xunit.Sdk.XunitException("No se encontró el correo pickup de ingreso.");
-    }
+    private static Task<string> ReadPickupCodeAsync(IServiceProvider provider, string email) =>
+        PickupCodeReader.ReadAsync(provider, email, Ct);
 
     private static string AuthorizePath(string access) =>
         "/connect/authorize?client_id=web&response_type=code" +

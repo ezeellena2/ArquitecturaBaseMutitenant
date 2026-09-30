@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity.OpenIddict;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using OpenIddict.Abstractions;
@@ -13,6 +14,8 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 [Collection(ApiTestGroup.Name)]
 public sealed class OpenIddictServerTests(ApiFactory factory)
 {
+    private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
     [Fact]
     public void Api_registers_the_local_authorization_server()
     {
@@ -20,8 +23,9 @@ public sealed class OpenIddictServerTests(ApiFactory factory)
     }
 
     [Fact]
-    public void Server_requires_pkce_and_rotating_refresh_tokens_without_password_flow()
+    public async Task Server_requires_pkce_and_rotating_refresh_tokens_without_password_flow()
     {
+        await factory.Services.SeedDatabaseAsync(Ct);
         var server = factory.Services.GetRequiredService<IOptionsMonitor<OpenIddictServerOptions>>().CurrentValue;
         var validation = factory.Services.GetRequiredService<IOptionsMonitor<OpenIddictValidationOptions>>().CurrentValue;
 
@@ -30,6 +34,9 @@ public sealed class OpenIddictServerTests(ApiFactory factory)
         Assert.DoesNotContain(GrantTypes.Password, server.GrantTypes);
         Assert.DoesNotContain(GrantTypes.ClientCredentials, server.GrantTypes);
         Assert.Contains(CodeChallengeMethods.Sha256, server.CodeChallengeMethods);
+        Assert.DoesNotContain(CodeChallengeMethods.Plain, server.CodeChallengeMethods);
+        Assert.True(server.RequireProofKeyForCodeExchange);
+        Assert.False(server.DisableRollingRefreshTokens);
         Assert.Contains("api", server.Scopes);
         Assert.DoesNotContain(Scopes.Roles, server.Scopes);
         Assert.Equal(TimeSpan.FromMinutes(5), server.AuthorizationCodeLifetime);
@@ -45,5 +52,10 @@ public sealed class OpenIddictServerTests(ApiFactory factory)
         Assert.Equal(new Uri("https://localhost:5174/"), Assert.Single(web.PostLogoutRedirectUris));
         using var scope = factory.Services.CreateScope();
         Assert.NotNull(scope.ServiceProvider.GetService<ITokenRevoker>());
+        var applications = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
+        var webClient = await applications.FindByClientIdAsync("web", Ct);
+        Assert.NotNull(webClient);
+        Assert.Contains(Requirements.Features.ProofKeyForCodeExchange,
+            await applications.GetRequirementsAsync(webClient, Ct));
     }
 }
