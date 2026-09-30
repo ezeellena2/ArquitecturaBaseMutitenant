@@ -135,11 +135,11 @@ En cada tarea se guarda evidencia de rojo y verde con el comando y resultado. Si
 **Archivos:** back: `Api/Controllers/Account/AccountGoogleController.cs`, `Api/Contracts/Account/*Google*`, `Interfaces/Services/IAccountGoogleService.cs`, `Services/Identity/{AccountGoogleService,GoogleMethodLinker}.cs`; ampliar `GoogleAccountResolver`, `GoogleAccountRegistrar`; tests `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Auth/GoogleLoginTests.cs` y `Identity/LoginMethodsTests.cs`.
 **Comportamiento exacto:** Inicio POST autenticado y antiforgery, OAuth state protege cuenta y retorno /cuenta. Callback valida que sesión/cuenta coincidan, subject único y correo verificado; no crea nueva cuenta. Devuelve /cuenta con estado estable sin tokens en query. Desvincular usa flujo quitar con código en otro método. Pruebas de proveedor doble solo en integración, no en E2E real.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Falta vínculo explícito y protección del callback para otra cuenta.
-- [ ] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class '*GoogleLoginTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: vincular Google desde la cuenta"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Falta vínculo explícito y protección del callback para otra cuenta.
+- [x] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class '*GoogleLoginTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: vincular Google desde la cuenta"`. Registrar hash back/front.
 
 ### T09 · Contratos HTTP de métodos y reautenticación
 

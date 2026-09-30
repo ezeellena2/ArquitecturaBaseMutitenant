@@ -3,6 +3,8 @@ using ArquitecturaBaseMultitenant.Api.ErrorHandling;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
+using ArquitecturaBaseMultitenant.Application.Models.Identity;
+using System.Security.Claims;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -23,6 +25,7 @@ namespace ArquitecturaBaseMultitenant.Api.Controllers.Auth;
 [OwnProtocol]
 public sealed class ExternalLoginController(
     IExternalLoginService service,
+    IAccountGoogleService accountGoogle,
     IAuthenticationSchemeProvider schemes) : ControllerBase
 {
     private const string CallbackPath = "/api/auth/external/callback";
@@ -107,6 +110,16 @@ public sealed class ExternalLoginController(
         if (!authenticated.Succeeded || state is null)
         {
             return RedirectWithError(ReturnUrls.LoginPath, ExternalLoginErrors.FailedCode);
+        }
+
+        if (state.ContainsKey(GoogleAccountLinkState.UserIdKey))
+        {
+            var session = await HttpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
+            _ = Guid.TryParse(Value(state, GoogleAccountLinkState.UserIdKey), out var expectedUserId);
+            _ = Guid.TryParse(session.Principal?.FindFirstValue(ClaimTypes.NameIdentifier), out var sessionUserId);
+            var linked = await accountGoogle.LinkAsync(new LinkGoogleRequest(expectedUserId, sessionUserId), cancellationToken);
+            return linked.IsSuccess ? LocalRedirect("/cuenta?google=linked")
+                : RedirectWithError("/cuenta", linked.Error.Code);
         }
 
         var signup = Value(state, SignupKey) == "true";

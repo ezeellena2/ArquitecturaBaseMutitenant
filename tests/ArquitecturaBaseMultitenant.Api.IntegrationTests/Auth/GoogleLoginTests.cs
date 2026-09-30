@@ -6,7 +6,10 @@ using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -18,6 +21,78 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 public sealed class GoogleLoginTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Explicit_link_does_not_take_a_Google_subject_or_email_from_another_account(bool googleConflict)
+    {
+        var subject = Guid.NewGuid().ToString("N");
+        var email = Email.Create("google-conflict-" + subject + "@example.test").Value;
+        var userId = Guid.Empty;
+        await using (var seedScope = factory.Services.CreateAsyncScope())
+        {
+            var services = seedScope.ServiceProvider;
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                var users = services.GetRequiredService<IUserRepository>();
+                userId = (await users.CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct)).Id;
+                var other = await users.CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct);
+                var method = googleConflict ? LoginMethod.CreateGoogle(other.Id, subject, email)
+                    : LoginMethod.CreateEmail(other.Id, email);
+                method.Verify(services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime);
+                services.GetRequiredService<ILoginMethodRepository>().Add(method);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+        var google = new GoogleSignInDouble(new ExternalLogin("Google", subject, email, true, null));
+        await using var host = HostWith(google);
+        await using var scope = host.Services.CreateAsyncScope();
+        var result = await scope.ServiceProvider.GetRequiredService<IAccountGoogleService>()
+            .LinkAsync(new LinkGoogleRequest(userId, userId), Ct);
+        Assert.Equal(GoogleMethodErrors.AlreadyUsed.Code, result.Error.Code);
+        Assert.Empty(await scope.ServiceProvider.GetRequiredService<ILoginMethodReader>().ListByUserIdAsync(userId, Ct));
+        Assert.Null(google.SignedInUserId);
+    }
+
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    public async Task Explicit_link_requires_the_same_account_session_and_verified_Google_email(
+        bool sameSession, bool emailVerified)
+    {
+        var userId = Guid.Empty;
+        await using (var seedScope = factory.Services.CreateAsyncScope())
+        {
+            var services = seedScope.ServiceProvider;
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                userId = (await services.GetRequiredService<IUserRepository>()
+                    .CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct)).Id;
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+        var subject = Guid.NewGuid().ToString("N");
+        var email = Email.Create("google-explicit-" + subject + "@example.test").Value;
+        var google = new GoogleSignInDouble(new ExternalLogin("Google", subject, email, emailVerified, null));
+        await using var host = HostWith(google);
+        await using var scope = host.Services.CreateAsyncScope();
+        var result = await scope.ServiceProvider.GetRequiredService<IAccountGoogleService>()
+            .LinkAsync(new LinkGoogleRequest(userId, sameSession ? userId : Guid.CreateVersion7()), Ct);
+
+        Assert.Equal(sameSession && emailVerified, result.IsSuccess);
+        Assert.Null(google.SignedInUserId);
+        Assert.Equal(sameSession && emailVerified ? 1 : 0, await CountMethodsAsync(subject));
+        if (result.IsSuccess)
+        {
+            var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var method = await context.LoginMethods.AsNoTracking().SingleAsync(row => row.UserId == userId, Ct);
+            Assert.Equal(email, method.ContactEmail);
+            Assert.True(method.IsPrimary);
+            Assert.Equal(email.Value, (await context.Users.AsNoTracking().SingleAsync(row => row.Id == userId, Ct)).Email);
+        }
+    }
 
     [Fact]
     public async Task Login_door_does_not_create_an_account_for_an_unknown_Google_subject()

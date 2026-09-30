@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Application.Services.Identity;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
@@ -15,6 +16,8 @@ internal sealed class GoogleAccountResolver(
     ILoginMethodRepository methods,
     IExternalLoginLock loginLock,
     GoogleAccountRegistrar registrar,
+    LoginMethodNotifier notifier,
+    ISignInService signIn,
     TimeProvider timeProvider)
 {
     internal Task<PersonalSpaceDraft> PrepareAsync(string? culture, string? timeZoneId,
@@ -59,19 +62,36 @@ internal sealed class GoogleAccountResolver(
             }
         }
 
+        await methods.LockUserAsync(userId, cancellationToken);
         var account = await users.GetByIdAsync(userId, cancellationToken);
         if (account is null || account.Status is UserStatus.Suspended or UserStatus.Deleted)
             return AccountErrors.Suspended;
         if (account.Status == UserStatus.PendingDeletion)
             return AccountErrors.PendingDeletion;
+        if (await signIn.IsLockedOutAsync(userId, cancellationToken)) return AccountErrors.LockedOut;
 
         if (googleMethod is null)
         {
-            var method = LoginMethod.CreateGoogle(userId, login.ProviderKey);
+            var all = await methods.ListByUserIdAsync(userId, cancellationToken);
+            var method = LoginMethod.CreateGoogle(userId, login.ProviderKey, email);
             method.Verify(timeProvider.GetUtcNow().UtcDateTime);
-            if (account.PrimaryEmail is null && method.MakePrimary().IsFailure)
-                throw new InvalidOperationException("A verified Google method could not become primary.");
+            if (!all.Any(value => value.IsPrimary))
+            {
+                method.MakePrimary();
+                await users.SetPrimaryContactAsync(userId, email, null, cancellationToken);
+            }
             methods.Add(method);
+            await notifier.ChangedAsync(account, [.. all, method], method, "Added", cancellationToken);
+        }
+        else if (email is not null)
+        {
+            var method = await methods.GetByIdForUserAsync(userId, googleMethod.MethodId, cancellationToken)
+                ?? throw new InvalidOperationException("The Google method disappeared under its lock.");
+            if (method.ContactEmail is null)
+            {
+                method.UpdateGoogleContact(email);
+                if (method.IsPrimary) await users.SetPrimaryContactAsync(userId, email, null, cancellationToken);
+            }
         }
 
         return userId;

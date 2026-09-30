@@ -3,6 +3,7 @@ using System.Security.Cryptography.X509Certificates;
 using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
+using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
@@ -155,10 +156,21 @@ internal static class IdentityRegistration
                 : throw new InvalidOperationException("Missing Authentication:Google:ClientSecret.");
             options.SignInScheme = IdentityConstants.ExternalScheme;
             options.ClaimActions.MapJsonKey("email_verified", "email_verified");
+            options.Events.OnRedirectToAuthorizationEndpoint = context =>
+            {
+                if (context.Properties.Items.ContainsKey(GoogleAccountLinkState.UserIdKey))
+                {
+                    context.Response.Headers.CacheControl = "no-store";
+                    return context.Response.WriteAsJsonAsync(new GoogleChallengeResponse(context.RedirectUri));
+                }
+                context.Response.Redirect(context.RedirectUri);
+                return Task.CompletedTask;
+            };
             options.Events.OnRemoteFailure = context =>
             {
                 context.Response.Redirect(
-                    ReturnUrls.LoginPath + "?error=" + Uri.EscapeDataString("Auth.ExternalLogin.Failed"));
+                    (context.Properties?.Items.ContainsKey(GoogleAccountLinkState.UserIdKey) == true ? "/cuenta" : ReturnUrls.LoginPath)
+                    + "?error=" + Uri.EscapeDataString("Auth.ExternalLogin.Failed"));
                 context.HandleResponse();
                 return Task.CompletedTask;
             };

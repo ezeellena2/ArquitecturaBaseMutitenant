@@ -95,4 +95,5 @@
   <data name="Identity.LoginMethod.AlreadyVerified" xml:space="preserve"><value>This sign-in method is already verified.</value></data>
   <data name="Identity.LoginMethod.LastMethod" xml:space="preserve"><value>You cannot remove your only sign-in method. Add and verify another one first.</value></data>
   <data name="Identity.LoginMethod.LastPersonalMethod" xml:space="preserve"><value>Add and verify another personal method before removing this one.</value></data>
+  <data name="Identity.Google.AlreadyUsed" xml:space="preserve"><value>This Google account is already associated with another account.</value></data>
 </root>
