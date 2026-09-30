@@ -71,7 +71,7 @@ internal sealed class PlatformSeeder(
 
         if (owner is null)
         {
-            if (environment.IsProduction())
+            if (!environment.IsEnvironment("Testing"))
             {
                 throw new InvalidOperationException(
                     "Seed:PlatformOwner:Email is required when no platform operator exists.");
