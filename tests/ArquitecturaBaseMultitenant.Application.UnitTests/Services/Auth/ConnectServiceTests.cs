@@ -75,6 +75,35 @@ public sealed class ConnectServiceTests
     }
 
     [Fact]
+    public async Task Non_operator_cannot_select_platform()
+    {
+        using var fixture = new ServiceFixture<ConnectService>();
+        var account = Account();
+        var service = new ConnectService(new StubUsers(account), new StubAccesses([]),
+            new StubPersonalSpaceProvisioner(), new StubPersonalSpaceLock(), new StubTenantScope(),
+            new FakeUnitOfWork(), fixture.TimeProvider, fixture.Logger);
+
+        var result = await service.GetActiveUserAsync(account.Id, Access.Platform, null, Ct);
+
+        Assert.Equal(AccessErrors.WrongCode, result.Error.Code);
+    }
+
+    [Fact]
+    public async Task Consumer_with_foreign_tenant_is_wrong()
+    {
+        using var fixture = new ServiceFixture<ConnectService>();
+        var account = Account();
+        var personal = AccessRow(Guid.CreateVersion7(), TenantKind.Personal);
+        var service = new ConnectService(new StubUsers(account), new StubAccesses([personal]),
+            new StubPersonalSpaceProvisioner(), new StubPersonalSpaceLock(), new StubTenantScope(),
+            new FakeUnitOfWork(), fixture.TimeProvider, fixture.Logger);
+
+        var result = await service.GetActiveUserAsync(account.Id, Access.Consumer, Guid.CreateVersion7(), Ct);
+
+        Assert.Equal(AccessErrors.WrongCode, result.Error.Code);
+    }
+
+    [Fact]
     public async Task Suspended_identity_cannot_enter_any_access()
     {
         using var fixture = new ServiceFixture<ConnectService>();

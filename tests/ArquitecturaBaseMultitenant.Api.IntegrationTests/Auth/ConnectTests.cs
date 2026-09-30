@@ -130,6 +130,51 @@ public sealed class ConnectTests(ApiFactory factory)
         Assert.False(parameters.ContainsKey("code"));
     }
 
+    [Fact]
+    public async Task Cookie_session_cannot_escalate_to_platform_or_select_a_foreign_tenant()
+    {
+        var email = $"ana-invalid-access-{Guid.NewGuid():N}@example.test";
+        await using var isolatedFactory = new ApiFactory();
+        await isolatedFactory.InitializeAsync();
+        using var host = isolatedFactory.WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Development");
+            builder.UseSetting("Email:Delivery", "PickupDirectory");
+            builder.UseSetting("Authentication:Google:ClientId", "");
+            builder.UseSetting("Seed:Development:AnaEmail", email);
+        });
+        await host.Services.SeedDatabaseAsync(Ct);
+        using var client = host.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
+        });
+
+        using var requested = await PostOnceAsync(client, "/api/auth/login-code", new { email });
+        Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
+        var code = await ReadPickupCodeAsync(host.Services, email);
+        using var verified = await PostOnceAsync(client, "/api/auth/login-code/verify",
+            new { email, code, returnUrl = AuthorizePath("business") });
+        Assert.Equal(HttpStatusCode.OK, verified.StatusCode);
+
+        var foreignTenant = Guid.CreateVersion7();
+        foreach (var path in new[]
+        {
+            AuthorizePath("platform"),
+            AuthorizePath("business") + "&tenant=" + foreignTenant.ToString("D"),
+            AuthorizePath("consumer") + "&tenant=" + foreignTenant.ToString("D"),
+        })
+        {
+            using var denied = await client.GetAsync(path, Ct);
+            Assert.Equal(HttpStatusCode.Redirect, denied.StatusCode);
+            var location = denied.Headers.Location;
+            Assert.NotNull(location);
+            var parameters = QueryHelpers.ParseQuery(location.Query);
+            Assert.Equal("access_denied", parameters["error"].ToString());
+            Assert.False(parameters.ContainsKey("code"));
+        }
+    }
+
     private static async Task<HttpResponseMessage> PostOnceAsync(HttpClient client, string path, object body)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, path) { Content = JsonContent.Create(body) };
