@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using MailKit.Security;
 using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
@@ -14,8 +15,14 @@ internal sealed class SmtpOptionsValidator(IOptions<EmailOptions> emailOptions) 
         }
 
         var results = new List<ValidationResult>();
-        return Validator.TryValidateObject(options, new ValidationContext(options), results,
-            validateAllProperties: true)
+        Validator.TryValidateObject(options, new ValidationContext(options), results,
+            validateAllProperties: true);
+        if (options.Security is not (SecureSocketOptions.StartTls or SecureSocketOptions.SslOnConnect))
+        {
+            results.Add(new ValidationResult("TLS is required.", [nameof(SmtpOptions.Security)]));
+        }
+
+        return results.Count == 0
             ? ValidateOptionsResult.Success
             : ValidateOptionsResult.Fail(results.SelectMany(result =>
                 result.MemberNames.DefaultIfEmpty("Options")

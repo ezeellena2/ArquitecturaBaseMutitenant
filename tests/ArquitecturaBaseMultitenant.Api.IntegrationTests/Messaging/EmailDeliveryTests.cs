@@ -1,6 +1,7 @@
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
+using MailKit.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -33,6 +34,52 @@ public sealed class EmailDeliveryTests
         Assert.False(validation.Succeeded);
         Assert.Contains("Email:Smtp:Password", string.Join(" ", validation.Failures ?? []));
         Assert.True(pickup.Validate(null, smtp).Skipped);
+    }
+
+    [Theory]
+    [InlineData(SecureSocketOptions.None)]
+    [InlineData(SecureSocketOptions.Auto)]
+    [InlineData(SecureSocketOptions.StartTlsWhenAvailable)]
+    public void Smtp_rejects_security_without_mandatory_tls(SecureSocketOptions security)
+    {
+        var validator = new SmtpOptionsValidator(
+            Options.Create(new EmailOptions { Delivery = EmailDelivery.Smtp }));
+        var options = new SmtpOptions
+        {
+            Host = "smtp.example.test",
+            Port = 587,
+            UserName = "sender@example.test",
+            Password = "test-only-password",
+            FromAddress = "sender@example.test",
+            FromName = "Test",
+            Security = security,
+        };
+
+        var result = validator.Validate(null, options);
+
+        Assert.False(result.Succeeded);
+        Assert.Contains("Email:Smtp:Security", string.Join(" ", result.Failures ?? []));
+    }
+
+    [Theory]
+    [InlineData(SecureSocketOptions.StartTls)]
+    [InlineData(SecureSocketOptions.SslOnConnect)]
+    public void Smtp_accepts_mandatory_tls(SecureSocketOptions security)
+    {
+        var validator = new SmtpOptionsValidator(
+            Options.Create(new EmailOptions { Delivery = EmailDelivery.Smtp }));
+        var options = new SmtpOptions
+        {
+            Host = "smtp.example.test",
+            Port = 587,
+            UserName = "sender@example.test",
+            Password = "test-only-password",
+            FromAddress = "sender@example.test",
+            FromName = "Test",
+            Security = security,
+        };
+
+        Assert.True(validator.Validate(null, options).Succeeded);
     }
 
     [Fact]
