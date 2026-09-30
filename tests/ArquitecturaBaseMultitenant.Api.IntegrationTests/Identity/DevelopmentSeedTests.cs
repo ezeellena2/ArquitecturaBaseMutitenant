@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Hosting;
@@ -102,6 +103,22 @@ public sealed class DevelopmentSeedTests
             Assert.Equal(2, members.Length);
             Assert.All(members, member => Assert.Equal(MemberStatus.Active, member.Status));
             Assert.Single(await context.TenantSettings.ToArrayAsync(TestContext.Current.CancellationToken));
+        }
+
+        // Un segundo proceso puede haber preparado el borrador antes de confirmar el primer seed.
+        var staleDraft = await scope.ServiceProvider.GetRequiredService<IPersonalSpaceProvisioner>()
+            .PrepareAsync(null, null, TestContext.Current.CancellationToken);
+        var staleCandidate = new DevelopmentPersonalCandidate(staleDraft, "Kevin",
+            Email.Create("kevin@empresa-a.com").Value);
+        using (scope.ServiceProvider.GetRequiredService<ITenantScope>().Enter(staleDraft.Tenant.Id))
+        {
+            await Assert.ThrowsAsync<DevelopmentSeedScopeChangedException>(async () =>
+                await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+                {
+                    await scope.ServiceProvider.GetRequiredService<DevelopmentSeeder>()
+                        .StagePersonalAsync(staleCandidate, ct);
+                    return Result.Success();
+                }, CommitPolicy.OnSuccess, TestContext.Current.CancellationToken));
         }
 
         WebApplicationFactory<Program> NewHost(string anaEmail) =>

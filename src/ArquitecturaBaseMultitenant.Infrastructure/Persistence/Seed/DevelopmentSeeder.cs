@@ -18,6 +18,8 @@ internal sealed class DevelopmentSeeder(
     IUserRepository users,
     ILoginMethodRepository methods,
     ITenantScope tenantScope,
+    IUserTenantAccessReader accesses,
+    IPersonalSpaceLock personalSpaceLock,
     IPersonalSpaceProvisioner personalSpaces,
     TenantSpaceProvisioner spaces,
     IConfiguration configuration,
@@ -94,6 +96,10 @@ internal sealed class DevelopmentSeeder(
             throw new InvalidOperationException("A sample account email exists without verification.");
         var userId = method?.UserId ?? await FindOrCreateUserAsync(candidate.Name, candidate.Email,
             candidate.Draft.Culture, candidate.Draft.TimeZoneId, cancellationToken);
+        await personalSpaceLock.LockAsync(userId, cancellationToken);
+        if ((await accesses.ListForUserAsync(userId, cancellationToken))
+            .Any(access => access.Kind == TenantKind.Personal))
+            throw new DevelopmentSeedScopeChangedException();
         personalSpaces.Stage(candidate.Draft, userId);
     }
 

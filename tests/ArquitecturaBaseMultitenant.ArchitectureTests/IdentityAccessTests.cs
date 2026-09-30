@@ -21,6 +21,7 @@ public sealed class IdentityAccessTests
         Assert.Equal([
             "ArquitecturaBaseMultitenant.Application/Services/Auth/ConnectService.cs",
             "ArquitecturaBaseMultitenant.Application/Services/Profile/ProfileSnapshotBuilder.cs",
+            "ArquitecturaBaseMultitenant.Infrastructure/Persistence/Seed/DevelopmentSeeder.cs",
         ], consumers.Order(StringComparer.Ordinal));
     }
 
