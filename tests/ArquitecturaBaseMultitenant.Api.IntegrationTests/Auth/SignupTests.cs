@@ -3,8 +3,15 @@ using System.Net.Http.Json;
 using System.Text.RegularExpressions;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -146,6 +153,135 @@ public sealed class SignupTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Existing_email_signup_failures_lock_the_account_and_block_a_correct_code()
+    {
+        await factory.Services.SeedDatabaseAsync(Ct);
+        using var client = factory.CreateClient();
+        var address = $"signup-lockout-{Guid.NewGuid():N}@example.test";
+        var userId = await CreateVerifiedEmailAccountAsync(address);
+
+        for (var batch = 0; batch < 2; batch++)
+        {
+            if (batch > 0) await AgeLoginCodesAsync(address);
+            var requested = await client.PostAsJsonAsync("/test/auth/signup",
+                new { email = address, acceptedTerms = true }, Ct);
+            Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
+            var correctCode = await ReadPickupCodeAsync(address);
+            var wrongCode = correctCode == "000000" ? "999999" : "000000";
+            for (var attempt = 0; attempt < 5; attempt++)
+            {
+                var failed = await client.PostAsJsonAsync("/test/auth/signup/verify",
+                    new { email = address, code = wrongCode, acceptedTerms = true }, Ct);
+                Assert.False(failed.Headers.Contains("Set-Cookie"));
+                Assert.NotEqual(HttpStatusCode.NoContent, failed.StatusCode);
+            }
+        }
+
+        await using (var scope = factory.Services.CreateAsyncScope())
+            Assert.True(await scope.ServiceProvider.GetRequiredService<ISignInService>()
+                .IsLockedOutAsync(userId, Ct));
+
+        await AgeLoginCodesAsync(address);
+        var finalRequest = await client.PostAsJsonAsync("/test/auth/signup",
+            new { email = address, acceptedTerms = true }, Ct);
+        Assert.Equal(HttpStatusCode.Accepted, finalRequest.StatusCode);
+        var finalCode = await ReadPickupCodeAsync(address);
+        var blocked = await client.PostAsJsonAsync("/test/auth/signup/verify",
+            new { email = address, code = finalCode, acceptedTerms = true }, Ct);
+        Assert.Equal(HttpStatusCode.TooManyRequests, blocked.StatusCode);
+        var problem = await blocked.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>(Ct);
+        Assert.Equal("Identity.Account.LockedOut", problem.GetProperty("code").GetString());
+        Assert.False(blocked.Headers.Contains("Set-Cookie"));
+    }
+
+    [Fact]
+    public async Task Existing_email_locked_by_login_cannot_enter_through_signup()
+    {
+        await factory.Services.SeedDatabaseAsync(Ct);
+        using var client = factory.CreateClient();
+        var address = $"signup-bypass-{Guid.NewGuid():N}@example.test";
+        var userId = await CreateVerifiedEmailAccountAsync(address);
+        var requested = await client.PostAsJsonAsync("/test/auth/signup",
+            new { email = address, acceptedTerms = true }, Ct);
+        Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
+        var code = await ReadPickupCodeAsync(address);
+
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                var signIn = services.GetRequiredService<ISignInService>();
+                for (var attempt = 0; attempt < 10; attempt++)
+                    await signIn.RegisterFailedAttemptAsync(userId, ct);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+
+        var blocked = await client.PostAsJsonAsync("/test/auth/signup/verify",
+            new { email = address, code, acceptedTerms = true }, Ct);
+        Assert.Equal(HttpStatusCode.TooManyRequests, blocked.StatusCode);
+        Assert.False(blocked.Headers.Contains("Set-Cookie"));
+    }
+
+    [Fact]
+    public async Task Closed_signup_does_not_reveal_account_existence_without_a_valid_code()
+    {
+        await factory.Services.SeedDatabaseAsync(Ct);
+        using var client = factory.CreateClient();
+        var known = $"closed-known-{Guid.NewGuid():N}@example.test";
+        var unknown = $"closed-unknown-{Guid.NewGuid():N}@example.test";
+        await CreateVerifiedEmailAccountAsync(known);
+        await SetConsumerSignupAsync("Closed");
+        try
+        {
+            var knownResponse = await client.PostAsJsonAsync("/test/auth/signup/verify",
+                new { email = known, code = "000000", acceptedTerms = true }, Ct);
+            var unknownResponse = await client.PostAsJsonAsync("/test/auth/signup/verify",
+                new { email = unknown, code = "000000", acceptedTerms = true }, Ct);
+
+            Assert.Equal(HttpStatusCode.BadRequest, knownResponse.StatusCode);
+            Assert.Equal(knownResponse.StatusCode, unknownResponse.StatusCode);
+            var knownProblem = await knownResponse.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>(Ct);
+            var unknownProblem = await unknownResponse.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>(Ct);
+            Assert.Equal(LoginCodeErrors.InvalidCode, knownProblem.GetProperty("code").GetString());
+            Assert.Equal(knownProblem.GetProperty("code").GetString(), unknownProblem.GetProperty("code").GetString());
+        }
+        finally
+        {
+            await SetConsumerSignupAsync("Open");
+        }
+    }
+
+    [Fact]
+    public async Task Suspended_account_is_not_disclosed_by_invalid_signup_code()
+    {
+        await factory.Services.SeedDatabaseAsync(Ct);
+        using var client = factory.CreateClient();
+        var address = $"suspended-signup-{Guid.NewGuid():N}@example.test";
+        var userId = await CreateVerifiedEmailAccountAsync(address);
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                var manager = services.GetRequiredService<UserManager<ApplicationUser>>();
+                var user = await manager.FindByIdAsync(userId.ToString("D"));
+                Assert.NotNull(user);
+                Assert.True(user.Suspend().IsSuccess);
+                Assert.True((await manager.UpdateAsync(user)).Succeeded);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+
+        var response = await client.PostAsJsonAsync("/test/auth/signup/verify",
+            new { email = address, code = "000000", acceptedTerms = true }, Ct);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>(Ct);
+        Assert.Equal(LoginCodeErrors.InvalidCode, problem.GetProperty("code").GetString());
+    }
+
+    [Fact]
     public async Task Closed_personal_signup_rejects_the_request_without_sending_a_code()
     {
         await factory.Services.SeedDatabaseAsync(Ct);
@@ -171,6 +307,43 @@ public sealed class SignupTests(ApiFactory factory)
         {
             await SetConsumerSignupAsync("Open");
         }
+    }
+
+    private async Task<Guid> CreateVerifiedEmailAccountAsync(string address)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var email = Email.Create(address).Value;
+        var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        Guid userId = Guid.Empty;
+
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+        {
+            var users = services.GetRequiredService<IUserRepository>();
+            userId = (await users.CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct)).Id;
+            var method = LoginMethod.CreateEmail(userId, email);
+            method.Verify(nowUtc);
+            method.MakePrimary();
+            services.GetRequiredService<ILoginMethodRepository>().Add(method);
+            await users.SetPrimaryEmailAsync(userId, email, ct);
+            return Result.Success();
+        }, CommitPolicy.OnSuccess, Ct);
+
+        return userId;
+    }
+
+    private async Task AgeLoginCodesAsync(string address)
+    {
+        await using var connection = new NpgsqlConnection(factory.AdminConnectionString);
+        await connection.OpenAsync(Ct);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE identity."LoginCodes"
+            SET "CreatedAtUtc" = "CreatedAtUtc" - interval '1 hour'
+            WHERE "Destination" = @email
+            """;
+        command.Parameters.AddWithValue("email", address);
+        await command.ExecuteNonQueryAsync(Ct);
     }
 
     private async Task SetConsumerSignupAsync(string mode)
