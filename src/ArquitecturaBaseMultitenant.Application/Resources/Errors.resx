@@ -87,4 +87,7 @@
   <data name="Tenancy.Access.Wrong" xml:space="preserve"><value>Este acceso no permite realizar la acción.</value></data>
   <data name="Tenancy.Access.NotMember" xml:space="preserve"><value>No sos miembro de esta organización.</value></data>
   <data name="Tenancy.Access.ConsumerCannotCreateBusiness" xml:space="preserve"><value>Para crear una organización, usá «Registrá tu empresa».</value></data>
+  <data name="Identity.Reauth.Invalid" xml:space="preserve"><value>La confirmación no es válida. Pedí un código nuevo.</value></data>
+  <data name="Identity.Reauth.Expired" xml:space="preserve"><value>La confirmación venció. Pedí un código nuevo.</value></data>
+  <data name="Identity.Reauth.OtherMethodRequired" xml:space="preserve"><value>Confirmá con otro método de ingreso verificado.</value></data>
 </root>

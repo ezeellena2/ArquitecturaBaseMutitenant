@@ -8,7 +8,8 @@ Estado: en ejecución. La 3c queda pendiente. No declarar cerrada esta etapa sin
 |---|---|---|---|
 | Plan previo | `c60cd18` | — | 30 tareas, TDD, alcance y matriz visual |
 | T01 · recorridos reales rojos | — | `20e2e8b` | Los cinco fallaron antes de implementar /cuenta |
-| T02 · reglas de métodos | este commit | — | Rojo CS1501/CS1061; verde LoginMethodTests 6/6 |
+| T02 · reglas de métodos | `61ffe6c` | — | Rojo CS1501/CS1061; verde LoginMethodTests 6/6 |
+| T03 · comprobante de reautenticación | este commit | — | Rojo CS0103; verde ReauthTicketTests 4/4 |
 
 ## Evidencia del E2E real antes de programar
 
@@ -41,6 +42,7 @@ Ocultaciones solicitadas: WhatsApp (E8), exportación/sugerencia de exportar (E1
 - La nueva versión legal del E2E la publica su preparador en la base propia por comando de archivo. No se agrega endpoint productivo ni se toca Development.
 - La limpieza de una cuenta real respeta la gracia: pedir baja impide su ingreso normal y el worker anonimiza al vencer; no se borra Identity ni auditoría a mano.
 - HarnessStage sigue en 2 hasta cerrar 3c; solo se actualizan inventarios existentes exigidos y se agrega el contrato cruzado funcional.
+- T03 entrega entidad y puerto; los helpers de emisión/verificación se conectan en T07 después de la persistencia T04, para probar el flujo completo con sus códigos y locks reales.
 
 ## Recorrido manual
 

@@ -20,6 +20,8 @@ La identidad de una persona es global. Una cuenta puede tener acceso como person
 
 ## 3b · La cuenta (pendiente)
 
+La reautenticación emite un secreto aleatorio de 256 bits y guarda solo su hash. Su comprobante dura cinco minutos y se consume una sola vez, ligado a cuenta, acción y método objetivo; quitar o elegir principal exige otro método verificado. El ticket de cancelación conserva el retorno autorizado y no concede una sesión antes de cancelarla.
+
 La gestión conserva `LoginMethods.Value` como clave global del método. En Google es el subject del proveedor; `ContactEmail` guarda el correo verificado para presentación y avisos, sin usarlo como clave OAuth. Cambiar el principal desmarca el anterior y conserva su verificación.
 
 Gestión de métodos de ingreso, aceptación bloqueante de versiones legales nuevas y baja con gracia. Los estados `PendingDeletion` y `Deleted` y sus fechas se reservan en el modelo de 3a sin implementar todavía el flujo de baja. Fuente: [multitenancy.md §3.1–§3.2](../architecture/multitenancy.md#31-métodos-de-ingreso-la-cuenta-no-depende-de-un-solo-correo).
