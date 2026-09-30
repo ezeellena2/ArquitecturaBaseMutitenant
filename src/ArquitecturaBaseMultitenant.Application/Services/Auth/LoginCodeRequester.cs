@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
+using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
@@ -26,18 +27,23 @@ internal sealed class LoginCodeRequester(
 
         var userId = await userLookup.FindVerifiedUserIdAsync(
             LoginMethodType.Email, destination.Value, cancellationToken);
+        UserAccountRow? account = null;
         if (userId is { } id)
         {
-            var account = await users.GetByIdAsync(id, cancellationToken);
-            if (account is { Status: UserStatus.Active or UserStatus.Suspended }
-                && !await signIn.IsLockedOutAsync(id, cancellationToken))
-            {
-                var culture = await userCultures.ResolveAsync(account.Culture, null, cancellationToken);
-                var channel = channels.SingleOrDefault(value => value.Key == destination.Channel)
-                    ?? throw new InvalidOperationException("The email login channel is not registered.");
-                channel.Enqueue(destination.Value, issued.Value.Code, issued.Value.LifetimeMinutes, culture);
-                issued.Value.LoginCode.MarkSent(issued.Value.IssuedAtUtc);
-            }
+            account = await users.GetByIdAsync(id, cancellationToken);
+        }
+
+        var culture = await userCultures.ResolveAsync(account?.Culture, null, cancellationToken);
+        var channel = channels.SingleOrDefault(value => value.Key == destination.Channel)
+            ?? throw new InvalidOperationException("The email login channel is not registered.");
+        var payload = channel.RenderLoginCode(destination.Value, issued.Value.Code,
+            issued.Value.LifetimeMinutes, culture);
+        if (userId is { } knownUserId
+            && account is { Status: UserStatus.Active or UserStatus.Suspended }
+            && !await signIn.IsLockedOutAsync(knownUserId, cancellationToken))
+        {
+            channel.EnqueueRenderedLoginCode(payload);
+            issued.Value.LoginCode.MarkSent(issued.Value.IssuedAtUtc);
         }
 
         return new RequestLoginCodeResponse(issued.Value.ResendCooldownSeconds);

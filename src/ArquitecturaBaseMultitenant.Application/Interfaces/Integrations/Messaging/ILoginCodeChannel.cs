@@ -7,7 +7,9 @@ public interface ILoginCodeChannel
 {
     string Key { get; }
 
-    void Enqueue(string destination, string code, int lifetimeMinutes, CultureProfile culture);
+    string RenderLoginCode(string destination, string code, int lifetimeMinutes, CultureProfile culture);
+
+    void EnqueueRenderedLoginCode(string payload);
 
     void EnqueueSignup(string destination, string code, int lifetimeMinutes, CultureProfile culture);
 }
