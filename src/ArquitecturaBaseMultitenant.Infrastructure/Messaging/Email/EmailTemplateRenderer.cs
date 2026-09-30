@@ -60,8 +60,8 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
             ["Title"] = Encode(title),
             ["Paragraphs"] = string.Join(string.Empty, paragraphs.Select(value => $"<p style=\"margin:0 0 16px;\">{Encode(value)}</p>")),
             ["Action"] = actionLabel.Length == 0 ? string.Empty :
-                $"<p style=\"margin:0 0 16px;\"><a href=\"{Encode(actionUrl)}\">{Encode(actionLabel)}</a></p>",
-            ["Note"] = note.Length == 0 ? string.Empty : $"<p style=\"margin:0;\">{Encode(note)}</p>",
+                $"<p style=\"margin:0 0 20px;\"><a href=\"{Encode(actionUrl)}\" style=\"display:inline-block;padding:10px 20px;border-radius:8px;background-color:oklch(0.5 0.1 195);color:#fff;font-weight:bold;text-decoration:none;\">{Encode(actionLabel)}</a></p>",
+            ["Note"] = note.Length == 0 ? string.Empty : $"<p style=\"margin:0;color:#6b7280;font-size:14px;\">{Encode(note)}</p>",
         });
         var html = Fill(LayoutTemplate, new Dictionary<string, string>
         {
@@ -169,7 +169,7 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
         var settings = options.Value;
         return string.IsNullOrWhiteSpace(settings.LogoUrl)
             ? Encode(settings.AppName)
-            : $"<img src=\"{Encode(settings.LogoUrl)}\" alt=\"{Encode(settings.AppName)}\" height=\"32\" style=\"display:block;border:0;height:32px;\">";
+            : $"<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td style=\"padding-right:10px;\"><img src=\"{Encode(settings.LogoUrl)}\" alt=\"\" height=\"24\" width=\"24\" style=\"display:block;border:0;height:24px;width:24px;border-radius:7px;\"></td><td style=\"font-size:16px;font-weight:bold;color:#111827;\">{Encode(settings.AppName)}</td></tr></table>";
     }
 
     private static string Fill(string templateName, Dictionary<string, string> values) =>

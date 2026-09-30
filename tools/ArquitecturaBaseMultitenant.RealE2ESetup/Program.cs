@@ -14,6 +14,9 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 using ArquitecturaBaseMultitenant.RealE2ESetup;
 
+if (args is ["--capture-emails", var emailCaptureDirectory])
+    return await AccountEmailCaptures.WriteAsync(emailCaptureDirectory);
+
 if (Environment.GetEnvironmentVariable("MT_E2E_ISOLATED") != "1")
 {
     Console.Error.WriteLine("E2E setup requires the isolated database mode.");
