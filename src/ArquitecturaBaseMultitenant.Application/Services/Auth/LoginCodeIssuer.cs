@@ -26,6 +26,15 @@ internal sealed class LoginCodeIssuer(
         CancellationToken cancellationToken) =>
         IssueAsync(destination, LoginCodePurpose.Signup, requestedByUserId: null, cancellationToken);
 
+    public Task<Result<IssuedLoginCode>> IssueAccountCodeAsync(LoginCodeDestination destination,
+        LoginCodePurpose purpose, Guid userId, CancellationToken cancellationToken)
+    {
+        if (purpose is not (LoginCodePurpose.VerifyDestination or LoginCodePurpose.Reauthenticate))
+            throw new ArgumentOutOfRangeException(nameof(purpose));
+        if (userId == Guid.Empty) throw new ArgumentException("The account is required.", nameof(userId));
+        return IssueAsync(destination, purpose, userId, cancellationToken);
+    }
+
     private async Task<Result<IssuedLoginCode>> IssueAsync(LoginCodeDestination destination,
         LoginCodePurpose purpose, Guid? requestedByUserId, CancellationToken cancellationToken)
     {

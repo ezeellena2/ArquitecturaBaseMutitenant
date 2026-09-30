@@ -90,4 +90,7 @@
   <data name="Identity.Reauth.Invalid" xml:space="preserve"><value>La confirmación no es válida. Pedí un código nuevo.</value></data>
   <data name="Identity.Reauth.Expired" xml:space="preserve"><value>La confirmación venció. Pedí un código nuevo.</value></data>
   <data name="Identity.Reauth.OtherMethodRequired" xml:space="preserve"><value>Confirmá con otro método de ingreso verificado.</value></data>
+  <data name="Identity.LoginMethod.AlreadyUsed" xml:space="preserve"><value>Este correo ya está asociado a una cuenta.</value></data>
+  <data name="Identity.LoginMethod.NotFound" xml:space="preserve"><value>No encontramos este método de ingreso.</value></data>
+  <data name="Identity.LoginMethod.AlreadyVerified" xml:space="preserve"><value>Este método de ingreso ya está verificado.</value></data>
 </root>

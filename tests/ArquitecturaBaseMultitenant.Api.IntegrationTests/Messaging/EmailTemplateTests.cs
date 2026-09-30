@@ -17,6 +17,20 @@ public sealed class EmailTemplateTests
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Theory]
+    [InlineData("es-AR", "Confirmá tu correo", "es tu código para agregar este correo")]
+    [InlineData("en-US", "Confirm your email", "is your code to add this email")]
+    public async Task Verify_email_uses_the_approved_template_and_distinct_copy(string culture,
+        string title, string subject)
+    {
+        var profile = await new CultureProfiles(new JsonReferenceDataCatalog()).LoadAsync(culture, Ct);
+        var renderer = new EmailTemplateRenderer(Options.Create(new EmailOptions { AppName = "ArquitecturaBase" }));
+        var message = renderer.RenderVerifyEmailCode("user@example.test", "715204", 10, profile);
+        Assert.Contains(title, message.TextBody);
+        Assert.Contains(subject, message.Subject);
+        Assert.Contains("715204", message.TextBody);
+    }
+
+    [Theory]
     [InlineData("es-AR", "Tu código de acceso", "Usá este código")]
     [InlineData("en-US", "Your access code", "Use this code")]
     public async Task Login_and_signup_codes_render_the_approved_copy_in_the_selected_language(

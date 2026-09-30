@@ -28,6 +28,9 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
     public EmailMessage RenderSignupCode(string to, string code, int lifetimeMinutes, CultureProfile culture) =>
         RenderCode(SignupCodeTemplate, to, code, lifetimeMinutes, culture);
 
+    public EmailMessage RenderVerifyEmailCode(string to, string code, int lifetimeMinutes, CultureProfile culture) =>
+        RenderCode(LoginCodeTemplate, to, code, lifetimeMinutes, culture, "VerifyEmail");
+
     public EmailMessage RenderInvitation(string to, string loginUrl, CultureProfile culture) =>
         throw new NotSupportedException("Invitation templates are introduced with invitations.");
 
@@ -87,8 +90,12 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
         var key = (notice.Change, notice.MethodType) switch
         {
             ("Added", LoginMethodType.Phone) => "LoginMethodAddedPhone",
+            ("Added", LoginMethodType.Email) => "LoginMethodAddedEmail",
+            ("Added", LoginMethodType.Google) => "LoginMethodAddedGoogle",
             ("Removed", LoginMethodType.Email) => "LoginMethodRemovedEmail",
+            ("Removed", LoginMethodType.Google) => "LoginMethodRemovedGoogle",
             ("Primary", LoginMethodType.Email) => "LoginMethodPrimaryEmail",
+            ("Primary", LoginMethodType.Google) => "LoginMethodPrimaryEmail",
             _ => throw new NotSupportedException("This login method notice has no approved copy."),
         };
         return (key, "LoginMethodChanged.html",
@@ -127,12 +134,13 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
             NotificationTexts.Get("Notice.NotMe", culture));
     }
 
-    private EmailMessage RenderCode(string template, string to, string code, int lifetimeMinutes, CultureProfile culture)
+    private EmailMessage RenderCode(string template, string to, string code, int lifetimeMinutes, CultureProfile culture,
+        string key = "LoginCode")
     {
         var appName = options.Value.AppName;
-        var title = NotificationTexts.Get("LoginCode.Title", culture);
-        var intro = NotificationTexts.Format("LoginCode.Intro", culture, appName);
-        var expiry = NotificationTexts.Format("LoginCode.Expiry", culture, lifetimeMinutes);
+        var title = NotificationTexts.Get(key + ".Title", culture);
+        var intro = NotificationTexts.Format(key + ".Intro", culture, appName);
+        var expiry = NotificationTexts.Format(key + ".Expiry", culture, lifetimeMinutes);
         var footer = NotificationTexts.Format("Layout.Footer", culture, appName);
 
         var content = Fill(template, new Dictionary<string, string>
@@ -153,7 +161,7 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
         var paragraphBreak = Environment.NewLine + Environment.NewLine;
         var text = string.Join(paragraphBreak, title, intro, code, expiry, footer);
         return new EmailMessage(to,
-            NotificationTexts.Format("LoginCode.Subject", culture, code, appName), html, text);
+            NotificationTexts.Format(key + ".Subject", culture, code, appName), html, text);
     }
 
     private string HeaderHtml()

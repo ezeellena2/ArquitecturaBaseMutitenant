@@ -35,4 +35,17 @@
   <data name="AccountDeleted.Title" xml:space="preserve"><value>Tu cuenta fue eliminada</value></data>
   <data name="AccountDeleted.Body" xml:space="preserve"><value>{0} Eliminamos tu cuenta de {1}, con sus métodos de ingreso y tu espacio personal.</value></data>
   <data name="AccountDeleted.After" xml:space="preserve"><value>Este correo ya no está asociado a ninguna cuenta.</value></data>
+  <data name="VerifyEmail.Subject" xml:space="preserve"><value>{0} es tu código para agregar este correo a {1}</value></data>
+  <data name="VerifyEmail.Title" xml:space="preserve"><value>Confirmá tu correo</value></data>
+  <data name="VerifyEmail.Intro" xml:space="preserve"><value>Usá este código para agregar este correo a tu cuenta de {0}:</value></data>
+  <data name="VerifyEmail.Expiry" xml:space="preserve"><value>Vence en {0} minutos. Si no lo pediste, ignorá este correo: sin el código, nadie puede agregar esta dirección a una cuenta.</value></data>
+  <data name="LoginMethodAddedEmail.Subject" xml:space="preserve"><value>Agregaste un correo a tu cuenta</value></data>
+  <data name="LoginMethodAddedEmail.Title" xml:space="preserve"><value>Agregaste un método de ingreso</value></data>
+  <data name="LoginMethodAddedEmail.Body" xml:space="preserve"><value>{0} El {1} a las {2} agregaste el correo {3} a tu cuenta de {4}.</value></data>
+  <data name="LoginMethodAddedGoogle.Subject" xml:space="preserve"><value>Vinculaste tu cuenta de Google</value></data>
+  <data name="LoginMethodAddedGoogle.Title" xml:space="preserve"><value>Agregaste un método de ingreso</value></data>
+  <data name="LoginMethodAddedGoogle.Body" xml:space="preserve"><value>{0} El {1} a las {2} vinculaste Google con el correo {3} a tu cuenta de {4}.</value></data>
+  <data name="LoginMethodRemovedGoogle.Subject" xml:space="preserve"><value>Desvinculaste tu cuenta de Google</value></data>
+  <data name="LoginMethodRemovedGoogle.Title" xml:space="preserve"><value>Quitaste un método de ingreso</value></data>
+  <data name="LoginMethodRemovedGoogle.Body" xml:space="preserve"><value>{0} El {1} a las {2} desvinculaste Google con el correo {3} de tu cuenta de {4}. Ya no sirve para ingresar.</value></data>
 </root>

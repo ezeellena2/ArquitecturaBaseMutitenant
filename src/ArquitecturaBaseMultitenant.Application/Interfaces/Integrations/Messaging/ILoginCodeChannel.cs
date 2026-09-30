@@ -12,4 +12,5 @@ public interface ILoginCodeChannel
     void EnqueueRenderedLoginCode(string payload);
 
     void EnqueueSignup(string destination, string code, int lifetimeMinutes, CultureProfile culture);
+    void EnqueueVerification(Guid userId, string destination, string code, int lifetimeMinutes, CultureProfile culture);
 }

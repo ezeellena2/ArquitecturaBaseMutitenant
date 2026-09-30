@@ -113,11 +113,11 @@ En cada tarea se guarda evidencia de rojo y verde con el comando y resultado. Si
 **Archivos:** back: `Application/Interfaces/Services/ILoginMethodManagementService.cs`, `Services/Identity/{LoginMethodManagementService,LoginMethodIssuer,LoginMethodVerifier}.cs`, `Models/Identity/*LoginMethod*Request.cs`, `Validation/Identity/*Validator.cs`; ampliar `LoginCodeIssuer`; test `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Identity/LoginMethodsTests.cs`.
 **Comportamiento exacto:** Alta Email normalizado pendiente, código VerifyMethod vinculado al usuario, plantilla VerifyEmail del lienzo, unicidad global incluso en gracia. Verificar una sola vez con intentos persistidos OnAnyResult; después SecurityEvent y aviso en todos. Método pendiente no ingresa. Unicidad atada a campo y sin filtrar existencia de cuentas desde login.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: No existen alta/verificación de método; código ajeno o de login no se acepta.
-- [ ] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class '*LoginMethodsTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: sumar y verificar correos de la cuenta"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: No existen alta/verificación de método; código ajeno o de login no se acepta.
+- [x] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class '*LoginMethodsTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: sumar y verificar correos de la cuenta"`. Registrar hash back/front.
 
 ### T07 · Quitar y elegir principal con otro código
 

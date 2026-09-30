@@ -1,0 +1,33 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Models.Identity;
+using ArquitecturaBaseMultitenant.Application.Services.Auth;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+
+namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
+
+internal sealed class LoginMethodVerifier(LoginMethodGuard guard, ILoginMethodRepository methods,
+    LoginCodeVerifier codes, LoginMethodNotifier notifier, IUserRepository users, TimeProvider timeProvider)
+{
+    public async Task<Result> VerifyAsync(Guid userId, VerifyLoginMethodRequest request, CancellationToken ct)
+    {
+        var account = await guard.LockAccountAsync(userId, ct);
+        if (account.IsFailure) return account.Error;
+        var method = await methods.GetByIdForUserAsync(userId, request.MethodId, ct);
+        if (method is null || method.Type != LoginMethodType.Email) return LoginMethodErrors.NotFound;
+        if (method.VerifiedAtUtc is not null) return LoginMethodErrors.AlreadyVerified;
+        var verified = await codes.VerifyAsync(LoginCodeDestination.ForEmail(Email.Create(method.Value).Value),
+            LoginCodePurpose.VerifyDestination, userId, request.Code!, ct);
+        if (verified.IsFailure) return verified.Error;
+        method.Verify(timeProvider.GetUtcNow().UtcDateTime);
+        var all = await methods.ListByUserIdAsync(userId, ct);
+        if (!all.Any(value => value.IsPrimary))
+        {
+            method.MakePrimary();
+            await users.SetPrimaryEmailAsync(userId, Email.Create(method.Value).Value, ct);
+        }
+        await notifier.ChangedAsync(account.Value, all, method, "Added", ct);
+        return Result.Success();
+    }
+}

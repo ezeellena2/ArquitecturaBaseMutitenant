@@ -34,7 +34,7 @@ internal static class PickupCodeReader
                     if (!message.To.Mailboxes.Any(mailbox =>
                         string.Equals(mailbox.Address, email, StringComparison.OrdinalIgnoreCase))) continue;
                     var match = Regex.Match(message.TextBody ?? string.Empty, @"(?<!\d)\d{6}(?!\d)");
-                    Assert.True(match.Success, "El correo pickup no contiene un código de seis dígitos.");
+                    if (!match.Success) continue;
                     code = match.Value;
                 }
                 File.Delete(path);

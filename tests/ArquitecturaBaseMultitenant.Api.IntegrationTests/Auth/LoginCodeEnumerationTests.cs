@@ -56,6 +56,9 @@ public sealed class LoginCodeEnumerationTests(ApiFactory factory)
         public EmailMessage RenderSignupCode(string to, string code, int lifetimeMinutes, CultureProfile culture) =>
             throw new NotSupportedException();
 
+        public EmailMessage RenderVerifyEmailCode(string to, string code, int lifetimeMinutes, CultureProfile culture) =>
+            throw new NotSupportedException();
+
         public EmailMessage RenderInvitation(string to, string loginUrl, CultureProfile culture) =>
             throw new NotSupportedException();
 

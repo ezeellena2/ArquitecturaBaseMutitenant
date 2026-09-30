@@ -46,6 +46,11 @@ public static class DependencyInjection
         services.AddScoped<LoginCodeVerifier>();
         services.AddScoped<UserCultures>();
         services.AddScoped<AccountNoticeIssuer>();
+        services.AddScoped<ILoginMethodManagementService, LoginMethodManagementService>();
+        services.AddScoped<LoginMethodGuard>();
+        services.AddScoped<LoginMethodIssuer>();
+        services.AddScoped<LoginMethodVerifier>();
+        services.AddScoped<LoginMethodNotifier>();
         services.AddScoped<DisplayFormatter>();
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
         services.AddScoped<IRequestValidator, RequestValidator>();

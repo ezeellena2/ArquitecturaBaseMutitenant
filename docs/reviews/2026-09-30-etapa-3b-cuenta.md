@@ -11,7 +11,8 @@ Estado: en ejecución. La 3c queda pendiente. No declarar cerrada esta etapa sin
 | T02 · reglas de métodos | `61ffe6c` | — | Rojo CS1501/CS1061; verde LoginMethodTests 6/6 |
 | T03 · comprobante de reautenticación | `414cb47` | — | Rojo CS0103; verde ReauthTicketTests 4/4 |
 | T04 · persistencia de cuenta | `5949ffb` | — | Rojo CS1061; Testcontainers LoginMethodsTests 3/3; modelo sin cambios pendientes; SQL revisado |
-| T05 · avisos de cuenta | este commit | — | Rojo CS0234; Testcontainers AccountNoticeTests 2/2; contactos deduplicados, payload cifrado y aviso final principal |
+| T05 · avisos de cuenta | `5eebba1` | — | Rojo CS0234; Testcontainers AccountNoticeTests 2/2; contactos deduplicados, payload cifrado y aviso final principal |
+| T06 · agregar y verificar correo | este commit | — | Rojo CS0246/CS0117; LoginMethodsTests 5/5; código Login rechazado, intento guardado, código propio consumido y reserva global |
 
 ## Evidencia del E2E real antes de programar
 
@@ -46,6 +47,8 @@ Ocultaciones solicitadas: WhatsApp (E8), exportación/sugerencia de exportar (E1
 - HarnessStage sigue en 2 hasta cerrar 3c; solo se actualizan inventarios existentes exigidos y se agrega el contrato cruzado funcional.
 - T03 entrega entidad y puerto; los helpers de emisión/verificación se conectan en T07 después de la persistencia T04, para probar el flujo completo con sus códigos y locks reales.
 - T04: índice parcial único de principal. Como PostgreSQL lo comprueba al emitir cada UPDATE, el repositorio retira la marca anterior dentro de la UoW antes de fijar la nueva; la fila no es auditable ni soft-deletable y rollback revierte todo. `xmin` usa la columna de sistema (el SQL de Npgsql no crea una columna manual).
+- T05: el canal recibe CultureProfile ya resuelto y renderiza async dentro de la UoW llamadora. UserId nullable permite cancelar mensajes propios sin modificar mensajes anteriores o de otros destinos; cancelar borra el payload cifrado pendiente.
+- T06: se reutiliza VerifyDestination ya definido en LoginCodePurpose, en lugar de crear un propósito equivalente. Los avisos de agregado/desvinculado adaptan el sustantivo del método en la plantilla aprobada; Google mantiene subject privado.
 
 ## Recorrido manual
 
