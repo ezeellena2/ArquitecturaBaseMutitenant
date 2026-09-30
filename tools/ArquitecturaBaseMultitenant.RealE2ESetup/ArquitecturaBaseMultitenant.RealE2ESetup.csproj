@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="..\..\src\ArquitecturaBaseMultitenant.Application\ArquitecturaBaseMultitenant.Application.csproj" />
+    <ProjectReference Include="..\..\src\ArquitecturaBaseMultitenant.Infrastructure\ArquitecturaBaseMultitenant.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

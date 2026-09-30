@@ -13,4 +13,7 @@
     <Project Path="tests/ArquitecturaBaseMultitenant.ArchitectureTests/ArquitecturaBaseMultitenant.ArchitectureTests.csproj" />
     <Project Path="tests/ArquitecturaBaseMultitenant.Domain.UnitTests/ArquitecturaBaseMultitenant.Domain.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/ArquitecturaBaseMultitenant.RealE2ESetup/ArquitecturaBaseMultitenant.RealE2ESetup.csproj" />
+  </Folder>
 </Solution>
