@@ -64,6 +64,24 @@ public sealed class StartupConfigurationTests
     }
 
     [Fact]
+    public void Pickup_delivery_is_rejected_in_production()
+    {
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Email:Delivery"] = "PickupDirectory",
+        }).Build();
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<IConfiguration>(configuration);
+        services.AddEmail(configuration, new TestHostEnvironment { EnvironmentName = "Production" });
+        using var provider = services.BuildServiceProvider();
+
+        var exception = Assert.ThrowsAny<Exception>(
+            () => provider.GetRequiredService<IStartupValidator>().Validate());
+        Assert.Contains("Email:Delivery", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Google_client_id_without_secret_fails_at_startup_and_names_only_the_key()
     {
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>

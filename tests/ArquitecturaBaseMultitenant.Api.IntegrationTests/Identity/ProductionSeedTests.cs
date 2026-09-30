@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
@@ -8,11 +9,14 @@ using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.ReferenceData;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
+using ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using OpenIddict.Abstractions;
 using Npgsql;
 using Testcontainers.PostgreSql;
@@ -163,9 +167,17 @@ public sealed class ProductionSeedTests
             builder.UseSetting("Authentication:Certificates:Encryption:Base64", certificate);
             builder.UseSetting("Authentication:Certificates:Signing:Base64", certificate);
             builder.UseSetting("DataProtection:Certificate:Base64", certificate);
-            builder.UseSetting("Email:Delivery", "PickupDirectory");
+            builder.UseSetting("Email:Delivery", "Smtp");
+            builder.UseSetting("Email:Smtp:UserName", "sender@example.test");
+            builder.UseSetting("Email:Smtp:Password", "test-only-password");
+            builder.UseSetting("Email:Smtp:FromAddress", "sender@example.test");
             builder.UseSetting("Seed:PlatformOwner:Email", ownerEmail);
             builder.UseSetting("Seed:PlatformOwner:DisplayName", "Operator Example");
+            builder.ConfigureTestServices(services =>
+            {
+                services.RemoveAll<IEmailTransport>();
+                services.AddScoped<IEmailTransport, NoopEmailTransport>();
+            });
         });
 
         string Connection(string user, string password) => new NpgsqlConnectionStringBuilder(postgres.GetConnectionString())
@@ -187,5 +199,11 @@ public sealed class ProductionSeedTests
             TimeProvider.System.GetUtcNow().AddMinutes(-1),
             TimeProvider.System.GetUtcNow().AddDays(1));
         return Convert.ToBase64String(certificate.Export(X509ContentType.Pkcs12));
+    }
+
+    private sealed class NoopEmailTransport : IEmailTransport
+    {
+        public Task SendAsync(EmailMessage message, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
     }
 }

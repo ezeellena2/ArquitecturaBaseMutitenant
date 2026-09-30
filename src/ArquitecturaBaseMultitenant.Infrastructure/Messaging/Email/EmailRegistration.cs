@@ -20,6 +20,7 @@ internal static class EmailRegistration
             email.PostConfigure(options => options.Delivery = EmailDelivery.PickupDirectory);
         }
         email.ValidateOnStart();
+        services.AddSingleton<IValidateOptions<EmailOptions>>(new EmailOptionsValidator(environment));
 
         var smtp = services.AddOptions<SmtpOptions>()
             .BindConfiguration(SmtpOptions.SectionName);

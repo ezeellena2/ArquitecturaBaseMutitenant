@@ -67,7 +67,7 @@ Mismos valores que `../ArquitecturaBase/src/ArquitecturaBase.Api/appsettings.Dev
 |---|---|
 | `Authentication:Google:ClientId` | el mismo `ClientId` de ArquitecturaBase |
 | `Authentication:Issuer` | `https://localhost:5174/` (el origen del front del multitenant) |
-| `Email:Delivery` | `Smtp` (o `PickupDirectory` para escribir `.eml` sin enviar) |
+| `Email:Delivery` | `Smtp`; `PickupDirectory` escribe `.eml` sin enviar solo en Development o Testing |
 | `Email:Smtp:Host` / `Port` | `smtp.gmail.com` / `587` (STARTTLS) |
 | `Email:Smtp:UserName` / `FromAddress` | tu cuenta de Gmail, la misma de ArquitecturaBase |
 | `Email:Smtp:FromName` | el nombre del producto |
@@ -103,6 +103,7 @@ Las opciones se validan **al arrancar**, como en ArquitecturaBase:
 | Situación | Resultado |
 |---|---|
 | `Email:Delivery=Smtp` sin `Email:Smtp:Password` | la Api no arranca y nombra la clave que falta |
+| Fuera de Development y Testing con `Email:Delivery=PickupDirectory` | la Api no arranca y nombra `Email:Delivery` |
 | Production sin operador y sin `Seed:PlatformOwner:Email` | la Api no arranca y nombra la clave que falta |
 | Fuera de Development y Testing sin `DataProtection:Certificate:Base64`, o con PFX inválido o sin clave privada | la Api no arranca y nombra la clave del certificado |
 | `Authentication:Google:ClientId` sin `ClientSecret` | la Api no arranca. Sin `ClientId`, el botón de Google no aparece (`GET /api/auth/methods`) |
