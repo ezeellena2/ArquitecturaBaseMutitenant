@@ -20,7 +20,7 @@ public sealed class Stage3aInventoryTests
         "src/ArquitecturaBaseMultitenant.Application/Services/Profile/ProfileService.cs",
         "src/ArquitecturaBaseMultitenant.Application/Services/Legal/LegalService.cs",
         "src/ArquitecturaBaseMultitenant.Infrastructure/Identity/IdentityRegistration.cs",
-        "src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Seed/DevelopmentSeeder.cs",
+        "src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Seed/DatabaseSeeder.cs",
         "docs/contracts/openapi.json",
         "tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Auth/AuthPipelineTests.cs",
         "tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Auth/LogoutTests.cs",

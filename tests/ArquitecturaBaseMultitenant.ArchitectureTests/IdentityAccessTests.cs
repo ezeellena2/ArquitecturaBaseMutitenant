@@ -22,7 +22,6 @@ public sealed class IdentityAccessTests
             "ArquitecturaBaseMultitenant.Application/Services/Auth/ConnectService.cs",
             "ArquitecturaBaseMultitenant.Application/Services/Profile/ProfileSnapshotBuilder.cs",
             "ArquitecturaBaseMultitenant.Infrastructure/Caching/AccessStatusCache.cs",
-            "ArquitecturaBaseMultitenant.Infrastructure/Persistence/Seed/DevelopmentSeeder.cs",
         ], consumers.Order(StringComparer.Ordinal));
     }
 
@@ -49,7 +48,7 @@ public sealed class IdentityAccessTests
     [InlineData("ArquitecturaBaseMultitenant.Infrastructure/Persistence/Repositories/Fake.cs", false)]
     [InlineData("ArquitecturaBaseMultitenant.Infrastructure/Persistence/Repositories/UserRepository.cs", true)]
     [InlineData("ArquitecturaBaseMultitenant.Infrastructure/Persistence/Readers/Platform/Fake.cs", false)]
-    [InlineData("ArquitecturaBaseMultitenant.Infrastructure/Persistence/Seed/DevelopmentSeeder.cs", false)]
+    [InlineData("ArquitecturaBaseMultitenant.Infrastructure/Persistence/Seed/DatabaseSeeder.cs", false)]
     [InlineData("ArquitecturaBaseMultitenant.Infrastructure/Persistence/Seed/PlatformSeeder.cs", true)]
     public void Identity_boundary_detector_rejects_unlisted_paths(string path, bool allowed) =>
         Assert.Equal(allowed, IsAllowed(path));
