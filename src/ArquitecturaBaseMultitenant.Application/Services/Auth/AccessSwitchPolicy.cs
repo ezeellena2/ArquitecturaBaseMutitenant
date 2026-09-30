@@ -20,7 +20,7 @@ internal static class AccessSwitchPolicy
             return requested?.MemberStatus switch
             {
                 MemberStatus.Active => RequireActiveTenant(requested),
-                MemberStatus.Inactive => MemberErrors.Inactive,
+                MemberStatus.Inactive => WithOrganization(MemberErrors.Inactive, requested),
                 _ => AccessErrors.NotMember,
             };
         }
@@ -29,39 +29,49 @@ internal static class AccessSwitchPolicy
             member.TenantStatus == TenantStatus.Active).ToArray();
         if (active.Length == 0)
         {
-            if (businesses.Length == 1 && businesses[0].MemberStatus == MemberStatus.Active)
-            {
-                return RequireActiveTenant(businesses[0]);
-            }
+            var unavailable = businesses.Where(member => member.MemberStatus == MemberStatus.Active).ToArray();
+            if (unavailable.Length > 0)
+                return RequireActiveTenant(Preferred(unavailable, lastBusinessTenantId));
 
-            return businesses.Length == 1 && businesses[0].MemberStatus == MemberStatus.Inactive
-                ? MemberErrors.Inactive
+            var inactive = businesses.Where(member => member.MemberStatus == MemberStatus.Inactive).ToArray();
+            return inactive.Length > 0
+                ? WithOrganization(MemberErrors.Inactive, Preferred(inactive, lastBusinessTenantId))
                 : AccessErrors.NotMember;
         }
 
-        if (active.Length == 1)
-        {
-            return active[0].TenantId;
-        }
+        return Preferred(active, lastBusinessTenantId).TenantId;
+    }
 
-        if (lastBusinessTenantId is { } lastId && active.FirstOrDefault(member => member.TenantId == lastId) is { } last)
-        {
-            return last.TenantId;
-        }
+    private static UserTenantAccessRow Preferred(IReadOnlyList<UserTenantAccessRow> candidates,
+        Guid? lastBusinessTenantId)
+    {
+        if (lastBusinessTenantId is { } lastId
+            && candidates.FirstOrDefault(member => member.TenantId == lastId) is { } last)
+            return last;
 
-        return active.OrderBy(member => member.JoinedAtUtc ?? DateTime.MaxValue)
+        return candidates.OrderBy(member => member.JoinedAtUtc ?? DateTime.MaxValue)
             .ThenBy(member => member.Name, StringComparer.OrdinalIgnoreCase)
             .ThenBy(member => member.TenantId)
-            .First().TenantId;
+            .First();
     }
 
     private static Result<Guid> RequireActiveTenant(UserTenantAccessRow member) => member.TenantStatus switch
     {
         TenantStatus.Active => member.TenantId,
-        TenantStatus.PendingApproval => TenantErrors.PendingApproval,
-        TenantStatus.Provisioning => TenantErrors.Provisioning,
-        TenantStatus.Suspended => TenantErrors.Suspended,
-        TenantStatus.Closed => TenantErrors.Closed,
-        _ => TenantErrors.InvalidTransition,
+        TenantStatus.PendingApproval => WithOrganization(TenantErrors.PendingApproval, member),
+        TenantStatus.Provisioning => WithOrganization(TenantErrors.Provisioning, member),
+        TenantStatus.Suspended => WithOrganization(TenantErrors.Suspended, member),
+        TenantStatus.Closed => WithOrganization(TenantErrors.Closed, member),
+        _ => WithOrganization(TenantErrors.InvalidTransition, member),
     };
+
+    private static Error WithOrganization(Error error, UserTenantAccessRow member) =>
+        error with
+        {
+            Metadata = new Dictionary<string, object?>(StringComparer.Ordinal)
+            {
+                ["organizationName"] = member.Name,
+                ["tenantId"] = member.TenantId.ToString("D"),
+            },
+        };
 }

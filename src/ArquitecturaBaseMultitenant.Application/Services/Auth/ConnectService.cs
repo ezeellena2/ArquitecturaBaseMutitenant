@@ -105,22 +105,6 @@ internal sealed class ConnectService(IUserRepository users, IUserTenantAccessRea
         {
             var selected = AccessSwitchPolicy.SelectBusinessTenant(memberships,
                 requestedTenantId, account.LastBusinessTenantId);
-            if (selected.IsFailure && selected.Error.Code == MemberErrors.InactiveCode)
-            {
-                var inactive = memberships.FirstOrDefault(member => member.Kind == TenantKind.Business &&
-                    member.MemberStatus == MemberStatus.Inactive &&
-                    (requestedTenantId is null || member.TenantId == requestedTenantId));
-                if (inactive is not null)
-                {
-                    return selected.Error with
-                    {
-                        Metadata = new Dictionary<string, object?>(StringComparer.Ordinal)
-                        {
-                            ["organizationName"] = inactive.Name,
-                        },
-                    };
-                }
-            }
             return selected.IsSuccess
                 ? new ConnectUser(account, access, selected.Value, TenantKind.Business)
                 : selected.Error;

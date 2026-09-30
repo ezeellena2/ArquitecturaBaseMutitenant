@@ -136,6 +136,27 @@ public sealed class ConnectServiceTests
         Assert.Equal("Empresa A", result.Error.Metadata?["organizationName"]);
     }
 
+    [Theory]
+    [InlineData(TenantStatus.Suspended, TenantErrors.SuspendedCode)]
+    [InlineData(TenantStatus.PendingApproval, TenantErrors.PendingApprovalCode)]
+    [InlineData(TenantStatus.Closed, TenantErrors.ClosedCode)]
+    public async Task Unavailable_business_reports_its_state_name_and_id_for_the_login_state(
+        TenantStatus status, string expectedCode)
+    {
+        using var fixture = new ServiceFixture<ConnectService>();
+        var account = Account();
+        var membership = AccessRow(Guid.CreateVersion7(), TenantKind.Business) with { TenantStatus = status };
+        var service = new ConnectService(new StubUsers(account), new StubAccesses([membership]),
+            new StubPersonalSpaceProvisioner(), new StubPersonalSpaceLock(), new StubTenantScope(),
+            new FakeUnitOfWork(), fixture.TimeProvider, fixture.Logger);
+
+        var result = await service.GetActiveUserAsync(account.Id, Access.Business, null, Ct);
+
+        Assert.Equal(expectedCode, result.Error.Code);
+        Assert.Equal(membership.Name, result.Error.Metadata?["organizationName"]);
+        Assert.Equal(membership.TenantId.ToString("D"), result.Error.Metadata?["tenantId"]);
+    }
+
     [Fact]
     public async Task First_consumer_access_creates_personal_space_inside_one_scoped_transaction()
     {

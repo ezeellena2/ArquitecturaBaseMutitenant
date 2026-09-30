@@ -115,6 +115,36 @@ public sealed class AccessSwitchPolicyTests
         Assert.Equal(TenantErrors.Suspended.Code, selected.Error.Code);
     }
 
+    [Fact]
+    public void Multiple_unavailable_businesses_report_the_oldest_status_instead_of_no_membership()
+    {
+        var oldest = Member(Guid.CreateVersion7(), MemberStatus.Active, "Alfa",
+            new DateTime(2026, 9, 27, 0, 0, 0, DateTimeKind.Utc), TenantStatus.Closed);
+        var recent = Member(Guid.CreateVersion7(), MemberStatus.Active, "Zeta",
+            new DateTime(2026, 9, 29, 0, 0, 0, DateTimeKind.Utc), TenantStatus.Suspended);
+
+        var selected = AccessSwitchPolicy.SelectBusinessTenant([recent, oldest], null, null);
+
+        Assert.Equal(TenantErrors.ClosedCode, selected.Error.Code);
+        Assert.Equal(oldest.Name, selected.Error.Metadata?["organizationName"]);
+        Assert.Equal(oldest.TenantId.ToString("D"), selected.Error.Metadata?["tenantId"]);
+    }
+
+    [Fact]
+    public void Last_business_is_reported_when_all_memberships_are_in_unavailable_businesses()
+    {
+        var first = Member(Guid.CreateVersion7(), MemberStatus.Active, "Alfa",
+            new DateTime(2026, 9, 27, 0, 0, 0, DateTimeKind.Utc), TenantStatus.Closed);
+        var last = Member(Guid.CreateVersion7(), MemberStatus.Active, "Zeta",
+            new DateTime(2026, 9, 29, 0, 0, 0, DateTimeKind.Utc), TenantStatus.PendingApproval);
+
+        var selected = AccessSwitchPolicy.SelectBusinessTenant([first, last], null, last.TenantId);
+
+        Assert.Equal(TenantErrors.PendingApprovalCode, selected.Error.Code);
+        Assert.Equal(last.Name, selected.Error.Metadata?["organizationName"]);
+        Assert.Equal(last.TenantId.ToString("D"), selected.Error.Metadata?["tenantId"]);
+    }
+
     private static UserTenantAccessRow Member(Guid tenantId, MemberStatus status,
         string name = "Test", DateTime? joinedAtUtc = null, TenantStatus tenantStatus = TenantStatus.Active) =>
         new(tenantId, TenantKind.Business, name, null, tenantStatus, status, joinedAtUtc);
