@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
 internal sealed class LoginMethodManagementService(ICurrentUser currentUser, LoginMethodIssuer issuer,
-    LoginMethodVerifier verifier, IRequestValidator validator, IUnitOfWork unitOfWork,
+    LoginMethodVerifier verifier, LoginMethodChanger changer, IRequestValidator validator, IUnitOfWork unitOfWork,
     TimeProvider timeProvider, ILogger<LoginMethodManagementService> logger) : ILoginMethodManagementService
 {
     public Task<Result<LoginMethodCodeResponse>> AddEmailAsync(AddLoginEmailRequest request, CancellationToken ct) =>
@@ -41,4 +41,19 @@ internal sealed class LoginMethodManagementService(ICurrentUser currentUser, Log
             return await unitOfWork.ExecuteInTransactionAsync(token => verifier.VerifyAsync(userId, request, token),
                 CommitPolicy.OnAnyResult, ct);
         });
+
+    public Task<Result> MakePrimaryAsync(ChangeLoginMethodRequest request, CancellationToken ct) =>
+        OperationLog.RunAsync(logger, timeProvider, "MakeLoginMethodPrimary", () => ChangeAsync(request, false, ct));
+
+    public Task<Result> RemoveAsync(ChangeLoginMethodRequest request, CancellationToken ct) =>
+        OperationLog.RunAsync(logger, timeProvider, "RemoveLoginMethod", () => ChangeAsync(request, true, ct));
+
+    private async Task<Result> ChangeAsync(ChangeLoginMethodRequest request, bool remove, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
+        if (currentUser.UserId is not { } userId) return UserErrors.NotFound;
+        return await unitOfWork.ExecuteInTransactionAsync(token => changer.ChangeAsync(userId, request, remove, token),
+            CommitPolicy.OnSuccess, ct);
+    }
 }

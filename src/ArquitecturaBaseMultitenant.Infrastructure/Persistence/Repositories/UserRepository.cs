@@ -57,6 +57,18 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
         EnsureSucceeded(await manager.UpdateAsync(user), "update the profile");
     }
 
+    public async Task SetPrimaryContactAsync(Guid userId, Email? email, PhoneNumber? phoneNumber,
+        CancellationToken cancellationToken)
+    {
+        context.RequireTransaction();
+        var user = await RequireUserAsync(userId, cancellationToken);
+        user.Email = email?.Value;
+        user.EmailConfirmed = email is not null;
+        user.PhoneNumber = phoneNumber?.Value;
+        user.PhoneNumberConfirmed = phoneNumber is not null;
+        EnsureSucceeded(await manager.UpdateAsync(user), "set the primary contact");
+    }
+
     public async Task RememberBusinessTenantAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken)
     {
         context.RequireTransaction();

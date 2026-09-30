@@ -48,6 +48,9 @@ public sealed class LoginCode : Entity
     /// La cuenta que pidió verificar un destino o reautenticarse; null en ingreso y registro.
     /// </summary>
     public Guid? RequestedByUserId { get; private set; }
+    public ReauthAction? ReauthAction { get; private set; }
+    public Guid? SourceMethodId { get; private set; }
+    public Guid? TargetMethodId { get; private set; }
 
     public string CodeHash { get; private set; }
 
@@ -157,6 +160,19 @@ public sealed class LoginCode : Entity
             ? Check(codeHash, nowUtc)
             : LoginCodeErrors.Invalid(attemptsLeft: null);
     }
+
+    public void BindReauthentication(ReauthAction action, Guid sourceMethodId, Guid? targetMethodId)
+    {
+        if (Purpose != LoginCodePurpose.Reauthenticate || ReauthAction is not null || !Enum.IsDefined(action)
+            || sourceMethodId == Guid.Empty)
+            throw new InvalidOperationException("Only a new reauthentication code can be bound to an action.");
+        ReauthAction = action;
+        SourceMethodId = sourceMethodId;
+        TargetMethodId = targetMethodId;
+    }
+
+    public bool MatchesReauthentication(ReauthAction action, Guid sourceMethodId, Guid? targetMethodId) =>
+        ReauthAction == action && SourceMethodId == sourceMethodId && TargetMethodId == targetMethodId;
 
     private Result Check(string codeHash, DateTime nowUtc)
     {

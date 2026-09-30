@@ -199,6 +199,8 @@ public sealed class ProfileServiceTests
 
         public Task SetPrimaryEmailAsync(Guid userId, Email email, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
+        public Task SetPrimaryContactAsync(Guid userId, Email? email, PhoneNumber? phoneNumber,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
 
         public Task UpdateProfileAsync(Guid userId, string? displayName, string culture, string timeZoneId,
             CancellationToken cancellationToken)

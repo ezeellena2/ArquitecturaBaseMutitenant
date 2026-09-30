@@ -51,6 +51,12 @@ public static class DependencyInjection
         services.AddScoped<LoginMethodIssuer>();
         services.AddScoped<LoginMethodVerifier>();
         services.AddScoped<LoginMethodNotifier>();
+        services.AddScoped<LoginMethodAvailability>();
+        services.AddScoped<LoginMethodChanger>();
+        services.AddScoped<IReauthService, ReauthService>();
+        services.AddScoped<ReauthIssuer>();
+        services.AddScoped<ReauthVerifier>();
+        services.AddScoped<ReauthTicketConsumer>();
         services.AddScoped<DisplayFormatter>();
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
         services.AddScoped<IRequestValidator, RequestValidator>();

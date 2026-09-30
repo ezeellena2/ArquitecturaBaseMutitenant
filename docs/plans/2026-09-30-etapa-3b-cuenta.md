@@ -124,11 +124,11 @@ En cada tarea se guarda evidencia de rojo y verde con el comando y resultado. Si
 **Archivos:** back: `Services/Identity/{LoginMethodManagementService,LoginMethodGuard,ReauthIssuer,ReauthVerifier}.cs`, `Interfaces/Services/IReauthService.cs`, `Services/Identity/ReauthService.cs`, modelos y validadores; test `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Identity/LoginMethodsTests.cs`.
 **Comportamiento exacto:** Código enviado automáticamente al abrir acción al respaldo verificado y disponible. Ticket se consume en misma transacción que cambio. Evitar último método válido o último propio con solo administrados restantes. Si quita principal, elegir respaldo válido determinista y actualizar copias de Identity; emitir SecurityEvent y avisos sin datos sensibles. Cambio principal mantiene exactamente uno.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Cambios sin ticket, ticket del mismo método, ajeno, expirado/repetido y último método quedan rechazados.
-- [ ] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class '*LoginMethodsTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: proteger cambios de métodos con otro código"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Cambios sin ticket, ticket del mismo método, ajeno, expirado/repetido y último método quedan rechazados.
+- [x] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class '*LoginMethodsTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: proteger cambios de métodos con otro código"`. Registrar hash back/front.
 
 ### T08 · Vincular y desvincular Google
 

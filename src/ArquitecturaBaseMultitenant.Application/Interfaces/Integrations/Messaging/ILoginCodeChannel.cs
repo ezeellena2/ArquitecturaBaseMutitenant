@@ -9,7 +9,7 @@ public interface ILoginCodeChannel
 
     string RenderLoginCode(string destination, string code, int lifetimeMinutes, CultureProfile culture);
 
-    void EnqueueRenderedLoginCode(string payload);
+    void EnqueueRenderedLoginCode(string payload, Guid? userId = null);
 
     void EnqueueSignup(string destination, string code, int lifetimeMinutes, CultureProfile culture);
     void EnqueueVerification(Guid userId, string destination, string code, int lifetimeMinutes, CultureProfile culture);

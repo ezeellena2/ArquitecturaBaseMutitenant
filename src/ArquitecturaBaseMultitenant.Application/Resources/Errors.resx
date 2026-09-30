@@ -93,4 +93,6 @@
   <data name="Identity.LoginMethod.AlreadyUsed" xml:space="preserve"><value>Este correo ya está asociado a una cuenta.</value></data>
   <data name="Identity.LoginMethod.NotFound" xml:space="preserve"><value>No encontramos este método de ingreso.</value></data>
   <data name="Identity.LoginMethod.AlreadyVerified" xml:space="preserve"><value>Este método de ingreso ya está verificado.</value></data>
+  <data name="Identity.LoginMethod.LastMethod" xml:space="preserve"><value>No podés quitar tu único método de ingreso. Agregá y verificá otro antes.</value></data>
+  <data name="Identity.LoginMethod.LastPersonalMethod" xml:space="preserve"><value>Agregá y verificá otro método personal antes de quitar este.</value></data>
 </root>

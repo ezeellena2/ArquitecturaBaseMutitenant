@@ -12,6 +12,7 @@ public interface IUserRepository
     Task<UserAccountRow?> GetByIdAsync(Guid userId, CancellationToken cancellationToken);
 
     Task SetPrimaryEmailAsync(Guid userId, Email email, CancellationToken cancellationToken);
+    Task SetPrimaryContactAsync(Guid userId, Email? email, PhoneNumber? phoneNumber, CancellationToken cancellationToken);
 
     Task UpdateProfileAsync(Guid userId, string? displayName, string culture, string timeZoneId,
         CancellationToken cancellationToken);
