@@ -39,10 +39,10 @@ internal sealed class LoginCodeRequester(
         var payload = channel.RenderLoginCode(destination.Value, issued.Value.Code,
             issued.Value.LifetimeMinutes, culture);
         if (userId is { } knownUserId
-            && account is { Status: UserStatus.Active or UserStatus.Suspended }
+            && account is { Status: UserStatus.Active or UserStatus.Suspended or UserStatus.PendingDeletion }
             && !await signIn.IsLockedOutAsync(knownUserId, cancellationToken))
         {
-            channel.EnqueueRenderedLoginCode(payload);
+            channel.EnqueueRenderedLoginCode(payload, knownUserId);
             issued.Value.LoginCode.MarkSent(issued.Value.IssuedAtUtc);
         }
 

@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Application.Services.Legal;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
@@ -12,8 +13,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 internal sealed class LoginCodeVerificationFlow(
     LoginCodeVerifier verifier,
     ILoginCodeRepository codes,
-    IUserLookup userLookup,
-    IUserRepository users,
+    LoginAccountGuard accounts,
+    AccountDeletionCancelIssuer cancellation,
     ILoginAuditRepository audits,
     ISignInService signIn,
     IConnectService connect,
@@ -23,9 +24,10 @@ internal sealed class LoginCodeVerificationFlow(
         VerifyLoginCodeRequest request, CancellationToken cancellationToken)
     {
         var destination = LoginCodeDestination.ForEmail(request.Email!);
+        var userId = await accounts.LockAsync(destination, cancellationToken);
         await codes.LockDestinationAsync(destination, cancellationToken);
-        var userId = await userLookup.FindVerifiedUserIdAsync(
-            LoginMethodType.Email, destination.Value, cancellationToken);
+        if (!await accounts.StillOwnsAsync(userId, destination, cancellationToken))
+            return Fail(userId, LoginCodeErrors.Invalid(attemptsLeft: null));
         var currentCode = await codes.GetLatestAsync(destination, LoginCodePurpose.Login,
             requestedByUserId: null, cancellationToken);
         var hadActiveCode = currentCode?.IsActive(timeProvider.GetUtcNow().UtcDateTime) == true;
@@ -46,11 +48,11 @@ internal sealed class LoginCodeVerificationFlow(
         if (await signIn.IsLockedOutAsync(userId.Value, cancellationToken))
             return Fail(userId, AccountErrors.LockedOut);
 
-        var account = await users.GetByIdAsync(userId.Value, cancellationToken);
+        var account = await accounts.ReadAsync(userId.Value, cancellationToken);
         if (account is null || account.Status is UserStatus.Suspended or UserStatus.Deleted)
             return Fail(userId, AccountErrors.Suspended);
         if (account.Status == UserStatus.PendingDeletion)
-            return Fail(userId, AccountErrors.PendingDeletion);
+            return Fail(userId, cancellation.Issue(account, null, request.ReturnUrl!));
 
         if (!ReturnUrls.TryReadAccessSelection(request.ReturnUrl, out var selection))
             throw new InvalidOperationException("A validated return URL became invalid.");

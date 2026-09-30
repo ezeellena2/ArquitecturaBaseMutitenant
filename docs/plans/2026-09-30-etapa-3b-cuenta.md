@@ -212,11 +212,11 @@ En cada tarea se guarda evidencia de rojo y verde con el comando y resultado. Si
 **Archivos:** back: `Services/Auth/{LoginCodeRequester,LoginCodeVerificationFlow,LoginCodeService,ExternalLoginService,GoogleAccountResolver}.cs`; `Services/Legal/AccountDeletionCancelIssuer.cs`, repositorio/ticket; ampliar AccountErrors y recursos; tests `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Legal/AccountDeletionTests.cs`.
 **Comportamiento exacto:** Correo y Google prueban posesión pero no emiten cookie/tokens para PendingDeletion; devuelven fecha y cancelTicket opaco de cinco minutos ligado a cuenta y returnUrl/access protegidos. Suspended siempre prevalece. CancelTicket no pasa por logs ni URL: Google entrega referencia transitoria protegida/cookie HttpOnly para recuperar estado por POST, sin token query.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: PendingDeletion no recibe código o carece de ticket/fecha; ninguno recibe token antes de cancelar.
-- [ ] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class '*AccountDeletionTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: permitir ingresar para cancelar la baja"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: PendingDeletion no recibe código o carece de ticket/fecha; ninguno recibe token antes de cancelar.
+- [x] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class '*AccountDeletionTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: permitir ingresar para cancelar la baja"`. Registrar hash back/front.
 
 ### T16 · Cancelar y continuar puerta elegida
 

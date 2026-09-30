@@ -397,6 +397,45 @@
         }
       }
     },
+    "/api/auth/deletion/pending": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendingDeletionState"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendingDeletionState"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendingDeletionState"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/external/google": {
       "get": {
         "tags": [
@@ -2657,6 +2696,35 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "PendingDeletionState": {
+        "required": [
+          "scheduledForUtc",
+          "cancelTicket",
+          "timeZoneId",
+          "returnUrl",
+          "expiresAtUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "scheduledForUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "cancelTicket": {
+            "type": "string"
+          },
+          "timeZoneId": {
+            "type": "string"
+          },
+          "returnUrl": {
+            "type": "string"
+          },
+          "expiresAtUtc": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },

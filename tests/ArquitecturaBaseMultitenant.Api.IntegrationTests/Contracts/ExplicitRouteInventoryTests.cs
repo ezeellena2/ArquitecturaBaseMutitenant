@@ -25,6 +25,7 @@ public sealed class ExplicitRouteInventoryTests(ApiFactory factory)
         "GET /api/auth/external/callback",
         "POST /api/auth/login-code",
         "POST /api/auth/login-code/verify",
+        "POST /api/auth/deletion/pending",
         "GET /api/auth/methods",
         "POST /api/auth/signup",
         "POST /api/auth/signup/verify",

@@ -22,6 +22,39 @@ public sealed class GoogleLoginTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
+    [Fact]
+    public async Task Pending_Google_proof_returns_cancel_ticket_without_signing_in()
+    {
+        var subject = Guid.NewGuid().ToString("N");
+        var email = Email.Create("google-pending-" + subject + "@example.test").Value;
+        await using (var seedScope = factory.Services.CreateAsyncScope())
+        {
+            var services = seedScope.ServiceProvider;
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                var users = services.GetRequiredService<IUserRepository>();
+                var user = await users.CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct);
+                var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+                var method = LoginMethod.CreateGoogle(user.Id, subject, email);
+                method.Verify(nowUtc);
+                method.MakePrimary();
+                services.GetRequiredService<ILoginMethodRepository>().Add(method);
+                await users.RequestDeletionAsync(user.Id, "Prueba Google", nowUtc, 30, ct);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+        var google = new GoogleSignInDouble(new ExternalLogin("Google", subject, email, true, null));
+        await using var host = HostWith(google);
+        await using var scope = host.Services.CreateAsyncScope();
+        var result = await scope.ServiceProvider.GetRequiredService<IExternalLoginService>()
+            .SignInAsync(new ExternalSignInRequest("/connect/authorize?client_id=web&access=business", false, false), Ct);
+
+        Assert.Equal(AccountErrors.PendingDeletion.Code, result.Error.Code);
+        Assert.NotNull(result.Error.Metadata);
+        Assert.True(result.Error.Metadata.ContainsKey("cancelTicket"));
+        Assert.Null(google.SignedInUserId);
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]

@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
+using ArquitecturaBaseMultitenant.Application.Services.Legal;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
@@ -18,7 +19,8 @@ internal sealed class GoogleAccountResolver(
     GoogleAccountRegistrar registrar,
     LoginMethodNotifier notifier,
     ISignInService signIn,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    AccountDeletionCancelIssuer cancellation)
 {
     internal Task<PersonalSpaceDraft> PrepareAsync(string? culture, string? timeZoneId,
         CancellationToken cancellationToken) => registrar.PrepareAsync(culture, timeZoneId, cancellationToken);
@@ -66,9 +68,9 @@ internal sealed class GoogleAccountResolver(
         var account = await users.GetByIdAsync(userId, cancellationToken);
         if (account is null || account.Status is UserStatus.Suspended or UserStatus.Deleted)
             return AccountErrors.Suspended;
-        if (account.Status == UserStatus.PendingDeletion)
-            return AccountErrors.PendingDeletion;
         if (await signIn.IsLockedOutAsync(userId, cancellationToken)) return AccountErrors.LockedOut;
+        if (account.Status == UserStatus.PendingDeletion)
+            return cancellation.Issue(account, googleMethod?.MethodId, request.ReturnUrl!);
 
         if (googleMethod is null)
         {

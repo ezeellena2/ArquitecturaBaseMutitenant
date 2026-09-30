@@ -18,6 +18,7 @@ public sealed class AccessDeclarationTests
         typeof(SignupController),
         typeof(LoginMethodsController),
         typeof(ExternalLoginController),
+        typeof(AccountDeletionCancelController),
         typeof(LegalController),
         typeof(ConnectController),
     ];

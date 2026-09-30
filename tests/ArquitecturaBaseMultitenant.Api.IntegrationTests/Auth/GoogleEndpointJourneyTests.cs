@@ -8,6 +8,11 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Time.Testing;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
@@ -25,6 +30,44 @@ public sealed class GoogleEndpointJourneyTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
     private const string Verifier = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~";
+
+    [Fact]
+    public async Task Pending_Google_callback_keeps_ticket_in_secure_cookie_and_expires_it()
+    {
+        await factory.Services.SeedDatabaseAsync(Ct);
+        var clock = new FakeTimeProvider(factory.Services.GetRequiredService<TimeProvider>().GetUtcNow());
+        var identity = new FakeGoogleIdentity(Guid.NewGuid().ToString("N"), $"google-grace-{Guid.NewGuid():N}@example.test");
+        using var host = HostWith(identity, clock);
+        using var client = Client(host);
+        using var challenged = await StartGoogleSignupAsync(client);
+        using var registered = await client.GetAsync("/api/auth/external/callback", Ct);
+        await using (var scope = host.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            var userId = await services.GetRequiredService<ApplicationDbContext>().LoginMethods
+                .Where(row => row.Value == identity.Subject).Select(row => row.UserId).SingleAsync(Ct);
+            var result = await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(
+                ct => services.GetRequiredService<IUserRepository>().RequestDeletionAsync(userId,
+                    "Prueba Google", clock.GetUtcNow().UtcDateTime, 30, ct), CommitPolicy.OnSuccess, Ct);
+            Assert.True(result.IsSuccess);
+        }
+        var returnUrl = AuthorizePath("business", WebEncoders.Base64UrlEncode(SHA256.HashData(Encoding.ASCII.GetBytes(Verifier))));
+        using var signIn = await client.GetAsync("/api/auth/external/google?access=business&returnUrl=" + Uri.EscapeDataString(returnUrl), Ct);
+        using var callback = await client.GetAsync("/api/auth/external/callback", Ct);
+        Assert.Equal("/login/empresa?error=Identity.Account.PendingDeletion", callback.Headers.Location?.ToString());
+        var cookie = Assert.Single(callback.Headers.GetValues("Set-Cookie"), value => value.StartsWith("MtPendingDeletion=", StringComparison.Ordinal));
+        Assert.Contains("secure", cookie, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("httponly", cookie, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Identity.Application", cookie, StringComparison.Ordinal);
+        using var pending = await client.PostAsJsonAsync("/api/auth/deletion/pending", new { }, Ct);
+        Assert.Equal(HttpStatusCode.OK, pending.StatusCode);
+        using var body = await pending.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+        Assert.Equal(returnUrl, body!.RootElement.GetProperty("returnUrl").GetString());
+        Assert.False(string.IsNullOrEmpty(body.RootElement.GetProperty("cancelTicket").GetString()));
+        clock.Advance(TimeSpan.FromMinutes(5));
+        using var expired = await client.PostAsJsonAsync("/api/auth/deletion/pending", new { }, Ct);
+        Assert.Equal(HttpStatusCode.NotFound, expired.StatusCode);
+    }
 
     [Fact]
     public async Task Google_signup_challenge_callback_cookie_and_consumer_token_reach_personal_me()
@@ -126,13 +169,18 @@ public sealed class GoogleEndpointJourneyTests(ApiFactory factory)
             && cookies.Any(cookie => cookie.Contains("Identity.Application", StringComparison.Ordinal)));
     }
 
-    private Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program> HostWith(FakeGoogleIdentity identity) =>
+    private Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program> HostWith(FakeGoogleIdentity identity, TimeProvider? clock = null) =>
         factory.WithWebHostBuilder(builder =>
         {
             builder.UseSetting("Authentication:Google:ClientId", string.Empty);
             builder.ConfigureTestServices(services =>
             {
                 services.AddSingleton(identity);
+                if (clock is not null)
+                {
+                    services.RemoveAll<TimeProvider>();
+                    services.AddSingleton(clock);
+                }
                 services.AddAuthentication().AddScheme<AuthenticationSchemeOptions, FakeGoogleHandler>(
                     GoogleDefaults.AuthenticationScheme, _ => { });
             });

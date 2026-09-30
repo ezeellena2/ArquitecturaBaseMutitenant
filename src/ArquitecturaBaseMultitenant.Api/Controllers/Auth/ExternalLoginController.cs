@@ -7,6 +7,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using System.Security.Claims;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Api.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
@@ -26,6 +27,7 @@ namespace ArquitecturaBaseMultitenant.Api.Controllers.Auth;
 public sealed class ExternalLoginController(
     IExternalLoginService service,
     IAccountGoogleService accountGoogle,
+    PendingDeletionCookie pendingCookie,
     IAuthenticationSchemeProvider schemes) : ControllerBase
 {
     private const string CallbackPath = "/api/auth/external/callback";
@@ -128,6 +130,8 @@ public sealed class ExternalLoginController(
         var result = await service.SignInAsync(request, cancellationToken);
         if (result.IsFailure)
         {
+            if (result.Error.Code == AccountErrors.PendingDeletion.Code)
+                pendingCookie.Write(HttpContext, result.Error);
             var destination = signup && result.Error.Code == "Auth.Signup.Closed"
                 ? "/registro"
                 : Value(state, AccessKey) == "business" ? "/login/empresa" : ReturnUrls.LoginPath;

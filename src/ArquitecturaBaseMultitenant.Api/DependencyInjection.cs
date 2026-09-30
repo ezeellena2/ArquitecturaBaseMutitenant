@@ -31,6 +31,7 @@ public static class DependencyInjection
         });
         services.AddScoped<ICurrentUser, CurrentUser>();
         services.AddScoped<OpenIdPrincipalFactory>();
+        services.AddScoped<PendingDeletionCookie>();
         services.AddScoped<IRequestInfo, RequestInfo>();
         services.AddSingleton<IPublicOrigin, PublicOrigin>();
 

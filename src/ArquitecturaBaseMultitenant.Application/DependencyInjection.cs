@@ -45,6 +45,8 @@ public static class DependencyInjection
         services.AddScoped<IAccountDeletionService, AccountDeletionService>();
         services.AddScoped<AccountDeletionRequester>();
         services.AddScoped<AccountDeletionNotifier>();
+        services.AddScoped<AccountDeletionCancelIssuer>();
+        services.AddScoped<LoginAccountGuard>();
         services.AddScoped<SignupPolicy>();
         services.AddScoped<IPersonalSpaceProvisioner, PersonalSpaceProvisioner>();
         services.AddScoped<TenantSpaceProvisioner>();
