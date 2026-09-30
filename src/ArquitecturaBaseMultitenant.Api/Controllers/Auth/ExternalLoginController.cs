@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Auth;
@@ -39,6 +40,36 @@ public sealed class ExternalLoginController(
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Google([FromQuery] ExternalLoginQuery query)
+    {
+        if (query.Signup) return Invalid("signup", ValidationTexts.Required);
+        return await StartGoogleChallengeAsync(query);
+    }
+
+    [HttpGet("google/antiforgery")]
+    [ProducesResponseType<GoogleSignupAntiforgeryResponse>(StatusCodes.Status200OK)]
+    public IActionResult GoogleSignupAntiforgery([FromServices] IAntiforgery antiforgery)
+    {
+        Response.Headers.CacheControl = "no-store";
+        var token = antiforgery.GetAndStoreTokens(HttpContext).RequestToken
+            ?? throw new InvalidOperationException("The antiforgery request token was not created.");
+        return Ok(new GoogleSignupAntiforgeryResponse(token));
+    }
+
+    [HttpPost("google")]
+    [Consumes("application/x-www-form-urlencoded")]
+    [ProducesResponseType(StatusCodes.Status302Found)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
+    [ProducesProblem(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GoogleSignup(
+        [FromForm] ExternalLoginQuery query, [FromServices] IAntiforgery antiforgery)
+    {
+        if (!await antiforgery.IsRequestValidAsync(HttpContext))
+            return Invalid("requestVerificationToken", ValidationTexts.Required);
+        if (!query.Signup) return Invalid("signup", ValidationTexts.Required);
+        return await StartGoogleChallengeAsync(query);
+    }
+
+    private async Task<IActionResult> StartGoogleChallengeAsync(ExternalLoginQuery query)
     {
         if (await schemes.GetSchemeAsync(GoogleDefaults.AuthenticationScheme) is null)
         {

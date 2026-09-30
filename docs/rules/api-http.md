@@ -6,6 +6,7 @@
 - `public sealed class XController(IXService service) : ControllerBase`, con `[ApiController]`, `[Route("api/<recurso>")]` y `[Tags]`.
 - **Entrada:**
   - `[FromBody] XHttpRequest` o `[FromQuery] XQuery` (records sealed con props nullable), mapeados a mano;
+  - excepción de protocolo: `POST /api/auth/external/google` recibe `[FromForm] ExternalLoginQuery` porque el navegador debe navegar al desafío Google; valida antiforgery antes de iniciarlo. `GET .../google/antiforgery` emite el token para Registro;
   - si lleva datos personales, códigos o tokens, sobrescribe `ToString()`.
   - los enums viajan por su nombre en JSON; un valor numérico se rechaza con 400. Los instantes usan `DateTime` UTC con sufijo `Utc`; `DateTimeOffset` no va en propiedades ni parámetros de contratos HTTP.
 - **Salida:**

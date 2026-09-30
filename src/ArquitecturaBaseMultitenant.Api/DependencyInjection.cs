@@ -21,6 +21,14 @@ public static class DependencyInjection
 
         services.AddHttpContextAccessor();
         services.AddAuthorization();
+        services.AddAntiforgery(options =>
+        {
+            options.Cookie.Name = "__Host-MtSignupCsrf";
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.Cookie.SameSite = SameSiteMode.Strict;
+            options.Cookie.HttpOnly = true;
+            options.FormFieldName = "__RequestVerificationToken";
+        });
         services.AddScoped<ICurrentUser, CurrentUser>();
         services.AddScoped<OpenIdPrincipalFactory>();
         services.AddScoped<IRequestInfo, RequestInfo>();

@@ -478,6 +478,98 @@
             }
           }
         }
+      },
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ReturnUrl": {
+                    "type": "string"
+                  },
+                  "Access": {
+                    "type": "string"
+                  },
+                  "Signup": {
+                    "type": "boolean"
+                  },
+                  "AcceptedTerms": {
+                    "type": "boolean"
+                  },
+                  "ReturnTo": {
+                    "type": "string"
+                  },
+                  "Culture": {
+                    "type": "string"
+                  },
+                  "TimeZoneId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "302": {
+            "description": "Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/external/google/antiforgery": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoogleSignupAntiforgeryResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoogleSignupAntiforgeryResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoogleSignupAntiforgeryResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/auth/external/callback": {
@@ -1314,6 +1406,18 @@
           "string"
         ],
         "description": "Correo normalizado para comparar y enviar; el dominio IDN se guarda en ASCII."
+      },
+      "GoogleSignupAntiforgeryResponse": {
+        "required": [
+          "requestToken"
+        ],
+        "type": "object",
+        "properties": {
+          "requestToken": {
+            "type": "string"
+          }
+        },
+        "description": "Token de formulario de un solo origen para iniciar Registro con Google."
       },
       "LegalDocumentKind": {
         "enum": [

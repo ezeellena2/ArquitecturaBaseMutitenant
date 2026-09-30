@@ -20,6 +20,8 @@ public sealed class ExplicitRouteInventoryTests(ApiFactory factory)
         "GET /api/reference-data/cultures",
         "GET /api/reference-data/tax-id-types",
         "GET /api/auth/external/google",
+        "GET /api/auth/external/google/antiforgery",
+        "POST /api/auth/external/google",
         "GET /api/auth/external/callback",
         "POST /api/auth/login-code",
         "POST /api/auth/login-code/verify",

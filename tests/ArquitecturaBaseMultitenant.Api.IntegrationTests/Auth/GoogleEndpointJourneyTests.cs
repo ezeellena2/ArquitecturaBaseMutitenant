@@ -35,9 +35,7 @@ public sealed class GoogleEndpointJourneyTests(ApiFactory factory)
         using var host = HostWith(identity);
         using var client = Client(host);
 
-        using var challenged = await client.GetAsync(
-            "/api/auth/external/google?signup=true&acceptedTerms=true&access=consumer" +
-            "&returnTo=%2F&culture=es-AR&timeZoneId=America%2FArgentina%2FBuenos_Aires", Ct);
+        using var challenged = await StartGoogleSignupAsync(client);
         Assert.Equal(HttpStatusCode.Redirect, challenged.StatusCode);
         Assert.Equal("/api/auth/external/callback", challenged.Headers.Location?.ToString());
         Assert.Contains(challenged.Headers.GetValues("Set-Cookie"),
@@ -117,9 +115,7 @@ public sealed class GoogleEndpointJourneyTests(ApiFactory factory)
         using var host = HostWith(identity);
         using var client = Client(host);
 
-        using var challenged = await client.GetAsync(
-            "/api/auth/external/google?signup=true&acceptedTerms=true&access=consumer" +
-            "&returnTo=%2F&culture=es-AR&timeZoneId=America%2FArgentina%2FBuenos_Aires", Ct);
+        using var challenged = await StartGoogleSignupAsync(client);
         Assert.Equal(HttpStatusCode.Redirect, challenged.StatusCode);
 
         using var callback = await client.GetAsync("/api/auth/external/callback", Ct);
@@ -154,6 +150,28 @@ public sealed class GoogleEndpointJourneyTests(ApiFactory factory)
         "&redirect_uri=https%3A%2F%2Flocalhost%3A5174%2Fauth%2Fcallback" +
         "&scope=openid%20profile%20email%20api" +
         "&code_challenge=" + challenge + "&code_challenge_method=S256&access=" + access;
+
+    private static async Task<HttpResponseMessage> StartGoogleSignupAsync(HttpClient client)
+    {
+        using var tokenResponse = await client.GetAsync(
+            "/api/auth/external/google/antiforgery", Ct);
+        Assert.Equal(HttpStatusCode.OK, tokenResponse.StatusCode);
+        using var tokenBody = await tokenResponse.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+        var requestToken = tokenBody!.RootElement.GetProperty("requestToken").GetString();
+        Assert.False(string.IsNullOrEmpty(requestToken));
+
+        return await client.PostAsync("/api/auth/external/google", new FormUrlEncodedContent(
+            new Dictionary<string, string>
+            {
+                ["signup"] = "true",
+                ["acceptedTerms"] = "true",
+                ["access"] = "consumer",
+                ["returnTo"] = "/",
+                ["culture"] = "es-AR",
+                ["timeZoneId"] = "America/Argentina/Buenos_Aires",
+                ["__RequestVerificationToken"] = requestToken,
+            }), Ct);
+    }
 
     private sealed record FakeGoogleIdentity(string Subject, string Email, bool? EmailVerified = true);
 
