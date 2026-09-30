@@ -311,33 +311,33 @@ En cada tarea se guarda evidencia de rojo y verde con el comando y resultado. Si
 **Archivos:** front: `src/areas/public/legal/pages/{AcceptTermsPage,AcceptTermsPage.test}.tsx`, `api/acceptance.ts`; `src/auth/LegalAcceptanceGate.tsx` y test; `src/app/routes.tsx`, queryClient/httpClient donde corresponda; locales.
 **Comportamiento exacto:** /aceptar-terminos copia Aceptar-Terminos/M-Aceptar-Terminos, tres casos y versiones reales; casilla desmarcada/botón bloqueado, Salir cierra sesión. GET me detecta pendingLegalDocuments al ingresar, 403 también dirige al gate; guardar returnTo seguro en memoria, continuar lado elegido después aceptar. Legales públicos accesibles sin gate.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Versión nueva no bloquea front; luego requiere aceptar y conserva puerta.
-- [ ] 2. Ejecutar `npm test -- src/areas/public/legal src/auth/LegalAcceptanceGate.test.tsx` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: reproducir aceptación bloqueante de términos"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Versión nueva no bloquea front; luego requiere aceptar y conserva puerta.
+- [x] 2. Ejecutar `npm test -- src/areas/public/legal src/auth/LegalAcceptanceGate.test.tsx` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: reproducir aceptación bloqueante de términos"`. Registrar hash back/front.
 
 ### T25 · Diálogo baja y sesión cerrada
 
 **Archivos:** front: `components/{AccountDeletionDialog,DeletionRequestedPage}.tsx`, tests; AccountPage.
 **Comportamiento exacto:** Copiar motivo obligatorio + código enviado al abrir al principal disponible + confirmación. Ocultar sugerencia exportar E10 y bloqueo Dueño E4. Backend operador muestra error vigente sin cambiar producto. Al éxito limpiar sesión/caché, vista Cerramos tu sesión/fecha/Ir al inicio del tablero, sin persistir tokens. Fecha por shared/format.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Baja no existe; se exige motivo/6 números y se cierra sesión al éxito.
-- [ ] 2. Ejecutar `npm test -- src/areas/personal/account/components` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: pedir baja desde Mi cuenta"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Baja no existe; se exige motivo/6 números y se cierra sesión al éxito.
+- [x] 2. Ejecutar `npm test -- src/areas/personal/account/components` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: pedir baja desde Mi cuenta"`. Registrar hash back/front.
 
 ### T26 · Ingreso con baja pedida
 
 **Archivos:** front: `src/areas/public/auth/pages/{LoginPage,LoginPage.test}.tsx`, `api/deletion.ts`, locales auth; `src/shared/api/ApiError.ts` si falta metadata tipada.
 **Comportamiento exacto:** Code/Google presentan Cuenta con la baja pedida con fecha, Cancelar la baja y entrar/Salir exactos. cancelTicket solo memoria (Google transporte seguro), sin iniciar OIDC antes de cancelar. Continuar returnUrl preservando puerta. Error ticket vencido vuelve al ingreso sin emitir sesión.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Error PendingDeletion genérico; luego botones/fecha y continuación pasan.
-- [ ] 2. Ejecutar `npm test -- src/areas/public/auth/pages/LoginPage.test.tsx` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: cancelar la baja desde el ingreso"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Error PendingDeletion genérico; luego botones/fecha y continuación pasan.
+- [x] 2. Ejecutar `npm test -- src/areas/public/auth/pages/LoginPage.test.tsx` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: cancelar la baja desde el ingreso"`. Registrar hash back/front.
 
 ### T27 · Publicación legal de pruebas y E2E verde
 
@@ -415,6 +415,7 @@ Guardar manifest e informe en front `docs/design/capturas/etapa-3b/`; cada caso 
 - Publicación de versión legal de pruebas por preparador E2E separado y restringido a MT_E2E_ISOLATED; no endpoint de pruebas en producción ni modificación de Development.
 - Preservar regla de no acortar gracia para limpieza manual: la cuenta de prueba se puede desactivar pidiendo baja y se anonimiza al vencer la gracia; test worker usa su propio reloj/base.
 - No agregar Stage3bInventoryTests ni nuevas guardas de arquitectura; solo casos funcionales, contrato cruzado y actualización de inventarios ya exigidos.
+
 
 
 

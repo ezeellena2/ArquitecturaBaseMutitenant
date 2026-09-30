@@ -43,6 +43,11 @@ Estado: en ejecución. La 3c queda pendiente. No declarar cerrada esta etapa sin
 | T22 · agregar y verificar | — | `f58c52e` | Rojo import ausente; 10/10 verdes, OTP incorrecto conserva diálogo, código corregido confirma |
 | T23 · cambiar método y Google | — | `8771cac` | Rojo import ausente; 11/11 verdes, prueba usa respaldo y DELETE ticket en cuerpo, tsc/lint verdes |
 
+| T24 · aceptación bloqueante | — | `296c8d4` | Rojo pantalla/gate ausentes; casos de aceptación y httpClient 12/12 verdes, tsc/lint verdes |
+| T24 bis · F5 conserva puerta | — | `f940874` | Rojo recuperaba consumer en /cuenta desde Business; 11/11 recuperación/auth/ruta verdes |
+| T25 · pedir baja | — | `3209dfb` | Rojo diálogo ausente; 23/23 cuenta/home/shell verdes; motivo y código obligatorios, sesión cerrada y fecha |
+| T26 · cancelar durante gracia | — | `053b4e6` | Rojo estado genérico; LoginPage 21/21 verdes por correo/Google sin sesión previa a cancelación |
+| T23 bis · cooldown de prueba | — | `0778296` | E2E sin .eml tras registro; test rojo sin OTP después del plazo, corrección 3/3 verdes |
 ## Evidencia del E2E real antes de programar
 
 `npm run test:e2e:real`, 30/09/2026. AppHost y PostgreSQL efímero exclusivos; datos del preparador y de /registro en esa base. Registro/puerta empresa/F5/cambio Personal/logout de 3a se recorrieron antes de los casos nuevos.
@@ -109,3 +114,4 @@ Pendiente de rutas y contratos finales.
 - T20: selectores compartidos ofrecen variante compacta del lienzo. El perfil congela versión con el draft, aplica cultura solo tras guardar y mantiene layout del acceso actual. El menú personal no agrega navegación inventada; Mi cuenta vive en el menú de identidad.
 
 - T21–23: el aviso vive en shared/ui para compartirlo con Inicio sin importar áreas. La tabla obedece flags del backend. El comprobante de reautenticación se conserva en memoria para reintentar si se pierde la respuesta de la mutación. Google enlaza antiforgery y errores de callback por códigos traducidos.
+
