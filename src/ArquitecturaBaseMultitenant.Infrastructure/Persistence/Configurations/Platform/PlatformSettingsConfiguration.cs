@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Platform;
 
+/// <summary>Mapea los ajustes globales de altas y límites de la plataforma. Sus modos se guardan como texto para que el estado sea legible en la base.</summary>
 internal sealed class PlatformSettingsConfiguration : IEntityTypeConfiguration<PlatformSettings>
 {
     public void Configure(EntityTypeBuilder<PlatformSettings> builder)

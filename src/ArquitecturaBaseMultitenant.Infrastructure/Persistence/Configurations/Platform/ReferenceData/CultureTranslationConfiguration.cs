@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Platform.ReferenceData;
 
+/// <summary>Mapea el nombre de una cultura mostrado en otra cultura. Ambas referencias apuntan al catálogo global de perfiles.</summary>
 internal sealed class CultureTranslationConfiguration : IEntityTypeConfiguration<CultureTranslation>
 {
     public void Configure(EntityTypeBuilder<CultureTranslation> builder)

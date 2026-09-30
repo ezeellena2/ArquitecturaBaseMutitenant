@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Platform;
 
+/// <summary>Mapea reservas y respuestas reutilizables de peticiones idempotentes. La clave única incluye el alcance de cuenta y tenant; el vencimiento permite limpiarlas.</summary>
 internal sealed class IdempotencyKeyConfiguration : IEntityTypeConfiguration<IdempotencyKey>
 {
     public void Configure(EntityTypeBuilder<IdempotencyKey> builder)

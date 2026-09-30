@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Identity;
 
+/// <summary>Mapea los métodos de ingreso globales de una cuenta. El tipo y valor son únicos en todo el sistema y solo puede haber un método principal por usuario.</summary>
 internal sealed class LoginMethodConfiguration : IEntityTypeConfiguration<LoginMethod>
 {
     public void Configure(EntityTypeBuilder<LoginMethod> builder)

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Tenant;
 
+/// <summary>Mapea las preferencias de cultura, zona y moneda de cada organización en tenant. Exige una fila por tenant y referencias válidas a los catálogos globales.</summary>
 internal sealed class TenantSettingsConfiguration : IEntityTypeConfiguration<TenantSettings>
 {
     public void Configure(EntityTypeBuilder<TenantSettings> builder)

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Platform;
 
+/// <summary>Mapea el texto de una versión legal por cultura. El documento se elimina con su contenido; la cultura debe seguir existiendo en el catálogo.</summary>
 internal sealed class LegalDocumentContentConfiguration : IEntityTypeConfiguration<LegalDocumentContent>
 {
     public void Configure(EntityTypeBuilder<LegalDocumentContent> builder)

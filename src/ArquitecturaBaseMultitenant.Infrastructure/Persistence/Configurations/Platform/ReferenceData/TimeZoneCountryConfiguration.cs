@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Platform.ReferenceData;
 
+/// <summary>Mapea la relación de muchos a muchos entre zonas IANA y países. Una zona compartida conserva todos sus países, en lugar de elegir uno solo.</summary>
 internal sealed class TimeZoneCountryConfiguration : IEntityTypeConfiguration<TimeZoneCountry>
 {
     public void Configure(EntityTypeBuilder<TimeZoneCountry> builder)

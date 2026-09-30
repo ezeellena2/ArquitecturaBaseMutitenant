@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Platform.ReferenceData;
 
+/// <summary>Mapea nombre, plural y símbolo de presentación de cada moneda por cultura. La moneda y la cultura se validan mediante claves foráneas globales.</summary>
 internal sealed class CurrencyTranslationConfiguration : IEntityTypeConfiguration<CurrencyTranslation>
 {
     public void Configure(EntityTypeBuilder<CurrencyTranslation> builder)

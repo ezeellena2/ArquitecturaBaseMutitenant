@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Identity;
 
+/// <summary>Mapea la cuenta global de ASP.NET Identity y sus datos de perfil y baja. El correo y teléfono son copias del método principal, no claves de búsqueda.</summary>
 internal sealed class ApplicationUserConfiguration : IEntityTypeConfiguration<ApplicationUser>
 {
     public void Configure(EntityTypeBuilder<ApplicationUser> builder)

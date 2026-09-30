@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Platform;
 
+/// <summary>Mapea los eventos globales de seguridad, con búsquedas por actor u organización. Estos eventos acompañan cambios que no pertenecen al audit log de un tenant.</summary>
 internal sealed class SecurityEventConfiguration : IEntityTypeConfiguration<SecurityEvent>
 {
     public void Configure(EntityTypeBuilder<SecurityEvent> builder)

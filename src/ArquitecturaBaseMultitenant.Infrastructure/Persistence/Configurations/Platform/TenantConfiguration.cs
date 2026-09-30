@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Platform;
 
+/// <summary>Mapea el registro global de espacios personales y organizaciones. Conserva el slug único y los estados que usan las lecturas de acceso.</summary>
 internal sealed class TenantConfiguration : IEntityTypeConfiguration<TenantEntity>
 {
     public void Configure(EntityTypeBuilder<TenantEntity> builder)

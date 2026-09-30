@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Platform.ReferenceData;
 
+/// <summary>Mapea el catálogo ISO de monedas con código natural y unidades menores. Es la referencia de los montos, sin una lista codificada en los servicios.</summary>
 internal sealed class CurrencyConfiguration : IEntityTypeConfiguration<Currency>
 {
     public void Configure(EntityTypeBuilder<Currency> builder)

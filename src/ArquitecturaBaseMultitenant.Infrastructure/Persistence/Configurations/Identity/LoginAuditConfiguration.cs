@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Identity;
 
+/// <summary>Mapea intentos de ingreso con resultado y código estable de fallo. Permite consultar la actividad por cuenta sin persistir el código enviado.</summary>
 internal sealed class LoginAuditConfiguration : IEntityTypeConfiguration<LoginAudit>
 {
     public void Configure(EntityTypeBuilder<LoginAudit> builder)

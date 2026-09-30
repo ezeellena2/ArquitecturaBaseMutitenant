@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Identity;
 
+/// <summary>Mapea los comprobantes breves de reautenticación por cuenta y acción. El hash del token es único y su vencimiento permite descartar el uso tardío.</summary>
 internal sealed class ReauthTicketConfiguration : IEntityTypeConfiguration<ReauthTicket>
 {
     public void Configure(EntityTypeBuilder<ReauthTicket> builder)

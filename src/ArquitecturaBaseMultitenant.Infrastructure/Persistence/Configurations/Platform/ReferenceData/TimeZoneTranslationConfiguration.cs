@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Platform.ReferenceData;
 
+/// <summary>Mapea la ciudad visible de cada zona IANA por cultura. Su clave compuesta evita duplicar traducciones y mantiene referencias al catálogo global.</summary>
 internal sealed class TimeZoneTranslationConfiguration : IEntityTypeConfiguration<TimeZoneTranslation>
 {
     public void Configure(EntityTypeBuilder<TimeZoneTranslation> builder)

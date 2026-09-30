@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Identity;
 
+/// <summary>Mapea el índice global de perfiles de una cuenta. Es una proyección de membresías para elegir acceso sin saltar RLS sobre tenant.Members.</summary>
 internal sealed class UserTenantAccessConfiguration : IEntityTypeConfiguration<UserTenantAccess>
 {
     public void Configure(EntityTypeBuilder<UserTenantAccess> builder)

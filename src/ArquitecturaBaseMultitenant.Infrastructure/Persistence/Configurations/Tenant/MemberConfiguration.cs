@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Tenant;
 
+/// <summary>Mapea la membresía privada de una cuenta en una organización. La combinación de tenant y usuario es única para evitar perfiles duplicados.</summary>
 internal sealed class MemberConfiguration : IEntityTypeConfiguration<Member>
 {
     public void Configure(EntityTypeBuilder<Member> builder)

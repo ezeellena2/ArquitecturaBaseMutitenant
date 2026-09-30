@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Platform.ReferenceData;
 
+/// <summary>Mapea el nombre de cada país por cultura de visualización. La clave compuesta impide traducciones duplicadas.</summary>
 internal sealed class CountryTranslationConfiguration : IEntityTypeConfiguration<CountryTranslation>
 {
     public void Configure(EntityTypeBuilder<CountryTranslation> builder)

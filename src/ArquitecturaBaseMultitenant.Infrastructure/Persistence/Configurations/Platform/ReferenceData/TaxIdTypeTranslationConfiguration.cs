@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Platform.ReferenceData;
 
+/// <summary>Mapea el nombre localizado de cada tipo fiscal por cultura. Mantiene una sola traducción por combinación de tipo e idioma.</summary>
 internal sealed class TaxIdTypeTranslationConfiguration : IEntityTypeConfiguration<TaxIdTypeTranslation>
 {
     public void Configure(EntityTypeBuilder<TaxIdTypeTranslation> builder)

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Identity;
 
+/// <summary>Mapea los desafíos de código de ingreso sin guardar el código en claro. Los índices permiten buscar el desafío por destino, propósito y vencimiento.</summary>
 internal sealed class LoginCodeConfiguration : IEntityTypeConfiguration<LoginCode>
 {
     public void Configure(EntityTypeBuilder<LoginCode> builder)

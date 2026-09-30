@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Tenant;
 
+/// <summary>Mapea el historial de cambios privado de cada organización con su actor, acción y diferencias en JSON. El índice permite leerlo por fecha dentro del tenant.</summary>
 internal sealed class AuditEntryConfiguration : IEntityTypeConfiguration<AuditEntry>
 {
     public void Configure(EntityTypeBuilder<AuditEntry> builder)

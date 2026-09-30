@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Platform.ReferenceData;
 
+/// <summary>Mapea las zonas IANA globales con su ID natural. Se usa como referencia para preferencias y países, sin un identificador artificial.</summary>
 internal sealed class TimeZoneConfiguration : IEntityTypeConfiguration<ReferenceTimeZone>
 {
     public void Configure(EntityTypeBuilder<ReferenceTimeZone> builder)

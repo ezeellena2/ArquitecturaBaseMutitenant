@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Identity;
 
+/// <summary>Mapea qué versión legal aceptó cada cuenta y cuándo. Conserva una aceptación única por documento y usuario para probar el consentimiento.</summary>
 internal sealed class LegalAcceptanceConfiguration : IEntityTypeConfiguration<LegalAcceptance>
 {
     public void Configure(EntityTypeBuilder<LegalAcceptance> builder)

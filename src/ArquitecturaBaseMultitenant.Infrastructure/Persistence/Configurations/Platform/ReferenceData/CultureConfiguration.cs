@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Platform.ReferenceData;
 
+/// <summary>Mapea los patrones de fecha, número y moneda que usan los formatos compartidos. La cultura tiene un país y puede indicar otra cultura como caída.</summary>
 internal sealed class CultureConfiguration : IEntityTypeConfiguration<Culture>
 {
     public void Configure(EntityTypeBuilder<Culture> builder)

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Platform.ReferenceData;
 
+/// <summary>Mapea los tipos de identificación fiscal asociados a un país y sus reglas de presentación. El código natural es la clave del catálogo.</summary>
 internal sealed class TaxIdTypeConfiguration : IEntityTypeConfiguration<TaxIdType>
 {
     public void Configure(EntityTypeBuilder<TaxIdType> builder)

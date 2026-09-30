@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Platform;
 
+/// <summary>Mapea las versiones publicadas de términos y privacidad. Una versión es única por tipo y se busca por fecha de vigencia.</summary>
 internal sealed class LegalDocumentConfiguration : IEntityTypeConfiguration<LegalDocument>
 {
     public void Configure(EntityTypeBuilder<LegalDocument> builder)
