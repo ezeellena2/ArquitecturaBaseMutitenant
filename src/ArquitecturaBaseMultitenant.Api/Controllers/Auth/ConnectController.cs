@@ -3,6 +3,7 @@ using System.Security.Claims;
 using ArquitecturaBaseMultitenant.Api.Authentication;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Api.Tenancy;
+using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -25,6 +26,7 @@ namespace ArquitecturaBaseMultitenant.Api.Controllers.Auth;
 [OwnProtocol]
 [Route("connect")]
 public sealed class ConnectController(IConnectService service, IConnectLogoutService logoutService,
+    IConnectAuthorizationService authorizationService,
     OpenIdPrincipalFactory principalFactory) : ControllerBase
 {
     [HttpGet("authorize")]
@@ -41,7 +43,9 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
 
         var forceLogin = request.HasPromptValue(PromptValues.Login);
         var session = await HttpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
-        if (!forceLogin && session.Succeeded && Guid.TryParse(
+        var browserSessionId = session.Properties?.Items.TryGetValue(BrowserSessionKeys.CookieSessionId,
+            out var activeSessionId) == true ? activeSessionId : null;
+        if (!forceLogin && session.Succeeded && !string.IsNullOrEmpty(browserSessionId) && Guid.TryParse(
             session.Principal?.FindFirstValue(ClaimTypes.NameIdentifier), CultureInfo.InvariantCulture, out var userId))
         {
             var selected = await service.SelectAccessAsync(userId, access, requestedTenantId, cancellationToken);
@@ -55,6 +59,14 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
                 request.GetScopes(), cancellationToken);
             if (principal is not null)
             {
+                var authorization = await authorizationService.CreateAsync(userId, access,
+                    selected.Value.TenantId, browserSessionId, request.ClientId!,
+                    request.GetScopes(), cancellationToken);
+                if (authorization.IsFailure)
+                {
+                    throw new InvalidOperationException("The OpenID Connect authorization could not be created.");
+                }
+                principal.SetAuthorizationId(authorization.Value);
                 return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
             }
         }
@@ -93,6 +105,10 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
         var stored = await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         var principal = stored.Principal is null
             ? null : await principalFactory.RefreshAsync(stored.Principal, cancellationToken);
+        if (principal is not null && stored.Principal?.GetAuthorizationId() is { } authorizationId)
+        {
+            principal.SetAuthorizationId(authorizationId);
+        }
         return principal is null
             ? Forbid(ErrorProperties(Errors.InvalidGrant, "The user can no longer sign in."),
                 OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)
@@ -105,9 +121,15 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
     {
         var hint = await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         var authorizationId = hint.Principal?.GetAuthorizationId();
-        if (!string.IsNullOrEmpty(authorizationId))
+        var session = await HttpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
+        var browserSessionId = session.Properties?.Items.TryGetValue(BrowserSessionKeys.CookieSessionId,
+            out var activeSessionId) == true ? activeSessionId : null;
+        var cookieUserId = Guid.TryParse(session.Principal?.FindFirstValue(ClaimTypes.NameIdentifier),
+            CultureInfo.InvariantCulture, out var parsedUserId) ? parsedUserId : (Guid?)null;
+        if (!string.IsNullOrEmpty(authorizationId) ||
+            (cookieUserId is not null && !string.IsNullOrEmpty(browserSessionId)))
         {
-            await logoutService.RevokeAuthorizationAsync(authorizationId, cancellationToken);
+            await logoutService.RevokeAsync(cookieUserId, browserSessionId, authorizationId, cancellationToken);
         }
 
         await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);

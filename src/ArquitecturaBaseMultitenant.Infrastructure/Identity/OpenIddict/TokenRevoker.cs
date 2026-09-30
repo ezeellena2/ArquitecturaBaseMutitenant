@@ -37,6 +37,15 @@ internal sealed class TokenRevoker(
         await tokens.RevokeBySubjectAsync(subject, cancellationToken);
     }
 
+    public Task RevokeSessionAsync(Guid userId, string sessionId, CancellationToken cancellationToken)
+    {
+        context.RequireTransaction();
+        ArgumentException.ThrowIfNullOrWhiteSpace(sessionId);
+        return RevokeMatchingAsync(authorizations.FindBySubjectAsync(userId.ToString("D"), cancellationToken),
+            properties => HasValue(properties, ConnectAuthorizationStore.SessionIdProperty, sessionId),
+            cancellationToken);
+    }
+
     public Task RevokeAccessAsync(Guid userId, Access access, CancellationToken cancellationToken)
     {
         context.RequireTransaction();

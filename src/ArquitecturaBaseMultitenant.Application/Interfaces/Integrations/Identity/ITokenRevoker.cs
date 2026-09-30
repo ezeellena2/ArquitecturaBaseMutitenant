@@ -7,6 +7,8 @@ public interface ITokenRevoker
 
     Task RevokeUserAsync(Guid userId, CancellationToken cancellationToken);
 
+    Task RevokeSessionAsync(Guid userId, string sessionId, CancellationToken cancellationToken);
+
     Task RevokeAccessAsync(Guid userId, Domain.Users.Access access, CancellationToken cancellationToken);
 
     Task RevokeTenantAsync(Guid tenantId, CancellationToken cancellationToken);

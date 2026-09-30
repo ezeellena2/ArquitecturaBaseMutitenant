@@ -10,13 +10,20 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 internal sealed class ConnectLogoutService(ITokenRevoker tokens, IUnitOfWork unitOfWork,
     TimeProvider timeProvider, ILogger<ConnectLogoutService> logger) : IConnectLogoutService
 {
-    public Task<Result> RevokeAuthorizationAsync(string authorizationId, CancellationToken cancellationToken) =>
+    public Task<Result> RevokeAsync(Guid? userId, string? sessionId,
+        string? authorizationId, CancellationToken cancellationToken) =>
         OperationLog.RunAsync(logger, timeProvider, "RevokeConnectAuthorization", () =>
         {
-            ArgumentException.ThrowIfNullOrEmpty(authorizationId);
             return unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
-                await tokens.RevokeAuthorizationAsync(authorizationId, ct);
+                if (userId is { } accountId && !string.IsNullOrEmpty(sessionId))
+                {
+                    await tokens.RevokeSessionAsync(accountId, sessionId, ct);
+                }
+                if (!string.IsNullOrEmpty(authorizationId))
+                {
+                    await tokens.RevokeAuthorizationAsync(authorizationId, ct);
+                }
                 return Result.Success();
             }, CommitPolicy.OnSuccess, cancellationToken);
         });

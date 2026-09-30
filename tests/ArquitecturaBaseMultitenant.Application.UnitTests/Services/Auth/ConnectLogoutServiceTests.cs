@@ -15,10 +15,14 @@ public sealed class ConnectLogoutServiceTests
         var revoker = new StubTokenRevoker(unitOfWork);
         var service = new ConnectLogoutService(revoker, unitOfWork, fixture.TimeProvider, fixture.Logger);
 
-        var result = await service.RevokeAuthorizationAsync("authorization-id", TestContext.Current.CancellationToken);
+        var userId = Guid.NewGuid();
+        var result = await service.RevokeAsync(userId, "browser-session", "authorization-id",
+            TestContext.Current.CancellationToken);
 
         Assert.True(result.IsSuccess);
         Assert.Equal("authorization-id", revoker.AuthorizationId);
+        Assert.Equal(userId, revoker.UserId);
+        Assert.Equal("browser-session", revoker.SessionId);
         Assert.True(revoker.WasInsideTransaction);
         Assert.Equal(1, unitOfWork.Transactions);
         Assert.Equal(1, unitOfWork.Commits);
@@ -27,6 +31,8 @@ public sealed class ConnectLogoutServiceTests
     private sealed class StubTokenRevoker(FakeUnitOfWork unitOfWork) : ITokenRevoker
     {
         public string? AuthorizationId { get; private set; }
+        public Guid? UserId { get; private set; }
+        public string? SessionId { get; private set; }
         public bool WasInsideTransaction { get; private set; }
 
         public Task RevokeAuthorizationAsync(string authorizationId, CancellationToken cancellationToken)
@@ -38,6 +44,14 @@ public sealed class ConnectLogoutServiceTests
 
         public Task RevokeUserAsync(Guid userId, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
+
+        public Task RevokeSessionAsync(Guid userId, string sessionId, CancellationToken cancellationToken)
+        {
+            UserId = userId;
+            SessionId = sessionId;
+            WasInsideTransaction = unitOfWork.InTransaction;
+            return Task.CompletedTask;
+        }
 
         public Task RevokeAccessAsync(Guid userId, Access access, CancellationToken cancellationToken) =>
             throw new NotSupportedException();

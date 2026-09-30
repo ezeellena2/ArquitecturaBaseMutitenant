@@ -187,6 +187,18 @@ public sealed class IngressJourneyTests(ApiFactory factory)
                 ["client_id"] = "web",
             }), Ct);
         Assert.Equal(HttpStatusCode.BadRequest, revoked.StatusCode);
+
+        foreach (var earlierRefreshToken in new[] { refreshed.RefreshToken, business.RefreshToken })
+        {
+            using var earlier = await client.PostAsync("/connect/token", new FormUrlEncodedContent(
+                new Dictionary<string, string>
+                {
+                    ["grant_type"] = "refresh_token",
+                    ["refresh_token"] = earlierRefreshToken,
+                    ["client_id"] = "web",
+                }), Ct);
+            Assert.Equal(HttpStatusCode.BadRequest, earlier.StatusCode);
+        }
     }
 
     private static string AuthorizePath(string access, string challenge) =>

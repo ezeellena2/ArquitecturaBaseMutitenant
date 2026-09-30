@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -88,6 +89,7 @@ internal static class OpenIddictRegistration
             });
 
         services.AddScoped<ITokenRevoker, TokenRevoker>();
+        services.AddScoped<IConnectAuthorizationStore, ConnectAuthorizationStore>();
 
         return services;
     }

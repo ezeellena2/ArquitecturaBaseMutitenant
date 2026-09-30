@@ -33,6 +33,7 @@ public static class DependencyInjection
         services.AddScoped<GoogleAccountResolver>();
         services.AddScoped<GoogleAccountRegistrar>();
         services.AddScoped<IConnectService, ConnectService>();
+        services.AddScoped<IConnectAuthorizationService, ConnectAuthorizationService>();
         services.AddScoped<IConnectLogoutService, ConnectLogoutService>();
         services.AddScoped<IProfileService, ProfileService>();
         services.AddScoped<ProfileSnapshotBuilder>();

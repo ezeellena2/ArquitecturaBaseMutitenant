@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using System.Security.Cryptography;
+using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.Users;
@@ -46,7 +48,10 @@ internal sealed class SignInService(
     public async Task SignInAsync(Guid userId, CancellationToken cancellationToken)
     {
         context.RequireNoTransaction();
-        await signInManager.SignInAsync(await RequireUserAsync(userId, cancellationToken), isPersistent: true);
+        var properties = new AuthenticationProperties { IsPersistent = true };
+        properties.Items[BrowserSessionKeys.CookieSessionId] =
+            Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
+        await signInManager.SignInAsync(await RequireUserAsync(userId, cancellationToken), properties);
     }
 
     public async Task<ExternalLogin?> GetExternalLoginAsync(CancellationToken cancellationToken)
