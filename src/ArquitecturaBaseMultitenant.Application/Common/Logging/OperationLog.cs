@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Common.Logging;
 
+/// <summary>Envuelve cada caso de uso con logs de inicio, resultado y duración; registra códigos y tipos de excepción sin volcar datos de la petición.</summary>
 public static partial class OperationLog
 {
     public static Task<Result<T>> RunAsync<T>(ILogger logger, TimeProvider timeProvider,

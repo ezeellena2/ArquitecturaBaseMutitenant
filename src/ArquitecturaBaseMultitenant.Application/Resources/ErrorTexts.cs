@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Application.Resources;
 
+/// <summary>Resuelve títulos y mensajes de error desde los recursos de la cultura activa; conserva la clave si falta una traducción.</summary>
 public static class ErrorTexts
 {
     internal static ResourceManager ResourceManager { get; } =

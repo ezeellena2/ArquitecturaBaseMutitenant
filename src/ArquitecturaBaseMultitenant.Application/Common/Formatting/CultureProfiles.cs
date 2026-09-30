@@ -63,6 +63,7 @@ public sealed class CultureProfiles(ICultureCatalog cultures)
     }
 }
 
+/// <summary>Agrupa reglas de formato y orden de traducción derivados de una cultura habilitada para reutilizarlos en una misma salida.</summary>
 public sealed record CultureProfile(
     CultureCatalogEntry Entry,
     CultureInfo Culture,

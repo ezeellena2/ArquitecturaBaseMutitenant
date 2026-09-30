@@ -1,5 +1,6 @@
 namespace ArquitecturaBaseMultitenant.Application.Common.Pagination;
 
+/// <summary>Interpreta el campo y sentido de orden pedidos por el cliente; el reader aún debe aplicar su lista blanca de campos.</summary>
 public sealed record SortDescriptor(string Field, bool Descending)
 {
     /// <summary>Interpreta "campo" o "-campo". Devuelve null si no hay campo.</summary>

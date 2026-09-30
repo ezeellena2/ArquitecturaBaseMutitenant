@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 
 namespace ArquitecturaBaseMultitenant.Application.Resources;
 
+/// <summary>Obtiene y compone mensajes de notificación según el perfil cultural, con respaldo en los recursos base.</summary>
 public static class NotificationTexts
 {
     internal static ResourceManager ResourceManager { get; } =

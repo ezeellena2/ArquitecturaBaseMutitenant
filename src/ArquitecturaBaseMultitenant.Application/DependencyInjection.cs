@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Application;
 
+/// <summary>Registra los casos de uso, sus colaboradores y la validación de Application para que la Api los consuma mediante interfaces.</summary>
 public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)

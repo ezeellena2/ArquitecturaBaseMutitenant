@@ -3,6 +3,7 @@ using System.Resources;
 
 namespace ArquitecturaBaseMultitenant.Application.Resources;
 
+/// <summary>Expone mensajes de validación desde los recursos de la cultura activa para mantenerlos fuera de las reglas.</summary>
 public static class ValidationTexts
 {
     internal static ResourceManager ResourceManager { get; } =

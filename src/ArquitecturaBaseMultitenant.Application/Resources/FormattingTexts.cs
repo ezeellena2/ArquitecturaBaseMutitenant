@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 
 namespace ArquitecturaBaseMultitenant.Application.Resources;
 
+/// <summary>Busca textos de formato según la cadena de idiomas del perfil cultural y falla si tampoco existe el recurso base.</summary>
 public static class FormattingTexts
 {
     internal static ResourceManager ResourceManager { get; } =

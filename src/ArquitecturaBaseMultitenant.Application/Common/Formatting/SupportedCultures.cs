@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 
 namespace ArquitecturaBaseMultitenant.Application.Common.Formatting;
 
+/// <summary>Lee las culturas habilitadas del catálogo y exige una sola predeterminada para validar preferencias sin una lista fija en código.</summary>
 public sealed class SupportedCultures
 {
     private SupportedCultures(string defaultCulture, IReadOnlyList<string> codes)

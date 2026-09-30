@@ -3,6 +3,7 @@ using System.Text;
 
 namespace ArquitecturaBaseMultitenant.Application.Common.Text;
 
+/// <summary>Limpia texto recibido antes de persistirlo: quita controles y caracteres invisibles peligrosos, normaliza Unicode y compacta espacios de nombres.</summary>
 public static class TextNormalizer
 {
     public static string? Clean(string? text)
