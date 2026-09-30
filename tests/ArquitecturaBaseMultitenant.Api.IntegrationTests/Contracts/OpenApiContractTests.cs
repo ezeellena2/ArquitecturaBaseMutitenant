@@ -1,7 +1,6 @@
 using System.Net;
 using System.Text.Json.Nodes;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
-using Microsoft.AspNetCore.Hosting;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Contracts;
 
@@ -16,7 +15,7 @@ public sealed class OpenApiContractTests(ApiFactory factory)
         Assert.True(File.Exists(contractPath), "The build must generate docs/contracts/openapi.json.");
 
         var versioned = JsonNode.Parse(await File.ReadAllTextAsync(contractPath, TestContext.Current.CancellationToken))!;
-        await using var development = factory.WithWebHostBuilder(builder => builder.UseEnvironment("Development"));
+        await using var development = factory.WithWebHostBuilder(builder => builder.UseDevelopmentTestOwner());
         using var client = development.CreateClient();
         using var response = await client.GetAsync("/openapi/v1.json", TestContext.Current.CancellationToken);
         var runtime = JsonNode.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken))!;

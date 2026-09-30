@@ -4,7 +4,6 @@ using System.Text.Json.Serialization;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Api.Json;
-using Microsoft.AspNetCore.Hosting;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Contracts;
 
@@ -24,7 +23,7 @@ public sealed class OpenApiTests(ApiFactory factory)
     [Fact]
     public async Task Swagger_and_document_are_available_in_development()
     {
-        await using var development = factory.WithWebHostBuilder(builder => builder.UseEnvironment("Development"));
+        await using var development = factory.WithWebHostBuilder(builder => builder.UseDevelopmentTestOwner());
         using var client = development.CreateClient();
 
         using var swagger = await client.GetAsync("/swagger/index.html", TestContext.Current.CancellationToken);
@@ -40,7 +39,7 @@ public sealed class OpenApiTests(ApiFactory factory)
     [Fact]
     public async Task Reference_routes_have_success_schemas_and_problem_details_errors()
     {
-        await using var development = factory.WithWebHostBuilder(builder => builder.UseEnvironment("Development"));
+        await using var development = factory.WithWebHostBuilder(builder => builder.UseDevelopmentTestOwner());
         using var client = development.CreateClient();
         using var response = await client.GetAsync("/openapi/v1.json", TestContext.Current.CancellationToken);
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
@@ -68,7 +67,7 @@ public sealed class OpenApiTests(ApiFactory factory)
     [Fact]
     public async Task Reference_codes_have_string_schemas_for_generated_frontend_types()
     {
-        await using var development = factory.WithWebHostBuilder(builder => builder.UseEnvironment("Development"));
+        await using var development = factory.WithWebHostBuilder(builder => builder.UseDevelopmentTestOwner());
         using var client = development.CreateClient();
         using var response = await client.GetAsync("/openapi/v1.json", TestContext.Current.CancellationToken);
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
@@ -83,7 +82,7 @@ public sealed class OpenApiTests(ApiFactory factory)
     [Fact]
     public async Task Profile_email_value_object_is_exposed_as_a_nullable_string()
     {
-        await using var development = factory.WithWebHostBuilder(builder => builder.UseEnvironment("Development"));
+        await using var development = factory.WithWebHostBuilder(builder => builder.UseDevelopmentTestOwner());
         using var client = development.CreateClient();
         using var response = await client.GetAsync("/openapi/v1.json", TestContext.Current.CancellationToken);
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
@@ -102,7 +101,7 @@ public sealed class OpenApiTests(ApiFactory factory)
     [Fact]
     public async Task Page_size_options_are_published_as_an_integer_enum()
     {
-        await using var development = factory.WithWebHostBuilder(builder => builder.UseEnvironment("Development"));
+        await using var development = factory.WithWebHostBuilder(builder => builder.UseDevelopmentTestOwner());
         using var client = development.CreateClient();
         using var response = await client.GetAsync("/openapi/v1.json", TestContext.Current.CancellationToken);
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
@@ -124,7 +123,7 @@ public sealed class OpenApiTests(ApiFactory factory)
     [Fact]
     public async Task Reference_schemas_preserve_nullable_strings_array_items_and_numeric_types()
     {
-        await using var development = factory.WithWebHostBuilder(builder => builder.UseEnvironment("Development"));
+        await using var development = factory.WithWebHostBuilder(builder => builder.UseDevelopmentTestOwner());
         using var client = development.CreateClient();
         using var response = await client.GetAsync("/openapi/v1.json", TestContext.Current.CancellationToken);
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
@@ -175,7 +174,7 @@ public sealed class OpenApiTests(ApiFactory factory)
     [Fact]
     public async Task Problem_responses_document_code_trace_fields_and_retry_after()
     {
-        await using var development = factory.WithWebHostBuilder(builder => builder.UseEnvironment("Development"));
+        await using var development = factory.WithWebHostBuilder(builder => builder.UseDevelopmentTestOwner());
         using var client = development.CreateClient();
         using var response = await client.GetAsync("/openapi/v1.json", TestContext.Current.CancellationToken);
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));

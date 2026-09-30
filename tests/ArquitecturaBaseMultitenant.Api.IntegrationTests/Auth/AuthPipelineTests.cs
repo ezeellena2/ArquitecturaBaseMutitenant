@@ -82,6 +82,7 @@ public sealed class AuthPipelineTests(ApiFactory factory)
     public async Task Authenticated_me_update_persists_culture_and_get_reads_it()
     {
         await using var app = TestApp(development: true);
+        await SampleAccountsFixture.SeedAsync(app.Services, "ana@example.test", Ct);
         using var client = app.CreateClient();
         await using var connection = new NpgsqlConnection(factory.AdminConnectionString);
         await connection.OpenAsync(Ct);
@@ -133,7 +134,7 @@ public sealed class AuthPipelineTests(ApiFactory factory)
     {
         if (development)
         {
-            builder.UseEnvironment("Development");
+            builder.UseEnvironment("Testing");
             builder.UseSetting("Email:Delivery", "PickupDirectory");
             builder.UseSetting("Authentication:Google:ClientId", string.Empty);
         }

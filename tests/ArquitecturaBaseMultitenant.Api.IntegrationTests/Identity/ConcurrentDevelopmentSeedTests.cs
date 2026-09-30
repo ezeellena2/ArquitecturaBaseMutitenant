@@ -34,8 +34,8 @@ public sealed class ConcurrentDevelopmentSeedTests
         var gate = new SeedStartGate();
         using var firstHost = NewHost(1);
         using var secondHost = NewHost(2);
-        var firstStart = Task.Run(() => firstHost.CreateClient(), Ct);
-        var secondStart = Task.Run(() => secondHost.CreateClient(), Ct);
+        var firstStart = Task.Run(() => SeedAndCreateClientAsync(firstHost), Ct);
+        var secondStart = Task.Run(() => SeedAndCreateClientAsync(secondHost), Ct);
         using var firstClient = await firstStart;
         using var secondClient = await secondStart;
         Assert.Equal(2, gate.Arrivals);
@@ -48,10 +48,17 @@ public sealed class ConcurrentDevelopmentSeedTests
         Assert.Equal(3, await CountAsync("SELECT count(*) FROM identity.\"LoginMethods\"", connection));
         Assert.Equal(4, await CountAsync("SELECT count(*) FROM identity.\"UserTenantAccesses\"", connection));
 
+        async Task<HttpClient> SeedAndCreateClientAsync(WebApplicationFactory<Program> host)
+        {
+            var client = host.CreateClient();
+            await SampleAccountsFixture.SeedAsync(host.Services, "ana@example.test", Ct);
+            return client;
+        }
+
         WebApplicationFactory<Program> NewHost(int replica) =>
             new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
             {
-                builder.UseEnvironment("Development");
+                builder.UseEnvironment("Testing");
                 builder.UseSetting("ConnectionStrings:postgres-bootstrap", bootstrap);
                 builder.UseSetting("ConnectionStrings:appdb-admin", admin);
                 builder.UseSetting("ConnectionStrings:appdb", runtime);
@@ -59,7 +66,6 @@ public sealed class ConcurrentDevelopmentSeedTests
                 builder.UseSetting("Authentication:Clients:Web:RedirectUris:0", "https://example.test/auth/callback");
                 builder.UseSetting("Authentication:Clients:Web:PostLogoutRedirectUris:0", "https://example.test/");
                 builder.UseSetting("Email:Delivery", "PickupDirectory");
-                builder.UseSetting("Seed:Development:AnaEmail", "ana@example.test");
                 builder.ConfigureTestServices(services =>
                 {
                     var descriptor = Assert.Single(services, item => item.ServiceType == typeof(IUnitOfWork));

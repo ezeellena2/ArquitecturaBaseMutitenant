@@ -96,12 +96,11 @@ public sealed class ConnectTests(ApiFactory factory)
         await isolatedFactory.InitializeAsync();
         using var host = isolatedFactory.WithWebHostBuilder(builder =>
         {
-            builder.UseEnvironment("Development");
+            builder.UseEnvironment("Testing");
             builder.UseSetting("Email:Delivery", "PickupDirectory");
             builder.UseSetting("Authentication:Google:ClientId", "");
-            builder.UseSetting("Seed:Development:AnaEmail", email);
         });
-        await host.Services.SeedDatabaseAsync(Ct);
+        await SampleAccountsFixture.SeedAsync(host.Services, email, Ct);
         using var client = host.CreateClient(new WebApplicationFactoryClientOptions
         {
             BaseAddress = new Uri("https://localhost"),
@@ -157,12 +156,11 @@ public sealed class ConnectTests(ApiFactory factory)
         await isolatedFactory.InitializeAsync();
         using var host = isolatedFactory.WithWebHostBuilder(builder =>
         {
-            builder.UseEnvironment("Development");
+            builder.UseEnvironment("Testing");
             builder.UseSetting("Email:Delivery", "PickupDirectory");
             builder.UseSetting("Authentication:Google:ClientId", "");
-            builder.UseSetting("Seed:Development:AnaEmail", email);
         });
-        await host.Services.SeedDatabaseAsync(Ct);
+        await SampleAccountsFixture.SeedAsync(host.Services, email, Ct);
         using var client = host.CreateClient(new WebApplicationFactoryClientOptions
         {
             BaseAddress = new Uri("https://localhost"),

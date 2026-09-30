@@ -7,7 +7,6 @@ using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
-using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -32,10 +31,13 @@ public sealed class DevelopmentSeedTests
         var bootstrap = postgres.GetConnectionString();
         var admin = Connection("mt_owner", ownerPassword);
         var runtime = Connection("mt_app", runtimePassword);
+        await DatabaseBootstrapExtensions.BootstrapAsync(bootstrap, admin, runtime,
+            TestContext.Current.CancellationToken);
 
-        using var host = NewHost("ana@example.test");
+        using var host = NewHost();
         using var client = host.CreateClient();
-        await host.Services.SeedDatabaseAsync(TestContext.Current.CancellationToken);
+        await SampleAccountsFixture.SeedAsync(host.Services, "ana@example.test",
+            TestContext.Current.CancellationToken);
 
         await using var scope = host.Services.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -91,9 +93,10 @@ public sealed class DevelopmentSeedTests
             }, CommitPolicy.OnSuccess, TestContext.Current.CancellationToken);
         }
 
-        using var changedConfigurationHost = NewHost("another@example.test");
+        using var changedConfigurationHost = NewHost();
         using var changedConfigurationClient = changedConfigurationHost.CreateClient();
-        await changedConfigurationHost.Services.SeedDatabaseAsync(TestContext.Current.CancellationToken);
+        await SampleAccountsFixture.SeedAsync(changedConfigurationHost.Services, "another@example.test",
+            TestContext.Current.CancellationToken);
         Assert.False(await context.LoginMethods.AnyAsync(method => method.Value == "another@example.test",
             TestContext.Current.CancellationToken));
         Assert.Equal(3, await context.LoginMethods.CountAsync(TestContext.Current.CancellationToken));
@@ -110,23 +113,23 @@ public sealed class DevelopmentSeedTests
         // Un segundo proceso puede haber preparado el borrador antes de confirmar el primer seed.
         var staleDraft = await scope.ServiceProvider.GetRequiredService<IPersonalSpaceProvisioner>()
             .PrepareAsync(null, null, TestContext.Current.CancellationToken);
-        var staleCandidate = new DevelopmentPersonalCandidate(staleDraft, "Kevin",
+        var staleCandidate = new SamplePersonalCandidate(staleDraft, "Kevin",
             Email.Create("kevin@empresa-a.test").Value);
         using (scope.ServiceProvider.GetRequiredService<ITenantScope>().Enter(staleDraft.Tenant.Id))
         {
-            await Assert.ThrowsAsync<DevelopmentSeedScopeChangedException>(async () =>
+            await Assert.ThrowsAsync<SampleSeedScopeChangedException>(async () =>
                 await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
                 {
-                    await scope.ServiceProvider.GetRequiredService<DevelopmentSeeder>()
+                    await ActivatorUtilities.CreateInstance<SampleAccountSeeder>(scope.ServiceProvider)
                         .StagePersonalAsync(staleCandidate, ct);
                     return Result.Success();
                 }, CommitPolicy.OnSuccess, TestContext.Current.CancellationToken));
         }
 
-        WebApplicationFactory<Program> NewHost(string anaEmail) =>
+        WebApplicationFactory<Program> NewHost() =>
             new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
             {
-                builder.UseEnvironment("Development");
+                builder.UseEnvironment("Testing");
                 builder.UseSetting("ConnectionStrings:postgres-bootstrap", bootstrap);
                 builder.UseSetting("ConnectionStrings:appdb-admin", admin);
                 builder.UseSetting("ConnectionStrings:appdb", runtime);
@@ -134,7 +137,6 @@ public sealed class DevelopmentSeedTests
                 builder.UseSetting("Authentication:Clients:Web:RedirectUris:0", "https://example.test/auth/callback");
                 builder.UseSetting("Authentication:Clients:Web:PostLogoutRedirectUris:0", "https://example.test/");
                 builder.UseSetting("Email:Delivery", "PickupDirectory");
-                builder.UseSetting("Seed:Development:AnaEmail", anaEmail);
             });
 
         string Connection(string user, string password) => new NpgsqlConnectionStringBuilder(bootstrap)
