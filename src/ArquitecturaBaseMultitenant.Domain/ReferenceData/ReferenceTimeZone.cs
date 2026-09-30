@@ -1,5 +1,6 @@
 namespace ArquitecturaBaseMultitenant.Domain.ReferenceData;
 
+/// <summary>Representa una zona IANA seleccionable; los nombres visibles viven en sus traducciones.</summary>
 public sealed class ReferenceTimeZone
 {
     private ReferenceTimeZone() { }

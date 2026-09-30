@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Domain.Common;
 
 namespace ArquitecturaBaseMultitenant.Domain.Messaging;
 
+/// <summary>Conserva un envío cifrado hasta que el dispatcher lo confirme o agote sus reintentos; no realiza el transporte.</summary>
 public sealed class OutboxMessage : Entity
 {
     private OutboxMessage() { }

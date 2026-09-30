@@ -1,5 +1,6 @@
 namespace ArquitecturaBaseMultitenant.Domain.ReferenceData;
 
+/// <summary>Define desde datos de referencia los patrones de presentación, la cultura de respaldo y su disponibilidad.</summary>
 public sealed class Culture
 {
     private Culture() { }

@@ -1,5 +1,6 @@
 namespace ArquitecturaBaseMultitenant.Domain.ReferenceData;
 
+/// <summary>Da un nombre visible a una cultura en el idioma de presentación solicitado.</summary>
 public sealed class CultureTranslation
 {
     private CultureTranslation() { }

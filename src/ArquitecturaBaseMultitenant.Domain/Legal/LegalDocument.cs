@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Domain.Common;
 
 namespace ArquitecturaBaseMultitenant.Domain.Legal;
 
+/// <summary>Identifica una versión de términos o privacidad y desde cuándo puede aceptarse.</summary>
 public sealed class LegalDocument : Entity
 {
     private LegalDocument() { }

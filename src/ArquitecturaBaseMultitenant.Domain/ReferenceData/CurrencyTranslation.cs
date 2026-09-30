@@ -1,5 +1,6 @@
 namespace ArquitecturaBaseMultitenant.Domain.ReferenceData;
 
+/// <summary>Conserva el nombre singular, plural y símbolo que una cultura muestra para una moneda.</summary>
 public sealed class CurrencyTranslation
 {
     private CurrencyTranslation() { }

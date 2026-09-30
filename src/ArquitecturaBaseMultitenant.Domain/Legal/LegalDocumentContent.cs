@@ -1,5 +1,6 @@
 namespace ArquitecturaBaseMultitenant.Domain.Legal;
 
+/// <summary>Asocia el texto de una versión legal con la cultura en que se presenta.</summary>
 public sealed class LegalDocumentContent
 {
     private LegalDocumentContent() { }

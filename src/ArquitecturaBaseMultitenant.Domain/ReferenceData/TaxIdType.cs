@@ -1,5 +1,6 @@
 namespace ArquitecturaBaseMultitenant.Domain.ReferenceData;
 
+/// <summary>Describe el tipo fiscal de un país con su máscara y la clave del validador, sin validar el número aquí.</summary>
 public sealed class TaxIdType
 {
     private TaxIdType() { }

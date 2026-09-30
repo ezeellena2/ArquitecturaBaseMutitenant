@@ -1,5 +1,6 @@
 namespace ArquitecturaBaseMultitenant.Domain.ReferenceData;
 
+/// <summary>Conserva el código ISO y las unidades menores que se usan para validar y redondear importes.</summary>
 public sealed class Currency
 {
     private Currency() { }

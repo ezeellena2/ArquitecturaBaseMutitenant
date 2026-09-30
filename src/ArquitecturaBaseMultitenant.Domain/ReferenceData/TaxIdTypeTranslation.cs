@@ -1,5 +1,6 @@
 namespace ArquitecturaBaseMultitenant.Domain.ReferenceData;
 
+/// <summary>Da el nombre localizado de un tipo de identificación fiscal sin cambiar su clave.</summary>
 public sealed class TaxIdTypeTranslation
 {
     private TaxIdTypeTranslation() { }

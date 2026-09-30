@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Domain.Common;
 
 namespace ArquitecturaBaseMultitenant.Domain.Settings;
 
+/// <summary>Guarda los valores predeterminados de presentación de un espacio; Application los elige desde los catálogos habilitados.</summary>
 public sealed class TenantSettings : Entity, ITenantOwned, IAuditable
 {
     private TenantSettings() { }

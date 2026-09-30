@@ -1,5 +1,6 @@
 namespace ArquitecturaBaseMultitenant.Domain.ReferenceData;
 
+/// <summary>Relaciona una zona IANA con un país y permite habilitar esa opción de forma independiente.</summary>
 public sealed class TimeZoneCountry
 {
     private TimeZoneCountry() { }

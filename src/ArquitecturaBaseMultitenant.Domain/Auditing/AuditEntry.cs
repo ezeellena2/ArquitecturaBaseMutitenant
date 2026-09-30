@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Domain.Common;
 
 namespace ArquitecturaBaseMultitenant.Domain.Auditing;
 
+/// <summary>Registra actor y cambio JSON de una entidad dentro de un tenant; el interceptor o AuditLog la agrega al guardado.</summary>
 public sealed class AuditEntry : Entity, ITenantOwned
 {
     private AuditEntry()

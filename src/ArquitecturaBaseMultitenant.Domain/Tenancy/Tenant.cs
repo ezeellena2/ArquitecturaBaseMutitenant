@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Domain.Tenancy;
 
+/// <summary>Representa un espacio personal o una organización y controla las transiciones que permiten entrar a él.</summary>
 public sealed class Tenant : Entity
 {
     private Tenant()

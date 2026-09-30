@@ -1,5 +1,6 @@
 namespace ArquitecturaBaseMultitenant.Domain.ReferenceData;
 
+/// <summary>Conserva códigos ISO, prefijo telefónico y preferencias de moneda y zona de un país.</summary>
 public sealed class Country
 {
     private Country() { }

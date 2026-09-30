@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Domain.Tenancy;
 
+/// <summary>Vincula una identidad global con un espacio privado y conserva su estado y fecha de incorporación.</summary>
 public sealed class Member : Entity, ITenantOwned
 {
     private Member()

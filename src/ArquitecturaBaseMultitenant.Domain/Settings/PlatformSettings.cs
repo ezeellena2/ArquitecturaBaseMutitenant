@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Domain.Settings;
 
+/// <summary>Configuración global única para los modos de registro, el límite de organizaciones y la gracia de baja.</summary>
 public sealed class PlatformSettings : Entity, IAuditable
 {
     public const string SingletonIdValue = "00000000-0000-0000-0000-000000000001";

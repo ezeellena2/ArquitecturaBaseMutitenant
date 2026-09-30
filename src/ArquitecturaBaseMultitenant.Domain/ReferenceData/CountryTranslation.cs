@@ -1,5 +1,6 @@
 namespace ArquitecturaBaseMultitenant.Domain.ReferenceData;
 
+/// <summary>Da el nombre de un país en la cultura que consulta el catálogo.</summary>
 public sealed class CountryTranslation
 {
     private CountryTranslation() { }

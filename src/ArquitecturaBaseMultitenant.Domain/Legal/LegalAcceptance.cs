@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Domain.Common;
 
 namespace ArquitecturaBaseMultitenant.Domain.Legal;
 
+/// <summary>Prueba qué versión legal aceptó una cuenta y cuándo; la baja puede retirar sus metadatos personales sin borrar la prueba.</summary>
 public sealed class LegalAcceptance : Entity
 {
     private LegalAcceptance() { }
