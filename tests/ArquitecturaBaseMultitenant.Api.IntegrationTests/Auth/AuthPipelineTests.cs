@@ -49,6 +49,20 @@ public sealed class AuthPipelineTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Tenant_policy_rejects_before_tenant_resolution()
+    {
+        await using var app = TestApp();
+        using var scope = app.Services.CreateScope();
+        var authorization = scope.ServiceProvider.GetRequiredService<IAuthorizationService>();
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim("sub", UserId.ToString("D"))], PipelineAuthHandler.SchemeName));
+
+        var result = await authorization.AuthorizeAsync(principal, resource: null, "TenantProbe");
+
+        Assert.False(result.Succeeded);
+    }
+
+    [Fact]
     public async Task Anonymous_route_has_no_tenant_context()
     {
         await using var app = TestApp();
@@ -136,8 +150,28 @@ public sealed class AuthPipelineTests(ApiFactory factory)
             services.RemoveAll<ITenantStatusCache>();
             services.AddSingleton<IAccessStatusCache, ActiveAccessStatusCache>();
             services.AddSingleton<ITenantStatusCache, ActiveTenantStatusCache>();
+            services.AddAuthorization(options => options.AddPolicy("TenantProbe", policy =>
+                policy.Requirements.Add(new TenantProbeRequirement())));
+            services.AddScoped<IAuthorizationHandler, TenantProbeAuthorizationHandler>();
         });
     });
+
+    private sealed class TenantProbeRequirement : IAuthorizationRequirement;
+
+    private sealed class TenantProbeAuthorizationHandler(ITenantContext tenantContext)
+        : AuthorizationHandler<TenantProbeRequirement>
+    {
+        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context,
+            TenantProbeRequirement requirement)
+        {
+            if (tenantContext.TenantId == TenantId)
+            {
+                context.Succeed(requirement);
+            }
+
+            return Task.CompletedTask;
+        }
+    }
 
     private sealed class PipelineAuthHandler(
         IOptionsMonitor<AuthenticationSchemeOptions> options,
@@ -201,7 +235,7 @@ public sealed record PipelineProbe(Guid? UserId, Guid? TenantId, string? TenantK
 public sealed class AuthPipelineProbeController(ITenantContext tenantContext) : ControllerBase
 {
     [HttpGet("authenticated")]
-    [Authorize]
+    [Authorize(Policy = "TenantProbe")]
     [Access(Access.Business)]
     public ActionResult<PipelineProbe> Authenticated() => Ok(new PipelineProbe(
         Guid.TryParse(User.FindFirst("sub")?.Value, out var userId) ? userId : null,
