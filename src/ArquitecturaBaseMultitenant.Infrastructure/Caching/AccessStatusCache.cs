@@ -1,6 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
@@ -9,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Caching;
 
-/// <summary>Cachea estado de identidad y membresía en scopes independientes de la petición.</summary>
+/// <summary>Cachea estado de identidad y membresía desde el índice global de accesos.</summary>
 internal sealed class AccessStatusCache(HybridCache cache, IServiceScopeFactory scopes) : IAccessStatusCache
 {
     private static readonly HybridCacheEntryOptions CacheOptions = new()
@@ -35,11 +34,10 @@ internal sealed class AccessStatusCache(HybridCache cache, IServiceScopeFactory 
             scopes, (userId, tenantId, kind),
             static async (services, state, ct) =>
             {
-                services.GetRequiredService<ITenantAccessInitializer>()
-                    .SetFromAccess(state.tenantId, state.kind);
-                var member = await services.GetRequiredService<IMemberReader>()
-                    .FindByUserIdAsync(state.userId, ct);
-                return member?.Status;
+                var accesses = await services.GetRequiredService<IUserTenantAccessReader>()
+                    .ListForUserAsync(state.userId, ct);
+                return accesses.FirstOrDefault(access => access.TenantId == state.tenantId
+                    && access.Kind == state.kind)?.MemberStatus;
             }, CacheOptions, cancellationToken: cancellationToken);
     }
 

@@ -16,7 +16,7 @@
   - Cada cambio de estado pasa por `PartyPolicy.Require(entity, Party.Consumer|Party.Business)`.
 - **Trigger de columnas tenant:** `prevent_tenant_change` recibe los nombres como literales sin comillas dobles dentro (`'TenantId'`, no `'"TenantId"'`). Al corregir un helper de RLS, agregá una migración que recree los triggers ya instalados; cambiar solo el helper no actualiza bases migradas.
 - **El host del subdominio nunca da acceso a datos privados:** solo `IPublicSiteContext`, para lo público.
-- **Perfiles de una identidad:** `identity.UserTenantAccesses` es la excepción global explícita para elegir acceso y mostrar `/api/me`. Un trigger copia `Member` en su misma transacción; el runtime solo puede leer la proyección por `UserId` y une `platform.Tenants` para nombre y estado. Solo ConnectService, TenantResolutionMiddleware, `/api/me` y `DevelopmentSeeder` (para no duplicar un espacio Personal de muestra) consumen ese lector; no se ignoran filtros ni se lee `tenant.Members` de otro alcance.
+- **Perfiles de una identidad:** `identity.UserTenantAccesses` es la excepción global explícita para elegir acceso y mostrar `/api/me`. Un trigger copia `Member` en su misma transacción; el runtime solo puede leer la proyección por `UserId` y une `platform.Tenants` para nombre y estado. Solo `ConnectService`, `TenantResolutionMiddleware` mediante `AccessStatusCache`, `/api/me` mediante `ProfileSnapshotBuilder` y `DevelopmentSeeder` (para no duplicar un espacio Personal de muestra) consumen ese lector; no se ignoran filtros ni se lee `tenant.Members` de otro alcance. `IdentityAccessTests` fija esa lista.
 - **Plataforma, workers y altas:** `using (tenantScope.Enter(tenantId)) { … }` después de autorizar, y antes de abrir el límite. En plataforma, además, con motivo obligatorio y el `SecurityEvent` registrado antes de `Enter` (`PlatformActionGuard`).
 - **Seed de Development:** `DevelopmentSeeder` consulta la proyección global de accesos por usuario para encontrar Empresa A y comprobar si Kevin o Carla ya tienen Personal. Dentro de la UoW del Personal toma el lock de la cuenta y vuelve a comprobar la proyección. Solo `DatabaseSeeder` coordina los límites tenant con `ITenantScope.Enter`; `DevelopmentSeeder` no entra en otros scopes.
 - **Una persona (B2C) nunca crea una organización:** el alta es "Registrá tu empresa" (`BusinessSignupService`).
@@ -40,7 +40,7 @@
 ## Lo verifica
 - `TenantIsolationModelValidator` (E2) al arrancar: toda entidad está clasificada, con su esquema y su filtro.
 - `RlsPolicyInventoryTests` (E2), `RlsBarrierTests` (E2), `RuntimeRoleTests` (E2).
-- `CrossTenantIsolationTests` (E2), `PublicAndSharedRowsTests` (E2), `AccessTests` (E3): acceso equivocado, B2C no crea empresas, accesos que no se mezclan.
+- `CrossTenantIsolationTests` (E2) y `PublicAndSharedRowsTests` (E2) prueban el aislamiento de filas; `AccessTests` (E3) prueba el atributo y su filtro. `IngressJourneyTests` (E3) cubre el 403 del acceso equivocado, la separación B2C/B2B y que B2C no expone el alta de empresa; `SuspensionTests` (E3) cubre los estados suspendidos.
 - `SubdomainTests` (E7): el host resuelve solo lo público; redirect URI solo para slugs publicados.
 - `DataClassificationTests` (E2), `TenantScopeUsageTests` (E2), `QueryFilterBypassTests` (E2), `IdentityAccessTests` (E3), `AccessDeclarationTests` (E3) con la lista explícita de controllers anónimos del dominio principal, `CacheKeyScopeTests` (E2).
 

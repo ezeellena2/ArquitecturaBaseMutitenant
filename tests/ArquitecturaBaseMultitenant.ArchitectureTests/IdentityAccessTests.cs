@@ -4,7 +4,7 @@ namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 public sealed class IdentityAccessTests
 {
     [Fact]
-    public void Global_access_reader_is_consumed_only_by_access_selection_and_me()
+    public void Global_access_reader_is_consumed_only_by_access_selection_tenant_validation_seed_and_me()
     {
         var source = Path.Combine(SolutionRoot.FullPath, "src");
         var consumers = Directory.EnumerateFiles(source, "*.cs", SearchOption.AllDirectories)
@@ -21,6 +21,7 @@ public sealed class IdentityAccessTests
         Assert.Equal([
             "ArquitecturaBaseMultitenant.Application/Services/Auth/ConnectService.cs",
             "ArquitecturaBaseMultitenant.Application/Services/Profile/ProfileSnapshotBuilder.cs",
+            "ArquitecturaBaseMultitenant.Infrastructure/Caching/AccessStatusCache.cs",
             "ArquitecturaBaseMultitenant.Infrastructure/Persistence/Seed/DevelopmentSeeder.cs",
         ], consumers.Order(StringComparer.Ordinal));
     }

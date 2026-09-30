@@ -1,6 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -32,19 +31,21 @@ public sealed class AccessStatusCacheTests
     }
 
     [Fact]
-    public async Task Membership_cache_uses_tenant_scope_and_invalidates_one_member()
+    public async Task Membership_cache_reads_global_access_index_and_invalidates_one_member()
     {
         var (cache, state) = NewCache();
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
+        state.Accesses = [new UserTenantAccessRow(tenantId, TenantKind.Business, "Empresa A", null,
+            TenantStatus.Active, MemberStatus.Active, null)];
 
         Assert.Equal(MemberStatus.Active,
             await cache.GetMemberStatusAsync(userId, tenantId, TenantKind.Business, Ct));
-        state.MemberStatus = MemberStatus.Inactive;
+        state.Accesses = [state.Accesses[0] with { MemberStatus = MemberStatus.Inactive }];
         Assert.Equal(MemberStatus.Active,
             await cache.GetMemberStatusAsync(userId, tenantId, TenantKind.Business, Ct));
         Assert.Equal(1, state.MemberReads);
-        Assert.Equal(tenantId, state.LastTenantId);
+        Assert.Equal(userId, state.LastUserId);
 
         await cache.InvalidateMemberAsync(userId, tenantId, Ct);
 
@@ -53,16 +54,27 @@ public sealed class AccessStatusCacheTests
         Assert.Equal(2, state.MemberReads);
     }
 
+    [Fact]
+    public async Task Membership_cache_rejects_a_tenant_or_kind_absent_from_the_global_index()
+    {
+        var (cache, state) = NewCache();
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        state.Accesses = [new UserTenantAccessRow(tenantId, TenantKind.Business, "Empresa A", null,
+            TenantStatus.Active, MemberStatus.Active, null)];
+
+        Assert.Null(await cache.GetMemberStatusAsync(userId, Guid.NewGuid(), TenantKind.Business, Ct));
+        Assert.Null(await cache.GetMemberStatusAsync(userId, tenantId, TenantKind.Personal, Ct));
+    }
+
     private static (IAccessStatusCache Cache, FakeState State) NewCache()
     {
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddHybridCache();
         services.AddSingleton<FakeState>();
-        services.AddScoped<FakeInitializer>();
-        services.AddScoped<ITenantAccessInitializer>(provider => provider.GetRequiredService<FakeInitializer>());
         services.AddScoped<IUserStatusReader, FakeUserStatusReader>();
-        services.AddScoped<IMemberReader, FakeMemberReader>();
+        services.AddScoped<IUserTenantAccessReader, FakeAccessReader>();
         services.AddSingleton<IAccessStatusCache, AccessStatusCache>();
         var provider = services.BuildServiceProvider();
         return (provider.GetRequiredService<IAccessStatusCache>(), provider.GetRequiredService<FakeState>());
@@ -71,16 +83,10 @@ public sealed class AccessStatusCacheTests
     private sealed class FakeState
     {
         public UserStatus UserStatus { get; set; } = UserStatus.Active;
-        public MemberStatus MemberStatus { get; set; } = MemberStatus.Active;
+        public IReadOnlyList<UserTenantAccessRow> Accesses { get; set; } = [];
         public int UserReads { get; set; }
         public int MemberReads { get; set; }
-        public Guid? LastTenantId { get; set; }
-    }
-
-    private sealed class FakeInitializer : ITenantAccessInitializer
-    {
-        public Guid? TenantId { get; private set; }
-        public void SetFromAccess(Guid tenantId, TenantKind kind) => TenantId = tenantId;
+        public Guid? LastUserId { get; set; }
     }
 
     private sealed class FakeUserStatusReader(FakeState state) : IUserStatusReader
@@ -92,17 +98,14 @@ public sealed class AccessStatusCacheTests
         }
     }
 
-    private sealed class FakeMemberReader(FakeState state, FakeInitializer initializer) : IMemberReader
+    private sealed class FakeAccessReader(FakeState state) : IUserTenantAccessReader
     {
-        public Task<MemberRow?> FindByUserIdAsync(Guid userId, CancellationToken cancellationToken)
+        public Task<IReadOnlyList<UserTenantAccessRow>> ListForUserAsync(Guid userId,
+            CancellationToken cancellationToken)
         {
             state.MemberReads++;
-            state.LastTenantId = initializer.TenantId;
-            return Task.FromResult<MemberRow?>(new MemberRow(initializer.TenantId!.Value, userId,
-                state.MemberStatus, state.UserStatus, null));
+            state.LastUserId = userId;
+            return Task.FromResult(state.Accesses);
         }
-
-        public Task<IReadOnlyList<MemberRow>> ListCurrentTenantAsync(CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<MemberRow>>([]);
     }
 }

@@ -209,7 +209,7 @@ Página pública:   Draft ──(publicar)──► Published ──(despublicar
 | `ITenantContext` | Application | `TenantId?` y `TenantKind?` del acceso activo |
 | `IPublicSiteContext` | Application | `BusinessTenantId?` resuelto por el subdominio (solo para datos públicos) |
 | `ITenantScope` | Application | `Enter(tenantId)` para plataforma, workers y altas |
-| `TenantResolutionMiddleware` | Api | lee `access`, `tenant_id` y `tenant_kind` del token; verifica en caché que estén activos; si la organización no está activa, responde el 403 de su estado (§7) |
+| `TenantResolutionMiddleware` | Api | lee `access`, `tenant_id` y `tenant_kind` del token; verifica en caché el estado de cuenta, organización y membresía proyectada en `identity.UserTenantAccesses`; si la organización no está activa, responde el 403 de su estado (§7) |
 | `PublicSiteResolutionMiddleware` | Api | subdominio → `BusinessTenantId` de una página publicada |
 
 Para consultar los perfiles de una cuenta desde cualquiera de los dos accesos, `identity.UserTenantAccesses` mantiene una proyección global de `tenant.Members` (`UserId`, `TenantId`, `Status`, `JoinedAtUtc`), sin RLS. Un trigger sobre `Members` la actualiza al insertar, cambiar o borrar una membresía, en la misma transacción del `IUnitOfWork`; la migración copia las membresías previas por tenant bajo RLS. `mt_app` solo tiene `SELECT` sobre la proyección: la función del trigger escribe con el dueño de la base. El nombre y estado de la organización salen de un join con `platform.Tenants`, sin duplicarlos. Solo `ConnectService`, `TenantResolutionMiddleware`, `/api/me` y `DevelopmentSeeder` para el seed Personal pueden leer este índice para seleccionar o mostrar accesos; no da permiso para leer datos privados de otro tenant.
