@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Application.Validation.Auth;
 
+/// <summary>Comprueba correo, longitud y dígitos del código y un retorno de acceso permitido antes de verificar el ingreso.</summary>
 internal sealed class VerifyLoginCodeRequestValidator : AbstractValidator<VerifyLoginCodeRequest>
 {
     public VerifyLoginCodeRequestValidator(IOptions<LoginCodeOptions> options)

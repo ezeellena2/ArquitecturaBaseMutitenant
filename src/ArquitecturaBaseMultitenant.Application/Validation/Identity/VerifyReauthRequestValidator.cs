@@ -5,6 +5,7 @@ using FluentValidation;
 
 namespace ArquitecturaBaseMultitenant.Application.Validation.Identity;
 
+/// <summary>Comprueba acción, métodos de origen y destino y código antes de emitir el ticket para una operación sensible.</summary>
 internal sealed class VerifyReauthRequestValidator : AbstractValidator<VerifyReauthRequest>
 {
     public VerifyReauthRequestValidator()

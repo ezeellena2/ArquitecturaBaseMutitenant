@@ -4,6 +4,7 @@ using FluentValidation;
 
 namespace ArquitecturaBaseMultitenant.Application.Validation.Identity;
 
+/// <summary>Exige el método de correo y un código numérico antes de completar su verificación.</summary>
 internal sealed class VerifyLoginMethodRequestValidator : AbstractValidator<VerifyLoginMethodRequest>
 {
     public VerifyLoginMethodRequestValidator()

@@ -5,6 +5,7 @@ using FluentValidation;
 
 namespace ArquitecturaBaseMultitenant.Application.Validation.Identity;
 
+/// <summary>Limita la reautenticación a acciones admitidas y exige un método objetivo solo cuando esa acción lo necesita.</summary>
 internal sealed class RequestReauthRequestValidator : AbstractValidator<RequestReauthRequest>
 {
     public RequestReauthRequestValidator()

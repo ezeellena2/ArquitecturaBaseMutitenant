@@ -7,6 +7,7 @@ using FluentValidation;
 
 namespace ArquitecturaBaseMultitenant.Application.Validation.Profile;
 
+/// <summary>Exige versión para concurrencia y preferencias habilitadas en los catálogos antes de actualizar el perfil.</summary>
 internal sealed class UpdateMeRequestValidator : AbstractValidator<UpdateMeRequest>
 {
     public UpdateMeRequestValidator(ICultureCatalog cultures, ITimeZoneCatalog timeZones)

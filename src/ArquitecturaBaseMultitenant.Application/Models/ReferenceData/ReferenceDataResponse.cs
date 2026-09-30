@@ -1,5 +1,6 @@
 namespace ArquitecturaBaseMultitenant.Application.Models.ReferenceData;
 
+/// <summary>Agrupa los cinco catálogos traducidos para el front, con filas habilitadas y deshabilitadas.</summary>
 public sealed record ReferenceDataResponse(
     string Culture,
     IReadOnlyList<CurrencyReferenceItem> Currencies,

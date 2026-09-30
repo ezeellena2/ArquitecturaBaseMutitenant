@@ -4,6 +4,7 @@ using FluentValidation;
 
 namespace ArquitecturaBaseMultitenant.Application.Validation.Legal;
 
+/// <summary>Exige identificadores y versiones legales válidos, sin duplicados, antes de registrar la aceptación.</summary>
 internal sealed class AcceptLegalRequestValidator : AbstractValidator<AcceptLegalRequest>
 {
     public AcceptLegalRequestValidator()

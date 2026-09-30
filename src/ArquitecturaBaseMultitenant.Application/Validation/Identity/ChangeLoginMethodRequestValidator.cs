@@ -5,6 +5,7 @@ using FluentValidation;
 
 namespace ArquitecturaBaseMultitenant.Application.Validation.Identity;
 
+/// <summary>Exige el método objetivo y un ticket de reautenticación con formato válido antes de cambiarlo o quitarlo.</summary>
 internal sealed class ChangeLoginMethodRequestValidator : AbstractValidator<ChangeLoginMethodRequest>
 {
     public ChangeLoginMethodRequestValidator()

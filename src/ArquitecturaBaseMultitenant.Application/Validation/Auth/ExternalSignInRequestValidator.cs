@@ -4,6 +4,7 @@ using FluentValidation;
 
 namespace ArquitecturaBaseMultitenant.Application.Validation.Auth;
 
+/// <summary>Exige un retorno de autorización seguro y, solo para altas con Google, aceptación de términos.</summary>
 internal sealed class ExternalSignInRequestValidator : AbstractValidator<ExternalSignInRequest>
 {
     public ExternalSignInRequestValidator()

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Application.Validation.Auth;
 
+/// <summary>Exige correo, código numérico con longitud configurada y aceptación de términos para confirmar el registro.</summary>
 internal sealed class VerifySignupRequestValidator : AbstractValidator<VerifySignupRequest>
 {
     public VerifySignupRequestValidator(IOptions<LoginCodeOptions> options)
