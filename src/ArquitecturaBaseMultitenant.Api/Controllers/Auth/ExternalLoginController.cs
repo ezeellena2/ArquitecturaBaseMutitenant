@@ -32,6 +32,7 @@ public sealed class ExternalLoginController(
     private const string AccessKey = "Access";
     private const string CultureKey = "Culture";
     private const string TimeZoneKey = "TimeZoneId";
+    private const string LoginProviderKey = "LoginProvider";
 
     [HttpGet("google")]
     [ProducesResponseType(StatusCodes.Status302Found)]
@@ -55,6 +56,7 @@ public sealed class ExternalLoginController(
         }
 
         var properties = new AuthenticationProperties { RedirectUri = CallbackPath };
+        properties.Items[LoginProviderKey] = GoogleDefaults.AuthenticationScheme;
         properties.Items[SignupKey] = query.Signup ? "true" : "false";
         properties.Items[AcceptedTermsKey] = query.AcceptedTerms ? "true" : "false";
         properties.Items[ReturnUrlKey] = query.Signup ? ReturnUrls.AuthorizePath : query.ReturnUrl;
