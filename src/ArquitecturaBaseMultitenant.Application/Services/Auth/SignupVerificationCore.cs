@@ -54,6 +54,8 @@ internal sealed class SignupVerificationCore(ILoginCodeRepository codes,
                 return Fail(method.UserId, AccountErrors.LockedOut);
             if (await existingMethods.CheckAccountAsync(method.UserId, cancellationToken) is { } accountError)
                 return Fail(method.UserId, accountError);
+            // Un código anónimo de Registro no prueba la sesión que pidió agregar el método.
+            if (method.VerifiedAtUtc is null) return Fail(method.UserId, LoginMethodErrors.AlreadyUsed);
             userId = await existingMethods.ConfirmAsync(method, request.Email!, nowUtc, cancellationToken);
             await signIn.ResetFailedAttemptsAsync(userId, cancellationToken);
         }

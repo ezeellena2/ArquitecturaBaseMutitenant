@@ -13,7 +13,8 @@ Estado: en ejecución. La 3c queda pendiente. No declarar cerrada esta etapa sin
 | T04 · persistencia de cuenta | `5949ffb` | — | Rojo CS1061; Testcontainers LoginMethodsTests 3/3; modelo sin cambios pendientes; SQL revisado |
 | T05 · avisos de cuenta | `5eebba1` | — | Rojo CS0234; Testcontainers AccountNoticeTests 2/2; contactos deduplicados, payload cifrado y aviso final principal |
 | T06 · agregar y verificar correo | `0d6f226` | — | Rojo CS0246/CS0117; LoginMethodsTests 5/5 y plantillas: total 17/17; código Login rechazado, intento guardado, código propio consumido y reserva global |
-| T07 · quitar y elegir principal | este commit | — | Rojo CS0246/CS1061; integración 8/8, inventario existente de identidad 3/3; contexto/replay/vencimiento, último método y principal/copias atómicos |
+| T07 · quitar y elegir principal | `ba150f2` | — | Rojo CS0246/CS1061; integración 8/8, inventario existente de identidad 3/3; contexto/replay/vencimiento, último método y principal/copias atómicos |
+| T06 bis · aislar registro y correo pendiente | este commit | — | Rojo: 204 con cookie en lugar de 400; registro ahora no confirma métodos pendientes agregados desde otra cuenta |
 
 ## Evidencia del E2E real antes de programar
 
@@ -51,6 +52,7 @@ Ocultaciones solicitadas: WhatsApp (E8), exportación/sugerencia de exportar (E1
 - T05: el canal recibe CultureProfile ya resuelto y renderiza async dentro de la UoW llamadora. UserId nullable permite cancelar mensajes propios sin modificar mensajes anteriores o de otros destinos; cancelar borra el payload cifrado pendiente.
 - T06: se reutiliza VerifyDestination ya definido en LoginCodePurpose, en lugar de crear un propósito equivalente. Los avisos de agregado/desvinculado adaptan el sustantivo del método en la plantilla aprobada; Google mantiene subject privado.
 - T07: el código también conserva acción/respaldo/objetivo, antes del ticket; de otro modo, la misma prueba podría presentarse como una acción diferente al verificar. Los métodos administrados consultan un booleano de membresía/organización activa mediante un puerto específico, declarado en el inventario existente; no consultan Members fuera de RLS.
+- T06 bis: un correo pendiente agregado desde Mi cuenta solo se confirma con VerifyDestination y su UserId. El registro anónimo no lo activa ni inicia una sesión de su propietario; devuelve el error existente de dirección asociada después de probar el código. Las invitaciones se implementan con su protocolo en 3c.
 
 ## Recorrido manual
 
