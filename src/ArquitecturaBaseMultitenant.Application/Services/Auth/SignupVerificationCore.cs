@@ -8,7 +8,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
 /// <summary>Bloquea, relee y verifica el código antes de registrar o confirmar una cuenta.</summary>
-internal sealed class SignupVerificationCore(ILoginCodeRepository codes, IUserLookup userLookup,
+internal sealed class SignupVerificationCore(ILoginCodeRepository codes,
     LoginCodeVerifier verifier, SignupPolicy policy, SignupAccountRegistrar registrar,
     SignupExistingMethodVerifier existingMethods, ILoginAuditRepository audits,
     ISignInService signIn, TimeProvider timeProvider)
@@ -26,8 +26,7 @@ internal sealed class SignupVerificationCore(ILoginCodeRepository codes, IUserLo
             requestedByUserId: null, request.Code!, cancellationToken);
         if (verified.IsFailure)
         {
-            var failedMethod = await userLookup.FindMethodAsync(LoginMethodType.Email,
-                destination.Value, cancellationToken);
+            var failedMethod = await existingMethods.FindAsync(destination, cancellationToken);
             if (failedMethod is not null && hadActiveCode && IsFailedCodeAttempt(verified.Error))
             {
                 await signIn.RegisterFailedAttemptAsync(failedMethod.UserId, cancellationToken);
@@ -38,8 +37,7 @@ internal sealed class SignupVerificationCore(ILoginCodeRepository codes, IUserLo
             return Fail(failedMethod?.UserId, verified.Error);
         }
 
-        var method = await userLookup.FindMethodAsync(LoginMethodType.Email,
-            destination.Value, cancellationToken);
+        var method = await existingMethods.FindAsync(destination, cancellationToken);
         Guid userId;
         if (method is null)
         {
