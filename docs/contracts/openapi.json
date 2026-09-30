@@ -1640,6 +1640,16 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal Server Error",
             "content": {
@@ -2360,6 +2370,19 @@
               "type": "string"
             }
           },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "needsPersonalLoginMethod": {
+            "type": "boolean"
+          },
+          "pendingLegalDocuments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PendingLegalDocumentResponse"
+            }
+          },
           "permissions": {
             "type": [
               "null",
@@ -2440,6 +2463,27 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "PendingLegalDocumentResponse": {
+        "required": [
+          "id",
+          "kind",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/LegalDocumentKind"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -2782,6 +2826,13 @@
               "null",
               "string"
             ]
+          },
+          "version": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
           }
         },
         "description": "Preferencias de la cuenta autenticada, nunca de un id recibido del cliente."

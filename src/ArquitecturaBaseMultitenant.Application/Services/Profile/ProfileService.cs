@@ -50,7 +50,7 @@ internal sealed class ProfileService(ICurrentUser currentUser, ITenantContext te
         }
 
         await users.UpdateProfileAsync(userId, request.DisplayName, request.Culture!, request.TimeZoneId!,
-            cancellationToken);
+            request.Version!.Value, cancellationToken);
         return Result.Success();
     }
 }

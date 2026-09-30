@@ -111,7 +111,8 @@ public sealed class LoginPersistenceTests(ApiFactory factory)
         {
             userId = (await users.CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct)).Id;
             await users.SetPrimaryEmailAsync(userId, email, ct);
-            await users.UpdateProfileAsync(userId, "Ana", "en-US", "America/New_York", ct);
+            var version = (await users.GetByIdAsync(userId, ct))!.Version;
+            await users.UpdateProfileAsync(userId, "Ana", "en-US", "America/New_York", version, ct);
             await users.RememberBusinessTenantAsync(userId, tenantId, ct);
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);

@@ -1,12 +1,15 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Application.Models.Profile;
 using ArquitecturaBaseMultitenant.Application.Models.Tenancy;
 using ArquitecturaBaseMultitenant.Application.Services.Profile;
+using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Application.UnitTests.TestDoubles;
 using ArquitecturaBaseMultitenant.Application.Validation.Profile;
 using ArquitecturaBaseMultitenant.Domain.Common;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
@@ -18,6 +21,28 @@ public sealed class ProfileServiceTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
+    [Theory]
+    [InlineData(false, true, false, true)]
+    [InlineData(true, false, false, true)]
+    [InlineData(true, true, true, true)]
+    [InlineData(true, true, false, false)]
+    public async Task Personal_method_warning_requires_verified_available_own_method(
+        bool verified, bool available, bool managed, bool warning)
+    {
+        var id = Guid.CreateVersion7();
+        var catalog = new JsonReferenceDataCatalog();
+        using var fixture = new ServiceFixture<ProfileService>();
+        var method = new LoginMethodRow(Guid.CreateVersion7(), LoginMethodType.Google, "subject", true,
+            verified ? fixture.TimeProvider.GetUtcNow().UtcDateTime : null, managed ? Guid.CreateVersion7() : null);
+        var snapshots = new ProfileSnapshotBuilder(new StubUsers(Account(id)), new StubAccesses([]),
+            new StubSettings(null), catalog, catalog, new StubMethods([method]),
+            new LoginMethodAvailability([], new StubGoogle(available), new StubMemberships()));
+
+        var profile = await snapshots.BuildAsync(id, Access.Consumer, null, Ct);
+
+        Assert.Equal(warning, profile!.NeedsPersonalLoginMethod);
+    }
+
     [Fact]
     public async Task Update_requires_enabled_culture_and_time_zone_from_catalogs()
     {
@@ -25,9 +50,9 @@ public sealed class ProfileServiceTests
         var validator = new UpdateMeRequestValidator(catalog, catalog);
 
         Assert.True((await validator.ValidateAsync(new UpdateMeRequest(null, "es-AR",
-            "America/Argentina/Buenos_Aires"), Ct)).IsValid);
+            "America/Argentina/Buenos_Aires", 5), Ct)).IsValid);
 
-        var invalid = await validator.ValidateAsync(new UpdateMeRequest(null, "zz-ZZ", "Unknown/Zone"), Ct);
+        var invalid = await validator.ValidateAsync(new UpdateMeRequest(null, "zz-ZZ", "Unknown/Zone", 5), Ct);
         Assert.Equal(["Culture", "TimeZoneId"], invalid.Errors.Select(error => error.PropertyName));
     }
 
@@ -38,7 +63,7 @@ public sealed class ProfileServiceTests
         var validator = new UpdateMeRequestValidator(catalog, catalog);
 
         var invalid = await validator.ValidateAsync(new UpdateMeRequest(
-            new string('A', TextLimits.PersonName + 1), "es-AR", "America/Argentina/Buenos_Aires"), Ct);
+            new string('A', TextLimits.PersonName + 1), "es-AR", "America/Argentina/Buenos_Aires", 5), Ct);
 
         Assert.Equal("DisplayName", Assert.Single(invalid.Errors).PropertyName);
     }
@@ -132,12 +157,12 @@ public sealed class ProfileServiceTests
         var service = CreateService(new StubCurrentUser(userId, Access.Consumer), new FakeTenantContext(),
             users, new StubAccesses([]), new StubSettings(null), fixture, unitOfWork);
 
-        var invalid = await service.UpdateAsync(new UpdateMeRequest("Ana", "zz-ZZ", "Unknown/Zone"), Ct);
+        var invalid = await service.UpdateAsync(new UpdateMeRequest("Ana", "zz-ZZ", "Unknown/Zone", 5), Ct);
         Assert.True(invalid.IsFailure);
         Assert.Equal(0, unitOfWork.Transactions);
 
         var updated = await service.UpdateAsync(new UpdateMeRequest("Ana", "en-US",
-            "America/Argentina/Buenos_Aires"), Ct);
+            "America/Argentina/Buenos_Aires", 5), Ct);
         Assert.True(updated.IsSuccess);
         Assert.Equal(1, unitOfWork.Transactions);
         Assert.Equal(CommitPolicy.OnSuccess, unitOfWork.LastPolicy);
@@ -159,7 +184,8 @@ public sealed class ProfileServiceTests
         ServiceFixture<ProfileService> fixture, IUnitOfWork? unitOfWork = null)
     {
         var catalog = new JsonReferenceDataCatalog();
-        var snapshots = new ProfileSnapshotBuilder(users, accesses, settings, catalog, catalog);
+        var availability = new LoginMethodAvailability([], new StubGoogle(), new StubMemberships());
+        var snapshots = new ProfileSnapshotBuilder(users, accesses, settings, catalog, catalog, new StubMethods(), availability);
         return new ProfileService(current, context, snapshots, users, fixture.Validator,
             unitOfWork ?? new FakeUnitOfWork(), fixture.TimeProvider, fixture.Logger);
     }
@@ -203,7 +229,7 @@ public sealed class ProfileServiceTests
             CancellationToken cancellationToken) => throw new NotSupportedException();
 
         public Task UpdateProfileAsync(Guid userId, string? displayName, string culture, string timeZoneId,
-            CancellationToken cancellationToken)
+            uint expectedVersion, CancellationToken cancellationToken)
         {
             LastUpdate = (userId, displayName, culture, timeZoneId);
             return Task.CompletedTask;
@@ -211,5 +237,17 @@ public sealed class ProfileServiceTests
 
         public Task RememberBusinessTenantAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
+    }
+
+    private sealed class StubMethods(IReadOnlyList<LoginMethodRow>? rows = null) : ILoginMethodReader
+    {
+        public Task<IReadOnlyList<LoginMethodRow>> ListByUserIdAsync(Guid userId,
+            CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<LoginMethodRow>>(rows ?? []);
+    }
+
+    private sealed class StubGoogle(bool enabled = false) : IGoogleAvailability { public bool IsEnabled => enabled; }
+    private sealed class StubMemberships : ILoginMethodMembershipReader
+    {
+        public Task<bool> IsActiveAsync(Guid userId, Guid tenantId, CancellationToken ct) => Task.FromResult(false);
     }
 }

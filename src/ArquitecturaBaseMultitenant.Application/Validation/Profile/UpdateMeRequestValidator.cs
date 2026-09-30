@@ -11,6 +11,8 @@ internal sealed class UpdateMeRequestValidator : AbstractValidator<UpdateMeReque
 {
     public UpdateMeRequestValidator(ICultureCatalog cultures, ITimeZoneCatalog timeZones)
     {
+        RuleFor(request => request.Version).NotNull().WithMessage(_ => ValidationTexts.Required)
+            .GreaterThan(0U).WithMessage(_ => ValidationTexts.Required);
         RuleFor(request => request.DisplayName).MaxLength(TextLimits.PersonName);
         RuleFor(request => request.Culture)
             .NotEmpty().WithMessage(_ => ValidationTexts.Required)

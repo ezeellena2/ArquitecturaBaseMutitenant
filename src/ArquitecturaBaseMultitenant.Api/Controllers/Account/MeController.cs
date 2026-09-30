@@ -28,8 +28,9 @@ public sealed class MeController(IProfileService service) : ControllerBase
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status401Unauthorized)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]
+    [ProducesProblem(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Update([FromBody] UpdateMeHttpRequest request,
         CancellationToken cancellationToken) =>
         (await service.UpdateAsync(new UpdateMeRequest(request.DisplayName, request.Culture,
-            request.TimeZoneId), cancellationToken)).ToActionResult(this);
+            request.TimeZoneId, request.Version), cancellationToken)).ToActionResult(this);
 }

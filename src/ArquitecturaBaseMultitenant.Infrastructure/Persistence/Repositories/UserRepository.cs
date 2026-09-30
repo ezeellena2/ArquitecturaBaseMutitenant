@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
@@ -44,7 +45,7 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
     }
 
     public async Task UpdateProfileAsync(Guid userId, string? displayName, string culture,
-        string timeZoneId, CancellationToken cancellationToken)
+        string timeZoneId, uint expectedVersion, CancellationToken cancellationToken)
     {
         context.RequireTransaction();
         var user = await RequireUserAsync(userId, cancellationToken);
@@ -54,7 +55,9 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
         }
 
         user.UpdatePreferences(culture, timeZoneId);
-        EnsureSucceeded(await manager.UpdateAsync(user), "update the profile");
+        context.Entry(user).Property(candidate => candidate.Version).OriginalValue = expectedVersion;
+        // UserStore.Update vuelve a adjuntar la entidad y restablece los valores originales.
+        // Nombre y preferencias no requieren normalización de Identity; los guarda la UoW.
     }
 
     public async Task SetPrimaryContactAsync(Guid userId, Email? email, PhoneNumber? phoneNumber,
@@ -90,6 +93,8 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
     {
         if (!result.Succeeded)
         {
+            if (result.Errors.Any(error => error.Code == nameof(IdentityErrorDescriber.ConcurrencyFailure)))
+                throw new ConcurrencyConflictException();
             throw new InvalidOperationException(
                 $"Could not {action}: {string.Join(", ", result.Errors.Select(error => error.Code))}.");
         }

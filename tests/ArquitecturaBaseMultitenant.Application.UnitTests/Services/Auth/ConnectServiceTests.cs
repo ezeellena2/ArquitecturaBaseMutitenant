@@ -247,7 +247,7 @@ public sealed class ConnectServiceTests
             CancellationToken cancellationToken) => throw new NotSupportedException();
 
         public Task UpdateProfileAsync(Guid userId, string? displayName, string culture, string timeZoneId,
-            CancellationToken cancellationToken) => throw new NotSupportedException();
+            uint expectedVersion, CancellationToken cancellationToken) => throw new NotSupportedException();
 
         public Task RememberBusinessTenantAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken)
         {

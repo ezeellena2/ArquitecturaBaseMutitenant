@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Models.Profile;
+using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 
@@ -8,7 +9,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Profile;
 
 /// <summary>Compone la cuenta y sus accesos globales con las preferencias del tenant activo.</summary>
 internal sealed class ProfileSnapshotBuilder(IUserRepository users, IUserTenantAccessReader accesses,
-    ITenantSettingsReader settings, ICultureCatalog cultures, ICountryCatalog countries)
+    ITenantSettingsReader settings, ICultureCatalog cultures, ICountryCatalog countries,
+    ILoginMethodReader loginMethods, LoginMethodAvailability availability)
 {
     internal async Task<MeResponse?> BuildAsync(Guid userId, Access access, Guid? activeTenantId,
         CancellationToken cancellationToken)
@@ -33,9 +35,17 @@ internal sealed class ProfileSnapshotBuilder(IUserRepository users, IUserTenantA
         var country = culture is null
             ? null : await countries.FindAsync(culture.CountryCode, cancellationToken);
         var currencyCode = tenantSettings?.DefaultCurrency ?? country?.DefaultCurrencyCode;
+        var methods = await loginMethods.ListByUserIdAsync(userId, cancellationToken);
+        var hasPersonalMethod = false;
+        foreach (var method in methods.Where(method => method.ManagedByTenantId is null))
+            hasPersonalMethod |= await availability.IsAvailableAsync(userId, method, cancellationToken);
 
         return new MeResponse(account.Id, account.DisplayName, account.PrimaryEmail, access,
             activeTenantId, personalSpace, organizations, EffectivePermissions.Empty,
-            account.Culture, account.TimeZoneId, currencyCode, []);
+            account.Culture, account.TimeZoneId, currencyCode, [])
+        {
+            Version = account.Version,
+            NeedsPersonalLoginMethod = !hasPersonalMethod,
+        };
     }
 }

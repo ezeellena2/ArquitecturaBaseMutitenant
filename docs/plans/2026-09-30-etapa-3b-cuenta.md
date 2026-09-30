@@ -157,11 +157,11 @@ En cada tarea se guarda evidencia de rojo y verde con el comando y resultado. Si
 **Archivos:** back: `Models/Profile/{MeResponse,UpdateMeRequest}.cs`, `Services/Profile/{ProfileService,ProfileSnapshotBuilder}.cs`, `Api/Contracts/Account/UpdateMeHttpRequest.cs`, repositorio/lector de cuenta; test `tests/ArquitecturaBaseMultitenant.Application.UnitTests/Services/Profile/ProfileServiceTests.cs` y integración Identity.
 **Comportamiento exacto:** GET /api/me incorpora version, pendingLegalDocuments y needsPersonalLoginMethod. PUT manda xmin y produce 409 ante edición vieja. Cultura/zona usan catálogos y validación actual. Aviso deriva solo de métodos propios verificados/disponibles; no agrega listas ni semilla.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Segundo guardado con la misma versión falla; el aviso desaparece al verificar método propio.
-- [ ] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Application.UnitTests/ArquitecturaBaseMultitenant.Application.UnitTests.csproj -- --filter-class '*ProfileServiceTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: completar preferencias y avisos de la cuenta"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Segundo guardado con la misma versión falla; el aviso desaparece al verificar método propio.
+- [x] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Application.UnitTests/ArquitecturaBaseMultitenant.Application.UnitTests.csproj -- --filter-class '*ProfileServiceTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: completar preferencias y avisos de la cuenta"`. Registrar hash back/front.
 
 ### T11 · Aceptación bloqueante de versiones vigentes
 

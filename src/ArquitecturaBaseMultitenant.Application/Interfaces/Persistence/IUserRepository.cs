@@ -15,7 +15,7 @@ public interface IUserRepository
     Task SetPrimaryContactAsync(Guid userId, Email? email, PhoneNumber? phoneNumber, CancellationToken cancellationToken);
 
     Task UpdateProfileAsync(Guid userId, string? displayName, string culture, string timeZoneId,
-        CancellationToken cancellationToken);
+        uint expectedVersion, CancellationToken cancellationToken);
 
     Task RememberBusinessTenantAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken);
 }
