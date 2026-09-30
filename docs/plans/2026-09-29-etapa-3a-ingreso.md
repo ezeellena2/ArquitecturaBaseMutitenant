@@ -156,8 +156,11 @@ Cada tarea de pantalla usa su tablero de escritorio **y** móvil, los estados 3a
 5. `aspire run` levanta Postgres migrado, Api y front; `/alive` responde 200; al terminar, `aspire stop`. Ningún secreto o código aparece en logs, capturas ni commits.
 6. Comparación visual según puerta 9: por **cada pantalla y estado 3a de su tablero**, captura de app y tablero a **1440×900 y 390×844** en `docs/design/capturas/etapa-3a/`. Comparar estructura, textos, orden, tokens, controles y estados; corregir diferencias y documentar en el informe sólo las justificadas. No programar estados ausentes del lienzo.
 7. Entregar instrucciones reproducibles para el recorrido manual Gmail/Google/Ana, incluida la forma de leer el código de Ana del seed sin exponerlo en el informe. Enumerar por tarea su commit, el resultado resumido de cada puerta, capturas, diferencias y «Decisiones tomadas».
+8. `npm run test:e2e:real` del front debe pasar contra el AppHost Development y el navegador reales, con correo por pickup `.eml`, sin mocks: `/registro` nuevo → Personal → logout → `/login/empresa` con Ana → `/org` de Empresa A → F5 en Empresa A → Perfiles/Personal → logout. Es parte de la puerta general de todas las etapas desde E3a; un verde de integración o de capturas no lo sustituye.
 
-## Cierre verificado de 3a · 2026-09-29
+## Verificación previa de 3a · 2026-09-29 (cierre invalidado)
+
+La revisión de código de 2026-09-29 demostró que el ingreso real fallaba pese a los resultados siguientes. Esta tabla queda como registro histórico, no como cierre de 3a; la etapa sigue abierta hasta que pase el recorrido Playwright real y se corrijan los hallazgos de [`2026-09-29-revision-etapa-3a.md`](../reviews/2026-09-29-revision-etapa-3a.md).
 
 | Comprobación | Resultado |
 |---|---|
@@ -168,4 +171,4 @@ Cada tarea de pantalla usa su tablero de escritorio **y** móvil, los estados 3a
 | Visual | `docs/design/capturas/etapa-3a/` contiene 78 pares app/lienzo (156 PNG), todos a 1440×900 o 390×844: 30 de Ingreso, 10 de Registro, 6 públicas, 12 de inicios/layouts y 20 de errores/sesión. La auditoría no encontró diferencias bloqueantes. Los README de cada grupo explican controles diferidos y variaciones; las tres familias móviles sin tablero están marcadas como pendientes de aprobación del usuario. |
 | Arnés | `HarnessStage.Closed` del back y `HarnessStage` del front permanecen en 2 hasta cerrar la 3c. El inventario 3a y los arneses de ambos repos pasaron. |
 
-Los recorridos de integración cubren el código leído de un `.eml` de pruebas, registro y aceptación, Google con doble, Ana → Empresa A → F5 → Personal, preferencias `en-US` por `PUT/GET /api/me`, logout, 403 por acceso equivocado y ausencia de alta empresarial para el acceso Personal. El envío real a Gmail, el callback del cliente Google y la navegación manual quedan para la comprobación del usuario con las URI autorizadas en `docs/operations/configuracion.md` §4.
+Los recorridos de integración previos cubrían el código leído de un `.eml` de pruebas, registro y aceptación, Google con doble, Ana → Empresa A → F5 → Personal, preferencias `en-US` por `PUT/GET /api/me`, logout, 403 por acceso equivocado y ausencia de alta empresarial para el acceso Personal. No probaban el front y la Api reales juntos, por lo que no validaban el login. El envío real a Gmail, el callback del cliente Google y la navegación manual quedan para la comprobación del usuario con las URI autorizadas en `docs/operations/configuracion.md` §4.
