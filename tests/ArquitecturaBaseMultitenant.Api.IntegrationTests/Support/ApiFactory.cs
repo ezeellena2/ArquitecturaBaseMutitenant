@@ -18,6 +18,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         .Build();
     private readonly string _ownerPassword = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
     private readonly string _runtimePassword = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+    private readonly string _pickupDirectory = Path.Combine(Path.GetFullPath(Path.GetTempPath()),
+        $"mt-tests-{Guid.NewGuid():N}");
 
     public ApiFactory()
     {
@@ -50,8 +52,24 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     public override async ValueTask DisposeAsync()
     {
-        await base.DisposeAsync();
-        await _postgres.DisposeAsync();
+        try
+        {
+            await base.DisposeAsync();
+            await _postgres.DisposeAsync();
+        }
+        finally
+        {
+            if (Directory.Exists(_pickupDirectory))
+            {
+                var target = Path.GetFullPath(_pickupDirectory);
+                var parent = Path.GetDirectoryName(target);
+                if (string.Equals(parent?.TrimEnd(Path.DirectorySeparatorChar),
+                        Path.GetFullPath(Path.GetTempPath()).TrimEnd(Path.DirectorySeparatorChar),
+                        StringComparison.OrdinalIgnoreCase)
+                    && Path.GetFileName(target).StartsWith("mt-tests-", StringComparison.Ordinal))
+                    Directory.Delete(target, recursive: true);
+            }
+        }
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -63,6 +81,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Authentication:Issuer", "https://localhost:5174/");
         builder.UseSetting("Authentication:LoginCode:HashKey",
             Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)));
+        builder.UseSetting("Email:PickupDirectory", _pickupDirectory);
         builder.UseSetting("Authentication:Clients:Web:RedirectUris:0", "https://localhost:5174/auth/callback");
         builder.UseSetting("Authentication:Clients:Web:PostLogoutRedirectUris:0", "https://localhost:5174/");
         builder.ConfigureLogging(logging => logging.ClearProviders().AddConsole());

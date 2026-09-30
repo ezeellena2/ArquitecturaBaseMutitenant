@@ -1,12 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.RegularExpressions;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -14,8 +11,6 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using MimeKit;
 using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
@@ -267,30 +262,6 @@ public sealed class LoginCodeTests(ApiFactory factory)
         return userId;
     }
 
-    private async Task<string> ReadPickupCodeAsync(string email)
-    {
-        await using var scope = factory.Services.CreateAsyncScope();
-        var services = scope.ServiceProvider;
-        var directory = Path.Combine(services.GetRequiredService<IHostEnvironment>().ContentRootPath, ".emails");
-        for (var attempt = 0; attempt < 20; attempt++)
-        {
-            await services.GetRequiredService<IOutboxDispatchService>().DispatchOnceAsync(
-                services.GetServices<IChannelSender>().ToArray(), Ct);
-            foreach (var path in Directory.Exists(directory) ? Directory.GetFiles(directory, "*.eml") : [])
-            {
-                MimeMessage message;
-                await using (var stream = File.OpenRead(path))
-                {
-                    message = await MimeMessage.LoadAsync(stream, Ct);
-                }
-                if (!message.To.Mailboxes.Any(mailbox => mailbox.Address == email)) continue;
-                var match = Regex.Match(message.TextBody ?? string.Empty, @"(?<!\d)\d{6}(?!\d)");
-                Assert.True(match.Success, "El correo pickup no contiene un código de seis dígitos.");
-                File.Delete(path);
-                return match.Value;
-            }
-            await Task.Delay(100, Ct);
-        }
-        throw new Xunit.Sdk.XunitException("No se encontró el correo pickup de ingreso.");
-    }
+    private Task<string> ReadPickupCodeAsync(string email) =>
+        PickupCodeReader.ReadAsync(factory.Services, email, Ct);
 }
