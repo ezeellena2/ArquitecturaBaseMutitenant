@@ -38,8 +38,9 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
                 OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         }
 
+        var forceLogin = request.HasPromptValue(PromptValues.Login);
         var session = await HttpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
-        if (session.Succeeded && Guid.TryParse(
+        if (!forceLogin && session.Succeeded && Guid.TryParse(
             session.Principal?.FindFirstValue(ClaimTypes.NameIdentifier), CultureInfo.InvariantCulture, out var userId))
         {
             var selected = await service.SelectAccessAsync(userId, access, requestedTenantId, cancellationToken);
@@ -67,6 +68,12 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
         var parameters = Request.HasFormContentType
             ? (await Request.ReadFormAsync(cancellationToken)).ToList()
             : Request.Query.ToList();
+        // El código verificado reanuda este authorize con una cookie nueva.
+        // Si se conserva prompt=login, volvería al formulario en un bucle.
+        if (forceLogin)
+        {
+            parameters = parameters.Where(parameter => parameter.Key != Parameters.Prompt).ToList();
+        }
         var loginPath = access == Access.Business ? "/login/empresa" : ReturnUrls.LoginPath;
         return Redirect(loginPath + QueryString.Create("returnUrl",
             ReturnUrls.AuthorizePath + QueryString.Create(parameters)));

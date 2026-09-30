@@ -90,6 +90,16 @@ public sealed class IngressJourneyTests(ApiFactory factory)
         Assert.Contains(verified.Headers.GetValues("Set-Cookie"),
             cookie => cookie.Contains("Identity.Application", StringComparison.Ordinal));
 
+        using var forcedLogin = await client.GetAsync(businessAuthorize + "&prompt=login", Ct);
+        Assert.Equal(HttpStatusCode.Redirect, forcedLogin.StatusCode);
+        var loginTarget = forcedLogin.Headers.Location?.ToString();
+        Assert.NotNull(loginTarget);
+        Assert.StartsWith("/login/empresa?returnUrl=", loginTarget, StringComparison.Ordinal);
+        var resume = QueryHelpers.ParseQuery(new Uri(new Uri("https://localhost"), loginTarget).Query)
+            ["returnUrl"].ToString();
+        Assert.Contains("access=business", resume, StringComparison.Ordinal);
+        Assert.DoesNotContain("prompt=login", resume, StringComparison.Ordinal);
+
         var business = await AuthorizeAndExchangeAsync(client, businessAuthorize, verifier);
         using var businessMe = await GetMeAsync(client, business.AccessToken);
         Assert.Equal("business", businessMe.RootElement.GetProperty("access").GetString());
