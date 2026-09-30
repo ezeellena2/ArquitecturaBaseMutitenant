@@ -48,6 +48,9 @@ public sealed class IdentityAccessTests
     [InlineData("ArquitecturaBaseMultitenant.Api/Controllers/Auth/Fake.cs", false)]
     [InlineData("ArquitecturaBaseMultitenant.Infrastructure/Persistence/Repositories/Fake.cs", false)]
     [InlineData("ArquitecturaBaseMultitenant.Infrastructure/Persistence/Repositories/UserRepository.cs", true)]
+    [InlineData("ArquitecturaBaseMultitenant.Infrastructure/Persistence/Readers/Platform/Fake.cs", false)]
+    [InlineData("ArquitecturaBaseMultitenant.Infrastructure/Persistence/Seed/DevelopmentSeeder.cs", false)]
+    [InlineData("ArquitecturaBaseMultitenant.Infrastructure/Persistence/Seed/PlatformSeeder.cs", true)]
     public void Identity_boundary_detector_rejects_unlisted_paths(string path, bool allowed) =>
         Assert.Equal(allowed, IsAllowed(path));
 
@@ -62,8 +65,7 @@ public sealed class IdentityAccessTests
             || relative == "Persistence/Configurations/Tenant/MemberConfiguration.cs"
             || relative == "Persistence/Repositories/UserRepository.cs"
             || relative == "Persistence/Readers/MemberReader.cs"
-            || relative.StartsWith("Persistence/Readers/Platform/", StringComparison.Ordinal)
-            || relative.StartsWith("Persistence/Seed/", StringComparison.Ordinal)
+            || relative == "Persistence/Seed/PlatformSeeder.cs"
             || relative.StartsWith("Persistence/Migrations/", StringComparison.Ordinal)
             || relative == "Persistence/Rls/TenantIsolationModelValidator.cs";
     }

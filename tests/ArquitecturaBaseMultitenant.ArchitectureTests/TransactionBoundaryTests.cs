@@ -224,7 +224,8 @@ public sealed class TransactionBoundaryTests
 internal static class ArchitectureIl
 {
     internal sealed record Call(string Owner, string DeclaringType, string Method, int ParameterCount,
-        IReadOnlyList<string> Literals, string OwnerMethod = "");
+        IReadOnlyList<string> Literals, string OwnerMethod = "",
+        IReadOnlyList<string>? GenericArguments = null);
 
     internal sealed record TypeUse(string Owner, string Type);
 
@@ -238,7 +239,10 @@ internal static class ArchitectureIl
             .Where(instruction => instruction.Operand is MethodReference)
             .Select(instruction => (MethodReference)instruction.Operand)
             .Select(called => new Call(owner, called.DeclaringType.FullName, called.Name,
-                called.Parameters.Count, literals, method.Name));
+                called.Parameters.Count, literals, method.Name,
+                called is GenericInstanceMethod generic
+                    ? [.. generic.GenericArguments.Select(argument => argument.FullName)]
+                    : []));
     });
 
     internal static IReadOnlyList<Call> DbContextSaveCalls(Assembly assembly) => Scan(assembly, (owner, method) =>
