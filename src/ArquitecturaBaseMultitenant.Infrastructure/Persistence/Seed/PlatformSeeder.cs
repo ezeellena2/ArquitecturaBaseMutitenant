@@ -85,12 +85,17 @@ internal sealed class PlatformSeeder(
             cancellationToken);
         if (method is not null)
         {
+            if (method.VerifiedAtUtc is null || method.ManagedByTenantId is not null)
+                throw new InvalidOperationException(
+                    "Seed:PlatformOwner:Email must reference a verified, unmanaged email method.");
             var existing = await users.Users.SingleAsync(user => user.Id == method.UserId,
                 cancellationToken);
             if (!existing.IsPlatformOperator)
             {
                 existing.GrantPlatformOperator();
                 EnsureSucceeded(await users.UpdateAsync(existing), "mark the platform operator");
+                securityEvents.Add(SecurityEvent.ForPlatformOperatorGrant(
+                    "Initial platform owner seed", timeProvider.GetUtcNow().UtcDateTime));
             }
 
             return;
@@ -124,6 +129,8 @@ internal sealed class PlatformSeeder(
         }
 
         context.LoginMethods.Add(loginMethod);
+        securityEvents.Add(SecurityEvent.ForPlatformOperatorGrant(
+            "Initial platform owner seed", timeProvider.GetUtcNow().UtcDateTime));
     }
 
     private static void EnsureSucceeded(IdentityResult result, string action)

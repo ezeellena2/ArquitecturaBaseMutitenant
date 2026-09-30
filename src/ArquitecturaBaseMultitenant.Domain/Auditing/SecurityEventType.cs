@@ -7,4 +7,5 @@ public enum SecurityEventType
     AccountDeletionCancelled,
     AccountDeleted,
     PlatformSettingsChanged,
+    PlatformOperatorGranted,
 }

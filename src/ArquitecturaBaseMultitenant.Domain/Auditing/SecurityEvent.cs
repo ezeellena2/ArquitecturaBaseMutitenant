@@ -41,7 +41,16 @@ public sealed class SecurityEvent : Entity
     }
 
     public static SecurityEvent ForPlatformSettings(AuditActorKind actorKind, Guid actorId,
-        string reason, DateTime occurredAtUtc)
+        string reason, DateTime occurredAtUtc) =>
+        ForPlatformAction(SecurityEventType.PlatformSettingsChanged, actorKind, actorId,
+            reason, occurredAtUtc);
+
+    public static SecurityEvent ForPlatformOperatorGrant(string reason, DateTime occurredAtUtc) =>
+        ForPlatformAction(SecurityEventType.PlatformOperatorGranted, AuditActorKind.System,
+            Guid.Empty, reason, occurredAtUtc);
+
+    private static SecurityEvent ForPlatformAction(SecurityEventType type, AuditActorKind actorKind,
+        Guid actorId, string reason, DateTime occurredAtUtc)
     {
         if (actorKind is not (AuditActorKind.System or AuditActorKind.PlatformOperator))
         {
@@ -65,7 +74,7 @@ public sealed class SecurityEvent : Entity
 
         return new SecurityEvent
         {
-            Type = SecurityEventType.PlatformSettingsChanged,
+            Type = type,
             ActorKind = actorKind,
             ActorId = actorId,
             Reason = reason.Trim(),

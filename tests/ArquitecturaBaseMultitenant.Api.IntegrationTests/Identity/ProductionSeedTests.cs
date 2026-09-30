@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Settings;
@@ -74,7 +75,12 @@ public sealed class ProductionSeedTests
             TestContext.Current.CancellationToken));
         Assert.True(await context.Set<Currency>().AnyAsync(currency => currency.IsEnabled,
             TestContext.Current.CancellationToken));
-        Assert.Single(await context.SecurityEvents.ToListAsync(TestContext.Current.CancellationToken));
+        var initialEvents = await context.SecurityEvents.AsNoTracking()
+            .ToListAsync(TestContext.Current.CancellationToken);
+        Assert.Equal(2, initialEvents.Count);
+        Assert.Contains(initialEvents, item => item.Type == SecurityEventType.PlatformSettingsChanged);
+        Assert.Contains(initialEvents, item => item.Type.ToString() == "PlatformOperatorGranted"
+            && item.ActorKind == AuditActorKind.System && item.Reason == "Initial platform owner seed");
 
         var operatorUser = await context.Users.SingleAsync(TestContext.Current.CancellationToken);
         Assert.True(operatorUser.IsPlatformOperator);
@@ -102,6 +108,49 @@ public sealed class ProductionSeedTests
         var scopes = scope.ServiceProvider.GetRequiredService<IOpenIddictScopeManager>();
         Assert.NotNull(await applications.FindByClientIdAsync("web", TestContext.Current.CancellationToken));
         Assert.NotNull(await scopes.FindByNameAsync("api", TestContext.Current.CancellationToken));
+
+        // Una instalación existente puede tener el correo configurado sin haber probado su posesión.
+        var pendingMethodId = Guid.CreateVersion7();
+        await context.Database.ExecuteSqlInterpolatedAsync($"""
+            UPDATE identity."AspNetUsers" SET "IsPlatformOperator" = false WHERE "Id" = {operatorUser.Id}
+            """, TestContext.Current.CancellationToken);
+        await context.Database.ExecuteSqlInterpolatedAsync($"""
+            INSERT INTO identity."LoginMethods"
+                ("Id", "UserId", "Type", "Value", "IsPrimary", "VerifiedAtUtc")
+            VALUES ({pendingMethodId}, {operatorUser.Id}, 'Email', 'pending-owner@example.test', false, NULL)
+            """, TestContext.Current.CancellationToken);
+        using (var unverifiedHost = NewHost("pending-owner@example.test"))
+        {
+            var rejected = Assert.ThrowsAny<Exception>(() => unverifiedHost.CreateClient());
+            Assert.Contains("Seed:PlatformOwner:Email", rejected.ToString(), StringComparison.Ordinal);
+        }
+        Assert.False(await context.Users.AsNoTracking().AnyAsync(user => user.IsPlatformOperator,
+            TestContext.Current.CancellationToken));
+
+        await context.Database.ExecuteSqlInterpolatedAsync($"""
+            UPDATE identity."LoginMethods"
+            SET "VerifiedAtUtc" = {TimeProvider.System.GetUtcNow().UtcDateTime}, "ManagedByTenantId" = {Guid.CreateVersion7()}
+            WHERE "Id" = {pendingMethodId}
+            """, TestContext.Current.CancellationToken);
+        using (var managedHost = NewHost("pending-owner@example.test"))
+        {
+            var rejected = Assert.ThrowsAny<Exception>(() => managedHost.CreateClient());
+            Assert.Contains("Seed:PlatformOwner:Email", rejected.ToString(), StringComparison.Ordinal);
+        }
+        Assert.False(await context.Users.AsNoTracking().AnyAsync(user => user.IsPlatformOperator,
+            TestContext.Current.CancellationToken));
+
+        await context.Database.ExecuteSqlInterpolatedAsync($"""
+            UPDATE identity."LoginMethods" SET "ManagedByTenantId" = NULL
+            WHERE "Id" = {pendingMethodId}
+            """, TestContext.Current.CancellationToken);
+        using var promotedHost = NewHost("pending-owner@example.test");
+        using var promotedClient = promotedHost.CreateClient();
+        Assert.True(await context.Users.AsNoTracking().AnyAsync(user => user.IsPlatformOperator,
+            TestContext.Current.CancellationToken));
+        Assert.Equal(2, (await context.SecurityEvents.AsNoTracking()
+            .ToArrayAsync(TestContext.Current.CancellationToken))
+            .Count(item => item.Type.ToString() == "PlatformOperatorGranted"));
 
         WebApplicationFactory<Program> NewHost(string ownerEmail) =>
             new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
