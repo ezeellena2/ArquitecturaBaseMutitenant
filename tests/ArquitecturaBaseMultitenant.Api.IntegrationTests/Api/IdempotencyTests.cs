@@ -48,6 +48,33 @@ public sealed class IdempotencyTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Disconnect_after_action_does_not_leave_the_reservation_in_progress()
+    {
+        using var client = factory.CreateClient();
+        var probe = IdempotencyProbe.Create();
+        var key = Guid.NewGuid();
+        var body = new IdempotencyTestRequest(probe.Id, "uno");
+
+        try
+        {
+            using var disconnected = await SendAsync(client, "create-abort-after-result", body, key);
+        }
+        catch (HttpRequestException)
+        {
+            // El servidor abortó la conexión después de serializar la respuesta capturada.
+        }
+        catch (TaskCanceledException)
+        {
+            // TestServer puede traducir el aborto de la conexión a cancelación del cliente.
+        }
+
+        using var replay = await SendAsync(client, "create-abort-after-result", body, key);
+        Assert.Equal(HttpStatusCode.Created, replay.StatusCode);
+        Assert.Equal("true", replay.Headers.GetValues("Idempotent-Replayed").Single());
+        Assert.Equal(1, probe.ExecutionCount);
+    }
+
+    [Fact]
     public async Task Same_key_with_another_body_or_route_returns_422()
     {
         using var client = factory.CreateClient();

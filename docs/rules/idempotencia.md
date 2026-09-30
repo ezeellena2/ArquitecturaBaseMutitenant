@@ -6,6 +6,7 @@
 - **Back:** `[Idempotent]` en la acción. `IdempotencyFilter` depende de `IIdempotencyStore` en Application; Infrastructure implementa la reserva. El filtro hace el resto:
   1. **Reserva** `(TenantId?, UserId, Key)` en `platform.IdempotencyKeys` (índice único) **en su propia transacción**, junto con el hash del cuerpo y la ruta.
   2. **Clave nueva:** ejecuta la acción. Si la respuesta es 2xx o 4xx, **después del commit del caso de uso** guarda status + cuerpo en la misma fila. Si es 5xx, libera la reserva para permitir el reintento.
+     La escritura de la respuesta usa un token independiente del pedido: si el cliente corta después del commit, la clave igual queda completada para el replay.
   3. **Clave terminada:** devuelve la respuesta guardada, con el encabezado `Idempotent-Replayed: true`, sin ejecutar nada.
   4. **Clave en curso:** 409 `Request.InProgress`.
   5. **Misma clave con otro cuerpo u otra ruta:** 422 `Request.IdempotencyKeyReused`.
@@ -23,7 +24,7 @@
 - `Api/Idempotency/IdempotencyFilter.cs` (E2) · front `../ArquitecturaBaseMutitenantFront/src/shared/api/useIdempotentMutation.ts` (E1).
 
 ## Lo verifica
-- `IdempotencyTests` (E2): dos pedidos iguales en paralelo crean uno solo; el reintento devuelve la misma respuesta; otro cuerpo da 422; un 5xx libera la clave.
+- `IdempotencyTests` (E2): dos pedidos iguales en paralelo crean uno solo; el reintento devuelve la misma respuesta incluso si `RequestAborted` se cancela después de la acción; otro cuerpo da 422; un 5xx libera la clave.
 - `IdempotentActionsTests` (E1): todo `POST` que declara 201/202 o llama a `ToCreatedResult`/`ToAcceptedResult` (también desde una acción async) tiene `[Idempotent]` (test de arquitectura).
 
 ## Detalle

@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using ArquitecturaBaseMultitenant.Api.Idempotency;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Idempotency;
 
@@ -38,6 +39,24 @@ public sealed class IdempotencyTestController : ControllerBase
         }
 
         return StatusCode(StatusCodes.Status201Created, new { execution, request.Name });
+    }
+
+    [HttpPost("create-abort-after-result")]
+    [Idempotent]
+    [AbortAfterResult]
+    public Task<IActionResult> CreateAndAbort(
+        [FromBody] IdempotencyTestRequest request,
+        CancellationToken cancellationToken) => Create(request, cancellationToken);
+}
+
+/// <summary>Imita RequestAborted después de ejecutar y serializar la acción.</summary>
+[AttributeUsage(AttributeTargets.Method)]
+internal sealed class AbortAfterResultAttribute : Attribute, IAsyncResultFilter
+{
+    public async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
+    {
+        await next();
+        context.HttpContext.RequestAborted = new CancellationToken(canceled: true);
     }
 }
 

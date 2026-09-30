@@ -99,7 +99,7 @@ public sealed class IdempotencyFilter(
                 preserveReservation = true;
                 var body = Encoding.UTF8.GetString(capture.ToArray());
                 await store.CompleteAsync(reservationId, response.StatusCode, body,
-                    context.HttpContext.RequestAborted);
+                    CancellationToken.None);
             }
             else
             {
