@@ -1,5 +1,6 @@
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 
+/// <summary>Consulta zonas IANA y sus nombres traducidos desde el catálogo global; el cálculo horario queda en el servicio de tiempo.</summary>
 public interface ITimeZoneCatalog
 {
     Task<IReadOnlyList<TimeZoneCatalogEntry>> ListAsync(CancellationToken cancellationToken);

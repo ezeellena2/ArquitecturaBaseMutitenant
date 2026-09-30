@@ -1,5 +1,6 @@
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 
+/// <summary>Distingue una reserva nueva, una operación en curso, una clave usada para otro pedido y una respuesta lista para repetir.</summary>
 public enum IdempotencyReservationState
 {
     Reserved,
@@ -8,6 +9,7 @@ public enum IdempotencyReservationState
     Replay,
 }
 
+/// <summary>Transporta el estado de la clave y, si existe, la respuesta previa para evitar repetir el efecto del POST.</summary>
 public sealed record IdempotencyReservation(
     Guid Id,
     IdempotencyReservationState State,

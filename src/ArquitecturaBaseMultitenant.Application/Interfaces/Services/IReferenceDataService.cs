@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 
+/// <summary>Reúne los cinco catálogos globales, traduce sus filas y ofrece búsquedas para selectores y valores ya guardados.</summary>
 public interface IReferenceDataService
 {
     Task<Result<ReferenceDataResponse>> GetAllAsync(string? culture, CancellationToken cancellationToken);

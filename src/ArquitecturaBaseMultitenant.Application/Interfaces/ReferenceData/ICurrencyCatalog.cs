@@ -1,5 +1,6 @@
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 
+/// <summary>Consulta monedas ISO y traducciones del catálogo global sin mantener códigos fijos en Application.</summary>
 public interface ICurrencyCatalog
 {
     Task<IReadOnlyList<CurrencyCatalogEntry>> ListAsync(CancellationToken cancellationToken);

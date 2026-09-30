@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 
+/// <summary>Orquesta el registro personal por código: solicita la prueba de correo y confirma el alta al verificarla.</summary>
 public interface IAccountService
 {
     Task<Result<RequestLoginCodeResponse>> RequestSignupCodeAsync(SignupRequest request,

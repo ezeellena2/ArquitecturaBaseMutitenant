@@ -1,5 +1,6 @@
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 
+/// <summary>Consulta tipos de identificación fiscal por país desde el catálogo global para validación y presentación.</summary>
 public interface ITaxIdTypeCatalog
 {
     Task<IReadOnlyList<TaxIdTypeCatalogEntry>> ListAsync(CancellationToken cancellationToken);

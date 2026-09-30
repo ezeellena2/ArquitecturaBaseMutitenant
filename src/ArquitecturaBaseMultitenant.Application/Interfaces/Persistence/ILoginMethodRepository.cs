@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Domain.Authentication;
 
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 
+/// <summary>Bloquea y modifica métodos de ingreso de una identidad global dentro de la transacción que aplica sus reglas.</summary>
 public interface ILoginMethodRepository
 {
     Task LockUserAsync(Guid userId, CancellationToken cancellationToken);

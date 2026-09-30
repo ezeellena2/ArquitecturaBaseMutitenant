@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Domain.Authentication;
 
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 
+/// <summary>Ata criptográficamente un código al destino y propósito para que no pueda reutilizarse en otro flujo.</summary>
 public interface ILoginCodeHasher
 {
     /// <summary>

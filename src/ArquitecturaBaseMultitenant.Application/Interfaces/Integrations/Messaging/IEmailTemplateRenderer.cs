@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Notifications;
 
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 
+/// <summary>Compone los correos de ingreso, invitación y avisos con la cultura elegida; el canal de entrega se encarga del envío.</summary>
 public interface IEmailTemplateRenderer
 {
     EmailMessage RenderLoginCode(string to, string code, int lifetimeMinutes, CultureProfile culture);

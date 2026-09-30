@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 
+/// <summary>Resuelve y cambia el acceso entre Personal, Empresa y Plataforma, comprobando el tenant pedido contra las membresías de la cuenta.</summary>
 public interface IConnectService
 {
     Task<Result<ConnectUser>> GetActiveUserAsync(Guid userId, Access access,

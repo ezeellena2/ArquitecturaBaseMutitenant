@@ -1,5 +1,6 @@
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 
+/// <summary>Consulta culturas y perfiles de formato del catálogo global; los casos de uso deciden cuándo exigir que estén habilitados.</summary>
 public interface ICultureCatalog
 {
     Task<IReadOnlyList<CultureCatalogEntry>> ListAsync(CancellationToken cancellationToken);

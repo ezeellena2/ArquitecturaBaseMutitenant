@@ -1,5 +1,6 @@
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 
+/// <summary>Consulta países y traducciones del catálogo global para validación y presentación; devuelve también filas deshabilitadas.</summary>
 public interface ICountryCatalog
 {
     Task<IReadOnlyList<CountryCatalogEntry>> ListAsync(CancellationToken cancellationToken);
