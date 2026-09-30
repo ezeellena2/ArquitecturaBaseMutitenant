@@ -34,7 +34,10 @@ Estado: en ejecución. La 3c queda pendiente. No declarar cerrada esta etapa sin
 
 | T17 · eliminación final | `6bdd516` | — | Rojo CS0246; integración 3/3, ampliación 2/2; lease excluye segundo reclamo, fallo tras Personal cerrado se recupera, Pending/Suspended terminan Deleted, un evento y aviso final. Inventario bulk existente de T04 se ajusta nominalmente en T18 |
 
-| T18 · contratos cruzados | este commit | hash del commit front en cierre | Rojo ENOENT; 2/2 verdes, schema regenerado, contracts:check y tsc verdes; inventarios existentes back 13/13 |
+| T18 · contratos cruzados | `97e7469` | `0c315cc` | Rojo ENOENT; 2/2 verdes, schema regenerado, contracts:check y tsc verdes; inventarios existentes back 13/13 |
+
+| T19 · clientes y recursos | — | `690aade` | Rojo clientes ausentes; API y paridad 6/6, tsc y lint verdes |
+| T20 · perfil y menú | — | `303d767` | Rojo ruta 404, menú ausente y versión faltante; 20/20 funcionales y axe, build verde; 409 conserva draft |
 
 ## Evidencia del E2E real antes de programar
 
@@ -98,3 +101,5 @@ Ocultaciones solicitadas: WhatsApp (E8), exportación/sugerencia de exportar (E1
 ## Recorrido manual
 
 Pendiente de rutas y contratos finales.
+
+- T20: selectores compartidos ofrecen variante compacta del lienzo. El perfil congela versión con el draft, aplica cultura solo tras guardar y mantiene layout del acceso actual. El menú personal no agrega navegación inventada; Mi cuenta vive en el menú de identidad.

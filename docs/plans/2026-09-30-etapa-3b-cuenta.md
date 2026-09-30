@@ -256,22 +256,22 @@ En cada tarea se guarda evidencia de rojo y verde con el comando y resultado. Si
 **Archivos:** front: `src/areas/personal/account/api/{account,loginMethods,reauth,deletion}.ts`, `src/locales/{es,en}/account.json`, `src/shared/api/types.ts`; tests colocalizados.
 **Comportamiento exacto:** Clientes httpClient tipados, query keys; Idempotency-Key de formularios; errores por code. i18n copia textos/orden/tablero incluidos mensajes de Google y baja. Datos de servidor TanStack Query, solo draft local. Añadir AGENTS/CLAUDE en carpetas nuevas del mapa.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Requests/rutas/keys no existen y red/409 muestran estado correcto.
-- [ ] 2. Ejecutar `npm test -- src/areas/personal/account/api` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: conectar clientes de la cuenta"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Requests/rutas/keys no existen y red/409 muestran estado correcto.
+- [x] 2. Ejecutar `npm test -- src/areas/personal/account/api` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: conectar clientes de la cuenta"`. Registrar hash back/front.
 
 ### T20 · Mi cuenta y formulario de datos
 
 **Archivos:** front: `src/areas/personal/account/pages/{AccountPage,AccountPage.test}.tsx`, `components/AccountProfileForm.tsx`; `src/app/routes.tsx`, `src/layouts/navigation/personal.ts`, `src/tenancy/{AccessMenu,AccessMenu.test}.tsx`.
 **Comportamiento exacto:** /cuenta identidad compartida accesos, layout según acceso sin cambiarlo. Page y hoja completa, Nombre/Idioma y región/Zona con CultureSelect/TimeZoneSelect; guardar/descartar arriba y barra móvil, dirty guard, version/ConcurrencyBanner. Menú Mi cuenta activo también desde business; sin crear empresa en consumer.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Ruta/menú/formulario faltantes; guardar en-US actualiza i18n y formatos y rollback visible en error.
-- [ ] 2. Ejecutar `npm test -- src/areas/personal/account/pages/AccountPage.test.tsx src/tenancy/AccessMenu.test.tsx` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: reproducir formulario de Mi cuenta"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Ruta/menú/formulario faltantes; guardar en-US actualiza i18n y formatos y rollback visible en error.
+- [x] 2. Ejecutar `npm test -- src/areas/personal/account/pages/AccountPage.test.tsx src/tenancy/AccessMenu.test.tsx` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: reproducir formulario de Mi cuenta"`. Registrar hash back/front.
 
 ### T21 · Tabla, aviso propio y menús
 
@@ -415,4 +415,5 @@ Guardar manifest e informe en front `docs/design/capturas/etapa-3b/`; cada caso 
 - Publicación de versión legal de pruebas por preparador E2E separado y restringido a MT_E2E_ISOLATED; no endpoint de pruebas en producción ni modificación de Development.
 - Preservar regla de no acortar gracia para limpieza manual: la cuenta de prueba se puede desactivar pidiendo baja y se anonimiza al vencer la gracia; test worker usa su propio reloj/base.
 - No agregar Stage3bInventoryTests ni nuevas guardas de arquitectura; solo casos funcionales, contrato cruzado y actualización de inventarios ya exigidos.
+
 
