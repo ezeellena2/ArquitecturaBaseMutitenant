@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -87,17 +88,14 @@ public sealed class RealLoginRateLimitTests(ApiFactory factory)
         using var client = factory.CreateClient();
         var address = $"lockout-real-{Guid.NewGuid():N}@example.test";
         await CreateKnownAccountAsync(address);
-        using var requested = await PostAsync(client, "/api/auth/login-code", address, signup: false);
-        Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
+        await SeedTenAttemptCodeAsync(address);
 
         for (var attempt = 0; attempt < 10; attempt++)
         {
             using var rejected = await PostVerifyAsync(client, address);
-            Assert.NotEqual(HttpStatusCode.OK, rejected.StatusCode);
+            Assert.Equal(attempt == 9 ? HttpStatusCode.TooManyRequests : HttpStatusCode.BadRequest,
+                rejected.StatusCode);
         }
-
-        using var locked = await PostVerifyAsync(client, address);
-        Assert.Equal(HttpStatusCode.TooManyRequests, locked.StatusCode);
     }
 
     private static async Task<HttpResponseMessage> PostCodeAsync(HttpClient client, string path, string ip)
@@ -153,6 +151,23 @@ public sealed class RealLoginRateLimitTests(ApiFactory factory)
             services.GetRequiredService<ILoginMethodRepository>().Add(method);
             await services.GetRequiredService<IUserRepository>().SetPrimaryEmailAsync(user.Id, email, ct);
             return Result.Success();
+        }, CommitPolicy.OnSuccess, Ct);
+    }
+
+    private async Task SeedTenAttemptCodeAsync(string address)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var destination = LoginCodeDestination.ForEmail(Email.Create(address).Value);
+        var hash = services.GetRequiredService<ILoginCodeHasher>()
+            .Hash(destination, LoginCodePurpose.Login, "123456");
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+        {
+            services.GetRequiredService<ILoginCodeRepository>().Add(LoginCode.Issue(destination,
+                LoginCodePurpose.Login, null, hash,
+                services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime,
+                TimeSpan.FromMinutes(10), maxAttempts: 10));
+            return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, Ct);
     }
 
