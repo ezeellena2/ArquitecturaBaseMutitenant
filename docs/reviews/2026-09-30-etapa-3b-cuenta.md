@@ -24,7 +24,9 @@ Estado: en ejecución. La 3c queda pendiente. No declarar cerrada esta etapa sin
 
 | T12 · reglas de baja y gracia | `0fbce93` | — | Rojo CS1061/CS0103; AccountDeletionPolicyTests 6/6; operador, pendiente, suspensión, límite inclusivo y anonimización |
 
-| T13 · participantes de eliminación | este commit | — | Rojo CS0246/CS1061 y falta de grant 42501; runtime 1/1 + inventarios existentes 12/12; limpieza doble, auditoría única, mensajes ajenos intactos y DELETE B2B devuelve cero |
+| T13 · participantes de eliminación | `e5bb79c` | — | Rojo CS0246/CS1061 y falta de grant 42501; runtime 1/1 + inventarios existentes 12/12; limpieza doble, auditoría única, mensajes ajenos intactos y DELETE B2B devuelve cero |
+
+| T14 · pedir baja y revocar sesiones | este commit | — | Rojo: 404; integración 7/7; operador/sin ticket rechazados, módulo conserva estado y ticket, tokens Consumer y Business revocados y cookie cerrada |
 
 ## Evidencia del E2E real antes de programar
 
@@ -74,6 +76,8 @@ Ocultaciones solicitadas: WhatsApp (E8), exportación/sugerencia de exportar (E1
 
 - T13: el puerto queda en Integrations/Legal, como el documento canónico. La proyección de eliminación es un lector específico de TenantId/Kind sobre el índice técnico existente, sin reutilizar el lector reservado de perfiles. La limpieza Personal borra sus filas y su índice en la misma transacción; un reintento omite el alcance ya limpiado. Membresías B2B quedan Removed con motivo AccountDeleted y evento de auditoría único.
 - T13: revisión automática rechazó el grant general DELETE por ampliar el alcance de mt_app. La alternativa aprobada agrega una política AS RESTRICTIVE solo para Personal, combinada con tenant_scope y FORCE RLS; el test demuestra que DELETE en Business no borra nada incluso con el alcance correcto. No se alteró Development.
+
+- T14: se reutiliza SignInService.RevokeSessions para revocar cookie por SecurityStamp y autorizaciones/tokens OpenIddict de ambos accesos en la UoW. La API cierra la cookie después del commit. Los mensajes anteriores se cancelan antes de encolar el aviso de baja; la razón permanece únicamente en la identidad y se limpia al anonimizar.
 
 ## Recorrido manual
 

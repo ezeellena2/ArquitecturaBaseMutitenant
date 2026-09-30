@@ -201,11 +201,11 @@ En cada tarea se guarda evidencia de rojo y verde con el comando y resultado. Si
 **Archivos:** back: `Interfaces/Services/IAccountDeletionService.cs`, `Services/Legal/{AccountDeletionService,AccountDeletionRequester}.cs`, modelos/validadores, `Api/Controllers/Account/AccountDeletionController.cs`, `Contracts/Account/RequestAccountDeletionHttpRequest.cs`; test `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Legal/AccountDeletionTests.cs`.
 **Comportamiento exacto:** POST /api/me/deletion con ticket de menos de cinco minutos y motivo. Dentro UoW lock→cuenta→policy→consumir ticket→fecha/estado→revocar tokens/seguridad cookie→participantes→avisos→SecurityEvent. Después commit invalidar cachés y cerrar sesión. Probar revocación de ambos accesos, rollback de bloqueo y métodos reservados.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: No existe ruta de baja; operador y ausencia de ticket deben bloquear sin cambios.
-- [ ] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class '*AccountDeletionTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: pedir baja y revocar todas las sesiones"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: No existe ruta de baja; operador y ausencia de ticket deben bloquear sin cambios.
+- [x] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class '*AccountDeletionTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: pedir baja y revocar todas las sesiones"`. Registrar hash back/front.
 
 ### T15 · Ingreso de gracia y cancelTicket
 

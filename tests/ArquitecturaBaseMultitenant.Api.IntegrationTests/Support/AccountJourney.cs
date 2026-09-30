@@ -25,10 +25,19 @@ internal sealed record AccountJourney(Guid UserId, Email Email)
         using var verified = await PostAsync(client, "/api/auth/signup/verify",
             new { email = email.Value, code, acceptedTerms = true, culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires" }, ct);
         Assert.Equal(HttpStatusCode.NoContent, verified.StatusCode);
+        await AuthorizeAsync(client, "consumer", ct);
+        using var me = await client.GetAsync("/api/me", ct);
+        Assert.Equal(HttpStatusCode.OK, me.StatusCode);
+        using var profile = await me.Content.ReadFromJsonAsync<JsonDocument>(ct);
+        return new AccountJourney(profile!.RootElement.GetProperty("id").GetGuid(), email);
+    }
+
+    internal static async Task AuthorizeAsync(HttpClient client, string access, CancellationToken ct)
+    {
         var challenge = WebEncoders.Base64UrlEncode(SHA256.HashData(Encoding.ASCII.GetBytes(Verifier)));
         using var authorized = await client.GetAsync("/connect/authorize?client_id=web&response_type=code"
             + "&redirect_uri=https%3A%2F%2Flocalhost%3A5174%2Fauth%2Fcallback&scope=openid%20profile%20email%20api"
-            + "&code_challenge=" + challenge + "&code_challenge_method=S256&access=consumer", ct);
+            + "&code_challenge=" + challenge + "&code_challenge_method=S256&access=" + access, ct);
         Assert.Equal(HttpStatusCode.Redirect, authorized.StatusCode);
         var authorizationCode = QueryHelpers.ParseQuery(authorized.Headers.Location!.Query)["code"].ToString();
         using var exchanged = await client.PostAsync("/connect/token", new FormUrlEncodedContent(new Dictionary<string, string>
@@ -40,10 +49,6 @@ internal sealed record AccountJourney(Guid UserId, Email Email)
         using var tokens = await exchanged.Content.ReadFromJsonAsync<JsonDocument>(ct);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
             tokens!.RootElement.GetProperty("access_token").GetString());
-        using var me = await client.GetAsync("/api/me", ct);
-        Assert.Equal(HttpStatusCode.OK, me.StatusCode);
-        using var profile = await me.Content.ReadFromJsonAsync<JsonDocument>(ct);
-        return new AccountJourney(profile!.RootElement.GetProperty("id").GetGuid(), email);
     }
 
     internal static Task<HttpResponseMessage> PostAsync<T>(HttpClient client, string path, T body, CancellationToken ct)

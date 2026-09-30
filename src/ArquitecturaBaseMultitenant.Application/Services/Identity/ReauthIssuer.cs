@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
+using ArquitecturaBaseMultitenant.Application.Services.Legal;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
@@ -16,6 +17,8 @@ internal sealed class ReauthIssuer(LoginMethodGuard guard, ILoginMethodRepositor
     {
         var account = await guard.LockAccountAsync(userId, ct);
         if (account.IsFailure) return account.Error;
+        if (request.Action == ReauthAction.DeleteAccount && AccountDeletionPolicy.CheckRequest(account.Value) is { } blockedState)
+            return blockedState;
         var all = await methods.ListByUserIdAsync(userId, ct);
         var available = await availability.AvailableAsync(all, ct);
         if (request.TargetMethodId is { } targetId)
