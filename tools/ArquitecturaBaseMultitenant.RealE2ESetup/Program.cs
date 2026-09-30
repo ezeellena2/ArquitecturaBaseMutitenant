@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using ArquitecturaBaseMultitenant.RealE2ESetup;
 
 if (Environment.GetEnvironmentVariable("MT_E2E_ISOLATED") != "1")
 {
@@ -100,6 +101,11 @@ try
 
     await using (var marker = new FileStream(readyFile, FileMode.CreateNew, FileAccess.Write, FileShare.None))
         await marker.FlushAsync(cancellationToken);
+    // El proceso conserva únicamente la conexión de la base efímera para la publicación legal del recorrido.
+    using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(250),
+        services.GetRequiredService<TimeProvider>());
+    while (await timer.WaitForNextTickAsync(cancellationToken))
+        await LegalVersionCommand.TryExecuteAsync(host.Services, readyFile, cancellationToken);
     return 0;
 }
 catch (PostgresException exception)
