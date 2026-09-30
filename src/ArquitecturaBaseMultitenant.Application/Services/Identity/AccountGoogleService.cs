@@ -9,6 +9,11 @@ using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
+/// <summary>
+/// Vincula Google como método de ingreso de una cuenta que ya tiene sesión.
+/// Comprueba que el callback corresponda a esa cuenta y que Google haya verificado el correo;
+/// las reglas del vínculo se ejecutan dentro de una transacción.
+/// </summary>
 internal sealed class AccountGoogleService(ISignInService signIn, GoogleMethodLinker linker,
     IUnitOfWork unitOfWork, TimeProvider timeProvider, ILogger<AccountGoogleService> logger) : IAccountGoogleService
 {

@@ -6,6 +6,10 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
+/// <summary>
+/// Aplica las reglas para sumar un ingreso Google a una cuenta existente dentro de la transacción del servicio.
+/// Bloquea los identificadores compartidos, impide que pertenezcan a otra cuenta y avisa del cambio.
+/// </summary>
 internal sealed class GoogleMethodLinker(LoginMethodGuard guard, IExternalLoginLock loginLock,
     IUserLookup lookup, ILoginMethodRepository methods, IUserRepository users,
     LoginMethodNotifier notifier, ISignInService signIn, TimeProvider timeProvider)

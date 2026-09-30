@@ -18,7 +18,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Auth;
 
-/// <summary>Desafío Google con contexto de Registro o Ingreso protegido por OAuth state.</summary>
+/// <summary>
+/// Inicia el desafío Google para registro, ingreso o vinculación desde Mi cuenta y procesa su callback.
+/// Conserva el contexto del recorrido en el state OAuth protegido antes de delegar en los servicios.
+/// </summary>
 [ApiController]
 [AllowAnonymous]
 [Route("api/auth/external")]
