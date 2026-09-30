@@ -96,6 +96,7 @@ public sealed class IngressJourneyTests(ApiFactory factory)
         var organization = Assert.Single(businessMe.RootElement.GetProperty("organizations").EnumerateArray());
         Assert.Equal("Empresa A", organization.GetProperty("name").GetString());
         var businessTenantId = businessMe.RootElement.GetProperty("activeTenantId").GetGuid();
+        AssertIdTokenAccess(business.IdToken, "business", businessTenantId);
         Assert.Equal(organization.GetProperty("id").GetGuid(), businessTenantId);
         using var businessProbe = await PostAsBearerAsync(client,
             "/test/access/business-signup", business.AccessToken);
@@ -116,6 +117,8 @@ public sealed class IngressJourneyTests(ApiFactory factory)
         var consumer = await AuthorizeAndExchangeAsync(client, AuthorizePath("consumer", challenge), verifier);
         using var consumerMe = await GetMeAsync(client, consumer.AccessToken);
         Assert.Equal("consumer", consumerMe.RootElement.GetProperty("access").GetString());
+        AssertIdTokenAccess(consumer.IdToken, "consumer",
+            consumerMe.RootElement.GetProperty("activeTenantId").GetGuid());
         Assert.NotEqual(businessTenantId, consumerMe.RootElement.GetProperty("activeTenantId").GetGuid());
         using var personalProbe = await PostAsBearerAsync(client,
             "/test/access/business-signup", consumer.AccessToken);
@@ -233,6 +236,18 @@ public sealed class IngressJourneyTests(ApiFactory factory)
     }
 
     private sealed record JourneyTokens(string AccessToken, string RefreshToken, string IdToken);
+
+    private static void AssertIdTokenAccess(string token, string access, Guid? tenantId)
+    {
+        var payload = token.Split('.')[1];
+        using var claims = JsonDocument.Parse(WebEncoders.Base64UrlDecode(payload));
+        Assert.Equal(access, claims.RootElement.GetProperty("access").GetString());
+        if (tenantId is not null)
+        {
+            Assert.Equal(tenantId.Value.ToString("D"),
+                claims.RootElement.GetProperty("tenant_id").GetString());
+        }
+    }
 
     private static async Task<HttpResponseMessage> PostOnceAsync(HttpClient client, string path, object body)
     {

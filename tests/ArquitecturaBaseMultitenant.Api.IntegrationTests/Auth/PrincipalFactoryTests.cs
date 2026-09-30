@@ -42,11 +42,11 @@ public sealed class PrincipalFactoryTests
         Assert.DoesNotContain(principal.Claims, claim => claim.Type.Contains("permission", StringComparison.OrdinalIgnoreCase));
         Assert.Equal([Destinations.AccessToken, Destinations.IdentityToken],
             principal.FindFirst(Claims.Subject)!.GetDestinations());
-        Assert.Equal([Destinations.AccessToken],
+        Assert.Equal([Destinations.AccessToken, Destinations.IdentityToken],
             principal.FindFirst(TenantClaimTypes.Access)!.GetDestinations());
-        Assert.Equal([Destinations.AccessToken],
+        Assert.Equal([Destinations.AccessToken, Destinations.IdentityToken],
             principal.FindFirst(TenantClaimTypes.TenantId)!.GetDestinations());
-        Assert.Equal([Destinations.AccessToken],
+        Assert.Equal([Destinations.AccessToken, Destinations.IdentityToken],
             principal.FindFirst(TenantClaimTypes.TenantKind)!.GetDestinations());
         Assert.Equal([Destinations.AccessToken, Destinations.IdentityToken],
             principal.FindFirst(Claims.Name)!.GetDestinations());

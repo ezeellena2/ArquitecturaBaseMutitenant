@@ -92,7 +92,9 @@ public sealed class OpenIdPrincipalFactory(IConnectService service, IOpenIddictS
             [Destinations.AccessToken, Destinations.IdentityToken],
         Claims.Name when claim.Subject?.HasScope(Scopes.Profile) == true =>
             [Destinations.AccessToken, Destinations.IdentityToken],
-        Claims.Name or Claims.Email or TenantClaimTypes.Access or TenantClaimTypes.TenantId or TenantClaimTypes.TenantKind =>
+        TenantClaimTypes.Access or TenantClaimTypes.TenantId or TenantClaimTypes.TenantKind =>
+            [Destinations.AccessToken, Destinations.IdentityToken],
+        Claims.Name or Claims.Email =>
             [Destinations.AccessToken],
         _ => [],
     };
