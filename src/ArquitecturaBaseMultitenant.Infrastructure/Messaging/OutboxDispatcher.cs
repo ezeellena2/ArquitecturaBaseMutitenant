@@ -24,13 +24,14 @@ internal sealed partial class OutboxDispatcher(
         {
             try
             {
-                for (var count = 0; count < options.Value.BatchSize && !stoppingToken.IsCancellationRequested; count++)
+                // El transporte SMTP vive durante el lote; cada mensaje conserva su propia UoW.
+                await using var senderScope = scopeFactory.CreateAsyncScope();
+                var senders = senderScope.ServiceProvider.GetServices<IChannelSender>().ToArray();
+                for (var count = 0; count < options.Value.BatchSize && senders.Length > 0 &&
+                    !stoppingToken.IsCancellationRequested; count++)
                 {
-                    await using var scope = scopeFactory.CreateAsyncScope();
-                    var services = scope.ServiceProvider;
-                    var senders = services.GetServices<IChannelSender>().ToArray();
-                    if (senders.Length == 0 ||
-                        (await services.GetRequiredService<IOutboxDispatchService>()
+                    await using var messageScope = scopeFactory.CreateAsyncScope();
+                    if ((await messageScope.ServiceProvider.GetRequiredService<IOutboxDispatchService>()
                             .DispatchOnceAsync(senders, stoppingToken)).Value == 0)
                     {
                         break;
