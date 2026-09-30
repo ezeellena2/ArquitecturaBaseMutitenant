@@ -1,7 +1,7 @@
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Api.Tenancy;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -19,7 +19,7 @@ namespace ArquitecturaBaseMultitenant.Api.Controllers.Account;
 [Access(Access.Consumer, Access.Business, Access.Platform)]
 [OwnProtocol]
 [Tags("Account")]
-public sealed class AccountGoogleController(ICurrentUser currentUser, IAuthenticationSchemeProvider schemes,
+public sealed class AccountGoogleController(IAccountGoogleService service, IAuthenticationSchemeProvider schemes,
     IAntiforgery antiforgery) : ControllerBase
 {
     [HttpPost]
@@ -27,16 +27,17 @@ public sealed class AccountGoogleController(ICurrentUser currentUser, IAuthentic
     [ProducesResponseType<GoogleChallengeResponse>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> LinkGoogle()
+    public async Task<IActionResult> LinkGoogle(CancellationToken cancellationToken)
     {
         if (!await antiforgery.IsRequestValidAsync(HttpContext))
             return Result.Failure(new ValidationError(new Dictionary<string, string[]>
                 { ["requestVerificationToken"] = [ValidationTexts.Required] })).ToActionResult(this);
         if (await schemes.GetSchemeAsync(GoogleDefaults.AuthenticationScheme) is null) return NotFound();
-        if (currentUser.UserId is not { } userId) return Result.Failure(UserErrors.NotFound).ToActionResult(this);
+        var identity = await service.GetLinkUserIdAsync(cancellationToken);
+        if (identity.IsFailure) return Result.Failure(identity.Error).ToActionResult(this);
         var properties = new AuthenticationProperties { RedirectUri = GoogleAccountLinkState.CallbackPath };
         properties.Items["LoginProvider"] = GoogleDefaults.AuthenticationScheme;
-        properties.Items[GoogleAccountLinkState.UserIdKey] = userId.ToString("D");
+        properties.Items[GoogleAccountLinkState.UserIdKey] = identity.Value.ToString("D");
         return Challenge(properties, GoogleDefaults.AuthenticationScheme);
     }
 }

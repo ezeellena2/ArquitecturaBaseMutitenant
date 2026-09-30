@@ -33,6 +33,7 @@ public static class DependencyInjection
         services.AddScoped<SignupExistingMethodVerifier>();
         services.AddScoped<IExternalLoginService, ExternalLoginService>();
         services.AddScoped<GoogleAccountResolver>();
+        services.AddScoped<GoogleAccountGuard>();
         services.AddScoped<GoogleAccountRegistrar>();
         services.AddScoped<IConnectService, ConnectService>();
         services.AddScoped<IConnectAuthorizationService, ConnectAuthorizationService>();

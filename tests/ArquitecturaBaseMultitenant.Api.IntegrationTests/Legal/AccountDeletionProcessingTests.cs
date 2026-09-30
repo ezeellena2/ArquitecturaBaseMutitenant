@@ -20,7 +20,7 @@ using OpenIddict.EntityFrameworkCore.Models;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Legal;
 
 [Collection(ApiTestGroup.Name)]
-public sealed class AccountDeletionProcessingTests(ApiFactory factory)
+public sealed class AccountDeletionProcessingTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
@@ -29,6 +29,8 @@ public sealed class AccountDeletionProcessingTests(ApiFactory factory)
     [InlineData(true)]
     public async Task Durable_claim_resumes_partial_cleanup_and_anonymizes_pending_or_suspended_once(bool suspended)
     {
+        await using var factory = new ApiFactory();
+        await factory.InitializeAsync();
         await factory.Services.SeedDatabaseAsync(Ct);
         var clock = new FakeTimeProvider(factory.Services.GetRequiredService<TimeProvider>().GetUtcNow());
         var failure = new FailOnceAfterTenant();

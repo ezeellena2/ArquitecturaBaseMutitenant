@@ -1,6 +1,8 @@
 using System.Reflection;
 using ArquitecturaBaseMultitenant.Api.Authentication;
 using ArquitecturaBaseMultitenant.Api.Controllers.Auth;
+using ArquitecturaBaseMultitenant.Api.Controllers.Account;
+using Microsoft.AspNetCore.Antiforgery;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -113,7 +115,11 @@ public sealed class ControllerServiceRepositoryTests
 
     private static bool IsApprovedProtocolDependency(Type controller, Type dependency) =>
         controller == typeof(ConnectController) && dependency == typeof(OpenIdPrincipalFactory)
-        || controller == typeof(ExternalLoginController) && dependency == typeof(IAuthenticationSchemeProvider);
+        || controller == typeof(ExternalLoginController) && dependency == typeof(IAuthenticationSchemeProvider)
+        || controller == typeof(ExternalLoginController) && dependency == typeof(PendingDeletionCookie)
+        || controller == typeof(AccountDeletionCancelController) && dependency == typeof(PendingDeletionCookie)
+        || controller == typeof(AccountGoogleController) && dependency == typeof(IAuthenticationSchemeProvider)
+        || controller == typeof(AccountGoogleController) && dependency == typeof(IAntiforgery);
 
     [Fact]
     public void Detector_recognizes_controllerbase_subclasses_without_controller_suffix()

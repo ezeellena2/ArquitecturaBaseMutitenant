@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -90,6 +91,7 @@ internal sealed class SampleAccountSeeder(
     IPersonalSpaceLock personalSpaceLock,
     IPersonalSpaceProvisioner personalSpaces,
     TenantSpaceProvisioner spaces,
+    ILegalRepository legal,
     TimeProvider timeProvider)
 {
     private const string BusinessName = "Empresa A";
@@ -201,6 +203,13 @@ internal sealed class SampleAccountSeeder(
             throw new InvalidOperationException("The test email could not become primary.");
         methods.Add(loginMethod);
         await users.SetPrimaryEmailAsync(userId, email, cancellationToken);
+        var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+        foreach (var kind in new[] { LegalDocumentKind.Terms, LegalDocumentKind.Privacy })
+        {
+            var document = await legal.GetCurrentDocumentAsync(kind, nowUtc, cancellationToken)
+                ?? throw new InvalidOperationException("The test account needs current legal documents.");
+            legal.AddAcceptance(LegalAcceptance.Create(userId, document, nowUtc, null, null));
+        }
         return userId;
     }
 }

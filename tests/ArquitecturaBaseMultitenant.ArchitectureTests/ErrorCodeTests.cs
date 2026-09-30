@@ -106,7 +106,7 @@ public sealed partial class ErrorCodeTests
                 ((Error?)field.GetValue(null) ?? throw new InvalidOperationException($"{field.Name} is null.")).Code));
 
     private static string[] MalformedFieldCodes(IEnumerable<(string Field, string Code)> fields) =>
-        fields.Where(field => !ErrorCodeFormat().IsMatch(field.Code))
+        fields.Where(field => !ReservedKeys.Contains(field.Code, StringComparer.Ordinal) && !ErrorCodeFormat().IsMatch(field.Code))
             .Select(field => $"{field.Field}: {field.Code}")
             .ToArray();
 

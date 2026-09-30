@@ -174,6 +174,7 @@ public sealed class IngressJourneyTests(ApiFactory factory)
                 displayName = "Ana",
                 culture = "en-US",
                 timeZoneId = "America/Argentina/Buenos_Aires",
+                version = consumerMe.RootElement.GetProperty("version").GetUInt32(),
             }),
         };
         update.Headers.Authorization = new AuthenticationHeaderValue("Bearer", consumer.AccessToken);

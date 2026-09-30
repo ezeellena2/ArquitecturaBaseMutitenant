@@ -1,10 +1,12 @@
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
@@ -15,8 +17,13 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 /// las reglas del vínculo se ejecutan dentro de una transacción.
 /// </summary>
 internal sealed class AccountGoogleService(ISignInService signIn, GoogleMethodLinker linker,
-    IUnitOfWork unitOfWork, TimeProvider timeProvider, ILogger<AccountGoogleService> logger) : IAccountGoogleService
+    IUnitOfWork unitOfWork, TimeProvider timeProvider, ILogger<AccountGoogleService> logger,
+    ICurrentUser currentUser) : IAccountGoogleService
 {
+    public Task<Result<Guid>> GetLinkUserIdAsync(CancellationToken cancellationToken) =>
+        OperationLog.RunAsync<Guid>(logger, timeProvider, "PrepareAccountGoogleLink", () =>
+            Task.FromResult(currentUser.UserId is { } userId ? Result.Success(userId) : Result.Failure<Guid>(UserErrors.NotFound)));
+
     public Task<Result> LinkAsync(LinkGoogleRequest request, CancellationToken ct) =>
         OperationLog.RunAsync(logger, timeProvider, "LinkAccountGoogle", async () =>
         {

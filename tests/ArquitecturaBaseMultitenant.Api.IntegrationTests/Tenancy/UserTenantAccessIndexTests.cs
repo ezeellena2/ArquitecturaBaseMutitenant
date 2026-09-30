@@ -142,7 +142,14 @@ public sealed class UserTenantAccessIndexTests(ApiFactory factory)
         var migrator = ownerContext.Database.GetService<IMigrator>();
         await migrator.MigrateAsync("20260929192919_OpenIddict", Ct);
 
-        Guid userId = Guid.Empty;
+        var userId = Guid.CreateVersion7();
+        await ownerContext.Database.ExecuteSqlInterpolatedAsync($"""
+            INSERT INTO identity."AspNetUsers"
+                ("Id", "Culture", "TimeZoneId", "Status", "IsPlatformOperator", "EmailConfirmed",
+                 "PhoneNumberConfirmed", "TwoFactorEnabled", "LockoutEnabled", "AccessFailedCount")
+            VALUES ({userId}, 'es-AR', 'America/Argentina/Buenos_Aires', 'Active', false,
+                    false, false, false, true, 0)
+            """, Ct);
         var firstTenant = Tenant.CreateBusiness("Backfill A", requiresApproval: false);
         var secondTenant = Tenant.CreateBusiness("Backfill B", requiresApproval: false);
         Assert.True(firstTenant.Activate().IsSuccess);
@@ -150,13 +157,11 @@ public sealed class UserTenantAccessIndexTests(ApiFactory factory)
         await using (var scope = isolated.Services.CreateAsyncScope())
         {
             var services = scope.ServiceProvider;
-            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
             {
-                userId = (await services.GetRequiredService<IUserRepository>()
-                    .CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct)).Id;
                 services.GetRequiredService<ITenantRepository>().Add(firstTenant);
                 services.GetRequiredService<ITenantRepository>().Add(secondTenant);
-                return Result.Success();
+                return Task.FromResult(Result.Success());
             }, CommitPolicy.OnSuccess, Ct);
         }
 
@@ -187,17 +192,17 @@ public sealed class UserTenantAccessIndexTests(ApiFactory factory)
     private static async Task SeedMemberAsync(ApiFactory source, Guid userId, Guid tenantId,
         DateTime joinedAtUtc, bool inactive)
     {
-        await using var scope = source.Services.CreateAsyncScope();
-        var services = scope.ServiceProvider;
-        using var active = services.GetRequiredService<ITenantScope>().Enter(tenantId);
-        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
-        {
-            var member = Member.Invite(userId);
-            Assert.True(member.Activate(joinedAtUtc).IsSuccess);
-            if (inactive) Assert.True(member.Deactivate().IsSuccess);
-            services.GetRequiredService<IMemberRepository>().Add(member);
-            return Task.FromResult(Result.Success());
-        }, CommitPolicy.OnSuccess, Ct);
+        await using var connection = await RuntimeRoleConnection.OpenAsync(source.RuntimeConnectionString, tenantId, Ct);
+        await using var command = new NpgsqlCommand("""
+            INSERT INTO tenant."Members" ("Id", "TenantId", "UserId", "Status", "JoinedAtUtc")
+            VALUES (@id, @tenant_id, @user_id, @status, @joined_at)
+            """, connection);
+        command.Parameters.AddWithValue("id", Guid.CreateVersion7());
+        command.Parameters.AddWithValue("tenant_id", tenantId);
+        command.Parameters.AddWithValue("user_id", userId);
+        command.Parameters.AddWithValue("status", inactive ? "Inactive" : "Active");
+        command.Parameters.AddWithValue("joined_at", joinedAtUtc);
+        Assert.Equal(1, await command.ExecuteNonQueryAsync(Ct));
     }
 
     private async Task<(string Status, DateTime JoinedAtUtc)?> ReadIndexAsync(Guid userId, Guid tenantId)

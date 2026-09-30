@@ -100,12 +100,17 @@ public sealed class AuthPipelineTests(ApiFactory factory)
         var tenantId = rows.GetGuid(1);
         await rows.DisposeAsync();
 
+        using var before = AuthorizedRequest(HttpMethod.Get, "/api/me", userId, tenantId);
+        using var beforeResponse = await client.SendAsync(before, Ct);
+        Assert.Equal(HttpStatusCode.OK, beforeResponse.StatusCode);
+        using var beforeBody = JsonDocument.Parse(await beforeResponse.Content.ReadAsStringAsync(Ct));
         using var put = AuthorizedRequest(HttpMethod.Put, "/api/me", userId, tenantId);
         put.Content = JsonContent.Create(new
         {
             displayName = "Carla",
             culture = "en-US",
             timeZoneId = "America/Argentina/Buenos_Aires",
+            version = beforeBody.RootElement.GetProperty("version").GetUInt32(),
         });
         using var updated = await client.SendAsync(put, Ct);
         Assert.Equal(HttpStatusCode.NoContent, updated.StatusCode);
