@@ -19,6 +19,13 @@ public sealed class TenantResolutionMiddleware(RequestDelegate next, ITenantStat
         ITenantAccessInitializer tenantInitializer, ITenantReader tenantReader)
     {
         ArgumentNullException.ThrowIfNull(context);
+        if (context.GetEndpoint()?.Metadata.GetMetadata<IAllowAnonymous>() is not null
+            && context.GetEndpoint()?.Metadata.GetMetadata<AccessAttribute>() is null)
+        {
+            await next(context);
+            return;
+        }
+
         if (context.User.Identity?.IsAuthenticated != true)
         {
             await next(context);

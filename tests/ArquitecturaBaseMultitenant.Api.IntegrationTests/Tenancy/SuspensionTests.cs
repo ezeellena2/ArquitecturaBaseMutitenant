@@ -7,6 +7,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -80,6 +81,41 @@ public sealed class SuspensionTests
 
         Assert.Null(initializer.TenantId);
         Assert.Equal(StatusCodes.Status204NoContent, context.Response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Anonymous_endpoint_ignores_bearer_from_inactive_business()
+    {
+        var context = NewContext(Access.Business, Guid.NewGuid(), TenantKind.Business);
+        context.Request.Path = "/api/reference-data";
+        context.SetEndpoint(new Endpoint(_ => Task.CompletedTask,
+            new EndpointMetadataCollection(new AllowAnonymousAttribute()), "reference-data"));
+        var initializer = new RecordingInitializer();
+        var middleware = NewMiddleware(new StubStatusCache(TenantStatus.Suspended), initializer);
+
+        await middleware.InvokeAsync(context,
+            new StubAccessStatusCache(UserStatus.Active, MemberStatus.Inactive), initializer,
+            new StubTenantReader());
+
+        Assert.Equal(StatusCodes.Status204NoContent, context.Response.StatusCode);
+        Assert.Null(initializer.TenantId);
+    }
+
+    [Fact]
+    public async Task Anonymous_endpoint_ignores_bearer_from_inactive_identity()
+    {
+        var context = NewContext(Access.Business, Guid.NewGuid(), TenantKind.Business);
+        context.Request.Path = "/api/legal/terms";
+        context.SetEndpoint(new Endpoint(_ => Task.CompletedTask,
+            new EndpointMetadataCollection(new AllowAnonymousAttribute()), "legal"));
+        var initializer = new RecordingInitializer();
+        var middleware = NewMiddleware(new StubStatusCache(TenantStatus.Active), initializer);
+
+        await middleware.InvokeAsync(context, new StubAccessStatusCache(UserStatus.Suspended), initializer,
+            new StubTenantReader());
+
+        Assert.Equal(StatusCodes.Status204NoContent, context.Response.StatusCode);
+        Assert.Null(initializer.TenantId);
     }
 
     [Fact]
