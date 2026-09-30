@@ -28,6 +28,8 @@ public sealed class LoginMethod : Entity
     public bool IsPrimary { get; private set; }
     public DateTime? VerifiedAtUtc { get; private set; }
     public Guid? ManagedByTenantId { get; private set; }
+    /// <summary>Correo que Google probó; Value conserva siempre el subject del proveedor.</summary>
+    public Email? ContactEmail { get; private set; }
 
     public static LoginMethod CreateEmail(Guid userId, Email email)
     {
@@ -41,8 +43,18 @@ public sealed class LoginMethod : Entity
         return new LoginMethod(userId, LoginMethodType.Phone, phoneNumber.Value);
     }
 
-    public static LoginMethod CreateGoogle(Guid userId, string providerSubject) =>
-        new(userId, LoginMethodType.Google, providerSubject);
+    public static LoginMethod CreateGoogle(Guid userId, string providerSubject, Email? contactEmail = null) =>
+        new(userId, LoginMethodType.Google, providerSubject) { ContactEmail = contactEmail };
+
+    public void UpdateGoogleContact(Email contactEmail)
+    {
+        ArgumentNullException.ThrowIfNull(contactEmail);
+        if (Type != LoginMethodType.Google)
+            throw new InvalidOperationException("Only a Google method has a provider contact.");
+        ContactEmail = contactEmail;
+    }
+
+    public void ClearPrimary() => IsPrimary = false;
 
     public Result Verify(DateTime verifiedAtUtc)
     {

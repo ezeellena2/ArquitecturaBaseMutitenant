@@ -6,6 +6,33 @@ namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Authentication;
 public sealed class LoginMethodTests
 {
     [Fact]
+    public void Google_contact_is_verified_separately_from_its_unique_provider_subject()
+    {
+        var contact = Email.Create("PERSONAL@Example.COM").Value;
+        var method = LoginMethod.CreateGoogle(Guid.CreateVersion7(), "provider-subject", contact);
+
+        Assert.Equal("provider-subject", method.Value);
+        Assert.Equal(contact, method.ContactEmail);
+        Assert.False(method.IsPrimary);
+        Assert.Null(method.VerifiedAtUtc);
+    }
+
+    [Fact]
+    public void Changing_the_primary_method_clears_the_previous_flag_without_revoking_verification()
+    {
+        var method = LoginMethod.CreateEmail(Guid.CreateVersion7(), Email.Create("own@example.com").Value);
+        var verifiedAtUtc = new DateTime(2026, 9, 30, 12, 0, 0, DateTimeKind.Utc);
+        method.Verify(verifiedAtUtc);
+        method.MakePrimary();
+
+        method.ClearPrimary();
+
+        Assert.False(method.IsPrimary);
+        Assert.Equal(verifiedAtUtc, method.VerifiedAtUtc);
+        Assert.True(method.CanSignIn(channelAvailable: true, managedMembershipActive: false));
+    }
+
+    [Fact]
     public void Email_method_keeps_the_canonical_value_and_starts_unverified()
     {
         var userId = Guid.CreateVersion7();
