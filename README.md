@@ -6,6 +6,7 @@ Plantilla multitenant **B2B + B2C**: una persona tiene una sola cuenta con dos a
 
 - [`AGENTS.md`](AGENTS.md): índice de reglas y del arnés.
 - [`docs/architecture/backend.md`](docs/architecture/backend.md): capas, patrones y carpetas.
+- [`docs/guides/leer-backend.md`](docs/guides/leer-backend.md): cómo seguir un recorrido del controller a las reglas y la base.
 - [`docs/architecture/multitenancy.md`](docs/architecture/multitenancy.md): organizaciones, empresas y aislamiento.
 - [`docs/architecture/arbol.md`](docs/architecture/arbol.md): estructura objetivo, archivo por archivo.
 - [`docs/rules/README.md`](docs/rules/README.md): fichas de reglas.
