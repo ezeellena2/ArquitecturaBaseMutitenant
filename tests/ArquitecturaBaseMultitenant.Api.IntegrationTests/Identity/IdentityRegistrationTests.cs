@@ -1,5 +1,7 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Claims;
+using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure;
@@ -74,6 +76,30 @@ public sealed class IdentityRegistrationTests(ApiFactory factory)
             Assert.NotNull(await configured.GetRequiredService<IAuthenticationSchemeProvider>()
                 .GetSchemeAsync(GoogleDefaults.AuthenticationScheme));
         }
+    }
+
+    [Theory]
+    [InlineData("{\"email_verified\":true}", true)]
+    [InlineData("{\"email_verified\":false}", false)]
+    [InlineData("{}", null)]
+    public void Google_json_maps_email_verified_claim(string userData, bool? expected)
+    {
+        using var provider = BuildProvider(new ConfigurationBuilder().AddInMemoryCollection(
+            new Dictionary<string, string?>
+            {
+                ["Authentication:Google:ClientId"] = "public-test-client",
+                ["Authentication:Google:ClientSecret"] = "test-only-secret",
+            }).Build());
+        var options = provider.GetRequiredService<IOptionsMonitor<GoogleOptions>>()
+            .Get(GoogleDefaults.AuthenticationScheme);
+        using var document = JsonDocument.Parse(userData);
+        var identity = new ClaimsIdentity();
+
+        foreach (var action in options.ClaimActions)
+            action.Run(document.RootElement, identity, GoogleDefaults.AuthenticationScheme);
+
+        var mapped = identity.FindFirst("email_verified")?.Value;
+        Assert.Equal(expected, mapped is null ? null : bool.Parse(mapped));
     }
 
     [Fact]

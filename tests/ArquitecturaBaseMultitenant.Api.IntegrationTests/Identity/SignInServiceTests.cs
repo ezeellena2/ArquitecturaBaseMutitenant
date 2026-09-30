@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Json;
 using System.Security.Claims;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Api.RequestContext;
@@ -73,6 +74,24 @@ public sealed class SignInServiceTests(ApiFactory factory)
         Assert.True(typeof(ISignInService).GetMembers().Length <= 12);
     }
 
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(false, false)]
+    [InlineData(null, false)]
+    public async Task External_scheme_claim_controls_email_verification(bool? claim, bool expected)
+    {
+        using var client = factory.CreateClient();
+        using var ticket = await client.PostAsJsonAsync("/test/auth/external-ticket",
+            new { emailVerified = claim }, Ct);
+        Assert.Equal(HttpStatusCode.NoContent, ticket.StatusCode);
+
+        using var response = await client.GetAsync("/test/auth/external-info", Ct);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var login = await response.Content.ReadFromJsonAsync<ExternalLoginInfo>(Ct);
+        Assert.Equal("Google", login?.Provider);
+        Assert.Equal(expected, login?.EmailVerified);
+    }
+
     [Fact]
     public async Task Global_lookup_finds_only_verified_login_methods()
     {
@@ -118,4 +137,6 @@ public sealed class SignInServiceTests(ApiFactory factory)
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
     }
+
+    private sealed record ExternalLoginInfo(string Provider, bool EmailVerified);
 }

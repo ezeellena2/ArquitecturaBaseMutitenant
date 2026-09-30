@@ -40,6 +40,7 @@ public sealed class AuthEndpointsTests(ApiFactory factory)
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
         var problem = await response.Content.ReadFromJsonAsync<ProblemBody>(Ct);
         Assert.Equal("Validation.Failed", problem?.Code);
+        Assert.Contains("acceptedTerms", Assert.IsType<Dictionary<string, string[]>>(problem?.Errors).Keys);
     }
 
     [Fact]
@@ -71,5 +72,5 @@ public sealed class AuthEndpointsTests(ApiFactory factory)
 
     private sealed record ChannelBody(string Key);
 
-    private sealed record ProblemBody(string Code);
+    private sealed record ProblemBody(string Code, Dictionary<string, string[]>? Errors);
 }

@@ -1,5 +1,4 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
-using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 
@@ -11,7 +10,6 @@ internal sealed class SignupPolicy(IPlatformSettingsReader settings)
     {
         var row = await settings.FindAsync(cancellationToken)
             ?? throw new InvalidOperationException("PlatformSettings has not been seeded.");
-        return row.ConsumerSignup == ConsumerSignupMode.Open
-            ? Result.Success() : SignupErrors.Closed;
+        return PlatformSettings.CanRegisterConsumer(row.ConsumerSignup);
     }
 }

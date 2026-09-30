@@ -5,9 +5,15 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
+using ArquitecturaBaseMultitenant.Infrastructure.Identity;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using System.Security.Claims;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures;
 
@@ -108,6 +114,32 @@ public sealed class TestController : ControllerBase
         [FromServices] IAccountService accounts, CancellationToken cancellationToken) =>
         (await accounts.VerifySignupAsync(new VerifySignupRequest(Email.Create(body.Email).Value,
             body.Code, body.AcceptedTerms, body.Culture, body.TimeZoneId), cancellationToken)).ToActionResult(this);
+
+    [HttpPost("auth/external-ticket")]
+    public async Task<IActionResult> ExternalTicket([FromBody] TestExternalTicket body,
+        [FromServices] SignInManager<ApplicationUser> signIn)
+    {
+        List<Claim> claims =
+        [
+            new(ClaimTypes.NameIdentifier, "google-subject"),
+            new(ClaimTypes.Email, "verified@example.test"),
+        ];
+        if (body.EmailVerified is { } verified)
+            claims.Add(new Claim("email_verified", verified ? "True" : "False"));
+        var properties = signIn.ConfigureExternalAuthenticationProperties(
+            GoogleDefaults.AuthenticationScheme, "/test/auth/external-info");
+        await HttpContext.SignInAsync(IdentityConstants.ExternalScheme,
+            new ClaimsPrincipal(new ClaimsIdentity(claims, GoogleDefaults.AuthenticationScheme)), properties);
+        return NoContent();
+    }
+
+    [HttpGet("auth/external-info")]
+    public async Task<IActionResult> ExternalInfo([FromServices] ISignInService signIn,
+        CancellationToken cancellationToken)
+    {
+        var login = await signIn.GetExternalLoginAsync(cancellationToken);
+        return login is null ? NotFound() : Ok(new { login.Provider, login.EmailVerified });
+    }
 }
 
 public sealed record TestRequestCode(string Email);
@@ -115,6 +147,7 @@ public sealed record TestVerifyCode(string Email, string Code, string ReturnUrl)
 public sealed record TestSignup(string Email, bool AcceptedTerms, string? Culture, string? TimeZoneId);
 public sealed record TestVerifySignup(string Email, string Code, bool AcceptedTerms,
     string? Culture, string? TimeZoneId);
+public sealed record TestExternalTicket(bool? EmailVerified);
 
 public sealed record TestBodyHttpRequest(string? Value);
 

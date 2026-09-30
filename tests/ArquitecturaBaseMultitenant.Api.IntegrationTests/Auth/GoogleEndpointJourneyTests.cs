@@ -108,6 +108,28 @@ public sealed class GoogleEndpointJourneyTests(ApiFactory factory)
             && cookies.Any(cookie => cookie.Contains("Identity.Application", StringComparison.Ordinal)));
     }
 
+    [Fact]
+    public async Task Google_callback_without_email_verified_claim_cannot_register()
+    {
+        await factory.Services.SeedDatabaseAsync(Ct);
+        var identity = new FakeGoogleIdentity(Guid.NewGuid().ToString("N"),
+            $"google-unverified-{Guid.NewGuid():N}@example.test", EmailVerified: null);
+        using var host = HostWith(identity);
+        using var client = Client(host);
+
+        using var challenged = await client.GetAsync(
+            "/api/auth/external/google?signup=true&acceptedTerms=true&access=consumer" +
+            "&returnTo=%2F&culture=es-AR&timeZoneId=America%2FArgentina%2FBuenos_Aires", Ct);
+        Assert.Equal(HttpStatusCode.Redirect, challenged.StatusCode);
+
+        using var callback = await client.GetAsync("/api/auth/external/callback", Ct);
+        Assert.Equal(HttpStatusCode.Redirect, callback.StatusCode);
+        Assert.Equal("/login?error=Auth.ExternalLogin.EmailNotVerified",
+            callback.Headers.Location?.ToString());
+        Assert.False(callback.Headers.TryGetValues("Set-Cookie", out var cookies)
+            && cookies.Any(cookie => cookie.Contains("Identity.Application", StringComparison.Ordinal)));
+    }
+
     private Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program> HostWith(FakeGoogleIdentity identity) =>
         factory.WithWebHostBuilder(builder =>
         {
@@ -133,7 +155,7 @@ public sealed class GoogleEndpointJourneyTests(ApiFactory factory)
         "&scope=openid%20profile%20email%20api" +
         "&code_challenge=" + challenge + "&code_challenge_method=S256&access=" + access;
 
-    private sealed record FakeGoogleIdentity(string Subject, string Email);
+    private sealed record FakeGoogleIdentity(string Subject, string Email, bool? EmailVerified = true);
 
     private sealed class FakeGoogleHandler(
         IOptionsMonitor<AuthenticationSchemeOptions> options,
@@ -146,13 +168,14 @@ public sealed class GoogleEndpointJourneyTests(ApiFactory factory)
 
         protected override async Task HandleChallengeAsync(AuthenticationProperties properties)
         {
-            Claim[] claims =
+            List<Claim> claims =
             [
                 new(ClaimTypes.NameIdentifier, identity.Subject),
                 new(ClaimTypes.Email, identity.Email),
                 new(ClaimTypes.Name, "Persona nueva"),
-                new("email_verified", "true"),
             ];
+            if (identity.EmailVerified is { } verified)
+                claims.Add(new Claim("email_verified", verified ? "true" : "false"));
             var principal = new ClaimsPrincipal(new ClaimsIdentity(claims,
                 GoogleDefaults.AuthenticationScheme));
             await Context.SignInAsync(IdentityConstants.ExternalScheme, principal, properties);

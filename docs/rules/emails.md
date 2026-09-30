@@ -29,7 +29,7 @@
 ## Lo verifica
 - `EmailTests` (E1): la tabla de casos de `format-cases.json` (`"  Juan@Gmail.COM "` → `juan@gmail.com`, IDN, límites por bytes y `error` para inválidos).
 - `EmailPropertyTests` (E1): ninguna entidad ni modelo tiene una propiedad `string` llamada `*Email`, salvo las copias heredadas `ApplicationUser.Email` y `ApplicationUser.NormalizedEmail`, que están en su lista blanca (test de arquitectura).
-- `SignupTests` (E3): dos registros que solo difieren en mayúsculas dan `Auth.Signup.EmailTaken`.
+- `SignupTests` (E3): dos registros del mismo correo que solo difieren en mayúsculas ingresan a una sola identidad. Un correo existente no devuelve `Auth.Signup.EmailTaken`.
 - `LoginMethodsTests` (E3) verifica la unicidad de cada correo; `ManagedEmailTests` (E6) comprueba que un exmiembro no pueda ingresar con el correo de la empresa.
 
 ## Detalle

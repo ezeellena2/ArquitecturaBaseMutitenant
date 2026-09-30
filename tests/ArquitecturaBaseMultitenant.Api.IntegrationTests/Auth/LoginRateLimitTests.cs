@@ -11,7 +11,7 @@ public sealed class LoginRateLimitTests(ApiFactory factory)
     [Theory]
     [InlineData("/test/login-code-rate-limit", "RateLimiting:LoginCodePermitLimit")]
     [InlineData("/test/login-verify-rate-limit", "RateLimiting:LoginVerifyPermitLimit")]
-    public async Task Login_rate_limit_is_partitioned_by_ip_and_returns_retry_after(
+    public async Task Login_rate_limit_returns_retry_after(
         string path, string limitKey)
     {
         await using var limited = factory.WithWebHostBuilder(builder => builder.UseSetting(limitKey, "1"));

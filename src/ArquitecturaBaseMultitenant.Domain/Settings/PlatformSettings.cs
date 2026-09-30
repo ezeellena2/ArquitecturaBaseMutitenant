@@ -45,8 +45,8 @@ public sealed class PlatformSettings : Entity, IAuditable
         };
     }
 
-    public Result CanRegisterConsumer()
-    {
-        return ConsumerSignup == ConsumerSignupMode.Open ? Result.Success() : SignupErrors.Closed;
-    }
+    public Result CanRegisterConsumer() => CanRegisterConsumer(ConsumerSignup);
+
+    public static Result CanRegisterConsumer(ConsumerSignupMode mode) =>
+        mode == ConsumerSignupMode.Open ? Result.Success() : SignupErrors.Closed;
 }

@@ -101,7 +101,7 @@ public sealed class SignupTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task Existing_email_enters_without_creating_second_account()
+    public async Task Existing_email_with_different_case_enters_without_creating_second_account()
     {
         await factory.Services.SeedDatabaseAsync(Ct);
         using var client = factory.CreateClient();
@@ -127,12 +127,13 @@ public sealed class SignupTests(ApiFactory factory)
             await age.ExecuteNonQueryAsync(Ct);
         }
 
+        var upperCaseAddress = address.ToUpperInvariant();
         var again = await client.PostAsJsonAsync("/test/auth/signup",
-            new { email = address, acceptedTerms = true }, Ct);
+            new { email = upperCaseAddress, acceptedTerms = true }, Ct);
         Assert.Equal(HttpStatusCode.Accepted, again.StatusCode);
         var secondCode = await ReadPickupCodeAsync(address);
         var second = await client.PostAsJsonAsync("/test/auth/signup/verify",
-            new { email = address, code = secondCode, acceptedTerms = true }, Ct);
+            new { email = upperCaseAddress, code = secondCode, acceptedTerms = true }, Ct);
         Assert.Equal(HttpStatusCode.NoContent, second.StatusCode);
 
         await using var connection = new NpgsqlConnection(factory.AdminConnectionString);

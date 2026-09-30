@@ -57,7 +57,6 @@
   <data name="Users.User.InvalidTransition" xml:space="preserve"><value>No se puede cambiar la cuenta a ese estado.</value></data>
   <data name="Auth.LoginMethod.NotVerified" xml:space="preserve"><value>Verificá este método antes de usarlo como principal.</value></data>
   <data name="Auth.Signup.Closed" xml:space="preserve"><value>El registro de personas está cerrado.</value></data>
-  <data name="Auth.Signup.EmailTaken" xml:space="preserve"><value>Ese correo ya tiene una cuenta.</value></data>
   <data name="Identity.Account.LockedOut" xml:space="preserve"><value>Tu cuenta está bloqueada por unos minutos.</value></data>
   <data name="Identity.Account.Suspended" xml:space="preserve"><value>Tu cuenta está suspendida.</value></data>
   <data name="Identity.Account.PendingDeletion" xml:space="preserve"><value>Tu cuenta tiene la baja pedida.</value></data>

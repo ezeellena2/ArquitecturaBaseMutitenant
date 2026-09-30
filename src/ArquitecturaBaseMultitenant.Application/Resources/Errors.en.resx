@@ -57,7 +57,6 @@
   <data name="Users.User.InvalidTransition" xml:space="preserve"><value>The account cannot change to that state.</value></data>
   <data name="Auth.LoginMethod.NotVerified" xml:space="preserve"><value>Verify this method before making it primary.</value></data>
   <data name="Auth.Signup.Closed" xml:space="preserve"><value>Personal signup is closed.</value></data>
-  <data name="Auth.Signup.EmailTaken" xml:space="preserve"><value>That email address already has an account.</value></data>
   <data name="Identity.Account.LockedOut" xml:space="preserve"><value>Your account is temporarily locked.</value></data>
   <data name="Identity.Account.Suspended" xml:space="preserve"><value>Your account is suspended.</value></data>
   <data name="Identity.Account.PendingDeletion" xml:space="preserve"><value>Your account is pending deletion.</value></data>
