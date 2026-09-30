@@ -69,44 +69,44 @@ En cada tarea se guarda evidencia de rojo y verde con el comando y resultado. Si
 **Archivos:** back: `Domain/Authentication/{LoginMethod,LoginMethodErrors}.cs`, `Application/Resources/{Errors,Errors.en}.resx`; test `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Authentication/LoginMethodTests.cs`.
 **Comportamiento exacto:** Agregar desmarcar principal y dirección Email de contacto verificada para Google (Value conserva subject). Probar que un método sin verificar no puede ser principal y que la dirección de Google nunca sustituye la clave única de ingreso.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Faltan el cambio de principal y el contacto de Google.
-- [ ] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Domain.UnitTests/ArquitecturaBaseMultitenant.Domain.UnitTests.csproj -- --filter-class '*LoginMethodTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: completar reglas de métodos de ingreso"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Faltan el cambio de principal y el contacto de Google.
+- [x] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Domain.UnitTests/ArquitecturaBaseMultitenant.Domain.UnitTests.csproj -- --filter-class '*LoginMethodTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: completar reglas de métodos de ingreso"`. Registrar hash back/front.
 
 ### T03 · Reautenticación ligada a cuenta y acción
 
 **Archivos:** back: `Domain/Authentication/ReauthTicket.cs`, `LoginCodePurpose.cs`; `Application/Services/Identity/{ReauthIssuer,ReauthVerifier}.cs`; `Application/Interfaces/Persistence/IReauthTicketRepository.cs`; test `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Authentication/ReauthTicketTests.cs`.
 **Comportamiento exacto:** Ticket de una sola utilización, 5 minutos, UserId + Action + TargetMethodId + SourceMethodId. Para quitar/cambiar, source distinto del target y verificado. Al consumir revalidar propiedad, estado y vencimiento. Código usa propósito separado y RequestedByUserId, sin reutilizar Login/Signup.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: No existe el ticket; fallan vencimiento, replay, cuenta/acción/objetivo ajenos.
-- [ ] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Domain.UnitTests/ArquitecturaBaseMultitenant.Domain.UnitTests.csproj -- --filter-class '*ReauthTicketTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: modelar reautenticación de acciones de cuenta"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: No existe el ticket; fallan vencimiento, replay, cuenta/acción/objetivo ajenos.
+- [x] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Domain.UnitTests/ArquitecturaBaseMultitenant.Domain.UnitTests.csproj -- --filter-class '*ReauthTicketTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: modelar reautenticación de acciones de cuenta"`. Registrar hash back/front.
 
 ### T04 · Persistencia y migración de cuenta
 
 **Archivos:** back: `Infrastructure/Persistence/Configurations/Identity/{LoginMethodConfiguration,ReauthTicketConfiguration,ApplicationUserConfiguration}.cs`, `Repositories/{LoginMethodRepository,ReauthTicketRepository,UserRepository}.cs`, `ApplicationDbContext.cs`, migración `AccountManagement` y snapshot; puertos `ILoginMethodRepository`, `IUserRepository`; test `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Identity/LoginMethodsTests.cs`.
 **Comportamiento exacto:** Lock global de cuenta dentro de UoW; métodos propios por UserId; Remove; persistir tickets; contacto Google; xmin para edición del perfil. Índice único de principal por UserId (parcial). Probar rollback, unicidad global concurrente, 404 de método ajeno y copia del principal. Revisar SQL; no modificar migraciones aplicadas.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Tabla/campos/operaciones faltantes o regla sin implementar.
-- [ ] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class '*LoginMethodsTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: persistir gestión y reautenticación de cuenta"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Tabla/campos/operaciones faltantes o regla sin implementar.
+- [x] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class '*LoginMethodsTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: persistir gestión y reautenticación de cuenta"`. Registrar hash back/front.
 
 ### T05 · Avisos por outbox
 
 **Archivos:** back: `Infrastructure/Messaging/Email/EmailAccountNoticeChannel.cs`, `EmailRegistration.cs`; `Application/Services/Identity/AccountNoticeIssuer.cs`; `Application/Interfaces/Integrations/Messaging/IOutbox.cs` y payload/entidad outbox si requiere UserId; tests `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Messaging/AccountNoticeTests.cs`.
 **Comportamiento exacto:** Encolar AccountNotice cerrado en todos los métodos verificados con canal disponible, incluidos método quitado y correo de Google, sin duplicar destino. Payload cifrado, UserId para cancelación de pendientes; URLs públicas obtenidas por IPublicOrigin. Al borrar, aviso final solo principal antes de eliminar métodos. Usar plantillas existentes y DisplayFormatter.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: No está registrado IAccountNoticeChannel ni se encolan los avisos.
-- [ ] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class '*AccountNoticeTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: entregar avisos de cuenta por el outbox"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: No está registrado IAccountNoticeChannel ni se encolan los avisos.
+- [x] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class '*AccountNoticeTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: entregar avisos de cuenta por el outbox"`. Registrar hash back/front.
 
 ### T06 · Sumar y verificar correo
 

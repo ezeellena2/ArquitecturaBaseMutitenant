@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Models.Notifications;
+using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
@@ -9,5 +10,6 @@ public interface IAccountNoticeChannel
     string Key { get; }
     LoginMethodType MethodType { get; }
 
-    void Enqueue(string destination, AccountNotice notice, string culture);
+    Task EnqueueAsync(Guid userId, string destination, AccountNotice notice, CultureProfile culture,
+        CancellationToken cancellationToken);
 }

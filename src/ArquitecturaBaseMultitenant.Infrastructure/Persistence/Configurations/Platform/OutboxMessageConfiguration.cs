@@ -15,5 +15,6 @@ internal sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Outb
         builder.Property(message => message.EncryptedPayload).HasColumnType("text").IsRequired();
         builder.Property(message => message.Status).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.HasIndex(message => new { message.Status, message.NextAttemptAtUtc, message.Id });
+        builder.HasIndex(message => message.UserId);
     }
 }

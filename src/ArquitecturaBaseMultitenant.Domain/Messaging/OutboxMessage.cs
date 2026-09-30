@@ -7,6 +7,7 @@ public sealed class OutboxMessage : Entity
     private OutboxMessage() { }
 
     public string Channel { get; private set; } = string.Empty;
+    public Guid? UserId { get; private set; }
     public string EncryptedPayload { get; private set; } = string.Empty;
     public OutboxStatus Status { get; private set; }
     public int Attempts { get; private set; }
@@ -14,7 +15,7 @@ public sealed class OutboxMessage : Entity
     public DateTime? NextAttemptAtUtc { get; private set; }
     public DateTime? SentAtUtc { get; private set; }
 
-    public static OutboxMessage Enqueue(string channel, string encryptedPayload, DateTime nowUtc)
+    public static OutboxMessage Enqueue(string channel, string encryptedPayload, DateTime nowUtc, Guid? userId = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(channel);
         ArgumentException.ThrowIfNullOrWhiteSpace(encryptedPayload);
@@ -23,11 +24,20 @@ public sealed class OutboxMessage : Entity
         return new OutboxMessage
         {
             Channel = channel,
+            UserId = userId,
             EncryptedPayload = encryptedPayload,
             Status = OutboxStatus.Pending,
             CreatedAtUtc = nowUtc,
             NextAttemptAtUtc = nowUtc,
         };
+    }
+
+    public void Cancel()
+    {
+        if (Status == OutboxStatus.Sent) return;
+        Status = OutboxStatus.Cancelled;
+        NextAttemptAtUtc = null;
+        EncryptedPayload = string.Empty;
     }
 
     public bool IsDue(DateTime nowUtc)

@@ -16,7 +16,7 @@ internal sealed class Outbox(
     private readonly HashSet<string> _channels = senders.Select(sender => sender.Key)
         .ToHashSet(StringComparer.Ordinal);
 
-    public void Enqueue(string channel, string payload)
+    public void Enqueue(string channel, string payload, Guid? userId = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(channel);
         ArgumentException.ThrowIfNullOrWhiteSpace(payload);
@@ -29,6 +29,6 @@ internal sealed class Outbox(
 
         var encryptedPayload = protector.Protect(payload);
         context.OutboxMessages.Add(OutboxMessage.Enqueue(
-            channel, encryptedPayload, timeProvider.GetUtcNow().UtcDateTime));
+            channel, encryptedPayload, timeProvider.GetUtcNow().UtcDateTime, userId));
     }
 }

@@ -10,7 +10,8 @@ Estado: en ejecución. La 3c queda pendiente. No declarar cerrada esta etapa sin
 | T01 · recorridos reales rojos | — | `20e2e8b` | Los cinco fallaron antes de implementar /cuenta |
 | T02 · reglas de métodos | `61ffe6c` | — | Rojo CS1501/CS1061; verde LoginMethodTests 6/6 |
 | T03 · comprobante de reautenticación | `414cb47` | — | Rojo CS0103; verde ReauthTicketTests 4/4 |
-| T04 · persistencia de cuenta | este commit | — | Rojo CS1061; Testcontainers LoginMethodsTests 3/3; modelo sin cambios pendientes; SQL revisado |
+| T04 · persistencia de cuenta | `5949ffb` | — | Rojo CS1061; Testcontainers LoginMethodsTests 3/3; modelo sin cambios pendientes; SQL revisado |
+| T05 · avisos de cuenta | este commit | — | Rojo CS0234; Testcontainers AccountNoticeTests 2/2; contactos deduplicados, payload cifrado y aviso final principal |
 
 ## Evidencia del E2E real antes de programar
 
