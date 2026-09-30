@@ -87,8 +87,12 @@ public sealed class TenantResolutionMiddleware(RequestDelegate next, ITenantStat
         if (HttpMethods.IsGet(context.Request.Method)
             && context.Request.Path.Equals(new PathString("/api/me")))
         {
-            // La propia cuenta permite abandonar una organización inactiva. Su proyección no concede permisos.
-            tenantInitializer.SetFromAccess(tenantId, kind);
+            // La cuenta global sigue disponible; un miembro que salió no obtiene contexto RLS.
+            if (await accessStatuses.GetMemberStatusAsync(userId, tenantId, kind,
+                    context.RequestAborted) == MemberStatus.Active)
+            {
+                tenantInitializer.SetFromAccess(tenantId, kind);
+            }
             await next(context);
             return;
         }

@@ -164,9 +164,12 @@ public sealed class SuspensionTests
     }
 
     [Theory]
-    [InlineData(TenantStatus.Suspended)]
-    [InlineData(TenantStatus.Closed)]
-    public async Task Get_me_remains_available_to_switch_away_from_inactive_business(TenantStatus status)
+    [InlineData(TenantStatus.Suspended, MemberStatus.Inactive)]
+    [InlineData(TenantStatus.Suspended, null)]
+    [InlineData(TenantStatus.Closed, MemberStatus.Inactive)]
+    [InlineData(TenantStatus.Closed, null)]
+    public async Task Get_me_remains_available_without_tenant_for_inactive_or_missing_membership(
+        TenantStatus status, MemberStatus? memberStatus)
     {
         var tenantId = Guid.NewGuid();
         var context = NewContext(Access.Business, tenantId, TenantKind.Business);
@@ -176,8 +179,24 @@ public sealed class SuspensionTests
         var middleware = NewMiddleware(new StubStatusCache(status), initializer);
 
         await middleware.InvokeAsync(context,
-            new StubAccessStatusCache(UserStatus.Active, MemberStatus.Inactive), initializer,
+            new StubAccessStatusCache(UserStatus.Active, memberStatus), initializer,
             new StubTenantReader());
+
+        Assert.Equal(StatusCodes.Status204NoContent, context.Response.StatusCode);
+        Assert.Null(initializer.TenantId);
+    }
+
+    [Fact]
+    public async Task Get_me_keeps_active_membership_context_when_business_is_suspended()
+    {
+        var tenantId = Guid.NewGuid();
+        var context = NewContext(Access.Business, tenantId, TenantKind.Business);
+        context.Request.Method = HttpMethods.Get;
+        context.Request.Path = "/api/me";
+        var initializer = new RecordingInitializer();
+        var middleware = NewMiddleware(new StubStatusCache(TenantStatus.Suspended), initializer);
+
+        await middleware.InvokeAsync(context, ActiveAccessCache(), initializer, new StubTenantReader());
 
         Assert.Equal(StatusCodes.Status204NoContent, context.Response.StatusCode);
         Assert.Equal(tenantId, initializer.TenantId);
@@ -275,7 +294,7 @@ public sealed class SuspensionTests
     }
 
     private sealed class StubAccessStatusCache(
-        UserStatus userStatus = UserStatus.Active, MemberStatus memberStatus = MemberStatus.Active) : IAccessStatusCache
+        UserStatus userStatus = UserStatus.Active, MemberStatus? memberStatus = MemberStatus.Active) : IAccessStatusCache
     {
         public Task<UserStatus?> GetUserStatusAsync(Guid userId, CancellationToken cancellationToken) =>
             Task.FromResult<UserStatus?>(userStatus);
