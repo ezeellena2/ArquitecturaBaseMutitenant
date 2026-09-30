@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Api.Tenancy;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
+using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
@@ -46,7 +47,7 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
             var selected = await service.SelectAccessAsync(userId, access, requestedTenantId, cancellationToken);
             if (selected.IsFailure)
             {
-                return Forbid(ErrorProperties(Errors.AccessDenied, selected.Error.Code),
+                return Forbid(ErrorProperties(Errors.AccessDenied, AccessErrorDescription(selected.Error)),
                     OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
             }
 
@@ -187,4 +188,16 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
             [OpenIddictServerAspNetCoreConstants.Properties.Error] = error,
             [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] = description,
         });
+
+    private static string AccessErrorDescription(Error error)
+    {
+        // El callback necesita el nombre aprobado del estado de membresía; no exponemos otras metadata.
+        if (error.Metadata is null ||
+            !error.Metadata.TryGetValue("organizationName", out var value) || value is not string name)
+        {
+            return error.Code;
+        }
+
+        return error.Code + "|" + Uri.EscapeDataString(name);
+    }
 }
