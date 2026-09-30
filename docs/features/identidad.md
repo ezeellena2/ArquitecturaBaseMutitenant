@@ -18,13 +18,35 @@ La identidad de una persona es global. Una cuenta puede tener acceso como person
 - Cada aceptación conserva el documento, su versión y el instante UTC. Solo al eliminar la cuenta se limpian IP y user agent, sin borrar la prueba de aceptación.
 - Los correos se encolan dentro de la transacción del caso de uso en el outbox global. El payload cifrado no aparece en logs ni en `ToString()`; un fallo espera con backoff. El dispatcher confirma cada mensaje en su propia transacción y no vuelve a tomar uno marcado `Sent`; al detenerse, termina y confirma el envío ya iniciado antes de empezar otro. Como SMTP y PostgreSQL no comparten transacción, una caída exacta entre aceptación SMTP y confirmación puede producir un duplicado en un reintento.
 
-## 3b · La cuenta (pendiente)
+## 3b · La cuenta
 
 La reautenticación emite un secreto aleatorio de 256 bits y guarda solo su hash. Su comprobante dura cinco minutos y se consume una sola vez, ligado a cuenta, acción y método objetivo; quitar o elegir principal exige otro método verificado. El ticket de cancelación conserva el retorno autorizado y no concede una sesión antes de cancelarla.
 
 La gestión conserva `LoginMethods.Value` como clave global del método. En Google es el subject del proveedor; `ContactEmail` guarda el correo verificado para presentación y avisos, sin usarlo como clave OAuth. Cambiar el principal desmarca el anterior y conserva su verificación.
 
-Gestión de métodos de ingreso, aceptación bloqueante de versiones legales nuevas y baja con gracia. Los estados `PendingDeletion` y `Deleted` y sus fechas se reservan en el modelo de 3a sin implementar todavía el flujo de baja. Fuente: [multitenancy.md §3.1–§3.2](../architecture/multitenancy.md#31-métodos-de-ingreso-la-cuenta-no-depende-de-un-solo-correo).
+`/cuenta` conserva el acceso actual y permite editar nombre, cultura y zona con `Version` de `/api/me`; un 409 conserva el borrador hasta que se elija «Ver lo nuevo» o «Seguir editando». El idioma cambia después de guardar. «Mi cuenta» aparece en el menú de identidad y en la navegación personal dibujada en el lienzo.
+
+| Operación | Ruta |
+|---|---|
+| Perfil global y versión | `GET/PUT /api/me` |
+| Listado y agregar correo | `GET/POST /api/me/login-methods` |
+| Enviar/verificar código del método | `POST /api/me/login-methods/{id}/code`, `POST /api/me/login-methods/{id}/verify` |
+| Pedir/verificar reautenticación | `POST /api/me/reauth`, `POST /api/me/reauth/verify` |
+| Quitar/elegir principal | `DELETE /api/me/login-methods/{id}`, `PUT /api/me/login-methods/{id}/primary` |
+| Vincular Google | `POST /api/me/external/google` con antiforgery; callback protegido vuelve a `/cuenta` |
+| Aceptar documentos pendientes | `POST /api/legal/accept` |
+| Pedir baja | `POST /api/me/deletion` |
+| Recuperar prueba Google/cancelar baja | `POST /api/auth/deletion/pending`, `POST /api/auth/deletion/cancel` |
+
+Agregar reserva globalmente el correo y envía su código. Solo la verificación de ese método y de esa cuenta lo activa. Quitar, desvincular y elegir principal piden un código a otro método disponible; no se puede quitar el último método propio. Las capacidades se calculan en el backend. Cada cambio deja `SecurityEvent` y avisos a contactos verificados deduplicados. Un 429 muestra la cuenta regresiva; el reintento exige pulsar el mismo botón, sin envío automático.
+
+`LegalAcceptanceMiddleware` devuelve 403 `Legal.AcceptanceRequired` hasta aceptar exactamente las versiones pendientes. `/api/me`, las lecturas legales y la aceptación quedan disponibles. El gate conduce a `/aceptar-terminos`, con casilla desmarcada. Una publicación simultánea devuelve `Legal.Document.VersionChanged`, recarga documentos y exige marcar otra vez; las aceptaciones anteriores se conservan.
+
+La baja exige motivo y reautenticación. Bloquea al operador y a participantes que informen un impedimento. El único Dueño se incorpora en E4. La transacción marca `PendingDeletion`, programa la fecha según `PlatformSettings.AccountDeletionGraceDays`, revoca todas las sesiones y encola el aviso. Durante la gracia, demostrar un método verificado presenta la fecha y «Cancelar la baja y entrar» antes de emitir una sesión. Google transporta la prueba mediante cookie Data Protection, HttpOnly/Secure, de cinco minutos; nunca en la URL. Cancelar consume la prueba, restaura la cuenta y recién entonces emite cookie y continúa el retorno autorizado. `Suspended`, gracia vencida o prueba vencida impiden cancelar.
+
+`AccountDeletionWorker` se ejecuta al arrancar y cada hora. Reclama un lease de quince minutos, limpia cada alcance en una transacción independiente y retoma tras una caída. Los participantes actuales cierran y limpian Personal, marcan membresías B2B `Removed/AccountDeleted`, retiran IP/user agent de aceptaciones y cancelan mensajes pendientes de esa cuenta. Se encola el aviso final al principal antes de purgar métodos/códigos/tickets/credenciales. La identidad termina `Deleted`, anonimizada, conservando su Guid y la prueba legal/auditoría. La limpieza Personal tiene DELETE restringido por RLS; no concede borrado de membresías Business.
+
+WhatsApp (E8), exportación (E10) y el bloqueo del único Dueño (E4) permanecen fuera de esta pantalla. La 3c sigue pendiente; `HarnessStage` permanece en 2 hasta cerrar toda la Etapa 3. Fuente: [multitenancy.md §3.1–§3.2](../architecture/multitenancy.md#31-métodos-de-ingreso-la-cuenta-no-depende-de-un-solo-correo), [ADR 0035](../decisions/README.md), [informe y recorrido manual](../reviews/2026-09-30-etapa-3b-cuenta.md).
 
 ## 3c · Invitaciones (pendiente)
 

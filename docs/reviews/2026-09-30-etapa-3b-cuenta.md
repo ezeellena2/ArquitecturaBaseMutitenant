@@ -107,11 +107,43 @@ Ocultaciones solicitadas: WhatsApp (E8), exportación/sugerencia de exportar (E1
 
 - T18: el mapa compartido de API se consume desde las features sin importarlas entre sí. El contrato lee ambos repos y verifica rutas/metadata/claims/retornos/errores y schema. La guardia bulk de E2 se actualiza en su prueba existente para declarar la única llamada técnica de principal de T04 (una llamada en el repositorio exacto); no se agregan guardas ni tests de arnés nuevos.
 
-## Recorrido manual
+## Recorrido manual con cuentas reales
 
-Pendiente de rutas y contratos finales.
+Preparación: Docker activo; Google y Gmail configurados según [configuración](../operations/configuracion.md). En la raíz del back ejecutá `aspire run` y abrí `https://localhost:5174`. Usá Gmail SMTP en Development para recibir correos reales. Si aparece una cuenta de ejemplo, no la crea el seed de esta etapa: Development solo siembra `Seed:PlatformOwner:*`. No ejecutes el preparador E2E contra esta base.
 
-- T20: selectores compartidos ofrecen variante compacta del lienzo. El perfil congela versión con el draft, aplica cultura solo tras guardar y mantiene layout del acceso actual. El menú personal no agrega navegación inventada; Mi cuenta vive en el menú de identidad.
+1. Abrí `/login`, ingresá el correo configurado en `Seed:PlatformOwner:Email`, pulsá «Enviar código», copiá el código del correo de Gmail y pulsá «Verificar». Entrás como operador. Abrí el menú de tu cuenta y «Mi cuenta», o `/cuenta`.
+2. En «Tus datos», editá el nombre, seleccioná «Inglés (Estados Unidos)» en «Idioma y región» y guardá. Verificá «My account» y que F5 conserve inglés. Volvé a Español (Argentina) y guardá para seguir este recorrido.
+3. Pulsá «Agregar correo o teléfono», ingresá otra dirección que controles (distinta del correo que vas a usar para registrar la segunda persona), «Enviar código» y verificá el código recibido en ese buzón. Aparece verificado y llega el aviso del cambio. WhatsApp todavía está oculto.
+4. En ⋮ de ese correo, «Hacer principal» pide un código enviado al otro método disponible; ingresalo y confirmá. Verificá la marca Principal y los avisos. Volvé a hacer principal el correo original, usando el código que llega al nuevo.
+5. En ⋮ del correo nuevo, «Quitar» pide otro código al principal original. Ingresalo y confirmá: desaparece y llega el aviso. Si aparece cuenta regresiva, esperá y pulsá el mismo botón otra vez para pedir el código; nunca se reenvía solo. En el único método propio no aparece Quitar.
+6. Si Google está configurado, «Vincular Google» abre el proveedor. Elegí una cuenta Google libre, autorizá y verificá el regreso a `/cuenta` con el aviso. Para desvincularla, ⋮ → «Desvincular», código en otro método → confirmar. Google nunca se vincula automáticamente por coincidir el correo.
+7. Para probar términos nuevos con cuentas reales, abrí la conexión **propietaria de appdb de Development** desde tu cliente PostgreSQL y ejecutá **una sola vez** [etapa-3b-publicar-terminos.sql](etapa-3b-publicar-terminos.sql). El script solo agrega otra versión del texto legal vigente es/en; no cambia personas ni aceptaciones. La pantalla administrativa para publicarlos nace más adelante. Volvé a la aplicación y F5: aparece «Actualizamos los términos», con el número recién publicado. Abrí el enlace legal, volvé, marcá la casilla y «Aceptar y seguir». F5 ya no vuelve a bloquear. La publicación también exigirá aceptar a las demás cuentas activas.
+8. El operador no puede darse de baja. Para probar la baja, cerrá su sesión y abrí `/registro`. Usá **un Gmail distinto del método del operador**, aceptá Términos/Privacidad, enviá el código y completá el registro con el correo recibido. Esto crea la segunda cuenta real y su espacio Personal; no crea ninguna empresa.
+9. En esta segunda cuenta abrí `/cuenta` → «Dar de baja». Escribí el motivo; al abrir llega un código al principal. Si el registro fue reciente, esperá la cuenta regresiva y pulsá «Dar de baja mi cuenta» para pedirlo otra vez. Copiá los seis números y confirmá. Verificá «Cerramos tu sesión», la fecha de eliminación y el correo de baja.
+10. Durante la gracia (30 días por defecto), abrí `/login` e ingresá **el mismo Gmail**. Enviá el código, verificá y comprobá «Tu cuenta tiene la baja pedida». Pulsá «Cancelar la baja y entrar»: recién entonces vuelve Personal y llega el aviso de cancelación. F5 debe conservar la sesión nueva. Con Google vinculado, el mismo estado aparece tras demostrar ese método en el proveedor.
+11. Para dejar solo al operador **activo**, volvé a pedir la baja de esta segunda cuenta con motivo y código y dejala pendiente. No vuelvas a ingresar y cancelar. Al llegar la fecha, `AccountDeletionWorker` la procesa al arrancar la Api o en su siguiente ejecución horaria. Verificá el aviso final al principal y que el Gmail ya no permita ingresar. La cuenta se anonimiza y se borran sus métodos, su espacio Personal y credenciales; su Guid y la evidencia legal/auditoría quedan conservados. Esto cumple la baja definitiva; no se hace DELETE manual de Identity ni se acorta la gracia para limpiar una prueba real. Después entrá otra vez con el operador.
+12. Terminá con `aspire stop` desde la raíz del back.
+
+
+- T20: selectores compartidos ofrecen variante compacta del lienzo. El perfil congela versión con el draft, aplica cultura solo tras guardar y mantiene layout del acceso actual. Mi cuenta vive en el menú de identidad y en el lateral personal que ya muestra el lienzo.
 
 - T21–23: el aviso vive en shared/ui para compartirlo con Inicio sin importar áreas. La tabla obedece flags del backend. El comprobante de reautenticación se conserva en memoria para reintentar si se pierde la respuesta de la mutación. Google enlaza antiforgery y errores de callback por códigos traducidos.
 
+
+## Últimas tareas verificadas
+
+| Tarea | Commit back | Commit front | Evidencia |
+|---|---|---|---|
+| T27 · recorridos reales completos | `fc66c58` | `a50b5b0` | Cinco recorridos + padre, 6/6 reales; publicación legal por archivo en base exclusiva |
+| T27 bis · respetar 429 manual | — | `3c05b47` | Test rojo: el botón permanecía bloqueado/reintento automático; verde 3/3, runner pulsa otra vez tras RetryAfter |
+| T30 correcciones de la puerta | `1b96685` | pendiente en T28 | Arquitectura 153/153 y afectados de integración 13/13; suite completa 1110/1110 |
+| T28 correos reales | `165d927` | pendiente en T28 | HTML real de siete avisos en es/en sin conectar ninguna base; plantillas 12/12 |
+
+## Decisiones tomadas durante la puerta
+
+- Reducir dependencias de Google mediante `GoogleAccountGuard` y mantener la preparación de la vinculación en el servicio, sin cambiar state, callback ni claims.
+- Actualizar inventarios existentes para las piezas que nacen en 3b; no añadir guardas de arquitectura ni tests del arnés.
+- Simular el estado anterior a una migración con columnas de ese esquema histórico; el modelo EF actual ya contiene columnas posteriores. El worker de baja se prueba en una base propia porque adelantar su reloj en una fixture compartida vuelve vencidas cuentas de otros tests.
+- Respetar el 429 con cuenta regresiva y reintento explícito en el botón ya dibujado. Se retiró el reintento automático de la primera corrección de cooldown por contradecir la regla escrita de la Etapa 1.
+- Componer los correos visuales a través del renderer real, el catálogo JSON y DisplayFormatter; el modo de captura no abre conexiones ni envía correo. En el navegador solo se sirve el logo local de la plantilla.
+- El chat paralelo de comentarios fue autorizado expresamente por el usuario. Los commits de backend se hicieron con patches funcionales revisados: la revisión automática rechazó stage de archivos completos por el riesgo de mezclar comentarios ajenos. No quedó bloqueada ninguna acción necesaria.

@@ -58,11 +58,11 @@ En cada tarea se guarda evidencia de rojo y verde con el comando y resultado. Si
 **Archivos:** front: `scripts/test-e2e-real.test.mjs`.
 **Comportamiento exacto:** Extender el recorrido existente con cinco subrecorridos: correo personal + verificación .eml; quitarlo con código en el correo original; nueva versión legal; baja + ingreso + cancelación; guardar en-US en /cuenta. Cada uno usa cuenta propia y registra su fallo antes de su implementación. Mantener registro/empresa/F5/Personal/logout de 3a.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: La ruta /cuenta no existe; el subrecorrido correspondiente falla sin mocks.
-- [ ] 2. Ejecutar `npm run test:e2e:real` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "test: definir recorridos reales de la cuenta"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: La ruta /cuenta no existe; el subrecorrido correspondiente falla sin mocks.
+- [x] 2. Ejecutar `npm run test:e2e:real` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "test: definir recorridos reales de la cuenta"`. Registrar hash back/front.
 
 ### T02 · Reglas de métodos y errores
 
@@ -344,11 +344,11 @@ En cada tarea se guarda evidencia de rojo y verde con el comando y resultado. Si
 **Archivos:** back: `tools/ArquitecturaBaseMultitenant.RealE2ESetup/{Program,LegalVersionCommand}.cs`, AppHost solo si requiere pasar ruta; front: `scripts/test-e2e-real.test.mjs`.
 **Comportamiento exacto:** Preparador recibe comando por archivo en pickup exclusivo E2E y publica versión 2 con textos es/en usando su conexión aislada, nunca endpoint productivo. Runner espera confirmación y ejerce gate real. Ejecutar cada subrecorrido inicialmente rojo (sin saltar los anteriores), y todos al final; aislar cuentas y respetar cooldown sin desactivar seguridad. Salida usa nombres de pasos y ningún dato personal/código.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Todos los subrecorridos de 3a/3b pasan contra navegador/front/API/Postgres/pickup reales.
-- [ ] 2. Ejecutar `npm run test:e2e:real` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "test: completar recorridos reales de la cuenta"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Todos los subrecorridos de 3a/3b pasan contra navegador/front/API/Postgres/pickup reales.
+- [x] 2. Ejecutar `npm run test:e2e:real` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "test: completar recorridos reales de la cuenta"`. Registrar hash back/front.
 
 ### T28 · Comparación visual de todos los estados
 
@@ -366,11 +366,11 @@ En cada tarea se guarda evidencia de rojo y verde con el comando y resultado. Si
 **Archivos:** back: `docs/features/identidad.md`, `docs/reviews/2026-09-30-etapa-3b-cuenta.md`, `docs/backlog.md`; front: punteros AGENTS/CLAUDE y docs de capturas.
 **Comportamiento exacto:** Documentar rutas/contratos/códigos/tickets/participantes y 3b sin cerrar 3c. Recorrido real operador para perfil/métodos/términos; segunda persona /registro Gmail para baja, cancelación y pedir de nuevo. Explicar limpieza por worker al vencer gracia (no borrar Identity/auditoría ni acortar gracia); si quiere dejar solo operador activo, baja inmediata desactiva cuenta y definitiva tras gracia. No incluir secretos/datos reales.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Punteros/recetas/participantes actuales correctos; HarnessStage sigue 2 hasta cerrar 3c.
-- [ ] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.ArchitectureTests/ArquitecturaBaseMultitenant.ArchitectureTests.csproj -- --filter-class '*HarnessTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "docs: documentar gestión y baja de cuenta"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Punteros/recetas/participantes actuales correctos; HarnessStage sigue 2 hasta cerrar 3c.
+- [x] 2. Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.ArchitectureTests/ArquitecturaBaseMultitenant.ArchitectureTests.csproj -- --filter-class '*HarnessTests'` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "docs: documentar gestión y baja de cuenta"`. Registrar hash back/front.
 
 ### T30 · Puerta general y cierre 3b
 
