@@ -11,7 +11,8 @@ $requeridas = [ordered]@{
     'Email:Smtp:Password'               = 'Gmail (contraseña de aplicación). Sin ella la Api no arranca con Email:Delivery=Smtp'
     'Authentication:Google:ClientSecret' = 'Ingreso y registro con Google'
     'Authentication:LoginCode:HashKey'    = 'Firma HMAC de los códigos de ingreso y registro'
-    'Seed:PlatformOwner:Email'          = 'Operador inicial; obligatoria en Production si aún no existe uno'
+    'Seed:PlatformOwner:Email'           = 'Correo del operador inicial; obligatorio en Development y Production'
+    'Seed:PlatformOwner:DisplayName'     = 'Nombre visible del operador inicial'
     'WhatsApp:AccessToken'              = 'Enviar por WhatsApp (obligatoria si hay WhatsApp:PhoneNumberId)'
     'WhatsApp:AppSecret'                = 'Webhook de WhatsApp (va junto con VerifyToken)'
     'WhatsApp:VerifyToken'              = 'Webhook de WhatsApp (va junto con AppSecret)'
@@ -25,4 +26,12 @@ $cargadas = (dotnet user-secrets list --project $Destino) -replace ' = .*', ''
 foreach ($clave in $requeridas.Keys) {
     if ($cargadas -contains $clave) { Write-Host "[ok]    $clave" -ForegroundColor Green }
     else { Write-Host "[falta] $clave  -> $($requeridas[$clave])" -ForegroundColor Yellow }
+}
+
+$claveTelefono = 'Seed:PlatformOwner:Phone'
+if ($cargadas -contains $claveTelefono) {
+    Write-Host "[ok]       $claveTelefono" -ForegroundColor Green
+}
+else {
+    Write-Host "[opcional] $claveTelefono  -> Teléfono E.164 del operador; se usará recién en la E8" -ForegroundColor DarkGray
 }
