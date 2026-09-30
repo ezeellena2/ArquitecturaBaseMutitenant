@@ -8,7 +8,7 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
-/// <summary>Emite el código y encola el mensaje sólo cuando el método verificado puede ingresar.</summary>
+/// <summary>Emite el código para un método verificado; la verificación informa el estado de la cuenta.</summary>
 internal sealed class LoginCodeRequester(
     LoginCodeIssuer issuer,
     IUserLookup userLookup,
@@ -29,7 +29,8 @@ internal sealed class LoginCodeRequester(
         if (userId is { } id)
         {
             var account = await users.GetByIdAsync(id, cancellationToken);
-            if (account is { Status: UserStatus.Active } && !await signIn.IsLockedOutAsync(id, cancellationToken))
+            if (account is { Status: UserStatus.Active or UserStatus.Suspended }
+                && !await signIn.IsLockedOutAsync(id, cancellationToken))
             {
                 var culture = await userCultures.ResolveAsync(account.Culture, null, cancellationToken);
                 var channel = channels.SingleOrDefault(value => value.Key == destination.Channel)

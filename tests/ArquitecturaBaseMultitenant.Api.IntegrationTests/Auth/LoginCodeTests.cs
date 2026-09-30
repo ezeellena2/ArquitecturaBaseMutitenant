@@ -11,6 +11,8 @@ using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MimeKit;
@@ -143,6 +145,38 @@ public sealed class LoginCodeTests(ApiFactory factory)
         var locked = await client.PostAsJsonAsync("/test/auth/verify-code",
             new { email = address, code = "000000", returnUrl = "/connect/authorize?client_id=web" }, Ct);
         Assert.Equal(HttpStatusCode.TooManyRequests, locked.StatusCode);
+    }
+
+    [Fact]
+    public async Task Suspended_account_receives_code_and_is_rejected_after_correct_verification()
+    {
+        using var client = factory.CreateClient();
+        var address = $"suspended-login-{Guid.NewGuid():N}@example.test";
+        var userId = await CreateVerifiedEmailAccountAsync(address);
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                var manager = services.GetRequiredService<UserManager<ApplicationUser>>();
+                var user = await manager.FindByIdAsync(userId.ToString("D"));
+                Assert.NotNull(user);
+                Assert.True(user.Suspend().IsSuccess);
+                Assert.True((await manager.UpdateAsync(user)).Succeeded);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+
+        var requested = await client.PostAsJsonAsync("/test/auth/request-code", new { email = address }, Ct);
+        Assert.Equal(HttpStatusCode.OK, requested.StatusCode);
+        var code = await ReadPickupCodeAsync(address);
+        var rejected = await client.PostAsJsonAsync("/test/auth/verify-code",
+            new { email = address, code, returnUrl = "/connect/authorize?client_id=web" }, Ct);
+
+        Assert.Equal(HttpStatusCode.Forbidden, rejected.StatusCode);
+        Assert.Contains("Identity.Account.Suspended", await rejected.Content.ReadAsStringAsync(Ct),
+            StringComparison.Ordinal);
+        Assert.False(rejected.Headers.Contains("Set-Cookie"));
     }
 
     private Task<Guid> CreateVerifiedEmailAccountAsync(string address) =>
