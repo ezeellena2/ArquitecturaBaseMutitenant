@@ -278,33 +278,33 @@ En cada tarea se guarda evidencia de rojo y verde con el comando y resultado. Si
 **Archivos:** front: `components/{LoginMethodsTable,PersonalLoginMethodNotice}.tsx`, tests; `src/areas/personal/home/pages/PersonalHomePage.tsx` y test; `account/pages/AccountPage.tsx`.
 **Comportamiento exacto:** Copiar Cuenta/M-Cuenta: tipo/valor/principal/administrado/estado/acciones en escritorio; móvil ícono+valor+pastillas+⋮ como tablero. Acciones según respuesta backend, no calcular reglas de seguridad. Aviso fijo también inicio Personal y botón Agregar a /cuenta. Ocultar WhatsApp sin canal.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Sin tabla ni aviso; último método no se ofrece para quitar, pendientes muestran Verificar.
-- [ ] 2. Ejecutar `npm test -- src/areas/personal/account src/areas/personal/home` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: mostrar métodos y aviso de correo personal"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Sin tabla ni aviso; último método no se ofrece para quitar, pendientes muestran Verificar.
+- [x] 2. Ejecutar `npm test -- src/areas/personal/account src/areas/personal/home` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: mostrar métodos y aviso de correo personal"`. Registrar hash back/front.
 
 ### T22 · Diálogo sumar/verificar
 
 **Archivos:** front: `components/{AddLoginMethodDialog,VerifyLoginMethodDialog}.tsx`, tests, AccountPage.
 **Comportamiento exacto:** Copiar título Agregar correo o teléfono y botón, ocultando pestaña WhatsApp E8. EmailField → Enviar código → OTP de seis casillas → Verificar; misma hoja móvil. Error en campo/OTP, reintento idempotente, código incorrecto/vencido/sin intentos. Tras verificar invalidar queries y toast del lienzo.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Diálogo no existe; luego recorrido de alta/OTP y errores pasa.
-- [ ] 2. Ejecutar `npm test -- src/areas/personal/account/components` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: agregar correos desde Mi cuenta"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Diálogo no existe; luego recorrido de alta/OTP y errores pasa.
+- [x] 2. Ejecutar `npm test -- src/areas/personal/account/components` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: agregar correos desde Mi cuenta"`. Registrar hash back/front.
 
 ### T23 · Diálogo quitar/principal y Google
 
 **Archivos:** front: `components/{ChangeLoginMethodDialog,AccountGoogleButton}.tsx`, tests; AccountPage/API.
 **Comportamiento exacto:** Abrir acción solicita código al respaldo que decide backend; texto exacto del lienzo con destino enmascarado. Verificar genera ticket, mutación usa ese ticket. Quitar/Desvincular/Hacer principal según tipo. Google inicia formulario navegación con antiforgery; resultado estable toast, error por code; no login tokens en URL. Foco vuelve al trigger.
 
-- [ ] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Acciones faltantes; código de otro método confirma y último propio queda protegido.
-- [ ] 2. Ejecutar `npm test -- src/areas/personal/account/components` en el repo dueño y registrar el fallo esperado (2–5 min).
-- [ ] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
-- [ ] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
-- [ ] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: cambiar métodos y vincular Google en la cuenta"`. Registrar hash back/front.
+- [x] 1. Escribir el caso que demuestra el comportamiento anterior. Rojo esperado: Acciones faltantes; código de otro método confirma y último propio queda protegido.
+- [x] 2. Ejecutar `npm test -- src/areas/personal/account/components` en el repo dueño y registrar el fallo esperado (2–5 min).
+- [x] 3. Implementar el mínimo comportamiento descrito, copiando piezas existentes; dividir en pasos de 2–5 min si hace falta.
+- [x] 4. Reejecutar el caso dirigido; esperado verde. Corregir antes de seguir.
+- [x] 5. Documentar el comportamiento junto al código, stage con todas y solo las rutas explícitas de esta tarea, `git commit -m "feat: cambiar métodos y vincular Google en la cuenta"`. Registrar hash back/front.
 
 ### T24 · Pantalla aceptación y bloqueo transversal
 
@@ -415,5 +415,6 @@ Guardar manifest e informe en front `docs/design/capturas/etapa-3b/`; cada caso 
 - Publicación de versión legal de pruebas por preparador E2E separado y restringido a MT_E2E_ISOLATED; no endpoint de pruebas en producción ni modificación de Development.
 - Preservar regla de no acortar gracia para limpieza manual: la cuenta de prueba se puede desactivar pidiendo baja y se anonimiza al vencer la gracia; test worker usa su propio reloj/base.
 - No agregar Stage3bInventoryTests ni nuevas guardas de arquitectura; solo casos funcionales, contrato cruzado y actualización de inventarios ya exigidos.
+
 
 

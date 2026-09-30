@@ -39,6 +39,10 @@ Estado: en ejecución. La 3c queda pendiente. No declarar cerrada esta etapa sin
 | T19 · clientes y recursos | — | `690aade` | Rojo clientes ausentes; API y paridad 6/6, tsc y lint verdes |
 | T20 · perfil y menú | — | `303d767` | Rojo ruta 404, menú ausente y versión faltante; 20/20 funcionales y axe, build verde; 409 conserva draft |
 
+| T21 · tabla y aviso | — | `013aeb2` | Rojo componente/aviso ausentes; 8/8 cuenta/home, build/lint verdes |
+| T22 · agregar y verificar | — | `f58c52e` | Rojo import ausente; 10/10 verdes, OTP incorrecto conserva diálogo, código corregido confirma |
+| T23 · cambiar método y Google | — | `8771cac` | Rojo import ausente; 11/11 verdes, prueba usa respaldo y DELETE ticket en cuerpo, tsc/lint verdes |
+
 ## Evidencia del E2E real antes de programar
 
 `npm run test:e2e:real`, 30/09/2026. AppHost y PostgreSQL efímero exclusivos; datos del preparador y de /registro en esa base. Registro/puerta empresa/F5/cambio Personal/logout de 3a se recorrieron antes de los casos nuevos.
@@ -103,3 +107,5 @@ Ocultaciones solicitadas: WhatsApp (E8), exportación/sugerencia de exportar (E1
 Pendiente de rutas y contratos finales.
 
 - T20: selectores compartidos ofrecen variante compacta del lienzo. El perfil congela versión con el draft, aplica cultura solo tras guardar y mantiene layout del acceso actual. El menú personal no agrega navegación inventada; Mi cuenta vive en el menú de identidad.
+
+- T21–23: el aviso vive en shared/ui para compartirlo con Inicio sin importar áreas. La tabla obedece flags del backend. El comprobante de reautenticación se conserva en memoria para reintentar si se pierde la respuesta de la mutación. Google enlaza antiforgery y errores de callback por códigos traducidos.
