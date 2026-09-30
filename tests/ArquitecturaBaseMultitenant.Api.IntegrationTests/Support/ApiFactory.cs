@@ -11,6 +11,10 @@ using Testcontainers.PostgreSql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 
+/// <summary>
+/// Hospeda la API de integración sobre un PostgreSQL aislado de Testcontainers.
+/// Prepara roles, esquema de aislamiento y correo pickup para probar HTTP, persistencia y RLS sin usar Development.
+/// </summary>
 public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:18.3")

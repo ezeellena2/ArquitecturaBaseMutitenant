@@ -10,6 +10,10 @@ using Microsoft.AspNetCore.WebUtilities;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 
+/// <summary>
+/// Recorre el registro por correo y obtiene una sesión consumer real para tests de cuenta.
+/// Lee el código del pickup y completa el intercambio de autorización sin simular la API.
+/// </summary>
 internal sealed record AccountJourney(Guid UserId, Email Email)
 {
     private const string Verifier = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~";

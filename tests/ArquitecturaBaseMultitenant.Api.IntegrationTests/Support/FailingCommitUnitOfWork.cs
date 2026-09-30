@@ -8,6 +8,9 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 
 internal sealed class ExpectedCommitFailure : Exception;
 
+/// <summary>
+/// Observa el estado de la transacción y del ChangeTracker alrededor de una falla de commit provocada por el test.
+/// </summary>
 internal sealed class CommitFailureProbe
 {
     public Func<ApplicationDbContext, CancellationToken, Task>? BeforeFailing { get; init; }

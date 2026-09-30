@@ -9,6 +9,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Crea consultas de widgets con el rol runtime y el tenant exigidos por RLS.
+/// Comparte la conexión y el contexto de aislamiento entre los tests de orden y paginado.
+/// </summary>
 internal sealed class WidgetQueryFixture : IAsyncDisposable
 {
     public static readonly SortMap<Widget> SortableFields = new()

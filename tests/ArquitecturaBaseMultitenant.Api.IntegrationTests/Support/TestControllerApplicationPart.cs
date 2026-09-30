@@ -8,6 +8,10 @@ using Microsoft.AspNetCore.Mvc.ApplicationParts;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 
+/// <summary>
+/// Expone a MVC los controllers exclusivos de pruebas de rutas, accesos, aislamiento e idempotencia.
+/// Permite ejercitar el pipeline HTTP real sin sumar esas rutas a la API de producción.
+/// </summary>
 internal sealed class TestControllerApplicationPart : ApplicationPart, IApplicationPartTypeProvider
 {
     public override string Name => nameof(TestControllerApplicationPart);

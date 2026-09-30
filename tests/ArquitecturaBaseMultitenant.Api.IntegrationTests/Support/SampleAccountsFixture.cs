@@ -77,6 +77,10 @@ internal static class SampleAccountsFixture
     }
 }
 
+/// <summary>
+/// Construye cuentas y espacios de muestra únicamente dentro de la base Testcontainers del test.
+/// Reutiliza los provisionadores reales para que los recorridos tengan accesos y membresías coherentes.
+/// </summary>
 internal sealed class SampleAccountSeeder(
     ApplicationDbContext context,
     IUserLookup lookup,
