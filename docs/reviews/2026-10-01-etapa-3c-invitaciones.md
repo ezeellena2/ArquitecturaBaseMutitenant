@@ -18,7 +18,7 @@ Estado: **cerrada**. `HarnessStage` queda en 3 en los dos repositorios. Se traba
 | T09 · Pantalla | `/invitacion`, sus estados y recursos; acceso Business persistente, sin crear Personal | front `6692111`, `94ce987` |
 | T10 · E2E verde y ajustes | Aserciones del E2E y verificaciones técnicas de cierre; pruebas dirigidas pasan | front `c4ace06`; back `7853d2a` |
 | T11 · Comparación visual | 30 pares app/lienzo, correos HTML del renderer y manifest verificado | front `ed1e7d4` |
-| T12 · Cierre | Fichas, arquitectura, OpenAPI, feature, backlog, plan, informe y HarnessStage 3; puerta completa | front `073ac0b`; back commit de cierre de este informe |
+| T12 · Cierre | Fichas, arquitectura, OpenAPI, feature, backlog, plan, informe y HarnessStage 3; puerta completa | front `073ac0b`; back `4b32337` |
 
 ## TDD y puerta completa
 
