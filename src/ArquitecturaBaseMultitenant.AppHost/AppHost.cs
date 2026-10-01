@@ -32,6 +32,8 @@ var api = builder.AddProject<Projects.ArquitecturaBaseMultitenant_Api>("api")
 if (isolatedE2e)
 {
     api.WithHttpHealthCheck("/alive");
+    api.WithEnvironment("RateLimiting__LoginCodePermitLimit", "100")
+        .WithEnvironment("RateLimiting__LoginVerifyPermitLimit", "100");
     var businessEmail = Environment.GetEnvironmentVariable("MT_E2E_BUSINESS_EMAIL")
         ?? throw new InvalidOperationException("MT_E2E_BUSINESS_EMAIL is required for the isolated E2E run.");
     var pickupDirectory = Environment.GetEnvironmentVariable("MT_E2E_PICKUP_DIR")
