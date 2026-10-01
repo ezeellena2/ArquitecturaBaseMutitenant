@@ -155,6 +155,10 @@ public sealed class LoginCodeConcurrencyTests(ApiFactory factory)
 
     private sealed class ObservedUserLookup(IUserLookup inner, LoginCodeReadGate gate) : IUserLookup
     {
+        public Task<IReadOnlyList<Guid>> FindVerifiedUsersByEmailAsync(
+            ArquitecturaBaseMultitenant.Domain.ValueObjects.Email email, CancellationToken ct) =>
+            inner.FindVerifiedUsersByEmailAsync(email, ct);
+
         public async Task<Guid?> FindVerifiedUserIdAsync(LoginMethodType type, string value, CancellationToken ct)
         {
             var userId = await inner.FindVerifiedUserIdAsync(type, value, ct);

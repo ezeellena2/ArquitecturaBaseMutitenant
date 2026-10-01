@@ -7,6 +7,7 @@ using ArquitecturaBaseMultitenant.Application.Services.Profile;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Application.Services.Legal;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
+using ArquitecturaBaseMultitenant.Application.Services.Invitations;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -59,6 +60,9 @@ public static class DependencyInjection
         services.AddScoped<LoginCodeIssuer>();
         services.AddScoped<LoginCodeVerifier>();
         services.AddScoped<UserCultures>();
+        services.AddScoped<InvitationIssuer>();
+        services.AddScoped<InvitationIssuingGuard>();
+        services.AddScoped<InvitationDeliveryIssuer>();
         services.AddScoped<AccountNoticeIssuer>();
         services.AddScoped<ILoginMethodManagementService, LoginMethodManagementService>();
         services.AddScoped<LoginMethodGuard>();

@@ -31,9 +31,6 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
     public EmailMessage RenderVerifyEmailCode(string to, string code, int lifetimeMinutes, CultureProfile culture) =>
         RenderCode(LoginCodeTemplate, to, code, lifetimeMinutes, culture, "VerifyEmail");
 
-    public EmailMessage RenderInvitation(string to, string loginUrl, CultureProfile culture) =>
-        throw new NotSupportedException("Invitation templates are introduced with invitations.");
-
     public async Task<EmailMessage> RenderAccountNoticeAsync(string to, AccountNotice notice, CultureProfile culture,
         CancellationToken cancellationToken)
     {

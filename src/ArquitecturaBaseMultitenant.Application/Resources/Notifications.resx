@@ -48,4 +48,11 @@
   <data name="LoginMethodRemovedGoogle.Subject" xml:space="preserve"><value>Desvinculaste tu cuenta de Google</value></data>
   <data name="LoginMethodRemovedGoogle.Title" xml:space="preserve"><value>Quitaste un método de ingreso</value></data>
   <data name="LoginMethodRemovedGoogle.Body" xml:space="preserve"><value>{0} El {1} a las {2} desvinculaste Google con el correo {3} de tu cuenta de {4}. Ya no sirve para ingresar.</value></data>
+  <data name="Invitation.Subject" xml:space="preserve"><value>{0} te invitó a {1}</value></data>
+  <data name="Invitation.Title" xml:space="preserve"><value>Te invitaron a {0}</value></data>
+  <data name="Invitation.Body" xml:space="preserve"><value>{0} {1} te invitó a sumarte a {2} en {3}.</value></data>
+  <data name="Invitation.ExpiresLabel" xml:space="preserve"><value>Vence</value></data>
+  <data name="Invitation.Action" xml:space="preserve"><value>Ver la invitación</value></data>
+  <data name="Invitation.Note" xml:space="preserve"><value>Para entrar, usá este correo: te vamos a mandar un código de acceso.</value></data>
+  <data name="Invitation.Footer" xml:space="preserve"><value>Si no esperabas este correo, podés ignorarlo.</value></data>
 </root>

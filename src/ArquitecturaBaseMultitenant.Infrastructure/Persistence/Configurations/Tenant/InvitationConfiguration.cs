@@ -17,8 +17,8 @@ internal sealed class InvitationConfiguration : IEntityTypeConfiguration<Invitat
         builder.HasKey(invitation => new { invitation.TenantId, invitation.Id });
         builder.Property(invitation => invitation.Status).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.Property(invitation => invitation.Channel).HasMaxLength(TextLimits.ShortName);
-        builder.Property(invitation => invitation.TokenHash).HasMaxLength(TextLimits.ShortName);
-        builder.Property(invitation => invitation.BootstrapNonceHash).HasMaxLength(TextLimits.ShortName);
+        builder.Property(invitation => invitation.TokenHash).HasMaxLength(TextLimits.Description);
+        builder.Property(invitation => invitation.BootstrapNonceHash).HasMaxLength(TextLimits.Description);
         builder.HasIndex(invitation => new { invitation.TenantId, invitation.Destination }).IsUnique()
             .HasFilter("\"Status\" = 'Pending'");
         builder.HasIndex(invitation => new { invitation.TenantId, invitation.TokenHash }).IsUnique();

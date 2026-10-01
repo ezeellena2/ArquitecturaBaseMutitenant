@@ -1,10 +1,19 @@
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
+using ArquitecturaBaseMultitenant.Application.Services.Invitations;
+using ArquitecturaBaseMultitenant.Application.Models.Invitations;
+using ArquitecturaBaseMultitenant.Application.Models.Messaging;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using Microsoft.Extensions.DependencyInjection;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
@@ -14,6 +23,147 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 public sealed class InvitationsTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    [Theory]
+    [InlineData("none")]
+    [InlineData("email")]
+    [InlineData("google")]
+    public async Task Issuer_enqueues_a_real_encrypted_email_without_creating_an_identity(string existingAccount)
+    {
+        using var client = factory.CreateClient();
+        var (tenantId, inviterId) = await CreateOrganizationAsync();
+        var email = Email.Create($"invite-{Guid.NewGuid():N}@example.test").Value;
+        Guid? recipientId = null;
+        if (existingAccount != "none") recipientId = await CreateRecipientAsync(email, existingAccount == "google");
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var beforeUsers = await context.Users.CountAsync(Ct);
+        var beforeOutbox = await context.OutboxMessages.CountAsync(Ct);
+        using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenantId);
+
+        var issued = await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(
+            ct => services.GetRequiredService<InvitationIssuer>().IssueAsync(
+                new IssueInvitationRequest(email, inviterId, InvitationChannel.Email), ct), CommitPolicy.OnSuccess, Ct);
+
+        Assert.True(issued.IsSuccess);
+        Assert.Equal(beforeUsers, await context.Users.CountAsync(Ct));
+        Assert.Equal(beforeOutbox + 1, await context.OutboxMessages.CountAsync(Ct));
+        var invitation = await services.GetRequiredService<IInvitationReader>().FindByIdAsync(issued.Value, Ct);
+        Assert.NotNull(invitation);
+        Assert.Equal(recipientId, invitation.MemberUserId);
+        Assert.Equal(MemberStatus.Invited, invitation.MemberStatus);
+        var outbox = await context.OutboxMessages.AsNoTracking().OrderByDescending(row => row.CreatedAtUtc)
+            .ThenByDescending(row => row.Id).FirstAsync(Ct);
+        var payload = services.GetRequiredService<IPayloadProtector>().Unprotect(outbox.EncryptedPayload);
+        var message = JsonSerializer.Deserialize<EmailMessage>(payload);
+        Assert.NotNull(message);
+        Assert.True(message.To == email.Value);
+        var link = Regex.Match(message.TextBody, @"https://[^\s]+/invitacion#(?<token>[A-Za-z0-9_-]+)");
+        Assert.True(link.Success);
+        var tokens = services.GetRequiredService<IInvitationTokenProtector>();
+        var token = tokens.Unprotect(link.Groups["token"].Value);
+        Assert.NotNull(token);
+        Assert.Equal(tenantId, token.TenantId);
+        Assert.Equal(invitation.Id, token.InvitationId);
+        Assert.True(invitation.TokenHash == services.GetRequiredService<ISecureTokenGenerator>().Hash(token.Secret));
+        Assert.False(outbox.EncryptedPayload.Contains(token.Secret, StringComparison.Ordinal));
+        Assert.Null(tokens.Unprotect(link.Groups["token"].Value + "tampered"));
+        Assert.Equal(existingAccount == "email", message.TextBody.Contains("te vamos a mandar un código", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Issuer_rejects_an_unregistered_channel_without_leaving_rows_or_outbox()
+    {
+        using var client = factory.CreateClient();
+        var (tenantId, inviterId) = await CreateOrganizationAsync();
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var beforeOutbox = await context.OutboxMessages.CountAsync(Ct);
+        using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenantId);
+
+        var issued = await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(
+            ct => services.GetRequiredService<InvitationIssuer>().IssueAsync(new IssueInvitationRequest(
+                Email.Create("unknown-channel@example.test").Value, inviterId, "unknown"), ct), CommitPolicy.OnSuccess, Ct);
+
+        Assert.Equal(InvitationErrors.ChannelUnavailable, issued.Error);
+        Assert.Equal(0, await context.Invitations.CountAsync(Ct));
+        Assert.Equal(0, await context.Members.CountAsync(Ct));
+        Assert.Equal(beforeOutbox, await context.OutboxMessages.CountAsync(Ct));
+    }
+
+    [Fact]
+    public async Task Rolling_back_the_callers_transaction_discards_invitation_member_and_email()
+    {
+        using var client = factory.CreateClient();
+        var (tenantId, inviterId) = await CreateOrganizationAsync();
+        long beforeOutbox;
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            beforeOutbox = await services.GetRequiredService<ApplicationDbContext>().OutboxMessages.CountAsync(Ct);
+            using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenantId);
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                var issued = await services.GetRequiredService<InvitationIssuer>().IssueAsync(new IssueInvitationRequest(
+                    Email.Create("rollback-invite@example.test").Value, inviterId, InvitationChannel.Email), ct);
+                Assert.True(issued.IsSuccess);
+                return Result.Failure(InvitationErrors.Invalid);
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+        await using var check = factory.Services.CreateAsyncScope();
+        using var active = check.ServiceProvider.GetRequiredService<ITenantScope>().Enter(tenantId);
+        var context = check.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.Equal(0, await context.Invitations.CountAsync(Ct));
+        Assert.Equal(0, await context.Members.CountAsync(Ct));
+        Assert.Equal(beforeOutbox, await context.OutboxMessages.CountAsync(Ct));
+    }
+
+    [Fact]
+    public async Task Issuer_rejects_a_second_pending_invitation_without_duplicating_rows_or_email()
+    {
+        using var client = factory.CreateClient();
+        var (tenantId, inviterId) = await CreateOrganizationAsync();
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenantId);
+        var request = new IssueInvitationRequest(Email.Create("duplicate-invite@example.test").Value,
+            inviterId, InvitationChannel.Email);
+        var uow = services.GetRequiredService<IUnitOfWork>();
+        Assert.True((await uow.ExecuteInTransactionAsync(ct =>
+            services.GetRequiredService<InvitationIssuer>().IssueAsync(request, ct), CommitPolicy.OnSuccess, Ct)).IsSuccess);
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var beforeOutbox = await context.OutboxMessages.CountAsync(Ct);
+
+        var repeated = await uow.ExecuteInTransactionAsync(ct =>
+            services.GetRequiredService<InvitationIssuer>().IssueAsync(request, ct), CommitPolicy.OnSuccess, Ct);
+
+        Assert.Equal(InvitationErrors.AlreadyPending, repeated.Error);
+        Assert.Equal(1, await context.Invitations.CountAsync(Ct));
+        Assert.Equal(1, await context.Members.CountAsync(Ct));
+        Assert.Equal(beforeOutbox, await context.OutboxMessages.CountAsync(Ct));
+    }
+
+    private async Task<Guid> CreateRecipientAsync(Email email, bool googleOnly = false)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var userId = Guid.Empty;
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+        {
+            userId = (await services.GetRequiredService<IUserRepository>()
+                .CreateAsync("Recipient", "es-AR", "America/Argentina/Buenos_Aires", ct)).Id;
+            var method = googleOnly ? LoginMethod.CreateGoogle(userId, $"google-{Guid.NewGuid():N}", email)
+                : LoginMethod.CreateEmail(userId, email);
+            method.Verify(new DateTime(2026, 10, 1, 12, 0, 0, DateTimeKind.Utc));
+            Assert.True(method.MakePrimary().IsSuccess);
+            services.GetRequiredService<ILoginMethodRepository>().Add(method);
+            if (!googleOnly) await services.GetRequiredService<IUserRepository>().SetPrimaryEmailAsync(userId, email, ct);
+            return Result.Success();
+        }, CommitPolicy.OnSuccess, Ct);
+        return userId;
+    }
 
     [Fact]
     public async Task Unbound_member_is_private_and_enters_the_access_index_only_after_binding()

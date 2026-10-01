@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Models.Notifications;
+using ArquitecturaBaseMultitenant.Application.Models.Invitations;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
@@ -19,6 +20,31 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Messaging;
 public sealed class EmailTemplateTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    [Theory]
+    [InlineData("es-AR", "Te invitaron a", "Ver la invitación", "08/10/2026")]
+    [InlineData("en-US", "You were invited to", "View the invitation", "10/08/2026")]
+    public async Task Invitation_renders_real_data_local_expiry_and_escapes_html(
+        string cultureCode, string title, string action, string expiry)
+    {
+        var profile = await new CultureProfiles(new JsonReferenceDataCatalog()).LoadAsync(cultureCode, Ct);
+        var renderer = new EmailTemplateRenderer(Options.Create(new EmailOptions { AppName = "Mi App" }), CreateFormatter());
+        var notice = new InvitationNotice("<Delta & Norte>", "Ana <Pérez>",
+            new DateTime(2026, 10, 9, 1, 0, 0, DateTimeKind.Utc), "America/Argentina/Buenos_Aires",
+            "https://example.test/invitacion#protected-secret", false);
+
+        var message = await renderer.RenderInvitationAsync("recipient@example.test", notice, profile, Ct);
+
+        Assert.Contains(title, message.TextBody);
+        Assert.Contains(action, message.TextBody);
+        Assert.Contains(expiry, message.TextBody);
+        Assert.Contains("&lt;Delta &amp; Norte&gt;", message.HtmlBody);
+        Assert.Contains("Ana &lt;P&#233;rez&gt;", message.HtmlBody);
+        Assert.DoesNotContain("<Delta & Norte>", message.HtmlBody);
+        Assert.Contains(notice.ActionUrl, message.TextBody);
+        Assert.DoesNotContain("protected-secret", notice.ToString());
+        Assert.DoesNotContain("protected-secret", message.ToString());
+    }
 
     [Theory]
     [InlineData("es-AR", "Confirmá tu correo", "es tu código para agregar este correo")]

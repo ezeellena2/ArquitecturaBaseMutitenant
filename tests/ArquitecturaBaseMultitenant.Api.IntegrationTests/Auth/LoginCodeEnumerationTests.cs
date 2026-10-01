@@ -63,7 +63,9 @@ public sealed class LoginCodeEnumerationTests(ApiFactory factory)
         public EmailMessage RenderVerifyEmailCode(string to, string code, int lifetimeMinutes, CultureProfile culture) =>
             throw new NotSupportedException();
 
-        public EmailMessage RenderInvitation(string to, string loginUrl, CultureProfile culture) =>
+        public Task<EmailMessage> RenderInvitationAsync(string to,
+            ArquitecturaBaseMultitenant.Application.Models.Invitations.InvitationNotice notice,
+            CultureProfile culture, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
         public Task<EmailMessage> RenderAccountNoticeAsync(string to, AccountNotice notice,

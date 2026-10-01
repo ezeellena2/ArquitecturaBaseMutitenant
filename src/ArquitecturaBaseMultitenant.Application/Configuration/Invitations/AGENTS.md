@@ -1,0 +1,1 @@
+Vencimiento configurable de invitaciones, sin secretos. Leé [fechas-y-zonas](../../../../docs/rules/fechas-y-zonas.md) y [configuracion](../../../../docs/operations/configuracion.md). Copiá de `../Auth/LoginCodeOptions.cs`.

@@ -56,6 +56,8 @@ Implementación en curso según el [plan de 3c](../plans/2026-10-01-etapa-3c-inv
 
 La invitación permite crear una identidad sin espacio personal o vincular una identidad existente a una organización. Su emisión, aceptación y pantalla pertenecen a 3c.
 
+El `InvitationIssuer` interno emite dentro de la UoW del llamador, reserva un miembro y encola por `IInvitationChannel`; no tiene ruta ni crea una identidad. Reconoce Email y el correo verificado de Google, rechaza destinos pendientes duplicados y solo deja outbox si se confirma la transacción. El enlace lleva un token Data Protection en el fragmento de `/invitacion`; la fila guarda SHA-256. El correo usa los datos actuales, resources es/en y DisplayFormatter con cultura y zona explícitas. La aceptación y pantalla todavía están pendientes.
+
 ## Reglas de implementación
 
 - Seguir las fichas [datos-personales](../rules/datos-personales.md), [multitenancy](../rules/multitenancy.md), [guardado](../rules/guardado.md), [result-y-errores](../rules/result-y-errores.md), [emails](../rules/emails.md), [telefonos](../rules/telefonos.md), [api-http](../rules/api-http.md) y [tests](../rules/tests.md).

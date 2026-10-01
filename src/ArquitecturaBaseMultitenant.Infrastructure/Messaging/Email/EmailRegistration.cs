@@ -38,6 +38,7 @@ internal static class EmailRegistration
         services.AddScoped<IChannelSender, EmailChannelSender>();
         services.AddScoped<IEmailTemplateRenderer, EmailTemplateRenderer>();
         services.AddScoped<ILoginCodeChannel, EmailLoginCodeChannel>();
+        services.AddScoped<IInvitationChannel, EmailInvitationChannel>();
         services.AddScoped<IAccountNoticeChannel, EmailAccountNoticeChannel>();
         return services;
     }

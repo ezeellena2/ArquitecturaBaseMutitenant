@@ -48,4 +48,11 @@
   <data name="LoginMethodRemovedGoogle.Subject" xml:space="preserve"><value>You unlinked your Google account</value></data>
   <data name="LoginMethodRemovedGoogle.Title" xml:space="preserve"><value>You removed a sign-in method</value></data>
   <data name="LoginMethodRemovedGoogle.Body" xml:space="preserve"><value>{0} On {1} at {2} you unlinked Google with email {3} from your {4} account. It can no longer be used to sign in.</value></data>
+  <data name="Invitation.Subject" xml:space="preserve"><value>{0} invited you to {1}</value></data>
+  <data name="Invitation.Title" xml:space="preserve"><value>You were invited to {0}</value></data>
+  <data name="Invitation.Body" xml:space="preserve"><value>{0} {1} invited you to join {2} on {3}.</value></data>
+  <data name="Invitation.ExpiresLabel" xml:space="preserve"><value>Expires</value></data>
+  <data name="Invitation.Action" xml:space="preserve"><value>View the invitation</value></data>
+  <data name="Invitation.Note" xml:space="preserve"><value>To sign in, use this email: we'll send you an access code.</value></data>
+  <data name="Invitation.Footer" xml:space="preserve"><value>If you weren't expecting this email, you can ignore it.</value></data>
 </root>

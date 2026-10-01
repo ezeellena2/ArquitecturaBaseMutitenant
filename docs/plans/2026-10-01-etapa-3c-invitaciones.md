@@ -63,10 +63,10 @@ Cada tarea con lógica sigue: test dirigido → observar rojo → implementació
 
 ### T03 · Emisor, token protegido y correo real (back)
 
-- [ ] Tests dirigidos: token adulterado no autoriza un alcance, hash persistido sin token claro; canal no disponible no guarda; invitación a identidad existente guarda su Member Invited; nunca crea identidades en emisión; transacción revertida no deja invitación/outbox.
-- [ ] Implementar `InvitationIssuer.IssueAsync` dentro del alcance/UoW del llamador, lock de destino y miembro, cuenta/método previos (Email y Google verificados), Member Invited, Invitation, token protegido y `IInvitationChannel.EnqueueAsync` con datos reales y cultura/zona de organización.
-- [ ] Implementar correo HTML y texto desde resources es/en, usando DisplayFormatter para vencimiento y escapando nombres/URL. Canal cifra por el outbox existente; registrar DI. Sin datos literales de empresa/roles inexistentes.
-- [ ] Integración emisión/outbox y tests de plantillas verdes; build Application/Infrastructure. Commit `feat: emitir invitaciones por el outbox de correo`.
+- [x] Tests dirigidos: token adulterado no autoriza un alcance, hash persistido sin token claro; canal no disponible no guarda; invitación a identidad existente guarda su Member Invited; nunca crea identidades en emisión; transacción revertida no deja invitación/outbox.
+- [x] Implementar `InvitationIssuer.IssueAsync` dentro del alcance/UoW del llamador, lock de destino y miembro, cuenta/método previos (Email y Google verificados), Member Invited, Invitation, token protegido y `IInvitationChannel.EnqueueAsync` con datos reales y cultura/zona de organización.
+- [x] Implementar correo HTML y texto desde resources es/en, usando DisplayFormatter para vencimiento y escapando nombres/URL. Canal cifra por el outbox existente; registrar DI. Sin datos literales de empresa/roles inexistentes.
+- [x] Integración emisión/outbox y tests de plantillas verdes: 28/28 con regresiones de código y migraciones. Build Application/Infrastructure 0 advertencias; modelo EF sin pendientes. Commit `feat: emitir invitaciones por el outbox de correo`.
 
 ### T04 · Dos recorridos E2E reales rojos (back + front)
 
