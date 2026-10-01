@@ -20,5 +20,7 @@
     <InternalsVisibleTo Include="ArquitecturaBaseMultitenant.Application.UnitTests" />
     <!-- Los tests de integración emiten enlaces de ingreso con LoginLinkIssuer, sin pasar por el bot. -->
     <InternalsVisibleTo Include="ArquitecturaBaseMultitenant.Api.IntegrationTests" />
+    <!-- El preparador emite invitaciones reales solo en la base E2E aislada. -->
+    <InternalsVisibleTo Include="ArquitecturaBaseMultitenant.RealE2ESetup" />
   </ItemGroup>
 </Project>

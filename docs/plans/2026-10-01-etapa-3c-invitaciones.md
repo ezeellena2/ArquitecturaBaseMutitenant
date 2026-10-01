@@ -70,10 +70,10 @@ Cada tarea con lógica sigue: test dirigido → observar rojo → implementació
 
 ### T04 · Dos recorridos E2E reales rojos (back + front)
 
-- [ ] Ampliar `tools/ArquitecturaBaseMultitenant.RealE2ESetup/Program.cs` con orden local por archivo, solo bajo `MT_E2E_ISOLATED=1`, para que un servicio de soporte E2E abra scope/UoW y llame al issuer real. Sin ruta de emisión productiva; test prepara su organización, invitador y destinatario con cuenta.
-- [ ] Ampliar `scripts/test-e2e-real.test.mjs`: caso sin cuenta y caso con cuenta; leer enlaces reales del .eml sin imprimirlos; abrir `/invitacion`, comprobar preview, aceptar y entrar a la organización. Un comando de inspección del preparador confirma cero espacios personales para la identidad nueva; inspeccionar antes de cualquier cambio a Personal.
-- [ ] Correr `npm run test:e2e:real` con la preparación/issuer ya existentes y el accept/front todavía ausentes: exigir rojo por el flujo faltante, sin skip ni mocks. Guardar salida en el informe. Mantener activos todos los casos de 3a/3b.
-- [ ] Commit back `test: preparar invitaciones en la base E2E aislada`; front `test: agregar recorridos reales de invitaciones`.
+- [x] Ampliar `tools/ArquitecturaBaseMultitenant.RealE2ESetup/Program.cs` con orden local por archivo, solo bajo `MT_E2E_ISOLATED=1`, para que un servicio de soporte E2E abra scope/UoW y llame al issuer real. Sin ruta de emisión productiva; test prepara su organización, invitador y destinatario con cuenta.
+- [x] Ampliar `scripts/test-e2e-real.test.mjs`: caso sin cuenta y caso con cuenta; leer enlaces reales del .eml sin imprimirlos; abrir `/invitacion`, comprobar preview, aceptar y entrar a la organización. Un comando de inspección del preparador confirma cero espacios personales para la identidad nueva; inspeccionar antes de cualquier cambio a Personal.
+- [x] Correr `npm run test:e2e:real` con la preparación/issuer ya existentes y el accept/front todavía ausentes: los dos casos 3c fallaron al esperar la vista previa; los siete anteriores pasaron, sin skip ni mocks. Guardar salida en el informe.
+- [x] Build preparador y AppHost 0 advertencias; front lint y sintaxis del runner limpios. Commit back `test: preparar invitaciones en la base E2E aislada`; front `test: agregar recorridos reales de invitaciones`.
 
 ### T05 · Vista previa, contexto de sesión y continuación (back)
 

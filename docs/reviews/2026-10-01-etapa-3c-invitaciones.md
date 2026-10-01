@@ -7,7 +7,8 @@ Estado: en curso. No se declara cerrada la etapa ni se cambia `HarnessStage` has
 | Plan previo | Revisado y guardado antes de programar | `7934f42` |
 | T01 · Dominio | Reglas de vigencia/uso único/bootstrap y Member sin identidad; 13/13 | `abbd59d` |
 | T02 · Persistencia | RLS, reservas sin identidad e índice de accesos; 10/10 integraciones | `a332c2b` |
-| T03 · Emisor y correo | Emisión nueva/Email/Google sin crear cuentas, rollback y canal real; 28/28 focales | commit que incorpora esta fila |
+| T03 · Emisor y correo | Emisión nueva/Email/Google sin crear cuentas, rollback y canal real; 28/28 focales | `1ce2d21` |
+| T04 · E2E rojo | Dos invitaciones reales llegan al navegador y fallan en preview ausente; siete recorridos previos verdes | commits de preparación y recorridos |
 
 ## TDD y verificaciones
 
@@ -24,7 +25,16 @@ T03 rojo: la prueba de emisión no compiló por la ausencia de `Application.Serv
 
 T03 verde: `InvitationsTests`, `EmailTemplateTests`, `LoginCodeEnumerationTests`, `LoginCodeConcurrencyTests`, `MigrationsTests`: total 28, correcto 28, error 0, omitido 0. Build Infrastructure (incluye Application): 0 advertencias/0 errores; modelo EF sin pendientes. La migración `InvitationHashStorage` amplía hashes de 60 a 500 siguiendo LoginCode/ReauthTicket: el generador existente produce SHA-256 hexadecimal de 64 caracteres. Up/Down revisados; Down vuelve al límite anterior y PostgreSQL rechaza valores largos sin truncarlos silenciosamente.
 
-Pendiente: T04 observa rojo del flujo real ausente y T10/T12 exigen verde completo, con la base y pickup aislados. No se crearon datos de ejemplo en Development.
+T04 ejecutó `npm run test:e2e:real` completo antes de implementar aceptación HTTP/front. Cada caso emitió con el issuer real en la base exclusiva y leyó el enlace del `.eml`. Ambos fallaron en «abre /invitacion y ve la vista previa»: `locator.waitFor: Timeout 15000ms exceeded`. Se mantuvieron los siete casos de cuenta anteriores y todos pasaron. Sin mocks, skip ni datos de ejemplo en Development. El `finally` detuvo el AppHost propio y eliminó el pickup temporal.
+
+```text
+✖ 3c: aceptar invitación sin cuenta y sin Personal desde el .eml (20922.3212ms)
+✖ 3c: aceptar invitación con cuenta previa desde el .eml (19869.5576ms)
+tests 10 · pass 7 · fail 3 · cancelled 0 · skipped 0 · todo 0
+duration_ms 685282.0408
+```
+
+El tercer fallo es el test padre por sus dos hijos rojos. T10/T12 exigen el verde completo. La inspección del preparador verificará Member activo, invitación aceptada y cero espacios Personal antes de cualquier selección Consumer.
 
 ## Comparación con el lienzo
 
