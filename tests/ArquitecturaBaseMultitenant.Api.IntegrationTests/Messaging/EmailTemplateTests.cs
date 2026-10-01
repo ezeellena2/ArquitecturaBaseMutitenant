@@ -22,16 +22,18 @@ public sealed class EmailTemplateTests
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Theory]
-    [InlineData("es-AR", "Te invitaron a", "Ver la invitación", "08/10/2026")]
-    [InlineData("en-US", "You were invited to", "View the invitation", "10/08/2026")]
+    [InlineData("es-AR", "Te invitaron a", "Ver la invitación", "08/10/2026", false)]
+    [InlineData("en-US", "You were invited to", "View the invitation", "10/08/2026", false)]
+    [InlineData("es-AR", "Te invitaron a", "Ver la invitación", "08/10/2026", true)]
+    [InlineData("en-US", "You were invited to", "View the invitation", "10/08/2026", true)]
     public async Task Invitation_renders_real_data_local_expiry_and_escapes_html(
-        string cultureCode, string title, string action, string expiry)
+        string cultureCode, string title, string action, string expiry, bool usesEmailCode)
     {
         var profile = await new CultureProfiles(new JsonReferenceDataCatalog()).LoadAsync(cultureCode, Ct);
         var renderer = new EmailTemplateRenderer(Options.Create(new EmailOptions { AppName = "Mi App" }), CreateFormatter());
         var notice = new InvitationNotice("<Delta & Norte>", "Ana <Pérez>",
             new DateTime(2026, 10, 9, 1, 0, 0, DateTimeKind.Utc), "America/Argentina/Buenos_Aires",
-            "https://example.test/invitacion#protected-secret", false);
+            "https://example.test/invitacion#protected-secret", usesEmailCode);
 
         var message = await renderer.RenderInvitationAsync("recipient@example.test", notice, profile, Ct);
 
@@ -42,8 +44,27 @@ public sealed class EmailTemplateTests
         Assert.Contains("Ana &lt;P&#233;rez&gt;", message.HtmlBody);
         Assert.DoesNotContain("<Delta & Norte>", message.HtmlBody);
         Assert.Contains(notice.ActionUrl, message.TextBody);
+        var loginNote = NotificationTexts.Get("Invitation.Note", profile);
+        if (usesEmailCode)
+        {
+            Assert.Contains(loginNote, message.TextBody);
+            Assert.Contains(System.Net.WebUtility.HtmlEncode(loginNote), message.HtmlBody);
+        }
+        else
+        {
+            Assert.DoesNotContain(loginNote, message.TextBody);
+            Assert.DoesNotContain(System.Net.WebUtility.HtmlEncode(loginNote), message.HtmlBody);
+        }
         Assert.DoesNotContain("protected-secret", notice.ToString());
         Assert.DoesNotContain("protected-secret", message.ToString());
+
+        if (Environment.GetEnvironmentVariable("MT_INVITATION_EMAIL_CAPTURE_DIR") is { Length: > 0 } captureDirectory)
+        {
+            Directory.CreateDirectory(captureDirectory);
+            var fileName = $"invitacion-{cultureCode}-{(usesEmailCode ? "con-codigo" : "sin-codigo")}.html";
+            var safeHtml = message.HtmlBody.Replace("protected-secret", "captura-sintetica", StringComparison.Ordinal);
+            await File.WriteAllTextAsync(Path.Combine(captureDirectory, fileName), safeHtml, Ct);
+        }
     }
 
     [Theory]
