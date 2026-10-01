@@ -163,6 +163,7 @@ public sealed class InvitationServiceTests
         public Task<Guid?> GetUserIdAsync(CancellationToken ct) => Task.FromResult(UserId);
         public InvitationContinuation? ReadContinuation() => Continuation;
         public void Remember(InvitationContinuation continuation) => Continuation = continuation;
+        public void PreserveContinuationForAccountSwitch() { }
         public void ClearContinuation() => Continuation = null;
         public Task<bool> RestoreSessionAsync(Guid userId, CancellationToken ct) { SignIns++; UserId = userId; return Task.FromResult(true); }
         public Task<IReadOnlyList<Guid>> FindVerifiedUsersByEmailAsync(Email email, CancellationToken ct) => Task.FromResult(Owners);

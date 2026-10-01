@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Api.Authentication;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Api.Tenancy;
 using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -27,7 +28,8 @@ namespace ArquitecturaBaseMultitenant.Api.Controllers.Auth;
 [Route("connect")]
 public sealed class ConnectController(IConnectService service, IConnectLogoutService logoutService,
     IConnectAuthorizationService authorizationService,
-    OpenIdPrincipalFactory principalFactory) : ControllerBase
+    OpenIdPrincipalFactory principalFactory, IInvitationFlowContext invitationFlow,
+    IConfiguration configuration) : ControllerBase
 {
     [HttpGet("authorize")]
     [HttpPost("authorize")]
@@ -122,6 +124,12 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
     [HttpPost("logout")]
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
+        var request = HttpContext.GetOpenIddictServerRequest();
+        if (ShouldPreserveInvitation(request, configuration, Request.Query["preserveInvitation"].ToString()))
+            invitationFlow.PreserveContinuationForAccountSwitch();
+        else
+            invitationFlow.ClearContinuation();
+
         var hint = await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         var authorizationId = hint.Principal?.GetAuthorizationId();
         var session = await HttpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
@@ -138,6 +146,22 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
         await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
         return SignOut(new AuthenticationProperties { RedirectUri = "/" },
             OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+    }
+
+    private static bool ShouldPreserveInvitation(OpenIddictRequest? request, IConfiguration configuration,
+        string preserveInvitation)
+    {
+        if (request?.ClientId != "web" || preserveInvitation != "true"
+            || !Uri.TryCreate(request.PostLogoutRedirectUri, UriKind.Absolute, out var redirect)
+            || redirect.AbsolutePath != "/invitacion" || redirect.Query.Length > 0 || redirect.Fragment.Length > 0)
+        {
+            return false;
+        }
+
+        var allowedRedirects = configuration.GetSection("Authentication:Clients:Web:PostLogoutRedirectUris")
+            .Get<string[]>() ?? [];
+        return allowedRedirects.Any(value => Uri.TryCreate(value, UriKind.Absolute, out var allowed)
+            && allowed.Equals(redirect));
     }
 
     [HttpGet("userinfo")]

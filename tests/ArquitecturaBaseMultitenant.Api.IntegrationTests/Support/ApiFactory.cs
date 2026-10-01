@@ -88,6 +88,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Email:PickupDirectory", _pickupDirectory);
         builder.UseSetting("Authentication:Clients:Web:RedirectUris:0", "https://localhost:5174/auth/callback");
         builder.UseSetting("Authentication:Clients:Web:PostLogoutRedirectUris:0", "https://localhost:5174/");
+        builder.UseSetting("Authentication:Clients:Web:PostLogoutRedirectUris:1", "https://localhost:5174/invitacion");
         builder.ConfigureLogging(logging => logging.ClearProviders().AddConsole());
         builder.ConfigureTestServices(services =>
             services.AddControllers().ConfigureApplicationPartManager(parts =>

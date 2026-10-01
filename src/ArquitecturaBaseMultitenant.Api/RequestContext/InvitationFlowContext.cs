@@ -15,7 +15,7 @@ namespace ArquitecturaBaseMultitenant.Api.RequestContext;
 
 /// <summary>Continúa el flujo tras ingreso/F5 sin exponer el token a almacenamiento JS, URL HTTP ni estado OIDC.</summary>
 public sealed class InvitationFlowContext(IHttpContextAccessor accessor, IDataProtectionProvider protection,
-    IUserStatusReader users, ISignInService signIn, TimeProvider timeProvider) : IInvitationFlowContext
+    IUserStatusReader users, ISignInService signIn, ISecureTokenGenerator tokens, TimeProvider timeProvider) : IInvitationFlowContext
 {
     private const string CookieName = "__Host-MtInvitation";
     private readonly IDataProtector _protector = protection.CreateProtector("Invitation.Continuation.v1");
@@ -61,7 +61,23 @@ public sealed class InvitationFlowContext(IHttpContextAccessor accessor, IDataPr
         Context.Response.Headers.CacheControl = "no-store";
     }
 
-    public void ClearContinuation() => Context.Response.Cookies.Delete(CookieName, Options);
+    public void PreserveContinuationForAccountSwitch()
+    {
+        var continuation = ReadContinuation();
+        if (continuation is null)
+        {
+            ClearContinuation();
+            return;
+        }
+
+        Remember(continuation with { Nonce = tokens.Generate() });
+    }
+
+    public void ClearContinuation()
+    {
+        Context.Response.Cookies.Delete(CookieName, Options);
+        Context.Response.Headers.CacheControl = "no-store";
+    }
 
     public async Task<bool> RestoreSessionAsync(Guid userId, CancellationToken cancellationToken)
     {

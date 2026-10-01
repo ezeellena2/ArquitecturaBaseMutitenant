@@ -8,6 +8,7 @@ public interface IInvitationFlowContext
     Task<Guid?> GetUserIdAsync(CancellationToken cancellationToken);
     InvitationContinuation? ReadContinuation();
     void Remember(InvitationContinuation continuation);
+    void PreserveContinuationForAccountSwitch();
     void ClearContinuation();
     Task<bool> RestoreSessionAsync(Guid userId, CancellationToken cancellationToken);
 }
