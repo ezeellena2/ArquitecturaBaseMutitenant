@@ -143,6 +143,14 @@ El aviso final, "Tu cuenta fue eliminada", va al método principal. Se encola **
 - los del núcleo: membresías, espacio personal, datos compartidos, aceptaciones legales, exportaciones, pedidos de recuperación y outbox;
 - cada módulo de un producto registra el suyo si guarda datos de la persona. `AccountDeletionParticipantsTests` verifica que toda entidad con datos de una identidad tenga un participante.
 
+### 3.3 Invitaciones a una organización
+
+Una invitación y su `Member(Invited)` son datos privados del tenant Business, en `tenant`, con filtro EF y RLS forzado. `Member.UserId` puede ser null durante la reserva; el índice global de accesos omite esas filas y las agrega al vincular una identidad. Un miembro invitado nunca queda Active sin identidad y una reserva retirada no se reactiva ni vincula después.
+
+`InvitationIssuer` emite dentro de la UoW de su llamador y encola mediante `IInvitationChannel`; no abre su propia transacción, no crea una cuenta y no expone una ruta. El token opaco va en el fragmento del enlace de `/invitacion`; la base conserva solo su hash. La vista previa y la aceptación reciben el token en JSON (`POST /api/invitations/preview` y `POST /api/invitations/accept`), nunca en la URL, query, `Location` ni logs. Preview no consume. Accept comprueba la organización, destino, sesión/cuenta y estados bajo locks y consume Invitation y activa Member en la misma transacción.
+
+Una identidad nueva se crea ya vinculada a la membresía Business, con su método verificado y consentimientos vigentes, pero sin espacio Personal ni acceso Consumer. Una cuenta existente debe demostrar su identidad por el ingreso habitual; el enlace no ingresa por ella ni permite cambiar de cuenta vinculada. El espacio Personal nace solo al entrar luego por Consumer. Si la respuesta de una aceptación nueva se pierde, únicamente el navegador que inició el flujo puede recuperar la sesión durante cinco minutos mediante su nonce protegido HttpOnly; el replay no crea otra identidad ni otra membresía. Emisión administrativa, reenvío y revocación HTTP desde Usuarios quedan para E5/E6; WhatsApp, para E8.
+
 ## 4. Tres clases de datos
 
 Todo dato nuevo se clasifica **antes** de escribir su entidad:

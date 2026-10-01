@@ -65,8 +65,8 @@ public sealed class Stage3aInventoryTests
         Assert.Contains(path, RequiredFiles);
 
     [Fact]
-    public void Split_stage_keeps_harness_at_two_until_3c_closes() =>
-        Assert.Equal(2, HarnessStage.Closed);
+    public void Identity_stage_closes_the_harness_at_three() =>
+        Assert.Equal(3, HarnessStage.Closed);
 
     [Fact]
     public void Identity_feature_and_first_area_pointers_are_present()

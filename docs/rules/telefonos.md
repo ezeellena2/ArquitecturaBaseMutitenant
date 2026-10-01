@@ -28,10 +28,10 @@
 - Una lista de países o prefijos telefónicos escrita a mano; salen de los datos de referencia ([ADR 0036](../architecture/datos-de-referencia.md)).
 
 ## Copiá de
-- `Domain/ValueObjects/PhoneNumber.cs` (E1), que se copia de `../ArquitecturaBase` (solo verifica el E.164; interpretar lo que escribe la persona es trabajo del parser) · `Infrastructure/Phones/LibPhoneNumberDisplayFormatter.cs` (E1) presenta con libphonenumber tras `IPhoneNumberDisplayFormatter` · `../ArquitecturaBase/src/ArquitecturaBase.Infrastructure/Phones/LibPhoneNumberParser.cs`, que se copia y se le suma `PhoneUsage` (E3).
+- `Domain/ValueObjects/PhoneNumber.cs` (E1), que se copia de `../ArquitecturaBase` (solo verifica el E.164; interpretar lo que escribe la persona es trabajo del parser) · `Infrastructure/Phones/LibPhoneNumberDisplayFormatter.cs` (E1) presenta con libphonenumber tras `IPhoneNumberDisplayFormatter` · `../ArquitecturaBase/src/ArquitecturaBase.Infrastructure/Phones/LibPhoneNumberParser.cs`, que se copia y se le suma `PhoneUsage` cuando nazca el primer flujo telefónico (E8 en este plan).
 
 ## Lo verifica
-- `LibPhoneNumberParserTests` (E3): el 9 argentino, números con 0 y 15, letras rechazadas, fijo contra celular. El país no permitido para WhatsApp lo prueban los tests del módulo (E8).
+- `LibPhoneNumberParserTests` (E8): el 9 argentino, números con 0 y 15, letras rechazadas, fijo contra celular. El parser se incorpora junto al primer flujo telefónico; el país no permitido para WhatsApp lo prueban los tests del módulo (E8).
 - `PhoneNumberTests` (E1) de Domain y `DisplayFormatterTests` (E1), con los casos de teléfono de `docs/contracts/format-cases.json`, los mismos que corre el front.
 
 ## Detalle

@@ -6,5 +6,5 @@ namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 /// </summary>
 internal static class HarnessStage
 {
-    public const int Closed = 2;
+    public const int Closed = 3;
 }

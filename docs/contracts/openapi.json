@@ -2827,7 +2827,8 @@
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "description": "Correo normalizado para comparar y enviar; el dominio IDN se guarda en ASCII."
           },
           "canUseEmailCode": {
             "type": "boolean",

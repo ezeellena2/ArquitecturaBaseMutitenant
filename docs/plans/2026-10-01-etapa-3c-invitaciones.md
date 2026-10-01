@@ -100,42 +100,42 @@ Cada tarea con lógica sigue: test dirigido → observar rojo → implementació
 
 ### T08 · HTTP, rate limit y contratos cruzados (back + front)
 
-- [ ] Tests HTTP de preview/accept con cuerpos reales, cookies/bearer, antiforgery en accept y preview/bootstrap, ausencia de token en Location/URL/logs, rate limit 429, tokens de otra invitación y cambios de sesión; preview no requiere Idempotency-Key, accept sí. Pérdida de respuesta tras commit → replay misma clave → preview con nonce original → cookie/authorize business; otro browser y nonce/grant inválidos no autentican. Tests de ingreso con retorno exacto `/invitacion`: código y Google crean cookie sin tokens ni Personal aun con Member Invited; retorno externo o alterado se rechaza, estados de cuenta siguen bloqueados y baja cancelada vuelve al flujo.
-- [ ] Controller anónimo, contratos HTTP con ToString seguro, recursos de errores, Produces y política `invitation-accept`; registrar controller/rutas en inventarios existentes, sin nueva guarda.
-- [ ] Generar OpenAPI por la herramienta existente y `npm run contracts`. Esto actualiza también los comentarios documentales que dejaron rojo `contracts:check` en la revisión de 3b.
-- [ ] `src/test/invitation-contract.test.ts` lee controller/modelos/códigos del back y cliente/ruta/state del front: verbos/rutas, token en body, campos/enums, acceptedTerms, acceso business/tenant, retorno a /invitacion y errores. No usar mocks de un contrato inventado.
-- [ ] HTTP/contrato cruzado verdes y builds; commits back `feat: exponer vista previa y aceptación de invitaciones`, front `feat: actualizar contratos de invitaciones`.
+- [x] Tests HTTP de preview/accept con cuerpos reales, cookies/bearer, antiforgery en accept y preview/bootstrap, ausencia de token en Location/URL/logs, rate limit 429, tokens de otra invitación y cambios de sesión; preview no requiere Idempotency-Key, accept sí. Pérdida de respuesta tras commit → replay misma clave → preview con nonce original → cookie/authorize business; otro browser y nonce/grant inválidos no autentican. Tests de ingreso con retorno exacto `/invitacion`: código y Google crean cookie sin tokens ni Personal aun con Member Invited; retorno externo o alterado se rechaza, estados de cuenta siguen bloqueados y baja cancelada vuelve al flujo.
+- [x] Controller anónimo, contratos HTTP con ToString seguro, recursos de errores, Produces y política `invitation-accept`; registrar controller/rutas en inventarios existentes, sin nueva guarda.
+- [x] Generar OpenAPI por la herramienta existente y `npm run contracts`. Esto actualiza también los comentarios documentales que dejaron rojo `contracts:check` en la revisión de 3b.
+- [x] `src/test/invitation-contract.test.ts` lee controller/modelos/códigos del back y cliente/ruta/state del front: verbos/rutas, token en body, campos/enums, acceptedTerms, acceso business/tenant, retorno a /invitacion y errores. No usar mocks de un contrato inventado.
+- [x] HTTP/contrato cruzado verdes y builds; commits back `feat: exponer vista previa y aceptación de invitaciones` (`81a01fd`), front `feat: actualizar contratos de invitaciones` (`3849299`).
 
 ### T09 · Página pública y estados del lienzo (front)
 
-- [ ] Usar solo los campos disponibles en E3c. Empresa, Roles y rol del invitador permanecen ocultos hasta E6/E4 según la decisión de producto ya resuelta. Revisar escritorio/móvil con una invitación del contrato real, nombre/correo largo y un vencimiento; si la composición falla con un elemento, proponer alternativas antes de programar.
-- [ ] Tests rojos de `InvitationPage`: Sin cuenta; Con cuenta sin sesión; Sesión propia; Sesión ajena; Vencida; Ya no sirve; Organización suspendida; Aceptada sin respaldo. Interacciones por rol accesible, resource parity, axe y 390 px.
-- [ ] Implementar ruta pública `/invitacion` con AuthLayout, textos y orden del lienzo; TanStack Query/httpClient para preview y useIdempotentMutation para accept. Vaciar el fragmento antes de consultar; ninguna credencial en QueryKey, storage, URL de retorno ni state OIDC. Datos de API y capacidades, no reglas de identidad en el cliente.
-- [ ] La cuenta previa usa `LoginPage` con el retorno fijo `/invitacion`: ingreso por código/Google crea cookie y vuelve usando la continuación protegida, sin `signinRedirect` antes de aceptar. «Salir y seguir» revoca la sesión anterior por el logout real, preserva solo la invitación pendiente protegida y rota el nonce para invalidar cualquier bootstrap; retoma el flujo sin registrar Personal incidentalmente. Logout común borra toda continuación. «Seguir como…» vuelve al acceso propio sin consumir invitación.
-- [ ] Aceptar nueva identidad obtiene tokens business para el tenant invitado. Mostrar el estado aceptado/aviso antes de sus acciones; «Agregar ahora» conserva business en /cuenta, «Más tarde» /org. Cuenta con respaldo termina en /org. F5 no cambia al acceso consumer.
-- [ ] Tests dirigidos verdes, lint/build. Commit `feat: implementar la pantalla de invitación`.
+- [x] Usar solo los campos disponibles en E3c. Empresa, Roles y rol del invitador permanecen ocultos hasta E6/E4 según la decisión de producto ya resuelta. Revisar escritorio/móvil con una invitación del contrato real, nombre/correo largo y un vencimiento; si la composición falla con un elemento, proponer alternativas antes de programar.
+- [x] Tests rojos de `InvitationPage`: Sin cuenta; Con cuenta sin sesión; Sesión propia; Sesión ajena; Vencida; Ya no sirve; Organización suspendida; Aceptada sin respaldo. Interacciones por rol accesible, resource parity, axe y 390 px.
+- [x] Implementar ruta pública `/invitacion` con AuthLayout, textos y orden del lienzo; TanStack Query/httpClient para preview y useIdempotentMutation para accept. Vaciar el fragmento antes de consultar; ninguna credencial en QueryKey, storage, URL de retorno ni state OIDC. Datos de API y capacidades, no reglas de identidad en el cliente.
+- [x] La cuenta previa usa `LoginPage` con el retorno fijo `/invitacion`: ingreso por código/Google crea cookie y vuelve usando la continuación protegida, sin `signinRedirect` antes de aceptar. «Salir y seguir» revoca la sesión anterior por el logout real, preserva solo la invitación pendiente protegida y rota el nonce para invalidar cualquier bootstrap; retoma el flujo sin registrar Personal incidentalmente. Logout común borra toda continuación. «Seguir como…» vuelve al acceso propio sin consumir invitación.
+- [x] Aceptar nueva identidad obtiene tokens business para el tenant invitado. Mostrar el estado aceptado/aviso antes de sus acciones; «Agregar ahora» conserva business en /cuenta, «Más tarde» /org. Cuenta con respaldo termina en /org. F5 no cambia al acceso consumer.
+- [x] Tests dirigidos verdes, lint/build. Commit `feat: implementar la pantalla de invitación` (`6692111`).
 
 ### T10 · E2E verde y casos críticos adicionales
 
-- [ ] Completar los dos E2E reales de T04; cuenta previa entra y acepta, nueva acepta y no tiene Personal, ambas conservan business/tenant después de F5. La base Development no se consulta ni se modifica.
-- [ ] Integración dirigida cubre lectura después de revocar/vencer/suspender, organización ajena, token adulterado, sesiones cruzadas, legal y eliminación. No crear matrices de segundo orden ni pruebas que repitan DTOs.
-- [ ] Ejecutar `npm run test:e2e:real`, guardar salida literal sanitizada sin códigos/links/emails y sin skip. Commitear únicamente los ajustes necesarios con rutas explícitas.
+- [x] Completar los dos E2E reales de T04; cuenta previa entra y acepta, nueva acepta y no tiene Personal, ambas conservan business/tenant después de F5. La base Development no se consulta ni se modifica.
+- [x] Integración dirigida cubre lectura después de revocar/vencer/suspender, organización ajena, token adulterado, sesiones cruzadas, legal y eliminación. No crear matrices de segundo orden ni pruebas que repitan DTOs.
+- [x] Ejecutar `npm run test:e2e:real`, guardar salida literal sanitizada sin códigos/links/emails y sin skip. Verde: 10 tests contados, 10 correctos, 0 fallos, 0 omitidos; salida completa en el informe. Ajustes de cierre: back `7853d2a`, front `c4ace06` y `94ce987`.
 
 ### T11 · Comparación visual y correo (front + back)
 
-- [ ] Reutilizar startCanvasServer/capturePaths/installApiMocks del arnés de capturas existente para fotografiar estados; los mocks aquí sirven solo para presentación y no sustituyen T10.
-- [ ] `scripts/capturar-etapa-3c.mjs` y manifest: ocho estados en 1440×900/390×844, carga/envío/error aplicables de las acciones, correo de invitación en es/en con HTML del renderer real y Mensajes como referencia.
-- [ ] Revisar cada par app/lienzo y cada correo; corregir diferencias de estructura, controles, orden, textos y tokens. Anotar datos omitidos autorizados, fechas/nombres contractuales y ajustes técnicos de foco/renderizado con motivo en `informe.md`. Sin renovar capturas de Cuenta.
-- [ ] Verificar manifest con el mecanismo existente y archivos presentes; no agregar un test del arnés. Commit front `test: comparar invitaciones con el lienzo`; back solo si hubo ajuste coherente de plantilla.
+- [x] Reutilizar startCanvasServer/capturePaths/installApiMocks del arnés de capturas existente para fotografiar estados; los mocks aquí sirven solo para presentación y no sustituyen T10.
+- [x] `scripts/capturar-etapa-3c.mjs` y manifest: ocho estados en 1440×900/390×844, carga/envío/error aplicables de las acciones, correo de invitación en es/en con HTML del renderer real y Mensajes como referencia.
+- [x] Revisar cada par app/lienzo y cada correo; corregir diferencias de estructura, controles, orden, textos y tokens. Anotar datos omitidos autorizados, fechas/nombres contractuales y ajustes técnicos de foco/renderizado con motivo en `informe.md`. Sin renovar capturas de Cuenta.
+- [x] Verificar manifest con el mecanismo existente y archivos presentes; no agregar un test del arnés. Commit front `test: comparar invitaciones con el lienzo` (`ed1e7d4`).
 
 ### T12 · Documentación, arnés existente y puerta completa
 
-- [ ] Completar `docs/features/identidad.md`, arquitectura/fichas afectadas y punteros E3 con archivos reales; `docs/backlog.md` solo para observaciones que no rompen flujo/seguridad. Informe de tareas con commit, rojo/verde, E2E, decisiones y diferencias visuales.
-- [ ] Cambiar únicamente valores de cierre `HarnessStage` a 3 en ambos repos. Completar requisitos E3 de los inventarios/tests ya existentes; no borrar pruebas ni bajar su alcance para obtener verde. No iniciar E4/E6.
-- [ ] Back: `dotnet build ArquitecturaBaseMultitenant.slnx` (0 advertencias/0 errores); `dotnet test` con Docker, sin suites omitidas; `node --test scripts/datos-de-referencia/generar.test.mjs`; HarnessTests incluido.
-- [ ] Front: `npm run lint`, `npm test`, `npm run build`, `npm run contracts:check`; harness visual existente y verificación de capturas etapa-3c; `npm run test:e2e:real` completo. Registrar totales y salida real, no solo códigos de salida.
-- [ ] Si los checks alteran un contrato o hacen necesario un fix, correr de nuevo solo los afectados y la puerta pendiente por ese cambio. `aspire stop` del AppHost propio, `aspire ps` sin el E2E activo; no detener AppHosts ajenos.
-- [ ] Commit de cierre en cada repo con las rutas verificadas. Git limpio, main, sin push. El informe conserva la pendiente manual de Usuarios para E6 y cualquier aprobación visual del usuario, sin declarar aprobadas diferencias por cuenta propia.
+- [x] Completar `docs/features/identidad.md`, arquitectura/fichas afectadas y punteros E3 con archivos reales; `docs/backlog.md` solo para observaciones que no rompen flujo/seguridad. El informe registra tareas, commits, rojo/verde, E2E, decisiones y diferencias visuales.
+- [x] Cambiar únicamente valores de cierre `HarnessStage` a 3 en ambos repos. Completar requisitos E3 de los inventarios/tests ya existentes; no borrar pruebas ni bajar su alcance para obtener verde. No iniciar E4/E6.
+- [x] Back: `dotnet build ArquitecturaBaseMultitenant.slnx` (0 advertencias/0 errores); `dotnet test` con Docker, sin suites omitidas; `node --test scripts/datos-de-referencia/generar.test.mjs`; HarnessTests incluido. Resultado: build 0/0 y tests 1182/1182.
+- [x] Front: `npm run lint`, `npm test`, `npm run build`, `npm run contracts:check`; harness visual existente y verificación de capturas etapa-3c; `npm run test:e2e:real` completo. El lint termina correctamente; sus warnings quedan explicados en el informe y el único warning de `InvitationPage` se anota en backlog.
+- [x] Si los checks alteran un contrato o hacen necesario un fix, correr de nuevo solo los afectados y la puerta pendiente por ese cambio. `aspire ps` después del E2E confirma que no hay AppHost activo; el runner detuvo su propio AppHost y no se detuvieron AppHosts ajenos.
+- [x] Commit de cierre en cada repo con las rutas verificadas. Git limpio, main, sin push. El informe conserva el recorrido manual de Usuarios para E6 y clasifica las diferencias visuales con su motivo.
 
 ## Puerta de salida y evidencia de aceptación
 

@@ -1,42 +1,28 @@
-# Etapa 3c · Invitaciones — informe de trabajo
+# Etapa 3c · Invitaciones — informe de cierre
 
-Estado: en curso. No se declara cerrada la etapa ni se cambia `HarnessStage` hasta completar la puerta.
+Estado: **cerrada**. `HarnessStage` queda en 3 en los dos repositorios. Se trabajó en `main`, sin push y con commits por rutas explícitas. La base Development no recibió cuentas ni organizaciones de prueba; las integraciones y el E2E usaron sus propias bases temporales.
 
-| Tarea | Resultado | Commit |
+## Tareas y commits
+
+| Tarea | Resultado | Commit(s) |
 |---|---|---|
-| Plan previo | Revisado y guardado antes de programar | `7934f42` |
-| T01 · Dominio | Reglas de vigencia/uso único/bootstrap y Member sin identidad; 13/13 | `abbd59d` |
-| T02 · Persistencia | RLS, reservas sin identidad e índice de accesos; 10/10 integraciones | `a332c2b` |
-| T03 · Emisor y correo | Emisión nueva/Email/Google sin crear cuentas, rollback y canal real; 28/28 focales | `1ce2d21` |
-| T04 · E2E rojo | Dos invitaciones reales llegan al navegador y fallan en preview ausente; siete recorridos previos verdes | back `d329ccd`, front `1a62898` |
-| T05 · Preview | Estados actuales, sesión explícita y continuación HttpOnly; 15 unitarios y 9 integraciones | `5170d21` |
+| Plan previo | Plan TDD detallado, revisado y comprometido antes de programar | back `7934f42` |
+| T01 · Dominio | Invitation y Member(Invited), expiración/consumo único; 13/13 | back `abbd59d` |
+| T02 · Persistencia | Reserva sin identidad, EF/RLS, migración e índice de accesos; 10/10 integraciones | back `a332c2b` |
+| T03 · Emisión y correo | Issuer dentro de la UoW del llamador, canal Email por outbox, renderer real es/en; 28/28 focales | back `1ce2d21`, `82c09c9` |
+| T04 · E2E rojo previo | Preparador aislado y pruebas reales con invitación nueva/existente: ambas llegaron al correo y fallaron porque aún no había preview | back `d329ccd`; front `1a62898` |
+| T05 · Vista previa | Ocho estados, guard de token, organización privada y continuación HttpOnly; 15 unitarios + 9 integraciones | back `5170d21` |
+| T06 · Aceptación | Cuenta nueva sin Personal, cuenta previa y aceptación atómica; 42 integraciones focales | back `861463c` |
+| T07 · Respaldo y baja | Metadata de origen, regla de respaldo y revocación de invitaciones recibidas en baja; pruebas de baja | back `9163854`; informe intermedio `badfcb1` |
+| T08 · API y contrato cruzado | `POST /preview` y `/accept`, antiforgery, idempotencia, rate limit, retorno de ingreso `/invitacion`; el contrato lee ambos repos | back `81a01fd`, `9ad21fc`; front `3849299`, `ce8a08a` |
+| T09 · Pantalla | `/invitacion`, sus estados y recursos; acceso Business persistente, sin crear Personal | front `6692111`, `94ce987` |
+| T10 · E2E verde y ajustes | Aserciones del E2E y verificaciones técnicas de cierre; pruebas dirigidas pasan | front `c4ace06`; back `7853d2a` |
+| T11 · Comparación visual | 30 pares app/lienzo, correos HTML del renderer y manifest verificado | front `ed1e7d4` |
+| T12 · Cierre | Fichas, arquitectura, OpenAPI, feature, backlog, plan, informe y HarnessStage 3; puerta completa | front `073ac0b`; back commit de cierre de este informe |
 
-| T06 · Aceptación | Identidad sin Personal, legales, dueño revalidado y consumo atómico; 42 integraciones focales | `861463c` |
-| T07 · Respaldo y baja | Metadata de origen; respaldo consistente en aceptación/perfil; baja revoca invitaciones recibidas y anonimiza las enviadas. Unitarios 7/7; integración 24/24 | `9163854` |
+## TDD y puerta completa
 
-## TDD y verificaciones
-
-- T01 rojo: `InvitationTests.cs` no compiló porque no existían el namespace `Domain.Invitations` ni `Invitation` (`CS0234`, `CS0246`). El intento inicial con red restringida falló en NuGet (`NU1900`); no se contó como rojo de conducta. Restauración con acceso a NuGet y repetición dieron el rojo esperado.
-- T01 verde: `dotnet test --project tests/ArquitecturaBaseMultitenant.Domain.UnitTests/ArquitecturaBaseMultitenant.Domain.UnitTests.csproj --no-restore -- --filter-class '*InvitationTests' --filter-class '*MemberTests'`: total 13, correcto 13, error 0, omitido 0.
-- Build Domain: 0 advertencias, 0 errores.
-- T02 rojo: tras compilar adaptadores y ajustar las proyecciones de Guid nullable, los tests reales fallaron en `PendingModelChangesWarning` por la migración aún ausente. El intento sin acceso al pipe de Docker no se contó como rojo de conducta.
-- T02 verde: `InvitationsTests`, `UserTenantAccessIndexTests`, `RlsPolicyInventoryTests` y `MigrationsTests`: total 10, correcto 10, error 0, omitido 0. PostgreSQL aislado creado y eliminado por Testcontainers.
-- Build Infrastructure: 0 advertencias, 0 errores. `has-pending-model-changes` indicó que no hay cambios; SQL idempotente revisado con claves/FKs, índices parciales, RLS forzado, grants SELECT/INSERT/UPDATE y trigger actualizado.
-- T05 rojo: tests de servicio no compilaron por los modelos, servicio y puerto de continuación ausentes (`CS0246`). Verde: 15 unitarios, 9 integraciones de invitación; sin omitidos. API build 0 advertencias/0 errores. La integración usa fila privada real, comprueba Pending después de dos previews y cookie protegida HttpOnly/Secure/SameSite Lax; no emite cookie Identity. El token adulterado ni siquiera entra al scope.
-
-- T06 rojo: modelo de aceptación ausente (`CS0246`); recuperación de respuesta perdida devolvía Invalid en vez de Accepted. Verde: 18 casos de aceptación, 10 de invitaciones/emisión y regresiones de código/Google: total 42, correcto 42, error 0, omitido 0. Preview unitario 15/15 y dominio Invitation 7/7. Inventarios existentes de dependencias/transacciones 10/10 y entradas de scope 2/2. API build: 0 advertencias/0 errores.
-- La regresión combinada encontró el límite de veinte despachos del lector pickup: las invitaciones previas superaban esa cola. Se ajustó el helper existente a cien despachos, con espera solo cuando no hubo trabajo. El conjunto pasó al repetirlo; no se agregó ningún test del arnés.
-
-- T07 rojo: `LoginMethodTests` no compiló por la fábrica `CreateInvitedEmail` aún ausente (`CS0117`). La primera integración también mostró que Google no estaba habilitado en `Testing` (por lo que sí correspondía el aviso) y que un cliente con HTTP recibe `error:invalid_request` de OpenIddict.
-- T07 verde: Domain `LoginMethodTests` 7/7; API Integration `InvitationAcceptanceTests` 20/20, `AccountDeletionProcessingTests` 3/3 y `AccountDeletionParticipantsTests` 1/1; API e integración build 0 advertencias/0 errores; EF sin cambios pendientes. PostgreSQL aislado en Testcontainers.
-
-## E2E real
-
-T03 rojo: la prueba de emisión no compiló por la ausencia de `Application.Services.Invitations` (`CS0234`). La variante Google detectó después que el aviso de código era incorrecto: esperaba ausencia y encontraba el texto. Se ajustó al método real. Dos expectativas de texto/fecha en inglés se corrigieron para respetar resources y catálogo (`MM/dd/yyyy`), sin cambiar el producto.
-
-T03 verde: `InvitationsTests`, `EmailTemplateTests`, `LoginCodeEnumerationTests`, `LoginCodeConcurrencyTests`, `MigrationsTests`: total 28, correcto 28, error 0, omitido 0. Build Infrastructure (incluye Application): 0 advertencias/0 errores; modelo EF sin pendientes. La migración `InvitationHashStorage` amplía hashes de 60 a 500 siguiendo LoginCode/ReauthTicket: el generador existente produce SHA-256 hexadecimal de 64 caracteres. Up/Down revisados; Down vuelve al límite anterior y PostgreSQL rechaza valores largos sin truncarlos silenciosamente.
-
-T04 ejecutó `npm run test:e2e:real` completo antes de implementar aceptación HTTP/front. Cada caso emitió con el issuer real en la base exclusiva y leyó el enlace del `.eml`. Ambos fallaron en «abre /invitacion y ve la vista previa»: `locator.waitFor: Timeout 15000ms exceeded`. Se mantuvieron los siete casos de cuenta anteriores y todos pasaron. Sin mocks, skip ni datos de ejemplo en Development. El `finally` detuvo el AppHost propio y eliminó el pickup temporal.
+T04 dejó el rojo real pedido: antes de implementar preview y aceptación, los dos recorridos de invitación leyeron un enlace real del `.eml` y fallaron al abrir la vista previa; los siete recorridos de cuenta anteriores pasaron. La salida resumida fue:
 
 ```text
 ✖ 3c: aceptar invitación sin cuenta y sin Personal desde el .eml (20922.3212ms)
@@ -45,18 +31,65 @@ tests 10 · pass 7 · fail 3 · cancelled 0 · skipped 0 · todo 0
 duration_ms 685282.0408
 ```
 
-El tercer fallo es el test padre por sus dos hijos rojos. T10/T12 exigen el verde completo. La inspección del preparador verificará Member activo, invitación aceptada y cero espacios Personal antes de cualquier selección Consumer.
+El tercer fallo era el padre de esos dos casos. El mismo E2E completo termina ahora con 10/10 correctos, cero fallos y cero omitidos (salida final abajo).
+
+Los tests focales finales de preview/emisión/aceptación pasan 31/31. Las guardas arquitectónicas existentes pasan 40/40. La suite completa `dotnet test` pasó **1.182/1.182**, con cero errores y cero omitidos; incluye `HarnessTests`. `dotnet build ArquitecturaBaseMultitenant.slnx --no-restore` terminó con **0 advertencias y 0 errores**. La primera invocación dentro del sandbox no pudo resolver el SDK de Aspire por falta de acceso a su caché/NuGet; después de restaurar, el build final fuera del sandbox pasó sin advertencias.
+
+En el front, `npm test` pasó 669 pruebas en 136 archivos; `npm run build` y `npm run contracts:check` terminaron correctamente. `node --test scripts/datos-de-referencia/generar.test.mjs` pasó 30/30. `node scripts/capturar-etapa-3c.mjs --verify` informó `30 pares visuales 3c completos.`. `npm run lint` terminó con código 0 y 746 warnings: 745 pertenecen a `docs/design/lienzo-v35`; uno está en `InvitationPage` por sincronizar el fragmento a estado local después de retirarlo de la barra de direcciones. Se agregó al backlog para refactorizar sin permitir que el token se consulte mientras sigue en la URL; no bloquea el flujo ni la etapa.
+
+Después del E2E, `aspire ps` respondió `No running AppHost found`; el runner limpió su AppHost y su pickup temporales.
+
+### Salida literal sanitizada de `npm run test:e2e:real`
+
+La salida no incluye correos, enlaces, tokens ni códigos de prueba.
+
+```text
+> arquitecturabase-multitenant-front@0.0.0 test:e2e:real
+> node --test scripts/test-e2e-real.test.mjs
+
+▶ registro real y puerta empresa usan un PostgreSQL aislado, front, Api y pickup sin mocks
+  ✔ 3c: aceptar invitación sin cuenta y sin Personal desde el .eml (9544.4659ms)
+  ✔ 3c: aceptar invitación con cuenta previa desde el .eml (19301.1667ms)
+  ✔ 3b seguridad: sesión abierta no suma correo ni Google y método nuevo no autoriza el anterior (78637.1835ms)
+  ✔ 3b seguridad: registro con posesión recupera un correo pendiente de otra cuenta (151081.8513ms)
+  ✔ 3b: sumar correo personal con código leído del .eml (78840.9377ms)
+  ✔ 3b: quitar un método con código enviado a otro (130095.1357ms)
+  ✔ 3b: pedir baja y cancelarla ingresando durante la gracia (130232.2955ms)
+  ✔ 3b: cambiar el idioma a en-US desde /cuenta (11538.3669ms)
+  ✔ 3b: aceptar versión nueva de términos que bloquea el ingreso (10394.0953ms)
+✔ registro real y puerta empresa usan un PostgreSQL aislado, front, Api y pickup sin mocks (671525.9524ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 671978.4998
+```
 
 ## Comparación con el lienzo
 
-Se revisaron los tableros Invitacion y M-Invitacion a 1440×900 y 390×844 con una invitación. No mostraron desborde horizontal ni campos deformados. T09 repetirá con datos del contrato real y T11 guardará las comparaciones en `docs/design/capturas/etapa-3c/` del front. Empresa, Roles y rol del invitador esperan una decisión del usuario porque esos modelos nacen en E6/E4.
+Se inspeccionaron Invitacion y M-Invitacion con un elemento a 1440×900 y 390×844 antes de programar. La composición era legible, sin elementos deformados ni desborde; no hizo falta pedir alternativas. Al finalizar se compararon los ocho estados estables, tres transitorios y cuatro variantes del correo en ambos tamaños: 30 pares completos, sin desborde horizontal a 390 px.
+
+| Referencia | Diferencia observada | Motivo y resolución |
+|---|---|---|
+| Invitacion y M-Invitacion | Empresa, Roles y rol de quien invita no aparecen | Esos modelos/API nacen en E6/E4; no se inventan valores en 3c. |
+| Aceptación | No aparece el enlace WhatsApp del lienzo | El único canal de 3c es Email. WhatsApp corresponde a E8. |
+| Fecha de vencimiento | El lienzo dice “En 6 días”; la pantalla presenta fecha civil localizada | Se conserva el DisplayFormatter compartido, que muestra fecha absoluta futura para no insinuar vigencias distintas por redondeo. |
+| Carga, envío y error | Los tableros no muestran estados transitorios | Se fotografió el estado real de la app y se comparó con la tarjeta estable correspondiente; no se agregó un estado ficticio al lienzo. |
+| Mensajes · correo | El ejemplo usa “ArquitecturaBase”, “Delta Norte S.A.” y texto español fijo | El renderer real usa datos actuales escapados, resources es/en y la fecha/localización de la organización. El aviso de código aparece solo para un correo Email verificado y disponible; no se promete código para Google-only ni para una cuenta nueva. |
+
+Los PNG, HTML del renderer, manifest y notas están en el [informe de capturas del front](../../../ArquitecturaBaseMutitenantFront/docs/design/capturas/etapa-3c/informe.md). Las capturas usan respuestas sintéticas del arnés visual y no reemplazan el E2E real.
 
 ## Decisiones tomadas
 
-Las decisiones vigentes están en el [plan](../plans/2026-10-01-etapa-3c-invitaciones.md#decisiones-técnicas-tomadas): identidad diferida, token protegido y RLS, continuación HttpOnly, ingreso sin selección de acceso antes del accept, reconocimiento de Google-only, nonce de bootstrap para recuperar una respuesta perdida, barrido por organización durante baja, locks compatibles y procedencia de invitación separada de dominio administrado. El aviso cuenta solo vías personales verificadas y disponibles en la configuración vigente. Una reserva de Member retirada puede seguir sin identidad; nunca se activa ni se vincula después de retirarse.
+- La invitación nueva crea una identidad ya vinculada a la organización, guarda los consentimientos vigentes y no crea espacio Personal. La primera entrada Consumer crea Personal; una cuenta existente debe autenticarse como su dueña y el enlace nunca la ingresa automáticamente.
+- `InvitationIssuer` es un helper interno dentro de la UoW del llamador, sin ruta propia. En 3c emite solo por Email/outbox; se dejan WhatsApp, empresa/roles y las acciones administrativas de Usuarios para E8/E4/E6 según el plan.
+- El token va en el fragmento del enlace y se retira antes de consultar; preview y accept lo reciben en el cuerpo JSON. La base guarda solo su hash. Una continuación HttpOnly permite volver del ingreso y, para una identidad nueva, recuperar durante cinco minutos una aceptación cuya respuesta se perdió, únicamente desde el navegador original.
+- Se mantiene la fecha futura absoluta localizada del formatter común aunque el lienzo use texto relativo. El correo no afirma que una cuenta nueva recibirá un código si el único medio de prueba fue el enlace.
+- No se implementó parser telefónico en 3c: no hay flujo telefónico que lo consuma; la ficha sitúa parser y tests con el primer flujo telefónico de E8. La clasificación de la ficha se actualizó para no marcar como faltante de E3 un test fuera de alcance.
+- La validación usa el límite de token central de `InvitationOptions`; la aceptación agrupa dependencias técnicas para respetar el límite existente de la capa. La política para «Salir y seguir» quedó dentro del servicio de logout, que conserva solo la continuación protegida y rota su nonce; logout común la borra.
+- El barrido de organizaciones durante una baja sigue lineal porque las invitaciones pendientes aún no están vinculadas a una identidad y no deben exponerse mediante un índice global. Su optimización queda en backlog solo si una medición muestra impacto.
 
-El aviso «te vamos a mandar un código» del correo aparece solo para un correo Email ya verificado, nunca para Google-only ni cuenta nueva. El pie conserva «Si no esperabas este correo, podés ignorarlo» y omite la promesa «sin el código nadie puede entrar»: la invitación nueva prueba posesión mediante el enlace. Se registrará también en la comparación visual. No se crean datos de Empresa ni Roles para completar el lienzo.
-
-El usuario confirmó Aspire apagado antes de compilar. Se trabaja en main, sin push y con rutas explícitas. El recorrido manual de invitar desde Usuarios pertenece a la puerta de E6.
-
-La cookie de continuación conserva cinco minutos adicionales tras el vencimiento para recuperar una aceptación realizada al límite. Aceptar comprueba siempre ExpiresAtUtc original; bootstrap comprueba AcceptedAtUtc + cinco minutos y el nonce exclusivo del navegador original. No habilita ingreso por enlace para una cuenta previa.
+El recorrido manual de invitar desde Usuarios sigue expresamente en la puerta de E6. No se inició E4 ni E6.

@@ -36,12 +36,14 @@
 
 ## Copiá de
 - Dato privado: `Domain/Authorization/Role.cs` (E4).
+- Reserva privada de invitación: `Domain/Invitations/Invitation.cs`, `Domain/Tenancy/Member.cs` y `Infrastructure/Persistence/Configurations/Tenant/InvitationConfiguration.cs` (E3c).
 - Datos público y compartido: `TestFeatures/Isolation/Poster.cs` y `Deal.cs` (E2). La plantilla no trae módulos de negocio, así que estos son la referencia.
 
 ## Lo verifica
 - `TenantIsolationModelValidator` (E2) al arrancar: toda entidad está clasificada, con su esquema y su filtro.
 - `RlsPolicyInventoryTests` (E2), `RlsBarrierTests` (E2), `RuntimeRoleTests` (E2).
 - `CrossTenantIsolationTests` (E2) y `PublicAndSharedRowsTests` (E2) prueban el aislamiento de filas; `AccessTests` (E3) prueba el atributo y su filtro. `IngressJourneyTests` (E3) cubre el 403 del acceso equivocado, la separación B2C/B2B y que B2C no expone el alta de empresa; `SuspensionTests` (E3) cubre los estados suspendidos.
+- `InvitationsTests` y `InvitationAcceptanceTests` (E3) verifican RLS, la reserva `Member(Invited)` sin identidad y la activación/vinculación transaccional tras aceptar.
 - `SubdomainTests` (E7): el host resuelve solo lo público; redirect URI solo para slugs publicados.
 - `DataClassificationTests` (E2), `TenantScopeUsageTests` (E2), `QueryFilterBypassTests` (E2), `IdentityAccessTests` (E3), `AccessDeclarationTests` (E3) con la lista explícita de controllers anónimos del dominio principal, `CacheKeyScopeTests` (E2).
 
