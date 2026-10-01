@@ -5,6 +5,10 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
+/// <summary>
+/// Comprueba que salir dirija a la página pública inicial. Evita continuar en el destino del acceso que se
+/// acaba de cerrar.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class LogoutTests(ApiFactory factory)
 {

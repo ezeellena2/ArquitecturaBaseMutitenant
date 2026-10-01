@@ -18,6 +18,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Identity;
 
+/// <summary>
+/// Comprueba las reglas persistidas al agregar, verificar, quitar y elegir métodos. Exige pruebas de
+/// titularidad válidas y cambios atómicos del método principal.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class LoginMethodsTests(ApiFactory factory)
 {

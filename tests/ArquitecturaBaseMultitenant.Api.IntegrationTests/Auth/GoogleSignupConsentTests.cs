@@ -13,6 +13,10 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
+/// <summary>
+/// Comprueba que el desafío Google del registro requiera POST con antiforgery. Evita iniciar el alta desde
+/// un GET o una solicitud sin protección.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class GoogleSignupConsentTests(ApiFactory factory)
 {

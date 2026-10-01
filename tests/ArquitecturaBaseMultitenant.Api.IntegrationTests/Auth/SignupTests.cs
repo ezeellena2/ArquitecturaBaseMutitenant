@@ -15,6 +15,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
+/// <summary>
+/// Comprueba el registro transaccional de cuenta, método, espacio personal y aceptación legal. Incluye
+/// correos existentes y reservas pendientes para evitar crear o activar la cuenta equivocada.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class SignupTests(ApiFactory factory)
 {

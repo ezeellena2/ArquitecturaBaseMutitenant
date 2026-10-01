@@ -10,6 +10,10 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
+/// <summary>
+/// Comprueba el aislamiento de revocaciones entre sesiones, accesos y organizaciones. Revocar una
+/// autorización no debe invalidar sesiones ajenas a su alcance.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class BrowserSessionAuthorizationTests(ApiFactory factory)
 {

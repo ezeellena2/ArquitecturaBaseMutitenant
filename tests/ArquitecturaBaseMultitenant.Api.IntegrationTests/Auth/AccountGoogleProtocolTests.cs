@@ -11,6 +11,10 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
+/// <summary>
+/// Comprueba la protección del desafío para vincular Google a una cuenta existente. Exige antiforgery,
+/// prueba de titularidad y estado OAuth ligado a la cuenta.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class AccountGoogleProtocolTests(ApiFactory factory)
 {

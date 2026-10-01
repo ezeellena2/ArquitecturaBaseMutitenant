@@ -12,6 +12,10 @@ using Testcontainers.PostgreSql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Identity;
 
+/// <summary>
+/// Comprueba que dos ejecuciones simultáneas del seed de muestra creen una sola copia de cada espacio.
+/// Protege su idempotencia bajo concurrencia.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class ConcurrentDevelopmentSeedTests
 {

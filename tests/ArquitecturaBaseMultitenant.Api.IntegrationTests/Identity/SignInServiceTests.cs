@@ -17,6 +17,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Identity;
 
+/// <summary>
+/// Comprueba los adaptadores de sesión, usuario actual y datos de la petición. Exige identidad y acceso
+/// obtenidos de claims y una configuración coherente del origen público.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class SignInServiceTests(ApiFactory factory)
 {

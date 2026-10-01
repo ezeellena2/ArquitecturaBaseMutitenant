@@ -14,6 +14,10 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
+/// <summary>
+/// Comprueba los claims emitidos y reconstruidos durante el refresh. Protege el acceso seleccionado, los
+/// datos vigentes y el instante UTC de inicio de sesión.
+/// </summary>
 public sealed class PrincipalFactoryTests
 {
     private static readonly Guid UserId = Guid.Parse("11111111-1111-1111-1111-111111111111");

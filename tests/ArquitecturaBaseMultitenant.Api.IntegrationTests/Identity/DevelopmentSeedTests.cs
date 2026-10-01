@@ -16,6 +16,10 @@ using Testcontainers.PostgreSql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Identity;
 
+/// <summary>
+/// Comprueba que la fixture de cuentas de muestra prepare una empresa y dos espacios personales una sola
+/// vez. Verifica membresías y métodos sin duplicarlos al repetirla.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class DevelopmentSeedTests
 {

@@ -14,6 +14,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Identity;
 
+/// <summary>
+/// Comprueba que verificaciones simultáneas consuman un código una sola vez. Protege el ingreso y el
+/// registro frente a carreras entre solicitudes.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class LoginCodeConcurrencyTests(ApiFactory factory)
 {

@@ -23,6 +23,10 @@ using Testcontainers.PostgreSql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Identity;
 
+/// <summary>
+/// Comprueba el seed de configuración, cliente web y documentos legales en una base vacía de producción.
+/// Repetir el arranque no debe duplicar esos datos.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class ProductionSeedTests
 {

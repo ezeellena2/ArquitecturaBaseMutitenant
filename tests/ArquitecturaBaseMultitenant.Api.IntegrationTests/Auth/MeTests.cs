@@ -5,6 +5,10 @@ using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
+/// <summary>
+/// Comprueba que los documentos legales se puedan consultar públicamente y que las rutas del perfil
+/// requieran sesión. Protege la separación entre lectura pública y cuenta.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class MeTests(ApiFactory factory)
 {

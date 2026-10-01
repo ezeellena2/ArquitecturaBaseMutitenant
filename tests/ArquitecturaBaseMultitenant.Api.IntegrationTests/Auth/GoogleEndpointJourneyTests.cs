@@ -25,6 +25,10 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
+/// <summary>
+/// Recorre desafío, callback, cookie y emisión de tokens del ingreso con Google. Comprueba el retorno
+/// correcto y la prueba protegida de una cuenta con baja pendiente.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class GoogleEndpointJourneyTests(ApiFactory factory)
 {

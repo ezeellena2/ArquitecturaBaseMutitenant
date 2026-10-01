@@ -11,6 +11,10 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
+/// <summary>
+/// Comprueba el registro del servidor de autorización local y sus requisitos de seguridad. Exige PKCE y
+/// refresh rotativo sin habilitar ingreso por contraseña.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class OpenIddictServerTests(ApiFactory factory)
 {

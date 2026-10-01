@@ -23,6 +23,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
+/// <summary>
+/// Comprueba el orden de autenticación, resolución del espacio y autorización. Verifica que el contexto de
+/// la petición provenga del token y permita actualizar el perfil correcto.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class AuthPipelineTests(ApiFactory factory)
 {

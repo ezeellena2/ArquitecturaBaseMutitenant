@@ -12,6 +12,10 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
+/// <summary>
+/// Comprueba que también se prepare el mensaje para una cuenta desconocida. Protege el comportamiento que
+/// evita revelar la existencia de un correo.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class LoginCodeEnumerationTests(ApiFactory factory)
 {

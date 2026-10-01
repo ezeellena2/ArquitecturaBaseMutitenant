@@ -11,6 +11,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Identity;
 
+/// <summary>
+/// Comprueba los contratos HTTP de gestión de métodos de ingreso con sesiones reales. Cubre prueba de
+/// titularidad, recursos ajenos y repetición idempotente de solicitudes.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class AccountMethodsHttpTests(ApiFactory factory)
 {

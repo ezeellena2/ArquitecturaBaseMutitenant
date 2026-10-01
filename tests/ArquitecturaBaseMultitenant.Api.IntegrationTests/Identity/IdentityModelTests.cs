@@ -6,6 +6,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Identity;
 
+/// <summary>
+/// Comprueba esquemas, columnas y unicidad del modelo global de identidad. Protege la separación entre
+/// cuentas globales y datos privados de una organización.
+/// </summary>
 public sealed class IdentityModelTests
 {
     [Fact]

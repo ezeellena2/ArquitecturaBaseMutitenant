@@ -10,6 +10,10 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
+/// <summary>
+/// Comprueba la validación de Google y correo al arrancar. Exige credenciales cuando corresponden y rechaza
+/// transportes de prueba en producción sin imprimir secretos.
+/// </summary>
 public sealed class StartupConfigurationTests
 {
     [Fact]

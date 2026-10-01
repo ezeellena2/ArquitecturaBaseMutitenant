@@ -8,6 +8,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Identity;
 
+/// <summary>
+/// Comprueba la persistencia de métodos, códigos, auditoría y preferencias de cuenta. Exige transacción
+/// para escribir y unicidad global del identificador de ingreso.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class LoginPersistenceTests(ApiFactory factory)
 {

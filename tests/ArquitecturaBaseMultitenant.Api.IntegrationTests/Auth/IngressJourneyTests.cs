@@ -19,6 +19,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
+/// <summary>
+/// Recorre registro e ingreso reales, cambio entre empresa y espacio personal, refresh y salida. Comprueba
+/// que cada paso conserve el acceso elegido y las aceptaciones legales.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class IngressJourneyTests(ApiFactory factory)
 {

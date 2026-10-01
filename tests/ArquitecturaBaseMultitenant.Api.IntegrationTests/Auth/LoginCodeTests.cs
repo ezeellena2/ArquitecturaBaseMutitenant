@@ -15,6 +15,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
+/// <summary>
+/// Comprueba el ingreso por códigos leídos del pickup de correo. Exige un método verificado y un código de
+/// uso único, y rechaza acceso empresa sin membresía.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class LoginCodeTests(ApiFactory factory)
 {

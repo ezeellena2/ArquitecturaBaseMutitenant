@@ -22,6 +22,10 @@ using OpenIddict.Validation.AspNetCore;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Identity;
 
+/// <summary>
+/// Comprueba el registro técnico de Identity, cookies y Google. Incluye la exportación OpenAPI sin
+/// dependencia de una base ni claves persistentes.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class IdentityRegistrationTests(ApiFactory factory)
 {

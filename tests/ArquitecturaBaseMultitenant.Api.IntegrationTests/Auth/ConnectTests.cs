@@ -17,6 +17,10 @@ using Microsoft.Extensions.Hosting;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
+/// <summary>
+/// Comprueba el protocolo de autorización: PKCE, sesión de navegador y retorno al acceso elegido. Incluye
+/// respuestas ante sesiones ausentes o membresías inactivas.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class ConnectTests(ApiFactory factory)
 {

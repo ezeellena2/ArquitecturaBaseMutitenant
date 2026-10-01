@@ -17,6 +17,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
+/// <summary>
+/// Comprueba los límites de las rutas reales de ingreso por IP y por intentos inválidos. Exige respuestas
+/// equivalentes para correos conocidos y desconocidos.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class RealLoginRateLimitTests(ApiFactory factory)
 {

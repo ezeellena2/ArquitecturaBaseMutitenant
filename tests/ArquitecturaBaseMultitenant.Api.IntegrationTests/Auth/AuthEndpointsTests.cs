@@ -5,6 +5,10 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
+/// <summary>
+/// Comprueba las puertas HTTP de ingreso y registro. Exige canales configurados, aceptación legal y estado
+/// externo confiable antes de iniciar o completar Google.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class AuthEndpointsTests(ApiFactory factory)
 {

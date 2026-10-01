@@ -6,6 +6,10 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Identity;
 
+/// <summary>
+/// Comprueba la edición del perfil usando su versión leída. Impide que un guardado con versión vieja
+/// sobrescriba preferencias ya actualizadas.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class AccountProfileTests(ApiFactory factory)
 {

@@ -17,6 +17,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
+/// <summary>
+/// Comprueba ingreso y vinculación de Google con persistencia. Protege la pertenencia del identificador
+/// externo y evita emitir sesión durante una baja pendiente.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class GoogleLoginTests(ApiFactory factory)
 {

@@ -5,6 +5,10 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
+/// <summary>
+/// Comprueba que el límite de ingreso responda con el tiempo de espera. Permite que el cliente sepa cuándo
+/// puede volver a pedir un código.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class LoginRateLimitTests(ApiFactory factory)
 {
