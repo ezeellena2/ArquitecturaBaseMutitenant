@@ -77,10 +77,10 @@ Cada tarea con lógica sigue: test dirigido → observar rojo → implementació
 
 ### T05 · Vista previa, contexto de sesión y continuación (back)
 
-- [ ] `InvitationServiceTests` con dobles existentes: token vacío/adulterado, estado válido, vencido, revocado/aceptado, organización suspendida; sin cuenta, cuenta sin sesión, sesión propia y ajena. Preview no cambia ningún estado ni acepta términos.
-- [ ] Implementar el guard de token, `IInvitationReader`, contexto de identidad y continuación HttpOnly protegida. La cookie no concede sesión y un token nuevo reemplaza la continuación anterior. Resolver scope únicamente desde el token validado, antes de leer privado; no abrir UoW de lectura ni conservar una conexión abierta al cambiar alcance.
-- [ ] Proyectar nombres actuales y fechas desde contratos reales; cuenta eliminada del invitador se muestra con recurso «Cuenta eliminada». El estado de organización se relee, no se acepta un slug como autorización.
-- [ ] Verde focal y build afectado. Commit `feat: consultar invitaciones sin consumirlas`.
+- [x] `InvitationServiceTests` con dobles existentes: token vacío/adulterado, estado válido, vencido, revocado/aceptado, organización suspendida; sin cuenta, cuenta sin sesión, sesión propia y ajena. Preview no cambia ningún estado ni acepta términos.
+- [x] Implementar el guard de token, `IInvitationReader`, contexto de identidad y continuación HttpOnly protegida. La cookie no concede sesión y un token nuevo reemplaza la continuación anterior. Resolver scope únicamente desde el token validado, antes de leer privado; no abrir UoW de lectura ni conservar una conexión abierta al cambiar alcance.
+- [x] Proyectar nombres actuales y fechas desde contratos reales; cuenta eliminada del invitador se muestra con recurso «Cuenta eliminada». El estado de organización se relee, no se acepta un slug como autorización.
+- [x] Verde focal: 15 unitarios y 9 integraciones; API build 0 advertencias. Commit `feat: consultar invitaciones sin consumirlas`.
 
 ### T06 · Aceptación atómica con y sin cuenta (back)
 

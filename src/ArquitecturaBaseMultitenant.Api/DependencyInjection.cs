@@ -35,6 +35,7 @@ public static class DependencyInjection
         services.AddScoped<PendingDeletionCookie>();
         services.AddScoped<IRequestInfo, RequestInfo>();
         services.AddSingleton<IPublicOrigin, PublicOrigin>();
+        services.AddScoped<IInvitationFlowContext, InvitationFlowContext>();
 
         services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
         {

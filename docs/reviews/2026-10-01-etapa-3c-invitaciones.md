@@ -8,7 +8,8 @@ Estado: en curso. No se declara cerrada la etapa ni se cambia `HarnessStage` has
 | T01 · Dominio | Reglas de vigencia/uso único/bootstrap y Member sin identidad; 13/13 | `abbd59d` |
 | T02 · Persistencia | RLS, reservas sin identidad e índice de accesos; 10/10 integraciones | `a332c2b` |
 | T03 · Emisor y correo | Emisión nueva/Email/Google sin crear cuentas, rollback y canal real; 28/28 focales | `1ce2d21` |
-| T04 · E2E rojo | Dos invitaciones reales llegan al navegador y fallan en preview ausente; siete recorridos previos verdes | commits de preparación y recorridos |
+| T04 · E2E rojo | Dos invitaciones reales llegan al navegador y fallan en preview ausente; siete recorridos previos verdes | back `d329ccd`, front `1a62898` |
+| T05 · Preview | Estados actuales, sesión explícita y continuación HttpOnly; 15 unitarios y 9 integraciones | commit que incorpora esta fila |
 
 ## TDD y verificaciones
 
@@ -18,6 +19,7 @@ Estado: en curso. No se declara cerrada la etapa ni se cambia `HarnessStage` has
 - T02 rojo: tras compilar adaptadores y ajustar las proyecciones de Guid nullable, los tests reales fallaron en `PendingModelChangesWarning` por la migración aún ausente. El intento sin acceso al pipe de Docker no se contó como rojo de conducta.
 - T02 verde: `InvitationsTests`, `UserTenantAccessIndexTests`, `RlsPolicyInventoryTests` y `MigrationsTests`: total 10, correcto 10, error 0, omitido 0. PostgreSQL aislado creado y eliminado por Testcontainers.
 - Build Infrastructure: 0 advertencias, 0 errores. `has-pending-model-changes` indicó que no hay cambios; SQL idempotente revisado con claves/FKs, índices parciales, RLS forzado, grants SELECT/INSERT/UPDATE y trigger actualizado.
+- T05 rojo: tests de servicio no compilaron por los modelos, servicio y puerto de continuación ausentes (`CS0246`). Verde: 15 unitarios, 9 integraciones de invitación; sin omitidos. API build 0 advertencias/0 errores. La integración usa fila privada real, comprueba Pending después de dos previews y cookie protegida HttpOnly/Secure/SameSite Lax; no emite cookie Identity. El token adulterado ni siquiera entra al scope.
 
 ## E2E real
 

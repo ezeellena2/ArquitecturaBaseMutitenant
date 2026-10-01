@@ -22,7 +22,8 @@ internal sealed class InvitationReader(ApplicationDbContext context, ITenantCont
                 invitation.TenantId, tenant.Kind, tenant.Status, tenant.Name, invitation.Destination,
                 invitation.Channel, invitation.TokenHash, invitation.Status, invitation.IssuedAtUtc,
                 invitation.ExpiresAtUtc, invitation.AcceptedAtUtc, invitation.AcceptedByUserId,
-                invitation.BootstrapNonceHash, inviter.Status == UserStatus.Deleted ? null : inviter.DisplayName))
+                invitation.BootstrapNonceHash, inviter.Status == UserStatus.Deleted ? null : inviter.DisplayName,
+                inviter.Status == UserStatus.Deleted))
             .SingleOrDefaultAsync(cancellationToken);
     }
 }

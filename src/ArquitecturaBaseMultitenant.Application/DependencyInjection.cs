@@ -63,6 +63,8 @@ public static class DependencyInjection
         services.AddScoped<InvitationIssuer>();
         services.AddScoped<InvitationIssuingGuard>();
         services.AddScoped<InvitationDeliveryIssuer>();
+        services.AddScoped<IInvitationService, InvitationService>();
+        services.AddScoped<InvitationPreviewBuilder>();
         services.AddScoped<AccountNoticeIssuer>();
         services.AddScoped<ILoginMethodManagementService, LoginMethodManagementService>();
         services.AddScoped<LoginMethodGuard>();

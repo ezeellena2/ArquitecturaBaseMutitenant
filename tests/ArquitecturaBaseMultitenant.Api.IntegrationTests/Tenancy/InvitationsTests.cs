@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Services.Invitations;
 using ArquitecturaBaseMultitenant.Application.Models.Invitations;
@@ -12,6 +13,7 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using Microsoft.Extensions.DependencyInjection;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Npgsql;
@@ -23,6 +25,58 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 public sealed class InvitationsTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    [Fact]
+    public async Task Preview_uses_real_private_rows_and_a_protected_http_only_continuation_without_opening_a_session()
+    {
+        using var client = factory.CreateClient();
+        var (tenantId, inviterId) = await CreateOrganizationAsync();
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var tokens = services.GetRequiredService<IInvitationTokenProtector>();
+        var secret = tokens.GenerateSecret();
+        var member = Member.Invite();
+        var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        var invitation = Invitation.Issue(member.Id, inviterId, Email.Create("preview-recipient@example.test").Value,
+            InvitationChannel.Email, tokens.Hash(secret), nowUtc, TimeSpan.FromDays(7));
+        using (services.GetRequiredService<ITenantScope>().Enter(tenantId))
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+            {
+                services.GetRequiredService<IMemberRepository>().Add(member);
+                services.GetRequiredService<IInvitationRepository>().Add(invitation);
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+        var token = tokens.Protect(new InvitationTokenData(tenantId, invitation.Id, secret));
+        var accessor = services.GetRequiredService<IHttpContextAccessor>();
+        try
+        {
+            var initial = new DefaultHttpContext { RequestServices = services };
+            initial.Request.Scheme = "https";
+            accessor.HttpContext = initial;
+            var preview = await services.GetRequiredService<IInvitationService>()
+                .PreviewAsync(new PreviewInvitationRequest(token), Ct);
+            Assert.Equal(InvitationPreviewState.NoAccount, preview.Value.State);
+            Assert.Equal(invitation.Destination, preview.Value.Email);
+            var cookie = Assert.Single(initial.Response.Headers.SetCookie);
+            Assert.NotNull(cookie);
+            Assert.Contains("__Host-MtInvitation=", cookie);
+            Assert.Contains("secure", cookie);
+            Assert.Contains("httponly", cookie);
+            Assert.Contains("samesite=lax", cookie);
+            Assert.False(cookie.Contains(token, StringComparison.Ordinal));
+            var reload = new DefaultHttpContext { RequestServices = services };
+            reload.Request.Scheme = "https";
+            reload.Request.Headers.Cookie = cookie.Split(';')[0];
+            accessor.HttpContext = reload;
+            var repeated = await services.GetRequiredService<IInvitationService>()
+                .PreviewAsync(new PreviewInvitationRequest(null), Ct);
+            Assert.Equal(preview.Value, repeated.Value);
+            using (services.GetRequiredService<ITenantScope>().Enter(tenantId))
+                Assert.Equal(InvitationStatus.Pending, (await services.GetRequiredService<IInvitationReader>()
+                    .FindByIdAsync(invitation.Id, Ct))!.Status);
+        }
+        finally { accessor.HttpContext = null; }
+    }
 
     [Theory]
     [InlineData("none")]
