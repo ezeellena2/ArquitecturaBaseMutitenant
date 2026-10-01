@@ -12,7 +12,10 @@ using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.RealE2ESetup;
 
-// Evidencia visual: compone los correos reales con el catálogo embebido, sin abrir una base ni enviarlos.
+/// <summary>
+/// Compone los correos reales de verificación y avisos de cuenta con el catálogo embebido.
+/// Guarda catorce archivos HTML en español e inglés para revisar su aspecto sin enviar mensajes.
+/// </summary>
 internal static class AccountEmailCaptures
 {
     public static async Task<int> WriteAsync(string directory)

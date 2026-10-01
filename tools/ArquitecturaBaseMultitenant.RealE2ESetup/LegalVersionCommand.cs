@@ -6,7 +6,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.RealE2ESetup;
 
-// Protocolo de archivo del runner: no expone una ruta ni publica en Development.
+/// <summary>
+/// Publica una segunda versión de términos cuando el runner deja una orden en su archivo de control.
+/// Permite probar la aceptación de nuevos legales dentro de la base aislada del recorrido E2E.
+/// </summary>
 internal static class LegalVersionCommand
 {
     public static async Task TryExecuteAsync(IServiceProvider services, string readyFile,

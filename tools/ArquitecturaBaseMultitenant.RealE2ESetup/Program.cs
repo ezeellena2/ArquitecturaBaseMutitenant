@@ -14,6 +14,9 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 using ArquitecturaBaseMultitenant.RealE2ESetup;
 
+// Prepara la cuenta, el espacio personal y la empresa de los recorridos E2E en su base aislada.
+// Señala al runner cuándo puede empezar y atiende su orden de publicar nuevos términos de prueba.
+// Con --capture-emails genera archivos HTML de los correos reales para revisar su aspecto.
 if (args is ["--capture-emails", var emailCaptureDirectory])
     return await AccountEmailCaptures.WriteAsync(emailCaptureDirectory);
 
