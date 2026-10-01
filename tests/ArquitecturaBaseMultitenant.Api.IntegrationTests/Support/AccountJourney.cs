@@ -25,10 +25,10 @@ internal sealed record AccountJourney(Guid UserId, Email Email)
 {
     private const string Verifier = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~";
 
-    internal static async Task<AccountJourney> RegisterAsync(ApiFactory factory, HttpClient client, CancellationToken ct)
+    internal static async Task<AccountJourney> RegisterAsync(ApiFactory factory, HttpClient client, CancellationToken ct, Email? destination = null)
     {
         await factory.Services.SeedDatabaseAsync(ct);
-        var email = Email.Create("account-journey-" + Guid.NewGuid().ToString("N") + "@example.test").Value;
+        var email = destination ?? Email.Create("account-journey-" + Guid.NewGuid().ToString("N") + "@example.test").Value;
         using var requested = await PostAsync(client, "/api/auth/signup",
             new { email = email.Value, acceptedTerms = true, culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires" }, ct);
         Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);

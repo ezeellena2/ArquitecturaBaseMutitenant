@@ -7,6 +7,8 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Invitations;
 using ArquitecturaBaseMultitenant.Application.Models.Messaging;
+using ArquitecturaBaseMultitenant.Application.Services.Identity;
+using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Application.Services.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
@@ -49,6 +51,7 @@ public sealed class InvitationAcceptanceTests(ApiFactory factory)
         Assert.True(accepted.Result.IsSuccess);
         Assert.Equal(issued.TenantId, accepted.Result.Value.OrganizationId);
         Assert.Equal(kind == "none", accepted.Result.Value.CreatedAccount);
+        Assert.Equal(kind == "none", accepted.Result.Value.NeedsPersonalLoginMethod);
         Assert.Equal(usersBefore + (kind == "none" ? 1 : 0), await db.Users.CountAsync(Ct));
         Assert.Equal(personalBefore, await db.Tenants.CountAsync(row => row.Kind == TenantKind.Personal, Ct));
         Assert.Equal(legalBefore + (kind == "none" ? 2 : 0), await db.LegalAcceptances.CountAsync(Ct));
@@ -61,12 +64,64 @@ public sealed class InvitationAcceptanceTests(ApiFactory factory)
             .Where(method => method.Type == LoginMethodType.Email && method.Value == issued.Email.Value).ToArrayAsync(Ct));
         Assert.Equal(row.AcceptedByUserId, identity.UserId);
         Assert.NotNull(identity.VerifiedAtUtc);
+        Assert.Equal(kind == "email" ? null : (Guid?)issued.TenantId, identity.InvitationOriginTenantId);
         Assert.Equal(kind != "google", identity.IsPrimary);
         Assert.Equal(kind == "none", row.BootstrapNonceHash is not null);
         var accesses = await check.ServiceProvider.GetRequiredService<IUserTenantAccessReader>().ListForUserAsync(identity.UserId, Ct);
         Assert.Equal(MemberStatus.Active, Assert.Single(accesses, access => access.TenantId == issued.TenantId).MemberStatus);
         Assert.DoesNotContain(accesses, access => access.Kind == TenantKind.Personal);
         Assert.Equal(kind == "none", accepted.Cookies.Any(cookie => cookie.StartsWith(".AspNetCore.Identity.Application=", StringComparison.Ordinal)));
+    }
+
+    [Fact]
+    public async Task Verified_personal_backup_removes_the_warning_after_invitation_acceptance()
+    {
+        using var client = factory.CreateClient();
+        var issued = await IssueAsync("none");
+        var accepted = await AcceptAsync(issued, null);
+        Assert.True(accepted.Result.Value.NeedsPersonalLoginMethod);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var userId = Assert.Single(await services.GetRequiredService<IUserLookup>().FindVerifiedUsersByEmailAsync(issued.Email, Ct));
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+        {
+            var own = LoginMethod.CreateEmail(userId, Email.Create($"backup-{Guid.NewGuid():N}@example.test").Value);
+            own.Verify(services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime);
+            services.GetRequiredService<ILoginMethodRepository>().Add(own);
+            return Task.FromResult(Result.Success());
+        }, CommitPolicy.OnSuccess, Ct);
+        Assert.True(await services.GetRequiredService<LoginMethodAvailability>().HasPersonalBackupAsync(userId,
+            await services.GetRequiredService<ILoginMethodReader>().ListByUserIdAsync(userId, Ct), Ct));
+        var preview = await PreviewAsync(issued, null, userId);
+        Assert.Equal(InvitationPreviewState.Accepted, preview.Result.Value.State);
+        Assert.False(preview.Result.Value.NeedsPersonalLoginMethod);
+    }
+
+    [Fact]
+    public async Task Account_registered_after_an_unbound_invitation_is_deleted_and_the_pending_invitation_is_revoked()
+    {
+        using var client = factory.CreateClient(new() { AllowAutoRedirect = false });
+        var issued = await IssueAsync("none");
+        var account = await AccountJourney.RegisterAsync(factory, client, Ct, issued.Email);
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            Assert.DoesNotContain(await services.GetRequiredService<IUserTenantAccessReader>().ListForUserAsync(account.UserId, Ct),
+                access => access.TenantId == issued.TenantId);
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                var user = await services.GetRequiredService<ApplicationDbContext>().Users.SingleAsync(row => row.Id == account.UserId, ct);
+                Assert.True(user.RequestDeletion("Test", services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime.AddDays(-31), 30).IsSuccess);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+        await ActivatorUtilities.CreateInstance<AccountDeletionWorker>(factory.Services).RunOnceAsync(Ct);
+        await using var check = factory.Services.CreateAsyncScope();
+        using var tenant = check.ServiceProvider.GetRequiredService<ITenantScope>().Enter(issued.TenantId);
+        var row = await check.ServiceProvider.GetRequiredService<IInvitationReader>().FindByIdAsync(issued.Id, Ct);
+        Assert.Equal(InvitationStatus.Revoked, row!.Status);
+        Assert.Null(row.MemberUserId);
+        Assert.False(await check.ServiceProvider.GetRequiredService<ApplicationDbContext>().LoginMethods.AnyAsync(method => method.UserId == account.UserId, Ct));
     }
 
     [Theory]

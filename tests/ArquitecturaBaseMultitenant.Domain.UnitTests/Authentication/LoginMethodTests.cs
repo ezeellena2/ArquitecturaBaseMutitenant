@@ -10,6 +10,19 @@ namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Authentication;
 public sealed class LoginMethodTests
 {
     [Fact]
+    public void Invitation_email_keeps_its_origin_without_becoming_managed_or_a_personal_backup()
+    {
+        var organizationId = Guid.CreateVersion7();
+        var method = LoginMethod.CreateInvitedEmail(Guid.CreateVersion7(), Email.Create("invited@example.test").Value, organizationId);
+        method.Verify(new DateTime(2026, 10, 1, 12, 0, 0, DateTimeKind.Utc));
+        Assert.Equal(organizationId, method.InvitationOriginTenantId);
+        Assert.Null(method.ManagedByTenantId);
+        Assert.False(method.IsPersonalBackup);
+        Assert.True(method.CanSignIn(channelAvailable: true, managedMembershipActive: false));
+        Assert.True(LoginMethod.CreateEmail(method.UserId, Email.Create("personal@example.test").Value).IsPersonalBackup);
+    }
+
+    [Fact]
     public void Google_contact_is_verified_separately_from_its_unique_provider_subject()
     {
         var contact = Email.Create("PERSONAL@Example.COM").Value;
