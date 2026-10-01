@@ -9,4 +9,8 @@ internal static class RateLimitPolicies
     public const string LoginCode = "login-code";
 
     public const string LoginVerify = "login-verify";
+
+    public const string InvitationPreview = "invitation-preview";
+
+    public const string InvitationAccept = "invitation-accept";
 }

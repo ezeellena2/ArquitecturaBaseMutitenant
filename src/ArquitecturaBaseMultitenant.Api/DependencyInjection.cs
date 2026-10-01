@@ -29,6 +29,7 @@ public static class DependencyInjection
             options.Cookie.SameSite = SameSiteMode.Strict;
             options.Cookie.HttpOnly = true;
             options.FormFieldName = "__RequestVerificationToken";
+            options.HeaderName = "RequestVerificationToken";
         });
         services.AddScoped<ICurrentUser, CurrentUser>();
         services.AddScoped<OpenIdPrincipalFactory>();

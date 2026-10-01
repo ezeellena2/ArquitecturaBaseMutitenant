@@ -1,6 +1,9 @@
 using System.Security.Claims;
+using System.Net;
+using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using ArquitecturaBaseMultitenant.Api.Contracts.Auth;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
@@ -21,6 +24,7 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
@@ -32,6 +36,104 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 public sealed class InvitationAcceptanceTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    [Fact]
+    public async Task Http_accept_replays_after_a_lost_response_and_restores_business_access_only_for_the_original_browser()
+    {
+        var issued = await IssueAsync("none");
+        using var client = factory.CreateClient(new()
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
+            HandleCookies = false,
+        });
+
+        using var csrfResponse = await client.GetAsync("/api/auth/external/google/antiforgery", Ct);
+        csrfResponse.EnsureSuccessStatusCode();
+        var csrf = await csrfResponse.Content.ReadFromJsonAsync<GoogleSignupAntiforgeryResponse>(Ct);
+        var csrfCookie = CookiePair(csrfResponse, "__Host-MtSignupCsrf");
+
+        using var missingCsrf = await client.PostAsJsonAsync("/api/invitations/preview", new { issued.Token }, Ct);
+        Assert.Equal(HttpStatusCode.BadRequest, missingCsrf.StatusCode);
+
+        using var previewRequest = JsonRequest(HttpMethod.Post, "/api/invitations/preview", new { issued.Token }, csrfCookie);
+        previewRequest.Headers.Add("RequestVerificationToken", csrf!.RequestToken);
+        using var preview = await client.SendAsync(previewRequest, Ct);
+        Assert.Equal(HttpStatusCode.OK, preview.StatusCode);
+        using var previewJson = JsonDocument.Parse(await preview.Content.ReadAsStringAsync(Ct));
+        Assert.Equal("NoAccount", previewJson.RootElement.GetProperty("state").GetString());
+        Assert.Equal("/api/invitations/preview", preview.RequestMessage!.RequestUri!.AbsolutePath);
+        Assert.Null(preview.Headers.Location);
+        var continuationCookie = CookiePair(preview, "__Host-MtInvitation");
+        var rawContinuation = continuationCookie[(continuationCookie.IndexOf('=') + 1)..];
+        Assert.DoesNotContain(issued.Token, rawContinuation, StringComparison.Ordinal);
+        Assert.Contains(preview.Headers.GetValues("Set-Cookie"), value => value.Contains("httponly", StringComparison.OrdinalIgnoreCase)
+            && value.Contains("secure", StringComparison.OrdinalIgnoreCase));
+
+        var idempotencyKey = Guid.NewGuid().ToString("D");
+        var originalBrowserCookies = $"{csrfCookie}; {continuationCookie}";
+        using var acceptedRequest = JsonRequest(HttpMethod.Post, "/api/invitations/accept",
+            new { issued.Token, acceptedTerms = true }, originalBrowserCookies);
+        acceptedRequest.Headers.Add("RequestVerificationToken", csrf.RequestToken);
+        acceptedRequest.Headers.Add("Idempotency-Key", idempotencyKey);
+        using var firstResponse = await client.SendAsync(acceptedRequest, Ct);
+        Assert.Equal(HttpStatusCode.OK, firstResponse.StatusCode);
+        using var firstJson = JsonDocument.Parse(await firstResponse.Content.ReadAsStringAsync(Ct));
+        Assert.True(firstJson.RootElement.GetProperty("createdAccount").GetBoolean());
+        Assert.Equal(issued.TenantId, firstJson.RootElement.GetProperty("organizationId").GetGuid());
+
+        // El navegador pierde las cookies de respuesta y vuelve a enviar la misma clave y cuerpo.
+        using var replayRequest = JsonRequest(HttpMethod.Post, "/api/invitations/accept",
+            new { issued.Token, acceptedTerms = true }, originalBrowserCookies);
+        replayRequest.Headers.Add("RequestVerificationToken", csrf.RequestToken);
+        replayRequest.Headers.Add("Idempotency-Key", idempotencyKey);
+        using var replay = await client.SendAsync(replayRequest, Ct);
+        Assert.Equal(HttpStatusCode.OK, replay.StatusCode);
+        Assert.Equal("true", Assert.Single(replay.Headers.GetValues("Idempotent-Replayed")));
+        Assert.DoesNotContain(replay.Headers, header => header.Key.Equals("Set-Cookie", StringComparison.OrdinalIgnoreCase)
+            && header.Value.Any(value => value.Contains("Identity.Application", StringComparison.Ordinal)));
+
+        using var restoredPreviewRequest = JsonRequest(HttpMethod.Post, "/api/invitations/preview", new { token = (string?)null }, originalBrowserCookies);
+        restoredPreviewRequest.Headers.Add("RequestVerificationToken", csrf.RequestToken);
+        using var restoredPreview = await client.SendAsync(restoredPreviewRequest, Ct);
+        Assert.Equal(HttpStatusCode.OK, restoredPreview.StatusCode);
+        using var restoredJson = JsonDocument.Parse(await restoredPreview.Content.ReadAsStringAsync(Ct));
+        Assert.Equal("Accepted", restoredJson.RootElement.GetProperty("state").GetString());
+        var applicationCookie = CookiePair(restoredPreview, ".AspNetCore.Identity.Application");
+
+        using var authorize = new HttpRequestMessage(HttpMethod.Get, BusinessAuthorizePath());
+        authorize.Headers.Add("Cookie", applicationCookie);
+        using var businessAccess = await client.SendAsync(authorize, Ct);
+        Assert.Equal(HttpStatusCode.Redirect, businessAccess.StatusCode);
+        var location = businessAccess.Headers.Location!;
+        Assert.Equal("https://localhost:5174/auth/callback", location.GetLeftPart(UriPartial.Path));
+        Assert.False(string.IsNullOrEmpty(QueryHelpers.ParseQuery(location.Query)["code"].ToString()));
+
+        using var otherBrowser = factory.CreateClient(new()
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
+            HandleCookies = false,
+        });
+        using var otherCsrfResponse = await otherBrowser.GetAsync("/api/auth/external/google/antiforgery", Ct);
+        var otherCsrf = await otherCsrfResponse.Content.ReadFromJsonAsync<GoogleSignupAntiforgeryResponse>(Ct);
+        var otherCsrfCookie = CookiePair(otherCsrfResponse, "__Host-MtSignupCsrf");
+        using var otherPreviewRequest = JsonRequest(HttpMethod.Post, "/api/invitations/preview", new { token = (string?)null }, otherCsrfCookie);
+        otherPreviewRequest.Headers.Add("RequestVerificationToken", otherCsrf!.RequestToken);
+        using var otherPreview = await otherBrowser.SendAsync(otherPreviewRequest, Ct);
+        Assert.Equal(HttpStatusCode.OK, otherPreview.StatusCode);
+        using var otherJson = JsonDocument.Parse(await otherPreview.Content.ReadAsStringAsync(Ct));
+        Assert.Equal("Invalid", otherJson.RootElement.GetProperty("state").GetString());
+        Assert.DoesNotContain(otherPreview.Headers, header => header.Key.Equals("Set-Cookie", StringComparison.OrdinalIgnoreCase)
+            && header.Value.Any(value => value.Contains("Identity.Application", StringComparison.Ordinal)));
+
+        await using var check = factory.Services.CreateAsyncScope();
+        var services = check.ServiceProvider;
+        var userId = Assert.Single(await services.GetRequiredService<IUserLookup>()
+            .FindVerifiedUsersByEmailAsync(issued.Email, Ct));
+        Assert.DoesNotContain(await services.GetRequiredService<IUserTenantAccessReader>().ListForUserAsync(userId, Ct),
+            access => access.Kind == TenantKind.Personal);
+    }
 
     [Theory]
     [InlineData("none")]
@@ -333,6 +435,24 @@ public sealed class InvitationAcceptanceTests(ApiFactory factory)
         Assert.Equal(InvitationStatus.Pending, row!.Status);
         Assert.Equal(MemberStatus.Invited, row.MemberStatus);
     }
+
+    private static HttpRequestMessage JsonRequest(HttpMethod method, string path, object body, string cookies)
+    {
+        var request = new HttpRequestMessage(method, path) { Content = JsonContent.Create(body) };
+        request.Headers.Add("Cookie", cookies);
+        return request;
+    }
+
+    private static string CookiePair(HttpResponseMessage response, string name) =>
+        Assert.Single(response.Headers.GetValues("Set-Cookie"), value =>
+            value.StartsWith($"{name}=", StringComparison.Ordinal)).Split(';', 2)[0];
+
+    private static string BusinessAuthorizePath() =>
+        "/connect/authorize?client_id=web&response_type=code" +
+        "&redirect_uri=https%3A%2F%2Flocalhost%3A5174%2Fauth%2Fcallback" +
+        "&scope=openid%20profile%20email%20api" +
+        "&code_challenge=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+        "&code_challenge_method=S256&access=business";
 
     private async Task<(Result<AcceptInvitationResponse> Result, string[] Cookies, string ContinuationCookie)> AcceptAsync(
         Issued issued, Guid? currentUserId, bool acceptedTerms = true, string? continuation = null, bool sendToken = true)

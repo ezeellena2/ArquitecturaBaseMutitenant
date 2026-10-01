@@ -692,6 +692,194 @@
         }
       }
     },
+    "/api/invitations/preview": {
+      "post": {
+        "tags": [
+          "Invitations"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewInvitationHttpRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewInvitationHttpRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitationPreviewResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitationPreviewResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitationPreviewResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/invitations/accept": {
+      "post": {
+        "tags": [
+          "Invitations"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptInvitationHttpRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptInvitationHttpRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptInvitationResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptInvitationResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptInvitationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/login-code": {
       "post": {
         "tags": [
@@ -2128,6 +2316,44 @@
   },
   "components": {
     "schemas": {
+      "AcceptInvitationHttpRequest": {
+        "required": [
+          "acceptedTerms"
+        ],
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "acceptedTerms": {
+            "type": "boolean"
+          }
+        },
+        "description": "Acepta desde el cuerpo el token opaco y la aceptación legal requerida para una identidad nueva."
+      },
+      "AcceptInvitationResponse": {
+        "required": [
+          "organizationId",
+          "createdAccount",
+          "needsPersonalLoginMethod"
+        ],
+        "type": "object",
+        "properties": {
+          "organizationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAccount": {
+            "type": "boolean"
+          },
+          "needsPersonalLoginMethod": {
+            "type": "boolean"
+          }
+        }
+      },
       "AcceptLegalHttpRequest": {
         "type": "object",
         "properties": {
@@ -2548,6 +2774,89 @@
         },
         "description": "Token de formulario de un solo origen para iniciar Registro con Google."
       },
+      "InvitationPreviewResponse": {
+        "required": [
+          "state"
+        ],
+        "type": "object",
+        "properties": {
+          "state": {
+            "$ref": "#/components/schemas/InvitationPreviewState"
+          },
+          "organizationId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "organizationName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Correo normalizado para comparar y enviar; el dominio IDN se guarda en ASCII."
+          },
+          "inviterName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "issuedAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "expiresAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "currentAccountEmail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "canUseEmailCode": {
+            "type": "boolean",
+            "default": false
+          },
+          "canUseGoogle": {
+            "type": "boolean",
+            "default": false
+          },
+          "needsPersonalLoginMethod": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "description": "Solo datos presentables de la invitación autorizada; jamás hashes ni secretos."
+      },
+      "InvitationPreviewState": {
+        "enum": [
+          "NoAccount",
+          "SignInRequired",
+          "Ready",
+          "WrongSession",
+          "Expired",
+          "Invalid",
+          "OrganizationSuspended",
+          "Accepted"
+        ],
+        "type": "string"
+      },
       "LegalAcceptanceItem": {
         "required": [
           "id",
@@ -2899,6 +3208,18 @@
           }
         },
         "description": "Identifica un documento legal y su versión pendiente de aceptación. Permite que el front solicite la\r\naceptación de la versión exacta."
+      },
+      "PreviewInvitationHttpRequest": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "description": "Token opaco recibido en el cuerpo; nunca se expone en la ruta, la query ni el diagnóstico."
       },
       "ProblemDetails": {
         "required": [
@@ -3405,6 +3726,9 @@
     },
     {
       "name": "Auth"
+    },
+    {
+      "name": "Invitations"
     },
     {
       "name": "Account"

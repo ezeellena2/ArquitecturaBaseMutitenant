@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ArquitecturaBaseMultitenant.Api.RateLimiting;
 
-/// <summary>Define los cupos y ventanas configurables para pedir y verificar códigos de ingreso.</summary>
+/// <summary>Define cupos y ventanas por IP para códigos de ingreso y aceptación de invitaciones.</summary>
 internal sealed class RateLimitingOptions
 {
     public const string SectionName = "RateLimiting";
@@ -18,4 +18,16 @@ internal sealed class RateLimitingOptions
 
     [Range(1, 1440)]
     public int LoginVerifyWindowMinutes { get; init; } = 15;
+
+    [Range(1, 100_000)]
+    public int InvitationPreviewPermitLimit { get; init; } = 60;
+
+    [Range(1, 1440)]
+    public int InvitationPreviewWindowMinutes { get; init; } = 15;
+
+    [Range(1, 100_000)]
+    public int InvitationAcceptPermitLimit { get; init; } = 10;
+
+    [Range(1, 1440)]
+    public int InvitationAcceptWindowMinutes { get; init; } = 15;
 }
