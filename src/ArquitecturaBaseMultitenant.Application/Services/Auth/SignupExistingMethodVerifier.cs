@@ -15,6 +15,13 @@ internal sealed class SignupExistingMethodVerifier(IUserRepository users,
         CancellationToken cancellationToken) =>
         userLookup.FindMethodAsync(LoginMethodType.Email, destination.Value, cancellationToken);
 
+    internal async Task RemovePendingAsync(LoginMethodLookup method, CancellationToken cancellationToken)
+    {
+        if (method.VerifiedAtUtc is not null) return;
+        var pending = await methods.GetByIdAsync(method.MethodId, cancellationToken);
+        if (pending is not null && pending.VerifiedAtUtc is null) methods.Remove(pending);
+    }
+
     internal async Task<Error?> CheckAccountAsync(Guid userId, CancellationToken cancellationToken)
     {
         var account = await users.GetByIdAsync(userId, cancellationToken);

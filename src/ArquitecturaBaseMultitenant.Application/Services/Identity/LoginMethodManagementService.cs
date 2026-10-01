@@ -21,7 +21,7 @@ internal sealed class LoginMethodManagementService(ICurrentUser currentUser, Log
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
             if (currentUser.UserId is not { } userId) return UserErrors.NotFound;
-            return await unitOfWork.ExecuteInTransactionAsync(token => issuer.AddAsync(userId, request.Email!, token),
+            return await unitOfWork.ExecuteInTransactionAsync(token => issuer.AddAsync(userId, request, token),
                 CommitPolicy.OnSuccess, ct);
         });
 
@@ -30,7 +30,7 @@ internal sealed class LoginMethodManagementService(ICurrentUser currentUser, Log
         {
             if (currentUser.UserId is not { } userId) return UserErrors.NotFound;
             return await unitOfWork.ExecuteInTransactionAsync(token => issuer.SendAsync(userId, methodId, token),
-                CommitPolicy.OnSuccess, ct);
+                CommitPolicy.OnAnyResult, ct);
         });
 
     public Task<Result> VerifyAsync(VerifyLoginMethodRequest request, CancellationToken ct) =>

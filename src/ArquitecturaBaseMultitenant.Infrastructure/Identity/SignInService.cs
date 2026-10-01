@@ -18,7 +18,7 @@ internal sealed class SignInService(
     UserManager<ApplicationUser> userManager,
     SignInManager<ApplicationUser> signInManager,
     ITokenRevoker tokenRevoker,
-    ApplicationDbContext context) : ISignInService
+    ApplicationDbContext context, TimeProvider timeProvider) : ISignInService
 {
     public async Task<bool> IsLockedOutAsync(Guid userId, CancellationToken cancellationToken) =>
         await userManager.IsLockedOutAsync(await RequireUserAsync(userId, cancellationToken));
@@ -51,6 +51,8 @@ internal sealed class SignInService(
         var properties = new AuthenticationProperties { IsPersistent = true };
         properties.Items[BrowserSessionKeys.CookieSessionId] =
             Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
+        properties.Items[BrowserSessionKeys.StartedAtUtc] =
+            BrowserSessionKeys.FormatStartedAtUtc(timeProvider.GetUtcNow().UtcDateTime);
         await signInManager.SignInAsync(await RequireUserAsync(userId, cancellationToken), properties);
     }
 

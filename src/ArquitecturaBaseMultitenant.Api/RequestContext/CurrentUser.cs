@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Security.Claims;
+using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Domain.Users;
 
@@ -8,6 +9,9 @@ namespace ArquitecturaBaseMultitenant.Api.RequestContext;
 /// <summary>Identidad y acceso del token o de la cookie de la petición.</summary>
 internal sealed class CurrentUser(IHttpContextAccessor httpContextAccessor) : ICurrentUser
 {
+    public DateTime? SessionStartedAtUtc => BrowserSessionKeys.ReadStartedAtUtc(
+        httpContextAccessor.HttpContext?.User.FindFirstValue(BrowserSessionKeys.StartedAtUtc));
+
     public Guid? UserId
     {
         get

@@ -18,11 +18,21 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 /// </summary>
 internal sealed class AccountGoogleService(ISignInService signIn, GoogleMethodLinker linker,
     IUnitOfWork unitOfWork, TimeProvider timeProvider, ILogger<AccountGoogleService> logger,
-    ICurrentUser currentUser) : IAccountGoogleService
+    ICurrentUser currentUser, LoginMethodGuard guard, ReauthTicketConsumer tickets) : IAccountGoogleService
 {
-    public Task<Result<Guid>> GetLinkUserIdAsync(CancellationToken cancellationToken) =>
-        OperationLog.RunAsync<Guid>(logger, timeProvider, "PrepareAccountGoogleLink", () =>
-            Task.FromResult(currentUser.UserId is { } userId ? Result.Success(userId) : Result.Failure<Guid>(UserErrors.NotFound)));
+    public Task<Result<Guid>> GetLinkUserIdAsync(string? reauthTicket, CancellationToken cancellationToken) =>
+        OperationLog.RunAsync<Guid>(logger, timeProvider, "PrepareAccountGoogleLink", async () =>
+        {
+            if (currentUser.UserId is not { } userId) return UserErrors.NotFound;
+            return await unitOfWork.ExecuteInTransactionAsync(async ct =>
+            {
+                var account = await guard.LockAccountAsync(userId, ct);
+                if (account.IsFailure) return Result.Failure<Guid>(account.Error);
+                var consumed = await tickets.ConsumeAsync(userId, ReauthAction.LinkGoogle, null,
+                    reauthTicket ?? string.Empty, ct);
+                return consumed.IsSuccess ? Result.Success(userId) : Result.Failure<Guid>(consumed.Error);
+            }, CommitPolicy.OnSuccess, cancellationToken);
+        });
 
     public Task<Result> LinkAsync(LinkGoogleRequest request, CancellationToken ct) =>
         OperationLog.RunAsync(logger, timeProvider, "LinkAccountGoogle", async () =>

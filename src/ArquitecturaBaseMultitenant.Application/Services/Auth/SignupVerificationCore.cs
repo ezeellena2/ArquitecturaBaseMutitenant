@@ -39,12 +39,14 @@ internal sealed class SignupVerificationCore(ILoginCodeRepository codes,
 
         var method = await existingMethods.FindAsync(destination, cancellationToken);
         Guid userId;
-        if (method is null)
+        if (method is null || method.VerifiedAtUtc is null)
         {
             var allowed = await policy.CanRegisterAsync(cancellationToken);
             if (allowed.IsFailure) return Fail(null, allowed.Error);
             (LegalDocument Terms, LegalDocument Privacy) documents =
                 await registrar.GetCurrentLegalAsync(nowUtc, cancellationToken);
+            if (method is not null)
+                await existingMethods.RemovePendingAsync(method, cancellationToken);
             userId = await registrar.RegisterAsync(request.Email!, draft, nowUtc,
                 documents.Terms, documents.Privacy, cancellationToken);
         }
@@ -54,8 +56,6 @@ internal sealed class SignupVerificationCore(ILoginCodeRepository codes,
                 return Fail(method.UserId, AccountErrors.LockedOut);
             if (await existingMethods.CheckAccountAsync(method.UserId, cancellationToken) is { } accountError)
                 return Fail(method.UserId, accountError);
-            // Un código anónimo de Registro no prueba la sesión que pidió agregar el método.
-            if (method.VerifiedAtUtc is null) return Fail(method.UserId, LoginMethodErrors.AlreadyUsed);
             userId = await existingMethods.ConfirmAsync(method, request.Email!, nowUtc, cancellationToken);
             await signIn.ResetFailedAttemptsAsync(userId, cancellationToken);
         }

@@ -55,8 +55,11 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
                     OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
             }
 
+            var sessionStartedAtUtc = session.Properties?.Items.TryGetValue(BrowserSessionKeys.StartedAtUtc,
+                out var startedAtUtc) == true ? BrowserSessionKeys.ReadStartedAtUtc(startedAtUtc) : null;
             var principal = await principalFactory.CreateAsync(userId, access, selected.Value.TenantId,
-                request.GetScopes(), cancellationToken);
+                request.GetScopes(), cancellationToken,
+                sessionStartedAtUtc);
             if (principal is not null)
             {
                 var authorization = await authorizationService.CreateAsync(userId, access,

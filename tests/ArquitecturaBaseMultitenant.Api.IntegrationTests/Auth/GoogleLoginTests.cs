@@ -92,6 +92,43 @@ public sealed class GoogleLoginTests(ApiFactory factory)
         Assert.Null(google.SignedInUserId);
     }
 
+    [Fact]
+    public async Task Explicit_link_reclaims_another_accounts_pending_email_under_the_destination_lock()
+    {
+        var subject = Guid.NewGuid().ToString("N");
+        var email = Email.Create("google-pending-link-" + subject + "@example.test").Value;
+        var userId = Guid.Empty;
+        var pendingOwnerId = Guid.Empty;
+        await using (var seedScope = factory.Services.CreateAsyncScope())
+        {
+            var services = seedScope.ServiceProvider;
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                var users = services.GetRequiredService<IUserRepository>();
+                userId = (await users.CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct)).Id;
+                pendingOwnerId = (await users.CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct)).Id;
+                services.GetRequiredService<ILoginMethodRepository>()
+                    .Add(LoginMethod.CreateEmail(pendingOwnerId, email));
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+        var google = new GoogleSignInDouble(new ExternalLogin("Google", subject, email, true, null));
+        await using var host = HostWith(google);
+        await using var scope = host.Services.CreateAsyncScope();
+
+        var result = await scope.ServiceProvider.GetRequiredService<IAccountGoogleService>()
+            .LinkAsync(new LinkGoogleRequest(userId, userId), Ct);
+
+        Assert.True(result.IsSuccess);
+        Assert.Empty(await scope.ServiceProvider.GetRequiredService<ILoginMethodReader>()
+            .ListByUserIdAsync(pendingOwnerId, Ct));
+        var linked = Assert.Single(await scope.ServiceProvider.GetRequiredService<ILoginMethodReader>()
+            .ListByUserIdAsync(userId, Ct));
+        Assert.Equal(LoginMethodType.Google, linked.Type);
+        Assert.Equal(subject, linked.Value);
+        Assert.Equal(email, linked.ContactEmail);
+    }
+
     [Theory]
     [InlineData(true, true)]
     [InlineData(false, true)]

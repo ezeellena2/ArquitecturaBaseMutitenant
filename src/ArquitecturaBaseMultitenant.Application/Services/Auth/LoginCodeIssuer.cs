@@ -35,6 +35,13 @@ internal sealed class LoginCodeIssuer(
         return IssueAsync(destination, purpose, userId, cancellationToken);
     }
 
+    public Task LockDestinationAsync(LoginCodeDestination destination, CancellationToken cancellationToken) =>
+        loginCodes.LockDestinationAsync(destination, cancellationToken);
+
+    public Task<LoginCode?> GetLatestAsync(LoginCodeDestination destination, LoginCodePurpose purpose,
+        Guid requestedByUserId, CancellationToken cancellationToken) =>
+        loginCodes.GetLatestAsync(destination, purpose, requestedByUserId, cancellationToken);
+
     private async Task<Result<IssuedLoginCode>> IssueAsync(LoginCodeDestination destination,
         LoginCodePurpose purpose, Guid? requestedByUserId, CancellationToken cancellationToken)
     {

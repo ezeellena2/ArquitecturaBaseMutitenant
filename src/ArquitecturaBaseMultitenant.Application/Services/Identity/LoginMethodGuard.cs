@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
@@ -7,8 +8,10 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
 /// <summary>Bloquea la identidad global y verifica que la cuenta permita gestionar métodos antes de modificarla.</summary>
-internal sealed class LoginMethodGuard(ILoginMethodRepository methods, IUserRepository users)
+internal sealed class LoginMethodGuard(ILoginMethodRepository methods, IUserRepository users, ISignInService signIn)
 {
+    public Task<bool> IsLockedOutAsync(Guid userId, CancellationToken ct) => signIn.IsLockedOutAsync(userId, ct);
+
     public async Task<Result<UserAccountRow>> LockAccountAsync(Guid userId, CancellationToken ct)
     {
         await methods.LockUserAsync(userId, ct);

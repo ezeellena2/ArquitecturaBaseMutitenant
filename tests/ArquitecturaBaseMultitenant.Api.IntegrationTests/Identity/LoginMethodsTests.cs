@@ -56,7 +56,7 @@ public sealed class LoginMethodsTests(ApiFactory factory)
             await services.GetRequiredService<IUserRepository>().SetPrimaryEmailAsync(user.Id, Email.Create(first.Value).Value, ct);
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
-        var service = ActivatorUtilities.CreateInstance<LoginMethodManagementService>(services, new TestCurrentUser(user.Id));
+        var service = ActivatorUtilities.CreateInstance<LoginMethodManagementService>(services, new TestCurrentUser(user.Id, services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime));
         var result = await service.RemoveAsync(new ChangeLoginMethodRequest(first.Id, secret), Ct);
         Assert.Equal(!expired, result.IsSuccess);
         if (expired) Assert.Equal(ReauthErrors.Expired.Code, result.Error.Code);
@@ -90,7 +90,7 @@ public sealed class LoginMethodsTests(ApiFactory factory)
             await services.GetRequiredService<IUserRepository>().SetPrimaryEmailAsync(user.Id, Email.Create(first.Value).Value, ct);
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
-        var current = new TestCurrentUser(user.Id);
+        var current = new TestCurrentUser(user.Id, services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime);
         var reauth = ActivatorUtilities.CreateInstance<ReauthService>(services, current);
         var management = ActivatorUtilities.CreateInstance<LoginMethodManagementService>(services, current);
 
@@ -135,11 +135,12 @@ public sealed class LoginMethodsTests(ApiFactory factory)
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
         var service = ActivatorUtilities.CreateInstance<LoginMethodManagementService>(services,
-            new TestCurrentUser(user.Id));
+            new TestCurrentUser(user.Id, services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime));
         var email = Email.Create("added-" + user.Id.ToString("N") + "@example.test").Value;
         var lookup = services.GetRequiredService<IUserLookup>();
 
-        var added = await service.AddEmailAsync(new AddLoginEmailRequest(email), Ct);
+        var ticket = await IssueAddTicketAsync(services, user.Id);
+        var added = await service.AddEmailAsync(new AddLoginEmailRequest(email, ticket), Ct);
         Assert.True(added.IsSuccess);
         Assert.Null(await lookup.FindVerifiedUserIdAsync(LoginMethodType.Email, email.Value, Ct));
         var code = await PickupCodeReader.ReadAsync(services, email.Value, Ct);
@@ -164,7 +165,7 @@ public sealed class LoginMethodsTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task Another_accounts_pending_email_is_reserved_and_its_method_cannot_be_verified()
+    public async Task Adding_an_email_reclaims_another_accounts_pending_method_under_the_destination_lock()
     {
         using var client = factory.CreateClient();
         await using var scope = factory.Services.CreateAsyncScope();
@@ -182,17 +183,75 @@ public sealed class LoginMethodsTests(ApiFactory factory)
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, Ct);
         var service = ActivatorUtilities.CreateInstance<LoginMethodManagementService>(services,
-            new TestCurrentUser(other.Id));
+            new TestCurrentUser(other.Id, services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime));
 
-        Assert.Equal(LoginMethodErrors.AlreadyUsedCode,
-            (await service.AddEmailAsync(new AddLoginEmailRequest(email), Ct)).Error.Code);
+        var ticket = await IssueAddTicketAsync(services, other.Id);
+        var added = await service.AddEmailAsync(new AddLoginEmailRequest(email, ticket), Ct);
+        Assert.True(added.IsSuccess);
+        var methods = services.GetRequiredService<ILoginMethodReader>();
+        Assert.Empty(await methods.ListByUserIdAsync(owner.Id, Ct));
+        var pendingForOther = Assert.Single(await methods.ListByUserIdAsync(other.Id, Ct),
+            value => value.VerifiedAtUtc is null);
+        Assert.Equal(added.Value.MethodId, pendingForOther.Id);
+        Assert.Null(pendingForOther.VerifiedAtUtc);
         Assert.Equal(LoginMethodErrors.NotFound.Code,
             (await service.VerifyAsync(new VerifyLoginMethodRequest(method.Id, "123456"), Ct)).Error.Code);
     }
 
-    private sealed record TestCurrentUser(Guid Id) : ICurrentUser
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task An_expired_verification_code_expires_its_pending_method_instead_of_resending_or_verifying_it(
+        bool resend)
+    {
+        using var client = factory.CreateClient();
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var work = services.GetRequiredService<IUnitOfWork>();
+        var user = ApplicationUser.Create(null, "es-AR", "America/Argentina/Buenos_Aires").Value;
+        var email = Email.Create("expired-pending-" + user.Id.ToString("N") + "@example.test").Value;
+        var method = LoginMethod.CreateEmail(user.Id, email);
+        var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        var destination = LoginCodeDestination.ForEmail(email);
+        var expiredCode = LoginCode.Issue(destination, LoginCodePurpose.VerifyDestination, user.Id,
+            services.GetRequiredService<ILoginCodeHasher>().Hash(destination, LoginCodePurpose.VerifyDestination, "123456"),
+            nowUtc.AddMinutes(-11), TimeSpan.FromMinutes(10), 5);
+        await work.ExecuteInTransactionAsync(async ct =>
+        {
+            Assert.True((await services.GetRequiredService<UserManager<ApplicationUser>>().CreateAsync(user)).Succeeded);
+            services.GetRequiredService<ILoginMethodRepository>().Add(method);
+            context.LoginCodes.Add(expiredCode);
+            return Result.Success();
+        }, CommitPolicy.OnSuccess, Ct);
+
+        var service = ActivatorUtilities.CreateInstance<LoginMethodManagementService>(services,
+            new TestCurrentUser(user.Id, nowUtc));
+        var error = resend
+            ? (await service.SendCodeAsync(method.Id, Ct)).Error
+            : (await service.VerifyAsync(new VerifyLoginMethodRequest(method.Id, "123456"), Ct)).Error;
+
+        Assert.Equal(LoginCodeErrors.Expired.Code, error.Code);
+        Assert.Empty(await services.GetRequiredService<ILoginMethodReader>().ListByUserIdAsync(user.Id, Ct));
+    }
+
+    private static async Task<string> IssueAddTicketAsync(IServiceProvider services, Guid userId)
+    {
+        var method = LoginMethod.CreateEmail(userId, Email.Create("source-" + userId.ToString("N") + "@example.test").Value);
+        method.Verify(services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime.AddSeconds(-1));
+        method.MakePrimary();
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+        {
+            services.GetRequiredService<ILoginMethodRepository>().Add(method);
+            return Task.FromResult(Result.Success());
+        }, CommitPolicy.OnSuccess, Ct);
+        return await AccountJourney.IssueReauthTicketAsync(services, userId, ReauthAction.AddEmail, Ct);
+    }
+
+    private sealed record TestCurrentUser(Guid Id, DateTime StartedAtUtc) : ICurrentUser
     {
         public Guid? UserId => Id;
+        public DateTime? SessionStartedAtUtc => StartedAtUtc;
         public Access? Access => Domain.Users.Access.Consumer;
     }
 

@@ -14,7 +14,8 @@ internal sealed class ReauthIssuer(LoginMethodGuard guard, ILoginMethodRepositor
     LoginMethodAvailability availability, LoginCodeIssuer codes, IEnumerable<ILoginCodeChannel> channels,
     UserCultures cultures)
 {
-    public async Task<Result<ReauthCodeResponse>> RequestAsync(Guid userId, RequestReauthRequest request, CancellationToken ct)
+    public async Task<Result<ReauthCodeResponse>> RequestAsync(Guid userId, RequestReauthRequest request,
+        DateTime? sessionStartedAtUtc, CancellationToken ct)
     {
         var account = await guard.LockAccountAsync(userId, ct);
         if (account.IsFailure) return account.Error;
@@ -31,7 +32,8 @@ internal sealed class ReauthIssuer(LoginMethodGuard guard, ILoginMethodRepositor
             if (request.Action == ReauthAction.MakePrimary && !available.Any(method => method.Id == targetId))
                 return LoginMethodErrors.NotVerified;
         }
-        var source = available.Where(method => method.Id != request.TargetMethodId && availability.CanReceiveCode(method))
+        var source = available.Where(method => method.Id != request.TargetMethodId && availability.CanReceiveCode(method)
+                && LoginMethodAvailability.WasVerifiedBeforeSession(method, sessionStartedAtUtc))
             .OrderByDescending(method => method.IsPrimary).ThenBy(method => method.ManagedByTenantId is not null)
             .ThenBy(method => method.Id).FirstOrDefault();
         if (source is null) return ReauthErrors.OtherMethodRequired;

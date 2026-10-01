@@ -8,4 +8,6 @@ public interface ICurrentUser
     Guid? UserId { get; }
 
     Access? Access { get; }
+
+    DateTime? SessionStartedAtUtc => null;
 }

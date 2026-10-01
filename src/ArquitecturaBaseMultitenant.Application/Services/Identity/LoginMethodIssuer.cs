@@ -11,17 +11,27 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
 /// <summary>Agrega un correo de ingreso no usado o reenvía su código de verificación; trabaja dentro de la transacción abierta por el servicio.</summary>
 internal sealed class LoginMethodIssuer(LoginMethodGuard guard, ILoginMethodRepository methods,
-    IUserLookup lookup, ILoginCodeRepository codeRepository, LoginCodeIssuer codes,
-    IEnumerable<ILoginCodeChannel> channels, UserCultures cultures)
+    IUserLookup lookup, LoginCodeIssuer codes,
+    IEnumerable<ILoginCodeChannel> channels, UserCultures cultures, ReauthTicketConsumer tickets,
+    TimeProvider timeProvider)
 {
-    public async Task<Result<LoginMethodCodeResponse>> AddAsync(Guid userId, Email email, CancellationToken ct)
+    public async Task<Result<LoginMethodCodeResponse>> AddAsync(Guid userId, AddLoginEmailRequest request, CancellationToken ct)
     {
         var account = await guard.LockAccountAsync(userId, ct);
         if (account.IsFailure) return account.Error;
+        var consumed = await tickets.ConsumeAsync(userId, ReauthAction.AddEmail, null, request.ReauthTicket ?? string.Empty, ct);
+        if (consumed.IsFailure) return consumed.Error;
+        var email = request.Email!;
         var destination = LoginCodeDestination.ForEmail(email);
-        await codeRepository.LockDestinationAsync(destination, ct);
-        if (await lookup.FindMethodAsync(LoginMethodType.Email, email.Value, ct) is not null)
-            return LoginMethodErrors.AlreadyUsed;
+        await codes.LockDestinationAsync(destination, ct);
+        var existing = await lookup.FindMethodAsync(LoginMethodType.Email, email.Value, ct);
+        if (existing is not null)
+        {
+            if (existing.VerifiedAtUtc is not null || existing.UserId == userId)
+                return LoginMethodErrors.AlreadyUsed;
+            var pending = await methods.GetByIdAsync(existing.MethodId, ct);
+            if (pending is not null && pending.VerifiedAtUtc is null) methods.Remove(pending);
+        }
         var method = LoginMethod.CreateEmail(userId, email);
         var sent = await SendAsync(userId, method, account.Value.Culture, ct);
         if (sent.IsSuccess) methods.Add(method);
@@ -35,6 +45,21 @@ internal sealed class LoginMethodIssuer(LoginMethodGuard guard, ILoginMethodRepo
         var method = await methods.GetByIdForUserAsync(userId, methodId, ct);
         if (method is null) return LoginMethodErrors.NotFound;
         if (method.VerifiedAtUtc is not null) return LoginMethodErrors.AlreadyVerified;
+        var destination = LoginCodeDestination.ForEmail(Email.Create(method.Value).Value);
+        await codes.LockDestinationAsync(destination, ct);
+        var latestCode = await codes.GetLatestAsync(destination,
+            LoginCodePurpose.VerifyDestination, userId, ct);
+        var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+        if (latestCode is null || !latestCode.IsActive(nowUtc))
+        {
+            methods.Remove(method);
+            return latestCode is { FailedAttempts: var attempts, MaxAttempts: var maxAttempts }
+                && attempts >= maxAttempts
+                ? LoginCodeErrors.TooManyAttempts
+                : latestCode is { ConsumedAtUtc: not null }
+                    ? LoginCodeErrors.AlreadyUsed
+                    : LoginCodeErrors.Expired;
+        }
         return await SendAsync(userId, method, account.Value.Culture, ct);
     }
 

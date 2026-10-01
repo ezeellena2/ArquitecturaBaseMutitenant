@@ -12,7 +12,8 @@ internal sealed class ReauthVerifier(LoginMethodGuard guard, ILoginMethodReposit
     LoginMethodAvailability availability, ILoginCodeRepository codes, ILoginCodeHasher hasher,
     IReauthTicketRepository tickets, ISecureTokenGenerator secrets, TimeProvider timeProvider)
 {
-    public async Task<Result<ReauthResponse>> VerifyAsync(Guid userId, VerifyReauthRequest request, CancellationToken ct)
+    public async Task<Result<ReauthResponse>> VerifyAsync(Guid userId, VerifyReauthRequest request,
+        DateTime? sessionStartedAtUtc, CancellationToken ct)
     {
         var account = await guard.LockAccountAsync(userId, ct);
         if (account.IsFailure) return account.Error;
@@ -21,7 +22,8 @@ internal sealed class ReauthVerifier(LoginMethodGuard guard, ILoginMethodReposit
         if (request.TargetMethodId is { } targetId && !all.Any(method => method.Id == targetId))
             return LoginMethodErrors.NotFound;
         var source = (await availability.AvailableAsync(all, ct)).SingleOrDefault(method => method.Id == request.SourceMethodId);
-        if (source is null || !availability.CanReceiveCode(source)) return ReauthErrors.Invalid;
+        if (source is null || !availability.CanReceiveCode(source)
+            || !LoginMethodAvailability.WasVerifiedBeforeSession(source, sessionStartedAtUtc)) return ReauthErrors.Invalid;
         var destination = LoginCodeDestination.ForEmail(Email.Create(LoginMethodNotifier.Contact(source)).Value);
         await codes.LockDestinationAsync(destination, ct);
         var code = await codes.GetLatestAsync(destination, LoginCodePurpose.Reauthenticate, userId, ct);

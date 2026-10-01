@@ -11,6 +11,10 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 internal sealed class LoginMethodAvailability(IEnumerable<ILoginCodeChannel> channels,
     IGoogleAvailability google, ILoginMethodMembershipReader memberships)
 {
+    internal static bool WasVerifiedBeforeSession(LoginMethod method, DateTime? sessionStartedAtUtc) =>
+        sessionStartedAtUtc is { Kind: DateTimeKind.Utc } && method.VerifiedAtUtc is { } verifiedAtUtc
+        && verifiedAtUtc <= sessionStartedAtUtc;
+
     public async Task<IReadOnlyList<LoginMethod>> AvailableAsync(IReadOnlyList<LoginMethod> methods, CancellationToken ct)
     {
         var result = new List<LoginMethod>();

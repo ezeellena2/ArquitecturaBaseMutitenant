@@ -25,7 +25,7 @@ public sealed class SignupTests(ApiFactory factory)
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
-    public async Task Anonymous_signup_does_not_verify_a_method_added_by_another_account()
+    public async Task Anonymous_signup_reclaims_a_pending_email_without_entering_its_previous_account()
     {
         await factory.Services.SeedDatabaseAsync(Ct);
         var email = Email.Create("pending-signup-" + Guid.NewGuid().ToString("N") + "@example.test").Value;
@@ -47,12 +47,14 @@ public sealed class SignupTests(ApiFactory factory)
         var code = await ReadPickupCodeAsync(email.Value);
         using var verified = await client.PostAsJsonAsync("/test/auth/signup/verify",
             new { email = email.Value, code, acceptedTerms = true }, Ct);
-        Assert.Equal(HttpStatusCode.BadRequest, verified.StatusCode);
-        Assert.False(verified.Headers.Contains("Set-Cookie"));
+        Assert.Equal(HttpStatusCode.NoContent, verified.StatusCode);
+        Assert.True(verified.Headers.Contains("Set-Cookie"));
         await using var checkScope = factory.Services.CreateAsyncScope();
         var lookup = checkScope.ServiceProvider.GetRequiredService<IUserLookup>();
-        Assert.Null(await lookup.FindVerifiedUserIdAsync(LoginMethodType.Email, email.Value, Ct));
-        Assert.Equal(userId, (await lookup.FindMethodAsync(LoginMethodType.Email, email.Value, Ct))!.UserId);
+        var newOwner = await lookup.FindVerifiedUserIdAsync(LoginMethodType.Email, email.Value, Ct);
+        Assert.NotNull(newOwner);
+        Assert.NotEqual(userId, newOwner);
+        Assert.Empty(await checkScope.ServiceProvider.GetRequiredService<ILoginMethodReader>().ListByUserIdAsync(userId, Ct));
     }
 
     [Fact]

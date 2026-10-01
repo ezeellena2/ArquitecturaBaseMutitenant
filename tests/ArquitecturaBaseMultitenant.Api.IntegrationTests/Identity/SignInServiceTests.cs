@@ -128,7 +128,8 @@ public sealed class SignInServiceTests(ApiFactory factory)
         using var client = factory.CreateClient();
         await using var scope = factory.Services.CreateAsyncScope();
         var services = scope.ServiceProvider;
-        var service = new SignInService(null!, null!, null!, services.GetRequiredService<ApplicationDbContext>());
+        var service = new SignInService(null!, null!, null!, services.GetRequiredService<ApplicationDbContext>(),
+            services.GetRequiredService<TimeProvider>());
         var userId = Guid.NewGuid();
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.RegisterFailedAttemptAsync(userId, Ct));

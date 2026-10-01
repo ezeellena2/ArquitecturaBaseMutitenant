@@ -20,7 +20,8 @@ internal sealed class ReauthService(ICurrentUser currentUser, ReauthIssuer issue
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
             if (currentUser.UserId is not { } userId) return UserErrors.NotFound;
-            return await unitOfWork.ExecuteInTransactionAsync(token => issuer.RequestAsync(userId, request, token), CommitPolicy.OnSuccess, ct);
+            return await unitOfWork.ExecuteInTransactionAsync(token => issuer.RequestAsync(userId, request,
+                currentUser.SessionStartedAtUtc, token), CommitPolicy.OnSuccess, ct);
         });
 
     public Task<Result<ReauthResponse>> VerifyAsync(VerifyReauthRequest request, CancellationToken ct) =>
@@ -29,6 +30,7 @@ internal sealed class ReauthService(ICurrentUser currentUser, ReauthIssuer issue
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
             if (currentUser.UserId is not { } userId) return UserErrors.NotFound;
-            return await unitOfWork.ExecuteInTransactionAsync(token => verifier.VerifyAsync(userId, request, token), CommitPolicy.OnAnyResult, ct);
+            return await unitOfWork.ExecuteInTransactionAsync(token => verifier.VerifyAsync(userId, request,
+                currentUser.SessionStartedAtUtc, token), CommitPolicy.OnAnyResult, ct);
         });
 }

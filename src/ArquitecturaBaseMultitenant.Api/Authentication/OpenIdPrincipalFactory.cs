@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.Security.Claims;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Api.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -16,7 +17,7 @@ namespace ArquitecturaBaseMultitenant.Api.Authentication;
 public sealed class OpenIdPrincipalFactory(IConnectService service, IOpenIddictScopeManager scopeManager)
 {
     public async Task<ClaimsPrincipal?> CreateAsync(Guid userId, Access access, Guid? requestedTenantId,
-        ImmutableArray<string> scopes, CancellationToken cancellationToken)
+        ImmutableArray<string> scopes, CancellationToken cancellationToken, DateTime? sessionStartedAtUtc = null)
     {
         var selected = await service.GetActiveUserAsync(userId, access, requestedTenantId, cancellationToken);
         if (selected.IsFailure || !IsConsistent(selected.Value, userId, access))
@@ -27,6 +28,8 @@ public sealed class OpenIdPrincipalFactory(IConnectService service, IOpenIddictS
         var identity = new ClaimsIdentity(TokenValidationParameters.DefaultAuthenticationType,
             Claims.Name, Claims.Role);
         SetUserClaims(identity, selected.Value);
+        identity.SetClaim(BrowserSessionKeys.StartedAtUtc,
+            sessionStartedAtUtc is { } startedAtUtc ? BrowserSessionKeys.FormatStartedAtUtc(startedAtUtc) : null);
         identity.SetScopes(scopes);
         var resources = new List<string>();
         await foreach (var resource in scopeManager.ListResourcesAsync(scopes, cancellationToken))
@@ -62,7 +65,8 @@ public sealed class OpenIdPrincipalFactory(IConnectService service, IOpenIddictS
             return null;
         }
 
-        return await CreateAsync(userId, access, tenantId, stored.GetScopes(), cancellationToken);
+        return await CreateAsync(userId, access, tenantId, stored.GetScopes(), cancellationToken,
+            BrowserSessionKeys.ReadStartedAtUtc(stored.GetClaim(BrowserSessionKeys.StartedAtUtc)));
     }
 
     private static bool IsConsistent(ConnectUser user, Guid userId, Access access) =>
@@ -88,6 +92,7 @@ public sealed class OpenIdPrincipalFactory(IConnectService service, IOpenIddictS
     private static IEnumerable<string> GetDestinations(Claim claim) => claim.Type switch
     {
         Claims.Subject => [Destinations.AccessToken, Destinations.IdentityToken],
+        BrowserSessionKeys.StartedAtUtc => [Destinations.AccessToken],
         Claims.Email when claim.Subject?.HasScope(Scopes.Email) == true =>
             [Destinations.AccessToken, Destinations.IdentityToken],
         Claims.Name when claim.Subject?.HasScope(Scopes.Profile) == true =>

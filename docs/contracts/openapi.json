@@ -1154,6 +1154,21 @@
         "tags": [
           "Account"
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeLoginMethodHttpRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeLoginMethodHttpRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK",
@@ -1177,6 +1192,16 @@
           },
           "400": {
             "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1283,6 +1308,16 @@
           },
           "400": {
             "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2105,7 +2140,8 @@
               "$ref": "#/components/schemas/LegalAcceptanceItem"
             }
           }
-        }
+        },
+        "description": "Recibe por HTTP la lista de documentos y versiones que la persona acepta. El controller la transforma en\r\nla solicitud del servicio de aceptación legal."
       },
       "Access": {
         "enum": [
@@ -2113,7 +2149,8 @@
           "business",
           "platform"
         ],
-        "type": "string"
+        "type": "string",
+        "description": "Identifica con qué acceso opera la sesión: como persona, como empresa o como operador de plataforma. Las\r\nrutas y las reglas lo usan para separar las operaciones permitidas."
       },
       "AccountDeletionResponse": {
         "required": [
@@ -2221,8 +2258,15 @@
               "null",
               "string"
             ]
+          },
+          "reauthTicket": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
-        }
+        },
+        "description": "Recibe el correo que se quiere agregar a la cuenta y lo entrega al flujo de validación. ToString oculta\r\nlos datos sensibles para que no se impriman al registrar la solicitud."
       },
       "CancelAccountDeletionHttpRequest": {
         "type": "object",
@@ -2233,7 +2277,8 @@
               "string"
             ]
           }
-        }
+        },
+        "description": "Recibe la prueba que permite cancelar una baja pendiente y devuelve el retorno del ingreso. El ticket se\r\nconserva sin normalizar y se oculta en ToString."
       },
       "CancelAccountDeletionHttpResponse": {
         "required": [
@@ -2244,7 +2289,8 @@
           "returnUrl": {
             "type": "string"
           }
-        }
+        },
+        "description": "Indica al navegador dónde continuar después de cancelar la baja y completar el ingreso."
       },
       "ChangeLoginMethodHttpRequest": {
         "type": "object",
@@ -2255,7 +2301,8 @@
               "string"
             ]
           }
-        }
+        },
+        "description": "Recibe la prueba de titularidad para quitar o elegir como principal un método de ingreso. El método\r\nobjetivo llega en la ruta; el ticket se conserva sin normalizar y se oculta en ToString."
       },
       "CountryReferenceHttpResponse": {
         "required": [
@@ -2307,7 +2354,8 @@
             ],
             "format": "int32"
           }
-        }
+        },
+        "description": "Expone un país con sus códigos y referencias predeterminadas para los selectores."
       },
       "CultureReferenceHttpResponse": {
         "required": [
@@ -2391,7 +2439,8 @@
             ],
             "format": "int32"
           }
-        }
+        },
+        "description": "Expone los patrones y separadores de una cultura para formatear fechas y números en el cliente."
       },
       "CurrencyReferenceHttpResponse": {
         "required": [
@@ -2440,7 +2489,8 @@
             ],
             "format": "int32"
           }
-        }
+        },
+        "description": "Expone una moneda con su precisión, símbolos y nombre traducido para mostrar importes."
       },
       "EffectivePermissions": {
         "required": [
@@ -2513,14 +2563,16 @@
             "type": "integer",
             "format": "int32"
           }
-        }
+        },
+        "description": "Identifica el documento y la versión exacta que una persona acepta. El servicio los compara con la versión\r\nvigente antes de guardar la prueba de aceptación."
       },
       "LegalDocumentKind": {
         "enum": [
           "Terms",
           "Privacy"
         ],
-        "type": "string"
+        "type": "string",
+        "description": "Distingue términos y condiciones de política de privacidad. Cada documento conserva sus propias\r\nversiones, textos y aceptaciones."
       },
       "LegalDocumentRow": {
         "required": [
@@ -2590,7 +2642,8 @@
             "type": "integer",
             "format": "int32"
           }
-        }
+        },
+        "description": "Devuelve el método al que se envió un código y cuánto hay que esperar para reenviarlo. Permite\r\nidentificar el destino y controlar el botón de reenvío."
       },
       "LoginMethodsResponse": {
         "required": [
@@ -2613,7 +2666,8 @@
           "Phone",
           "Google"
         ],
-        "type": "string"
+        "type": "string",
+        "description": "Identifica si un método de ingreso usa correo, teléfono o Google. El tipo determina cómo se interpreta\r\nsu valor y qué canal puede verificarlo."
       },
       "MemberStatus": {
         "enum": [
@@ -2622,7 +2676,8 @@
           "Inactive",
           "Removed"
         ],
-        "type": "string"
+        "type": "string",
+        "description": "Indica si una membresía está invitada, activa, inactiva o retirada. Las reglas lo usan para decidir si\r\nla persona puede operar en ese espacio."
       },
       "MeResponse": {
         "required": [
@@ -2842,7 +2897,8 @@
             "type": "integer",
             "format": "int32"
           }
-        }
+        },
+        "description": "Identifica un documento legal y su versión pendiente de aceptación. Permite que el front solicite la\r\naceptación de la versión exacta."
       },
       "ProblemDetails": {
         "required": [
@@ -2912,6 +2968,8 @@
           "MakePrimary",
           "DeleteAccount",
           "CancelDeletion",
+          "AddEmail",
+          "LinkGoogle",
           null
         ],
         "type": [
@@ -2997,7 +3055,8 @@
               "$ref": "#/components/schemas/TaxIdTypeReferenceHttpResponse"
             }
           }
-        }
+        },
+        "description": "Adapta los cinco catálogos de referencia al contrato JSON de la API. Cada FromModel copia explícitamente\r\nlos datos de Application para mantener separados los modelos internos y HTTP."
       },
       "RequestAccountDeletionHttpRequest": {
         "type": "object",
@@ -3014,7 +3073,8 @@
               "string"
             ]
           }
-        }
+        },
+        "description": "Recibe el motivo de baja y la prueba de titularidad necesaria para solicitarla. ToString oculta ambos\r\nvalores para evitar que se registren en logs."
       },
       "RequestLoginCodeHttpRequest": {
         "type": "object",
@@ -3061,7 +3121,8 @@
             ],
             "format": "uuid"
           }
-        }
+        },
+        "description": "Recibe la acción sensible y el método objetivo de una prueba de titularidad. Los campos nullable\r\npermiten que la validación informe entradas faltantes o inválidas."
       },
       "SignupHttpRequest": {
         "required": [
@@ -3137,7 +3198,8 @@
             ],
             "format": "int32"
           }
-        }
+        },
+        "description": "Expone un tipo de identificación fiscal con país, máscara y criterio de validación."
       },
       "TenantStatus": {
         "enum": [
@@ -3147,7 +3209,8 @@
           "Suspended",
           "Closed"
         ],
-        "type": "string"
+        "type": "string",
+        "description": "Describe el ciclo de vida de un espacio personal u organización, desde su preparación hasta el cierre.\r\nLas reglas de acceso consultan este estado antes de permitir operaciones."
       },
       "TimeZoneReferenceHttpResponse": {
         "required": [
@@ -3180,7 +3243,8 @@
             ],
             "format": "int32"
           }
-        }
+        },
+        "description": "Expone una zona IANA y sus países para elegir y presentar la zona horaria."
       },
       "UpdateMeHttpRequest": {
         "type": "object",
@@ -3258,7 +3322,8 @@
               "string"
             ]
           }
-        }
+        },
+        "description": "Recibe el código usado para verificar un método de ingreso pendiente. Conserva el texto original para\r\nvalidarlo y oculta su valor en ToString."
       },
       "VerifyReauthHttpRequest": {
         "type": "object",
@@ -3293,7 +3358,8 @@
               "string"
             ]
           }
-        }
+        },
+        "description": "Recibe la acción, los métodos involucrados y el código que demuestra titularidad. RawText conserva el\r\ncódigo recibido y ToString evita exponerlo en logs."
       },
       "VerifySignupHttpRequest": {
         "required": [

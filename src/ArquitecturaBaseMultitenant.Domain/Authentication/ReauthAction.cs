@@ -7,5 +7,6 @@ public enum ReauthAction
     MakePrimary,
     DeleteAccount,
     CancelDeletion,
+    AddEmail,
+    LinkGoogle,
 }
-

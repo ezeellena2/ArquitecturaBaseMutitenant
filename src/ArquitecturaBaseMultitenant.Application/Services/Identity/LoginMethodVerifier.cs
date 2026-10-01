@@ -9,7 +9,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
 /// <summary>Verifica el código de un correo nuevo y, si la cuenta no tiene principal, lo promueve antes de avisar el cambio.</summary>
 internal sealed class LoginMethodVerifier(LoginMethodGuard guard, ILoginMethodRepository methods,
-    LoginCodeVerifier codes, LoginMethodNotifier notifier, IUserRepository users, TimeProvider timeProvider)
+    ILoginCodeRepository codeRepository, LoginCodeVerifier codes, LoginMethodNotifier notifier,
+    IUserRepository users, TimeProvider timeProvider)
 {
     public async Task<Result> VerifyAsync(Guid userId, VerifyLoginMethodRequest request, CancellationToken ct)
     {
@@ -18,7 +19,22 @@ internal sealed class LoginMethodVerifier(LoginMethodGuard guard, ILoginMethodRe
         var method = await methods.GetByIdForUserAsync(userId, request.MethodId, ct);
         if (method is null || method.Type != LoginMethodType.Email) return LoginMethodErrors.NotFound;
         if (method.VerifiedAtUtc is not null) return LoginMethodErrors.AlreadyVerified;
-        var verified = await codes.VerifyAsync(LoginCodeDestination.ForEmail(Email.Create(method.Value).Value),
+        var destination = LoginCodeDestination.ForEmail(Email.Create(method.Value).Value);
+        await codeRepository.LockDestinationAsync(destination, ct);
+        var currentCode = await codeRepository.GetLatestAsync(destination,
+            LoginCodePurpose.VerifyDestination, userId, ct);
+        var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+        if (currentCode is null || !currentCode.IsActive(nowUtc))
+        {
+            methods.Remove(method);
+            return currentCode is { FailedAttempts: var attempts, MaxAttempts: var maxAttempts }
+                && attempts >= maxAttempts
+                ? LoginCodeErrors.TooManyAttempts
+                : currentCode is { ConsumedAtUtc: not null }
+                    ? LoginCodeErrors.AlreadyUsed
+                    : LoginCodeErrors.Expired;
+        }
+        var verified = await codes.VerifyAsync(destination,
             LoginCodePurpose.VerifyDestination, userId, request.Code!, ct);
         if (verified.IsFailure) return verified.Error;
         method.Verify(timeProvider.GetUtcNow().UtcDateTime);

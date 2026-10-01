@@ -28,11 +28,12 @@ public sealed class AccountLoginMethodsController(ILoginMethodManagementService 
     [Idempotent]
     [ProducesResponseType<LoginMethodCodeResponse>(StatusCodes.Status202Accepted)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
+    [ProducesProblem(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Add([FromBody] AddLoginEmailHttpRequest request, CancellationToken ct)
     {
         var email = AuthEmailMapping.Parse(request.Email);
         if (email.IsFailure) return Result.Failure(email.Error).ToActionResult(this);
-        return (await service.AddEmailAsync(new AddLoginEmailRequest(email.Value), ct)).ToAcceptedResult(this);
+        return (await service.AddEmailAsync(new AddLoginEmailRequest(email.Value, request.ReauthTicket), ct)).ToAcceptedResult(this);
     }
 
     [HttpPost("{methodId:guid}/code")]

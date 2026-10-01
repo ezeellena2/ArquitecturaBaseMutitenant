@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Security.Claims;
 using ArquitecturaBaseMultitenant.Api.Authentication;
 using ArquitecturaBaseMultitenant.Api.Tenancy;
+using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
@@ -23,6 +24,20 @@ public sealed class PrincipalFactoryTests
     private static readonly Guid UserId = Guid.Parse("11111111-1111-1111-1111-111111111111");
     private static readonly Guid PersonalId = Guid.Parse("22222222-2222-2222-2222-222222222222");
     private static readonly Guid BusinessId = Guid.Parse("33333333-3333-3333-3333-333333333333");
+
+    [Fact]
+    public async Task Session_start_round_trips_as_utc_when_it_has_no_fractional_seconds()
+    {
+        var startedAtUtc = new DateTime(2026, 9, 30, 12, 0, 0, DateTimeKind.Utc);
+        var (factory, _) = CreateFactory(new ConnectUser(Account(), Access.Consumer, PersonalId, TenantKind.Personal));
+
+        var principal = await factory.CreateAsync(UserId, Access.Consumer, PersonalId,
+            [Scopes.OpenId], TestContext.Current.CancellationToken, startedAtUtc);
+
+        Assert.NotNull(principal);
+        var claim = principal.GetClaim(BrowserSessionKeys.StartedAtUtc);
+        Assert.Equal(startedAtUtc, BrowserSessionKeys.ReadStartedAtUtc(claim));
+    }
 
     [Theory]
     [InlineData(Access.Consumer, TenantKind.Personal)]
@@ -89,12 +104,16 @@ public sealed class PrincipalFactoryTests
         Assert.NotNull(principal);
         ((ClaimsIdentity)principal.Identity!).AddClaim(new Claim(Claims.Role, "stale-role"));
         ((ClaimsIdentity)principal.Identity!).AddClaim(new Claim("permissions", "stale-permission"));
+        const string sessionStartedAtUtc = "2026-09-30T12:00:00.1234567Z";
+        ((ClaimsIdentity)principal.Identity!).AddClaim(new Claim("session_started_at", sessionStartedAtUtc));
 
         connect.Response = Result.Success(new ConnectUser(Account(email: null, name: "Ana nueva"),
             Access.Business, BusinessId, TenantKind.Business));
         var refreshed = await factory.RefreshAsync(principal, TestContext.Current.CancellationToken);
 
         Assert.NotNull(refreshed);
+        Assert.Equal(sessionStartedAtUtc, refreshed.GetClaim("session_started_at"));
+        Assert.Equal([Destinations.AccessToken], refreshed.FindFirst("session_started_at")!.GetDestinations());
         Assert.Equal("Ana nueva", refreshed.GetClaim(Claims.Name));
         Assert.Null(refreshed.GetClaim(Claims.Email));
         Assert.Equal(BusinessId.ToString("D"), refreshed.GetClaim(TenantClaimTypes.TenantId));
