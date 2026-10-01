@@ -2,6 +2,10 @@ using ArquitecturaBaseMultitenant.Application.Models.ReferenceData;
 
 namespace ArquitecturaBaseMultitenant.Api.Contracts.ReferenceData;
 
+/// <summary>
+/// Adapta los cinco catálogos de referencia al contrato JSON de la API. Cada FromModel copia explícitamente
+/// los datos de Application para mantener separados los modelos internos y HTTP.
+/// </summary>
 public sealed record ReferenceDataHttpResponse(
     string Culture,
     IReadOnlyList<CurrencyReferenceHttpResponse> Currencies,
@@ -19,6 +23,7 @@ public sealed record ReferenceDataHttpResponse(
         model.TaxIdTypes.Select(TaxIdTypeReferenceHttpResponse.FromModel).ToArray());
 }
 
+/// <summary>Expone una moneda con su precisión, símbolos y nombre traducido para mostrar importes.</summary>
 public sealed record CurrencyReferenceHttpResponse(
     string Code, string NumericCode, int? MinorUnits, string Symbol,
     string DisplaySymbol, string Name, string NamePlural, bool IsEnabled, int? SortOrder)
@@ -28,6 +33,7 @@ public sealed record CurrencyReferenceHttpResponse(
         item.Name, item.NamePlural, item.IsEnabled, item.SortOrder);
 }
 
+/// <summary>Expone un país con sus códigos y referencias predeterminadas para los selectores.</summary>
 public sealed record CountryReferenceHttpResponse(
     string Code, string Alpha3, string NumericCode, string? CallingCode,
     string? DefaultCurrencyCode, string? DefaultTimeZoneId, string Name, bool IsEnabled, int? SortOrder)
@@ -37,6 +43,7 @@ public sealed record CountryReferenceHttpResponse(
         item.DefaultTimeZoneId, item.Name, item.IsEnabled, item.SortOrder);
 }
 
+/// <summary>Expone una zona IANA y sus países para elegir y presentar la zona horaria.</summary>
 public sealed record TimeZoneReferenceHttpResponse(
     string Id, IReadOnlyList<string> CountryCodes, string City, bool IsEnabled, int? SortOrder)
 {
@@ -44,6 +51,7 @@ public sealed record TimeZoneReferenceHttpResponse(
         item.Id, item.CountryCodes, item.City, item.IsEnabled, item.SortOrder);
 }
 
+/// <summary>Expone los patrones y separadores de una cultura para formatear fechas y números en el cliente.</summary>
 public sealed record CultureReferenceHttpResponse(
     string Code, string LanguageCode, string CountryCode,
     string DatePattern, string TimePattern, string DateTimePattern, string LongDatePattern,
@@ -59,6 +67,7 @@ public sealed record CultureReferenceHttpResponse(
         item.Name, item.IsEnabled, item.SortOrder);
 }
 
+/// <summary>Expone un tipo de identificación fiscal con país, máscara y criterio de validación.</summary>
 public sealed record TaxIdTypeReferenceHttpResponse(
     string Code, string CountryCode, string Label, string Mask, string ValidatorKey,
     string AppliesTo, string Name, bool IsEnabled, int? SortOrder)
