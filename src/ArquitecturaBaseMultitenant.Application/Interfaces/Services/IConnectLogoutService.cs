@@ -6,5 +6,5 @@ namespace ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 public interface IConnectLogoutService
 {
     Task<Result> RevokeAsync(Guid? userId, string? sessionId,
-        string? authorizationId, CancellationToken cancellationToken);
+        string? authorizationId, bool preserveInvitationContinuation, CancellationToken cancellationToken);
 }

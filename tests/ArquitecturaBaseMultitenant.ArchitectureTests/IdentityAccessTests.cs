@@ -62,6 +62,7 @@ public sealed class IdentityAccessTests
             || relative == "Persistence/ApplicationDbContext.cs"
             || relative.StartsWith("Persistence/Configurations/Identity/", StringComparison.Ordinal)
             || relative == "Persistence/Configurations/Tenant/MemberConfiguration.cs"
+            || relative == "Persistence/Configurations/Tenant/InvitationConfiguration.cs"
             || relative == "Persistence/Repositories/UserRepository.cs"
             || relative == "Persistence/Readers/MemberReader.cs"
             || relative == "Persistence/Seed/PlatformSeeder.cs"

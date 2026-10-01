@@ -10,6 +10,7 @@ using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Invitations;
 
@@ -59,12 +60,13 @@ internal sealed class InvitationPreviewBuilder(IInvitationReader invitations, IU
                 emailCode |= method.Type == LoginMethodType.Email && method.Value == row.Destination.Value;
                 google |= method.Type == LoginMethodType.Google && method.ContactEmail == row.Destination;
             }
-        string? currentEmail = null;
+        Email? currentEmail = null;
         if (state == InvitationPreviewState.WrongSession && userId is { } current)
         {
             var ownMethods = await methods.ListByUserIdAsync(current, ct);
             var primary = ownMethods.FirstOrDefault(method => method.IsPrimary && method.VerifiedAtUtc is not null);
-            currentEmail = primary?.Type == LoginMethodType.Email ? primary.Value : primary?.ContactEmail?.Value;
+            currentEmail = primary?.Type == LoginMethodType.Email
+                ? Email.Create(primary.Value).Value : primary?.ContactEmail;
         }
         return Present(row, state) with { CanUseEmailCode = emailCode, CanUseGoogle = google, CurrentAccountEmail = currentEmail };
     }

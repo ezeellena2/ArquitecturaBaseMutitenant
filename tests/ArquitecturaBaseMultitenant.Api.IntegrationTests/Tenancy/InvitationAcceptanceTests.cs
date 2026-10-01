@@ -532,11 +532,13 @@ public sealed class InvitationAcceptanceTests(ApiFactory factory)
                 }
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
+        var outboxIdsBeforeIssue = await services.GetRequiredService<ApplicationDbContext>().OutboxMessages
+            .Select(row => row.Id).ToArrayAsync(Ct);
         var issued = await uow.ExecuteInTransactionAsync(ct => services.GetRequiredService<InvitationIssuer>()
             .IssueAsync(new IssueInvitationRequest(email, inviter, InvitationChannel.Email), ct), CommitPolicy.OnSuccess, Ct);
         Assert.True(issued.IsSuccess);
         var outbox = await services.GetRequiredService<ApplicationDbContext>().OutboxMessages.AsNoTracking()
-            .OrderByDescending(row => row.CreatedAtUtc).ThenByDescending(row => row.Id).FirstAsync(Ct);
+            .SingleAsync(row => !outboxIdsBeforeIssue.Contains(row.Id), Ct);
         var message = JsonSerializer.Deserialize<EmailMessage>(services.GetRequiredService<IPayloadProtector>().Unprotect(outbox.EncryptedPayload))!;
         var token = Regex.Match(message.TextBody, @"/invitacion#(?<token>[A-Za-z0-9_-]+)").Groups["token"].Value;
         Assert.NotEmpty(token);

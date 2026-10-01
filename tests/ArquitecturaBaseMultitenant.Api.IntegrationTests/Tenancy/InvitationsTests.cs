@@ -93,7 +93,7 @@ public sealed class InvitationsTests(ApiFactory factory)
         var services = scope.ServiceProvider;
         var context = services.GetRequiredService<ApplicationDbContext>();
         var beforeUsers = await context.Users.CountAsync(Ct);
-        var beforeOutbox = await context.OutboxMessages.CountAsync(Ct);
+        var beforeOutboxIds = await context.OutboxMessages.Select(row => row.Id).ToArrayAsync(Ct);
         using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenantId);
 
         var issued = await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(
@@ -102,13 +102,13 @@ public sealed class InvitationsTests(ApiFactory factory)
 
         Assert.True(issued.IsSuccess);
         Assert.Equal(beforeUsers, await context.Users.CountAsync(Ct));
-        Assert.Equal(beforeOutbox + 1, await context.OutboxMessages.CountAsync(Ct));
+        Assert.Equal(beforeOutboxIds.Length + 1, await context.OutboxMessages.CountAsync(Ct));
         var invitation = await services.GetRequiredService<IInvitationReader>().FindByIdAsync(issued.Value, Ct);
         Assert.NotNull(invitation);
         Assert.Equal(recipientId, invitation.MemberUserId);
         Assert.Equal(MemberStatus.Invited, invitation.MemberStatus);
-        var outbox = await context.OutboxMessages.AsNoTracking().OrderByDescending(row => row.CreatedAtUtc)
-            .ThenByDescending(row => row.Id).FirstAsync(Ct);
+        var outbox = await context.OutboxMessages.AsNoTracking()
+            .SingleAsync(row => !beforeOutboxIds.Contains(row.Id), Ct);
         var payload = services.GetRequiredService<IPayloadProtector>().Unprotect(outbox.EncryptedPayload);
         var message = JsonSerializer.Deserialize<EmailMessage>(payload);
         Assert.NotNull(message);

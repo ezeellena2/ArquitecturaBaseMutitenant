@@ -70,6 +70,7 @@ public static class DependencyInjection
         services.AddScoped<InvitationAcceptanceGuard>();
         services.AddScoped<InvitationIdentityDefaults>();
         services.AddScoped<InvitationAccountRegistrar>();
+        services.AddScoped<InvitationAcceptanceCredentials>();
         services.AddScoped<InvitationAcceptor>();
         services.AddScoped<InvitationSessionRestorer>();
         services.AddScoped<AccountNoticeIssuer>();

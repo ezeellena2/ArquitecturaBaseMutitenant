@@ -4,7 +4,6 @@ using ArquitecturaBaseMultitenant.Api.Authentication;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Api.Tenancy;
 using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -28,8 +27,7 @@ namespace ArquitecturaBaseMultitenant.Api.Controllers.Auth;
 [Route("connect")]
 public sealed class ConnectController(IConnectService service, IConnectLogoutService logoutService,
     IConnectAuthorizationService authorizationService,
-    OpenIdPrincipalFactory principalFactory, IInvitationFlowContext invitationFlow,
-    IConfiguration configuration) : ControllerBase
+    OpenIdPrincipalFactory principalFactory, IConfiguration configuration) : ControllerBase
 {
     [HttpGet("authorize")]
     [HttpPost("authorize")]
@@ -125,10 +123,8 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
         var request = HttpContext.GetOpenIddictServerRequest();
-        if (ShouldPreserveInvitation(request, configuration, Request.Query["preserveInvitation"].ToString()))
-            invitationFlow.PreserveContinuationForAccountSwitch();
-        else
-            invitationFlow.ClearContinuation();
+        var preserveInvitation = ShouldPreserveInvitation(request, configuration,
+            Request.Query["preserveInvitation"].ToString());
 
         var hint = await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         var authorizationId = hint.Principal?.GetAuthorizationId();
@@ -137,11 +133,8 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
             out var activeSessionId) == true ? activeSessionId : null;
         var cookieUserId = Guid.TryParse(session.Principal?.FindFirstValue(ClaimTypes.NameIdentifier),
             CultureInfo.InvariantCulture, out var parsedUserId) ? parsedUserId : (Guid?)null;
-        if (!string.IsNullOrEmpty(authorizationId) ||
-            (cookieUserId is not null && !string.IsNullOrEmpty(browserSessionId)))
-        {
-            await logoutService.RevokeAsync(cookieUserId, browserSessionId, authorizationId, cancellationToken);
-        }
+        await logoutService.RevokeAsync(cookieUserId, browserSessionId, authorizationId,
+            preserveInvitation, cancellationToken);
 
         await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
         return SignOut(new AuthenticationProperties { RedirectUri = "/" },
