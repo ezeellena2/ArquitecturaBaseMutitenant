@@ -422,7 +422,7 @@ Guardar manifest e informe en front `docs/design/capturas/etapa-3b/`; cada caso 
 
 ## Estado de ejecución al terminar el trabajo técnico
 
-T01–T30 ejecutadas y commiteadas. Puerta automática verde: backend 1110/1110, front 655/655, generador 30/30, arnés 10/10 y 20/20, contratos, builds y E2E real 6/6. Comparación visual: 118 pares presentes y revisados. El cierre formal de 3b queda pendiente de aprobación del usuario de las diferencias residuales de presentación, por el punto 9 del plan maestro. La 3c no se inició y conserva su propia puerta. Informe y manual: `docs/reviews/2026-09-30-etapa-3b-cuenta.md`.
+T01–T30 se ejecutaron y commitearon primero; sus resultados históricos están en el informe. Después se completaron T31–T35 con los cambios de seguridad solicitados. Puerta automática final: backend 1117/1117, build con 0 advertencias/0 errores; front 658/658, lint/build/contracts:check verdes; generador 30/30, arnés 10/10 y 20/20; E2E real 8/8. Comparación visual: 122 pares app/lienzo completos y revisados, incluidos cuatro pares nuevos para reautenticación. La 3c no se inició y conserva su propia puerta. Informe y pasos manuales: `docs/reviews/2026-09-30-etapa-3b-cuenta.md`.
 
 ## Correcciones de seguridad solicitadas antes del cierre
 
@@ -430,44 +430,44 @@ Alcance exclusivo: impedir agregar métodos con solo una sesión abierta y liber
 
 ### T31 · Regresiones reales de ambos problemas
 
-- [ ] Escribir un caso HTTP sin ticket para agregar correo y vincular Google; comprobar que no produce método ni desafío. Ejecutarlo y guardar el rojo.
-- [ ] Escribir un caso de reauth que excluye un método verificado después de la sesión, incluidos verificación manipulada y refresh/cambio de acceso. Ejecutarlo y guardar el rojo.
-- [ ] Cambiar el caso de registro con pendiente ajeno: el código crea otra cuenta y elimina el pendiente; no activa la cuenta anterior. Ejecutarlo y guardar el rojo.
-- [ ] Agregar ambos casos al runner real, con identidades y PostgreSQL propios, sin mocks; ejecutarlo antes de implementar y registrar ambos fallos.
+- [x] Escribir un caso HTTP sin ticket para agregar correo y vincular Google; comprobar que no produce método ni desafío. Ejecutarlo rojo antes de la corrección.
+- [x] Escribir un caso de reauth que excluye un método verificado después de la sesión, incluidos verificación manipulada y refresh/cambio de acceso. Ejecutarlo rojo antes de la corrección.
+- [x] Cambiar el caso de registro con pendiente ajeno: el código crea otra cuenta y elimina el pendiente; no activa la cuenta anterior. Ejecutarlo rojo antes de la corrección.
+- [x] Agregar ambos casos al runner real, con identidades y PostgreSQL propios, sin mocks; comprobar el rojo antes del código y el verde final.
 
 ### T32 · Reautenticación para agregar correo y vincular Google (back)
 
 Archivos: sesión y claims (`SignInService`, `BrowserSessionKeys`, `ConnectController`, `OpenIdPrincipalFactory`, `CurrentUser`), servicios/modelos/validadores/contratos de cuenta y reauth, tests de Identity/Auth y contratos OpenAPI.
 
-- [ ] Sellar el inicio UTC en las propiedades protegidas de la cookie; emitirlo en el token y conservarlo al renovar/cambiar acceso. Ausencia o valor inválido no permite reauth.
-- [ ] Agregar acciones específicas para correo y Google; seleccionar y verificar solamente fuentes anteriores al inicio de sesión.
-- [ ] Consumir el ticket una vez y dentro de la UoW para agregar correo y preparar el desafío Google; conservar antiforgery y la identidad protegida del callback.
-- [ ] Ejecutar los tests dirigidos verdes y los contratos cruzados. Actualizar `datos-personales.md` y ADR 0033 en este mismo commit: `fix: exigir reautenticación para sumar métodos de ingreso`.
+- [x] Sellar el inicio UTC en las propiedades protegidas de la cookie; emitirlo en el token y conservarlo al renovar/cambiar acceso. Ausencia o valor inválido no permite reauth.
+- [x] Agregar acciones específicas para correo y Google; seleccionar y verificar solamente fuentes anteriores al inicio de sesión.
+- [x] Consumir el ticket una vez y dentro de la UoW para agregar correo y preparar el desafío Google; conservar antiforgery y la identidad protegida del callback.
+- [x] Tests dirigidos verdes y contratos cruzados. `datos-personales.md` y ADR 0033 quedaron en el mismo commit de back `1b607b9`.
 
 ### T33 · Diálogo existente de reautenticación para las dos altas (front)
 
 Archivos: componentes/API/tests de Mi cuenta, resources es/en, contrato cruzado y schema generado.
 
-- [ ] Escribir primero los tests que exigen confirmar el código del método anterior antes del POST de alta o desafío; ejecutarlos rojos.
-- [ ] Reusar el diálogo, controles y estados de cambio de método para correo/Google; mantener tickets solo en memoria y cuerpo HTTP.
-- [ ] Adaptar el recorrido real de agregar correo y registrar/verificar los contratos de acciones y cuerpos leyendo los dos repos.
-- [ ] Tests dirigidos, lint/build verdes y commit: `fix: reautenticar antes de agregar correo o Google`.
+- [x] Tests que exigen confirmar el código del método anterior antes del POST de alta o desafío; rojo previo y verde tras el cambio.
+- [x] Reusar el diálogo, controles y estados de cambio de método para correo/Google; mantener tickets solo en memoria y cuerpo HTTP.
+- [x] Adaptar el recorrido real y los contratos cruzados leyendo ambos repositorios.
+- [x] Tests dirigidos, lint/build verdes; commit front `e5346e1`.
 
 ### T34 · Posesión y vencimiento de pendientes (back)
 
 Archivos: entidad/configuración/migración/repositorio `LoginMethod`, registro, alta y vínculo Google, tests existentes de Signup/LoginMethods/GoogleLogin.
 
-- [ ] Escribir casos rojos de pendiente ajeno en alta y Google, vencimiento igual al código, reenvío, rechazo de código anterior y conservación de métodos verificados ajenos.
-- [ ] Eliminar el pendiente ajeno bajo el mismo lock del destino antes de continuar; registrar una cuenta nueva solo tras probar posesión. El borrado y la nueva escritura se confirman o revierten juntos.
-- [ ] Persistir el vencimiento UTC del pendiente desde su código y renovarlo al reenviar; un pendiente vencido deja de reservar el destino y de admitir verificación. Migración revisada, sin datos de ejemplo ni modificar Development.
-- [ ] Tests dirigidos verdes y commit: `fix: liberar métodos pendientes y vencerlos con su código`.
+- [x] Casos rojos de pendiente ajeno en alta y Google, vencimiento con su código, reenvío, rechazo de código anterior y protección de métodos verificados ajenos.
+- [x] Eliminar el pendiente ajeno bajo el mismo lock del destino antes de continuar; la cuenta del dueño del código prevalece y el borrado/escritura son atómicos.
+- [x] Persistir el vencimiento UTC del pendiente desde su código y renovarlo al reenviar; un pendiente vencido no reserva el destino ni admite verificación. Migración aplicada a bases de prueba, sin sembrar Development.
+- [x] Tests dirigidos verdes; mismo commit back `1b607b9`.
 
 ### T35 · E2E real, comparación visual y puerta completa
 
-- [ ] Actualizar los recorridos reales con la reauth legítima y comprobar que ambos ataques quedan bloqueados, que el pendiente se recupera y que el método nuevo no sirve como fuente en la sesión anterior. Ejecutar `npm run test:e2e:real` completo verde.
-- [ ] Capturar las nuevas reautenticaciones desktop/móvil en `docs/design/capturas/etapa-3b/`, comparar esos estados con el diálogo existente y documentar la extensión autorizada por el pedido de seguridad. Los estados no tocados conservan su comparación anterior.
-- [ ] Repetir build back 0 advertencias, `dotnet test` con Docker; lint/test/build/contracts:check front; generador, arnés y contratos existentes.
-- [ ] Detener Aspire; registrar commits, rojos/verdes, salida literal E2E, diferencias y decisiones. Actualizar manual real para ambos controles. Commit de evidencia: `docs: registrar correcciones y puerta de seguridad de la 3b`.
+- [x] E2E real actualizado: bloquea la toma de cuenta, recupera el correo pendiente ajeno y prueba los cinco recorridos originales; 8/8 final.
+- [x] Capturas de las dos reautenticaciones en escritorio/móvil, comparación con el diálogo existente y motivo documentado. Manifest final: 122 pares completos.
+- [x] Build back 0 advertencias, `dotnet test` Docker 1117/1117; lint/test/build/contracts:check front 658/658; generador 30/30, arnés 10/10 y 20/20.
+- [x] Aspire detenido; informe, salida E2E, diferencias, decisiones y pasos manuales actualizados. Evidencia en commit de documentación de cierre.
 
 ### Decisiones tomadas para las correcciones
 

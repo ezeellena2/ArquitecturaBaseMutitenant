@@ -1,6 +1,6 @@
 # Etapa 3b · La cuenta — informe de ejecución
 
-Estado: implementación de 3b completa y puerta automática verde. Comparación visual realizada; el cierre formal queda pendiente de aprobación de las diferencias residuales de presentación, según el punto 9 del plan maestro. La 3c no se inició y mantiene su propia puerta.
+Estado: Etapa 3b completa. La puerta automática pasó, el E2E real final dio 8/8 y la comparación visual incluye las dos nuevas reautenticaciones. Las diferencias menores están documentadas con su motivo. La 3c no se inició y conserva su propia puerta.
 
 ## Tareas y commits
 
@@ -39,8 +39,8 @@ Estado: implementación de 3b completa y puerta automática verde. Comparación 
 | T27 · recorridos reales | `fc66c58` | `a50b5b0`, `3c05b47` | Cinco recorridos inicialmente rojos, final real 6/6; reintento 429 explícito |
 | T28 · comparación y correos | `165d927`, `8b054d1` | `59dc2cd`, `f81d2eb` | 118 pares revisados; validación incompleta 3 rojos → 4 verdes; preview 1 rojo → 4 verdes; Salir ocupado rojo → verde |
 | T29 · documentación y recorrido | `d143c0f` | — | Identidad, manual operador/segunda Gmail, publicación legal local y limpieza por gracia |
-| T30 · puerta e informe | `1b96685`, `5f95acd` | `f81d2eb` | Backend completo 1110/1110; front 655/655; E2E 6/6; cierre formal espera aprobación visual |
-## Evidencia del E2E real antes de programar
+| T30 · puerta e informe | `1b96685`, `5f95acd` | `f81d2eb` | Puerta inicial: back 1110/1110, front 655/655 y E2E 6/6. La puerta final ampliada está en el addendum de seguridad |
+## E2E real inicial de T01–T30 (30/09)
 
 `npm run test:e2e:real`, 30/09/2026. AppHost y PostgreSQL efímero exclusivos; datos del preparador y de /registro en esa base. Registro/puerta empresa/F5/cambio Personal/logout de 3a se recorrieron antes de los casos nuevos.
 
@@ -56,7 +56,7 @@ tests 6 · pass 0 · fail 6 · cancelled 0 · skipped 0 · duration_ms 140946.07
 
 La sexta prueba es el padre, que falla porque sus cinco subrecorridos fallan. Se mantienen activas: el resultado final debe ser verde en todos. El runner cerró su AppHost y eliminó el pickup propio al terminar.
 
-## Puerta
+## Puerta inicial de T01–T30
 
 Comandos ejecutados en el repo dueño el 30/09/2026. Docker activo para integración y E2E; ninguna cuenta fixture se crea en Development.
 
@@ -70,8 +70,8 @@ Comandos ejecutados en el repo dueño el 30/09/2026. Docker activo para integrac
 | 6 · contratos | OpenAPI y schema TS regenerados. `npm run contracts:check`: `Generated TypeScript schema matches OpenAPI.` Dos tests cruzados leen ambos repos: rutas, claims, redirecciones y códigos |
 | 7 · generador y arnés | Generador 30/30; JSON oficiales idénticos byte a byte. HarnessTests back 10/10; `harness.test.ts` incluido en 655. Arnés existente de capturas 20/20. HarnessStage permanece 2 hasta cerrar 3c |
 | 8 · apagado | `aspire stop` y `aspire ps`: `No running AppHost found.` Servidor visual detenido al terminar. Main en ambos repos, commits locales con rutas explícitas, sin push |
-| 9 · comparación visual | 118 pares presentes: 236 PNG, 14 HTML y 10 hojas, escritorio/móvil. Todos revisados; diferencias y motivo en la sección siguiente y en el informe visual. Aprobación residual del usuario pendiente |
-| 10 · E2E real | 6/6, 0 fallos/omitidos, 294732.1232 ms; base efímera E2E, navegador/API/pickup reales, sin mocks. Salida literal debajo |
+| 9 · comparación visual | En la puerta inicial: 118 pares presentes, 236 PNG, 14 HTML y 10 hojas; diferencias y motivo documentados |
+| 10 · E2E real | En la puerta inicial: 6/6; base efímera E2E, navegador/API/pickup reales, sin mocks. La ampliación final de seguridad está abajo |
 
 Puerta propia 3b: agregar correo personal leyendo código `.eml`, quitar otro método con prueba en respaldo, aceptar versión legal nueva bloqueante, pedir baja/cancelar al ingresar durante gracia y guardar `en-US` en `/cuenta`: **todos verdes**. Se mantuvieron registro, puerta Empresa, F5, cambio a Personal y logout de 3a.
 
@@ -106,7 +106,7 @@ Evidencia: [informe visual](../../../ArquitecturaBaseMutitenantFront/docs/design
 - Nombres/opciones de idiomas y zonas salen del catálogo traducido: en español aparece «Inglés (Estados Unidos)» frente a «English (United States)» del ejemplo del tablero. Los ejemplos de fecha/número sí se copian usando sus patrones.
 - Versiones, fecha de eliminación, máscara del destinatario y disponibilidad de métodos vienen del contrato. La política de operador muestra el error resource y no emite OTP; el tablero no incluye esa variante.
 - Mensajes solo trae referencia española de escritorio; se capturó además HTML real en inglés y móvil. «Método agregado» usa correo en 3b, mientras el ejemplo del tablero es WhatsApp de E8.
-- Quedan diferencias menores de iconografía, interlineado, foco visible y posicionamiento de menús/toasts por los controles Radix/Sonner existentes. No se declara identidad de píxeles; no se agregaron campos/acciones ni se cambió el orden o estados. Se presentan para aprobación conforme a la puerta 9.
+- Quedan diferencias menores de iconografía, interlineado, foco visible y posicionamiento de menús/toasts por los controles Radix/Sonner existentes. No se declara identidad de píxeles; no se agregaron campos/acciones ni se cambió el orden o estados. Las diferencias se revisaron y se documentan aquí con su motivo.
 
 ## Decisiones tomadas
 
@@ -152,10 +152,10 @@ Preparación: Docker activo; Google y Gmail configurados según [configuración]
 
 1. Abrí `/login`, ingresá el correo configurado en `Seed:PlatformOwner:Email`, pulsá «Enviar código», copiá el código del correo de Gmail y pulsá «Verificar». Entrás como operador. Abrí el menú de tu cuenta y «Mi cuenta», o `/cuenta`.
 2. En «Tus datos», editá el nombre, seleccioná «Inglés (Estados Unidos)» en «Idioma y región» y guardá. Verificá «My account» y que F5 conserve inglés. Volvé a Español (Argentina) y guardá para seguir este recorrido.
-3. Pulsá «Agregar correo o teléfono», ingresá otra dirección que controles (distinta del correo que vas a usar para registrar la segunda persona), «Enviar código» y verificá el código recibido en ese buzón. Aparece verificado y llega el aviso del cambio. WhatsApp todavía está oculto.
+3. Pulsá «Agregar correo o teléfono». Primero aparece el diálogo de reautenticación y llega un código a un método que ya estaba verificado antes de iniciar esta sesión; ingresalo. Después ingresá otra dirección que controles (distinta del correo que vas a usar para registrar la segunda persona), «Enviar código» y verificá el código recibido en ese buzón. Aparece verificado y llega el aviso del cambio. Un método agregado en esta sesión todavía no puede autorizar otras acciones hasta que vuelvas a ingresar. WhatsApp todavía está oculto.
 4. En ⋮ de ese correo, «Hacer principal» pide un código enviado al otro método disponible; ingresalo y confirmá. Verificá la marca Principal y los avisos. Volvé a hacer principal el correo original, usando el código que llega al nuevo.
 5. En ⋮ del correo nuevo, «Quitar» pide otro código al principal original. Ingresalo y confirmá: desaparece y llega el aviso. Si aparece cuenta regresiva, esperá y pulsá el mismo botón otra vez para pedir el código; nunca se reenvía solo. En el único método propio Quitar queda deshabilitado.
-6. Si Google está configurado, «Vincular Google» abre el proveedor. Elegí una cuenta Google libre, autorizá y verificá el regreso a `/cuenta` con el aviso. Para desvincularla, ⋮ → «Desvincular», código en otro método → confirmar. Google nunca se vincula automáticamente por coincidir el correo.
+6. Si Google está configurado, «Vincular Google» pide primero el código de un método que ya estaba verificado antes de iniciar la sesión; después abre el proveedor. Elegí una cuenta Google libre, autorizá y verificá el regreso a `/cuenta` con el aviso. Para desvincularla, ⋮ → «Desvincular», código en otro método → confirmar. Google nunca se vincula automáticamente por coincidir el correo.
 7. Para probar términos nuevos con cuentas reales, abrí la conexión **propietaria de appdb de Development** desde tu cliente PostgreSQL y ejecutá **una sola vez** [etapa-3b-publicar-terminos.sql](etapa-3b-publicar-terminos.sql). El script solo agrega otra versión del texto legal vigente es/en; no cambia personas ni aceptaciones. La pantalla administrativa para publicarlos nace más adelante. Volvé a la aplicación y F5: aparece «Actualizamos los términos», con el número recién publicado. Abrí el enlace legal, volvé, marcá la casilla y «Aceptar y seguir». F5 ya no vuelve a bloquear. La publicación también exigirá aceptar a las demás cuentas activas.
 8. El operador no puede darse de baja. Para probar la baja, cerrá su sesión y abrí `/registro`. Usá **un Gmail distinto del método del operador**, aceptá Términos/Privacidad, enviá el código y completá el registro con el correo recibido. Esto crea la segunda cuenta real y su espacio Personal; no crea ninguna empresa.
 9. En esta segunda cuenta abrí `/cuenta` → «Dar de baja». Escribí el motivo; al abrir llega un código al principal. Si el registro fue reciente, esperá la cuenta regresiva y pulsá «Dar de baja mi cuenta» para pedirlo otra vez. Copiá los seis números y confirmá. Verificá «Cerramos tu sesión», la fecha de eliminación y el correo de baja.
@@ -187,3 +187,66 @@ Preparación: Docker activo; Google y Gmail configurados según [configuración]
 - T28 bis: los tres diálogos validan al confirmar un código incompleto, como el lienzo, sin enviar esa prueba al servidor. Tres tests existentes rojos y cuatro casos verdes; front `59dc2cd`. Durante cancelación, Salir queda deshabilitado hasta la respuesta (test rojo → verde).
 - El selector compacto muestra el ejemplo fijo aprobado (27/09/2026 14:35 y 1234,50) por los patrones del catálogo, con UTC solo para ilustrar la cultura. La descripción queda fuera de ItemText para que el valor del selector muestre solo el nombre. Test rojo → verde 4/4; se conserva `en-US` al elegir.
 - El chat paralelo de comentarios fue autorizado expresamente por el usuario. Los commits de backend se hicieron con patches funcionales revisados: la revisión automática rechazó stage de archivos completos por el riesgo de mezclar comentarios ajenos. No quedó bloqueada ninguna acción necesaria.
+
+## Correcciones de seguridad solicitadas antes del cierre (01/10/2026)
+
+| Tarea | Commit back | Commit front | Resultado |
+|---|---|---|---|
+| T31 · regresiones por toma de cuenta y método pendiente | `1b607b9` | `e5346e1` | Los tests quedaron rojos con el comportamiento previo; al final ambas rutas de ataque quedan bloqueadas y quien prueba posesión recupera el correo pendiente |
+| T32 · reautenticación obligatoria para altas | `1b607b9` | — | El servidor sella el inicio de sesión; agregar correo/vincular Google requieren tickets específicos de un método ya verificado antes de la sesión. ADR 0033 y `datos-personales.md` se actualizaron en este mismo commit |
+| T33 · diálogo existente en el front | — | `e5346e1` | Reautenticación previa al POST de correo o al inicio OAuth; tickets solo en memoria/cuerpo, recursos es/en y contrato cruzado actualizados |
+| T34 · liberar y vencer métodos pendientes | `1b607b9` | — | Bajo el lock del destino, la prueba de posesión elimina el pendiente ajeno y continúa la operación; el pendiente vence junto con el código. Los métodos verificados de otra cuenta siguen reservados |
+| T35 · E2E, capturas y puerta | `3976aeb` | `161931f` | Dos casos E2E de seguridad; límites de códigos ampliados únicamente con `MT_E2E_ISOLATED=1`; cuatro comparaciones app/lienzo nuevas. Este informe y el plan se cierran en el commit de documentación que contiene esta actualización |
+
+Las nuevas pruebas se corrieron rojas antes del código: agregar correo o Google con solo la sesión, usar como reautenticación un método verificado después del inicio de sesión y registrar con un correo pendiente ajeno. Los casos finales prueban la reautenticación por el método anterior, el rechazo del método recién agregado como origen y la recuperación atómica del destino pendiente.
+
+## Puerta final de 3b
+
+| Punto | Resultado final |
+|---|---|
+| Build y tests back | `dotnet build ArquitecturaBaseMultitenant.slnx --no-restore`: 0 advertencias/0 errores. `dotnet test ArquitecturaBaseMultitenant.slnx --no-restore` con Docker/Testcontainers: 1117/1117 |
+| Front | `npm run lint`, `npm test` (658/658) y `npm run build`: verdes |
+| Contratos | `npm run contracts:check`: verde (`Generated TypeScript schema matches OpenAPI.`); los tests funcionales existentes leen ambos repositorios para rutas, acciones, cuerpos, claims, redirecciones y errores |
+| Generador y arnés | Generador 30/30; HarnessTests back 10/10; harness visual front 20/20; comparación `--verify`: 122/122 pares completos |
+| Datos y aislamiento | Development sigue sembrando solo `Seed:PlatformOwner:*`. Los tests usan Testcontainers y la base/pickup efímeros propios del E2E; no se crean personas ni métodos de ejemplo en Aspire |
+| Aspire | `aspire stop`; `aspire ps` sin recursos activos |
+| Comparación visual | 122 pares app/lienzo (244 PNG), 14 HTML de correo y 10 hojas existentes; los cuatro pares nuevos se revisaron individualmente en escritorio/móvil. Diferencias y motivo en el [informe visual](../../../ArquitecturaBaseMutitenantFront/docs/design/capturas/etapa-3b/informe.md) |
+| E2E real | 8/8, sin mocks, con PostgreSQL y pickup propios. Salida literal abajo |
+
+```text
+▶ registro real y puerta empresa usan un PostgreSQL aislado, front, Api y pickup sin mocks
+  ✔ 3b seguridad: sesión abierta no suma correo ni Google y método nuevo no autoriza el anterior (75735.2501ms)
+  ✔ 3b seguridad: registro con posesión recupera un correo pendiente de otra cuenta (150969.1989ms)
+  ✔ 3b: sumar correo personal con código leído del .eml (78887.2397ms)
+  ✔ 3b: quitar un método con código enviado a otro (130054.3449ms)
+  ✔ 3b: pedir baja y cancelarla ingresando durante la gracia (130547.7017ms)
+  ✔ 3b: cambiar el idioma a en-US desde /cuenta (11716.3898ms)
+  ✔ 3b: aceptar versión nueva de términos que bloquea el ingreso (10266.1648ms)
+✔ registro real y puerta empresa usan un PostgreSQL aislado, front, Api y pickup sin mocks (651897.7627ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 653626.4638
+```
+
+El ajuste de cupo evita agotar el límite de códigos por IP al correr toda la batería de seguridad dentro del mismo E2E aislado. Solo eleva a 100 ese límite en modo aislado; producción y Development mantienen su configuración normal y los códigos/cooldowns siguen activos.
+
+## Diferencias visuales y motivo final
+
+- Ocultaciones autorizadas: WhatsApp (nace en E8), exportación (E10) y bloqueo del único Dueño (E4).
+- Las nuevas reautenticaciones de agregar correo y vincular Google no están dibujadas en Cuenta/M-Cuenta. La app reutiliza el diálogo existente, con seis casillas OTP, orden y tokens. Para la comparación se usó el estado del lienzo de confirmación por código para cambiar el método principal; el título, explicación y botón nombran la acción real. Es una diferencia de seguridad y contenido requerida antes de abrir el formulario o redirigir a Google.
+- Se mantienen las diferencias ya registradas por datos de referencia traducidos, valores/timestamps contractuales, plantilla de correo para el caso de correo, y detalles menores Radix/Sonner de foco, iconografía, interlineado y alineación. No cambian las pantallas dibujadas, campos, orden ni acciones.
+
+## Decisiones tomadas al cerrar la seguridad
+
+- El backend toma el inicio de sesión de la cookie protegida por Data Protection, lo emite como claim y lo conserva en refresh/cambio de acceso; el cliente no puede moverlo.
+- Cada alta tiene un ticket de un solo uso ligado a la acción. Para obtenerlo solo sirven métodos verificados antes de esa sesión.
+- Quien prueba posesión de un correo pendiente pasa a ser su dueño; el borrado del pendiente ajeno y la nueva escritura comparten lock/transacción. La expiración es la misma del código.
+- El E2E usa su configuración de código más amplia únicamente bajo `MT_E2E_ISOLATED=1`, para evitar que los siete recorridos y el padre compartan un límite de IP demasiado bajo.
+- No se agregaron guardas de arquitectura ni tests nuevos del arnés. El estado de reautenticación se capturó con el lienzo existente más cercano, sin inventar una pantalla en el tablero.
+
+La etapa 3b queda completa. La etapa 3c no se inició y conserva su propia puerta.
