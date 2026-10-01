@@ -2,6 +2,10 @@ using ArquitecturaBaseMultitenant.Domain.Common;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Auditing;
 
+/// <summary>
+/// Define entidades sintéticas privadas, públicas y compartidas para probar auditoría. Incluye datos
+/// sensibles y una propiedad excluida del rastro para verificar su protección.
+/// </summary>
 internal sealed class AuditedRecord : Entity, ITenantOwned, IAuditable, ISoftDeletable
 {
     private AuditedRecord()
@@ -33,6 +37,7 @@ internal sealed class AuditedRecord : Entity, ITenantOwned, IAuditable, ISoftDel
     public void ChangeSecret(string secret) => Secret = secret;
 }
 
+/// <summary>Permite comprobar que la auditoría selle al publicador de un dato público sintético.</summary>
 internal sealed class AuditedPublicRecord(Guid businessTenantId) : Entity, IPublishedByBusiness, IAuditable
 {
     public Guid BusinessTenantId { get; private set; } = businessTenantId;
@@ -43,6 +48,7 @@ internal sealed class AuditedPublicRecord(Guid businessTenantId) : Entity, IPubl
     public Guid? ModifiedBy { get; private set; }
 }
 
+/// <summary>Permite comprobar el sellado y la auditoría de las dos partes de un dato compartido sintético.</summary>
 internal sealed class AuditedSharedRecord(Guid consumerTenantId, Guid businessTenantId)
     : Entity, IConsumerBusinessShared, IAuditable
 {

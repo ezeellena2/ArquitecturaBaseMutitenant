@@ -11,6 +11,10 @@ using MimeKit;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Messaging;
 
+/// <summary>
+/// Comprueba configuración segura de SMTP y entrega a pickup. Exige las credenciales y TLS correspondientes
+/// y verifica el correo generado.
+/// </summary>
 public sealed class EmailDeliveryTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

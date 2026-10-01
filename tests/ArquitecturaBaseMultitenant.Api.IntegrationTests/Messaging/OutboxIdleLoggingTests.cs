@@ -9,6 +9,10 @@ using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Messaging;
 
+/// <summary>
+/// Comprueba que un ciclo sin mensajes no genere registros informativos. Evita ruido periódico del
+/// dispatcher cuando no hay trabajo.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class OutboxIdleLoggingTests(ApiFactory factory)
 {

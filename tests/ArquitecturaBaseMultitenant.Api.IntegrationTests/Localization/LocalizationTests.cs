@@ -4,6 +4,10 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Localization;
 
+/// <summary>
+/// Comprueba que los errores usen Accept-Language y declaren el idioma de respuesta. Incluye los rechazos
+/// generados por el framework.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class LocalizationTests(ApiFactory factory)
 {

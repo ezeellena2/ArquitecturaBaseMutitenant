@@ -5,6 +5,10 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Api;
 
+/// <summary>
+/// Comprueba la limpieza de texto en el límite HTTP y el rechazo de valores no textuales. Verifica la
+/// entrada sin depender de persistencia.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class NormalizedInputTests(ApiFactory factory)
 {

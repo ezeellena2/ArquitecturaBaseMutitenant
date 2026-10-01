@@ -8,6 +8,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.ErrorHandling;
 
+/// <summary>
+/// Comprueba que el rechazo del rate limiter incluya ProblemDetails y Retry-After coherentes. Mantiene el
+/// tiempo de espera igual en cuerpo y encabezado.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class RateLimiterTests(ApiFactory factory)
 {

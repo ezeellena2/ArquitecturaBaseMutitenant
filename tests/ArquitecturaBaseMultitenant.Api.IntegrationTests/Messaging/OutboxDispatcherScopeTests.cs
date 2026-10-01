@@ -9,6 +9,10 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Messaging;
 
+/// <summary>
+/// Comprueba que un lote pueda reutilizar el sender pero abra un alcance de despacho por mensaje. Evita
+/// compartir el estado transaccional entre envíos.
+/// </summary>
 public sealed class OutboxDispatcherScopeTests
 {
     [Fact]

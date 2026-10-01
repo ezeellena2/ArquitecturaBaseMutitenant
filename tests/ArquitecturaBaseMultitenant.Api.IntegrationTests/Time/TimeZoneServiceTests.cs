@@ -5,6 +5,10 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Time;
 
+/// <summary>
+/// Comprueba rangos UTC de días civiles según una zona IANA. Incluye cambios de horario, medianoches
+/// inexistentes y horas repetidas.
+/// </summary>
 public sealed class TimeZoneServiceTests
 {
     [Theory]

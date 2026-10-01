@@ -19,6 +19,10 @@ using OpenIddict.EntityFrameworkCore.Models;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Legal;
 
+/// <summary>
+/// Comprueba el reclamo durable y la reanudación de una baja interrumpida. Exige terminar la limpieza y
+/// anonimizar una sola vez.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class AccountDeletionProcessingTests
 {

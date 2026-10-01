@@ -3,6 +3,10 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Isolation;
 
+/// <summary>
+/// Representa un dato privado sintético con auditoría, borrado lógico y versión. Permite probar
+/// aislamiento, concurrencia y paginado sin agregar un módulo de negocio.
+/// </summary>
 internal sealed class Widget : Entity, ITenantOwned, IAuditable, ISoftDeletable, IVersioned
 {
     private Widget()

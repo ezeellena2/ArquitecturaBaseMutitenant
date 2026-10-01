@@ -4,6 +4,10 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 
+/// <summary>
+/// Comprueba que cada fixture use un pickup temporal propio y fuera del repositorio. Al terminar, solo debe
+/// borrar el directorio que creó.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class PickupFixtureTests(ApiFactory factory)
 {

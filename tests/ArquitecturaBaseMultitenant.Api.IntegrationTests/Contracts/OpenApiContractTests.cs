@@ -4,6 +4,10 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Contracts;
 
+/// <summary>
+/// Comprueba que el OpenAPI versionado coincida con las rutas productivas y sus tipos. Detecta cambios del
+/// contrato público que no se hayan actualizado.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class OpenApiContractTests(ApiFactory factory)
 {

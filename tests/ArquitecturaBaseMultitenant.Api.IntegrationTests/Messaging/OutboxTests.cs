@@ -13,6 +13,10 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Messaging;
 
+/// <summary>
+/// Comprueba el encolado dentro de la transacción del caso de uso. Exige un canal registrado y un payload
+/// cifrado que solo persista después del commit.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class OutboxTests(ApiFactory factory)
 {

@@ -7,6 +7,10 @@ using ArquitecturaBaseMultitenant.Api.Json;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Contracts;
 
+/// <summary>
+/// Comprueba Swagger y la descripción generada de rutas, respuestas y errores. Protege los esquemas que
+/// usan los clientes de la API.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class OpenApiTests(ApiFactory factory)
 {

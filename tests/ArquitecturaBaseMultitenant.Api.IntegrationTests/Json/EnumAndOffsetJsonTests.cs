@@ -5,6 +5,10 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Json;
 
+/// <summary>
+/// Comprueba que los enums HTTP usen nombres y rechacen números. Incluye las restricciones de
+/// representación temporal del contrato.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class EnumAndOffsetJsonTests(ApiFactory factory)
 {

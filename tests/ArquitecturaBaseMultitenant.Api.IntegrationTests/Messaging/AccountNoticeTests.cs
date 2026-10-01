@@ -14,6 +14,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Messaging;
 
+/// <summary>
+/// Comprueba que los avisos lleguen a contactos verificados sin duplicados. Exige persistir el payload
+/// cifrado asociado a la cuenta.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class AccountNoticeTests(ApiFactory factory)
 {

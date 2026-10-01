@@ -10,6 +10,10 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Security;
 
+/// <summary>
+/// Comprueba aleatoriedad, longitud y hash ligado a destino y propósito de los códigos. Evita aceptar una
+/// prueba fuera del contexto donde se emitió.
+/// </summary>
 public sealed class LoginCodeSecurityTests
 {
     private const string Code = "123456";

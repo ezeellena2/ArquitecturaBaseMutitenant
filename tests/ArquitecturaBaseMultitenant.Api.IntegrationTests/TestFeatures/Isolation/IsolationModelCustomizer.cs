@@ -5,6 +5,10 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Isolation;
 
+/// <summary>
+/// Agrega al modelo de tests entidades privadas, públicas y compartidas con sus claves e índices. Mantiene
+/// estas piezas fuera del modelo y las migraciones productivas.
+/// </summary>
 internal sealed class IsolationModelCustomizer(ModelCustomizerDependencies dependencies) : ModelCustomizer(dependencies)
 {
     public override void Customize(ModelBuilder modelBuilder, DbContext context)
@@ -24,6 +28,7 @@ internal sealed class IsolationModelCustomizer(ModelCustomizerDependencies depen
     }
 }
 
+/// <summary>Deriva del contexto real para incorporar las tablas de aislamiento exclusivas de tests.</summary>
 internal sealed class IsolationApplicationDbContext(
     DbContextOptions<IsolationApplicationDbContext> options,
     ITenantContext tenantContext) : ApplicationDbContext(options, tenantContext);

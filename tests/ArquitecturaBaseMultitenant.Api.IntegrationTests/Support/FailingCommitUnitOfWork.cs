@@ -6,6 +6,10 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 
+/// <summary>
+/// Señala el fallo provocado por el decorador transaccional del test. Permite distinguir esa falla esperada
+/// de una excepción ajena a la comprobación del rollback.
+/// </summary>
 internal sealed class ExpectedCommitFailure : Exception;
 
 /// <summary>

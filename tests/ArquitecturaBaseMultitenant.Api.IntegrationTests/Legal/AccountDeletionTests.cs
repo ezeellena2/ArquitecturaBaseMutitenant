@@ -25,6 +25,10 @@ using OpenIddict.EntityFrameworkCore.Models;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Legal;
 
+/// <summary>
+/// Comprueba permisos, prueba de titularidad e impedimentos al solicitar una baja. Un bloqueo debe
+/// preservar la cuenta y el ticket sin consumirlo.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class AccountDeletionTests(ApiFactory factory)
 {

@@ -10,6 +10,10 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Api;
 
+/// <summary>
+/// Comprueba que pedidos repetidos con la misma clave ejecuten una sola operación y reproduzcan su
+/// respuesta. También cubre concurrencia, desconexión y reutilización inválida de claves.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class IdempotencyTests(ApiFactory factory)
 {

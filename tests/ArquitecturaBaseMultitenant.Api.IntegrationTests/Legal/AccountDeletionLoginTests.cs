@@ -17,6 +17,10 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Legal;
 
+/// <summary>
+/// Comprueba la prueba de ingreso de una cuenta con baja pendiente y su cancelación. Conserva el retorno
+/// elegido y evita emitir sesión o reutilizar la prueba antes de cancelar.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class AccountDeletionLoginTests(ApiFactory factory)
 {

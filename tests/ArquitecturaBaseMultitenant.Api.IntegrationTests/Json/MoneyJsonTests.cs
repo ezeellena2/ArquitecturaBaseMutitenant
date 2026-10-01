@@ -5,6 +5,10 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Json;
 
+/// <summary>
+/// Comprueba que Money viaje como monto y moneda ISO y se pueda reconstruir. Las formas inválidas deben
+/// devolver un ProblemDetails 400.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class MoneyJsonTests(ApiFactory factory)
 {

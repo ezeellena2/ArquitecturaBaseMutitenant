@@ -12,6 +12,10 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Messaging;
 
+/// <summary>
+/// Comprueba textos y estructura de las plantillas de ingreso y avisos por idioma. Protege el escape HTML y
+/// la ausencia de códigos en ToString.
+/// </summary>
 public sealed class EmailTemplateTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

@@ -4,6 +4,10 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Json;
 
+/// <summary>
+/// Comprueba que el value object de correo siga viajando como string JSON. Mantiene el contrato público
+/// pese a la representación interna tipada.
+/// </summary>
 public sealed class EmailJsonTests
 {
     [Fact]

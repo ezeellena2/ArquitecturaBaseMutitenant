@@ -14,6 +14,10 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Legal;
 
+/// <summary>
+/// Comprueba que nuevas versiones legales bloqueen las rutas hasta aceptarlas exactamente. Incluye textos
+/// por cultura y prueba de aceptación guardada durante el registro.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class LegalAcceptanceTests(ApiFactory factory)
 {

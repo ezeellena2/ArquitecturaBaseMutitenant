@@ -2,6 +2,10 @@ using ArquitecturaBaseMultitenant.Domain.Common;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Isolation;
 
+/// <summary>
+/// Representa un dato compartido sintético entre una persona y una empresa. Permite probar las políticas
+/// que limitan su lectura a ambas partes.
+/// </summary>
 internal sealed class Deal : Entity, IConsumerBusinessShared
 {
     private Deal()

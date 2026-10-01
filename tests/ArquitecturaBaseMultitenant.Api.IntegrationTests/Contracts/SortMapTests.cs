@@ -3,6 +3,10 @@ using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Contracts;
 
+/// <summary>
+/// Comprueba que el orden solicitado use campos permitidos y direcciones válidas. Exige desempate estable
+/// por identificador al paginar.
+/// </summary>
 public sealed class SortMapTests
 {
     private sealed record Row(int Id, string Name, int Rank);

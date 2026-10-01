@@ -12,6 +12,10 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Hosting;
 
+/// <summary>
+/// Comprueba encabezados de seguridad en respuestas exitosas y errores. También verifica qué datos puede
+/// reenviar un proxy confiable.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class SecurityHeadersTests(ApiFactory factory)
 {

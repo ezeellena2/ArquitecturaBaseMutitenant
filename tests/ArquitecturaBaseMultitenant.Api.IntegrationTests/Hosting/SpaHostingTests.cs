@@ -7,6 +7,10 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Hosting;
 
+/// <summary>
+/// Comprueba qué rutas abren la SPA y cuáles pertenecen al backend. Evita devolver HTML de la aplicación
+/// ante una ruta de API inexistente.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class SpaHostingTests(ApiFactory factory)
 {

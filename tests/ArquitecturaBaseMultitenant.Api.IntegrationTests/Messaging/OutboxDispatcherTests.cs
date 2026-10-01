@@ -17,6 +17,10 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Messaging;
 
+/// <summary>
+/// Comprueba despacho, confirmación y reintentos de mensajes pendientes. Protege el backoff y que un
+/// mensaje enviado no vuelva a procesarse.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class OutboxDispatcherTests(ApiFactory factory)
 {

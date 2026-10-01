@@ -15,6 +15,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Legal;
 
+/// <summary>
+/// Comprueba que cada participante limpie únicamente los datos de la cuenta eliminada. Repetir la limpieza
+/// no debe ampliar el alcance ni fallar por datos ya retirados.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class AccountDeletionParticipantsTests(ApiFactory factory)
 {

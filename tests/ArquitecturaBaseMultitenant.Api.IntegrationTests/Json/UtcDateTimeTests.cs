@@ -6,6 +6,10 @@ using ArquitecturaBaseMultitenant.Api.Json;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Json;
 
+/// <summary>
+/// Comprueba lectura de offsets y escritura de instantes UTC con Z. Protege el formato de fracciones y
+/// evita aceptar instantes sin referencia temporal explícita.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class UtcDateTimeTests(ApiFactory factory)
 {

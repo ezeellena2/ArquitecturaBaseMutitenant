@@ -6,6 +6,10 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.ErrorHandling;
 
+/// <summary>
+/// Comprueba que los errores del framework también respondan como ProblemDetails. Evita filtrar detalles
+/// internos de validación o formato del cuerpo.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class FrameworkErrorsTests(ApiFactory factory)
 {

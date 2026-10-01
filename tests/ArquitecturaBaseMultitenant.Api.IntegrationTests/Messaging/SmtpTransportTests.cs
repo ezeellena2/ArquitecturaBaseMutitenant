@@ -8,6 +8,10 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Messaging;
 
+/// <summary>
+/// Comprueba que dos mensajes del mismo lote compartan una conexión SMTP. Protege la reutilización del
+/// transporte durante el despacho.
+/// </summary>
 public sealed class SmtpTransportTests
 {
     [Fact]

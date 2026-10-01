@@ -7,6 +7,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.ErrorHandling;
 
+/// <summary>
+/// Comprueba títulos, detalles y metadata de errores traducidos. Impide reemplazar campos reservados y
+/// conserva el tiempo de espera admitido.
+/// </summary>
 public sealed class ValidationProblemTests
 {
     [Theory]

@@ -5,6 +5,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Isolation;
 
+/// <summary>
+/// Crea las tablas exclusivas de aislamiento después de aplicar las migraciones reales. Usa las mismas
+/// plantillas RLS y el rol runtime para probar barreras equivalentes.
+/// </summary>
 internal static class IsolationSchema
 {
     public static async Task ApplyAsync(NpgsqlConnection connection, CancellationToken cancellationToken)

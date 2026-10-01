@@ -7,6 +7,10 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.ErrorHandling;
 
+/// <summary>
+/// Comprueba que un cursor inválido se informe como error de validación del campo after. Mantiene el
+/// rechazo ligado a la entrada que el cliente debe corregir.
+/// </summary>
 public sealed class CursorErrorMappingTests
 {
     [Fact]

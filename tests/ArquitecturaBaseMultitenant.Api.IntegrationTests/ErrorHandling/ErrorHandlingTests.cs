@@ -4,6 +4,10 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.ErrorHandling;
 
+/// <summary>
+/// Comprueba el status y el contrato ProblemDetails de cada tipo de error. Incluye errores por campo y la
+/// traducción de fallas inesperadas.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class ErrorHandlingTests(ApiFactory factory)
 {

@@ -5,6 +5,10 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Json;
 
+/// <summary>
+/// Comprueba las formas ISO exactas de fechas civiles y horas. Rechaza entradas ambiguas o que no respeten
+/// el formato público.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class DateOnlyTimeOnlyTests(ApiFactory factory)
 {

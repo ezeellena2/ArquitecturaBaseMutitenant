@@ -9,6 +9,10 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.ReferenceData;
 
+/// <summary>
+/// Comprueba las rutas de catálogos, búsqueda, traducciones y ETag. Exige mostrar también valores
+/// históricos deshabilitados para interpretar datos guardados.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class ReferenceDataApiTests(ApiFactory factory)
 {

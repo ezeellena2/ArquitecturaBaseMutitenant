@@ -3,6 +3,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Auditing;
 
+/// <summary>
+/// Construye el modelo mínimo de entidades sintéticas y entradas de auditoría. Permite probar interceptores
+/// sin incluir esas entidades en el modelo productivo.
+/// </summary>
 internal sealed class AuditTestDbContext(DbContextOptions<AuditTestDbContext> options) : DbContext(options)
 {
     public DbSet<AuditedRecord> Records => Set<AuditedRecord>();
