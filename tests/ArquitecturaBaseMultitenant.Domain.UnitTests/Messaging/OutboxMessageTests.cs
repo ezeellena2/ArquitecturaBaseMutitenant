@@ -2,6 +2,10 @@ using ArquitecturaBaseMultitenant.Domain.Messaging;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Messaging;
 
+/// <summary>
+/// Comprueba el ciclo de un mensaje encolado, los reintentos y su caducidad operativa. Evita reenviar
+/// mensajes enviados o exponer el payload en texto.
+/// </summary>
 public sealed class OutboxMessageTests
 {
     private static readonly DateTime NowUtc = new(2026, 9, 29, 12, 0, 0, DateTimeKind.Utc);

@@ -2,6 +2,10 @@ using System.Text.Json;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Common;
 
+/// <summary>
+/// Comprueba la estructura y cobertura del catálogo común de ejemplos de formato. Exige casos
+/// identificables para cada cultura habilitada.
+/// </summary>
 public sealed class FormatCasesContractTests
 {
     private static readonly string Root = FindSolutionRoot();

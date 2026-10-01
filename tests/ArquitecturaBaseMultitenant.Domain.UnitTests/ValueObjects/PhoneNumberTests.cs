@@ -4,6 +4,10 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.ValueObjects;
 
+/// <summary>
+/// Comprueba el formato internacional y la igualdad de teléfonos. Rechaza entradas fuera de la forma y
+/// longitud admitidas.
+/// </summary>
 public sealed class PhoneNumberTests
 {
     [Theory]

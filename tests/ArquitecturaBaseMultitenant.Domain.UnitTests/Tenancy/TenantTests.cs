@@ -2,6 +2,10 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Tenancy;
 
+/// <summary>
+/// Comprueba el ciclo de aprobación, preparación, activación, suspensión y cierre de una organización.
+/// Rechaza transiciones incompatibles con su estado.
+/// </summary>
 public sealed class TenantTests
 {
     [Fact]

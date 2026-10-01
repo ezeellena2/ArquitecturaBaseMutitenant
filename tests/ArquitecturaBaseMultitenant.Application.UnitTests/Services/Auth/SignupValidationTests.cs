@@ -6,6 +6,10 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Services.Auth;
 
+/// <summary>
+/// Comprueba correo, código y aceptación de términos en los pasos del registro. Protege los nombres de
+/// campo de los errores que consume el formulario.
+/// </summary>
 public sealed class SignupValidationTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

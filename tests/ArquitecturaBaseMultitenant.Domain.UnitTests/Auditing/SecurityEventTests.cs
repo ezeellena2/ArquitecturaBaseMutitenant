@@ -2,6 +2,10 @@ using ArquitecturaBaseMultitenant.Domain.Auditing;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Auditing;
 
+/// <summary>
+/// Comprueba que los eventos de cuenta conserven el tipo, actor e instante UTC. Evita incluir
+/// identificadores personales en ese registro de seguridad.
+/// </summary>
 public sealed class SecurityEventTests
 {
     [Fact]

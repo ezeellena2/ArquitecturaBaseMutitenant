@@ -5,6 +5,10 @@ using ArquitecturaBaseMultitenant.Application.Resources;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Common;
 
+/// <summary>
+/// Comprueba los perfiles de presentación obtenidos del catálogo y su cadena de fallback. Evita usar
+/// culturas deshabilitadas para formatear datos.
+/// </summary>
 public sealed class CultureProfilesTests
 {
     [Theory]

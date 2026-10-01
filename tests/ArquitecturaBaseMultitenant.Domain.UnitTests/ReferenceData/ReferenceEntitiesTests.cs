@@ -3,6 +3,10 @@ using ArquitecturaBaseMultitenant.Domain.ReferenceData;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.ReferenceData;
 
+/// <summary>
+/// Comprueba que los catálogos conserven claves naturales, traducciones y asociaciones oficiales. Protege
+/// los datos ausentes sin reemplazarlos por valores inventados.
+/// </summary>
 public sealed class ReferenceEntitiesTests
 {
     [Fact]

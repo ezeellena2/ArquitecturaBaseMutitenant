@@ -2,6 +2,10 @@ using ArquitecturaBaseMultitenant.Domain.Legal;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Legal;
 
+/// <summary>
+/// Comprueba textos por cultura, versiones y aceptaciones legales exactas. Permite retirar datos de la
+/// solicitud durante la baja sin borrar la prueba de aceptación.
+/// </summary>
 public sealed class LegalDocumentTests
 {
     private static readonly DateTime EffectiveAtUtc = new(2026, 9, 29, 12, 0, 0, DateTimeKind.Utc);

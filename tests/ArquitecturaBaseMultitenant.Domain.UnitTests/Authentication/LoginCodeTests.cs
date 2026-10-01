@@ -3,6 +3,10 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Authentication;
 
+/// <summary>
+/// Comprueba caducidad, intentos y uso único de los códigos. Exige que la verificación corresponda a la
+/// cuenta y al propósito para los que se emitieron.
+/// </summary>
 public sealed class LoginCodeTests
 {
     private static readonly DateTime IssuedAtUtc = new(2026, 9, 29, 12, 0, 0, DateTimeKind.Utc);

@@ -3,6 +3,10 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.ValueObjects;
 
+/// <summary>
+/// Comprueba el formato de tres letras y la igualdad canónica de códigos de moneda. La pertenencia al
+/// catálogo se valida fuera del objeto de valor.
+/// </summary>
 public sealed class CurrencyCodeTests
 {
     [Theory]

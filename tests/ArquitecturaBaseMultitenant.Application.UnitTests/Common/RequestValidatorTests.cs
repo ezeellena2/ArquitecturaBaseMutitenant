@@ -8,6 +8,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Common;
 
+/// <summary>
+/// Comprueba que el puerto de validación ejecute todos los validadores registrados. Protege el uso de
+/// nombres JSON al devolver errores por campo.
+/// </summary>
 public sealed class RequestValidatorTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

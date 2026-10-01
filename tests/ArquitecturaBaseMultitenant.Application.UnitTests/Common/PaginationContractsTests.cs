@@ -2,6 +2,10 @@ using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Common;
 
+/// <summary>
+/// Comprueba el cálculo de navegación, totales y páginas del contrato paginado. Conserva la página
+/// solicitada aunque quede fuera del rango.
+/// </summary>
 public sealed class PaginationContractsTests
 {
     private sealed record SamplePagedRequest : PagedRequest;

@@ -10,6 +10,10 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Common;
 
+/// <summary>
+/// Comprueba que fechas, horas, monedas y números se presenten con el perfil compartido de cultura. Protege
+/// la coherencia de formato entre tipos.
+/// </summary>
 public sealed class DisplayFormatterTests
 {
     [Fact]

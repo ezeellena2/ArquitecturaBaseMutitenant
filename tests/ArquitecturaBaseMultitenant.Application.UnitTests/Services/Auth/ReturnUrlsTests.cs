@@ -3,6 +3,10 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Services.Auth;
 
+/// <summary>
+/// Comprueba que acceso y organización se obtengan únicamente de un retorno local válido del protocolo.
+/// Rechaza destinos externos o selecciones ambiguas.
+/// </summary>
 public sealed class ReturnUrlsTests
 {
     [Theory]

@@ -9,6 +9,10 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Services.Auth;
 
+/// <summary>
+/// Comprueba orden de locks, lecturas, emisión y verificación de códigos. Protege los límites de reenvío y
+/// la invalidación por propósito.
+/// </summary>
 public sealed class LoginCodeFlowTests
 {
     private static readonly DateTimeOffset Now = new(2026, 9, 29, 12, 0, 0, TimeSpan.Zero);

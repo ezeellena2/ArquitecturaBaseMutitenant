@@ -2,6 +2,10 @@ using ArquitecturaBaseMultitenant.Domain.Authentication;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Authentication;
 
+/// <summary>
+/// Comprueba que la prueba de titularidad sea de uso único, caduque y corresponda a usuario, acción y
+/// método. También protege el retorno al cancelar una baja.
+/// </summary>
 public sealed class ReauthTicketTests
 {
     private static readonly DateTime IssuedAtUtc = new(2026, 9, 30, 12, 0, 0, DateTimeKind.Utc);

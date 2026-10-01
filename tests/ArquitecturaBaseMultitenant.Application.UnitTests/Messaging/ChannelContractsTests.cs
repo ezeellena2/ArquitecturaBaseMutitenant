@@ -5,6 +5,10 @@ using ArquitecturaBaseMultitenant.Domain.Authentication;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Messaging;
 
+/// <summary>
+/// Comprueba los contratos de canales y avisos de cuenta. Protege las claves registradas y que los mensajes
+/// no impriman destinatarios ni cuerpos.
+/// </summary>
 public sealed class ChannelContractsTests
 {
     [Fact]

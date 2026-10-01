@@ -2,6 +2,10 @@ using ArquitecturaBaseMultitenant.Domain.Common;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Tenancy;
 
+/// <summary>
+/// Comprueba que una acción de datos compartidos la ejecute la parte requerida desde su espacio. Evita
+/// confundir el acceso de la persona con el de la empresa.
+/// </summary>
 public sealed class PartyPolicyTests
 {
     private readonly Guid _consumerTenantId = Guid.CreateVersion7();

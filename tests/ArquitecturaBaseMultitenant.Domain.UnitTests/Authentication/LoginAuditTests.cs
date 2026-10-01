@@ -3,6 +3,10 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Authentication;
 
+/// <summary>
+/// Comprueba que la auditoría de ingreso conserve el resultado y su código estable de error. Protege la
+/// ausencia de direcciones y códigos de ingreso en el rastro.
+/// </summary>
 public sealed class LoginAuditTests
 {
     private static readonly DateTime OccurredAtUtc = new(2026, 9, 29, 13, 0, 0, DateTimeKind.Utc);

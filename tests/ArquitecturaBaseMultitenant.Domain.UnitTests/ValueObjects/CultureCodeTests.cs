@@ -3,6 +3,10 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.ValueObjects;
 
+/// <summary>
+/// Comprueba el formato y la igualdad canónica de códigos de cultura. Distingue validar la forma de
+/// consultar si una cultura está en el catálogo.
+/// </summary>
 public sealed class CultureCodeTests
 {
     [Theory]

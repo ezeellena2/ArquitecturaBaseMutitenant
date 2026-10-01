@@ -20,6 +20,10 @@ using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Services.Profile;
 
+/// <summary>
+/// Comprueba preferencias y advertencias de métodos de ingreso del perfil. Exige cultura y zona habilitadas
+/// y un método propio utilizable.
+/// </summary>
 public sealed class ProfileServiceTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

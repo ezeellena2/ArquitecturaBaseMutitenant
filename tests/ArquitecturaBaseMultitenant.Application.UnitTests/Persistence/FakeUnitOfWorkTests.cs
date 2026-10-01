@@ -4,6 +4,10 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Persistence;
 
+/// <summary>
+/// Comprueba que el doble transaccional reproduzca las políticas de commit y rollback. Incluye errores,
+/// excepciones y rechazo de transacciones anidadas.
+/// </summary>
 public sealed class FakeUnitOfWorkTests
 {
     private static readonly Error Rejected = Error.Conflict("Tests.Persistence.Rejected", "Rejected by the test.");

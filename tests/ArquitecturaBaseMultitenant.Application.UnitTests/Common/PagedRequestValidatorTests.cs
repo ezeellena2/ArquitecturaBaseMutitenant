@@ -5,6 +5,10 @@ using ArquitecturaBaseMultitenant.Application.Resources;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Common;
 
+/// <summary>
+/// Comprueba los tamaños de página admitidos, sus valores predeterminados y errores. Mantiene la validación
+/// alineada con el contrato de paginado.
+/// </summary>
 public sealed class PagedRequestValidatorTests
 {
     private sealed record ProductsQuery : PagedRequest;

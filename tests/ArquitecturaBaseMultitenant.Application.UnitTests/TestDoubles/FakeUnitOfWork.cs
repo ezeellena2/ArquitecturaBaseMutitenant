@@ -3,6 +3,10 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.TestDoubles;
 
+/// <summary>
+/// Simula el límite transaccional para pruebas unitarias sin base de datos. Cuenta commits y rollbacks,
+/// aplica CommitPolicy y permite provocar un fallo de commit.
+/// </summary>
 internal sealed class FakeUnitOfWork(List<string>? events = null) : IUnitOfWork
 {
     /// <summary>Cuántas veces se abrió el límite transaccional.</summary>

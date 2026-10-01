@@ -3,6 +3,10 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Tenancy;
 
+/// <summary>
+/// Comprueba las transiciones de una membresía y rechaza cambios inválidos. Mantiene el sellado del espacio
+/// a cargo del interceptor.
+/// </summary>
 public sealed class MemberTests
 {
     [Fact]

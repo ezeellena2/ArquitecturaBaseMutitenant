@@ -5,6 +5,10 @@ using ArquitecturaBaseMultitenant.Application.Resources;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Common;
 
+/// <summary>
+/// Comprueba tamaño de página y formato del cursor recibido. Rechaza límites o cursores inválidos antes de
+/// ejecutar una lectura.
+/// </summary>
 public sealed class CursorRequestValidatorTests
 {
     private sealed record AuditQuery : CursorRequest;

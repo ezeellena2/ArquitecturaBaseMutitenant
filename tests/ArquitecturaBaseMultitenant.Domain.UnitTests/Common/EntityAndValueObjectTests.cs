@@ -3,6 +3,10 @@ using ArquitecturaBaseMultitenant.Domain.Common;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Common;
 
+/// <summary>
+/// Comprueba la identidad y la igualdad de entidades y objetos de valor. Protege la generación de Guid v7 y
+/// el constructor necesario para persistencia.
+/// </summary>
 public sealed class EntityAndValueObjectTests
 {
     private sealed class SampleEntity : Entity

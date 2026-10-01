@@ -5,6 +5,10 @@ using FluentValidation;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.ReferenceData;
 
+/// <summary>
+/// Comprueba que los datos nuevos usen referencias conocidas y habilitadas. Distingue los valores
+/// opcionales ausentes de las selecciones inválidas.
+/// </summary>
 public sealed class ReferenceDataValidationTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

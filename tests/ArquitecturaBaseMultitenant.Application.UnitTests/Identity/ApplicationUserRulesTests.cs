@@ -5,6 +5,10 @@ using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Identity;
 
+/// <summary>
+/// Comprueba las reglas puras de la cuenta Identity: nombre, estado y preferencias iniciales. Evita
+/// recortar silenciosamente un nombre demasiado largo.
+/// </summary>
 public sealed class ApplicationUserRulesTests
 {
     [Fact]

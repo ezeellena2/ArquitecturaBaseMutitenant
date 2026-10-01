@@ -3,6 +3,10 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.ValueObjects;
 
+/// <summary>
+/// Comprueba la aritmética, comparación y redondeo de importes con moneda. Impide operar entre monedas
+/// distintas y exige precisión explícita.
+/// </summary>
 public sealed class MoneyTests
 {
     [Fact]

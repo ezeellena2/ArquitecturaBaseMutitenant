@@ -5,6 +5,10 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.ValueObjects;
 
+/// <summary>
+/// Comprueba normalización, longitud y formato del correo. Protege que entradas equivalentes compartan el
+/// mismo valor canónico.
+/// </summary>
 public sealed class EmailTests
 {
     [Fact]

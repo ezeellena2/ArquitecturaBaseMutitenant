@@ -3,6 +3,10 @@ using ArquitecturaBaseMultitenant.Domain.Common;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Auditing;
 
+/// <summary>
+/// Comprueba que una entrada de auditoría conserve actor, espacio, acción y diferencias sin permitir
+/// cambios públicos. También exige que su instante sea UTC.
+/// </summary>
 public sealed class AuditEntryTests
 {
     [Fact]

@@ -4,6 +4,10 @@ using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.ReferenceData;
 
+/// <summary>
+/// Comprueba los snapshots embebidos de catálogos y sus referencias. Exige leerlos sin depender del
+/// checkout y conservar filas históricas deshabilitadas.
+/// </summary>
 [CollectionDefinition("ReferenceDataCatalog", DisableParallelization = true)]
 public sealed class ReferenceDataCatalogTestsGroup;
 

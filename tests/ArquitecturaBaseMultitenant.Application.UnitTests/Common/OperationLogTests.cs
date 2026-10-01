@@ -6,6 +6,10 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Common;
 
+/// <summary>
+/// Comprueba los registros de inicio, duración y resultado de una operación. Exige informar errores con su
+/// código estable sin registrar los datos del resultado.
+/// </summary>
 public sealed class OperationLogTests
 {
     [Fact]

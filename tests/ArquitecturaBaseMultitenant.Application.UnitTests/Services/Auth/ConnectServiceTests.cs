@@ -11,6 +11,10 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Services.Auth;
 
+/// <summary>
+/// Comprueba selección y lectura de perfiles sin mezclar datos personales con membresías de empresa.
+/// Verifica qué organización se recuerda para el próximo ingreso.
+/// </summary>
 public sealed class ConnectServiceTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

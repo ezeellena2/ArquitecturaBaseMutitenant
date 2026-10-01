@@ -8,6 +8,10 @@ using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Resources;
 
+/// <summary>
+/// Comprueba la traducción de errores según la cultura de interfaz y su fallback. Distingue un código
+/// desconocido de uno traducido.
+/// </summary>
 public sealed class ErrorTextsTests
 {
     [Theory]

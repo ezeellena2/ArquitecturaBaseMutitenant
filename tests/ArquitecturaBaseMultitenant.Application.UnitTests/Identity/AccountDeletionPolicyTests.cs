@@ -8,6 +8,10 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Identity;
 
+/// <summary>
+/// Comprueba solicitud, cancelación y vencimiento de la baja. Exige reservar métodos durante la gracia y
+/// conservar el identificador al anonimizar.
+/// </summary>
 public sealed class AccountDeletionPolicyTests
 {
     private static DateTime NowUtc => new FakeTimeProvider(new DateTimeOffset(2026, 9, 30, 15, 0, 0, TimeSpan.Zero))

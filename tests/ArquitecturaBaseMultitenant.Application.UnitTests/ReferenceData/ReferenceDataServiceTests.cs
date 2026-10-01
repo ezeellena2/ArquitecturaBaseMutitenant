@@ -8,6 +8,10 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.ReferenceData;
 
+/// <summary>
+/// Comprueba composición, traducciones y búsqueda de los cinco catálogos. Mantiene visibles los datos
+/// históricos y respeta el fallback de cultura.
+/// </summary>
 public sealed class ReferenceDataServiceTests
 {
     [Fact]

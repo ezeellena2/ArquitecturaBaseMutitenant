@@ -4,6 +4,10 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Services.Auth;
 
+/// <summary>
+/// Comprueba cómo se elige una membresía al cambiar al acceso empresa. Distingue falta de pertenencia y
+/// estados que impiden ingresar.
+/// </summary>
 public sealed class AccessSwitchPolicyTests
 {
     [Fact]

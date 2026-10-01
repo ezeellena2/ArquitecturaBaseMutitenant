@@ -5,6 +5,10 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Services.Auth;
 
+/// <summary>
+/// Comprueba que salir revoque la autorización activa y sus tokens dentro de una sola transacción. Protege
+/// el cierre de la sesión seleccionada.
+/// </summary>
 public sealed class ConnectLogoutServiceTests
 {
     [Fact]

@@ -3,6 +3,10 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Authentication;
 
+/// <summary>
+/// Comprueba creación, verificación y selección del método principal. Distingue el identificador único de
+/// Google de su correo de contacto.
+/// </summary>
 public sealed class LoginMethodTests
 {
     [Fact]

@@ -3,6 +3,10 @@ using ArquitecturaBaseMultitenant.Domain.Settings;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Settings;
 
+/// <summary>
+/// Comprueba las reglas de registro y los valores de configuración global y por espacio. Exige que los
+/// formatos predeterminados provengan de datos de referencia.
+/// </summary>
 public sealed class PlatformSettingsTests
 {
     [Fact]

@@ -6,6 +6,10 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Services.Auth;
 
+/// <summary>
+/// Comprueba los datos de solicitud y verificación del código de ingreso. Exige correo válido, seis dígitos
+/// y un retorno local autorizado.
+/// </summary>
 public sealed class LoginCodeValidationTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

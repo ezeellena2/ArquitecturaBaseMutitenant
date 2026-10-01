@@ -2,6 +2,10 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Results;
 
+/// <summary>
+/// Comprueba las fábricas de errores, su metadata y la agrupación de mensajes por campo. Protege los
+/// códigos de las validaciones de negocio.
+/// </summary>
 public sealed class ValidationErrorTests
 {
     [Fact]

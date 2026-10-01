@@ -2,6 +2,10 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Results;
 
+/// <summary>
+/// Comprueba los estados de éxito y error de Result y Result con valor. Impide construir resultados
+/// contradictorios o leer un valor inexistente.
+/// </summary>
 public sealed class ResultTests
 {
     private static readonly Error SampleError = Error.NotFound("Test.Sample.NotFound", "Sample not found.");

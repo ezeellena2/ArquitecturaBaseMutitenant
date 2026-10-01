@@ -2,6 +2,10 @@ using ArquitecturaBaseMultitenant.Application.Common.Text;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Common;
 
+/// <summary>
+/// Comprueba limpieza, espacios, normalización Unicode y caracteres invisibles. Conserva los caracteres
+/// necesarios para escritura legítima.
+/// </summary>
 public sealed class TextNormalizerTests
 {
     [Fact]
