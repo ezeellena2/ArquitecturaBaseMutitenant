@@ -56,10 +56,10 @@ Cada tarea con lógica sigue: test dirigido → observar rojo → implementació
 
 ### T02 · Persistencia, RLS e índice de accesos (back)
 
-- [ ] Test focal de `InvitationsTests`: emisión guarda Member Invited sin identidad y no aparece en el índice global; fila privada de otra organización sigue invisible incluso con SQL runtime.
-- [ ] Agregar configuración, DbSet, puertos/adaptadores y migración. FK de Member.UserId nullable; índice único sigue protegiendo miembros vinculados. Invitation referencia Member dentro del mismo TenantId y tiene índice de hash único y fechas UTC. Índice único parcial `(TenantId, Destination)` para estado Pending; una segunda emisión pendiente devuelve conflicto. Reenvío y reemplazo administrativo quedan para E5/E6. Aplicar `EnableTenantRls` y grants mínimos.
-- [ ] Adaptar el trigger `sync_user_tenant_access` mediante una migración nueva: eliminar entrada anterior al cambiar vínculo y retornar sin INSERT si NEW.UserId es null; nunca editar la migración ya aplicada. Revisar readers que requieren Guid y SQL Up/Down.
-- [ ] Comandos de `docs/guides/migracion.md`, SQL revisado, `has-pending-model-changes` limpio; integración de invitaciones e índice de accesos verdes. Actualizar inventarios existentes solo si exige la nueva pieza. Commit `feat: persistir invitaciones con aislamiento por organización`.
+- [x] Test focal de `InvitationsTests`: reserva persistida Member Invited sin identidad no aparece en el índice global; fila privada de otra organización sigue invisible incluso con SQL runtime. T03 agrega emisión por issuer.
+- [x] Agregar configuración, DbSet, puertos/adaptadores y migración. FK de Member.UserId nullable; índice único sigue protegiendo miembros vinculados. Invitation referencia Member dentro del mismo TenantId y tiene índice de hash único y fechas UTC. Índice único parcial `(TenantId, Destination)` para estado Pending; una segunda emisión pendiente devuelve conflicto (T03). Reenvío y reemplazo administrativo quedan para E5/E6. Aplicar `EnableTenantRls` y grants mínimos.
+- [x] Adaptar el trigger `sync_user_tenant_access` mediante una migración nueva: eliminar entrada anterior al cambiar vínculo y retornar sin INSERT si NEW.UserId es null; nunca editar la migración ya aplicada. Revisar readers que requieren Guid y SQL Up/Down.
+- [x] Comandos de `docs/guides/migracion.md`, SQL revisado, `has-pending-model-changes` limpio; 10/10 integraciones de invitaciones, índice, RLS y migraciones. Inventario existente de readers de identidad actualizado. Build Infrastructure 0 advertencias. Commit `feat: persistir invitaciones con aislamiento por organización`.
 
 ### T03 · Emisor, token protegido y correo real (back)
 

@@ -69,7 +69,8 @@ public sealed class DevelopmentSeedTests
                 var member = Assert.Single(await context.Members.AsNoTracking()
                     .ToArrayAsync(TestContext.Current.CancellationToken));
                 Assert.Equal(MemberStatus.Active, member.Status);
-                personalOwners.Add(member.UserId);
+                Assert.NotNull(member.UserId);
+                personalOwners.Add(member.UserId.Value);
                 Assert.Single(await context.TenantSettings.AsNoTracking()
                     .ToArrayAsync(TestContext.Current.CancellationToken));
             }

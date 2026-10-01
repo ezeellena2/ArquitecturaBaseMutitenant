@@ -52,6 +52,8 @@ WhatsApp (E8), exportación (E10) y el bloqueo del único Dueño (E4) permanecen
 
 Implementación en curso según el [plan de 3c](../plans/2026-10-01-etapa-3c-invitaciones.md). Una invitación reserva un `Member(Invited)` sin crear identidad: `UserId` puede estar vacío hasta vincularse y nunca se activa sin cuenta. La invitación conserva solo el hash del token, vence en el instante exacto configurado y se acepta una vez; revocarla impide usarla. Si la aceptación crea identidad, un nonce del navegador original permite recuperar su sesión durante cinco minutos ante una respuesta perdida. No concede ingreso a una cuenta previa.
 
+`tenant.Invitations` tiene clave compuesta, vínculo al miembro del mismo tenant, destino pendiente único y RLS forzado. `identity.sync_user_tenant_access` omite miembros sin identidad y agrega su acceso al vincularlos en la misma transacción. El reader de miembros solo proyecta identidades vinculadas. La migración nueva conserva las membresías existentes; su rollback retira las reservas sin usuario antes de restaurar `UserId NOT NULL`.
+
 La invitación permite crear una identidad sin espacio personal o vincular una identidad existente a una organización. Su emisión, aceptación y pantalla pertenecen a 3c.
 
 ## Reglas de implementación

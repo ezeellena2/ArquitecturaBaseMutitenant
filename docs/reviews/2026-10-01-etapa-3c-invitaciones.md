@@ -5,13 +5,17 @@ Estado: en curso. No se declara cerrada la etapa ni se cambia `HarnessStage` has
 | Tarea | Resultado | Commit |
 |---|---|---|
 | Plan previo | Revisado y guardado antes de programar | `7934f42` |
-| T01 · Dominio | Reglas de vigencia/uso único/bootstrap y Member sin identidad; 13/13 | commit que incorpora esta fila |
+| T01 · Dominio | Reglas de vigencia/uso único/bootstrap y Member sin identidad; 13/13 | `abbd59d` |
+| T02 · Persistencia | RLS, reservas sin identidad e índice de accesos; 10/10 integraciones | commit que incorpora esta fila |
 
 ## TDD y verificaciones
 
 - T01 rojo: `InvitationTests.cs` no compiló porque no existían el namespace `Domain.Invitations` ni `Invitation` (`CS0234`, `CS0246`). El intento inicial con red restringida falló en NuGet (`NU1900`); no se contó como rojo de conducta. Restauración con acceso a NuGet y repetición dieron el rojo esperado.
 - T01 verde: `dotnet test --project tests/ArquitecturaBaseMultitenant.Domain.UnitTests/ArquitecturaBaseMultitenant.Domain.UnitTests.csproj --no-restore -- --filter-class '*InvitationTests' --filter-class '*MemberTests'`: total 13, correcto 13, error 0, omitido 0.
 - Build Domain: 0 advertencias, 0 errores.
+- T02 rojo: tras compilar adaptadores y ajustar las proyecciones de Guid nullable, los tests reales fallaron en `PendingModelChangesWarning` por la migración aún ausente. El intento sin acceso al pipe de Docker no se contó como rojo de conducta.
+- T02 verde: `InvitationsTests`, `UserTenantAccessIndexTests`, `RlsPolicyInventoryTests` y `MigrationsTests`: total 10, correcto 10, error 0, omitido 0. PostgreSQL aislado creado y eliminado por Testcontainers.
+- Build Infrastructure: 0 advertencias, 0 errores. `has-pending-model-changes` indicó que no hay cambios; SQL idempotente revisado con claves/FKs, índices parciales, RLS forzado, grants SELECT/INSERT/UPDATE y trigger actualizado.
 
 ## E2E real
 

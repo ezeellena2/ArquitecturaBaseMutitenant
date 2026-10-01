@@ -6,6 +6,7 @@ namespace ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 public interface IMemberRepository
 {
     Task<Member?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken);
+    Task<Member?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 
     void Add(Member member);
 }

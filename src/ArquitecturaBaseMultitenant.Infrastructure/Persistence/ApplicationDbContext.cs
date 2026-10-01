@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Legal;
+using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -44,6 +45,7 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
     internal DbSet<UserTenantAccess> UserTenantAccesses => Set<UserTenantAccess>();
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Member> Members => Set<Member>();
+    public DbSet<Invitation> Invitations => Set<Invitation>();
     public DbSet<TenantSettings> TenantSettings => Set<TenantSettings>();
     public DbSet<PlatformSettings> PlatformSettings => Set<PlatformSettings>();
     public DbSet<SecurityEvent> SecurityEvents => Set<SecurityEvent>();
