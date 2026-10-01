@@ -1,6 +1,6 @@
 # Etapa 3b · La cuenta — plan de implementación
 
-> **Para ejecución en este chat:** usar `writing-plans` y `executing-plans`, tarea por tarea. La instrucción explícita del usuario prevalece: un solo chat, ejecución directa en main, sin worktrees, subagentes ni push. Cada paso es una acción de 2–5 minutos; si crece, dividirlo conservando el ciclo rojo → mínimo código → verde → commit.
+> **Para ejecución en este chat:** usar `writing-plans` y `executing-plans`, tarea por tarea. La instrucción explícita del usuario prevalece: un solo chat, ejecución directa en main, sin worktrees, subagentes ni push. Los pasos de 2–5 minutos son orientativos; cada cambio coherente cierra el ciclo rojo → mínimo código → verde → commit, sin exigir un commit por paso interno. T01–T30 conservan su registro histórico; esta cadencia rige las tareas pendientes.
 
 **Objetivo:** completar solo La cuenta: perfil/idioma, correo y Google, reautenticación, términos nuevos y baja con gracia; demostrarlo con navegador, API, PostgreSQL y correo pickup reales.
 
@@ -401,11 +401,11 @@ Guardar manifest e informe en front `docs/design/capturas/etapa-3b/`; cada caso 
 2. `dotnet test` con Docker: suite completa, incluidos LoginMethodsTests/LegalAcceptanceTests/AccountDeletionTests/AccountDeletionParticipantsTests y aislamiento.
 3. Front `npm run lint`, `npm test`, `npm run build`, `npm run contracts:check`: exit 0.
 4. Generador referencias: `node --test scripts/datos-de-referencia/generar.test.mjs`; salidas intactas.
-5. Inventarios existentes de rutas/contratos y arnés back/front verdes; contratos regenerados en ambos repos.
-6. Todos los pares visuales 3b presentes/revisados; diferencias corregidas o documentadas con motivo.
+5. Inventarios existentes de rutas/contratos y arnés back/front verdes; contratos regenerados y commiteados en ambos repos si cambió la API, con `contracts:check` siempre verde.
+6. Pares visuales de pantallas y estados nuevos o modificados en 3b presentes/revisados; los no tocados conservan la comparación aprobada. Diferencias corregidas o documentadas con motivo.
 7. `npm run test:e2e:real`: registrar fallo inicial de cada recorrido 3b y salida final pasando todos, sin mocks ni Development. Obligatorio: sumar correo con .eml, quitar con código en otro, términos versión nueva, baja/cancelación al ingresar y en-US desde /cuenta; mantener puerta empresa 3a.
 8. `aspire stop`: AppHost detenido; no push; repos sin cambios propios sin commit.
-9. Informe `docs/reviews/2026-09-30-etapa-3b-cuenta.md`: cada tarea/hash y rojo/verde, resultados puerta y salida E2E, diferencias de lienzo/motivos, «Decisiones tomadas», pendientes solo en backlog y pasos manuales exactos.
+9. Informe `docs/reviews/2026-09-30-etapa-3b-cuenta.md`: cada cambio coherente/hash y rojo/verde donde hubo lógica, resultados puerta y salida E2E, diferencias de lienzo/motivos, «Decisiones tomadas», pendientes solo en backlog y pasos manuales exactos.
 10. Declarar solo 3b cerrada si todo lo anterior pasa. 3c queda pendiente con su propia puerta.
 
 ## Decisiones tomadas (iniciales)
@@ -465,7 +465,7 @@ Archivos: entidad/configuración/migración/repositorio `LoginMethod`, registro,
 ### T35 · E2E real, comparación visual y puerta completa
 
 - [ ] Actualizar los recorridos reales con la reauth legítima y comprobar que ambos ataques quedan bloqueados, que el pendiente se recupera y que el método nuevo no sirve como fuente en la sesión anterior. Ejecutar `npm run test:e2e:real` completo verde.
-- [ ] Capturar las nuevas reautenticaciones desktop/móvil en `docs/design/capturas/etapa-3b/`, comparar con el diálogo existente y documentar la extensión autorizada por el pedido de seguridad. Repetir comparación general.
+- [ ] Capturar las nuevas reautenticaciones desktop/móvil en `docs/design/capturas/etapa-3b/`, comparar esos estados con el diálogo existente y documentar la extensión autorizada por el pedido de seguridad. Los estados no tocados conservan su comparación anterior.
 - [ ] Repetir build back 0 advertencias, `dotnet test` con Docker; lint/test/build/contracts:check front; generador, arnés y contratos existentes.
 - [ ] Detener Aspire; registrar commits, rojos/verdes, salida literal E2E, diferencias y decisiones. Actualizar manual real para ambos controles. Commit de evidencia: `docs: registrar correcciones y puerta de seguridad de la 3b`.
 

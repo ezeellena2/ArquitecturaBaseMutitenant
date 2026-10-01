@@ -1,6 +1,6 @@
 # Plan de desarrollo: ArquitecturaBaseMultitenant (back + front)
 
-> **Para agentes:** este es el plan maestro. La Etapa 0 está al nivel ejecutable. Cada una de las demás se detalla **al arrancarla**, con `writing-plans`, en `docs/plans/AAAA-MM-DD-etapa-N-<tema>.md` (TDD, pasos de 2 a 5 minutos), porque depende de cómo quedó la anterior. Casillas `- [ ]` para el seguimiento.
+> **Para agentes:** este es el plan maestro. La Etapa 0 está al nivel ejecutable. Cada una de las demás se detalla **al arrancarla**, con `writing-plans`, en `docs/plans/AAAA-MM-DD-etapa-N-<tema>.md` (TDD donde hay lógica y cambios coherentes que puedan verificarse y commitearse). Los pasos breves son orientativos, no una cuota de commits. Casillas `- [ ]` para el seguimiento.
 
 **Objetivo:** construir desde cero la plantilla multitenant **B2B + B2C** con las convenciones de ArquitecturaBase. Incluye:
 - una sola cuenta por persona con **dos accesos que no se mezclan**: como persona (B2C) y como empresa (B2B), como en Mercado Libre y para cualquier tipo de negocio;
@@ -26,18 +26,19 @@ El resultado tiene que servir para empezar productos reales.
 3. Desde la E1, el inventario de rutas (`ExplicitRouteInventoryTests`) actualizado, con un test por cada ruta nueva.
 4. Si la etapa toca datos de negocio: los tests de aislamiento de `Tenancy/` en verde y ampliados a las rutas nuevas.
 5. Desde la E1, si la etapa muestra datos nuevos: se usan `shared/ui/format` y `shared/ui/fields`, y cada tipo nuevo tiene sus casos en `format-cases.json`.
-6. Desde la E1, `docs/contracts/openapi.json` y `src/shared/api/generated` regenerados y commiteados, con su chequeo en CI.
-7. La documentación de la etapa, actualizada **en el mismo commit** que el código. **Arnés:**
+6. Desde la E1, si cambia el contrato HTTP, `docs/contracts/openapi.json` y `src/shared/api/generated` se regeneran y commitean; `contracts:check` y el chequeo de CI siguen siendo obligatorios en cada puerta.
+7. La documentación afectada por una conducta o regla cambia **en el mismo commit** que el código; el informe de la etapa se cierra en la puerta. **Arnés:**
    - toda carpeta nueva del mapa (`arnes.md` §3) tiene su `AGENTS.md` + `CLAUDE.md`;
-   - toda regla nueva tiene su ficha en `docs/rules/` y su verificación;
+   - toda convención transversal nueva o modificada actualiza su ficha en `docs/rules/` y usa una verificación pertinente, existente o nueva; una decisión local se registra en la feature o el informe, con test de conducta si agrega lógica;
    - los "Copiá de" marcados con esta etapa ya apuntan a archivos reales;
    - `HarnessTests` y `harness.test.ts` están en verde; `HarnessStage` se sube al cerrar la etapa y exige los tests nombrados en las fichas hasta esa etapa.
 8. `aspire stop` si se levantó el AppHost.
-9. Desde la E3, si la etapa programa pantallas: **comparación visual con el lienzo**. Por cada pantalla y cada estado de su tablero en `docs/design/lienzo/`, una captura de la pantalla real y otra del tablero, las dos a 1440 × 900 y a 390 × 844 (Playwright), guardadas en `docs/design/capturas/etapa-N/`. Tienen que coincidir: la estructura, los textos, el orden, los colores (tokens de tema.md), los controles y los estados. Cualquier diferencia se corrige, o se anota con su motivo en el informe de la etapa para que el usuario la apruebe. **No se inventa nada que el tablero no tenga:** ni campos, ni textos, ni pantallas, ni acciones. Si falta algo, se dibuja primero.
+9. Desde la E3, si la etapa programa pantallas: **comparación visual con el lienzo** de las pantallas y estados nuevos o modificados. Una pantalla nueva incluye todos sus estados aprobados aplicables; una modificación posterior recaptura solo los estados afectados. Por cada estado comparado, una captura de la pantalla real y otra del tablero en `docs/design/lienzo/`, las dos a 1440 × 900 y a 390 × 844 (Playwright), guardadas en `docs/design/capturas/etapa-N/`. Tienen que coincidir: la estructura, los textos, el orden, los colores (tokens de tema.md), los controles y los estados. Cualquier diferencia se corrige, o se anota con su motivo en el informe de la etapa para que el usuario la apruebe. **No se inventa nada que el tablero no tenga:** ni campos, ni textos, ni pantallas, ni acciones. Si falta algo, se dibuja primero.
 10. Desde la E3a y en **cada etapa posterior**, `npm run test:e2e:real` del front pasa contra el front y la Api reales, con una base PostgreSQL exclusiva del E2E, separada del volumen de Development de Aspire, `Email:Delivery=PickupDirectory` y un directorio temporal de `.eml`. Playwright no intercepta peticiones ni usa mocks: el runner crea en esa base la persona y la organización necesarias, registra una cuenta por código leído del `.eml`, sale, entra por la puerta empresa con su propia cuenta, comprueba `/org`, F5, cambio a Personal y logout. La prueba exige `E2E_PICKUP_DIR` absoluto; ningún valor de secreto, correo ni código se imprime. Sin esta prueba verde, la etapa no se cierra aunque pasen build, tests de integración y capturas.
 
 **Forma de trabajo:**
-- Commits chicos, en español, con conventional commits. **Cada tarea termina en un commit.**
+- Durante la etapa: test focal rojo → verde para lógica y build/lint del alcance afectado por cambio coherente; si se toca ruta, persistencia, autenticación o aislamiento, también integración focal y controles de seguridad pertinentes. Las tareas de documentación o capturas usan su verificación propia, sin tests que solo repliquen el archivo. **La puerta completa se ejecuta al cierre, no por cada paso.**
+- Commits chicos, en español, con conventional commits. **Cada cambio coherente y verificado termina en un commit**; los pasos internos no requieren commits separados.
 - En el front, toda pantalla se dibuja y el usuario la aprueba antes de programarla. **Las pantallas ya aprobadas son los tableros de `docs/design/lienzo/`:** se programan copiando su estructura, sus textos y sus estados.
 
 ---

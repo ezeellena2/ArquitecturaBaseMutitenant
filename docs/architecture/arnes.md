@@ -127,7 +127,9 @@ Hasta que ambos repos estén en GitHub, cada CI usa solo su propio checkout. Los
 
 ## 6. Mantenimiento
 
-- **Regla nueva** → ficha (o sección de una ficha existente) + su verificación + fila en la tabla "si vas a tocar X, leé Y" del `AGENTS.md` raíz si corresponde, **en el mismo commit** que el código que la introduce.
+- **Convención transversal nueva o modificada** → ficha (o sección de una ficha existente) + verificación pertinente, mediante un test existente o nuevo cuando haga falta, y fila en la tabla "si vas a tocar X, leé Y" del `AGENTS.md` raíz si corresponde, **en el mismo commit** que el código que la introduce. Una decisión local se registra en la feature o en «Decisiones tomadas» y, si agrega lógica, se cubre con su test de conducta; no crea una ficha ni una guarda de arquitectura por sí sola.
 - **Carpeta nueva del mapa** → sus dos punteros en la misma tarea.
 - **Un agente inventó algo** → no se corrige solo el código: se busca qué nivel del arnés no lo guió (falta puntero, la ficha no era clara o falta test) y se arregla ese nivel.
 - Al cerrar cada etapa, la puerta de documentación a ciegas (plan, Etapa 4) se repite con las preguntas de las áreas nuevas.
+
+Durante una etapa, cada cambio coherente se verifica con su test focal y el build del proyecto afectado; las integraciones relevantes se suman al tocar rutas, persistencia, autenticación o aislamiento. La puerta completa de ambos repos, el E2E real y la comparación visual se ejecutan al cerrar la etapa, según el plan maestro. No se repiten por cada paso interno.

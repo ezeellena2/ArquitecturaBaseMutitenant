@@ -1,8 +1,12 @@
 # Tests
 
-**Regla:** TDD donde hay lógica. Cada pieza tiene su test en el proyecto y la carpeta equivalentes. Nada se da por terminado sin `dotnet build` sin advertencias y `dotnet test` en verde.
+**Regla:** TDD donde hay lógica. Cada conducta con reglas propias tiene un test en el proyecto y la carpeta equivalentes; los DTO, la documentación y las delegaciones simples no necesitan un test que replique su implementación. Durante la etapa se verifican los cambios coherentes con tests dirigidos y build del proyecto afectado; `dotnet build` de la solución sin advertencias y `dotnet test` completos son puerta de cierre de etapa y de CI.
 
 ## Cómo se hace
+- Para un cambio de lógica, observar rojo por la conducta ausente, implementar, repetir el test focal en verde y commitear el cambio coherente. Los pasos internos no necesitan un commit ni una suite completa cada uno.
+- Si cambia una ruta, persistencia, autenticación o aislamiento, correr antes del commit la integración focal y los tests de seguridad afectados. Las pruebas con Testcontainers usan Docker.
+- Para documentación, capturas o configuración sin lógica, usar la comprobación pertinente; no escribir un test que solo repita el cambio.
+
 | Qué | Dónde | Con qué |
 |---|---|---|
 | Regla de una entidad o value object | `Domain.UnitTests/<Área>/` | puro |

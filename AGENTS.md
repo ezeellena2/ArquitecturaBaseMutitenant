@@ -35,11 +35,11 @@ Las decisiones están en [`docs/decisions/README.md`](docs/decisions/README.md) 
 | escribir tests | [tests](docs/rules/tests.md) |
 | agregar un área completa | `docs/guides/agregar-un-area.md` (nace en la Etapa 4) |
 
-El inventario de todos los estándares transversales (los definidos y los propuestos) está en [`docs/architecture/estandares.md`](docs/architecture/estandares.md). Si una regla no está escrita: **copiá cómo lo resuelve ArquitecturaBase** (`../ArquitecturaBase`, `../ArquitecturaBaseFront`); si tampoco está ahí, **decidí vos lo más simple y coherente con estos docs, anotalo en la sección «Decisiones tomadas» del informe de la etapa y seguí**. Frená y preguntá **solo** si la decisión cambia el producto (qué ve o puede hacer un usuario, una pantalla del lienzo, el modelo de accesos) o contradice una regla escrita. Una duda técnica menor nunca frena una etapa. Después se agrega la ficha y su test.
+El inventario de todos los estándares transversales (los definidos y los propuestos) está en [`docs/architecture/estandares.md`](docs/architecture/estandares.md). Si una regla no está escrita: **copiá cómo lo resuelve ArquitecturaBase** (`../ArquitecturaBase`, `../ArquitecturaBaseFront`); si tampoco está ahí, **decidí vos lo más simple y coherente con estos docs, anotalo en la sección «Decisiones tomadas» del informe de la etapa y seguí**. Frená y preguntá **solo** si la decisión cambia el producto (qué ve o puede hacer un usuario, una pantalla del lienzo, el modelo de accesos) o contradice una regla escrita. Una duda técnica menor nunca frena una etapa. Una convención transversal nueva se agrega a la ficha y se verifica con un test pertinente, existente o nuevo; una decisión local queda en la feature o el informe, con test de conducta si agrega lógica.
 
 ## Forma de trabajo
-- Commits chicos, en español, con conventional commits. **Commitear al cerrar cada tarea**: el código que nunca se commitea se pierde.
-- TDD donde hay lógica. Antes de dar algo por terminado: `dotnet build` sin advertencias y `dotnet test` en verde. Los tests de integración necesitan Docker. Apagar Aspire con `aspire stop`.
+- Commits chicos, en español, con conventional commits. **Commitear cada cambio coherente y verificado**; los pasos internos de una tarea no requieren commits separados. No acumular trabajo terminado sin commitear.
+- TDD donde hay lógica: test dirigido rojo → verde y build del proyecto afectado durante el trabajo. Si cambia una ruta, persistencia, autenticación o aislamiento, correr además la integración y los tests de seguridad afectados. La solución completa (`dotnet build` sin advertencias y `dotnet test` con Docker) se verifica al cerrar la etapa y en CI; no se repite por cada paso. Apagar Aspire con `aspire stop` si se levantó.
 - Una pantalla nueva del front se dibuja antes de programarse.
 
 ## Reglas que no se negocian
