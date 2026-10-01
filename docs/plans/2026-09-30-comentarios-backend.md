@@ -4,7 +4,7 @@
 
 **Objetivo:** que una persona pueda abrir cada archivo C# escrito a mano del backend y entender la responsabilidad del tipo principal, su motivo y su lugar en el flujo.
 
-**Alcance:** inventariar todos los `.cs` de `src/` de Api, Application, Domain, Infrastructure, AppHost y ServiceDefaults. Se excluyen por categoría las migraciones, archivos generados y artefactos `bin/obj`; entre los escritos a mano solo pueden quedar sin comentario los DTO, enums y marcadores cuyo nombre y miembros expliquen íntegramente su propósito. Al cierre se informa cuántos archivos se cubrieron y cuántos se excluyeron por cada categoría. En tests solo se aclaran fixtures o helpers cuyo propósito no resulte evidente del nombre y de las pruebas.
+**Alcance:** todos los `.cs` escritos a mano de `src/`, `tests/` y `tools/` de Api, Application, Domain, Infrastructure, AppHost, ServiceDefaults y herramientas E2E, incluidos DTO, enums, catálogos de errores, fixtures y pruebas. Se excluyen las migraciones, los archivos generados y los artefactos `bin/obj`. El usuario confirmó este alcance al pedir también una explicación de `AccessErrors`; no quedan exclusiones por considerar un tipo autoexplicativo.
 
 **Criterio:** un `/// <summary>` de una a tres frases sobre el tipo principal, después del `namespace`. Debe explicar qué hace y para qué existe; cuando importa, señalar el límite con la siguiente pieza. En archivos de nivel superior sin tipo principal (`Program.cs`, `AppHost.cs`), el comentario de propósito va antes del bloque de arranque/composición. Se conservan los resúmenes existentes que ya responden eso. Un método público o bloque complejo recibe comentario solo si su nombre no aclara una decisión importante del flujo; nunca se traduce línea por línea. No copiar el nombre del tipo como única descripción, no describir `using`, no incluir secretos ni prometer comportamientos que la implementación no tenga.
 
@@ -21,6 +21,14 @@
 ## Verificación de calidad
 
 - Abrir una muestra por área y leer únicamente su `summary`: debe permitir decir qué hace el tipo y dónde seguir el flujo.
-- No agregar comentarios a DTOs, enums o marcadores si el nombre y sus miembros ya cuentan toda la historia.
+- En DTOs, enums y marcadores, explicar su función en el flujo; en las pruebas, el comportamiento que protegen. Evitar limitarse a traducir el nombre.
 - En un archivo con varios tipos relevantes, documentar cada tipo que tenga responsabilidad propia.
 - La documentación debe permanecer junto al tipo para aparecer en las ayudas de Visual Studio.
+
+## Resultado de la ampliación
+
+- Los 757 archivos elegibles tienen explicación inicial: 532 de `src/`, 222 de `tests/` y 3 de `tools/`. Esta ampliación documentó 258 archivos adicionales y conservó las explicaciones existentes.
+- `AccessErrors` explica además los códigos estables y el motivo de cada rechazo. Los métodos reciben aclaraciones cuando aportan información que no resulta evidente del nombre.
+- La auditoría de los commits C# confirma que solo cambiaron comentarios. Los cambios de seguridad que ya estaban en curso permanecen fuera de esos commits.
+- `dotnet build ArquitecturaBaseMultitenant.slnx --artifacts-path .artifacts/comments-validation`: 0 advertencias y 0 errores. Se usó una carpeta separada porque la API abierta bloqueaba las DLL del destino habitual.
+- `dotnet test --artifacts-path .artifacts/comments-validation --no-build --no-ansi --no-progress`: 1117 correctos, 0 errores, 0 omitidos; duración de 4 minutos y 10 segundos. `git diff --check` sin problemas.

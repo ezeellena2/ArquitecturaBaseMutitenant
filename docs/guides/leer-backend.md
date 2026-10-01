@@ -37,4 +37,6 @@ Este recorrido vincula Google a una **cuenta existente**. El registro o ingreso 
 
 Las reglas generales de carpetas y capas están en [`backend.md`](../architecture/backend.md); los recorridos del producto están en `docs/features/`.
 
-Al crear o modificar una clase con lógica, mantené su `summary` en una a tres frases sobre responsabilidad y motivo. Un DTO, enum o marcador cuyo nombre y miembros ya lo explican no necesita un comentario que repita lo mismo.
+Cada archivo C# escrito a mano de `src/`, `tests/` y `tools/` tiene una explicación breve en español de qué hace y para qué sirve. Al crear o modificar uno, mantené su `summary` en una a tres frases sobre responsabilidad y motivo, también si es un DTO, enum o catálogo de errores. En las pruebas, explicá qué comportamiento protegen; en los modelos, qué información transportan y quién la usa. En un programa sin clase explícita, usá un comentario `//` antes del arranque. Las migraciones y los archivos generados conservan sus reglas propias y quedan fuera de esta convención.
+
+Los comentarios de métodos o bloques aclaran una decisión, una regla o un efecto que no resulte evidente del nombre. Por ejemplo, `AccessErrors` reúne rechazos de acceso; sus constantes son códigos estables para traducciones y su `Error.Forbidden` termina en un HTTP 403. No hace falta explicar cada `using` ni narrar cada asignación.
