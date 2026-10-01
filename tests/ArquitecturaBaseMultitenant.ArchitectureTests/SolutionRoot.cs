@@ -1,5 +1,9 @@
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Localiza la raíz de la solución recorriendo los directorios desde el ensamblado de tests. Permite leer
+/// archivos del repositorio sin depender del directorio de ejecución.
+/// </summary>
 internal static class SolutionRoot
 {
     public static string FullPath { get; } = Find();

@@ -5,6 +5,10 @@ using ArquitecturaBaseMultitenant.ArchitectureTests.Support;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Detecta catálogos de referencia escritos como listas, comparaciones, switches o enums en código
+/// productivo. Exige obtener esos datos de su fuente central.
+/// </summary>
 public sealed class ReferenceDataHardcodeTests
 {
     private enum UnrelatedChoice { ARS }

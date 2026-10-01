@@ -5,6 +5,10 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Comprueba el formato, la unicidad y las traducciones de los códigos de error. Protege el contrato
+/// estable que comparten Domain, API y front.
+/// </summary>
 public sealed partial class ErrorCodeTests
 {
     // Códigos reservados del contrato HTTP y títulos de ProblemDetails.

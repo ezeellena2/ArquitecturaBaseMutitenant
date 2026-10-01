@@ -5,6 +5,10 @@ using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Comprueba que solo los adaptadores autorizados lean los conjuntos globales de identidad. Evita ampliar
+/// accidentalmente el acceso a cuentas o métodos de ingreso.
+/// </summary>
 public sealed partial class IdentityStorageAccessTests
 {
     private const string Infrastructure = "ArquitecturaBaseMultitenant.Infrastructure.";

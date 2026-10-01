@@ -2,6 +2,10 @@ using System.Xml.Linq;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Comprueba que Application use únicamente los paquetes admitidos y no dependa de frameworks compartidos.
+/// Protege su separación de la infraestructura.
+/// </summary>
 public sealed class ApplicationPackagesTests
 {
     // Application no conoce EF Core ni ASP.NET Core: solo usa las abstracciones de Microsoft.Extensions (logging y

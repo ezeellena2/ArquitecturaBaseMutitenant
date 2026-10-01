@@ -8,6 +8,10 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Detecta números de punto flotante en entidades y decimales sin precisión explícita en EF. Protege la
+/// representación exacta de importes y valores decimales.
+/// </summary>
 public sealed class DecimalPrecisionTests
 {
     private static readonly Assembly DomainAssembly = Assembly.Load("ArquitecturaBaseMultitenant.Domain");

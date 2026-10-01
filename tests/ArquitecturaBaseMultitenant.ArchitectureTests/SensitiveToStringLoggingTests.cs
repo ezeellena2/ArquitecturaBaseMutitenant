@@ -3,6 +3,10 @@ using ArquitecturaBaseMultitenant.Api.Contracts.Common;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Comprueba que los contratos con datos sensibles oculten sus valores en ToString. Evita que el registro
+/// de una solicitud revele correos, códigos o tickets.
+/// </summary>
 public sealed class SensitiveToStringLoggingTests
 {
     private const string Sentinel = "private-value-7fbd63";

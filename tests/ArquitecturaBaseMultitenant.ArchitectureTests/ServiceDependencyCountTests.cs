@@ -3,6 +3,10 @@ using System.Runtime.CompilerServices;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Comprueba que los constructores de servicios no superen ocho dependencias. Ayuda a detectar
+/// responsabilidades que necesitan un helper propio.
+/// </summary>
 public sealed class ServiceDependencyCountTests
 {
     private const string ServicesNamespace = "ArquitecturaBaseMultitenant.Application.Services";

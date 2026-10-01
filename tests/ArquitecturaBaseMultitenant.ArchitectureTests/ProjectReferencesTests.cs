@@ -2,6 +2,10 @@ using System.Xml.Linq;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Comprueba que cada proyecto referencie únicamente los proyectos permitidos. Protege la dirección de
+/// dependencias de la solución.
+/// </summary>
 public sealed class ProjectReferencesTests
 {
     public static TheoryData<string, string[]> AllowedReferences => new()

@@ -3,6 +3,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Detecta consultas que ignoran filtros de tenant, publicación o partes fuera de las excepciones
+/// autorizadas. Distingue el filtro de borrado lógico que sí puede omitirse.
+/// </summary>
 public sealed class QueryFilterBypassTests
 {
     private const string EfExtensions = "Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions";

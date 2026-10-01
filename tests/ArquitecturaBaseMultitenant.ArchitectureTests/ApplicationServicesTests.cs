@@ -3,6 +3,10 @@ using System.Runtime.CompilerServices;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Comprueba que cada servicio de Application implemente su interfaz de servicio. Mantiene explícito el
+/// contrato que consumen los controllers.
+/// </summary>
 public sealed class ApplicationServicesTests
 {
     private const string ServicesNamespace = "ArquitecturaBaseMultitenant.Application.Services";

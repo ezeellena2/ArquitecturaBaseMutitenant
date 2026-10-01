@@ -4,6 +4,10 @@ using NetArchTest.Rules;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Comprueba las dependencias de las capas y sus ensamblados. Impide que Domain o Application dependan de
+/// componentes técnicos de capas externas.
+/// </summary>
 public sealed class LayerDependencyTests
 {
     private const string DomainNamespace = "ArquitecturaBaseMultitenant.Domain";

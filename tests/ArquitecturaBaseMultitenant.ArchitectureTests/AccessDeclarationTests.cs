@@ -9,6 +9,10 @@ using Microsoft.AspNetCore.Mvc.Routing;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Comprueba que cada acción HTTP declare su acceso y que las rutas anónimas pertenezcan a la lista
+/// autorizada. Evita publicar operaciones con un alcance ambiguo.
+/// </summary>
 public sealed class AccessDeclarationTests
 {
     private static readonly HashSet<Type> AnonymousMainDomainControllers =

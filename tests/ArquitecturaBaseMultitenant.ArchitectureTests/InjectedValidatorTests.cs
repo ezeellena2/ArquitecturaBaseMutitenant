@@ -4,6 +4,10 @@ using FluentValidation;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Detecta servicios que construyen o inyectan validadores concretos en vez del puerto común. Mantiene una
+/// sola entrada para la validación de solicitudes.
+/// </summary>
 public sealed class InjectedValidatorTests
 {
     private const string ServicesNamespace = "ArquitecturaBaseMultitenant.Application.Services";

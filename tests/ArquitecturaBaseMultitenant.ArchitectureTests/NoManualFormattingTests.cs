@@ -5,6 +5,10 @@ using Mono.Cecil.Cil;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Detecta formateo manual de fechas y números en código productivo. Exige centralizar la presentación en
+/// DisplayFormatter.
+/// </summary>
 public sealed class NoManualFormattingTests
 {
     private static readonly string[] ProductionAssemblies =

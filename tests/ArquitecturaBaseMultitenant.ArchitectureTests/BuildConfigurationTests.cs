@@ -4,6 +4,10 @@ using System.Xml.Linq;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Comprueba la versión del SDK, los analizadores y las acciones de CI fijadas por el proyecto. Evita que
+/// el entorno de compilación cambie sin una decisión explícita.
+/// </summary>
 public sealed partial class BuildConfigurationTests
 {
     private static readonly Dictionary<string, (string Sha, string Version)> ActionPins =

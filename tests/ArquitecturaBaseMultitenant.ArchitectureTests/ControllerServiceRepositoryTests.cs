@@ -11,6 +11,10 @@ using NetArchTest.Rules;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Comprueba que los controllers deleguen en servicios y no accedan directamente a persistencia o
+/// integraciones. Protege el recorrido entre las capas.
+/// </summary>
 public sealed class ControllerServiceRepositoryTests
 {
     private const string DomainNamespace = "ArquitecturaBaseMultitenant.Domain";

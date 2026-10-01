@@ -3,6 +3,10 @@ using System.Text.RegularExpressions;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Comprueba que las reglas, sus referencias y los tests del arnés correspondan a entregables existentes.
+/// Incluye el inventario de pruebas C#, Node y TypeScript.
+/// </summary>
 public sealed class HarnessTests
 {
     private static readonly string Root = SolutionRoot.FullPath;

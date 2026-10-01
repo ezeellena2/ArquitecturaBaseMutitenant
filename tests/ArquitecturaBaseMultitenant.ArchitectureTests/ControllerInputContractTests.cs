@@ -4,6 +4,10 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Comprueba que los controllers reciban contratos HTTP y tipos simples admitidos. También protege el
+/// formato de instantes y enums del contrato público.
+/// </summary>
 public sealed class ControllerInputContractTests
 {
     private const string ContractsNamespace = "ArquitecturaBaseMultitenant.Api.Contracts";

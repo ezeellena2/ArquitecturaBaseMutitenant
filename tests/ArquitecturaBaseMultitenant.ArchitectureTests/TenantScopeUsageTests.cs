@@ -3,6 +3,10 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Detecta entradas a un alcance de organización fuera de los adaptadores y altas autorizados. Protege el
+/// punto donde se cambia el contexto de aislamiento.
+/// </summary>
 public sealed class TenantScopeUsageTests
 {
     private const string TenantContext = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.TenantContext";

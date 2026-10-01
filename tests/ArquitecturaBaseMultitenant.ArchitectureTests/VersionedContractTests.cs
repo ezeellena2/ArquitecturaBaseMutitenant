@@ -4,6 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Comprueba que las ediciones de entidades con versión reciban esa versión en su contrato HTTP. Protege la
+/// detección de cambios simultáneos.
+/// </summary>
 public sealed class VersionedContractTests
 {
     [Fact]

@@ -5,6 +5,10 @@ using FluentValidation;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Detecta límites de texto repetidos o distintos entre Domain, validación y persistencia. Exige usar el
+/// catálogo central de longitudes.
+/// </summary>
 public sealed partial class TextLimitsTests
 {
     [Fact]

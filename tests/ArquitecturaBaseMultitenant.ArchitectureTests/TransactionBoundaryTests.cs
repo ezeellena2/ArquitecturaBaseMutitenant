@@ -10,6 +10,10 @@ using Mono.Cecil.Cil;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Comprueba quién abre transacciones y quién guarda el DbContext. Exige que las escrituras pasen por la
+/// unidad de trabajo del caso de uso.
+/// </summary>
 public sealed class TransactionBoundaryTests
 {
     private const string UnitOfWorkClass = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.UnitOfWork";

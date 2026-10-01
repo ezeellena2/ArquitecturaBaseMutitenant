@@ -3,6 +3,10 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Detecta correos expuestos como strings en entidades y modelos internos, incluidas propiedades heredadas.
+/// Exige usar el value object que conserva su formato canónico.
+/// </summary>
 public sealed class EmailPropertyTests
 {
     private static readonly Assembly[] Assemblies =

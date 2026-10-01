@@ -3,6 +3,10 @@ using System.Reflection;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Detecta IQueryable y Expression en las firmas públicas de Application, incluso dentro de tipos
+/// compuestos. Evita filtrar detalles de consultas al contrato de la capa.
+/// </summary>
 public sealed class ApplicationPublicApiTests
 {
     private const BindingFlags DeclaredMembers =

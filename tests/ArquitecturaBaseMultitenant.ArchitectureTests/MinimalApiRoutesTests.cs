@@ -2,6 +2,10 @@ using System.Text.RegularExpressions;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Detecta rutas registradas como Minimal APIs de negocio. Mantiene los endpoints dentro del recorrido de
+/// controllers y servicios definido por el proyecto.
+/// </summary>
 public sealed partial class MinimalApiRoutesTests
 {
     // Las rutas de negocio son controllers MVC. Los endpoints de salud los mapea MapDefaultEndpoints en

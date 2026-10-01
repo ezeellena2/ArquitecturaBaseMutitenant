@@ -11,6 +11,10 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Comprueba que cada entidad del modelo EF tenga exactamente una configuración. Evita que un mapeo quede
+/// implícito o se duplique.
+/// </summary>
 public sealed class EntityConfigurationTests
 {
     private const string ConfigurationsNamespace =

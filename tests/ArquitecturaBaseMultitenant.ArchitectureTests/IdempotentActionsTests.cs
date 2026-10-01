@@ -9,6 +9,10 @@ using Mono.Cecil;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Detecta acciones POST que crean o envían sin declarar idempotencia. Protege las operaciones frente a
+/// pedidos repetidos.
+/// </summary>
 public sealed class IdempotentActionsTests
 {
     [Fact]

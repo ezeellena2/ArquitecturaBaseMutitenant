@@ -13,6 +13,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
+/// <summary>
+/// Comprueba que cada entidad persistida tenga su clase de datos, esquema y filtro de aislamiento. Detecta
+/// modelos que dejarían datos fuera de la protección prevista.
+/// </summary>
 public sealed class DataClassificationTests
 {
     // Excepciones globales explícitas de E2. Cada tipo nuevo se clasifica o se agrega con su motivo.
