@@ -10,6 +10,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 
+/// <summary>
+/// Comprueba que los workers recorran empresas activas y entren al alcance antes del trabajo. Incluye
+/// invalidación de caché al cambiar el estado.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class TenantJobRunnerIdentityTests(ApiFactory factory)
 {

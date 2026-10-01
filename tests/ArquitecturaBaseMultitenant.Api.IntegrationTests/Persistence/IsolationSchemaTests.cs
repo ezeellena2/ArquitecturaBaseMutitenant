@@ -8,6 +8,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba el esquema sintético usado para probar las tres clases de datos. Exige claves por espacio, RLS
+/// forzado y políticas equivalentes a las productivas.
+/// </summary>
 public sealed class IsolationSchemaTests
 {
     [Fact]

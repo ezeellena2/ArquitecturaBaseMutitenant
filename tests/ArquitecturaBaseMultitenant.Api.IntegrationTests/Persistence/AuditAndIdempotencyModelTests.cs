@@ -9,6 +9,10 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba esquemas, claves y columnas del rastro de auditoría y la reserva idempotente. Incluye unicidad
+/// de claves aunque no haya espacio activo.
+/// </summary>
 public sealed class AuditAndIdempotencyModelTests
 {
     [Fact]

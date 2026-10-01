@@ -15,6 +15,10 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba que xmin detecte una edición simultánea y preserve el primer cambio. La API debe informar el
+/// conflicto con status 409 y código estable.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class ConcurrencyTests(ApiFactory factory)
 {

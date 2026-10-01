@@ -13,6 +13,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba la composición de los cinco catálogos desde PostgreSQL. Conserva traducciones y filas
+/// deshabilitadas en las lecturas.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class ReferenceDataReaderTests(ApiFactory factory)
 {

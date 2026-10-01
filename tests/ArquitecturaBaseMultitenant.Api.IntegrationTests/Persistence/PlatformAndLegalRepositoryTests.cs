@@ -10,6 +10,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba que los repositorios globales exijan transacción al escribir. Verifica lectura de
+/// configuración y textos legales por cultura después del commit.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class PlatformAndLegalRepositoryTests(ApiFactory factory)
 {

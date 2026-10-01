@@ -10,6 +10,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba el seed completo de catálogos oficiales. Repetirlo debe conservar las mismas filas sin
+/// introducir cambios.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class ReferenceDataSeederTests(ApiFactory factory)
 {

@@ -10,6 +10,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 
+/// <summary>
+/// Comprueba que el primer acceso personal simultáneo cree un único espacio para la cuenta. Protege el alta
+/// frente a dos solicitudes que llegan juntas.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class ConnectServiceConcurrencyTests(ApiFactory factory)
 {

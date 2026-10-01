@@ -6,6 +6,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 
+/// <summary>
+/// Comprueba que el catálogo de espacios sea global y sus membresías y preferencias sean privadas. Exige
+/// filtros y claves con el espacio primero.
+/// </summary>
 public sealed class IdentityTenancyModelTests
 {
     [Fact]

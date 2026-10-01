@@ -3,6 +3,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 
+/// <summary>
+/// Comprueba que las columnas de espacio no puedan cambiar y que la auditoría sea inmutable. Protege ambas
+/// reglas mediante restricciones reales de base.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class TenantColumnsImmutabilityTests(ApiFactory factory)
 {

@@ -3,6 +3,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 
+/// <summary>
+/// Comprueba que el rol de ejecución de la aplicación no tenga privilegios de dueño ni bypass de RLS.
+/// Protege el aislamiento impuesto por PostgreSQL.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class RuntimeRoleTests(ApiFactory factory)
 {

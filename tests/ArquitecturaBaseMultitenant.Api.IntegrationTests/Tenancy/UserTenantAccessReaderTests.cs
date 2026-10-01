@@ -6,6 +6,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 
+/// <summary>
+/// Comprueba que el reader liste únicamente las membresías de la cuenta consultada. Permite elegir acceso
+/// sin abrir lecturas privadas de otros espacios.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class UserTenantAccessReaderTests(ApiFactory factory)
 {

@@ -3,6 +3,10 @@ using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 
+/// <summary>
+/// Comprueba entrada, anidación y restauración del contexto de espacio. Exige fallar si se necesita un
+/// espacio y no hay acceso activo.
+/// </summary>
 public sealed class TenantContextTests
 {
     [Fact]

@@ -8,6 +8,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba que una conexión reutilizada reciba el espacio de cada alcance y lo limpie al quedar sin
+/// contexto. Evita heredar el aislamiento de una petición anterior.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class TenantConnectionTests(ApiFactory factory)
 {

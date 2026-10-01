@@ -8,6 +8,10 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba que el interceptor asigne a los datos nuevos el espacio activo. Impide usar un identificador
+/// de espacio provisto por la entidad para saltar el aislamiento.
+/// </summary>
 public sealed class TenantStampTests
 {
     [Fact]

@@ -11,6 +11,10 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba el modelo global de configuración, eventos, outbox y legales. Protege versiones únicas y la
+/// separación de documentos y aceptaciones.
+/// </summary>
 public sealed class IdentitySupportModelTests
 {
     [Fact]

@@ -9,6 +9,10 @@ using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba filtros independientes para datos privados, públicos, compartidos y borrado lógico. Exige que
+/// consulten el espacio actual sin abrir conexiones.
+/// </summary>
 public sealed class ModelFiltersTests
 {
     [Fact]

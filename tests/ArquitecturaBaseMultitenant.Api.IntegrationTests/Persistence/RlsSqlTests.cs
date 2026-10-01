@@ -4,6 +4,10 @@ using Microsoft.EntityFrameworkCore.Migrations.Operations;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba las plantillas SQL de aislamiento privado, público y compartido. Exige lectura y escritura
+/// limitadas a las partes o publicaciones correspondientes.
+/// </summary>
 public sealed class RlsSqlTests
 {
     [Fact]

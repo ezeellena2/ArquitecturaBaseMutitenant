@@ -10,6 +10,10 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba xmin como token generado de concurrencia y los conversores de datos tipados. Protege formato
+/// canónico y límites de persistencia.
+/// </summary>
 public sealed class VersionedModelTests
 {
     [Fact]

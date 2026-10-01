@@ -9,6 +9,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 
+/// <summary>
+/// Comprueba repositorios y readers de membresías y configuración. Exige transacción al escribir y lecturas
+/// limitadas al espacio activo.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class IdentityRepositoryTests(ApiFactory factory)
 {

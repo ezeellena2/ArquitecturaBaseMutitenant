@@ -5,6 +5,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 
+/// <summary>
+/// Comprueba lectura pública solo de publicaciones y lectura compartida solo por sus partes. La empresa
+/// debe ver únicamente lo que recibió en la interacción.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class PublicAndSharedRowsTests(ApiFactory factory)
 {

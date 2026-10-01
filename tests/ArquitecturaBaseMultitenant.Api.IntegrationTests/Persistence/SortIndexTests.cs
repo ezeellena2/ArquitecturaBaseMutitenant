@@ -4,6 +4,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba índices por espacio, campo de orden e identificador para cada orden admitido. Protege el
+/// soporte del paginado estable en base.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class SortIndexTests(ApiFactory factory)
 {

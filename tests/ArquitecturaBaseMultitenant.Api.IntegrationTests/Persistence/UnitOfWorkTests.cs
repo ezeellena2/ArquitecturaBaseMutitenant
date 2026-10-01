@@ -15,6 +15,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba commit, rollback y limpieza del seguimiento en la unidad de trabajo real. Exige aplicar el
+/// espacio de forma local a la transacción.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class UnitOfWorkTests(ApiFactory factory)
 {

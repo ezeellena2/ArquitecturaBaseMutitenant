@@ -6,6 +6,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 
+/// <summary>
+/// Comprueba que cada organización reciba un alcance y contexto nuevos. Un fallo debe liberar su alcance
+/// antes de continuar.
+/// </summary>
 public sealed class TenantJobRunnerTests
 {
     [Fact]

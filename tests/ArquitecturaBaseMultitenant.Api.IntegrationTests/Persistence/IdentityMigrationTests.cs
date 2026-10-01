@@ -9,6 +9,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba el SQL de las migraciones de identidad, legales y mensajería. Exige tablas, RLS y permisos
+/// runtime acordes al modelo.
+/// </summary>
 public sealed class IdentityMigrationTests
 {
     [Fact]

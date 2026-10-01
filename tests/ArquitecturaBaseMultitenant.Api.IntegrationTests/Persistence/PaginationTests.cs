@@ -5,6 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba páginas estables, totales y desempates por identificador. Mantiene el total real aunque se
+/// solicite una página fuera del rango.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class PaginationTests(ApiFactory factory)
 {

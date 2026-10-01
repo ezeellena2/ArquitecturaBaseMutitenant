@@ -5,6 +5,10 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba claves naturales, relaciones y esquema platform de los once modelos de referencia. Exige que
+/// esos catálogos globales no tengan RLS.
+/// </summary>
 public sealed class ReferenceDataModelTests
 {
     [Fact]

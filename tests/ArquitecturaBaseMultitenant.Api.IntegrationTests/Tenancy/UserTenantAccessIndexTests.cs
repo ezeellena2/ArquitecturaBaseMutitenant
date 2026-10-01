@@ -12,6 +12,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 
+/// <summary>
+/// Comprueba que la proyección global siga los cambios de membresía y su rollback. Exige permisos de solo
+/// lectura runtime y backfill de datos existentes.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class UserTenantAccessIndexTests(ApiFactory factory)
 {

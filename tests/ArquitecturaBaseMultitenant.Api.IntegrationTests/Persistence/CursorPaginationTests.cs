@@ -6,6 +6,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba continuidad del paginado por cursor ante inserciones y empates de fecha. Evita repetir o
+/// saltear filas entre páginas.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class CursorPaginationTests(ApiFactory factory)
 {

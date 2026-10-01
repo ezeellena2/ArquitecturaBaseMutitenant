@@ -8,6 +8,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba las políticas RLS del rastro de auditoría y su rollback con el caso de uso. Protege las
+/// inserciones autorizadas sin abrir la lectura a la contraparte.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class AuditTrailRlsTests(ApiFactory factory)
 {

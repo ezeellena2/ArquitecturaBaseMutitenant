@@ -5,6 +5,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba el formato estable de claves de locks por espacio, recurso e identificador. También protege la
+/// clave global del seed de referencias.
+/// </summary>
 public sealed class AdvisoryLockKeysTests
 {
     private static readonly Guid TenantA = Guid.Parse("01234567-89ab-cdef-0123-456789abcdef");

@@ -13,6 +13,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 
+/// <summary>
+/// Comprueba la resolución de espacios según estado y claims. Evita fijar contexto para una empresa
+/// inactiva o derivarlo del host ante un claim inválido.
+/// </summary>
 public sealed class SuspensionTests
 {
     [Theory]

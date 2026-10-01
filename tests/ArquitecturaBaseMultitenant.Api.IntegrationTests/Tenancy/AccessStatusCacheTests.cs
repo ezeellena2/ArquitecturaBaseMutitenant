@@ -9,6 +9,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 
+/// <summary>
+/// Comprueba la caché de estado de cuenta y membresía y su invalidación explícita. Exige consultar el
+/// índice global autorizado al resolver pertenencia.
+/// </summary>
 public sealed class AccessStatusCacheTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

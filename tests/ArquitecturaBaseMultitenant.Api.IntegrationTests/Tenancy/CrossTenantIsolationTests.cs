@@ -3,6 +3,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 
+/// <summary>
+/// Comprueba que las vistas de acceso no mezclen datos entre espacios. Protege el aislamiento durante
+/// lecturas desde distintos contextos.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class CrossTenantIsolationTests(ApiFactory factory)
 {

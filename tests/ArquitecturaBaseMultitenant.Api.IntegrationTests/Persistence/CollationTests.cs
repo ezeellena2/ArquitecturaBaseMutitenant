@@ -3,6 +3,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba el orden real de letras acentuadas y ñ en PostgreSQL. Protege la collation española
+/// configurada en la base.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class CollationTests(ApiFactory factory)
 {

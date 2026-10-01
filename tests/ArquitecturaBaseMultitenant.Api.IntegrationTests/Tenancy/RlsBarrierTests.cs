@@ -8,6 +8,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 
+/// <summary>
+/// Comprueba el aislamiento real de PostgreSQL aun cuando se ignoren filtros de EF. Protege la segunda
+/// barrera contra lecturas entre organizaciones.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class RlsBarrierTests(ApiFactory factory)
 {

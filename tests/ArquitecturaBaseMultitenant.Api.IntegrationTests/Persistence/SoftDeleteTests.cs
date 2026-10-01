@@ -6,6 +6,10 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba que eliminar se convierta en una marca con instante UTC y actor. Incluye la ejecución del
+/// sistema cuando no hay usuario en sesión.
+/// </summary>
 public sealed class SoftDeleteTests
 {
     private static readonly DateTimeOffset Instant = new(2026, 9, 28, 12, 0, 0, TimeSpan.Zero);

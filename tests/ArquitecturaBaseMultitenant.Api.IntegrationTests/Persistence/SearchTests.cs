@@ -4,6 +4,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba búsqueda sin distinción de mayúsculas o acentos y con comodines tratados como texto. Mantiene
+/// el filtro del espacio al combinar columnas.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class SearchTests(ApiFactory factory)
 {

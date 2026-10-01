@@ -5,6 +5,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba creación de base, esquemas y collation ICU es-AR. Exige separar el dueño de la base del rol
+/// limitado que ejecuta la aplicación.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class BootstrapTests(ApiFactory factory)
 {

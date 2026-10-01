@@ -12,6 +12,10 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba las entradas y diferencias generadas al crear o editar entidades. Exige ocultar datos
+/// sensibles y omitir propiedades marcadas para no auditar.
+/// </summary>
 public sealed class AuditTrailTests
 {
     private static readonly DateTimeOffset Instant = new(2026, 9, 28, 12, 0, 0, TimeSpan.Zero);

@@ -13,6 +13,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 
+/// <summary>
+/// Comprueba que el acceso declarado por una ruta rechace modos incompatibles con 403. Una coincidencia
+/// debe continuar sin cambiar el espacio activo.
+/// </summary>
 public sealed class AccessTests
 {
     [Fact]

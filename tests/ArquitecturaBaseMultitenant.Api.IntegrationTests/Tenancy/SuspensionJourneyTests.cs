@@ -15,6 +15,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 
+/// <summary>
+/// Recorre una sesión de empresa suspendida y su refresh con base real. Exige rechazar operaciones privadas
+/// y mantener el perfil disponible para cambiar de acceso.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class SuspensionJourneyTests
 {

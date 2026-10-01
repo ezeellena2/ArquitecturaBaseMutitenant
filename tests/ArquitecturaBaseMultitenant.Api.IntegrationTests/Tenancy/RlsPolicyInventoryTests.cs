@@ -3,6 +3,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 
+/// <summary>
+/// Comprueba RLS forzado y las políticas de cada tabla protegida. Incluye los argumentos de triggers que
+/// impiden cambiar el espacio de una fila.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class RlsPolicyInventoryTests(ApiFactory factory)
 {

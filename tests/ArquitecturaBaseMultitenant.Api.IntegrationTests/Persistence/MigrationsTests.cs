@@ -7,6 +7,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba que el modelo actual no tenga cambios sin migración. También revisa que las migraciones
+/// productivas no incluyan las tablas exclusivas de tests.
+/// </summary>
 public sealed class MigrationsTests
 {
     [Fact]

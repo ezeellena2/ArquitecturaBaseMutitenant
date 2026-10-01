@@ -13,6 +13,10 @@ using Microsoft.Extensions.Hosting;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba los esquemas y el modelo de persistencia esperado por la etapa. Protege la ubicación de
+/// identidad y claves de protección de datos.
+/// </summary>
 public sealed class DbContextModelTests
 {
     [Fact]

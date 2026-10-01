@@ -4,6 +4,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 
+/// <summary>
+/// Comprueba prefijos y formatos de claves de caché por alcance. Evita colisiones entre espacios privados,
+/// sitios públicos, usuarios y plataforma.
+/// </summary>
 public sealed class CacheKeyScopeTests
 {
     private static readonly Guid TenantA = Guid.Parse("01234567-89ab-cdef-0123-456789abcdef");

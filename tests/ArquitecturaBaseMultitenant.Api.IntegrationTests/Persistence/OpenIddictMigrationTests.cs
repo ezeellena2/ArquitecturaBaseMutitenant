@@ -9,6 +9,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba tablas y permisos de OpenIddict creados por migración. Exige que el rol runtime pueda usarlos
+/// después del bootstrap.
+/// </summary>
 public sealed class OpenIddictMigrationScriptTests
 {
     [Fact]

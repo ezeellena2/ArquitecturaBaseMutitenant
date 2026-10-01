@@ -6,6 +6,10 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
+/// <summary>
+/// Comprueba que los interceptores sellen creación y edición con reloj y actor inyectados. Evita alterar
+/// las marcas de creación al modificar una entidad.
+/// </summary>
 public sealed class AuditingTests
 {
     private static readonly DateTimeOffset Instant = new(2026, 9, 28, 12, 0, 0, TimeSpan.Zero);
