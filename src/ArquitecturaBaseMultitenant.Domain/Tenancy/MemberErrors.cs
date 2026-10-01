@@ -2,6 +2,10 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Domain.Tenancy;
 
+/// <summary>
+/// Define los rechazos de una membresía inactiva o de una transición de estado inválida. Permite comunicar
+/// estas reglas mediante Result con códigos estables.
+/// </summary>
 public static class MemberErrors
 {
     public const string InactiveCode = "Tenancy.Member.Inactive";

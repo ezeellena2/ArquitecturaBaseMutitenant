@@ -1,5 +1,9 @@
 namespace ArquitecturaBaseMultitenant.Domain.Results;
 
+/// <summary>
+/// Clasifica un error de negocio para que la API elija su respuesta HTTP. Distingue validación,
+/// autenticación, permisos, ausencia, conflicto, límite de pedidos y falla.
+/// </summary>
 public enum ErrorType
 {
     Failure = 0,

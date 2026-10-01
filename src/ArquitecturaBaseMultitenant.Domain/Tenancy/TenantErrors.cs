@@ -2,6 +2,10 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Domain.Tenancy;
 
+/// <summary>
+/// Centraliza los errores de acceso por el estado de una organización y los cambios de estado no
+/// permitidos. Cada código conserva el motivo para la API y las traducciones.
+/// </summary>
 public static class TenantErrors
 {
     public const string SuspendedCode = "Tenancy.Tenant.Suspended";

@@ -2,6 +2,10 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Domain.Authentication;
 
+/// <summary>
+/// Reúne los errores de verificación y los límites de envío de códigos. Sus fábricas agregan los intentos
+/// restantes o los segundos de espera que necesita mostrar el front.
+/// </summary>
 public static class LoginCodeErrors
 {
     public const string InvalidCode = "Auth.LoginCode.Invalid";
@@ -27,12 +31,14 @@ public static class LoginCodeErrors
             "The code is not valid.",
             attemptsLeft is null ? null : new Dictionary<string, object?> { [AttemptsLeftKey] = attemptsLeft });
 
+    /// <summary>Informa cuánto falta para reenviar un código; el front usa ese tiempo en la cuenta regresiva.</summary>
     public static Error ResendTooSoon(int retryAfterSeconds) =>
         Error.TooManyRequests(
             ResendTooSoonCode,
             "A new code can't be requested yet.",
             new Dictionary<string, object?> { [RetryAfterKey] = retryAfterSeconds });
 
+    /// <summary>Informa la espera al superar el límite de pedidos de códigos dentro de la ventana de envío.</summary>
     public static Error TooManyRequests(int retryAfterSeconds) =>
         Error.TooManyRequests(
             TooManyRequestsCode,

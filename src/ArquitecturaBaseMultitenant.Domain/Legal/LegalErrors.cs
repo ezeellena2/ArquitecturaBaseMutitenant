@@ -2,6 +2,10 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Domain.Legal;
 
+/// <summary>
+/// Reúne los rechazos por documentos legales pendientes, inexistentes o cuya versión cambió. Permite pedir
+/// una nueva aceptación sin perder el motivo del rechazo.
+/// </summary>
 public static class LegalErrors
 {
     public const string AcceptanceRequiredCode = "Legal.AcceptanceRequired";

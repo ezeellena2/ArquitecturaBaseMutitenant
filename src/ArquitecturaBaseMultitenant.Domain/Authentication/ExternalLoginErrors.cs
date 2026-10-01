@@ -2,6 +2,10 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Domain.Authentication;
 
+/// <summary>
+/// Centraliza los rechazos del ingreso con Google: fallo del proveedor, correo sin verificar o cuenta sin
+/// vínculo. Los servicios devuelven estos errores como Result.
+/// </summary>
 public static class ExternalLoginErrors
 {
     public const string FailedCode = "Auth.ExternalLogin.Failed";

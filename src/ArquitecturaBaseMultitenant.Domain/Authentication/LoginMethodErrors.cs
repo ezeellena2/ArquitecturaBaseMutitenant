@@ -2,6 +2,10 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Domain.Authentication;
 
+/// <summary>
+/// Centraliza los errores al agregar, verificar, quitar o elegir un método de ingreso. Incluye las reglas
+/// que conservan al menos un método utilizable y los errores asociados al campo correo.
+/// </summary>
 public static class LoginMethodErrors
 {
     public const string AlreadyUsedCode = "Identity.LoginMethod.AlreadyUsed";

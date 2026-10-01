@@ -2,6 +2,10 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Domain.Legal;
 
+/// <summary>
+/// Reúne los motivos que impiden pedir o cancelar una baja de cuenta: falta de prueba de titularidad,
+/// bloqueos, solicitud existente, plazo vencido o motivo inválido.
+/// </summary>
 public static class AccountDeletionErrors
 {
     public static readonly Error PlatformOperator = Error.Forbidden("Legal.AccountDeletion.PlatformOperator",

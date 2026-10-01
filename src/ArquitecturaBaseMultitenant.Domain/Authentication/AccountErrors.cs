@@ -2,6 +2,10 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Domain.Authentication;
 
+/// <summary>
+/// Define los rechazos por una cuenta bloqueada temporalmente, suspendida o con baja pendiente. Los flujos
+/// de ingreso usan estos motivos antes de conceder una sesión.
+/// </summary>
 public static class AccountErrors
 {
     public const string LockedOutCode = "Identity.Account.LockedOut";

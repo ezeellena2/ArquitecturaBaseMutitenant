@@ -2,6 +2,10 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Domain.Authentication;
 
+/// <summary>
+/// Reúne los rechazos de una prueba de titularidad inválida o vencida y de la falta de otro método
+/// verificado. Protege las operaciones sensibles de la cuenta.
+/// </summary>
 public static class ReauthErrors
 {
     public const string InvalidCode = "Identity.Reauth.Invalid";
