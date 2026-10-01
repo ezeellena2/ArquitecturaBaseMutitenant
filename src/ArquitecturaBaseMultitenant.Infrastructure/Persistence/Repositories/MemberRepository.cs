@@ -9,6 +9,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories;
 /// <summary>Prepara las membresías privadas del tenant activo para los casos de uso de alta o cambio. Exige alcance de tenant y transacción antes de leer o agregar.</summary>
 internal sealed class MemberRepository(ApplicationDbContext context, ITenantContext tenantContext) : IMemberRepository
 {
+    public Task LockUserAsync(Guid userId, CancellationToken cancellationToken) =>
+        context.AcquireAdvisoryLocksAsync([AdvisoryLockKeys.For(tenantContext.RequiredTenantId, "member-user", userId)], cancellationToken);
     public Task<Member?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         context.RequireTransaction();

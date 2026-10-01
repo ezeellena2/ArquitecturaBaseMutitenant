@@ -5,6 +5,7 @@ namespace ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 /// <summary>Obtiene y agrega membresías privadas bajo el alcance y la transacción del tenant activo.</summary>
 public interface IMemberRepository
 {
+    Task LockUserAsync(Guid userId, CancellationToken cancellationToken);
     Task<Member?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken);
     Task<Member?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 

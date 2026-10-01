@@ -85,12 +85,16 @@ public sealed class Invitation : Entity, ITenantOwned, IAuditable
     }
 
     public bool CanBootstrap(string nonceHash, DateTime nowUtc)
+        => CanBootstrap(Status, AcceptedAtUtc, BootstrapNonceHash, nonceHash, nowUtc);
+
+    public static bool CanBootstrap(InvitationStatus status, DateTime? acceptedAtUtc, string? expectedNonceHash,
+        string nonceHash, DateTime nowUtc)
     {
         ArgumentNullException.ThrowIfNull(nonceHash);
         RequireUtc(nowUtc);
-        return Status == InvitationStatus.Accepted && AcceptedAtUtc is { } acceptedAt
+        return status == InvitationStatus.Accepted && acceptedAtUtc is { } acceptedAt
             && nowUtc >= acceptedAt && nowUtc < acceptedAt.AddMinutes(5)
-            && BootstrapNonceHash is { } expectedHash && HashEquals(expectedHash, nonceHash);
+            && expectedNonceHash is { } expectedHash && HashEquals(expectedHash, nonceHash);
     }
 
     public Result Revoke(DateTime nowUtc)

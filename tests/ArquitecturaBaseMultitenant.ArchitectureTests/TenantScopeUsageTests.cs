@@ -17,6 +17,8 @@ public sealed class TenantScopeUsageTests
     private const string ConnectService = "ArquitecturaBaseMultitenant.Application.Services.Auth.ConnectService";
     private const string ExternalLoginService = "ArquitecturaBaseMultitenant.Application.Services.Auth.ExternalLoginService";
     private const string AccountDeletionProcessingService = "ArquitecturaBaseMultitenant.Application.Services.Legal.AccountDeletionProcessingService";
+    private const string InvitationPreviewFlow = "ArquitecturaBaseMultitenant.Application.Services.Invitations.InvitationPreviewFlow";
+    private const string InvitationAcceptanceResolver = "ArquitecturaBaseMultitenant.Application.Services.Invitations.InvitationAcceptanceResolver";
 
     [Fact]
     public void Only_declared_adapters_and_signup_services_enter_a_tenant_scope()
@@ -56,7 +58,8 @@ public sealed class TenantScopeUsageTests
     private static string[] UnauthorizedCallers(IEnumerable<ArchitectureIl.Call> calls) =>
         [.. calls.Where(IsEnterCall)
             .Where(call => call.Owner is not (TenantJobRunner or TenantSettingsLoader
-                or AccountService or ConnectService or ExternalLoginService or AccountDeletionProcessingService))
+                or AccountService or ConnectService or ExternalLoginService or AccountDeletionProcessingService
+                or InvitationPreviewFlow or InvitationAcceptanceResolver))
             .Select(call => $"{call.Owner}.{call.OwnerMethod}")
             .Distinct(StringComparer.Ordinal)];
 

@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Invitations;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
@@ -15,7 +16,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Invitations;
 /// <summary>Lee exclusivamente dentro del alcance probado y no consume ni modifica la invitación.</summary>
 internal sealed class InvitationPreviewBuilder(IInvitationReader invitations, IUserLookup lookup,
     ILoginMethodReader methods, LoginMethodAvailability availability, IInvitationFlowContext flow,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider, IInvitationTokenProtector tokens)
 {
     internal async Task<InvitationPreviewResponse> BuildAsync(InvitationTokenData proof, string tokenHash, CancellationToken ct)
     {
@@ -26,9 +27,16 @@ internal sealed class InvitationPreviewBuilder(IInvitationReader invitations, IU
             return new(InvitationPreviewState.Invalid);
         var userId = await flow.GetUserIdAsync(ct);
         if (row.Status == InvitationStatus.Accepted)
+        {
+            if (userId is null && row.AcceptedByUserId is { } newlyCreated && row.MemberStatus == MemberStatus.Active
+                && row.TenantStatus == TenantStatus.Active && flow.ReadContinuation() is { } original
+                && Invitation.CanBootstrap(row.Status, row.AcceptedAtUtc, row.BootstrapNonceHash,
+                    tokens.Hash(original.Nonce), timeProvider.GetUtcNow().UtcDateTime)
+                && await flow.RestoreSessionAsync(newlyCreated, ct)) userId = newlyCreated;
             return row.AcceptedByUserId is { } accepted && userId == accepted && row.MemberStatus == MemberStatus.Active
                 && row.TenantStatus == TenantStatus.Active ? Present(row, InvitationPreviewState.Accepted)
                     : new(InvitationPreviewState.Invalid);
+        }
         if (timeProvider.GetUtcNow().UtcDateTime >= row.ExpiresAtUtc) return Present(row, InvitationPreviewState.Expired);
         if (row.TenantStatus == TenantStatus.Suspended) return Present(row, InvitationPreviewState.OrganizationSuspended);
         if (row.TenantStatus != TenantStatus.Active || row.MemberStatus != MemberStatus.Invited)

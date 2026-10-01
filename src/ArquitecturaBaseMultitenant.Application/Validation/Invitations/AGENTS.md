@@ -1,0 +1,1 @@
+Validación de forma y consentimiento de una identidad nueva, antes de la transacción. Leé [validacion](../../../../docs/rules/validacion.md) y [datos-personales](../../../../docs/rules/datos-personales.md). Copiá `../Auth/VerifySignupRequestValidator.cs`; reglas con datos de base van en los helpers del servicio.

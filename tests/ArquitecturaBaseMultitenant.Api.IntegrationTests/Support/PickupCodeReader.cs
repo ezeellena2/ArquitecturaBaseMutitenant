@@ -21,9 +21,10 @@ internal static class PickupCodeReader
         var directory = Path.IsPathFullyQualified(configured)
             ? configured
             : Path.Combine(services.GetRequiredService<IHostEnvironment>().ContentRootPath, configured);
-        for (var attempt = 0; attempt < 20; attempt++)
+        // Cada despacho reclama un mensaje; otros tests de la fixture pueden dejar más de veinte.
+        for (var attempt = 0; attempt < 100; attempt++)
         {
-            await services.GetRequiredService<IOutboxDispatchService>().DispatchOnceAsync(
+            var dispatched = await services.GetRequiredService<IOutboxDispatchService>().DispatchOnceAsync(
                 services.GetServices<IChannelSender>().ToArray(), cancellationToken);
             foreach (var path in Directory.Exists(directory) ? Directory.GetFiles(directory, "*.eml") : [])
             {
@@ -40,7 +41,7 @@ internal static class PickupCodeReader
                 File.Delete(path);
                 return code;
             }
-            await Task.Delay(100, cancellationToken);
+            if (dispatched.IsFailure || dispatched.Value == 0) await Task.Delay(100, cancellationToken);
         }
         throw new Xunit.Sdk.XunitException("No se encontró el correo pickup del destinatario.");
     }

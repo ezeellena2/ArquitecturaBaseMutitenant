@@ -9,7 +9,9 @@ Estado: en curso. No se declara cerrada la etapa ni se cambia `HarnessStage` has
 | T02 · Persistencia | RLS, reservas sin identidad e índice de accesos; 10/10 integraciones | `a332c2b` |
 | T03 · Emisor y correo | Emisión nueva/Email/Google sin crear cuentas, rollback y canal real; 28/28 focales | `1ce2d21` |
 | T04 · E2E rojo | Dos invitaciones reales llegan al navegador y fallan en preview ausente; siete recorridos previos verdes | back `d329ccd`, front `1a62898` |
-| T05 · Preview | Estados actuales, sesión explícita y continuación HttpOnly; 15 unitarios y 9 integraciones | commit que incorpora esta fila |
+| T05 · Preview | Estados actuales, sesión explícita y continuación HttpOnly; 15 unitarios y 9 integraciones | `5170d21` |
+
+| T06 · Aceptación | Identidad sin Personal, legales, dueño revalidado y consumo atómico; 42 integraciones focales | commit que incorpora esta fila |
 
 ## TDD y verificaciones
 
@@ -20,6 +22,9 @@ Estado: en curso. No se declara cerrada la etapa ni se cambia `HarnessStage` has
 - T02 verde: `InvitationsTests`, `UserTenantAccessIndexTests`, `RlsPolicyInventoryTests` y `MigrationsTests`: total 10, correcto 10, error 0, omitido 0. PostgreSQL aislado creado y eliminado por Testcontainers.
 - Build Infrastructure: 0 advertencias, 0 errores. `has-pending-model-changes` indicó que no hay cambios; SQL idempotente revisado con claves/FKs, índices parciales, RLS forzado, grants SELECT/INSERT/UPDATE y trigger actualizado.
 - T05 rojo: tests de servicio no compilaron por los modelos, servicio y puerto de continuación ausentes (`CS0246`). Verde: 15 unitarios, 9 integraciones de invitación; sin omitidos. API build 0 advertencias/0 errores. La integración usa fila privada real, comprueba Pending después de dos previews y cookie protegida HttpOnly/Secure/SameSite Lax; no emite cookie Identity. El token adulterado ni siquiera entra al scope.
+
+- T06 rojo: modelo de aceptación ausente (`CS0246`); recuperación de respuesta perdida devolvía Invalid en vez de Accepted. Verde: 18 casos de aceptación, 10 de invitaciones/emisión y regresiones de código/Google: total 42, correcto 42, error 0, omitido 0. Preview unitario 15/15 y dominio Invitation 7/7. Inventarios existentes de dependencias/transacciones 10/10 y entradas de scope 2/2. API build: 0 advertencias/0 errores.
+- La regresión combinada encontró el límite de veinte despachos del lector pickup: las invitaciones previas superaban esa cola. Se ajustó el helper existente a cien despachos, con espera solo cuando no hubo trabajo. El conjunto pasó al repetirlo; no se agregó ningún test del arnés.
 
 ## E2E real
 
@@ -49,3 +54,5 @@ Las decisiones vigentes están en el [plan](../plans/2026-10-01-etapa-3c-invitac
 El aviso «te vamos a mandar un código» del correo aparece solo para un correo Email ya verificado, nunca para Google-only ni cuenta nueva. El pie conserva «Si no esperabas este correo, podés ignorarlo» y omite la promesa «sin el código nadie puede entrar»: la invitación nueva prueba posesión mediante el enlace. Se registrará también en la comparación visual. No se crean datos de Empresa ni Roles para completar el lienzo.
 
 El usuario confirmó Aspire apagado antes de compilar. Se trabaja en main, sin push y con rutas explícitas. El recorrido manual de invitar desde Usuarios pertenece a la puerta de E6.
+
+La cookie de continuación conserva cinco minutos adicionales tras el vencimiento para recuperar una aceptación realizada al límite. Aceptar comprueba siempre ExpiresAtUtc original; bootstrap comprueba AcceptedAtUtc + cinco minutos y el nonce exclusivo del navegador original. No habilita ingreso por enlace para una cuenta previa.

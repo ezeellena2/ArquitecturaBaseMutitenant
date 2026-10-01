@@ -27,6 +27,7 @@ internal sealed class InvitationIssuer(IInvitationRepository invitations, IMembe
         if (await invitations.GetPendingByDestinationAsync(request.Destination, cancellationToken) is not null)
             return InvitationErrors.AlreadyPending;
         var (organization, userId) = checkedRequest.Value;
+        if (userId is { } knownUserId) await members.LockUserAsync(knownUserId, cancellationToken);
         var member = userId is { } recipientId
             ? await members.GetByUserIdAsync(recipientId, cancellationToken) : null;
         if (member is not null && member.Status != MemberStatus.Invited) return MemberErrors.InvalidTransition;

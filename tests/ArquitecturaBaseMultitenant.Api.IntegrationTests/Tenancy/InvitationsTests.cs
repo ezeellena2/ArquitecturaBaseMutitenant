@@ -127,6 +127,42 @@ public sealed class InvitationsTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Two_verified_destinations_of_one_account_share_one_pending_member_when_issued_concurrently()
+    {
+        using var client = factory.CreateClient();
+        var (tenantId, inviterId) = await CreateOrganizationAsync();
+        var first = Email.Create($"first-{Guid.NewGuid():N}@example.test").Value;
+        var second = Email.Create($"second-{Guid.NewGuid():N}@example.test").Value;
+        var userId = await CreateRecipientAsync(first, false);
+        await using (var scope = factory.Services.CreateAsyncScope())
+            await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+            {
+                var method = LoginMethod.CreateEmail(userId, second);
+                method.Verify(scope.ServiceProvider.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime);
+                scope.ServiceProvider.GetRequiredService<ILoginMethodRepository>().Add(method);
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+
+        async Task<Result<Guid>> Issue(Email destination)
+        {
+            await using var scope = factory.Services.CreateAsyncScope();
+            using var tenant = scope.ServiceProvider.GetRequiredService<ITenantScope>().Enter(tenantId);
+            return await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(
+                ct => scope.ServiceProvider.GetRequiredService<InvitationIssuer>().IssueAsync(new(destination, inviterId, InvitationChannel.Email), ct),
+                CommitPolicy.OnSuccess, Ct);
+        }
+        var results = await Task.WhenAll(Issue(first), Issue(second));
+        Assert.All(results, result => Assert.True(result.IsSuccess));
+        await using var check = factory.Services.CreateAsyncScope();
+        using var tenantScope = check.ServiceProvider.GetRequiredService<ITenantScope>().Enter(tenantId);
+        var reader = check.ServiceProvider.GetRequiredService<IInvitationReader>();
+        var rows = new List<InvitationRow>();
+        foreach (var result in results) rows.Add((await reader.FindByIdAsync(result.Value, Ct))!);
+        Assert.Single(rows.Select(row => row!.MemberId).Distinct());
+        Assert.All(rows, row => Assert.Equal(userId, row!.MemberUserId));
+    }
+
+    [Fact]
     public async Task Issuer_rejects_an_unregistered_channel_without_leaving_rows_or_outbox()
     {
         using var client = factory.CreateClient();
