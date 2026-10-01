@@ -1,0 +1,1 @@
+Invitación privada y reglas de vigencia/uso único. Leé [persistencia-ef](../../../docs/rules/persistencia-ef.md), [multitenancy](../../../docs/rules/multitenancy.md), [emails](../../../docs/rules/emails.md) y [auditoria](../../../docs/rules/auditoria.md). Copiá de `../Authentication/LoginCode.cs`; verificá `Domain.UnitTests/Invitations/InvitationTests.cs`.

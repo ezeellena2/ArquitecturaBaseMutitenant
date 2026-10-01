@@ -23,7 +23,7 @@ public sealed class Member : Entity, ITenantOwned
 
     public Guid TenantId { get; private set; }
 
-    public Guid UserId { get; private set; }
+    public Guid? UserId { get; private set; }
 
     public MemberStatus Status { get; private set; }
     public MemberRemovalReason? RemovalReason { get; private set; }
@@ -31,6 +31,16 @@ public sealed class Member : Entity, ITenantOwned
     public DateTime? JoinedAtUtc { get; private set; }
 
     public static Member Invite(Guid userId) => new(userId);
+
+    public static Member Invite() => new() { Status = MemberStatus.Invited };
+
+    public Result AssignUser(Guid userId)
+    {
+        if (userId == Guid.Empty) throw new ArgumentException("The user id cannot be empty.", nameof(userId));
+        if (Status != MemberStatus.Invited || UserId is not null) return MemberErrors.InvalidTransition;
+        UserId = userId;
+        return Result.Success();
+    }
 
     public Result Activate(DateTime joinedAtUtc)
     {
@@ -43,6 +53,8 @@ public sealed class Member : Entity, ITenantOwned
         {
             return MemberErrors.InvalidTransition;
         }
+
+        if (UserId is null) return MemberErrors.IdentityRequired;
 
         JoinedAtUtc ??= joinedAtUtc;
         Status = MemberStatus.Active;

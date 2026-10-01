@@ -104,4 +104,12 @@
   <data name="Legal.AccountDeletion.InvalidReason" xml:space="preserve"><value>Enter a reason up to 500 characters.</value></data>
   <data name="Legal.AccountDeletion.PlatformOperator" xml:space="preserve"><value>Your operator account cannot be deleted from here.</value></data>
   <data name="Legal.AccountDeletion.ReauthRequired" xml:space="preserve"><value>Confirm the code we sent to request account deletion.</value></data>
+  <data name="Tenancy.Member.IdentityRequired" xml:space="preserve"><value>The membership needs an account before activation.</value></data>
+  <data name="Invitations.Invitation.Invalid" xml:space="preserve"><value>This invitation is no longer valid.</value></data>
+  <data name="Invitations.Invitation.Expired" xml:space="preserve"><value>The invitation has expired.</value></data>
+  <data name="Invitations.Invitation.AlreadyUsed" xml:space="preserve"><value>The invitation was already accepted.</value></data>
+  <data name="Invitations.Invitation.AlreadyPending" xml:space="preserve"><value>There is already a pending invitation for this email.</value></data>
+  <data name="Invitations.Invitation.SignInRequired" xml:space="preserve"><value>Sign in to accept the invitation.</value></data>
+  <data name="Invitations.Invitation.WrongAccount" xml:space="preserve"><value>This invitation is for another account.</value></data>
+  <data name="Invitations.Invitation.ChannelUnavailable" xml:space="preserve"><value>This invitation channel is unavailable.</value></data>
 </root>

@@ -20,7 +20,7 @@
 
 ## Decisiones técnicas tomadas
 
-1. **Invitado sin identidad:** `Member.UserId` permite `null` solo mientras está `Invited`; `Member.Invite()` crea esa reserva y `AssignUser` la vincula al aceptar. No se crea una cuenta vacía en la emisión. La activación sin identidad se rechaza. Las membresías existentes conservan su conducta. El trigger del índice de accesos omite filas sin usuario y sincroniza al vincularlas; los readers de identidades proyectan solo miembros con usuario.
+1. **Invitado sin identidad:** `Member.UserId` permite `null` hasta vincularse; `Member.Invite()` crea esa reserva y `AssignUser` la vincula al aceptar. Una reserva retirada puede conservar `null`, pero nunca se activa sin identidad ni se vincula después de retirarse. No se crea una cuenta vacía en la emisión. Las membresías existentes conservan su conducta. El trigger del índice de accesos omite filas sin usuario y sincroniza al vincularlas; los readers de identidades proyectan solo miembros con usuario.
 2. **Token y aislamiento:** un puerto `IInvitationTokenProtector` usa Data Protection con propósito exclusivo y un secreto aleatorio de 256 bits. El token protege TenantId, InvitationId y el secreto; en `Invitation` se persiste solo el hash. Antes de `Enter` se valida el token protegido; dentro del alcance se comprueba el hash y el estado reales. No se incorpora un índice global de invitaciones ni una excepción a los filtros RLS.
 3. **Transporte:** los endpoints reciben el token en JSON, nunca query/path. El enlace del correo lleva la referencia opaca en el fragmento del SPA, que no viaja en la URL HTTP ni en Referer; el SPA lo retira con `history.replaceState` antes de consultar y no lo conserva en almacenamiento JS ni estado OIDC. Un adaptador de continuación guarda una copia protegida en cookie HttpOnly/Secure/SameSite Lax, limitada al flujo y al vencimiento, para volver del ingreso y recargar. Sin fragmento ni continuación válida se muestra «Ya no sirve».
 4. **Sesión:** las rutas son anónimas y no reciben alcance del token bearer actual. Un puerto de contexto del flujo lee la identidad autenticada válida por bearer o cookie de Identity. La posesión de la invitación crea sesión solo para una identidad nueva; si el correo ya pertenece a una cuenta, exige ingresar como esa cuenta. Una sesión ajena no puede aceptar ni vincular el correo. Se relee esta propiedad después de los locks para cubrir una cuenta creada entre preview y accept. El lookup reconoce también el `ContactEmail` verificado de Google; un resultado ambiguo se rechaza, nunca crea otra identidad ni elige una arbitraria.
@@ -50,9 +50,9 @@ Cada tarea con lógica sigue: test dirigido → observar rojo → implementació
 
 ### T01 · Reglas de invitación y miembro sin identidad (back)
 
-- [ ] Escribir `InvitationTests` y ampliar tests de `Member`: preview no consume; aceptación válida, repetida, revocada, límite exacto de vencimiento; token/hash no aparece en `ToString`; miembro sin usuario no se activa y solo se vincula una vez.
-- [ ] Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Domain.UnitTests/ArquitecturaBaseMultitenant.Domain.UnitTests.csproj -- --filter-class "*InvitationTests"`; observar error por entidad ausente. Implementar fábrica/estados y `Member.Invite()`/`AssignUser`, preservando `Invite(Guid)`.
-- [ ] Verde del grupo y tests de Member; build Domain. Commit `feat: modelar invitaciones y membresías pendientes` con archivos de Domain, tests y reglas locales nuevos.
+- [x] Escribir `InvitationTests` y ampliar tests de `Member`: preview no consume; aceptación válida, repetida, revocada, límite exacto de vencimiento; token/hash no aparece en `ToString`; miembro sin usuario no se activa y solo se vincula una vez.
+- [x] Ejecutar `dotnet test --project tests/ArquitecturaBaseMultitenant.Domain.UnitTests/ArquitecturaBaseMultitenant.Domain.UnitTests.csproj -- --filter-class "*InvitationTests"`; observar error por entidad ausente. Implementar fábrica/estados y `Member.Invite()`/`AssignUser`, preservando `Invite(Guid)`.
+- [x] Verde del grupo y tests de Member: 13/13, sin omitidos; build Domain: 0 advertencias/0 errores. Commit `feat: modelar invitaciones y membresías pendientes` con archivos de Domain, tests y reglas locales nuevos.
 
 ### T02 · Persistencia, RLS e índice de accesos (back)
 

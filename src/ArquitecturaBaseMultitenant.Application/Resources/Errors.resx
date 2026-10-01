@@ -104,4 +104,12 @@
   <data name="Legal.AccountDeletion.InvalidReason" xml:space="preserve"><value>Escribí un motivo de hasta 500 caracteres.</value></data>
   <data name="Legal.AccountDeletion.PlatformOperator" xml:space="preserve"><value>Tu cuenta de operador no puede darse de baja desde acá.</value></data>
   <data name="Legal.AccountDeletion.ReauthRequired" xml:space="preserve"><value>Confirmá el código que te mandamos para pedir la baja.</value></data>
+  <data name="Tenancy.Member.IdentityRequired" xml:space="preserve"><value>La membresía necesita una cuenta antes de activarse.</value></data>
+  <data name="Invitations.Invitation.Invalid" xml:space="preserve"><value>Esta invitación ya no sirve.</value></data>
+  <data name="Invitations.Invitation.Expired" xml:space="preserve"><value>La invitación venció.</value></data>
+  <data name="Invitations.Invitation.AlreadyUsed" xml:space="preserve"><value>La invitación ya fue aceptada.</value></data>
+  <data name="Invitations.Invitation.AlreadyPending" xml:space="preserve"><value>Ya hay una invitación pendiente para este correo.</value></data>
+  <data name="Invitations.Invitation.SignInRequired" xml:space="preserve"><value>Ingresá para aceptar la invitación.</value></data>
+  <data name="Invitations.Invitation.WrongAccount" xml:space="preserve"><value>Esta invitación es para otra cuenta.</value></data>
+  <data name="Invitations.Invitation.ChannelUnavailable" xml:space="preserve"><value>Este canal de invitación no está disponible.</value></data>
 </root>
