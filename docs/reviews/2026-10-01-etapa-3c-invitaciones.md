@@ -11,7 +11,8 @@ Estado: en curso. No se declara cerrada la etapa ni se cambia `HarnessStage` has
 | T04 · E2E rojo | Dos invitaciones reales llegan al navegador y fallan en preview ausente; siete recorridos previos verdes | back `d329ccd`, front `1a62898` |
 | T05 · Preview | Estados actuales, sesión explícita y continuación HttpOnly; 15 unitarios y 9 integraciones | `5170d21` |
 
-| T06 · Aceptación | Identidad sin Personal, legales, dueño revalidado y consumo atómico; 42 integraciones focales | commit que incorpora esta fila |
+| T06 · Aceptación | Identidad sin Personal, legales, dueño revalidado y consumo atómico; 42 integraciones focales | `861463c` |
+| T07 · Respaldo y baja | Metadata de origen; respaldo consistente en aceptación/perfil; baja revoca invitaciones recibidas y anonimiza las enviadas. Unitarios 7/7; integración 24/24 | `9163854` |
 
 ## TDD y verificaciones
 
@@ -25,6 +26,9 @@ Estado: en curso. No se declara cerrada la etapa ni se cambia `HarnessStage` has
 
 - T06 rojo: modelo de aceptación ausente (`CS0246`); recuperación de respuesta perdida devolvía Invalid en vez de Accepted. Verde: 18 casos de aceptación, 10 de invitaciones/emisión y regresiones de código/Google: total 42, correcto 42, error 0, omitido 0. Preview unitario 15/15 y dominio Invitation 7/7. Inventarios existentes de dependencias/transacciones 10/10 y entradas de scope 2/2. API build: 0 advertencias/0 errores.
 - La regresión combinada encontró el límite de veinte despachos del lector pickup: las invitaciones previas superaban esa cola. Se ajustó el helper existente a cien despachos, con espera solo cuando no hubo trabajo. El conjunto pasó al repetirlo; no se agregó ningún test del arnés.
+
+- T07 rojo: `LoginMethodTests` no compiló por la fábrica `CreateInvitedEmail` aún ausente (`CS0117`). La primera integración también mostró que Google no estaba habilitado en `Testing` (por lo que sí correspondía el aviso) y que un cliente con HTTP recibe `error:invalid_request` de OpenIddict.
+- T07 verde: Domain `LoginMethodTests` 7/7; API Integration `InvitationAcceptanceTests` 20/20, `AccountDeletionProcessingTests` 3/3 y `AccountDeletionParticipantsTests` 1/1; API e integración build 0 advertencias/0 errores; EF sin cambios pendientes. PostgreSQL aislado en Testcontainers.
 
 ## E2E real
 
@@ -49,7 +53,7 @@ Se revisaron los tableros Invitacion y M-Invitacion a 1440×900 y 390×844 con u
 
 ## Decisiones tomadas
 
-Las decisiones vigentes están en el [plan](../plans/2026-10-01-etapa-3c-invitaciones.md#decisiones-técnicas-tomadas): identidad diferida, token protegido y RLS, continuación HttpOnly, ingreso sin selección de acceso antes del accept, reconocimiento de Google-only, nonce de bootstrap para recuperar una respuesta perdida, barrido por organización durante baja y locks compatibles. Una reserva de Member retirada puede seguir sin identidad; nunca se activa ni se vincula después de retirarse.
+Las decisiones vigentes están en el [plan](../plans/2026-10-01-etapa-3c-invitaciones.md#decisiones-técnicas-tomadas): identidad diferida, token protegido y RLS, continuación HttpOnly, ingreso sin selección de acceso antes del accept, reconocimiento de Google-only, nonce de bootstrap para recuperar una respuesta perdida, barrido por organización durante baja, locks compatibles y procedencia de invitación separada de dominio administrado. El aviso cuenta solo vías personales verificadas y disponibles en la configuración vigente. Una reserva de Member retirada puede seguir sin identidad; nunca se activa ni se vincula después de retirarse.
 
 El aviso «te vamos a mandar un código» del correo aparece solo para un correo Email ya verificado, nunca para Google-only ni cuenta nueva. El pie conserva «Si no esperabas este correo, podés ignorarlo» y omite la promesa «sin el código nadie puede entrar»: la invitación nueva prueba posesión mediante el enlace. Se registrará también en la comparación visual. No se crean datos de Empresa ni Roles para completar el lienzo.
 
