@@ -14,7 +14,7 @@
 - [x] Leer plan maestro, Etapa 3c/punto 7; `backend.md` §13, `multitenancy.md` §3/§3.1/§3.2 y las reglas de guardado, Result, validación, persistencia, aislamiento, auditoría, HTTP, idempotencia, fechas, correos, datos personales, logs, recursos y tests.
 - [x] Leer `Invitacion`, `M-Invitacion` y la invitación por correo de `Mensajes`. Revisar escritorio 1440×900 y teléfono 390×844 con una invitación: composición breve, sin tabla de listado ni desborde horizontal. Repetir con el contrato real antes de programar el front.
 - [x] **Condición de entorno:** el usuario confirmó que Aspire está apagado. Verificarlo antes del E2E; no detener un AppHost ajeno si aparece uno mientras se trabaja.
-- [ ] **Decisión de producto pendiente:** el lienzo incluye Empresa, Roles y el rol del invitador, pero no existen esos modelos hasta E6/E4. Se propuso ocultar únicamente esos datos hasta sus etapas. No programar ni dar por aprobada esa diferencia antes de la respuesta del usuario; no crear textos/roles/empresas temporales.
+- [x] **Decisión de producto resuelta:** los campos de Empresa, Roles y rol del invitador se ocultan hasta que nazcan sus etapas (E6/E4), conforme a la decisión previa del usuario de ocultar los controles de rutas que todavía no existen. No se crean textos, roles ni empresas temporales.
 - Cuenta y su rediseño quedan fuera. La emisión administrativa, reenvío y revocación HTTP pertenecen a E5/E6; el recorrido manual desde Usuarios se conserva para E6. WhatsApp no se habilita antes de E8.
 - Leer el `AGENTS.md` local antes de editar cada carpeta. Cada carpeta nueva del mapa incorpora `AGENTS.md` y `CLAUDE.md` breves con responsabilidad y fichas reales, sin nuevas comprobaciones del arnés.
 
@@ -107,7 +107,7 @@ Cada tarea con lógica sigue: test dirigido → observar rojo → implementació
 
 ### T09 · Página pública y estados del lienzo (front)
 
-- [ ] Requiere decisión de producto de campos futuros. Revisar de nuevo escritorio/móvil con una invitación del contrato real, nombre/correo largo y solo un vencimiento; informar alternativas si se rompe su composición.
+- [ ] Usar solo los campos disponibles en E3c. Empresa, Roles y rol del invitador permanecen ocultos hasta E6/E4 según la decisión de producto ya resuelta. Revisar escritorio/móvil con una invitación del contrato real, nombre/correo largo y un vencimiento; si la composición falla con un elemento, proponer alternativas antes de programar.
 - [ ] Tests rojos de `InvitationPage`: Sin cuenta; Con cuenta sin sesión; Sesión propia; Sesión ajena; Vencida; Ya no sirve; Organización suspendida; Aceptada sin respaldo. Interacciones por rol accesible, resource parity, axe y 390 px.
 - [ ] Implementar ruta pública `/invitacion` con AuthLayout, textos y orden del lienzo; TanStack Query/httpClient para preview y useIdempotentMutation para accept. Vaciar el fragmento antes de consultar; ninguna credencial en QueryKey, storage, URL de retorno ni state OIDC. Datos de API y capacidades, no reglas de identidad en el cliente.
 - [ ] La cuenta previa usa `LoginPage` con el retorno fijo `/invitacion`: ingreso por código/Google crea cookie y vuelve usando la continuación protegida, sin `signinRedirect` antes de aceptar. «Salir y seguir» revoca la sesión anterior por el logout real, preserva solo la invitación pendiente protegida y rota el nonce para invalidar cualquier bootstrap; retoma el flujo sin registrar Personal incidentalmente. Logout común borra toda continuación. «Seguir como…» vuelve al acceso propio sin consumir invitación.
