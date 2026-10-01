@@ -28,6 +28,8 @@ public sealed class LoginMethod : Entity
     public bool IsPrimary { get; private set; }
     public DateTime? VerifiedAtUtc { get; private set; }
     public Guid? ManagedByTenantId { get; private set; }
+    public Guid? InvitationOriginTenantId { get; private set; }
+    public bool IsPersonalBackup => ManagedByTenantId is null && InvitationOriginTenantId is null;
     /// <summary>Correo que Google probó; Value conserva siempre el subject del proveedor.</summary>
     public Email? ContactEmail { get; private set; }
 
@@ -35,6 +37,20 @@ public sealed class LoginMethod : Entity
     {
         ArgumentNullException.ThrowIfNull(email);
         return new LoginMethod(userId, LoginMethodType.Email, email.Value);
+    }
+
+    public static LoginMethod CreateInvitedEmail(Guid userId, Email email, Guid organizationId)
+    {
+        ArgumentNullException.ThrowIfNull(email);
+        if (organizationId == Guid.Empty)
+        {
+            throw new ArgumentException("The organization id cannot be empty.", nameof(organizationId));
+        }
+
+        return new LoginMethod(userId, LoginMethodType.Email, email.Value)
+        {
+            InvitationOriginTenantId = organizationId,
+        };
     }
 
     public static LoginMethod CreatePhone(Guid userId, PhoneNumber phoneNumber)

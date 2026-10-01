@@ -33,6 +33,17 @@ internal sealed class InvitationRepository(ApplicationDbContext context, ITenant
             && invitation.Status == InvitationStatus.Pending, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Invitation>> ListPendingByDestinationsAsync(
+        IReadOnlyCollection<Email> destinations, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(destinations);
+        context.RequireTransaction();
+        _ = tenantContext.RequiredTenantId;
+        if (destinations.Count == 0) return [];
+        return await context.Invitations.Where(invitation => invitation.Status == InvitationStatus.Pending
+            && destinations.Contains(invitation.Destination)).ToArrayAsync(cancellationToken);
+    }
+
     public void Add(Invitation invitation)
     {
         ArgumentNullException.ThrowIfNull(invitation);

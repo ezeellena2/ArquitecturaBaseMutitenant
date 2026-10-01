@@ -33,9 +33,11 @@ internal sealed class InvitationPreviewBuilder(IInvitationReader invitations, IU
                 && Invitation.CanBootstrap(row.Status, row.AcceptedAtUtc, row.BootstrapNonceHash,
                     tokens.Hash(original.Nonce), timeProvider.GetUtcNow().UtcDateTime)
                 && await flow.RestoreSessionAsync(newlyCreated, ct)) userId = newlyCreated;
-            return row.AcceptedByUserId is { } accepted && userId == accepted && row.MemberStatus == MemberStatus.Active
-                && row.TenantStatus == TenantStatus.Active ? Present(row, InvitationPreviewState.Accepted)
-                    : new(InvitationPreviewState.Invalid);
+            if (row.AcceptedByUserId is not { } accepted || userId != accepted || row.MemberStatus != MemberStatus.Active
+                || row.TenantStatus != TenantStatus.Active) return new(InvitationPreviewState.Invalid);
+            var methodsForAccepted = await methods.ListByUserIdAsync(accepted, ct);
+            var hasPersonalBackup = await availability.HasPersonalBackupAsync(accepted, methodsForAccepted, ct);
+            return Present(row, InvitationPreviewState.Accepted) with { NeedsPersonalLoginMethod = !hasPersonalBackup };
         }
         if (timeProvider.GetUtcNow().UtcDateTime >= row.ExpiresAtUtc) return Present(row, InvitationPreviewState.Expired);
         if (row.TenantStatus == TenantStatus.Suspended) return Present(row, InvitationPreviewState.OrganizationSuspended);

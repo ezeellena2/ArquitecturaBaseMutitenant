@@ -9,4 +9,4 @@ internal sealed record InvitationAcceptanceContext(InvitationTokenData Proof, st
 }
 
 internal sealed record InvitationAcceptanceOutcome(Guid UserId, Guid OrganizationId, bool CreatedAccount,
-    DateTime ExpiresAtUtc);
+    bool NeedsPersonalLoginMethod, DateTime ExpiresAtUtc);

@@ -31,8 +31,8 @@ internal sealed class AccountLoginMethodsService(ICurrentUser currentUser, ILogi
                 var backup = remaining.Where(availability.CanReceiveCode).OrderByDescending(value => value.IsPrimary)
                     .ThenBy(value => value.ManagedByTenantId is not null).ThenBy(value => value.Id).FirstOrDefault();
                 var isAvailable = available.Any(value => value.Id == method.Id);
-                var canRemove = backup is not null && !(isAvailable && method.ManagedByTenantId is null
-                    && remaining.All(value => value.ManagedByTenantId is not null));
+                var canRemove = backup is not null && !(isAvailable && method.IsPersonalBackup
+                    && remaining.All(value => !value.IsPersonalBackup));
                 var organization = method.ManagedByTenantId is { } tenantId ? await tenants.FindByIdAsync(tenantId, ct) : null;
                 rows.Add(new AccountLoginMethodResponse(method.Id, method.Type,
                     method.Type == LoginMethodType.Google ? method.ContactEmail?.Value : method.Value,
@@ -42,7 +42,7 @@ internal sealed class AccountLoginMethodsService(ICurrentUser currentUser, ILogi
             }
             var platform = await settings.FindAsync(ct) ?? throw new InvalidOperationException("Platform settings have not been seeded.");
             return new AccountLoginMethodsResponse(rows, google.IsEnabled && !all.Any(method => method.Type == LoginMethodType.Google),
-                !all.Any(method => method.VerifiedAtUtc is not null && method.ManagedByTenantId is null), platform.AccountDeletionGraceDays);
+                !await availability.HasPersonalBackupAsync(userId, all, ct), platform.AccountDeletionGraceDays);
         });
 
     private static string Mask(LoginMethodRow method)

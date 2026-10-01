@@ -214,6 +214,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .HasMaxLength(254)
                         .HasColumnType("character varying(254)");
 
+                    b.Property<Guid?>("InvitationOriginTenantId")
+                        .HasColumnType("uuid");
+
                     b.Property<bool>("IsPrimary")
                         .HasColumnType("boolean");
 

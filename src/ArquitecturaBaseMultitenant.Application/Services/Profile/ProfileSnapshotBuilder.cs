@@ -37,9 +37,7 @@ internal sealed class ProfileSnapshotBuilder(IUserRepository users, IUserTenantA
             ? null : await countries.FindAsync(culture.CountryCode, cancellationToken);
         var currencyCode = tenantSettings?.DefaultCurrency ?? country?.DefaultCurrencyCode;
         var methods = await loginMethods.ListByUserIdAsync(userId, cancellationToken);
-        var hasPersonalMethod = false;
-        foreach (var method in methods.Where(method => method.ManagedByTenantId is null))
-            hasPersonalMethod |= await availability.IsAvailableAsync(userId, method, cancellationToken);
+        var hasPersonalMethod = await availability.HasPersonalBackupAsync(userId, methods, cancellationToken);
 
         return new MeResponse(account.Id, account.DisplayName, account.PrimaryEmail, access,
             activeTenantId, personalSpace, organizations, EffectivePermissions.Empty,

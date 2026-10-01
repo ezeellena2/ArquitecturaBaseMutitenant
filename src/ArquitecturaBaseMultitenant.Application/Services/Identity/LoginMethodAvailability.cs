@@ -52,11 +52,18 @@ internal sealed class LoginMethodAvailability(IEnumerable<ILoginCodeChannel> cha
             && (method.ManagedByTenantId is not { } tenantId || await memberships.IsActiveAsync(userId, tenantId, ct));
     }
 
+    public async Task<bool> HasPersonalBackupAsync(Guid userId, IReadOnlyList<LoginMethodRow> methods, CancellationToken ct)
+    {
+        foreach (var method in methods)
+            if (method.IsPersonalBackup && await IsAvailableAsync(userId, method, ct)) return true;
+        return false;
+    }
+
     public static Error? CheckRemoval(LoginMethod target, IReadOnlyList<LoginMethod> available)
     {
         var remaining = available.Where(method => method.Id != target.Id).ToArray();
         if (remaining.Length == 0) return LoginMethodErrors.LastMethod;
-        return target.ManagedByTenantId is null && available.Any(method => method.Id == target.Id)
-            && remaining.All(method => method.ManagedByTenantId is not null) ? LoginMethodErrors.LastPersonalMethod : null;
+        return target.IsPersonalBackup && available.Any(method => method.Id == target.Id)
+            && remaining.All(method => !method.IsPersonalBackup) ? LoginMethodErrors.LastPersonalMethod : null;
     }
 }

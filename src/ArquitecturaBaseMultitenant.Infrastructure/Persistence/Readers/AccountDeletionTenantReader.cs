@@ -4,13 +4,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 
-/// <summary>Proyecta solo IDs y clases de tenant relacionados con la cuenta para planificar su baja. Usa el índice global de accesos, sin leer datos privados de otra organización.</summary>
+/// <summary>Proyecta sus espacios y todas las organizaciones para limpiar invitaciones aún sin identidad vinculada, sin leer datos privados de otra organización.</summary>
 internal sealed class AccountDeletionTenantReader(ApplicationDbContext context) : IAccountDeletionTenantReader
 {
-    public async Task<IReadOnlyList<AccountDeletionTenant>> ListAsync(Guid userId, CancellationToken ct) =>
-        await (from access in context.UserTenantAccesses.AsNoTracking()
-            where access.UserId == userId
-            join tenant in context.Tenants.AsNoTracking() on access.TenantId equals tenant.Id
-            orderby tenant.Kind, tenant.Id
-            select new AccountDeletionTenant(tenant.Id, tenant.Kind)).ToArrayAsync(ct);
+    public async Task<IReadOnlyList<AccountDeletionTenant>> ListAsync(Guid userId, CancellationToken ct)
+    {
+        var tenantIds = await context.UserTenantAccesses.AsNoTracking()
+            .Where(access => access.UserId == userId)
+            .Select(access => access.TenantId)
+            .Union(context.Tenants.AsNoTracking().Where(tenant => tenant.Kind == Domain.Tenancy.TenantKind.Business)
+                .Select(tenant => tenant.Id))
+            .Distinct()
+            .ToArrayAsync(ct);
+        return await context.Tenants.AsNoTracking().Where(tenant => tenantIds.Contains(tenant.Id))
+            .OrderBy(tenant => tenant.Kind).ThenBy(tenant => tenant.Id)
+            .Select(tenant => new AccountDeletionTenant(tenant.Id, tenant.Kind)).ToArrayAsync(ct);
+    }
 }

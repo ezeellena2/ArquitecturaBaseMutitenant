@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Invitations;
@@ -51,7 +52,9 @@ public sealed class InvitationAcceptanceTests(ApiFactory factory)
         Assert.True(accepted.Result.IsSuccess);
         Assert.Equal(issued.TenantId, accepted.Result.Value.OrganizationId);
         Assert.Equal(kind == "none", accepted.Result.Value.CreatedAccount);
-        Assert.Equal(kind == "none", accepted.Result.Value.NeedsPersonalLoginMethod);
+        var googleAvailable = check.ServiceProvider.GetRequiredService<IGoogleAvailability>().IsEnabled;
+        Assert.Equal(kind == "none" || kind == "google" && !googleAvailable,
+            accepted.Result.Value.NeedsPersonalLoginMethod);
         Assert.Equal(usersBefore + (kind == "none" ? 1 : 0), await db.Users.CountAsync(Ct));
         Assert.Equal(personalBefore, await db.Tenants.CountAsync(row => row.Kind == TenantKind.Personal, Ct));
         Assert.Equal(legalBefore + (kind == "none" ? 2 : 0), await db.LegalAcceptances.CountAsync(Ct));
@@ -66,6 +69,13 @@ public sealed class InvitationAcceptanceTests(ApiFactory factory)
         Assert.NotNull(identity.VerifiedAtUtc);
         Assert.Equal(kind == "email" ? null : (Guid?)issued.TenantId, identity.InvitationOriginTenantId);
         Assert.Equal(kind != "google", identity.IsPrimary);
+        if (kind == "google")
+        {
+            var googleMethod = Assert.Single(await db.LoginMethods.AsNoTracking()
+                .Where(method => method.Type == LoginMethodType.Google && method.UserId == identity.UserId).ToArrayAsync(Ct));
+            Assert.Null(googleMethod.InvitationOriginTenantId);
+            Assert.Null(googleMethod.ManagedByTenantId);
+        }
         Assert.Equal(kind == "none", row.BootstrapNonceHash is not null);
         var accesses = await check.ServiceProvider.GetRequiredService<IUserTenantAccessReader>().ListForUserAsync(identity.UserId, Ct);
         Assert.Equal(MemberStatus.Active, Assert.Single(accesses, access => access.TenantId == issued.TenantId).MemberStatus);
@@ -100,7 +110,11 @@ public sealed class InvitationAcceptanceTests(ApiFactory factory)
     [Fact]
     public async Task Account_registered_after_an_unbound_invitation_is_deleted_and_the_pending_invitation_is_revoked()
     {
-        using var client = factory.CreateClient(new() { AllowAutoRedirect = false });
+        using var client = factory.CreateClient(new()
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
+        });
         var issued = await IssueAsync("none");
         var account = await AccountJourney.RegisterAsync(factory, client, Ct, issued.Email);
         await using (var scope = factory.Services.CreateAsyncScope())

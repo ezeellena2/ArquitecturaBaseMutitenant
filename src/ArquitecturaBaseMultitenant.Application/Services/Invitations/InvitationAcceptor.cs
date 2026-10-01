@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Invitations;
+using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -9,6 +10,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Invitations;
 
 internal sealed class InvitationAcceptor(IInvitationRepository invitations, IMemberRepository members,
     ITenantReader tenants, InvitationAcceptanceGuard guard, InvitationAccountRegistrar registrar,
+    ILoginMethodReader loginMethods, LoginMethodAvailability availability,
     IInvitationTokenProtector tokens, TimeProvider timeProvider)
 {
     internal async Task<Result<InvitationAcceptanceOutcome>> AcceptAsync(InvitationAcceptanceContext context, CancellationToken ct)
@@ -34,13 +36,16 @@ internal sealed class InvitationAcceptor(IInvitationRepository invitations, IMem
             if (other is not null && other.Id != member.Id) return InvitationErrors.Invalid;
         }
         var created = owner.Value is null;
-        var userId = owner.Value ?? await registrar.RegisterAsync(invitation.Destination, nowUtc, ct);
-        if (!created) await registrar.EnsureEmailAsync(userId, invitation.Destination, nowUtc, ct);
+        var userId = owner.Value ?? await registrar.RegisterAsync(context.Proof.TenantId, invitation.Destination, nowUtc, ct);
+        var hasPersonalBackup = !created && await availability.HasPersonalBackupAsync(userId,
+            await loginMethods.ListByUserIdAsync(userId, ct), ct);
+        if (!created) await registrar.EnsureEmailAsync(userId, context.Proof.TenantId, invitation.Destination, nowUtc, ct);
         if (member.UserId is null && member.AssignUser(userId).IsFailure)
             throw new InvalidOperationException("A checked invitation member could not be bound.");
         if (member.Activate(nowUtc).IsFailure || invitation.Accept(userId, context.TokenHash, nowUtc,
                 created ? tokens.Hash(context.Nonce) : null).IsFailure)
             throw new InvalidOperationException("A checked invitation could not be accepted.");
-        return new InvitationAcceptanceOutcome(userId, context.Proof.TenantId, created, invitation.ExpiresAtUtc);
+        return new InvitationAcceptanceOutcome(userId, context.Proof.TenantId, created,
+            !hasPersonalBackup, invitation.ExpiresAtUtc);
     }
 }

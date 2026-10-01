@@ -3,8 +3,14 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Legal;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Legal;
+using ArquitecturaBaseMultitenant.Application.Models.Invitations;
+using ArquitecturaBaseMultitenant.Application.Services.Auth;
+using ArquitecturaBaseMultitenant.Application.Services.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Settings;
+using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
@@ -27,6 +33,71 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Legal;
 public sealed class AccountDeletionProcessingTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    [Fact]
+    public async Task Deletion_keeps_outgoing_invitations_and_anonymizes_the_inviter()
+    {
+        await using var factory = new ApiFactory();
+        await factory.InitializeAsync();
+        await factory.Services.SeedDatabaseAsync(Ct);
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+
+        var account = await AccountJourney.RegisterAsync(factory, client, Ct);
+        var outboundTenantId = await CreateBusinessSpaceAsync(factory.Services, account.UserId, "Invitación enviada");
+        var outboundInvitationId = await IssueAsync(factory.Services, outboundTenantId, account.UserId,
+            Email.Create($"external-{Guid.NewGuid():N}@example.test").Value);
+
+        var nowUtc = factory.Services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                var user = await services.GetRequiredService<ApplicationDbContext>().Users
+                    .SingleAsync(row => row.Id == account.UserId, ct);
+                Assert.True(user.RequestDeletion("Prueba de baja", nowUtc.AddDays(-31), 30).IsSuccess);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+
+        await ActivatorUtilities.CreateInstance<AccountDeletionWorker>(factory.Services).RunOnceAsync(Ct);
+
+        await using var check = factory.Services.CreateAsyncScope();
+        var checkedServices = check.ServiceProvider;
+        var tenantScope = checkedServices.GetRequiredService<ITenantScope>();
+        using (tenantScope.Enter(outboundTenantId))
+        {
+            var outbound = await checkedServices.GetRequiredService<IInvitationReader>().FindByIdAsync(outboundInvitationId, Ct);
+            Assert.Equal(InvitationStatus.Pending, outbound!.Status);
+            Assert.True(outbound.InviterDeleted);
+            Assert.Null(outbound.InviterName);
+        }
+    }
+
+    private static async Task<Guid> CreateBusinessSpaceAsync(IServiceProvider services, Guid userId, string name)
+    {
+        var tenant = Tenant.CreateBusiness(name, requiresApproval: false);
+        Assert.True(tenant.Activate().IsSuccess);
+        using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenant.Id);
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+        {
+            services.GetRequiredService<TenantSpaceProvisioner>().Stage(tenant,
+                TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"), [userId]);
+            return Task.FromResult(Result.Success());
+        }, CommitPolicy.OnSuccess, Ct);
+        return tenant.Id;
+    }
+
+    private static async Task<Guid> IssueAsync(IServiceProvider services, Guid tenantId, Guid inviterId, Email destination)
+    {
+        using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenantId);
+        var result = await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+            services.GetRequiredService<InvitationIssuer>().IssueAsync(
+                new IssueInvitationRequest(destination, inviterId, InvitationChannel.Email), ct), CommitPolicy.OnSuccess, Ct);
+        Assert.True(result.IsSuccess);
+        return result.Value;
+    }
 
     [Theory]
     [InlineData(false)]

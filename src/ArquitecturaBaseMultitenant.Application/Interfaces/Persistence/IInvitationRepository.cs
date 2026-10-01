@@ -10,5 +10,7 @@ public interface IInvitationRepository
     Task LockDestinationAsync(Email destination, CancellationToken cancellationToken);
     Task<Invitation?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<Invitation?> GetPendingByDestinationAsync(Email destination, CancellationToken cancellationToken);
+    Task<IReadOnlyList<Invitation>> ListPendingByDestinationsAsync(IReadOnlyCollection<Email> destinations,
+        CancellationToken cancellationToken);
     void Add(Invitation invitation);
 }

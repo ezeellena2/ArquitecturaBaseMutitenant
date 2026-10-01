@@ -14,6 +14,7 @@ internal sealed class LoginMethodReader(ApplicationDbContext context) : ILoginMe
             .ThenBy(method => method.Type)
             .ThenBy(method => method.Id)
             .Select(method => new LoginMethodRow(method.Id, method.Type, method.Value,
-                method.IsPrimary, method.VerifiedAtUtc, method.ManagedByTenantId, method.ContactEmail))
+                method.IsPrimary, method.VerifiedAtUtc, method.ManagedByTenantId, method.ContactEmail,
+                method.InvitationOriginTenantId))
             .ToArrayAsync(cancellationToken);
 }

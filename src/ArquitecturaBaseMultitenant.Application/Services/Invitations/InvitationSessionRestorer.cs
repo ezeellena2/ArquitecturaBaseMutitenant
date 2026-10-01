@@ -12,6 +12,6 @@ internal sealed class InvitationSessionRestorer(IAccessStatusCache statuses, IIn
         await statuses.InvalidateMemberAsync(accepted.UserId, accepted.OrganizationId, ct);
         flow.Remember(new InvitationContinuation(context.Token, context.Nonce, accepted.ExpiresAtUtc.AddMinutes(5)));
         if (accepted.CreatedAccount) await flow.RestoreSessionAsync(accepted.UserId, ct);
-        return new AcceptInvitationResponse(accepted.OrganizationId, accepted.CreatedAccount, accepted.CreatedAccount);
+        return new AcceptInvitationResponse(accepted.OrganizationId, accepted.CreatedAccount, accepted.NeedsPersonalLoginMethod);
     }
 }

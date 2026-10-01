@@ -71,8 +71,9 @@ public sealed class AccountDeletionParticipantsTests(ApiFactory factory)
         Assert.Equal(OutboxStatus.Cancelled, ownedMessage.Status);
         Assert.Equal(OutboxStatus.Pending, otherMessage.Status);
         var targets = await services.GetRequiredService<IAccountDeletionTenantReader>().ListAsync(account.UserId, Ct);
-        Assert.Equal(2, targets.Count);
-        foreach (var target in targets)
+        Assert.Contains(targets, target => target.Kind == TenantKind.Personal);
+        Assert.Contains(targets, target => target.TenantId == business.Id && target.Kind == TenantKind.Business);
+        foreach (var target in targets.Where(target => target.Kind == TenantKind.Personal || target.TenantId == business.Id))
         {
             using (tenantScope.Enter(target.TenantId))
             {

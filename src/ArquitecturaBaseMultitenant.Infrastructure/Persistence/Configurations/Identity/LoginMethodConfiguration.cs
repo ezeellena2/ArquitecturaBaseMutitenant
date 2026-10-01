@@ -14,6 +14,7 @@ internal sealed class LoginMethodConfiguration : IEntityTypeConfiguration<LoginM
         builder.HasKey(method => method.Id);
         builder.Property(method => method.Type).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.Property(method => method.Value).HasMaxLength(TextLimits.Description).IsRequired();
+        builder.Property(method => method.InvitationOriginTenantId);
         builder.HasIndex(method => new { method.Type, method.Value }).IsUnique();
         builder.HasIndex(method => method.UserId);
         builder.HasIndex(method => method.UserId, "IX_LoginMethods_UserId_Primary")

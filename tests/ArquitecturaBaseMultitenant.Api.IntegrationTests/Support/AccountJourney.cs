@@ -49,7 +49,8 @@ internal sealed record AccountJourney(Guid UserId, Email Email)
         using var authorized = await client.GetAsync("/connect/authorize?client_id=web&response_type=code"
             + "&redirect_uri=https%3A%2F%2Flocalhost%3A5174%2Fauth%2Fcallback&scope=openid%20profile%20email%20api"
             + "&code_challenge=" + challenge + "&code_challenge_method=S256&access=" + access, ct);
-        Assert.Equal(HttpStatusCode.Redirect, authorized.StatusCode);
+        Assert.True(authorized.StatusCode == HttpStatusCode.Redirect,
+            $"Expected an authorization redirect, got {(int)authorized.StatusCode}: {await authorized.Content.ReadAsStringAsync(ct)}");
         var authorizationCode = QueryHelpers.ParseQuery(authorized.Headers.Location!.Query)["code"].ToString();
         using var exchanged = await client.PostAsync("/connect/token", new FormUrlEncodedContent(new Dictionary<string, string>
         {
