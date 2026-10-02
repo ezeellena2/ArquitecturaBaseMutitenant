@@ -54,4 +54,21 @@ public sealed class CompanyTests
         Assert.True(company.IsSuccess);
         Assert.Equal(id, company.Value.Id);
     }
+
+    [Fact]
+    public void Change_status_inactivates_and_reactivates_without_changing_company_data()
+    {
+        var company = Company.Create("Taller Norte", null, "UTC").Value;
+
+        Assert.True(company.IsActive);
+        company.SetActive(false);
+
+        Assert.False(company.IsActive);
+        Assert.Equal("Taller Norte", company.Name);
+        Assert.Equal("UTC", company.TimeZoneId);
+
+        company.SetActive(true);
+
+        Assert.True(company.IsActive);
+    }
 }

@@ -40,6 +40,8 @@ public sealed class Company : Entity, ITenantOwned, IAuditable, IVersioned
 
     public string TimeZoneId { get; private set; }
 
+    public bool IsActive { get; private set; } = true;
+
     public Guid TenantId { get; private set; }
 
     public uint Version { get; private set; }
@@ -76,6 +78,8 @@ public sealed class Company : Entity, ITenantOwned, IAuditable, IVersioned
         TimeZoneId = timeZoneId!.Trim();
         return Result.Success();
     }
+
+    public void SetActive(bool isActive) => IsActive = isActive;
 
     private static Result Validate(string? name, string? timeZoneId)
     {

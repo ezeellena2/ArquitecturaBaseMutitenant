@@ -16,6 +16,7 @@ internal sealed class CompanyConfiguration : IEntityTypeConfiguration<Company>
         builder.HasKey(company => new { company.TenantId, company.Id });
         builder.Property(company => company.Name).HasMaxLength(TextLimits.OrganizationName).IsRequired();
         builder.Property(company => company.TimeZoneId).IsRequired();
+        builder.Property(company => company.IsActive).HasDefaultValue(true).IsRequired();
         builder.Property(company => company.TaxCountry).HasColumnName("TaxCountry").HasColumnType("character(2)");
         builder.Property(company => company.TaxType).HasColumnName("TaxType");
         builder.Property(company => company.TaxNumber).HasColumnName("TaxNumber");
