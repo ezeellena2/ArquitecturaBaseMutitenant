@@ -2095,7 +2095,24 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantSlugAvailabilityResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantSlugAvailabilityResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantSlugAvailabilityResponse"
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad Request",
@@ -4701,6 +4718,29 @@
           }
         },
         "description": "Expone un tipo de identificación fiscal con país, máscara y criterio de validación."
+      },
+      "TenantSlugAvailability": {
+        "enum": [
+          "Available",
+          "Reserved",
+          "Taken"
+        ],
+        "type": "string"
+      },
+      "TenantSlugAvailabilityResponse": {
+        "required": [
+          "slug",
+          "availability"
+        ],
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "availability": {
+            "$ref": "#/components/schemas/TenantSlugAvailability"
+          }
+        }
       },
       "TenantStatus": {
         "enum": [

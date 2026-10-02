@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
+using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,7 +15,7 @@ namespace ArquitecturaBaseMultitenant.Api.Controllers.Auth;
 public sealed class TenantSlugAvailabilityController(ITenantSlugAvailabilityService service) : ControllerBase
 {
     [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType<TenantSlugAvailabilityResponse>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Check([FromQuery] string? slug, CancellationToken cancellationToken) =>
         (await service.CheckAsync(slug, cancellationToken)).ToActionResult(this);
