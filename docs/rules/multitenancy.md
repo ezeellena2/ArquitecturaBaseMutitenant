@@ -21,6 +21,7 @@
 - **Plataforma, workers y altas:** `using (tenantScope.Enter(tenantId)) { … }` después de autorizar, y antes de abrir el límite. En plataforma, además, con motivo obligatorio y el `SecurityEvent` registrado antes de `Enter` (`PlatformActionGuard`).
 - **Seed de Development:** siembra los mismos datos globales que Production. No crea membresías, espacios personales ni organizaciones. El E2E prepara sus datos de prueba en una base separada de la base de Development.
 - **Una persona (B2C) nunca crea una organización:** el alta es "Registrá tu empresa" (`BusinessSignupService`).
+- **Slug de una organización:** el valor se normaliza con trim y minúsculas invariantes; admite solo ASCII alfanumérico y guion, empieza/termina con alfanumérico y sigue exactamente `Registro-Empresa` (1 o 3–63 caracteres; dos caracteres no son válidos). La reserva de nombres y la disponibilidad son reglas de aplicación con índice único como barrera ante carreras.
 - **Caché y locks:** `CacheKeys.Tenant(…)`, `CacheKeys.PublicSite(…)`, `CacheKeys.User(…)` y `CacheKeys.Platform(…)` producen claves `t:`, `s:`, `u:` y `p:`; los identificadores son GUID en formato `N`. `AdvisoryLockKeys.For(tenantId, recurso, id)` produce `t:{tenantId:N}:lock:{recurso}:{id}` y se toma dentro del límite del caso de uso. En un recurso compartido, lock de fila.
 
 ## Prohibido

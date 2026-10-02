@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Domain.Common;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using TenantEntity = ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -15,7 +16,7 @@ internal sealed class TenantConfiguration : IEntityTypeConfiguration<TenantEntit
         builder.Property(tenant => tenant.Kind).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.Property(tenant => tenant.Status).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.Property(tenant => tenant.Name).HasMaxLength(TextLimits.OrganizationName).IsRequired();
-        builder.Property(tenant => tenant.Slug).HasMaxLength(TextLimits.ShortName);
+        builder.Property(tenant => tenant.Slug).HasMaxLength(TenantSlug.MaxLength);
         builder.HasIndex(tenant => tenant.Slug).IsUnique();
         builder.HasIndex(tenant => new { tenant.Kind, tenant.Status });
     }

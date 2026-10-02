@@ -37,6 +37,14 @@ public sealed class Tenant : Entity
     public static Tenant CreateBusiness(string name, bool requiresApproval) =>
         new(TenantKind.Business, name, requiresApproval ? TenantStatus.PendingApproval : TenantStatus.Provisioning);
 
+    public Result SetSlug(TenantSlug slug)
+    {
+        ArgumentNullException.ThrowIfNull(slug);
+        if (Kind != TenantKind.Business) return TenantErrors.InvalidTransition;
+        Slug = slug.Value;
+        return Result.Success();
+    }
+
     public Result Approve()
     {
         if (Kind != TenantKind.Business || Status != TenantStatus.PendingApproval)

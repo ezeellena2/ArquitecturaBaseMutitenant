@@ -34,6 +34,18 @@ public sealed class TenantTests
     }
 
     [Fact]
+    public void Only_business_tenants_can_receive_a_valid_slug()
+    {
+        var business = Tenant.CreateBusiness("La Cosecha", requiresApproval: false);
+        var slug = TenantSlug.Create("la-cosecha").Value;
+        var personal = Tenant.CreatePersonal("Ana");
+
+        Assert.True(business.SetSlug(slug).IsSuccess);
+        Assert.Equal("la-cosecha", business.Slug);
+        Assert.Equal(TenantErrors.InvalidTransition, personal.SetSlug(slug).Error);
+    }
+
+    [Fact]
     public void Business_can_suspend_resume_and_close_from_suspended()
     {
         var tenant = Tenant.CreateBusiness("La Cosecha", requiresApproval: false);

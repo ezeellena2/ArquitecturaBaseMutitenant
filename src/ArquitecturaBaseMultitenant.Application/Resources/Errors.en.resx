@@ -94,6 +94,7 @@
   <data name="Tenancy.Tenant.PendingApproval" xml:space="preserve"><value>The organization is awaiting approval.</value></data>
   <data name="Tenancy.Tenant.Provisioning" xml:space="preserve"><value>The organization is being provisioned.</value></data>
   <data name="Tenancy.Tenant.Closed" xml:space="preserve"><value>The organization is closed.</value></data>
+  <data name="Tenancy.TenantSlug.Invalid" xml:space="preserve"><value>Use lowercase letters, numbers, and hyphens; the address cannot have two characters.</value></data>
   <data name="Tenancy.Tenant.InvalidTransition" xml:space="preserve"><value>The organization cannot change to that state.</value></data>
   <data name="Tenancy.Member.Inactive" xml:space="preserve"><value>Your access to this organization is disabled.</value></data>
   <data name="Tenancy.Member.InvalidTransition" xml:space="preserve"><value>The membership cannot change to that state.</value></data>
