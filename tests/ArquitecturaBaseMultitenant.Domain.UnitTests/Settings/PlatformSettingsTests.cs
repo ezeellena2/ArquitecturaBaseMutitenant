@@ -71,4 +71,30 @@ public sealed class PlatformSettingsTests
 
         Assert.Equal(Guid.Empty, settings.TenantId);
     }
+
+    [Fact]
+    public void Tenant_settings_can_be_updated_with_values_from_reference_catalogs()
+    {
+        var settings = TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS");
+
+        var result = settings.Update(" en-US ", " America/New_York ", " USD ");
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("en-US", settings.DefaultCulture);
+        Assert.Equal("America/New_York", settings.DefaultTimeZoneId);
+        Assert.Equal("USD", settings.DefaultCurrency);
+    }
+
+    [Fact]
+    public void Tenant_settings_reject_missing_defaults_without_changing_saved_values()
+    {
+        var settings = TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS");
+
+        var result = settings.Update("en-US", " ", "USD");
+
+        Assert.Equal(SettingsErrors.TenantConfigurationRequired, result.Error);
+        Assert.Equal("es-AR", settings.DefaultCulture);
+        Assert.Equal("America/Argentina/Buenos_Aires", settings.DefaultTimeZoneId);
+        Assert.Equal("ARS", settings.DefaultCurrency);
+    }
 }

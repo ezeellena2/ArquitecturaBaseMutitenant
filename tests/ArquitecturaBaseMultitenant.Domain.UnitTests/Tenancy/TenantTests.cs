@@ -83,4 +83,15 @@ public sealed class TenantTests
         Assert.True(tenant.Close().IsSuccess);
         Assert.Equal(TenantStatus.Closed, tenant.Status);
     }
+
+    [Fact]
+    public void Business_organization_name_can_be_changed_and_is_trimmed()
+    {
+        var tenant = Tenant.CreateBusiness("La Cosecha", requiresApproval: false);
+
+        var result = tenant.Rename("  La Cosecha Sur  ");
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("La Cosecha Sur", tenant.Name);
+    }
 }

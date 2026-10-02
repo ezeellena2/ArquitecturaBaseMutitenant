@@ -59,6 +59,17 @@ public sealed class Tenant : Entity
         return Result.Success();
     }
 
+    public Result Rename(string? name)
+    {
+        if (Kind != TenantKind.Business || Status == TenantStatus.Closed)
+            return TenantErrors.InvalidTransition;
+        if (string.IsNullOrWhiteSpace(name)) return TenantErrors.NameRequired;
+        if (name.Trim().Length > TextLimits.OrganizationName) return TenantErrors.NameTooLong;
+
+        Name = name.Trim();
+        return Result.Success();
+    }
+
     public Result Approve()
     {
         if (Kind != TenantKind.Business || Status != TenantStatus.PendingApproval)

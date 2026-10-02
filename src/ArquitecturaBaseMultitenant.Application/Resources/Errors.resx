@@ -146,4 +146,7 @@
   <data name="Invitations.Invitation.SignInRequired" xml:space="preserve"><value>Ingresá para aceptar la invitación.</value></data>
   <data name="Invitations.Invitation.WrongAccount" xml:space="preserve"><value>Esta invitación es para otra cuenta.</value></data>
   <data name="Invitations.Invitation.ChannelUnavailable" xml:space="preserve"><value>Este canal de invitación no está disponible.</value></data>
+  <data name="Settings.Tenant.ConfigurationRequired" xml:space="preserve"><value>El idioma, la zona horaria y la moneda de la organización son obligatorios.</value></data>
+  <data name="Tenancy.Tenant.NameRequired" xml:space="preserve"><value>Ingresá el nombre de la organización.</value></data>
+  <data name="Tenancy.Tenant.NameTooLong" xml:space="preserve"><value>El nombre de la organización es demasiado largo.</value></data>
 </root>

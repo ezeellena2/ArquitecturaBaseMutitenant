@@ -9,6 +9,9 @@ namespace ArquitecturaBaseMultitenant.Domain.Settings;
 public static class SettingsErrors
 {
     public const string NotFoundCode = "Settings.System.NotFound";
+    public const string TenantConfigurationRequiredCode = "Settings.Tenant.ConfigurationRequired";
 
     public static readonly Error NotFound = Error.NotFound(NotFoundCode, "The platform settings were not found.");
+    public static readonly Error TenantConfigurationRequired = Error.Validation(TenantConfigurationRequiredCode,
+        "The organization culture, time zone, and currency are required.");
 }

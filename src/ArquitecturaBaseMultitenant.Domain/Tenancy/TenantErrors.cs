@@ -14,6 +14,8 @@ public static class TenantErrors
     public const string ClosedCode = "Tenancy.Tenant.Closed";
     public const string InvalidTransitionCode = "Tenancy.Tenant.InvalidTransition";
     public const string ProvisioningConflictCode = "Tenancy.Tenant.ProvisioningConflict";
+    public const string NameRequiredCode = "Tenancy.Tenant.NameRequired";
+    public const string NameTooLongCode = "Tenancy.Tenant.NameTooLong";
 
     public static readonly Error Suspended = Error.Forbidden(SuspendedCode, "The organization is suspended.");
     public static readonly Error PendingApproval = Error.Forbidden(PendingApprovalCode, "The organization is awaiting approval.");
@@ -22,4 +24,6 @@ public static class TenantErrors
     public static readonly Error InvalidTransition = Error.Conflict(InvalidTransitionCode, "The organization cannot change to that state.");
     public static readonly Error ProvisioningConflict = Error.Conflict(ProvisioningConflictCode,
         "The organization already exists with different provisioning data.");
+    public static readonly Error NameRequired = Error.Validation(NameRequiredCode, "An organization name is required.");
+    public static readonly Error NameTooLong = Error.Validation(NameTooLongCode, "The organization name is too long.");
 }
