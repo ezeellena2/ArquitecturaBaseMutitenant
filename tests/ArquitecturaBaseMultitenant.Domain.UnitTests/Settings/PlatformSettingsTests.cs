@@ -20,6 +20,18 @@ public sealed class PlatformSettingsTests
     }
 
     [Fact]
+    public void Business_signup_allows_open_and_approval_modes_but_blocks_closed_mode()
+    {
+        var open = PlatformSettings.Create(ConsumerSignupMode.Closed, BusinessSignupMode.Open, 3);
+        var approval = PlatformSettings.Create(ConsumerSignupMode.Closed, BusinessSignupMode.RequiresApproval, 3);
+        var closed = PlatformSettings.Create(ConsumerSignupMode.Open, BusinessSignupMode.Closed, 3);
+
+        Assert.True(open.CanRegisterBusiness().IsSuccess);
+        Assert.True(approval.CanRegisterBusiness().IsSuccess);
+        Assert.Equal(SignupErrors.BusinessClosed, closed.CanRegisterBusiness().Error);
+    }
+
+    [Fact]
     public void Platform_settings_have_a_single_identity_and_thirty_day_deletion_grace()
     {
         var settings = PlatformSettings.Create(ConsumerSignupMode.Open, BusinessSignupMode.RequiresApproval, 4);

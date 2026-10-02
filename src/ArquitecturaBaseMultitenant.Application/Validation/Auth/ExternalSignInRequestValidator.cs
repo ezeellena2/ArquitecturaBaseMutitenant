@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Application.Resources;
+using ArquitecturaBaseMultitenant.Domain.Users;
 using FluentValidation;
 
 namespace ArquitecturaBaseMultitenant.Application.Validation.Auth;
@@ -17,5 +18,8 @@ internal sealed class ExternalSignInRequestValidator : AbstractValidator<Externa
             .WithMessage(_ => ValidationTexts.ReturnUrlInvalid);
         RuleFor(request => request.AcceptedTerms)
             .Equal(true).When(request => request.IsSignup).WithMessage(_ => ValidationTexts.Required);
+        RuleFor(request => request.RequestedAccess)
+            .Must(value => value is Access.Consumer or Access.Business)
+            .WithMessage(_ => ValidationTexts.Required);
     }
 }

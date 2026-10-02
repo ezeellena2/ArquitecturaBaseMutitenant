@@ -246,6 +246,27 @@ public sealed class GoogleLoginTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Business_registration_creates_identity_without_a_personal_space()
+    {
+        await factory.Services.SeedDatabaseAsync(Ct);
+        var subject = Guid.NewGuid().ToString("N");
+        var google = new GoogleSignInDouble(new ExternalLogin("Google", subject,
+            Email.Create($"google-business-{subject}@example.test").Value, true, "Persona nueva"));
+        await using var host = HostWith(google);
+        await using var scope = host.Services.CreateAsyncScope();
+
+        var result = await scope.ServiceProvider.GetRequiredService<IExternalLoginService>()
+            .SignInAsync(new ExternalSignInRequest("/connect/authorize?client_id=web&access=business", true,
+                true, "es-AR", "America/Argentina/Buenos_Aires", Domain.Users.Access.Business), Ct);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(google.SignedInUserId);
+        Assert.Equal(1, await CountMethodsAsync(subject));
+        Assert.Equal(2, await CountAcceptancesAsync(google.SignedInUserId.Value));
+        Assert.Equal(0, await CountPersonalSpacesAsync(google.SignedInUserId.Value));
+    }
+
+    [Fact]
     public async Task Verified_Google_email_links_an_existing_account_without_a_second_identity()
     {
         await factory.Services.SeedDatabaseAsync(Ct);

@@ -9,6 +9,7 @@ using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Api.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
@@ -129,14 +130,16 @@ public sealed class ExternalLoginController(
 
         var signup = Value(state, SignupKey) == "true";
         var request = new ExternalSignInRequest(Value(state, ReturnUrlKey), signup,
-            Value(state, AcceptedTermsKey) == "true", Value(state, CultureKey), Value(state, TimeZoneKey));
+            Value(state, AcceptedTermsKey) == "true", Value(state, CultureKey), Value(state, TimeZoneKey),
+            Value(state, AccessKey) == "business" ? Access.Business : Access.Consumer);
         var result = await service.SignInAsync(request, cancellationToken);
         if (result.IsFailure)
         {
             if (result.Error.Code == AccountErrors.PendingDeletion.Code)
                 pendingCookie.Write(HttpContext, result.Error);
-            var destination = signup && result.Error.Code == "Auth.Signup.Closed"
-                ? "/registro"
+            var signupClosed = result.Error.Code is "Auth.Signup.Closed" or "Auth.BusinessSignup.Closed";
+            var destination = signup && signupClosed
+                ? Value(state, AccessKey) == "business" ? "/registro/empresa" : "/registro"
                 : Value(state, AccessKey) == "business" ? "/login/empresa" : ReturnUrls.LoginPath;
             return RedirectWithError(destination, result.Error.Code,
                 !signup && Value(state, ReturnUrlKey) == ReturnUrls.InvitationPath ? ReturnUrls.InvitationPath : null);
@@ -144,6 +147,12 @@ public sealed class ExternalLoginController(
 
         if (!signup) return LocalRedirect(result.Value.ReturnUrl);
         var returnTo = Value(state, ReturnToKey);
+        if (Value(state, AccessKey) == "business")
+        {
+            var businessReturn = IsLocalAppPath(returnTo) ? returnTo! : "/registro/empresa";
+            return LocalRedirect(businessReturn + (businessReturn.Contains('?') ? "&" : "?")
+                + "google=complete");
+        }
         if (!IsLocalAppPath(returnTo)) return LocalRedirect("/registro?google=complete");
         return LocalRedirect("/registro" + QueryString.Create(
             new Dictionary<string, string?> { ["google"] = "complete", ["returnTo"] = returnTo }));

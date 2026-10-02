@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
@@ -54,8 +55,10 @@ internal sealed class GoogleAccountResolver(
             else
             {
                 if (!request.IsSignup) return ExternalLoginErrors.AccountNotFound;
-                if (draft is null) throw new InvalidOperationException("The personal space was not prepared.");
-                var registered = await registrar.RegisterAsync(login, draft, cancellationToken);
+                if (draft is null) throw new InvalidOperationException("The signup defaults were not prepared.");
+                var registered = request.RequestedAccess == Access.Business
+                    ? await registrar.RegisterBusinessAsync(login, draft, cancellationToken)
+                    : await registrar.RegisterAsync(login, draft, cancellationToken);
                 if (registered.IsFailure) return registered.Error;
                 userId = registered.Value;
             }

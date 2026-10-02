@@ -50,4 +50,9 @@ public sealed class PlatformSettings : Entity, IAuditable
 
     public static Result CanRegisterConsumer(ConsumerSignupMode mode) =>
         mode == ConsumerSignupMode.Open ? Result.Success() : SignupErrors.Closed;
+
+    public Result CanRegisterBusiness() => CanRegisterBusiness(BusinessSignup);
+
+    public static Result CanRegisterBusiness(BusinessSignupMode mode) =>
+        mode == BusinessSignupMode.Closed ? SignupErrors.BusinessClosed : Result.Success();
 }

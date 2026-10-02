@@ -9,7 +9,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
-/// <summary>Prepara y crea la identidad Personal Google con ambos consentimientos vigentes.</summary>
+/// <summary>Prepara el registro Google personal o empresarial con ambos consentimientos vigentes.</summary>
 internal sealed class GoogleAccountRegistrar(
     SignupPolicy policy,
     IPersonalSpaceProvisioner personalSpaces,
@@ -36,6 +36,26 @@ internal sealed class GoogleAccountRegistrar(
         var userId = (await users.CreateAsync(FitExternalDisplayName(login.DisplayName),
             draft.Culture, draft.TimeZoneId, cancellationToken)).Id;
         personalSpaces.Stage(draft, userId);
+        legal.AddAcceptance(LegalAcceptance.Create(userId, terms, nowUtc,
+            requestInfo.IpAddress, requestInfo.UserAgent));
+        legal.AddAcceptance(LegalAcceptance.Create(userId, privacy, nowUtc,
+            requestInfo.IpAddress, requestInfo.UserAgent));
+        return userId;
+    }
+
+    internal async Task<Result<Guid>> RegisterBusinessAsync(ExternalLogin login, PersonalSpaceDraft defaults,
+        CancellationToken cancellationToken)
+    {
+        var allowed = await policy.CanRegisterBusinessAsync(cancellationToken);
+        if (allowed.IsFailure) return allowed.Error;
+
+        var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+        var terms = await legal.GetCurrentDocumentAsync(LegalDocumentKind.Terms, nowUtc, cancellationToken)
+            ?? throw new InvalidOperationException("The current Terms document has not been seeded.");
+        var privacy = await legal.GetCurrentDocumentAsync(LegalDocumentKind.Privacy, nowUtc, cancellationToken)
+            ?? throw new InvalidOperationException("The current Privacy document has not been seeded.");
+        var userId = (await users.CreateAsync(FitExternalDisplayName(login.DisplayName),
+            defaults.Culture, defaults.TimeZoneId, cancellationToken)).Id;
         legal.AddAcceptance(LegalAcceptance.Create(userId, terms, nowUtc,
             requestInfo.IpAddress, requestInfo.UserAgent));
         legal.AddAcceptance(LegalAcceptance.Create(userId, privacy, nowUtc,

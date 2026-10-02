@@ -13,4 +13,11 @@ internal sealed class SignupPolicy(IPlatformSettingsReader settings)
             ?? throw new InvalidOperationException("PlatformSettings has not been seeded.");
         return PlatformSettings.CanRegisterConsumer(row.ConsumerSignup);
     }
+
+    public async Task<Result> CanRegisterBusinessAsync(CancellationToken cancellationToken)
+    {
+        var row = await settings.FindAsync(cancellationToken)
+            ?? throw new InvalidOperationException("PlatformSettings has not been seeded.");
+        return PlatformSettings.CanRegisterBusiness(row.BusinessSignup);
+    }
 }

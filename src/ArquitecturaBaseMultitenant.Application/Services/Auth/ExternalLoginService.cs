@@ -7,6 +7,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
@@ -35,11 +36,12 @@ internal sealed class ExternalLoginService(
                 await signIn.SignOutExternalAsync(cancellationToken);
             }
 
-            // El candidato Personal y su scope preceden al límite, igual que en AccountService.
+            // Se resuelven los valores de referencia antes de la transacción; solo el alta Personal entra a ese scope.
             var draft = request.IsSignup && login is not null
                 ? await accounts.PrepareAsync(request.Culture, request.TimeZoneId, cancellationToken)
                 : null;
-            using var scope = draft is null ? null : tenantScope.Enter(draft.Tenant.Id);
+            using var scope = draft is null || request.RequestedAccess == Access.Business
+                ? null : tenantScope.Enter(draft.Tenant.Id);
             var result = await unitOfWork.ExecuteInTransactionAsync(
                 ct => SignInCoreAsync(request, login, draft, ct), CommitPolicy.OnAnyResult, cancellationToken);
             if (result.IsFailure) return result.Error;
