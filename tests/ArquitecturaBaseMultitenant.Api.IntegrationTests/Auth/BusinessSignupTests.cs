@@ -142,6 +142,25 @@ public sealed class BusinessSignupTests(ApiFactory factory)
         Assert.Equal("TenantAdmin", reader.GetString(5));
         Assert.Equal(0L, reader.GetInt64(6));
         Assert.False(await reader.ReadAsync(Ct));
+        await reader.DisposeAsync();
+
+        await using var membership = connection.CreateCommand();
+        membership.CommandText = """
+            SELECT count(*)
+            FROM tenant."CompanyMemberships" cm
+            JOIN tenant."RoleAssignments" assignment
+              ON assignment."TenantId" = cm."TenantId"
+             AND assignment."CompanyId" = cm."CompanyId"
+             AND assignment."MemberId" = cm."MemberId"
+            JOIN tenant."Roles" role
+              ON role."TenantId" = assignment."TenantId"
+             AND role."Id" = assignment."RoleId"
+            WHERE cm."TenantId" = @tenantId
+              AND cm."Status" = 'Active'
+              AND role."Name" = 'CompanyAdmin'
+            """;
+        membership.Parameters.AddWithValue("tenantId", tenantId);
+        Assert.Equal(1L, (long)(await membership.ExecuteScalarAsync(Ct))!);
     }
 
     private static async Task<HttpResponseMessage> PostAsync(HttpClient client, string path, object body)

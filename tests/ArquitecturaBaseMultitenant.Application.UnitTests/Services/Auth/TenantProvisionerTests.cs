@@ -53,7 +53,7 @@ public sealed class TenantProvisionerTests
 
     private static TenantProvisioner CreateService(FakeTenantRepository tenants,
         FakeMemberRepository members, FakeTenantSettingsRepository settings, Guid tenantId) => new(tenants, members,
-        null!, null!, settings,
+        null!, null!, null!, settings,
         new FakeTenantContext { TenantId = tenantId, TenantKind = TenantKind.Business }, TimeProvider.System,
         NullLogger<TenantProvisioner>.Instance);
 

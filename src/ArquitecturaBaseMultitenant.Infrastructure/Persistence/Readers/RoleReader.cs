@@ -99,10 +99,17 @@ internal sealed class RoleReader(ApplicationDbContext context, ITenantContext te
                 .Select(assignment => assignment.RoleId).Distinct().ToArrayAsync(cancellationToken);
         }
 
-        return await assignments.Where(assignment => assignment.CompanyId == companyId
+        return await assignments.Where(assignment =>
+                context.Companies.Any(company => company.TenantId == tenantId && company.Id == companyId
+                    && company.Status == CompanyStatus.Active)
                 && context.Roles.Any(role => role.TenantId == tenantId && role.Id == assignment.RoleId
-                    && role.Scope != RoleScope.Organization
-                    && (role.Scope != RoleScope.SpecificCompany || role.CompanyId == companyId)))
+                    && ((assignment.CompanyId == companyId && role.Scope != RoleScope.Organization
+                            && (role.Scope != RoleScope.SpecificCompany || role.CompanyId == companyId))
+                        || (assignment.CompanyId == null && role.Scope == RoleScope.Organization)))
+                && (assignment.CompanyId == null || context.CompanyMemberships.Any(membership =>
+                    membership.TenantId == tenantId && membership.CompanyId == companyId
+                    && membership.MemberId == assignment.MemberId
+                    && membership.Status == CompanyMembershipStatus.Active)))
             .Select(assignment => assignment.RoleId).Distinct().ToArrayAsync(cancellationToken);
     }
 

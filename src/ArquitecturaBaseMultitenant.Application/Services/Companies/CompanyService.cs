@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
+using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
@@ -31,6 +32,8 @@ internal sealed class CompanyService(
     TimeProvider timeProvider,
     ILogger<CompanyService> logger) : ICompanyService
 {
+    private const string TaxIdUniqueConstraint = "IX_Companies_TenantId_TaxCountry_TaxType_TaxNumber";
+
     public Task<Result<PagedResult<CompanyResponse>>> ListAsync(ListCompaniesRequest request,
         CancellationToken cancellationToken)
     {
@@ -75,8 +78,16 @@ internal sealed class CompanyService(
 
             var created = Company.Create(request.Name, taxId.Value, request.TimeZoneId);
             if (created.IsFailure) return created.Error;
-            return await unitOfWork.ExecuteInTransactionAsync(ct => CreateCoreAsync(created.Value, ct),
-                CommitPolicy.OnSuccess, cancellationToken);
+            try
+            {
+                return await unitOfWork.ExecuteInTransactionAsync(ct => CreateCoreAsync(created.Value, ct),
+                    CommitPolicy.OnSuccess, cancellationToken);
+            }
+            catch (UniqueConstraintViolationException exception)
+                when (exception.ConstraintName == TaxIdUniqueConstraint)
+            {
+                return CompanyErrors.TaxIdAlreadyUsed;
+            }
         });
     }
 
@@ -91,19 +102,27 @@ internal sealed class CompanyService(
             if (!await IsAvailableTimeZoneAsync(request.TimeZoneId!, cancellationToken))
                 return CompanyErrors.TimeZoneUnavailable;
 
-            return await unitOfWork.ExecuteInTransactionAsync(async ct =>
+            try
             {
-                var company = await companies.GetByIdAsync(request.CompanyId, request.Version!.Value, ct);
-                if (company is null) return CompanyErrors.NotFound;
-                if (taxId.Value is { } requestedTaxId
-                    && await reader.ExistsTaxIdAsync(requestedTaxId.Country, requestedTaxId.Type,
-                        requestedTaxId.Number, company.Id, ct))
-                    return CompanyErrors.TaxIdAlreadyUsed;
-                var updated = company.Update(request.Name, taxId.Value, request.TimeZoneId);
-                if (updated.IsFailure) return updated;
-                companies.MarkUpdated(company);
-                return Result.Success();
-            }, CommitPolicy.OnSuccess, cancellationToken);
+                return await unitOfWork.ExecuteInTransactionAsync(async ct =>
+                {
+                    var company = await companies.GetByIdAsync(request.CompanyId, request.Version!.Value, ct);
+                    if (company is null) return CompanyErrors.NotFound;
+                    if (taxId.Value is { } requestedTaxId
+                        && await reader.ExistsTaxIdAsync(requestedTaxId.Country, requestedTaxId.Type,
+                            requestedTaxId.Number, company.Id, ct))
+                        return CompanyErrors.TaxIdAlreadyUsed;
+                    var updated = company.Update(request.Name, taxId.Value, request.TimeZoneId);
+                    if (updated.IsFailure) return updated;
+                    companies.MarkUpdated(company);
+                    return Result.Success();
+                }, CommitPolicy.OnSuccess, cancellationToken);
+            }
+            catch (UniqueConstraintViolationException exception)
+                when (exception.ConstraintName == TaxIdUniqueConstraint)
+            {
+                return CompanyErrors.TaxIdAlreadyUsed;
+            }
         });
     }
 

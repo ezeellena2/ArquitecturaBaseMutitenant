@@ -106,7 +106,8 @@ internal sealed class BusinessOrganizationCreator(
                         }
 
                         companies.Add(firstCompany.Value);
-                        var provisioned = await provisioner.StageAsync(tenant, draft.Settings, [userId], userId, ct);
+                        var provisioned = await provisioner.StageAsync(tenant, draft.Settings, [userId], userId, ct,
+                            firstCompanyId);
                         if (provisioned.IsFailure) return provisioned.Error;
                         await users.RememberBusinessTenantAsync(userId, tenant.Id, ct);
                         return Response(tenant, firstCompany.Value.Id, requiresApproval);
@@ -135,7 +136,8 @@ internal sealed class BusinessOrganizationCreator(
         if (storedSettings is null) return TenantErrors.ProvisioningConflict;
 
         var requiresApproval = existing.Status == TenantStatus.PendingApproval;
-        var provisioned = await provisioner.StageAsync(existing, storedSettings, [userId], userId, ct);
+        var provisioned = await provisioner.StageAsync(existing, storedSettings, [userId], userId, ct,
+            firstCompanyId);
         if (provisioned.IsFailure) return provisioned.Error;
         await users.RememberBusinessTenantAsync(userId, existing.Id, ct);
         return Response(existing, company.Id, requiresApproval);

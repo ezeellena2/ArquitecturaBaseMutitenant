@@ -11,11 +11,12 @@ public sealed class TenantSpaceProvisioner(
     IMemberRepository members,
     IRoleRepository roles,
     IRoleAssignmentRepository assignments,
+    ICompanyMembershipRepository companyMemberships,
     ITenantSettingsRepository settings,
     TimeProvider timeProvider)
 {
     public void Stage(Tenant tenant, TenantSettings tenantSettings, IReadOnlyCollection<Guid> userIds,
-        Guid? businessOwnerUserId = null)
+        Guid? businessOwnerUserId = null, Guid? primaryCompanyId = null)
     {
         ArgumentNullException.ThrowIfNull(tenant);
         ArgumentNullException.ThrowIfNull(tenantSettings);
@@ -24,6 +25,10 @@ public sealed class TenantSpaceProvisioner(
             throw new ArgumentException("A new space needs an initial member.", nameof(userIds));
         if (tenant.Kind != TenantKind.Business && businessOwnerUserId is not null)
             throw new ArgumentException("Only a business space can specify an owner.", nameof(businessOwnerUserId));
+        if (tenant.Kind != TenantKind.Business && primaryCompanyId is not null)
+            throw new ArgumentException("Only a business space can have an initial company.", nameof(primaryCompanyId));
+        if (primaryCompanyId == Guid.Empty)
+            throw new ArgumentException("The initial company ID is required.", nameof(primaryCompanyId));
         if (businessOwnerUserId is { } requestedOwner && !userIds.Contains(requestedOwner))
             throw new ArgumentException("The owner must be one of the initial members.", nameof(businessOwnerUserId));
         if (tenant.Kind == TenantKind.Business && userIds.Count > 1 && businessOwnerUserId is null)
@@ -54,6 +59,19 @@ public sealed class TenantSpaceProvisioner(
             if (assignment.IsFailure)
                 throw new InvalidOperationException("The initial organization owner could not be assigned.");
             assignments.Add(assignment.Value);
+
+            if (primaryCompanyId is { } initialCompanyId)
+            {
+                var companyAdmin = systemRoles.Single(role => role.Name == SystemRoles.CompanyAdmin);
+                var companyMembership = CompanyMembership.Create(initialCompanyId, owner.Id);
+                if (companyMembership.IsFailure)
+                    throw new InvalidOperationException("The initial company membership could not be created.");
+                var companyAssignment = RoleAssignment.Assign(owner.Id, companyAdmin, initialCompanyId);
+                if (companyAssignment.IsFailure)
+                    throw new InvalidOperationException("The initial company administrator could not be assigned.");
+                companyMemberships.Add(companyMembership.Value);
+                assignments.Add(companyAssignment.Value);
+            }
         }
 
         settings.Add(tenantSettings);

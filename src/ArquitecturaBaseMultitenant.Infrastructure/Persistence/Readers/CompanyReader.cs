@@ -77,7 +77,9 @@ internal sealed class CompanyReader(ApplicationDbContext context, ITenantContext
         company.TimeZoneId,
         company.Status,
         context.CompanyMemberships.Count(membership => membership.TenantId == company.TenantId
-            && membership.CompanyId == company.Id && membership.Status == CompanyMembershipStatus.Active),
+            && membership.CompanyId == company.Id && membership.Status == CompanyMembershipStatus.Active
+            && context.Members.Any(member => member.TenantId == membership.TenantId
+                && member.Id == membership.MemberId && member.Status == MemberStatus.Active)),
         company.Version,
         company.CreatedAtUtc));
 }

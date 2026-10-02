@@ -22,6 +22,7 @@
 
 - [x] Escribir tests para límite `MaxOwnedOrganizations` y validación de los campos de `BusinessSignup`; quedan pendientes la prueba de conducta del alta real y de repetición con PostgreSQL.
 - [x] Implementar `TenantProvisioner` reutilizable por alta B2B y futura plataforma, conservando las transacciones/UoW existentes y roles de sistema; la repetición de la misma operación no duplica tenant, owner, empresa ni settings. Commit `813ff0c`.
+- [x] En el alta inicial, asignar al Dueño como miembro activo de la primera empresa y otorgarle `CompanyAdmin`; el replay confirma la membresía y la asignación sin duplicarlas.
 - [x] Agregar catálogo persistido de slugs reservados con los nombres validados por el tablero: `www`, `app`, `api`, `auth`, `admin`, `empresas` y `plataforma`; el lector distingue disponibles, reservados y tomados. Commits `bd91f9e` y `fb12872`.
 - [x] Exponer `GET /api/public-site/slug-availability` con estados disponible/reservado/tomado y formato validado.
 - [x] Traducir la carrera de alta contra el índice único de `Tenants` en `Tenancy.TenantSlug.Taken`.
@@ -36,7 +37,7 @@
 - [x] Crear `Company`, configuración EF/migración e índices tenant-owned; la prueba de persistencia quedó bloqueada por falta del daemon Docker y se ejecutará en la puerta.
 - [x] Crear `TaxId` y `ArgentineCuitValidator` según `docs/rules/identificacion-fiscal.md`; agregar `TaxIdTests` y pruebas de propiedades para dígito, normalización, valor inválido y datos históricos nulos. Commits `234fc72`.
 - [x] Implementar servicio y API de listado paginado, conteos por estado, ficha, alta, edición concurrente (`version` y 409) y cambio de estado activo/inactivo; validar zona horaria y normalizar CUIT desde catálogos. Pruebas unitarias dirigidas para listado, conteos, alta, primer Administrador y concurrencia de estado. Commit pendiente.
-- [ ] Agregar integración con PostgreSQL para tenant isolation, estado/versiones, TaxId único y conteos/listados con 1 y 50 empresas.
+- [ ] Ejecutar las pruebas API con PostgreSQL para tenant isolation, estado/versiones, TaxId único, permisos efectivos solo para empresa activa y conteos/listados con 1 y 50 empresas. Los recorridos de integración ya están escritos; el daemon Docker sigue sin estar disponible.
 - [ ] Implementar membresías de empresa y asignación de roles mediante `RoleAssignment.CompanyId`, reutilizando catálogos y `RoleService`; filtrar empresas/roles por tenant y nunca aceptar un ID ajeno.
 - [ ] Proteger quitar o deshabilitar al último `CompanyAdmin` activo; cubrir concurrencia en dos solicitudes y miembros con baja pedida.
 - [ ] Conectar el catálogo de empresas y roles a los flujos de Invitaciones, manteniendo los estados individuales de cada invitación.
@@ -105,4 +106,5 @@
 - La aprobación agrupada del 2026-10-02 habilita la implementación de todo el grupo Organización incluido móviles y diálogos; no se redibujan tableros existentes.
 - Las empresas no se borran físicamente desde E6: se puede cambiar su estado a Inactiva con `version`, de acuerdo con el diálogo validado, que conserva datos y miembros.
 - Al crear una empresa, el miembro activo que la creó queda como miembro de la empresa y recibe el rol de sistema `CompanyAdmin`, para que la empresa nazca con un Administrador.
+- El permiso por empresa combina los roles `Organization` (que valen para todas las empresas) y los roles asignados a esa empresa. Los roles company-scoped requieren membresía activa; una empresa inactiva entrega cero permisos efectivos.
 - La estrategia de almacenamiento del logo se definirá inspeccionando las capacidades reales ya presentes en los repos; se documentará antes de cerrar esa tarea.

@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
@@ -128,6 +129,33 @@ public sealed class CompanyServiceTests
         Assert.Equal(CompanyStatus.Inactive, company.Status);
         Assert.True(repository.Updated);
         Assert.Equal(1, unitOfWork.Transactions);
+    }
+
+    [Fact]
+    public async Task A_tax_id_unique_race_returns_a_conflict_instead_of_a_server_error()
+    {
+        var userId = Guid.CreateVersion7();
+        var member = Member.Invite(userId);
+        Assert.True(member.Activate(new DateTime(2026, 10, 2, 12, 0, 0, DateTimeKind.Utc)).IsSuccess);
+        var unitOfWork = new FakeUnitOfWork
+        {
+            CommitFailure = new UniqueConstraintViolationException
+            {
+                ConstraintName = "IX_Companies_TenantId_TaxCountry_TaxType_TaxNumber",
+            },
+        };
+        using var fixture = new ServiceFixture<CompanyService>(new CreateCompanyRequestValidator());
+        var service = new CompanyService(new FakeCompanyReader(), new FakeCompanyRepository(),
+            new FakeCompanyMembershipRepository(), new FakeMemberRepository { Member = member },
+            new FakeRoleRepository(), new FakeRoleAssignmentRepository(), new FakeTaxIdTypeCatalog(),
+            new FakeTimeZoneCatalog(), new IdentifiedCurrentUser(userId), fixture.Validator, unitOfWork,
+            fixture.TimeProvider, fixture.Logger);
+
+        var result = await service.CreateAsync(new CreateCompanyRequest("Sucursal", null, null,
+            "America/Argentina/Buenos_Aires"), Ct);
+
+        Assert.Equal(CompanyErrors.TaxIdAlreadyUsed, result.Error);
+        Assert.Equal(1, unitOfWork.Rollbacks);
     }
 
     private static CompanyService Create(FakeCompanyReader reader, ServiceFixture<CompanyService> fixture,
