@@ -1,0 +1,21 @@
+# Agregar un área
+
+Receta breve para un CRUD nuevo que pertenece a una organización. Antes de empezar, leé [AGENTS.md](../../AGENTS.md), [backend.md](../architecture/backend.md), [multitenancy.md](../architecture/multitenancy.md) y las fichas de cada pieza. La referencia implementada es [Roles](../features/roles.md). Trabajá en `main`, con TDD y commits chicos; no agregues una capa nueva si el área no la necesita.
+
+## Pasos
+
+1. **Clasificá el dato y la puerta.** Decidí si es privado del tenant (`ITenantOwned` + esquema `tenant` + RLS), público (`IPublishedByBusiness` + `public_site`) o compartido (`IConsumerBusinessShared` + `engagement`). La ruta B2B declara `[Access(Access.Business)]`; la B2C declara Consumer. Un subdominio solo resuelve contenido público publicado.
+2. **Dominio primero.** Creá `Domain/<Área>/<Entidad>.cs` y `<Entidad>Errors.cs`; expresá las reglas en métodos de la entidad y devolvé `Result`. Probá transiciones y límites en `Domain.UnitTests` antes del código.
+3. **Persistencia y aislamiento.** Creá los puertos específicos en `Application/Interfaces/Persistence`, la configuración EF y el repositorio/lector en Infrastructure. Para datos privados, usá el helper RLS del tipo correcto; no asignes columnas de tenant a mano ni ignores filtros. Generá la migración, leé su SQL y probá RLS con PostgreSQL aislado.
+4. **Pedidos y validación.** Definí `*Request`, `*Response`, filas de lectura y validadores en Application. Reutilizá `PagedRequest`, `LikePatterns`, catálogo de referencia y rules existentes. No expongas EF ni contratos HTTP desde Application.
+5. **Servicio.** Agregá `I<X>Service` y `<X>Service`; copiá la estructura de [`RoleService`](../features/roles.md). Cada método público que escribe valida afuera y abre exactamente una `IUnitOfWork`; adentro toma locks antes de leer. Los servicios usan repositorios/readers explícitos, devuelven `Result` y envuelven métodos públicos en `OperationLog.RunAsync`.
+6. **Permisos y textos.** Sumá claves a `Permissions` y `Permissions.All`; agregá recursos es/en. Aplicá `[HasPermission]` a cada operación protegida. Si el acceso es de empresa o plataforma, usá su atributo específico y su catálogo.
+7. **Borde HTTP.** En `Api/Contracts/<Área>` agregá entradas nullable con `ToString()` que no exponga datos personales; en `Api/Controllers/<Área>` traducí HTTP → servicio → resultado. Incluí `[Access]`, permiso, idempotencia en escrituras que la requieren, respuestas ProblemDetails y códigos de éxito/error del OpenAPI.
+8. **Pruebas de conducta.** Cubrí unidad, HTTP y aislamiento: 401/403, validación, acceso cruzado como 404, concurrencia, idempotencia y paginado si corresponde. Los tests crean sus propios usuarios y organizaciones en su base; no agregues fixtures de negocio a Development.
+9. **Contrato y arnés.** Regenerá `docs/contracts/openapi.json` desde el build y los tipos front con `npm run contracts`. Para una ruta consumida por ambos repos, el test de contrato lee controller/contrato/OpenAPI del back y el consumidor/tipos del front. Actualizá el inventario HTTP existente y sus punteros de carpeta.
+10. **Interfaz.** Buscá primero el tablero aprobado en `docs/design/lienzo/`. Si no existe, dibujá la pantalla y esperá aprobación antes de programarla. La pantalla llama al contrato generado y muestra los estados/error que define el API; seguí las fichas del front y el criterio visual validado.
+11. **Documentación y puerta.** Escribí `docs/features/<área>.md`, enlazalo desde sus `AGENTS.md`, agregá punteros `CLAUDE.md` con solo `@AGENTS.md`, y registrá la ubicación en el mapa del arnés. Ejecutá las pruebas del área, build y puerta correspondiente antes de cada commit coherente.
+
+## Ejemplo mínimo para validar esta receta
+
+En un checkout descartable, modelá `Tags` como dato privado de la organización: entidad con `ITenantOwned`, tabla con RLS, servicio y ruta Business con `tags.read`/`tags.manage`. No agregues menú ni pantalla. La verificación mínima es que el proyecto compile, el test de dominio pase y una consulta/escritura no atraviese el tenant en un test de PostgreSQL. Eliminá el esqueleto temporal al terminar; no debe quedar diff en el repositorio principal.

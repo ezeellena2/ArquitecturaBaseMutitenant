@@ -119,6 +119,7 @@ public sealed class HarnessTests
     {
         var folders = new[] { Root }
             .Concat(MappedFolders())
+            .Concat(FeatureFolders())
             .Concat(AreaFolders())
             .Distinct(StringComparer.OrdinalIgnoreCase);
         var missing = folders.SelectMany(MissingPointerFiles).ToArray();
@@ -335,6 +336,30 @@ public sealed class HarnessTests
             .Where(folder => names.Contains(Path.GetFileName(folder))
                 || (names.Contains("roles") && Path.GetFileName(folder).Equals("Authorization", StringComparison.OrdinalIgnoreCase)))
             .Where(HasWorkFiles);
+    }
+
+    private static IEnumerable<string> FeatureFolders()
+    {
+        var features = Path.Combine(Root, "docs", "features");
+        if (!Directory.Exists(features)) yield break;
+
+        foreach (var file in Directory.EnumerateFiles(features, "*.md"))
+        {
+            var inFolders = false;
+            foreach (var line in File.ReadLines(file))
+            {
+                if (line.StartsWith("## ", StringComparison.Ordinal))
+                {
+                    inFolders = line == "## Carpetas";
+                    continue;
+                }
+
+                if (!inFolders) continue;
+                var match = Regex.Match(line, @"^\| `(?<path>(?:src|tests)/[^`]+)` \|", RegexOptions.CultureInvariant);
+                if (match.Success) yield return Path.Combine(Root,
+                    match.Groups["path"].Value.Replace('/', Path.DirectorySeparatorChar));
+            }
+        }
     }
 
     private static HashSet<string> ModuleNames()

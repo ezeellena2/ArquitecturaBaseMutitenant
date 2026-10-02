@@ -6,6 +6,8 @@ La arquitectura canónica está en dos documentos:
 - [`docs/architecture/backend.md`](docs/architecture/backend.md): capas, patrones y carpetas;
 - [`docs/architecture/multitenancy.md`](docs/architecture/multitenancy.md): organizaciones, empresas y aislamiento.
 
+Las áreas de referencia tienen una ficha funcional: [Identidad e ingreso](docs/features/identidad.md) y [Roles y permisos](docs/features/roles.md). Leé la ficha del área antes de cambiar su conducta o sus límites.
+
 Las decisiones están en [`docs/decisions/README.md`](docs/decisions/README.md) y el plan en [`docs/plans/2026-09-27-plan-de-desarrollo.md`](docs/plans/2026-09-27-plan-de-desarrollo.md).
 
 ## Antes de escribir código: el arnés
