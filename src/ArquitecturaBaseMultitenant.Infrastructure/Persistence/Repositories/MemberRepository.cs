@@ -18,6 +18,16 @@ internal sealed class MemberRepository(ApplicationDbContext context, ITenantCont
         return context.Members.SingleOrDefaultAsync(member => member.Id == id, cancellationToken);
     }
 
+    public async Task<Member?> GetByIdAsync(Guid id, uint expectedVersion, CancellationToken cancellationToken)
+    {
+        context.RequireTransaction();
+        _ = tenantContext.RequiredTenantId;
+        var member = await context.Members.SingleOrDefaultAsync(row => row.Id == id, cancellationToken);
+        if (member is not null)
+            context.Entry(member).Property(candidate => candidate.Version).OriginalValue = expectedVersion;
+        return member;
+    }
+
     public Task<Member?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken)
     {
         context.RequireTransaction();
@@ -32,5 +42,13 @@ internal sealed class MemberRepository(ApplicationDbContext context, ITenantCont
         context.RequireTransaction();
         _ = tenantContext.RequiredTenantId;
         context.Members.Add(member);
+    }
+
+    public void MarkUpdated(Member member)
+    {
+        ArgumentNullException.ThrowIfNull(member);
+        context.RequireTransaction();
+        _ = tenantContext.RequiredTenantId;
+        context.Entry(member).State = EntityState.Modified;
     }
 }

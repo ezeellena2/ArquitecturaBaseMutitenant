@@ -4,7 +4,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 namespace ArquitecturaBaseMultitenant.Domain.Tenancy;
 
 /// <summary>Vincula una identidad global con un espacio privado y conserva su estado y fecha de incorporación.</summary>
-public sealed class Member : Entity, ITenantOwned
+public sealed class Member : Entity, ITenantOwned, IAuditable, IVersioned
 {
     private Member()
     {
@@ -29,6 +29,12 @@ public sealed class Member : Entity, ITenantOwned
     public MemberRemovalReason? RemovalReason { get; private set; }
 
     public DateTime? JoinedAtUtc { get; private set; }
+
+    public uint Version { get; private set; }
+    public DateTime CreatedAtUtc { get; private set; }
+    public Guid? CreatedBy { get; private set; }
+    public DateTime? ModifiedAtUtc { get; private set; }
+    public Guid? ModifiedBy { get; private set; }
 
     public static Member Invite(Guid userId) => new(userId);
 

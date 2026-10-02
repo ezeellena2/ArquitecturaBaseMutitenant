@@ -71,6 +71,17 @@ public sealed class MemberTests
     }
 
     [Fact]
+    public void Member_is_audited_and_uses_a_database_version_for_concurrent_edits()
+    {
+        var member = Member.Invite(Guid.CreateVersion7());
+
+        Assert.IsAssignableFrom<IAuditable>(member);
+        Assert.IsAssignableFrom<IVersioned>(member);
+        Assert.Equal(default, member.CreatedAtUtc);
+        Assert.Null(member.ModifiedAtUtc);
+    }
+
+    [Fact]
     public void Tenant_column_starts_unset_for_the_interceptor_to_stamp()
     {
         var member = Member.Invite(Guid.CreateVersion7());

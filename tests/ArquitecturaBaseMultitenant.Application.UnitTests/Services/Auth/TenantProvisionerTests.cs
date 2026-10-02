@@ -75,9 +75,12 @@ public sealed class TenantProvisionerTests
         public Task LockUserAsync(Guid userId, CancellationToken cancellationToken) => Task.CompletedTask;
         public Task<Member?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken) =>
             Task.FromResult(Member?.UserId == userId ? Member : null);
-        public Task<Member?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
-            Task.FromResult(Member?.Id == id ? Member : null);
-        public void Add(Member value) => AddCount++;
+          public Task<Member?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
+              Task.FromResult(Member?.Id == id ? Member : null);
+          public Task<Member?> GetByIdAsync(Guid id, uint expectedVersion, CancellationToken cancellationToken) =>
+              Task.FromResult(Member?.Id == id ? Member : null);
+          public void Add(Member value) => AddCount++;
+          public void MarkUpdated(Member value) { }
     }
 
     private sealed class FakeTenantSettingsRepository(TenantSettings? current) : ITenantSettingsRepository

@@ -223,8 +223,11 @@ public sealed class CompanyServiceTests
         public Member? Member { get; init; }
         public Task LockUserAsync(Guid userId, CancellationToken cancellationToken) => Task.CompletedTask;
         public Task<Member?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken) => Task.FromResult(Member);
-        public Task<Member?> GetByIdAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult(Member);
-        public void Add(Member member) { }
+          public Task<Member?> GetByIdAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult(Member);
+          public Task<Member?> GetByIdAsync(Guid id, uint expectedVersion, CancellationToken cancellationToken) =>
+              Task.FromResult(Member);
+          public void Add(Member member) { }
+          public void MarkUpdated(Member member) { }
     }
 
     internal sealed class FakeRoleRepository : IRoleRepository
