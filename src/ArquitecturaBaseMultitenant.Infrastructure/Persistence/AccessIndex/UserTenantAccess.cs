@@ -14,4 +14,6 @@ internal sealed class UserTenantAccess
     public MemberStatus Status { get; private set; }
 
     public DateTime? JoinedAtUtc { get; private set; }
+
+    public string? RoleName { get; private set; }
 }

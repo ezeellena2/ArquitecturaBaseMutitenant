@@ -13,6 +13,7 @@ internal sealed class UserTenantAccessConfiguration : IEntityTypeConfiguration<U
         builder.ToTable("UserTenantAccesses", Schemas.Identity);
         builder.HasKey(access => new { access.UserId, access.TenantId });
         builder.Property(access => access.Status).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
+        builder.Property(access => access.RoleName).HasMaxLength(TextLimits.ShortName);
         builder.HasIndex(access => access.TenantId);
         builder.HasOne<Infrastructure.Identity.ApplicationUser>().WithMany()
             .HasForeignKey(access => access.UserId).OnDelete(DeleteBehavior.Cascade);

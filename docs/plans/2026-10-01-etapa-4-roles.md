@@ -14,6 +14,8 @@ No se crean cuentas, espacios personales ni organizaciones de ejemplo en Develop
 
 - Los Roles y RoleAssignments son privados de cada organización y llevan RLS. `SystemRoles` define las plantillas inmutables; cada organización de prueba recibe esas filas y el Dueño se asigna por `RoleAssignment`. El seed global no inventa un `TenantId` ni crea organizaciones. El provisionador de Etapa 6 reutilizará la misma preparación al nacer una organización real.
 - `TenantAdmin` es la única fuente de verdad para Dueño; `Member` no recibe un flag. La proyección global de accesos puede reflejar el rol para Mi cuenta y la protección de baja, pero siempre se mantiene desde el `RoleAssignment` dentro de la misma UoW.
+- `Role.CompanyId` y `RoleAssignment.CompanyId` permanecen como GUID opcionales sin FK durante E4; `Company` todavía no existe en el dominio y su FK se agregará en E6. E4 no expone asignación a empresas.
+- La unicidad del nombre de rol se aplica por tenant sobre `NormalizedName`, que recorta espacios, normaliza Unicode Form C y usa mayúsculas invariantes; la base cierra duplicados concurrentes sin hacer equivalentes los acentos.
 - La ficha apunta a `../ArquitecturaBase/src/ArquitecturaBase.Domain/Authorization/Role.cs`, pero esa entidad no existe allí: solo hay `RoleErrors`, `Permissions` y `SystemRoles`, con roles administrados por Identity en Infrastructure. `Role`, `RoleScope` y `RoleAssignment` se definen según el modelo local multitenant (`ITenantOwned`, `IVersioned`, RLS); la base sirve para copiar los errores, catálogo y patrones de servicio/autorización.
 - El rol activo de `/api/me` se incorpora al índice de perfiles de organización que ya reserva `OrganizationSummary.RoleName`; no se leen Members ni RoleAssignments fuera de su RLS. Se actualiza en la misma transacción que cambie la asignación.
 - El encabezado ordenable conserva `aria-sort` para anunciar el orden a tecnología asistiva. El tablero Criterio no dibuja una flecha de orden, así que no se agrega un indicador visible.
@@ -61,12 +63,12 @@ No se crean cuentas, espacios personales ni organizaciones de ejemplo en Develop
 
 ### T04 · Persistencia privada, migración, sistema de roles y perfiles
 
-- [ ] Añadir tests de modelo/migración/RLS/concurrencia antes de implementar configuraciones y repositorios.
-- [ ] Implementar `RoleConfiguration` y `RoleAssignmentConfiguration` en `Infrastructure/Persistence/Configurations/Tenant/`, puertos en `Application/Interfaces/Persistence/`, y `RoleRepository`/`RoleReader` en Infrastructure; crear una migración nueva en `Infrastructure/Persistence/Migrations/` con RLS `EnableTenantRls`, índices por campos de `SortMap`, auditoría y token de versión `xmin`.
-- [ ] Registrar `Role`/`RoleAssignment` en `ApplicationDbContext` y en clasificación/seed de esquema; revisar el SQL completo antes de commitear. Los tests crean tenant y roles dentro de su Testcontainer, prueban aislamiento cruzado, assignment huérfano y concurrencia real.
-- [ ] Sembrar `TenantAdmin` y `CompanyAdmin` por tenant en la preparación tenant-scoped que reutiliza la futura Etapa 6; asignar `TenantAdmin` al Dueño de la organización. No tocar la seed global para introducir una organización.
-- [ ] Actualizar el índice `identity.UserTenantAccesses` y su reader/configuración/proyección para incluir el rol de sistema derivado del `RoleAssignment`. Mantenerlo sincronizado en la misma UoW al asignar, quitar o cambiar el rol. Ampliar los tests del índice, `/api/me` y baja; ningún endpoint del front ve un flag de Dueño en `Member`.
-- [ ] Revisar `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Persistence/`, `Tenancy/` y la migración: las políticas RLS bloquean a otra organización aun cuando EF omite un filtro, y todas las rutas nuevas reciben declaración explícita.
+- [x] Añadir tests de modelo/migración/RLS/concurrencia antes de implementar configuraciones y repositorios.
+- [x] Implementar `RoleConfiguration` y `RoleAssignmentConfiguration` en `Infrastructure/Persistence/Configurations/Tenant/`, puertos en `Application/Interfaces/Persistence/`, y `RoleRepository`/`RoleReader` en Infrastructure; crear migraciones en `Infrastructure/Persistence/Migrations/` con RLS `EnableTenantRls`, índices por campos de `SortMap`, auditoría y token de versión `xmin`.
+- [x] Registrar `Role`/`RoleAssignment` en `ApplicationDbContext`; revisar el SQL de las migraciones. Los tests crean tenant y roles dentro de su Testcontainer, prueban aislamiento cruzado, assignment huérfano y concurrencia real.
+- [x] Sembrar `TenantAdmin` y `CompanyAdmin` por tenant en la preparación tenant-scoped que reutilizará la Etapa 6; asignar `TenantAdmin` al Dueño de la organización. No tocar la seed global para introducir una organización.
+- [x] Actualizar el índice `identity.UserTenantAccesses` y su reader/configuración/proyección para incluir el rol de sistema derivado del `RoleAssignment`, sincronizado por triggers transaccionales; ampliar tests del índice y `/api/me`. Ningún endpoint del front ve un flag de Dueño en `Member`.
+- [x] Revisar `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Persistence/`, `Tenancy/` y la migración: RLS bloquea acceso cruzado incluso sin filtro EF; las rutas nuevas se agregarán en T05.
 
 ### T05 · Contratos, validación y respuestas HTTP
 
@@ -89,6 +91,7 @@ No se crean cuentas, espacios personales ni organizaciones de ejemplo en Develop
 - [ ] Añadir primero un caso HTTP rojo a `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Legal/AccountDeletionTests.cs` y unidad roja a `AccountDeletionPolicyTests.cs`: la última persona Dueña de una organización no cerrada recibe `Legal.AccountDeletion.LastAdmin`, no consume el ticket y conserva su cuenta; con otro Dueño activo, la baja continúa.
 - [ ] Implementar la lectura/reutilización de Dueños activos sobre `RoleAssignment` y la proyección permitida, en Application/Infrastructure con puerto propio. El mismo reader queda listo para `LastTenantAdminGuard` de Etapa 6; la decisión se serializa con el cambio de roles y no abre tenant scope dentro de una transacción ya abierta.
 - [ ] `Active` cuenta; `PendingDeletion`, `Suspended`, `Deleted`, Member inactivo y organización cerrada no cuentan como Dueños activos según `multitenancy.md` y el punto 7 del plan maestro. No agregar un flag a la entidad `Member`.
+- [ ] En la baja, retirar `RoleAssignments` bajo el tenant y en la misma UoW antes de borrar `Member`, por la FK `RESTRICT`.
 - [ ] Registrar `Legal.AccountDeletion.LastAdmin` en recursos es/en y cubrir también el reauth/request sin filtrar datos de otras organizaciones ni consumir un ticket al bloquear.
 
 ### T08 · E2E real y contratos entre repos

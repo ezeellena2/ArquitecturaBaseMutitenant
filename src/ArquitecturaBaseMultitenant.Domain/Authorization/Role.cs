@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using System.Text;
 using PermissionCatalog = ArquitecturaBaseMultitenant.Domain.Authorization.Permissions;
 
 namespace ArquitecturaBaseMultitenant.Domain.Authorization;
@@ -16,7 +17,8 @@ public sealed class Role : Entity, ITenantOwned, IAuditable, IVersioned
     private Role(string name, string? description, RoleScope scope, Guid? companyId,
         IReadOnlyCollection<string> permissions, bool isSystemRole)
     {
-        Name = name;
+        Name = name.Trim();
+        NormalizedName = NormalizeName(name);
         Description = description;
         Scope = scope;
         CompanyId = companyId;
@@ -25,6 +27,8 @@ public sealed class Role : Entity, ITenantOwned, IAuditable, IVersioned
     }
 
     public string Name { get; private set; } = string.Empty;
+
+    public string NormalizedName { get; private set; } = string.Empty;
 
     public string? Description { get; private set; }
 
@@ -53,7 +57,8 @@ public sealed class Role : Entity, ITenantOwned, IAuditable, IVersioned
     {
         var validation = Validate(name, description, scope, companyId, permissions, isSystemRole: false);
         if (validation.IsFailure) return validation.Error;
-        if (SystemRoles.All.Contains(name!, StringComparer.Ordinal)) return RoleErrors.SystemRoleNameReserved;
+        if (SystemRoles.All.Any(systemName => NormalizeName(systemName) == NormalizeName(name!)))
+            return RoleErrors.SystemRoleNameReserved;
 
         return new Role(name!, description, scope, companyId, permissions!, isSystemRole: false);
     }
@@ -76,9 +81,11 @@ public sealed class Role : Entity, ITenantOwned, IAuditable, IVersioned
         if (IsSystemRole) return RoleErrors.SystemRoleCannotChange;
         var validation = Validate(name, description, scope, companyId, permissions, isSystemRole: false);
         if (validation.IsFailure) return validation.Error;
-        if (SystemRoles.All.Contains(name!, StringComparer.Ordinal)) return RoleErrors.SystemRoleNameReserved;
+        if (SystemRoles.All.Any(systemName => NormalizeName(systemName) == NormalizeName(name!)))
+            return RoleErrors.SystemRoleNameReserved;
 
-        Name = name!;
+        Name = name!.Trim();
+        NormalizedName = NormalizeName(name);
         Description = description;
         Scope = scope;
         CompanyId = companyId;
@@ -91,7 +98,7 @@ public sealed class Role : Entity, ITenantOwned, IAuditable, IVersioned
         IReadOnlyCollection<string>? permissions, bool isSystemRole)
     {
         if (string.IsNullOrWhiteSpace(name)) return RoleErrors.NameRequired;
-        if (name.Length > TextLimits.ShortName) return RoleErrors.NameTooLong;
+        if (name.Trim().Length > TextLimits.ShortName) return RoleErrors.NameTooLong;
         if (description?.Length > TextLimits.Description) return RoleErrors.DescriptionTooLong;
         if (!Enum.IsDefined(scope)) return RoleErrors.InvalidScope;
         if (companyId == Guid.Empty) throw new ArgumentException("The company id cannot be empty.", nameof(companyId));
@@ -111,5 +118,11 @@ public sealed class Role : Entity, ITenantOwned, IAuditable, IVersioned
         }
 
         return Result.Success();
+    }
+
+    public static string NormalizeName(string name)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        return name.Trim().Normalize(NormalizationForm.FormC).ToUpperInvariant().Normalize(NormalizationForm.FormC);
     }
 }

@@ -22,7 +22,7 @@ internal sealed class ProfileSnapshotBuilder(IUserRepository users, IUserTenantA
         var memberships = await accesses.ListForUserAsync(userId, cancellationToken);
         var organizations = memberships.Where(row => row.Kind == TenantKind.Business)
             .Select(row => new OrganizationSummary(row.TenantId, row.Name, row.Slug,
-                row.TenantStatus, null, row.MemberStatus)).ToArray();
+                row.TenantStatus, row.RoleName, row.MemberStatus)).ToArray();
         var personalSpace = memberships.Any(row => row.Kind == TenantKind.Personal);
         var activeMembership = memberships.SingleOrDefault(row => row.TenantId == activeTenantId);
         var mayReadSettings = activeMembership is

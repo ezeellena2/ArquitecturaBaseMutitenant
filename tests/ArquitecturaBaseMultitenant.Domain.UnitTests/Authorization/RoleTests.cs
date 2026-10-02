@@ -22,6 +22,19 @@ public sealed class RoleTests
     }
 
     [Fact]
+    public void Create_trims_name_and_keeps_a_culture_independent_uniqueness_key()
+    {
+        var role = Role.Create("  Gestión diaria  ", null, RoleScope.Organization, null, []).Value;
+
+        Assert.Equal("Gestión diaria", role.Name);
+        Assert.Equal("GESTIÓN DIARIA", role.NormalizedName);
+        var canonicalEquivalent = Role.Create("Gestio\u0301n diaria", null, RoleScope.Organization, null, []).Value;
+        Assert.Equal(role.NormalizedName, canonicalEquivalent.NormalizedName);
+        Assert.Equal(RoleErrors.SystemRoleNameReserved,
+            Role.Create("tenantadmin", null, RoleScope.Organization, null, []).Error);
+    }
+
+    [Fact]
     public void Company_scoped_role_requires_a_company_only_for_specific_company_scope()
     {
         var companyId = Guid.CreateVersion7();

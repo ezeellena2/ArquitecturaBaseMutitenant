@@ -14,6 +14,6 @@ internal sealed class UserTenantAccessReader(ApplicationDbContext context) : IUs
                where access.UserId == userId
                orderby access.JoinedAtUtc, tenant.Name, tenant.Id
                select new UserTenantAccessRow(tenant.Id, tenant.Kind, tenant.Name, tenant.Slug,
-                   tenant.Status, access.Status, access.JoinedAtUtc))
+                   tenant.Status, access.Status, access.JoinedAtUtc, access.RoleName))
             .ToArrayAsync(cancellationToken);
 }

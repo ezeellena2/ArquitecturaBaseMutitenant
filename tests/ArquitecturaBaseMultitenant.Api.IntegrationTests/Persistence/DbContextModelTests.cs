@@ -1,5 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Domain.Authorization;
+using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
@@ -41,6 +43,47 @@ public sealed class DbContextModelTests
         Assert.All(model.GetEntityTypes().Where(entity =>
             entity.GetTableName()?.StartsWith("AspNet", StringComparison.Ordinal) == true),
             entity => Assert.Equal(Schemas.Identity, entity.GetSchema()));
+    }
+
+    [Fact]
+    public void E4_roles_are_private_versioned_and_assignments_have_tenant_scoped_keys()
+    {
+        using var context = CreateContext();
+        var role = context.Model.FindEntityType(typeof(Role));
+        var assignment = context.Model.FindEntityType(typeof(RoleAssignment));
+        var access = context.Model.FindEntityType(
+            "ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.UserTenantAccess");
+
+        Assert.NotNull(role);
+        Assert.NotNull(assignment);
+        Assert.NotNull(access);
+        Assert.Equal(Schemas.Tenant, role.GetSchema());
+        Assert.Equal("Roles", role.GetTableName());
+        Assert.Equal(["TenantId", "Id"], role.FindPrimaryKey()!.Properties.Select(property => property.Name));
+        Assert.Equal("Tenant", Assert.Single(role.GetDeclaredQueryFilters()).Key);
+        Assert.Equal("text[]", role.FindProperty(nameof(Role.Permissions))!.GetColumnType());
+        Assert.Equal(TextLimits.ShortName, role.FindProperty(nameof(Role.NormalizedName))!.GetMaxLength());
+        Assert.Contains(role.GetIndexes(), index => index.IsUnique
+            && index.Properties.Select(property => property.Name).SequenceEqual(["TenantId", "NormalizedName"]));
+        Assert.Contains(role.GetIndexes(), index =>
+            index.Properties.Select(property => property.Name).SequenceEqual(["TenantId", "Name", "Id"]));
+
+        var version = role.FindProperty(nameof(Role.Version));
+        Assert.NotNull(version);
+        Assert.True(version.IsConcurrencyToken);
+        Assert.Equal("xmin", version.GetColumnName());
+
+        Assert.Equal(Schemas.Tenant, assignment.GetSchema());
+        Assert.Equal("RoleAssignments", assignment.GetTableName());
+        Assert.Equal(["TenantId", "Id"], assignment.FindPrimaryKey()!.Properties.Select(property => property.Name));
+        Assert.Equal("Tenant", Assert.Single(assignment.GetDeclaredQueryFilters()).Key);
+
+        var foreignKeys = assignment.GetForeignKeys().ToArray();
+        Assert.Contains(foreignKeys, key => key.PrincipalEntityType.ClrType == typeof(Role)
+            && key.Properties.Select(property => property.Name).SequenceEqual(["TenantId", "RoleId"]));
+        Assert.Contains(foreignKeys, key => key.PrincipalEntityType.ClrType == typeof(Member)
+            && key.Properties.Select(property => property.Name).SequenceEqual(["TenantId", "MemberId"]));
+        Assert.Equal(TextLimits.ShortName, access.FindProperty("RoleName")!.GetMaxLength());
     }
 
     [Fact]

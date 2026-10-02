@@ -1,7 +1,10 @@
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
+using ArquitecturaBaseMultitenant.Application.Services.Auth;
+using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -37,27 +40,27 @@ public sealed class UserTenantAccessIndexTests(ApiFactory factory)
             {
                 userId = (await services.GetRequiredService<IUserRepository>()
                     .CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct)).Id;
-                services.GetRequiredService<ITenantRepository>().Add(tenant);
                 return Result.Success();
             }, CommitPolicy.OnSuccess, Ct);
         }
 
-        var joinedAtUtc = new DateTime(2026, 9, 29, 15, 0, 0, DateTimeKind.Utc);
         await using (var memberScope = factory.Services.CreateAsyncScope())
         {
             var services = memberScope.ServiceProvider;
             using var active = services.GetRequiredService<ITenantScope>().Enter(tenant.Id);
             await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
             {
-                var member = Member.Invite(userId);
-                Assert.True(member.Activate(joinedAtUtc).IsSuccess);
-                services.GetRequiredService<IMemberRepository>().Add(member);
+                services.GetRequiredService<TenantSpaceProvisioner>().Stage(tenant,
+                    TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"), [userId]);
                 return Task.FromResult(Result.Success());
             }, CommitPolicy.OnSuccess, Ct);
         }
 
-        Assert.Equal((MemberStatus.Active.ToString(), joinedAtUtc),
-            await ReadIndexAsync(userId, tenant.Id));
+        var createdAccess = await ReadIndexAsync(userId, tenant.Id);
+        Assert.Equal(MemberStatus.Active.ToString(), createdAccess?.Status);
+        Assert.Equal(SystemRoles.TenantAdmin, createdAccess?.RoleName);
+        var joinedAtUtc = createdAccess?.JoinedAtUtc
+            ?? throw new InvalidOperationException("The provisioned owner lacks a join timestamp.");
 
         await using (var memberScope = factory.Services.CreateAsyncScope())
         {
@@ -73,7 +76,7 @@ public sealed class UserTenantAccessIndexTests(ApiFactory factory)
             }, CommitPolicy.OnSuccess, Ct);
         }
 
-        Assert.Equal((MemberStatus.Inactive.ToString(), joinedAtUtc),
+        Assert.Equal((MemberStatus.Inactive.ToString(), joinedAtUtc, SystemRoles.TenantAdmin),
             await ReadIndexAsync(userId, tenant.Id));
 
         await using (var runtime = await RuntimeRoleConnection.OpenAsync(factory.RuntimeConnectionString, tenant.Id, Ct))
@@ -90,7 +93,7 @@ public sealed class UserTenantAccessIndexTests(ApiFactory factory)
             await transaction.RollbackAsync(Ct);
         }
 
-        Assert.Equal((MemberStatus.Inactive.ToString(), joinedAtUtc),
+        Assert.Equal((MemberStatus.Inactive.ToString(), joinedAtUtc, SystemRoles.TenantAdmin),
             await ReadIndexAsync(userId, tenant.Id));
 
         await using (var admin = new NpgsqlConnection(factory.AdminConnectionString))
@@ -100,6 +103,16 @@ public sealed class UserTenantAccessIndexTests(ApiFactory factory)
             {
                 scope.Parameters.AddWithValue("tenant_id", tenant.Id.ToString("D"));
                 await scope.ExecuteNonQueryAsync(Ct);
+            }
+            await using (var assignments = new NpgsqlCommand("""
+                DELETE FROM tenant."RoleAssignments"
+                WHERE "TenantId" = @tenant_id AND "MemberId" IN (
+                    SELECT "Id" FROM tenant."Members" WHERE "TenantId" = @tenant_id AND "UserId" = @user_id)
+                """, admin))
+            {
+                assignments.Parameters.AddWithValue("tenant_id", tenant.Id);
+                assignments.Parameters.AddWithValue("user_id", userId);
+                Assert.Equal(1, await assignments.ExecuteNonQueryAsync(Ct));
             }
             await using var delete = new NpgsqlCommand("""
                 DELETE FROM tenant."Members" WHERE "TenantId" = @tenant_id AND "UserId" = @user_id
@@ -209,18 +222,21 @@ public sealed class UserTenantAccessIndexTests(ApiFactory factory)
         Assert.Equal(1, await command.ExecuteNonQueryAsync(Ct));
     }
 
-    private async Task<(string Status, DateTime JoinedAtUtc)?> ReadIndexAsync(Guid userId, Guid tenantId)
+    private async Task<(string Status, DateTime JoinedAtUtc, string? RoleName)?> ReadIndexAsync(Guid userId,
+        Guid tenantId)
     {
         await using var connection = new NpgsqlConnection(factory.RuntimeConnectionString);
         await connection.OpenAsync(Ct);
         await using var command = new NpgsqlCommand("""
-            SELECT "Status", "JoinedAtUtc" FROM identity."UserTenantAccesses"
+            SELECT "Status", "JoinedAtUtc", "RoleName" FROM identity."UserTenantAccesses"
             WHERE "UserId" = @user_id AND "TenantId" = @tenant_id
             """, connection);
         command.Parameters.AddWithValue("user_id", userId);
         command.Parameters.AddWithValue("tenant_id", tenantId);
         await using var reader = await command.ExecuteReaderAsync(Ct);
-        return await reader.ReadAsync(Ct) ? (reader.GetString(0), reader.GetDateTime(1)) : null;
+        return await reader.ReadAsync(Ct)
+            ? (reader.GetString(0), reader.GetDateTime(1), reader.IsDBNull(2) ? null : reader.GetString(2))
+            : null;
     }
 
     private static async Task<string?> ReadIndexStatusAsync(

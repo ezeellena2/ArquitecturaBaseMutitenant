@@ -100,7 +100,7 @@ public sealed class ProfileServiceTests
         var personalId = Guid.CreateVersion7();
         var accesses = new StubAccesses([
             new(tenantId, TenantKind.Business, "Empresa A", "empresa-a", TenantStatus.Active,
-                MemberStatus.Active, null),
+                MemberStatus.Active, null, "TenantAdmin"),
             new(suspendedId, TenantKind.Business, "Empresa B", "empresa-b", TenantStatus.Suspended,
                 MemberStatus.Active, null),
             new(personalId, TenantKind.Personal, "Personal", null, TenantStatus.Active,
@@ -121,6 +121,7 @@ public sealed class ProfileServiceTests
         Assert.True(result.Value.HasPersonalSpace);
         Assert.Equal(2, result.Value.Organizations.Count);
         Assert.True(result.Value.Organizations[0].IsSelectable);
+        Assert.Equal("TenantAdmin", result.Value.Organizations[0].RoleName);
         Assert.False(result.Value.Organizations[1].IsSelectable);
         Assert.Equal(MemberStatus.Active, result.Value.Organizations[1].MemberStatus);
         Assert.Equal("en-US", result.Value.Culture);

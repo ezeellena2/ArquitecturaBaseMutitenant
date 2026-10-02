@@ -131,7 +131,8 @@ internal sealed class SampleAccountSeeder(
         if (candidate.Tenant.Activate().IsFailure)
             throw new InvalidOperationException("The sample organization could not be activated.");
         spaces.Stage(candidate.Tenant, TenantSettings.Create(culture.Code,
-            country.DefaultTimeZoneId, country.DefaultCurrencyCode), [firstUserId, kevinId]);
+            country.DefaultTimeZoneId, country.DefaultCurrencyCode), [firstUserId, kevinId],
+            businessOwnerUserId: firstUserId);
     }
 
     public async Task<SamplePersonalCandidate?> PreparePersonalAsync(SamplePerson person,
