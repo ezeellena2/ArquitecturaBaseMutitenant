@@ -24,6 +24,16 @@ public sealed class Tenant : Entity
         Status = status;
     }
 
+    private Tenant(Guid id, TenantKind kind, string name, TenantStatus status) : base(id)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        if (name.Length > TextLimits.OrganizationName)
+            throw new ArgumentOutOfRangeException(nameof(name));
+        Kind = kind;
+        Name = name;
+        Status = status;
+    }
+
     public TenantKind Kind { get; private set; }
 
     public TenantStatus Status { get; private set; }
@@ -36,6 +46,10 @@ public sealed class Tenant : Entity
 
     public static Tenant CreateBusiness(string name, bool requiresApproval) =>
         new(TenantKind.Business, name, requiresApproval ? TenantStatus.PendingApproval : TenantStatus.Provisioning);
+
+    public static Tenant CreateBusiness(Guid id, string name, bool requiresApproval) =>
+        new(id, TenantKind.Business, name,
+            requiresApproval ? TenantStatus.PendingApproval : TenantStatus.Provisioning);
 
     public Result SetSlug(TenantSlug slug)
     {

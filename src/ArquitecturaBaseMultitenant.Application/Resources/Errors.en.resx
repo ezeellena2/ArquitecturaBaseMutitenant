@@ -95,7 +95,11 @@
   <data name="Tenancy.Tenant.Provisioning" xml:space="preserve"><value>The organization is being provisioned.</value></data>
   <data name="Tenancy.Tenant.Closed" xml:space="preserve"><value>The organization is closed.</value></data>
   <data name="Tenancy.TenantSlug.Invalid" xml:space="preserve"><value>Use lowercase letters, numbers, and hyphens; the address cannot have two characters.</value></data>
+  <data name="Tenancy.Company.NameRequired" xml:space="preserve"><value>Enter the company name.</value></data>
+  <data name="Tenancy.Company.NameTooLong" xml:space="preserve"><value>The company name is too long.</value></data>
+  <data name="Tenancy.Company.TimeZoneRequired" xml:space="preserve"><value>Choose a time zone.</value></data>
   <data name="Tenancy.Tenant.InvalidTransition" xml:space="preserve"><value>The organization cannot change to that state.</value></data>
+  <data name="Tenancy.Tenant.ProvisioningConflict" xml:space="preserve"><value>The organization already exists with different configuration data.</value></data>
   <data name="Tenancy.Member.Inactive" xml:space="preserve"><value>Your access to this organization is disabled.</value></data>
   <data name="Tenancy.Member.InvalidTransition" xml:space="preserve"><value>The membership cannot change to that state.</value></data>
   <data name="Tenancy.Access.Wrong" xml:space="preserve"><value>This access cannot perform the action.</value></data>

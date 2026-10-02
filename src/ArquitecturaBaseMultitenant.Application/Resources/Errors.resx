@@ -95,7 +95,11 @@
   <data name="Tenancy.Tenant.Provisioning" xml:space="preserve"><value>La organización se está preparando.</value></data>
   <data name="Tenancy.Tenant.Closed" xml:space="preserve"><value>La organización está cerrada.</value></data>
   <data name="Tenancy.TenantSlug.Invalid" xml:space="preserve"><value>Usá letras minúsculas, números y guiones; la dirección no puede tener dos caracteres.</value></data>
+  <data name="Tenancy.Company.NameRequired" xml:space="preserve"><value>Escribí el nombre de la empresa.</value></data>
+  <data name="Tenancy.Company.NameTooLong" xml:space="preserve"><value>El nombre de la empresa es demasiado largo.</value></data>
+  <data name="Tenancy.Company.TimeZoneRequired" xml:space="preserve"><value>Elegí una zona horaria.</value></data>
   <data name="Tenancy.Tenant.InvalidTransition" xml:space="preserve"><value>La organización no puede pasar a ese estado.</value></data>
+  <data name="Tenancy.Tenant.ProvisioningConflict" xml:space="preserve"><value>La organización ya existe con otros datos de configuración.</value></data>
   <data name="Tenancy.Member.Inactive" xml:space="preserve"><value>Tu acceso a esta organización está deshabilitado.</value></data>
   <data name="Tenancy.Member.InvalidTransition" xml:space="preserve"><value>La membresía no puede pasar a ese estado.</value></data>
   <data name="Tenancy.Access.Wrong" xml:space="preserve"><value>Este acceso no permite realizar la acción.</value></data>
