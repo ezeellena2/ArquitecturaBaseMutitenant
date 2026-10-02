@@ -72,3 +72,24 @@ public sealed class CompanyTests
         Assert.Equal(CompanyStatus.Active, company.Status);
     }
 }
+
+public sealed class CompanyMembershipTests
+{
+    [Fact]
+    public void Create_starts_active_and_can_be_inactivated_without_losing_its_identity()
+    {
+        var companyId = Guid.NewGuid();
+        var memberId = Guid.NewGuid();
+        var membership = CompanyMembership.Create(companyId, memberId).Value;
+
+        Assert.Equal(companyId, membership.CompanyId);
+        Assert.Equal(memberId, membership.MemberId);
+        Assert.Equal(CompanyMembershipStatus.Active, membership.Status);
+
+        membership.SetStatus(CompanyMembershipStatus.Inactive);
+
+        Assert.Equal(CompanyMembershipStatus.Inactive, membership.Status);
+        Assert.Equal(companyId, membership.CompanyId);
+        Assert.Equal(memberId, membership.MemberId);
+    }
+}
