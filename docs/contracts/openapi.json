@@ -3391,9 +3391,13 @@
             ]
           },
           "taxId": {
-            "type": [
-              "null",
-              "string"
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/BusinessSignupTaxIdHttpRequest"
+              }
             ]
           },
           "acceptedTerms": {
@@ -3435,6 +3439,23 @@
           }
         },
         "description": "Confirma el alta y permite continuar por su estado sin inferirlo del contenido de la página."
+      },
+      "BusinessSignupTaxIdHttpRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "number": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
       },
       "CancelAccountDeletionHttpRequest": {
         "type": "object",

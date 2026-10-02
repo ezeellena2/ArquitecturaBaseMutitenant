@@ -79,7 +79,8 @@ public sealed class BusinessSignupController(IBusinessSignupService service, IAn
             return Result.Failure(BusinessSignupErrors.IdentityRequired).ToActionResult(this);
 
         var businessSignup = new BusinessSignupRequest(request.OrganizationName, request.Slug,
-            request.FirstCompanyName, request.TaxId, request.AcceptedTerms);
+            request.FirstCompanyName, request.TaxId is null ? null
+                : new BusinessSignupTaxId(request.TaxId.Type, request.TaxId.Number), request.AcceptedTerms);
         return (await service.CreateOrganizationAsync(userId, operationId, businessSignup, cancellationToken))
             .ToActionResult(this);
     }

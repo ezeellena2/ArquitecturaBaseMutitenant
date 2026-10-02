@@ -141,16 +141,15 @@ internal sealed class BusinessOrganizationCreator(
         return Response(existing, company.Id, requiresApproval);
     }
 
-    private async Task<Result<TaxId?>> CreateTaxIdAsync(string? number, CancellationToken ct)
+    private async Task<Result<TaxId?>> CreateTaxIdAsync(BusinessSignupTaxId? request, CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(number)) return Result.Success<TaxId?>(null);
-        var type = (await taxIdTypes.ListAsync(ct)).FirstOrDefault(row => row.IsEnabled
-            && row.ValidatorKey == "ar-cuit-mod11"
-            && row.AppliesTo is "Company" or "Both");
-        if (type is null) return TaxIdErrors.Invalid;
+        if (request is null) return Result.Success<TaxId?>(null);
+        var type = await taxIdTypes.FindAsync(request.Type ?? string.Empty, ct);
+        if (type is not { IsEnabled: true } || type.AppliesTo is not ("Company" or "Both"))
+            return TaxIdErrors.Invalid;
         var domainType = TaxIdType.Create(type.Code, type.CountryCode, type.Label, type.Mask,
             type.ValidatorKey, type.AppliesTo, type.IsEnabled, type.SortOrder);
-        var taxId = TaxId.Create(type.CountryCode, domainType, number);
+        var taxId = TaxId.Create(type.CountryCode, domainType, request.Number);
         return taxId.IsSuccess ? Result.Success<TaxId?>(taxId.Value) : taxId.Error;
     }
 

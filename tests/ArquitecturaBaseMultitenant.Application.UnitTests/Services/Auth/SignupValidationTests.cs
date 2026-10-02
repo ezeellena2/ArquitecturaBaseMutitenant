@@ -56,5 +56,9 @@ public sealed class SignupValidationTests
         Assert.Contains(invalid.Errors, error => error.PropertyName == "Slug");
         Assert.Contains(invalid.Errors, error => error.PropertyName == "FirstCompanyName");
         Assert.Contains(invalid.Errors, error => error.PropertyName == "AcceptedTerms");
+        var invalidTaxId = await validator.ValidateAsync(new BusinessSignupRequest("Acme", "acme",
+            "Acme Argentina", new BusinessSignupTaxId("", ""), true), Ct);
+        Assert.Contains(invalidTaxId.Errors, error => error.PropertyName == "TaxId.Type");
+        Assert.Contains(invalidTaxId.Errors, error => error.PropertyName == "TaxId.Number");
     }
 }
