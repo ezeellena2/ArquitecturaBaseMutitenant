@@ -22,7 +22,8 @@
 
 - [ ] Escribir primero tests rojos para `BusinessSignup`, límite `MaxOwnedOrganizations`, slug normalizado/disponible/reservado, alta abierta/cerrada, aprobación pendiente y provisionamiento idempotente.
 - [ ] Implementar `TenantProvisioner` reutilizable por alta B2B y futura plataforma, conservando las transacciones/UoW existentes y roles de sistema; la repetición de la misma operación no duplica tenant, owner, empresa ni settings.
-- [ ] Agregar catálogo persistido de slugs reservados con los nombres validados por el tablero: `www`, `app`, `api`, `auth`, `admin`, `empresas` y `plataforma`; verificar colisión y carrera contra el índice único de `Tenants`.
+- [x] Agregar catálogo persistido de slugs reservados con los nombres validados por el tablero: `www`, `app`, `api`, `auth`, `admin`, `empresas` y `plataforma`; el lector distingue disponibles, reservados y tomados. Commits `bd91f9e` y el cambio de catálogo actual.
+- [ ] Exponer disponibilidad en el contrato del alta y traducir la carrera de alta contra el índice único de `Tenants`.
 - [ ] Crear primera empresa con CUIT opcional y zona inicial; validar el CUIT mediante `TaxId`/catálogo, nunca como texto libre persistido.
 - [ ] Implementar el alta por correo y por Google, con aceptación de términos vigentes y sin crear acceso Personal. Respetar la política de alta y el máximo de organizaciones propias; devolver los estados que consume el tablero.
 - [ ] Agregar contratos HTTP, declaraciones explícitas de ruta anónima, recursos es/en, integración y aislamiento. Actualizar OpenAPI y contratos generados del front; incluir una prueba de contrato que lea el OpenAPI del back y el cliente generado del front.
@@ -32,7 +33,7 @@
 ### 2. Empresas y roles por empresa
 
 - [ ] Crear `Company`, configuración EF/migración e índices tenant-owned; cubrir aislamiento por `tenant_id` y acceso cruzado 404.
-- [ ] Crear `TaxId` y `ArgentineCuitValidator` según `docs/rules/identificacion-fiscal.md`; agregar `TaxIdTests` y pruebas de propiedades para dígito, normalización, valor inválido y datos históricos nulos.
+- [x] Crear `TaxId` y `ArgentineCuitValidator` según `docs/rules/identificacion-fiscal.md`; agregar `TaxIdTests` y pruebas de propiedades para dígito, normalización, valor inválido y datos históricos nulos. Commits `234fc72`.
 - [ ] Implementar listado, alta, edición concurrente (`version` y 409), baja permitida por regla escrita, zona horaria y ficha; añadir conteos/listados para 1 y 50 registros en base de prueba aislada.
 - [ ] Implementar membresías de empresa y asignación de roles mediante `RoleAssignment.CompanyId`, reutilizando catálogos y `RoleService`; filtrar empresas/roles por tenant y nunca aceptar un ID ajeno.
 - [ ] Proteger quitar o deshabilitar al último `CompanyAdmin` activo; cubrir concurrencia en dos solicitudes y miembros con baja pedida.
@@ -75,7 +76,7 @@
 ### 7. Frontend por grupos aprobados
 
 - [ ] Implementar `/registro/empresa` desde `Registro-Empresa` y `M-Registro-Empresa`: canal disponible de correo/Google, aceptación de términos, slug y disponibilidad/reservados, primera empresa/CUIT opcional, límite, espera de aprobación y alta cerrada. El canal WhatsApp queda para E8 porque todavía no está implementado.
-- [ ] Esperar la aprobación agrupada de tableros todavía marcados «· para aprobar» antes de codificarlos: `Inicio-Org`, `M-Inicio-Org`, `Inicio-Miembro`; `Usuarios`, `Usuario`, `M-Usuarios`, `M-Usuario`; `Empresas`, `Empresa`, `M-Empresas`, `M-Empresa`; `Configuracion`, `M-Configuracion` y alta/verificación/retiro de dominio; `Pagina-Org` y `Pagina-Org-Despublicar`; `Auditoria-Org` y `M-Auditoria-Org`. Mostrar esos tableros en conjunto si la aprobación aún está pendiente. No volver a pedir visto bueno de Roles/Rol ni Registro-Empresa, ya aprobados.
+- [x] Aprobación agrupada recibida para `Inicio-Org`, `M-Inicio-Org`, `Inicio-Miembro`; `Usuarios`, `Usuario`, `M-Usuarios`, `M-Usuario`; `Empresas`, `Empresa`, `M-Empresas`, `M-Empresa`; `Configuracion`, `M-Configuracion`, alta/verificación/retiro de dominio; `Pagina-Org`, `Pagina-Org-Despublicar`; `Auditoria-Org`, `M-Auditoria-Org`, incluidos móviles y diálogos. Implementar copiando lienzo v60. No volver a pedir visto bueno de Roles/Rol ni Registro-Empresa.
 - [ ] Con la aprobación, implementar las pantallas, móviles, diálogos y estados de la lista anterior copiando lienzo v60; usar `shared/ui`, fichas front, clientes generados, permisos y componentes del área Roles. No redibujar pantallas existentes.
 - [ ] Hacer el flujo real de 1 y 50 filas en Usuarios, Empresas y Auditoría con PostgreSQL de prueba propia; comparar orden, filtros, conteos, estados y paginado contra las maquetas.
 

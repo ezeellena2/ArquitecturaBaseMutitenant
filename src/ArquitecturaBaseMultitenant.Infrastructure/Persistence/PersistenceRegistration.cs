@@ -66,6 +66,7 @@ internal static class PersistenceRegistration
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<ITenantRepository, TenantRepository>();
         services.AddScoped<ITenantReader, TenantReader>();
+        services.AddScoped<ITenantSlugAvailabilityReader, TenantSlugAvailabilityReader>();
         services.AddScoped<IMemberRepository, MemberRepository>();
         services.AddScoped<IMemberReader, MemberReader>();
         services.AddScoped<IInvitationRepository, InvitationRepository>();

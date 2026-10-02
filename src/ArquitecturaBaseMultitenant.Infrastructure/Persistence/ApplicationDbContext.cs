@@ -45,6 +45,7 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
     public DbSet<LoginAudit> LoginAudits => Set<LoginAudit>();
     internal DbSet<UserTenantAccess> UserTenantAccesses => Set<UserTenantAccess>();
     public DbSet<Tenant> Tenants => Set<Tenant>();
+    public DbSet<ReservedTenantSlug> ReservedTenantSlugs => Set<ReservedTenantSlug>();
     public DbSet<Member> Members => Set<Member>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
     public DbSet<Role> Roles => Set<Role>();

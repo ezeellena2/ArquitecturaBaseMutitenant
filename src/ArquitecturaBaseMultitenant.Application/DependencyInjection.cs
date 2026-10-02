@@ -22,6 +22,7 @@ public static class DependencyInjection
         ArgumentNullException.ThrowIfNull(services);
 
         services.AddScoped<IReferenceDataService, ReferenceDataService>();
+        services.AddScoped<ITenantSlugAvailabilityService, TenantSlugAvailabilityService>();
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddScoped<IPlatformPermissionService, PlatformPermissionService>();

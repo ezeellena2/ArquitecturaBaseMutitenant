@@ -1052,6 +1052,47 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.ToTable("Members", "tenant");
                 });
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Tenancy.ReservedTenantSlug", b =>
+                {
+                    b.Property<string>("Slug")
+                        .HasMaxLength(63)
+                        .HasColumnType("character varying(63)");
+
+                    b.HasKey("Slug");
+
+                    b.ToTable("ReservedTenantSlugs", "platform");
+
+                    b.HasData(
+                        new
+                        {
+                            Slug = "www"
+                        },
+                        new
+                        {
+                            Slug = "app"
+                        },
+                        new
+                        {
+                            Slug = "api"
+                        },
+                        new
+                        {
+                            Slug = "auth"
+                        },
+                        new
+                        {
+                            Slug = "admin"
+                        },
+                        new
+                        {
+                            Slug = "empresas"
+                        },
+                        new
+                        {
+                            Slug = "plataforma"
+                        });
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant", b =>
                 {
                     b.Property<Guid>("Id")
