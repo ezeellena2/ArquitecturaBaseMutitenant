@@ -77,7 +77,8 @@ public sealed class HarnessTests
     public void Lo_verifica_requires_closed_stage_Node_and_TypeScript_tests()
     {
         var line = "- `missing.test.mjs` (E1), `missing.test.ts` (E1), `missing.test.tsx` (E1), `future.test.tsx` (E3).";
-        var failures = MissingVerificationTests(line, 7, "docs/rules/probe.md", new HashSet<string>(StringComparer.Ordinal), closedStage: 2).ToArray();
+        var failures = MissingVerificationTests(line, 7, "docs/rules/probe.md", new HashSet<string>(StringComparer.Ordinal),
+            new HashSet<int> { 0, 1, 2 }).ToArray();
 
         Assert.Contains(failures, value => value.Contains("missing.test.mjs", StringComparison.Ordinal));
         Assert.Contains(failures, value => value.Contains("missing.test.ts", StringComparison.Ordinal));
@@ -97,7 +98,7 @@ public sealed class HarnessTests
             var line = "- `generator.test.mjs` (E1), `missing.test.mjs` (E1), `formatters.test.ts` (E1), `screen.test.tsx` (E1).";
 
             var failures = MissingVerificationTests(line, 7, "docs/rules/probe.md", names,
-                closedStage: 2, frontExists: false).ToArray();
+                new HashSet<int> { 0, 1, 2 }, frontExists: false).ToArray();
 
             Assert.Single(failures);
             Assert.Contains("missing.test.mjs", failures[0], StringComparison.Ordinal);
@@ -111,7 +112,15 @@ public sealed class HarnessTests
     [Fact]
     public void Persistence_stage_is_closed()
     {
-        Assert.True(HarnessStage.Closed >= 2);
+        var path = Path.Combine(Root, "tests", "ArquitecturaBaseMultitenant.ArchitectureTests", "HarnessStage.cs");
+        var declaration = Regex.Match(File.ReadAllText(path), @"ClosedStages\s*=\s*\[(?<stages>[^\]]*)\]", RegexOptions.CultureInvariant);
+        Assert.True(declaration.Success, "HarnessStage debe enumerar las etapas cerradas para permitir saltos.");
+        var closedStages = Regex.Matches(declaration.Groups["stages"].Value, @"\d+", RegexOptions.CultureInvariant)
+            .Select(match => int.Parse(match.Value, System.Globalization.CultureInfo.InvariantCulture)).ToArray();
+
+        Assert.Contains(2, closedStages);
+        Assert.Contains(4, closedStages);
+        Assert.DoesNotContain(5, closedStages);
     }
 
     [Fact]
@@ -189,9 +198,16 @@ public sealed class HarnessTests
         var testNames = TestNames(Root, frontExists ? FrontRoot : null);
         failures.AddRange(EmptyCSharpTestClasses(Root));
 
-        var cards = RuleCards().Select(file => (File: file, Stage: HarnessStage.Closed))
-            .Concat(frontExists ? RuleCards(FrontRoot).Select(file => (File: file, Stage: FrontClosedStage())) : []);
-        foreach (var (file, closedStage) in cards)
+        var backClosedStages = HarnessStage.ClosedStages.ToHashSet();
+        var frontClosedStages = frontExists ? FrontClosedStages().ToHashSet() : backClosedStages;
+        if (frontExists)
+        {
+            Assert.Equal(backClosedStages.Order(), frontClosedStages.Order());
+        }
+
+        var cards = RuleCards().Select(file => (File: file, Stages: backClosedStages))
+            .Concat(frontExists ? RuleCards(FrontRoot).Select(file => (File: file, Stages: frontClosedStages)) : []);
+        foreach (var (file, closedStages) in cards)
         {
             foreach (var (line, number) in SectionLinesWithNumbers(File.ReadAllLines(file), "Lo verifica"))
             {
@@ -200,7 +216,7 @@ public sealed class HarnessTests
                     continue;
                 }
 
-                failures.AddRange(MissingVerificationTests(line, number, Relative(file), testNames, closedStage,
+                failures.AddRange(MissingVerificationTests(line, number, Relative(file), testNames, closedStages,
                     frontExists));
 
                 if (line.Contains("`BannedSymbols.txt` (E0)", StringComparison.Ordinal)
@@ -445,8 +461,9 @@ public sealed class HarnessTests
                 var path = pieces[0].Length == 0
                     ? file
                     : Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file)!, Uri.UnescapeDataString(pieces[0]).Replace('/', Path.DirectorySeparatorChar)));
-                var stage = StageForReference(line, match.Index + match.Length);
-                if (stage is not null && stage > HarnessStage.Closed)
+                var stageRange = StageRangeForReference(line, match.Index + match.Length);
+                if (stageRange is not null && !IsClosedRange(stageRange.Value.First, stageRange.Value.Last,
+                    HarnessStage.ClosedStages.ToHashSet()))
                 {
                     continue;
                 }
@@ -520,8 +537,9 @@ public sealed class HarnessTests
                     continue;
                 }
 
-                var stage = StageForReference(line, match.Index + match.Length);
-                if (stage is not null && stage > HarnessStage.Closed)
+                var stageRange = StageRangeForReference(line, match.Index + match.Length);
+                if (stageRange is not null && !IsClosedRange(stageRange.Value.First, stageRange.Value.Last,
+                    HarnessStage.ClosedStages.ToHashSet()))
                 {
                     continue;
                 }
@@ -750,44 +768,56 @@ public sealed class HarnessTests
             .Select(testClass => $"{Path.GetRelativePath(backendRoot, testClass.File).Replace('\\', '/')}: {testClass.Name} no tiene [Fact] ni [Theory] en un método.");
 
     private static IEnumerable<string> MissingVerificationTests(string line, int number, string file, HashSet<string> testNames,
-        int closedStage, bool frontExists = true)
+        IReadOnlySet<int> closedStages, bool frontExists = true)
     {
         const string pattern = @"\b(?:[A-Za-z][A-Za-z0-9_]*Tests|[A-Za-z][A-Za-z0-9_-]*\.test\.(?:mjs|tsx?))\b";
         foreach (Match match in Regex.Matches(line, pattern, RegexOptions.CultureInvariant))
         {
-            var stage = StageForReference(line, match.Index + match.Length);
-            if (stage is null)
+            var stageRange = StageRangeForReference(line, match.Index + match.Length);
+            if (stageRange is null)
             {
                 yield return $"{file}:{number}: {match.Value} no indica (E#).";
             }
-            else if (stage <= closedStage && !testNames.Contains(match.Value)
+            else if (IsClosedRange(stageRange.Value.First, stageRange.Value.Last, closedStages)
+                && !testNames.Contains(match.Value)
                 && (frontExists || !match.Value.EndsWith(".test.ts", StringComparison.Ordinal)
                     && !match.Value.EndsWith(".test.tsx", StringComparison.Ordinal)))
             {
-                yield return $"{file}:{number}: falta el test {match.Value} (E{stage}).";
+                yield return $"{file}:{number}: falta el test {match.Value} (E{stageRange.Value.Last}).";
             }
         }
     }
 
-    private static int FrontClosedStage()
+    private static int[] FrontClosedStages()
     {
         var path = Path.Combine(FrontRoot, "src", "test", "HarnessStage.ts");
-        var match = Regex.Match(File.ReadAllText(path), @"\bHarnessStage\s*=\s*(?<stage>\d+)", RegexOptions.CultureInvariant);
-        Assert.True(match.Success, $"No se pudo leer HarnessStage en {Relative(path)}.");
-        return int.Parse(match.Groups["stage"].Value, System.Globalization.CultureInfo.InvariantCulture);
+        var match = Regex.Match(File.ReadAllText(path), @"ClosedStages\s*=\s*\[(?<stages>[^\]]*)\]", RegexOptions.CultureInvariant);
+        Assert.True(match.Success, $"No se pudo leer ClosedStages en {Relative(path)}.");
+        return Regex.Matches(match.Groups["stages"].Value, @"\d+", RegexOptions.CultureInvariant)
+            .Select(value => int.Parse(value.Value, System.Globalization.CultureInfo.InvariantCulture)).ToArray();
     }
 
-    private static int? StageForReference(string line, int end)
+    private static (int First, int Last)? StageRangeForReference(string line, int end)
     {
-        var after = Regex.Match(line[end..], @"\bE(?<stage>\d+)\b", RegexOptions.CultureInvariant);
+        var pattern = @"\bE(?<first>\d+)(?:\s*[–-]\s*E?(?<last>\d+))?\b";
+        var after = Regex.Match(line[end..], pattern, RegexOptions.CultureInvariant);
         if (after.Success)
         {
-            return int.Parse(after.Groups["stage"].Value, System.Globalization.CultureInfo.InvariantCulture);
+            return ParseStageRange(after);
         }
 
-        var before = Regex.Matches(line[..end], @"\bE(?<stage>\d+)\b", RegexOptions.CultureInvariant).LastOrDefault();
-        return before is null ? null : int.Parse(before.Groups["stage"].Value, System.Globalization.CultureInfo.InvariantCulture);
+        var before = Regex.Matches(line[..end], pattern, RegexOptions.CultureInvariant).LastOrDefault();
+        return before is null ? null : ParseStageRange(before);
     }
+
+    private static (int First, int Last) ParseStageRange(Match match) =>
+        (int.Parse(match.Groups["first"].Value, System.Globalization.CultureInfo.InvariantCulture),
+            match.Groups["last"].Success
+                ? int.Parse(match.Groups["last"].Value, System.Globalization.CultureInfo.InvariantCulture)
+                : int.Parse(match.Groups["first"].Value, System.Globalization.CultureInfo.InvariantCulture));
+
+    private static bool IsClosedRange(int first, int last, IReadOnlySet<int> closedStages) =>
+        first <= last && Enumerable.Range(first, last - first + 1).All(closedStages.Contains);
 
     private static IEnumerable<string> SectionLines(string[] lines, string heading) =>
         SectionLinesWithNumbers(lines, heading).Select(entry => entry.Line);

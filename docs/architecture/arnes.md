@@ -119,7 +119,7 @@ La tabla está solo en el [`AGENTS.md` raíz](../../AGENTS.md#antes-de-escribir-
 3. una ficha no tiene las secciones del formato (§2), o su "Lo verifica" nombra una clase C# `*Tests` sin método `[Fact]`/`[Theory]` o un archivo `.test.mjs`, `.test.ts` o `.test.tsx` que no existe, salvo que lleve `(E#)` de una etapa que todavía no cerró o diga `Pendiente:`; revisa el repo hermano cuando está presente;
 4. el `AGENTS.md` raíz pasa las 120 líneas, o un puntero pasa las 8.
 
-La última etapa cerrada vive en una sola constante del arnés, `HarnessStage`, que usa `HarnessTests` y se actualiza en la puerta de cada etapa (plan, puerta 7). Mientras la etapa de un enlace o test no haya cerrado, su ausencia no falla; cuando cierra, sí.
+Las etapas cerradas viven en una lista explícita de `HarnessStage`, que usan `HarnessTests` y se actualiza en la puerta de cada etapa (plan, puerta 7). Las etapas pueden cerrarse fuera de orden; una referencia o test se exige solo cuando su etapa está en la lista. En particular, cerrar E6 después de E4 no cierra E5.
 
 Así, mover un archivo modelo o renombrar un test rompe el build hasta que se actualiza la guía: la documentación no puede quedar vieja en silencio.
 

@@ -47,7 +47,7 @@ public sealed class EntityConfigurationTests
             .Where(type => type is { IsClass: true, IsAbstract: false }
                 && (type.IsSubclassOf(typeof(Entity))
                     || type.Namespace == typeof(Currency).Namespace))
-            .Where(type => HarnessStage.Closed >= 3 || !deferred.Contains(type));
+            .Where(type => HarnessStage.ClosedStages.Contains(3) || !deferred.Contains(type));
         var expected = domainEntities.Concat(
         [
             typeof(DataProtectionKey),
