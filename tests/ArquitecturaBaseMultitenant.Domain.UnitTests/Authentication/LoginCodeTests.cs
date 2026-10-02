@@ -28,6 +28,19 @@ public sealed class LoginCodeTests
     }
 
     [Fact]
+    public void Business_signup_code_cannot_be_used_as_a_personal_signup_code()
+    {
+        var destination = LoginCodeDestination.ForEmail(Email.Create("empresa@example.com").Value);
+        var code = LoginCode.Issue(destination, LoginCodePurpose.BusinessSignup, null, "hash", IssuedAtUtc,
+            TimeSpan.FromMinutes(10), 3);
+
+        Assert.Equal(LoginCodeErrors.InvalidCode,
+            code.Verify(LoginCodePurpose.Signup, "hash", IssuedAtUtc.AddMinutes(1)).Error.Code);
+        Assert.Equal(3, code.AttemptsLeft);
+        Assert.True(code.Verify(LoginCodePurpose.BusinessSignup, "hash", IssuedAtUtc.AddMinutes(1)).IsSuccess);
+    }
+
+    [Fact]
     public void Code_expires_at_the_boundary_and_consumes_failed_attempts()
     {
         var destination = LoginCodeDestination.ForEmail(Email.Create("ana@example.com").Value);

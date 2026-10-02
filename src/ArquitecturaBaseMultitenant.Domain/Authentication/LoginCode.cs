@@ -100,7 +100,8 @@ public sealed class LoginCode : Entity
 
         switch (purpose)
         {
-            case LoginCodePurpose.Login or LoginCodePurpose.Signup when requestedByUserId is not null:
+            case LoginCodePurpose.Login or LoginCodePurpose.Signup or LoginCodePurpose.BusinessSignup
+                when requestedByUserId is not null:
                 throw new ArgumentException("A login or signup code cannot be requested by an account.", nameof(requestedByUserId));
 
             case LoginCodePurpose.VerifyDestination or LoginCodePurpose.Reauthenticate
@@ -108,7 +109,7 @@ public sealed class LoginCode : Entity
                 throw new ArgumentException(
                     "The code needs the account that requested it.", nameof(requestedByUserId));
 
-            case LoginCodePurpose.Login or LoginCodePurpose.Signup
+            case LoginCodePurpose.Login or LoginCodePurpose.Signup or LoginCodePurpose.BusinessSignup
                 or LoginCodePurpose.VerifyDestination or LoginCodePurpose.Reauthenticate:
                 break;
 
@@ -141,7 +142,8 @@ public sealed class LoginCode : Entity
     {
         ArgumentNullException.ThrowIfNull(codeHash);
 
-        return expectedPurpose is LoginCodePurpose.Login or LoginCodePurpose.Signup && Purpose == expectedPurpose
+        return expectedPurpose is LoginCodePurpose.Login or LoginCodePurpose.Signup or LoginCodePurpose.BusinessSignup
+            && Purpose == expectedPurpose
             ? Check(codeHash, nowUtc)
             : LoginCodeErrors.Invalid(attemptsLeft: null);
     }

@@ -11,6 +11,9 @@ public enum LoginCodePurpose
     /// <summary>Crear una cuenta personal.</summary>
     Signup = 2,
 
+    /// <summary>Verificar el correo al crear una identidad para el acceso empresarial.</summary>
+    BusinessSignup = 5,
+
     /// <summary>
     /// Demostrar, desde el perfil, que un número o un correo es de quien lo quiere vincular. Solo sirve para la cuenta
     /// que lo pidió.

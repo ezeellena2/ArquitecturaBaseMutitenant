@@ -64,6 +64,58 @@ internal sealed class SignupVerificationCore(ILoginCodeRepository codes,
         return userId;
     }
 
+    internal async Task<Result<Guid>> VerifyBusinessAsync(VerifySignupRequest request, PersonalSpaceDraft defaults,
+        CancellationToken cancellationToken)
+    {
+        var destination = LoginCodeDestination.ForEmail(request.Email!);
+        await codes.LockDestinationAsync(destination, cancellationToken);
+        var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+        var allowed = await policy.CanRegisterBusinessAsync(cancellationToken);
+        if (allowed.IsFailure) return Fail(null, allowed.Error);
+
+        var currentCode = await codes.GetLatestAsync(destination, LoginCodePurpose.BusinessSignup,
+            requestedByUserId: null, cancellationToken);
+        var hadActiveCode = currentCode?.IsActive(nowUtc) == true;
+        var verified = await verifier.VerifyAsync(destination, LoginCodePurpose.BusinessSignup,
+            requestedByUserId: null, request.Code!, cancellationToken);
+        if (verified.IsFailure)
+        {
+            var failedMethod = await existingMethods.FindAsync(destination, cancellationToken);
+            if (failedMethod is not null && hadActiveCode && IsFailedCodeAttempt(verified.Error))
+            {
+                await signIn.RegisterFailedAttemptAsync(failedMethod.UserId, cancellationToken);
+                if (await signIn.IsLockedOutAsync(failedMethod.UserId, cancellationToken))
+                    return Fail(failedMethod.UserId, AccountErrors.LockedOut);
+            }
+            return Fail(failedMethod?.UserId, verified.Error);
+        }
+
+        var method = await existingMethods.FindAsync(destination, cancellationToken);
+        Guid userId;
+        if (method is null || method.VerifiedAtUtc is null)
+        {
+            var documents = await registrar.GetCurrentLegalAsync(nowUtc, cancellationToken);
+            if (method is not null) await existingMethods.RemovePendingAsync(method, cancellationToken);
+            userId = await registrar.RegisterBusinessAsync(request.Email!, defaults, nowUtc,
+                documents.Terms, documents.Privacy, cancellationToken);
+        }
+        else
+        {
+            if (await signIn.IsLockedOutAsync(method.UserId, cancellationToken))
+                return Fail(method.UserId, AccountErrors.LockedOut);
+            if (await existingMethods.CheckAccountAsync(method.UserId, cancellationToken) is { } accountError)
+                return Fail(method.UserId, accountError);
+            userId = await existingMethods.ConfirmAsync(method, request.Email!, nowUtc, cancellationToken);
+            await signIn.ResetFailedAttemptsAsync(userId, cancellationToken);
+            var documents = await registrar.GetCurrentLegalAsync(nowUtc, cancellationToken);
+            await registrar.AcceptCurrentLegalAsync(userId, documents.Terms, documents.Privacy,
+                nowUtc, cancellationToken);
+        }
+
+        audits.Add(LoginAudit.Success(userId, LoginAuditMethod.Code, nowUtc));
+        return userId;
+    }
+
     private static bool IsFailedCodeAttempt(Error error) =>
         error.Code == LoginCodeErrors.TooManyAttemptsCode
         || (error.Code == LoginCodeErrors.InvalidCode

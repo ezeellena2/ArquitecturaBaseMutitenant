@@ -26,6 +26,10 @@ internal sealed class LoginCodeIssuer(
         CancellationToken cancellationToken) =>
         IssueAsync(destination, LoginCodePurpose.Signup, requestedByUserId: null, cancellationToken);
 
+    public Task<Result<IssuedLoginCode>> IssueBusinessSignupCodeAsync(LoginCodeDestination destination,
+        CancellationToken cancellationToken) =>
+        IssueAsync(destination, LoginCodePurpose.BusinessSignup, requestedByUserId: null, cancellationToken);
+
     public Task<Result<IssuedLoginCode>> IssueAccountCodeAsync(LoginCodeDestination destination,
         LoginCodePurpose purpose, Guid userId, CancellationToken cancellationToken)
     {

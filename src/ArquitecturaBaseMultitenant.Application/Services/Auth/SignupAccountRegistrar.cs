@@ -6,7 +6,7 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
-/// <summary>Crea identidad, método principal, Personal y consentimientos en la transacción vigente.</summary>
+/// <summary>Crea identidades por correo y sus consentimientos; solo el alta Personal crea un espacio Personal.</summary>
 internal sealed class SignupAccountRegistrar(IUserRepository users, ILoginMethodRepository methods,
     ILegalRepository legal, IPersonalSpaceProvisioner personalSpaces, IRequestInfo requestInfo)
 {
@@ -31,10 +31,32 @@ internal sealed class SignupAccountRegistrar(IUserRepository users, ILoginMethod
         methods.Add(loginMethod);
         await users.SetPrimaryEmailAsync(userId, email, cancellationToken);
         personalSpaces.Stage(draft, userId);
-        legal.AddAcceptance(LegalAcceptance.Create(userId, terms, nowUtc,
-            requestInfo.IpAddress, requestInfo.UserAgent));
-        legal.AddAcceptance(LegalAcceptance.Create(userId, privacy, nowUtc,
-            requestInfo.IpAddress, requestInfo.UserAgent));
+        await AcceptCurrentLegalAsync(userId, terms, privacy, nowUtc, cancellationToken);
         return userId;
+    }
+
+    internal async Task<Guid> RegisterBusinessAsync(Email email, PersonalSpaceDraft defaults, DateTime nowUtc,
+        LegalDocument terms, LegalDocument privacy, CancellationToken cancellationToken)
+    {
+        var userId = (await users.CreateAsync(null, defaults.Culture, defaults.TimeZoneId, cancellationToken)).Id;
+        var loginMethod = LoginMethod.CreateEmail(userId, email);
+        loginMethod.Verify(nowUtc);
+        if (loginMethod.MakePrimary().IsFailure)
+            throw new InvalidOperationException("A verified signup method could not become primary.");
+        methods.Add(loginMethod);
+        await users.SetPrimaryEmailAsync(userId, email, cancellationToken);
+        await AcceptCurrentLegalAsync(userId, terms, privacy, nowUtc, cancellationToken);
+        return userId;
+    }
+
+    internal async Task AcceptCurrentLegalAsync(Guid userId, LegalDocument terms, LegalDocument privacy,
+        DateTime nowUtc, CancellationToken cancellationToken)
+    {
+        if (!await legal.HasAcceptedAsync(userId, terms.Id, cancellationToken))
+            legal.AddAcceptance(LegalAcceptance.Create(userId, terms, nowUtc,
+                requestInfo.IpAddress, requestInfo.UserAgent));
+        if (!await legal.HasAcceptedAsync(userId, privacy.Id, cancellationToken))
+            legal.AddAcceptance(LegalAcceptance.Create(userId, privacy, nowUtc,
+                requestInfo.IpAddress, requestInfo.UserAgent));
     }
 }

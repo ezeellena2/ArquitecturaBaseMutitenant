@@ -20,6 +20,7 @@ public sealed class AccessDeclarationTests
         typeof(ReferenceDataController),
         typeof(LoginCodeController),
         typeof(SignupController),
+        typeof(BusinessSignupController),
         typeof(TenantSlugAvailabilityController),
         typeof(LoginMethodsController),
         typeof(InvitationsController),
