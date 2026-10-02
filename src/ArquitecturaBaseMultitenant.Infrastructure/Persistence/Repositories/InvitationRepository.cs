@@ -44,6 +44,16 @@ internal sealed class InvitationRepository(ApplicationDbContext context, ITenant
             && destinations.Contains(invitation.Destination)).ToArrayAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Invitation>> ListPendingForMemberAsync(Guid memberId,
+        CancellationToken cancellationToken)
+    {
+        if (memberId == Guid.Empty) throw new ArgumentException("A member ID is required.", nameof(memberId));
+        context.RequireTransaction();
+        _ = tenantContext.RequiredTenantId;
+        return await context.Invitations.Where(invitation => invitation.MemberId == memberId
+            && invitation.Status == InvitationStatus.Pending).ToArrayAsync(cancellationToken);
+    }
+
     public void Add(Invitation invitation)
     {
         ArgumentNullException.ThrowIfNull(invitation);

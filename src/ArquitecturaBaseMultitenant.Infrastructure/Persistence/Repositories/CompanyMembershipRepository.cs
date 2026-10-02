@@ -29,6 +29,16 @@ internal sealed class CompanyMembershipRepository(ApplicationDbContext context, 
             && row.MemberId == memberId, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<CompanyMembership>> ListForMemberAsync(Guid memberId,
+        CancellationToken cancellationToken)
+    {
+        if (memberId == Guid.Empty) throw new ArgumentException("The member id cannot be empty.", nameof(memberId));
+        context.RequireTransaction();
+        var tenantId = tenantContext.RequiredTenantId;
+        return await context.CompanyMemberships.Where(row => row.TenantId == tenantId
+            && row.MemberId == memberId).ToArrayAsync(cancellationToken);
+    }
+
     public void Add(CompanyMembership membership)
     {
         ArgumentNullException.ThrowIfNull(membership);

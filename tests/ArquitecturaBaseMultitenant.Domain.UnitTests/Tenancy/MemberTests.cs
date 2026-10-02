@@ -64,6 +64,23 @@ public sealed class MemberTests
     }
 
     [Fact]
+    public void A_removed_member_can_be_invited_again_without_erasing_the_previous_join_date()
+    {
+        var member = Member.Invite(Guid.CreateVersion7());
+        var joinedAtUtc = new DateTime(2026, 9, 28, 12, 0, 0, DateTimeKind.Utc);
+        Assert.True(member.Activate(joinedAtUtc).IsSuccess);
+        Assert.True(member.Remove().IsSuccess);
+
+        Assert.True(member.PrepareForInvitation().IsSuccess);
+        Assert.Equal(MemberStatus.Invited, member.Status);
+        Assert.Null(member.RemovalReason);
+        Assert.Equal(joinedAtUtc, member.JoinedAtUtc);
+        var activeMember = Member.Invite(Guid.CreateVersion7());
+        Assert.True(activeMember.Activate(joinedAtUtc).IsSuccess);
+        Assert.True(activeMember.PrepareForInvitation().IsFailure);
+    }
+
+    [Fact]
     public void Member_has_no_ownership_flag()
     {
         Assert.Null(typeof(Member).GetProperty("IsOwner"));

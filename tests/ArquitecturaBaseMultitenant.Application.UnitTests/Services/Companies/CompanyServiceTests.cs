@@ -211,8 +211,10 @@ public sealed class CompanyServiceTests
         public CompanyMembership? Added { get; private set; }
         public Task<CompanyMembership?> GetByIdAsync(Guid companyId, Guid memberId, uint expectedVersion,
             CancellationToken cancellationToken) => Task.FromResult<CompanyMembership?>(null);
-        public Task<CompanyMembership?> FindAsync(Guid companyId, Guid memberId, CancellationToken cancellationToken) =>
-            Task.FromResult<CompanyMembership?>(null);
+          public Task<CompanyMembership?> FindAsync(Guid companyId, Guid memberId, CancellationToken cancellationToken) =>
+              Task.FromResult<CompanyMembership?>(null);
+          public Task<IReadOnlyList<CompanyMembership>> ListForMemberAsync(Guid memberId,
+              CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<CompanyMembership>>([]);
         public void Add(CompanyMembership membership) => Added = membership;
         public void MarkUpdated(CompanyMembership membership) { }
         public void Remove(CompanyMembership membership) { }

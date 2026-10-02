@@ -173,6 +173,27 @@ public sealed class EmailTemplateTests
         Assert.Contains("Este correo ya no está asociado a ninguna cuenta.", deleted.TextBody);
     }
 
+    [Theory]
+    [InlineData("es-AR", "Revisá tus métodos de ingreso", "Terminó tu acceso a", "verificados")]
+    [InlineData("en-US", "Review your sign-in methods", "Your access to", "verified")]
+    public async Task Membership_end_notice_explains_managed_email_and_links_to_account(string cultureCode,
+        string subject, string body, string verified)
+    {
+        var profile = await new CultureProfiles(new JsonReferenceDataCatalog()).LoadAsync(cultureCode, Ct);
+        var renderer = new EmailTemplateRenderer(Options.Create(new EmailOptions { AppName = "ArquitecturaBase" }));
+        var notice = new AccountNotice.ReviewLoginMethods("Delta <Sur>", "https://example.test/cuenta")
+        { RecipientName = "Lucía" };
+
+        var message = await renderer.RenderAccountNoticeAsync("other-method@example.test", notice, profile, Ct);
+
+        Assert.Equal(subject, message.Subject);
+        Assert.Contains(body, message.TextBody);
+        Assert.Contains(verified, message.TextBody, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("https://example.test/cuenta", message.TextBody);
+        Assert.Contains("Delta &lt;Sur&gt;", message.HtmlBody);
+        Assert.DoesNotContain("Delta <Sur>", message.HtmlBody);
+    }
+
     [Fact]
     public async Task Login_method_change_uses_the_three_approved_variants_and_escapes_personal_data()
     {

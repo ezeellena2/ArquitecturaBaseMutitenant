@@ -12,7 +12,7 @@ public abstract record AccountNotice
         string MaskedMethod, DateTime OccurredAtUtc, string TimeZoneId, string ActionUrl)
         : AccountNotice;
 
-    public sealed record ReviewLoginMethods(string OrganizationName) : AccountNotice;
+    public sealed record ReviewLoginMethods(string OrganizationName, string ActionUrl) : AccountNotice;
 
     public sealed record DeletionRequested(DateTime RequestedAtUtc, DateTime ScheduledForUtc,
         string TimeZoneId, string ActionUrl) : AccountNotice;

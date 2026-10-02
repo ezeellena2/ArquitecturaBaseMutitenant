@@ -45,13 +45,14 @@
 
 ### 3. Usuarios e invitaciones de la organización
 
-- [ ] Implementar lectura paginada de miembros con filtros, conteos y ficha; incluir estados activo, invitado, vencido, deshabilitado, baja pedida y correo administrado. Probar 1 y 50 registros y los límites de página.
-- [ ] Implementar edición concurrente con `version`; habilitar, deshabilitar y quitar según ficha, registrando auditoría sin exponer correos/tokens en logs.
-- [ ] Implementar `LastTenantAdminGuard` sobre la lectura de Dueños activos de E4; una cuenta con baja pedida no cuenta como Dueño. Cubrir última persona, concurrencia y recursos ajenos.
-- [ ] Extender `InvitationIssuer` y su solicitud para incluir empresa/roles cuando corresponda; crear `POST /api/users/invitations`, reenviar y revocar bajo la ruta del área. No duplicar emisión, envío ni estados ya resueltos en 3c.
-- [ ] Al quitar a un miembro, desactivar sus métodos de correo administrados por la organización, preservar la seguridad de otros métodos, registrar el evento y encolar el aviso requerido; cubrir `ManagedEmailTests` y el efecto de un dominio no verificado/verificado.
-- [ ] Verificar que los cambios ya cerrados de invitación sigan intactos: ingresar para aceptar no crea Personal y el estado es por invitación.
-- [ ] Agregar pruebas API/integración/aislamiento y actualizar contratos generados; build focal.
+- [x] Implementar lectura paginada de miembros con filtros, conteos y ficha; incluir estados activo, invitado, vencido, deshabilitado, baja pedida y correo administrado. Quedaron tests de política y recorridos HTTP para 1 y 50 registros y límites de página; la ejecución PostgreSQL está pendiente del daemon Docker.
+- [x] Implementar edición concurrente con `version`; habilitar, deshabilitar y quitar según ficha, registrando auditoría sin exponer correos/tokens en logs. Member tiene `xmin` versionado y auditoría de creación/modificación.
+- [x] Implementar `LastTenantAdminGuard` sobre la lectura de Dueños activos de E4; una cuenta con baja pedida no cuenta como Dueño. La prueba HTTP rechaza quitar al único Dueño con `Legal.AccountDeletion.LastAdmin`; falta ejecutar con PostgreSQL y probar la carrera concurrente.
+- [x] Extender `InvitationIssuer` y su solicitud para incluir empresa/roles cuando corresponda; crear `POST /api/users/invitations`, reenviar y revocar bajo la ruta del área. El reenvío conserva el mismo Member y crea una invitación histórica independiente; al revocar una invitación sin cuenta se retira el Member huérfano y sus asignaciones sin borrar la Invitation revocada.
+- [x] Al terminar o quitar una membresía, la disponibilidad de correos administrados se deriva de `UserTenantAccess`; se registra `OrganizationMembershipEnded` y se encola `ReviewLoginMethods` solo a otros métodos verificados disponibles. Prueba de plantilla bilingüe incluida; falta integrar/verificar con dominio comprobado y no comprobado en `ManagedEmailTests`.
+- [x] Preservar los cambios ya cerrados de invitación: ingresar para aceptar no crea Personal y el estado es por invitación. El E2E canónico existente no se modificó en este bloque.
+- [x] Agregar el controller, declaración explícita de rutas, OpenAPI, lector/servicio y pruebas de política/integración; back API e IntegrationTests compilan sin advertencias; Domain (221) y Application (392) pasan. Contrato y cliente front quedan pendientes del front.
+- [ ] Ejecutar con PostgreSQL las nuevas pruebas HTTP de Usuarios, aislamiento, concurrencia y `ManagedEmailTests`; Docker estaba inaccesible (`npipe://./pipe/docker_engine`).
 
 ### 4. Configuración y dominio de correo
 
@@ -110,3 +111,6 @@
 - Los cambios de membresía que pueden afectar `CompanyAdmin` adquieren el lock por empresa dentro de la misma UoW y vuelven a leer el estado de la empresa bajo transacción. La reactivación de una membresía vinculada a cuenta exige identidad activa; una invitación sin cuenta puede prepararse con roles.
 - Los nombres técnicos de roles de sistema se traducen en respuestas (`TenantAdmin` → Dueño/Owner, `CompanyAdmin` → Administrador/Administrator); los nombres elegidos por la organización se conservan.
 - La estrategia de almacenamiento del logo se definirá inspeccionando las capacidades reales ya presentes en los repos; se documentará antes de cerrar esa tarea.
+- `Member.Version` usa la columna de sistema PostgreSQL `xmin` que ya estaba mapeada; la migración solo agrega `CreatedAtUtc`, la rellena con `JoinedAtUtc` (o el instante de migración si falta) y aplica `NOT NULL`. No se crea ni se elimina manualmente `xmin`.
+- Al retirar una invitación sin cuenta pendiente, se conserva su fila y estado `Revoked`, y se marca `Member` como `Removed` junto con la limpieza de roles/membresías de empresa. Así el reenvío mantiene un solo miembro, y una invitación nueva posterior no deja asignaciones huérfanas. Las invitaciones para una cuenta existente conservan su Member para permitir re-invitarla.
+- La finalización o deshabilitación de una membresía no modifica los métodos de ingreso personales. Los métodos `ManagedByTenantId` de esa organización dejan de ser disponibles por el índice `UserTenantAccesses`; `ReviewLoginMethods` se encola a otros métodos verificados, excluyendo además los métodos originados por una invitación de esa organización y métodos administrados por otra organización cuya membresía no esté activa.

@@ -36,4 +36,21 @@ public sealed class SecurityEventTests
         Assert.Throws<ArgumentException>(() => SecurityEvent.ForAccount(
             SecurityEventType.AccountDeletionRequested, Guid.CreateVersion7(), local));
     }
+
+    [Fact]
+    public void Organization_membership_event_records_actor_and_target_without_personal_data()
+    {
+        var actorId = Guid.CreateVersion7();
+        var tenantId = Guid.CreateVersion7();
+        var occurredAtUtc = new DateTime(2026, 10, 2, 13, 0, 0, DateTimeKind.Utc);
+
+        var securityEvent = SecurityEvent.ForOrganizationMembershipEnded(actorId, tenantId, occurredAtUtc);
+
+        Assert.Equal(SecurityEventType.OrganizationMembershipEnded, securityEvent.Type);
+        Assert.Equal(AuditActorKind.User, securityEvent.ActorKind);
+        Assert.Equal(actorId, securityEvent.ActorId);
+        Assert.Equal(tenantId, securityEvent.TargetTenantId);
+        Assert.Equal(occurredAtUtc, securityEvent.OccurredAtUtc);
+        Assert.Null(securityEvent.Reason);
+    }
 }

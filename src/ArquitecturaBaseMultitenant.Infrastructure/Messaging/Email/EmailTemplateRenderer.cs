@@ -43,6 +43,11 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
         var (key, template, paragraphs, actionLabel, actionUrl, note) = notice switch
         {
             AccountNotice.LoginMethodChanged changed => await MethodChangedAsync(changed, greeting, appName, culture, cancellationToken),
+            AccountNotice.ReviewLoginMethods review => (
+                "ReviewLoginMethods", "AccountDeletionCancelled.html",
+                [NotificationTexts.Format("ReviewLoginMethods.Body", culture, greeting, review.OrganizationName)],
+                NotificationTexts.Get("Action.MyAccount", culture), review.ActionUrl,
+                NotificationTexts.Get("ReviewLoginMethods.Note", culture)),
             AccountNotice.DeletionRequested requested => await DeletionRequestedAsync(requested, greeting, appName, culture, cancellationToken),
             AccountNotice.DeletionCancelled cancelled => await DeletionCancelledAsync(cancelled, greeting, appName, culture, cancellationToken),
             AccountNotice.AccountDeleted => ("AccountDeleted", "AccountDeleted.html",

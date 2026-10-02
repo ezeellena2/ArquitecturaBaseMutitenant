@@ -116,6 +116,7 @@
   <data name="Tenancy.Tenant.ProvisioningConflict" xml:space="preserve"><value>The organization already exists with different configuration data.</value></data>
   <data name="Tenancy.Member.Inactive" xml:space="preserve"><value>Your access to this organization is disabled.</value></data>
   <data name="Tenancy.Member.InvalidTransition" xml:space="preserve"><value>The membership cannot change to that state.</value></data>
+  <data name="Tenancy.Member.NotFound" xml:space="preserve"><value>We couldn't find this person in the organization.</value></data>
   <data name="Tenancy.Access.Wrong" xml:space="preserve"><value>This access cannot perform the action.</value></data>
   <data name="Tenancy.Access.NotMember" xml:space="preserve"><value>You are not a member of this organization.</value></data>
   <data name="Tenancy.Access.ConsumerCannotCreateBusiness" xml:space="preserve"><value>Use Register your business to create an organization.</value></data>

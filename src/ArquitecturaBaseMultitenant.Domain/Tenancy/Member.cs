@@ -78,6 +78,15 @@ public sealed class Member : Entity, ITenantOwned, IAuditable, IVersioned
         return Result.Success();
     }
 
+    public Result PrepareForInvitation()
+    {
+        if (Status == MemberStatus.Invited) return Result.Success();
+        if (Status != MemberStatus.Removed) return MemberErrors.InvalidTransition;
+        Status = MemberStatus.Invited;
+        RemovalReason = null;
+        return Result.Success();
+    }
+
     public Result Remove(MemberRemovalReason? reason = null)
     {
         if (Status == MemberStatus.Removed)

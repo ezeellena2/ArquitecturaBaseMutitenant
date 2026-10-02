@@ -12,5 +12,7 @@ public interface IInvitationRepository
     Task<Invitation?> GetPendingByDestinationAsync(Email destination, CancellationToken cancellationToken);
     Task<IReadOnlyList<Invitation>> ListPendingByDestinationsAsync(IReadOnlyCollection<Email> destinations,
         CancellationToken cancellationToken);
+    Task<IReadOnlyList<Invitation>> ListPendingForMemberAsync(Guid memberId,
+        CancellationToken cancellationToken);
     void Add(Invitation invitation);
 }
