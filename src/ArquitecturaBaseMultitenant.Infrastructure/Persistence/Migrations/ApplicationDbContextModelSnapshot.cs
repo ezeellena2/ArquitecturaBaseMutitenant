@@ -358,6 +358,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasKey("TenantId", "Id");
 
+                    b.HasIndex("TenantId", "CompanyId");
+
                     b.HasIndex("TenantId", "NormalizedName")
                         .IsUnique();
 
@@ -398,6 +400,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("TenantId", "Id");
+
+                    b.HasIndex("TenantId", "CompanyId");
 
                     b.HasIndex("TenantId", "MemberId", "RoleId")
                         .IsUnique()
@@ -1090,6 +1094,53 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.ToTable("Companies", "tenant");
                 });
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Tenancy.CompanyMembership", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("MemberId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ModifiedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("TenantId", "Id");
+
+                    b.HasIndex("TenantId", "MemberId");
+
+                    b.HasIndex("TenantId", "CompanyId", "MemberId")
+                        .IsUnique();
+
+                    b.ToTable("CompanyMemberships", "tenant");
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Tenancy.Member", b =>
                 {
                     b.Property<Guid>("TenantId")
@@ -1725,10 +1776,20 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Company", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Authorization.RoleAssignment", b =>
                 {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Company", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Member", null)
                         .WithMany()
                         .HasForeignKey("TenantId", "MemberId")
@@ -1972,6 +2033,21 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasOne("ArquitecturaBaseMultitenant.Domain.ReferenceData.ReferenceTimeZone", null)
                         .WithMany()
                         .HasForeignKey("TimeZoneId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Tenancy.CompanyMembership", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Company", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Member", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "MemberId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Common;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TenantEntity = ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant;
@@ -24,5 +25,7 @@ internal sealed class RoleConfiguration : IEntityTypeConfiguration<Role>
         builder.HasIndex(role => new { role.TenantId, role.CreatedAtUtc, role.Id });
         builder.HasOne<TenantEntity>().WithMany()
             .HasForeignKey(role => role.TenantId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Company>().WithMany()
+            .HasForeignKey(role => new { role.TenantId, role.CompanyId }).OnDelete(DeleteBehavior.Restrict);
     }
 }

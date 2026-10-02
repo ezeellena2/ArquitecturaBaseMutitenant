@@ -22,7 +22,9 @@ public sealed class CompanyPersistenceTests(ApiFactory factory)
         var otherTenant = await CreateBusinessTenantAsync("Empresa de prueba B");
         var company = Company.Create("  Taller Norte  ", taxId: null, "UTC").Value;
         company.SetStatus(CompanyStatus.Inactive);
-        await AddCompanyAsync(firstTenant.Id, company);
+        var member = Member.Invite();
+        var membership = CompanyMembership.Create(company.Id, member.Id).Value;
+        await AddCompanyAsync(firstTenant.Id, company, member, membership);
 
         await using var firstConnection = await RuntimeRoleConnection.OpenAsync(factory.RuntimeConnectionString,
             firstTenant.Id, Ct);
@@ -31,6 +33,8 @@ public sealed class CompanyPersistenceTests(ApiFactory factory)
 
         Assert.Equal(1, await CountAsync(firstConnection, company.Id));
         Assert.Equal(0, await CountAsync(otherConnection, company.Id));
+        Assert.Equal(1, await CountMembershipsAsync(firstConnection, company.Id));
+        Assert.Equal(0, await CountMembershipsAsync(otherConnection, company.Id));
         Assert.True(company.Version > 0);
         Assert.Equal(CompanyStatus.Inactive, company.Status);
 
@@ -58,7 +62,8 @@ public sealed class CompanyPersistenceTests(ApiFactory factory)
         return tenant;
     }
 
-    private async Task AddCompanyAsync(Guid tenantId, Company company)
+    private async Task AddCompanyAsync(Guid tenantId, Company company, Member member,
+        CompanyMembership membership)
     {
         await using var scope = factory.Services.CreateAsyncScope();
         var services = scope.ServiceProvider;
@@ -66,6 +71,8 @@ public sealed class CompanyPersistenceTests(ApiFactory factory)
         await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
         {
             services.GetRequiredService<ICompanyRepository>().Add(company);
+            services.GetRequiredService<IMemberRepository>().Add(member);
+            services.GetRequiredService<ICompanyMembershipRepository>().Add(membership);
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, Ct);
     }
@@ -73,6 +80,14 @@ public sealed class CompanyPersistenceTests(ApiFactory factory)
     private static async Task<int> CountAsync(NpgsqlConnection connection, Guid companyId)
     {
         await using var command = new NpgsqlCommand("SELECT count(*) FROM tenant.\"Companies\" WHERE \"Id\" = @id",
+            connection);
+        command.Parameters.AddWithValue("id", companyId);
+        return checked((int)(long)(await command.ExecuteScalarAsync(Ct))!);
+    }
+
+    private static async Task<int> CountMembershipsAsync(NpgsqlConnection connection, Guid companyId)
+    {
+        await using var command = new NpgsqlCommand("SELECT count(*) FROM tenant.\"CompanyMemberships\" WHERE \"CompanyId\" = @id",
             connection);
         command.Parameters.AddWithValue("id", companyId);
         return checked((int)(long)(await command.ExecuteScalarAsync(Ct))!);

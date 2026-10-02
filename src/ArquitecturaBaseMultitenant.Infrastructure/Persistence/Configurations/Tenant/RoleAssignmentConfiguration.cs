@@ -25,5 +25,8 @@ internal sealed class RoleAssignmentConfiguration : IEntityTypeConfiguration<Rol
         builder.HasOne<Role>().WithMany()
             .HasForeignKey(assignment => new { assignment.TenantId, assignment.RoleId })
             .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Company>().WithMany()
+            .HasForeignKey(assignment => new { assignment.TenantId, assignment.CompanyId })
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
