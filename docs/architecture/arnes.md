@@ -56,6 +56,7 @@ Cada fila es una carpeta que lleva `AGENTS.md` + `CLAUDE.md`. Los punteros se es
 | `Domain/` | entidades, value objects, `<X>Errors`, catálogos. Sin paquetes, sin EF ni Identity | capas-y-flujo, result-y-errores, persistencia-ef | `Domain/Authorization/Role.cs` (E4) |
 | `Domain/Common/` | `Entity`, `ValueObject`; marcas `IAuditable`, `ISoftDeletable`, `IVersioned` y las de las tres clases de datos: `ITenantOwned` (+ `ICompanyOwned`), `IPublishedByBusiness`, `IConsumerBusinessShared`; `Party`/`PartyPolicy`, `NotAuditedAttribute` y `TextLimits`. **No** se agregan marcas sin ADR | multitenancy, auditoria, concurrencia, textos-libres | — |
 | `Domain/ValueObjects/` | `Money`, `Email`, `PhoneNumber`, `TaxId`: un dato con forma propia es un value object, nunca un `string` suelto | numeros-y-moneda, emails, telefonos, identificacion-fiscal | `Money.cs`, `Email.cs` (E1) |
+| `Domain/ValueObjects/TaxIdValidators/` | Algoritmos de identificación fiscal puros; los tipos habilitados salen del catálogo en Application | identificacion-fiscal, datos-de-referencia | `ArgentineCuitValidator.cs` (E6) |
 | `Domain/ReferenceData/` | entidades globales de los cinco catálogos y sus traducciones, sin dependencia de Application ni RLS | datos-de-referencia, capas-y-flujo | `Currency.cs` (E2) |
 | `Domain/Features/` | catálogo de módulos | modulos-habilitados | `Features.cs` (E5) |
 | `Domain/<Módulo>/` | entidades y `<X>Errors` del módulo (hoy `Domain/WhatsApp/`); se borra junto con sus `Modules/` | modulos | — |

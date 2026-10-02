@@ -89,6 +89,7 @@
   <data name="Legal.Document.NotFound" xml:space="preserve"><value>The legal document is not available.</value></data>
   <data name="ReferenceData.Currency.Invalid" xml:space="preserve"><value>Enter a valid currency code.</value></data>
   <data name="ReferenceData.Culture.Invalid" xml:space="preserve"><value>Enter a valid culture.</value></data>
+  <data name="TaxIds.TaxId.Invalid" xml:space="preserve"><value>Enter a valid tax identification number.</value></data>
   <data name="Tenancy.Tenant.Suspended" xml:space="preserve"><value>The organization is suspended.</value></data>
   <data name="Tenancy.Tenant.PendingApproval" xml:space="preserve"><value>The organization is awaiting approval.</value></data>
   <data name="Tenancy.Tenant.Provisioning" xml:space="preserve"><value>The organization is being provisioned.</value></data>
