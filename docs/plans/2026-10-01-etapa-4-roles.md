@@ -54,10 +54,10 @@ No se crean cuentas, espacios personales ni organizaciones de ejemplo en Develop
 
 ### T03 · Dominio de autorización y roles
 
-- [ ] Crear primero tests rojos en `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Authorization/RoleTests.cs` y `RoleAssignmentTests.cs`.
-- [ ] Implementar en `src/ArquitecturaBaseMultitenant.Domain/Authorization/` `Permissions`, `PersonalPermissions`, `PlatformPermissions`, `Role`, `RoleScope`, `RoleAssignment`, `SystemRoles` y `RoleErrors`; añadir `AGENTS.md` y `CLAUDE.md` a la carpeta nueva.
-- [ ] `Role` es `ITenantOwned` y `IVersioned`, valida nombre/ámbito/empresa/permisos, y solo usa errores `Roles.Role.*`. `TenantAdmin` y `CompanyAdmin` son inmutables; el Dueño nunca se deriva de Member.
-- [ ] Cubrir unidades: `Organization`, `AnyCompany`, `SpecificCompany`; empresa requerida/prohibida según alcance; límites/nombres/permisos; estado de rol de sistema y versión.
+- [x] Crear primero tests rojos en `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Authorization/RoleTests.cs` y `RoleAssignmentTests.cs`.
+- [x] Implementar en `src/ArquitecturaBaseMultitenant.Domain/Authorization/` `Permissions`, `PersonalPermissions`, `PlatformPermissions`, `Role`, `RoleScope`, `RoleAssignment`, `SystemRoles` y `RoleErrors`; añadir `AGENTS.md` y `CLAUDE.md` a la carpeta nueva.
+- [x] `Role` es `ITenantOwned` y `IVersioned`, valida nombre/ámbito/empresa/permisos, y solo usa errores `Roles.Role.*`. `TenantAdmin` y `CompanyAdmin` son inmutables; el Dueño nunca se deriva de Member.
+- [x] Cubrir unidades: `Organization`, `AnyCompany`, `SpecificCompany`; empresa requerida/prohibida según alcance; límites/nombres/permisos; estado de rol de sistema y versión.
 
 ### T04 · Persistencia privada, migración, sistema de roles y perfiles
 
