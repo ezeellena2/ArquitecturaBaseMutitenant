@@ -35,6 +35,8 @@ public sealed class ExplicitRouteInventoryTests(ApiFactory factory)
         "GET /api/users/paged",
         "GET /api/users/filter-counts",
         "GET /api/users/{memberid:guid}",
+        "GET /api/organization/settings",
+        "PUT /api/organization/settings",
         "POST /api/users/invitations",
         "POST /api/users/invitations/{invitationid:guid}/resend",
         "DELETE /api/users/invitations/{invitationid:guid}",

@@ -85,7 +85,11 @@ public sealed class TenantProvisionerTests
 
     private sealed class FakeTenantSettingsRepository(TenantSettings? current) : ITenantSettingsRepository
     {
-        public Task<TenantSettings?> GetCurrentAsync(CancellationToken cancellationToken) => Task.FromResult(current);
+        public Task<TenantSettings?> GetCurrentAsync(CancellationToken cancellationToken) =>
+            Task.FromResult(current);
+        public Task<TenantSettings?> GetCurrentAsync(uint expectedVersion, CancellationToken cancellationToken) =>
+            Task.FromResult(current);
         public void Add(TenantSettings settings) { }
+        public void MarkUpdated(TenantSettings settings) { }
     }
 }

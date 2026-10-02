@@ -14,8 +14,18 @@ internal sealed class TenantSettingsRepository(
     {
         context.RequireTransaction();
         var tenantId = tenantContext.RequiredTenantId;
-        return context.TenantSettings.SingleOrDefaultAsync(
-            settings => settings.TenantId == tenantId, cancellationToken);
+        return context.TenantSettings.SingleOrDefaultAsync(row => row.TenantId == tenantId, cancellationToken);
+    }
+
+    public async Task<TenantSettings?> GetCurrentAsync(uint expectedVersion, CancellationToken cancellationToken)
+    {
+        context.RequireTransaction();
+        var tenantId = tenantContext.RequiredTenantId;
+        var settings = await context.TenantSettings.SingleOrDefaultAsync(
+            row => row.TenantId == tenantId, cancellationToken);
+        if (settings is not null)
+            context.Entry(settings).Property(candidate => candidate.Version).OriginalValue = expectedVersion;
+        return settings;
     }
 
     public void Add(TenantSettings settings)
@@ -24,5 +34,13 @@ internal sealed class TenantSettingsRepository(
         context.RequireTransaction();
         _ = tenantContext.RequiredTenantId;
         context.TenantSettings.Add(settings);
+    }
+
+    public void MarkUpdated(TenantSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        context.RequireTransaction();
+        _ = tenantContext.RequiredTenantId;
+        context.Entry(settings).State = EntityState.Modified;
     }
 }

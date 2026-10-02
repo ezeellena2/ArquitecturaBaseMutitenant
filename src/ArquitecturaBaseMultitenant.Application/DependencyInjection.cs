@@ -11,6 +11,7 @@ using ArquitecturaBaseMultitenant.Application.Services.Invitations;
 using ArquitecturaBaseMultitenant.Application.Services.Roles;
 using ArquitecturaBaseMultitenant.Application.Services.Companies;
 using ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
+using ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -29,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<ICompanyService, CompanyService>();
         services.AddScoped<ICompanyMembershipService, CompanyMembershipService>();
         services.AddScoped<IOrganizationUserService, OrganizationUserService>();
+        services.AddScoped<IOrganizationSettingsService, OrganizationSettingsService>();
         services.AddScoped<ILastCompanyAdminGuard, LastCompanyAdminGuard>();
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddScoped<IPlatformPermissionService, PlatformPermissionService>();

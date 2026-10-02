@@ -7,5 +7,9 @@ public interface ITenantSettingsRepository
 {
     Task<TenantSettings?> GetCurrentAsync(CancellationToken cancellationToken);
 
+    Task<TenantSettings?> GetCurrentAsync(uint expectedVersion, CancellationToken cancellationToken);
+
     void Add(TenantSettings settings);
+
+    void MarkUpdated(TenantSettings settings);
 }

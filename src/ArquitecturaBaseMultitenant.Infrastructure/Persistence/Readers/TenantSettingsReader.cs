@@ -35,10 +35,11 @@ internal sealed class TenantSettingsLoader(ApplicationDbContext context, ITenant
     public async Task<TenantSettingsRow?> FindAsync(Guid tenantId, CancellationToken cancellationToken)
     {
         using var scope = tenantScope.Enter(tenantId);
-        return await context.TenantSettings.AsNoTracking()
-            .Where(settings => settings.TenantId == tenantId)
-            .Select(settings => new TenantSettingsRow(settings.TenantId, settings.DefaultCulture,
-                settings.DefaultTimeZoneId, settings.DefaultCurrency))
+        return await (from settings in context.TenantSettings.AsNoTracking()
+            join tenant in context.Tenants.AsNoTracking() on settings.TenantId equals tenant.Id
+            where settings.TenantId == tenantId
+            select new TenantSettingsRow(settings.TenantId, settings.DefaultCulture,
+                settings.DefaultTimeZoneId, settings.DefaultCurrency, tenant.Name, settings.Version))
             .SingleOrDefaultAsync(cancellationToken);
     }
 }

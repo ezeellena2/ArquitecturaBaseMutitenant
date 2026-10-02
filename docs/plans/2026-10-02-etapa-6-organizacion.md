@@ -56,7 +56,8 @@
 
 ### 4. Configuración y dominio de correo
 
-- [ ] Extender settings por organización con nombre, cultura, zona horaria y moneda desde catálogos, validando recursos; edición con concurrencia cuando la ficha lo requiera.
+- [x] Extender settings por organización con nombre, cultura, zona horaria y moneda desde catálogos; el formulario usa `TenantSettings.Version` y actualiza nombre/preferencias en una sola UoW. API, traducciones y prueba PostgreSQL de lectura/guardado/409 implementadas; build focal sin advertencias.
+- [ ] Ejecutar `OrganizationSettingsTests` con PostgreSQL para verificar aislamiento, permisos, invalidación de caché y 409; falta Docker.
 - [ ] Crear `platform.TenantDomains`, dominio global único y normalizado, token TXT de un solo propósito, estados `Pending | Verified`, persistencia, reader y auditoría.
 - [ ] Crear `TenantDomainService`, puerto `IDnsTxtLookup` y adaptador; tests deterministas del puerto para registro, verificación correcta/incorrecta, dominio en uso, retiro y reintentos. Nunca imprimir el token.
 - [ ] Al verificarse un dominio, asignar `ManagedByTenantId` a métodos existentes; al crear/verificar un nuevo LoginMethod, consultar dominio verificado y asignarlo sin abrir otro acceso.
@@ -114,3 +115,4 @@
 - `Member.Version` usa la columna de sistema PostgreSQL `xmin` que ya estaba mapeada; la migración solo agrega `CreatedAtUtc`, la rellena con `JoinedAtUtc` (o el instante de migración si falta) y aplica `NOT NULL`. No se crea ni se elimina manualmente `xmin`.
 - Al retirar una invitación sin cuenta pendiente, se conserva su fila y estado `Revoked`, y se marca `Member` como `Removed` junto con la limpieza de roles/membresías de empresa. Así el reenvío mantiene un solo miembro, y una invitación nueva posterior no deja asignaciones huérfanas. Las invitaciones para una cuenta existente conservan su Member para permitir re-invitarla.
 - La finalización o deshabilitación de una membresía no modifica los métodos de ingreso personales. Los métodos `ManagedByTenantId` de esa organización dejan de ser disponibles por el índice `UserTenantAccesses`; `ReviewLoginMethods` se encola a otros métodos verificados, excluyendo además los métodos originados por una invitación de esa organización y métodos administrados por otra organización cuya membresía no esté activa.
+- La edición de nombre, cultura, zona y moneda usa una versión única de `TenantSettings`; se fuerza su `UPDATE` aunque solo cambie el nombre global de `Tenant`, así `xmin` protege todo el guardado atómico sin una versión manual adicional ni una transacción parcial.
