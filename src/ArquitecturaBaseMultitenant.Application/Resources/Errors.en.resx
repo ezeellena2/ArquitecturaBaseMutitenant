@@ -104,6 +104,9 @@
   <data name="Tenancy.Company.NameRequired" xml:space="preserve"><value>Enter the company name.</value></data>
   <data name="Tenancy.Company.NameTooLong" xml:space="preserve"><value>The company name is too long.</value></data>
   <data name="Tenancy.Company.TimeZoneRequired" xml:space="preserve"><value>Choose a time zone.</value></data>
+  <data name="Tenancy.Company.TimeZoneUnavailable" xml:space="preserve"><value>Choose an available time zone.</value></data>
+  <data name="Tenancy.Company.TaxIdAlreadyUsed" xml:space="preserve"><value>A company already has this tax identification number.</value></data>
+  <data name="Tenancy.Company.NotFound" xml:space="preserve"><value>We could not find this company.</value></data>
   <data name="Companies.Membership.NotFound" xml:space="preserve"><value>We could not find this company membership.</value></data>
   <data name="Companies.Membership.AlreadyExists" xml:space="preserve"><value>This person already belongs to the company.</value></data>
   <data name="Companies.Membership.MemberInactive" xml:space="preserve"><value>Only a person with active access to the organization can be added.</value></data>

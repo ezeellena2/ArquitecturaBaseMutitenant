@@ -104,6 +104,9 @@
   <data name="Tenancy.Company.NameRequired" xml:space="preserve"><value>Escribí el nombre de la empresa.</value></data>
   <data name="Tenancy.Company.NameTooLong" xml:space="preserve"><value>El nombre de la empresa es demasiado largo.</value></data>
   <data name="Tenancy.Company.TimeZoneRequired" xml:space="preserve"><value>Elegí una zona horaria.</value></data>
+  <data name="Tenancy.Company.TimeZoneUnavailable" xml:space="preserve"><value>Elegí una zona horaria disponible.</value></data>
+  <data name="Tenancy.Company.TaxIdAlreadyUsed" xml:space="preserve"><value>Ya hay una empresa con esa identificación fiscal.</value></data>
+  <data name="Tenancy.Company.NotFound" xml:space="preserve"><value>No encontramos esta empresa.</value></data>
   <data name="Companies.Membership.NotFound" xml:space="preserve"><value>No encontramos esta membresía de empresa.</value></data>
   <data name="Companies.Membership.AlreadyExists" xml:space="preserve"><value>Esta persona ya pertenece a la empresa.</value></data>
   <data name="Companies.Membership.MemberInactive" xml:space="preserve"><value>Solo podés sumar a una persona con acceso activo a la organización.</value></data>

@@ -35,7 +35,8 @@
 
 - [x] Crear `Company`, configuración EF/migración e índices tenant-owned; la prueba de persistencia quedó bloqueada por falta del daemon Docker y se ejecutará en la puerta.
 - [x] Crear `TaxId` y `ArgentineCuitValidator` según `docs/rules/identificacion-fiscal.md`; agregar `TaxIdTests` y pruebas de propiedades para dígito, normalización, valor inválido y datos históricos nulos. Commits `234fc72`.
-- [ ] Implementar listado, alta, edición concurrente (`version` y 409), baja permitida por regla escrita, zona horaria y ficha; añadir conteos/listados para 1 y 50 registros en base de prueba aislada.
+- [x] Implementar servicio y API de listado paginado, conteos por estado, ficha, alta, edición concurrente (`version` y 409) y cambio de estado activo/inactivo; validar zona horaria y normalizar CUIT desde catálogos. Pruebas unitarias dirigidas para listado, conteos, alta, primer Administrador y concurrencia de estado. Commit pendiente.
+- [ ] Agregar integración con PostgreSQL para tenant isolation, estado/versiones, TaxId único y conteos/listados con 1 y 50 empresas.
 - [ ] Implementar membresías de empresa y asignación de roles mediante `RoleAssignment.CompanyId`, reutilizando catálogos y `RoleService`; filtrar empresas/roles por tenant y nunca aceptar un ID ajeno.
 - [ ] Proteger quitar o deshabilitar al último `CompanyAdmin` activo; cubrir concurrencia en dos solicitudes y miembros con baja pedida.
 - [ ] Conectar el catálogo de empresas y roles a los flujos de Invitaciones, manteniendo los estados individuales de cada invitación.
@@ -101,5 +102,7 @@
 - El lienzo v60 es la fuente visual; el texto del plan maestro que cita lienzo v35/67 tableros está desactualizado y no se usará como catálogo visual.
 - El salto `4 → 6` no cierra E5: el arnés debe representar etapas cerradas como conjunto explícito en las comprobaciones existentes, no con una comparación ordinal que marque etapas intermedias.
 - La pantalla de alta empresarial soporta solo los canales que publica el backend. El botón de WhatsApp no se conecta antes de E8; se usará correo y Google.
-- Las pantallas de Organización aún en aprobación quedan como bloqueo exclusivo del frontend de esas pantallas. El backend, contratos, alta empresarial validada y tareas sin dependencia visual pueden avanzar.
+- La aprobación agrupada del 2026-10-02 habilita la implementación de todo el grupo Organización incluido móviles y diálogos; no se redibujan tableros existentes.
+- Las empresas no se borran físicamente desde E6: se puede cambiar su estado a Inactiva con `version`, de acuerdo con el diálogo validado, que conserva datos y miembros.
+- Al crear una empresa, el miembro activo que la creó queda como miembro de la empresa y recibe el rol de sistema `CompanyAdmin`, para que la empresa nazca con un Administrador.
 - La estrategia de almacenamiento del logo se definirá inspeccionando las capacidades reales ya presentes en los repos; se documentará antes de cerrar esa tarea.

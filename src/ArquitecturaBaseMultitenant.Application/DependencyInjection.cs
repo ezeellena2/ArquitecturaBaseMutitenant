@@ -9,6 +9,7 @@ using ArquitecturaBaseMultitenant.Application.Services.Legal;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Application.Services.Invitations;
 using ArquitecturaBaseMultitenant.Application.Services.Roles;
+using ArquitecturaBaseMultitenant.Application.Services.Companies;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -24,6 +25,8 @@ public static class DependencyInjection
         services.AddScoped<IReferenceDataService, ReferenceDataService>();
         services.AddScoped<ITenantSlugAvailabilityService, TenantSlugAvailabilityService>();
         services.AddScoped<IRoleService, RoleService>();
+        services.AddScoped<ICompanyService, CompanyService>();
+        services.AddScoped<ICompanyService, CompanyService>();
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddScoped<IPlatformPermissionService, PlatformPermissionService>();
         services.AddScoped<IOutboxDispatchService, OutboxDispatchService>();
