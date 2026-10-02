@@ -67,6 +67,19 @@ public sealed class RolesTests(ApiFactory factory)
         Assert.Equal(1, ownerRole.GetProperty("userCount").GetInt32());
         var ownerRoleId = ownerRole.GetProperty("id").GetGuid();
 
+        using var organizationRolesResponse = await client.GetAsync("/api/roles/paged?scope=Organization", Ct);
+        Assert.Equal(HttpStatusCode.OK, organizationRolesResponse.StatusCode);
+        using var organizationRolesJson = JsonDocument.Parse(await organizationRolesResponse.Content.ReadAsStringAsync(Ct));
+        Assert.All(organizationRolesJson.RootElement.GetProperty("items").EnumerateArray(), role =>
+            Assert.Equal(nameof(RoleScope.Organization), role.GetProperty("scope").GetString()));
+
+        using var companyRolesResponse = await client.GetAsync("/api/roles/paged?scope=Company", Ct);
+        Assert.Equal(HttpStatusCode.OK, companyRolesResponse.StatusCode);
+        using var companyRolesJson = JsonDocument.Parse(await companyRolesResponse.Content.ReadAsStringAsync(Ct));
+        Assert.All(companyRolesJson.RootElement.GetProperty("items").EnumerateArray(), role =>
+            Assert.NotEqual(nameof(RoleScope.Organization), role.GetProperty("scope").GetString()));
+        Assert.NotEmpty(companyRolesJson.RootElement.GetProperty("items").EnumerateArray());
+
         var roleName = "Lectura " + Guid.NewGuid().ToString("N");
         using var created = await AccountJourney.PostAsync(client, "/api/roles", new
         {

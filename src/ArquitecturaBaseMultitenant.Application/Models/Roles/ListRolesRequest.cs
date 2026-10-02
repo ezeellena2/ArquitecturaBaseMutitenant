@@ -6,4 +6,6 @@ namespace ArquitecturaBaseMultitenant.Application.Models.Roles;
 public sealed record ListRolesRequest : PagedRequest
 {
     public static readonly IReadOnlyCollection<string> SortableFields = ["name", "createdAtUtc"];
+
+    public RoleScopeFilter? Scope { get; init; }
 }

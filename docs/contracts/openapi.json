@@ -506,6 +506,13 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "Scope",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/RoleScopeFilter"
+            }
           }
         ],
         "responses": {
@@ -4209,6 +4216,17 @@
         ],
         "type": "string",
         "description": "Ámbito de un rol de organización."
+      },
+      "RoleScopeFilter": {
+        "enum": [
+          "Organization",
+          "Company",
+          null
+        ],
+        "type": [
+          "null",
+          "string"
+        ]
       },
       "SignupHttpRequest": {
         "required": [

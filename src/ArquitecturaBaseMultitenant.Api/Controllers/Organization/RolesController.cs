@@ -32,6 +32,7 @@ public sealed class RolesController(IRoleService service) : ControllerBase
             PageSize = query.PageSize ?? PagedRequest.DefaultPageSize,
             Sort = query.Sort,
             Search = query.Search,
+            Scope = query.Scope,
         }, cancellationToken)).ToActionResult(this);
 
     [HttpGet("{id:guid}")]

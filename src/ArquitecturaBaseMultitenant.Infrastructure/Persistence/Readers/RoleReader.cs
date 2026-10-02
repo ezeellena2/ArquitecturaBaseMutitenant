@@ -35,7 +35,14 @@ internal sealed class RoleReader(ApplicationDbContext context, ITenantContext te
         ArgumentNullException.ThrowIfNull(request);
         var tenantId = tenantContext.RequiredTenantId;
         var roles = context.Roles.AsNoTracking().Where(role => role.TenantId == tenantId)
-            .ApplySearch(request.Search, role => role.Name, role => role.Description)
+            .ApplySearch(request.Search, role => role.Name, role => role.Description);
+        roles = request.Scope switch
+        {
+            RoleScopeFilter.Organization => roles.Where(role => role.Scope == RoleScope.Organization),
+            RoleScopeFilter.Company => roles.Where(role => role.Scope != RoleScope.Organization),
+            _ => roles,
+        };
+        roles = roles
             .ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort, role => role.Id);
         var page = await roles.ToPagedResultAsync(request, cancellationToken);
         if (page.Items.Count == 0)
