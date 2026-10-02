@@ -10,6 +10,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Legal;
 using ArquitecturaBaseMultitenant.Application.Services.Legal;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
+using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
@@ -62,6 +63,80 @@ public sealed class AccountDeletionTests(ApiFactory factory)
         Assert.Null((await context.ReauthTickets.AsNoTracking().SingleAsync(row => row.Id == ticket.Id, Ct)).ConsumedAtUtc);
     }
 
+    [Fact]
+    public async Task Sole_business_owner_cannot_request_deletion_or_consume_ownership_ticket()
+    {
+        using var client = CreateClient();
+        var account = await AccountJourney.RegisterAsync(factory, client, Ct);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var work = services.GetRequiredService<IUnitOfWork>();
+        var business = Tenant.CreateBusiness("Organización con única Dueña", false);
+        business.Activate();
+        using (services.GetRequiredService<ITenantScope>().Enter(business.Id))
+            await work.ExecuteInTransactionAsync(ct =>
+            {
+                services.GetRequiredService<TenantSpaceProvisioner>().Stage(business,
+                    TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"), [account.UserId]);
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+        var secret = await IssueDeletionTicketAsync(services, context, work, account.UserId);
+
+        using var response = await AccountJourney.PostAsync(client, "/api/me/deletion",
+            new { reason = "Ya no la uso", reauthTicket = secret }, Ct);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        using var problem = await response.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+        Assert.Equal("Legal.AccountDeletion.LastAdmin", problem!.RootElement.GetProperty("code").GetString());
+        Assert.Equal(UserStatus.Active, (await services.GetRequiredService<IUserRepository>()
+            .GetByIdAsync(account.UserId, Ct))!.Status);
+        Assert.Null(await context.ReauthTickets.AsNoTracking().Where(row => row.UserId == account.UserId)
+            .Select(row => row.ConsumedAtUtc).SingleAsync(Ct));
+    }
+
+    [Fact]
+    public async Task Business_owner_can_request_deletion_when_another_active_owner_exists()
+    {
+        using var client = CreateClient();
+        using var secondClient = CreateClient();
+        var account = await AccountJourney.RegisterAsync(factory, client, Ct);
+        var secondAccount = await AccountJourney.RegisterAsync(factory, secondClient, Ct);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var work = services.GetRequiredService<IUnitOfWork>();
+        var tenantScope = services.GetRequiredService<ITenantScope>();
+        var business = Tenant.CreateBusiness("Organización con dos Dueños", false);
+        business.Activate();
+        using (tenantScope.Enter(business.Id))
+        {
+            await work.ExecuteInTransactionAsync(ct =>
+            {
+                services.GetRequiredService<TenantSpaceProvisioner>().Stage(business,
+                    TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"), [account.UserId]);
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+            await work.ExecuteInTransactionAsync(async ct =>
+            {
+                var member = Member.Invite(secondAccount.UserId);
+                Assert.True(member.Activate(services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime).IsSuccess);
+                context.Members.Add(member);
+                var tenantAdmin = await context.Roles.SingleAsync(role => role.Name == SystemRoles.TenantAdmin, ct);
+                context.RoleAssignments.Add(RoleAssignment.Assign(member.Id, tenantAdmin, null).Value);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+        var secret = await IssueDeletionTicketAsync(services, context, work, account.UserId);
+
+        using var response = await AccountJourney.PostAsync(client, "/api/me/deletion",
+            new { reason = "Ya no la uso", reauthTicket = secret }, Ct);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(UserStatus.PendingDeletion, (await services.GetRequiredService<IUserRepository>()
+            .GetByIdAsync(account.UserId, Ct))!.Status);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -95,7 +170,9 @@ public sealed class AccountDeletionTests(ApiFactory factory)
     public async Task Request_commits_grace_and_revokes_consumer_business_and_cookie_sessions()
     {
         using var client = CreateClient();
+        using var secondClient = CreateClient();
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
+        var secondOwner = await AccountJourney.RegisterAsync(factory, secondClient, Ct);
         var consumerToken = client.DefaultRequestHeaders.Authorization!.Parameter;
         await using var scope = factory.Services.CreateAsyncScope();
         var services = scope.ServiceProvider;
@@ -104,12 +181,23 @@ public sealed class AccountDeletionTests(ApiFactory factory)
         var business = Tenant.CreateBusiness("Empresa baja HTTP", false);
         business.Activate();
         using (services.GetRequiredService<ITenantScope>().Enter(business.Id))
+        {
             await work.ExecuteInTransactionAsync(ct =>
             {
                 services.GetRequiredService<TenantSpaceProvisioner>().Stage(business,
                     TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"), [account.UserId]);
                 return Task.FromResult(Result.Success());
             }, CommitPolicy.OnSuccess, Ct);
+            await work.ExecuteInTransactionAsync(async ct =>
+            {
+                var member = Member.Invite(secondOwner.UserId);
+                Assert.True(member.Activate(services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime).IsSuccess);
+                context.Members.Add(member);
+                var tenantAdmin = await context.Roles.SingleAsync(role => role.Name == SystemRoles.TenantAdmin, ct);
+                context.RoleAssignments.Add(RoleAssignment.Assign(member.Id, tenantAdmin, null).Value);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+        }
         await AccountJourney.AuthorizeAsync(client, "business", Ct);
         var businessToken = client.DefaultRequestHeaders.Authorization!.Parameter;
         var secrets = services.GetRequiredService<ISecureTokenGenerator>();
@@ -146,6 +234,22 @@ public sealed class AccountDeletionTests(ApiFactory factory)
 
     private HttpClient CreateClient() => factory.CreateClient(new WebApplicationFactoryClientOptions
         { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+
+    private static async Task<string> IssueDeletionTicketAsync(IServiceProvider services, ApplicationDbContext context,
+        IUnitOfWork work, Guid userId)
+    {
+        var secrets = services.GetRequiredService<ISecureTokenGenerator>();
+        var secret = secrets.Generate();
+        var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        var primary = await context.LoginMethods.AsNoTracking().SingleAsync(row => row.UserId == userId && row.IsPrimary, Ct);
+        await work.ExecuteInTransactionAsync(ct =>
+        {
+            context.ReauthTickets.Add(ReauthTicket.Issue(userId, ReauthAction.DeleteAccount, primary.Id,
+                null, secrets.Hash(secret), nowUtc).Value);
+            return Task.FromResult(Result.Success());
+        }, CommitPolicy.OnSuccess, Ct);
+        return secret;
+    }
 
     private sealed class TestUser(Guid id) : ICurrentUser
     {

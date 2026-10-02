@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Application.Models.Legal;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
@@ -14,8 +15,17 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Identity.Deletion;
 
 /// <summary>Retira una membresía de la organización durante la baja de una cuenta y deja su auditoría en la transacción ya abierta. Exige que el worker haya entrado primero al tenant correcto.</summary>
 internal sealed class MembershipDeletionParticipant(ApplicationDbContext database, ITenantContext tenantContext,
-    ILoginMethodReader loginMethods, IInvitationRepository invitations, IAuditLog audit) : AccountDeletionParticipant
+    ILoginMethodReader loginMethods, IInvitationRepository invitations, IRoleAssignmentRepository assignments,
+    ITenantAdminLock tenantAdmins, ILastTenantAdminGuard tenantAdminGuard, IAuditLog audit) : AccountDeletionParticipant
 {
+    public override async Task<IReadOnlyList<ArquitecturaBaseMultitenant.Domain.Results.Error>> CheckAsync(
+        AccountDeletionContext context, CancellationToken ct)
+    {
+        if (context.TenantId is not null) return [];
+        var result = await tenantAdminGuard.CheckCanLeaveAsync(context.UserId, ct);
+        return result.IsFailure ? [result.Error] : [];
+    }
+
     public override async Task ExecuteAsync(AccountDeletionContext context, CancellationToken ct)
     {
         if (context.TenantId is not { } tenantId) return;
@@ -36,6 +46,12 @@ internal sealed class MembershipDeletionParticipant(ApplicationDbContext databas
         }
         var member = await database.Members.SingleOrDefaultAsync(row => row.UserId == context.UserId, ct);
         if (member is null || member.Status == MemberStatus.Removed) return;
+        if (context.TenantKind == TenantKind.Business)
+        {
+            await tenantAdmins.LockAssignmentsAsync(tenantId, ct);
+            foreach (var assignment in await assignments.ListForMemberAsync(member.Id, ct))
+                assignments.Remove(assignment);
+        }
         if (member.Remove(MemberRemovalReason.AccountDeleted).IsFailure)
             throw new InvalidOperationException("The account membership could not be removed.");
         audit.Record(AuditAction.Custom, nameof(Member), member.Id,

@@ -10,6 +10,8 @@ public static class AccountDeletionErrors
 {
     public static readonly Error PlatformOperator = Error.Forbidden("Legal.AccountDeletion.PlatformOperator",
         "A platform operator cannot request their own deletion.");
+    public static readonly Error LastAdmin = Error.Conflict("Legal.AccountDeletion.LastAdmin",
+        "An active organization must keep at least one active owner.");
     public static readonly Error AlreadyPending = Error.Conflict("Legal.AccountDeletion.AlreadyPending",
         "The account deletion was already requested.");
     public static readonly Error Blocked = Error.Conflict("Legal.AccountDeletion.Blocked",

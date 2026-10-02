@@ -27,6 +27,8 @@ internal sealed class AccountDeletionRequester(ILoginMethodRepository methods, I
         var context = new AccountDeletionContext(userId, nowUtc);
         var blocks = new List<Error>();
         foreach (var participant in participants) blocks.AddRange(await participant.CheckAsync(context, ct));
+        if (blocks.FirstOrDefault(error => error.Code == AccountDeletionErrors.LastAdmin.Code) is { } lastAdmin)
+            return lastAdmin;
         if (blocks.Count > 0) return AccountDeletionErrors.Blocked with
         {
             Metadata = new Dictionary<string, object?> { ["reasons"] = blocks.Select(error => ErrorTexts.Get(error.Code)).ToArray() },

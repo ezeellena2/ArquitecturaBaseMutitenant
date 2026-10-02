@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Legal;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
+using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
@@ -55,6 +56,8 @@ public sealed class AccountDeletionParticipantsTests(ApiFactory factory)
         }, CommitPolicy.OnSuccess, Ct);
         var participants = services.GetServices<IAccountDeletionParticipant>().ToArray();
         Assert.Equal(4, participants.Length);
+        var membershipParticipant = Assert.Single(participants,
+            participant => participant.GetType().Name == "MembershipDeletionParticipant");
         Assert.All(await context.LegalAcceptances.AsNoTracking().Where(row => row.UserId == account.UserId)
             .ToArrayAsync(Ct), row => Assert.Equal("AccountDeletionTest/1.0", row.UserAgent));
         var global = new AccountDeletionContext(account.UserId, nowUtc);
@@ -62,7 +65,11 @@ public sealed class AccountDeletionParticipantsTests(ApiFactory factory)
         {
             foreach (var participant in participants)
             {
-                Assert.Empty(await participant.CheckAsync(global, ct));
+                var blockers = await participant.CheckAsync(global, ct);
+                if (ReferenceEquals(participant, membershipParticipant))
+                    Assert.Equal(AccountDeletionErrors.LastAdmin, Assert.Single(blockers));
+                else
+                    Assert.Empty(blockers);
                 await participant.OnRequestedAsync(global, ct);
                 await participant.OnCancelledAsync(global, ct);
             }
@@ -95,6 +102,7 @@ public sealed class AccountDeletionParticipantsTests(ApiFactory factory)
                     var member = await context.Members.AsNoTracking().SingleAsync(row => row.UserId == account.UserId, Ct);
                     Assert.Equal(MemberStatus.Removed, member.Status);
                     Assert.Equal(MemberRemovalReason.AccountDeleted, member.RemovalReason);
+                    Assert.Empty(await context.RoleAssignments.AsNoTracking().Where(row => row.MemberId == member.Id).ToArrayAsync(Ct));
                     Assert.Single(await context.Set<AuditEntry>().AsNoTracking().Where(row => row.EntityId == member.Id
                         && row.Action == AuditAction.Custom).ToArrayAsync(Ct));
                     await work.ExecuteInTransactionAsync(async ct =>
