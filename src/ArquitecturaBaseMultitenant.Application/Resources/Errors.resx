@@ -107,6 +107,7 @@
   <data name="Tenancy.Company.TimeZoneUnavailable" xml:space="preserve"><value>Elegí una zona horaria disponible.</value></data>
   <data name="Tenancy.Company.TaxIdAlreadyUsed" xml:space="preserve"><value>Ya hay una empresa con esa identificación fiscal.</value></data>
   <data name="Tenancy.Company.NotFound" xml:space="preserve"><value>No encontramos esta empresa.</value></data>
+  <data name="Tenancy.Company.Inactive" xml:space="preserve"><value>Activá la empresa antes de administrar sus miembros.</value></data>
   <data name="Companies.Membership.NotFound" xml:space="preserve"><value>No encontramos esta membresía de empresa.</value></data>
   <data name="Companies.Membership.AlreadyExists" xml:space="preserve"><value>Esta persona ya pertenece a la empresa.</value></data>
   <data name="Companies.Membership.MemberInactive" xml:space="preserve"><value>Solo podés sumar a una persona con acceso activo a la organización.</value></data>

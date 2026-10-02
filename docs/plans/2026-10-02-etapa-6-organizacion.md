@@ -36,12 +36,12 @@
 
 - [x] Crear `Company`, configuración EF/migración e índices tenant-owned; la prueba de persistencia quedó bloqueada por falta del daemon Docker y se ejecutará en la puerta.
 - [x] Crear `TaxId` y `ArgentineCuitValidator` según `docs/rules/identificacion-fiscal.md`; agregar `TaxIdTests` y pruebas de propiedades para dígito, normalización, valor inválido y datos históricos nulos. Commits `234fc72`.
-- [x] Implementar servicio y API de listado paginado, conteos por estado, ficha, alta, edición concurrente (`version` y 409) y cambio de estado activo/inactivo; validar zona horaria y normalizar CUIT desde catálogos. Pruebas unitarias dirigidas para listado, conteos, alta, primer Administrador y concurrencia de estado. Commit pendiente.
+- [x] Implementar servicio y API de listado paginado, conteos por estado, ficha, alta, edición concurrente (`version` y 409) y cambio de estado activo/inactivo; validar zona horaria y normalizar CUIT desde catálogos. Pruebas unitarias dirigidas para listado, conteos, alta, primer Administrador y concurrencia de estado. Commit `7fbc59a`.
 - [ ] Ejecutar las pruebas API con PostgreSQL para tenant isolation, estado/versiones, TaxId único, permisos efectivos solo para empresa activa y conteos/listados con 1 y 50 empresas. Los recorridos de integración ya están escritos; el daemon Docker sigue sin estar disponible.
-- [ ] Implementar membresías de empresa y asignación de roles mediante `RoleAssignment.CompanyId`, reutilizando catálogos y `RoleService`; filtrar empresas/roles por tenant y nunca aceptar un ID ajeno.
-- [ ] Proteger quitar o deshabilitar al último `CompanyAdmin` activo; cubrir concurrencia en dos solicitudes y miembros con baja pedida.
+- [x] Implementar membresías de empresa y asignación de roles mediante `RoleAssignment.CompanyId`, reutilizando catálogos y `RoleService`; agregar listado, conteos, alta, edición de roles y estado versionado bajo permisos de empresa. La prueba HTTP real cubre permisos antes y después, una y dos personas Administradoras, y el rechazo de quitar a la última.
+- [x] Proteger quitar o deshabilitar al último `CompanyAdmin` activo con lock transaccional; los tests unitarios del guard pasan. La prueba de concurrencia PostgreSQL está en `CompaniesTests` y pendiente de ejecución por Docker apagado.
 - [ ] Conectar el catálogo de empresas y roles a los flujos de Invitaciones, manteniendo los estados individuales de cada invitación.
-- [ ] Actualizar inventario de rutas, OpenAPI, contrato back/front, permisos existentes, textos bilingües y pruebas de aislamiento; build y pruebas focales.
+- [ ] Actualizar inventario de rutas, OpenAPI, contrato back/front, permisos existentes, textos bilingües y pruebas de aislamiento; build y pruebas focales. El controller y los contratos de miembros ya compilan; falta regenerar/contrastar el cliente front y correr integración con PostgreSQL.
 
 ### 3. Usuarios e invitaciones de la organización
 
@@ -107,4 +107,6 @@
 - Las empresas no se borran físicamente desde E6: se puede cambiar su estado a Inactiva con `version`, de acuerdo con el diálogo validado, que conserva datos y miembros.
 - Al crear una empresa, el miembro activo que la creó queda como miembro de la empresa y recibe el rol de sistema `CompanyAdmin`, para que la empresa nazca con un Administrador.
 - El permiso por empresa combina los roles `Organization` (que valen para todas las empresas) y los roles asignados a esa empresa. Los roles company-scoped requieren membresía activa; una empresa inactiva entrega cero permisos efectivos.
+- Los cambios de membresía que pueden afectar `CompanyAdmin` adquieren el lock por empresa dentro de la misma UoW y vuelven a leer el estado de la empresa bajo transacción. La reactivación de una membresía vinculada a cuenta exige identidad activa; una invitación sin cuenta puede prepararse con roles.
+- Los nombres técnicos de roles de sistema se traducen en respuestas (`TenantAdmin` → Dueño/Owner, `CompanyAdmin` → Administrador/Administrator); los nombres elegidos por la organización se conservan.
 - La estrategia de almacenamiento del logo se definirá inspeccionando las capacidades reales ya presentes en los repos; se documentará antes de cerrar esa tarea.

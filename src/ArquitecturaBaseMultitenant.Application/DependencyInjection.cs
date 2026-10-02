@@ -26,7 +26,8 @@ public static class DependencyInjection
         services.AddScoped<ITenantSlugAvailabilityService, TenantSlugAvailabilityService>();
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<ICompanyService, CompanyService>();
-        services.AddScoped<ICompanyService, CompanyService>();
+        services.AddScoped<ICompanyMembershipService, CompanyMembershipService>();
+        services.AddScoped<ILastCompanyAdminGuard, LastCompanyAdminGuard>();
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddScoped<IPlatformPermissionService, PlatformPermissionService>();
         services.AddScoped<IOutboxDispatchService, OutboxDispatchService>();
