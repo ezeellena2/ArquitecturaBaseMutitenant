@@ -65,8 +65,8 @@ public sealed class Stage3aInventoryTests
         Assert.Contains(path, RequiredFiles);
 
     [Fact]
-    public void Identity_stage_closes_the_harness_at_three() =>
-        Assert.Equal(3, HarnessStage.Closed);
+    public void Identity_stage_remains_closed_after_the_harness_advances() =>
+        Assert.True(HarnessStage.Closed >= 3);
 
     [Fact]
     public void Identity_feature_and_first_area_pointers_are_present()
