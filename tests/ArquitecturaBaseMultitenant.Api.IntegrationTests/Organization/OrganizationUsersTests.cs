@@ -38,7 +38,8 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
             roleIds = Array.Empty<Guid>(),
             companies = Array.Empty<object>(),
         }, Ct);
-        Assert.Equal(HttpStatusCode.Created, issued.StatusCode);
+        Assert.True(issued.StatusCode == HttpStatusCode.Created,
+            await issued.Content.ReadAsStringAsync(Ct));
         var invitationId = await issued.Content.ReadFromJsonAsync<Guid>(Ct);
 
         using var listed = await ownerClient.GetAsync("/api/users/paged?page=1&pageSize=50&state=Invited", Ct);
@@ -51,7 +52,8 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
 
         using var resent = await AccountJourney.PostAsync(ownerClient,
             $"/api/users/invitations/{invitationId:D}/resend", new { }, Ct);
-        Assert.Equal(HttpStatusCode.OK, resent.StatusCode);
+        Assert.True(resent.StatusCode == HttpStatusCode.OK,
+            await resent.Content.ReadAsStringAsync(Ct));
         var resentInvitationId = await resent.Content.ReadFromJsonAsync<Guid>(Ct);
         Assert.NotEqual(invitationId, resentInvitationId);
         await using (var scope = factory.Services.CreateAsyncScope())

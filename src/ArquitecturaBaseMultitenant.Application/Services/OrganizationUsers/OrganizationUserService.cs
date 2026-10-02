@@ -83,13 +83,12 @@ internal sealed class OrganizationUserService(IOrganizationUserReader reader, IM
             if (desired.IsFailure) return desired.Error;
             return await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
-                var invitationId = await issuer.IssueAsync(
+                var issued = await issuer.IssueWithMemberAsync(
                     new IssueInvitationRequest(email.Value, inviterId, InvitationChannel.Email), ct);
-                if (invitationId.IsFailure) return invitationId.Error;
-                var invitation = await invitations.GetByIdAsync(invitationId.Value, ct)
-                    ?? throw new InvalidOperationException("The issuer did not persist its invitation in the caller's unit of work.");
-                var assigned = await SetAssignmentsAsync(invitation.MemberId, desired.Value, ct);
-                return assigned.IsFailure ? assigned.Error : invitationId;
+                if (issued.IsFailure) return issued.Error;
+                var assigned = await SetAssignmentsAsync(issued.Value.MemberId, desired.Value, ct,
+                    memberInUnitOfWork: issued.Value.Member);
+                return assigned.IsFailure ? assigned.Error : Result<Guid>.Success(issued.Value.InvitationId);
             }, CommitPolicy.OnSuccess, cancellationToken);
         });
     }
@@ -112,7 +111,7 @@ internal sealed class OrganizationUserService(IOrganizationUserReader reader, IM
                 if (revoked.IsFailure) return revoked.Error;
                 if (currentUser.UserId is not { } inviterId || inviterId == Guid.Empty) return AccessErrors.NotMember;
                 return await issuer.IssueAsync(new IssueInvitationRequest(invitation.Destination, inviterId,
-                    invitation.Channel, invitation.MemberId), ct);
+                    invitation.Channel, invitation.MemberId, invitation.Id), ct);
             }, CommitPolicy.OnSuccess, cancellationToken);
         });
 
@@ -335,9 +334,9 @@ internal sealed class OrganizationUserService(IOrganizationUserReader reader, IM
 
     private async Task<Result> SetAssignmentsAsync(Guid memberId, DesiredAssignments desired,
         CancellationToken cancellationToken, IReadOnlyList<RoleAssignment>? existingAssignments = null,
-        IReadOnlyList<CompanyMembership>? existingMemberships = null)
+        IReadOnlyList<CompanyMembership>? existingMemberships = null, Member? memberInUnitOfWork = null)
     {
-        var member = await members.GetByIdAsync(memberId, cancellationToken);
+        var member = memberInUnitOfWork ?? await members.GetByIdAsync(memberId, cancellationToken);
         if (member is null) return MemberErrors.NotFound;
         existingAssignments ??= await assignments.ListForMemberAsync(memberId, cancellationToken);
         existingMemberships ??= await companyMemberships.ListForMemberAsync(memberId, cancellationToken);

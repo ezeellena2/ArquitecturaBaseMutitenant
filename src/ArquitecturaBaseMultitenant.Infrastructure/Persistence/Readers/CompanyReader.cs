@@ -11,7 +11,7 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 /// <summary>Proyecta empresas y conteos de membresías bajo el tenant activo.</summary>
 internal sealed class CompanyReader(ApplicationDbContext context, ITenantContext tenantContext) : ICompanyReader
 {
-    private static readonly SortMap<CompanyRow> Sort = new()
+    private static readonly SortMap<Company> Sort = new()
     {
         ["name"] = company => company.Name,
         ["createdAtUtc"] = company => company.CreatedAtUtc,
@@ -24,9 +24,9 @@ internal sealed class CompanyReader(ApplicationDbContext context, ITenantContext
     {
         ArgumentNullException.ThrowIfNull(request);
         var tenantId = tenantContext.RequiredTenantId;
-        var rows = Project(Companies(tenantId, request));
-        rows = rows.ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort, company => company.Id);
-        return rows.ToPagedResultAsync(request, cancellationToken);
+        var companies = Companies(tenantId, request)
+            .ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort, company => company.Id);
+        return ProjectPageAsync(companies, tenantId, request, cancellationToken);
     }
 
     public Task<CompanyRow?> FindByIdAsync(Guid companyId, CancellationToken cancellationToken)
@@ -82,4 +82,19 @@ internal sealed class CompanyReader(ApplicationDbContext context, ITenantContext
                 && member.Id == membership.MemberId && member.Status == MemberStatus.Active)),
         company.Version,
         company.CreatedAtUtc));
+
+    private async Task<PagedResult<CompanyRow>> ProjectPageAsync(IQueryable<Company> companies, Guid tenantId,
+        ListCompaniesRequest request, CancellationToken cancellationToken)
+    {
+        var page = await companies.ToPagedResultAsync(request, cancellationToken);
+        if (page.Items.Count == 0)
+            return new PagedResult<CompanyRow>([], page.Page, page.PageSize, page.TotalCount);
+
+        var companyIds = page.Items.Select(company => company.Id).ToArray();
+        var rows = await Project(context.Companies.AsNoTracking().Where(company => company.TenantId == tenantId
+                && companyIds.Contains(company.Id)))
+            .ToDictionaryAsync(company => company.Id, cancellationToken);
+        return new PagedResult<CompanyRow>([.. page.Items.Select(company => rows[company.Id])],
+            page.Page, page.PageSize, page.TotalCount);
+    }
 }

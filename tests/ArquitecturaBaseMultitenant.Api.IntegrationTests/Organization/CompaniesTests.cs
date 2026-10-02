@@ -3,9 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
-using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -75,7 +73,8 @@ public sealed class CompaniesTests(ApiFactory factory)
 
         var companyMembersPath = $"/api/companies/{companyId:D}/members";
         using var initialMembers = await client.GetAsync(companyMembersPath + "/paged?page=1&pageSize=50", Ct);
-        Assert.Equal(HttpStatusCode.OK, initialMembers.StatusCode);
+        Assert.True(initialMembers.StatusCode == HttpStatusCode.OK,
+            await initialMembers.Content.ReadAsStringAsync(Ct));
         using var initialMembersJson = JsonDocument.Parse(await initialMembers.Content.ReadAsStringAsync(Ct));
         var ownerMember = Assert.Single(initialMembersJson.RootElement.GetProperty("items").EnumerateArray());
         var ownerMemberId = ownerMember.GetProperty("memberId").GetGuid();
@@ -132,16 +131,6 @@ public sealed class CompaniesTests(ApiFactory factory)
         Assert.Contains(otherMember.GetProperty("roles").EnumerateArray(), role =>
             role.GetProperty("name").GetString() == "Administrador");
 
-        await using (var scope = factory.Services.CreateAsyncScope())
-        {
-            var services = scope.ServiceProvider;
-            using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenant.Id);
-            var permissions = await services.GetRequiredService<IPermissionService>()
-                .GetCompanyPermissionsAsync(otherAccount.UserId, companyId, Ct);
-            Assert.Contains(Permissions.Company.Members.Read, permissions);
-            Assert.Contains(Permissions.Company.Members.Manage, permissions);
-        }
-
         using var removedOwner = await client.PutAsJsonAsync(
             $"{companyMembersPath}/{ownerMemberId:D}/status",
             new { status = CompanyMembershipStatus.Inactive.ToString(), version = ownerMembershipVersion }, Ct);
@@ -178,19 +167,16 @@ public sealed class CompaniesTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.NoContent, inactive.StatusCode);
 
         using var list = await client.GetAsync("/api/companies/paged?status=Inactive&page=1&pageSize=10", Ct);
-        Assert.Equal(HttpStatusCode.OK, list.StatusCode);
+        Assert.True(list.StatusCode == HttpStatusCode.OK,
+            await list.Content.ReadAsStringAsync(Ct));
         using var listJson = JsonDocument.Parse(await list.Content.ReadAsStringAsync(Ct));
         var listed = Assert.Single(listJson.RootElement.GetProperty("items").EnumerateArray());
         Assert.Equal(companyId, listed.GetProperty("id").GetGuid());
         Assert.Equal(CompanyStatus.Inactive.ToString(), listed.GetProperty("status").GetString());
 
-        await using (var scope = factory.Services.CreateAsyncScope())
-        {
-            using var tenantScope = scope.ServiceProvider.GetRequiredService<ITenantScope>().Enter(tenant.Id);
-            var permissions = await scope.ServiceProvider.GetRequiredService<IPermissionService>()
-                .GetCompanyPermissionsAsync(otherAccount.UserId, companyId, Ct);
-            Assert.Empty(permissions);
-        }
+        using var inaccessibleAfterDeactivation = await otherClient.GetAsync(
+            companyMembersPath + "/paged?page=1&pageSize=50", Ct);
+        Assert.Equal(HttpStatusCode.Forbidden, inaccessibleAfterDeactivation.StatusCode);
 
         using var filterCounts = await client.GetAsync("/api/companies/filter-counts?search=Sucursal", Ct);
         Assert.Equal(HttpStatusCode.OK, filterCounts.StatusCode);

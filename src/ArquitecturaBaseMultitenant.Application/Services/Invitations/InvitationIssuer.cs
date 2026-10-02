@@ -17,6 +17,13 @@ internal sealed class InvitationIssuer(IInvitationRepository invitations, IMembe
 {
     public async Task<Result<Guid>> IssueAsync(IssueInvitationRequest request, CancellationToken cancellationToken)
     {
+        var issued = await IssueWithMemberAsync(request, cancellationToken);
+        return issued.IsFailure ? issued.Error : issued.Value.InvitationId;
+    }
+
+    public async Task<Result<IssuedInvitation>> IssueWithMemberAsync(IssueInvitationRequest request,
+        CancellationToken cancellationToken)
+    {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(request.Destination);
         if (request.InviterUserId == Guid.Empty) throw new ArgumentException("An inviter is required.", nameof(request));
@@ -25,7 +32,8 @@ internal sealed class InvitationIssuer(IInvitationRepository invitations, IMembe
         if (!delivery.IsAvailable(request.Channel)) return InvitationErrors.ChannelUnavailable;
         var checkedRequest = await guard.CheckAsync(tenantId, request, cancellationToken);
         if (checkedRequest.IsFailure) return checkedRequest.Error;
-        if (await invitations.GetPendingByDestinationAsync(request.Destination, cancellationToken) is not null)
+        var pendingInvitation = await invitations.GetPendingByDestinationAsync(request.Destination, cancellationToken);
+        if (pendingInvitation is not null && pendingInvitation.Id != request.ReplacingInvitationId)
             return InvitationErrors.AlreadyPending;
         var (organization, userId) = checkedRequest.Value;
         if (userId is { } knownUserId) await members.LockUserAsync(knownUserId, cancellationToken);
@@ -50,6 +58,6 @@ internal sealed class InvitationIssuer(IInvitationRepository invitations, IMembe
         invitations.Add(invitation);
         var token = tokens.Protect(new InvitationTokenData(tenantId, invitation.Id, secret));
         await delivery.EnqueueAsync(invitation, organization, token, userId, cancellationToken);
-        return invitation.Id;
+        return new IssuedInvitation(invitation.Id, member);
     }
 }
