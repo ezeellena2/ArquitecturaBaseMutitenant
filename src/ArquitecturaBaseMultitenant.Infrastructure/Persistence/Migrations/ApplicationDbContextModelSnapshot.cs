@@ -1019,6 +1019,70 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.ToTable("TenantSettings", "tenant");
                 });
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Tenancy.Company", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ModifiedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("TaxCountry")
+                        .HasColumnType("character(2)")
+                        .HasColumnName("TaxCountry");
+
+                    b.Property<string>("TaxNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("TaxNumber");
+
+                    b.Property<string>("TaxType")
+                        .HasColumnType("text")
+                        .HasColumnName("TaxType");
+
+                    b.Property<string>("TimeZoneId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("TenantId", "Id");
+
+                    b.HasIndex("TaxCountry");
+
+                    b.HasIndex("TaxType");
+
+                    b.HasIndex("TimeZoneId");
+
+                    b.HasIndex("TenantId", "Name", "Id");
+
+                    b.HasIndex("TenantId", "TaxCountry", "TaxType", "TaxNumber")
+                        .IsUnique()
+                        .HasFilter("\"TaxCountry\" IS NOT NULL");
+
+                    b.ToTable("Companies", "tenant");
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Tenancy.Member", b =>
                 {
                     b.Property<Guid>("TenantId")
@@ -1876,6 +1940,31 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant", null)
                         .WithMany()
                         .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Tenancy.Company", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.ReferenceData.Country", null)
+                        .WithMany()
+                        .HasForeignKey("TaxCountry")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.ReferenceData.TaxIdType", null)
+                        .WithMany()
+                        .HasForeignKey("TaxType")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.ReferenceData.ReferenceTimeZone", null)
+                        .WithMany()
+                        .HasForeignKey("TimeZoneId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

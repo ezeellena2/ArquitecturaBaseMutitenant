@@ -19,6 +19,8 @@ public sealed class TaxId : ValueObject
     public string Type { get; }
     public string Number { get; }
 
+    internal static TaxId Restore(string country, string type, string number) => new(country, type, number);
+
     public static Result<TaxId> Create(string? country, TaxIdType? type, string? numberText)
     {
         if (country is not { Length: 2 } || !country.All(IsAsciiLetter)

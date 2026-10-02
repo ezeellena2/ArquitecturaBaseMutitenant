@@ -47,6 +47,7 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<ReservedTenantSlug> ReservedTenantSlugs => Set<ReservedTenantSlug>();
     public DbSet<Member> Members => Set<Member>();
+    public DbSet<Company> Companies => Set<Company>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<RoleAssignment> RoleAssignments => Set<RoleAssignment>();
