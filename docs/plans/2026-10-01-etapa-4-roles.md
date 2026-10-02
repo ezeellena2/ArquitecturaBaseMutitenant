@@ -110,17 +110,20 @@ No se crean cuentas, espacios personales ni organizaciones de ejemplo en Develop
 - [x] Puerta documental breve A: generar el esqueleto temporal `Tags`, ejecutar la verificación mínima y eliminarlo; el diff temporal terminó limpio.
 - [x] Puerta documental breve B: diez preguntas de ubicación y comparación de respuestas leyendo solo `AGENTS.md`; resultado registrado en el informe.
 
-### T10 · Pantallas de Roles (bloqueadas por aprobación)
+### T10 · Pantallas de Roles (aprobadas e implementadas)
 
-- [x] **No iniciar todavía.** El back está verificado; se informa al usuario y se espera aprobación explícita de los tableros de Organización.
-- [ ] Tras aprobación: implementar `areas/business/roles/{pages,api}` desde los tableros `Roles`, `Rol`, `M-Roles` y `M-Rol`; añadir enlace «Roles y permisos» dentro de «Gestión de usuarios» en `src/layouts/navigation/business.ts`, con contrato/permiso correctos, tests de pantalla y estados de conflicto 409; comparar todos los estados en `docs/design/capturas/etapa-4/`.
-- [ ] Solo al terminar este bloque se sube `HarnessStage` a 4 en ambos repositorios y se considera cerrada E4.
+- [x] El usuario aprobó los tableros de Organización después de revisar la maqueta.
+- [x] Implementar `areas/business/roles/{pages,api}` según `Roles`, `Rol`, `M-Roles` y `M-Rol`: listado, alta, consulta y edición; permisos; filtro, búsqueda y paginado; roles de sistema de solo lectura; errores de versión 409 conservando el borrador; validación y recursos es/en.
+- [x] Añadir «Roles y permisos» a «Gestión de usuarios» en el AdminPanel con permiso `roles.read`; cubrir rutas, navegación, API, pantallas y el contrato que lee los contratos de ambos repositorios.
+- [x] Comparar cinco estados en 1440×900 y cinco en 390×844 en `docs/design/capturas/etapa-4/roles/`; documentar las diferencias funcionales y de presentación con su motivo.
+- [x] Ampliar el recorrido E2E real para edición, conflicto 409, creación y protección del único Dueño; incluye siete roles de sistema/personalizados de su base exclusiva y no agrega datos de ejemplo.
+- [x] Subir `HarnessStage` a 4 en ambos repositorios y ajustar el inventario anterior para aceptar etapas futuras.
 
 ## Puerta de cierre
 
 - Back: `dotnet build ArquitecturaBaseMultitenant.slnx` con cero advertencias; `dotnet test` completo con Docker/Testcontainers y cero omitidos; generador de datos de referencia 30/30; nuevos tests de Role, permisos, RLS/aislamiento, migración, concurrencia, AccountDeletion y `HarnessTests` en verde.
 - Front: `npm test`, `npm run lint`, `npm run build`, `npm run contracts:check`, tests de componentes/contrato y `harness.test.ts` en verde. El lint puede conservar warnings ya documentados de lienzo v35 y `InvitationPage`; no se ocultan ni se agregan como deuda nueva si el flujo los usa.
 - E2E real: todos los recorridos 3a–3c y nuevos casos E4, contra front/API/navegador reales y PostgreSQL/pickup exclusivos; cero mocks, fallos u omitidos.
-- Visual: las reglas de Criterio se verifican con tests colocalizados de componentes; capturas app/lienzo de `/cuenta` y sus diálogos en escritorio/teléfono; después de la aprobación, Roles/Rol y sus estados en ambas medidas. Toda diferencia tiene corrección o motivo en el informe.
+- Visual: las reglas de Criterio se verifican con tests colocalizados de componentes; capturas app/lienzo de `/cuenta` y sus diálogos y de cinco estados de Roles/Rol, en escritorio y teléfono. Toda diferencia tiene motivo documentado en el informe.
 - Documentación: las dos puertas cortas T09 pasan y `docs/reviews/2026-10-01-etapa-4-roles.md` registra tareas/commits, salida literal sanitizada del E2E, diferencias visuales y «Decisiones tomadas».
-- Estado de esta entrega: `main`, commits locales con rutas explícitas, sin push, repos limpios y sin AppHost de Aspire activo. T10 queda pendiente de aprobación; por eso `HarnessStage` no se sube todavía y E4 no se declara cerrada.
+- Estado final: E4 cerrada en `main`, sin push, commits con rutas explícitas, datos de ejemplo ausentes y `HarnessStage=4` en ambos repositorios. Puertas finales registradas en el informe de revisión.
