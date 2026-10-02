@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Application.Models.Profile;
 using ArquitecturaBaseMultitenant.Application.Models.Tenancy;
@@ -42,9 +43,9 @@ public sealed class ProfileServiceTests
         var method = new LoginMethodRow(Guid.CreateVersion7(), LoginMethodType.Google, "subject", true,
             verified ? fixture.TimeProvider.GetUtcNow().UtcDateTime : null, managed ? Guid.CreateVersion7() : null);
         var snapshots = new ProfileSnapshotBuilder(new StubUsers(Account(id)), new StubAccesses([]),
-            new StubSettings(null), catalog, catalog, new StubMethods([method]),
+            new ProfilePreferences(new StubSettings(null), catalog, catalog), new StubMethods([method]),
             new LoginMethodAvailability([], new StubGoogle(available), new StubMemberships()),
-            new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider));
+            new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider), new StubPermissions());
 
         var profile = await snapshots.BuildAsync(id, Access.Consumer, null, Ct);
 
@@ -194,8 +195,8 @@ public sealed class ProfileServiceTests
     {
         var catalog = new JsonReferenceDataCatalog();
         var availability = new LoginMethodAvailability([], new StubGoogle(), new StubMemberships());
-        var snapshots = new ProfileSnapshotBuilder(users, accesses, settings, catalog, catalog, new StubMethods(),
-            availability, new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider));
+        var snapshots = new ProfileSnapshotBuilder(users, accesses, new ProfilePreferences(settings, catalog, catalog), new StubMethods(),
+            availability, new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider), new StubPermissions());
         return new ProfileService(current, context, snapshots, users, fixture.Validator,
             unitOfWork ?? new FakeUnitOfWork(), fixture.TimeProvider, fixture.Logger);
     }
@@ -210,6 +211,7 @@ public sealed class ProfileServiceTests
             QueriedUserId = userId;
             return Task.FromResult(rows);
         }
+
     }
 
     private sealed class StubSettings(TenantSettingsRow? row) : ITenantSettingsReader
@@ -259,6 +261,19 @@ public sealed class ProfileServiceTests
     {
         public Task<IReadOnlyList<LoginMethodRow>> ListByUserIdAsync(Guid userId,
             CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<LoginMethodRow>>(rows ?? []);
+    }
+
+    private sealed class StubPermissions : IPermissionService
+    {
+        public Task<IReadOnlyList<string>> GetOrganizationPermissionsAsync(Guid userId, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<string>>([]);
+        public Task<IReadOnlyList<string>> GetCompanyPermissionsAsync(Guid userId, Guid companyId,
+            CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<string>>([]);
+        public Task<bool> HasPermissionAsync(Guid userId, string permission, CancellationToken cancellationToken) =>
+            Task.FromResult(false);
+        public Task<bool> HasCompanyPermissionAsync(Guid userId, Guid companyId, string permission,
+            CancellationToken cancellationToken) => Task.FromResult(false);
+        public Task InvalidateRoleAsync(Guid roleId, CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
     private sealed class StubGoogle(bool enabled = false) : IGoogleAvailability { public bool IsEnabled => enabled; }

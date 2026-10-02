@@ -65,6 +65,18 @@
   <data name="Users.Invitation.NameRequired" xml:space="preserve"><value>Para invitar por WhatsApp, cargá el nombre de la persona.</value></data>
   <data name="Users.Invitation.TooManyRequests" xml:space="preserve"><value>Esperá un minuto antes de volver a invitar a esta persona.</value></data>
   <data name="Users.Invitation.UserInactive" xml:space="preserve"><value>La cuenta está deshabilitada: habilitala antes de invitarla.</value></data>
+  <data name="Roles.Role.NameRequired" xml:space="preserve"><value>Escribí el nombre del rol.</value></data>
+  <data name="Roles.Role.NameTooLong" xml:space="preserve"><value>El nombre del rol supera el límite permitido.</value></data>
+  <data name="Roles.Role.DescriptionTooLong" xml:space="preserve"><value>La descripción supera el límite permitido.</value></data>
+  <data name="Roles.Role.InvalidScope" xml:space="preserve"><value>Elegí un alcance válido para el rol.</value></data>
+  <data name="Roles.Role.CompanyRequired" xml:space="preserve"><value>Elegí la empresa para este rol.</value></data>
+  <data name="Roles.Role.CompanyNotAllowed" xml:space="preserve"><value>Este alcance no admite una empresa específica.</value></data>
+  <data name="Roles.Role.PermissionNotFound" xml:space="preserve"><value>El permiso no forma parte del catálogo disponible.</value></data>
+  <data name="Roles.Role.PermissionScopeInvalid" xml:space="preserve"><value>El permiso no está disponible para este alcance.</value></data>
+  <data name="Roles.Role.SystemRoleNameReserved" xml:space="preserve"><value>Ese nombre está reservado para un rol del sistema.</value></data>
+  <data name="Roles.RoleAssignment.CompanyRequired" xml:space="preserve"><value>La asignación requiere una empresa.</value></data>
+  <data name="Roles.RoleAssignment.CompanyNotAllowed" xml:space="preserve"><value>La asignación no admite una empresa específica.</value></data>
+  <data name="Roles.RoleAssignment.CompanyMismatch" xml:space="preserve"><value>La empresa no coincide con el alcance del rol.</value></data>
   <data name="Roles.Role.NotFound" xml:space="preserve"><value>No encontramos el rol.</value></data>
   <data name="Roles.Role.AlreadyExists" xml:space="preserve"><value>Ya existe un rol con ese nombre.</value></data>
   <data name="Roles.Role.SystemRoleCannotChange" xml:space="preserve"><value>Los roles del sistema no se pueden renombrar, borrar ni cambiarles los permisos.</value></data>
@@ -102,6 +114,7 @@
   <data name="Legal.AccountDeletion.DeletedDisplayName" xml:space="preserve"><value>Cuenta eliminada</value></data>
   <data name="Legal.AccountDeletion.GraceExpired" xml:space="preserve"><value>El plazo para cancelar la baja venció.</value></data>
   <data name="Legal.AccountDeletion.InvalidReason" xml:space="preserve"><value>Escribí un motivo de hasta 500 caracteres.</value></data>
+  <data name="Legal.AccountDeletion.LastAdmin" xml:space="preserve"><value>Antes de pedir la baja, cada Organización activa debe tener otra persona con el rol Dueño.</value></data>
   <data name="Legal.AccountDeletion.PlatformOperator" xml:space="preserve"><value>Tu cuenta de operador no puede darse de baja desde acá.</value></data>
   <data name="Legal.AccountDeletion.ReauthRequired" xml:space="preserve"><value>Confirmá el código que te mandamos para pedir la baja.</value></data>
   <data name="Tenancy.Member.IdentityRequired" xml:space="preserve"><value>La membresía necesita una cuenta antes de activarse.</value></data>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Area.users" xml:space="preserve"><value>Users</value></data>
+  <data name="Area.roles" xml:space="preserve"><value>Roles</value></data>
+  <data name="Area.companies" xml:space="preserve"><value>Companies</value></data>
+  <data name="Area.settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="Area.audit" xml:space="preserve"><value>Audit</value></data>
+  <data name="Area.publicpage" xml:space="preserve"><value>Public page</value></data>
+  <data name="Area.company" xml:space="preserve"><value>Company</value></data>
+  <data name="Area.platform" xml:space="preserve"><value>Platform</value></data>
+  <data name="Permission.users.read" xml:space="preserve"><value>View users</value></data>
+  <data name="Permission.users.invite" xml:space="preserve"><value>Invite users</value></data>
+  <data name="Permission.users.manage" xml:space="preserve"><value>Manage users</value></data>
+  <data name="Permission.roles.read" xml:space="preserve"><value>View roles</value></data>
+  <data name="Permission.roles.manage" xml:space="preserve"><value>Manage roles</value></data>
+  <data name="Permission.roles.assign" xml:space="preserve"><value>Assign roles</value></data>
+  <data name="Permission.companies.read" xml:space="preserve"><value>View companies</value></data>
+  <data name="Permission.companies.manage" xml:space="preserve"><value>Manage companies</value></data>
+  <data name="Permission.settings.read" xml:space="preserve"><value>View settings</value></data>
+  <data name="Permission.settings.manage" xml:space="preserve"><value>Manage settings</value></data>
+  <data name="Permission.audit.read" xml:space="preserve"><value>View audit log</value></data>
+  <data name="Permission.publicpage.manage" xml:space="preserve"><value>Manage public page</value></data>
+  <data name="Permission.company.members.read" xml:space="preserve"><value>View company members</value></data>
+  <data name="Permission.company.members.manage" xml:space="preserve"><value>Manage company members</value></data>
+  <data name="Permission.platform.tenants.read" xml:space="preserve"><value>View organizations</value></data>
+  <data name="Permission.platform.tenants.manage" xml:space="preserve"><value>Manage organizations</value></data>
+  <data name="Permission.platform.accounts.read" xml:space="preserve"><value>View accounts</value></data>
+  <data name="Permission.platform.accounts.manage" xml:space="preserve"><value>Manage accounts</value></data>
+  <data name="Permission.platform.recoveries.manage" xml:space="preserve"><value>Resolve account recoveries</value></data>
+  <data name="Permission.platform.legal.manage" xml:space="preserve"><value>Manage legal documents</value></data>
+  <data name="Permission.platform.operators.manage" xml:space="preserve"><value>Manage operators</value></data>
+  <data name="Permission.platform.audit.read" xml:space="preserve"><value>View platform audit log</value></data>
+  <data name="Permission.platform.settings.manage" xml:space="preserve"><value>Manage platform settings</value></data>
+  <data name="PermissionDescription.users.read" xml:space="preserve"><value>View the organization member list and each member's details.</value></data>
+  <data name="PermissionDescription.users.invite" xml:space="preserve"><value>Send an invitation to join the organization.</value></data>
+  <data name="PermissionDescription.users.manage" xml:space="preserve"><value>Edit, deactivate, enable and remove organization members.</value></data>
+  <data name="PermissionDescription.roles.read" xml:space="preserve"><value>View roles and the permissions they include.</value></data>
+  <data name="PermissionDescription.roles.manage" xml:space="preserve"><value>Create, edit and delete roles.</value></data>
+  <data name="PermissionDescription.roles.assign" xml:space="preserve"><value>Assign or remove roles from members.</value></data>
+  <data name="PermissionDescription.companies.read" xml:space="preserve"><value>View the organization's companies.</value></data>
+  <data name="PermissionDescription.companies.manage" xml:space="preserve"><value>Create, edit and delete companies.</value></data>
+  <data name="PermissionDescription.settings.read" xml:space="preserve"><value>View the organization's settings.</value></data>
+  <data name="PermissionDescription.settings.manage" xml:space="preserve"><value>Edit the organization's settings.</value></data>
+  <data name="PermissionDescription.audit.read" xml:space="preserve"><value>View the organization's audit log.</value></data>
+  <data name="PermissionDescription.publicpage.manage" xml:space="preserve"><value>Edit and publish the organization's public page.</value></data>
+  <data name="PermissionDescription.company.members.read" xml:space="preserve"><value>View the people who belong to a company.</value></data>
+  <data name="PermissionDescription.company.members.manage" xml:space="preserve"><value>Manage the people who belong to a company.</value></data>
+  <data name="PermissionDescription.platform.tenants.read" xml:space="preserve"><value>View organizations and their administrative data.</value></data>
+  <data name="PermissionDescription.platform.tenants.manage" xml:space="preserve"><value>Approve, suspend, reactivate and close organizations and manage their modules.</value></data>
+  <data name="PermissionDescription.platform.accounts.read" xml:space="preserve"><value>Search and view platform accounts.</value></data>
+  <data name="PermissionDescription.platform.accounts.manage" xml:space="preserve"><value>Suspend accounts, close their sessions and start account deletion.</value></data>
+  <data name="PermissionDescription.platform.recoveries.manage" xml:space="preserve"><value>Approve or reject account recovery requests.</value></data>
+  <data name="PermissionDescription.platform.legal.manage" xml:space="preserve"><value>Publish new versions of legal documents.</value></data>
+  <data name="PermissionDescription.platform.operators.manage" xml:space="preserve"><value>Grant or remove platform operator access.</value></data>
+  <data name="PermissionDescription.platform.audit.read" xml:space="preserve"><value>View the platform audit log.</value></data>
+  <data name="PermissionDescription.platform.settings.manage" xml:space="preserve"><value>Edit global platform settings.</value></data>
+</root>

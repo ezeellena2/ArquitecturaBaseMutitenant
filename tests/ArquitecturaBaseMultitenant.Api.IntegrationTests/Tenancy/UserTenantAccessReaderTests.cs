@@ -1,7 +1,12 @@
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Services.Auth;
+using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
@@ -62,6 +67,71 @@ public sealed class UserTenantAccessReaderTests(ApiFactory factory)
         Assert.Contains(accesses, row => row.TenantId == beta.Id && row.Kind == TenantKind.Business &&
             row.Name == "Beta" && row.JoinedAtUtc == newer);
         Assert.Contains(accesses, row => row.TenantId == personal.Id && row.Kind == TenantKind.Personal);
+    }
+
+    [Fact]
+    public async Task Tenant_admin_reader_counts_only_active_accounts_memberships_and_organizations()
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var work = services.GetRequiredService<IUnitOfWork>();
+        var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        var userIds = new Guid[5];
+        await work.ExecuteInTransactionAsync(async ct =>
+        {
+            var users = services.GetRequiredService<IUserRepository>();
+            for (var index = 0; index < userIds.Length; index++)
+                userIds[index] = (await users.CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct)).Id;
+
+            var pending = await context.Users.SingleAsync(user => user.Id == userIds[1], ct);
+            Assert.True(pending.RequestDeletion("Baja de prueba", nowUtc, 30).IsSuccess);
+            var suspended = await context.Users.SingleAsync(user => user.Id == userIds[2], ct);
+            Assert.True(suspended.Suspend().IsSuccess);
+            var deleted = await context.Users.SingleAsync(user => user.Id == userIds[3], ct);
+            Assert.True(deleted.RequestDeletion("Baja de prueba", nowUtc, 1).IsSuccess);
+            Assert.True(deleted.CompleteDeletion(nowUtc.AddDays(2), "Cuenta eliminada").IsSuccess);
+            return Result.Success();
+        }, CommitPolicy.OnSuccess, Ct);
+
+        var business = Tenant.CreateBusiness("Organización para conteo de Dueños", requiresApproval: false);
+        Assert.True(business.Activate().IsSuccess);
+        using (services.GetRequiredService<ITenantScope>().Enter(business.Id))
+        {
+            await work.ExecuteInTransactionAsync(ct =>
+            {
+                services.GetRequiredService<TenantSpaceProvisioner>().Stage(business,
+                    TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"), [userIds[0]]);
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+            await work.ExecuteInTransactionAsync(async ct =>
+            {
+                var tenantAdmin = await context.Roles.SingleAsync(role => role.Name == SystemRoles.TenantAdmin, ct);
+                for (var index = 1; index < userIds.Length; index++)
+                {
+                    var member = Member.Invite(userIds[index]);
+                    Assert.True(member.Activate(nowUtc).IsSuccess);
+                    if (index == 4) Assert.True(member.Deactivate().IsSuccess);
+                    context.Members.Add(member);
+                    context.RoleAssignments.Add(RoleAssignment.Assign(member.Id, tenantAdmin, null).Value);
+                }
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+
+        var admins = services.GetRequiredService<ITenantAdminReader>();
+        Assert.Equal(1, await admins.CountActiveOwnersAsync(business.Id, Ct));
+        Assert.Equal(new[] { business.Id }, await admins.ListActiveTenantIdsForOwnerAsync(userIds[0], Ct));
+
+        await work.ExecuteInTransactionAsync(ct =>
+        {
+            Assert.True(business.Suspend().IsSuccess);
+            Assert.True(business.Close().IsSuccess);
+            return Task.FromResult(Result.Success());
+        }, CommitPolicy.OnSuccess, Ct);
+
+        Assert.Equal(0, await admins.CountActiveOwnersAsync(business.Id, Ct));
+        Assert.Empty(await admins.ListActiveTenantIdsForOwnerAsync(userIds[0], Ct));
     }
 
     private async Task AddMemberAsync(Guid tenantId, Guid userId, DateTime joinedAtUtc)

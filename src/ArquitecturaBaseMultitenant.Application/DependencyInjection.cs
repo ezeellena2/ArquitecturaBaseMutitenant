@@ -8,6 +8,7 @@ using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Application.Services.Legal;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Application.Services.Invitations;
+using ArquitecturaBaseMultitenant.Application.Services.Roles;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -21,6 +22,9 @@ public static class DependencyInjection
         ArgumentNullException.ThrowIfNull(services);
 
         services.AddScoped<IReferenceDataService, ReferenceDataService>();
+        services.AddScoped<IRoleService, RoleService>();
+        services.AddScoped<IPermissionService, PermissionService>();
+        services.AddScoped<IPlatformPermissionService, PlatformPermissionService>();
         services.AddScoped<IOutboxDispatchService, OutboxDispatchService>();
         services.AddScoped<ILoginCodeService, LoginCodeService>();
         services.AddScoped<LoginCodeRequester>();
@@ -40,6 +44,8 @@ public static class DependencyInjection
         services.AddScoped<IConnectAuthorizationService, ConnectAuthorizationService>();
         services.AddScoped<IConnectLogoutService, ConnectLogoutService>();
         services.AddScoped<IProfileService, ProfileService>();
+        services.AddScoped<ILastTenantAdminGuard, LastTenantAdminGuard>();
+        services.AddScoped<ProfilePreferences>();
         services.AddScoped<ProfileSnapshotBuilder>();
         services.AddScoped<ILegalService, LegalService>();
         services.AddScoped<ILegalAcceptanceService, LegalAcceptanceService>();
@@ -47,6 +53,7 @@ public static class DependencyInjection
         services.AddScoped<LegalAcceptanceWriter>();
         services.AddScoped<IAccountDeletionService, AccountDeletionService>();
         services.AddScoped<AccountDeletionRequester>();
+        services.AddScoped<LastTenantAdminGuard>();
         services.AddScoped<AccountDeletionNotifier>();
         services.AddScoped<AccountDeletionCanceller>();
         services.AddScoped<AccountDeletionSessionRestorer>();

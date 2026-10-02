@@ -73,7 +73,10 @@ internal static class PersistenceRegistration
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IRoleAssignmentRepository, RoleAssignmentRepository>();
         services.AddScoped<IRoleReader, RoleReader>();
-        services.AddScoped<IUserTenantAccessReader, UserTenantAccessReader>();
+        services.AddScoped<ITenantAdminLock, TenantAdminLock>();
+        services.AddScoped<UserTenantAccessReader>();
+        services.AddScoped<IUserTenantAccessReader>(provider => provider.GetRequiredService<UserTenantAccessReader>());
+        services.AddScoped<ITenantAdminReader>(provider => provider.GetRequiredService<UserTenantAccessReader>());
         services.AddScoped<IPersonalSpaceLock, PersonalSpaceLock>();
         services.AddScoped<ITenantSettingsRepository, TenantSettingsRepository>();
         services.AddScoped<ITenantSettingsReader, TenantSettingsReader>();

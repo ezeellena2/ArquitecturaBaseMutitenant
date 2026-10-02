@@ -194,6 +194,7 @@ public sealed class ConnectServiceTests
     {
         public Task<IReadOnlyList<UserTenantAccessRow>> ListForUserAsync(Guid userId,
             CancellationToken cancellationToken) => Task.FromResult(rows);
+
     }
 
     private sealed class StubPersonalSpaceProvisioner(List<string>? events = null) : IPersonalSpaceProvisioner

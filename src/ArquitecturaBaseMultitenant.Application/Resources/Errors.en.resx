@@ -65,6 +65,18 @@
   <data name="Users.Invitation.NameRequired" xml:space="preserve"><value>To invite by WhatsApp, enter the name of the person.</value></data>
   <data name="Users.Invitation.TooManyRequests" xml:space="preserve"><value>Wait a minute before inviting this person again.</value></data>
   <data name="Users.Invitation.UserInactive" xml:space="preserve"><value>The account is disabled: enable it before inviting it.</value></data>
+  <data name="Roles.Role.NameRequired" xml:space="preserve"><value>Enter a name for the role.</value></data>
+  <data name="Roles.Role.NameTooLong" xml:space="preserve"><value>The role name is longer than allowed.</value></data>
+  <data name="Roles.Role.DescriptionTooLong" xml:space="preserve"><value>The description is longer than allowed.</value></data>
+  <data name="Roles.Role.InvalidScope" xml:space="preserve"><value>Choose a valid scope for the role.</value></data>
+  <data name="Roles.Role.CompanyRequired" xml:space="preserve"><value>Choose the company for this role.</value></data>
+  <data name="Roles.Role.CompanyNotAllowed" xml:space="preserve"><value>This scope does not allow a specific company.</value></data>
+  <data name="Roles.Role.PermissionNotFound" xml:space="preserve"><value>The permission is not in the available catalog.</value></data>
+  <data name="Roles.Role.PermissionScopeInvalid" xml:space="preserve"><value>The permission is not available for this scope.</value></data>
+  <data name="Roles.Role.SystemRoleNameReserved" xml:space="preserve"><value>That name is reserved for a system role.</value></data>
+  <data name="Roles.RoleAssignment.CompanyRequired" xml:space="preserve"><value>This role assignment requires a company.</value></data>
+  <data name="Roles.RoleAssignment.CompanyNotAllowed" xml:space="preserve"><value>This role assignment does not allow a specific company.</value></data>
+  <data name="Roles.RoleAssignment.CompanyMismatch" xml:space="preserve"><value>The company does not match the role scope.</value></data>
   <data name="Roles.Role.NotFound" xml:space="preserve"><value>We couldn't find the role.</value></data>
   <data name="Roles.Role.AlreadyExists" xml:space="preserve"><value>A role with that name already exists.</value></data>
   <data name="Roles.Role.SystemRoleCannotChange" xml:space="preserve"><value>System roles can't be renamed, deleted or have their permissions changed.</value></data>
@@ -102,6 +114,7 @@
   <data name="Legal.AccountDeletion.DeletedDisplayName" xml:space="preserve"><value>Deleted account</value></data>
   <data name="Legal.AccountDeletion.GraceExpired" xml:space="preserve"><value>The period to cancel deletion has expired.</value></data>
   <data name="Legal.AccountDeletion.InvalidReason" xml:space="preserve"><value>Enter a reason up to 500 characters.</value></data>
+  <data name="Legal.AccountDeletion.LastAdmin" xml:space="preserve"><value>Before requesting deletion, each active organization must have another person with the Owner role.</value></data>
   <data name="Legal.AccountDeletion.PlatformOperator" xml:space="preserve"><value>Your operator account cannot be deleted from here.</value></data>
   <data name="Legal.AccountDeletion.ReauthRequired" xml:space="preserve"><value>Confirm the code we sent to request account deletion.</value></data>
   <data name="Tenancy.Member.IdentityRequired" xml:space="preserve"><value>The membership needs an account before activation.</value></data>

@@ -100,6 +100,10 @@ public sealed class AccessStatusCacheTests
             state.UserReads++;
             return Task.FromResult<UserStatus?>(state.UserStatus);
         }
+
+        public Task<IReadOnlyCollection<Guid>> ListActiveAsync(IReadOnlyCollection<Guid> userIds,
+            CancellationToken cancellationToken) => Task.FromResult<IReadOnlyCollection<Guid>>(
+            state.UserStatus == UserStatus.Active ? userIds : []);
     }
 
     private sealed class FakeAccessReader(FakeState state) : IUserTenantAccessReader
@@ -111,5 +115,6 @@ public sealed class AccessStatusCacheTests
             state.LastUserId = userId;
             return Task.FromResult(state.Accesses);
         }
+
     }
 }

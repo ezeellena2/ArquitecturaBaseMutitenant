@@ -14,6 +14,11 @@ public static class RoleErrors
     public const string PermissionScopeInvalidCode = "Roles.Role.PermissionScopeInvalid";
     public const string SystemRoleCannotChangeCode = "Roles.Role.SystemRoleCannotChange";
     public const string SystemRoleNameReservedCode = "Roles.Role.SystemRoleNameReserved";
+    public const string NotFoundCode = "Roles.Role.NotFound";
+    public const string AlreadyExistsCode = "Roles.Role.AlreadyExists";
+    public const string HasUsersCode = "Roles.Role.HasUsers";
+
+    public const string UserCountKey = "userCount";
 
     public static readonly Error NameRequired = Error.Validation(NameRequiredCode, "A role name is required.");
     public static readonly Error NameTooLong = Error.Validation(NameTooLongCode, "The role name is too long.");
@@ -25,4 +30,9 @@ public static class RoleErrors
     public static readonly Error PermissionScopeInvalid = Error.Validation(PermissionScopeInvalidCode, "A permission is not available for this role scope.");
     public static readonly Error SystemRoleCannotChange = Error.Forbidden(SystemRoleCannotChangeCode, "System roles cannot be changed.");
     public static readonly Error SystemRoleNameReserved = Error.Conflict(SystemRoleNameReservedCode, "The name is reserved for a system role.");
+    public static readonly Error NotFound = Error.NotFound(NotFoundCode, "The role was not found.");
+    public static readonly Error AlreadyExists = Error.Conflict(AlreadyExistsCode, "A role with that name already exists.");
+
+    public static Error HasUsers(int userCount) => Error.Conflict(HasUsersCode,
+        "The role still has users assigned.", new Dictionary<string, object?> { [UserCountKey] = userCount });
 }

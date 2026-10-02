@@ -13,4 +13,14 @@ internal sealed class UserStatusReader(ApplicationDbContext context) : IUserStat
             .Where(user => user.Id == userId)
             .Select(user => (UserStatus?)user.Status)
             .SingleOrDefaultAsync(cancellationToken);
+
+    public async Task<IReadOnlyCollection<Guid>> ListActiveAsync(IReadOnlyCollection<Guid> userIds,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(userIds);
+        if (userIds.Count == 0) return [];
+        return await context.Users.AsNoTracking()
+            .Where(user => userIds.Contains(user.Id) && user.Status == UserStatus.Active)
+            .Select(user => user.Id).Distinct().ToArrayAsync(cancellationToken);
+    }
 }

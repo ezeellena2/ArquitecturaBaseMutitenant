@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Common;
+using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using FluentValidation;
 
@@ -35,6 +36,14 @@ public static class ValidationRules
 
     public static IRuleBuilderOptions<T, string?> LongText<T>(this IRuleBuilder<T, string?> ruleBuilder) =>
         ruleBuilder.MaximumLength(TextLimits.LongText).WithMessage(_ => ValidationTexts.MaxLength);
+
+    public static IRuleBuilderOptions<T, IReadOnlyCollection<string>?> ValidPermissions<T>(
+        this IRuleBuilder<T, IReadOnlyCollection<string>?> ruleBuilder) =>
+        ruleBuilder
+            .NotNull().WithMessage(_ => ValidationTexts.Required)
+            .Must(permissions => permissions is not null
+                && permissions.All(permission => Permissions.All.Contains(permission, StringComparer.Ordinal)))
+            .WithMessage(_ => ValidationTexts.PermissionUnknown);
 
     public static IRuleBuilderOptions<T, string?> ValidEmail<T>(this IRuleBuilderInitial<T, string?> ruleBuilder) =>
         ruleBuilder.Cascade(CascadeMode.Stop)

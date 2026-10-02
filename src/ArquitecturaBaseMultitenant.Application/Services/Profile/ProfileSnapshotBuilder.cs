@@ -1,5 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
-using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Profile;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Application.Services.Legal;
@@ -10,8 +10,9 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Profile;
 
 /// <summary>Compone la cuenta y sus accesos globales con las preferencias del tenant activo.</summary>
 internal sealed class ProfileSnapshotBuilder(IUserRepository users, IUserTenantAccessReader accesses,
-    ITenantSettingsReader settings, ICultureCatalog cultures, ICountryCatalog countries,
-    ILoginMethodReader loginMethods, LoginMethodAvailability availability, LegalAcceptanceGuard legal)
+    ProfilePreferences preferences,
+    ILoginMethodReader loginMethods, LoginMethodAvailability availability, LegalAcceptanceGuard legal,
+    IPermissionService permissions)
 {
     internal async Task<MeResponse?> BuildAsync(Guid userId, Access access, Guid? activeTenantId,
         CancellationToken cancellationToken)
@@ -30,17 +31,16 @@ internal sealed class ProfileSnapshotBuilder(IUserRepository users, IUserTenantA
             TenantStatus: TenantStatus.Active,
             MemberStatus: MemberStatus.Active,
         };
-        var tenantSettings = mayReadSettings
-            ? await settings.FindCurrentAsync(cancellationToken) : null;
-        var culture = await cultures.FindAsync(account.Culture, cancellationToken);
-        var country = culture is null
-            ? null : await countries.FindAsync(culture.CountryCode, cancellationToken);
-        var currencyCode = tenantSettings?.DefaultCurrency ?? country?.DefaultCurrencyCode;
+        var currencyCode = await preferences.FindCurrencyCodeAsync(account.Culture, mayReadSettings, cancellationToken);
         var methods = await loginMethods.ListByUserIdAsync(userId, cancellationToken);
         var hasPersonalMethod = await availability.HasPersonalBackupAsync(userId, methods, cancellationToken);
+        IReadOnlyList<string> organizationPermissions = access == Access.Business && mayReadSettings
+            ? await permissions.GetOrganizationPermissionsAsync(userId, cancellationToken)
+            : [];
 
         return new MeResponse(account.Id, account.DisplayName, account.PrimaryEmail, access,
-            activeTenantId, personalSpace, organizations, EffectivePermissions.Empty,
+            activeTenantId, personalSpace, organizations,
+            new EffectivePermissions(organizationPermissions, new Dictionary<Guid, IReadOnlyList<string>>()),
             account.Culture, account.TimeZoneId, currencyCode, [])
         {
             Version = account.Version,

@@ -1,5 +1,6 @@
 using System.Threading.RateLimiting;
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
+using ArquitecturaBaseMultitenant.Api.Authorization;
 using ArquitecturaBaseMultitenant.Api.Authentication;
 using ArquitecturaBaseMultitenant.Api.Idempotency;
 using ArquitecturaBaseMultitenant.Api.Json;
@@ -9,6 +10,7 @@ using ArquitecturaBaseMultitenant.Api.RequestContext;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.Api;
@@ -22,6 +24,8 @@ public static class DependencyInjection
 
         services.AddHttpContextAccessor();
         services.AddAuthorization();
+        services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+        services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
         services.AddAntiforgery(options =>
         {
             options.Cookie.Name = "__Host-MtSignupCsrf";

@@ -6,4 +6,7 @@ namespace ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identi
 public interface IUserStatusReader
 {
     Task<UserStatus?> GetStatusAsync(Guid userId, CancellationToken cancellationToken);
+
+    Task<IReadOnlyCollection<Guid>> ListActiveAsync(IReadOnlyCollection<Guid> userIds,
+        CancellationToken cancellationToken);
 }
