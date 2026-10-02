@@ -42,4 +42,19 @@ public sealed class SignupValidationTests
         Assert.DoesNotContain(typeof(SignupRequest).GetProperties(),
             property => property.Name.Contains("Name", StringComparison.Ordinal));
     }
+
+    [Fact]
+    public async Task Business_organization_signup_requires_names_slug_and_terms()
+    {
+        var validator = new BusinessSignupRequestValidator();
+
+        Assert.True((await validator.ValidateAsync(new BusinessSignupRequest("Acme", "acme",
+            "Acme Argentina", null, true), Ct)).IsValid);
+        var invalid = await validator.ValidateAsync(new BusinessSignupRequest(" ", "", "", null, false), Ct);
+
+        Assert.Contains(invalid.Errors, error => error.PropertyName == "OrganizationName");
+        Assert.Contains(invalid.Errors, error => error.PropertyName == "Slug");
+        Assert.Contains(invalid.Errors, error => error.PropertyName == "FirstCompanyName");
+        Assert.Contains(invalid.Errors, error => error.PropertyName == "AcceptedTerms");
+    }
 }

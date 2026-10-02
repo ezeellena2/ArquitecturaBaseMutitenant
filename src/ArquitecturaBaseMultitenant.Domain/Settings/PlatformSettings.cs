@@ -55,4 +55,14 @@ public sealed class PlatformSettings : Entity, IAuditable
 
     public static Result CanRegisterBusiness(BusinessSignupMode mode) =>
         mode == BusinessSignupMode.Closed ? SignupErrors.BusinessClosed : Result.Success();
+
+    public Result CanCreateBusinessOrganization(int ownedOrganizationCount)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(ownedOrganizationCount);
+        var signup = CanRegisterBusiness();
+        if (signup.IsFailure) return signup;
+        return ownedOrganizationCount >= MaxOwnedOrganizations
+            ? BusinessSignupErrors.LimitReached
+            : Result.Success();
+    }
 }

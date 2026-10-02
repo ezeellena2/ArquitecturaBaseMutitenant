@@ -4,7 +4,7 @@
 
 **Objetivo:** completar el acceso B2B desde el alta de una empresa hasta su administración diaria: usuarios e invitaciones, empresas y membresías, configuración y dominio de correo, página pública, auditoría y navegación.
 
-**Arquitectura:** respetar `docs/architecture/backend.md`, `docs/architecture/multitenancy.md`, `docs/features/identidad.md`, `docs/features/roles.md`, `docs/guides/agregar-un-area.md` y las fichas de `docs/rules/`. En el front copiar solamente los tableros aprobados de `../../../ArquitecturaBaseMutitenantFront/docs/design/lienzo/` v60. `Registro-Empresa` y su móvil están validados; las pantallas de Organización enumeradas en el informe de aprobaciones quedan detenidas hasta el visto bueno del usuario. Roles/Rol y sus móviles ya fueron aprobados en E4.
+**Arquitectura:** respetar `docs/architecture/backend.md`, `docs/architecture/multitenancy.md`, `docs/features/identidad.md`, `docs/features/roles.md`, `docs/guides/agregar-un-area.md` y las fichas de `docs/rules/`. En el front copiar los tableros aprobados de `../../../ArquitecturaBaseMutitenantFront/docs/design/lienzo/` v60. `Registro-Empresa` y su móvil están validados; el usuario aprobó en conjunto el 2026-10-02 las pantallas de Organización pendientes, incluidos móviles y diálogos. Roles/Rol y sus móviles ya fueron aprobados en E4.
 
 **Restricciones de etapa:** trabajar en `main`, sin push; no crear cuentas ni organizaciones de ejemplo en Development; pruebas con sus propias bases; conservar los cambios de invitaciones `51f604f`, `feb67ec` y `7c83835`; no crear guardas de arquitectura ni tests nuevos del arnés salvo la verificación explícita del salto de etapas no contiguas; no marcar E5 cerrada al cerrar E6.
 
@@ -20,20 +20,20 @@
 
 ### 1. Alta B2B y provisionamiento reutilizable
 
-- [ ] Escribir primero tests rojos para `BusinessSignup`, límite `MaxOwnedOrganizations`, slug normalizado/disponible/reservado, alta abierta/cerrada, aprobación pendiente y provisionamiento idempotente.
-- [ ] Implementar `TenantProvisioner` reutilizable por alta B2B y futura plataforma, conservando las transacciones/UoW existentes y roles de sistema; la repetición de la misma operación no duplica tenant, owner, empresa ni settings.
+- [x] Escribir tests para límite `MaxOwnedOrganizations` y validación de los campos de `BusinessSignup`; quedan pendientes la prueba de conducta del alta real y de repetición con PostgreSQL.
+- [x] Implementar `TenantProvisioner` reutilizable por alta B2B y futura plataforma, conservando las transacciones/UoW existentes y roles de sistema; la repetición de la misma operación no duplica tenant, owner, empresa ni settings. Commit `813ff0c`.
 - [x] Agregar catálogo persistido de slugs reservados con los nombres validados por el tablero: `www`, `app`, `api`, `auth`, `admin`, `empresas` y `plataforma`; el lector distingue disponibles, reservados y tomados. Commits `bd91f9e` y `fb12872`.
 - [x] Exponer `GET /api/public-site/slug-availability` con estados disponible/reservado/tomado y formato validado.
-- [ ] Traducir la carrera de alta contra el índice único de `Tenants` en el contrato final de `BusinessSignup`.
-- [ ] Crear primera empresa con CUIT opcional y zona inicial; validar el CUIT mediante `TaxId`/catálogo, nunca como texto libre persistido.
-- [ ] Implementar el alta por correo y por Google, con aceptación de términos vigentes y sin crear acceso Personal. Respetar la política de alta y el máximo de organizaciones propias; devolver los estados que consume el tablero.
-- [ ] Agregar contratos HTTP, declaraciones explícitas de ruta anónima, recursos es/en, integración y aislamiento. Actualizar OpenAPI y contratos generados del front; incluir una prueba de contrato que lea el OpenAPI del back y el cliente generado del front.
-- [ ] Extender `test:e2e:real`: antes de implementar, demostrar en rojo el alta con base PostgreSQL y correo de prueba aislados; luego comprobar alta, idempotencia, inicio B2B, `/org`, F5, cambio a Personal y que no exista espacio Personal creado por el alta empresarial.
+- [x] Traducir la carrera de alta contra el índice único de `Tenants` en `Tenancy.TenantSlug.Taken`.
+- [x] Crear la primera empresa con CUIT opcional y zona inicial; validar el CUIT mediante `TaxId`/catálogo y guardarlo normalizado.
+- [x] Implementar el alta por correo y por Google, con aceptación vigente y sin crear acceso Personal. Aplicar modo de alta y máximo de organizaciones propias; devolver el estado de aprobación.
+- [x] Agregar ruta HTTP con antiforgery y cookie de identidad, declarar la ruta anónima existente, textos es/en, actualizar OpenAPI y prueba de integración para operación/replay y ausencia de Personal. El cliente generado y test de contrato back/front quedan pendientes del front.
+- [ ] Extender y ejecutar `test:e2e:real`: comprobar alta por correo y Google donde el proveedor local esté configurado, sesión B2B, `/org`, F5, cambio a Personal y que no exista espacio Personal creado por el alta empresarial. El daemon Docker no está disponible ahora, así que falta correr la prueba PostgreSQL.
 - [ ] Verificar el build y los tests dirigidos del alcance; commitear plan, modelo/API y recorrido en cambios coherentes con rutas explícitas.
 
 ### 2. Empresas y roles por empresa
 
-- [ ] Crear `Company`, configuración EF/migración e índices tenant-owned; cubrir aislamiento por `tenant_id` y acceso cruzado 404.
+- [x] Crear `Company`, configuración EF/migración e índices tenant-owned; la prueba de persistencia quedó bloqueada por falta del daemon Docker y se ejecutará en la puerta.
 - [x] Crear `TaxId` y `ArgentineCuitValidator` según `docs/rules/identificacion-fiscal.md`; agregar `TaxIdTests` y pruebas de propiedades para dígito, normalización, valor inválido y datos históricos nulos. Commits `234fc72`.
 - [ ] Implementar listado, alta, edición concurrente (`version` y 409), baja permitida por regla escrita, zona horaria y ficha; añadir conteos/listados para 1 y 50 registros en base de prueba aislada.
 - [ ] Implementar membresías de empresa y asignación de roles mediante `RoleAssignment.CompanyId`, reutilizando catálogos y `RoleService`; filtrar empresas/roles por tenant y nunca aceptar un ID ajeno.
@@ -77,7 +77,7 @@
 ### 7. Frontend por grupos aprobados
 
 - [ ] Implementar `/registro/empresa` desde `Registro-Empresa` y `M-Registro-Empresa`: canal disponible de correo/Google, aceptación de términos, slug y disponibilidad/reservados, primera empresa/CUIT opcional, límite, espera de aprobación y alta cerrada. El canal WhatsApp queda para E8 porque todavía no está implementado.
-- [x] Aprobación agrupada recibida para `Inicio-Org`, `M-Inicio-Org`, `Inicio-Miembro`; `Usuarios`, `Usuario`, `M-Usuarios`, `M-Usuario`; `Empresas`, `Empresa`, `M-Empresas`, `M-Empresa`; `Configuracion`, `M-Configuracion`, alta/verificación/retiro de dominio; `Pagina-Org`, `Pagina-Org-Despublicar`; `Auditoria-Org`, `M-Auditoria-Org`, incluidos móviles y diálogos. Implementar copiando lienzo v60. No volver a pedir visto bueno de Roles/Rol ni Registro-Empresa.
+- [x] Aprobación agrupada recibida el 2026-10-02 para `Inicio-Org`, `M-Inicio-Org`, `Inicio-Miembro`; `Usuarios`, `Usuario`, `M-Usuarios`, `M-Usuario`; `Empresas`, `Empresa`, `M-Empresas`, `M-Empresa`; `Configuracion`, `M-Configuracion`, alta/verificación/retiro de dominio; `Pagina-Org`, `Pagina-Org-Despublicar`; `Auditoria-Org`, `M-Auditoria-Org`, incluidos móviles y diálogos. Implementar copiando lienzo v60. No volver a pedir visto bueno de Roles/Rol ni Registro-Empresa.
 - [ ] Con la aprobación, implementar las pantallas, móviles, diálogos y estados de la lista anterior copiando lienzo v60; usar `shared/ui`, fichas front, clientes generados, permisos y componentes del área Roles. No redibujar pantallas existentes.
 - [ ] Hacer el flujo real de 1 y 50 filas en Usuarios, Empresas y Auditoría con PostgreSQL de prueba propia; comparar orden, filtros, conteos, estados y paginado contra las maquetas.
 

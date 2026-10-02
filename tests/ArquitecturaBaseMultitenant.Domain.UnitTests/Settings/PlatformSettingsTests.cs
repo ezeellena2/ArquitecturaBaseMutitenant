@@ -32,6 +32,16 @@ public sealed class PlatformSettingsTests
     }
 
     [Fact]
+    public void Business_signup_enforces_maximum_owned_organizations()
+    {
+        var settings = PlatformSettings.Create(ConsumerSignupMode.Open, BusinessSignupMode.Open, 2);
+
+        Assert.True(settings.CanCreateBusinessOrganization(1).IsSuccess);
+        Assert.Equal(BusinessSignupErrors.LimitReached,
+            settings.CanCreateBusinessOrganization(2).Error);
+    }
+
+    [Fact]
     public void Platform_settings_have_a_single_identity_and_thirty_day_deletion_grace()
     {
         var settings = PlatformSettings.Create(ConsumerSignupMode.Open, BusinessSignupMode.RequiresApproval, 4);

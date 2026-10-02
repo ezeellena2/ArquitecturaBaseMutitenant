@@ -11,7 +11,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
 /// <summary>Verifica identidad empresarial por correo antes de abrir el formulario de organización.</summary>
 internal sealed class BusinessSignupService(SignupCodeRequester codes, SignupVerificationCore verification,
-    IPersonalSpaceProvisioner defaults, IRequestValidator validator, IUnitOfWork unitOfWork,
+    IPersonalSpaceProvisioner defaults, BusinessOrganizationCreator organizationCreator,
+    IRequestValidator validator, IUnitOfWork unitOfWork,
     ISignInService signIn, TimeProvider timeProvider, ILogger<BusinessSignupService> logger)
     : IBusinessSignupService
 {
@@ -39,4 +40,14 @@ internal sealed class BusinessSignupService(SignupCodeRequester codes, SignupVer
             await signIn.SignInAsync(verified.Value, cancellationToken);
             return Result.Success();
         });
+
+    public Task<Result<BusinessSignupResponse>> CreateOrganizationAsync(Guid userId, Guid operationId,
+        BusinessSignupRequest request, CancellationToken cancellationToken) =>
+        OperationLog.RunAsync<BusinessSignupResponse>(logger, timeProvider, "CreateBusinessSignupOrganization",
+            async () =>
+            {
+                ArgumentNullException.ThrowIfNull(request);
+                if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
+                return await organizationCreator.CreateAsync(userId, operationId, request, cancellationToken);
+            });
 }

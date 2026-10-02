@@ -95,6 +95,7 @@ public sealed class UserTenantAccessReaderTests(ApiFactory factory)
         }, CommitPolicy.OnSuccess, Ct);
 
         var business = Tenant.CreateBusiness("Organización para conteo de Dueños", requiresApproval: false);
+        var pendingBusiness = Tenant.CreateBusiness("Organización pendiente", requiresApproval: true);
         Assert.True(business.Activate().IsSuccess);
         using (services.GetRequiredService<ITenantScope>().Enter(business.Id))
         {
@@ -119,9 +120,21 @@ public sealed class UserTenantAccessReaderTests(ApiFactory factory)
             }, CommitPolicy.OnSuccess, Ct);
         }
 
+        using (services.GetRequiredService<ITenantScope>().Enter(pendingBusiness.Id))
+        {
+            await work.ExecuteInTransactionAsync(ct =>
+            {
+                services.GetRequiredService<TenantSpaceProvisioner>().Stage(pendingBusiness,
+                    TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"), [userIds[0]]);
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+
         var admins = services.GetRequiredService<ITenantAdminReader>();
         Assert.Equal(1, await admins.CountActiveOwnersAsync(business.Id, Ct));
         Assert.Equal(new[] { business.Id }, await admins.ListActiveTenantIdsForOwnerAsync(userIds[0], Ct));
+        Assert.Equal(new[] { business.Id, pendingBusiness.Id }.Order(),
+            await admins.ListOwnedBusinessTenantIdsAsync(userIds[0], Ct));
 
         await work.ExecuteInTransactionAsync(ct =>
         {

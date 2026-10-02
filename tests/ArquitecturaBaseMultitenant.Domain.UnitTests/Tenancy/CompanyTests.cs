@@ -43,4 +43,15 @@ public sealed class CompanyTests
         Assert.Equal(taxId.Value, company.TaxId);
         Assert.Equal("America/Argentina/Buenos_Aires", company.TimeZoneId);
     }
+
+    [Fact]
+    public void Create_can_keep_a_stable_id_for_idempotent_provisioning()
+    {
+        var id = Guid.Parse("20000000-0000-0000-0000-000000000044");
+
+        var company = Company.Create(id, "Acme", null, "UTC");
+
+        Assert.True(company.IsSuccess);
+        Assert.Equal(id, company.Value.Id);
+    }
 }

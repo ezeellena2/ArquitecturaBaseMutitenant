@@ -58,6 +58,8 @@
   <data name="Auth.LoginMethod.NotVerified" xml:space="preserve"><value>Verify this method before making it primary.</value></data>
   <data name="Auth.Signup.Closed" xml:space="preserve"><value>Personal signup is closed.</value></data>
   <data name="Auth.BusinessSignup.Closed" xml:space="preserve"><value>Business registration is closed.</value></data>
+  <data name="Auth.BusinessSignup.IdentityRequired" xml:space="preserve"><value>Sign in to create an organization.</value></data>
+  <data name="Auth.BusinessSignup.ActiveSpace" xml:space="preserve"><value>Create an organization from the account session without an active space.</value></data>
   <data name="Identity.Account.LockedOut" xml:space="preserve"><value>Your account is temporarily locked.</value></data>
   <data name="Identity.Account.Suspended" xml:space="preserve"><value>Your account is suspended.</value></data>
   <data name="Identity.Account.PendingDeletion" xml:space="preserve"><value>Your account is pending deletion.</value></data>
@@ -96,6 +98,9 @@
   <data name="Tenancy.Tenant.Provisioning" xml:space="preserve"><value>The organization is being provisioned.</value></data>
   <data name="Tenancy.Tenant.Closed" xml:space="preserve"><value>The organization is closed.</value></data>
   <data name="Tenancy.TenantSlug.Invalid" xml:space="preserve"><value>Use lowercase letters, numbers, and hyphens; the address cannot have two characters.</value></data>
+  <data name="Tenancy.TenantSlug.Reserved" xml:space="preserve"><value>This address is reserved.</value></data>
+  <data name="Tenancy.TenantSlug.Taken" xml:space="preserve"><value>This address is already in use.</value></data>
+  <data name="Tenancy.Organization.LimitReached" xml:space="preserve"><value>You have reached your organization limit.</value></data>
   <data name="Tenancy.Company.NameRequired" xml:space="preserve"><value>Enter the company name.</value></data>
   <data name="Tenancy.Company.NameTooLong" xml:space="preserve"><value>The company name is too long.</value></data>
   <data name="Tenancy.Company.TimeZoneRequired" xml:space="preserve"><value>Choose a time zone.</value></data>

@@ -58,6 +58,8 @@
   <data name="Auth.LoginMethod.NotVerified" xml:space="preserve"><value>Verificá este método antes de usarlo como principal.</value></data>
   <data name="Auth.Signup.Closed" xml:space="preserve"><value>El registro de personas está cerrado.</value></data>
   <data name="Auth.BusinessSignup.Closed" xml:space="preserve"><value>El registro de empresas está cerrado.</value></data>
+  <data name="Auth.BusinessSignup.IdentityRequired" xml:space="preserve"><value>Iniciá sesión para crear una organización.</value></data>
+  <data name="Auth.BusinessSignup.ActiveSpace" xml:space="preserve"><value>Para crear una organización, usá la sesión de la cuenta sin un espacio activo.</value></data>
   <data name="Identity.Account.LockedOut" xml:space="preserve"><value>Tu cuenta está bloqueada por unos minutos.</value></data>
   <data name="Identity.Account.Suspended" xml:space="preserve"><value>Tu cuenta está suspendida.</value></data>
   <data name="Identity.Account.PendingDeletion" xml:space="preserve"><value>Tu cuenta tiene la baja pedida.</value></data>
@@ -96,6 +98,9 @@
   <data name="Tenancy.Tenant.Provisioning" xml:space="preserve"><value>La organización se está preparando.</value></data>
   <data name="Tenancy.Tenant.Closed" xml:space="preserve"><value>La organización está cerrada.</value></data>
   <data name="Tenancy.TenantSlug.Invalid" xml:space="preserve"><value>Usá letras minúsculas, números y guiones; la dirección no puede tener dos caracteres.</value></data>
+  <data name="Tenancy.TenantSlug.Reserved" xml:space="preserve"><value>Esta dirección está reservada.</value></data>
+  <data name="Tenancy.TenantSlug.Taken" xml:space="preserve"><value>Esta dirección ya está en uso.</value></data>
+  <data name="Tenancy.Organization.LimitReached" xml:space="preserve"><value>Llegaste al límite de organizaciones propias.</value></data>
   <data name="Tenancy.Company.NameRequired" xml:space="preserve"><value>Escribí el nombre de la empresa.</value></data>
   <data name="Tenancy.Company.NameTooLong" xml:space="preserve"><value>El nombre de la empresa es demasiado largo.</value></data>
   <data name="Tenancy.Company.TimeZoneRequired" xml:space="preserve"><value>Elegí una zona horaria.</value></data>

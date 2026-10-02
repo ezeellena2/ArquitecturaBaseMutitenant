@@ -1232,6 +1232,110 @@
         }
       }
     },
+    "/api/auth/business-signup": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BusinessSignupHttpRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BusinessSignupHttpRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessSignupResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessSignupResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessSignupResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/external/google": {
       "get": {
         "tags": [
@@ -3261,6 +3365,76 @@
           }
         },
         "description": "Recibe el correo que se quiere agregar a la cuenta y lo entrega al flujo de validación. ToString oculta\r\nlos datos sensibles para que no se impriman al registrar la solicitud."
+      },
+      "BusinessSignupHttpRequest": {
+        "required": [
+          "acceptedTerms"
+        ],
+        "type": "object",
+        "properties": {
+          "organizationName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "slug": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "firstCompanyName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "taxId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "acceptedTerms": {
+            "type": "boolean"
+          }
+        },
+        "description": "Recibe los datos de la primera organización y empresa sin imprimir datos fiscales en logs."
+      },
+      "BusinessSignupResponse": {
+        "required": [
+          "tenantId",
+          "organizationName",
+          "slug",
+          "requiresApproval",
+          "firstCompanyId",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "organizationName": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "requiresApproval": {
+            "type": "boolean"
+          },
+          "firstCompanyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TenantStatus"
+          }
+        },
+        "description": "Confirma el alta y permite continuar por su estado sin inferirlo del contenido de la página."
       },
       "CancelAccountDeletionHttpRequest": {
         "type": "object",

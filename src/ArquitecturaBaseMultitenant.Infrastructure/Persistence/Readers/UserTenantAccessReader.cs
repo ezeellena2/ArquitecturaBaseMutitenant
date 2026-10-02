@@ -35,6 +35,20 @@ internal sealed class UserTenantAccessReader(ApplicationDbContext context, IUser
             ? tenantIds : [];
     }
 
+    public async Task<IReadOnlyList<Guid>> ListOwnedBusinessTenantIdsAsync(Guid userId, CancellationToken ct)
+    {
+        if (userId == Guid.Empty) throw new ArgumentException("The user id cannot be empty.", nameof(userId));
+        var tenantIds = await (from access in context.UserTenantAccesses.AsNoTracking()
+                               join tenant in context.Tenants.AsNoTracking() on access.TenantId equals tenant.Id
+                               where access.UserId == userId && access.RoleName == SystemRoles.TenantAdmin
+                                   && access.Status == MemberStatus.Active && tenant.Kind == TenantKind.Business
+                                   && tenant.Status != TenantStatus.Closed
+                               select tenant.Id)
+            .Distinct().Order().ToArrayAsync(ct);
+        return tenantIds.Length > 0 && await users.ListActiveAsync([userId], ct) is { Count: > 0 }
+            ? tenantIds : [];
+    }
+
     public async Task<int> CountActiveOwnersAsync(Guid tenantId, CancellationToken ct)
     {
         if (tenantId == Guid.Empty) throw new ArgumentException("A tenant id is required.", nameof(tenantId));

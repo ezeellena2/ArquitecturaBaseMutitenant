@@ -10,4 +10,7 @@ public interface IBusinessSignupService
         CancellationToken cancellationToken);
 
     Task<Result> VerifyEmailCodeAsync(VerifySignupRequest request, CancellationToken cancellationToken);
+
+    Task<Result<BusinessSignupResponse>> CreateOrganizationAsync(Guid userId, Guid operationId,
+        BusinessSignupRequest request, CancellationToken cancellationToken);
 }

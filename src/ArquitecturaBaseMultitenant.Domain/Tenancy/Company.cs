@@ -20,6 +20,13 @@ public sealed class Company : Entity, ITenantOwned, IAuditable, IVersioned
         TimeZoneId = timeZoneId;
     }
 
+    private Company(Guid id, string name, TaxId? taxId, string timeZoneId) : base(id)
+    {
+        Name = name;
+        SetTaxId(taxId);
+        TimeZoneId = timeZoneId;
+    }
+
     public string Name { get; private set; }
 
     public string? TaxCountry { get; private set; }
@@ -50,6 +57,14 @@ public sealed class Company : Entity, ITenantOwned, IAuditable, IVersioned
         var validation = Validate(name, timeZoneId);
         if (validation.IsFailure) return validation.Error;
         return new Company(name!.Trim(), taxId, timeZoneId!.Trim());
+    }
+
+    public static Result<Company> Create(Guid id, string? name, TaxId? taxId, string? timeZoneId)
+    {
+        if (id == Guid.Empty) throw new ArgumentException("A company ID is required.", nameof(id));
+        var validation = Validate(name, timeZoneId);
+        if (validation.IsFailure) return validation.Error;
+        return new Company(id, name!.Trim(), taxId, timeZoneId!.Trim());
     }
 
     public Result Update(string? name, TaxId? taxId, string? timeZoneId)
