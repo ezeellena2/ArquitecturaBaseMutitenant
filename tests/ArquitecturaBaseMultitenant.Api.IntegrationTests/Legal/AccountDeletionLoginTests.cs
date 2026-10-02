@@ -29,6 +29,7 @@ public sealed class AccountDeletionLoginTests(ApiFactory factory)
     [Theory]
     [InlineData("consumer")]
     [InlineData("business")]
+    [InlineData("invitation")]
     public async Task Code_proves_pending_account_without_session_and_preserves_the_selected_door(string access)
     {
         await factory.Services.SeedDatabaseAsync(Ct);
@@ -63,7 +64,7 @@ public sealed class AccountDeletionLoginTests(ApiFactory factory)
         using var requested = await AccountJourney.PostAsync(client, "/api/auth/login-code", new { email = account.Email.Value }, Ct);
         Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
         var code = await PickupCodeReader.ReadAsync(host.Services, account.Email.Value, Ct);
-        var returnUrl = "/connect/authorize?client_id=web&access=" + access;
+        var returnUrl = access == "invitation" ? "/invitacion" : "/connect/authorize?client_id=web&access=" + access;
         using var verified = await AccountJourney.PostAsync(client, "/api/auth/login-code/verify",
             new { email = account.Email.Value, code, returnUrl }, Ct);
         Assert.Equal(HttpStatusCode.Forbidden, verified.StatusCode);
@@ -88,13 +89,14 @@ public sealed class AccountDeletionLoginTests(ApiFactory factory)
     [Theory]
     [InlineData("consumer")]
     [InlineData("business")]
+    [InlineData("invitation")]
     public async Task Cancellation_uses_the_proved_account_and_return_door_and_rejects_replay(string access)
     {
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
             { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
         var oldToken = client.DefaultRequestHeaders.Authorization;
-        var returnUrl = "/connect/authorize?client_id=web&access=" + access;
+        var returnUrl = access == "invitation" ? "/invitacion" : "/connect/authorize?client_id=web&access=" + access;
         string secret;
         await using (var scope = factory.Services.CreateAsyncScope())
         {

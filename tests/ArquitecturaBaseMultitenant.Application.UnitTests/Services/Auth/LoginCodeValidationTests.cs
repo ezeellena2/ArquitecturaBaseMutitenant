@@ -33,6 +33,11 @@ public sealed class LoginCodeValidationTests
     [InlineData("12345a", "/connect/authorize?client_id=web", false)]
     [InlineData("123456", "https://evil.example/connect/authorize", false)]
     [InlineData("123456", "//evil.example", false)]
+    [InlineData("123456", "/invitacion", true)]
+    [InlineData("123456", "/invitacion?access=consumer", false)]
+    [InlineData("123456", "/invitacion#token", false)]
+    [InlineData("123456", "/invitacion/", false)]
+    [InlineData("123456", "/org", false)]
     public async Task Verification_requires_six_digits_and_local_authorize_return(
         string code, string returnUrl, bool expectedValid)
     {
@@ -53,5 +58,20 @@ public sealed class LoginCodeValidationTests
 
         Assert.Contains(result.Errors, error => error.PropertyName == "Email");
         Assert.Contains(result.Errors, error => error.PropertyName == "Code");
+    }
+
+    [Theory]
+    [InlineData("/invitacion", false, true)]
+    [InlineData("/invitacion", true, false)]
+    [InlineData("/invitacion?access=consumer", false, false)]
+    [InlineData("/invitacion#token", false, false)]
+    [InlineData("https://other.test/invitacion", false, false)]
+    [InlineData("//other.test/invitacion", false, false)]
+    public async Task Google_allows_only_exact_invitation_return_and_only_for_login(
+        string returnUrl, bool signup, bool expectedValid)
+    {
+        var result = await new ExternalSignInRequestValidator().ValidateAsync(
+            new ExternalSignInRequest(returnUrl, signup, true, null, null), Ct);
+        Assert.Equal(expectedValid, result.IsValid);
     }
 }

@@ -36,7 +36,64 @@ public sealed class GoogleEndpointJourneyTests(ApiFactory factory)
     private const string Verifier = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~";
 
     [Fact]
-    public async Task Pending_Google_callback_keeps_ticket_in_secure_cookie_and_expires_it()
+    public async Task Invitation_Google_login_returns_without_provisioning_personal_space()
+    {
+        await factory.Services.SeedDatabaseAsync(Ct);
+        var identity = new FakeGoogleIdentity(Guid.NewGuid().ToString("N"), $"google-invited-{Guid.NewGuid():N}@example.test");
+        using var host = HostWith(identity);
+        Guid userId;
+        await using (var scope = host.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            var created = await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                var user = await services.GetRequiredService<IUserRepository>().CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct);
+                var method = ArquitecturaBaseMultitenant.Domain.Authentication.LoginMethod.CreateGoogle(user.Id, identity.Subject,
+                    ArquitecturaBaseMultitenant.Domain.ValueObjects.Email.Create(identity.Email).Value);
+                method.Verify(services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime);
+                Assert.True(method.MakePrimary().IsSuccess);
+                services.GetRequiredService<ILoginMethodRepository>().Add(method);
+                return ArquitecturaBaseMultitenant.Domain.Results.Result.Success(user.Id);
+            }, CommitPolicy.OnSuccess, Ct);
+            userId = created.Value;
+        }
+        using var client = Client(host);
+        using var challenged = await client.GetAsync("/api/auth/external/google?returnUrl=%2Finvitacion", Ct);
+        Assert.Equal(HttpStatusCode.Redirect, challenged.StatusCode);
+        using var callback = await client.GetAsync("/api/auth/external/callback", Ct);
+        Assert.Equal("/invitacion", callback.Headers.Location?.ToString());
+        Assert.Contains(callback.Headers.GetValues("Set-Cookie"), value => value.Contains("Identity.Application", StringComparison.Ordinal));
+        await using var checkedScope = host.Services.CreateAsyncScope();
+        Assert.Empty(await checkedScope.ServiceProvider.GetRequiredService<IUserTenantAccessReader>().ListForUserAsync(userId, Ct));
+    }
+
+    [Theory]
+    [InlineData("/invitacion?access=consumer")]
+    [InlineData("/invitacion#token")]
+    [InlineData("//other.test/invitacion")]
+    public async Task Invitation_Google_login_rejects_altered_returns(string returnUrl)
+    {
+        using var host = HostWith(new FakeGoogleIdentity(Guid.NewGuid().ToString("N"), $"google-invalid-{Guid.NewGuid():N}@example.test"));
+        using var client = Client(host);
+        using var response = await client.GetAsync("/api/auth/external/google?returnUrl=" + Uri.EscapeDataString(returnUrl), Ct);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Invitation_Google_failure_preserves_the_cookie_only_login_return()
+    {
+        using var host = HostWith(new FakeGoogleIdentity(Guid.NewGuid().ToString("N"), $"google-unknown-{Guid.NewGuid():N}@example.test"));
+        using var client = Client(host);
+        using var challenge = await client.GetAsync("/api/auth/external/google?returnUrl=%2Finvitacion", Ct);
+        Assert.Equal(HttpStatusCode.Redirect, challenge.StatusCode);
+        using var callback = await client.GetAsync("/api/auth/external/callback", Ct);
+        Assert.Equal("/login?error=Auth.Google.AccountNotFound&returnUrl=%2Finvitacion", callback.Headers.Location?.ToString());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Pending_Google_callback_keeps_ticket_in_secure_cookie_and_expires_it(bool invitation)
     {
         await factory.Services.SeedDatabaseAsync(Ct);
         var clock = new FakeTimeProvider(factory.Services.GetRequiredService<TimeProvider>().GetUtcNow());
@@ -55,10 +112,11 @@ public sealed class GoogleEndpointJourneyTests(ApiFactory factory)
                     "Prueba Google", clock.GetUtcNow().UtcDateTime, 30, ct), CommitPolicy.OnSuccess, Ct);
             Assert.True(result.IsSuccess);
         }
-        var returnUrl = AuthorizePath("business", WebEncoders.Base64UrlEncode(SHA256.HashData(Encoding.ASCII.GetBytes(Verifier))));
+        var returnUrl = invitation ? "/invitacion" : AuthorizePath("business", WebEncoders.Base64UrlEncode(SHA256.HashData(Encoding.ASCII.GetBytes(Verifier))));
         using var signIn = await client.GetAsync("/api/auth/external/google?access=business&returnUrl=" + Uri.EscapeDataString(returnUrl), Ct);
         using var callback = await client.GetAsync("/api/auth/external/callback", Ct);
-        Assert.Equal("/login/empresa?error=Identity.Account.PendingDeletion", callback.Headers.Location?.ToString());
+        Assert.Equal(invitation ? "/login/empresa?error=Identity.Account.PendingDeletion&returnUrl=%2Finvitacion"
+            : "/login/empresa?error=Identity.Account.PendingDeletion", callback.Headers.Location?.ToString());
         var cookie = Assert.Single(callback.Headers.GetValues("Set-Cookie"), value => value.StartsWith("MtPendingDeletion=", StringComparison.Ordinal));
         Assert.Contains("secure", cookie, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("httponly", cookie, StringComparison.OrdinalIgnoreCase);

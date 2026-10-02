@@ -24,7 +24,7 @@ internal sealed class AccountDeletionCanceller(IReauthTicketRepository tickets, 
         var ticket = await tickets.GetByHashAsync(hash, ct);
         if (ticket is null || ticket.UserId != userId || ticket.ConsumedAtUtc is not null)
             return AccountDeletionErrors.ReauthRequired;
-        if (!ReturnUrls.TryReadAccessSelection(ticket.ReturnUrl, out _)) return AccountDeletionErrors.ReauthRequired;
+        if (!ReturnUrls.IsLoginReturn(ticket.ReturnUrl)) return AccountDeletionErrors.ReauthRequired;
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         var account = await users.GetByIdAsync(userId.Value, ct);
         if (account is null) return AccountDeletionErrors.ReauthRequired;

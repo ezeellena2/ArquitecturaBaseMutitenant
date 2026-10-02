@@ -54,13 +54,16 @@ internal sealed class LoginCodeVerificationFlow(
         if (account.Status == UserStatus.PendingDeletion)
             return Fail(userId, cancellation.Issue(account, null, request.ReturnUrl!));
 
-        if (!ReturnUrls.TryReadAccessSelection(request.ReturnUrl, out var selection))
-            throw new InvalidOperationException("A validated return URL became invalid.");
-        if (selection.Access == Access.Business)
+        if (request.ReturnUrl != ReturnUrls.InvitationPath)
         {
-            var selected = await connect.GetActiveUserAsync(userId.Value, selection.Access,
-                selection.TenantId, cancellationToken);
-            if (selected.IsFailure) return Fail(userId, selected.Error);
+            if (!ReturnUrls.TryReadAccessSelection(request.ReturnUrl, out var selection))
+                throw new InvalidOperationException("A validated return URL became invalid.");
+            if (selection.Access == Access.Business)
+            {
+                var selected = await connect.GetActiveUserAsync(userId.Value, selection.Access,
+                    selection.TenantId, cancellationToken);
+                if (selected.IsFailure) return Fail(userId, selected.Error);
+            }
         }
 
         await signIn.ResetFailedAttemptsAsync(userId.Value, cancellationToken);

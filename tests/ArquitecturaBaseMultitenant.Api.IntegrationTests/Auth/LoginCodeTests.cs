@@ -25,6 +25,31 @@ public sealed class LoginCodeTests(ApiFactory factory)
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
+    public async Task Invitation_login_emits_only_identity_cookie_without_personal_space()
+    {
+        using var client = factory.CreateClient();
+        var email = $"invitation-login-{Guid.NewGuid():N}@example.test";
+        var userId = await CreateVerifiedEmailAccountAsync(email);
+        using var requested = await AccountJourney.PostAsync(client, "/api/auth/login-code", new { email }, Ct);
+        Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
+        var code = await ReadPickupCodeAsync(email);
+        using var verified = await AccountJourney.PostAsync(client, "/api/auth/login-code/verify",
+            new { email, code, returnUrl = "/invitacion" }, Ct);
+        Assert.Equal(HttpStatusCode.OK, verified.StatusCode);
+        Assert.Contains(verified.Headers.GetValues("Set-Cookie"),
+            value => value.Contains("Identity.Application", StringComparison.Ordinal));
+        using var body = await verified.Content.ReadFromJsonAsync<System.Text.Json.JsonDocument>(Ct);
+        Assert.Equal("/invitacion", body!.RootElement.GetProperty("returnUrl").GetString());
+        Assert.False(body.RootElement.TryGetProperty("access_token", out _));
+        await using var scope = factory.Services.CreateAsyncScope();
+        Assert.Empty(await scope.ServiceProvider.GetRequiredService<IUserTenantAccessReader>().ListForUserAsync(userId, Ct));
+        using var replay = await AccountJourney.PostAsync(client, "/api/auth/login-code/verify",
+            new { email, code, returnUrl = "/invitacion" }, Ct);
+        Assert.Equal(HttpStatusCode.BadRequest, replay.StatusCode);
+        Assert.False(replay.Headers.Contains("Set-Cookie"));
+    }
+
+    [Fact]
     public async Task Known_and_unknown_email_get_the_same_request_response()
     {
         using var client = factory.CreateClient();

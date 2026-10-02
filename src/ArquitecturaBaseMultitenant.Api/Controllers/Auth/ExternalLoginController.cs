@@ -89,7 +89,7 @@ public sealed class ExternalLoginController(
             if (!query.AcceptedTerms) return Invalid("acceptedTerms", ValidationTexts.Required);
             if (!IsLocalAppPath(query.ReturnTo)) return Invalid("returnTo", ValidationTexts.ReturnUrlInvalid);
         }
-        else if (!ReturnUrls.IsAuthorizeRequest(query.ReturnUrl))
+        else if (!ReturnUrls.IsLoginReturn(query.ReturnUrl))
         {
             return Invalid("returnUrl", ValidationTexts.ReturnUrlInvalid);
         }
@@ -138,7 +138,8 @@ public sealed class ExternalLoginController(
             var destination = signup && result.Error.Code == "Auth.Signup.Closed"
                 ? "/registro"
                 : Value(state, AccessKey) == "business" ? "/login/empresa" : ReturnUrls.LoginPath;
-            return RedirectWithError(destination, result.Error.Code);
+            return RedirectWithError(destination, result.Error.Code,
+                !signup && Value(state, ReturnUrlKey) == ReturnUrls.InvitationPath ? ReturnUrls.InvitationPath : null);
         }
 
         if (!signup) return LocalRedirect(result.Value.ReturnUrl);
@@ -148,8 +149,12 @@ public sealed class ExternalLoginController(
             new Dictionary<string, string?> { ["google"] = "complete", ["returnTo"] = returnTo }));
     }
 
-    private LocalRedirectResult RedirectWithError(string path, string code) =>
-        LocalRedirect(path + QueryString.Create("error", code));
+    private LocalRedirectResult RedirectWithError(string path, string code, string? returnUrl = null)
+    {
+        var parameters = new Dictionary<string, string?> { ["error"] = code };
+        if (returnUrl is not null) parameters["returnUrl"] = returnUrl;
+        return LocalRedirect(path + QueryString.Create(parameters));
+    }
 
     private IActionResult Invalid(string field, string message) =>
         Result.Failure(new ValidationError(new Dictionary<string, string[]> { [field] = [message] }))

@@ -12,7 +12,9 @@ internal sealed class ExternalSignInRequestValidator : AbstractValidator<Externa
         RuleFor(request => request.ReturnUrl)
             .Cascade(CascadeMode.Stop)
             .NotEmpty().WithMessage(_ => ValidationTexts.Required)
-            .Must(ReturnUrls.IsAuthorizeRequest).WithMessage(_ => ValidationTexts.ReturnUrlInvalid);
+            .Must((request, value) => request.IsSignup
+                ? ReturnUrls.IsAuthorizeRequest(value) : ReturnUrls.IsLoginReturn(value))
+            .WithMessage(_ => ValidationTexts.ReturnUrlInvalid);
         RuleFor(request => request.AcceptedTerms)
             .Equal(true).When(request => request.IsSignup).WithMessage(_ => ValidationTexts.Required);
     }

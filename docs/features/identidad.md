@@ -60,6 +60,10 @@ El `InvitationIssuer` interno emite dentro de la UoW del llamador, reserva un mi
 
 La ruta pública `/invitacion` consulta `POST /api/invitations/preview` y acepta con `POST /api/invitations/accept`; ambos reciben el token en el cuerpo JSON, nunca en URL, query ni logs. La vista previa no consume la invitación. La pantalla distingue sin cuenta, ingreso requerido, sesión propia, sesión ajena, vencida, inválida, organización suspendida y aceptación con aviso de respaldo. Los errores conservan salidas al ingreso sin activar ni vincular una identidad. La emisión administrativa, reenvío/revocación y el recorrido manual desde Usuarios quedan para E5/E6.
 
+Cuando la cuenta ya existe, «Ingresá para aceptar» abre `/login?returnUrl=%2Finvitacion`. El código o Google emiten solo la cookie de identidad y vuelven al destino exacto `/invitacion`, sin seleccionar Consumer ni crear Personal. No se admiten query, fragmento u otras rutas como retorno de invitación. Los errores de Google y la cancelación de una baja pendiente conservan ese retorno; los controles de estado, bloqueo, vencimiento y uso único siguen aplicándose. La autorización Business se inicia después de aceptar.
+
+Cada navegación a otra invitación monta un flujo nuevo: aceptación, consentimiento, errores y clave de idempotencia pertenecen a esa invitación. Una respuesta tardía del flujo anterior no cambia la nueva pantalla. El token sigue únicamente en memoria local y en el cuerpo de la API, con una clave opaca de caché.
+
 ## Reglas de implementación
 
 - Seguir las fichas [datos-personales](../rules/datos-personales.md), [multitenancy](../rules/multitenancy.md), [guardado](../rules/guardado.md), [result-y-errores](../rules/result-y-errores.md), [emails](../rules/emails.md), [telefonos](../rules/telefonos.md), [api-http](../rules/api-http.md) y [tests](../rules/tests.md).

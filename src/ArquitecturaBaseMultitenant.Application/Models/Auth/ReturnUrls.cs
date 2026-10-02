@@ -3,11 +3,15 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Application.Models.Auth;
 
-/// <summary>Solo se vuelve a la autorización local; una URL arbitraria sería una redirección abierta.</summary>
+/// <summary>Permite autorización local o el retorno exacto de invitación, sin destinos arbitrarios.</summary>
 public static class ReturnUrls
 {
     public const string AuthorizePath = "/connect/authorize";
     public const string LoginPath = "/login";
+    public const string InvitationPath = "/invitacion";
+
+    public static bool IsLoginReturn([NotNullWhen(true)] string? returnUrl) =>
+        returnUrl == InvitationPath || TryReadAccessSelection(returnUrl, out _);
 
     public static bool IsAuthorizeRequest([NotNullWhen(true)] string? returnUrl) =>
         !string.IsNullOrEmpty(returnUrl)

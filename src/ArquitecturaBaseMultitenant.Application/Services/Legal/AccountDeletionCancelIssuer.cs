@@ -20,7 +20,7 @@ internal sealed class AccountDeletionCancelIssuer(IReauthTicketRepository ticket
             return UserErrors.InvalidTransition;
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         if (nowUtc >= date) return AccountDeletionErrors.GraceExpired;
-        if (!ReturnUrls.TryReadAccessSelection(returnUrl, out _))
+        if (!ReturnUrls.IsLoginReturn(returnUrl))
             throw new InvalidOperationException("The cancellation return URL must be validated.");
         var secret = secrets.Generate();
         var ticket = ReauthTicket.Issue(account.Id, ReauthAction.CancelDeletion, sourceMethodId,
