@@ -4,6 +4,10 @@
 
 - `InvitationPage` sincroniza el fragmento de invitación a estado local después de retirarlo de la barra de direcciones; oxlint informa `react(set-state-in-effect)`. Refactorizar ese paso manteniendo que el token no llegue a la primera consulta mientras siga en la URL. El lint termina con código 0 y el E2E real cubre el flujo; no bloquea 3c.
 
+## Observaciones de E4 para etapas posteriores
+
+- **73.** En la puerta de documentación a ciegas, una respuesta ubicó una guía en `docs/guides/` sin precisar el archivo. Aclarar los punteros de `AGENTS.md` cuando se amplíen las recetas; la ubicación de la carpeta fue correcta y no afecta un flujo ni la seguridad.
+
 ## Observaciones de 3b para etapas posteriores
 
 - Publicación administrativa de versiones legales: usar la administración prevista para plataforma cuando nazca su pantalla. La 3b permite leer/aceptar; el E2E publica solo en su propia base y el recorrido manual tiene SQL local explícito.
