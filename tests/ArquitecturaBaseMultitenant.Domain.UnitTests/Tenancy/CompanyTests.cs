@@ -60,15 +60,15 @@ public sealed class CompanyTests
     {
         var company = Company.Create("Taller Norte", null, "UTC").Value;
 
-        Assert.True(company.IsActive);
-        company.SetActive(false);
+        Assert.Equal(CompanyStatus.Active, company.Status);
+        company.SetStatus(CompanyStatus.Inactive);
 
-        Assert.False(company.IsActive);
+        Assert.Equal(CompanyStatus.Inactive, company.Status);
         Assert.Equal("Taller Norte", company.Name);
         Assert.Equal("UTC", company.TimeZoneId);
 
-        company.SetActive(true);
+        company.SetStatus(CompanyStatus.Active);
 
-        Assert.True(company.IsActive);
+        Assert.Equal(CompanyStatus.Active, company.Status);
     }
 }

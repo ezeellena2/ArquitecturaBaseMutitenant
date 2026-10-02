@@ -21,6 +21,7 @@ public sealed class CompanyPersistenceTests(ApiFactory factory)
         var firstTenant = await CreateBusinessTenantAsync("Empresa de prueba A");
         var otherTenant = await CreateBusinessTenantAsync("Empresa de prueba B");
         var company = Company.Create("  Taller Norte  ", taxId: null, "UTC").Value;
+        company.SetStatus(CompanyStatus.Inactive);
         await AddCompanyAsync(firstTenant.Id, company);
 
         await using var firstConnection = await RuntimeRoleConnection.OpenAsync(factory.RuntimeConnectionString,
@@ -31,7 +32,7 @@ public sealed class CompanyPersistenceTests(ApiFactory factory)
         Assert.Equal(1, await CountAsync(firstConnection, company.Id));
         Assert.Equal(0, await CountAsync(otherConnection, company.Id));
         Assert.True(company.Version > 0);
-        Assert.True(company.IsActive);
+        Assert.Equal(CompanyStatus.Inactive, company.Status);
 
         await using var scope = factory.Services.CreateAsyncScope();
         var services = scope.ServiceProvider;
@@ -40,7 +41,7 @@ public sealed class CompanyPersistenceTests(ApiFactory factory)
             .SingleAsync(item => item.Id == company.Id, Ct);
         Assert.Equal("Taller Norte", stored.Name);
         Assert.Null(stored.TaxId);
-        Assert.True(stored.IsActive);
+        Assert.Equal(CompanyStatus.Inactive, stored.Status);
     }
 
     private async Task<Tenant> CreateBusinessTenantAsync(string name)

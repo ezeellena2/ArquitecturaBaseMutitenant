@@ -40,7 +40,7 @@ public sealed class Company : Entity, ITenantOwned, IAuditable, IVersioned
 
     public string TimeZoneId { get; private set; }
 
-    public bool IsActive { get; private set; } = true;
+    public CompanyStatus Status { get; private set; } = CompanyStatus.Active;
 
     public Guid TenantId { get; private set; }
 
@@ -79,7 +79,11 @@ public sealed class Company : Entity, ITenantOwned, IAuditable, IVersioned
         return Result.Success();
     }
 
-    public void SetActive(bool isActive) => IsActive = isActive;
+    public void SetStatus(CompanyStatus status)
+    {
+        if (!Enum.IsDefined(status)) throw new ArgumentOutOfRangeException(nameof(status));
+        Status = status;
+    }
 
     private static Result Validate(string? name, string? timeZoneId)
     {
