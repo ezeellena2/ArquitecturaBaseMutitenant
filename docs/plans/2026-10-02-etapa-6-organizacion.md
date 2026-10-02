@@ -22,8 +22,9 @@
 
 - [ ] Escribir primero tests rojos para `BusinessSignup`, límite `MaxOwnedOrganizations`, slug normalizado/disponible/reservado, alta abierta/cerrada, aprobación pendiente y provisionamiento idempotente.
 - [ ] Implementar `TenantProvisioner` reutilizable por alta B2B y futura plataforma, conservando las transacciones/UoW existentes y roles de sistema; la repetición de la misma operación no duplica tenant, owner, empresa ni settings.
-- [x] Agregar catálogo persistido de slugs reservados con los nombres validados por el tablero: `www`, `app`, `api`, `auth`, `admin`, `empresas` y `plataforma`; el lector distingue disponibles, reservados y tomados. Commits `bd91f9e` y el cambio de catálogo actual.
-- [ ] Exponer disponibilidad en el contrato del alta y traducir la carrera de alta contra el índice único de `Tenants`.
+- [x] Agregar catálogo persistido de slugs reservados con los nombres validados por el tablero: `www`, `app`, `api`, `auth`, `admin`, `empresas` y `plataforma`; el lector distingue disponibles, reservados y tomados. Commits `bd91f9e` y `fb12872`.
+- [x] Exponer `GET /api/public-site/slug-availability` con estados disponible/reservado/tomado y formato validado.
+- [ ] Traducir la carrera de alta contra el índice único de `Tenants` en el contrato final de `BusinessSignup`.
 - [ ] Crear primera empresa con CUIT opcional y zona inicial; validar el CUIT mediante `TaxId`/catálogo, nunca como texto libre persistido.
 - [ ] Implementar el alta por correo y por Google, con aceptación de términos vigentes y sin crear acceso Personal. Respetar la política de alta y el máximo de organizaciones propias; devolver los estados que consume el tablero.
 - [ ] Agregar contratos HTTP, declaraciones explícitas de ruta anónima, recursos es/en, integración y aislamiento. Actualizar OpenAPI y contratos generados del front; incluir una prueba de contrato que lea el OpenAPI del back y el cliente generado del front.
