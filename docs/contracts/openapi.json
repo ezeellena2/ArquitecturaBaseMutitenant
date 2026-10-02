@@ -1814,6 +1814,47 @@
         }
       }
     },
+    "/api/public-site/slug-availability": {
+      "get": {
+        "tags": [
+          "Public site"
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/me/deletion": {
       "post": {
         "tags": [
@@ -4568,6 +4609,9 @@
     },
     {
       "name": "Invitations"
+    },
+    {
+      "name": "Public site"
     },
     {
       "name": "Account"
