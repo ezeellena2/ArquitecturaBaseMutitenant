@@ -148,6 +148,37 @@ test('catalogos: permisos, códigos y rutas mencionados que no existen, y grupos
   assert.deepEqual(hs.find((h) => h.tipo === 'permiso-desconocido').candidatos, ['roles.view']);
 });
 
+test('front: los mismos detectores sobre TS, con el mapa `src/` y el árbol `## src/`', async () => {
+  const hs = await correr(undefined, raicesFixture, 'front');
+  const arbol = 'docs/architecture/arbol.md';
+  assert.deepEqual(resumen(hs), [
+    'indices|ficha-sin-fila-guia|humano|AGENTS.md|otra.md',
+    'indices|fila-huerfana|auto|AGENTS.md|docs/rules/viejo.md',
+    `arbol|archivo-faltante|humano|${arbol}|src/shared/ghost.ts`,
+    `arbol|archivo-nuevo|auto|${arbol}|src/shared/Money.test.ts`,
+    `arbol|archivo-nuevo|modelo|${arbol}|src/shared/other.ts`,
+    `arbol|archivo-nuevo|auto|${arbol}|src/shared/useAccess.ts`,
+    'referencias|ruta-inexistente|modelo|docs/architecture/arnes.md|src/futuro/',
+    'referencias|ruta-inexistente|modelo|docs/rules/formatos.md|src/shared/formater.ts',
+    'simbolos|simbolo-inexistente|modelo|docs/rules/formatos.md|MoneyBannerPage',
+    'simbolos|simbolo-inexistente|auto|docs/rules/formatos.md|useAccesss',
+    'indices|ficha-sin-fila|modelo|docs/rules/README.md|otra.md',
+    'indices|fila-huerfana|auto|docs/rules/README.md|docs/rules/viejo.md',
+    'punteros|puntero-faltante|auto|src/areas/business/roles/api/AGENTS.md|src/areas/business/roles/api/AGENTS.md',
+    'punteros|puntero-faltante|auto|src/areas/business/roles/api/CLAUDE.md|src/areas/business/roles/api/CLAUDE.md',
+    'punteros|puntero-fuera-del-mapa|modelo|src/extra/AGENTS.md|src/extra',
+    'punteros|puntero-huerfano|auto|src/old/AGENTS.md|src/old/AGENTS.md',
+    'punteros|puntero-huerfano|auto|src/old/CLAUDE.md|src/old/CLAUDE.md',
+    'punteros|puntero-faltante|auto|src/shared/AGENTS.md|src/shared/AGENTS.md',
+    'punteros|puntero-faltante|auto|src/shared/CLAUDE.md|src/shared/CLAUDE.md',
+  ].sort());
+  const jsdoc = hs.find((h) => h.id.endsWith('useAccess.ts'));
+  assert.match(jsdoc.parche.texto, /^│   ├── useAccess\.ts {10,}Acceso activo de la sesión y sus permisos$/);
+  assert.equal(hs.find((h) => h.id.endsWith('useAccesss')).parche.a, '`useAccess`');
+  // El catálogo (permisos, códigos y rutas del back) no corre sobre el front.
+  assert.ok(!hs.some((h) => h.detector === 'catalogos'));
+});
+
 test('el runner deja una sola respuesta por línea: el auto de indices gana al modelo de referencias', async () => {
   const hs = await correr(undefined, raicesFixture);
   const enLinea = hs.filter((h) => h.archivo === 'docs/rules/README.md' && h.linea === 6 && h.tipo !== 'ficha-sin-fila');

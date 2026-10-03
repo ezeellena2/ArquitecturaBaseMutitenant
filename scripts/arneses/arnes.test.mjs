@@ -63,7 +63,7 @@ test('--instalar copia la skill versionada de .agents a .claude', async () => {
 
 test('la skill del repo declara su nombre y las opciones del CLI', async () => {
   const skill = await readFile(join(dirname(fileURLToPath(import.meta.url)), '..', '..', '.agents', 'skills', 'arnes', 'SKILL.md'), 'utf8');
-  assert.match(skill, /^---\nname: arnes\n/);
+  assert.match(skill, /^---\r?\nname: arnes\r?\n/);
   for (const opcion of ['--detectar', '--sin-modelo', '--motor', '--modelo', '--presupuesto', '--repo', '--fusionar']) assert.ok(skill.includes(opcion), opcion);
 });
 

@@ -13,13 +13,15 @@ function lineaNueva(hermano, nombreArchivo, descripcion, columna = 50) {
   return `${izquierda.padEnd(Math.max(columna, izquierda.length + 1))}${descripcion}`;
 }
 
-/** Descripción corta sin llamar al modelo: el `<summary>` del tipo (C#) o, para un archivo de tests, "tests de X". */
+/** Descripción corta sin llamar al modelo: el `<summary>` (C#) o el JSDoc (TS) del archivo o, para un archivo de tests, "tests de X". */
 async function describirArchivo(ctx, archivo) {
   const nombreArchivo = posix.basename(archivo);
-  if (archivo.endsWith('.cs')) {
-    const m = (await ctx.leer(archivo)).match(/\/\/\/\s*<summary>([\s\S]*?)<\/summary>/);
+  const esTs = /\.(ts|tsx|mjs)$/.test(archivo);
+  if (archivo.endsWith('.cs') || esTs) {
+    const texto = await ctx.leer(archivo);
+    const m = esTs ? texto.match(/\/\*\*([\s\S]*?)\*\//) : texto.match(/\/\/\/\s*<summary>([\s\S]*?)<\/summary>/);
     if (m) {
-      const limpio = m[1].replace(/^\s*\/\/\/\s?/gm, '').replace(/<see cref="([^"]+)"\s*\/>/g, '$1').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+      const limpio = m[1].replace(/^\s*(\/\/\/|\*)\s?/gm, '').replace(/<see cref="([^"]+)"\s*\/>/g, '$1').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
       // Primera oración y, si es larga, hasta el primer signo de corte; tope de 10 palabras.
       const oracion = limpio.split(/\.\s|\.$/)[0].trim();
       const corta = oracion.split(/\s[—–-]\s|[:;]\s/)[0].trim();
@@ -27,7 +29,7 @@ async function describirArchivo(ctx, archivo) {
       if (!corta) return null;
       return palabras.length <= 10 ? corta : `${palabras.slice(0, 10).join(' ')}…`;
     }
-    const tests = nombreArchivo.match(/^(\w+?)Tests\.cs$/);
+    const tests = nombreArchivo.match(/^(\w+?)Tests\.cs$/) ?? nombreArchivo.match(/^([\w.-]+?)\.test\.(?:ts|tsx|mjs)$/);
     if (tests) return `tests de ${tests[1]}`;
   }
   return null;

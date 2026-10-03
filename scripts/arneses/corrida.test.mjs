@@ -56,7 +56,7 @@ async function correr(e, extra = [], bins = { claude: claudeFalso, codex: codexF
   process.env.ARNES_FAKE_LOG = e.log;
   const salida = [];
   try {
-    const codigo = await ejecutar(['realinear-docs', '--back', e.back, '--front', join(fixtures, 'front'), '--repo', 'back', ...extra], {
+    const codigo = await ejecutar(['realinear-docs', '--back', e.back, '--front', e.front ?? join(fixtures, 'front'), '--repo', e.repo ?? 'back', ...extra], {
       dirArneses: e.dirArneses, dirInformes: e.dirInformes, escribir: (t) => salida.push(t), historial: historialFalso, bins, fecha: '20261002-2300',
     });
     return { codigo, salida: salida.join('\n') };
@@ -66,7 +66,7 @@ async function correr(e, extra = [], bins = { claude: claudeFalso, codex: codexF
   }
 }
 
-const leerInforme = async (e) => JSON.parse(await readFile(join(e.dirInformes, 'realinear-docs', '20261002-2300-back.json'), 'utf8'));
+const leerInforme = async (e) => JSON.parse(await readFile(join(e.dirInformes, 'realinear-docs', `20261002-2300-${e.repo ?? 'back'}.json`), 'utf8'));
 const enRama = (e, ruta) => git(e.back, ['show', `arnes/realinear-docs/20261002-2300:${ruta}`]);
 
 const escenarioFeliz = {
@@ -193,4 +193,34 @@ test('sin cambios: no deja rama ni worktree', async () => {
   assert.equal(info.estado, 'sin cambios');
   assert.equal((await git(e.back, ['branch', '--list', 'arnes/*'])).trim(), '');
   await mkdir(join(e.madre, 'x'), { recursive: true });
+});
+
+test('front: una corrida sobre el repo del front termina con commit y verifica con su propio comando', async () => {
+  const madre = await mkdtemp(join(tmpdir(), 'corrida-front-'));
+  temporales.push(madre);
+  const front = join(madre, 'front');
+  await cp(join(fixtures, 'front'), front, { recursive: true });
+  for (const a of [['init', '-q', '-b', 'main'], ['config', 'user.email', 'a@b.c'], ['config', 'user.name', 'Arnés'], ['config', 'core.autocrlf', 'false'], ['add', '-A'], ['commit', '-q', '-m', 'base']]) await git(front, a);
+  const dirArneses = join(madre, 'arneses');
+  await cp(aqui, dirArneses, { recursive: true, filter: (origen) => !origen.includes(`${sep}fixtures`) && !origen.endsWith('.test.mjs') });
+  const manifiestoRuta = join(dirArneses, 'realinear-docs', 'arnes.json');
+  const manifiesto = JSON.parse(await readFile(manifiestoRuta, 'utf8'));
+  manifiesto.repos = ['front'];
+  manifiesto.verificacion = { front: ['node -e "process.exit(0)"'] };
+  await writeFile(manifiestoRuta, JSON.stringify(manifiesto));
+  await writeFile(join(dirArneses, 'realinear-docs', 'ignorados.json'), '[]');
+  await writeFile(join(madre, 'escenario.json'), '{}');
+  const e = { madre, back: join(fixtures, 'back'), front, repo: 'front', dirArneses, dirInformes: join(madre, 'informes'), escenario: join(madre, 'escenario.json'), log: join(madre, 'log.jsonl') };
+  const { codigo, salida } = await correr(e, ['--sin-modelo']);
+  assert.equal(codigo, 0, salida);
+  const info = await leerInforme(e);
+  assert.equal(info.estado, 'commiteado');
+  const mostrar = (ruta) => git(front, ['show', `arnes/realinear-docs/20261002-2300:${ruta}`]);
+  assert.match(await mostrar('src/shared/AGENTS.md'), /Lo común a todas las áreas/);
+  assert.equal((await mostrar('src/shared/CLAUDE.md')).trim(), '@AGENTS.md');
+  assert.match(await mostrar('docs/architecture/arbol.md'), /useAccess\.ts +Acceso activo de la sesión y sus permisos/);
+  assert.match(await mostrar('docs/architecture/arbol.md'), /Money\.test\.ts +tests de Money/);
+  assert.match(await mostrar('docs/rules/formatos.md'), /`useAccess`\)? \(el real es `useAccess`\)/);
+  assert.doesNotMatch(await mostrar('docs/rules/README.md'), /viejo/);
+  assert.equal((await git(front, ['rev-list', '--count', 'main'])).trim(), '1');
 });

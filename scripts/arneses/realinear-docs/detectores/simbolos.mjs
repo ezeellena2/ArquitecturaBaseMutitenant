@@ -5,8 +5,10 @@ import { parecidos } from '../../comun/similitud.mjs';
 
 export const nombre = 'simbolos';
 
-const sufijos = 'Service|Repository|Reader|Controller|Errors|Tests|Policy|Request|Response|Row|Guard|Issuer|Verifier|Linker|Validator|Configuration|Options|Interceptor|Factory|Provider|Extensions|Attribute|Query|Middleware|Formatter|Catalog|Handler|Scope|Filter|Registration|Settings';
-const conFormaDelRepo = new RegExp(`^I?[A-Z][A-Za-z0-9]*(?:${sufijos})$`);
+const sufijos = 'Service|Repository|Reader|Controller|Errors|Tests|Policy|Request|Response|Row|Guard|Issuer|Verifier|Linker|Validator|Configuration|Options|Interceptor|Factory|Provider|Extensions|Attribute|Query|Middleware|Formatter|Catalog|Handler|Scope|Filter|Registration|Settings|Page|Form|Dialog|Layout|Banner|Button|Panel|Table|Gate|Boundary|Context';
+const conSufijoDelRepo = new RegExp(`^I?[A-Z][A-Za-z0-9]*(?:${sufijos})$`);
+// En el front también son símbolos del repo los hooks (`useAccess`).
+const conFormaDelRepo = { test: (n) => conSufijoDelRepo.test(n) || /^use[A-Z][A-Za-z0-9]+$/.test(n) };
 const conMiembro = /^([A-Z][A-Za-z0-9]*)\.([A-Za-z_]\w*)(?:\(.*\))?$/;
 
 // Tipos del framework o de paquetes que se nombran en los docs y no viven en el repo.
