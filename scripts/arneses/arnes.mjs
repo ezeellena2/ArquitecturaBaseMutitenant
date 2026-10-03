@@ -6,7 +6,7 @@
  *   node scripts/arneses/arnes.mjs <arnés> [opciones]       corrida completa (ver README.md)
  */
 import { readFile, readdir } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
+import { basename, join, dirname } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
 import { indexarArchivos } from './comun/archivos.mjs';
@@ -61,12 +61,16 @@ export async function detectar({ dirArneses, arnes, raices, soloRepo }) {
     if (!raiz || !existsSync(raiz)) continue;
     const repo = await cargarRepo(nombre, raiz);
     const archivos = await indexarArchivos(raiz);
+    const otro = nombre === 'back' ? 'front' : 'back';
+    const hermano = raices[otro] && existsSync(raices[otro]) ? await indexarArchivos(raices[otro]) : null;
     const excluido = (rel) => coincide(rel, manifiesto.excluir ?? []);
     const ctx = {
       repo: nombre,
       raiz,
       repoInfo: repo,
       archivos,
+      hermano,
+      pares: Object.values(raices).filter(Boolean).map((r) => basename(r)),
       markdown,
       etapasCerradas: repo.etapasCerradas,
       manifiesto,
@@ -83,7 +87,20 @@ export async function detectar({ dirArneses, arnes, raices, soloRepo }) {
       todos.push(...encontrados.filter((h) => !excluido(h.archivo)));
     }
   }
-  return ordenar(filtrarIgnorados(todos, ignorados));
+  return ordenar(filtrarIgnorados(sinLineasQueSeBorran(todos), ignorados));
+}
+
+/** Si un detector borra una fila (auto), los hallazgos de otros detectores sobre esa misma línea sobran. */
+export function sinLineasQueSeBorran(hallazgos) {
+  const borradas = new Map();
+  for (const h of hallazgos) {
+    if (h.parche?.tipo === 'borrar-linea') borradas.set(`${h.repo}|${h.parche.archivo}|${h.parche.linea}`, h.detector);
+  }
+  return hallazgos.filter((h) => {
+    if (h.parche?.tipo === 'borrar-linea') return true;
+    const quien = borradas.get(`${h.repo}|${h.archivo}|${h.linea}`);
+    return !quien || quien === h.detector;
+  });
 }
 
 export async function ejecutar(argv, opts = {}) {

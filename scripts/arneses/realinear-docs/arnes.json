@@ -1,0 +1,25 @@
+{
+  "nombre": "realinear-docs",
+  "descripcion": "Alinea docs y punteros con el código: corrige, crea y borra lo que quedó viejo.",
+  "repos": ["back", "front"],
+  "detectores": ["referencias", "punteros", "indices"],
+  "excluir": ["docs/plans/**", "docs/reviews/**", "docs/history/**", "docs/decisions/0*.md",
+              "docs/backlog.md", "docs/design/**", "docs/contracts/**", ".claude/**", ".agents/**"],
+  "permisos": {
+    "puedeCrear": ["**/AGENTS.md", "**/CLAUDE.md", "docs/**/*.md"],
+    "puedeBorrar": ["**/AGENTS.md", "**/CLAUDE.md"],
+    "nuncaToca": ["**/*.cs", "**/*.ts", "**/*.tsx", "**/*.resx", "**/Migrations/**", "tests/**", "docs/contracts/**"]
+  },
+  "modelo": {
+    "motor": "claude",
+    "maxHallazgos": 40,
+    "claude": { "nombre": "sonnet", "esfuerzo": "low", "presupuestoUsd": 1.5 },
+    "codex": { "nombre": "gpt-6.1-sol", "esfuerzo": "low", "minutosMaximos": 10 }
+  },
+  "verificacion": {
+    "back": ["node --test \"scripts/arneses/**/*.test.mjs\"",
+             "dotnet test --project tests/ArquitecturaBaseMultitenant.ArchitectureTests/ArquitecturaBaseMultitenant.ArchitectureTests.csproj -- --filter-class \"ArquitecturaBaseMultitenant.ArchitectureTests.HarnessTests\""],
+    "front": ["npx vitest run src/test/harness.test.ts"]
+  },
+  "commit": "docs: realinear documentación con el código"
+}

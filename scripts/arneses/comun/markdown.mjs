@@ -16,7 +16,6 @@ export function slug(titulo) {
   return titulo
     .trim()
     .toLowerCase()
-    .replace(/<[^>]*>/g, '')
     .replace(/[^\p{L}\p{N}_\s-]/gu, '')
     .replace(/\s/g, '-');
 }

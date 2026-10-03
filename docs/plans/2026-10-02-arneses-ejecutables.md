@@ -282,3 +282,30 @@ Cada fase: TDD con `node --test` (rojo → verde), un commit, y `node --test scr
 | 4. Modelo y corrida | `worktree.mjs`, `motores/claude.mjs`, `motores/codex.mjs`, `guardia.mjs`, `instrucciones.md`, `resultado.schema.json`, verificación, commit, `--fusionar` | sobre el **mismo** informe, una corrida con Claude y otra con Codex terminan con commit en su rama, `HarnessTests` en verde y el consumo anotado; un test de `guardia.mjs` revierte un archivo tocado fuera de `permisos` |
 | 5. Entradas y docs | skill en `.agents/skills/arnes/`, `--instalar`, `programar.ps1`, guía, README, ADR 0037, filas en `AGENTS.md`, `arnes.md` y `arbol.md`, CI | `HarnessTests` en verde con la carpeta nueva; `/arnes realinear-docs` muestra el resumen en Claude Code y en Codex; la tarea programada se da de alta y de baja |
 | 6. Front | `--repo front` con referencias, simbolos (TS), arbol, punteros e indices | una corrida sobre el front termina con commit y `harness.test.ts` en verde |
+
+## 11. Decisiones tomadas
+
+> Anotadas durante la implementación (2026-10-02). Ninguna contradice D1 a D10.
+
+1. **`node --test scripts/arneses` no recorre carpetas en Node 24:** desde Node 22 los argumentos de `--test` son globs y una carpeta se toma como archivo. El comando que corre en CI y localmente es `node --test "scripts/arneses/**/*.test.mjs"` (entre comillas, para que lo expanda Node y no el shell). `arnes.json` → `verificacion` usa esa forma.
+2. **Anclas como GitHub y como `HarnessTests`:** cada espacio es un guion (sin colapsar), se conservan `_` y `-`, y no se quitan los `<...>`, porque dentro de un título van en código (`## 2. Formato de una ficha (\`docs/rules/<tema>.md\`)` da `2-formato-de-una-ficha-docsrulestemamd`).
+3. **Convención de capa generalizada:** `Application/X` ya valía; ahora todo proyecto de `src/` y `tests/` se abrevia por lo que sigue al primer punto (`Api.IntegrationTests/X`, `AppHost/X`).
+4. **Repos hermanos:** una ruta que no está en este repo se busca por sufijo en el otro del par (back/front). Una ruta que empieza con otro repo hermano (`ArquitecturaBase/...`, `../ArquitecturaBase/...`) no se juzga: no es código de este par.
+5. **Valores que no se tratan como ruta:** extensiones sueltas (`.resx`, `.test.ts`), imports (`@AGENTS.md`), rutas con `\` o `%`, `wwwroot`, `bin`, `obj`, `.local`, y plantillas (`NNNN`, `AAAA`, `IXService`).
+6. **`auto` solo con un candidato que no sea un nombre genérico** (`README.md`, `AGENTS.md`, `CLAUDE.md`, `index.*`, `package.json`): el nombre único no prueba el renombre. No se usa `git log --follow` (alcanza con el nombre; si hace falta, va a `modelo`).
+7. **Una sola respuesta por línea:** si un detector borra una fila (`borrar-linea`, auto), los hallazgos de otros detectores sobre esa línea se descartan (el auto de `indices` gana al `modelo` de `referencias`).
+8. **Carpetas de área:** un `AGENTS.md` en una carpeta hija de una del mapa (`Services/Auth`) es una carpeta de área (arnes.md §3) y no se pregunta si falta su fila. `Domain/<Módulo>/` no se expande: lo resuelve `HarnessTests` con la lista de módulos.
+9. **Tipo de parche extra `escribir-archivo`** (reescribe un archivo existente, p. ej. un `CLAUDE.md` que no es `@AGENTS.md`); se suma a los cuatro del plan. Los parches preservan CRLF/LF.
+10. **Fixtures sin repo real:** los tests de los detectores usan solo `realinear-docs/fixtures/` (el índice de archivos ignora cualquier carpeta llamada `fixtures`, así el repo real no los cuenta).
+
+## 12. Contadores de las corridas reales (`--detectar`, sin modelo)
+
+**Fase 2** (back, rama `main`, 2026-10-02; solo se cuentan hallazgos, no se listan). Corre en 0,6 s.
+
+| Detector | auto | modelo | humano | Falsos positivos |
+|---|---:|---:|---:|---|
+| referencias | 1 | 18 | 0 | 3 (`Modules/`, `Disabled/` y una carpeta futura sin marca: planeado sin `(E#)`) |
+| punteros | 2 | 24 | 0 | 0 (los 24 son carpetas con puntero que no están en el mapa de arnes.md §3) |
+| indices | 0 | 0 | 1 | 0 |
+
+Antes de ajustar, el primer pasaje dio 28 auto / 125 modelo (`referencias` 99, `punteros` 53): los ajustes de las decisiones 3 a 8 sacaron los falsos positivos.
