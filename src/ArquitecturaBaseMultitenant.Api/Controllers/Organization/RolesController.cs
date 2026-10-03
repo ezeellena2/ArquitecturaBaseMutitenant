@@ -33,6 +33,7 @@ public sealed class RolesController(IRoleService service) : ControllerBase
             Sort = query.Sort,
             Search = query.Search,
             Scope = query.Scope,
+            CompanyId = query.CompanyId,
         }, cancellationToken)).ToActionResult(this);
 
     [HttpGet("{id:guid}")]

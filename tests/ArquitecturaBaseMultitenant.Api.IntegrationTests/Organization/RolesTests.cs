@@ -19,6 +19,67 @@ public sealed class RolesTests(ApiFactory factory)
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
+    public async Task Filtering_by_a_company_lists_its_roles_and_the_ones_valid_in_every_company()
+    {
+        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var account = await AccountJourney.RegisterAsync(factory, client, Ct);
+        var tenant = Tenant.CreateBusiness("Roles por empresa", requiresApproval: false);
+        Assert.True(tenant.Activate().IsSuccess);
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenant.Id);
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+            {
+                services.GetRequiredService<TenantSpaceProvisioner>().Stage(tenant,
+                    TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"), [account.UserId]);
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+        await AccountJourney.AuthorizeAsync(client, "business", Ct);
+        var north = await CreateCompanyAsync(client, "Delta Norte S.A.");
+        var south = await CreateCompanyAsync(client, "Delta Sur S.R.L.");
+        foreach (var (companyId, name) in new[] { (north, "Solo lectura Norte"), (south, "Solo lectura Sur") })
+        {
+            using var created = await AccountJourney.PostAsync(client, "/api/roles", new
+            {
+                name,
+                description = (string?)null,
+                scope = "SpecificCompany",
+                companyId,
+                permissions = new[] { Permissions.Company.Members.Read },
+            }, Ct);
+            Assert.True(created.StatusCode == HttpStatusCode.Created, await created.Content.ReadAsStringAsync(Ct));
+        }
+
+        // Tablero Roles, filtro «Vale en: Delta Norte S.A.»: su «Solo lectura» y el Administrador de «Cada empresa».
+        using var response = await client.GetAsync($"/api/roles/paged?companyId={north:D}&pageSize=50", Ct);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
+        var roles = json.RootElement.GetProperty("items").EnumerateArray()
+            .Select(role => (Scope: role.GetProperty("scope").GetString(),
+                Company: role.TryGetProperty("companyId", out var company) && company.ValueKind == JsonValueKind.String ? company.GetGuid() : (Guid?)null))
+            .ToArray();
+        Assert.Contains(roles, role => role.Scope == nameof(RoleScope.SpecificCompany) && role.Company == north);
+        Assert.Contains(roles, role => role.Scope == nameof(RoleScope.AnyCompany));
+        Assert.DoesNotContain(roles, role => role.Company == south);
+        Assert.DoesNotContain(roles, role => role.Scope == nameof(RoleScope.Organization));
+    }
+
+    private static async Task<Guid> CreateCompanyAsync(HttpClient client, string name)
+    {
+        using var created = await AccountJourney.PostAsync(client, "/api/companies", new
+        {
+            name,
+            taxIdType = (string?)null,
+            taxIdNumber = (string?)null,
+            timeZoneId = "America/Argentina/Buenos_Aires",
+        }, Ct);
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        return await created.Content.ReadFromJsonAsync<Guid>(Ct);
+    }
+
+    [Fact]
     public async Task Tenant_admin_reads_permissions_and_manages_roles_with_optimistic_concurrency()
     {
         using var client = factory.CreateClient(new()

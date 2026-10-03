@@ -9,6 +9,7 @@
 - El Dueño nace con la organización y es asignado por el provisionador. Roles de sistema se preparan dentro del tenant; la seed global conserva solo al operador y no crea organizaciones ni cuentas de ejemplo.
 - Las rutas Business piden `[HasPermission]`. La sesión determina el tenant mediante `tenant_id`; un recurso de otro tenant responde 404. La autorización de empresa y plataforma usa atributos propios, sin reutilizar permisos de organización.
 - La baja de una cuenta no puede dejar sin Dueño activo a una organización abierta. El conteo incluye solo cuenta, miembro y organización activos. La verificación se serializa con cambios de asignación mediante el lock compartido `ITenantAdminLock`; E6 lo toma al asignar o quitar `TenantAdmin` y devuelve `Legal.AccountDeletion.LastAdmin` al intentar retirar al último Dueño.
+- `GET /api/roles/paged` filtra por `scope` (`Organization` o `Company`) y por `companyId`: los roles de esa empresa y los que valen en cada empresa, como el filtro «Vale en» del tablero Roles. La pantalla ofrece «Toda la organización» o una empresa por nombre; «Cada empresa» queda solo en la API y en los roles de sistema.
 - Las escrituras de roles validan antes de la transacción, usan una única `IUnitOfWork`, preservan `Version` y devuelven 409 ante concurrencia. Los permisos cacheados se invalidan después del commit.
 
 ## Carpetas

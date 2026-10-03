@@ -42,6 +42,9 @@ internal sealed class RoleReader(ApplicationDbContext context, ITenantContext te
             RoleScopeFilter.Company => roles.Where(role => role.Scope != RoleScope.Organization),
             _ => roles,
         };
+        if (request.CompanyId is { } companyId)
+            roles = roles.Where(role => role.Scope == RoleScope.AnyCompany
+                || role.Scope == RoleScope.SpecificCompany && role.CompanyId == companyId);
         roles = roles
             .ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort, role => role.Id);
         var page = await roles.ToPagedResultAsync(request, cancellationToken);

@@ -8,4 +8,7 @@ public sealed record ListRolesRequest : PagedRequest
     public static readonly IReadOnlyCollection<string> SortableFields = ["name", "createdAtUtc"];
 
     public RoleScopeFilter? Scope { get; init; }
+
+    /// <summary>«Vale en» una empresa: sus roles propios y los que valen en cada empresa.</summary>
+    public Guid? CompanyId { get; init; }
 }
