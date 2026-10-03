@@ -10,6 +10,8 @@
 
 Los puntos marcados ✔ los volví a verificar en el código.
 
+**Seguimiento de ejecución (03/10):** ✔ identifica un hallazgo comprobado por el informe original; no significa que esté corregido. Fuente temporal copiada en `cc2835b`. Corrección 0.7: Usuarios devuelve ahora `Tenancy.Member.LastTenantAdmin` («Tiene que quedar al menos un Dueño activo.») y `Tenancy.Member.CannotDisableSelf`; la baja de cuenta conserva su error legal. Verificación: rojo focal y luego Usuarios 3/3, baja de cuenta 6/6, recursos 6/6, build Api sin advertencias. El front del Paquete 0 lo está corrigiendo otro chat; sus commits no se atribuyen a este cambio.
+
 **Rutas:** F = repo del front, B = repo del back.
 
 ## Resumen

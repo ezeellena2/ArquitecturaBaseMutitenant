@@ -28,7 +28,7 @@ internal sealed class OrganizationUserStatusEditor(
                 return MemberErrors.InvalidTransition;
             if (member.Status == MemberStatus.Active && request.IsActive == false
                 && currentUserId == member.UserId)
-                return UserErrors.CannotModifySelf;
+                return MemberErrors.CannotDisableSelf;
             if (request.IsActive == (member.Status == MemberStatus.Active)) return Result.Success();
 
             if (member.UserId is { } changingUserId)

@@ -119,7 +119,20 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
         using var refused = await client.DeleteAsync($"/api/users/{ownerMemberId:D}?version={version}", Ct);
         Assert.Equal(HttpStatusCode.Conflict, refused.StatusCode);
         using var problem = JsonDocument.Parse(await refused.Content.ReadAsStringAsync(Ct));
-        Assert.Equal("Legal.AccountDeletion.LastAdmin", problem.RootElement.GetProperty("code").GetString());
+        Assert.Equal("Tenancy.Member.LastTenantAdmin", problem.RootElement.GetProperty("code").GetString());
+        Assert.Equal("Tiene que quedar al menos un Dueño activo.", problem.RootElement.GetProperty("detail").GetString());
+
+        using var selfDisabled = await client.PutAsJsonAsync($"/api/users/{ownerMemberId:D}/status",
+            new { isActive = false, version }, Ct);
+        Assert.Equal(HttpStatusCode.Forbidden, selfDisabled.StatusCode);
+        using var selfProblem = JsonDocument.Parse(await selfDisabled.Content.ReadAsStringAsync(Ct));
+        Assert.Equal("Tenancy.Member.CannotDisableSelf", selfProblem.RootElement.GetProperty("code").GetString());
+
+        using var rolesRemoved = await client.PutAsJsonAsync($"/api/users/{ownerMemberId:D}",
+            new { roleIds = Array.Empty<Guid>(), companies = Array.Empty<object>(), version }, Ct);
+        Assert.Equal(HttpStatusCode.Conflict, rolesRemoved.StatusCode);
+        using var rolesProblem = JsonDocument.Parse(await rolesRemoved.Content.ReadAsStringAsync(Ct));
+        Assert.Equal("Tenancy.Member.LastTenantAdmin", rolesProblem.RootElement.GetProperty("code").GetString());
     }
 
     [Fact]

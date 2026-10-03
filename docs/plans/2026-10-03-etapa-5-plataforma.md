@@ -13,7 +13,7 @@
 - Back: `C:/Users/ezequ/source/repos/ArquitecturaBaseMutitenant`, main limpio, `a12edb7`.
 - Front: `C:/Users/ezequ/source/repos/ArquitecturaBaseMutitenantFront`, main limpio, `44bf951`.
 - E4 y E6 cerradas. Conservar ClosedStages `{0,1,2,3,4,6}` hasta cerrar E5; el salto no reabre E6.
-- Fuente visual: front `docs/design/lienzo/`, v71. El escritorio Gestión/Administración y el modal Auditoría están aprobados. Recuperar/M-Recuperar están validados. El resto de Plataforma figura por refinar: presentar propuesta conjunta y esperar elección para esas pantallas, avanzando mientras tanto con back y piezas independientes.
+- Fuente visual: front `docs/design/lienzo/` vigente (v72 al elegir T04). El usuario eligió los ocho escritorios con ajustes el 03/10; registrar esa elección en tableros/canvas/README y mostrar ocho capturas antes de programarlos. Los móviles son los validados en v72 (`9841dbd`), tal cual; se descartan los móviles de la propuesta. Ningún tablero «por refinar» se programa.
 - Teléfono: formato app del Criterio-Marco actual; barra de estado, título y contexto, navegación inferior con Más, listas de borde a borde, acción fija y hojas inferiores. No copiar el teléfono anterior como una web reducida.
 - WhatsApp, WA-*, M-WA-* y Meta fuera del alcance; no añadir sus rutas, módulos, permisos ni semillas.
 - Development solo conserva el operador real configurado en user-secrets. Tests, capturas con datos y E2E usan PostgreSQL/pickup aislados. No imprimir direcciones, códigos, tokens ni secretos.
@@ -105,6 +105,18 @@ Archivos front: `docs/design/lienzo/generadores/plataforma_*.py`, tableros propu
 - [x] Propuesta compacta con estados interactivos y marco app de Organización, listas 1/50 (1 y 10 filas visibles respectivamente). Menú desktop y modal Audit conservados.
 - [x] Visor conjunto en `http://127.0.0.1:61405/.artifacts/etapa-5-propuesta/index.html`: 8 desktop y 16 móviles/estados; pregunta de elección presentada. Continuar back mientras espera; no implica aprobación. Front `e670892`.
 - [ ] Registrar elección y actualizar solo tableros correspondientes/canvas; commit de diseño explícito.
+
+### A00 · Alineación previa a las pantallas de Plataforma (instrucción del 03/10)
+
+Fuente: `docs/reviews/2026-10-03-alineacion-lienzo.md`, ya copiado sin cambios del informe temporal en `cc2835b`. Las marcas ✔ del informe significan hallazgos verificados, no correcciones terminadas.
+
+- [ ] Paquete 0 completo. Otro chat corrige el front; este chat trabaja exclusivamente el backend mientras dure esa coordinación, sin modificar ni commitear cambios ajenos.
+- [x] 0.7: error propio `Tenancy.Member.LastTenantAdmin` para quitar/eliminar roles del último Dueño y `Tenancy.Member.CannotDisableSelf` para el acceso propio; la baja de cuenta conserva `Legal.AccountDeletion.LastAdmin`. Rojo dirigido → Usuarios 3/3, baja de cuenta 6/6, recursos 6/6 y build Api 0 advertencias.
+- [ ] Después de 0: actualizar frontend.md §4/Teléfono, responsive, formularios, pantallas-y-ui y AGENTS del front desde los ocho Criterio-* vigentes. Sin pruebas de documentación nuevas.
+- [ ] Después de las fichas: Paquete 4 pasos 2–4, piezas compartidas de app, navegación declarativa/Más/E2E a390 y todas las hojas; antes de T20–23.
+- [ ] Capturas solo de pantallas nuevas y estados principales contra el lienzo vigente; E2E real en verde. Mantener las verificaciones focales y la puerta funcional de cierre.
+
+Elección T04: Organizaciones combina Dueño/correo; ficha Organización usa resumen (Dueño, dominio, página, módulos) e Historial como lista; Cuentas combina nombre/correo y último ingreso/método sin teléfono; métodos en Cuenta son filas como Mi cuenta; Recuperaciones y Configuración conservan propuesta; Legales es lista sin columnas, versión/vigencia debajo; Auditoría abre desde Qué pasó, sin ojo ni conteo en la banda.
 
 ### T05 · Configuración global
 
@@ -305,6 +317,6 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 | T04 | Propuesta conjunta verificada, elección pendiente; canvas intacto | seguimiento de esta tarea | `e670892` |
 | T05 | Dominio 12/12; servicio 4/4; HTTP 3/3; recursos 6/6; accesos/contratos 15/15; migración/build verificados | `6a49970` | — |
 | T06 | Dominio nuevo 3/3 y regresiones 7/7; HTTP/RLS/tokens 5/5; recursos 6/6; inventarios 28/28; build/migración verificados | `f785e5b` | — |
-| T07 | Scope 3/3 + PG 2/2; core 3/3 + PG 2/2; HTTP 8/8; slug 5/5; regresiones 36/36; recursos 6/6; inventarios 32/32; build/SQL verificados | `b375f04`, `d27d7d3`, `feat(plataforma): provisionar organizaciones e invitar dueños` | `d4d0627` (muestra) |
+| T07 | Scope 3/3 + PG 2/2; core 3/3 + PG 2/2; HTTP 8/8; slug 5/5; regresiones 36/36; recursos 6/6; inventarios 32/32; build/SQL verificados | `b375f04`, `d27d7d3`, `f05c9df`, `6fa09c4` | `d4d0627` (muestra) |
 
 No declarar cierre a partir de esta tabla sin completar T25.

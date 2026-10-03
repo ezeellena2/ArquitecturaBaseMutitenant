@@ -51,6 +51,8 @@
   <data name="Users.Phone.AlreadyExists" xml:space="preserve"><value>An account with that number already exists.</value></data>
   <data name="Users.User.NotFound" xml:space="preserve"><value>We couldn't find the user.</value></data>
   <data name="Users.User.CannotModifySelf" xml:space="preserve"><value>You can't apply this change to your own account.</value></data>
+  <data name="Tenancy.Member.LastTenantAdmin" xml:space="preserve"><value>The organization must keep at least one active Owner.</value></data>
+  <data name="Tenancy.Member.CannotDisableSelf" xml:space="preserve"><value>You can't disable your own organization access.</value></data>
   <data name="Users.User.LastAdmin" xml:space="preserve"><value>The system must keep at least one active administrator.</value></data>
   <data name="Settings.System.NotFound" xml:space="preserve"><value>We couldn't find the system settings.</value></data>
   <data name="Users.User.AlreadyExists" xml:space="preserve"><value>An account with that email already exists.</value></data>
