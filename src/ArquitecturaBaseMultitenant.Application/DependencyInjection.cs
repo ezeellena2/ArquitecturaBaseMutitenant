@@ -36,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<OrganizationSettingsUpdater>();
         services.AddScoped<IOrganizationDomainService, OrganizationDomainService>();
         services.AddScoped<IPublicPageService, PublicPageService>();
+        services.AddScoped<PublicPageEditor>();
         services.AddScoped<IOrganizationAuditService, OrganizationAuditService>();
         services.AddScoped<LoginMethodDomainAssigner>();
         services.AddScoped<ILastCompanyAdminGuard, LastCompanyAdminGuard>();
