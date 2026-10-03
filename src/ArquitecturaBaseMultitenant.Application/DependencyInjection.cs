@@ -49,6 +49,7 @@ public static class DependencyInjection
         services.AddScoped<ILoginCodeService, LoginCodeService>();
         services.AddScoped<LoginCodeRequester>();
         services.AddScoped<LoginCodeVerificationFlow>();
+        services.AddScoped<LoginCodeAttemptCoordinator>();
         services.AddScoped<ILoginMethodsService, LoginMethodsService>();
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IBusinessSignupService, BusinessSignupService>();

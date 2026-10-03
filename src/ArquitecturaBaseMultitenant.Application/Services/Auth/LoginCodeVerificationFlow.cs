@@ -1,4 +1,3 @@
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
@@ -13,42 +12,37 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 /// <summary>Verifica código y cuenta, conserva intentos y auditoría dentro del límite del llamador.</summary>
 internal sealed class LoginCodeVerificationFlow(
     LoginCodeVerifier verifier,
-    ILoginCodeRepository codes,
+    LoginCodeAttemptCoordinator attempts,
     LoginAccountGuard accounts,
     ILoginMethodReader loginMethods,
     LoginMethodAvailability availability,
     AccountDeletionCancelIssuer cancellation,
-    ILoginAuditRepository audits,
-    ISignInService signIn,
-    IConnectService connect,
-    TimeProvider timeProvider)
+    IConnectService connect)
 {
     internal async Task<Result<Guid>> VerifyAsync(
         VerifyLoginCodeRequest request, CancellationToken cancellationToken)
     {
         var destination = LoginCodeDestination.ForEmail(request.Email!);
         var userId = await accounts.LockAsync(destination, cancellationToken);
-        await codes.LockDestinationAsync(destination, cancellationToken);
+        await attempts.LockDestinationAsync(destination, cancellationToken);
         if (!await accounts.StillOwnsAsync(userId, destination, cancellationToken))
             return Fail(userId, LoginCodeErrors.Invalid(attemptsLeft: null));
-        var currentCode = await codes.GetLatestAsync(destination, LoginCodePurpose.Login,
-            requestedByUserId: null, cancellationToken);
-        var hadActiveCode = currentCode?.IsActive(timeProvider.GetUtcNow().UtcDateTime) == true;
+        var hadActiveCode = await attempts.HasActiveCodeAsync(destination, cancellationToken);
         var verified = await verifier.VerifyAsync(destination, LoginCodePurpose.Login,
             requestedByUserId: null, request.Code!, cancellationToken);
         if (verified.IsFailure)
         {
             if (userId is { } existingUserId && hadActiveCode && IsFailedCodeAttempt(verified.Error))
             {
-                await signIn.RegisterFailedAttemptAsync(existingUserId, cancellationToken);
-                if (await signIn.IsLockedOutAsync(existingUserId, cancellationToken))
+                await attempts.RegisterFailedAttemptAsync(existingUserId, cancellationToken);
+                if (await attempts.IsLockedOutAsync(existingUserId, cancellationToken))
                     return Fail(userId, AccountErrors.LockedOut);
             }
             return Fail(userId, verified.Error);
         }
 
         if (userId is null) return Fail(null, LoginCodeErrors.Invalid(attemptsLeft: null));
-        if (await signIn.IsLockedOutAsync(userId.Value, cancellationToken))
+        if (await attempts.IsLockedOutAsync(userId.Value, cancellationToken))
             return Fail(userId, AccountErrors.LockedOut);
 
         var account = await accounts.ReadAsync(userId.Value, cancellationToken);
@@ -74,9 +68,8 @@ internal sealed class LoginCodeVerificationFlow(
             }
         }
 
-        await signIn.ResetFailedAttemptsAsync(userId.Value, cancellationToken);
-        audits.Add(LoginAudit.Success(userId.Value, LoginAuditMethod.Code,
-            timeProvider.GetUtcNow().UtcDateTime));
+        await attempts.ResetFailedAttemptsAsync(userId.Value, cancellationToken);
+        attempts.RecordSuccess(userId.Value);
         return userId.Value;
     }
 
@@ -87,8 +80,6 @@ internal sealed class LoginCodeVerificationFlow(
 
     private Error Fail(Guid? userId, Error error)
     {
-        audits.Add(LoginAudit.Failure(userId, LoginAuditMethod.Code, error,
-            timeProvider.GetUtcNow().UtcDateTime));
-        return error;
+        return attempts.RecordFailure(userId, error);
     }
 }
