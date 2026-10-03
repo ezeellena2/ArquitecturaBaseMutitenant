@@ -1,0 +1,8 @@
+{
+  "openapi": "3.0.1",
+  "paths": {
+    "/api/roles": { "get": {}, "post": {} },
+    "/api/roles/{id}": { "get": {}, "put": {} },
+    "/api/companies": { "get": {} }
+  }
+}

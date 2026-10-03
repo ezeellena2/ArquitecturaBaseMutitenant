@@ -309,3 +309,18 @@ Cada fase: TDD con `node --test` (rojo → verde), un commit, y `node --test scr
 | indices | 0 | 0 | 1 | 0 |
 
 Antes de ajustar, el primer pasaje dio 28 auto / 125 modelo (`referencias` 99, `punteros` 53): los ajustes de las decisiones 3 a 8 sacaron los falsos positivos.
+
+**Fase 3** (back, `main`, 2026-10-02; corre en 1,8 s; con el front, 2,7 s).
+
+| Detector | auto | modelo | humano | Falsos positivos |
+|---|---:|---:|---:|---|
+| referencias | 0 | 18 | 0 | 3 (los de la fase 2) |
+| simbolos | 0 | 26 (24 tipos, 2 miembros) | 0 | ~6: negaciones del doc (`IQuery`) y nombres del framework que faltan en la lista |
+| arbol | 200 | 58 | 54 (45 archivos y 9 carpetas que figuran y nunca existieron) | 0: son desvíos reales |
+| punteros | 2 | 24 | 0 | 0 |
+| indices | 0 | 0 | 1 | 0 |
+| catalogos | 0 | 0 | 25 (11 grupos de códigos, 8 de permisos y 6 de rutas sin feature) | 0 |
+
+Los 200 `auto` de `arbol` son archivos nuevos con descripción sacada del `<summary>` (o "tests de X"); los 58 `modelo` no tienen `<summary>`.
+
+Ajustes que salieron de esta corrida (decisiones 11 a 14): primero `simbolos` dio 63 tipos y 126 miembros inexistentes, y 47 `auto` equivocados (plurales de `DbSet`, nombres de archivo como `Email.cs`, tipos del framework).

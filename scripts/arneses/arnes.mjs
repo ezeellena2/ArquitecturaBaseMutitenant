@@ -14,7 +14,14 @@ import { coincide } from './comun/glob.mjs';
 import { contar, crearHallazgo, filtrarIgnorados, ordenar } from './comun/hallazgos.mjs';
 import { escribirInforme, fechaCorrida, resumenMarkdown } from './comun/informe.mjs';
 import * as markdown from './comun/markdown.mjs';
+import { fabricaHistorial } from './comun/git.mjs';
 import { cargarRepo, raizBackPorDefecto, raizFrontPorDefecto } from './comun/repos.mjs';
+import { indexarSimbolos } from './comun/simbolos.mjs';
+
+const memo = (fn) => {
+  let promesa;
+  return () => (promesa ??= fn());
+};
 
 const aqui = dirname(fileURLToPath(import.meta.url));
 
@@ -51,7 +58,7 @@ export async function leerJson(ruta, porDefecto = null) {
 }
 
 /** Corre los detectores del arnés sobre cada repo y devuelve los hallazgos sin ignorados, ordenados. */
-export async function detectar({ dirArneses, arnes, raices, soloRepo }) {
+export async function detectar({ dirArneses, arnes, raices, soloRepo, historial }) {
   const { manifiesto } = arnes;
   const ignorados = (await leerJson(join(dirArneses, arnes.carpeta, 'ignorados.json'), [])) ?? [];
   const todos = [];
@@ -77,6 +84,10 @@ export async function detectar({ dirArneses, arnes, raices, soloRepo }) {
       raices,
       excluido,
       leer: (rel) => readFile(join(raiz, rel), 'utf8'),
+      // ¿existió y se borró? Se puede reemplazar desde afuera (tests) con `historial(repo, ruta)`.
+      fueBorrado: historial ? (ruta) => historial(nombre, ruta) : fabricaHistorial(raiz),
+      indiceSimbolos: memo(() => indexarSimbolos(archivos)),
+      indiceSimbolosHermano: memo(async () => (hermano ? indexarSimbolos(hermano) : null)),
       crear: (campos) => crearHallazgo({ ...campos, repo: nombre, detector: ctx.detectorActual }),
     };
     for (const nombreDetector of manifiesto.detectores ?? []) {

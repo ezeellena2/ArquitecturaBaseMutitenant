@@ -2,7 +2,7 @@
   "nombre": "realinear-docs",
   "descripcion": "Alinea docs y punteros con el código: corrige, crea y borra lo que quedó viejo.",
   "repos": ["back", "front"],
-  "detectores": ["referencias", "punteros", "indices"],
+  "detectores": ["referencias", "simbolos", "arbol", "punteros", "indices", "catalogos"],
   "excluir": ["docs/plans/**", "docs/reviews/**", "docs/history/**", "docs/decisions/0*.md",
               "docs/backlog.md", "docs/design/**", "docs/contracts/**", ".claude/**", ".agents/**"],
   "permisos": {

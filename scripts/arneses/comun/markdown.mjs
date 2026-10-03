@@ -86,6 +86,25 @@ export function estaCerrada(rangos, cerradas) {
   });
 }
 
+/** Líneas cuya mención es de una etapa que no cerró (D3): la propia línea o el encabezado de su sección. */
+export function lineasPlaneadas(texto, cerradas) {
+  const planeadas = new Set();
+  let nivelPlaneado = null;
+  for (const l of lineas(texto)) {
+    const h = !l.codigo && l.contenido.match(/^(#{1,6})\s/);
+    if (h) {
+      const nivel = h[1].length;
+      if (nivelPlaneado !== null && nivel <= nivelPlaneado) nivelPlaneado = null;
+      const marcas = marcasEtapa(l.contenido);
+      if (marcas.length && !estaCerrada(marcas, cerradas)) nivelPlaneado = nivel;
+    }
+    if (nivelPlaneado !== null) planeadas.add(l.n);
+    const marcas = marcasEtapa(l.contenido);
+    if (marcas.length && !estaCerrada(marcas, cerradas)) planeadas.add(l.n);
+  }
+  return planeadas;
+}
+
 /** Filas de tablas Markdown: [{ linea, celdas }]; salta el separador. */
 export function filasDeTabla(texto) {
   const out = [];

@@ -1,31 +1,12 @@
 import { posix } from 'node:path';
 import { contextoDe } from '../../comun/hallazgos.mjs';
-import { anclas, enlaces, estaCerrada, lineas, marcasEtapa, rutasEnBackticks } from '../../comun/markdown.mjs';
+import { anclas, enlaces, lineasPlaneadas, rutasEnBackticks } from '../../comun/markdown.mjs';
 import { estiloDe, mapaDeCapas, resolverValor } from '../../comun/rutas.mjs';
 
 export const nombre = 'referencias';
 
 // Valores que parecen ruta y no lo son: carpetas generadas, secretos locales, extensiones sueltas, imports (@) y plantillas.
 const ignorarRuta = /(^|\/)(\.local|bin|obj|node_modules|dist|\.git|wwwroot)(\/|$)|^appsettings|\.local\.json$|^\.env|\.\.\.|…|^@|[\\%]|^\.[\w.]+$|NNNN|AAAA|(^|\/)I?X(Service|Repository|Reader|Errors|Controller|Request)\b/;
-
-/** Líneas cuya mención es de una etapa que no cerró (D3): la propia línea o el encabezado de su sección. */
-function lineasPlaneadas(texto, cerradas) {
-  const planeadas = new Set();
-  let nivelPlaneado = null;
-  for (const l of lineas(texto)) {
-    const h = !l.codigo && l.contenido.match(/^(#{1,6})\s/);
-    if (h) {
-      const nivel = h[1].length;
-      if (nivelPlaneado !== null && nivel <= nivelPlaneado) nivelPlaneado = null;
-      const marcas = marcasEtapa(l.contenido);
-      if (marcas.length && !estaCerrada(marcas, cerradas)) nivelPlaneado = nivel;
-    }
-    if (nivelPlaneado !== null) planeadas.add(l.n);
-    const marcas = marcasEtapa(l.contenido);
-    if (marcas.length && !estaCerrada(marcas, cerradas)) planeadas.add(l.n);
-  }
-  return planeadas;
-}
 
 // Nombres que se repiten en muchas carpetas: un único candidato no prueba que sea un renombre.
 const nombreGenerico = /(^|\/)(README|AGENTS|CLAUDE|index|package|HarnessStage)\.[a-z]+$/;

@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path';
 import { after, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { detectar, leerJson, listarArneses } from '../arnes.mjs';
+import { parsearArbol } from '../comun/arbolmd.mjs';
 import { aplicarParches } from '../comun/parches.mjs';
 
 const aqui = dirname(fileURLToPath(import.meta.url));
@@ -18,8 +19,11 @@ async function arnesReal(detectores) {
   return { carpeta: 'realinear-docs', manifiesto: { ...manifiesto, detectores: detectores ?? manifiesto.detectores } };
 }
 
+// En los fixtures no hay historia de git: el "se borró en un commit" se simula con un nombre.
+const historialFalso = async (_repo, ruta) => /ViejoService/.test(ruta);
+
 async function correr(detectores, raices, soloRepo = 'back') {
-  return detectar({ dirArneses, arnes: await arnesReal(detectores), raices, soloRepo });
+  return detectar({ dirArneses, arnes: await arnesReal(detectores), raices, soloRepo, historial: historialFalso });
 }
 
 const resumen = (hs) => hs.map((h) => `${h.detector}|${h.tipo}|${h.accion}|${h.archivo}|${h.id.split('|').at(-1)}`).sort();
@@ -83,6 +87,65 @@ test('indices: filas de archivos que no existen y fichas sin fila', async () => 
     'indices|fila-huerfana|auto|AGENTS.md|docs/rules/inexistente.md',
     'indices|fila-huerfana|auto|docs/rules/README.md|docs/rules/viejo.md',
   ].sort());
+});
+
+test('arbol: el parser reconstruye las rutas de las secciones con ruta y no lee las demás', async () => {
+  const texto = await readFile(join(fixtures, 'back', 'docs/architecture/arbol.md'), 'utf8');
+  const secciones = parsearArbol(texto, [0, 1, 2]);
+  assert.deepEqual(secciones.map((s) => s.raiz), ['', 'src/Demo.Application']);
+  assert.deepEqual(secciones[0].entradas.map((e) => e.ruta), ['docs', 'docs/features', 'docs/features/roles.md', 'src', 'LICENSE']);
+  assert.deepEqual(secciones[1].entradas.map((e) => e.ruta), [
+    'src/Demo.Application/Services', 'src/Demo.Application/Services/Roles', 'src/Demo.Application/Services/Roles/RoleService.cs',
+    'src/Demo.Application/Services/Roles/Helper.cs', 'src/Demo.Application/Services/Roles/ViejoService.cs',
+    'src/Demo.Application/Services/Fantasma.cs', 'src/Demo.Application/Extra', 'src/Demo.Application/Extra/Cosa.cs',
+    'src/Demo.Application/Old', 'src/Demo.Application/Old/Algo.cs',
+  ]);
+  const planeadas = secciones[1].entradas.filter((e) => e.planeada).map((e) => e.nombre);
+  assert.deepEqual(planeadas, ['Extra/', 'Cosa.cs', 'Algo.cs']);
+  assert.equal(parsearArbol(texto, [0, 1, 2, 7])[1].entradas.filter((e) => e.planeada).length, 1);
+});
+
+test('arbol: archivos que ya no están, que nunca estuvieron, nuevos y sin descripción', async () => {
+  const hs = await correr(['arbol'], raicesFixture);
+  const arbol = 'docs/architecture/arbol.md';
+  assert.deepEqual(resumen(hs), [
+    `arbol|archivo-faltante|auto|${arbol}|src/Demo.Application/Services/Roles/ViejoService.cs`,
+    `arbol|archivo-faltante|humano|${arbol}|src/Demo.Application/Services/Fantasma.cs`,
+    `arbol|archivo-nuevo|auto|${arbol}|src/Demo.Application/Services/Roles/RoleSpecs.cs`,
+    `arbol|archivo-nuevo|auto|${arbol}|src/Demo.Application/Services/Roles/RoleSpecsTests.cs`,
+    `arbol|archivo-nuevo|modelo|${arbol}|src/Demo.Application/Services/Roles/RoleOther.cs`,
+    `arbol|linea-sin-descripcion|modelo|${arbol}|src/Demo.Application/Services/Roles/Helper.cs`,
+  ].sort());
+  const porArchivo = (nombre) => hs.find((h) => h.id.endsWith(nombre));
+  // La descripción sale del <summary> (primera oración) o del nombre del test: 0 tokens.
+  assert.match(porArchivo('RoleSpecs.cs').parche.texto, /^│   │   ├── RoleSpecs\.cs {10,}Especificaciones de roles$/);
+  assert.match(porArchivo('RoleSpecsTests.cs').parche.texto, /RoleSpecsTests\.cs {10,}tests de RoleSpecs$/);
+  assert.match(porArchivo('RoleOther.cs').esperado, /RoleOther\.cs {10,}<describir>$/);
+});
+
+test('simbolos: typo único (auto), inexistente y miembro que no está', async () => {
+  const hs = await correr(['simbolos'], raicesFixture);
+  assert.deepEqual(resumen(hs), [
+    'simbolos|miembro-inexistente|modelo|docs/features/roles.md|RoleService.Borrar',
+    'simbolos|simbolo-inexistente|auto|docs/features/roles.md|RolleService',
+    'simbolos|simbolo-inexistente|modelo|docs/features/roles.md|RolFantasmaService',
+  ].sort());
+  assert.equal(hs.find((h) => h.accion === 'auto').parche.a, '`RoleService`');
+});
+
+test('catalogos: permisos, códigos y rutas mencionados que no existen, y grupos sin feature', async () => {
+  const hs = await correr(['catalogos'], raicesFixture);
+  const roles = 'docs/features/roles.md';
+  assert.deepEqual(resumen(hs), [
+    `catalogos|codigo-desconocido|modelo|${roles}|Roles.Role.NameReqired`,
+    'catalogos|codigo-sin-feature|humano|docs/features|Companies',
+    `catalogos|metodo-desconocido|modelo|${roles}|DELETE /api/roles`,
+    `catalogos|permiso-desconocido|modelo|${roles}|roles.vew`,
+    'catalogos|permiso-sin-feature|humano|docs/features|companies',
+    `catalogos|ruta-desconocida|modelo|${roles}|POST /api/rolez`,
+    'catalogos|ruta-sin-feature|humano|docs/features|companies',
+  ].sort());
+  assert.deepEqual(hs.find((h) => h.tipo === 'permiso-desconocido').candidatos, ['roles.view']);
 });
 
 test('el runner deja una sola respuesta por línea: el auto de indices gana al modelo de referencias', async () => {
