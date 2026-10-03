@@ -18,7 +18,12 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                 type: "timestamp with time zone",
                 nullable: true);
 
-            migrationBuilder.Sql("UPDATE tenant.\"Members\" SET \"CreatedAtUtc\" = COALESCE(\"JoinedAtUtc\", CURRENT_TIMESTAMP);");
+            migrationBuilder.Sql("""
+                ALTER TABLE tenant."Members" DISABLE ROW LEVEL SECURITY;
+                UPDATE tenant."Members" SET "CreatedAtUtc" = COALESCE("JoinedAtUtc", CURRENT_TIMESTAMP);
+                ALTER TABLE tenant."Members" ENABLE ROW LEVEL SECURITY;
+                ALTER TABLE tenant."Members" FORCE ROW LEVEL SECURITY;
+                """);
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAtUtc",

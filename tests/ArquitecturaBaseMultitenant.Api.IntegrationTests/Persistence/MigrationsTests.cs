@@ -70,6 +70,30 @@ public sealed class MigrationsTests
             StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Member_audit_backfill_runs_before_forced_rls_is_restored()
+    {
+        using var context = CreateContext();
+        var script = context.GetService<IMigrator>().GenerateScript(
+            fromMigration: "20261002011150_RoleAccessProjection",
+            toMigration: "20261002212624_MemberAuditAndConcurrency");
+
+        var disableRls = script.IndexOf("ALTER TABLE tenant.\"Members\" DISABLE ROW LEVEL SECURITY;",
+            StringComparison.Ordinal);
+        var backfill = script.IndexOf("UPDATE tenant.\"Members\" SET \"CreatedAtUtc\" = COALESCE(\"JoinedAtUtc\", CURRENT_TIMESTAMP);",
+            StringComparison.Ordinal);
+        var enableRls = script.IndexOf("ALTER TABLE tenant.\"Members\" ENABLE ROW LEVEL SECURITY;",
+            StringComparison.Ordinal);
+        var forceRls = script.IndexOf("ALTER TABLE tenant.\"Members\" FORCE ROW LEVEL SECURITY;",
+            StringComparison.Ordinal);
+        var requireCreatedAt = script.IndexOf("ALTER COLUMN \"CreatedAtUtc\" SET NOT NULL",
+            StringComparison.Ordinal);
+
+        Assert.True(disableRls >= 0 && disableRls < backfill);
+        Assert.True(backfill < enableRls && enableRls < forceRls);
+        Assert.True(forceRls < requireCreatedAt);
+    }
+
     private static ApplicationDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
