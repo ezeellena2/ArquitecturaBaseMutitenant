@@ -62,7 +62,7 @@ El resultado tiene que servir para empezar productos reales.
 
 Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va después de la 6. La 5 usa `TenantProvisioner` de la 6 (aprobar, crear con invitación y reintentar el provisioning), `PublicPage` (moderar la página pública) y `TenantDomains` de la 6 (administrar el dominio verificado desde la plataforma). El dominio de correo y `TenantDomains` nacen y se cierran en la Configuración de la 6. La 7 necesita la página pública de la 6 (`PublicPage` publicada, el slug y los reservados). Los módulos de negocio del producto (B2B y B2C) se suman después, cada uno con su plan, copiando Roles, **como módulos con `[FeatureGate]`** (P8).
 
-**Pantallas por etapa:** la fuente es el [lienzo versionado en el front](../../../ArquitecturaBaseMutitenantFront/docs/design/lienzo/README.md) (versión 35, 67 tableros `.dc.html`, en escritorio y teléfono), con el tema de [`tema.md`](../../../ArquitecturaBaseMutitenantFront/docs/architecture/tema.md). Cada etapa programa las suyas **copiando el tablero**, que manda sobre las descripciones textuales, sin rediseñar. Si una pantalla necesita algo que el tablero no tiene, primero se dibuja y se aprueba.
+**Pantallas por etapa:** la fuente es el [lienzo versionado en el front](../../../ArquitecturaBaseMutitenantFront/docs/design/lienzo/README.md) (la versión vigente: el número y los estados están en su README; se programan solo los tableros validados, sin la marca «· por refinar» ni «· para aprobar»), con el tema de [`tema.md`](../../../ArquitecturaBaseMutitenantFront/docs/architecture/tema.md). Cada etapa programa las suyas **copiando el tablero**, que manda sobre las descripciones textuales, sin rediseñar. Si una pantalla necesita algo que el tablero no tiene, primero se dibuja y se aprueba.
 
 | Etapa | Tableros del lienzo |
 |---|---|
@@ -71,7 +71,7 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
 | 4 | Roles y Rol |
 | 5 | Organizaciones, Organizacion, Cuentas, Cuenta-Plat, Recuperaciones, Recuperar, Legales, Auditoria-Plat y Config-Plat |
 | 6 | Registro-Empresa, Inicio-Org, Inicio-Miembro, Usuarios, Usuario, Empresas, Empresa, Configuracion (con el dominio de correo), Pagina-Org y Auditoria-Org |
-| 7 | Pagina-Publica y Directorio |
+| 7 | Landing (la sección «Empresas en ArquitecturaBase» de la portada), Directorio (`/empresas`) y Pagina-Publica, con sus teléfonos (Landing-Movil, M-Directorio y M-Pagina-Publica, como web móvil) |
 | 8 | Ingreso, Registro y Cuenta (los estados de WhatsApp), Enlace y Mensajes (canal WhatsApp, incluido «Enlace para entrar (bot)») |
 | 9 | Ingreso: los estados del operador (segundo factor, código del autenticador incorrecto, código de recuperación, configurar el autenticador y guardar los códigos) |
 | 10 | Cuenta (Privacidad: Exportar mis datos) y Mensajes (Exportación de datos lista, por correo) |
@@ -366,7 +366,7 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
    - `PublicSiteResolutionMiddleware` (subdominio → organización publicada, usa `ReservedSlugs` de la Etapa 6) y `[PublicSite]`;
    - una organización suspendida o con la página despublicada muestra «No disponible» en su subdominio (tablero Pagina-Publica), probado en `SubdomainTests` con los estados sembrados directamente (`TenantStatus.Suspended` y la página bloqueada), sin depender de los servicios de la Etapa 5;
    - `SubdomainRedirectUriValidator` para ingresar desde un subdominio: el issuer es fijo (el dominio principal), `authorize` y `logout` navegan al dominio principal, y el canje del código, la renovación y `userinfo` van a `/connect/*` del propio subdominio;
-   - el directorio de páginas publicadas en el dominio principal (`DirectoryController`, con `[AllowAnonymous]` y no `[PublicSite]`);
+   - el directorio de páginas publicadas en el dominio principal (`DirectoryController`, con `[AllowAnonymous]` y no `[PublicSite]`), con búsqueda y paginado: la portada pide las tres primeras y `/empresas`, el listado completo;
    - el SPA y la Api en el mismo origen en cada host, sin CORS y con `BackendPrefixes` igual en todos; en desarrollo, `*.localtest.me` y el proxy de Vite por host.
 1b. **Mecánica de interacción de punta a punta con `TestFeatures`:** una persona crea un `Deal` desde la página pública, la empresa lo ve en su bandeja y cada parte cambia estados según `PartyPolicy`. Es la guía para que un producto arme su módulo. Suma el participante de la baja para los datos compartidos (`engagement`), que reemplaza la copia de los datos personales por "Cuenta eliminada", e `IRetainedOnConsumerDeletion` para la retención legal que declare un módulo (ADR 0035, multitenancy.md §3.2). El caso se prueba con el `Deal` en `AccountDeletionTests`.
 2. `docs/features/personal.md`, la receta de un módulo B2C:
@@ -376,10 +376,10 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
    - tests de aislamiento entre personas, y entre el acceso B2C y el B2B de la misma persona.
 3. `TestFeatures` con controllers `[Access(Consumer)]` y `[PublicSite]` que prueban esa receta.
 
-**Front:** el sitio público, copiando Pagina-Publica y Directorio con sus tableros de teléfono (P10: las páginas públicas se piensan primero para el teléfono):
+**Front:** el sitio público, copiando Landing, Directorio y Pagina-Publica con sus tableros de teléfono. Las páginas públicas se piensan primero para el teléfono (P10) y, sin sesión, se ven como **web móvil con ☰**, no como app:
 - el árbol de rutas por host en `routes.tsx` (con un subdominio arma `storefront`) y `usePublicSite`;
 - `areas/storefront` con la página pública del subdominio (publicada, sin sesión o con sesión, y «No disponible») y «Ingresá para continuar», que ingresa como persona y vuelve a la misma página;
-- el directorio de empresas publicadas en `areas/public/site`, al lado de la portada de la Etapa 3;
+- en `areas/public/site`: la sección «Empresas en ArquitecturaBase» de la portada (buscador, tres empresas y «Ver todas las empresas»; «Empresas», arriba, baja a esa sección) y el directorio completo en `/empresas` (tarjetas con buscador y paginado; cada una lleva a la página pública en su subdominio);
 - todo dentro de `SiteLayout`.
 
 Además, `navigation/personal.ts` queda listo para sumar módulos B2C. El `PersonalLayout` y el inicio personal ya están desde la Etapa 3.
