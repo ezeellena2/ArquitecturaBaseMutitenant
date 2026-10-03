@@ -165,7 +165,8 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
                                       && method.Type == LoginMethodType.Email && method.VerifiedAtUtc != null)
                                   .OrderByDescending(method => method.IsPrimary).ThenBy(method => method.Id)
                                   .Select(method => method.Value).FirstOrDefault(),
-                              user == null ? null : user.Status, member.Status, member.Version, member.CreatedAtUtc))
+                              user == null ? null : user.Status, member.Status, member.Version, member.CreatedAtUtc,
+                              user == null ? null : user.DeletionScheduledForUtc))
             .ToArrayAsync(cancellationToken);
         var byId = rows.ToDictionary(row => row.MemberId);
         return members.Select(member => byId[member.Id]).ToArray();
@@ -239,7 +240,8 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
                 row.UserId is { } userId && managedUserIds.Contains(userId), row.MemberStatus, row.UserStatus,
                 invitation?.Status, invitation?.Id, invitation?.IssuedAtUtc, invitation?.ExpiresAtUtc,
                 rolesByMember.GetValueOrDefault(row.MemberId, []),
-                companiesByMember.GetValueOrDefault(row.MemberId, []), row.Version, row.CreatedAtUtc);
+                companiesByMember.GetValueOrDefault(row.MemberId, []), row.Version, row.CreatedAtUtc,
+                row.DeletionScheduledForUtc);
         })];
     }
 
@@ -254,5 +256,6 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
         .Replace("_", "\\_", StringComparison.Ordinal);
 
     private sealed record UserProjection(Guid MemberId, Guid? UserId, string DisplayName, string? Email,
-        UserStatus? UserStatus, MemberStatus MemberStatus, uint Version, DateTime CreatedAtUtc);
+        UserStatus? UserStatus, MemberStatus MemberStatus, uint Version, DateTime CreatedAtUtc,
+        DateTime? DeletionScheduledForUtc);
 }

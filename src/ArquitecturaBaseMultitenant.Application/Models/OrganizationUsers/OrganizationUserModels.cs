@@ -34,12 +34,14 @@ public sealed record OrganizationUserRow(Guid MemberId, Guid? UserId, string Dis
     bool HasManagedEmail, MemberStatus MemberStatus, UserStatus? UserStatus,
     InvitationStatus? InvitationStatus, Guid? InvitationId, DateTime? InvitationIssuedAtUtc,
     DateTime? InvitationExpiresAtUtc, IReadOnlyList<OrganizationUserRoleRow> Roles,
-    IReadOnlyList<OrganizationUserCompanyRow> Companies, uint Version, DateTime CreatedAtUtc);
+    IReadOnlyList<OrganizationUserCompanyRow> Companies, uint Version, DateTime CreatedAtUtc,
+    DateTime? DeletionScheduledForUtc);
 
 public sealed record OrganizationUserResponse(Guid MemberId, Guid? UserId, string DisplayName, Email? Email,
     OrganizationUserState State, bool HasManagedEmail, IReadOnlyList<OrganizationUserRoleRow> Roles,
     IReadOnlyList<OrganizationUserCompanyRow> Companies, Guid? InvitationId,
-    DateTime? InvitationIssuedAtUtc, DateTime? InvitationExpiresAtUtc, uint Version, DateTime CreatedAtUtc);
+    DateTime? InvitationIssuedAtUtc, DateTime? InvitationExpiresAtUtc, uint Version, DateTime CreatedAtUtc,
+    DateTime? DeletionScheduledForUtc);
 
 public sealed record OrganizationUserFilterCountsResponse(int All, int Active, int PendingDeletion,
     int Invited, int Expired, int Inactive);
@@ -49,7 +51,8 @@ public sealed record InviteOrganizationUserRequest(Email? Email, IReadOnlyCollec
 
 public sealed record InviteCompanyRolesRequest(Guid CompanyId, IReadOnlyCollection<Guid>? RoleIds);
 
+/// <summary>Guarda roles y empresas; <c>IsActive</c> cambia el estado en la misma operación (null lo deja igual).</summary>
 public sealed record UpdateOrganizationUserRequest(Guid MemberId, IReadOnlyCollection<Guid>? RoleIds,
-    IReadOnlyCollection<InviteCompanyRolesRequest>? Companies, uint? Version);
+    IReadOnlyCollection<InviteCompanyRolesRequest>? Companies, uint? Version, bool? IsActive = null);
 
 public sealed record ChangeOrganizationUserStatusRequest(Guid MemberId, bool? IsActive, uint? Version);

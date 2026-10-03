@@ -7,16 +7,17 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
 
-/// <summary>Edita roles y membresías después de proteger a los administradores actuales.</summary>
+/// <summary>Edita estado, roles y membresías en una transacción, después de proteger a los administradores actuales.</summary>
 internal sealed class OrganizationUserEditor(
     IMemberRepository members,
     IMemberReader memberReader,
     OrganizationUserAssignmentManager assignments,
     OrganizationUserAdministratorGuard administrators,
+    OrganizationUserStatusEditor statusEditor,
     IUnitOfWork unitOfWork)
 {
     internal Task<Result> UpdateAsync(UpdateOrganizationUserRequest request,
-        DesiredOrganizationUserAssignments desired, CancellationToken cancellationToken) =>
+        DesiredOrganizationUserAssignments desired, Guid? currentUserId, CancellationToken cancellationToken) =>
         unitOfWork.ExecuteInTransactionAsync(async ct =>
         {
             var member = await members.GetByIdAsync(request.MemberId, request.Version!.Value, ct);
@@ -24,6 +25,11 @@ internal sealed class OrganizationUserEditor(
             if (member.Status == MemberStatus.Removed) return MemberErrors.InvalidTransition;
             var user = member.UserId is { } userId ? await memberReader.FindByUserIdAsync(userId, ct) : null;
             if (user?.UserStatus == UserStatus.PendingDeletion) return AccountErrors.PendingDeletion;
+            if (request.IsActive is { } isActive)
+            {
+                var status = await statusEditor.ApplyAsync(member, isActive, currentUserId, ct);
+                if (status.IsFailure) return status;
+            }
             var snapshot = await assignments.GetSnapshotAsync(member.Id, ct);
             var protectedResult = await administrators.ProtectAsync(member, user?.UserStatus, snapshot,
                 desired, deactivating: false, removing: false, ct);

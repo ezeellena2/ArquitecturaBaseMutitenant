@@ -93,7 +93,7 @@ internal sealed class OrganizationUserService(
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             var desired = await assignments.ValidateAsync(request.RoleIds!, request.Companies!, cancellationToken);
             if (desired.IsFailure) return desired.Error;
-            return await lifecycle.UpdateAsync(request, desired.Value, cancellationToken);
+            return await lifecycle.UpdateAsync(request, desired.Value, currentUser.UserId, cancellationToken);
         });
     }
 
@@ -121,7 +121,8 @@ internal sealed class OrganizationUserService(
             row.InvitationExpiresAtUtc, timeProvider.GetUtcNow().UtcDateTime), row.HasManagedEmail,
         [.. row.Roles.Select(Translate)],
         [.. row.Companies.Select(company => company with { Roles = [.. company.Roles.Select(Translate)] })],
-        row.InvitationId, row.InvitationIssuedAtUtc, row.InvitationExpiresAtUtc, row.Version, row.CreatedAtUtc);
+        row.InvitationId, row.InvitationIssuedAtUtc, row.InvitationExpiresAtUtc, row.Version, row.CreatedAtUtc,
+        row.DeletionScheduledForUtc);
 
     private static OrganizationUserRoleRow Translate(OrganizationUserRoleRow role) => role with
     {

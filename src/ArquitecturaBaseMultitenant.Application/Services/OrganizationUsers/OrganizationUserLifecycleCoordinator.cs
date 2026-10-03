@@ -10,8 +10,8 @@ internal sealed class OrganizationUserLifecycleCoordinator(
     OrganizationUserRemover remover)
 {
     internal Task<Result> UpdateAsync(UpdateOrganizationUserRequest request,
-        DesiredOrganizationUserAssignments desired, CancellationToken cancellationToken) =>
-        editor.UpdateAsync(request, desired, cancellationToken);
+        DesiredOrganizationUserAssignments desired, Guid? currentUserId, CancellationToken cancellationToken) =>
+        editor.UpdateAsync(request, desired, currentUserId, cancellationToken);
 
     internal Task<Result> ChangeStatusAsync(ChangeOrganizationUserStatusRequest request, Guid? currentUserId,
         CancellationToken cancellationToken) =>

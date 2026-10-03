@@ -227,6 +227,99 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
         Assert.Equal(companyAdminRoleId, Assert.Single(company.GetProperty("roles").EnumerateArray()).GetProperty("id").GetGuid());
     }
 
+    [Fact]
+    public async Task Saving_the_user_changes_status_with_roles_and_shows_when_the_account_is_deleted()
+    {
+        using var ownerClient = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false });
+        var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
+        using var memberClient = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false });
+        var user = await AccountJourney.RegisterAsync(factory, memberClient, Ct);
+        var (tenantId, ownerMemberId) = await CreateOrganizationAsync(owner.UserId);
+        await AccountJourney.AuthorizeAsync(ownerClient, "business", Ct);
+        var memberId = await AddActiveMemberAsync(tenantId, user.UserId);
+
+        // Tablero Usuario: «Guardar cambios» manda estado, roles y empresas juntos.
+        using var disabled = await ownerClient.PutAsJsonAsync($"/api/users/{memberId:D}", new
+        {
+            isActive = false,
+            roleIds = Array.Empty<Guid>(),
+            companies = Array.Empty<object>(),
+            version = await UserVersionAsync(ownerClient, memberId),
+        }, Ct);
+        Assert.True(disabled.StatusCode == HttpStatusCode.NoContent, await disabled.Content.ReadAsStringAsync(Ct));
+        Assert.Equal("Inactive", await UserStateAsync(ownerClient, memberId));
+
+        using var enabled = await ownerClient.PutAsJsonAsync($"/api/users/{memberId:D}", new
+        {
+            isActive = true,
+            roleIds = Array.Empty<Guid>(),
+            companies = Array.Empty<object>(),
+            version = await UserVersionAsync(ownerClient, memberId),
+        }, Ct);
+        Assert.True(enabled.StatusCode == HttpStatusCode.NoContent, await enabled.Content.ReadAsStringAsync(Ct));
+        Assert.Equal("Active", await UserStateAsync(ownerClient, memberId));
+
+        using var selfDisabled = await ownerClient.PutAsJsonAsync($"/api/users/{ownerMemberId:D}", new
+        {
+            isActive = false,
+            roleIds = Array.Empty<Guid>(),
+            companies = Array.Empty<object>(),
+            version = await UserVersionAsync(ownerClient, ownerMemberId),
+        }, Ct);
+        Assert.Equal(HttpStatusCode.Forbidden, selfDisabled.StatusCode);
+        using var selfProblem = JsonDocument.Parse(await selfDisabled.Content.ReadAsStringAsync(Ct));
+        Assert.Equal("Tenancy.Member.CannotDisableSelf", selfProblem.RootElement.GetProperty("code").GetString());
+
+        DateTime requestedAtUtc;
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            requestedAtUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+            var requested = await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+                services.GetRequiredService<IUserRepository>().RequestDeletionAsync(user.UserId, "Prueba",
+                    requestedAtUtc, 30, ct), CommitPolicy.OnSuccess, Ct);
+            Assert.True(requested.IsSuccess);
+        }
+        using var pending = await ownerClient.GetAsync($"/api/users/{memberId:D}", Ct);
+        using var pendingJson = JsonDocument.Parse(await pending.Content.ReadAsStringAsync(Ct));
+        Assert.Equal("PendingDeletion", pendingJson.RootElement.GetProperty("state").GetString());
+        // «Pidió la baja de su cuenta. Se elimina el …»
+        Assert.Equal(requestedAtUtc.AddDays(30), pendingJson.RootElement.GetProperty("deletionScheduledForUtc")
+            .GetDateTime(), TimeSpan.FromSeconds(1));
+    }
+
+    private static async Task<uint> UserVersionAsync(HttpClient client, Guid memberId)
+    {
+        using var response = await client.GetAsync($"/api/users/{memberId:D}", Ct);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
+        return json.RootElement.GetProperty("version").GetUInt32();
+    }
+
+    private static async Task<string?> UserStateAsync(HttpClient client, Guid memberId)
+    {
+        using var response = await client.GetAsync($"/api/users/{memberId:D}", Ct);
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
+        return json.RootElement.GetProperty("state").GetString();
+    }
+
+    private async Task<Guid> AddActiveMemberAsync(Guid tenantId, Guid userId)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        using var tenant = services.GetRequiredService<ITenantScope>().Enter(tenantId);
+        var member = Member.Invite(userId);
+        Assert.True(member.Activate(services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime).IsSuccess);
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+        {
+            services.GetRequiredService<IMemberRepository>().Add(member);
+            return Task.FromResult(Result.Success());
+        }, CommitPolicy.OnSuccess, Ct);
+        return member.Id;
+    }
+
     private async Task<(Guid TenantId, Guid MemberId)> CreateOrganizationAsync(Guid ownerId)
     {
         var tenant = Tenant.CreateBusiness("Usuarios HTTP test", requiresApproval: false);
