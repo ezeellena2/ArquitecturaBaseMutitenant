@@ -5,22 +5,17 @@ using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
-using ArquitecturaBaseMultitenant.Application.Services.Identity;
-using ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
 /// <summary>Resuelve el subject global bajo lock, vincula correo verificado o registra desde Registro.</summary>
 internal sealed class GoogleAccountResolver(
     IUserLookup lookup,
-    IUserRepository users,
     ILoginMethodRepository methods,
     IExternalLoginLock loginLock,
     GoogleAccountRegistrar registrar,
-    LoginMethodNotifier notifier,
-    TimeProvider timeProvider,
     GoogleAccountGuard guard,
-    LoginMethodDomainAssigner emailDomains)
+    GoogleAccountMethodFinalizer methodFinalizer)
 {
     internal Task<PersonalSpaceDraft> PrepareAsync(string? culture, string? timeZoneId,
         CancellationToken cancellationToken) => registrar.PrepareAsync(culture, timeZoneId, cancellationToken);
@@ -74,16 +69,8 @@ internal sealed class GoogleAccountResolver(
         if (googleMethod is null)
         {
             var all = await methods.ListByUserIdAsync(userId, cancellationToken);
-            var method = LoginMethod.CreateGoogle(userId, login.ProviderKey, email);
-            method.Verify(timeProvider.GetUtcNow().UtcDateTime);
-            await emailDomains.AssignIfVerifiedAsync(method, email, cancellationToken);
-            if (!all.Any(value => value.IsPrimary))
-            {
-                method.MakePrimary();
-                await users.SetPrimaryContactAsync(userId, email, null, cancellationToken);
-            }
-            methods.Add(method);
-            await notifier.ChangedAsync(account, [.. all, method], method, "Added", cancellationToken);
+            await methodFinalizer.AddGoogleMethodAsync(account, userId, login.ProviderKey, email, all,
+                cancellationToken);
         }
         else if (email is not null)
         {
@@ -92,7 +79,7 @@ internal sealed class GoogleAccountResolver(
             if (method.ContactEmail is null)
             {
                 method.UpdateGoogleContact(email);
-                if (method.IsPrimary) await users.SetPrimaryContactAsync(userId, email, null, cancellationToken);
+                await methodFinalizer.UpdatePrimaryContactIfNeededAsync(userId, method, email, cancellationToken);
             }
         }
 

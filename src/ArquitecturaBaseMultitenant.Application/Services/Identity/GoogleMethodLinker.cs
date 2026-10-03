@@ -13,8 +13,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 /// Bloquea los identificadores compartidos, impide que pertenezcan a otra cuenta y avisa del cambio.
 /// </summary>
 internal sealed class GoogleMethodLinker(LoginMethodGuard guard, IExternalLoginLock loginLock,
-    IUserLookup lookup, ILoginMethodRepository methods, LoginCodeIssuer codes, IUserRepository users,
-    LoginMethodNotifier notifier, TimeProvider timeProvider, LoginMethodDomainAssigner emailDomains)
+    IUserLookup lookup, ILoginMethodRepository methods, LoginCodeIssuer codes,
+    TimeProvider timeProvider, LoginMethodDomainAssigner emailDomains, GoogleMethodLinkFinalizer finalizer)
 {
     public async Task<Result> LinkAsync(Guid userId, ExternalLogin login, CancellationToken ct)
     {
@@ -43,13 +43,9 @@ internal sealed class GoogleMethodLinker(LoginMethodGuard guard, IExternalLoginL
         var method = LoginMethod.CreateGoogle(userId, login.ProviderKey, login.Email);
         method.Verify(timeProvider.GetUtcNow().UtcDateTime);
         await emailDomains.AssignIfVerifiedAsync(method, login.Email, ct);
-        if (!all.Any(value => value.IsPrimary))
-        {
-            method.MakePrimary();
-            await users.SetPrimaryContactAsync(userId, login.Email, null, ct);
-        }
+        await finalizer.SetPrimaryIfNeededAsync(userId, login, all, method, ct);
         methods.Add(method);
-        await notifier.ChangedAsync(account.Value, [.. all, method], method, "Added", ct);
+        await finalizer.NotifyAddedAsync(account.Value, all, method, ct);
         return Result.Success();
     }
 }

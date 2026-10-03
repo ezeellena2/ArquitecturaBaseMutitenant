@@ -56,6 +56,7 @@ public static class DependencyInjection
         services.AddScoped<SignupExistingMethodVerifier>();
         services.AddScoped<IExternalLoginService, ExternalLoginService>();
         services.AddScoped<GoogleAccountResolver>();
+        services.AddScoped<GoogleAccountMethodFinalizer>();
         services.AddScoped<GoogleAccountGuard>();
         services.AddScoped<GoogleAccountRegistrar>();
         services.AddScoped<IConnectService, ConnectService>();
@@ -106,6 +107,7 @@ public static class DependencyInjection
         services.AddScoped<LoginMethodIssuer>();
         services.AddScoped<LoginMethodVerifier>();
         services.AddScoped<LoginMethodNotifier>();
+        services.AddScoped<GoogleMethodLinkFinalizer>();
         services.AddScoped<LoginMethodAvailability>();
         services.AddScoped<LoginMethodChanger>();
         services.AddScoped<IReauthService, ReauthService>();
