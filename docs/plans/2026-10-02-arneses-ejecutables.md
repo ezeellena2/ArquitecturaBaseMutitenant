@@ -303,6 +303,19 @@ Cada fase: TDD con `node --test` (rojo → verde), un commit, y `node --test scr
 13. **`simbolos`:** `auto` solo con un candidato único a distancia ≤ 2, de la misma clase (interfaz o no) y con el mismo sufijo. Los miembros se verifican solo en tipos con forma del repo. Un nombre de archivo (`Email.cs`) o de proyecto (`ArchitectureTests`) no es un tipo ni un miembro.
 14. **`catalogos`:** lo que el código define y ninguna feature documenta se pregunta por grupo (un permiso, un código o una ruta por grupo), no por elemento. El historial se lee con una sola llamada a `git log --diff-filter=D`.
 
+15. **La respuesta del modelo es un objeto** `{ "resultados": [{ id, resultado, nota }] }` y no un arreglo suelto: Codex exige un objeto en la raíz con `--output-schema`. `resultado.schema.json` y su validador mínimo (`comun/resultado.mjs`) valen para los dos motores.
+16. **`ignorados.json` lo escribe el script**, no el modelo: un `descartado` del resultado se anota con su motivo. Así también funciona sobre el front, cuyo worktree no contiene la carpeta del arnés; en ese caso queda modificado el `ignorados.json` del repo del arnés, sin commitear.
+17. **Lo que el modelo no resolvió** (hallazgos enviados que siguen detectándose) no hace fallar la corrida: pasa a la lista `humano` con la nota «el modelo no lo resolvió». Falla la corrida si queda un `auto` (es un bug del script), si la guardia revirtió algo, si el motor falló o si la respuesta no cumple el schema.
+18. **Los repos hermanos se buscan desde el repo real, no desde el worktree** (`raicesReales`): el worktree vive en `../.arneses/` y `../ArquitecturaBase` no está al lado.
+19. **`.local/` del worktree se ignora con `info/exclude`**, porque el `.gitignore` del front no lo tiene; la tarea del modelo se escribe ahí.
+20. **Front en el worktree:** para verificar con `npx vitest` se enlaza el `node_modules` del repo (una *junction*, que `quitarWorktree` suelta sin tocar el destino).
+21. **`archivo-nuevo` sin descripción** lo resuelve el modelo (inserta la línea de `esperado` con ≤ 10 palabras); `instrucciones.md` lo explica.
+22. **Windows y los finales de línea:** con `core.autocrlf`, un checkout nuevo trae CRLF. Los tests no comparan finales de línea, y los parches los preservan.
+23. **Claude real no se pudo probar en esta máquina:** `claude auth status` da `loggedIn: false` (la sesión de la app de escritorio no la hereda un `claude -p`). Los flags del plan §7 los aceptó el CLI real (devolvió «Not logged in», no un error de opción); el flujo completo está probado con un `claude` falso. Para correrlo en serio: `claude /login` y `node scripts/arneses/arnes.mjs realinear-docs --motor claude --presupuesto 1`.
+24. **Codex:** el `codex` de npm (0.151.0) rechaza `gpt-6.1-sol` con una cuenta de ChatGPT («model is not supported»); el de la app de Codex (0.159.0-alpha) lo acepta. `ARNES_CODEX_BIN` (y `ARNES_CLAUDE_BIN`) apuntan al ejecutable.
+25. **Sandbox de Codex en Windows con `--ignore-user-config`:** no funciona tal cual: sin el `[windows] sandbox = "elevated"` de la config del usuario, `workspace-write` rechaza todo comando («blocked by policy»). El perfil mínimo propio es un solo override: `-c windows.sandbox="elevated"` (con `unelevated` falla con «CreateProcessAsUserW … Acceso denegado»). No hizo falta un `-p`.
+26. **Tope de gasto:** Claude lo limita con `--max-budget-usd`; Codex no tiene tope de costo, así que el script corta el proceso a los `minutosMaximos`.
+
 ## 12. Contadores de las corridas reales (`--detectar`, sin modelo)
 
 **Fase 2** (back, rama `main`, 2026-10-02; solo se cuentan hallazgos, no se listan). Corre en 0,6 s.
@@ -329,3 +342,42 @@ Antes de ajustar, el primer pasaje dio 28 auto / 125 modelo (`referencias` 99, `
 Los 200 `auto` de `arbol` son archivos nuevos con descripción sacada del `<summary>` (o "tests de X"); los 58 `modelo` no tienen `<summary>`.
 
 Ajustes que salieron de esta corrida (decisiones 11 a 14): primero `simbolos` dio 63 tipos y 126 miembros inexistentes, y 47 `auto` equivocados (plurales de `DbSet`, nombres de archivo como `Email.cs`, tipos del framework).
+
+**Fase 6** (front, `--detectar`, misma fecha): auto 139 · modelo 54 · humano 23. `arbol` 126 auto, 41 modelo y 23 humano (20 archivos y 3 carpetas que figuran y nunca existieron); `punteros` 12 auto (carpetas del mapa sin puntero) y 1 modelo; `referencias` 1 auto y 8 modelo; `simbolos` 4 modelo. Los hooks de React y de las librerías (`useState`, `useQuery`…) estaban dando 13 falsos positivos: ahora están en la lista de nombres del framework.
+
+## 13. Primera corrida real (Codex, `gpt-6.1-sol`, esfuerzo `low`)
+
+Las dos corridas partieron de `main` en `3e53648` (back) y `b386ed1` (front); cada una dejó **una rama** y **un commit**, sin push: `arnes/realinear-docs/20261002-2248` (back) y `arnes/realinear-docs/20261002-2252` (front).
+
+| | Back | Front |
+|---|---|---|
+| Hallazgos al empezar (auto · modelo · humano) | 204 · 134 · 80 | 145 · 52 · 25 |
+| Aplicados sin modelo | 204 | 145 |
+| Enviados al modelo (tope 40) | 40: 38 líneas nuevas de `arbol.md` y 2 descartes (`ignorados.json`) | 40 |
+| Al terminar (auto · modelo · humano) | 0 · 94 · 80 (los 94 son los que superaron el tope) | 0 · 12 · 25 |
+| Tokens de entrada (de caché) · salida | 226 158 (180 480) · 3 302 | 256 513 (200 576) · 2 965 |
+| Costo | n/d (Codex no lo informa) | n/d |
+| Verificación | `node --test` y `HarnessTests`: verdes | `npx vitest run src/test/harness.test.ts`: verde |
+| Commit | 6 archivos, +256 −3 (`arbol.md`, 2 filas de docs, `ignorados.json` y los 2 punteros de `Configurations/PublicSite`) | 20 archivos, +203 −1 (punteros de las carpetas nuevas de `areas/business` y `arbol.md`) |
+
+**Alcanzó:** con el modelo barato (esfuerzo `low`) y 40 hallazgos por corrida, los dos repos terminaron con la verificación en verde. Quedan 94 + 12 hallazgos `modelo` para las próximas corridas (cada una procesa hasta `maxHallazgos`).
+
+**Intentos anteriores** (cada uno encontró un defecto del arnés, ya corregido): (1) el test de la corrida leía el `ignorados.json` real, que el propio arnés acababa de modificar; (2) un test comparaba finales de línea con LF y en el worktree venía CRLF; (3) `HarnessTests` mira el repo hermano en `../ArquitecturaBaseMutitenantFront` (el worktree vive en `../.arneses/`) y el build había regenerado `docs/contracts/openapi.json`, que no se debe commitear: ahora se enlaza el hermano mientras dura la verificación y la guardia revierte, después de verificar, lo que el build dejó fuera de `permisos`.
+
+**Claude Code: no se pudo correr** (`claude auth status` → `loggedIn: false`; ver decisión 23). Quedan sin medir la corrida con `--motor claude --presupuesto 1` y la de `--modelo haiku` sobre el mismo informe. Con `claude /login` hecho:
+
+```bash
+node scripts/arneses/arnes.mjs realinear-docs --repo back --motor claude --presupuesto 1
+node scripts/arneses/arnes.mjs realinear-docs --repo back --motor claude --modelo haiku
+```
+
+### Cuánto cuesta cargar la config del usuario (medido)
+
+Misma tarea mínima (un hallazgo), Codex `gpt-6.1-sol` esfuerzo `low`, en esta máquina (plugins y MCP del usuario cargados):
+
+| | Entrada | De caché | Salida |
+|---|---:|---:|---:|
+| `--ignore-user-config` (lo que hace el arnés) | 53 416 | 47 744 | 206 |
+| sin aislar (`--sin-aislar`) | 90 942 | 66 176 | 372 |
+
+Aislar evita 37 526 tokens de entrada por llamada (−41 %; sin contar la caché, 5 672 contra 24 766). **Claude Code:** no se pudo medir por la falta de sesión; el flag equivalente es `--sin-aislar`, que quita `--setting-sources project --strict-mcp-config`.
