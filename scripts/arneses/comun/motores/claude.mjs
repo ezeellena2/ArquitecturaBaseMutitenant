@@ -1,4 +1,4 @@
-import { ejecutarProceso, resolverEjecutable } from '../proceso.mjs';
+import { binDelMotor, ejecutarProceso } from '../proceso.mjs';
 import { extraerResultado } from '../resultado.mjs';
 
 export const nombre = 'claude';
@@ -36,7 +36,7 @@ export function consumoDe(salida) {
  * `bin` reemplaza al ejecutable (los tests usan un `claude` falso).
  */
 export async function ejecutar({ tarea, instrucciones, modelo, esfuerzo, presupuestoUsd, minutosMaximos = 15, cwd, aislar = true, bin }) {
-  const comando = [...(bin ?? resolverEjecutable('claude')), ...argumentos({ tarea, instrucciones, modelo, esfuerzo, presupuestoUsd, aislar })];
+  const comando = [...(bin ?? binDelMotor('claude')), ...argumentos({ tarea, instrucciones, modelo, esfuerzo, presupuestoUsd, aislar })];
   const r = await ejecutarProceso(comando, { cwd, timeoutMs: minutosMaximos * 60_000 });
   if (r.cortado) return { ok: false, estado: 'cortado por tiempo', resultado: null, consumo: null, texto: r.stdout, stderr: r.stderr };
   let salida = null;

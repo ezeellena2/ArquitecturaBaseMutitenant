@@ -1,13 +1,16 @@
 import { readFile } from 'node:fs/promises';
-import { ejecutarProceso, resolverEjecutable } from '../proceso.mjs';
+import { binDelMotor, ejecutarProceso } from '../proceso.mjs';
 import { extraerResultado } from '../resultado.mjs';
 
 export const nombre = 'codex';
 
 /** Argumentos de `codex exec` (plan §7); el prompt va por stdin (`-`). `aislar` = `--ignore-user-config`. */
-export function argumentos({ cwd, modelo, esfuerzo, esquema, salida, aislar = true }) {
+export function argumentos({ cwd, modelo, esfuerzo, esquema, salida, aislar = true, plataforma = process.platform }) {
   const args = ['exec', '-C', cwd, '-m', modelo, '-c', `model_reasoning_effort="${esfuerzo}"`, '-s', 'workspace-write'];
   if (aislar) args.push('--ignore-user-config');
+  // Sin la config del usuario Codex pierde `[windows] sandbox = "elevated"` y rechaza todo comando ("blocked by policy"):
+  // el perfil mínimo propio es este único override.
+  if (aislar && plataforma === 'win32') args.push('-c', 'windows.sandbox="elevated"');
   args.push('--ephemeral', '--output-schema', esquema, '-o', salida, '--json', '-');
   return args;
 }
@@ -55,7 +58,7 @@ function buscarUso(nodo, profundidad = 0) {
  * `--append-system-prompt-file`, así que va al principio del prompt.
  */
 export async function ejecutar({ tarea, instruccionesTexto, modelo, esfuerzo, minutosMaximos = 10, cwd, esquema, salida, aislar = true, bin }) {
-  const comando = [...(bin ?? resolverEjecutable('codex')), ...argumentos({ cwd, modelo, esfuerzo, esquema, salida, aislar })];
+  const comando = [...(bin ?? binDelMotor('codex')), ...argumentos({ cwd, modelo, esfuerzo, esquema, salida, aislar })];
   const r = await ejecutarProceso(comando, { cwd, stdin: `${instruccionesTexto}\n\n---\n\n${tarea}\n`, timeoutMs: minutosMaximos * 60_000 });
   const consumo = consumoDe(r.stdout);
   if (r.cortado) return { ok: false, estado: 'cortado por tiempo', resultado: null, consumo, texto: '', stderr: r.stderr };

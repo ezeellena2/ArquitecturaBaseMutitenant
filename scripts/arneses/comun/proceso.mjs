@@ -23,6 +23,12 @@ export function resolverEjecutable(nombre, { entorno = process.env, plataforma =
   return [nombre];
 }
 
+/** Ejecutable de un motor: `ARNES_<MOTOR>_BIN` (una ruta) gana sobre el del PATH. Sirve para apuntar a un `codex` más nuevo que el de npm. */
+export function binDelMotor(nombre, entorno = process.env) {
+  const forzado = entorno[`ARNES_${nombre.toUpperCase()}_BIN`];
+  return forzado ? [forzado] : resolverEjecutable(nombre, { entorno });
+}
+
 function matarArbol(proceso) {
   if (process.platform === 'win32') spawnSync('taskkill', ['/PID', String(proceso.pid), '/T', '/F'], { windowsHide: true });
   else proceso.kill('SIGKILL');

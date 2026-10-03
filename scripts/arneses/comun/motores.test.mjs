@@ -132,6 +132,10 @@ test('codex: argumentos del plan §7 y --ignore-user-config solo si se aísla', 
   assert.equal(par('-o'), 'R.json');
   assert.equal(a.at(-1), '-');
   assert.ok(!codex.argumentos({ ...base, aislar: false }).includes('--ignore-user-config'));
+  // En Windows, sin la config del usuario hace falta el sandbox elevado para poder leer y escribir en el worktree.
+  assert.ok(codex.argumentos({ ...base, plataforma: 'win32' }).includes('windows.sandbox="elevated"'));
+  assert.ok(!codex.argumentos({ ...base, plataforma: 'linux' }).includes('windows.sandbox="elevated"'));
+  assert.ok(!codex.argumentos({ ...base, aislar: false, plataforma: 'win32' }).includes('windows.sandbox="elevated"'));
 });
 
 test('motor claude con un ejecutable falso: resultado, tokens y costo', async () => {
