@@ -51,6 +51,24 @@ public sealed class TenantProvisionerTests
         Assert.Equal(0, tenantRepository.AddCount);
     }
 
+    [Fact]
+    public async Task Explicit_owner_entry_rejects_personal_wrong_scope_and_removed_members()
+    {
+        var tenant = Tenant.CreateBusiness("Alta explícita", false);
+        Assert.True(tenant.Activate().IsSuccess);
+        var tenants = new FakeTenantRepository(null);
+        var settings = TenantSettings.Create("es-AR", "UTC", "ARS");
+        var owner = Member.Invite();
+        var wrongScope = CreateService(tenants, new FakeMemberRepository(null), new FakeTenantSettingsRepository(null), Guid.NewGuid());
+        Assert.True((await wrongScope.StageBusinessOwnerAsync(tenant, settings, owner, Ct)).IsFailure);
+        var correct = CreateService(tenants, new FakeMemberRepository(null), new FakeTenantSettingsRepository(null), tenant.Id);
+        Assert.True((await correct.StageBusinessOwnerAsync(Tenant.CreatePersonal("Personal"), settings, owner, Ct)).IsFailure);
+        Assert.True((await correct.StageBusinessOwnerAsync(tenant, settings, owner, Ct, Guid.Empty)).IsFailure);
+        Assert.True(owner.Remove().IsSuccess);
+        Assert.True((await correct.StageBusinessOwnerAsync(tenant, settings, owner, Ct)).IsFailure);
+        Assert.Equal(0, tenants.AddCount);
+    }
+
     private static TenantProvisioner CreateService(FakeTenantRepository tenants,
         FakeMemberRepository members, FakeTenantSettingsRepository settings, Guid tenantId)
     {

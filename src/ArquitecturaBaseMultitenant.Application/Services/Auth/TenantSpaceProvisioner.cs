@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Settings;
+using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
@@ -15,6 +16,46 @@ public sealed class TenantSpaceProvisioner(
     ITenantSettingsRepository settings,
     TimeProvider timeProvider)
 {
+    internal async Task<Result> StageBusinessOwnerAsync(Tenant tenant, TenantSettings requestedSettings, Member owner,
+        bool addTenant, Guid? companyId, CancellationToken ct)
+    {
+        var currentSettings = await settings.GetCurrentAsync(ct);
+        if (currentSettings is not null && (currentSettings.DefaultCulture != requestedSettings.DefaultCulture
+            || currentSettings.DefaultTimeZoneId != requestedSettings.DefaultTimeZoneId
+            || currentSettings.DefaultCurrency != requestedSettings.DefaultCurrency))
+            return TenantErrors.ProvisioningConflict;
+        var defaults = new List<Role>();
+        var missing = new List<Role>();
+        foreach (var template in SystemRoles.CreateDefaults())
+        {
+            var existing = await roles.GetByNameAsync(template.Name, ct);
+            if (existing is not null && (!existing.IsSystemRole || existing.Scope != template.Scope
+                || !existing.Permissions.Order().SequenceEqual(template.Permissions.Order())))
+                return TenantErrors.ProvisioningConflict;
+            defaults.Add(existing ?? template);
+            if (existing is null) missing.Add(template);
+        }
+        var ownerAssignments = await assignments.ListForMemberAsync(owner.Id, ct);
+        var membership = companyId is { } id ? await companyMemberships.FindAsync(id, owner.Id, ct) : null;
+        if (membership is not null && membership.Status != CompanyMembershipStatus.Active)
+            return TenantErrors.ProvisioningConflict;
+
+        if (addTenant) tenants.Add(tenant);
+        foreach (var role in missing) roles.Add(role);
+        var tenantAdmin = defaults.Single(r => r.Name == SystemRoles.TenantAdmin);
+        if (!ownerAssignments.Any(a => a.RoleId == tenantAdmin.Id && a.CompanyId == null))
+            assignments.Add(RoleAssignment.Assign(owner.Id, tenantAdmin, null).Value);
+        if (companyId is { } initialCompany)
+        {
+            if (membership is null) companyMemberships.Add(CompanyMembership.Create(initialCompany, owner.Id).Value);
+            var companyAdmin = defaults.Single(r => r.Name == SystemRoles.CompanyAdmin);
+            if (!ownerAssignments.Any(a => a.RoleId == companyAdmin.Id && a.CompanyId == initialCompany))
+                assignments.Add(RoleAssignment.Assign(owner.Id, companyAdmin, initialCompany).Value);
+        }
+        if (currentSettings is null) settings.Add(requestedSettings);
+        return Result.Success();
+    }
+
     public void Stage(Tenant tenant, TenantSettings tenantSettings, IReadOnlyCollection<Guid> userIds,
         Guid? businessOwnerUserId = null, Guid? primaryCompanyId = null)
     {

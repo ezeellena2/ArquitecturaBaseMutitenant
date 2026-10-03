@@ -126,6 +126,8 @@ Archivos: IPlatformReader/PlatformReader, Tenant (IVersioned si edición), model
 
 Archivos: TenantAdministrationService/helpers, Auth/TenantProvisioner/TenantSpaceProvisioner/TenantProvisioningReplayVerifier, Invitations/InvitationIssuer, contratos y tests de provisioning/invitación.
 
+Avance del provisioner: entrada explícita `StageBusinessOwnerAsync` para Member Invited/Active de Business, conserva `StageAsync` de E3/E6. Rojo por método ausente → PostgreSQL 2/2 (replay sin duplicar roles/asignaciones/settings, preferencias incompatibles); unitarias 3/3; regresiones alta E6 2/2 e invitaciones 10/10. No crea identidades ni Personal. Build Api 0 advertencias. Rutas de alta/aprobación/reintento siguen pendientes.
+
 - [ ] Rojo: aprobar pendiente prepara roles/settings una sola vez; retry idempotente no duplica; crear con invitación a persona sin cuenta no crea identidad/Personal y asigna el rol Dueño al aceptar; inválidos/slug tomado conservan estado.
 - [ ] Extender provisioner con entrada explícita para dueño invitado, conservando restricciones de StageAsync de E3/E6. Autorización/evento confirmado antes de Enter; entrar fuera de UoW y después provisionar/encolar en un único writer. Aprobar crea lo pendiente o valida replay, sin anidar transacciones.
 - [ ] Probar recuperación después de falla y concurrencia; regresiones E6. Commit `feat(plataforma): provisionar organizaciones e invitar dueños`.

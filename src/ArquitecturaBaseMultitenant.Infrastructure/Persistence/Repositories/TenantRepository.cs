@@ -11,6 +11,9 @@ internal sealed class TenantRepository(ApplicationDbContext context) : ITenantRe
     public Task<Tenant?> GetByIdAsync(Guid tenantId, CancellationToken cancellationToken)
     {
         context.RequireTransaction();
+        var added = context.Tenants.Local.SingleOrDefault(tenant => tenant.Id == tenantId
+            && context.Entry(tenant).State == EntityState.Added);
+        if (added is not null) return Task.FromResult<Tenant?>(added);
         return context.Tenants.SingleOrDefaultAsync(tenant => tenant.Id == tenantId, cancellationToken);
     }
 

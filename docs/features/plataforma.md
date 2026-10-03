@@ -29,6 +29,8 @@ Rechazar (PendingApproval→Closed), suspender (Active→Suspended), reactivar (
 
 La aprobación, creación por invitación y reintento siguen en T07; E5 permanece abierta.
 
+`TenantProvisioner.StageBusinessOwnerAsync` completa los roles de sistema, la configuración y las asignaciones del Dueño invitado o activo, dentro del alcance Business y la UoW del llamador. Reutiliza lo existente y rechaza preferencias incompatibles; no crea identidades ni membresías Personal. La entrada `StageAsync` de E3/E6 conserva sus restricciones. El repositorio transaccional puede releer una organización Added antes del único guardado final.
+
 ## Verificación
 
 El acceso privado pasa por `PlatformScopeAccessService`: valida acceso Platform, permiso persistido `platform.tenants.manage` y motivo; confirma el SecurityEvent previo en una UoW. `PlatformActionGuard` entra con `ITenantScope.Enter` después, sin transacción abierta, y restaura el alcance al disponer la lease. La operación privada usa luego su única UoW. Una falla posterior conserva el registro de entrada.
@@ -42,3 +44,4 @@ El acceso privado pasa por `PlatformScopeAccessService`: valida acceso Platform,
 - `PlatformTenantTests`: registro global inmutable/UTC y eventos con destino y operador.
 - `PlatformTenantAdministrationTests`: paginado/filtros/búsqueda/contacto, 401/403/404, transiciones y 409, revocación Business con Personal operativo, y conteos actualizados sin lectura de tablas privadas.
 - `PlatformScopeTests` de servicio e integración: sin permiso/motivo no registra ni entra; el evento está confirmado antes de consultar filas privadas, Support no entra y una excepción restaura el alcance.
+- `PlatformProvisioningTests`: Dueño invitado sin identidad, replay sin duplicados y preferencias incompatibles sin reemplazar lo existente.

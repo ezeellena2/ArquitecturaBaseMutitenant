@@ -15,6 +15,28 @@ public sealed class TenantProvisioner(
     TimeProvider timeProvider,
     ILogger<TenantProvisioner> logger)
 {
+    /// <summary>Prepara una organización para un Dueño activo o invitado, sin crear identidad ni Personal.</summary>
+    public Task<Result> StageBusinessOwnerAsync(Tenant tenant, TenantSettings settings, Member owner,
+        CancellationToken cancellationToken, Guid? primaryCompanyId = null) =>
+        OperationLog.RunAsync(logger, timeProvider, "ProvisionBusinessOwner", async () =>
+        {
+            ArgumentNullException.ThrowIfNull(tenant);
+            ArgumentNullException.ThrowIfNull(settings);
+            ArgumentNullException.ThrowIfNull(owner);
+            if (tenant.Kind != TenantKind.Business || tenantContext.TenantId != tenant.Id
+                || tenant.Status is not (TenantStatus.Active or TenantStatus.PendingApproval)
+                || owner.Status is not (MemberStatus.Invited or MemberStatus.Active)
+                || (owner.TenantId != Guid.Empty && owner.TenantId != tenant.Id))
+                return TenantErrors.ProvisioningConflict;
+            if (primaryCompanyId == Guid.Empty) return TenantErrors.ProvisioningConflict;
+            var existing = await replayVerifier.FindTenantAsync(tenant.Id, cancellationToken);
+            if (existing is not null && (existing.Kind != tenant.Kind || existing.Name != tenant.Name
+                || existing.Slug != tenant.Slug || existing.Status != tenant.Status))
+                return TenantErrors.ProvisioningConflict;
+            return await newTenantProvisioner.StageBusinessOwnerAsync(tenant, settings, owner,
+                existing is null, primaryCompanyId, cancellationToken);
+        });
+
     public Task<Result> StageAsync(Tenant tenant, TenantSettings tenantSettings,
         IReadOnlyCollection<Guid> userIds, Guid? businessOwnerUserId, CancellationToken cancellationToken,
         Guid? primaryCompanyId = null) =>
