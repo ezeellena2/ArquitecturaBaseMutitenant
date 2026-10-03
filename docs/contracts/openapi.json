@@ -5413,6 +5413,14 @@
             "schema": {
               "$ref": "#/components/schemas/RoleScopeFilter"
             }
+          },
+          {
+            "name": "CompanyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
