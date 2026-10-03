@@ -8,9 +8,12 @@ using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure;
+using ArquitecturaBaseMultitenant.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using ArquitecturaBaseMultitenant.RealE2ESetup;
 
@@ -63,6 +66,10 @@ try
     var users = services.GetRequiredService<IUserRepository>();
     var methods = services.GetRequiredService<ILoginMethodRepository>();
     var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+    var platformOperator = await services.GetRequiredService<UserManager<ApplicationUser>>()
+        .FindByEmailAsync("e2e-operator@example.test");
+    if (platformOperator is null || !platformOperator.IsPlatformOperator)
+        throw new InvalidOperationException("The isolated platform operator has not been seeded.");
 
     var created = await unitOfWork.ExecuteInTransactionAsync(async ct =>
     {
@@ -79,6 +86,10 @@ try
             var document = await legal.GetCurrentDocumentAsync(kind, nowUtc, ct)
                 ?? throw new InvalidOperationException("The E2E legal documents have not been seeded.");
             legal.AddAcceptance(LegalAcceptance.Create(user.Id, document, nowUtc, null, null));
+            // El recorrido del operador comienza con los términos vigentes ya aceptados.
+            // Los recorridos de identidad prueban por pantalla los documentos y sus nuevas versiones.
+            if (!await legal.HasAcceptedAsync(platformOperator.Id, document.Id, ct))
+                legal.AddAcceptance(LegalAcceptance.Create(platformOperator.Id, document, nowUtc, null, null));
         }
         return Result.Success(user.Id);
     }, CommitPolicy.OnSuccess, cancellationToken);
@@ -118,6 +129,11 @@ try
         await InvitationCommand.TryExecuteAsync(host.Services, readyFile, business.Id, created.Value, cancellationToken);
     }
     return 0;
+}
+catch (DbUpdateException exception) when (exception.InnerException is PostgresException postgres)
+{
+    Console.Error.WriteLine($"E2E setup failed (PostgresException {postgres.SqlState}, constraint {postgres.ConstraintName ?? "none"}).");
+    return 1;
 }
 catch (PostgresException exception)
 {
