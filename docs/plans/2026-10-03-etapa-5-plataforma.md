@@ -77,9 +77,9 @@ Rutas definitivas que se implementan y prueban (no sustituir las ya fijadas por 
 
 Archivos: `Domain/Platform/{PlatformRole,PlatformRoleAssignment,PlatformRolePermissions}.cs`, AGENTS/CLAUDE; `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Platform/PlatformRoleTests.cs`; `docs/features/plataforma.md` inicial.
 
-- [ ] Rojo: Owner coincide con PlatformPermissions.All; Support tiene exclusivamente tenants.read/accounts.read/recoveries.manage/audit.read; asignación retiene UserId, valida Guid/enum y cambia de rol; no es ITenantOwned.
-- [ ] Crear enum Owner/Support, catálogo de permisos inmutable y asignación global IVersioned con fábrica y cambio de rol. No introducir un permiso nuevo ni datos de muestra.
-- [ ] Verde focal y build Domain; documentar roles/permisos. Commit `feat(plataforma): definir roles globales`.
+- [x] Rojo: tipos ausentes (CS0234) tras restaurar NuGet fuera del sandbox; Owner/Support, inmutabilidad y asignación global cubiertos por cinco pruebas.
+- [x] Enum Owner/Support, catálogo inmutable y asignación global IVersioned con fábrica y cambio de rol. Sin permisos nuevos ni datos de muestra.
+- [x] Verde focal: 5/5; build Domain: 0 advertencias/errores. Ficha inicial documenta roles y límites. Commit `feat(plataforma): definir roles globales`.
 
 ### T02 · Recorrido E5 real inicialmente rojo
 
@@ -288,6 +288,7 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 
 | Tarea | Estado/evidencia | Commit back | Commit front |
 |---|---|---|---|
-| T00 | Línea de base limpia, Aspire parado, Docker disponible | pendiente del plan | — |
+| T00 | Línea de base limpia, Aspire parado, Docker disponible; revisión Approved | `fff99c9` | — |
+| T01 | Rojo CS0234 → 5/5 verde, build Domain 0 advertencias | commit de esta tarea | — |
 
 No declarar cierre a partir de esta tabla sin completar T25.
