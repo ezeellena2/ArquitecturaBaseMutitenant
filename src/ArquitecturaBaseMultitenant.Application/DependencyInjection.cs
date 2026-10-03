@@ -63,6 +63,10 @@ public static class DependencyInjection
         services.AddScoped<IPlatformPermissionService, PlatformPermissionService>();
         services.AddScoped<IPlatformSettingsService, Services.Platform.PlatformSettingsService>();
         services.AddScoped<Services.Platform.PlatformSettingsAudit>();
+        services.AddScoped<ITenantAdministrationService, Services.Platform.TenantAdministrationService>();
+        services.AddScoped<Services.Platform.PlatformTenantStateWriter>();
+        services.AddScoped<Services.Platform.PlatformTenantAudit>();
+        services.AddScoped<Services.Platform.PlatformTenantNotifier>();
         services.AddScoped<IOutboxDispatchService, OutboxDispatchService>();
         services.AddScoped<ILoginCodeService, LoginCodeService>();
         services.AddScoped<LoginCodeRequester>();

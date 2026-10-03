@@ -59,4 +59,14 @@
   <data name="Invitation.Action" xml:space="preserve"><value>Ver la invitación</value></data>
   <data name="Invitation.Note" xml:space="preserve"><value>Para entrar, usá este correo: te vamos a mandar un código de acceso.</value></data>
   <data name="Invitation.Footer" xml:space="preserve"><value>Si no esperabas este correo, podés ignorarlo.</value></data>
+  <data name="OrganizationState.Title" xml:space="preserve"><value>Cambió el estado de tu organización</value></data>
+  <data name="OrganizationState.Subject" xml:space="preserve"><value>Cambio de estado de tu organización</value></data>
+  <data name="OrganizationState.Body" xml:space="preserve"><value>{0} La organización {1} ahora está {2}.</value></data>
+  <data name="OrganizationState.Reason" xml:space="preserve"><value>Motivo: {0}</value></data>
+  <data name="OrganizationState.PersonalUnaffected" xml:space="preserve"><value>Tu cuenta y tu espacio personal siguen funcionando.</value></data>
+  <data name="OrganizationState.Active" xml:space="preserve"><value>activa</value></data>
+  <data name="OrganizationState.Suspended" xml:space="preserve"><value>suspendida</value></data>
+  <data name="OrganizationState.Closed" xml:space="preserve"><value>cerrada</value></data>
+  <data name="OrganizationState.Provisioning" xml:space="preserve"><value>en preparación</value></data>
+  <data name="OrganizationState.PendingApproval" xml:space="preserve"><value>esperando aprobación</value></data>
 </root>

@@ -24,6 +24,8 @@
 - **Slug de una organización:** el valor se normaliza con trim y minúsculas invariantes; admite solo ASCII alfanumérico y guion, empieza/termina con alfanumérico y sigue exactamente `Registro-Empresa` (1 o 3–63 caracteres; dos caracteres no son válidos). La reserva de nombres y la disponibilidad son reglas de aplicación con índice único como barrera ante carreras.
 - **Caché y locks:** `CacheKeys.Tenant(…)`, `CacheKeys.PublicSite(…)`, `CacheKeys.User(…)` y `CacheKeys.Platform(…)` producen claves `t:`, `s:`, `u:` y `p:`; los identificadores son GUID en formato `N`. `AdvisoryLockKeys.For(tenantId, recurso, id)` produce `t:{tenantId:N}:lock:{recurso}:{id}` y se toma dentro del límite del caso de uso. En un recurso compartido, lock de fila.
 
+**Proyección global explícita de Plataforma (E5):** `IPlatformReader` consulta `platform.Tenants` y el índice `UserTenantAccesses` para metadatos, contacto del Dueño y destinatarios de avisos; el contacto se une con la identidad global. Es un adaptador autorizado en `IdentityStorageAccessTests`. Nunca consulta Members o Companies ni ignora su RLS. Los conteos globales se mantienen con triggers por delta de las escrituras privadas, con search_path fijo y sin EXECUTE público; el backfill recorre los alcances RLS uno por uno. Lo verifica `PlatformTenantAdministrationTests`, incluyendo los conteos sin filas privadas visibles y la suspensión Business sin perder Personal.
+
 ## Prohibido
 - Leer el tenant de un header, del body o de la query.
 - Usar el subdominio para autorizar datos privados.

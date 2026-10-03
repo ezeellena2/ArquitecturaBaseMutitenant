@@ -1346,15 +1346,36 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<int>("CompanyCount")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Kind")
                         .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
 
+                    b.Property<int>("MemberCount")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
+
+                    b.Property<Guid?>("RegisteredByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RegistrationSource")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
 
                     b.Property<string>("Slug")
                         .HasMaxLength(63)
@@ -1365,12 +1386,22 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
 
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Slug")
                         .IsUnique();
 
+                    b.HasIndex("CreatedAtUtc", "Id");
+
                     b.HasIndex("Kind", "Status");
+
+                    b.HasIndex("Name", "Id");
 
                     b.ToTable("Tenants", "platform");
                 });

@@ -4,7 +4,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 namespace ArquitecturaBaseMultitenant.Domain.Tenancy;
 
 /// <summary>Representa un espacio personal o una organización y controla las transiciones que permiten entrar a él.</summary>
-public sealed class Tenant : Entity
+public sealed class Tenant : Entity, IVersioned
 {
     private Tenant()
     {
@@ -41,6 +41,28 @@ public sealed class Tenant : Entity
     public string Name { get; private set; }
 
     public string? Slug { get; private set; }
+
+    public uint Version { get; private set; }
+    public DateTime? CreatedAtUtc { get; private set; }
+    public Guid? RegisteredByUserId { get; private set; }
+    public TenantRegistrationSource RegistrationSource { get; private set; }
+    public int CompanyCount { get; private set; }
+    public int MemberCount { get; private set; }
+
+    public Result RecordRegistration(Guid userId, TenantRegistrationSource source, DateTime createdAtUtc)
+    {
+        if (userId == Guid.Empty) throw new ArgumentException("A registering account is required.", nameof(userId));
+        if (!Enum.IsDefined(source)) throw new ArgumentOutOfRangeException(nameof(source));
+        if (createdAtUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("Registration must be UTC.", nameof(createdAtUtc));
+        if (Kind != TenantKind.Business) return TenantErrors.InvalidTransition;
+        if (CreatedAtUtc is not null)
+            return RegisteredByUserId == userId && RegistrationSource == source && CreatedAtUtc == createdAtUtc
+                ? Result.Success() : TenantErrors.ProvisioningConflict;
+        RegisteredByUserId = userId;
+        RegistrationSource = source;
+        CreatedAtUtc = createdAtUtc;
+        return Result.Success();
+    }
 
     public static Tenant CreatePersonal(string name) => new(TenantKind.Personal, name, TenantStatus.Active);
 

@@ -53,6 +53,11 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
             AccountNotice.AccountDeleted => ("AccountDeleted", "AccountDeleted.html",
                 new[] { NotificationTexts.Format("AccountDeleted.Body", culture, greeting, appName),
                     NotificationTexts.Get("AccountDeleted.After", culture) }, string.Empty, string.Empty, string.Empty),
+            AccountNotice.OrganizationStateChanged changed => ("OrganizationState", "AccountDeleted.html",
+                new[] { NotificationTexts.Format("OrganizationState.Body", culture, greeting, changed.OrganizationName,
+                    NotificationTexts.Get("OrganizationState." + changed.Status, culture)),
+                    NotificationTexts.Format("OrganizationState.Reason", culture, changed.Reason) },
+                string.Empty, string.Empty, NotificationTexts.Get("OrganizationState.PersonalUnaffected", culture)),
             _ => throw new NotSupportedException("This account notice template belongs to a later stage."),
         };
         var title = NotificationTexts.Get(key + ".Title", culture);

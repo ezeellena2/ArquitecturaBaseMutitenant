@@ -43,12 +43,13 @@ internal sealed record AccountJourney(Guid UserId, Email Email)
         return new AccountJourney(profile!.RootElement.GetProperty("id").GetGuid(), email);
     }
 
-    internal static async Task AuthorizeAsync(HttpClient client, string access, CancellationToken ct)
+    internal static async Task AuthorizeAsync(HttpClient client, string access, CancellationToken ct, Guid? tenantId = null)
     {
         var challenge = WebEncoders.Base64UrlEncode(SHA256.HashData(Encoding.ASCII.GetBytes(Verifier)));
         using var authorized = await client.GetAsync("/connect/authorize?client_id=web&response_type=code"
             + "&redirect_uri=https%3A%2F%2Flocalhost%3A5174%2Fauth%2Fcallback&scope=openid%20profile%20email%20api"
-            + "&code_challenge=" + challenge + "&code_challenge_method=S256&access=" + access, ct);
+            + "&code_challenge=" + challenge + "&code_challenge_method=S256&access=" + access
+            + (tenantId is { } id ? "&tenant_id=" + id.ToString("D") : string.Empty), ct);
         Assert.True(authorized.StatusCode == HttpStatusCode.Redirect,
             $"Expected an authorization redirect, got {(int)authorized.StatusCode}: {await authorized.Content.ReadAsStringAsync(ct)}");
         var authorizationCode = QueryHelpers.ParseQuery(authorized.Headers.Location!.Query)["code"].ToString();

@@ -19,7 +19,17 @@ La migración de E5 convierte los operadores anteriores a Owner sin crear cuenta
 
 `GET/PUT /api/platform/settings` requiere `platform.settings.manage`. Expone los modos de registro de personas y organizaciones y el límite de organizaciones propias (mínimo uno). La gracia de baja permanece en 30 días. La edición exige motivo y versión xmin; un conflicto devuelve 409 sin guardar ni agregar un evento. El cambio y su SecurityEvent con el operador se confirman juntos; la caché global se invalida después del commit. Support y los accesos Consumer/Business no pueden consultar ni cambiar esta configuración.
 
-## Pruebas
+## Organizaciones: consulta y estado
+
+`/api/platform/tenants/paged`, `/filter-counts` y `/{id}` requieren `platform.tenants.read` y muestran exclusivamente Business. La búsqueda compartida no distingue acentos/case y escapa comodines; incluye nombre, slug y contacto del Dueño. Cada dimensión de conteos mantiene los otros filtros. La ficha de Personal se devuelve como 404.
+
+El registro global conserva origen, fecha y cuenta que registró, versión xmin y conteos. La fecha histórica se recupera de las incorporaciones disponibles; si no existe evidencia queda null. Los totales de empresas y miembros no retirados se mantienen mediante deltas atómicos en triggers de sus escrituras bajo RLS, sin consultar esas filas privadas desde Plataforma. El contacto se proyecta de la identidad global del Dueño actual (o del registrante autoservicio cuando aún no hay asignación).
+
+Rechazar (PendingApproval→Closed), suspender (Active→Suspended), reactivar (Suspended→Active) y cerrar (PendingApproval/Suspended→Closed) requieren `platform.tenants.manage`, motivo y versión. Los cambios guardan SecurityEvent con actor y destino y encolan avisos a registrante/Dueños en la misma UoW. Las bajas de acceso revocan únicamente los tokens de esa organización; después del commit se invalida su estado en caché. La identidad y los accesos Personal conservan sus sesiones.
+
+La aprobación, creación por invitación y reintento siguen en T07; E5 permanece abierta.
+
+## Verificación
 
 - `PlatformRoleTests`: catálogo completo de Owner, alcance de Support, inmutabilidad y asignación global/versionada.
 - `PlatformPermissionServiceTests`: permisos por rol, cuenta inactiva, asignación ausente y cuenta no operadora.
@@ -27,3 +37,5 @@ La migración de E5 convierte los operadores anteriores a Owner sin crear cuenta
 - `ProductionSeedTests`: Owner inicial, repetición del seed y preservación de una sola asignación.
 - `PlatformSettingsTests` de dominio y servicio: validación sin mutación, configuración versionada, evento y caché después del commit.
 - `PlatformSettingsTests` de integración: permisos reales, validación, lectura actualizada y 409 sin evento adicional en PostgreSQL aislado.
+- `PlatformTenantTests`: registro global inmutable/UTC y eventos con destino y operador.
+- `PlatformTenantAdministrationTests`: paginado/filtros/búsqueda/contacto, 401/403/404, transiciones y 409, revocación Business con Personal operativo, y conteos actualizados sin lectura de tablas privadas.

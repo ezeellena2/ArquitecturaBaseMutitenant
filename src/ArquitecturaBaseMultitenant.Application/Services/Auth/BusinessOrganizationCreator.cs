@@ -53,6 +53,8 @@ internal sealed class BusinessOrganizationCreator(
                     await legalAcceptor.AcceptCurrentAsync(userId, nowUtc, ct);
                     var requiresApproval = eligibility.Value;
                     var tenant = Tenant.CreateBusiness(operationId, request.OrganizationName!.Trim(), requiresApproval);
+                    var registration = tenant.RecordRegistration(userId, TenantRegistrationSource.SelfService, nowUtc);
+                    if (registration.IsFailure) return registration.Error;
                     var slugResult = tenant.SetSlug(parsedSlug.Value);
                     if (slugResult.IsFailure) return slugResult.Error;
                     if (!requiresApproval)

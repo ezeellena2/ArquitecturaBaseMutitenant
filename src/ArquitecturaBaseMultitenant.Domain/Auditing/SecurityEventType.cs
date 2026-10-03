@@ -13,4 +13,11 @@ public enum SecurityEventType
     OrganizationMembershipEnded,
     PlatformSettingsChanged,
     PlatformOperatorGranted,
+    OrganizationRejected,
+    OrganizationSuspended,
+    OrganizationReactivated,
+    OrganizationClosed,
+    OrganizationApproved,
+    OrganizationCreated,
+    OrganizationProvisioningRetried,
 }

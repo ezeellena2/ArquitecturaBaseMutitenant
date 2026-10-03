@@ -65,6 +65,8 @@ internal static class PersistenceRegistration
                     provider.GetRequiredService<AuditTrailInterceptor>()));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<ITenantRepository, TenantRepository>();
+        services.AddScoped<IPlatformTenantRepository, PlatformTenantRepository>();
+        services.AddScoped<IPlatformReader, PlatformReader>();
         services.AddScoped<ITenantReader, TenantReader>();
         services.AddScoped<ITenantSlugAvailabilityReader, TenantSlugAvailabilityReader>();
         services.AddScoped<IMemberRepository, MemberRepository>();

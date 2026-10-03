@@ -8,6 +8,8 @@ namespace ArquitecturaBaseMultitenant.Domain.Tenancy;
 /// </summary>
 public static class TenantErrors
 {
+    public const string NotFoundCode = "Tenancy.Tenant.NotFound";
+    public static readonly Error NotFound = Error.NotFound(NotFoundCode, "The organization was not found.");
     public const string SuspendedCode = "Tenancy.Tenant.Suspended";
     public const string PendingApprovalCode = "Tenancy.Tenant.PendingApproval";
     public const string ProvisioningCode = "Tenancy.Tenant.Provisioning";

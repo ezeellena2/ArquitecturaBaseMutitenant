@@ -101,9 +101,9 @@ Archivos: PlatformRoleAssignmentConfiguration/Repository/Reader, ApplicationDbCo
 
 Archivos front: `docs/design/lienzo/generadores/plataforma_*.py`, tableros propuestos en página propia y visor `.local/etapa-5-propuesta/`; informe visual inicial.
 
-- [ ] Inventariar estados de los 8 tableros desktop y los 4 móviles actuales; identificar móviles de ficha/recuperaciones/legales que faltan para la puerta.
-- [ ] Refinar con Criterio-* actual manteniendo contenidos/acciones; copiar el marco app de Organización; mostrar listas con 1 y 50 filas. Conservar menú desktop y modal Audit aprobados.
-- [ ] Presentar juntos navegación inferior/Más, fichas y diálogos app, lista/tabla/densidad y legales; pedir solo elecciones pendientes con enlaces concretos. No implementar estas pantallas hasta respuesta; continuar T05–T16/T18–T19 independientes.
+- [x] Inventario: 8 desktop y 4 móviles antiguos; muestras de fichas/recuperación/legales preparadas en página separada sin modificar canvas ni generador ajeno.
+- [x] Propuesta compacta con estados interactivos y marco app de Organización, listas 1/50 (1 y 10 filas visibles respectivamente). Menú desktop y modal Audit conservados.
+- [x] Visor conjunto en `http://127.0.0.1:61405/.artifacts/etapa-5-propuesta/index.html`: 8 desktop y 16 móviles/estados; pregunta de elección presentada. Continuar back mientras espera; no implica aprobación. Front `e670892`.
 - [ ] Registrar elección y actualizar solo tableros correspondientes/canvas; commit de diseño explícito.
 
 ### T05 · Configuración global
@@ -118,9 +118,9 @@ Archivos: PlatformSettings/Configuration/Repository/Reader, modelos/validadores/
 
 Archivos: IPlatformReader/PlatformReader, Tenant (IVersioned si edición), modelos/validadores/servicio/controller TenantAdministration, SecurityEvent; tests TenantAdministrationRead/State y Tenancy/PlatformAccess.
 
-- [ ] Rojo: solo Business, paginado/búsqueda/conteos compartidos, ficha 404 inexistente, PendingApproval→Closed al rechazar, Active→Suspended→Active, cierre desde estados permitidos; B2C sigue operativo al suspender Business.
-- [ ] Listado/ficha global sin consultar datos privados; eventos con motivo/operador y aviso al creador/Dueños por outbox. Invalidar AccessStatusCache después del commit.
-- [ ] 401/403 para cada ruta, versión vieja 409, transiciones inválidas sin cambios; inventario y OpenAPI. Commit `feat(plataforma): administrar organizaciones`.
+- [x] Rojo: metadatos/eventos ausentes y rutas HTTP 404 donde debe haber 401. Dominio 3/3 nuevo y 7/7 regresiones. PostgreSQL 5/5: Business, paginado/búsqueda/conteos, contacto del Dueño, transiciones, 404/409, cierre y B2C operativo al suspender Business.
+- [x] Metadatos globales y contacto desde identidad/índice explícito, sin leer filas privadas. Totales mantenidos por deltas bajo RLS; registro histórico recuperado cuando existe. Eventos y outbox en mismo commit; revocación sólo tenant e invalidación TenantStatusCache después.
+- [x] 401/403 por ruta, 409 sin evento/cambio; OpenAPI e inventario actualizado. Recursos 6/6, lectores de identidad 3/3, transacciones/dependencias/accesos/contratos 25/25. Build Api 0 advertencias; SQL revisado y sin cambios EF pendientes. Commit `feat(plataforma): administrar organizaciones`.
 
 ### T07 · Aprobar, crear con invitación y reprovisionar
 
@@ -284,6 +284,7 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 4. Crear con invitación prepara roles/settings sin crear identidad: una entrada explícita del TenantProvisioner permite dueño pendiente, InvitationIssuer reserva Member(Invited) con TenantAdmin y la aceptación vigente vincula/crea cuenta sin Personal.
 5. El refinamiento visual pendiente se revisa como grupo concreto; aprobaciones desktop/menu/modal previas se conservan. Inicios de Organización y WhatsApp no se rediseñan en E5.
 6. Configuración exige motivo y versión; su evento se guarda en la misma transacción y la caché se invalida después. La gracia de baja de 30 días no es editable.
+7. Conteos globales de organizaciones se mantienen con deltas atómicos desde escrituras privadas bajo RLS. Plataforma lee solo metadatos y contacto global explícito; no entra a cada organización para armar un listado. La fecha histórica sin evidencia queda null.
 
 ## Registro de resultados
 
@@ -293,6 +294,8 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 | T01 | Rojo CS0234 → 5/5 verde, build Domain 0 advertencias | `f03c1b1` | — |
 | T02 | E2E real rojo por pantalla E5 ausente; Aspire detenido | `4ce80b7` (registro) | `696c2b3` |
 | T03 | Permisos 6/6; roles PostgreSQL 3/3; seed 1/1; migraciones 4/4; inventarios 4/4 | `4ce80b7` | — |
-| T05 | Dominio 12/12; servicio 4/4; HTTP 3/3; recursos 6/6; accesos/contratos 15/15; migración/build verificados | commit de esta tarea | — |
+| T04 | Propuesta conjunta verificada, elección pendiente; canvas intacto | seguimiento de esta tarea | `e670892` |
+| T05 | Dominio 12/12; servicio 4/4; HTTP 3/3; recursos 6/6; accesos/contratos 15/15; migración/build verificados | `6a49970` | — |
+| T06 | Dominio nuevo 3/3 y regresiones 7/7; HTTP/RLS/tokens 5/5; recursos 6/6; inventarios 28/28; build/migración verificados | commit de esta tarea | — |
 
 No declarar cierre a partir de esta tabla sin completar T25.
