@@ -8,7 +8,8 @@
 - **Infrastructure:** implementaciones de EF (`Persistence/{Repositories,Readers}`) y adaptadores técnicos (`<Tema>/`).
 - **Api:** el controller inyecta **solo** `I<X>Service`; contratos en `Api/Contracts/<Área>`.
 - Registro en DI: cada capa en su `DependencyInjection.cs`, uno por uno y explícito. `Program.cs` solo compone.
-- Lo que crece se parte en helpers con sufijo fijo: `Policy` (decide), `Guard` (protege una regla), `Issuer` (emite), `Verifier` (verifica) y `Linker` (vincula). **Máximo 8 dependencias** por servicio.
+- Lo que crece se parte por responsabilidad en helpers con sufijo fijo: `Policy` (decide), `Guard` (protege una regla), `Issuer` (emite), `Verifier` (verifica) y `Linker` (vincula). **Máximo 8 dependencias de negocio** por clase de servicios. No cuentan `ILogger<T>`, `TimeProvider`, `IRequestValidator` ni `IUnitOfWork`; todo lo demás cuenta, incluido `IOptions<T>` ([ADR 0039](../decisions/0039-tope-de-dependencias-de-negocio.md)). No crear clases que solo reenvían para cumplir el tope.
+- El método público del servicio abre la transacción. Los helpers trabajan dentro de ella y no reciben `IUnitOfWork`.
 
 ## Prohibido
 - `ICommand`, `IQuery`, handlers, MediatR, `Application/Features`, repositorio genérico, Scrutor, AutoMapper, Minimal APIs de negocio.

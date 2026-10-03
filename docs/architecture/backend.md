@@ -106,7 +106,7 @@ Prohibido:
 
 | Principio | Regla concreta |
 |---|---|
-| **S**, responsabilidad única | Un servicio por área funcional, con **8 dependencias como máximo** (lo verifica un test). Lo que crece se parte en helpers con sufijo fijo: `*Policy` (decide), `*Guard` (verifica invariantes y devuelve `Error?`), `*Issuer` (emite códigos, enlaces o invitaciones), `*Verifier` (valida lo emitido), `*Linker` (vincula entidades). Los helpers no guardan ni reciben `IUnitOfWork` |
+| **S**, responsabilidad única | Un servicio por área funcional, con **8 dependencias de negocio como máximo** (lo verifica un test; ADR 0039). No cuentan `ILogger<T>`, `TimeProvider`, `IRequestValidator` ni `IUnitOfWork`; todo lo demás cuenta, incluido `IOptions<T>`. Lo que crece se parte por responsabilidad en helpers con sufijo fijo: `*Policy` (decide), `*Guard` (verifica invariantes y devuelve `Error?`), `*Issuer` (emite códigos, enlaces o invitaciones), `*Verifier` (valida lo emitido), `*Linker` (vincula entidades). Los helpers no guardan ni reciben `IUnitOfWork`; no crear clases que solo reenvían |
 | **O**, abierto/cerrado | Módulos quitables (`Modules/WhatsApp` en Application, Infrastructure y Api), que se enchufan al núcleo por puertos: `ILoginCodeChannel`, `IInvitationChannel`, `IAccountNoticeChannel`, `IPhoneLinkObserver`. El núcleo no cambia cuando se agrega o se quita un módulo, y no referencia ningún `*.Modules.*` (test). Los errores y permisos nuevos se suman a catálogos, sin tocar el mapper |
 | **L**, sustitución de Liskov | Las implementaciones de un puerto respetan el contrato completo, incluido el "fallo cerrado" (por ejemplo, `DisabledWhatsAppAvailability` responde "no disponible", no lanza). Los dobles de test implementan la misma semántica (`FakeUnitOfWork` usa la misma `CommitPolicy`) |
 | **I**, segregación de interfaces | Lectura y escritura separadas (`I<X>Reader` / `I<X>Repository`). `ISignInService` con 12 miembros como máximo (test). `ICurrentUser`, `ITenantContext` e `IRequestInfo` separados |
@@ -238,6 +238,8 @@ Application/
 ```
 
 `NeutralLanguage=es` y `InternalsVisibleTo` para Application.UnitTests y Api.IntegrationTests. Los servicios y helpers son `internal sealed partial`: `partial` porque llevan `[LoggerMessage]`.
+
+El tope de constructores es de **8 dependencias de negocio**: excluye únicamente `ILogger<T>`, `TimeProvider`, `IRequestValidator` e `IUnitOfWork`; `IOptions<T>` y cualquier otra dependencia cuentan ([ADR 0039](../decisions/0039-tope-de-dependencias-de-negocio.md)). Si una clase se pasa, se divide por responsabilidad, sin clases que solo reenvían. La transacción la abre el método público del servicio de entrada, como `RoleService`; sus helpers trabajan dentro y no reciben `IUnitOfWork`. No se agregan excepciones de helpers a `TransactionBoundaryTests`. Los desvíos anteriores se ordenan en la consolidación previa a E7; lo que falta de E5 ya nace con esta regla.
 
 ### 4.3 Infrastructure
 

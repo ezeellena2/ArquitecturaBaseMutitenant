@@ -1,10 +1,13 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using ArquitecturaBaseMultitenant.Application.Common.Validation;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
 /// <summary>
-/// Comprueba que los constructores de servicios no superen ocho dependencias. Ayuda a detectar
+/// Comprueba que los constructores de servicios no superen ocho dependencias de negocio. Ayuda a detectar
 /// responsabilidades que necesitan un helper propio.
 /// </summary>
 public sealed class ServiceDependencyCountTests
@@ -26,21 +29,28 @@ public sealed class ServiceDependencyCountTests
         Assert.NotEmpty(classes);
         Assert.Empty(classes
             .Where(type => DependencyCount(type) > MaximumDependencies)
-            .Select(type => $"{type.FullName}: {DependencyCount(type)} dependencies"));
+            .Select(type => $"{type.FullName}: {DependencyCount(type)} business dependencies"));
     }
 
     [Fact]
-    public void Detector_counts_the_whole_constructor_including_logger_and_clock()
+    public void Detector_excludes_only_the_four_cross_cutting_dependencies()
     {
-        Assert.Equal(9, DependencyCount(typeof(NineDependencies)));
+        Assert.Equal(0, DependencyCount(typeof(InfrastructureOnly)));
+        Assert.Equal(8, DependencyCount(typeof(EightBusinessDependencies)));
+        Assert.Equal(9, DependencyCount(typeof(NineBusinessDependencies)));
+        Assert.True(DependencyCount(typeof(NineBusinessDependencies)) > MaximumDependencies);
         Assert.Equal(0, DependencyCount(typeof(NoDependencies)));
     }
 
     private static int DependencyCount(Type type) =>
         type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-            .Select(constructor => constructor.GetParameters().Length)
+            .Select(constructor => constructor.GetParameters().Count(parameter => IsBusinessDependency(parameter.ParameterType)))
             .DefaultIfEmpty(0)
             .Max();
+
+    private static bool IsBusinessDependency(Type type) =>
+        type != typeof(TimeProvider) && type != typeof(IRequestValidator) && type != typeof(IUnitOfWork)
+        && !(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ILogger<>));
 
     private static bool IsGenerated(Type type) =>
         type.IsDefined(typeof(CompilerGeneratedAttribute), inherit: false)
@@ -51,9 +61,16 @@ public sealed class ServiceDependencyCountTests
         || type.Namespace?.StartsWith(@namespace + ".", StringComparison.Ordinal) == true;
 
 #pragma warning disable CA1812, CS9113 // Signature-only test probes.
-    private sealed class NineDependencies(
-        string a, string b, string c, string d, string e, string f, string g,
-        TimeProvider clock, Microsoft.Extensions.Logging.ILogger logger);
+    private sealed class InfrastructureOnly(ILogger<InfrastructureOnly> logger, TimeProvider clock,
+        IRequestValidator validator, IUnitOfWork unitOfWork);
+
+    private sealed class EightBusinessDependencies(string a, string b, string c, string d,
+        string e, string f, string g, string h, ILogger<EightBusinessDependencies> logger,
+        TimeProvider clock, IRequestValidator validator, IUnitOfWork unitOfWork);
+
+    private sealed class NineBusinessDependencies(string a, string b, string c, string d,
+        string e, string f, string g, string h, string i, ILogger<NineBusinessDependencies> logger,
+        TimeProvider clock, IRequestValidator validator, IUnitOfWork unitOfWork);
 
     private sealed class NoDependencies;
 #pragma warning restore CA1812, CS9113

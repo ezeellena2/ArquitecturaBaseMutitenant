@@ -9,6 +9,7 @@
 4. **Afuera y después del commit:** invalidar el caché. Todo el método va dentro de `OperationLog.RunAsync`.
 - `CommitPolicy.OnAnyResult` solo cuando también hay que guardar si falla: intentos, códigos consumidos, auditoría de seguridad.
 - Los locks usan `AdvisoryLockKeys.For(tenantId, recurso, id)` o `FOR NO KEY UPDATE`, y exigen la transacción del caso de uso.
+- El método público del servicio de entrada abre la transacción; los helpers trabajan dentro de ella y no reciben `IUnitOfWork`. El tope de 8 cuenta solo dependencias de negocio: excluye `ILogger<T>`, `TimeProvider`, `IRequestValidator` e `IUnitOfWork`, y cuenta todo lo demás, incluido `IOptions<T>` ([ADR 0039](../decisions/0039-tope-de-dependencias-de-negocio.md)). No resolver el tope con clases que solo reenvían ni ampliar la lista blanca de helpers de `TransactionBoundaryTests`. Los desvíos existentes se consolidan antes de E7; el trabajo nuevo de E5 ya cumple esta regla.
 - Hay dos excepciones nominales fuera de los servicios de Application: `ReferenceDataSeeder` y `DatabaseSeeder`. El primero toma `AdvisoryLockKeys.ReferenceDataSeed` para el bootstrap de catálogos. El segundo toma `AdvisoryLockKeys.Seed` y coordina en una UoW el mismo seed global para Development y Production, llamando a `ReferenceDataSeeder.StageAsync` sin anidar una UoW. Son seeds técnicos, no servicios de negocio. Ninguno crea personas ni organizaciones de muestra. Solo `UnitOfWork` llama `SaveChanges`.
 
 ```csharp
