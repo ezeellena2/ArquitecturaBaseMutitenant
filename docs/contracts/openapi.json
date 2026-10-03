@@ -8242,7 +8242,8 @@
           "methods",
           "canLinkGoogle",
           "needsPersonalLoginMethod",
-          "accountDeletionGraceDays"
+          "accountDeletionGraceDays",
+          "soleOwnerOrganizations"
         ],
         "type": "object",
         "properties": {
@@ -8261,6 +8262,12 @@
           "accountDeletionGraceDays": {
             "type": "integer",
             "format": "int32"
+          },
+          "soleOwnerOrganizations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "description": "Entrega métodos de ingreso y capacidades de gestión de la cuenta sin exponer los objetos de persistencia."
