@@ -5,7 +5,10 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Platform;
 
@@ -13,6 +16,34 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Platform;
 public sealed class PlatformTenantCountersTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    [Fact]
+    public async Task Forward_migration_preserves_existing_totals_without_recounting_private_rows()
+    {
+        await using var isolated = new ApiFactory();
+        await isolated.InitializeAsync();
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(isolated.AdminConnectionString);
+        options.UseOpenIddict<Guid>();
+        await using var context = new ApplicationDbContext(options.Options, new TenantContext());
+        var migrator = context.GetService<IMigrator>();
+        await migrator.MigrateAsync("20261003191532_AddTenantFeatures", Ct);
+        var id = Guid.NewGuid();
+        await using (var connection = new NpgsqlConnection(isolated.AdminConnectionString))
+        {
+            await connection.OpenAsync(Ct);
+            await using var command = new NpgsqlCommand("""
+                INSERT INTO platform."Tenants" ("Id", "Kind", "Status", "Name", "CompanyCount", "MemberCount")
+                VALUES (@id, 'Business', 'Active', 'Metadatos anteriores', 7, 11);
+                """, connection);
+            command.Parameters.AddWithValue("id", id);
+            await command.ExecuteNonQueryAsync(Ct);
+        }
+        await migrator.MigrateAsync("20261003213034_SeparateTenantCounters", Ct);
+        var counters = await context.TenantCounters.AsNoTracking().SingleAsync(row => row.TenantId == id, Ct);
+        Assert.Equal(7, counters.CompanyCount);
+        Assert.Equal(11, counters.MemberCount);
+        Assert.Equal(TenantStatus.Active, (await context.Tenants.AsNoTracking().SingleAsync(row => row.Id == id, Ct)).Status);
+    }
 
     [Fact]
     public async Task A_private_insert_and_a_versioned_state_change_commit_together_without_ignoring_stale_versions()

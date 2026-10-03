@@ -46,8 +46,6 @@ public sealed class Tenant : Entity, IVersioned
     public DateTime? CreatedAtUtc { get; private set; }
     public Guid? RegisteredByUserId { get; private set; }
     public TenantRegistrationSource RegistrationSource { get; private set; }
-    public int CompanyCount { get; private set; }
-    public int MemberCount { get; private set; }
 
     public Result RecordRegistration(Guid userId, TenantRegistrationSource source, DateTime createdAtUtc)
     {

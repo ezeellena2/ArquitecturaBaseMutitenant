@@ -1397,11 +1397,6 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<int>("CompanyCount")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0);
-
                     b.Property<DateTime?>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -1409,11 +1404,6 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
-
-                    b.Property<int>("MemberCount")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0);
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1696,6 +1686,26 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId");
 
                     b.ToTable("UserTenantAccesses", "identity");
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Infrastructure.Persistence.TenantCounters", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("CompanyCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("MemberCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.HasKey("TenantId");
+
+                    b.ToTable("TenantCounters", "platform");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey", b =>
@@ -2367,6 +2377,15 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasOne("ArquitecturaBaseMultitenant.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Infrastructure.Persistence.TenantCounters", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant", null)
+                        .WithOne()
+                        .HasForeignKey("ArquitecturaBaseMultitenant.Infrastructure.Persistence.TenantCounters", "TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

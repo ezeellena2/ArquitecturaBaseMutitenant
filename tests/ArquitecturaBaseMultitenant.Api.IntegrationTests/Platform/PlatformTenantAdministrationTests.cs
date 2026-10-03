@@ -142,6 +142,32 @@ public sealed class PlatformTenantAdministrationTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
     }
 
+    [Fact]
+    public async Task Adding_a_member_after_reading_the_organization_does_not_conflict_with_suspension()
+    {
+        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var account = await AccountJourney.RegisterAsync(factory, client, Ct);
+        await GrantAsync(factory, account.UserId, Domain.Platform.PlatformRole.Owner);
+        await AccountJourney.AuthorizeAsync(client, "platform", Ct);
+        var id = await SeedBusinessAsync(factory, "Versión y conteo " + Guid.NewGuid().ToString("N")[..8], false, account.UserId);
+        var original = await VersionAsync(client, id);
+        await SeedMembershipAsync(id, account.UserId);
+
+        using var suspended = await PlatformJourney.PostAsync(client, $"/api/platform/tenants/{id:D}/suspend",
+            new { version = original, reason = "Suspender luego del alta del miembro" }, Ct);
+        Assert.Equal(HttpStatusCode.NoContent, suspended.StatusCode);
+        using var detail = await client.GetAsync($"/api/platform/tenants/{id:D}", Ct);
+        using var json = JsonDocument.Parse(await detail.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(1, json.RootElement.GetProperty("memberCount").GetInt32());
+        Assert.Equal("Suspended", json.RootElement.GetProperty("status").GetString());
+        Assert.NotEqual(original, json.RootElement.GetProperty("version").GetUInt32());
+
+        using var stale = await PlatformJourney.PostAsync(client, $"/api/platform/tenants/{id:D}/reactivate",
+            new { version = original, reason = "Reactivar con estado viejo" }, Ct);
+        Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
+        Assert.Equal(TenantStatus.Suspended, (await StoredTenantAsync(factory, id)).Status);
+    }
+
     private async Task<Guid> PersonalIdAsync(Guid userId)
     {
         await using var scope = factory.Services.CreateAsyncScope();
