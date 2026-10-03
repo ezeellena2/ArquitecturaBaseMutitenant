@@ -54,7 +54,8 @@ El resultado tiene que servir para empezar productos reales.
 | 4 | Autorización y Roles (área de referencia) | ✔ | ✔ | 3 |
 | 5 | Plataforma: organizaciones, aprobaciones, **módulos por organización**, moderación de páginas públicas, dominio verificado, identidades (con la baja iniciada por la plataforma), recuperaciones de cuenta, documentos legales, operadores, auditoría de seguridad | ✔ | ✔ | 4 y 6 |
 | 6 | Área B2B: **"Registrá tu empresa"**, usuarios, empresas, membresías, configuración, auditoría, **mi página pública** | ✔ | ✔ | 4 |
-| 7 | Área B2C y **sitio público**: el área personal lista para sumar módulos (receta `personal.md`), páginas por subdominio, directorio, ingreso desde un subdominio, y la **mecánica de interacción** persona ↔ empresa probada de punta a punta | ✔ | ✔ | 6 |
+| C | **Consolidación previa a la 7** ([plan](2026-10-03-consolidacion.md)): los bugs de la revisión de calidad, el ADR 0039 aplicado a lo existente, las reglas duplicadas unificadas, los permisos por empresa de punta a punta y las piezas comunes del front | ✔ | ✔ | 5 y 6 |
+| 7 | Área B2C y **sitio público**: el área personal lista para sumar módulos (receta `personal.md`), páginas por subdominio, directorio, ingreso desde un subdominio, y la **mecánica de interacción** persona ↔ empresa probada de punta a punta | ✔ | ✔ | 6 y C |
 | 8 | WhatsApp (número de la plataforma: códigos, invitaciones, avisos de la cuenta, bot de ingreso) | ✔ | ✔ | 3 |
 | 9 | Endurecimiento: TOTP para operadores, **caché en Redis**, rate limit, headers, observabilidad, fuzz de aislamiento | ✔ | ✔ | 5–8 |
 | 10 | Despliegue y operación: CI/CD, migration bundle, backup, runbook, exportar mis datos | ✔ | ✔ | 9 |
@@ -354,6 +355,21 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
 **Documentación:** `docs/features/organizaciones.md` (usuarios, empresas, membresías, filtros y conteos), con los punteros de una línea en las carpetas del área, y la sección del registro de empresas ("Registrá tu empresa") en `docs/features/identidad.md`.
 
 **Puerta:** la general, más un recorrido manual: crear una organización desde «Registrá tu empresa», entrar por «Ingresá como empresa» y comprobar `/org`, F5 y el cambio a Personal; invitar desde Usuarios a alguien sin cuenta y a alguien con cuenta, que las dos invitaciones lleguen **de verdad** por Gmail, y aceptarlas.
+
+---
+
+## Consolidación previa a la Etapa 7
+
+- **Plan ejecutable:** [2026-10-03-consolidacion.md](2026-10-03-consolidacion.md), aprobado por el usuario el 2026-10-03.
+- **De dónde sale:** de la [revisión de calidad de diseño](../reviews/2026-10-03-calidad-de-diseno.md) y del [ADR 0039](../decisions/0039-tope-de-dependencias-de-negocio.md).
+- **Qué hace:**
+  - realinea los docs con el código;
+  - corrige los bugs de la revisión, cada uno con su test;
+  - devuelve la transacción a los servicios, sin clases que solo reenvían;
+  - deja una sola pieza por cada regla duplicada;
+  - suma las piezas comunes del front: errores, permisos (incluidos los permisos por empresa), paginado, accesos, cultura y edición;
+  - deja a Roles como referencia de verdad.
+- **Qué no hace:** no agrega pantallas nuevas.
 
 ---
 
