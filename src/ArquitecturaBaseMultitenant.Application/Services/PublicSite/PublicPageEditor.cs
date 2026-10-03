@@ -1,4 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
+using ArquitecturaBaseMultitenant.Application.Common.Validation;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Phones;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.PublicSite;
@@ -12,7 +14,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.PublicSite;
 /// <summary>Guarda contenido, slug y publicación de la página dentro de la UoW de la petición.</summary>
 internal sealed class PublicPageEditor(IPublicPageRepository pages, ITenantRepository tenants,
     ITenantSlugAvailabilityReader slugs, ITenantContext tenantContext, IUnitOfWork unitOfWork,
-    IAuditLog auditLog)
+    IAuditLog auditLog, IPhoneNumberParser phoneParser)
 {
     private const string TenantSlugConstraint = "IX_Tenants_Slug";
     private static readonly string[] AuditedFields = ["slug", "name", "description", "logo", "contact"];
@@ -24,6 +26,13 @@ internal sealed class PublicPageEditor(IPublicPageRepository pages, ITenantRepos
         if (slug.IsFailure) return slug.Error;
         var decodedLogo = DecodeLogo(request);
         if (decodedLogo.IsFailure) return decodedLogo.Error;
+        string? contactPhone = null;
+        if (!string.IsNullOrWhiteSpace(request.ContactPhoneNumber))
+        {
+            var phone = phoneParser.Parse(request.ContactPhoneCountry, request.ContactPhoneNumber, PhoneUsage.Any);
+            if (phone.IsFailure) return FieldErrors.On(phone.Error, "contactPhone");
+            contactPhone = phone.Value.Value;
+        }
 
         try
         {
@@ -43,7 +52,7 @@ internal sealed class PublicPageEditor(IPublicPageRepository pages, ITenantRepos
                 var isNew = page is null;
                 page ??= PublicPage.Create();
                 var updated = page.UpdateContent(request.Name, request.Description, request.ContactEmail,
-                    request.ContactPhone, request.Address, request.Website);
+                    contactPhone, request.Address, request.Website);
                 if (updated.IsFailure) return updated;
                 if (request.RemoveLogo || request.LogoBase64 is not null)
                 {

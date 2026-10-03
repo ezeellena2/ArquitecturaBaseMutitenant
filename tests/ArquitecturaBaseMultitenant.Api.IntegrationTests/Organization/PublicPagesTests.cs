@@ -43,7 +43,7 @@ public sealed class PublicPagesTests(ApiFactory factory)
             name = "Grupo Delta",
             description = "Una organización y sus empresas.",
             contactEmail = "contacto@example.com",
-            contactPhone = "+541145678900",
+            contactPhone = new { country = "AR", number = "011 4567-8900" },
             address = "Buenos Aires",
             website = "https://example.com",
             logoBase64 = png,
@@ -60,7 +60,22 @@ public sealed class PublicPagesTests(ApiFactory factory)
         Assert.Equal("pagina-test-2", page.GetProperty("slug").GetString());
         Assert.Equal("Grupo Delta", page.GetProperty("name").GetString());
         Assert.StartsWith("data:image/png;base64,", page.GetProperty("logoDataUri").GetString());
+        // docs/rules/telefonos.md: el país y lo escrito entran; se guarda y sale E.164.
+        Assert.Equal("+541145678900", page.GetProperty("contactPhone").GetString());
         var savedVersion = page.GetProperty("version").GetUInt32();
+
+        using var invalidPhone = await ownerClient.PutAsJsonAsync("/api/organization/public-page", new
+        {
+            slug = "pagina-test-2",
+            name = "Grupo Delta",
+            contactPhone = new { country = "AR", number = "123" },
+            removeLogo = false,
+            version = savedVersion,
+        }, Ct);
+        Assert.Equal(HttpStatusCode.BadRequest, invalidPhone.StatusCode);
+        using var invalidPhoneJson = JsonDocument.Parse(await invalidPhone.Content.ReadAsStringAsync(Ct));
+        Assert.Equal("Users.Phone.Invalid", invalidPhoneJson.RootElement.GetProperty("code").GetString());
+        Assert.True(invalidPhoneJson.RootElement.GetProperty("errors").TryGetProperty("contactPhone", out _));
 
         using var stale = await ownerClient.PutAsJsonAsync("/api/organization/public-page", new
         {

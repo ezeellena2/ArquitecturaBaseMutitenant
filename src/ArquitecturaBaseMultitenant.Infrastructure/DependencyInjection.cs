@@ -43,6 +43,7 @@ public static class DependencyInjection
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<ITimeZoneService, TimeZoneService>();
         services.AddSingleton<IPhoneNumberDisplayFormatter, LibPhoneNumberDisplayFormatter>();
+        services.AddSingleton<IPhoneNumberParser, LibPhoneNumberParser>();
         services.AddHttpClient<IDnsTxtLookup, CloudflareDnsTxtLookup>();
         services.AddOptions<LoginCodeOptions>()
             .BindConfiguration(LoginCodeOptions.SectionName)

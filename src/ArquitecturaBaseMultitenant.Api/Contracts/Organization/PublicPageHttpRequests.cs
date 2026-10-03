@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Api.Contracts.Common;
 using ArquitecturaBaseMultitenant.Application.Models.PublicSite;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -7,7 +8,7 @@ using PublicPageModelResponse = ArquitecturaBaseMultitenant.Application.Models.P
 namespace ArquitecturaBaseMultitenant.Api.Contracts.Organization;
 
 public sealed record UpdatePublicPageHttpRequest(string? Slug, string? Name, string? Description,
-    string? ContactEmail, string? ContactPhone, string? Address, string? Website,
+    string? ContactEmail, PhoneInputHttpRequest? ContactPhone, string? Address, string? Website,
     string? LogoBase64, string? LogoContentType, bool RemoveLogo, uint? Version)
 {
     public override string ToString() => nameof(UpdatePublicPageHttpRequest);
@@ -39,8 +40,8 @@ public static class PublicPageHttpMappings
             contactEmail = parsed.Value;
         }
 
-        return new UpdatePublicPageRequest(request.Slug, request.Name, request.Description, contactEmail, request.ContactPhone,
-            request.Address, request.Website, request.LogoBase64, request.LogoContentType,
+        return new UpdatePublicPageRequest(request.Slug, request.Name, request.Description, contactEmail,
+            request.ContactPhone?.Country, request.ContactPhone?.Number, request.Address, request.Website, request.LogoBase64, request.LogoContentType,
             request.RemoveLogo, request.Version);
     }
 

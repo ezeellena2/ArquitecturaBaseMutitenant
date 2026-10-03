@@ -9,6 +9,8 @@ namespace ArquitecturaBaseMultitenant.Domain.Users;
 public static class PhoneErrors
 {
     public const string InvalidCode = "Users.Phone.Invalid";
+    public const string NotMobileCode = "Users.Phone.NotMobile";
 
     public static readonly Error Invalid = Error.Validation(InvalidCode, "The phone number is not valid.");
+    public static readonly Error NotMobile = Error.Validation(NotMobileCode, "The phone number must be a mobile number.");
 }

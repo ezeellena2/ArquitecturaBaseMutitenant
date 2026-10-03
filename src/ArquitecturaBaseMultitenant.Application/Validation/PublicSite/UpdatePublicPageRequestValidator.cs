@@ -15,7 +15,7 @@ internal sealed class UpdatePublicPageRequestValidator : AbstractValidator<Updat
             .WithMessage(_ => ValidationTexts.PageInvalid);
         RuleFor(request => request.Name).NotEmpty().MaximumLength(TextLimits.OrganizationName);
         RuleFor(request => request.Description).MaximumLength(TextLimits.Description);
-        RuleFor(request => request.ContactPhone).MaximumLength(TextLimits.PhoneNumber);
+        RuleFor(request => request.ContactPhoneNumber).MaximumLength(TextLimits.PhoneNumber);
         RuleFor(request => request.Address).MaximumLength(TextLimits.Description);
         RuleFor(request => request.Website).MaximumLength(TextLimits.WebAddress).Must(IsWebAddress)
             .When(request => !string.IsNullOrWhiteSpace(request.Website));

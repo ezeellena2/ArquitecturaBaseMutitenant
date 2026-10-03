@@ -2,8 +2,9 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Models.PublicSite;
 
+/// <summary>El teléfono llega como país y lo escrito; el servicio lo interpreta y guarda E.164 (telefonos.md).</summary>
 public sealed record UpdatePublicPageRequest(string? Slug, string? Name, string? Description,
-    Email? ContactEmail, string? ContactPhone, string? Address, string? Website,
+    Email? ContactEmail, string? ContactPhoneCountry, string? ContactPhoneNumber, string? Address, string? Website,
     string? LogoBase64, string? LogoContentType, bool RemoveLogo, uint? Version);
 
 public sealed record SetPublicPagePublicationRequest(uint? Version);
