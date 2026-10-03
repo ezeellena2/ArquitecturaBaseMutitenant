@@ -17,6 +17,8 @@ public abstract record AccountNotice
     public sealed record OrganizationStateChanged(string OrganizationName,
         ArquitecturaBaseMultitenant.Domain.Tenancy.TenantStatus Status, string Reason) : AccountNotice;
 
+    public sealed record PublicPageModerated(string OrganizationName, bool IsBlocked, string Reason) : AccountNotice;
+
     public sealed record DeletionRequested(DateTime RequestedAtUtc, DateTime ScheduledForUtc,
         string TimeZoneId, string ActionUrl) : AccountNotice;
 

@@ -69,4 +69,9 @@
   <data name="OrganizationState.Closed" xml:space="preserve"><value>closed</value></data>
   <data name="OrganizationState.Provisioning" xml:space="preserve"><value>being provisioned</value></data>
   <data name="OrganizationState.PendingApproval" xml:space="preserve"><value>awaiting approval</value></data>
+  <data name="PublicPageModeration.Title" xml:space="preserve"><value>Your page publication changed</value></data>
+  <data name="PublicPageModeration.Subject" xml:space="preserve"><value>Organization page publication</value></data>
+  <data name="PublicPageModeration.BlockedBody" xml:space="preserve"><value>{0} The platform unpublished the page for {1}. It is a draft and cannot be published until the platform allows it.</value></data>
+  <data name="PublicPageModeration.AllowedBody" xml:space="preserve"><value>{0} The platform allowed the page for {1} to be published again. You can review and publish it from your organization.</value></data>
+  <data name="PublicPageModeration.Note" xml:space="preserve"><value>Your organization and its access remain available.</value></data>
 </root>

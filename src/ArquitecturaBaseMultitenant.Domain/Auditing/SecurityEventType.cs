@@ -22,4 +22,6 @@ public enum SecurityEventType
     OrganizationProvisioningRetried,
     PlatformTenantEntered,
     TenantFeaturesChanged,
+    PublicPageUnpublished,
+    PublicPagePublicationAllowed,
 }

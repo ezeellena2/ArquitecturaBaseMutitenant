@@ -36,6 +36,24 @@ public sealed class PublicPageTests
     }
 
     [Fact]
+    public void Lifting_moderation_keeps_the_page_draft_until_the_organization_publishes_it()
+    {
+        var page = PublicPage.Create();
+        Assert.True(page.UpdateContent("Grupo Delta", "Contenido conservado", null, null, null, null).IsSuccess);
+        Assert.True(page.Publish().IsSuccess);
+        Assert.True(page.ApplyModerationBlock("Revisar contenido", Guid.NewGuid(),
+            new DateTime(2026, 10, 3, 12, 0, 0, DateTimeKind.Utc)).IsSuccess);
+
+        Assert.True(page.AllowPublish().IsSuccess);
+        Assert.False(page.IsPublished);
+        Assert.Null(page.PublishBlockedAtUtc);
+        Assert.Null(page.PublishBlockedReason);
+        Assert.Null(page.PublishBlockedByUserId);
+        Assert.Equal("Contenido conservado", page.Description);
+        Assert.True(page.Publish().IsSuccess);
+    }
+
+    [Fact]
     public void Logo_accepts_supported_signatures_and_rejects_mismatched_or_large_files()
     {
         var page = PublicPage.Create();

@@ -95,6 +95,14 @@ public sealed class PublicPage : Entity, IPublishedByBusiness, IVersioned
         return Result.Success();
     }
 
+    public Result AllowPublish()
+    {
+        PublishBlockedAtUtc = null;
+        PublishBlockedReason = null;
+        PublishBlockedByUserId = null;
+        return Result.Success();
+    }
+
     private static bool TooLong(string? value, int maximum) => value?.Trim().Length > maximum;
 
     private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();

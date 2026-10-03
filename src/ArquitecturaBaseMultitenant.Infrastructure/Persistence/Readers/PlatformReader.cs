@@ -44,6 +44,11 @@ internal sealed class PlatformReader(ApplicationDbContext context) : IPlatformRe
         return await owners.Union(registrant).Order().ToArrayAsync(ct);
     }
 
+    public async Task<IReadOnlyList<Guid>> ListActiveTenantOwnerIdsAsync(Guid id, CancellationToken ct) =>
+        await context.UserTenantAccesses.AsNoTracking().Where(a => a.TenantId == id
+            && a.Status == MemberStatus.Active && a.RoleName == SystemRoles.TenantAdmin)
+            .Select(a => a.UserId).Distinct().Order().ToArrayAsync(ct);
+
     private IQueryable<Tenant> ApplyFilters(ListPlatformTenantsRequest request)
     {
         var query = context.Tenants.AsNoTracking().Where(t => t.Kind == TenantKind.Business);

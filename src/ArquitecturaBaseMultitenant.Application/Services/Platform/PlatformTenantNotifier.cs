@@ -20,4 +20,16 @@ internal sealed class PlatformTenantNotifier(IPlatformReader reader, IUserReposi
                 user.Culture, principalOnly: false, ct);
         }
     }
+
+    internal async Task EnqueuePageModerationAsync(Tenant tenant, bool blocked, string reason, CancellationToken ct)
+    {
+        foreach (var id in await reader.ListActiveTenantOwnerIdsAsync(tenant.Id, ct))
+        {
+            var user = await users.GetByIdAsync(id, ct);
+            if (user is null) continue;
+            await notices.EnqueueAsync(id, await methods.ListByUserIdAsync(id, ct),
+                new AccountNotice.PublicPageModerated(tenant.Name, blocked, reason) { RecipientName = user.DisplayName },
+                user.Culture, principalOnly: false, ct);
+        }
+    }
 }

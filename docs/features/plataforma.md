@@ -41,6 +41,12 @@ El catálogo `Domain/Features/Features.All` está vacío en la plantilla; las pi
 
 FeatureManagement es scoped. El filtro Tenant utiliza el contexto activo firmado y una caché por espacio con filas crudas, invalidada después del commit; el reloj se evalúa en cada consulta. El apagado global en configuración prevalece. El middleware de API oculta el módulo con 404 antes de comprobar permisos, después de validar autenticación/acceso/estado; la librería FeatureGate y su handler mantienen la misma respuesta. `/api/me.features` contiene solo claves efectivas del acceso activo y permanece presente con lista vacía cuando corresponde. El consumo front de módulos sigue pendiente en T08.
 
+## Moderación de páginas públicas
+
+`GET /api/platform/tenants/{id}/public-site` exige `platform.tenants.manage` y devuelve solo metadatos de publicación, nombre, slug y versión; no consulta contenido, logo ni contacto. Confirma el SecurityEvent de consulta antes de entrar al alcance privado. Support conserva el listado global de organizaciones, pero no entra a los datos privados de moderación.
+
+`POST .../unpublish` y `POST .../allow-publish` requieren motivo, versión e Idempotency-Key. Reutilizan la página de E6: despublicar deja borrador bloqueado con operador/fecha/motivo; permitir retira el bloqueo y conserva el borrador hasta que la organización decida publicarlo. El cambio, su SecurityEvent, la auditoría de organización y los avisos a sus Dueños activos se confirman juntos. Una edición vieja devuelve 409 sin aviso ni evento de cambio adicional; el registro previo del intento de entrada permanece. El replay no duplica cambios ni correos. Una organización no puede publicar mientras el bloqueo siga vigente.
+
 ## Verificación de accesos y flujos
 
 El acceso privado pasa por `PlatformScopeAccessService`: valida acceso Platform, permiso persistido `platform.tenants.manage` y motivo; confirma el SecurityEvent previo en una UoW. `PlatformActionGuard` entra con `ITenantScope.Enter` después, sin transacción abierta, y restaura el alcance al disponer la lease. La operación privada usa luego su única UoW. Una falla posterior conserva el registro de entrada.
@@ -57,3 +63,4 @@ El acceso privado pasa por `PlatformScopeAccessService`: valida acceso Platform,
 - `PlatformProvisioningTests`: Dueño invitado sin identidad, replay sin duplicados y preferencias incompatibles sin reemplazar lo existente.
 - `PlatformTenantProvisioningHttpTests`: 401/403, creación/aceptación/replay, aprobación/retry, reparación y rollback, versiones viejas, idempotencia y concurrencia sin duplicados.
 - `FeatureGateTests`, `PlatformFeatureAdministrationTests` y `ModuleControllersTests`: apagado, emergencia, permisos, expiración con caché, aislamiento de acceso, edición y carrera, y núcleo sin gates. El contrato de `/api/me.features` lee el backend y el tipo generado consumido por el front.
+- `PublicPageModerationTests`: HTTP/PG real, 401/403/404, metadatos sin contenido, permisos Owner/Support, motivo, versión, replay, avisos sin duplicados, auditoría y aislamiento del borrador; `PublicPagesTests` conserva la regresión E6.

@@ -65,4 +65,6 @@
   <data name="Field.Fields" xml:space="preserve"><value>Datos modificados</value></data>
   <data name="Fallback" xml:space="preserve"><value>un registro</value></data>
   <data name="Platform.OrganizationCreationReason" xml:space="preserve"><value>Alta de organización con invitación al Dueño.</value></data>
+  <data name="Platform.PublicPageMetadataReadReason" xml:space="preserve"><value>Consulta de los metadatos de publicación de la página pública.</value></data>
+  <data name="Field.PublishBlocked" xml:space="preserve"><value>Publicación bloqueada</value></data>
 </root>

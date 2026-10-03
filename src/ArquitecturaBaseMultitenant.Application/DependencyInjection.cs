@@ -71,6 +71,8 @@ public static class DependencyInjection
         services.AddScoped<Services.Platform.PlatformTenantAudit>();
         services.AddScoped<Services.Platform.PlatformTenantNotifier>();
         services.AddScoped<IPlatformScopeAccessService, Services.Platform.PlatformScopeAccessService>();
+        services.AddScoped<IPlatformPublicSiteService, Services.Platform.PlatformPublicSiteService>();
+        services.AddScoped<Services.Platform.PlatformPublicSiteWriter>();
         services.AddScoped<Services.Platform.PlatformActionGuard>();
         services.AddScoped<Services.Platform.PlatformTenantSlugAllocator>();
         services.AddScoped<Services.Platform.PlatformTenantCreator>();

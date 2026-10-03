@@ -58,6 +58,11 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
                     NotificationTexts.Get("OrganizationState." + changed.Status, culture)),
                     NotificationTexts.Format("OrganizationState.Reason", culture, changed.Reason) },
                 string.Empty, string.Empty, NotificationTexts.Get("OrganizationState.PersonalUnaffected", culture)),
+            AccountNotice.PublicPageModerated moderated => ("PublicPageModeration", "AccountDeleted.html",
+                new[] { NotificationTexts.Format(moderated.IsBlocked ? "PublicPageModeration.BlockedBody" : "PublicPageModeration.AllowedBody",
+                    culture, greeting, moderated.OrganizationName),
+                    NotificationTexts.Format("OrganizationState.Reason", culture, moderated.Reason) },
+                string.Empty, string.Empty, NotificationTexts.Get("PublicPageModeration.Note", culture)),
             _ => throw new NotSupportedException("This account notice template belongs to a later stage."),
         };
         var title = NotificationTexts.Get(key + ".Title", culture);

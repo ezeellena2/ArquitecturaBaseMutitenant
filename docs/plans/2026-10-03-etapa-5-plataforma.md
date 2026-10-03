@@ -111,9 +111,10 @@ Archivos front: `docs/design/lienzo/generadores/plataforma_*.py`, tableros propu
 Fuente: `docs/reviews/2026-10-03-alineacion-lienzo.md`, ya copiado sin cambios del informe temporal en `cc2835b`. Las marcas ✔ del informe significan hallazgos verificados, no correcciones terminadas.
 
 - [ ] Paquete 0 completo, responsabilidad de la conversación «Paquete 0 · Errores visibles», incluido registro de empresa. Este chat no toca sus archivos ni incluye cambios ajenos en commits.
+- [ ] Paquete 1 (excepto 1.11, asignado a este chat) y Paquete 3: responsabilidad de otra conversación. Este chat no los implementa ni modifica sus archivos por esos hallazgos.
 - [x] 0.7: error propio `Tenancy.Member.LastTenantAdmin` para quitar/eliminar roles del último Dueño y `Tenancy.Member.CannotDisableSelf` para el acceso propio; la baja de cuenta conserva `Legal.AccountDeletion.LastAdmin`. Rojo dirigido → Usuarios 3/3, baja de cuenta 6/6, recursos 6/6 y build Api 0 advertencias.
 - [ ] Antes de T20–23, después de diseño validado y Paquete 0: actualizar frontend.md §4/Teléfono, responsive, formularios, pantallas-y-ui y AGENTS del front desde los ocho Criterio-* vigentes (Paquete 5). Sin pruebas de documentación nuevas.
-- [ ] Después de las fichas: Paquete 4 pasos 2–4, piezas compartidas de app, navegación declarativa/Más/E2E a390 y todas las hojas; antes de T20–23.
+- [ ] Paso 4c, después de las fichas: Paquete 4 pasos 2–4 (piezas compartidas de app, navegación declarativa/Más/E2E a390 y todas las hojas), **más Paquete 2 completo** (criterio en botones, menús, Page, FormField, diálogos y avisos) y **punto 1.11** (migas y panel de Administración indican la ruta actual; el panel arranca abierto en rutas de administración). Resolver juntos los archivos de `shared/ui` y `layouts` antes de T20–23, sin tocar Paquetes 0, 1 (salvo 1.11) y 3 de las otras conversaciones.
 - [ ] Capturas solo de pantallas nuevas y estados principales contra el lienzo vigente, enviadas al usuario antes del cierre para su revisión; no se autoaprueban. E2E real en verde y puerta general completa.
 
 ### A01 · Recuperar main en verde antes de seguir (instrucción del 03/10)
@@ -168,9 +169,9 @@ Archivos: PlatformActionGuard y servicio de registro de acceso; TenantScope; Pub
 
 Avance del acceso privado (prerrequisito de T07): prueba roja por tipos ausentes → 3/3 unitarias y 2/2 con PostgreSQL. Comprueba permisos persistidos, evento visible desde otra conexión antes de Enter, ausencia de transacción abierta y restauración del alcance ante excepción. Build Api 0 advertencias e inventarios existentes 12/12. Moderación sigue pendiente.
 
-- [ ] Rojo: operador sin Enter no ve datos; motivo/permiso preceden SecurityEvent confirmado y Enter sin transacción; excepciones restauran alcance. Support lectura conforme permiso, mutación 403.
-- [ ] GET solo metadatos de página; Unpublish vuelve Draft con bloqueo/actor/motivo/fecha, AllowPublish retira bloqueo; organización no publica bloqueada. Avisar Dueños sin exponer cuerpo/logo a plataforma si no lo requiere tablero.
-- [ ] Estados/409/aislamiento y regresión PublicPage E6; commit `feat(plataforma): moderar páginas públicas`.
+- [x] Rojo HTTP por ruta ausente (404 frente a 401 esperado); permiso/motivo preceden evento confirmado y Enter sin transacción. Scope 3/3 unitarias y 2/2 PostgreSQL conservan restauración. Según el catálogo, metadatos privados/moderación exigen tenants.manage: Support 403; su listado global permanece disponible.
+- [x] GET proyecta solo metadatos; Unpublish vuelve Draft con bloqueo/actor/motivo/fecha; AllowPublish retira bloqueo sin publicar. La organización no publica bloqueada. Avisos a Dueños, versión y replay verificados; el borrador queda oculto fuera del alcance autorizado y otra organización permanece intacta.
+- [x] Moderación real 1/1; PublicPage dominio 4/4; regresión E6 1/1; inventario 3/3 y OpenAPI 3/3. Build completo 0 advertencias/errores; suite completa **1454/1454**, 0 omitidos, **6m 36s 429ms** (`.artifacts/etapa-5/t09-full.log`). Commit `feat(plataforma): moderar páginas públicas`.
 
 ### T10 · Dominio verificado desde Plataforma
 
@@ -265,7 +266,7 @@ Archivos: navigation/types/platform, Sidebar/AdminPanel/PrivateLayoutFrame, rout
 
 Archivos: `src/areas/platform/tenants/{api,pages,components}/`, locales y tests.
 
-- [ ] Copiar estados elegidos de Organizaciones/Organizacion y sus app móviles: filtros/conteos/1 y 50 filas, ficha/tabs y diálogos aprobar/rechazar/crear/suspender/reactivar/cerrar/retry, Modules/PublicSite/Domain.
+- [ ] Copiar estados elegidos de Organizaciones/Organizacion y sus app móviles: filtros/conteos/1 y 50 filas, ficha con resumen e Historial como lista (sin pestañas de un elemento), diálogos aprobar/rechazar/crear/suspender/reactivar/cerrar/retry, Modules/PublicSite/Domain.
 - [ ] Conectar API real y versiones; no duplicar handlers de E6 ni inventar ediciones ajenas; 409 conserva selección/draft, motivo obligatorio y acción irreversible roja.
 - [ ] Pantalla/red/errores/permisos, lint/build. Commit(s) coherentes `feat(plataforma): conectar organizaciones`.
 
@@ -316,6 +317,7 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 10. Los deltas de conteos son constraint triggers `DEFERRABLE INITIALLY DEFERRED`, dentro de la misma transacción: se ejecutan después del SaveChanges para no adelantar xmin antes del UPDATE de estado. Se conserva el rechazo de versiones viejas. Referencia: [CREATE TRIGGER, PostgreSQL 18](https://www.postgresql.org/docs/current/sql-createtrigger.html).
 11. El filtro de módulos conserva filas crudas en caché y evalúa la vigencia con TimeProvider por petición; el apagado global gana. El gate se evalúa antes de los permisos, después de autenticación/acceso/tenant, para devolver 404 cuando el módulo está apagado. Una configuración inicial usa versión 0; la carrera de inserción se traduce a 409. Cambiar módulos exige SecurityEvent del destino en la misma UoW.
 12. Los tests que retroceden a una migración histórica preparan datos con SQL parametrizado de ese esquema, sin usar el modelo actual. Una fixture que conserva un Tenant entre transacciones recarga su xmin tras los triggers; esto no cambia la concurrencia productiva ni el rechazo de versiones viejas.
+13. Moderación utiliza la página de E6 y su versión, sin copiar contenido. Permitir publicación retira el bloqueo y deja la decisión de publicar a la organización. RLS permite lo publicado y oculta el borrador fuera del alcance. La consulta privada exige tenants.manage, conforme al catálogo de E5, y audita su motivo traducido antes de Enter.
 
 ## Registro de resultados
 
@@ -329,6 +331,7 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 | T05 | Dominio 12/12; servicio 4/4; HTTP 3/3; recursos 6/6; accesos/contratos 15/15; migración/build verificados | `6a49970` | — |
 | T06 | Dominio nuevo 3/3 y regresiones 7/7; HTTP/RLS/tokens 5/5; recursos 6/6; inventarios 28/28; build/migración verificados | `f785e5b` | — |
 | T07 | Scope 3/3 + PG 2/2; core 3/3 + PG 2/2; HTTP 8/8; slug 5/5; regresiones 36/36; recursos 6/6; inventarios 32/32; build/SQL verificados | `b375f04`, `d27d7d3`, `f05c9df`, `6fa09c4` | `d4d0627` (muestra) |
-| T08 backend / A01 | Gates/edición real y regresiones; build completo 0 advertencias, suite completa 1452/1452 (6m23s); front de módulos pendiente | commit de esta tarea | — |
+| T08 backend / A01 | Gates/edición real y regresiones; build completo 0 advertencias, suite completa 1452/1452 (6m23s); front de módulos pendiente | `2e5a06b` | — |
+| T09 | Moderación/avisos/replay/versión/aislamiento HTTP; regresiones E6 y contratos; suite completa 1454/1454 (6m36s), build 0 advertencias | commit de esta tarea | — |
 
 No declarar cierre a partir de esta tabla sin completar T25.
