@@ -6,7 +6,7 @@ import { estiloDe, mapaDeCapas, resolverValor } from '../../comun/rutas.mjs';
 export const nombre = 'referencias';
 
 // Valores que parecen ruta y no lo son: carpetas generadas, secretos locales, extensiones sueltas, imports (@) y plantillas.
-const ignorarRuta = /(^|\/)(\.local|bin|obj|node_modules|dist|\.git|wwwroot)(\/|$)|^appsettings|\.local\.json$|^\.env|\.\.\.|…|^@|[\\%]|^\.[\w.]+$|NNNN|AAAA|(^|\/)I?X(Service|Repository|Reader|Errors|Controller|Request)\b/;
+const ignorarRuta = /(^|\/)(\.local|bin|obj|node_modules|dist|\.git|wwwroot)(\/|$)|^appsettings|\.local\.json$|^\.env|\.\.\.|…|^@|[\\%]|^\.[\w.]+$|NNNN|AAAA|(^|\/)I?X(Service|Repository|Reader|Errors|Controller|Request)\b|(^|\/)X\.[\w.]+$/;
 
 // Nombres que se repiten en muchas carpetas: un único candidato no prueba que sea un renombre.
 const nombreGenerico = /(^|\/)(README|AGENTS|CLAUDE|index|package|HarnessStage)\.[a-z]+$/;

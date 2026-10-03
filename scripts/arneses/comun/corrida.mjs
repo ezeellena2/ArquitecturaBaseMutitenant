@@ -8,7 +8,7 @@ import { escribirInforme, fechaCorrida } from './informe.mjs';
 import { aplicarParches } from './parches.mjs';
 import { ejecutarProceso } from './proceso.mjs';
 import { validar } from './resultado.mjs';
-import { carpetaDelWorktree, crearWorktree, enlazarNodeModules, nombreDeRama, quitarWorktree } from './worktree.mjs';
+import { carpetaDelWorktree, crearWorktree, enlazarHermanos, enlazarNodeModules, nombreDeRama, quitarWorktree, soltarEnlaces } from './worktree.mjs';
 import * as claude from './motores/claude.mjs';
 import * as codex from './motores/codex.mjs';
 
@@ -130,14 +130,23 @@ export async function corridaDeRepo({ detectar, arnes, repo, dirArneses, raices,
   info.verificacion = [];
   if (!fallo) {
     if (repo === 'front') await enlazarNodeModules(raiz, carpeta);
-    for (const comando of manifiesto.verificacion?.[repo] ?? []) {
-      const v = await ejecutarProceso(comando, { cwd: carpeta, shell: true, timeoutMs: 30 * 60_000 });
-      info.verificacion.push({ comando, codigo: v.codigo, salida: v.codigo === 0 ? '' : pocos(`${v.stdout}\n${v.stderr}`) });
-      if (v.codigo !== 0) {
-        fallo = `la verificación falló: ${comando}`;
-        break;
+    // Los tests de arquitectura miran el repo hermano en `../<Repo>`: se lo enlaza al lado del worktree mientras dura la verificación.
+    const enlaces = await enlazarHermanos(carpeta, Object.entries(raices).filter(([n]) => n !== repo).map(([, r]) => r));
+    try {
+      for (const comando of manifiesto.verificacion?.[repo] ?? []) {
+        const v = await ejecutarProceso(comando, { cwd: carpeta, shell: true, timeoutMs: 30 * 60_000 });
+        info.verificacion.push({ comando, codigo: v.codigo, salida: v.codigo === 0 ? '' : pocos(`${v.stdout}\n${v.stderr}`) });
+        if (v.codigo !== 0) {
+          fallo = `la verificación falló: ${comando}`;
+          break;
+        }
       }
+    } finally {
+      await soltarEnlaces(enlaces);
     }
+    // El build regenera archivos (docs/contracts/openapi.json): lo que quedó fuera de `permisos` no se commitea.
+    const posterior = await guardia(carpeta, { permisos: manifiesto.permisos, excluir: manifiesto.excluir ?? [] });
+    info.revertidosPostVerificacion = posterior.revertidos;
   }
 
   // 7. Commit en la rama del arnés (nunca push).

@@ -47,3 +47,30 @@ export async function enlazarNodeModules(raiz, carpeta) {
   await symlink(origen, destino, 'junction');
   return true;
 }
+
+/**
+ * Los tests de arquitectura miran el repo hermano en `../<Repo>` y el worktree vive en `../.arneses/`:
+ * se enlaza (junction) el hermano al lado del worktree mientras dura la verificación.
+ * Devuelve los enlaces creados; `soltarEnlaces` los quita sin tocar el destino.
+ */
+export async function enlazarHermanos(carpeta, hermanos) {
+  const { symlink } = await import('node:fs/promises');
+  const creados = [];
+  for (const origen of hermanos.filter((h) => h && existsSync(h))) {
+    const destino = join(dirname(carpeta), basename(origen));
+    if (existsSync(destino)) continue;
+    await symlink(origen, destino, 'junction');
+    creados.push(destino);
+  }
+  return creados;
+}
+
+export async function soltarEnlaces(enlaces) {
+  for (const e of enlaces) {
+    try {
+      if (lstatSync(e).isSymbolicLink()) await rmdir(e);
+    } catch {
+      /* ya no está */
+    }
+  }
+}

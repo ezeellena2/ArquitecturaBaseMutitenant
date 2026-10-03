@@ -224,3 +224,21 @@ test('front: una corrida sobre el repo del front termina con commit y verifica c
   assert.doesNotMatch(await mostrar('docs/rules/README.md'), /viejo/);
   assert.equal((await git(front, ['rev-list', '--count', 'main'])).trim(), '1');
 });
+
+test('la verificación puede regenerar archivos (openapi.json): no se commitean y el hermano se enlaza mientras dura', async () => {
+  const e = await entorno();
+  // El hermano enlazado es el front del par (`raices.front`), no cualquier repo vecino.
+  const verificacion = `node -e "require('fs').writeFileSync('docs/contracts/openapi.json','{}'); process.exit(require('fs').existsSync('../front') ? 0 : 7)"`;
+  const m = JSON.parse(await readFile(join(e.dirArneses, 'realinear-docs', 'arnes.json'), 'utf8'));
+  m.verificacion = { back: [verificacion] };
+  await writeFile(join(e.dirArneses, 'realinear-docs', 'arnes.json'), JSON.stringify(m));
+  await mkdir(join(e.madre, 'front'), { recursive: true });
+  const { codigo, salida } = await correr({ ...e, front: join(e.madre, 'front') }, ['--sin-modelo']);
+  assert.equal(codigo, 0, salida);
+  const info = await leerInforme(e);
+  assert.equal(info.estado, 'commiteado');
+  assert.deepEqual(info.revertidosPostVerificacion.map((r) => r.archivo), ['docs/contracts/openapi.json']);
+  assert.match(await enRama(e, 'docs/contracts/openapi.json'), /"\/api\/roles"/);
+  assert.ok(existsSync(join(e.madre, 'front')), 'soltar el enlace no borra el destino');
+  assert.ok(!existsSync(join(e.madre, '.arneses', 'front')));
+});

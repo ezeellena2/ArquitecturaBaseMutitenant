@@ -21,6 +21,11 @@ const delFramework = new Set([
   'HybridCacheEntryOptions', 'JsonSerializerOptions', 'CultureInfo', 'IStringLocalizer', 'IStringLocalizerFactory',
   'TimeProvider', 'FakeTimeProvider', 'BackgroundService', 'TreatWarningsAsErrors', 'UseExceptionHandler',
   'RequestLocalizationOptions', 'AuthenticationOptions', 'IdentityOptions', 'CookieAuthenticationOptions',
+  // Hooks de React y de las librerías del front (TanStack, React Router, React Hook Form, i18n, oidc).
+  'useState', 'useEffect', 'useMemo', 'useCallback', 'useRef', 'useContext', 'useReducer', 'useLayoutEffect', 'useId', 'useTransition',
+  'useDeferredValue', 'useSyncExternalStore', 'useQuery', 'useMutation', 'useInfiniteQuery', 'useQueryClient', 'useSuspenseQuery',
+  'useIsFetching', 'useIsMutating', 'useNavigate', 'useParams', 'useLocation', 'useSearchParams', 'useBlocker', 'useOutletContext',
+  'useForm', 'useFieldArray', 'useWatch', 'useFormContext', 'useController', 'useFormState', 'useTranslation', 'useAuth',
 ]);
 
 // Un nombre de archivo (`Email.cs`) no es un miembro.
