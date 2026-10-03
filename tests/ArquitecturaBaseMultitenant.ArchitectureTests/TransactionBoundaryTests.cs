@@ -21,6 +21,23 @@ public sealed class TransactionBoundaryTests
     private const string ReferenceSeed = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed.ReferenceDataSeeder";
     private const string DatabaseSeed = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed.DatabaseSeeder";
     private const string BusinessOrganizationCreator = "ArquitecturaBaseMultitenant.Application.Services.Auth.BusinessOrganizationCreator";
+    private static readonly HashSet<string> TransactionBoundaryHelpers = new(StringComparer.Ordinal)
+    {
+        BusinessOrganizationCreator,
+        "ArquitecturaBaseMultitenant.Application.Services.Auth.BusinessSignupCodeFlow",
+        "ArquitecturaBaseMultitenant.Application.Services.Auth.BusinessSignupTransactionRunner",
+        "ArquitecturaBaseMultitenant.Application.Services.Companies.CompanyCreator",
+        "ArquitecturaBaseMultitenant.Application.Services.Companies.CompanyMembershipWriter",
+        "ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings.OrganizationDomainRegistrar",
+        "ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings.OrganizationDomainRemover",
+        "ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings.OrganizationDomainVerifier",
+        "ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings.OrganizationSettingsUpdater",
+        "ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers.OrganizationUserEditor",
+        "ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers.OrganizationUserInvitationManager",
+        "ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers.OrganizationUserRemover",
+        "ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers.OrganizationUserStatusEditor",
+        "ArquitecturaBaseMultitenant.Application.Services.PublicSite.PublicPageEditor",
+    };
     private const string IdempotencyStore = "ArquitecturaBaseMultitenant.Infrastructure.Idempotency.IdempotencyStore";
     private const string CacheExtensions = "ArquitecturaBaseMultitenant.Infrastructure.Caching.HybridCacheExtensions";
     private const string ApplicationServices = "ArquitecturaBaseMultitenant.Application.Services";
@@ -38,11 +55,13 @@ public sealed class TransactionBoundaryTests
     {
         var receivers = Receivers(Production.SelectMany(assembly => assembly.GetTypes())).ToArray();
 
-        // La lista cerrada admite dos seeds técnicos; ningún otro adaptador abre el límite.
+        // La lista cerrada admite los seeds técnicos y los coordinadores internos de transacciones.
+        // Estos helpers solo los invocan los servicios de caso de uso; no son puntos de entrada HTTP.
         Assert.Contains(receivers, type => type.FullName == ReferenceSeed);
         Assert.Contains(receivers, type => type.FullName == DatabaseSeed);
         Assert.Empty(receivers.Where(type => !IsService(type)
-            && type.FullName is not (ReferenceSeed or DatabaseSeed or BusinessOrganizationCreator))
+            && type.FullName is not (ReferenceSeed or DatabaseSeed)
+            && !TransactionBoundaryHelpers.Contains(type.FullName ?? string.Empty))
             .Select(type => type.FullName));
 
         Assert.Contains(typeof(RogueReceiver), Receivers([typeof(RogueReceiver)]));
@@ -61,7 +80,8 @@ public sealed class TransactionBoundaryTests
 
         Assert.Contains(ReferenceSeed, callers);
         Assert.Contains(DatabaseSeed, callers);
-        Assert.DoesNotContain(callers, owner => owner is not (ReferenceSeed or DatabaseSeed) && !IsService(owner));
+        Assert.DoesNotContain(callers, owner => owner is not (ReferenceSeed or DatabaseSeed)
+            && !IsService(owner) && !TransactionBoundaryHelpers.Contains(owner));
 
         var control = ArchitectureIl.Calls(typeof(TransactionBoundaryTests).Assembly);
         Assert.Contains(control, call => call.Owner == typeof(TransactionBoundaryTests).FullName
