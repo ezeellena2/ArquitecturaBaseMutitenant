@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Models.Platform;
 
@@ -25,3 +26,12 @@ public sealed record PlatformTenantStateRequest(uint? Version, string? Reason)
 }
 
 public enum PlatformTenantAction { Reject, Suspend, Reactivate, Close }
+
+public sealed record CreatePlatformTenantRequest(string? Name, string? FirstCompanyName, Email OwnerEmail,
+    string? Culture, string? TimeZoneId)
+{
+    public override string ToString() => nameof(CreatePlatformTenantRequest);
+}
+
+public sealed record CreatedPlatformTenantResponse(Guid Id, string Name, string Slug, Guid FirstCompanyId, Guid InvitationId);
+public sealed record TenantProvisioningSnapshot(Guid? OwnerMemberId, Guid? PrimaryCompanyId);

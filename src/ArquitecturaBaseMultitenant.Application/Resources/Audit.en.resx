@@ -64,4 +64,5 @@
   <data name="Field.Description" xml:space="preserve"><value>Description</value></data>
   <data name="Field.Fields" xml:space="preserve"><value>Changed data</value></data>
   <data name="Fallback" xml:space="preserve"><value>a record</value></data>
+  <data name="Platform.OrganizationCreationReason" xml:space="preserve"><value>Organization created with an owner invitation.</value></data>
 </root>

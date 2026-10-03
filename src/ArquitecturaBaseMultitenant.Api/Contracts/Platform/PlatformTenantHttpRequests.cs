@@ -1,6 +1,8 @@
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Api.Contracts.Auth;
+using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Api.Contracts.Platform;
 
@@ -23,4 +25,15 @@ public sealed record PlatformTenantStateHttpRequest(uint? Version, string? Reaso
 {
     public PlatformTenantStateRequest ToModel() => new(Version, Reason);
     public override string ToString() => nameof(PlatformTenantStateHttpRequest);
+}
+
+public sealed record CreatePlatformTenantHttpRequest(string? Name, string? FirstCompanyName, string? OwnerEmail,
+    string? Culture, string? TimeZoneId)
+{
+    public Result<CreatePlatformTenantRequest> ToModel()
+    {
+        var email = AuthEmailMapping.Parse(OwnerEmail, "ownerEmail");
+        return email.IsFailure ? email.Error : new CreatePlatformTenantRequest(Name, FirstCompanyName, email.Value, Culture, TimeZoneId);
+    }
+    public override string ToString() => nameof(CreatePlatformTenantHttpRequest);
 }

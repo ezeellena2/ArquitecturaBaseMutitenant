@@ -8,6 +8,7 @@ using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Invitations;
 
@@ -18,14 +19,14 @@ internal sealed class InvitationDeliveryIssuer(IEnumerable<IInvitationChannel> c
     internal bool IsAvailable(string channel) => channels.Any(value => value.Key == channel);
 
     internal async Task EnqueueAsync(Invitation invitation, TenantRow organization, string token,
-        Guid? recipientId, CancellationToken ct)
+        Guid? recipientId, CancellationToken ct, TenantSettings? preparedSettings = null)
     {
         var channel = channels.Single(value => value.Key == invitation.Channel);
         var inviter = await users.GetByIdAsync(invitation.InviterUserId, ct)
             ?? throw new InvalidOperationException("The inviter must exist.");
-        var tenantSettings = await settings.FindCurrentAsync(ct);
-        var profile = await cultures.ResolveAsync(null, tenantSettings?.DefaultCulture ?? inviter.Culture, ct);
-        var timeZoneId = tenantSettings?.DefaultTimeZoneId ?? inviter.TimeZoneId;
+        var tenantSettings = preparedSettings is null ? await settings.FindCurrentAsync(ct) : null;
+        var profile = await cultures.ResolveAsync(null, preparedSettings?.DefaultCulture ?? tenantSettings?.DefaultCulture ?? inviter.Culture, ct);
+        var timeZoneId = preparedSettings?.DefaultTimeZoneId ?? tenantSettings?.DefaultTimeZoneId ?? inviter.TimeZoneId;
         var publicOrigin = origin.Value ?? throw new InvalidOperationException("The public origin is required for invitation links.");
         var url = new Uri(publicOrigin, "/invitacion").AbsoluteUri + "#" + token;
         var inviterName = inviter.Status == UserStatus.Deleted

@@ -10,4 +10,6 @@ public interface ITenantAdministrationService
     Task<Result<PlatformTenantFilterCounts>> CountAsync(ListPlatformTenantsRequest request, CancellationToken ct);
     Task<Result<PlatformTenantResponse>> FindAsync(Guid tenantId, CancellationToken ct);
     Task<Result> ChangeStateAsync(Guid tenantId, PlatformTenantAction action, PlatformTenantStateRequest request, CancellationToken ct);
+    Task<Result<CreatedPlatformTenantResponse>> CreateAsync(Guid operationId, CreatePlatformTenantRequest request, CancellationToken ct);
+    Task<Result> ProvisionAsync(Guid tenantId, bool retry, PlatformTenantStateRequest request, CancellationToken ct);
 }

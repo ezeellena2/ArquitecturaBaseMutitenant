@@ -126,11 +126,11 @@ Archivos: IPlatformReader/PlatformReader, Tenant (IVersioned si edición), model
 
 Archivos: TenantAdministrationService/helpers, Auth/TenantProvisioner/TenantSpaceProvisioner/TenantProvisioningReplayVerifier, Invitations/InvitationIssuer, contratos y tests de provisioning/invitación.
 
-Avance del provisioner: entrada explícita `StageBusinessOwnerAsync` para Member Invited/Active de Business, conserva `StageAsync` de E3/E6. Rojo por método ausente → PostgreSQL 2/2 (replay sin duplicar roles/asignaciones/settings, preferencias incompatibles); unitarias 3/3; regresiones alta E6 2/2 e invitaciones 10/10. No crea identidades ni Personal. Build Api 0 advertencias. Rutas de alta/aprobación/reintento siguen pendientes.
+Provisioner `d27d7d3`: entrada explícita `StageBusinessOwnerAsync` para Member Invited/Active de Business, conserva `StageAsync` de E3/E6. Rojo por método ausente → PostgreSQL 2/2; unitarias 3/3; regresiones alta E6 2/2 e invitaciones 10/10. Acceso privado auditado `b375f04`.
 
-- [ ] Rojo: aprobar pendiente prepara roles/settings una sola vez; retry idempotente no duplica; crear con invitación a persona sin cuenta no crea identidad/Personal y asigna el rol Dueño al aceptar; inválidos/slug tomado conservan estado.
-- [ ] Extender provisioner con entrada explícita para dueño invitado, conservando restricciones de StageAsync de E3/E6. Autorización/evento confirmado antes de Enter; entrar fuera de UoW y después provisionar/encolar en un único writer. Aprobar crea lo pendiente o valida replay, sin anidar transacciones.
-- [ ] Probar recuperación después de falla y concurrencia; regresiones E6. Commit `feat(plataforma): provisionar organizaciones e invitar dueños`.
+- [x] Rojo HTTP: 4/4 rutas ausentes; verde final 8/8. Crear no agrega identidad/Personal; aceptar por HTTP concede Dueño; replay 201 no repite invitación; aprobación/retry conservan roles/settings y 409 con versión vieja. Slug automático: cinco pruebas (acentos, tomado, reservado, nombre no ASCII y corto).
+- [x] Reutilizar provisioner/InvitationIssuer; permiso/evento confirmado antes de Enter, único writer después. El emisor relee Tenant Added por el repositorio transaccional y recibe preferencias preparadas para el correo, sin guardar temprano ni crear Personal.
+- [x] Rojo→verde del alta incompleta; retry recupera el miembro de la identidad registrante activa, roles/settings faltantes y no inventa una primera empresa sin datos. Sin responsable recuperable da 409 y conserva Provisioning. Dos retries simultáneos: uno 204 y otro 409, un solo evento/roles/settings. Contadores diferidos al commit evitan conflicto propio de xmin. Acciones que encolan avisos son idempotentes. Regresiones aceptación 21/21, invitaciones 10/10, estado/listado 5/5; recursos 6/6, inventarios existentes 32/32. Build Api 0 advertencias, SQL revisado y sin cambios EF pendientes. Commit `feat(plataforma): provisionar organizaciones e invitar dueños`.
 
 ### T08 · Módulos y FeatureGate
 
@@ -165,11 +165,12 @@ Archivos: IPlatformReader/PlatformReader (identidad global explícita), Account 
 
 - [ ] Rojo: búsqueda nombres/métodos enmascarados según contrato; paginado y filtros Active/Suspended/PendingDeletion/Deleted/NeedsRecovery; estado derivado solo Active sin método disponible, membresía terminada invalida correo administrado, resto de estados tiene prioridad.
 - [ ] Proyectar ficha con métodos/membresías/operador sin leer Members fuera de RLS; usar proyección global autorizada explícitamente para consulta de plataforma y adaptar whitelist existente. Nunca loguear valores de búsqueda ni direcciones.
+- [ ] Completar el contacto del Dueño de organización creada por Plataforma cuando la invitación aún no tiene identidad: el tablero muestra el correo desde el alta. Proyección administrativa explícita y limpieza al eliminar la identidad, sin leer Invitaciones fuera de RLS ni conservar un correo personal huérfano.
 - [ ] 401/403, filtros/conteos y contrato. Commit `feat(plataforma): consultar cuentas globales`.
 
 ### T12 · Suspender, reactivar y cerrar sesiones de cuenta
 
-Archivos: PlatformAccountService/writer, IUserRepository/UserRepository/ApplicationUser, ISessionRevoker, cache/events/notices; tests PlatformAccountState y integración de tokens.
+Archivos: PlatformAccountService/writer, IUserRepository/UserRepository/ApplicationUser, ITokenRevoker/ISignInService, cache/events/notices; tests PlatformAccountState y integración de tokens.
 
 - [ ] Rojo: suspensión revoca todos los accesos/sesiones; reactivación con baja programada deja PendingDeletion; revoke-sessions mantiene estado; Support no muta; último Owner/self protections según rol y reglas de acceso.
 - [ ] Motivo y version en cambios, lock por cuenta; SecurityEvent con actor operador y avisos existentes en mismo commit; caché tras guardar.
@@ -289,6 +290,9 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 5. El refinamiento visual pendiente se revisa como grupo concreto; aprobaciones desktop/menu/modal previas se conservan. Inicios de Organización y WhatsApp no se rediseñan en E5.
 6. Configuración exige motivo y versión; su evento se guarda en la misma transacción y la caché se invalida después. La gracia de baja de 30 días no es editable.
 7. Conteos globales de organizaciones se mantienen con deltas atómicos desde escrituras privadas bajo RLS. Plataforma lee solo metadatos y contacto global explícito; no entra a cada organización para armar un listado. La fecha histórica sin evidencia queda null.
+8. Crear copia los cinco campos del tablero (nombre, primera empresa, correo del Dueño, cultura y zona). No agrega un campo de slug ni de motivo: genera la dirección desde el nombre y, ante reserva/colisión/nombre inválido, usa `org-{operationId}`; la descripción fija de la acción sale de resources. Los otros cambios administrativos exigen motivo escrito. Muestra móvil corregida en front `d4d0627`.
+9. El retry incompleto solo reconstruye un miembro cuando existe registrante autoservicio activo; nunca convierte al operador creador en Dueño ni adivina el nombre de una empresa perdida. Sin responsable verificable conserva Provisioning y devuelve conflicto.
+10. Los deltas de conteos son constraint triggers `DEFERRABLE INITIALLY DEFERRED`, dentro de la misma transacción: se ejecutan después del SaveChanges para no adelantar xmin antes del UPDATE de estado. Se conserva el rechazo de versiones viejas. Referencia: [CREATE TRIGGER, PostgreSQL 18](https://www.postgresql.org/docs/current/sql-createtrigger.html).
 
 ## Registro de resultados
 
@@ -301,5 +305,6 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 | T04 | Propuesta conjunta verificada, elección pendiente; canvas intacto | seguimiento de esta tarea | `e670892` |
 | T05 | Dominio 12/12; servicio 4/4; HTTP 3/3; recursos 6/6; accesos/contratos 15/15; migración/build verificados | `6a49970` | — |
 | T06 | Dominio nuevo 3/3 y regresiones 7/7; HTTP/RLS/tokens 5/5; recursos 6/6; inventarios 28/28; build/migración verificados | `f785e5b` | — |
+| T07 | Scope 3/3 + PG 2/2; core 3/3 + PG 2/2; HTTP 8/8; slug 5/5; regresiones 36/36; recursos 6/6; inventarios 32/32; build/SQL verificados | `b375f04`, `d27d7d3`, `feat(plataforma): provisionar organizaciones e invitar dueños` | `d4d0627` (muestra) |
 
 No declarar cierre a partir de esta tabla sin completar T25.

@@ -10,14 +10,14 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Invitations;
 
 /// <summary>Serializa destinos compartidos y comprueba organización y dueño sin crear identidades.</summary>
 internal sealed class InvitationIssuingGuard(IUserLookup lookup, IExternalLoginLock loginLock,
-    IInvitationRepository invitations, ITenantReader tenants)
+    IInvitationRepository invitations, ITenantRepository tenants)
 {
     internal async Task<Result<(TenantRow Organization, Guid? UserId)>> CheckAsync(
         Guid tenantId, IssueInvitationRequest request, CancellationToken ct)
     {
         await loginLock.LockEmailAsync(request.Destination, ct);
         await invitations.LockDestinationAsync(request.Destination, ct);
-        var tenant = await tenants.FindByIdAsync(tenantId, ct);
+        var tenant = await tenants.GetByIdAsync(tenantId, ct);
         if (tenant is null || tenant.Kind != TenantKind.Business) return InvitationErrors.Invalid;
         if (tenant.Status != TenantStatus.Active) return tenant.Status switch
         {
@@ -28,6 +28,6 @@ internal sealed class InvitationIssuingGuard(IUserLookup lookup, IExternalLoginL
         };
         var owners = await lookup.FindVerifiedUsersByEmailAsync(request.Destination, ct);
         if (owners.Count > 1) return InvitationErrors.WrongAccount;
-        return (tenant, owners.Count == 0 ? null : owners[0]);
+        return (new TenantRow(tenant.Id, tenant.Kind, tenant.Status, tenant.Name, tenant.Slug), owners.Count == 0 ? null : owners[0]);
     }
 }

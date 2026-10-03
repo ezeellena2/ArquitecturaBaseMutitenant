@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Application.Resources;
+using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using FluentValidation;
 
 namespace ArquitecturaBaseMultitenant.Application.Validation.Platform;
@@ -20,5 +21,17 @@ internal sealed class PlatformTenantStateRequestValidator : AbstractValidator<Pl
     {
         RuleFor(r => r.Version).NotNull().WithMessage(_ => ValidationTexts.Required);
         RuleFor(r => r.Reason).Required().Description();
+    }
+}
+
+internal sealed class CreatePlatformTenantRequestValidator : AbstractValidator<CreatePlatformTenantRequest>
+{
+    public CreatePlatformTenantRequestValidator(ICultureCatalog cultures, ITimeZoneCatalog timeZones)
+    {
+        RuleFor(r => r.Name).OrganizationName();
+        RuleFor(r => r.FirstCompanyName).OrganizationName();
+        RuleFor(r => r.OwnerEmail).NotNull().WithMessage(_ => ValidationTexts.Required);
+        RuleFor(r => r.Culture).Required().ValidCulture(cultures);
+        RuleFor(r => r.TimeZoneId).Required().ValidTimeZone(timeZones);
     }
 }

@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -29,7 +28,7 @@ public sealed class PlatformTenantAdministrationTests(ApiFactory factory)
         }
         foreach (var action in new[] { "reject", "suspend", "reactivate", "close" })
         {
-            using var response = await client.PostAsJsonAsync($"/api/platform/tenants/{Guid.NewGuid():D}/{action}", new { reason = "No autorizado", version = 1u }, Ct);
+            using var response = await PlatformJourney.PostAsync(client, $"/api/platform/tenants/{Guid.NewGuid():D}/{action}", new { reason = "No autorizado", version = 1u }, Ct);
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
     }
@@ -86,9 +85,9 @@ public sealed class PlatformTenantAdministrationTests(ApiFactory factory)
         using var businessBefore = await consumerClient.GetAsync("/api/me", Ct);
         Assert.Equal(HttpStatusCode.OK, businessBefore.StatusCode);
         var original = await VersionAsync(ownerClient, id);
-        using var invalid = await ownerClient.PostAsJsonAsync($"/api/platform/tenants/{id:D}/suspend", new { version = original, reason = " " }, Ct);
+        using var invalid = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{id:D}/suspend", new { version = original, reason = " " }, Ct);
         Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
-        using var suspended = await ownerClient.PostAsJsonAsync($"/api/platform/tenants/{id:D}/suspend", new { version = original, reason = "Revisión de actividad" }, Ct);
+        using var suspended = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{id:D}/suspend", new { version = original, reason = "Revisión de actividad" }, Ct);
         Assert.Equal(HttpStatusCode.NoContent, suspended.StatusCode);
         Assert.Equal(TenantStatus.Suspended, (await StoredTenantAsync(factory, id)).Status);
         using var businessAfter = await consumerClient.GetAsync("/api/me", Ct);
@@ -96,20 +95,20 @@ public sealed class PlatformTenantAdministrationTests(ApiFactory factory)
         consumerClient.DefaultRequestHeaders.Authorization = personalAuthorization;
         using var me = await consumerClient.GetAsync("/api/me", Ct);
         Assert.Equal(HttpStatusCode.OK, me.StatusCode);
-        using var stale = await ownerClient.PostAsJsonAsync($"/api/platform/tenants/{id:D}/reactivate", new { version = original, reason = "Versión anterior" }, Ct);
+        using var stale = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{id:D}/reactivate", new { version = original, reason = "Versión anterior" }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
         Assert.Equal(TenantStatus.Suspended, (await StoredTenantAsync(factory, id)).Status);
-        using var reactivated = await ownerClient.PostAsJsonAsync($"/api/platform/tenants/{id:D}/reactivate", new { version = await VersionAsync(ownerClient,id), reason = "Revisión terminada" }, Ct);
+        using var reactivated = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{id:D}/reactivate", new { version = await VersionAsync(ownerClient,id), reason = "Revisión terminada" }, Ct);
         Assert.Equal(HttpStatusCode.NoContent, reactivated.StatusCode);
-        using var closeActive = await ownerClient.PostAsJsonAsync($"/api/platform/tenants/{id:D}/close", new { version = await VersionAsync(ownerClient,id), reason = "Transición inválida" }, Ct);
+        using var closeActive = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{id:D}/close", new { version = await VersionAsync(ownerClient,id), reason = "Transición inválida" }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, closeActive.StatusCode);
-        using var suspendAgain = await ownerClient.PostAsJsonAsync($"/api/platform/tenants/{id:D}/suspend", new { version = await VersionAsync(ownerClient,id), reason = "Preparar cierre" }, Ct);
+        using var suspendAgain = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{id:D}/suspend", new { version = await VersionAsync(ownerClient,id), reason = "Preparar cierre" }, Ct);
         Assert.Equal(HttpStatusCode.NoContent, suspendAgain.StatusCode);
-        using var closed = await ownerClient.PostAsJsonAsync($"/api/platform/tenants/{id:D}/close", new { version = await VersionAsync(ownerClient,id), reason = "Cierre solicitado" }, Ct);
+        using var closed = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{id:D}/close", new { version = await VersionAsync(ownerClient,id), reason = "Cierre solicitado" }, Ct);
         Assert.Equal(HttpStatusCode.NoContent, closed.StatusCode);
         Assert.Equal(TenantStatus.Closed, (await StoredTenantAsync(factory,id)).Status);
         var pending = await SeedBusinessAsync(factory, "Rechazo " + Guid.NewGuid().ToString("N")[..8], true, member.UserId);
-        using var rejected = await ownerClient.PostAsJsonAsync($"/api/platform/tenants/{pending:D}/reject", new { version = await VersionAsync(ownerClient,pending), reason = "Solicitud no válida" }, Ct);
+        using var rejected = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{pending:D}/reject", new { version = await VersionAsync(ownerClient,pending), reason = "Solicitud no válida" }, Ct);
         Assert.Equal(HttpStatusCode.NoContent, rejected.StatusCode);
         Assert.Equal(TenantStatus.Closed, (await StoredTenantAsync(factory,pending)).Status);
         await using var scope = factory.Services.CreateAsyncScope();
@@ -134,7 +133,7 @@ public sealed class PlatformTenantAdministrationTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.OK, listed.StatusCode);
         foreach (var action in new[] { "reject", "suspend", "reactivate", "close" })
         {
-            using var response = await client.PostAsJsonAsync($"/api/platform/tenants/{id:D}/{action}", new { version = 1u, reason = "Sin permiso" }, Ct);
+            using var response = await PlatformJourney.PostAsync(client, $"/api/platform/tenants/{id:D}/{action}", new { version = 1u, reason = "Sin permiso" }, Ct);
             Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         }
         using var missing = await client.GetAsync($"/api/platform/tenants/{Guid.NewGuid():D}", Ct);

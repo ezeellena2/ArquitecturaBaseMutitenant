@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Invitations;
@@ -22,7 +23,7 @@ internal sealed class InvitationIssuer(IInvitationRepository invitations, IMembe
     }
 
     public async Task<Result<IssuedInvitation>> IssueWithMemberAsync(IssueInvitationRequest request,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, TenantSettings? preparedSettings = null)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(request.Destination);
@@ -57,7 +58,7 @@ internal sealed class InvitationIssuer(IInvitationRepository invitations, IMembe
             tokens.Hash(secret), timeProvider.GetUtcNow().UtcDateTime, TimeSpan.FromDays(options.Value.LifetimeDays));
         invitations.Add(invitation);
         var token = tokens.Protect(new InvitationTokenData(tenantId, invitation.Id, secret));
-        await delivery.EnqueueAsync(invitation, organization, token, userId, cancellationToken);
+        await delivery.EnqueueAsync(invitation, organization, token, userId, cancellationToken, preparedSettings);
         return new IssuedInvitation(invitation.Id, member);
     }
 }

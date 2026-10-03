@@ -27,7 +27,9 @@ El registro global conserva origen, fecha y cuenta que registró, versión xmin 
 
 Rechazar (PendingApproval→Closed), suspender (Active→Suspended), reactivar (Suspended→Active) y cerrar (PendingApproval/Suspended→Closed) requieren `platform.tenants.manage`, motivo y versión. Los cambios guardan SecurityEvent con actor y destino y encolan avisos a registrante/Dueños en la misma UoW. Las bajas de acceso revocan únicamente los tokens de esa organización; después del commit se invalida su estado en caché. La identidad y los accesos Personal conservan sus sesiones.
 
-La aprobación, creación por invitación y reintento siguen en T07; E5 permanece abierta.
+`POST /api/platform/tenants` crea una organización activa con primera empresa e invitación al Dueño; recibe nombre, primera empresa, correo, cultura y zona. Genera el slug desde el nombre; ante colisión/reserva/nombre inválido usa una dirección `org-{operationId}`. El motivo de creación es la descripción traducida de esa acción. No crea identidad ni Personal: el Member queda Invited y al aceptar recibe TenantAdmin y CompanyAdmin sobre la primera empresa.
+
+`POST /{id}/approve` y `/retry-provisioning` reutilizan TenantProvisioner. Completan roles/settings faltantes o comprueban lo existente, con motivo y versión. Un retry de alta incompleta puede recuperar al miembro del registrante autoservicio activo; no adivina una empresa ni asigna el rol al operador. Si no puede identificar un responsable, devuelve 409 sin abandonar Provisioning. Los cambios que encolan avisos exigen Idempotency-Key; replay conserva respuesta/eventos/envíos. E5 permanece abierta.
 
 `TenantProvisioner.StageBusinessOwnerAsync` completa los roles de sistema, la configuración y las asignaciones del Dueño invitado o activo, dentro del alcance Business y la UoW del llamador. Reutiliza lo existente y rechaza preferencias incompatibles; no crea identidades ni membresías Personal. La entrada `StageAsync` de E3/E6 conserva sus restricciones. El repositorio transaccional puede releer una organización Added antes del único guardado final.
 
@@ -45,3 +47,4 @@ El acceso privado pasa por `PlatformScopeAccessService`: valida acceso Platform,
 - `PlatformTenantAdministrationTests`: paginado/filtros/búsqueda/contacto, 401/403/404, transiciones y 409, revocación Business con Personal operativo, y conteos actualizados sin lectura de tablas privadas.
 - `PlatformScopeTests` de servicio e integración: sin permiso/motivo no registra ni entra; el evento está confirmado antes de consultar filas privadas, Support no entra y una excepción restaura el alcance.
 - `PlatformProvisioningTests`: Dueño invitado sin identidad, replay sin duplicados y preferencias incompatibles sin reemplazar lo existente.
+- `PlatformTenantProvisioningHttpTests`: 401/403, creación/aceptación/replay, aprobación/retry, reparación y rollback, versiones viejas, idempotencia y concurrencia sin duplicados.
