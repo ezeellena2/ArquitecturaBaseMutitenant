@@ -4,7 +4,7 @@
 
 **Objetivo:** que la plataforma y cada organización atiendan por WhatsApp con el mismo módulo: números conectados con el alta de Meta, bot con menú, equipos y bandejas de Clientes e Internos, contactos con consentimiento, plantillas, difusiones y la sección «Mensajes» de la persona.
 
-**Decisión de producto:** [ADR 0038](../decisions/0038-whatsapp-de-atencion.md). **Fuente visual:** página «Organización · WhatsApp» del lienzo v65 (`../ArquitecturaBaseMutitenantFront/docs/design/lienzo`, tableros `WA-*`, más el área WhatsApp de `Rol`, «Cargar teléfonos» en `Usuarios`, «Mensajes» en el perfil personal, el correo «Chats esperando» de `Mensajes` y el menú de Plataforma). Cuando el lienzo y este texto no coinciden, manda el lienzo.
+**Decisión de producto:** [ADR 0038](../decisions/0038-whatsapp-de-atencion.md). **Fuente visual:** página «Organización · WhatsApp» del lienzo v69 (`../ArquitecturaBaseMutitenantFront/docs/design/lienzo`, tableros `WA-*` y, para el teléfono, `M-WA-*`, más el área WhatsApp de `Rol`, «Cargar teléfonos» en `Usuarios`, «Mensajes» en el perfil personal, el correo «Chats esperando» de `Mensajes` y el menú de Plataforma). Cuando el lienzo y este texto no coinciden, manda el lienzo.
 
 **Arquitectura:** respetar `docs/architecture/backend.md` (§15, módulo quitable), `docs/architecture/multitenancy.md`, ADR 0007, 0014, 0022, 0033 y 0038, y las fichas de `docs/rules/`, en especial [modulos](../rules/modulos.md), [modulos-habilitados](../rules/modulos-habilitados.md), [datos-personales](../rules/datos-personales.md), [idempotencia](../rules/idempotencia.md), [paginado-y-busqueda](../rules/paginado-y-busqueda.md), [telefonos](../rules/telefonos.md), [numeros-y-moneda](../rules/numeros-y-moneda.md) y [plantillas](../operations/whatsapp-plantillas.md). Todo vive en `Modules/WhatsApp`, y el núcleo no lo referencia.
 
@@ -14,7 +14,6 @@
 
 ## Pendiente de diseño (no se programa hasta que esté dibujado y aprobado)
 
-- Los teléfonos de estas pantallas: `M-WA-*` siguen «por refinar».
 - Las ventanas del alta embebida de Meta. Se dibujan cuando el dueño lo pida.
 - Los inicios (Inicio-Org e Inicio-Miembro) siguen «para repensar», con la idea de un menú propio para las acciones pendientes.
 
@@ -23,7 +22,7 @@
 ### 0. Línea de base
 
 - [ ] Confirmar la Etapa 8 cerrada, `main` limpio en los dos repos y Aspire apagado.
-- [ ] Leer ADR 0038, el tablero de decisiones y los tableros `WA-*` de v65; revisar este plan con un revisor de documentos antes del código.
+- [ ] Leer ADR 0038, el tablero de decisiones y los tableros `WA-*` y `M-WA-*` de v69; revisar este plan con un revisor de documentos antes del código.
 
 ### 1. Modelo y módulo por organización
 
@@ -44,14 +43,14 @@
 
 - [ ] Reconocer quién escribe: un número verificado en la cuenta de un miembro activo de la organización dueña del número va a Internos; cualquier otro, a Clientes.
 - [ ] Bot por número: bienvenida, fuera de horario y menú como lista interactiva de WhatsApp (hasta 10 opciones), donde cada opción pasa a un equipo o contesta un texto. Los empleados no ven el menú y van al equipo de Internos configurado.
-- [ ] Tomar (al responder también se toma, con control de carrera: si otro lo tomó antes, error y aviso), pasar a equipo o persona, y notas internas.
+- [ ] Tomar (al responder también se toma, con control de carrera: si otro lo tomó antes, error y aviso), pasar a equipo o persona, y notas internas (un botón al lado de donde se escribe las prende).
 - [ ] Ventana de 24 h: fuera de ella solo se manda una plantilla.
 - [ ] Aviso por correo cuando un chat queda sin tomar más del tiempo del equipo: por outbox (ADR 0014), solo con el resumen.
 - [ ] Registro de acciones internas por módulo: cada acción declara su permiso. La plantilla no trae acciones de negocio.
 
 ### 4. Contactos, consentimiento y personas
 
-- [ ] Etiquetas y consentimiento de promociones: el bot pregunta y «Baja» lo corta solo. Importar contactos (CSV o Excel) con la casilla obligatoria de consentimiento y su origen guardado.
+- [ ] Etiquetas y consentimiento de promociones: el bot pregunta y «Baja» lo corta solo. Importar contactos (CSV o Excel) con «Descargar ejemplo» (Nombre, Teléfono, Etiqueta, Acepta promociones); el consentimiento va por contacto, en esa columna, con su origen guardado. Sin «Sí», el contacto queda «Sin respuesta» y no entra en difusiones.
 - [ ] Vincular con la cuenta: el bot ofrece el enlace; con la aceptación de la persona, la organización ve su nombre verificado. La persona puede desvincular. Sumarlo a «Exportar mis datos» y a la baja de la cuenta.
 - [ ] «Cargar teléfonos de empleados»: revisar cada número (miembro, con cuenta, sin cuenta, inválido) y confirmar los vínculos y las invitaciones, que salen por WhatsApp. `[Idempotent]`.
 
@@ -61,10 +60,11 @@
 - [ ] Elegir plantilla en un chat: datos completados, vista previa y costo estimado (`Money`).
 - [ ] Difusiones: destinatarios (los que aceptaron o una etiqueta), programar, costo estimado, envío por outbox respetando los límites de Meta, resultados por contacto (entregado, leído, respondió, baja, no llegó con motivo) y «Duplicar».
 
-### 6. Front, copiando el lienzo v65
+### 6. Front, copiando el lienzo v69
 
 - [ ] Chats (Clientes e Internos, filtros, tomar, pasar, notas, 24 h, elegir plantilla), Contactos (importar), Ficha del contacto, Difusiones, Nueva difusión y Resultados.
 - [ ] Administración › WhatsApp: Números (falta medio de pago), Bot con «Configuración» y «Recorrido», Equipos y Plantillas.
+- [ ] Teléfono como app (`M-WA-*`): barra de abajo con Inicio, Chats, Contactos, Difusiones y «Más»; dentro de un chat y en las pantallas con acción fija abajo, sin barra. Diálogos como hojas desde abajo y «+» flotante para crear.
 - [ ] Área WhatsApp en Rol, «Cargar teléfonos» en Usuarios, «Mensajes» en el perfil personal, el menú de Plataforma («WhatsApp» y la configuración aparte) y el correo «Chats esperando».
 
 ### 7. Puerta
