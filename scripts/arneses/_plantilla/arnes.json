@@ -1,0 +1,22 @@
+{
+  "nombre": "mi-arnes",
+  "descripcion": "Una línea: qué detecta y qué arregla.",
+  "repos": ["back"],
+  "detectores": ["ejemplo"],
+  "excluir": ["docs/plans/**", "docs/reviews/**", "docs/history/**", "docs/backlog.md", "docs/design/**", "docs/contracts/**", ".claude/**", ".agents/**"],
+  "permisos": {
+    "puedeCrear": [],
+    "puedeBorrar": [],
+    "nuncaToca": ["**/*.cs", "**/*.ts", "**/*.tsx", "**/*.resx", "**/Migrations/**", "tests/**", "docs/contracts/**"]
+  },
+  "modelo": {
+    "motor": "claude",
+    "maxHallazgos": 40,
+    "claude": { "nombre": "sonnet", "esfuerzo": "low", "presupuestoUsd": 1.5 },
+    "codex": { "nombre": "gpt-6.1-sol", "esfuerzo": "low", "minutosMaximos": 10 }
+  },
+  "verificacion": {
+    "back": ["node --test scripts/arneses"]
+  },
+  "commit": "docs: describí lo que hace el arnés"
+}
