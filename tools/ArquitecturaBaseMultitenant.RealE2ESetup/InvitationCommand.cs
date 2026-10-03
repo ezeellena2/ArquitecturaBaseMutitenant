@@ -42,6 +42,18 @@ internal static class InvitationCommand
             if (issued.IsFailure) throw new InvalidOperationException("The isolated invitation could not be issued.");
             result = new { invitationId = issued.Value, tenantId };
         }
+        else if (kind == "inspect-accesses")
+        {
+            var userId = await provider.GetRequiredService<IUserLookup>()
+                .FindVerifiedUserIdAsync(LoginMethodType.Email, email.Value.Value, ct);
+            if (userId is null) throw new InvalidOperationException("The isolated signup did not create a verified identity.");
+            var accesses = await provider.GetRequiredService<IUserTenantAccessReader>().ListForUserAsync(userId.Value, ct);
+            result = new
+            {
+                personalSpaces = accesses.Count(row => row.Kind == TenantKind.Personal),
+                activeBusinessAccesses = accesses.Count(row => row.Kind == TenantKind.Business && row.MemberStatus == MemberStatus.Active),
+            };
+        }
         else if (kind == "inspect")
         {
             var userId = await provider.GetRequiredService<IUserLookup>()
