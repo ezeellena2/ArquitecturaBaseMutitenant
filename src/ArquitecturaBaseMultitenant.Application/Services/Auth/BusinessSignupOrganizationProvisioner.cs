@@ -20,7 +20,7 @@ internal sealed class BusinessSignupOrganizationProvisioner(
 
     internal async Task<Result<BusinessSignupResponse>> ReplayAsync(Tenant existing, Guid userId,
         BusinessSignupRequest request, TenantSlug slug, Guid firstCompanyId, TaxId? requestedTaxId,
-        CancellationToken cancellationToken)
+        Email? notificationEmail, CancellationToken cancellationToken)
     {
         if (existing.Kind != TenantKind.Business || existing.Name != request.OrganizationName!.Trim()
             || existing.Slug != slug.Value)
@@ -38,7 +38,7 @@ internal sealed class BusinessSignupOrganizationProvisioner(
             cancellationToken, firstCompanyId);
         if (provisioned.IsFailure) return provisioned.Error;
         await users.RememberBusinessTenantAsync(userId, existing.Id, cancellationToken);
-        return Response(existing, company.Id, requiresApproval);
+        return Response(existing, company.Id, requiresApproval, notificationEmail);
     }
 
     internal async Task<Result> CreateAsync(Tenant tenant, Company company, TenantSettings settings,
@@ -52,6 +52,8 @@ internal sealed class BusinessSignupOrganizationProvisioner(
         return Result.Success();
     }
 
-    private static BusinessSignupResponse Response(Tenant tenant, Guid firstCompanyId, bool requiresApproval) =>
-        new(tenant.Id, tenant.Name, tenant.Slug!, requiresApproval, firstCompanyId, tenant.Status);
+    private static BusinessSignupResponse Response(Tenant tenant, Guid firstCompanyId, bool requiresApproval,
+        Email? notificationEmail) =>
+        new(tenant.Id, tenant.Name, tenant.Slug!, requiresApproval, firstCompanyId, tenant.Status,
+            notificationEmail?.Value);
 }

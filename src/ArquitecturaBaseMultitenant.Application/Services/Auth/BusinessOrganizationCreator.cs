@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
@@ -39,7 +40,7 @@ internal sealed class BusinessOrganizationCreator(
                     var existing = await provisioner.FindTenantAsync(operationId, ct);
                     if (existing is not null)
                         return await provisioner.ReplayAsync(existing, userId, request, parsedSlug.Value,
-                            firstCompanyId, taxId.Value, ct);
+                            firstCompanyId, taxId.Value, account.PrimaryEmail, ct);
 
                     var eligibility = await policy.EvaluateAsync(userId, parsedSlug.Value, ct);
                     if (eligibility.IsFailure) return eligibility.Error;
@@ -65,12 +66,14 @@ internal sealed class BusinessOrganizationCreator(
 
                     var created = await provisioner.CreateAsync(tenant, firstCompany.Value, draft.Settings, userId, ct);
                     if (created.IsFailure) return created.Error;
-                    return Response(tenant, firstCompany.Value.Id, requiresApproval);
+                    return Response(tenant, firstCompany.Value.Id, requiresApproval, account.PrimaryEmail);
                 }, cancellationToken);
             });
 
-    private static BusinessSignupResponse Response(Tenant tenant, Guid firstCompanyId, bool requiresApproval) =>
-        new(tenant.Id, tenant.Name, tenant.Slug!, requiresApproval, firstCompanyId, tenant.Status);
+    private static BusinessSignupResponse Response(Tenant tenant, Guid firstCompanyId, bool requiresApproval,
+        Email? notificationEmail) =>
+        new(tenant.Id, tenant.Name, tenant.Slug!, requiresApproval, firstCompanyId, tenant.Status,
+            notificationEmail?.Value);
 
     private static Guid StableCompanyId(Guid tenantId)
     {

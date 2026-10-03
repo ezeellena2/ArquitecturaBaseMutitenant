@@ -2,6 +2,6 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 
 namespace ArquitecturaBaseMultitenant.Application.Models.Auth;
 
-/// <summary>Confirma el alta y permite continuar por su estado sin inferirlo del contenido de la página.</summary>
+/// <summary>Confirma el alta, su estado y el correo principal de la cuenta, al que se avisa la aprobación.</summary>
 public sealed record BusinessSignupResponse(Guid TenantId, string OrganizationName, string Slug,
-    bool RequiresApproval, Guid FirstCompanyId, TenantStatus Status);
+    bool RequiresApproval, Guid FirstCompanyId, TenantStatus Status, string? NotificationEmail);

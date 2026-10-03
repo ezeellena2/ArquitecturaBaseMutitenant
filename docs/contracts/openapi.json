@@ -7898,9 +7898,15 @@
           },
           "status": {
             "$ref": "#/components/schemas/TenantStatus"
+          },
+          "notificationEmail": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
-        "description": "Confirma el alta y permite continuar por su estado sin inferirlo del contenido de la página."
+        "description": "Confirma el alta, su estado y el correo principal de la cuenta, al que se avisa la aprobación."
       },
       "BusinessSignupTaxIdHttpRequest": {
         "type": "object",

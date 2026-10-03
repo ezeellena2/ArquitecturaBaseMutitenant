@@ -60,6 +60,8 @@ public sealed class BusinessSignupTests(ApiFactory factory)
         var tenantId = result!.RootElement.GetProperty("tenantId").GetGuid();
         var slug = result.RootElement.GetProperty("slug").GetString()!;
         Assert.Equal("Active", result.RootElement.GetProperty("status").GetString());
+        // «Espera aprobación» dice a qué correo avisamos, también si se entró con Google o con sesión.
+        Assert.Equal(email, result.RootElement.GetProperty("notificationEmail").GetString());
 
         using var replayContent = JsonContent.Create(new
         {
@@ -80,6 +82,7 @@ public sealed class BusinessSignupTests(ApiFactory factory)
         Assert.Contains(replayed.Headers, header => header.Key == "Idempotent-Replayed");
         using var replayResult = await replayed.Content.ReadFromJsonAsync<JsonDocument>(Ct);
         Assert.Equal(tenantId, replayResult!.RootElement.GetProperty("tenantId").GetGuid());
+        Assert.Equal(email, replayResult.RootElement.GetProperty("notificationEmail").GetString());
 
         await AssertBusinessRowsAsync(email, tenantId, slug);
     }
