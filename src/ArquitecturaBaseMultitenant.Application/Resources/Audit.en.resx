@@ -9,6 +9,25 @@
   <data name="AuditAction.Deleted" xml:space="preserve"><value>Removed</value></data>
   <data name="AuditAction.Restored" xml:space="preserve"><value>Restored</value></data>
   <data name="AuditAction.Custom" xml:space="preserve"><value>Performed an action on</value></data>
+  <data name="AuditSummary.RoleAssignment" xml:space="preserve"><value>Changed the roles of {0}</value></data>
+  <data name="AuditSummary.CompanyMembership" xml:space="preserve"><value>Changed the access for {0}</value></data>
+  <data name="AuditSummary.Member.Created" xml:space="preserve"><value>Invited {0}</value></data>
+  <data name="AuditSummary.Member.Updated" xml:space="preserve"><value>Changed the details for {0}</value></data>
+  <data name="AuditSummary.Member.Deleted" xml:space="preserve"><value>Removed {0}</value></data>
+  <data name="AuditSummary.Member.Restored" xml:space="preserve"><value>Restored {0}</value></data>
+  <data name="AuditSummary.Invitation.Created" xml:space="preserve"><value>Invited {0}</value></data>
+  <data name="AuditSummary.Invitation.Updated" xml:space="preserve"><value>Changed the invitation for {0}</value></data>
+  <data name="AuditSummary.Invitation.Deleted" xml:space="preserve"><value>Removed the invitation for {0}</value></data>
+  <data name="AuditSummary.Invitation.Restored" xml:space="preserve"><value>Restored the invitation for {0}</value></data>
+  <data name="AuditSummary.Company.Created" xml:space="preserve"><value>Created company {0}</value></data>
+  <data name="AuditSummary.Company.Updated" xml:space="preserve"><value>Changed company {0}</value></data>
+  <data name="AuditSummary.Company.Deleted" xml:space="preserve"><value>Removed company {0}</value></data>
+  <data name="AuditSummary.Company.Restored" xml:space="preserve"><value>Restored company {0}</value></data>
+  <data name="AuditSummary.Role.Created" xml:space="preserve"><value>Created role {0}</value></data>
+  <data name="AuditSummary.Role.Updated" xml:space="preserve"><value>Changed role {0}</value></data>
+  <data name="AuditSummary.Role.Deleted" xml:space="preserve"><value>Removed role {0}</value></data>
+  <data name="AuditSummary.Role.Restored" xml:space="preserve"><value>Restored role {0}</value></data>
+  <data name="Location.Organization" xml:space="preserve"><value>Entire organization</value></data>
   <data name="Entity.Member" xml:space="preserve"><value>a user</value></data>
   <data name="Entity.Invitation" xml:space="preserve"><value>an invitation</value></data>
   <data name="Entity.Company" xml:space="preserve"><value>a company</value></data>

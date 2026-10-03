@@ -15,7 +15,8 @@ public sealed record ListOrganizationAuditRequest : CursorRequest
 }
 
 public sealed record OrganizationAuditRow(Guid Id, DateTime OccurredAtUtc, AuditAction Action, string EntityType,
-    Guid EntityId, Guid? ActorId, AuditActorKind ActorKind, string? ActorDisplayName, string Changes);
+    Guid EntityId, Guid? ActorId, AuditActorKind ActorKind, string? ActorDisplayName,
+    string? AffectedDisplayName, string? CompanyName, string Changes);
 
 public sealed record OrganizationAuditChangeResponse(string Field, string? OldValue, string? NewValue);
 
@@ -25,5 +26,6 @@ public sealed record OrganizationAuditActorResponse(Guid? ActorId, string ActorK
     string? DisplayName);
 
 public sealed record OrganizationAuditEntryResponse(Guid Id, DateTime OccurredAtUtc, string Action,
-    string ActionText, string EntityType, string EntityText, string ActorKind, string ActorText,
-    Guid? ActorId, string? ActorDisplayName, IReadOnlyList<OrganizationAuditChangeResponse> Changes);
+    string ActionText, string EntityType, string EntityText, string? AffectedDisplayName, string WhereText,
+    string ActorKind, string ActorText, Guid? ActorId, string? ActorDisplayName,
+    IReadOnlyList<OrganizationAuditChangeResponse> Changes);

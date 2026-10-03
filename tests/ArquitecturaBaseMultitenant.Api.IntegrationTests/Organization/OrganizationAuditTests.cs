@@ -3,10 +3,14 @@ using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
+using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Infrastructure.Identity;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Organization;
@@ -15,6 +19,30 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Organization;
 public sealed class OrganizationAuditTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    [Fact]
+    public async Task Audit_returns_affected_person_and_company_for_role_changes()
+    {
+        using var ownerClient = Client();
+        var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
+        var tenant = await CreateBusinessAsync("Auditoría ubicación", "auditoria-ubicacion", owner.UserId);
+        await AccountJourney.AuthorizeAsync(ownerClient, "business", Ct);
+
+        var target = ApplicationUser.Create("Tomás Acosta", "es-AR", "America/Argentina/Buenos_Aires").Value;
+        var userManager = factory.Services.GetRequiredService<UserManager<ApplicationUser>>();
+        var created = await userManager.CreateAsync(target);
+        Assert.True(created.Succeeded, string.Join("; ", created.Errors.Select(error => error.Description)));
+        await SeedCompanyRoleAssignmentAsync(tenant.Id, target.Id);
+
+        using var response = await ownerClient.GetAsync("/api/organization/audit?period=all&category=roles&limit=50", Ct);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
+        var entry = Assert.Single(json.RootElement.GetProperty("items").EnumerateArray(), item =>
+            item.TryGetProperty("affectedDisplayName", out var name) && name.GetString() == "Tomás Acosta");
+
+        Assert.Equal("Cambió los roles de Tomás Acosta", entry.GetProperty("actionText").GetString());
+        Assert.Equal("Delta S.A.", entry.GetProperty("whereText").GetString());
+    }
 
     [Fact]
     public async Task Audit_is_tenant_scoped_searchable_paginated_and_masks_personal_data()
@@ -114,6 +142,27 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
                 });
             }
 
+            return Task.FromResult(Result.Success());
+        }, CommitPolicy.OnSuccess, Ct);
+    }
+
+    private async Task SeedCompanyRoleAssignmentAsync(Guid tenantId, Guid userId)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenantId);
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+        {
+            var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+            var member = Member.Invite(userId);
+            Assert.True(member.Activate(nowUtc).IsSuccess);
+            var company = Company.Create("Delta S.A.", null, "America/Argentina/Buenos_Aires").Value;
+            var role = Role.Create("Solo lectura", null, RoleScope.AnyCompany, null,
+                [Permissions.Company.Members.Read]).Value;
+            var membership = CompanyMembership.Create(company.Id, member.Id).Value;
+            var assignment = RoleAssignment.Assign(member.Id, role, company.Id).Value;
+            context.AddRange(member, company, role, membership, assignment);
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, Ct);
     }

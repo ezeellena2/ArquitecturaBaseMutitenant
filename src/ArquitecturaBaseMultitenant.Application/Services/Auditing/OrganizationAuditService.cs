@@ -73,7 +73,9 @@ internal sealed class OrganizationAuditService(IOrganizationAuditReader reader,
     {
         var actorDisplayName = row.ActorKind == AuditActorKind.User ? row.ActorDisplayName : null;
         return new OrganizationAuditEntryResponse(row.Id, row.OccurredAtUtc, row.Action.ToString(),
-            AuditTexts.Action(row.Action), row.EntityType, AuditTexts.Entity(row.EntityType),
+            AuditTexts.Summary(row.Action, row.EntityType, row.AffectedDisplayName),
+            row.EntityType, AuditTexts.Entity(row.EntityType), row.AffectedDisplayName,
+            row.CompanyName ?? AuditTexts.WholeOrganization(),
             row.ActorKind.ToString(), AuditTexts.Actor(row.ActorKind), row.ActorId, actorDisplayName,
             ReadChanges(row.Changes));
     }

@@ -7817,6 +7817,7 @@
           "actionText",
           "entityType",
           "entityText",
+          "whereText",
           "actorKind",
           "actorText",
           "changes"
@@ -7841,6 +7842,15 @@
             "type": "string"
           },
           "entityText": {
+            "type": "string"
+          },
+          "affectedDisplayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "whereText": {
             "type": "string"
           },
           "actorKind": {

@@ -1,8 +1,12 @@
+using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
+using ArquitecturaBaseMultitenant.Domain.Authorization;
+using ArquitecturaBaseMultitenant.Domain.Invitations;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -38,10 +42,111 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
             : await context.Users.AsNoTracking().Where(user => actorIds.Contains(user.Id))
                 .Select(user => new { user.Id, user.DisplayName })
                 .ToDictionaryAsync(user => user.Id, user => user.DisplayName, cancellationToken);
+        var displayData = await ResolveDisplayDataAsync(page.Items, cancellationToken);
         var rows = page.Items.Select(entry => new OrganizationAuditRow(entry.Id, entry.OccurredAtUtc,
             entry.Action, entry.EntityType, entry.EntityId, entry.ActorId, entry.ActorKind,
-            entry.ActorId is { } id ? actors.GetValueOrDefault(id) : null, entry.Changes)).ToArray();
+            entry.ActorId is { } id ? actors.GetValueOrDefault(id) : null,
+            displayData[entry.Id].AffectedDisplayName, displayData[entry.Id].CompanyName,
+            entry.Changes)).ToArray();
         return new CursorResult<OrganizationAuditRow>(rows, page.NextCursor, page.HasMore);
+    }
+
+    private async Task<Dictionary<Guid, AuditDisplayData>> ResolveDisplayDataAsync(
+        IReadOnlyCollection<AuditEntry> entries, CancellationToken cancellationToken)
+    {
+        var invitationIds = entries.Where(entry => entry.EntityType == nameof(Invitation))
+            .Select(entry => entry.EntityId).Distinct().ToArray();
+        var invitations = invitationIds.Length == 0
+            ? new Dictionary<Guid, Invitation>()
+            : await context.Invitations.AsNoTracking().Where(invitation => invitationIds.Contains(invitation.Id))
+                .ToDictionaryAsync(invitation => invitation.Id, cancellationToken);
+
+        var memberIds = entries.Select(entry => entry.EntityType switch
+            {
+                nameof(Member) => entry.EntityId,
+                nameof(CompanyMembership) or nameof(RoleAssignment) => ReadGuid(entry.Changes, "MemberId"),
+                nameof(Invitation) => invitations.GetValueOrDefault(entry.EntityId)?.MemberId ??
+                                      ReadGuid(entry.Changes, "MemberId"),
+                _ => null,
+            })
+            .Where(id => id.HasValue).Select(id => id!.Value).Distinct().ToArray();
+        var members = memberIds.Length == 0
+            ? []
+            : await context.Members.AsNoTracking().Where(member => memberIds.Contains(member.Id))
+                .Select(member => new { member.Id, member.UserId }).ToArrayAsync(cancellationToken);
+        var userIds = members.Where(member => member.UserId.HasValue).Select(member => member.UserId!.Value)
+            .Distinct().ToArray();
+        var userNames = userIds.Length == 0
+            ? new Dictionary<Guid, string?>()
+            : await context.Users.AsNoTracking().Where(user => userIds.Contains(user.Id))
+                .Select(user => new { user.Id, user.DisplayName })
+                .ToDictionaryAsync(user => user.Id, user => user.DisplayName, cancellationToken);
+        var memberNames = members.ToDictionary(member => member.Id,
+            member => member.UserId is { } userId ? userNames.GetValueOrDefault(userId) : null);
+
+        var roleIds = entries.Select(entry => entry.EntityType switch
+            {
+                nameof(Role) => entry.EntityId,
+                nameof(RoleAssignment) => ReadGuid(entry.Changes, "RoleId"),
+                _ => null,
+            })
+            .Where(id => id.HasValue).Select(id => id!.Value).Distinct().ToArray();
+        var roles = roleIds.Length == 0
+            ? []
+            : await context.Roles.AsNoTracking().Where(role => roleIds.Contains(role.Id))
+                .Select(role => new { role.Id, role.Name, role.CompanyId }).ToArrayAsync(cancellationToken);
+        var roleDetails = roles.ToDictionary(role => role.Id);
+
+        var companyIds = entries.Select(entry => entry.EntityType switch
+            {
+                nameof(Company) => entry.EntityId,
+                nameof(CompanyMembership) or nameof(RoleAssignment) => ReadGuid(entry.Changes, "CompanyId"),
+                nameof(Role) => roleDetails.GetValueOrDefault(entry.EntityId)?.CompanyId,
+                _ => null,
+            })
+            .Concat(roleDetails.Values.Where(role => role.CompanyId.HasValue).Select(role => role.CompanyId))
+            .Where(id => id.HasValue).Select(id => id!.Value).Distinct().ToArray();
+        var companyNames = companyIds.Length == 0
+            ? new Dictionary<Guid, string>()
+            : await context.Companies.AsNoTracking().Where(company => companyIds.Contains(company.Id))
+                .Select(company => new { company.Id, company.Name })
+                .ToDictionaryAsync(company => company.Id, company => company.Name, cancellationToken);
+
+        var result = new Dictionary<Guid, AuditDisplayData>(entries.Count);
+        foreach (var entry in entries)
+        {
+            var memberId = entry.EntityType switch
+            {
+                nameof(Member) => entry.EntityId,
+                nameof(CompanyMembership) or nameof(RoleAssignment) => ReadGuid(entry.Changes, "MemberId"),
+                nameof(Invitation) => invitations.GetValueOrDefault(entry.EntityId)?.MemberId ??
+                                      ReadGuid(entry.Changes, "MemberId"),
+                _ => null,
+            };
+            var role = entry.EntityType == nameof(Role)
+                ? roleDetails.GetValueOrDefault(entry.EntityId)
+                : null;
+            var companyId = entry.EntityType switch
+            {
+                nameof(Company) => entry.EntityId,
+                nameof(CompanyMembership) or nameof(RoleAssignment) => ReadGuid(entry.Changes, "CompanyId"),
+                nameof(Role) => role?.CompanyId,
+                _ => null,
+            };
+            var affectedName = memberId is { } id ? memberNames.GetValueOrDefault(id) : null;
+            if (string.IsNullOrWhiteSpace(affectedName) && entry.EntityType == nameof(Company))
+                affectedName = companyNames.GetValueOrDefault(entry.EntityId);
+            if (string.IsNullOrWhiteSpace(affectedName) && entry.EntityType == nameof(Role))
+                affectedName = role?.Name;
+            if (string.IsNullOrWhiteSpace(affectedName) && entry.EntityType == nameof(Invitation) &&
+                invitations.TryGetValue(entry.EntityId, out var invitation))
+                affectedName = MaskEmail(invitation.Destination.DisplayValue);
+
+            result[entry.Id] = new AuditDisplayData(affectedName,
+                companyId is { } companyGuid ? companyNames.GetValueOrDefault(companyGuid) : null);
+        }
+
+        return result;
     }
 
     public async Task<IReadOnlyList<OrganizationAuditActorRow>> ListActorsAsync(ListOrganizationAuditRequest request,
@@ -105,4 +210,32 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
         .Replace("\\", "\\\\", StringComparison.Ordinal)
         .Replace("%", "\\%", StringComparison.Ordinal)
         .Replace("_", "\\_", StringComparison.Ordinal);
+
+    private static Guid? ReadGuid(string changes, string propertyName)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(changes);
+            if (!document.RootElement.TryGetProperty(propertyName, out var property)) return null;
+            foreach (var side in new[] { "new", "old" })
+            {
+                if (!property.TryGetProperty(side, out var value) || value.ValueKind != JsonValueKind.String) continue;
+                if (Guid.TryParse(value.GetString(), out var id)) return id;
+            }
+
+            return null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static string MaskEmail(string email)
+    {
+        var at = email.LastIndexOf('@');
+        return at < 0 ? "***" : "***" + email[at..];
+    }
+
+    private sealed record AuditDisplayData(string? AffectedDisplayName, string? CompanyName);
 }
