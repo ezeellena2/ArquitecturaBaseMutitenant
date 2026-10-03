@@ -8,10 +8,16 @@ public sealed record CompanyListHttpQuery(int? Page, int? PageSize, string? Sort
     CompanyStatus? Status);
 
 public sealed record CreateCompanyHttpRequest(string? Name, string? TaxIdType, string? TaxIdNumber,
-    string? TimeZoneId);
+    string? TimeZoneId)
+{
+    public override string ToString() => nameof(CreateCompanyHttpRequest);
+}
 
 public sealed record UpdateCompanyHttpRequest(string? Name, string? TaxIdType, string? TaxIdNumber,
-    string? TimeZoneId, uint? Version);
+    string? TimeZoneId, uint? Version)
+{
+    public override string ToString() => nameof(UpdateCompanyHttpRequest);
+}
 
 public sealed record ChangeCompanyStatusHttpRequest(CompanyStatus? Status, uint? Version);
 

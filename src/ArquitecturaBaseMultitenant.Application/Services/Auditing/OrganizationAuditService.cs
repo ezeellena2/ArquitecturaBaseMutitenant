@@ -55,7 +55,7 @@ internal sealed class OrganizationAuditService(IOrganizationAuditReader reader,
         if (request.Period == "0")
         {
             var settings = await settingsReader.FindCurrentAsync(cancellationToken);
-            var timeZoneId = settings?.DefaultTimeZoneId ?? "UTC";
+            var timeZoneId = settings?.DefaultTimeZoneId ?? TimeZoneInfo.Utc.Id;
             var localDate = DateOnly.FromDateTime(timeZoneService.ConvertToLocal(nowUtc, timeZoneId));
             var range = timeZoneService.GetDayRangeUtc(localDate, timeZoneId);
             return (range.StartUtc, range.EndUtc);
@@ -135,7 +135,7 @@ internal sealed class OrganizationAuditService(IOrganizationAuditReader reader,
             JsonValueKind.True => "true",
             JsonValueKind.False => "false",
             JsonValueKind.Number => value.GetRawText(),
-            JsonValueKind.Array => value.GetArrayLength().ToString(System.Globalization.CultureInfo.InvariantCulture),
+            JsonValueKind.Array => JsonSerializer.Serialize(value.GetArrayLength()),
             _ => null,
         };
         if (text is null) return null;

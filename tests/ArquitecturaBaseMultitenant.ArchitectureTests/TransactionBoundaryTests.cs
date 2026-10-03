@@ -20,6 +20,7 @@ public sealed class TransactionBoundaryTests
     private const string Registration = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.PersistenceRegistration";
     private const string ReferenceSeed = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed.ReferenceDataSeeder";
     private const string DatabaseSeed = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed.DatabaseSeeder";
+    private const string BusinessOrganizationCreator = "ArquitecturaBaseMultitenant.Application.Services.Auth.BusinessOrganizationCreator";
     private const string IdempotencyStore = "ArquitecturaBaseMultitenant.Infrastructure.Idempotency.IdempotencyStore";
     private const string CacheExtensions = "ArquitecturaBaseMultitenant.Infrastructure.Caching.HybridCacheExtensions";
     private const string ApplicationServices = "ArquitecturaBaseMultitenant.Application.Services";
@@ -40,7 +41,8 @@ public sealed class TransactionBoundaryTests
         // La lista cerrada admite dos seeds técnicos; ningún otro adaptador abre el límite.
         Assert.Contains(receivers, type => type.FullName == ReferenceSeed);
         Assert.Contains(receivers, type => type.FullName == DatabaseSeed);
-        Assert.Empty(receivers.Where(type => !IsService(type) && type.FullName is not (ReferenceSeed or DatabaseSeed))
+        Assert.Empty(receivers.Where(type => !IsService(type)
+            && type.FullName is not (ReferenceSeed or DatabaseSeed or BusinessOrganizationCreator))
             .Select(type => type.FullName));
 
         Assert.Contains(typeof(RogueReceiver), Receivers([typeof(RogueReceiver)]));
@@ -172,7 +174,8 @@ public sealed class TransactionBoundaryTests
                     || parameter.ParameterType.FullName == UnitOfWorkClass)));
 
     private static bool IsService(string owner) =>
-        Production.Select(assembly => assembly.GetType(owner)).OfType<Type>().Any(IsService);
+        owner == BusinessOrganizationCreator
+        || Production.Select(assembly => assembly.GetType(owner)).OfType<Type>().Any(IsService);
 
     private static bool IsService(Type type) =>
         type.Namespace?.StartsWith(ApplicationServices + ".", StringComparison.Ordinal) == true

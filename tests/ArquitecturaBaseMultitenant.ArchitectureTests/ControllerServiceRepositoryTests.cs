@@ -126,7 +126,8 @@ public sealed class ControllerServiceRepositoryTests
         || controller == typeof(AccountDeletionCancelController) && dependency == typeof(PendingDeletionCookie)
         || controller == typeof(AccountGoogleController) && dependency == typeof(IAuthenticationSchemeProvider)
         || controller == typeof(AccountGoogleController) && dependency == typeof(IAntiforgery)
-        || controller == typeof(InvitationsController) && dependency == typeof(IAntiforgery);
+        || controller == typeof(InvitationsController) && dependency == typeof(IAntiforgery)
+        || controller == typeof(BusinessSignupController) && dependency == typeof(IAntiforgery);
 
     [Fact]
     public void Detector_recognizes_controllerbase_subclasses_without_controller_suffix()

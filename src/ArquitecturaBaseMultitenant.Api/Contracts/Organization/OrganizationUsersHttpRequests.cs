@@ -7,7 +7,10 @@ public sealed record OrganizationUserListHttpQuery(int? Page, int? PageSize, str
     OrganizationUserState? State, Guid? CompanyId, bool? WithoutCompany);
 
 public sealed record InviteOrganizationUserHttpRequest(string? Email, IReadOnlyCollection<Guid>? RoleIds,
-    IReadOnlyCollection<InviteCompanyRolesHttpRequest>? Companies);
+    IReadOnlyCollection<InviteCompanyRolesHttpRequest>? Companies)
+{
+    public override string ToString() => nameof(InviteOrganizationUserHttpRequest);
+}
 
 public sealed record InviteCompanyRolesHttpRequest(Guid CompanyId, IReadOnlyCollection<Guid>? RoleIds);
 

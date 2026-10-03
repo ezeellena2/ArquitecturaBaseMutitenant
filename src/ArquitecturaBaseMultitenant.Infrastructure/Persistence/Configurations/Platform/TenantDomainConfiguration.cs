@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TenantEntity = ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant;
@@ -15,7 +16,7 @@ internal sealed class TenantDomainConfiguration : IEntityTypeConfiguration<Tenan
         builder.Property(domain => domain.Domain).HasMaxLength(OrganizationEmailDomain.MaxLength).IsRequired();
         builder.Property(domain => domain.VerificationToken).HasMaxLength(TenantDomain.MaxVerificationTokenLength)
             .IsRequired();
-        builder.Property(domain => domain.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
+        builder.Property(domain => domain.Status).HasConversion<string>().HasMaxLength(TextLimits.ShortCode).IsRequired();
         builder.Property(domain => domain.CreatedAtUtc).IsRequired();
         builder.Ignore(domain => domain.TxtRecordValue);
         builder.HasIndex(domain => domain.Domain).IsUnique()

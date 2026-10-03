@@ -30,6 +30,8 @@ public sealed class DataClassificationTests
         typeof(ReauthTicket).FullName!, // Comprobante global de cuenta, ligado a usuario y acción.
         typeof(LoginAudit).FullName!,
         typeof(Tenant).FullName!,
+        typeof(ReservedTenantSlug).FullName!, // Reservas globales que impiden colisiones de dominios entre organizaciones.
+        typeof(TenantDomain).FullName!, // Verificación de dominios global, administrada desde cada organización.
         typeof(PlatformSettings).FullName!,
         typeof(SecurityEvent).FullName!,
         typeof(OutboxMessage).FullName!,

@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Models.Auditing;
 using ArquitecturaBaseMultitenant.Application.Resources;
+using ArquitecturaBaseMultitenant.Domain.Common;
 using FluentValidation;
 
 namespace ArquitecturaBaseMultitenant.Application.Validation.Auditing;
@@ -22,7 +23,7 @@ internal sealed class ListOrganizationAuditRequestValidator : CursorRequestValid
             .Must(id => id is null || id != Guid.Empty)
             .WithMessage(_ => ValidationTexts.Required);
         RuleFor(request => request.Search)
-            .MaximumLength(100)
+            .MaximumLength(TextLimits.AuditSearch)
             .WithMessage(_ => ValidationTexts.Required);
     }
 }

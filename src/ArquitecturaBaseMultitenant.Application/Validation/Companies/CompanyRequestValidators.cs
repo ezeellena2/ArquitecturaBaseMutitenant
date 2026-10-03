@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Models.Companies;
 using ArquitecturaBaseMultitenant.Application.Resources;
+using ArquitecturaBaseMultitenant.Domain.Common;
 using FluentValidation;
 
 namespace ArquitecturaBaseMultitenant.Application.Validation.Companies;
@@ -9,7 +10,7 @@ internal sealed class CreateCompanyRequestValidator : AbstractValidator<CreateCo
     public CreateCompanyRequestValidator()
     {
         RuleFor(request => request.Name).NotEmpty().WithMessage(_ => ValidationTexts.Required)
-            .MaximumLength(120).WithMessage(_ => ValidationTexts.MaxLength);
+            .MaximumLength(TextLimits.OrganizationName).WithMessage(_ => ValidationTexts.MaxLength);
         RuleFor(request => request.TimeZoneId).NotEmpty().WithMessage(_ => ValidationTexts.Required);
         RuleFor(request => request).Must(TaxIdIsComplete).WithMessage(_ => ValidationTexts.Required);
     }
@@ -23,7 +24,7 @@ internal sealed class UpdateCompanyRequestValidator : AbstractValidator<UpdateCo
     public UpdateCompanyRequestValidator()
     {
         RuleFor(request => request.Name).NotEmpty().WithMessage(_ => ValidationTexts.Required)
-            .MaximumLength(120).WithMessage(_ => ValidationTexts.MaxLength);
+            .MaximumLength(TextLimits.OrganizationName).WithMessage(_ => ValidationTexts.MaxLength);
         RuleFor(request => request.TimeZoneId).NotEmpty().WithMessage(_ => ValidationTexts.Required);
         RuleFor(request => request).Must(TaxIdIsComplete).WithMessage(_ => ValidationTexts.Required);
         RuleFor(request => request.Version).NotNull().WithMessage(_ => ValidationTexts.Required);

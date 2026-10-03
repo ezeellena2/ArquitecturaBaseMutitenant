@@ -169,7 +169,7 @@ public sealed class IngressJourneyTests(ApiFactory factory)
         Assert.Equal(AccessErrors.WrongCode, problem?.RootElement.GetProperty("code").GetString());
         using var missingBusinessSignup = await PostAsBearerAsync(client,
             "/api/auth/business-signup", consumer.AccessToken);
-        Assert.Equal(HttpStatusCode.NotFound, missingBusinessSignup.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, missingBusinessSignup.StatusCode);
 
         using var update = new HttpRequestMessage(HttpMethod.Put, "/api/me")
         {
