@@ -9697,9 +9697,13 @@
             }
           },
           "actorEmail": {
-            "type": [
-              "null",
-              "string"
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Email"
+              }
             ]
           }
         }
