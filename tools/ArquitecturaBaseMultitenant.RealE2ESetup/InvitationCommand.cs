@@ -31,7 +31,12 @@ internal static class InvitationCommand
         var provider = scope.ServiceProvider;
         var kind = command.RootElement.GetProperty("kind").GetString();
         object result;
-        if (kind == "emit")
+        if (kind == "prepare-recipient")
+        {
+            await CreateRecipientAsync(provider, email.Value, ct);
+            result = new { prepared = true };
+        }
+        else if (kind == "emit")
         {
             if (command.RootElement.GetProperty("existingAccount").GetBoolean())
                 await CreateRecipientAsync(provider, email.Value, ct);
