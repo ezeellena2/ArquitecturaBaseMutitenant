@@ -9695,6 +9695,12 @@
             "items": {
               "$ref": "#/components/schemas/OrganizationAuditChangeResponse"
             }
+          },
+          "actorEmail": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
