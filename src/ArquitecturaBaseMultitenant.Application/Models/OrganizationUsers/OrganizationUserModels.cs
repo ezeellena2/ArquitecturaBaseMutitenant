@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
 
@@ -29,13 +30,13 @@ public sealed record OrganizationUserRoleRow(Guid Id, string Name, bool IsSystem
 public sealed record OrganizationUserCompanyRow(Guid CompanyId, string CompanyName,
     CompanyMembershipStatus Status, IReadOnlyList<OrganizationUserRoleRow> Roles);
 
-public sealed record OrganizationUserRow(Guid MemberId, Guid? UserId, string DisplayName, string? Email,
+public sealed record OrganizationUserRow(Guid MemberId, Guid? UserId, string DisplayName, Email? Email,
     bool HasManagedEmail, MemberStatus MemberStatus, UserStatus? UserStatus,
     InvitationStatus? InvitationStatus, Guid? InvitationId, DateTime? InvitationIssuedAtUtc,
     DateTime? InvitationExpiresAtUtc, IReadOnlyList<OrganizationUserRoleRow> Roles,
     IReadOnlyList<OrganizationUserCompanyRow> Companies, uint Version, DateTime CreatedAtUtc);
 
-public sealed record OrganizationUserResponse(Guid MemberId, Guid? UserId, string DisplayName, string? Email,
+public sealed record OrganizationUserResponse(Guid MemberId, Guid? UserId, string DisplayName, Email? Email,
     OrganizationUserState State, bool HasManagedEmail, IReadOnlyList<OrganizationUserRoleRow> Roles,
     IReadOnlyList<OrganizationUserCompanyRow> Companies, Guid? InvitationId,
     DateTime? InvitationIssuedAtUtc, DateTime? InvitationExpiresAtUtc, uint Version, DateTime CreatedAtUtc);
@@ -43,7 +44,7 @@ public sealed record OrganizationUserResponse(Guid MemberId, Guid? UserId, strin
 public sealed record OrganizationUserFilterCountsResponse(int All, int Active, int PendingDeletion,
     int Invited, int Expired, int Inactive);
 
-public sealed record InviteOrganizationUserRequest(string? Email, IReadOnlyCollection<Guid>? RoleIds,
+public sealed record InviteOrganizationUserRequest(Email? Email, IReadOnlyCollection<Guid>? RoleIds,
     IReadOnlyCollection<InviteCompanyRolesRequest>? Companies);
 
 public sealed record InviteCompanyRolesRequest(Guid CompanyId, IReadOnlyCollection<Guid>? RoleIds);

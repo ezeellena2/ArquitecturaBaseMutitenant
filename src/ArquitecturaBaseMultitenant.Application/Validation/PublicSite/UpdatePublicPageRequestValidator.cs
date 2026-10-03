@@ -3,7 +3,6 @@ using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.PublicSite;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
-using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using FluentValidation;
 
 namespace ArquitecturaBaseMultitenant.Application.Validation.PublicSite;
@@ -16,8 +15,6 @@ internal sealed class UpdatePublicPageRequestValidator : AbstractValidator<Updat
             .WithMessage(_ => ValidationTexts.PageInvalid);
         RuleFor(request => request.Name).NotEmpty().MaximumLength(TextLimits.OrganizationName);
         RuleFor(request => request.Description).MaximumLength(TextLimits.Description);
-        RuleFor(request => request.ContactEmail).EmailAddress().When(request => !string.IsNullOrWhiteSpace(request.ContactEmail));
-        RuleFor(request => request.ContactEmail).MaximumLength(Email.MaxLength);
         RuleFor(request => request.ContactPhone).MaximumLength(TextLimits.PhoneNumber);
         RuleFor(request => request.Address).MaximumLength(TextLimits.Description);
         RuleFor(request => request.Website).MaximumLength(TextLimits.WebAddress).Must(IsWebAddress)

@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Companies;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -72,7 +73,7 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
         var mapped = page.Select(membership => rowsById[membership.MemberId])
             .Select(member => new CompanyMemberRow(member.MemberId, member.UserId,
             member.DisplayName.Length == 0 ? pendingEmails.GetValueOrDefault(member.MemberId, "") : member.DisplayName,
-            member.Email ?? pendingEmails.GetValueOrDefault(member.MemberId), member.MemberStatus,
+            ToEmail(member.Email ?? pendingEmails.GetValueOrDefault(member.MemberId)), member.MemberStatus,
             member.UserStatus, member.MembershipStatus, rolesByMember.GetValueOrDefault(member.MemberId, []),
             member.Version, member.CreatedAtUtc)).ToArray();
         return new PagedResult<CompanyMemberRow>(mapped, request.Page, request.PageSize, totalCount);
@@ -178,6 +179,8 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
         .Replace("\\", "\\\\", StringComparison.Ordinal)
         .Replace("%", "\\%", StringComparison.Ordinal)
         .Replace("_", "\\_", StringComparison.Ordinal);
+
+    private static Email? ToEmail(string? value) => value is null ? null : Email.Create(value).Value;
 
     private sealed record MemberProjection(Guid MemberId, Guid? UserId, string DisplayName, string? Email,
         MemberStatus MemberStatus, UserStatus? UserStatus, CompanyMembershipStatus MembershipStatus,

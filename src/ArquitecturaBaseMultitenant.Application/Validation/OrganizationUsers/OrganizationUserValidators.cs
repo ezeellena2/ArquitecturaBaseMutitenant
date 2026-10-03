@@ -1,7 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
 using ArquitecturaBaseMultitenant.Application.Resources;
-using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using FluentValidation;
 
 namespace ArquitecturaBaseMultitenant.Application.Validation.OrganizationUsers;
@@ -23,7 +22,7 @@ internal sealed class InviteOrganizationUserRequestValidator : AbstractValidator
 {
     public InviteOrganizationUserRequestValidator()
     {
-        RuleFor(request => request.Email).NotEmpty().MaximumLength(Email.MaxLength)
+        RuleFor(request => request.Email).NotNull()
             .WithMessage(_ => ValidationTexts.Required);
         RuleFor(request => request.RoleIds).NotNull().WithMessage(_ => ValidationTexts.Required);
         RuleForEach(request => request.RoleIds).NotEmpty().WithMessage(_ => ValidationTexts.Required);

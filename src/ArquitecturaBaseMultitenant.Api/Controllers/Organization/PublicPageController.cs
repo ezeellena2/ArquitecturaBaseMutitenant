@@ -4,7 +4,6 @@ using ArquitecturaBaseMultitenant.Api.ErrorHandling;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Api.Tenancy;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
-using ArquitecturaBaseMultitenant.Application.Models.PublicSite;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.AspNetCore.Mvc;
@@ -23,8 +22,11 @@ public sealed class PublicPageController(IPublicPageService service) : Controlle
     [ProducesProblem(StatusCodes.Status401Unauthorized)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Get(CancellationToken cancellationToken) =>
-        (await service.GetAsync(cancellationToken)).ToActionResult(this);
+    public async Task<IActionResult> Get(CancellationToken cancellationToken)
+    {
+        var result = await service.GetAsync(cancellationToken);
+        return result.IsFailure ? result.ToActionResult(this) : Ok(result.Value.ToHttpResponse());
+    }
 
     [HttpPut]
     [HasPermission(Permissions.PublicPage.Manage)]
@@ -35,8 +37,12 @@ public sealed class PublicPageController(IPublicPageService service) : Controlle
     [ProducesProblem(StatusCodes.Status404NotFound)]
     [ProducesProblem(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Update([FromBody] UpdatePublicPageHttpRequest request,
-        CancellationToken cancellationToken) =>
-        (await service.UpdateAsync(request.ToModel(), cancellationToken)).ToActionResult(this);
+        CancellationToken cancellationToken)
+    {
+        var model = request.ToModel();
+        if (model.IsFailure) return model.ToActionResult(this);
+        return (await service.UpdateAsync(model.Value, cancellationToken)).ToActionResult(this);
+    }
 
     [HttpPost("publish")]
     [HasPermission(Permissions.PublicPage.Manage)]

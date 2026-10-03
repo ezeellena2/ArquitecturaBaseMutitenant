@@ -10,6 +10,7 @@ using ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.AspNetCore.Mvc;
+using OrganizationUserContractResponse = ArquitecturaBaseMultitenant.Api.Contracts.Organization.OrganizationUserResponse;
 
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Organization;
 
@@ -21,17 +22,23 @@ public sealed class OrganizationUsersController(IOrganizationUserService service
 {
     [HttpGet("paged")]
     [HasPermission(Permissions.Users.Read)]
-    [ProducesResponseType<PagedResult<OrganizationUserResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<PagedResult<OrganizationUserContractResponse>>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status401Unauthorized)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> List([FromQuery] OrganizationUserListHttpQuery query,
-        CancellationToken cancellationToken) =>
-        (await service.ListAsync(query.ToModel(), cancellationToken)).ToActionResult(this);
+        CancellationToken cancellationToken)
+    {
+        var result = await service.ListAsync(query.ToModel(), cancellationToken);
+        if (result.IsFailure) return result.ToActionResult(this);
+        var page = result.Value;
+        return Ok(new PagedResult<OrganizationUserContractResponse>([.. page.Items.Select(item => item.ToHttpResponse())],
+            page.Page, page.PageSize, page.TotalCount));
+    }
 
     [HttpGet("filter-counts")]
     [HasPermission(Permissions.Users.Read)]
-    [ProducesResponseType<OrganizationUserFilterCountsResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers.OrganizationUserFilterCountsResponse>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status401Unauthorized)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]
@@ -41,12 +48,15 @@ public sealed class OrganizationUsersController(IOrganizationUserService service
 
     [HttpGet("{memberId:guid}")]
     [HasPermission(Permissions.Users.Read)]
-    [ProducesResponseType<OrganizationUserResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<OrganizationUserContractResponse>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status401Unauthorized)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Get([FromRoute] Guid memberId, CancellationToken cancellationToken) =>
-        (await service.GetAsync(memberId, cancellationToken)).ToActionResult(this);
+    public async Task<IActionResult> Get([FromRoute] Guid memberId, CancellationToken cancellationToken)
+    {
+        var result = await service.GetAsync(memberId, cancellationToken);
+        return result.IsFailure ? result.ToActionResult(this) : Ok(result.Value.ToHttpResponse());
+    }
 
     [HttpPost("invitations")]
     [HasPermission(Permissions.Users.Invite)]
@@ -59,7 +69,9 @@ public sealed class OrganizationUsersController(IOrganizationUserService service
     public async Task<IActionResult> Invite([FromBody] InviteOrganizationUserHttpRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await service.InviteAsync(request.ToModel(), cancellationToken);
+        var model = request.ToModel();
+        if (model.IsFailure) return model.ToActionResult(this);
+        var result = await service.InviteAsync(model.Value, cancellationToken);
         return result.IsSuccess ? StatusCode(StatusCodes.Status201Created, result.Value)
             : result.ToActionResult(this);
     }

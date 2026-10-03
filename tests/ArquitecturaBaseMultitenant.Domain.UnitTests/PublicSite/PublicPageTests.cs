@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Domain.PublicSite;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.PublicSite;
 
@@ -10,7 +11,7 @@ public sealed class PublicPageTests
         var page = PublicPage.Create();
 
         Assert.False(page.IsPublished);
-        Assert.True(page.UpdateContent("Grupo Delta", "Una descripción", "hola@example.com",
+        Assert.True(page.UpdateContent("Grupo Delta", "Una descripción", Email.Create("hola@example.com").Value,
             "+541145678900", "Buenos Aires", "https://example.com").IsSuccess);
         Assert.True(page.Publish().IsSuccess);
         Assert.True(page.IsPublished);

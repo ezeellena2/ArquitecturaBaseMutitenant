@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Domain.PublicSite;
 
@@ -18,7 +19,7 @@ public sealed class PublicPage : Entity, IPublishedByBusiness, IVersioned
     public string? Description { get; private set; }
     public byte[]? LogoBytes { get; private set; }
     public string? LogoContentType { get; private set; }
-    public string? ContactEmail { get; private set; }
+    public Email? ContactEmail { get; private set; }
     public string? ContactPhone { get; private set; }
     public string? Address { get; private set; }
     public string? Website { get; private set; }
@@ -30,18 +31,18 @@ public sealed class PublicPage : Entity, IPublishedByBusiness, IVersioned
 
     public static PublicPage Create() => new();
 
-    public Result UpdateContent(string? name, string? description, string? contactEmail,
+    public Result UpdateContent(string? name, string? description, Email? contactEmail,
         string? contactPhone, string? address, string? website)
     {
         if (string.IsNullOrWhiteSpace(name)) return PublicPageErrors.NameRequired;
         if (name.Trim().Length > TextLimits.OrganizationName) return PublicPageErrors.NameTooLong;
         if (TooLong(description, TextLimits.Description)) return PublicPageErrors.DescriptionTooLong;
-        if (TooLong(contactEmail, 254) || TooLong(contactPhone, 100)
+        if (TooLong(contactPhone, TextLimits.PhoneNumber)
             || TooLong(address, 500) || TooLong(website, 2048)) return PublicPageErrors.ContactTooLong;
 
         Name = name.Trim();
         Description = Normalize(description);
-        ContactEmail = Normalize(contactEmail);
+        ContactEmail = contactEmail;
         ContactPhone = Normalize(contactPhone);
         Address = Normalize(address);
         Website = Normalize(website);

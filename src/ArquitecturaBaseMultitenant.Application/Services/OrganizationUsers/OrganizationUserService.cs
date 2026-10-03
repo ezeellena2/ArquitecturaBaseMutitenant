@@ -19,7 +19,6 @@ using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
-using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
@@ -76,15 +75,14 @@ internal sealed class OrganizationUserService(IOrganizationUserReader reader, IM
         return OperationLog.RunAsync(logger, timeProvider, "InviteOrganizationUser", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            var email = Email.Create(request.Email);
-            if (email.IsFailure) return email.Error;
+            var email = request.Email!;
             if (currentUser.UserId is not { } inviterId || inviterId == Guid.Empty) return AccessErrors.NotMember;
             var desired = await ValidateAssignmentsAsync(request.RoleIds!, request.Companies!, cancellationToken);
             if (desired.IsFailure) return desired.Error;
             return await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
                 var issued = await issuer.IssueWithMemberAsync(
-                    new IssueInvitationRequest(email.Value, inviterId, InvitationChannel.Email), ct);
+                    new IssueInvitationRequest(email, inviterId, InvitationChannel.Email), ct);
                 if (issued.IsFailure) return issued.Error;
                 var assigned = await SetAssignmentsAsync(issued.Value.MemberId, desired.Value, ct,
                     memberInUnitOfWork: issued.Value.Member);
@@ -454,7 +452,7 @@ internal sealed class OrganizationUserService(IOrganizationUserReader reader, IM
         (assignment.RoleId, assignment.CompanyId);
 
     private OrganizationUserResponse ToResponse(OrganizationUserRow row) => new(row.MemberId, row.UserId,
-        row.DisplayName.Length == 0 ? row.Email ?? string.Empty : row.DisplayName, row.Email,
+        row.DisplayName.Length == 0 ? row.Email?.DisplayValue ?? string.Empty : row.DisplayName, row.Email,
         OrganizationUserStatePolicy.Resolve(row.MemberStatus, row.UserStatus, row.InvitationStatus,
             row.InvitationExpiresAtUtc, timeProvider.GetUtcNow().UtcDateTime), row.HasManagedEmail,
         [.. row.Roles.Select(Translate)],

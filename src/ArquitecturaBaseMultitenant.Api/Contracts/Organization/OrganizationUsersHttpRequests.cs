@@ -1,5 +1,8 @@
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
+using ArquitecturaBaseMultitenant.Api.Contracts.Auth;
+using ArquitecturaBaseMultitenant.Domain.Results;
+using OrganizationUserModelResponse = ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers.OrganizationUserResponse;
 
 namespace ArquitecturaBaseMultitenant.Api.Contracts.Organization;
 
@@ -19,6 +22,11 @@ public sealed record UpdateOrganizationUserHttpRequest(IReadOnlyCollection<Guid>
 
 public sealed record ChangeOrganizationUserStatusHttpRequest(bool? IsActive, uint? Version);
 
+public sealed record OrganizationUserResponse(Guid MemberId, Guid? UserId, string DisplayName, string? Email,
+    OrganizationUserState State, bool HasManagedEmail, IReadOnlyList<OrganizationUserRoleRow> Roles,
+    IReadOnlyList<OrganizationUserCompanyRow> Companies, Guid? InvitationId,
+    DateTime? InvitationIssuedAtUtc, DateTime? InvitationExpiresAtUtc, uint Version, DateTime CreatedAtUtc);
+
 public static class OrganizationUserHttpMappings
 {
     public static ListOrganizationUsersRequest ToModel(this OrganizationUserListHttpQuery request) => new()
@@ -32,11 +40,20 @@ public static class OrganizationUserHttpMappings
         WithoutCompany = request.WithoutCompany ?? false,
     };
 
-    public static InviteOrganizationUserRequest ToModel(this InviteOrganizationUserHttpRequest request) =>
-        new(request.Email, request.RoleIds, request.Companies?.Select(company =>
+    public static Result<InviteOrganizationUserRequest> ToModel(this InviteOrganizationUserHttpRequest request)
+    {
+        var email = AuthEmailMapping.Parse(request.Email);
+        if (email.IsFailure) return email.Error;
+        return new InviteOrganizationUserRequest(email.Value, request.RoleIds, request.Companies?.Select(company =>
             new InviteCompanyRolesRequest(company.CompanyId, company.RoleIds)).ToArray());
+    }
 
     public static UpdateOrganizationUserRequest ToModel(this UpdateOrganizationUserHttpRequest request,
         Guid memberId) => new(memberId, request.RoleIds, request.Companies?.Select(company =>
             new InviteCompanyRolesRequest(company.CompanyId, company.RoleIds)).ToArray(), request.Version);
+
+    public static OrganizationUserResponse ToHttpResponse(this OrganizationUserModelResponse response) => new(
+        response.MemberId, response.UserId, response.DisplayName, response.Email?.DisplayValue, response.State,
+        response.HasManagedEmail, response.Roles, response.Companies, response.InvitationId,
+        response.InvitationIssuedAtUtc, response.InvitationExpiresAtUtc, response.Version, response.CreatedAtUtc);
 }

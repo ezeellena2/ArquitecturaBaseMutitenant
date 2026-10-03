@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -232,7 +233,8 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
         return [.. page.Select(row =>
         {
             var invitation = invitationByMember.GetValueOrDefault(row.MemberId);
-            var email = row.Email ?? invitation?.Destination.DisplayValue;
+            var emailText = row.Email ?? invitation?.Destination.DisplayValue;
+            var email = emailText is null ? null : Email.Create(emailText).Value;
             return new OrganizationUserRow(row.MemberId, row.UserId, row.DisplayName, email,
                 row.UserId is { } userId && managedUserIds.Contains(userId), row.MemberStatus, row.UserStatus,
                 invitation?.Status, invitation?.Id, invitation?.IssuedAtUtc, invitation?.ExpiresAtUtc,

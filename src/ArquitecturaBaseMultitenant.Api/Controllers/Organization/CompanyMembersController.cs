@@ -10,6 +10,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Companies;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.AspNetCore.Mvc;
+using CompanyMemberContractResponse = ArquitecturaBaseMultitenant.Api.Contracts.Organization.CompanyMemberResponse;
 
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Organization;
 
@@ -21,14 +22,20 @@ public sealed class CompanyMembersController(ICompanyMembershipService service) 
 {
     [HttpGet("paged")]
     [HasCompanyPermission(Permissions.Company.Members.Read)]
-    [ProducesResponseType<PagedResult<CompanyMemberResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<PagedResult<CompanyMemberContractResponse>>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status401Unauthorized)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> List([FromRoute] Guid companyId, [FromQuery] CompanyMemberListHttpQuery query,
-        CancellationToken cancellationToken) =>
-        (await service.ListAsync(companyId, query.ToModel(), cancellationToken)).ToActionResult(this);
+        CancellationToken cancellationToken)
+    {
+        var result = await service.ListAsync(companyId, query.ToModel(), cancellationToken);
+        if (result.IsFailure) return result.ToActionResult(this);
+        var page = result.Value;
+        return Ok(new PagedResult<CompanyMemberContractResponse>([.. page.Items.Select(item => item.ToHttpResponse())],
+            page.Page, page.PageSize, page.TotalCount));
+    }
 
     [HttpGet("filter-counts")]
     [HasCompanyPermission(Permissions.Company.Members.Read)]
