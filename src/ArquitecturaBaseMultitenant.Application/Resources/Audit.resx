@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="AuditAction.Created" xml:space="preserve"><value>Creó</value></data>
+  <data name="AuditAction.Updated" xml:space="preserve"><value>Cambió</value></data>
+  <data name="AuditAction.Deleted" xml:space="preserve"><value>Quitó</value></data>
+  <data name="AuditAction.Restored" xml:space="preserve"><value>Restauró</value></data>
+  <data name="AuditAction.Custom" xml:space="preserve"><value>Realizó una acción en</value></data>
+  <data name="Entity.Member" xml:space="preserve"><value>un usuario</value></data>
+  <data name="Entity.Invitation" xml:space="preserve"><value>una invitación</value></data>
+  <data name="Entity.Company" xml:space="preserve"><value>una empresa</value></data>
+  <data name="Entity.CompanyMembership" xml:space="preserve"><value>una membresía de empresa</value></data>
+  <data name="Entity.Role" xml:space="preserve"><value>un rol</value></data>
+  <data name="Entity.RoleAssignment" xml:space="preserve"><value>una asignación de rol</value></data>
+  <data name="Entity.TenantSettings" xml:space="preserve"><value>la configuración de la organización</value></data>
+  <data name="Entity.TenantDomain" xml:space="preserve"><value>un dominio de correo</value></data>
+  <data name="Entity.PublicPage" xml:space="preserve"><value>la página pública</value></data>
+  <data name="Entity.Tenant" xml:space="preserve"><value>la organización</value></data>
+  <data name="Actor.User" xml:space="preserve"><value>Persona</value></data>
+  <data name="Actor.PlatformOperator" xml:space="preserve"><value>Plataforma</value></data>
+  <data name="Actor.System" xml:space="preserve"><value>Sistema</value></data>
+  <data name="Field.Name" xml:space="preserve"><value>Nombre</value></data>
+  <data name="Field.DisplayName" xml:space="preserve"><value>Nombre</value></data>
+  <data name="Field.TenantName" xml:space="preserve"><value>Organización</value></data>
+  <data name="Field.Status" xml:space="preserve"><value>Estado</value></data>
+  <data name="Field.IsActive" xml:space="preserve"><value>Estado</value></data>
+  <data name="Field.Slug" xml:space="preserve"><value>Dirección pública</value></data>
+  <data name="Field.DefaultCulture" xml:space="preserve"><value>Idioma y región</value></data>
+  <data name="Field.DefaultTimeZoneId" xml:space="preserve"><value>Zona horaria</value></data>
+  <data name="Field.DefaultCurrency" xml:space="preserve"><value>Moneda</value></data>
+  <data name="Field.Domain" xml:space="preserve"><value>Dominio de correo</value></data>
+  <data name="Field.IsPublished" xml:space="preserve"><value>Publicación</value></data>
+  <data name="Field.ContactEmail" xml:space="preserve"><value>Correo de contacto</value></data>
+  <data name="Field.ContactPhone" xml:space="preserve"><value>Teléfono de contacto</value></data>
+  <data name="Field.Email" xml:space="preserve"><value>Correo</value></data>
+  <data name="Field.Phone" xml:space="preserve"><value>Teléfono</value></data>
+  <data name="Field.RoleIds" xml:space="preserve"><value>Roles</value></data>
+  <data name="Field.CompanyId" xml:space="preserve"><value>Empresa</value></data>
+  <data name="Field.TaxId" xml:space="preserve"><value>Identificación fiscal</value></data>
+  <data name="Field.Website" xml:space="preserve"><value>Sitio web</value></data>
+  <data name="Field.Address" xml:space="preserve"><value>Dirección</value></data>
+  <data name="Field.Description" xml:space="preserve"><value>Descripción</value></data>
+  <data name="Field.Fields" xml:space="preserve"><value>Datos modificados</value></data>
+  <data name="Fallback" xml:space="preserve"><value>un registro</value></data>
+</root>

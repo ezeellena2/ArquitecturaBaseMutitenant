@@ -73,10 +73,10 @@
 
 ### 6. Auditoría, inicio y navegación B2B
 
-- [ ] Implementar consulta paginada y traducida de auditoría de organización, con filtros que muestre el tablero y sin filtrar campos sensibles.
+- [x] Implementar consulta por cursor y traducida de auditoría de organización, con período, tema, persona y búsqueda; el día usa la zona de la organización. Prueba PostgreSQL: 50 entradas, cursor sin duplicados, filtro de tema/búsqueda, aislamiento entre organizaciones y correo/teléfono enmascarados. Contratos e inventario explícito de las dos rutas verificados.
 - [ ] Completar `AdminPanel` únicamente con áreas disponibles en E6 y sus permisos; no mostrar navegación a módulos futuros que aún no existen.
 - [ ] Implementar servicios, datos y rutas de Inicio-Org e Inicio-Miembro que no dependan de la presentación; las pantallas, sus enlaces y los estados visibles esperan la aprobación indicada en §7. No conservar ni inventar estados que contradigan o no estén cubiertos por v60: si falta un estado necesario, mostrarlo para aprobación antes de programarlo.
-- [ ] Agregar pruebas de ruta/permisos, textos es/en, formato de fechas y 1/50 elementos en listados.
+- [x] Auditoría agrega rutas Business con `audit.read`, recursos de auditoría es/en con paridad probada y formato UTC para que el front use `shared/ui/format`. El test de integración de Auditoría cubre 50 elementos; los tests de flujo/permiso de Usuarios, Empresas y su paginado focal se ejecutaron en las tareas de esas áreas.
 
 ### 7. Frontend por grupos aprobados
 
@@ -121,3 +121,4 @@
 - La migración nueva usa la convención existente `IVersioned`/`xmin`; verifiqué su SQL con `dotnet ef migrations script` y Npgsql omite las operaciones a la columna de sistema.
 - La página pública persiste su imagen en `public_site.PublicPages.LogoBytes` como `bytea`: solo PNG/JPEG/WebP, firma de archivo comprobada y máximo de 512 KiB. La fila completa queda bajo RLS `IPublishedByBusiness`: la organización puede leer su borrador y una página publicada es legible públicamente para el futuro flujo E7; no se aceptan URLs externas de logo.
 - El editor devuelve y exige `version` (xmin). Si la página todavía no existe, solo acepta `version=0` para crearla; el `GET` inicial muestra los datos de la organización como borrador hasta el primer guardado.
+- La auditoría se pagina por cursor sobre `OccurredAtUtc` e `Id` en orden descendente; no cuenta toda una tabla append-only. El período “Hoy” usa la zona de la organización, y los campos de correo, teléfono y CUIT se enmascaran al proyectar el detalle. La búsqueda usa SQL parametrizado sobre el JSONB almacenado; nunca devuelve el texto crudo de cambios.
