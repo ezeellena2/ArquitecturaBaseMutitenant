@@ -47,6 +47,7 @@ public static class DependencyInjection
         services.AddScoped<ILoginMethodsService, LoginMethodsService>();
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IBusinessSignupService, BusinessSignupService>();
+        services.AddScoped<BusinessSignupCodeFlow>();
         services.AddScoped<BusinessOrganizationCreator>();
         services.AddScoped<SignupCodeRequester>();
         services.AddScoped<SignupVerificationFlow>();
@@ -81,6 +82,7 @@ public static class DependencyInjection
         services.AddScoped<SignupPolicy>();
         services.AddScoped<IPersonalSpaceProvisioner, PersonalSpaceProvisioner>();
         services.AddScoped<TenantSpaceProvisioner>();
+        services.AddScoped<TenantProvisioningReplayVerifier>();
         services.AddScoped<TenantProvisioner>();
         services.AddScoped<LoginCodeIssuer>();
         services.AddScoped<LoginCodeVerifier>();

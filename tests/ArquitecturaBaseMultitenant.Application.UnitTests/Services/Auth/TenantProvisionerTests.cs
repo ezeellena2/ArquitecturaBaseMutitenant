@@ -52,10 +52,15 @@ public sealed class TenantProvisionerTests
     }
 
     private static TenantProvisioner CreateService(FakeTenantRepository tenants,
-        FakeMemberRepository members, FakeTenantSettingsRepository settings, Guid tenantId) => new(tenants, members,
-        null!, null!, null!, settings,
-        new FakeTenantContext { TenantId = tenantId, TenantKind = TenantKind.Business }, TimeProvider.System,
-        NullLogger<TenantProvisioner>.Instance);
+        FakeMemberRepository members, FakeTenantSettingsRepository settings, Guid tenantId)
+    {
+        var tenantContext = new FakeTenantContext { TenantId = tenantId, TenantKind = TenantKind.Business };
+        var replayVerifier = new TenantProvisioningReplayVerifier(tenants, members, null!, null!, null!, settings);
+        var newTenantProvisioner = new TenantSpaceProvisioner(tenants, members, null!, null!, null!, settings,
+            TimeProvider.System);
+        return new TenantProvisioner(newTenantProvisioner, replayVerifier, tenantContext, TimeProvider.System,
+            NullLogger<TenantProvisioner>.Instance);
+    }
 
     private sealed class FakeTenantRepository(Tenant? existing) : ITenantRepository
     {
