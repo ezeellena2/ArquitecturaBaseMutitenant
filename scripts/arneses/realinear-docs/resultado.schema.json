@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Resultado de un arnés ejecutable",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["resultados"],
+  "properties": {
+    "resultados": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "resultado", "nota"],
+        "properties": {
+          "id": { "type": "string" },
+          "resultado": { "type": "string", "enum": ["corregido", "borrado", "creado", "descartado", "humano"] },
+          "nota": { "type": "string" }
+        }
+      }
+    }
+  }
+}

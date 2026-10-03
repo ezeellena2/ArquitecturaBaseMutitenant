@@ -14,6 +14,7 @@ import { coincide } from './comun/glob.mjs';
 import { contar, crearHallazgo, filtrarIgnorados, ordenar } from './comun/hallazgos.mjs';
 import { escribirInforme, fechaCorrida, resumenMarkdown } from './comun/informe.mjs';
 import * as markdown from './comun/markdown.mjs';
+import { corridaDeRepo } from './comun/corrida.mjs';
 import { fabricaHistorial } from './comun/git.mjs';
 import { cargarRepo, raizBackPorDefecto, raizFrontPorDefecto } from './comun/repos.mjs';
 import { indexarSimbolos } from './comun/simbolos.mjs';
@@ -142,8 +143,27 @@ export async function ejecutar(argv, opts = {}) {
       escribir(`Informe: ${rutas.md}`);
       return hallazgos.length ? 2 : 0;
     }
-    escribir('La corrida completa todavía no está disponible; usá --detectar.');
-    return 1;
+    const opciones = {
+      sinModelo: Boolean(args['sin-modelo']), motor: args.motor, modelo: args.modelo, fusionar: Boolean(args.fusionar),
+      presupuesto: args.presupuesto ? Number(args.presupuesto) : undefined, sinAislar: Boolean(args['sin-aislar']), fecha: opts.fecha,
+    };
+    let fallo = false;
+    for (const nombre of arnes.manifiesto.repos ?? ['back']) {
+      if (args.repo && args.repo !== nombre) continue;
+      if (!raices[nombre] || !existsSync(raices[nombre])) {
+        escribir(`${nombre}: no se encontró el repo en ${raices[nombre]}; se omite.`);
+        continue;
+      }
+      const info = await corridaDeRepo({
+        detectar, arnes, repo: nombre, dirArneses, raices, opciones, dirInformes, historial: opts.historial,
+        bins: opts.bins, escribir, raizBackArneses: back,
+      });
+      escribir(`${nombre}: ${info.estado}${info.rama ? ` · rama ${info.rama}` : ''}`);
+      if (info.consumo) escribir(`${nombre}: consumo ${JSON.stringify(info.consumo)}`);
+      escribir(`${nombre}: informe ${info.informe}`);
+      if (info.estado.startsWith('falló')) fallo = true;
+    }
+    return fallo ? 1 : 0;
   } catch (e) {
     escribir(`Falló: ${e.stack ?? e}`);
     return 1;

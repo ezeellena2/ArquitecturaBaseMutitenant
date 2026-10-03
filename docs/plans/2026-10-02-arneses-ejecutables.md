@@ -298,6 +298,11 @@ Cada fase: TDD con `node --test` (rojo → verde), un commit, y `node --test scr
 9. **Tipo de parche extra `escribir-archivo`** (reescribe un archivo existente, p. ej. un `CLAUDE.md` que no es `@AGENTS.md`); se suma a los cuatro del plan. Los parches preservan CRLF/LF.
 10. **Fixtures sin repo real:** los tests de los detectores usan solo `realinear-docs/fixtures/` (el índice de archivos ignora cualquier carpeta llamada `fixtures`, así el repo real no los cuenta).
 
+11. **`arbol.md`:** solo se leen las secciones cuyo título es una ruta (`Raíz`, `src/<Proyecto>`, `tests/`); las "Piezas…" con rutas planas quedan afuera. Una carpeta con nombre de plantilla (`NNNN-<titulo>.md`) lista un patrón y no se le agregan archivos; los de `excluir` tampoco.
+12. **Archivos nuevos en `arbol.md`:** la línea se inserta (auto) solo si la descripción sale sin modelo: el primer `<summary>` del `.cs` (primera oración, hasta 10 palabras) o "tests de X". Si no hay, el hallazgo es `modelo` y trae la línea esperada con `<describir>`. Una línea que ya trae `<describir>` es un `modelo` aparte (`linea-sin-descripcion`). La línea se inserta antes de la última hermana, así no hay que reindentar el resto.
+13. **`simbolos`:** `auto` solo con un candidato único a distancia ≤ 2, de la misma clase (interfaz o no) y con el mismo sufijo. Los miembros se verifican solo en tipos con forma del repo. Un nombre de archivo (`Email.cs`) o de proyecto (`ArchitectureTests`) no es un tipo ni un miembro.
+14. **`catalogos`:** lo que el código define y ninguna feature documenta se pregunta por grupo (un permiso, un código o una ruta por grupo), no por elemento. El historial se lee con una sola llamada a `git log --diff-filter=D`.
+
 ## 12. Contadores de las corridas reales (`--detectar`, sin modelo)
 
 **Fase 2** (back, rama `main`, 2026-10-02; solo se cuentan hallazgos, no se listan). Corre en 0,6 s.

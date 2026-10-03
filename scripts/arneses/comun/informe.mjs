@@ -7,18 +7,36 @@ export function fechaCorrida(ahora = new Date()) {
   return `${ahora.getFullYear()}${p(ahora.getMonth() + 1)}${p(ahora.getDate())}-${p(ahora.getHours())}${p(ahora.getMinutes())}`;
 }
 
+const formato = (c) => `auto: ${c.auto} · modelo: ${c.modelo} · humano: ${c.humano}`;
+
+export function textoDeConsumo(c) {
+  if (!c) return null;
+  const partes = [`entrada ${c.tokensEntrada}`];
+  if (c.cacheLectura !== undefined) partes.push(`(caché ${c.cacheLectura})`);
+  partes.push(`salida ${c.tokensSalida}`);
+  if (c.tokensRazonamiento) partes.push(`razonamiento ${c.tokensRazonamiento}`);
+  partes.push(c.costoUsd === null || c.costoUsd === undefined ? 'costo n/d' : `costo US$ ${Number(c.costoUsd).toFixed(4)}`);
+  return partes.join(' · ');
+}
+
 export function resumenMarkdown(info) {
-  const c = info.contadores ?? contar(info.hallazgos ?? []);
-  const l = [`# Informe de ${info.arnes} (${info.fecha})`, ''];
-  if (info.rama) l.push(`- Rama: \`${info.rama}\``);
-  if (info.motor) l.push(`- Motor: ${info.motor}${info.modelo ? ` (${info.modelo})` : ''}`);
-  l.push(`- Hallazgos: auto: ${c.auto} · modelo: ${c.modelo} · humano: ${c.humano}`);
-  if (info.consumo) l.push(`- Consumo: ${JSON.stringify(info.consumo)}`);
+  const inicial = info.contadores ?? contar(info.hallazgos ?? []);
+  const l = [`# Informe de ${info.arnes}${info.repo ? ` (${info.repo})` : ''} · ${info.fecha}`, ''];
   if (info.estado) l.push(`- Estado: ${info.estado}`);
+  if (info.rama) l.push(`- Rama: \`${info.rama}\``);
+  if (info.worktreeConservado && info.worktree) l.push(`- Worktree conservado: \`${info.worktree}\``);
+  if (info.motor && info.enviados) l.push(`- Motor: ${info.motor}${info.modelo ? ` (${info.modelo})` : ''} · ${info.enviados} hallazgo(s) enviados`);
+  l.push(`- Hallazgos al empezar: ${formato(inicial)}`);
+  if (info.contadoresFinales) l.push(`- Hallazgos al terminar: ${formato(info.contadoresFinales)}`);
+  if (info.sinEnviar) l.push(`- Quedaron sin enviar al modelo (tope por corrida): ${info.sinEnviar}`);
+  const consumo = textoDeConsumo(info.consumo);
+  if (consumo) l.push(`- Consumo: ${consumo}`);
+  if (info.verificacion?.length) l.push(`- Verificación: ${info.verificacion.map((v) => `${v.codigo === 0 ? 'ok' : 'FALLÓ'} \`${v.comando}\``).join(' · ')}`);
+  if (info.revertidos?.length) l.push(`- Revertido por la guardia: ${info.revertidos.map((r) => `\`${r.archivo}\` (${r.motivo})`).join(', ')}`);
   const humano = (info.hallazgos ?? []).filter((h) => h.accion === 'humano');
   l.push('', '## Para vos (humano)', '');
   if (!humano.length) l.push('Nada.');
-  for (const h of humano) l.push(`- \`${h.archivo}:${h.linea}\` (${h.tipo}): ${h.pregunta ?? h.real}`);
+  for (const h of humano) l.push(`- \`${h.archivo}${h.linea ? `:${h.linea}` : ''}\` (${h.tipo}): ${h.pregunta ?? h.real}`);
   return `${l.join('\n')}\n`;
 }
 
