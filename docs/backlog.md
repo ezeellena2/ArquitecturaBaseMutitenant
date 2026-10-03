@@ -12,6 +12,10 @@
 
 - La maqueta de Auditoría muestra el total de eventos del período en el subtítulo. El endpoint actual usa cursor y evita contar toda la tabla append-only; la pantalla conserva un subtítulo genérico en lugar de mostrar una cantidad parcial como si fuera el total. Definir una estrategia de recuento solo si se prioriza esa cifra.
 
+## Observaciones de E5 para etapas posteriores
+
+- El comentario «El backoffice comienza en E9» en `../ArquitecturaBaseMutitenantFront/src/layouts/navigation/platform.ts` quedó desactualizado: Plataforma se implementa en E5. Corregirlo cuando se actualice esa navegación; el comentario no rompe un flujo ni cambia la autorización.
+
 ## Observaciones de 3b para etapas posteriores
 
 - Publicación administrativa de versiones legales: usar la administración prevista para plataforma cuando nazca su pantalla. La 3b permite leer/aceptar; el E2E publica solo en su propia base y el recorrido manual tiene SQL local explícito.

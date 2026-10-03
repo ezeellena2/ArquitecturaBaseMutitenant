@@ -4,14 +4,14 @@ E5 sigue abierta. Este informe registra la revisión solicitada sobre lo impleme
 
 | Punto | Resultado | Commit |
 |---|---|---|
-| 1 · Avisos | Solo rechazo y moderación. Dueños con membresía e identidad activas; principal seguro o alternativas del resolver, sin correo administrado ajeno ni registrante retirado. El contrato no admite el motivo interno. | commit de esta corrección |
+| 1 · Avisos | Solo rechazo y moderación. Dueños con membresía e identidad activas; principal seguro o alternativas del resolver, sin correo administrado ajeno ni registrante retirado. El contrato no admite el motivo interno. | `02184ca` |
 | 2 · Versión | Pendiente: separar contadores de la fila versionada. | — |
 | 3 · Ficha | Lecturas globales definidas en el plan; implementación y contrato pendientes en T21. | `b3ca50d` (definición) |
 | 4 · Auditoría | Definición incorporada en T17; ajuste de los eventos existentes pendiente. | `b3ca50d` (definición) |
 | 5 · Retry | Pendiente: motivo fijo sin campo escrito. | — |
 | 6 · E2E operador | Pendiente: pasos de pantalla y permisos reducidos; rojo esperado hasta T21–T23. | — |
 | 7 · Propuesta | Plan apunta al lienzo vigente v73 o posterior. Archivo de propuesta preparado como archivado; sin commit front mientras su suite tenga un rojo ajeno. | `b3ca50d` (plan) |
-| 8 · Backlog | Preparado; pendiente commit separado. | — |
+| 8 · Backlog | Comentario E9 de navigation/platform.ts registrado; no se modifica la navegación ni se agregan tests de documentación. Suite de R01 vigente (1473/1473), sin cambios ejecutables adicionales. | commit de esta corrección |
 
 ## Verificación del punto 1
 

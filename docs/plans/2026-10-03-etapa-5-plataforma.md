@@ -136,7 +136,7 @@ Antes de continuar T09–T16 o programar pantallas, completar estas correcciones
 - [ ] R05 · Retry recibe solo version; motivo fijo de resources, sin pedir texto al usuario. Test HTTP del cuerpo sin reason y evento con motivo traducido.
 - [ ] R06 · E2E operador: aceptación legal con texto real o en preparador; solo pasos de pantalla para Gestión/Administración/filas/acción con motivo/F5. Segundo operador con permisos reducidos y límites. Rojo por pantalla ausente; verde en T21–T23. No GET de API como reemplazo del recorrido.
 - [ ] R07 · Fuente visual T04 es exclusivamente el lienzo vigente; informe de propuesta archivado. El generador lo retira diseño, sin tocarlo aquí.
-- [ ] R08 · Registrar en backlog el comentario desactualizado «El backoffice comienza en E9» en navigation/platform.ts.
+- [x] R08 · Registrar en backlog el comentario desactualizado «El backoffice comienza en E9» en navigation/platform.ts.
 
 ### T05 · Configuración global
 
@@ -351,6 +351,7 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 | T07 | Scope 3/3 + PG 2/2; core 3/3 + PG 2/2; HTTP 8/8; slug 5/5; regresiones 36/36; recursos 6/6; inventarios 32/32; build/SQL verificados | `b375f04`, `d27d7d3`, `f05c9df`, `6fa09c4` | `d4d0627` (muestra) |
 | T08 backend / A01 | Gates/edición real y regresiones; build completo 0 advertencias, suite completa 1452/1452 (6m23s); front de módulos pendiente | `2e5a06b` | — |
 | T09 | Moderación/avisos/replay/versión/aislamiento HTTP; regresiones E6 y contratos; suite completa 1454/1454 (6m36s), build 0 advertencias | `cd3fedb` | — |
-| R01 | Outbox real rojo (4/5 envíos en vez de 2) → focal 2/2; HTTP de estados/moderación y contrato de canales; build 0 advertencias, suite completa 1473/1473, 0 omitidas (6m22s564ms) | commit de esta corrección | — |
+| R01 | Outbox real rojo (4/5 envíos en vez de 2) → focal 2/2; HTTP de estados/moderación y contrato de canales; build 0 advertencias, suite completa 1473/1473, 0 omitidas (6m22s564ms) | `02184ca` | — |
+| R08 | Comentario E9 de navigation/platform.ts registrado en backlog; sin cambios ejecutables, misma suite 1473/1473 de R01 y revisión del diff | commit de esta corrección | — |
 
 No declarar cierre a partir de esta tabla sin completar T25.
