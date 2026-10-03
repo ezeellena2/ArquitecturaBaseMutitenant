@@ -348,9 +348,23 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
         var services = scope.ServiceProvider;
         var protector = services.GetRequiredService<IPayloadProtector>();
         var payloads = await services.GetRequiredService<ApplicationDbContext>().OutboxMessages.AsNoTracking()
+            .Where(row => row.Channel == "email" && row.EncryptedPayload != string.Empty)
             .Select(row => row.EncryptedPayload).ToListAsync(Ct);
-        return payloads.Select(payload => JsonSerializer.Deserialize<EmailMessage>(protector.Unprotect(payload)))
-            .Single(message => message?.To == recipient.Value)!;
+        var messages = new List<EmailMessage>();
+        foreach (var payload in payloads)
+        {
+            string cleartext;
+            try { cleartext = protector.Unprotect(payload); }
+            catch (Exception exception) when (exception is System.Security.Cryptography.CryptographicException
+                or FormatException)
+            {
+                // Other tests in this fixture deliberately enqueue invalid payloads.
+                continue;
+            }
+            if (JsonSerializer.Deserialize<EmailMessage>(cleartext) is { } message)
+                messages.Add(message);
+        }
+        return Assert.Single(messages, message => message.To == recipient.Value);
     }
 
     private async Task<Result<InvitationPreviewResponse>> PreviewInvitationAsync(string token)
