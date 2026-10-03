@@ -59,6 +59,11 @@ public static class DependencyInjection
         services.AddScoped<IBusinessSignupService, BusinessSignupService>();
         services.AddScoped<BusinessSignupCodeFlow>();
         services.AddScoped<BusinessOrganizationCreator>();
+        services.AddScoped<BusinessSignupTransactionRunner>();
+        services.AddScoped<BusinessSignupPolicyReader>();
+        services.AddScoped<BusinessSignupOrganizationProvisioner>();
+        services.AddScoped<BusinessSignupLegalAcceptor>();
+        services.AddScoped<BusinessSignupRequestResolver>();
         services.AddScoped<SignupCodeRequester>();
         services.AddScoped<SignupVerificationFlow>();
         services.AddScoped<SignupVerificationCore>();
