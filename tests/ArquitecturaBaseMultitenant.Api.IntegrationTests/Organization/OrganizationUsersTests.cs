@@ -122,6 +122,98 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
         Assert.Equal("Legal.AccountDeletion.LastAdmin", problem.RootElement.GetProperty("code").GetString());
     }
 
+    [Fact]
+    public async Task Updating_organization_roles_preserves_company_roles_for_an_inactive_membership()
+    {
+        using var ownerClient = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false });
+        var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
+        using var memberClient = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false });
+        var user = await AccountJourney.RegisterAsync(factory, memberClient, Ct);
+        var (tenantId, _) = await CreateOrganizationAsync(owner.UserId);
+        await AccountJourney.AuthorizeAsync(ownerClient, "business", Ct);
+
+        using var createdCompany = await AccountJourney.PostAsync(ownerClient, "/api/companies", new
+        {
+            name = "Sucursal inactiva",
+            taxIdType = (string?)null,
+            taxIdNumber = (string?)null,
+            timeZoneId = "America/Argentina/Buenos_Aires",
+        }, Ct);
+        Assert.Equal(HttpStatusCode.Created, createdCompany.StatusCode);
+        var companyId = await createdCompany.Content.ReadFromJsonAsync<Guid>(Ct);
+
+        Guid memberId;
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            using var tenant = services.GetRequiredService<ITenantScope>().Enter(tenantId);
+            var member = Member.Invite(user.UserId);
+            memberId = member.Id;
+            Assert.True(member.Activate(services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime).IsSuccess);
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+            {
+                services.GetRequiredService<IMemberRepository>().Add(member);
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+
+        using var roleResponse = await ownerClient.GetAsync("/api/roles/paged?scope=Company&page=1&pageSize=50", Ct);
+        Assert.Equal(HttpStatusCode.OK, roleResponse.StatusCode);
+        using var rolesJson = JsonDocument.Parse(await roleResponse.Content.ReadAsStringAsync(Ct));
+        var companyAdmin = Assert.Single(rolesJson.RootElement.GetProperty("items").EnumerateArray(),
+            role => role.GetProperty("isSystemRole").GetBoolean() && role.GetProperty("name").GetString() == "Administrador");
+        var companyAdminRoleId = companyAdmin.GetProperty("id").GetGuid();
+        var companyMembersPath = $"/api/companies/{companyId:D}/members";
+        using var added = await AccountJourney.PostAsync(ownerClient, companyMembersPath, new
+        {
+            memberId,
+            roleIds = new[] { companyAdminRoleId },
+        }, Ct);
+        Assert.Equal(HttpStatusCode.NoContent, added.StatusCode);
+
+        using var membersResponse = await ownerClient.GetAsync(companyMembersPath + "/paged?page=1&pageSize=50", Ct);
+        Assert.Equal(HttpStatusCode.OK, membersResponse.StatusCode);
+        using var membersJson = JsonDocument.Parse(await membersResponse.Content.ReadAsStringAsync(Ct));
+        var companyMember = Assert.Single(membersJson.RootElement.GetProperty("items").EnumerateArray(),
+            row => row.GetProperty("memberId").GetGuid() == memberId);
+        var companyMembershipVersion = companyMember.GetProperty("version").GetUInt32();
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            using var tenant = services.GetRequiredService<ITenantScope>().Enter(tenantId);
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                var membership = await services.GetRequiredService<ICompanyMembershipRepository>()
+                    .GetByIdAsync(companyId, memberId, companyMembershipVersion, ct);
+                Assert.NotNull(membership);
+                membership.SetStatus(CompanyMembershipStatus.Inactive);
+                services.GetRequiredService<ICompanyMembershipRepository>().MarkUpdated(membership);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+
+        using var userDetailResponse = await ownerClient.GetAsync($"/api/users/{memberId:D}", Ct);
+        Assert.Equal(HttpStatusCode.OK, userDetailResponse.StatusCode);
+        using var userDetailJson = JsonDocument.Parse(await userDetailResponse.Content.ReadAsStringAsync(Ct));
+        var userVersion = userDetailJson.RootElement.GetProperty("version").GetUInt32();
+        using var updated = await ownerClient.PutAsJsonAsync($"/api/users/{memberId:D}", new
+        {
+            roleIds = Array.Empty<Guid>(),
+            companies = Array.Empty<object>(),
+            version = userVersion,
+        }, Ct);
+        Assert.Equal(HttpStatusCode.NoContent, updated.StatusCode);
+
+        using var afterResponse = await ownerClient.GetAsync($"/api/users/{memberId:D}", Ct);
+        Assert.Equal(HttpStatusCode.OK, afterResponse.StatusCode);
+        using var afterJson = JsonDocument.Parse(await afterResponse.Content.ReadAsStringAsync(Ct));
+        var company = Assert.Single(afterJson.RootElement.GetProperty("companies").EnumerateArray());
+        Assert.Equal(CompanyMembershipStatus.Inactive.ToString(), company.GetProperty("status").GetString());
+        Assert.Equal(companyAdminRoleId, Assert.Single(company.GetProperty("roles").EnumerateArray()).GetProperty("id").GetGuid());
+    }
+
     private async Task<(Guid TenantId, Guid MemberId)> CreateOrganizationAsync(Guid ownerId)
     {
         var tenant = Tenant.CreateBusiness("Usuarios HTTP test", requiresApproval: false);

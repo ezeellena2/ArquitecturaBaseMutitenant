@@ -366,8 +366,16 @@ internal sealed class OrganizationUserService(IOrganizationUserReader reader, IM
 
         var desiredKeys = desiredAssignments.Select(AssignmentKey).ToHashSet();
         var existingKeys = existingAssignments.Select(AssignmentKey).ToHashSet();
+        var inactiveCompanyIds = existingMemberships
+            .Where(row => row.Status != CompanyMembershipStatus.Active)
+            .Select(row => row.CompanyId)
+            .ToHashSet();
         foreach (var assignment in existingAssignments.Where(row => !desiredKeys.Contains(AssignmentKey(row))))
-            assignments.Remove(assignment);
+        {
+            // Una edición general no reactiva empresas inactivas ni borra sus roles guardados.
+            if (assignment.CompanyId is null || !inactiveCompanyIds.Contains(assignment.CompanyId.Value))
+                assignments.Remove(assignment);
+        }
         foreach (var assignment in desiredAssignments.Where(row => !existingKeys.Contains(AssignmentKey(row))))
             assignments.Add(assignment);
 
