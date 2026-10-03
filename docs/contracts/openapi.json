@@ -10291,6 +10291,24 @@
           }
         }
       },
+      "PhoneInputHttpRequest": {
+        "type": "object",
+        "properties": {
+          "country": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "number": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "description": "País elegido y número escrito; el parser del servicio produce E.164."
+      },
       "PlatformFeatureResponse": {
         "required": [
           "key",
@@ -11392,9 +11410,13 @@
             ]
           },
           "contactPhone": {
-            "type": [
-              "null",
-              "string"
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PhoneInputHttpRequest"
+              }
             ]
           },
           "address": {
