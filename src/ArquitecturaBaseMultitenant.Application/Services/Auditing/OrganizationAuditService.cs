@@ -77,7 +77,7 @@ internal sealed class OrganizationAuditService(IOrganizationAuditReader reader,
             row.EntityType, AuditTexts.Entity(row.EntityType), row.AffectedDisplayName,
             row.CompanyName ?? AuditTexts.WholeOrganization(),
             row.ActorKind.ToString(), AuditTexts.Actor(row.ActorKind), row.ActorId, actorDisplayName,
-            ReadChanges(row.Changes));
+            ReadChanges(row.Changes), row.ActorKind == AuditActorKind.User ? row.ActorEmail : null);
     }
 
     private static List<OrganizationAuditChangeResponse> ReadChanges(string json)

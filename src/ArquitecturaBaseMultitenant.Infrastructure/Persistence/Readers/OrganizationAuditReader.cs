@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -42,12 +43,21 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
             : await context.Users.AsNoTracking().Where(user => actorIds.Contains(user.Id))
                 .Select(user => new { user.Id, user.DisplayName })
                 .ToDictionaryAsync(user => user.Id, user => user.DisplayName, cancellationToken);
+        // «Quién» del detalle: nombre · correo (el verificado, primero el principal).
+        var actorEmails = actorIds.Length == 0
+            ? new Dictionary<Guid, string>()
+            : (await context.LoginMethods.AsNoTracking()
+                    .Where(method => actorIds.Contains(method.UserId) && method.Type == LoginMethodType.Email
+                        && method.VerifiedAtUtc != null)
+                    .OrderByDescending(method => method.IsPrimary).ThenBy(method => method.Id)
+                    .Select(method => new { method.UserId, method.Value }).ToArrayAsync(cancellationToken))
+                .GroupBy(method => method.UserId).ToDictionary(group => group.Key, group => group.First().Value);
         var displayData = await ResolveDisplayDataAsync(page.Items, cancellationToken);
         var rows = page.Items.Select(entry => new OrganizationAuditRow(entry.Id, entry.OccurredAtUtc,
             entry.Action, entry.EntityType, entry.EntityId, entry.ActorId, entry.ActorKind,
             entry.ActorId is { } id ? actors.GetValueOrDefault(id) : null,
             displayData[entry.Id].AffectedDisplayName, displayData[entry.Id].CompanyName,
-            entry.Changes)).ToArray();
+            entry.Changes, entry.ActorId is { } emailOwner ? actorEmails.GetValueOrDefault(emailOwner) : null)).ToArray();
         return new CursorResult<OrganizationAuditRow>(rows, page.NextCursor, page.HasMore);
     }
 

@@ -45,6 +45,32 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Audit_detail_shows_who_acted_with_name_and_email()
+    {
+        using var ownerClient = Client();
+        var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
+        await CreateBusinessAsync("Auditoría quién", "auditoria-quien", owner.UserId);
+        await AccountJourney.AuthorizeAsync(ownerClient, "business", Ct);
+        using var created = await AccountJourney.PostAsync(ownerClient, "/api/companies", new
+        {
+            name = "Delta Norte S.A.",
+            taxIdType = (string?)null,
+            taxIdNumber = (string?)null,
+            timeZoneId = "America/Argentina/Buenos_Aires",
+        }, Ct);
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+
+        using var response = await ownerClient.GetAsync("/api/organization/audit?period=all&category=companies&limit=50", Ct);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
+        var entry = json.RootElement.GetProperty("items").EnumerateArray()
+            .First(item => item.GetProperty("actorKind").GetString() == "User");
+
+        // Tablero Auditoria-Org, detalle: «Quién: Lucía Fernández · lucia.fernandez@delta.ejemplo.com».
+        Assert.Equal(owner.Email.Value, entry.GetProperty("actorEmail").GetString());
+    }
+
+    [Fact]
     public async Task Audit_is_tenant_scoped_searchable_paginated_and_masks_personal_data()
     {
         using var ownerClient = Client();
