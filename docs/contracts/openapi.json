@@ -9916,6 +9916,13 @@
           "createdAtUtc": {
             "type": "string",
             "format": "date-time"
+          },
+          "deletionScheduledForUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -11259,6 +11266,12 @@
               "integer"
             ],
             "format": "uint32"
+          },
+          "isActive": {
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         }
       },
