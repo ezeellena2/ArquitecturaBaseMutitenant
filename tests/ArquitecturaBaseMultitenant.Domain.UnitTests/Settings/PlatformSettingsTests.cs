@@ -63,8 +63,10 @@ public sealed class PlatformSettingsTests
         var settings = PlatformSettings.Create(ConsumerSignupMode.Open, BusinessSignupMode.Open, 2);
 
         Assert.True(settings.CanCreateBusinessOrganization(1).IsSuccess);
-        Assert.Equal(BusinessSignupErrors.LimitReached,
-            settings.CanCreateBusinessOrganization(2).Error);
+        var error = settings.CanCreateBusinessOrganization(2).Error;
+        Assert.Equal(BusinessSignupErrors.LimitReachedCode, error.Code);
+        // Tablero Registro-Empresa: «Llegaste al límite de 2 organizaciones propias.»
+        Assert.Equal(2, error.Metadata?["limit"]);
     }
 
     [Fact]

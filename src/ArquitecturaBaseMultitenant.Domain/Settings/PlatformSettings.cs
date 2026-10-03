@@ -72,8 +72,9 @@ public sealed class PlatformSettings : Entity, IAuditable, IVersioned
         ArgumentOutOfRangeException.ThrowIfNegative(ownedOrganizationCount);
         var signup = CanRegisterBusiness();
         if (signup.IsFailure) return signup;
+        // El tope viaja en el error para que el registro diga «Llegaste al límite de N organizaciones propias».
         return ownedOrganizationCount >= MaxOwnedOrganizations
-            ? BusinessSignupErrors.LimitReached
+            ? BusinessSignupErrors.LimitReached with { Metadata = new Dictionary<string, object?> { ["limit"] = MaxOwnedOrganizations } }
             : Result.Success();
     }
 }
