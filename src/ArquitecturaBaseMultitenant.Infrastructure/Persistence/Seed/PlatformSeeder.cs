@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Common;
+using ArquitecturaBaseMultitenant.Domain.Platform;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
@@ -64,8 +65,12 @@ internal sealed class PlatformSeeder(
                 timeProvider.GetUtcNow().UtcDateTime));
         }
 
-        if (await users.Users.AnyAsync(user => user.IsPlatformOperator, cancellationToken))
+        var operatorIds = await users.Users.Where(user => user.IsPlatformOperator)
+            .Select(user => user.Id).ToArrayAsync(cancellationToken);
+        if (operatorIds.Length > 0)
         {
+            foreach (var userId in operatorIds)
+                await EnsureOwnerAssignmentAsync(userId, cancellationToken);
             return;
         }
 
@@ -97,6 +102,7 @@ internal sealed class PlatformSeeder(
                 securityEvents.Add(SecurityEvent.ForPlatformOperatorGrant(
                     "Initial platform owner seed", timeProvider.GetUtcNow().UtcDateTime));
             }
+            await EnsureOwnerAssignmentAsync(existing.Id, cancellationToken);
 
             return;
         }
@@ -129,8 +135,15 @@ internal sealed class PlatformSeeder(
         }
 
         context.LoginMethods.Add(loginMethod);
+        context.PlatformRoleAssignments.Add(PlatformRoleAssignment.Create(user.Id, PlatformRole.Owner));
         securityEvents.Add(SecurityEvent.ForPlatformOperatorGrant(
             "Initial platform owner seed", timeProvider.GetUtcNow().UtcDateTime));
+    }
+
+    private async Task EnsureOwnerAssignmentAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        if (!await context.PlatformRoleAssignments.AnyAsync(assignment => assignment.UserId == userId, cancellationToken))
+            context.PlatformRoleAssignments.Add(PlatformRoleAssignment.Create(userId, PlatformRole.Owner));
     }
 
     private static void EnsureSucceeded(IdentityResult result, string action)

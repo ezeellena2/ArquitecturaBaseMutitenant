@@ -85,17 +85,17 @@ Archivos: `Domain/Platform/{PlatformRole,PlatformRoleAssignment,PlatformRolePerm
 
 Archivos: front `scripts/test-e2e-real.test.mjs` (runner y recorridos actuales en un único archivo); back `tools/ArquitecturaBaseMultitenant.RealE2ESetup/{Program,PlatformCommand}.cs`.
 
-- [ ] Preparar operador y Support solo en base aislada y leer códigos por pickup; reutilizar helpers de login del runner, sin interceptaciones.
-- [ ] Añadir recorrido operador → `/plataforma` → configuración → organizaciones y cuentas. Ejecutar focal: debe fallar por API/pantalla de E5 ausente, preservando anteriores.
-- [ ] Registrar evidencia del rojo en el seguimiento. El verde final es T25; no marcar E5 cerrada ahora. Commit `test(plataforma): iniciar recorrido real`.
+- [x] Reutilizar operador del seed aislado y códigos por pickup; sin interceptaciones. Support se agrega al preparador cuando T03 habilita su persistencia.
+- [x] Recorrido `/plataforma` sin sesión → código real → listado y APIs de configuración/organizaciones/cuentas. Rojo confirmado esperando el encabezado Organizaciones (pantalla E5 ausente), 2 tests fallidos, duración 91,56 s. Una ejecución cruzada con generación de migración se descartó.
+- [x] Evidencia registrada. El verde final es T25; E5 sigue abierta. Front `696c2b3`; Node check y lint focal sin errores. Lint general retorna 0 con advertencias previas de componentes y lienzo-v35.
 
 ### T03 · Persistencia y autorización de operadores
 
 Archivos: PlatformRoleAssignmentConfiguration/Repository/Reader, ApplicationDbContext, PlatformSeeder, PlatformPermissionService y puertos; migración nueva; tests `PlatformPermissionServiceTests`, `PlatformOperatorPersistenceTests` e inventarios existentes.
 
-- [ ] Rojo: Support obtiene solo sus cuatro permisos, suspendido/deleted pierde acceso, seed previo IsPlatformOperator migra a Owner, segunda ejecución no duplica y mt_app no puede editar auditoría.
-- [ ] Persistir `platform.PlatformRoleAssignments` con unicidad UserId/FK identidad/xmin. Migración convierte operadores existentes a Owner; seed agrega asignación al crear/habilitar operador. Mantener IsPlatformOperator como indicador de acceso sincronizado transaccionalmente, sin usarlo para conceder todos los permisos.
-- [ ] Verde focal/PostgreSQL/autorización y build. Commit `feat(plataforma): persistir permisos de operadores`.
+- [x] Rojo por reader ausente; permisos limitados y pérdida de autorización con cuenta inactiva. Regresión real de actualización desde operador legado sin Personal; el seed se repite sin duplicar asignaciones. La protección append-only de auditoría conserva su test existente.
+- [x] `platform.PlatformRoleAssignments`: unicidad UserId/FK identidad/xmin. Migración convierte operadores existentes a Owner y otorga al runtime permisos explícitos sobre esta tabla; seed conserva roles existentes. IsPlatformOperator selecciona acceso, no concede permisos.
+- [x] Unit 6/6; PostgreSQL roles 3/3, ProductionSeed 1/1, Migrations 4/4; clasificación/configuración existentes 4/4. Build Api/AppHost/preparador 0 advertencias. SQL revisado; modelo sin cambios pendientes. Commit `feat(plataforma): persistir permisos de operadores`.
 
 ### T04 · Propuesta visual para elección conjunta
 
@@ -289,6 +289,8 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 | Tarea | Estado/evidencia | Commit back | Commit front |
 |---|---|---|---|
 | T00 | Línea de base limpia, Aspire parado, Docker disponible; revisión Approved | `fff99c9` | — |
-| T01 | Rojo CS0234 → 5/5 verde, build Domain 0 advertencias | commit de esta tarea | — |
+| T01 | Rojo CS0234 → 5/5 verde, build Domain 0 advertencias | `f03c1b1` | — |
+| T02 | E2E real rojo por pantalla E5 ausente; Aspire detenido | seguimiento de esta tarea | `696c2b3` |
+| T03 | Permisos 6/6; roles PostgreSQL 3/3; seed 1/1; migraciones 4/4; inventarios 4/4 | commit de esta tarea | — |
 
 No declarar cierre a partir de esta tabla sin completar T25.

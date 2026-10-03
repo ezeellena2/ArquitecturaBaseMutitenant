@@ -1,21 +1,40 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
-using ArquitecturaBaseMultitenant.Domain.Authorization;
+using ArquitecturaBaseMultitenant.Application.Common.Logging;
+using ArquitecturaBaseMultitenant.Domain.Platform;
+using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Roles;
 
-/// <summary>El operador inicial es el Owner de plataforma; su acceso se mantiene en la cuenta global.</summary>
-internal sealed class PlatformPermissionService(IUserRepository users) : IPlatformPermissionService
+/// <summary>Resuelve el rol persistido de operadores activos, sin conceder permisos por el indicador de acceso.</summary>
+internal sealed class PlatformPermissionService(IUserRepository users, IPlatformRoleAssignmentReader roles,
+    TimeProvider timeProvider, ILogger<PlatformPermissionService> logger) : IPlatformPermissionService
 {
     public async Task<IReadOnlyList<string>> GetPermissionsAsync(Guid userId, CancellationToken cancellationToken)
     {
-        var user = await users.GetByIdAsync(userId, cancellationToken);
-        return user is { Status: UserStatus.Active, IsPlatformOperator: true }
-            ? [.. PlatformPermissions.All]
-            : [];
+        var result = await OperationLog.RunAsync(logger, timeProvider, "GetPlatformPermissions",
+            () => ReadAsync(userId, cancellationToken));
+        return result.Value;
     }
 
-    public async Task<bool> HasPermissionAsync(Guid userId, string permission, CancellationToken cancellationToken) =>
-        (await GetPermissionsAsync(userId, cancellationToken)).Contains(permission, StringComparer.Ordinal);
+    public async Task<bool> HasPermissionAsync(Guid userId, string permission, CancellationToken cancellationToken)
+    {
+        var result = await OperationLog.RunAsync(logger, timeProvider, "HasPlatformPermission", async () =>
+        {
+            var permissions = await ReadAsync(userId, cancellationToken);
+            return Result.Success(permissions.Value.Contains(permission, StringComparer.Ordinal));
+        });
+        return result.Value;
+    }
+
+    private async Task<Result<IReadOnlyList<string>>> ReadAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var user = await users.GetByIdAsync(userId, cancellationToken);
+        if (user is not { Status: UserStatus.Active, IsPlatformOperator: true })
+            return Result.Success<IReadOnlyList<string>>([]);
+        var role = await roles.FindRoleAsync(userId, cancellationToken);
+        return Result.Success<IReadOnlyList<string>>(role is null ? [] : [.. PlatformRolePermissions.For(role.Value)]);
+    }
 }

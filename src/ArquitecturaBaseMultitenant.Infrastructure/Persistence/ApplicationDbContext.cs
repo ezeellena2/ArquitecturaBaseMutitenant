@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.PublicSite;
+using ArquitecturaBaseMultitenant.Domain.Platform;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
@@ -57,6 +58,7 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
     public DbSet<TenantDomain> TenantDomains => Set<TenantDomain>();
     public DbSet<PublicPage> PublicPages => Set<PublicPage>();
     public DbSet<PlatformSettings> PlatformSettings => Set<PlatformSettings>();
+    public DbSet<PlatformRoleAssignment> PlatformRoleAssignments => Set<PlatformRoleAssignment>();
     public DbSet<SecurityEvent> SecurityEvents => Set<SecurityEvent>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<LegalDocument> LegalDocuments => Set<LegalDocument>();

@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Domain.Common;
+using ArquitecturaBaseMultitenant.Domain.Platform;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Legal;
@@ -33,6 +34,7 @@ public sealed class DataClassificationTests
         typeof(ReservedTenantSlug).FullName!, // Reservas globales que impiden colisiones de dominios entre organizaciones.
         typeof(TenantDomain).FullName!, // Verificación de dominios global, administrada desde cada organización.
         typeof(PlatformSettings).FullName!,
+        typeof(PlatformRoleAssignment).FullName!, // Autorización global de operadores, independiente de una organización.
         typeof(SecurityEvent).FullName!,
         typeof(OutboxMessage).FullName!,
         typeof(LegalDocument).FullName!,

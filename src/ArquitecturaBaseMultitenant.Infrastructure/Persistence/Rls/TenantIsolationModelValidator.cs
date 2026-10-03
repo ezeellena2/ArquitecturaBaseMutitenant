@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Domain.Common;
+using ArquitecturaBaseMultitenant.Domain.Platform;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Legal;
@@ -67,6 +68,7 @@ internal static class TenantIsolationModelValidator
         type == typeof(ReservedTenantSlug) ||
         type == typeof(TenantDomain) ||
         type == typeof(PlatformSettings) ||
+        type == typeof(PlatformRoleAssignment) ||
         type == typeof(SecurityEvent) ||
         type == typeof(OutboxMessage) ||
         type == typeof(LegalDocument) ||

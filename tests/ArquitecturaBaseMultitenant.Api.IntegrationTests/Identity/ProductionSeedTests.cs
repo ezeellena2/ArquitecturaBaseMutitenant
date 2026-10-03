@@ -92,6 +92,9 @@ public sealed class ProductionSeedTests
 
         var operatorUser = await context.Users.SingleAsync(TestContext.Current.CancellationToken);
         Assert.True(operatorUser.IsPlatformOperator);
+        var operatorRole = await context.PlatformRoleAssignments.SingleAsync(TestContext.Current.CancellationToken);
+        Assert.Equal(operatorUser.Id, operatorRole.UserId);
+        Assert.Equal(ArquitecturaBaseMultitenant.Domain.Platform.PlatformRole.Owner, operatorRole.Role);
         Assert.Equal("Operator Example", operatorUser.DisplayName);
         Assert.Equal("platform-owner@example.test", operatorUser.Email);
         Assert.False(await context.Tenants.AnyAsync(TestContext.Current.CancellationToken));
@@ -154,6 +157,7 @@ public sealed class ProductionSeedTests
             """, TestContext.Current.CancellationToken);
         using var promotedHost = NewHost("pending-owner@example.test");
         using var promotedClient = promotedHost.CreateClient();
+        Assert.Equal(1, await context.PlatformRoleAssignments.AsNoTracking().CountAsync(TestContext.Current.CancellationToken));
         Assert.True(await context.Users.AsNoTracking().AnyAsync(user => user.IsPlatformOperator,
             TestContext.Current.CancellationToken));
         Assert.Equal(2, (await context.SecurityEvents.AsNoTracking()
