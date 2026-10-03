@@ -58,7 +58,7 @@ El resultado tiene que servir para empezar productos reales.
 | 8 | WhatsApp (número de la plataforma: códigos, invitaciones, avisos de la cuenta, bot de ingreso) | ✔ | ✔ | 3 |
 | 9 | Endurecimiento: TOTP para operadores, **caché en Redis**, rate limit, headers, observabilidad, fuzz de aislamiento | ✔ | ✔ | 5–8 |
 | 10 | Despliegue y operación: CI/CD, migration bundle, backup, runbook, exportar mis datos | ✔ | ✔ | 9 |
-| 11 | Opcional: canales de WhatsApp por organización | ✔ | ✔ | 8 |
+| 11 | WhatsApp de atención: plataforma y organizaciones ([plan](2026-10-03-etapa-11-whatsapp.md), ADR 0038) | ✔ | ✔ | 8 |
 
 Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va después de la 6. La 5 usa `TenantProvisioner` de la 6 (aprobar, crear con invitación y reintentar el provisioning), `PublicPage` (moderar la página pública) y `TenantDomains` de la 6 (administrar el dominio verificado desde la plataforma). El dominio de correo y `TenantDomains` nacen y se cierran en la Configuración de la 6. La 7 necesita la página pública de la 6 (`PublicPage` publicada, el slug y los reservados). Los módulos de negocio del producto (B2B y B2C) se suman después, cada uno con su plan, copiando Roles, **como módulos con `[FeatureGate]`** (P8).
 
@@ -400,7 +400,7 @@ Además, `navigation/personal.ts` queda listo para sumar módulos B2C. El `Perso
 6. `ModuleIsolationTests`: el núcleo no referencia `*.Modules.*`.
 7. `docs/features/whatsapp.md` y `docs/guides/quitar-whatsapp.md`.
 
-**Front:** ingreso, registro y enlace por WhatsApp (`/login/enlace`, tablero Enlace), y `PhoneField` en la cuenta (vincular y desvincular), copiando los estados de WhatsApp de Ingreso, Registro, Cuenta y Enlace y el canal WhatsApp de Mensajes. No hay pantalla de WhatsApp de plataforma: si algún día hace falta, primero se dibuja y se aprueba.
+**Front:** ingreso, registro y enlace por WhatsApp (`/login/enlace`, tablero Enlace), y `PhoneField` en la cuenta (vincular y desvincular), copiando los estados de WhatsApp de Ingreso, Registro, Cuenta y Enlace y el canal WhatsApp de Mensajes. Las pantallas de WhatsApp de la plataforma y de las organizaciones llegan en la Etapa 11 (ADR 0038), ya dibujadas y aprobadas en el lienzo v65.
 
 **Puerta:** la general, más un recorrido real: con el webhook de Meta apuntando al túnel del multitenant (`configuracion.md` §4), ingresar con un código por WhatsApp y escribirle al bot. Además, **la prueba de fuego**: en una copia descartable, quitar el módulo siguiendo `quitar-whatsapp.md`, y el build y los tests del núcleo tienen que quedar en verde.
 
@@ -432,6 +432,6 @@ Además, `navigation/personal.ts` queda listo para sumar módulos B2C. El `Perso
 - `docs/operations/runbook.md`: alta de `mt_app` **y creación de la base con ICU `es-AR`**, backup y restore, rotación de certificados, suspensiones, purga y baja de datos personales.
 - **Datos personales (P7, segunda parte):** `POST /api/me/data-export` (`[Idempotent]`), `platform.DataExports`, la preparación en segundo plano del JSON y el correo «Exportación de datos lista» (solo por correo), con un enlace de descarga que vence a las 48 h ([datos-personales](../rules/datos-personales.md)), y su participante de la baja, que borra los archivos. En el front, «Exportar mis datos» en la sección Privacidad de `/cuenta`. La baja de la cuenta ya está en la Etapa 3.
 
-## Etapa 11 (opcional)
+## Etapa 11: WhatsApp de atención
 
-- Canales de WhatsApp por organización (`WhatsAppChannels`). Recién acá entra al catálogo `platform.whatsapp.manage`, porque es la primera ruta que lo usa.
+El plan ejecutable es [2026-10-03-etapa-11-whatsapp.md](2026-10-03-etapa-11-whatsapp.md) y la decisión, [ADR 0038](../decisions/0038-whatsapp-de-atencion.md). Resumen: la plataforma y cada organización atienden por WhatsApp con el mismo módulo (números con el alta de Meta, bot, equipos, bandejas de Clientes e Internos, contactos, plantillas y difusiones). Recién acá entra al catálogo `platform.whatsapp.manage`, porque es la primera ruta que lo usa.

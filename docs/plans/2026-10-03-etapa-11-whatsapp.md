@@ -1,0 +1,74 @@
+# Etapa 11: WhatsApp de atención — plan ejecutable
+
+> Plan de implementación para esta etapa. Seguir el orden, completar las casillas con evidencia y commitear cada cambio coherente y verificado con rutas explícitas.
+
+**Objetivo:** que la plataforma y cada organización atiendan por WhatsApp con el mismo módulo: números conectados con el alta de Meta, bot con menú, equipos y bandejas de Clientes e Internos, contactos con consentimiento, plantillas, difusiones y la sección «Mensajes» de la persona.
+
+**Decisión de producto:** [ADR 0038](../decisions/0038-whatsapp-de-atencion.md). **Fuente visual:** página «Organización · WhatsApp» del lienzo v65 (`../ArquitecturaBaseMutitenantFront/docs/design/lienzo`, tableros `WA-*`, más el área WhatsApp de `Rol`, «Cargar teléfonos» en `Usuarios`, «Mensajes» en el perfil personal, el correo «Chats esperando» de `Mensajes` y el menú de Plataforma). Cuando el lienzo y este texto no coinciden, manda el lienzo.
+
+**Arquitectura:** respetar `docs/architecture/backend.md` (§15, módulo quitable), `docs/architecture/multitenancy.md`, ADR 0007, 0014, 0022, 0033 y 0038, y las fichas de `docs/rules/`, en especial [modulos](../rules/modulos.md), [modulos-habilitados](../rules/modulos-habilitados.md), [datos-personales](../rules/datos-personales.md), [idempotencia](../rules/idempotencia.md), [paginado-y-busqueda](../rules/paginado-y-busqueda.md), [telefonos](../rules/telefonos.md), [numeros-y-moneda](../rules/numeros-y-moneda.md) y [plantillas](../operations/whatsapp-plantillas.md). Todo vive en `Modules/WhatsApp`, y el núcleo no lo referencia.
+
+**Requisitos fuera del código:** la plataforma registrada en Meta como **Tech Provider**, con su app aprobada para el alta embebida. Sin eso, el alta se prueba solo con la cuenta de la plataforma.
+
+**Depende de:** la Etapa 8 (cliente de Cloud API, webhook con firma, plantillas, teléfono como método de ingreso y bot de ingreso).
+
+## Pendiente de diseño (no se programa hasta que esté dibujado y aprobado)
+
+- Los teléfonos de estas pantallas: `M-WA-*` siguen «por refinar».
+- Las ventanas del alta embebida de Meta. Se dibujan cuando el dueño lo pida.
+- Los inicios (Inicio-Org e Inicio-Miembro) siguen «para repensar», con la idea de un menú propio para las acciones pendientes.
+
+## Seguimiento
+
+### 0. Línea de base
+
+- [ ] Confirmar la Etapa 8 cerrada, `main` limpio en los dos repos y Aspire apagado.
+- [ ] Leer ADR 0038, el tablero de decisiones y los tableros `WA-*` de v65; revisar este plan con un revisor de documentos antes del código.
+
+### 1. Modelo y módulo por organización
+
+- [ ] Módulo «WhatsApp» en el catálogo de módulos por organización. La pestaña «Módulos» de la ficha de organización lo prende y lo apaga. Apagado, las rutas del módulo responden 404 y el menú no lo muestra.
+- [ ] `WhatsAppChannels`: número, dueño (plataforma u organización), a quién atiende (toda la organización o una empresa), ids de Meta, estado (conectado, falta medio de pago, desconectado) y fecha. `PhoneNumberId` único global, como ya está previsto.
+- [ ] Equipos (nombre, bandeja Clientes o Internos, personas, minutos para el aviso por correo), contactos (nombre, número, etiquetas, consentimiento de promociones con su origen, vínculo con una cuenta), conversaciones (bandeja, equipo, quién la tomó, estado de la ventana de 24 h), mensajes, notas internas, plantillas, difusiones y destinatarios.
+- [ ] Clasificar cada tabla: lo de la organización es `ITenantOwned`; el vínculo de un contacto con una persona es `IConsumerBusinessShared`; lo de la plataforma es su propio esquema. Agregar los tests de aislamiento.
+- [ ] Permisos de organización: `whatsapp.customers` (Atender clientes), `whatsapp.internal` (Atender internos), `whatsapp.broadcasts` (Mandar difusiones) y `whatsapp.manage` (Administrar WhatsApp), en el catálogo, en `Permissions.resx` y `.en.resx` y en el seed. Plataforma: `platform.whatsapp.manage` y un permiso para atender las consultas del número propio.
+
+### 2. Conectar números (alta embebida de Meta)
+
+- [ ] Recibir lo que devuelve el alta (id de la cuenta de WhatsApp Business y del número), cambiar el código por el token del negocio, suscribirse a los webhooks de esa cuenta y registrar el número. Nunca registrar tokens en logs. Soportar coexistencia.
+- [ ] Consultar si la cuenta tiene medio de pago: sin medio de pago, el estado es «Falta medio de pago», con «Comprobar». Llevar los mensajes del mes por número.
+- [ ] «Cambiar a quién atiende» y «Desconectar», con su auditoría.
+- [ ] Plataforma › WhatsApp: el número propio con el mismo flujo, que también atiende consultas.
+
+### 3. Entrada de mensajes y bandejas
+
+- [ ] Reconocer quién escribe: un número verificado en la cuenta de un miembro activo de la organización dueña del número va a Internos; cualquier otro, a Clientes.
+- [ ] Bot por número: bienvenida, fuera de horario y menú como lista interactiva de WhatsApp (hasta 10 opciones), donde cada opción pasa a un equipo o contesta un texto. Los empleados no ven el menú y van al equipo de Internos configurado.
+- [ ] Tomar (al responder también se toma, con control de carrera: si otro lo tomó antes, error y aviso), pasar a equipo o persona, y notas internas.
+- [ ] Ventana de 24 h: fuera de ella solo se manda una plantilla.
+- [ ] Aviso por correo cuando un chat queda sin tomar más del tiempo del equipo: por outbox (ADR 0014), solo con el resumen.
+- [ ] Registro de acciones internas por módulo: cada acción declara su permiso. La plantilla no trae acciones de negocio.
+
+### 4. Contactos, consentimiento y personas
+
+- [ ] Etiquetas y consentimiento de promociones: el bot pregunta y «Baja» lo corta solo. Importar contactos (CSV o Excel) con la casilla obligatoria de consentimiento y su origen guardado.
+- [ ] Vincular con la cuenta: el bot ofrece el enlace; con la aceptación de la persona, la organización ve su nombre verificado. La persona puede desvincular. Sumarlo a «Exportar mis datos» y a la baja de la cuenta.
+- [ ] «Cargar teléfonos de empleados»: revisar cada número (miembro, con cuenta, sin cuenta, inválido) y confirmar los vínculos y las invitaciones, que salen por WhatsApp. `[Idempotent]`.
+
+### 5. Plantillas y difusiones
+
+- [ ] Crear plantillas por la API de Meta (nombre, tipo Utilidad o Marketing, texto con datos variables), traer las existentes y su estado (en revisión, aprobada, rechazada con motivo). Una aprobada se duplica, no se edita.
+- [ ] Elegir plantilla en un chat: datos completados, vista previa y costo estimado (`Money`).
+- [ ] Difusiones: destinatarios (los que aceptaron o una etiqueta), programar, costo estimado, envío por outbox respetando los límites de Meta, resultados por contacto (entregado, leído, respondió, baja, no llegó con motivo) y «Duplicar».
+
+### 6. Front, copiando el lienzo v65
+
+- [ ] Chats (Clientes e Internos, filtros, tomar, pasar, notas, 24 h, elegir plantilla), Contactos (importar), Ficha del contacto, Difusiones, Nueva difusión y Resultados.
+- [ ] Administración › WhatsApp: Números (falta medio de pago), Bot con «Configuración» y «Recorrido», Equipos y Plantillas.
+- [ ] Área WhatsApp en Rol, «Cargar teléfonos» en Usuarios, «Mensajes» en el perfil personal, el menú de Plataforma («WhatsApp» y la configuración aparte) y el correo «Chats esperando».
+
+### 7. Puerta
+
+- [ ] La general (build sin advertencias y tests con Docker), los tests de aislamiento del módulo y `ModuleIsolationTests`.
+- [ ] Recorrido real con el webhook de Meta apuntando al túnel: conectar un número de prueba, escribir como cliente y como empleado, tomar, pasar, mandar una plantilla y una difusión chica.
+- [ ] La prueba de fuego de la Etapa 8, otra vez: quitar el módulo en una copia descartable y que el núcleo quede en verde.
