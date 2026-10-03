@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -34,19 +35,10 @@ internal sealed class PlatformReader(ApplicationDbContext context) : IPlatformRe
     public Task<PlatformTenantResponse?> FindTenantAsync(Guid id, CancellationToken ct) =>
         Project(context.Tenants.AsNoTracking().Where(t => t.Kind == TenantKind.Business && t.Id == id)).SingleOrDefaultAsync(ct);
 
-    public async Task<IReadOnlyList<Guid>> ListTenantNoticeRecipientsAsync(Guid id, CancellationToken ct)
-    {
-        var owners = context.UserTenantAccesses.AsNoTracking().Where(a => a.TenantId == id
-            && a.Status == MemberStatus.Active && a.RoleName == SystemRoles.TenantAdmin).Select(a => a.UserId);
-        var registrant = context.Tenants.AsNoTracking().Where(t => t.Id == id
-            && t.Kind == TenantKind.Business && t.RegistrationSource == TenantRegistrationSource.SelfService
-            && t.RegisteredByUserId != null).Select(t => t.RegisteredByUserId!.Value);
-        return await owners.Union(registrant).Order().ToArrayAsync(ct);
-    }
-
     public async Task<IReadOnlyList<Guid>> ListActiveTenantOwnerIdsAsync(Guid id, CancellationToken ct) =>
         await context.UserTenantAccesses.AsNoTracking().Where(a => a.TenantId == id
-            && a.Status == MemberStatus.Active && a.RoleName == SystemRoles.TenantAdmin)
+            && a.Status == MemberStatus.Active && a.RoleName == SystemRoles.TenantAdmin
+            && context.Users.Any(user => user.Id == a.UserId && user.Status == UserStatus.Active))
             .Select(a => a.UserId).Distinct().Order().ToArrayAsync(ct);
 
     private IQueryable<Tenant> ApplyFilters(ListPlatformTenantsRequest request)

@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Platform;
@@ -76,6 +77,10 @@ public sealed class PublicPageModerationTests(ApiFactory factory)
         Assert.Equal(before + 1, await OutboxCountAsync());
         await using (var scope = factory.Services.CreateAsyncScope())
         {
+            var services = scope.ServiceProvider;
+            var notice = await services.GetRequiredService<ApplicationDbContext>().OutboxMessages.AsNoTracking()
+                .Where(message => message.UserId == member.UserId).OrderByDescending(message => message.CreatedAtUtc).FirstAsync(Ct);
+            Assert.DoesNotContain("Revisar contenido", services.GetRequiredService<IPayloadProtector>().Unprotect(notice.EncryptedPayload));
             // El borrador privado desaparece de la lectura pública sin un alcance autorizado.
             Assert.False(await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
                 .PublicPages.AnyAsync(p => p.BusinessTenantId == tenantId, Ct));

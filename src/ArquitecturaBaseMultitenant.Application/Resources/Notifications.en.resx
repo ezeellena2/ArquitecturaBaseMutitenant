@@ -59,16 +59,10 @@
   <data name="Invitation.Action" xml:space="preserve"><value>View the invitation</value></data>
   <data name="Invitation.Note" xml:space="preserve"><value>To sign in, use this email: we'll send you an access code.</value></data>
   <data name="Invitation.Footer" xml:space="preserve"><value>If you weren't expecting this email, you can ignore it.</value></data>
-  <data name="OrganizationState.Title" xml:space="preserve"><value>Your organization status changed</value></data>
-  <data name="OrganizationState.Subject" xml:space="preserve"><value>Organization status change</value></data>
-  <data name="OrganizationState.Body" xml:space="preserve"><value>{0} Organization {1} is now {2}.</value></data>
-  <data name="OrganizationState.Reason" xml:space="preserve"><value>Reason: {0}</value></data>
-  <data name="OrganizationState.PersonalUnaffected" xml:space="preserve"><value>Your account and personal space remain available.</value></data>
-  <data name="OrganizationState.Active" xml:space="preserve"><value>active</value></data>
-  <data name="OrganizationState.Suspended" xml:space="preserve"><value>suspended</value></data>
-  <data name="OrganizationState.Closed" xml:space="preserve"><value>closed</value></data>
-  <data name="OrganizationState.Provisioning" xml:space="preserve"><value>being provisioned</value></data>
-  <data name="OrganizationState.PendingApproval" xml:space="preserve"><value>awaiting approval</value></data>
+  <data name="OrganizationRejected.Title" xml:space="preserve"><value>Your organization signup was not approved</value></data>
+  <data name="OrganizationRejected.Subject" xml:space="preserve"><value>Your organization signup request</value></data>
+  <data name="OrganizationRejected.Body" xml:space="preserve"><value>{0} The signup request for {1} was not approved.</value></data>
+  <data name="OrganizationRejected.PersonalUnaffected" xml:space="preserve"><value>Your account and personal space remain available.</value></data>
   <data name="PublicPageModeration.Title" xml:space="preserve"><value>Your page publication changed</value></data>
   <data name="PublicPageModeration.Subject" xml:space="preserve"><value>Organization page publication</value></data>
   <data name="PublicPageModeration.BlockedBody" xml:space="preserve"><value>{0} The platform unpublished the page for {1}. It is a draft and cannot be published until the platform allows it.</value></data>

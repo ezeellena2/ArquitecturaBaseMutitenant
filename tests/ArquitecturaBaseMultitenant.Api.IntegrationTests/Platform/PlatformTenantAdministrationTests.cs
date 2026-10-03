@@ -84,6 +84,7 @@ public sealed class PlatformTenantAdministrationTests(ApiFactory factory)
         await AccountJourney.AuthorizeAsync(consumerClient, "business", Ct, id);
         using var businessBefore = await consumerClient.GetAsync("/api/me", Ct);
         Assert.Equal(HttpStatusCode.OK, businessBefore.StatusCode);
+        var noticesBefore = await OutboxCountAsync(member.UserId);
         var original = await VersionAsync(ownerClient, id);
         using var invalid = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{id:D}/suspend", new { version = original, reason = " " }, Ct);
         Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
@@ -116,7 +117,8 @@ public sealed class PlatformTenantAdministrationTests(ApiFactory factory)
         Assert.Equal(4, await context.SecurityEvents.CountAsync(e => e.TargetTenantId == id, Ct));
         Assert.True(await context.SecurityEvents.AnyAsync(e => e.TargetTenantId == pending && e.ActorId == owner.UserId
             && e.Type == Domain.Auditing.SecurityEventType.OrganizationRejected && e.Reason == "Solicitud no válida", Ct));
-        Assert.True(await context.OutboxMessages.CountAsync(e => e.UserId == member.UserId, Ct) >= 3);
+        // Suspender/reactivar/cerrar no tienen aviso diseñado; el registrante sin membresía tampoco lo recibe.
+        Assert.Equal(noticesBefore, await context.OutboxMessages.CountAsync(e => e.UserId == member.UserId, Ct));
     }
 
     [Fact]
@@ -145,6 +147,13 @@ public sealed class PlatformTenantAdministrationTests(ApiFactory factory)
         await using var scope = factory.Services.CreateAsyncScope();
         var rows = await scope.ServiceProvider.GetRequiredService<IUserTenantAccessReader>().ListForUserAsync(userId, Ct);
         return rows.Single(r => r.Kind == TenantKind.Personal).TenantId;
+    }
+
+    private async Task<int> OutboxCountAsync(Guid userId)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
+            .OutboxMessages.CountAsync(message => message.UserId == userId, Ct);
     }
 
     private async Task SeedMembershipAsync(Guid tenantId, Guid userId)

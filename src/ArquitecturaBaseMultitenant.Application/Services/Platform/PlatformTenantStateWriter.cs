@@ -35,7 +35,7 @@ internal sealed class PlatformTenantStateWriter(IPlatformTenantRepository tenant
         };
         audit.Record(id, type, request.Reason!);
         if (action is not PlatformTenantAction.Reactivate) await tokens.RevokeTenantAsync(id, ct);
-        await notices.EnqueueAsync(tenant, request.Reason!, ct);
+        if (action == PlatformTenantAction.Reject) await notices.EnqueueRejectedAsync(tenant, ct);
         return Result.Success();
     }
 }

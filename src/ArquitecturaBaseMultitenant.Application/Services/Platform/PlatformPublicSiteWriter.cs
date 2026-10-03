@@ -25,7 +25,7 @@ internal sealed class PlatformPublicSiteWriter(IPublicPageRepository pages, ITen
         audit.Record(tenantId, blocked ? SecurityEventType.PublicPageUnpublished : SecurityEventType.PublicPagePublicationAllowed, request.Reason!);
         auditLog.Record(AuditAction.Updated, "PublicPage", page.Id,
             new Dictionary<string, object?> { ["isPublished"] = page.IsPublished, ["publishBlocked"] = blocked });
-        await notices.EnqueuePageModerationAsync(tenant, blocked, request.Reason!, ct);
+        await notices.EnqueuePageModerationAsync(tenant, blocked, ct);
         return Result.Success();
     }
 }
