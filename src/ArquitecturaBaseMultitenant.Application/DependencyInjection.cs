@@ -33,6 +33,7 @@ public static class DependencyInjection
         services.AddScoped<ICompanyMembershipService, CompanyMembershipService>();
         services.AddScoped<IOrganizationUserService, OrganizationUserService>();
         services.AddScoped<IOrganizationSettingsService, OrganizationSettingsService>();
+        services.AddScoped<OrganizationSettingsUpdater>();
         services.AddScoped<IOrganizationDomainService, OrganizationDomainService>();
         services.AddScoped<IPublicPageService, PublicPageService>();
         services.AddScoped<IOrganizationAuditService, OrganizationAuditService>();
