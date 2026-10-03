@@ -2,9 +2,11 @@ using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Models.Companies;
 using ArquitecturaBaseMultitenant.Application.Models.Invitations;
 using ArquitecturaBaseMultitenant.Application.Services.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -69,12 +71,33 @@ internal static class InvitationCommand
             var invitationId = command.RootElement.GetProperty("invitationId").GetGuid();
             var invitation = await provider.GetRequiredService<IInvitationReader>().FindByIdAsync(invitationId, ct)
                 ?? throw new InvalidOperationException("The isolated invitation was not found.");
+            bool? companyMembershipActive = null;
+            bool? companyAdminAssigned = null;
+            if (command.RootElement.TryGetProperty("companyId", out var companyIdElement))
+            {
+                var companyId = companyIdElement.GetGuid();
+                var membership = await provider.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async token =>
+                {
+                    var member = await provider.GetRequiredService<IMemberRepository>()
+                        .GetByUserIdAsync(userId.Value, token);
+                    if (member is null) return Result.Success((Active: false, IsCompanyAdmin: false));
+                    var companyMembers = await provider.GetRequiredService<ICompanyMembershipReader>().ListAsync(companyId,
+                        new ListCompanyMembersRequest { Page = 1, PageSize = 100 }, token);
+                    var companyMember = companyMembers.Items.SingleOrDefault(row => row.MemberId == member.Id);
+                    return Result.Success((Active: companyMember?.MembershipStatus == CompanyMembershipStatus.Active,
+                        IsCompanyAdmin: companyMember?.Roles.Any(role => role.Name == SystemRoles.CompanyAdmin) == true));
+                }, CommitPolicy.OnSuccess, ct);
+                companyMembershipActive = membership.Value.Active;
+                companyAdminAssigned = membership.Value.IsCompanyAdmin;
+            }
             result = new
             {
                 personalSpaces = accesses.Count(row => row.Kind == TenantKind.Personal),
                 activeBusinessAccesses = accesses.Count(row => row.TenantId == tenantId && row.MemberStatus == MemberStatus.Active),
                 accepted = invitation.Status == InvitationStatus.Accepted,
                 boundToIdentity = invitation.MemberUserId == userId,
+                companyMembershipActive,
+                companyAdminAssigned,
             };
         }
         else throw new InvalidOperationException("Unsupported isolated invitation command.");
