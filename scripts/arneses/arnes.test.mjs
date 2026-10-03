@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { after, test } from 'node:test';
@@ -47,6 +47,24 @@ test('--detectar sobre los fixtures devuelve exactamente los hallazgos esperados
   const codigo = await ejecutar(['prueba', '--detectar', '--back', join(fixtures, 'back'), '--front', join(fixtures, 'front')], { dirArneses: dir, escribir: c.escribir, dirInformes: raiz });
   assert.equal(codigo, 2);
   assert.match(c.salida.join('\n'), /humano: 1/);
+});
+
+test('--instalar copia la skill versionada de .agents a .claude', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'skill-'));
+  temporales.push(dir);
+  await mkdir(join(dir, '.agents', 'skills', 'arnes'), { recursive: true });
+  await writeFile(join(dir, '.agents', 'skills', 'arnes', 'SKILL.md'), '---\nname: arnes\n---\n');
+  const c = captura();
+  assert.equal(await ejecutar(['--instalar', '--back', dir], { escribir: c.escribir }), 0);
+  assert.equal(await readFile(join(dir, '.claude', 'skills', 'arnes', 'SKILL.md'), 'utf8'), '---\nname: arnes\n---\n');
+  assert.match(c.salida.join('\n'), /Skill \/arnes instalada/);
+  assert.equal(await ejecutar(['--instalar', '--back', join(dir, 'nada')], { escribir: c.escribir }), 1);
+});
+
+test('la skill del repo declara su nombre y las opciones del CLI', async () => {
+  const skill = await readFile(join(dirname(fileURLToPath(import.meta.url)), '..', '..', '.agents', 'skills', 'arnes', 'SKILL.md'), 'utf8');
+  assert.match(skill, /^---\nname: arnes\n/);
+  for (const opcion of ['--detectar', '--sin-modelo', '--motor', '--modelo', '--presupuesto', '--repo', '--fusionar']) assert.ok(skill.includes(opcion), opcion);
 });
 
 test('--detectar sale con 0 sin hallazgos y con 1 si el arnés no existe', async () => {

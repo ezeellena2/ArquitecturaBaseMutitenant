@@ -36,6 +36,7 @@ Las decisiones están en [`docs/decisions/README.md`](docs/decisions/README.md) 
 | configurar Google, Gmail o WhatsApp, o cargar secretos | [configuracion](docs/operations/configuracion.md) (nunca un secreto en el repo) |
 | escribir tests | [tests](docs/rules/tests.md) |
 | agregar un área completa | `docs/guides/agregar-un-area.md` (nace en la Etapa 4) |
+| correr o crear un arnés ejecutable (realinear docs, programar una rutina) | [scripts/arneses/README.md](scripts/arneses/README.md), [agregar-un-arnes](docs/guides/agregar-un-arnes.md) |
 
 El inventario de todos los estándares transversales (los definidos y los propuestos) está en [`docs/architecture/estandares.md`](docs/architecture/estandares.md). Si una regla no está escrita: **copiá cómo lo resuelve ArquitecturaBase** (`../ArquitecturaBase`, `../ArquitecturaBaseFront`); si tampoco está ahí, **decidí vos lo más simple y coherente con estos docs, anotalo en la sección «Decisiones tomadas» del informe de la etapa y seguí**. Frená y preguntá **solo** si la decisión cambia el producto (qué ve o puede hacer un usuario, una pantalla del lienzo, el modelo de accesos) o contradice una regla escrita. Una duda técnica menor nunca frena una etapa. Una convención transversal nueva se agrega a la ficha y se verifica con un test pertinente, existente o nuevo; una decisión local queda en la feature o el informe, con test de conducta si agrega lógica.
 
@@ -83,4 +84,5 @@ El inventario de todos los estándares transversales (los definidos y los propue
 - `dotnet build ArquitecturaBaseMultitenant.slnx`
 - `dotnet test`, o `dotnet test --project tests/<P>/<P>.csproj -- --filter-class "<Clase>"`
 - `aspire run` / `aspire stop`
+- `node scripts/arneses/arnes.mjs realinear-docs --detectar` (0 tokens); sin `--detectar` corre el arnés completo en una rama aparte. Tests: `node --test "scripts/arneses/**/*.test.mjs"`.
 - Migración: ver [backend.md §9](docs/architecture/backend.md#9-persistencia).

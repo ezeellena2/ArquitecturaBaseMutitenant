@@ -42,7 +42,7 @@ export async function corridaDeRepo({ detectar, arnes, repo, dirArneses, raices,
   const rel = relative(raizBackArneses ?? raiz, dirArneses);
   const dirDet = !rel.startsWith('..') && !isAbsolute(rel) && raiz === (raizBackArneses ?? raiz) ? join(carpeta, rel) : dirArneses;
   const raicesWt = { ...raices, [repo]: carpeta };
-  const detectarAqui = () => detectar({ dirArneses: dirDet, arnes, raices: raicesWt, soloRepo: repo, historial });
+  const detectarAqui = () => detectar({ dirArneses: dirDet, arnes, raices: raicesWt, soloRepo: repo, historial, raicesReales: raices });
 
   let hallazgos = await detectarAqui();
   info.contadores = contar(hallazgos);

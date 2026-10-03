@@ -28,7 +28,7 @@ export async function detectar(ctx) {
     if (!archivo.endsWith('.md') || ctx.excluido(archivo)) continue;
     const texto = await ctx.leer(archivo);
     const planeadas = lineasPlaneadas(texto, ctx.etapasCerradas);
-    const resolverCtx = { archivos: ctx.archivos, capas, origen: archivo, raiz: ctx.raiz, pares: ctx.pares, hermano: ctx.hermano };
+    const resolverCtx = { archivos: ctx.archivos, capas, origen: archivo, raiz: ctx.raizReal ?? ctx.raiz, pares: ctx.pares, hermano: ctx.hermano };
 
     for (const e of enlaces(texto)) {
       if (planeadas.has(e.linea)) continue;

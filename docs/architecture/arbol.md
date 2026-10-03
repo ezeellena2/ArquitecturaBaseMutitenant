@@ -6,6 +6,10 @@
 
 ```
 ArquitecturaBaseMutitenant/
+├── .agents/
+│   └── skills/
+│       └── arnes/
+│           └── SKILL.md                              skill /arnes <nombre>: corre un arnés ejecutable y muestra el resumen (Codex la lee de acá; --instalar la copia a .claude/skills/)
 ├── .github/
 │   └── workflows/
 │       └── ci.yml                                    [E0] build + test (Docker); desde la E1 verifica docs/contracts/openapi.json
@@ -57,6 +61,56 @@ ArquitecturaBaseMutitenant/
 │   │   │   └── iana-zone1970.tab                    [E1] IANA tzdb, zonas canónicas y países
 │   │   ├── ciudades.es.json                          [E1] excepciones de nombres de ciudad en español
 │   │   └── ciudades.en.json                          [E1] excepciones de nombres de ciudad en inglés
+│   ├── arneses/                                      arneses ejecutables: detectan (0 tokens), arreglan lo mecánico y llaman a un modelo barato (ADR 0037)
+│   │   ├── AGENTS.md
+│   │   ├── CLAUDE.md
+│   │   ├── README.md                                 qué es un arnés ejecutable, cómo se corre, catálogo, motores y programación
+│   │   ├── arnes.mjs                                 CLI único: lista, detecta, repara, llama al modelo, verifica y commitea
+│   │   ├── arnes.test.mjs                            tests del CLI con fixtures, sin red ni modelo
+│   │   ├── corrida.test.mjs                          corrida completa con ejecutables falsos de claude y codex
+│   │   ├── programar.ps1                             alta, baja y consulta de la tarea programada de Windows
+│   │   ├── comun/                                    piezas compartidas por todos los arneses
+│   │   │   ├── repos.mjs                             ubica back y front; lee ClosedStages de cada uno
+│   │   │   ├── archivos.mjs                          índice del árbol de archivos
+│   │   │   ├── markdown.mjs                          enlaces, anclas, rutas entre backticks, tablas y marcas de etapa
+│   │   │   ├── arbolmd.mjs                           parser de docs/architecture/arbol.md
+│   │   │   ├── rutas.mjs                             resuelve rutas de los docs contra el repo (capas, proyectos y repo hermano)
+│   │   │   ├── simbolos.mjs                          índice de tipos y miembros: C# por regex, TS por export
+│   │   │   ├── similitud.mjs                         distancia de edición y candidatos parecidos
+│   │   │   ├── hallazgos.mjs                         forma del hallazgo, id estable, orden y filtro de ignorados
+│   │   │   ├── parches.mjs                           aplica parches genéricos con verificación del texto y de los permisos
+│   │   │   ├── glob.mjs                              glob mínimo para excluir y permisos
+│   │   │   ├── git.mjs                               git y el historial de archivos borrados
+│   │   │   ├── worktree.mjs                          crea y quita el worktree y la rama de la corrida
+│   │   │   ├── proceso.mjs                           ejecuta procesos y resuelve los shims de npm en Windows
+│   │   │   ├── guardia.mjs                           revierte lo tocado fuera de permisos y hace fallar la corrida
+│   │   │   ├── resultado.mjs                         extrae y valida la respuesta final del modelo
+│   │   │   ├── corrida.mjs                           la corrida completa de un repo, paso a paso
+│   │   │   ├── informe.mjs                           escribe .local/arneses/<arnés>/<fecha>.json y .md
+│   │   │   ├── comun.test.mjs
+│   │   │   ├── motores.test.mjs                      worktree, guardia, motores y shims, con ejecutables falsos
+│   │   │   ├── motores/                              misma interfaz para los dos motores
+│   │   │   │   ├── claude.mjs                        claude -p con solo Read, Edit, Write, Glob y Grep
+│   │   │   │   └── codex.mjs                         codex exec con las instrucciones por stdin
+│   │   │   └── fakes/                                ejecutables falsos de claude y codex para los tests
+│   │   │       ├── claude-falso.mjs
+│   │   │       ├── codex-falso.mjs
+│   │   │       └── escenario.mjs
+│   │   ├── realinear-docs/                           el primer arnés: alinea docs y punteros con el código
+│   │   │   ├── arnes.json                            manifiesto: repos, detectores, permisos, modelo y verificación
+│   │   │   ├── ignorados.json                        hallazgos descartados con motivo; se revisan en el diff
+│   │   │   ├── instrucciones.md                      instrucciones del modelo, iguales para los dos motores
+│   │   │   ├── resultado.schema.json                 forma de la respuesta final del modelo
+│   │   │   ├── realinear-docs.test.mjs               un test por detector, sobre fixtures
+│   │   │   ├── detectores/                           solo leen; nunca escriben ni llaman al modelo
+│   │   │   │   ├── referencias.mjs                   enlaces, anclas y rutas entre backticks que no existen
+│   │   │   │   ├── simbolos.mjs                      tipos y miembros nombrados en los docs que ya no existen
+│   │   │   │   ├── arbol.mjs                         arbol.md contra el árbol real
+│   │   │   │   ├── punteros.mjs                      AGENTS.md y CLAUDE.md contra el mapa de arnes.md §3
+│   │   │   │   ├── indices.mjs                       índices de fichas, decisiones y la tabla del AGENTS.md raíz
+│   │   │   │   └── catalogos.mjs                     permisos, códigos de error y rutas HTTP de docs/features
+│   │   │   └── fixtures/                             mini repos falsos (back y front) con cada tipo de desvío
+│   │   └── _plantilla/                               se copia para crear un arnés nuevo; el CLI ignora las carpetas con _
 │   └── secretos/
 │       ├── importar-desde-arquitecturabase.ps1       copia los 5 secretos de ArquitecturaBase sin mostrarlos
 │       ├── cargar-desde-archivo.ps1                  carga un JSON guardado fuera del repo
@@ -1217,6 +1271,7 @@ docs/
 │   │                                                  errores → permiso → repositorio y lector → servicio → controller
 │   │                                                  con [Access] → tests (aislamiento incluido) → inventario
 │   ├── permiso-nuevo.md                               [E4]
+│   ├── agregar-un-arnes.md                            receta para sumar un arnés ejecutable (scripts/arneses/)
 │   ├── migracion.md                                   [E2] comando + EnableTenantRls + índices de SortMap
 │   ├── prefijo-de-backend.md                          [E1]
 │   └── quitar-whatsapp.md                             [E8] borrar Domain/WhatsApp, Modules/WhatsApp en las tres capas y la

@@ -5,7 +5,7 @@
  *   node scripts/arneses/arnes.mjs <arnés> --detectar       0 tokens: detecta y escribe el informe
  *   node scripts/arneses/arnes.mjs <arnés> [opciones]       corrida completa (ver README.md)
  */
-import { readFile, readdir } from 'node:fs/promises';
+import { cp, readFile, readdir } from 'node:fs/promises';
 import { basename, join, dirname } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
@@ -59,7 +59,9 @@ export async function leerJson(ruta, porDefecto = null) {
 }
 
 /** Corre los detectores del arnés sobre cada repo y devuelve los hallazgos sin ignorados, ordenados. */
-export async function detectar({ dirArneses, arnes, raices, soloRepo, historial }) {
+// `raicesReales` son los repos de verdad cuando `raices` apunta a un worktree: los hermanos (`../ArquitecturaBase`) se buscan desde ahí.
+export async function detectar({ dirArneses, arnes, raices, soloRepo, historial, raicesReales }) {
+  const reales = raicesReales ?? raices;
   const { manifiesto } = arnes;
   const ignorados = (await leerJson(join(dirArneses, arnes.carpeta, 'ignorados.json'), [])) ?? [];
   const todos = [];
@@ -78,7 +80,8 @@ export async function detectar({ dirArneses, arnes, raices, soloRepo, historial 
       repoInfo: repo,
       archivos,
       hermano,
-      pares: Object.values(raices).filter(Boolean).map((r) => basename(r)),
+      raizReal: reales[nombre] ?? raiz,
+      pares: Object.values(reales).filter(Boolean).map((r) => basename(r)),
       markdown,
       etapasCerradas: repo.etapasCerradas,
       manifiesto,
@@ -115,11 +118,28 @@ export function sinLineasQueSeBorran(hallazgos) {
   });
 }
 
+/**
+ * `.claude/` está en `.gitignore`, así que la skill versionada vive en `.agents/skills/arnes/` (la lee Codex)
+ * y acá se copia a `.claude/skills/arnes/` en cada máquina. Es una copia, no un enlace: el repo tiene `core.symlinks=false`.
+ */
+export async function instalarSkill(raiz) {
+  const origen = join(raiz, '.agents', 'skills', 'arnes');
+  const destino = join(raiz, '.claude', 'skills', 'arnes');
+  if (!existsSync(origen)) throw new Error(`No existe ${origen}`);
+  await cp(origen, destino, { recursive: true });
+  return destino;
+}
+
 export async function ejecutar(argv, opts = {}) {
   const escribir = opts.escribir ?? ((t) => process.stdout.write(`${t}\n`));
   const dirArneses = opts.dirArneses ?? aqui;
   const args = parsearArgumentos(argv);
   try {
+    if (args.instalar) {
+      const destino = await instalarSkill(args.back ?? raizBackPorDefecto());
+      escribir(`Skill /arnes instalada en ${destino}`);
+      return 0;
+    }
     const arneses = await listarArneses(dirArneses);
     if (args._.length === 0 && !args.instalar) {
       escribir('Arneses disponibles:');

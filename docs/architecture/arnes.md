@@ -78,6 +78,7 @@ Cada fila es una carpeta que lleva `AGENTS.md` + `CLAUDE.md`. Los punteros se es
 | `Infrastructure/Persistence/Migrations/` | se generan con el comando de la guía; cada tabla nueva llama al helper RLS de su clase (`EnableTenantRls`, `EnablePublicRls` o `EnablePartiesRls`) + índices del `SortMap` | persistencia-ef, multitenancy, paginado-y-busqueda | `docs/guides/migracion.md` (E2) |
 | `Infrastructure/Persistence/Repositories/` | EF para escribir un agregado; exige la transacción del caso de uso | guardado, persistencia-ef | `RoleRepository.cs` (E4) |
 | `Infrastructure/Persistence/Readers/` | proyecciones `AsNoTracking` → `*Row`; desde E2, `ReferenceDataReader` lee catálogos globales con HybridCache y scope propio; `SortMap`, `ApplySearch`, `ToPagedResultAsync` | datos-de-referencia, paginado-y-busqueda, multitenancy | `ReferenceDataReader.cs` (E2), `RoleReader.cs` (E4) |
+| `scripts/arneses/` | arneses ejecutables: detectan, arreglan lo mecánico y llaman a un modelo barato; sin npm; los tests no leen el repo real ni llaman a un modelo | tests | `scripts/datos-de-referencia/generar.test.mjs` |
 | `Infrastructure/Persistence/Seed/ReferenceData/` | cinco JSON generados de ISO/IANA/CLDR y fuentes editables del script; no se editan a mano | datos-de-referencia | `currencies.json` (E1) |
 | `scripts/datos-de-referencia/` | fuentes editables, snapshots/lock fijados y generador de los cinco JSON; tests sin red | datos-de-referencia | `generar.mjs` (E1) |
 | `Infrastructure/ReferenceData/` | adaptador JSON de los cinco catálogos en E1; desde E2 solo alimenta el seed y el exportador OpenAPI, mientras el runtime usa Reader con HybridCache | datos-de-referencia, capas-y-flujo | `JsonReferenceDataCatalog.cs` (E1) |
@@ -132,5 +133,6 @@ Hasta que ambos repos estén en GitHub, cada CI usa solo su propio checkout. Los
 - **Carpeta nueva del mapa** → sus dos punteros en la misma tarea.
 - **Un agente inventó algo** → no se corrige solo el código: se busca qué nivel del arnés no lo guió (falta puntero, la ficha no era clara o falta test) y se arregla ese nivel.
 - Al cerrar cada etapa, la puerta de documentación a ciegas (plan, Etapa 4) se repite con las preguntas de las áreas nuevas.
+- Al cerrar cada etapa se corre `realinear-docs` ([arneses ejecutables](../../scripts/arneses/README.md), [ADR 0037](../decisions/0037-arneses-ejecutables.md)): detecta en 0 tokens, arregla lo mecánico y deja en una rama aparte lo que hace falta mirar. `HarnessTests` sigue siendo la red final.
 
 Durante una etapa, cada cambio coherente se verifica con su test focal y el build del proyecto afectado; las integraciones relevantes se suman al tocar rutas, persistencia, autenticación o aislamiento. La puerta completa de ambos repos, el E2E real y la comparación visual se ejecutan al cerrar la etapa, según el plan maestro. No se repiten por cada paso interno.

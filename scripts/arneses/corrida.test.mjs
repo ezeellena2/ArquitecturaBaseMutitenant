@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { appendFile, cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, sep } from 'node:path';
@@ -29,6 +29,9 @@ async function entorno({ verificacion = ['node -e "process.exit(0)"'] } = {}) {
   temporales.push(madre);
   const back = join(madre, 'repo');
   await cp(join(fixtures, 'back'), back, { recursive: true });
+  // Un repo hermano que no es el par back/front: mencionarlo no es un desvío, tampoco desde el worktree (`../.arneses/`).
+  await mkdir(join(madre, 'OtroRepo'));
+  await appendFile(join(back, 'docs', 'features', 'roles.md'), '- Otro repo: `OtroRepo/src/Foo.cs`.\n');
   await git(back, ['init', '-q', '-b', 'main']);
   await git(back, ['config', 'user.email', 'a@b.c']);
   await git(back, ['config', 'user.name', 'Arnés']);
@@ -42,6 +45,7 @@ async function entorno({ verificacion = ['node -e "process.exit(0)"'] } = {}) {
   manifiesto.repos = ['back'];
   manifiesto.verificacion = { back: verificacion };
   await writeFile(manifiestoRuta, JSON.stringify(manifiesto));
+  await writeFile(join(dirArneses, 'realinear-docs', 'ignorados.json'), '[]');
   await writeFile(join(madre, 'escenario.json'), '{}');
   return { madre, back, dirArneses, dirInformes: join(madre, 'informes'), escenario: join(madre, 'escenario.json'), log: join(madre, 'log.jsonl') };
 }
@@ -86,6 +90,7 @@ test('corrida con Claude: autos, modelo, guardia, verificación y commit en la r
   assert.ok(info.enviados >= 3);
   assert.equal(info.consumo.costoUsd, 0.0123);
   assert.equal(info.verificacion[0].codigo, 0);
+  assert.ok(!info.hallazgos.some((h) => h.id.endsWith('OtroRepo/src/Foo.cs')), 'un repo hermano no es un desvío');
   // Los autos y la corrección del modelo quedaron en el commit de la rama; main no se tocó.
   assert.equal((await enRama(e, 'src/Demo.Domain/CLAUDE.md')).trim(), '@AGENTS.md');
   assert.match(await enRama(e, 'docs/features/roles.md'), /una ficha que ya no existe/);

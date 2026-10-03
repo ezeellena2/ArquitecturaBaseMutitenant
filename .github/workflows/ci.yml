@@ -28,6 +28,14 @@ jobs:
           npm ci
           npm test
 
+      - name: Probar arneses ejecutables (sin red ni modelo)
+        run: node --test "scripts/arneses/**/*.test.mjs"
+
+      # Informativo: sale 2 si hay desvíos entre la documentación y el código; no frena el build.
+      - name: Detectar desvíos de documentación
+        continue-on-error: true
+        run: node scripts/arneses/arnes.mjs realinear-docs --detectar --repo back
+
       # El runner de Ubuntu trae Docker para los tests de integración con Testcontainers.
       - name: Verificar Docker
         run: docker info
