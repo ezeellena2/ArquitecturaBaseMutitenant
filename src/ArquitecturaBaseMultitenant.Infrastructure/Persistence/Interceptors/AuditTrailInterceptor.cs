@@ -16,7 +16,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Interceptors;
 internal sealed class AuditTrailInterceptor(
     ICurrentUser currentUser,
     ITenantContext tenantContext,
-    TimeProvider timeProvider) : SaveChangesInterceptor
+    TimeProvider timeProvider,
+    IRequestInfo requestInfo) : SaveChangesInterceptor
 {
     private const string CounterpartSql =
         "SELECT set_config('app.audit_counterpart_tenant_ids', @tenant_ids, true)";
@@ -51,6 +52,8 @@ internal sealed class AuditTrailInterceptor(
     {
         ArgumentNullException.ThrowIfNull(context);
         RejectHistoryMutations(context);
+        foreach (var entry in context.ChangeTracker.Entries<SecurityEvent>().Where(entry => entry.State == EntityState.Added))
+            entry.Entity.WithRequestIp(requestInfo.IpAddress);
         var allChanged = context.ChangeTracker.Entries<IAuditable>()
             .Where(entry => entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
             .ToArray();

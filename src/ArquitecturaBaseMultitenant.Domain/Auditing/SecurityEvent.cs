@@ -1,4 +1,6 @@
 using ArquitecturaBaseMultitenant.Domain.Common;
+using System.Net;
+using System.Net.Sockets;
 
 namespace ArquitecturaBaseMultitenant.Domain.Auditing;
 
@@ -11,6 +13,9 @@ public sealed class SecurityEvent : Entity
     public AuditActorKind ActorKind { get; private set; }
     public Guid ActorId { get; private set; }
     public Guid? TargetTenantId { get; private set; }
+    public Guid? TargetAccountId { get; private set; }
+    public string Changes { get; private set; } = "{}";
+    public string? MaskedIpAddress { get; private set; }
     public string? Reason { get; private set; }
     public DateTime OccurredAtUtc { get; private set; }
 
@@ -36,6 +41,7 @@ public sealed class SecurityEvent : Entity
             Type = type,
             ActorKind = AuditActorKind.User,
             ActorId = actorId,
+            TargetAccountId = actorId,
             OccurredAtUtc = occurredAtUtc,
         };
     }
@@ -63,9 +69,37 @@ public sealed class SecurityEvent : Entity
         ForPlatformAction(SecurityEventType.PlatformSettingsChanged, actorKind, actorId,
             reason, occurredAtUtc);
 
-    public static SecurityEvent ForPlatformOperatorGrant(string reason, DateTime occurredAtUtc) =>
-        ForPlatformAction(SecurityEventType.PlatformOperatorGranted, AuditActorKind.System,
+    public static SecurityEvent ForPlatformOperatorGrant(string reason, DateTime occurredAtUtc, Guid? accountId = null)
+    {
+        if (accountId == Guid.Empty) throw new ArgumentException("The account id cannot be empty.", nameof(accountId));
+        var ev = ForPlatformAction(SecurityEventType.PlatformOperatorGranted, AuditActorKind.System,
             Guid.Empty, reason, occurredAtUtc);
+        ev.TargetAccountId = accountId;
+        return ev;
+    }
+
+    public SecurityEvent WithEvidence(SecurityEventChanges changes, string? ipAddress)
+    {
+        ArgumentNullException.ThrowIfNull(changes);
+        Changes = changes.ToJson();
+        return WithRequestIp(ipAddress);
+    }
+
+    public SecurityEvent WithRequestIp(string? ipAddress)
+    {
+        MaskedIpAddress = MaskIp(ipAddress);
+        return this;
+    }
+
+    private static string? MaskIp(string? value)
+    {
+        if (!IPAddress.TryParse(value, out var address)) return null;
+        if (address.IsIPv4MappedToIPv6) address = address.MapToIPv4();
+        var bytes = address.GetAddressBytes();
+        return address.AddressFamily == AddressFamily.InterNetwork
+            ? FormattableString.Invariant($"{bytes[0]}.{bytes[1]}.{bytes[2]}.*")
+            : FormattableString.Invariant($"{(bytes[0] << 8) | bytes[1]:x}:{(bytes[2] << 8) | bytes[3]:x}:{(bytes[4] << 8) | bytes[5]:x}:*");
+    }
 
     public static SecurityEvent ForTenantAdministration(SecurityEventType type, Guid operatorId,
         Guid tenantId, string reason, DateTime occurredAtUtc)

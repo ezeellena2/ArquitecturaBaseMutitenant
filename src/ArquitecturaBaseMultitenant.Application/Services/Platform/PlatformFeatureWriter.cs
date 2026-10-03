@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Features;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Domain.Features;
+using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 
@@ -18,6 +19,11 @@ internal sealed class PlatformFeatureWriter(ITenantReader tenants, ITenantFeatur
         if (definition is null) return TenantFeatureErrors.NotFound;
         if (!definition.Supports(tenant.Kind)) return TenantFeatureErrors.InvalidScope;
         var feature = await features.GetForUpdateAsync(tenantId, key, request.Version!.Value, ct);
+        var changes = new SecurityEventChanges();
+        var prefix = "features." + definition.Key + ".";
+        changes.AddBoolean(prefix + "enabled", feature?.Enabled ?? definition.DefaultEnabled, request.Enabled);
+        changes.AddEnum<TenantFeatureSource>(prefix + "source", feature?.Source, request.Source);
+        changes.AddUtc(prefix + "expiresAtUtc", feature?.ExpiresAtUtc, request.ExpiresAtUtc);
         if (feature is null)
         {
             if (request.Version.Value != 0) return TenantFeatureErrors.NotFound;
@@ -31,7 +37,7 @@ internal sealed class PlatformFeatureWriter(ITenantReader tenants, ITenantFeatur
             if (update.IsFailure) return update;
             features.MarkUpdated(feature);
         }
-        audit.RecordFeatures(tenantId, request.Reason!);
+        audit.RecordFeatures(tenantId, request.Reason!, changes);
         return Result.Success();
     }
 }

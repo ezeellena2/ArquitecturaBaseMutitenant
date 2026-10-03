@@ -56,7 +56,8 @@ public sealed class PlatformScopeTests(ApiFactory factory)
 
         var access = new PlatformScopeAccessService(new Current(account.UserId),
             services.GetRequiredService<IPlatformPermissionService>(), services.GetRequiredService<ISecurityEventRepository>(),
-            work, services.GetRequiredService<TimeProvider>(), services.GetRequiredService<ILogger<PlatformScopeAccessService>>());
+            work, services.GetRequiredService<TimeProvider>(), services.GetRequiredService<IRequestInfo>(),
+            services.GetRequiredService<ILogger<PlatformScopeAccessService>>());
         var guard = new PlatformActionGuard(access, services.GetRequiredService<ITenantScope>());
         var result = await guard.EnterAsync(tenant.Id, "Verificar aislamiento", Ct);
         Assert.Equal(allowed, result.IsSuccess);

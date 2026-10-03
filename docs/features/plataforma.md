@@ -51,6 +51,10 @@ FeatureManagement es scoped. El filtro Tenant utiliza el contexto activo firmado
 
 ## Verificación de accesos y flujos
 
+Los `SecurityEvent` de configuración, módulos, cambios de estado y moderación conservan el diff técnico de claves con `before`/`after`, el destino de organización o cuenta y la IP enmascarada. El diff solo admite booleanos, cantidades, enums y UTC; omite valores iguales y no recibe nombre, correo, dominio ni contenido de la página. El motivo interno va aparte. Las entradas técnicas sin modificación conservan un diff vacío; un retry que no cambia el estado no inventa una transición.
+
+IPv4 conserva tres octetos; IPv6 conserva los primeros 48 bits y la IPv4 mapeada se normaliza. El interceptor existente agrega esa evidencia solo a eventos nuevos, sin reemplazar el diff; bootstrap y workers sin petición conservan IP null. La migración mantiene los eventos históricos sin inventar valores desconocidos. El seed identifica la cuenta destinataria del alta de operador. La lectura de «Ingresos» desde identity.LoginAudits, sin direcciones ni códigos OTP, se conecta en T17.
+
 El acceso privado pasa por `PlatformScopeAccessService`: valida acceso Platform, permiso persistido `platform.tenants.manage` y motivo; confirma el SecurityEvent previo en una UoW. `PlatformActionGuard` entra con `ITenantScope.Enter` después, sin transacción abierta, y restaura el alcance al disponer la lease. La operación privada usa luego su única UoW. Una falla posterior conserva el registro de entrada.
 
 - `PlatformRoleTests`: catálogo completo de Owner, alcance de Support, inmutabilidad y asignación global/versionada.

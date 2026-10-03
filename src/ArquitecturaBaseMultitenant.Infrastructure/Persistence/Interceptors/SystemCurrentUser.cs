@@ -4,9 +4,11 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Interceptors;
 
 /// <summary>Representa una operación sin usuario autenticado, como el bootstrap de la base. La Api sustituye este valor por el contexto del request cuando hay una sesión.</summary>
-internal sealed class SystemCurrentUser : ICurrentUser
+internal sealed class SystemCurrentUser : ICurrentUser, IRequestInfo
 {
     public Guid? UserId => null;
 
     public Access? Access => null;
+    public string? IpAddress => null;
+    public string? UserAgent => null;
 }

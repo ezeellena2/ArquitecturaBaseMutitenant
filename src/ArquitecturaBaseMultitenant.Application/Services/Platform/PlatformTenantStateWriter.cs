@@ -15,6 +15,7 @@ internal sealed class PlatformTenantStateWriter(IPlatformTenantRepository tenant
     {
         var tenant = await tenants.GetForUpdateAsync(id, request.Version!.Value, ct);
         if (tenant is null) return TenantErrors.NotFound;
+        var before = tenant.Status;
         var result = action switch
         {
             PlatformTenantAction.Reject when tenant.Status == TenantStatus.PendingApproval => tenant.Close(),
@@ -33,7 +34,9 @@ internal sealed class PlatformTenantStateWriter(IPlatformTenantRepository tenant
             PlatformTenantAction.Close => SecurityEventType.OrganizationClosed,
             _ => throw new ArgumentOutOfRangeException(nameof(action)),
         };
-        audit.Record(id, type, request.Reason!);
+        var changes = new SecurityEventChanges();
+        changes.AddEnum("status", before, tenant.Status);
+        audit.Record(id, type, request.Reason!, changes);
         if (action is not PlatformTenantAction.Reactivate) await tokens.RevokeTenantAsync(id, ct);
         if (action == PlatformTenantAction.Reject) await notices.EnqueueRejectedAsync(tenant, ct);
         return Result.Success();

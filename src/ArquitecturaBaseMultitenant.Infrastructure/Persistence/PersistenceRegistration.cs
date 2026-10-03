@@ -45,6 +45,7 @@ internal static class PersistenceRegistration
         services.AddScoped<ITenantScope>(provider => provider.GetRequiredService<TenantContext>());
         services.AddScoped<ITenantAccessInitializer>(provider => provider.GetRequiredService<TenantContext>());
         services.TryAddScoped<ICurrentUser, SystemCurrentUser>();
+        services.TryAddScoped<IRequestInfo, SystemCurrentUser>();
         services.AddScoped<TenantConnectionInterceptor>();
         services.AddScoped<TenantStampInterceptor>();
         services.AddScoped<SoftDeleteInterceptor>();

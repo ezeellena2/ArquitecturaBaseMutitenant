@@ -91,6 +91,15 @@ public sealed class PlatformFeatureAdministrationTests
             var feature = await context.TenantFeatures.AsNoTracking().SingleAsync(row => row.TenantId == tenantId && row.FeatureKey == "test-business", Ct);
             Assert.True(feature.Enabled);
             Assert.Equal(expires, feature.ExpiresAtUtc);
+            var events = await context.SecurityEvents.AsNoTracking().Where(row => row.Type == SecurityEventType.TenantFeaturesChanged
+                && row.TargetTenantId == tenantId).ToListAsync(Ct);
+            var trial = Assert.Single(events, row => row.Reason == "Prueba contratada");
+            using var diff = JsonDocument.Parse(trial.Changes);
+            Assert.Equal("Trial", diff.RootElement.GetProperty("features.test-business.source").GetProperty("after").GetString());
+            Assert.Equal(expires, diff.RootElement.GetProperty("features.test-business.expiresAtUtc").GetProperty("after").GetDateTime());
+            Assert.DoesNotContain("Prueba contratada", trial.Changes);
+            Assert.DoesNotContain(account.Email.Value, trial.Changes);
+            Assert.Null(trial.TargetAccountId);
         }
         await GrantAsync(host.Services, account.UserId, PlatformRole.Support);
         using var support = await client.PutAsJsonAsync(path + "/test-business", new

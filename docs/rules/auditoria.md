@@ -10,6 +10,9 @@
 - Datos sensibles (tokens, hashes): `[NotAudited]` en la propiedad.
 - Evento que no es un cambio de entidad (una exportación, reenviar una invitación): `IAuditLog.Record(action, entityType, entityId, data)` **dentro** del límite.
 - Acción de un operador sobre una organización: `PlatformActionGuard` exige el motivo y registra el `SecurityEvent` **antes** de `Enter`.
+- El `SecurityEvent` guarda `TargetTenantId` o `TargetAccountId` según el destino y un resumen `Changes` JSON de claves técnicas con `before`/`after`. `SecurityEventChanges` admite booleanos, cantidades, enums y fechas UTC; omite valores iguales y no acepta nombres, contactos ni texto libre. El motivo interno se conserva aparte y no entra en ese resumen ni en correos.
+- `MaskedIpAddress` conserva IPv4 sin el último octeto e IPv6 sin los últimos 80 bits; IPv4 mapeada se normaliza. Una IP ausente o inválida queda null. `AuditTrailInterceptor` completa la IP de los eventos nuevos con `IRequestInfo`, sin alterar su diff ni los eventos ya guardados. Las filas históricas sin evidencia mantienen diff vacío y campos desconocidos null.
+- En Plataforma, el tipo «Ingresos» se consulta desde `identity.LoginAudits`, con método/resultado y códigos de error técnicos, sin dirección completa ni código OTP. No se inventan ingresos como SecurityEvents.
 - Las acciones se traducen con `AuditAction.<código>` en `Audit.resx`.
 
 ## Prohibido

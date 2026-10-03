@@ -16,7 +16,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
 internal sealed class PlatformScopeAccessService(ICurrentUser currentUser, IPlatformPermissionService permissions,
     ISecurityEventRepository events, IUnitOfWork unitOfWork, TimeProvider clock,
-    ILogger<PlatformScopeAccessService> logger) : IPlatformScopeAccessService
+    IRequestInfo requestInfo, ILogger<PlatformScopeAccessService> logger) : IPlatformScopeAccessService
 {
     public Task<Result<Guid>> AuthorizeAsync(Guid tenantId, string reason, CancellationToken cancellationToken) =>
         OperationLog.RunAsync<Guid>(logger, clock, "AuthorizePlatformTenantScope", async () =>
@@ -29,7 +29,8 @@ internal sealed class PlatformScopeAccessService(ICurrentUser currentUser, IPlat
             if (reason.Length > TextLimits.Description) return FieldErrors.Validation("reason", ValidationTexts.MaxLength);
             return await unitOfWork.ExecuteInTransactionAsync(_ =>
             {
-                events.Add(SecurityEvent.ForPlatformTenantAccess(actorId, tenantId, reason, clock.GetUtcNow().UtcDateTime));
+                events.Add(SecurityEvent.ForPlatformTenantAccess(actorId, tenantId, reason,
+                    clock.GetUtcNow().UtcDateTime).WithEvidence(new SecurityEventChanges(), requestInfo.IpAddress));
                 return Task.FromResult<Result<Guid>>(actorId);
             }, CommitPolicy.OnSuccess, cancellationToken);
         });

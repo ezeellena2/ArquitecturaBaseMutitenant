@@ -14,4 +14,5 @@ public static class TextLimits
     public const int PhoneNumber = 100;
     public const int WebAddress = 2048;
     public const int ShortCode = 20;
+    public const int IpAddress = 45;
 }

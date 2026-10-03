@@ -80,12 +80,25 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
 
+                    b.Property<string>("Changes")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasDefaultValueSql("'{}'::jsonb");
+
+                    b.Property<string>("MaskedIpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)");
+
                     b.Property<DateTime>("OccurredAtUtc")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Reason")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
+
+                    b.Property<Guid?>("TargetAccountId")
+                        .HasColumnType("uuid");
 
                     b.Property<Guid?>("TargetTenantId")
                         .HasColumnType("uuid");
@@ -98,6 +111,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ActorId", "OccurredAtUtc");
+
+                    b.HasIndex("TargetAccountId", "OccurredAtUtc");
 
                     b.HasIndex("TargetTenantId", "OccurredAtUtc");
 

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Settings;
@@ -102,7 +103,7 @@ public sealed class AuditTrailTests
         using var sharedContext = CreateContext();
         sharedContext.Add(new AuditedSharedRecord(consumerTenant, businessTenant));
         var trail = new AuditTrailInterceptor(new TestCurrentUser(), new TestTenantContext(consumerTenant),
-            new FakeTimeProvider(Instant));
+            new FakeTimeProvider(Instant), new TestRequestInfo());
         trail.PrepareAuditEntries(sharedContext);
         var auditTenants = sharedContext.ChangeTracker.Entries<AuditEntry>()
             .Select(entry => entry.Entity.TenantId).ToArray();
@@ -121,7 +122,7 @@ public sealed class AuditTrailTests
         context.Add(new AuditedSharedRecord(consumerTenant, firstBusiness));
         context.Add(new AuditedSharedRecord(consumerTenant, secondBusiness));
         var trail = new AuditTrailInterceptor(new TestCurrentUser(), new TestTenantContext(consumerTenant),
-            new FakeTimeProvider(Instant));
+            new FakeTimeProvider(Instant), new TestRequestInfo());
 
         var counterpartIds = trail.PrepareAuditEntries(context);
 
@@ -141,7 +142,7 @@ public sealed class AuditTrailTests
         context.Attach(audit);
         context.Entry(audit).State = EntityState.Modified;
         var trail = new AuditTrailInterceptor(new TestCurrentUser(), new TestTenantContext(tenantId),
-            new FakeTimeProvider(Instant));
+            new FakeTimeProvider(Instant), new TestRequestInfo());
         Action save = () => trail.SavingChanges(Event(context), default);
         Assert.Throws<InvalidOperationException>(save);
 
@@ -156,7 +157,7 @@ public sealed class AuditTrailTests
         context.Add(PlatformSettings.Create(ConsumerSignupMode.Open,
             BusinessSignupMode.RequiresApproval, 1));
         var trail = new AuditTrailInterceptor(new TestCurrentUser(), new TestTenantContext(null),
-            new FakeTimeProvider(Instant));
+            new FakeTimeProvider(Instant), new TestRequestInfo());
 
         Assert.Throws<InvalidOperationException>(() => trail.PrepareAuditEntries(context));
 
@@ -176,7 +177,7 @@ public sealed class AuditTrailTests
         var tenantId = Guid.NewGuid();
         context.Add(Domain.Features.TenantFeature.Create(tenantId, "test-module", true,
             Domain.Features.TenantFeatureSource.Manual, null).Value);
-        var trail = new AuditTrailInterceptor(new TestCurrentUser(), new TestTenantContext(null), new FakeTimeProvider(Instant));
+        var trail = new AuditTrailInterceptor(new TestCurrentUser(), new TestTenantContext(null), new FakeTimeProvider(Instant), new TestRequestInfo());
         Assert.Throws<InvalidOperationException>(() => trail.PrepareAuditEntries(context));
         context.Add(SecurityEvent.ForTenantFeatures(AuditActorKind.System, Guid.Empty, Guid.NewGuid(), "Otro espacio", Instant.UtcDateTime));
         Assert.Throws<InvalidOperationException>(() => trail.PrepareAuditEntries(context));
@@ -217,7 +218,7 @@ public sealed class AuditTrailTests
     {
         var clock = new FakeTimeProvider(Instant);
         new AuditableEntityInterceptor(actor, clock).SavingChanges(Event(context), default);
-        new AuditTrailInterceptor(actor, new TestTenantContext(tenantId), clock)
+        new AuditTrailInterceptor(actor, new TestTenantContext(tenantId), clock, new TestRequestInfo())
             .SavingChanges(Event(context), default);
     }
 
@@ -231,6 +232,31 @@ public sealed class AuditTrailTests
             .UseNpgsql("Host=localhost;Database=audit_model_test")
             .Options,
         new TestTenantContext(null));
+
+    [Fact]
+    public void Account_security_event_receives_masked_request_ip_without_overwriting_its_changes()
+    {
+        using var context = CreateApplicationContext();
+        var actor = Guid.NewGuid();
+        var changes = new SecurityEventChanges();
+        changes.AddBoolean("primary", false, true);
+        var ev = SecurityEvent.ForAccount(SecurityEventType.LoginMethodChanged, actor, Instant.UtcDateTime)
+            .WithEvidence(changes, null);
+        context.Add(ev);
+        var trail = new AuditTrailInterceptor(new TestCurrentUser(), new TestTenantContext(null),
+            new FakeTimeProvider(Instant), new TestRequestInfo());
+
+        Assert.Empty(trail.PrepareAuditEntries(context));
+        Assert.Equal("203.0.113.*", ev.MaskedIpAddress);
+        Assert.Equal(actor, ev.TargetAccountId);
+        Assert.Equal(changes.ToJson(), ev.Changes);
+    }
+
+    private sealed class TestRequestInfo : IRequestInfo
+    {
+        public string? IpAddress => "203.0.113.27";
+        public string? UserAgent => null;
+    }
 
     private static DbContextEventData Event(DbContext context) =>
         new(null!, (_, _) => string.Empty, context);

@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Domain.Auditing;
+using System.Text.Json;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Auditing;
 
@@ -21,6 +22,7 @@ public sealed class SecurityEventTests
         Assert.Equal(actorId, securityEvent.ActorId);
         Assert.Equal(occurredAtUtc, securityEvent.OccurredAtUtc);
         Assert.Null(securityEvent.TargetTenantId);
+        Assert.Equal(actorId, securityEvent.TargetAccountId);
         Assert.Null(securityEvent.Reason);
         Assert.Null(typeof(SecurityEvent).GetProperty("Email"));
         Assert.Null(typeof(SecurityEvent).GetProperty("PhoneNumber"));
@@ -52,5 +54,33 @@ public sealed class SecurityEventTests
         Assert.Equal(tenantId, securityEvent.TargetTenantId);
         Assert.Equal(occurredAtUtc, securityEvent.OccurredAtUtc);
         Assert.Null(securityEvent.Reason);
+    }
+
+    [Theory]
+    [InlineData("203.0.113.27", "203.0.113.*")]
+    [InlineData("::ffff:203.0.113.27", "203.0.113.*")]
+    [InlineData("2001:db8:abcd:12::9876", "2001:db8:abcd:*")]
+    [InlineData("invalid address", null)]
+    [InlineData(null, null)]
+    public void Evidence_keeps_only_technical_changes_and_masks_the_ip(string? ip, string? expected)
+    {
+        var actor = Guid.CreateVersion7();
+        var tenant = Guid.CreateVersion7();
+        var now = new DateTime(2026, 10, 3, 12, 0, 0, DateTimeKind.Utc);
+        var changes = new SecurityEventChanges();
+        changes.AddEnum("status", Domain.Tenancy.TenantStatus.Active, Domain.Tenancy.TenantStatus.Suspended);
+        changes.AddBoolean("publicPage.publishBlocked", false, false);
+        var item = SecurityEvent.ForTenantAdministration(SecurityEventType.OrganizationSuspended,
+            actor, tenant, "Revisión interna", now).WithEvidence(changes, ip);
+
+        Assert.Equal(tenant, item.TargetTenantId);
+        Assert.Null(item.TargetAccountId);
+        Assert.Equal(expected, item.MaskedIpAddress);
+        using var json = JsonDocument.Parse(item.Changes);
+        var change = Assert.Single(json.RootElement.EnumerateObject());
+        Assert.Equal("status", change.Name);
+        Assert.Equal("Active", change.Value.GetProperty("before").GetString());
+        Assert.Equal("Suspended", change.Value.GetProperty("after").GetString());
+        Assert.DoesNotContain("Revisión interna", item.Changes);
     }
 }

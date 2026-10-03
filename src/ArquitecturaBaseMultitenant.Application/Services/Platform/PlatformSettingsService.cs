@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
+using ArquitecturaBaseMultitenant.Domain.Auditing;
 using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
@@ -33,10 +34,14 @@ internal sealed class PlatformSettingsService(IPlatformSettingsReader reader, IP
             {
                 var settings = await repository.GetForUpdateAsync(request.Version!.Value, ct);
                 if (settings is null) return SettingsErrors.NotFound;
+                var changes = new SecurityEventChanges();
+                changes.AddEnum("consumerSignup", settings.ConsumerSignup, request.ConsumerSignup!.Value);
+                changes.AddEnum("businessSignup", settings.BusinessSignup, request.BusinessSignup!.Value);
+                changes.AddCount("maxOwnedOrganizations", settings.MaxOwnedOrganizations, request.MaxOwnedOrganizations);
                 var changed = settings.Update(request.ConsumerSignup!.Value, request.BusinessSignup!.Value, request.MaxOwnedOrganizations!.Value);
                 if (changed.IsFailure) return changed;
                 repository.MarkUpdated(settings);
-                audit.Record(request.Reason!);
+                audit.Record(request.Reason!, changes);
                 return Result.Success();
             }, CommitPolicy.OnSuccess, cancellationToken);
             if (result.IsSuccess) await cache.InvalidateAsync(cancellationToken);

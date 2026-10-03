@@ -16,8 +16,11 @@ internal sealed class SecurityEventConfiguration : IEntityTypeConfiguration<Secu
         builder.Property(securityEvent => securityEvent.Type).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.Property(securityEvent => securityEvent.ActorKind).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.Property(securityEvent => securityEvent.Reason).HasMaxLength(TextLimits.Description);
+        builder.Property(securityEvent => securityEvent.Changes).HasColumnType("jsonb").HasDefaultValueSql("'{}'::jsonb");
+        builder.Property(securityEvent => securityEvent.MaskedIpAddress).HasMaxLength(TextLimits.IpAddress);
         builder.HasIndex(securityEvent => new { securityEvent.ActorId, securityEvent.OccurredAtUtc });
         builder.HasIndex(securityEvent => new { securityEvent.TargetTenantId, securityEvent.OccurredAtUtc });
+        builder.HasIndex(securityEvent => new { securityEvent.TargetAccountId, securityEvent.OccurredAtUtc });
         foreach (var property in builder.Metadata.GetProperties())
         {
             property.SetAfterSaveBehavior(PropertySaveBehavior.Throw);

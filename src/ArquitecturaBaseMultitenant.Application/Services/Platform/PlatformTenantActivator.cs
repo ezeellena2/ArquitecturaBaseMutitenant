@@ -18,6 +18,7 @@ internal sealed class PlatformTenantActivator(IPlatformTenantRepository tenants,
     {
         var tenant = await tenants.GetForUpdateAsync(id, request.Version!.Value, ct);
         if (tenant is null) return TenantErrors.NotFound;
+        var before = tenant.Status;
         if (!retry)
         {
             var approved = tenant.Approve();
@@ -48,7 +49,10 @@ internal sealed class PlatformTenantActivator(IPlatformTenantRepository tenants,
         var prepared = await provisioner.StageBusinessOwnerAsync(tenant, currentSettings, owner, ct, snapshot.PrimaryCompanyId);
         if (prepared.IsFailure) return prepared;
         tenants.MarkUpdated(tenant);
-        audit.Record(id, retry ? SecurityEventType.OrganizationProvisioningRetried : SecurityEventType.OrganizationApproved, request.Reason!);
+        var changes = new SecurityEventChanges();
+        changes.AddEnum("status", before, tenant.Status);
+        audit.Record(id, retry ? SecurityEventType.OrganizationProvisioningRetried : SecurityEventType.OrganizationApproved,
+            request.Reason!, changes);
         return Result.Success();
     }
 }

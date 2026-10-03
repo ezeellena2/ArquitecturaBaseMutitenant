@@ -57,6 +57,15 @@ public sealed class PlatformSettingsTests
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         Assert.Equal(1, await context.SecurityEvents.CountAsync(item => item.ActorId == account.UserId
             && item.Type == Domain.Auditing.SecurityEventType.PlatformSettingsChanged, Ct));
+        var ev = await context.SecurityEvents.AsNoTracking().SingleAsync(item => item.ActorId == account.UserId
+            && item.Type == Domain.Auditing.SecurityEventType.PlatformSettingsChanged, Ct);
+        using var diff = JsonDocument.Parse(ev.Changes);
+        Assert.Equal("Open", diff.RootElement.GetProperty("consumerSignup").GetProperty("before").GetString());
+        Assert.Equal("Closed", diff.RootElement.GetProperty("consumerSignup").GetProperty("after").GetString());
+        Assert.Equal(3, diff.RootElement.GetProperty("maxOwnedOrganizations").GetProperty("after").GetInt32());
+        Assert.DoesNotContain("Control del alta de prueba", ev.Changes);
+        Assert.Null(ev.TargetTenantId);
+        Assert.Null(ev.TargetAccountId);
         Assert.Equal(Domain.Settings.ConsumerSignupMode.Closed, (await context.PlatformSettings.AsNoTracking().SingleAsync(Ct)).ConsumerSignup);
     }
 

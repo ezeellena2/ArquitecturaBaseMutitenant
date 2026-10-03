@@ -9,6 +9,7 @@ using ArquitecturaBaseMultitenant.Application.Validation.Platform;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using System.Text.Json;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Services.Platform;
 
@@ -39,6 +40,14 @@ public sealed class PlatformSettingsServiceTests
         Assert.Equal(AuditActorKind.PlatformOperator, securityEvent.ActorKind);
         Assert.Equal("Control del alta", securityEvent.Reason);
         Assert.Equal(fixture.TimeProvider.GetUtcNow().UtcDateTime, securityEvent.OccurredAtUtc);
+        Assert.Equal("203.0.113.*", securityEvent.MaskedIpAddress);
+        using var changes = JsonDocument.Parse(securityEvent.Changes);
+        Assert.Equal(3, changes.RootElement.EnumerateObject().Count());
+        Assert.Equal("Open", changes.RootElement.GetProperty("consumerSignup").GetProperty("before").GetString());
+        Assert.Equal("Closed", changes.RootElement.GetProperty("consumerSignup").GetProperty("after").GetString());
+        Assert.Equal(1, changes.RootElement.GetProperty("maxOwnedOrganizations").GetProperty("before").GetInt32());
+        Assert.Equal(3, changes.RootElement.GetProperty("maxOwnedOrganizations").GetProperty("after").GetInt32());
+        Assert.DoesNotContain("Control del alta", securityEvent.Changes);
     }
 
     [Theory]
@@ -71,7 +80,7 @@ public sealed class PlatformSettingsServiceTests
     private static PlatformSettingsService Create(ServiceFixture<PlatformSettingsService> fixture, StubRepository repository,
         StubEvents events, FakeUnitOfWork unitOfWork, StubCache cache) =>
         new(new StubReader(), repository, unitOfWork, fixture.Validator,
-            new PlatformSettingsAudit(new StubUser(), events, fixture.TimeProvider), cache, fixture.TimeProvider, fixture.Logger);
+            new PlatformSettingsAudit(new StubUser(), events, fixture.TimeProvider, new StubRequest()), cache, fixture.TimeProvider, fixture.Logger);
 
     private sealed class StubReader : IPlatformSettingsReader
     {
@@ -93,6 +102,12 @@ public sealed class PlatformSettingsServiceTests
     {
         public Guid? UserId { get; } = Guid.CreateVersion7();
         public Access? Access => Domain.Users.Access.Platform;
+    }
+
+    private sealed class StubRequest : IRequestInfo
+    {
+        public string? IpAddress => "203.0.113.27";
+        public string? UserAgent => null;
     }
 
     private sealed class StubEvents : ISecurityEventRepository

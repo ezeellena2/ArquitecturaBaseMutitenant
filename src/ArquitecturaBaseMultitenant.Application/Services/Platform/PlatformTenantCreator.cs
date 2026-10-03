@@ -37,7 +37,9 @@ internal sealed class PlatformTenantCreator(ITenantRepository tenants, ICompanyR
         if (issued.IsFailure) return issued.Error;
         var prepared = await provisioner.StageBusinessOwnerAsync(tenant, settings, issued.Value.Member, ct, company.Value.Id);
         if (prepared.IsFailure) return prepared.Error;
-        audit.Record(id, SecurityEventType.OrganizationCreated, reason);
+        var changes = new SecurityEventChanges();
+        changes.AddEnum<TenantStatus>("status", null, tenant.Status);
+        audit.Record(id, SecurityEventType.OrganizationCreated, reason, changes);
         return new CreatedPlatformTenantResponse(id, tenant.Name, tenant.Slug!, company.Value.Id, issued.Value.InvitationId);
     }
 }

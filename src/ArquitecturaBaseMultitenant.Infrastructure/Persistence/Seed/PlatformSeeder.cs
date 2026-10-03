@@ -100,7 +100,7 @@ internal sealed class PlatformSeeder(
                 existing.GrantPlatformOperator();
                 EnsureSucceeded(await users.UpdateAsync(existing), "mark the platform operator");
                 securityEvents.Add(SecurityEvent.ForPlatformOperatorGrant(
-                    "Initial platform owner seed", timeProvider.GetUtcNow().UtcDateTime));
+                    "Initial platform owner seed", timeProvider.GetUtcNow().UtcDateTime, existing.Id));
             }
             await EnsureOwnerAssignmentAsync(existing.Id, cancellationToken);
 
@@ -137,7 +137,7 @@ internal sealed class PlatformSeeder(
         context.LoginMethods.Add(loginMethod);
         context.PlatformRoleAssignments.Add(PlatformRoleAssignment.Create(user.Id, PlatformRole.Owner));
         securityEvents.Add(SecurityEvent.ForPlatformOperatorGrant(
-            "Initial platform owner seed", timeProvider.GetUtcNow().UtcDateTime));
+            "Initial platform owner seed", timeProvider.GetUtcNow().UtcDateTime, user.Id));
     }
 
     private async Task EnsureOwnerAssignmentAsync(Guid userId, CancellationToken cancellationToken)
