@@ -49,10 +49,10 @@
 - [x] Implementar edición concurrente con `version`; habilitar, deshabilitar y quitar según ficha, registrando auditoría sin exponer correos/tokens en logs. Member tiene `xmin` versionado y auditoría de creación/modificación.
 - [x] Implementar `LastTenantAdminGuard` sobre la lectura de Dueños activos de E4; una cuenta con baja pedida no cuenta como Dueño. La prueba HTTP rechaza quitar al único Dueño con `Legal.AccountDeletion.LastAdmin`; falta ejecutar con PostgreSQL y probar la carrera concurrente.
 - [x] Extender `InvitationIssuer` y su solicitud para incluir empresa/roles cuando corresponda; crear `POST /api/users/invitations`, reenviar y revocar bajo la ruta del área. El reenvío conserva el mismo Member y crea una invitación histórica independiente; al revocar una invitación sin cuenta se retira el Member huérfano y sus asignaciones sin borrar la Invitation revocada.
-- [x] Al terminar o quitar una membresía, la disponibilidad de correos administrados se deriva de `UserTenantAccess`; se registra `OrganizationMembershipEnded` y se encola `ReviewLoginMethods` solo a otros métodos verificados disponibles. Prueba de plantilla bilingüe incluida; falta integrar/verificar con dominio comprobado y no comprobado en `ManagedEmailTests`.
+- [x] Al terminar o quitar una membresía, la disponibilidad de correos administrados se deriva de `UserTenantAccess`; se registra `OrganizationMembershipEnded` y se encola `ReviewLoginMethods` solo a otros métodos verificados disponibles. La prueba existente `LoginCodeTests.Inactive_managed_member_cannot_use_the_email_to_sign_into_personal_access` verifica que la baja invalida un código previamente emitido y retiene el nuevo envío; `OrganizationDomainsTests.Owner_verifies_removes_and_keeps_existing_login_method_associations` verifica que quitar el dominio mantiene el vínculo actual.
 - [x] Preservar los cambios ya cerrados de invitación: ingresar para aceptar no crea Personal y el estado es por invitación. El E2E canónico existente no se modificó en este bloque.
 - [x] Agregar el controller, declaración explícita de rutas, OpenAPI, lector/servicio y pruebas de política/integración; back API e IntegrationTests compilan sin advertencias; Domain (221) y Application (392) pasan. Contrato y cliente front quedan pendientes del front.
-- [x] Ejecutar las pruebas HTTP focales de Usuarios, aislamiento básico, concurrencia y `ManagedEmailTests` con PostgreSQL; la suite completa de integración queda pendiente de la puerta final.
+- [x] Ejecutar las pruebas HTTP focales de Usuarios, aislamiento básico y concurrencia; además `LoginCodeTests` y `OrganizationDomainsTests` con PostgreSQL. La suite completa de integración queda pendiente de la puerta final.
 
 ### 4. Configuración y dominio de correo
 
@@ -62,7 +62,7 @@
 - [x] Crear `OrganizationDomainService`, puerto `IDnsTxtLookup` y adaptador DoH; integrar TXT incorrecto y correcto, dominio ocupado, reintentos y retiro. Nunca imprimir el token.
 - [x] Al verificarse un dominio, asignar `ManagedByTenantId` a métodos existentes; al crear/verificar un LoginMethod, consultar dominio verificado y asignarlo sin abrir otro acceso.
 - [x] Probar con PostgreSQL real la asociación de correos existentes y nuevos al verificar, la retención de vínculos al retirar, que nuevas asociaciones se detengan al retirarlo, el TXT inválido y la respuesta/listado.
-- [ ] Probar políticas de sesión de métodos administrados con membresía inactiva, aislamiento entre organizaciones y los casos de DNS no disponible/carrera de dominios. Actualizar contrato OpenAPI/front y textos bilingües; build focal.
+- [x] Probar con PostgreSQL las políticas de ingreso de correo administrado tras desactivar la membresía, el aislamiento (otra organización no lista ni retira un dominio ajeno), el DNS no disponible/TXT ausente, la retención del vínculo al retirar el dominio y la carrera por dominio único. Contratos OpenAPI/front y textos bilingües actualizados; build focal. Evidencia: `dotnet test ... --filter "FullyQualifiedName~OrganizationDomainsTests|FullyQualifiedName~LoginCodeTests"` pasó 12/12.
 
 ### 5. Página pública y moderación
 

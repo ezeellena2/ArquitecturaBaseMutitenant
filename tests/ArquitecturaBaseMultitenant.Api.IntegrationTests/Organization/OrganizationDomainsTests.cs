@@ -137,6 +137,49 @@ public sealed class OrganizationDomainsTests(ApiFactory factory)
         Assert.Equal(TenantDomainErrors.AlreadyExistsCode, problem.RootElement.GetProperty("code").GetString());
     }
 
+    [Fact]
+    public async Task Organization_cannot_list_or_remove_another_organizations_email_domain()
+    {
+        using var ownerClient = factory.CreateClient(new WebApplicationFactoryClientOptions
+            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        using var otherOwnerClient = factory.CreateClient(new WebApplicationFactoryClientOptions
+            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
+        var otherOwner = await AccountJourney.RegisterAsync(factory, otherOwnerClient, Ct);
+        await CreateOrganizationAsync(owner.UserId);
+        await CreateOrganizationAsync(otherOwner.UserId);
+        await AccountJourney.AuthorizeAsync(ownerClient, "business", Ct);
+        await AccountJourney.AuthorizeAsync(otherOwnerClient, "business", Ct);
+        var domain = $"private-{Guid.NewGuid():N}.example.test";
+
+        using var created = await AccountJourney.PostAsync(ownerClient, "/api/organization/settings/domains",
+            new { domain }, Ct);
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        using var createdJson = JsonDocument.Parse(await created.Content.ReadAsStringAsync(Ct));
+        var domainId = createdJson.RootElement.GetProperty("id").GetGuid();
+
+        using var ownerList = await ownerClient.GetAsync("/api/organization/settings/domains", Ct);
+        Assert.Equal(HttpStatusCode.OK, ownerList.StatusCode);
+        using var ownerListJson = JsonDocument.Parse(await ownerList.Content.ReadAsStringAsync(Ct));
+        var ownerDomain = Assert.Single(ownerListJson.RootElement.EnumerateArray());
+        var version = ownerDomain.GetProperty("version").GetUInt32();
+
+        using var otherList = await otherOwnerClient.GetAsync("/api/organization/settings/domains", Ct);
+        Assert.Equal(HttpStatusCode.OK, otherList.StatusCode);
+        using var otherListJson = JsonDocument.Parse(await otherList.Content.ReadAsStringAsync(Ct));
+        Assert.Empty(otherListJson.RootElement.EnumerateArray());
+
+        using var otherRemoval = await otherOwnerClient.DeleteAsync(
+            $"/api/organization/settings/domains/{domainId:D}?version={version}", Ct);
+        Assert.Equal(HttpStatusCode.NotFound, otherRemoval.StatusCode);
+        using var problem = JsonDocument.Parse(await otherRemoval.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(TenantDomainErrors.NotFoundCode, problem.RootElement.GetProperty("code").GetString());
+
+        using var ownerListAfterAttempt = await ownerClient.GetAsync("/api/organization/settings/domains", Ct);
+        using var ownerListAfterAttemptJson = JsonDocument.Parse(await ownerListAfterAttempt.Content.ReadAsStringAsync(Ct));
+        Assert.Single(ownerListAfterAttemptJson.RootElement.EnumerateArray());
+    }
+
     private async Task<Guid> CreateOrganizationAsync(Guid ownerId)
     {
         var tenant = Tenant.CreateBusiness("Dominios HTTP test", requiresApproval: false);
