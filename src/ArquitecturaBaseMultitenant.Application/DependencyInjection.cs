@@ -36,6 +36,18 @@ public static class DependencyInjection
         services.AddScoped<CompanyMembershipWriter>();
         services.AddScoped<CompanyMembershipRoleManager>();
         services.AddScoped<IOrganizationUserService, OrganizationUserService>();
+        services.AddScoped<OrganizationUserAssignmentManager>();
+        services.AddScoped<OrganizationUserAdministratorGuard>();
+        services.AddScoped<OrganizationUserAccessCleaner>();
+        services.AddScoped<OrganizationUserInvitationManager>();
+        services.AddScoped<OrganizationMembershipEndNoticeContextProvider>();
+        services.AddScoped<OrganizationAvailableLoginMethodsResolver>();
+        services.AddScoped<OrganizationMembershipEndNotifier>();
+        services.AddScoped<OrganizationUserEditor>();
+        services.AddScoped<OrganizationUserStatusEditor>();
+        services.AddScoped<OrganizationUserExitEffects>();
+        services.AddScoped<OrganizationUserRemover>();
+        services.AddScoped<OrganizationUserLifecycleCoordinator>();
         services.AddScoped<IOrganizationSettingsService, OrganizationSettingsService>();
         services.AddScoped<OrganizationSettingsUpdater>();
         services.AddScoped<IOrganizationDomainService, OrganizationDomainService>();
