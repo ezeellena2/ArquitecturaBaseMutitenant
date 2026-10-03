@@ -1200,7 +1200,7 @@ tests/
 │   │   ├── ConnectTests.cs
 │   │   ├── LogoutTests.cs                            [E3] GET/POST /connect/logout
 │   │   ├── AuthMethodsTests.cs                        qué medios de ingreso están encendidos según la configuración (GET /api/auth/methods)
-│   │   ├── ManagedEmailTests.cs                       [E6] un exmiembro no puede ingresar con el correo de la empresa
+│   │   ├── LoginCodeTests.cs                           [E3/E6] LoginCodeTests.Inactive_managed_member_cannot_use_the_email_to_sign_into_personal_access bloquea el correo administrado sin membresía activa
 │   │   └── InvitationsTests.cs                        puerta de la 3c: InvitationIssuer invita a alguien sin cuenta y a alguien con cuenta, y las dos se aceptan
 │   ├── Account/                                       [E3]
 │   │   ├── MeTests.cs
@@ -1213,6 +1213,7 @@ tests/
 │   │   ├── CompaniesTests.cs                          [E6]
 │   │   ├── CompanyMembersTests.cs                     [E6]
 │   │   ├── SettingsTests.cs                           [E6]
+│   │   ├── OrganizationDomainsTests.cs                 [E6] TXT, asociaciones de ManagedByTenantId, retención y aislamiento del dominio
 │   │   └── AuditTests.cs                              [E6]
 │   ├── Platform/                                      [E5]
 │   │   ├── PlatformTenantsTests.cs
@@ -1408,7 +1409,8 @@ src/ArquitecturaBaseMultitenant.Api/
 tests/
 ├── *.Api.IntegrationTests/Account/LoginMethodsTests.cs                  [E3] 3b: sumar, verificar, principal, quitar con código en otro método; siempre queda al
 │                                                                        menos uno propio o activo; aviso en todos
-├── *.Api.IntegrationTests/Auth/ManagedEmailTests.cs                     [E6] un exmiembro no puede ingresar con el correo de la empresa
+├── *.Api.IntegrationTests/Auth/LoginCodeTests.cs                        [E3/E6] correo administrado solo está disponible con membresía activa
+├── *.Api.IntegrationTests/Organization/OrganizationDomainsTests.cs      [E6] verificación TXT y retención de vínculos al retirar el dominio
 └── *.Application.UnitTests/Services/Identity/LoginMethodServiceTests.cs  [E3]
 ```
 

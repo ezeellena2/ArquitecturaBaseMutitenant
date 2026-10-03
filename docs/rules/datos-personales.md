@@ -47,7 +47,7 @@
 ## Lo verifica
 - `AuthEndpointsTests`, `SignupValidationTests` y `GoogleLoginTests` (3a): el registro sin aceptar da 400 `Validation.Failed` con `acceptedTerms` en correo y Google. `LegalAcceptanceTests` (3a) comprueba la lectura de Términos y Privacidad vigentes en ambas culturas y que el alta por correo guarde exactamente ambos documentos y sus versiones vigentes. La invitación (3c), el alta de empresa (E6) y WhatsApp (E8) suman sus casos cuando nacen; en 3b se comprueba que una versión nueva exija `Legal.AcceptanceRequired` hasta aceptarla.
 - `AccountDeletionTests` (E3) y `AccountDeletionParticipantsTests` (E3); el caso del único Dueño se suma en la E4.
-- `LoginMethodsTests` (E3) cubre la gestión; `ManagedEmailTests` (E6) comprueba que un exmiembro no pueda ingresar con el correo de la empresa.
+- `LoginMethodsTests` (E3) cubre la gestión. `LoginCodeTests.Inactive_managed_member_cannot_use_the_email_to_sign_into_personal_access` (E6) y `OrganizationDomainsTests` (E6) comprueban que un exmiembro no pueda entrar con ese correo y que retirar un dominio conserve la protección de los métodos ya vinculados.
 
 ## Detalle
 [backend.md §20](../architecture/backend.md#20-reglas-de-datos-que-se-aplican-solas) · [datos-personales en estandares.md](../architecture/estandares.md)
