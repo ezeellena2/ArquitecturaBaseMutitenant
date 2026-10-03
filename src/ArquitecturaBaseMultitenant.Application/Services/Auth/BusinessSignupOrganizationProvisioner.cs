@@ -55,5 +55,5 @@ internal sealed class BusinessSignupOrganizationProvisioner(
     private static BusinessSignupResponse Response(Tenant tenant, Guid firstCompanyId, bool requiresApproval,
         Email? notificationEmail) =>
         new(tenant.Id, tenant.Name, tenant.Slug!, requiresApproval, firstCompanyId, tenant.Status,
-            notificationEmail?.Value);
+            notificationEmail);
 }

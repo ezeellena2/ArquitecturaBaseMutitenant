@@ -7900,9 +7900,13 @@
             "$ref": "#/components/schemas/TenantStatus"
           },
           "notificationEmail": {
-            "type": [
-              "null",
-              "string"
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Email"
+              }
             ]
           }
         },
