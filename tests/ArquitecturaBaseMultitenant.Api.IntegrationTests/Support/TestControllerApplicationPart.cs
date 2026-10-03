@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.BusinessAcce
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Isolation;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Idempotency;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
+using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Features;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
@@ -23,5 +24,6 @@ internal sealed class TestControllerApplicationPart : ApplicationPart, IApplicat
         typeof(WidgetsController).GetTypeInfo(),
         typeof(IdempotencyTestController).GetTypeInfo(),
         typeof(AuthPipelineProbeController).GetTypeInfo(),
+        typeof(FeatureProbeController).GetTypeInfo(),
     ];
 }

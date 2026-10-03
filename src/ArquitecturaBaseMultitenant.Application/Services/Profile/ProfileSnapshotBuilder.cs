@@ -12,7 +12,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Profile;
 internal sealed class ProfileSnapshotBuilder(IUserRepository users, IUserTenantAccessReader accesses,
     ProfilePreferences preferences,
     ILoginMethodReader loginMethods, LoginMethodAvailability availability, LegalAcceptanceGuard legal,
-    IPermissionService permissions)
+    IPermissionService permissions, IFeatureService features)
 {
     internal async Task<MeResponse?> BuildAsync(Guid userId, Access access, Guid? activeTenantId,
         CancellationToken cancellationToken)
@@ -41,7 +41,8 @@ internal sealed class ProfileSnapshotBuilder(IUserRepository users, IUserTenantA
         return new MeResponse(account.Id, account.DisplayName, account.PrimaryEmail, access,
             activeTenantId, personalSpace, organizations,
             new EffectivePermissions(organizationPermissions, new Dictionary<Guid, IReadOnlyList<string>>()),
-            account.Culture, account.TimeZoneId, currencyCode, [])
+            account.Culture, account.TimeZoneId, currencyCode,
+            mayReadSettings ? await features.ListEnabledAsync(cancellationToken) : [])
         {
             Version = account.Version,
             PendingLegalDocuments = await legal.PendingAsync(userId, cancellationToken),

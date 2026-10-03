@@ -33,7 +33,15 @@ Rechazar (PendingApproval→Closed), suspender (Active→Suspended), reactivar (
 
 `TenantProvisioner.StageBusinessOwnerAsync` completa los roles de sistema, la configuración y las asignaciones del Dueño invitado o activo, dentro del alcance Business y la UoW del llamador. Reutiliza lo existente y rechaza preferencias incompatibles; no crea identidades ni membresías Personal. La entrada `StageAsync` de E3/E6 conserva sus restricciones. El repositorio transaccional puede releer una organización Added antes del único guardado final.
 
-## Verificación
+## Módulos por organización
+
+El catálogo `Domain/Features/Features.All` está vacío en la plantilla; las piezas del núcleo siempre existen. Cada módulo real declara alcance Consumer/Business/Both y su default. `platform.TenantFeatures` conserva enabled, origen Plan/Manual/Trial, vencimiento UTC y versión xmin por espacio y clave. Trial exige fecha; en el límite exacto ya está apagado.
+
+`GET /api/platform/tenants/{id}/features` requiere tenants.read y proyecta únicamente módulos compatibles con Business. `PUT /{featureKey}` requiere tenants.manage, motivo y versión (0 para la configuración inicial sin fila). Guarda la habilitación y SecurityEvent para el destino juntos; las ediciones viejas y carreras del alta devuelven 409 sin evento adicional. Personal e ids inexistentes responden 404. Support puede consultar y no modificar.
+
+FeatureManagement es scoped. El filtro Tenant utiliza el contexto activo firmado y una caché por espacio con filas crudas, invalidada después del commit; el reloj se evalúa en cada consulta. El apagado global en configuración prevalece. El middleware de API oculta el módulo con 404 antes de comprobar permisos, después de validar autenticación/acceso/estado; la librería FeatureGate y su handler mantienen la misma respuesta. `/api/me.features` contiene solo claves efectivas del acceso activo y permanece presente con lista vacía cuando corresponde. El consumo front de módulos sigue pendiente en T08.
+
+## Verificación de accesos y flujos
 
 El acceso privado pasa por `PlatformScopeAccessService`: valida acceso Platform, permiso persistido `platform.tenants.manage` y motivo; confirma el SecurityEvent previo en una UoW. `PlatformActionGuard` entra con `ITenantScope.Enter` después, sin transacción abierta, y restaura el alcance al disponer la lease. La operación privada usa luego su única UoW. Una falla posterior conserva el registro de entrada.
 
@@ -48,3 +56,4 @@ El acceso privado pasa por `PlatformScopeAccessService`: valida acceso Platform,
 - `PlatformScopeTests` de servicio e integración: sin permiso/motivo no registra ni entra; el evento está confirmado antes de consultar filas privadas, Support no entra y una excepción restaura el alcance.
 - `PlatformProvisioningTests`: Dueño invitado sin identidad, replay sin duplicados y preferencias incompatibles sin reemplazar lo existente.
 - `PlatformTenantProvisioningHttpTests`: 401/403, creación/aceptación/replay, aprobación/retry, reparación y rollback, versiones viejas, idempotencia y concurrencia sin duplicados.
+- `FeatureGateTests`, `PlatformFeatureAdministrationTests` y `ModuleControllersTests`: apagado, emergencia, permisos, expiración con caché, aislamiento de acceso, edición y carrera, y núcleo sin gates. El contrato de `/api/me.features` lee el backend y el tipo generado consumido por el front.

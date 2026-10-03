@@ -21,4 +21,5 @@ public enum SecurityEventType
     OrganizationCreated,
     OrganizationProvisioningRetried,
     PlatformTenantEntered,
+    TenantFeaturesChanged,
 }

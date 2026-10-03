@@ -9,6 +9,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
 using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
 using ArquitecturaBaseMultitenant.Infrastructure.Caching;
+using ArquitecturaBaseMultitenant.Infrastructure.Features;
 using ArquitecturaBaseMultitenant.Infrastructure.Idempotency;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Time;
@@ -60,6 +61,7 @@ public static class DependencyInjection
         services.AddCaching();
 
         services.AddPersistence(configuration);
+        services.AddFeatures(configuration);
         services.AddIdentityServices(configuration, environment);
         services.AddScoped<IAccountDeletionParticipant, MembershipDeletionParticipant>();
         services.AddScoped<IAccountDeletionParticipant, PersonalSpaceDeletionParticipant>();

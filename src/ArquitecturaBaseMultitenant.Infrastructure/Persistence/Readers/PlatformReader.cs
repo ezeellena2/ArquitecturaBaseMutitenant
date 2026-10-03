@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -71,8 +72,9 @@ internal sealed class PlatformReader(ApplicationDbContext context) : IPlatformRe
             && a.RoleName == SystemRoles.TenantAdmin).OrderBy(a => a.JoinedAtUtc).ThenBy(a => a.UserId)
             .Select(a => (Guid?)a.UserId).FirstOrDefault()
         let userId = ownerId ?? (t.RegistrationSource == TenantRegistrationSource.SelfService ? t.RegisteredByUserId : null)
+        let ownerEmail = context.Users.Where(u => u.Id == userId).Select(u => u.Email).FirstOrDefault()
         select new PlatformTenantResponse(t.Id, t.Name, t.Slug, t.Status, t.RegistrationSource,
             t.CreatedAtUtc, t.CompanyCount, t.MemberCount, t.Version,
             context.Users.Where(u => u.Id == userId).Select(u => u.DisplayName).FirstOrDefault(),
-            context.Users.Where(u => u.Id == userId).Select(u => u.Email).FirstOrDefault());
+            ownerEmail == null ? null : Email.Create(ownerEmail).Value);
 }

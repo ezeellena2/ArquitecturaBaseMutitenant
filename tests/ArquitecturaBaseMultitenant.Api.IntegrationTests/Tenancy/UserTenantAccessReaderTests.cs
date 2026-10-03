@@ -136,11 +136,13 @@ public sealed class UserTenantAccessReaderTests(ApiFactory factory)
         Assert.Equal(new[] { business.Id, pendingBusiness.Id }.Order(),
             await admins.ListOwnedBusinessTenantIdsAsync(userIds[0], Ct));
 
-        await work.ExecuteInTransactionAsync(ct =>
+        await work.ExecuteInTransactionAsync(async ct =>
         {
+            // Los deltas de membresía confirmados cambiaron el xmin de esta entidad de la fixture.
+            await context.Entry(business).ReloadAsync(ct);
             Assert.True(business.Suspend().IsSuccess);
             Assert.True(business.Close().IsSuccess);
-            return Task.FromResult(Result.Success());
+            return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
 
         Assert.Equal(0, await admins.CountActiveOwnersAsync(business.Id, Ct));

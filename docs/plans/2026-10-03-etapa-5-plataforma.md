@@ -13,7 +13,7 @@
 - Back: `C:/Users/ezequ/source/repos/ArquitecturaBaseMutitenant`, main limpio, `a12edb7`.
 - Front: `C:/Users/ezequ/source/repos/ArquitecturaBaseMutitenantFront`, main limpio, `44bf951`.
 - E4 y E6 cerradas. Conservar ClosedStages `{0,1,2,3,4,6}` hasta cerrar E5; el salto no reabre E6.
-- Fuente visual: front `docs/design/lienzo/` vigente (v72 al elegir T04). El usuario eligió los ocho escritorios con ajustes el 03/10; registrar esa elección en tableros/canvas/README y mostrar ocho capturas antes de programarlos. Los móviles son los validados en v72 (`9841dbd`), tal cual; se descartan los móviles de la propuesta. Ningún tablero «por refinar» se programa.
+- Fuente visual: front `docs/design/lienzo/` vigente (v73, `423891e`). La conversación de diseño registró los ocho escritorios elegidos el 03/10; solo ella modifica tableros/canvas/README. Los móviles son los validados en formato app desde v72 (`9841dbd`), tal cual; se descartan los móviles de la propuesta. Ningún tablero «por refinar» se programa. Las capturas de la implementación se envían al usuario antes del cierre y no se autoaprueban.
 - Teléfono: formato app del Criterio-Marco actual; barra de estado, título y contexto, navegación inferior con Más, listas de borde a borde, acción fija y hojas inferiores. No copiar el teléfono anterior como una web reducida.
 - WhatsApp, WA-*, M-WA-* y Meta fuera del alcance; no añadir sus rutas, módulos, permisos ni semillas.
 - Development solo conserva el operador real configurado en user-secrets. Tests, capturas con datos y E2E usan PostgreSQL/pickup aislados. No imprimir direcciones, códigos, tokens ni secretos.
@@ -104,17 +104,22 @@ Archivos front: `docs/design/lienzo/generadores/plataforma_*.py`, tableros propu
 - [x] Inventario: 8 desktop y 4 móviles antiguos; muestras de fichas/recuperación/legales preparadas en página separada sin modificar canvas ni generador ajeno.
 - [x] Propuesta compacta con estados interactivos y marco app de Organización, listas 1/50 (1 y 10 filas visibles respectivamente). Menú desktop y modal Audit conservados.
 - [x] Visor conjunto en `http://127.0.0.1:61405/.artifacts/etapa-5-propuesta/index.html`: 8 desktop y 16 móviles/estados; pregunta de elección presentada. Continuar back mientras espera; no implica aprobación. Front `e670892`.
-- [ ] Registrar elección y actualizar solo tableros correspondientes/canvas; commit de diseño explícito.
+- [x] La conversación de diseño registra la elección y actualiza tableros/canvas/README exclusivamente; este chat no modifica `docs/design/lienzo`. Diseño de escritorio validado en v73, front `423891e`; teléfonos app validados del lienzo, nunca los de la propuesta. Verificar tableros vigentes al implementar.
 
 ### A00 · Alineación previa a las pantallas de Plataforma (instrucción del 03/10)
 
 Fuente: `docs/reviews/2026-10-03-alineacion-lienzo.md`, ya copiado sin cambios del informe temporal en `cc2835b`. Las marcas ✔ del informe significan hallazgos verificados, no correcciones terminadas.
 
-- [ ] Paquete 0 completo. Otro chat corrige el front; este chat trabaja exclusivamente el backend mientras dure esa coordinación, sin modificar ni commitear cambios ajenos.
+- [ ] Paquete 0 completo, responsabilidad de la conversación «Paquete 0 · Errores visibles», incluido registro de empresa. Este chat no toca sus archivos ni incluye cambios ajenos en commits.
 - [x] 0.7: error propio `Tenancy.Member.LastTenantAdmin` para quitar/eliminar roles del último Dueño y `Tenancy.Member.CannotDisableSelf` para el acceso propio; la baja de cuenta conserva `Legal.AccountDeletion.LastAdmin`. Rojo dirigido → Usuarios 3/3, baja de cuenta 6/6, recursos 6/6 y build Api 0 advertencias.
-- [ ] Después de 0: actualizar frontend.md §4/Teléfono, responsive, formularios, pantallas-y-ui y AGENTS del front desde los ocho Criterio-* vigentes. Sin pruebas de documentación nuevas.
+- [ ] Antes de T20–23, después de diseño validado y Paquete 0: actualizar frontend.md §4/Teléfono, responsive, formularios, pantallas-y-ui y AGENTS del front desde los ocho Criterio-* vigentes (Paquete 5). Sin pruebas de documentación nuevas.
 - [ ] Después de las fichas: Paquete 4 pasos 2–4, piezas compartidas de app, navegación declarativa/Más/E2E a390 y todas las hojas; antes de T20–23.
-- [ ] Capturas solo de pantallas nuevas y estados principales contra el lienzo vigente; E2E real en verde. Mantener las verificaciones focales y la puerta funcional de cierre.
+- [ ] Capturas solo de pantallas nuevas y estados principales contra el lienzo vigente, enviadas al usuario antes del cierre para su revisión; no se autoaprueban. E2E real en verde y puerta general completa.
+
+### A01 · Recuperar main en verde antes de seguir (instrucción del 03/10)
+
+- [x] Corregir los 12 rojos informados: fichas Features/configuración EF/correo tipado/inventario/avisos/límite de Identity y regresiones Me, LegalAcceptance, InvitationAcceptance, UserTenantAccessIndex y UserTenantAccessReader. El cambio de notificationEmail del registro de empresa pertenece al otro chat (`5335ac7`) y se preserva.
+- [x] Build completo: 0 advertencias/errores; `dotnet test` completo: **1452/1452**, 0 omitidos, **6m 23s 287ms**, antes del siguiente commit o tarea E5. Evidencia local: `.artifacts/etapa-5/main-verde-build-2.log` y `main-verde-test-2.log`. Primera ejecución: 1446/1452; los seis fallos restantes se corrigieron y verificaron focalmente antes de repetir.
 
 Elección T04: Organizaciones combina Dueño/correo; ficha Organización usa resumen (Dueño, dominio, página, módulos) e Historial como lista; Cuentas combina nombre/correo y último ingreso/método sin teléfono; métodos en Cuenta son filas como Mi cuenta; Recuperaciones y Configuración conservan propuesta; Legales es lista sin columnas, versión/vigencia debajo; Auditoría abre desde Qué pasó, sin ojo ni conteo en la banda.
 
@@ -148,11 +153,13 @@ Provisioner `d27d7d3`: entrada explícita `StageBusinessOwnerAsync` para Member 
 
 Archivos: Domain/Features, Configuration/Features, puerto IFeatureService; Infrastructure/Features; TenantFeatures configuración/reader/repo/migración; MeResponse/ProfileSnapshotBuilder; tests FeatureGateTests y ModuleControllersTests requeridos, contratos y feature tests front.
 
-Avance de dominio: rojo por tipos ausentes → 4/4 verdes (límite exacto de vencimiento, apagado manual, inválidos sin mutación y accesos separados). Catálogo productivo vacío; recursos es/en 6/6 y códigos 6/6; build Domain 0 advertencias. Persistencia, filtro y HTTP siguen pendientes.
+Avance de dominio: rojo por tipos ausentes → 4/4 verdes (límite exacto de vencimiento, apagado manual, inválidos sin mutación y accesos separados), commit 152b3a3. Catálogo productivo vacío; recursos es/en 6/6 y códigos 6/6; build Domain 0 advertencias.
 
-- [ ] Rojo: apagado 404 ProblemDetails, prendido 200; emergencia global gana; Trial vence en límite exacto; caché invalida; alcance Consumer/Business no se mezcla.
-- [ ] Agregar paquete central y registro Microsoft.FeatureManagement.AspNetCore, filtro Tenant/caché t:{id}:features, DisabledFeatureHandler; persistir origen/vencimiento/version, motivo y SecurityEvent al cambiar desde Plataforma.
-- [ ] Catálogo productivo inicialmente vacío: núcleo siempre disponible, sin módulos de ejemplo ni WhatsApp. Gates de recorrido viven en TestFeatures; el framework soporta catálogo de nuevos módulos reales siguiendo guía.
+Avance backend: FeatureGate rojo por tipos ausentes y administración rojo por ruta ausente → recorridos reales verdes en PostgreSQL aislado. Registro scoped, filas globales versionadas, cache de datos crudos, límite exacto con TimeProvider y middleware antes de permisos. Administración con motivo/evento, Support de lectura, Personal 404, carrera inicial 204/409. Perfil 13/13; auditoría 9/9; contrato que lee ambos repos 3/3; inventario de rutas 3/3; ModuleControllersTests 1/1; API 0 advertencias. SQL revisado y modelo sin cambios pendientes. Consumidores front, nuevos tipos de Plataforma y E2E visual siguen pendientes por el orden acordado.
+
+- [x] Rojo: apagado 404 ProblemDetails, prendido 200; emergencia global gana; Trial vence en límite exacto; caché invalida; alcance Consumer/Business no se mezcla.
+- [x] Agregar paquete central y registro Microsoft.FeatureManagement.AspNetCore, filtro Tenant/caché t:{id}:features, DisabledFeatureHandler; persistir origen/vencimiento/version, motivo y SecurityEvent al cambiar desde Plataforma.
+- [x] Catálogo productivo inicialmente vacío: núcleo siempre disponible, sin módulos de ejemplo ni WhatsApp. Gates de recorrido viven en TestFeatures; el framework soporta catálogo de nuevos módulos reales siguiendo guía.
 - [ ] `features` de `/api/me` siempre presente, lista vacía cuando corresponda; front useFeature/Feature/FeatureRoute y `feature` en rutas/navegación. Contrato lee ambos repos. Commit `feat(modulos): habilitar funcionalidades por organización`.
 
 ### T09 · Entrada privada y moderación de página
@@ -307,6 +314,8 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 8. Crear copia los cinco campos del tablero (nombre, primera empresa, correo del Dueño, cultura y zona). No agrega un campo de slug ni de motivo: genera la dirección desde el nombre y, ante reserva/colisión/nombre inválido, usa `org-{operationId}`; la descripción fija de la acción sale de resources. Los otros cambios administrativos exigen motivo escrito. Muestra móvil corregida en front `d4d0627`.
 9. El retry incompleto solo reconstruye un miembro cuando existe registrante autoservicio activo; nunca convierte al operador creador en Dueño ni adivina el nombre de una empresa perdida. Sin responsable verificable conserva Provisioning y devuelve conflicto.
 10. Los deltas de conteos son constraint triggers `DEFERRABLE INITIALLY DEFERRED`, dentro de la misma transacción: se ejecutan después del SaveChanges para no adelantar xmin antes del UPDATE de estado. Se conserva el rechazo de versiones viejas. Referencia: [CREATE TRIGGER, PostgreSQL 18](https://www.postgresql.org/docs/current/sql-createtrigger.html).
+11. El filtro de módulos conserva filas crudas en caché y evalúa la vigencia con TimeProvider por petición; el apagado global gana. El gate se evalúa antes de los permisos, después de autenticación/acceso/tenant, para devolver 404 cuando el módulo está apagado. Una configuración inicial usa versión 0; la carrera de inserción se traduce a 409. Cambiar módulos exige SecurityEvent del destino en la misma UoW.
+12. Los tests que retroceden a una migración histórica preparan datos con SQL parametrizado de ese esquema, sin usar el modelo actual. Una fixture que conserva un Tenant entre transacciones recarga su xmin tras los triggers; esto no cambia la concurrencia productiva ni el rechazo de versiones viejas.
 
 ## Registro de resultados
 
@@ -316,9 +325,10 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 | T01 | Rojo CS0234 → 5/5 verde, build Domain 0 advertencias | `f03c1b1` | — |
 | T02 | E2E real rojo por pantalla E5 ausente; Aspire detenido | `4ce80b7` (registro) | `696c2b3` |
 | T03 | Permisos 6/6; roles PostgreSQL 3/3; seed 1/1; migraciones 4/4; inventarios 4/4 | `4ce80b7` | — |
-| T04 | Propuesta conjunta verificada, elección pendiente; canvas intacto | seguimiento de esta tarea | `e670892` |
+| T04 | Elección registrada por la conversación de diseño; escritorio v73 y móviles app validados | seguimiento de esta tarea | `e670892` (propuesta), `423891e` (diseño externo) |
 | T05 | Dominio 12/12; servicio 4/4; HTTP 3/3; recursos 6/6; accesos/contratos 15/15; migración/build verificados | `6a49970` | — |
 | T06 | Dominio nuevo 3/3 y regresiones 7/7; HTTP/RLS/tokens 5/5; recursos 6/6; inventarios 28/28; build/migración verificados | `f785e5b` | — |
 | T07 | Scope 3/3 + PG 2/2; core 3/3 + PG 2/2; HTTP 8/8; slug 5/5; regresiones 36/36; recursos 6/6; inventarios 32/32; build/SQL verificados | `b375f04`, `d27d7d3`, `f05c9df`, `6fa09c4` | `d4d0627` (muestra) |
+| T08 backend / A01 | Gates/edición real y regresiones; build completo 0 advertencias, suite completa 1452/1452 (6m23s); front de módulos pendiente | commit de esta tarea | — |
 
 No declarar cierre a partir de esta tabla sin completar T25.

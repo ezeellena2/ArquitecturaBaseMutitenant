@@ -3,6 +3,7 @@ using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Common;
+using ArquitecturaBaseMultitenant.Domain.Features;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -54,7 +55,7 @@ internal sealed class AuditTrailInterceptor(
             .Where(entry => entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
             .ToArray();
         RequireGlobalSecurityEvents(context, allChanged);
-        var changed = allChanged.Where(entry => entry.Entity is not PlatformSettings).ToArray();
+        var changed = allChanged.Where(entry => entry.Entity is not (PlatformSettings or TenantFeature)).ToArray();
         if (changed.Length == 0)
         {
             return [];
@@ -93,6 +94,13 @@ internal sealed class AuditTrailInterceptor(
     private static void RequireGlobalSecurityEvents(DbContext context,
         IReadOnlyCollection<EntityEntry<IAuditable>> changed)
     {
+        foreach (var feature in changed.Select(entry => entry.Entity).OfType<TenantFeature>())
+        {
+            if (!context.ChangeTracker.Entries<SecurityEvent>().Any(entry => entry.State == EntityState.Added
+                && entry.Entity.Type == SecurityEventType.TenantFeaturesChanged
+                && entry.Entity.TargetTenantId == feature.TenantId && !string.IsNullOrWhiteSpace(entry.Entity.Reason)))
+                throw new InvalidOperationException("Module changes require a security event with reason in the same transaction.");
+        }
         if (!changed.Any(entry => entry.Entity is PlatformSettings))
         {
             return;

@@ -171,16 +171,12 @@ public sealed class UserTenantAccessIndexTests(ApiFactory factory)
         var secondTenant = Tenant.CreateBusiness("Backfill B", requiresApproval: false);
         Assert.True(firstTenant.Activate().IsSuccess);
         Assert.True(secondTenant.Activate().IsSuccess);
-        await using (var scope = isolated.Services.CreateAsyncScope())
-        {
-            var services = scope.ServiceProvider;
-            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
-            {
-                services.GetRequiredService<ITenantRepository>().Add(firstTenant);
-                services.GetRequiredService<ITenantRepository>().Add(secondTenant);
-                return Task.FromResult(Result.Success());
-            }, CommitPolicy.OnSuccess, Ct);
-        }
+        // El modelo actual no puede escribir contra el esquema histórico previo al índice.
+        await ownerContext.Database.ExecuteSqlInterpolatedAsync($"""
+            INSERT INTO platform."Tenants" ("Id", "Kind", "Name", "Status", "Slug")
+            VALUES ({firstTenant.Id}, 'Business', {firstTenant.Name}, 'Active', NULL),
+                   ({secondTenant.Id}, 'Business', {secondTenant.Name}, 'Active', NULL)
+            """, Ct);
 
         var firstJoined = new DateTime(2026, 9, 28, 12, 0, 0, DateTimeKind.Utc);
         var secondJoined = firstJoined.AddDays(1);

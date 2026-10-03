@@ -12,6 +12,7 @@ internal static class CachingRegistration
         services.AddHybridCache();
         services.AddSingleton<ReferenceDataCache>();
         services.AddSingleton<ITenantStatusCache, TenantStatusCache>();
+        services.AddSingleton<ITenantFeatureCache, TenantFeatureCache>();
         services.AddSingleton<ITenantSettingsCache, TenantSettingsCache>();
         services.AddSingleton<IPlatformSettingsCache, PlatformSettingsCache>();
         services.AddSingleton<IAccessStatusCache, AccessStatusCache>();

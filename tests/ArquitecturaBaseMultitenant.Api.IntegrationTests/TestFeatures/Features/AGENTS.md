@@ -1,0 +1,1 @@
+Controllers y catálogo exclusivos de pruebas de módulos. Leé docs/rules/tests.md y modulos-habilitados.md. Se exponen solo por TestControllerApplicationPart y nunca en src. Copiá FeatureProbeController.

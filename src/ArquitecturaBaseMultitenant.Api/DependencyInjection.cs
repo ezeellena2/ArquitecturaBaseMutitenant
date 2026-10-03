@@ -1,5 +1,7 @@
 using System.Threading.RateLimiting;
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
+using ArquitecturaBaseMultitenant.Api.Features;
+using Microsoft.FeatureManagement.Mvc;
 using ArquitecturaBaseMultitenant.Api.Authorization;
 using ArquitecturaBaseMultitenant.Api.Authentication;
 using ArquitecturaBaseMultitenant.Api.Idempotency;
@@ -26,6 +28,7 @@ public static class DependencyInjection
         services.AddAuthorization();
         services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
         services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+        services.AddScoped<IDisabledFeaturesHandler, DisabledFeatureHandler>();
         services.AddAntiforgery(options =>
         {
             options.Cookie.Name = "__Host-MtSignupCsrf";

@@ -170,6 +170,22 @@ public sealed class AuditTrailTests
     }
 
     [Fact]
+    public void Global_modules_require_an_event_for_the_affected_space_in_the_same_commit()
+    {
+        using var context = CreateApplicationContext();
+        var tenantId = Guid.NewGuid();
+        context.Add(Domain.Features.TenantFeature.Create(tenantId, "test-module", true,
+            Domain.Features.TenantFeatureSource.Manual, null).Value);
+        var trail = new AuditTrailInterceptor(new TestCurrentUser(), new TestTenantContext(null), new FakeTimeProvider(Instant));
+        Assert.Throws<InvalidOperationException>(() => trail.PrepareAuditEntries(context));
+        context.Add(SecurityEvent.ForTenantFeatures(AuditActorKind.System, Guid.Empty, Guid.NewGuid(), "Otro espacio", Instant.UtcDateTime));
+        Assert.Throws<InvalidOperationException>(() => trail.PrepareAuditEntries(context));
+        context.Add(SecurityEvent.ForTenantFeatures(AuditActorKind.System, Guid.Empty, tenantId, "Habilitación de prueba", Instant.UtcDateTime));
+        Assert.Empty(trail.PrepareAuditEntries(context));
+        Assert.Empty(context.ChangeTracker.Entries<AuditEntry>());
+    }
+
+    [Fact]
     public void Explicit_audit_event_uses_the_active_tenant_and_platform_actor()
     {
         var tenantId = Guid.NewGuid();

@@ -13,11 +13,13 @@
 - **Catálogo en código:** `Domain/Features/Features.cs`, con constantes como `Features.Reportes`. Cada módulo declara de qué lado vive (`Consumer`, `Business` o los dos, si usa datos compartidos) y si arranca prendido.
 - **Por tenant:** `platform.TenantFeatures` (`TenantId`, `FeatureKey`, `Source` = `Plan` | `Manual` | `Trial`, `ExpiresAtUtc?`).
 - **Filtro:** `TenantFeatureFilter` (el filtro `"Tenant"` de la librería) lee los módulos del tenant activo con caché `t:{tenantId}:features`, que se invalida al cambiarlos.
+- FeatureManagement y el filtro son scoped porque dependen del contexto firmado. La caché contiene filas y fechas, nunca el resultado de vigencia; una prueba vence en el instante `ExpiresAtUtc` aunque la fila siga cacheada. La comprobación HTTP previa corre después de autenticar y resolver el acceso y antes de los permisos; el handler de la librería también devuelve ProblemDetails 404.
 - **Configuración** (`appsettings`): cada módulo se declara con `EnabledFor: [{ "Name": "Tenant" }]`. Ponerlo en `false` es el **apagado de emergencia** para todos.
 - **Controller de un módulo:** `[FeatureGate(Features.Reportes)]` + `[Access]` + permiso. Apagado, responde 404 ProblemDetails (`DisabledFeatureHandler`).
 - **Workers y correos del módulo:** preguntan `IFeatureService.IsEnabledAsync(Features.X)` (un puerto de Application, sobre `IFeatureManager`) antes de hacer algo por un tenant.
 - **`GET /api/me`** devuelve `features: ["reportes", …]` del acceso activo. Un módulo de datos compartidos está prendido para una persona si lo está para la organización con la que interactúa.
 - **Plataforma:** la ficha de una organización tiene la sección "Módulos", para prenderlos, apagarlos y fijar la fecha de fin de una prueba, con motivo y `SecurityEvent`.
+- `GET /api/platform/tenants/{id}/features` devuelve el catálogo Business y sus valores iniciales (versión 0 cuando no existe fila). `PUT /{featureKey}` exige enabled, source, version y reason; Trial exige vencimiento. La habilitación y el evento se confirman juntos; una edición vieja o una carrera de alta devuelve 409. La plantilla mantiene el catálogo vacío hasta incorporar módulos reales.
 - **El núcleo no es un módulo:** usuarios, roles, empresas, configuración, auditoría y la página pública (con el directorio) están siempre prendidos. Que una organización publique su página o no es su estado (`Draft`/`Published`), no un módulo.
 
 ## Prohibido

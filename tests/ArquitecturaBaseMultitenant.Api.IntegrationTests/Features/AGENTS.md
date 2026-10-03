@@ -1,0 +1,1 @@
+Pruebas exigidas de módulos con API, PostgreSQL y caché reales en base aislada. Leé docs/rules/tests.md y modulos-habilitados.md. Los módulos de ejemplo solo existen en TestFeatures y su catálogo inyectado; sin cuentas ni organizaciones Development.

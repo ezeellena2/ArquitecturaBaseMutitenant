@@ -13,7 +13,7 @@ public sealed record ListPlatformTenantsRequest : PagedRequest
 
 public sealed record PlatformTenantResponse(Guid Id, string Name, string? Slug, TenantStatus Status,
     TenantRegistrationSource Source, DateTime? CreatedAtUtc, int CompanyCount, int MemberCount, uint Version,
-    string? OwnerName = null, string? OwnerEmail = null);
+    string? OwnerName = null, Email? OwnerEmail = null);
 
 public sealed record PlatformTenantStatusCount(TenantStatus Status, int Count);
 public sealed record PlatformTenantSourceCount(TenantRegistrationSource Source, int Count);

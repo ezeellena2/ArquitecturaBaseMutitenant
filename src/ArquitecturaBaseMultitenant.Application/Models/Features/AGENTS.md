@@ -1,0 +1,1 @@
+Proyecciones de habilitaciones globales sin EF. Leé docs/rules/modulos-habilitados.md, fechas-y-zonas.md y concurrencia.md. Cachear filas crudas; el vencimiento se evalúa con TimeProvider por llamada.

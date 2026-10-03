@@ -1,5 +1,7 @@
 using System.Net;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
+using ArquitecturaBaseMultitenant.Application.Models.Profile;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Contracts;
@@ -63,6 +65,32 @@ public sealed class OpenApiContractTests(ApiFactory factory)
             TestContext.Current.CancellationToken))!;
         Assert.Equal("string", contract["components"]?["schemas"]?["LegalDocumentRow"]?
             ["properties"]?["effectiveAtUtc"]?["type"]?.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task Active_features_contract_matches_the_backend_and_the_front_consumed_schema()
+    {
+        var root = FindRepositoryRoot();
+        var front = Path.GetFullPath(Path.Combine(root, "..", "ArquitecturaBaseMutitenantFront"));
+        if (!Directory.Exists(front))
+        {
+            Console.WriteLine("Front checkout absent; cross-repository feature schema check runs with both checkouts.");
+            return;
+        }
+        var contract = JsonNode.Parse(await File.ReadAllTextAsync(Path.Combine(root, "docs", "contracts", "openapi.json"),
+            TestContext.Current.CancellationToken))!;
+        var schema = contract["components"]!["schemas"]!["MeResponse"]!;
+        Assert.Contains(schema["required"]!.AsArray(), value => value!.GetValue<string>() == "features");
+        Assert.Equal("array", schema["properties"]!["features"]!["type"]!.GetValue<string>());
+        Assert.Equal("string", schema["properties"]!["features"]!["items"]!["type"]!.GetValue<string>());
+        Assert.Equal(typeof(IReadOnlyList<string>), typeof(MeResponse).GetProperty(nameof(MeResponse.Features))!.PropertyType);
+        var generated = await File.ReadAllTextAsync(Path.Combine(front, "src", "shared", "api", "generated", "schema.d.ts"),
+            TestContext.Current.CancellationToken);
+        var me = Regex.Match(generated, @"MeResponse:\s*\{(?<body>[\s\S]*?)\n\s*\};", RegexOptions.CultureInvariant);
+        Assert.True(me.Success);
+        Assert.Matches(@"\bfeatures:\s*string\[\];", me.Groups["body"].Value);
+        var types = await File.ReadAllTextAsync(Path.Combine(front, "src", "shared", "api", "types.ts"), TestContext.Current.CancellationToken);
+        Assert.Contains("MeResponse = ApiSchemas[\"MeResponse\"]", types);
     }
 
     private static string FindRepositoryRoot()

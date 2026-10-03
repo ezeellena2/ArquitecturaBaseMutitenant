@@ -45,7 +45,7 @@ public sealed class ProfileServiceTests
         var snapshots = new ProfileSnapshotBuilder(new StubUsers(Account(id)), new StubAccesses([]),
             new ProfilePreferences(new StubSettings(null), catalog, catalog), new StubMethods([method]),
             new LoginMethodAvailability([], new StubGoogle(available), new StubMemberships()),
-            new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider), new StubPermissions());
+            new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider), new StubPermissions(), new StubFeatures());
 
         var profile = await snapshots.BuildAsync(id, Access.Consumer, null, Ct);
 
@@ -196,7 +196,7 @@ public sealed class ProfileServiceTests
         var catalog = new JsonReferenceDataCatalog();
         var availability = new LoginMethodAvailability([], new StubGoogle(), new StubMemberships());
         var snapshots = new ProfileSnapshotBuilder(users, accesses, new ProfilePreferences(settings, catalog, catalog), new StubMethods(),
-            availability, new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider), new StubPermissions());
+            availability, new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider), new StubPermissions(), new StubFeatures());
         return new ProfileService(current, context, snapshots, users, fixture.Validator,
             unitOfWork ?? new FakeUnitOfWork(), fixture.TimeProvider, fixture.Logger);
     }
@@ -277,6 +277,12 @@ public sealed class ProfileServiceTests
     }
 
     private sealed class StubGoogle(bool enabled = false) : IGoogleAvailability { public bool IsEnabled => enabled; }
+    private sealed class StubFeatures : IFeatureService
+    {
+        public Task<bool> IsEnabledAsync(string key, CancellationToken cancellationToken) => Task.FromResult(false);
+        public Task<IReadOnlyList<string>> ListEnabledAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<string>>([]);
+    }
     private sealed class StubMemberships : ILoginMethodMembershipReader
     {
         public Task<bool> IsActiveAsync(Guid userId, Guid tenantId, CancellationToken ct) => Task.FromResult(false);

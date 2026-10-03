@@ -1,0 +1,1 @@
+Adaptadores HTTP de módulos opcionales: FeatureGate y apagados 404 ProblemDetails. Leé docs/rules/modulos-habilitados.md, api-http.md, permisos.md y multitenancy.md. El middleware comprueba el acceso antes de ocultar el módulo y corre antes de UseAuthorization; no reemplaza autenticación ni Access. Copiá DisabledFeatureHandler y FeatureGateMiddleware; lo prueba FeatureGateTests.

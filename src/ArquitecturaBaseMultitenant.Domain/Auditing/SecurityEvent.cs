@@ -89,6 +89,15 @@ public sealed class SecurityEvent : Entity
         return ev;
     }
 
+    public static SecurityEvent ForTenantFeatures(AuditActorKind actorKind, Guid actorId,
+        Guid tenantId, string reason, DateTime occurredAtUtc)
+    {
+        if (tenantId == Guid.Empty) throw new ArgumentException("A target space is required.", nameof(tenantId));
+        var ev = ForPlatformAction(SecurityEventType.TenantFeaturesChanged, actorKind, actorId, reason, occurredAtUtc);
+        ev.TargetTenantId = tenantId;
+        return ev;
+    }
+
     private static SecurityEvent ForPlatformAction(SecurityEventType type, AuditActorKind actorKind,
         Guid actorId, string reason, DateTime occurredAtUtc)
     {
