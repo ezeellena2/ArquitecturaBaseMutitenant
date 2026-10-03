@@ -66,10 +66,10 @@
 
 ### 5. Página pública y moderación
 
-- [ ] Crear `PublicPage` y configuración bajo clasificación `public_site`; nombre, descripción, logo, contacto, slug de tenant, estado borrador/publicado y campos de bloqueo (`PublishBlockedAtUtc`, `PublishBlockedReason`, `PublishBlockedByUserId`).
-- [ ] Implementar logo como carga validada de imagen con tipo/tamaño acotados y lectura protegida por permiso; no almacenar rutas externas arbitrarias. Registrar en decisiones la solución de almacenamiento elegida y sus límites.
-- [ ] Implementar lectura/edición/publicación/despublicación del área bajo `publicpage.manage`; slug reutiliza `ReservedSlugs` y verificación de disponibilidad. Una página bloqueada queda en borrador y no se puede republicar; respetar `PublicSite.PublicPage.PublishBlocked`.
-- [ ] Añadir tests de validación, conducta, permisos, aislamiento y bloqueo de moderación; rutas, OpenAPI, textos y contrato.
+- [x] Crear `PublicPage` y configuración bajo clasificación `public_site`; nombre, descripción, logo, contacto, slug de tenant, estado borrador/publicado y campos de bloqueo (`PublishBlockedAtUtc`, `PublishBlockedReason`, `PublishBlockedByUserId`).
+- [x] Implementar logo como carga validada de imagen con tipo/tamaño acotados y lectura protegida por permiso; no almacenar rutas externas arbitrarias. Registrar en decisiones la solución de almacenamiento elegida y sus límites.
+- [x] Implementar lectura/edición/publicación/despublicación del área bajo `publicpage.manage`; slug reutiliza `ReservedSlugs` y verificación de disponibilidad. Una página bloqueada queda en borrador y no se puede republicar; respetar `PublicSite.PublicPage.PublishBlocked`.
+- [x] Añadir pruebas de firma/tamaño de logo, transición de publicación, moderación bloqueada, versiones, slug reservado/ocupado, aislamiento por tenant y rutas. El build de API pasó con 0 advertencias; Application Unit pasó 392/392; `PublicPagesTests` pasó 1/1 contra PostgreSQL y `ExplicitRouteInventoryTests` pasó 3/3. OpenAPI generado; actualizar el contrato front sigue pendiente.
 
 ### 6. Auditoría, inicio y navegación B2B
 
@@ -119,3 +119,5 @@
 - Quitar un dominio verificado impide nuevas asociaciones automáticas, pero conserva `ManagedByTenantId` en los métodos existentes para que un correo de un exmiembro no vuelva a habilitar Personal. El usuario aprobó cambiar el diálogo de retiro porque su texto anterior prometía quitar esa protección.
 - Los dominios se verifican consultando TXT mediante Cloudflare DNS-over-HTTPS, encapsulado detrás de `IDnsTxtLookup`; las pruebas reemplazan únicamente el puerto por un lector determinista.
 - La migración nueva usa la convención existente `IVersioned`/`xmin`; verifiqué su SQL con `dotnet ef migrations script` y Npgsql omite las operaciones a la columna de sistema.
+- La página pública persiste su imagen en `public_site.PublicPages.LogoBytes` como `bytea`: solo PNG/JPEG/WebP, firma de archivo comprobada y máximo de 512 KiB. La fila completa queda bajo RLS `IPublishedByBusiness`: la organización puede leer su borrador y una página publicada es legible públicamente para el futuro flujo E7; no se aceptan URLs externas de logo.
+- El editor devuelve y exige `version` (xmin). Si la página todavía no existe, solo acepta `version=0` para crearla; el `GET` inicial muestra los datos de la organización como borrador hasta el primer guardado.

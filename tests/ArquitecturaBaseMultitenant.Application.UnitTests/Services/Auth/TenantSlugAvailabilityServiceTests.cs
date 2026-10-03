@@ -62,5 +62,8 @@ public sealed class TenantSlugAvailabilityServiceTests
             TakenLookups.Add(normalizedSlug);
             return Task.FromResult(normalizedSlug == Taken);
         }
+
+        public Task<bool> IsTakenByOtherAsync(string normalizedSlug, Guid tenantId,
+            CancellationToken cancellationToken) => Task.FromResult(normalizedSlug == Taken);
     }
 }

@@ -157,4 +157,13 @@
   <data name="Settings.TenantDomain.TxtNotFound" xml:space="preserve"><value>We could not find the verification TXT record in DNS.</value></data>
   <data name="Settings.TenantDomain.DnsUnavailable" xml:space="preserve"><value>We could not query DNS right now. Try again in a few minutes.</value></data>
   <data name="Settings.TenantDomain.AlreadyRemoved" xml:space="preserve"><value>The domain has already been removed.</value></data>
+  <data name="PublicSite.PublicPage.NameRequired" xml:space="preserve"><value>Enter the name this page should display.</value></data>
+  <data name="PublicSite.PublicPage.NameTooLong" xml:space="preserve"><value>The page name is too long.</value></data>
+  <data name="PublicSite.PublicPage.DescriptionTooLong" xml:space="preserve"><value>The description exceeds 500 characters.</value></data>
+  <data name="PublicSite.PublicPage.ContactTooLong" xml:space="preserve"><value>A contact field is too long.</value></data>
+  <data name="PublicSite.PublicPage.InvalidLogo" xml:space="preserve"><value>Upload a PNG, JPG, or WebP image up to 512 KiB.</value></data>
+  <data name="PublicSite.PublicPage.PublishBlocked" xml:space="preserve"><value>The platform blocked this page. You cannot republish it until the block is lifted.</value></data>
+  <data name="PublicSite.PublicPage.BlockReasonRequired" xml:space="preserve"><value>A moderation block needs a reason.</value></data>
+  <data name="PublicSite.PublicPage.NotFound" xml:space="preserve"><value>The public page was not found.</value></data>
+  <data name="PublicSite.PublicPage.VersionConflict" xml:space="preserve"><value>The page changed since you opened it. Refresh it before saving.</value></data>
 </root>

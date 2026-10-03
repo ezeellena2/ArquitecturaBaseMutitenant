@@ -6,4 +6,6 @@ public interface ITenantSlugAvailabilityReader
     Task<bool> IsReservedAsync(string normalizedSlug, CancellationToken cancellationToken);
 
     Task<bool> IsTakenAsync(string normalizedSlug, CancellationToken cancellationToken);
+
+    Task<bool> IsTakenByOtherAsync(string normalizedSlug, Guid tenantId, CancellationToken cancellationToken);
 }

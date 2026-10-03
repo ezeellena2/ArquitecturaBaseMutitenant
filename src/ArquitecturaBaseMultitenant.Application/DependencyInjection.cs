@@ -12,6 +12,7 @@ using ArquitecturaBaseMultitenant.Application.Services.Roles;
 using ArquitecturaBaseMultitenant.Application.Services.Companies;
 using ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
 using ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
+using ArquitecturaBaseMultitenant.Application.Services.PublicSite;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -32,6 +33,7 @@ public static class DependencyInjection
         services.AddScoped<IOrganizationUserService, OrganizationUserService>();
         services.AddScoped<IOrganizationSettingsService, OrganizationSettingsService>();
         services.AddScoped<IOrganizationDomainService, OrganizationDomainService>();
+        services.AddScoped<IPublicPageService, PublicPageService>();
         services.AddScoped<LoginMethodDomainAssigner>();
         services.AddScoped<ILastCompanyAdminGuard, LastCompanyAdminGuard>();
         services.AddScoped<IPermissionService, PermissionService>();

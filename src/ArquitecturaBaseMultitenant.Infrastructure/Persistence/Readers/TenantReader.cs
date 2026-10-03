@@ -11,13 +11,13 @@ internal sealed class TenantReader(ApplicationDbContext context) : ITenantReader
     public Task<TenantRow?> FindByIdAsync(Guid tenantId, CancellationToken cancellationToken) =>
         context.Tenants.AsNoTracking()
             .Where(tenant => tenant.Id == tenantId)
-            .Select(tenant => new TenantRow(tenant.Id, tenant.Kind, tenant.Status, tenant.Name))
+            .Select(tenant => new TenantRow(tenant.Id, tenant.Kind, tenant.Status, tenant.Name, tenant.Slug))
             .SingleOrDefaultAsync(cancellationToken);
 
     public async Task<IReadOnlyList<TenantRow>> ListActiveBusinessesAsync(CancellationToken cancellationToken) =>
         await context.Tenants.AsNoTracking()
             .Where(tenant => tenant.Kind == TenantKind.Business && tenant.Status == TenantStatus.Active)
             .OrderBy(tenant => tenant.Id)
-            .Select(tenant => new TenantRow(tenant.Id, tenant.Kind, tenant.Status, tenant.Name))
+            .Select(tenant => new TenantRow(tenant.Id, tenant.Kind, tenant.Status, tenant.Name, tenant.Slug))
             .ToArrayAsync(cancellationToken);
 }
