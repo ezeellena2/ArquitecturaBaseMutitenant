@@ -52,6 +52,11 @@
   <data name="Users.User.NotFound" xml:space="preserve"><value>We couldn't find the user.</value></data>
   <data name="Users.User.CannotModifySelf" xml:space="preserve"><value>You can't apply this change to your own account.</value></data>
   <data name="Tenancy.Member.LastTenantAdmin" xml:space="preserve"><value>The organization must keep at least one active Owner.</value></data>
+  <data name="Features.Module.InvalidKey" xml:space="preserve"><value>Check the module.</value></data>
+  <data name="Features.Module.InvalidSource" xml:space="preserve"><value>Choose a valid module source.</value></data>
+  <data name="Features.Module.ExpiryRequired" xml:space="preserve"><value>Enter when the trial ends.</value></data>
+  <data name="Features.Module.NotFound" xml:space="preserve"><value>We couldn't find the module.</value></data>
+  <data name="Features.Module.InvalidScope" xml:space="preserve"><value>The module is not available for this profile.</value></data>
   <data name="Tenancy.Member.CannotDisableSelf" xml:space="preserve"><value>You can't disable your own organization access.</value></data>
   <data name="Users.User.LastAdmin" xml:space="preserve"><value>The system must keep at least one active administrator.</value></data>
   <data name="Settings.System.NotFound" xml:space="preserve"><value>We couldn't find the system settings.</value></data>

@@ -148,6 +148,8 @@ Provisioner `d27d7d3`: entrada explícita `StageBusinessOwnerAsync` para Member 
 
 Archivos: Domain/Features, Configuration/Features, puerto IFeatureService; Infrastructure/Features; TenantFeatures configuración/reader/repo/migración; MeResponse/ProfileSnapshotBuilder; tests FeatureGateTests y ModuleControllersTests requeridos, contratos y feature tests front.
 
+Avance de dominio: rojo por tipos ausentes → 4/4 verdes (límite exacto de vencimiento, apagado manual, inválidos sin mutación y accesos separados). Catálogo productivo vacío; recursos es/en 6/6 y códigos 6/6; build Domain 0 advertencias. Persistencia, filtro y HTTP siguen pendientes.
+
 - [ ] Rojo: apagado 404 ProblemDetails, prendido 200; emergencia global gana; Trial vence en límite exacto; caché invalida; alcance Consumer/Business no se mezcla.
 - [ ] Agregar paquete central y registro Microsoft.FeatureManagement.AspNetCore, filtro Tenant/caché t:{id}:features, DisabledFeatureHandler; persistir origen/vencimiento/version, motivo y SecurityEvent al cambiar desde Plataforma.
 - [ ] Catálogo productivo inicialmente vacío: núcleo siempre disponible, sin módulos de ejemplo ni WhatsApp. Gates de recorrido viven en TestFeatures; el framework soporta catálogo de nuevos módulos reales siguiendo guía.

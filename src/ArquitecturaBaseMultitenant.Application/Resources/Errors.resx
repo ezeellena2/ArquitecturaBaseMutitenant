@@ -52,6 +52,11 @@
   <data name="Users.User.NotFound" xml:space="preserve"><value>No encontramos el usuario.</value></data>
   <data name="Users.User.CannotModifySelf" xml:space="preserve"><value>No podés aplicar este cambio sobre tu propia cuenta.</value></data>
   <data name="Tenancy.Member.LastTenantAdmin" xml:space="preserve"><value>Tiene que quedar al menos un Dueño activo.</value></data>
+  <data name="Features.Module.InvalidKey" xml:space="preserve"><value>Revisá el módulo.</value></data>
+  <data name="Features.Module.InvalidSource" xml:space="preserve"><value>Elegí un origen válido para el módulo.</value></data>
+  <data name="Features.Module.ExpiryRequired" xml:space="preserve"><value>Escribí cuándo termina la prueba.</value></data>
+  <data name="Features.Module.NotFound" xml:space="preserve"><value>No encontramos el módulo.</value></data>
+  <data name="Features.Module.InvalidScope" xml:space="preserve"><value>El módulo no está disponible para este perfil.</value></data>
   <data name="Tenancy.Member.CannotDisableSelf" xml:space="preserve"><value>No podés deshabilitarte a vos misma.</value></data>
   <data name="Users.User.LastAdmin" xml:space="preserve"><value>Tiene que quedar al menos un administrador activo en el sistema.</value></data>
   <data name="Settings.System.NotFound" xml:space="preserve"><value>No encontramos la configuración del sistema.</value></data>
