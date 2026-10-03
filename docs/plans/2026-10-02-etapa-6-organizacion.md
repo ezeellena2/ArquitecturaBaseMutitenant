@@ -4,7 +4,7 @@
 
 **Objetivo:** completar el acceso B2B desde el alta de una empresa hasta su administración diaria: usuarios e invitaciones, empresas y membresías, configuración y dominio de correo, página pública, auditoría y navegación.
 
-**Arquitectura:** respetar `docs/architecture/backend.md`, `docs/architecture/multitenancy.md`, `docs/features/identidad.md`, `docs/features/roles.md`, `docs/guides/agregar-un-area.md` y las fichas de `docs/rules/`. En el front copiar los tableros aprobados de `../../../ArquitecturaBaseMutitenantFront/docs/design/lienzo/` v60. `Registro-Empresa` y su móvil están validados; el usuario aprobó en conjunto el 2026-10-02 las pantallas de Organización pendientes, incluidos móviles y diálogos. Roles/Rol y sus móviles ya fueron aprobados en E4.
+**Arquitectura:** respetar `docs/architecture/backend.md`, `docs/architecture/multitenancy.md`, `docs/features/identidad.md`, `docs/features/roles.md`, `docs/guides/agregar-un-area.md` y las fichas de `docs/rules/`. La fuente visual vigente es `../../../ArquitecturaBaseMutitenantFront/docs/design/lienzo/` v64. El 2026-10-03 el usuario indicó copiar v64 para `Usuarios`, `Usuario`, `Roles`, `Rol`, `Empresas`, `Empresa`, `Configuracion`, `Pagina-Org`, `Auditoria-Org`, `Error-Org` y `Avisos`, y confirmó que sus móviles v64 están aprobados para esta etapa. `Registro-Empresa` sigue validado; Roles/Rol de escritorio fue aprobado en E4. Los dos tableros de Inicio quedan «para repensar» según el README v64.
 
 **Restricciones de etapa:** trabajar en `main`, sin push; no crear cuentas ni organizaciones de ejemplo en Development; pruebas con sus propias bases; conservar los cambios de invitaciones `51f604f`, `feb67ec` y `7c83835`; no crear guardas de arquitectura ni tests nuevos del arnés salvo la verificación explícita del salto de etapas no contiguas; no marcar E5 cerrada al cerrar E6.
 
@@ -14,7 +14,7 @@
 
 - [x] Confirmar `main`, árbol limpio y último commit en ambos repos.
 - [x] Confirmar Aspire apagado; no repetir la puerta de E4.
-- [x] Leer las fichas, decisiones, informes, plan maestro y aprobaciones v60 requeridas.
+- [x] Leer las fichas, decisiones, informes, plan maestro y aprobaciones; revisar el README y `canvas.json` vigentes de v64.
 - [x] Revisar este plan con un revisor de documentos y resolver las observaciones de secuencia, E2E canónico, formatos, arnés y puerta manual antes del código.
 - [ ] Guardar la decisión de que E6 puede cerrarse antes de E5 en el arnés existente: la lista de etapas cerradas debe permitir `{0,1,2,3,4,6}` y E5 debe seguir abierta. Actualizar las comprobaciones existentes de back/front sin añadir un arnés paralelo.
 
@@ -81,8 +81,14 @@
 ### 7. Frontend por grupos aprobados
 
 - [ ] Implementar `/registro/empresa` desde `Registro-Empresa` y `M-Registro-Empresa`: canal disponible de correo/Google, aceptación de términos, slug y disponibilidad/reservados, primera empresa/CUIT opcional, límite, espera de aprobación y alta cerrada. El canal WhatsApp queda para E8 porque todavía no está implementado.
-- [x] Aprobación agrupada recibida el 2026-10-02 para `Inicio-Org`, `M-Inicio-Org`, `Inicio-Miembro`; `Usuarios`, `Usuario`, `M-Usuarios`, `M-Usuario`; `Empresas`, `Empresa`, `M-Empresas`, `M-Empresa`; `Configuracion`, `M-Configuracion`, alta/verificación/retiro de dominio; `Pagina-Org`, `Pagina-Org-Despublicar`; `Auditoria-Org`, `M-Auditoria-Org`, incluidos móviles y diálogos. Implementar copiando lienzo v60. No volver a pedir visto bueno de Roles/Rol ni Registro-Empresa.
-- [ ] Con la aprobación, implementar las pantallas, móviles, diálogos y estados de la lista anterior copiando lienzo v60; usar `shared/ui`, fichas front, clientes generados, permisos y componentes del área Roles. No redibujar pantallas existentes.
+- [x] Aprobación agrupada recibida el 2026-10-02 para las pantallas de Organización pendientes en v60, incluidos móviles y diálogos. La instrucción del 2026-10-03 actualiza a v64 las once pantallas nombradas arriba; no se redibujan tableros existentes.
+- [ ] Completar la copia de escritorio v64 para Usuarios, Usuario, Roles, Rol, Empresas, Empresa, Configuración, Página pública, Auditoría, Error-Org y Avisos, incluidos sus estados y diálogos. Ya están adaptadas las columnas de Usuarios/Roles/Empresas, el detalle Usuario, el editor Rol, la consulta de Auditoría y los textos afectados; faltan revisar/cerrar estados visuales y registrar diferencias.
+- [ ] Resolver el selector visual de empresa y roles de Usuario conforme a v64: empresas como lista de lectura con ⋮; editar roles y sumar empresa en diálogos que guardan al momento. Pruebas focales del diálogo de roles y alta de empresa.
+- [ ] El backend de Auditoría debe devolver el nombre de la persona afectada en la acción traducida y la empresa («Dónde»); front y prueba de contrato deben leer ambos lados. Implementación backend en commit `6e98bc1`; falta verificar contrato generado front y su puerta.
+- [ ] Revisar el estado «Quitar» de Configuración (los correos administrados siguen protegidos) y el rótulo «Dominio de correo»; Página pública debe usar «Nombre de la página».
+- [ ] Revisar Error-Org y Avisos según v64, sin agregar explicación que el tablero no muestra.
+- [x] El usuario confirmó el 2026-10-03 que los tableros móviles v64 de las pantallas aprobadas están aprobados y deben copiarse; incluirlos en la implementación y comparación visual.
+- [ ] Los inicios de Organización y Miembro figuran «para repensar» en README v64; no implementar estados nuevos basados en v60 sin nueva definición visual. Mantener lo que ya existe y anotar cualquier bloqueo real que aparezca en el recorrido.
 - [ ] Hacer el flujo real de 1 y 50 filas en Usuarios, Empresas y Auditoría con PostgreSQL de prueba propia; comparar orden, filtros, conteos, estados y paginado contra las maquetas.
 
 ### 8. Recorridos reales, documentación y puertas
@@ -96,13 +102,13 @@
 - [ ] Ejecutar `npm run test:e2e:real` en verde con PostgreSQL exclusivo y `Email:Delivery=PickupDirectory`, exigiendo `E2E_PICKUP_DIR` absoluto. Preservar el flujo canónico: el runner crea una persona y una organización en su base, registra la cuenta personal con el código leído del `.eml`, sale, entra con su cuenta por la puerta empresa, verifica `/org`, F5, cambio a Personal y logout; sumar los recorridos E6 sin mocks. Conservar salidas sin datos personales ni secretos.
 - [ ] Comparar visualmente cada tablero aprobado/estado afectado en 1440×900 y 390×844, guardar capturas de maqueta y producto en `docs/design/capturas/etapa-6/` y anotar cada diferencia con su motivo.
 - [ ] Ejecutar el recorrido manual requerido: registrar la organización, ingresar, comprobar `/org`, F5, cambiar a Personal; invitar desde Usuarios a una persona con cuenta y a otra sin cuenta, recibir ambos correos de invitación en Gmail y aceptar ambos enlaces. Si falta una acción/credencial personal, pedir solo esa intervención al usuario y registrar la prueba como pendiente; no declarar aprobada ni cerrar la puerta de E6 hasta que se complete.
-- [ ] Comparar cada estado codificado con el lienzo v60 y su contraparte móvil. Corregir cualquier diferencia; si la maqueta no cubre un estado de producto necesario o una diferencia no puede corregirse sin cambiarlo, pausar esa pantalla para aprobación del usuario y registrar el motivo en el informe, sin inventar una solución visual.
+- [ ] Comparar cada estado codificado con los tableros aprobados v64 y su contraparte móvil aprobada. Corregir cualquier diferencia; si una maqueta queda pendiente, no inventar una solución visual y anotar el bloqueo hasta recibir aprobación.
 - [ ] Subir `HarnessStage` de 4 a 6 en back/front usando etapas cerradas explícitas; E5 permanece pendiente.
 - [ ] Apagar Aspire si se levantó y comprobar ambos repos limpios en `main`, sin push.
 
 ## Decisiones tomadas
 
-- El lienzo v60 es la fuente visual; el texto del plan maestro que cita lienzo v35/67 tableros está desactualizado y no se usará como catálogo visual.
+- El lienzo v64 es la fuente visual; el texto del plan maestro que cita lienzo v35/67 tableros está desactualizado y no se usará como catálogo visual.
 - El salto `4 → 6` no cierra E5: el arnés debe representar etapas cerradas como conjunto explícito en las comprobaciones existentes, no con una comparación ordinal que marque etapas intermedias.
 - La pantalla de alta empresarial soporta solo los canales que publica el backend. El botón de WhatsApp no se conecta antes de E8; se usará correo y Google.
 - La aprobación agrupada del 2026-10-02 habilita la implementación de todo el grupo Organización incluido móviles y diálogos; no se redibujan tableros existentes.
