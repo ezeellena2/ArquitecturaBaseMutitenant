@@ -53,19 +53,20 @@ public sealed class OrganizationSettingsTests(ApiFactory factory)
         {
             name = "  Configuración actualizada  ",
             defaultCulture = "en-US",
-            defaultTimeZoneId = "America/New_York",
-            defaultCurrency = "USD",
+            defaultTimeZoneId = "America/Argentina/Mendoza",
+            defaultCurrency = "ARS",
             version = originalVersion,
         }, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, saved.StatusCode);
+        Assert.True(saved.StatusCode == HttpStatusCode.NoContent,
+            await saved.Content.ReadAsStringAsync(Ct));
 
         using var updated = await client.GetAsync("/api/organization/settings", Ct);
         using var updatedJson = JsonDocument.Parse(await updated.Content.ReadAsStringAsync(Ct));
         var root = updatedJson.RootElement;
         Assert.Equal("Configuración actualizada", root.GetProperty("name").GetString());
         Assert.Equal("en-US", root.GetProperty("defaultCulture").GetString());
-        Assert.Equal("America/New_York", root.GetProperty("defaultTimeZoneId").GetString());
-        Assert.Equal("USD", root.GetProperty("defaultCurrency").GetString());
+        Assert.Equal("America/Argentina/Mendoza", root.GetProperty("defaultTimeZoneId").GetString());
+        Assert.Equal("ARS", root.GetProperty("defaultCurrency").GetString());
         Assert.NotEqual(originalVersion, root.GetProperty("version").GetUInt32());
 
         using var stale = await client.PutAsJsonAsync("/api/organization/settings", new

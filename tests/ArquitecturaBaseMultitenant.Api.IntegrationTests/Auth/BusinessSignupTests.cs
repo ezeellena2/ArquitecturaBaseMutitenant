@@ -55,7 +55,7 @@ public sealed class BusinessSignupTests(ApiFactory factory)
         signup.Headers.Add("Idempotency-Key", operationId.ToString("D"));
         signup.Headers.Add("RequestVerificationToken", requestToken);
         using var created = await client.SendAsync(signup, Ct);
-        Assert.Equal(HttpStatusCode.OK, created.StatusCode);
+        Assert.True(created.StatusCode == HttpStatusCode.OK, await created.Content.ReadAsStringAsync(Ct));
         using var result = await created.Content.ReadFromJsonAsync<JsonDocument>(Ct);
         var tenantId = result!.RootElement.GetProperty("tenantId").GetGuid();
         var slug = result.RootElement.GetProperty("slug").GetString()!;
@@ -116,6 +116,13 @@ public sealed class BusinessSignupTests(ApiFactory factory)
     {
         await using var connection = new NpgsqlConnection(factory.AdminConnectionString);
         await connection.OpenAsync(Ct);
+        await using (var tenantScope = connection.CreateCommand())
+        {
+            tenantScope.CommandText = "SELECT set_config('app.tenant_id', @tenantId, false)";
+            tenantScope.Parameters.AddWithValue("tenantId", tenantId.ToString("D"));
+            await tenantScope.ExecuteScalarAsync(Ct);
+        }
+
         await using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT t."Kind", t."Status", t."Slug", c."Name", m."Status", access."RoleName",
