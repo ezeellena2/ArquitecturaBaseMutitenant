@@ -59,7 +59,7 @@ public sealed class PlatformTenantsController(ITenantAdministrationService servi
     [ProducesProblem(StatusCodes.Status403Forbidden)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     [ProducesProblem(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Retry(Guid id, [FromBody] PlatformTenantStateHttpRequest request, CancellationToken ct) =>
+    public async Task<IActionResult> Retry(Guid id, [FromBody] PlatformTenantRetryHttpRequest request, CancellationToken ct) =>
         (await service.ProvisionAsync(id, true, request.ToModel(), ct)).ToActionResult(this);
 
     [HttpGet("paged")]

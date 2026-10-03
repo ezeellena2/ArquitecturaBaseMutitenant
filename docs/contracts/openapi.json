@@ -1264,17 +1264,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PlatformTenantStateHttpRequest"
+                "$ref": "#/components/schemas/PlatformTenantRetryHttpRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/PlatformTenantStateHttpRequest"
+                "$ref": "#/components/schemas/PlatformTenantRetryHttpRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/PlatformTenantStateHttpRequest"
+                "$ref": "#/components/schemas/PlatformTenantRetryHttpRequest"
               }
             }
           },
@@ -10546,6 +10546,18 @@
               "string"
             ],
             "description": "Correo normalizado para comparar y enviar; el dominio IDN se guarda en ASCII."
+          }
+        }
+      },
+      "PlatformTenantRetryHttpRequest": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
           }
         }
       },

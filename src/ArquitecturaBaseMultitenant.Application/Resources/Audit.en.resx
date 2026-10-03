@@ -65,6 +65,7 @@
   <data name="Field.Fields" xml:space="preserve"><value>Changed data</value></data>
   <data name="Fallback" xml:space="preserve"><value>a record</value></data>
   <data name="Platform.OrganizationCreationReason" xml:space="preserve"><value>Organization created with an owner invitation.</value></data>
+  <data name="Platform.OrganizationRetryReason" xml:space="preserve"><value>Retry provisioning</value></data>
   <data name="Platform.PublicPageMetadataReadReason" xml:space="preserve"><value>Public page publication metadata consulted.</value></data>
   <data name="Field.PublishBlocked" xml:space="preserve"><value>Publication blocked</value></data>
 </root>

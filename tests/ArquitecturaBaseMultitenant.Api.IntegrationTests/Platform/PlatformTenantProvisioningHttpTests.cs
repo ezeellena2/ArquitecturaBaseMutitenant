@@ -141,13 +141,18 @@ public sealed class PlatformTenantProvisioningHttpTests(ApiFactory factory)
         using var current = await client.GetAsync($"/api/platform/tenants/{tenant.Id:D}", Ct);
         using var metadata = JsonDocument.Parse(await current.Content.ReadAsStringAsync(Ct));
         var version = metadata.RootElement.GetProperty("version").GetUInt32();
-        using var result = await PlatformJourney.PostAsync(client, $"/api/platform/tenants/{tenant.Id:D}/{action}", new { version, reason = "Alta revisada" }, Ct);
+        object body = pendingApproval ? new { version, reason = "Alta revisada" } : new { version };
+        using var result = await PlatformJourney.PostAsync(client, $"/api/platform/tenants/{tenant.Id:D}/{action}", body, Ct);
         Assert.Equal(HttpStatusCode.NoContent, result.StatusCode);
         using var stale = await PlatformJourney.PostAsync(client, $"/api/platform/tenants/{tenant.Id:D}/retry-provisioning", new { version, reason = "Repetir" }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
         await using var check = factory.Services.CreateAsyncScope();
         var servicesCheck = check.ServiceProvider;
         var context = servicesCheck.GetRequiredService<ApplicationDbContext>();
+        if (!pendingApproval)
+            Assert.True(await context.SecurityEvents.AnyAsync(ev => ev.TargetTenantId == tenant.Id
+                && ev.Type == Domain.Auditing.SecurityEventType.OrganizationProvisioningRetried
+                && ev.Reason == "Reintentar el alta", Ct));
         Assert.Equal(TenantStatus.Active, (await context.Tenants.AsNoTracking().SingleAsync(t => t.Id == tenant.Id, Ct)).Status);
         using var privateScope = servicesCheck.GetRequiredService<ITenantScope>().Enter(tenant.Id);
         Assert.Equal(2, await context.Roles.CountAsync(Ct));

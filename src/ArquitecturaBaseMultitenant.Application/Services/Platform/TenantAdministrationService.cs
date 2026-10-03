@@ -45,6 +45,7 @@ internal sealed class TenantAdministrationService(IPlatformReader reader, IReque
         OperationLog.RunAsync(logger, clock, "ProvisionPlatformTenant", async () =>
         {
             ArgumentNullException.ThrowIfNull(request);
+            request = retry ? request with { Reason = AuditTexts.OrganizationRetryReason() } : request;
             if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
             var settings = await provisioning.PrepareAsync(null, null, ct);
             var authorized = await provisioning.EnterAsync(tenantId, request.Reason!, ct);

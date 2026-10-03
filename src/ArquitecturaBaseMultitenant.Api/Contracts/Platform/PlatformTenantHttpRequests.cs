@@ -27,6 +27,12 @@ public sealed record PlatformTenantStateHttpRequest(uint? Version, string? Reaso
     public override string ToString() => nameof(PlatformTenantStateHttpRequest);
 }
 
+public sealed record PlatformTenantRetryHttpRequest(uint? Version)
+{
+    public PlatformTenantStateRequest ToModel() => new(Version, null);
+    public override string ToString() => nameof(PlatformTenantRetryHttpRequest);
+}
+
 public sealed record CreatePlatformTenantHttpRequest(string? Name, string? FirstCompanyName, string? OwnerEmail,
     string? Culture, string? TimeZoneId)
 {
