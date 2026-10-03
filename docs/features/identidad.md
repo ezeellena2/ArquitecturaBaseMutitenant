@@ -66,6 +66,10 @@ Cuando la cuenta ya existe, «Ingresá para aceptar» abre `/login?returnUrl=%2F
 
 Cada navegación a otra invitación monta un flujo nuevo: aceptación, consentimiento, errores y clave de idempotencia pertenecen a esa invitación. Una respuesta tardía del flujo anterior no cambia la nueva pantalla. El token sigue únicamente en memoria local y en el cuerpo de la API, con una clave opaca de caché.
 
+## E6 · Alta empresarial
+
+`/registro/empresa` y `POST /api/auth/business-signup` permiten iniciar una organización luego de verificar un correo o autenticar una cuenta existente con Google. El formulario exige aceptar términos, elegir un slug disponible y puede crear la primera empresa con CUIT opcional. El alta respeta `BusinessSignup` y `MaxOwnedOrganizations`, y la operación puede dejar la organización pendiente de aprobación. La creación idempotente pasa por `TenantProvisioner`, asigna al creador como Dueño y Administrador de la primera empresa y no crea espacio Personal. Para administración de miembros, empresas y configuración, ver [organizaciones.md](organizaciones.md).
+
 ## Reglas de implementación
 
 - Seguir las fichas [datos-personales](../rules/datos-personales.md), [multitenancy](../rules/multitenancy.md), [guardado](../rules/guardado.md), [result-y-errores](../rules/result-y-errores.md), [emails](../rules/emails.md), [telefonos](../rules/telefonos.md), [api-http](../rules/api-http.md) y [tests](../rules/tests.md).

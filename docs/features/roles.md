@@ -8,7 +8,7 @@
 - `Role` es un recurso de organización, no un rol de Identity. `TenantAdmin` (Dueño) y `CompanyAdmin` son roles de sistema inmutables. Solo un `RoleAssignment` de `TenantAdmin` representa a un Dueño; `Member` no duplica ese dato.
 - El Dueño nace con la organización y es asignado por el provisionador. Roles de sistema se preparan dentro del tenant; la seed global conserva solo al operador y no crea organizaciones ni cuentas de ejemplo.
 - Las rutas Business piden `[HasPermission]`. La sesión determina el tenant mediante `tenant_id`; un recurso de otro tenant responde 404. La autorización de empresa y plataforma usa atributos propios, sin reutilizar permisos de organización.
-- La baja de una cuenta no puede dejar sin Dueño activo a una organización abierta. El conteo incluye solo cuenta, miembro y organización activos. La verificación se serializa con cambios de asignación mediante el lock compartido `ITenantAdminLock`; la etapa 6 lo debe tomar al asignar o quitar `TenantAdmin`.
+- La baja de una cuenta no puede dejar sin Dueño activo a una organización abierta. El conteo incluye solo cuenta, miembro y organización activos. La verificación se serializa con cambios de asignación mediante el lock compartido `ITenantAdminLock`; E6 lo toma al asignar o quitar `TenantAdmin` y devuelve `Legal.AccountDeletion.LastAdmin` al intentar retirar al último Dueño.
 - Las escrituras de roles validan antes de la transacción, usan una única `IUnitOfWork`, preservan `Version` y devuelven 409 ante concurrencia. Los permisos cacheados se invalidan después del commit.
 
 ## Carpetas
@@ -36,6 +36,7 @@ Las pantallas de Roles y el enlace de Administración esperan la aprobación de 
 - Para agregar otra área de negocio, seguí [`docs/guides/agregar-un-area.md`](../guides/agregar-un-area.md) y usá Roles como ejemplo concreto.
 - Para sumar una clave al catálogo, seguí [`docs/guides/permiso-nuevo.md`](../guides/permiso-nuevo.md).
 - La definición del dominio y la protección de la baja están detalladas en el [plan de E4](../plans/2026-10-01-etapa-4-roles.md).
+- Las membresías, los roles de empresa y la protección del último Administrador están detallados en [organizaciones.md](organizaciones.md).
 
 ## Lo verifica
 
