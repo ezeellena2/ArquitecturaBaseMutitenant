@@ -29,6 +29,8 @@ internal sealed partial class EmailTemplateRenderer
         details.Add((expiryLabel, expires));
         var note = notice.UsesEmailCode ? NotificationTexts.Get("Invitation.Note", culture) : string.Empty;
         var footer = NotificationTexts.Get("Invitation.Footer", culture);
+        // Tablero Mensajes: debajo del aviso de la invitación va el pie de todos los correos.
+        var layoutFooter = NotificationTexts.Format("Layout.Footer", culture, options.Value.AppName);
         var content = Fill("Invitation.html", new Dictionary<string, string>
         {
             ["Title"] = Encode(title), ["Body"] = Encode(body),
@@ -40,13 +42,14 @@ internal sealed partial class EmailTemplateRenderer
         var html = Fill(LayoutTemplate, new Dictionary<string, string>
         {
             ["Lang"] = Encode(culture.Entry.LanguageCode), ["Title"] = Encode(title), ["Header"] = HeaderHtml(),
-            ["Content"] = content, ["Footer"] = Encode(footer),
+            ["Content"] = content, ["Footer"] = Encode(footer) + "<br>" + Encode(layoutFooter),
         });
         var text = new List<string> { title, body };
         text.AddRange(details.Select(detail => detail.Label + ": " + detail.Value));
         text.Add(action + ": " + notice.ActionUrl);
         if (note.Length > 0) text.Add(note);
         text.Add(footer);
+        text.Add(layoutFooter);
         return new EmailMessage(to, subject, html, string.Join(Environment.NewLine + Environment.NewLine, text));
     }
 }

@@ -68,6 +68,22 @@ public sealed class EmailTemplateTests
         }
     }
 
+    // Tablero Mensajes: «correo» y no «email», y el pie completo de la invitación.
+    [Fact]
+    public async Task Invitation_footer_and_layout_say_correo_like_the_board()
+    {
+        var profile = await new CultureProfiles(new JsonReferenceDataCatalog()).LoadAsync("es-AR", Ct);
+        var renderer = new EmailTemplateRenderer(Options.Create(new EmailOptions { AppName = "ArquitecturaBase" }), CreateFormatter());
+        var notice = new InvitationNotice("Grupo Delta", "Lucía Fernández", new DateTime(2026, 10, 9, 1, 0, 0, DateTimeKind.Utc),
+            "America/Argentina/Buenos_Aires", "https://example.test/invitacion#protected-secret", false);
+
+        var message = await renderer.RenderInvitationAsync("recipient@example.test", notice, profile, Ct);
+
+        Assert.Contains("Si no esperabas este correo, podés ignorarlo. Sin el código, nadie puede entrar a tu cuenta.", message.TextBody);
+        Assert.Contains("Este correo lo envió ArquitecturaBase automáticamente. No lo respondas.", message.TextBody);
+        Assert.Contains(System.Net.WebUtility.HtmlEncode("Este correo lo envió ArquitecturaBase automáticamente."), message.HtmlBody);
+    }
+
     // Tablero Mensajes, «Invitación a una organización»: Empresa, Roles y Vence; los roles de sistema en el idioma del correo.
     [Theory]
     [InlineData("es-AR", "Empresa: Delta Norte S.A.", "Roles: Administrador, Solo lectura")]

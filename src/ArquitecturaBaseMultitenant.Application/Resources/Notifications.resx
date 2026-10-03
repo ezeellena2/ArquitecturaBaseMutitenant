@@ -7,8 +7,8 @@
   <data name="LoginCode.Subject" xml:space="preserve"><value>{0} es tu código de acceso a {1}</value></data>
   <data name="LoginCode.Title" xml:space="preserve"><value>Tu código de acceso</value></data>
   <data name="LoginCode.Intro" xml:space="preserve"><value>Usá este código para ingresar a {0}:</value></data>
-  <data name="LoginCode.Expiry" xml:space="preserve"><value>Vence en {0} minutos. Si no lo pediste, ignorá este email: nadie puede entrar a tu cuenta sin el código.</value></data>
-  <data name="Layout.Footer" xml:space="preserve"><value>Este email lo envió {0} automáticamente. No lo respondas.</value></data>
+  <data name="LoginCode.Expiry" xml:space="preserve"><value>Vence en {0} minutos. Si no lo pediste, ignorá este correo: nadie puede entrar a tu cuenta sin el código.</value></data>
+  <data name="Layout.Footer" xml:space="preserve"><value>Este correo lo envió {0} automáticamente. No lo respondas.</value></data>
   <data name="Greeting.Named" xml:space="preserve"><value>Hola, {0}.</value></data>
   <data name="Greeting.Unnamed" xml:space="preserve"><value>Hola.</value></data>
   <data name="Action.MyAccount" xml:space="preserve"><value>Ir a Mi cuenta</value></data>
@@ -60,7 +60,7 @@
   <data name="Invitation.RolesLabel" xml:space="preserve"><value>Roles</value></data>
   <data name="Invitation.Action" xml:space="preserve"><value>Ver la invitación</value></data>
   <data name="Invitation.Note" xml:space="preserve"><value>Para entrar, usá este correo: te vamos a mandar un código de acceso.</value></data>
-  <data name="Invitation.Footer" xml:space="preserve"><value>Si no esperabas este correo, podés ignorarlo.</value></data>
+  <data name="Invitation.Footer" xml:space="preserve"><value>Si no esperabas este correo, podés ignorarlo. Sin el código, nadie puede entrar a tu cuenta.</value></data>
   <data name="OrganizationRejected.Title" xml:space="preserve"><value>No aprobamos el alta de tu organización</value></data>
   <data name="OrganizationRejected.Subject" xml:space="preserve"><value>Solicitud de alta de tu organización</value></data>
   <data name="OrganizationRejected.Body" xml:space="preserve"><value>{0} No aprobamos la solicitud de alta de {1}.</value></data>

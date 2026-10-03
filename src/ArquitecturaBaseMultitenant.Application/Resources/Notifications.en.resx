@@ -60,7 +60,7 @@
   <data name="Invitation.RolesLabel" xml:space="preserve"><value>Roles</value></data>
   <data name="Invitation.Action" xml:space="preserve"><value>View the invitation</value></data>
   <data name="Invitation.Note" xml:space="preserve"><value>To sign in, use this email: we'll send you an access code.</value></data>
-  <data name="Invitation.Footer" xml:space="preserve"><value>If you weren't expecting this email, you can ignore it.</value></data>
+  <data name="Invitation.Footer" xml:space="preserve"><value>If you weren't expecting this email, you can ignore it. Without the code, nobody can sign in to your account.</value></data>
   <data name="OrganizationRejected.Title" xml:space="preserve"><value>Your organization signup was not approved</value></data>
   <data name="OrganizationRejected.Subject" xml:space="preserve"><value>Your organization signup request</value></data>
   <data name="OrganizationRejected.Body" xml:space="preserve"><value>{0} The signup request for {1} was not approved.</value></data>
