@@ -13,7 +13,7 @@
 - Back: `C:/Users/ezequ/source/repos/ArquitecturaBaseMutitenant`, main limpio, `a12edb7`.
 - Front: `C:/Users/ezequ/source/repos/ArquitecturaBaseMutitenantFront`, main limpio, `44bf951`.
 - E4 y E6 cerradas. Conservar ClosedStages `{0,1,2,3,4,6}` hasta cerrar E5; el salto no reabre E6.
-- Fuente visual: front `docs/design/lienzo/` vigente (v73, `423891e`). La conversación de diseño registró los ocho escritorios elegidos el 03/10; solo ella modifica tableros/canvas/README. Los móviles son los validados en formato app desde v72 (`9841dbd`), tal cual; se descartan los móviles de la propuesta. Ningún tablero «por refinar» se programa. Las capturas de la implementación se envían al usuario antes del cierre y no se autoaprueban.
+- Fuente visual: ver los tableros vigentes de front `docs/design/lienzo/` (v73 o posterior), escritorio y teléfonos validados en formato app. Solo la conversación de diseño modifica tableros/canvas/README. La propuesta descartada no es fuente. Ningún tablero «por refinar» se programa. Las capturas de implementación se envían al usuario antes del cierre y no se autoaprueban.
 - Teléfono: formato app del Criterio-Marco actual; barra de estado, título y contexto, navegación inferior con Más, listas de borde a borde, acción fija y hojas inferiores. No copiar el teléfono anterior como una web reducida.
 - WhatsApp, WA-*, M-WA-* y Meta fuera del alcance; no añadir sus rutas, módulos, permisos ni semillas.
 - Development solo conserva el operador real configurado en user-secrets. Tests, capturas con datos y E2E usan PostgreSQL/pickup aislados. No imprimir direcciones, códigos, tokens ni secretos.
@@ -45,7 +45,7 @@ Si Visual Studio mantiene bloqueados bin/obj, usar `-p:ArtifactsPath=<directorio
 
 | Pieza | Archivos y responsabilidad |
 |---|---|
-| Roles globales | `Domain/Platform/{PlatformRole,PlatformRoleAssignment,PlatformRolePermissions,PlatformErrors}.cs`; Owner/Support, asignación única por cuenta, permisos desde PlatformPermissions; último Owner en guard de servicio |
+| Operadores exclusivos | Migrar T01/T03 a permisos individuales, asignación única por cuenta y catálogo PlatformPermissions (9 claves); sin Owner/Support. Invitación por correo a identidad exclusivamente Platform, rechazo de cuenta previa, protección del último operador con operators.manage |
 | Datos opcionales | `Domain/Features/{Features,FeatureDefinition,TenantFeature,FeatureSource}.cs`; clave, acceso, default, origen Plan/Manual/Trial y vencimiento UTC |
 | Recuperación | `Domain/Platform/{AccountRecoveryRequest,AccountRecoveryStatus,AccountRecoveryErrors}.cs`; Pending/Approved/Rejected, método anterior y nuevo verificado, decisión con motivo; valores personales fuera de logs/auditoría |
 | Modelos y validación | `Application/Models/Platform/` y `Application/Validation/Platform/`: requests y responses explícitos; listados paginados y auditoría por cursor; cada cambio visible conserva version |
@@ -61,7 +61,7 @@ Rutas definitivas que se implementan y prueban (no sustituir las ya fijadas por 
 
 - `/api/platform/tenants/paged`, `/filter-counts`, `/{id}`; POST raíz (crear con invitación); POST `/{id}/approve`, `/reject`, `/suspend`, `/reactivate`, `/close`, `/retry-provisioning`; GET `/{id}/features`, PUT `/{id}/features/{featureKey}`.
 - GET `/api/platform/tenants/{id}/public-site`; POST `/unpublish` y `/allow-publish` con motivo y version. GET `/api/platform/tenants/{id}/domains`; POST `/{domain}/verify`; DELETE `/{domain}` con motivo y version.
-- `/api/platform/accounts/paged`, `/filter-counts`, `/{id}`; POST `/{id}/suspend`, `/reactivate`, `/revoke-sessions`, `/deletion`; PUT `/{id}/operator` y DELETE `/{id}/operator` (version/motivo).
+- `/api/platform/accounts/paged`, `/filter-counts`, `/{id}`; POST `/{id}/suspend`, `/reactivate`, `/revoke-sessions`, `/deletion`; POST `/api/platform/operators/invitations` (correo y permisos individuales), PUT/DELETE `/api/platform/accounts/{id}/operator` (version/motivo y permisos, sin roles).
 - POST `/api/account-recovery/code`, `/verify` y raíz `/api/account-recovery` (idempotente, respuesta pública indistinguible); GET `/api/platform/recoveries` paginado; POST `/{id}/approve` y `/reject`.
 - GET `/api/platform/audit` por cursor y `/{id}`; GET/PUT `/api/platform/settings`; GET/POST `/api/platform/legal-documents` y GET `/{id}`; publicación inmutable e idempotente.
 - Front: `/plataforma`, `/plataforma/organizaciones/:id`, `/plataforma/cuentas`, `/plataforma/cuentas/:id`, `/plataforma/recuperaciones`, `/plataforma/legales`, `/plataforma/auditoria`, `/plataforma/configuracion`, `/recuperar`.
@@ -74,6 +74,8 @@ Rutas definitivas que se implementan y prueban (no sustituir las ya fijadas por 
 - [x] Revisión independiente del documento: Approved, sin bloqueos. Commit inicial exclusivo del plan antes de programar.
 
 ### T01 · Roles globales puros (primera tarea)
+
+Registro histórico: esta implementación Owner/Support se reemplaza por permisos individuales en R00, por decisión del usuario del 03/10. No usarla como modelo para código nuevo.
 
 Archivos: `Domain/Platform/{PlatformRole,PlatformRoleAssignment,PlatformRolePermissions}.cs`, AGENTS/CLAUDE; `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Platform/PlatformRoleTests.cs`; `docs/features/plataforma.md` inicial.
 
@@ -91,20 +93,20 @@ Archivos: front `scripts/test-e2e-real.test.mjs` (runner y recorridos actuales e
 
 ### T03 · Persistencia y autorización de operadores
 
+Registro histórico: la persistencia de roles y su seed se migran en R00; conservar los permisos efectivos, sin conservar Owner/Support en el modelo nuevo.
+
 Archivos: PlatformRoleAssignmentConfiguration/Repository/Reader, ApplicationDbContext, PlatformSeeder, PlatformPermissionService y puertos; migración nueva; tests `PlatformPermissionServiceTests`, `PlatformOperatorPersistenceTests` e inventarios existentes.
 
 - [x] Rojo por reader ausente; permisos limitados y pérdida de autorización con cuenta inactiva. Regresión real de actualización desde operador legado sin Personal; el seed se repite sin duplicar asignaciones. La protección append-only de auditoría conserva su test existente.
 - [x] `platform.PlatformRoleAssignments`: unicidad UserId/FK identidad/xmin. Migración convierte operadores existentes a Owner y otorga al runtime permisos explícitos sobre esta tabla; seed conserva roles existentes. IsPlatformOperator selecciona acceso, no concede permisos.
 - [x] Unit 6/6; PostgreSQL roles 3/3, ProductionSeed 1/1, Migrations 4/4; clasificación/configuración existentes 4/4. Build Api/AppHost/preparador 0 advertencias. SQL revisado; modelo sin cambios pendientes. Commit `feat(plataforma): persistir permisos de operadores`.
 
-### T04 · Propuesta visual para elección conjunta
+### T04 · Ver los tableros vigentes del lienzo (v73 o posterior)
 
-Archivos front: `docs/design/lienzo/generadores/plataforma_*.py`, tableros propuestos en página propia y visor `.local/etapa-5-propuesta/`; informe visual inicial.
+Archivos: solo lectura de `docs/design/lienzo` vigente y sus Criterio-*; la conversación de diseño es la única que escribe esos archivos.
 
-- [x] Inventario: 8 desktop y 4 móviles antiguos; muestras de fichas/recuperación/legales preparadas en página separada sin modificar canvas ni generador ajeno.
-- [x] Propuesta compacta con estados interactivos y marco app de Organización, listas 1/50 (1 y 10 filas visibles respectivamente). Menú desktop y modal Audit conservados.
-- [x] Visor conjunto en `http://127.0.0.1:61405/.artifacts/etapa-5-propuesta/index.html`: 8 desktop y 16 móviles/estados; pregunta de elección presentada. Continuar back mientras espera; no implica aprobación. Front `e670892`.
-- [x] La conversación de diseño registra la elección y actualiza tableros/canvas/README exclusivamente; este chat no modifica `docs/design/lienzo`. Diseño de escritorio validado en v73, front `423891e`; teléfonos app validados del lienzo, nunca los de la propuesta. Verificar tableros vigentes al implementar.
+- [x] Escritorios validados desde v73 (`423891e`) y teléfonos app validados; verificar la versión vigente al implementar, incluidos sus estados y diálogos.
+- [ ] Archivar el informe de la propuesta descartada. Su generador lo retira la conversación de diseño; este chat no toca el lienzo.
 
 ### A00 · Alineación previa a las pantallas de Plataforma (instrucción del 03/10)
 
@@ -122,7 +124,19 @@ Fuente: `docs/reviews/2026-10-03-alineacion-lienzo.md`, ya copiado sin cambios d
 - [x] Corregir los 12 rojos informados: fichas Features/configuración EF/correo tipado/inventario/avisos/límite de Identity y regresiones Me, LegalAcceptance, InvitationAcceptance, UserTenantAccessIndex y UserTenantAccessReader. El cambio de notificationEmail del registro de empresa pertenece al otro chat (`5335ac7`) y se preserva.
 - [x] Build completo: 0 advertencias/errores; `dotnet test` completo: **1452/1452**, 0 omitidos, **6m 23s 287ms**, antes del siguiente commit o tarea E5. Evidencia local: `.artifacts/etapa-5/main-verde-build-2.log` y `main-verde-test-2.log`. Primera ejecución: 1446/1452; los seis fallos restantes se corrigieron y verificaron focalmente antes de repetir.
 
-Elección T04: Organizaciones combina Dueño/correo; ficha Organización usa resumen (Dueño, dominio, página, módulos) e Historial como lista; Cuentas combina nombre/correo y último ingreso/método sin teléfono; métodos en Cuenta son filas como Mi cuenta; Recuperaciones y Configuración conservan propuesta; Legales es lista sin columnas, versión/vigencia debajo; Auditoría abre desde Qué pasó, sin ojo ni conteo en la banda.
+### R00–R08 · Decisión de operadores y revisión prioritaria (03/10)
+
+Antes de continuar T09–T16 o programar pantallas, completar estas correcciones. Cada punto tiene TDD donde hay lógica, focal verde, suite completa sin rojos antes de commit y rutas explícitas. T09 ya estaba commiteada al recibirse la revisión; T10 queda sin commit y se adapta también a R04. No tocar Paquetes 0, 1 (salvo 1.11), 3 ni el lienzo.
+
+- [ ] R00 · Migrar T01/T03 y ajustar T16: nueve permisos individuales, sin roles Owner/Support. Seed inicial con el catálogo completo; migración conserva los permisos efectivos previos. Operador nuevo se invita por correo sin crear Personal/Business. Rechazar toda cuenta previa con «Un operador no puede tener perfiles de persona». Último operador activo con operators.manage protegido bajo lock global al quitar, suspender o iniciar baja. Actualizar maestro/permisos/ficha, contratos y tests existentes.
+- [ ] R01 · Avisos: solo rechazo y moderación. Dueños activos desde índice e identidad Active; principal verificado permitido o métodos del resolver de Organización. Nunca correo administrado por otra organización ni registrante retirado; ningún motivo interno en el correo. Test real de outbox/destinos y ausencia de avisos en otros estados.
+- [ ] R02 · Separar contadores en tabla global 1:1: los triggers no actualizan platform.Tenants ni su xmin. Migrar datos conservando conteos. Test real: sumar miembro entre GET y Suspender conserva version y la acción no da 409; cambios de estado simultáneos siguen dando 409.
+- [ ] R03 · Lecturas de ficha: Dueños por índice de accesos e identidad; Historial por auditoría filtrada por organización; último cambio de estado con fecha y motivo. Sin consultar Members/Invitations privadas. Agregar contrato y conexión T21.
+- [ ] R04 · SecurityEvent: resumen de claves y antes/después sin datos personales, destino organización/cuenta e IP enmascarada. Ajustar T05/T08 y T09 existente antes de nuevos eventos. Ingresos proviene de LoginAudits. Tests de datos/eventos y privacidad; contrato/migración si corresponde.
+- [ ] R05 · Retry recibe solo version; motivo fijo de resources, sin pedir texto al usuario. Test HTTP del cuerpo sin reason y evento con motivo traducido.
+- [ ] R06 · E2E operador: aceptación legal con texto real o en preparador; solo pasos de pantalla para Gestión/Administración/filas/acción con motivo/F5. Segundo operador con permisos reducidos y límites. Rojo por pantalla ausente; verde en T21–T23. No GET de API como reemplazo del recorrido.
+- [ ] R07 · Fuente visual T04 es exclusivamente el lienzo vigente; informe de propuesta archivado. El generador lo retira diseño, sin tocarlo aquí.
+- [ ] R08 · Registrar en backlog el comentario desactualizado «El backoffice comienza en E9» en navigation/platform.ts.
 
 ### T05 · Configuración global
 
@@ -194,7 +208,7 @@ Archivos: IPlatformReader/PlatformReader (identidad global explícita), Account 
 
 Archivos: PlatformAccountService/writer, IUserRepository/UserRepository/ApplicationUser, ITokenRevoker/ISignInService, cache/events/notices; tests PlatformAccountState y integración de tokens.
 
-- [ ] Rojo: suspensión revoca todos los accesos/sesiones; reactivación con baja programada deja PendingDeletion; revoke-sessions mantiene estado; Support no muta; último Owner/self protections según rol y reglas de acceso.
+- [ ] Rojo: suspensión revoca todos los accesos/sesiones; reactivación con baja programada deja PendingDeletion; revoke-sessions mantiene estado; un operador sin accounts.manage no muta; proteger al último operador activo con operators.manage.
 - [ ] Motivo y version en cambios, lock por cuenta; SecurityEvent con actor operador y avisos existentes en mismo commit; caché tras guardar.
 - [ ] Tokens/cookie/F5 regresión y build. Commit `feat(plataforma): administrar estado y sesiones de cuentas`.
 
@@ -218,16 +232,16 @@ Archivos: AccountRecoveryRequest/Status/errors/config/migración/reader/repo; Re
 
 Archivos: PlatformRecoveryService/Controller, Recovery writer, AccountRecoveryReader, Infrastructure/Identity/Deletion/RecoveryDeletionParticipant; tests RecoveryDecision/RecoveryDeletion.
 
-- [ ] Rojo: Support puede revisar; aprobar agrega método propio verificado y quita NeedsRecovery sin duplicar ni emitir sesión; rechazar conserva métodos; motivo/version y repetición protegida; pedidos de cuenta Deleted no restauran identidad.
+- [ ] Rojo: operador con recoveries.manage puede revisar; aprobar agrega método propio verificado y quita NeedsRecovery sin duplicar ni emitir sesión; rechazar conserva métodos; motivo/version y repetición protegida; pedidos de cuenta Deleted no restauran identidad.
 - [ ] Locks por pedido/cuenta/método, validación de unicidad con índices; SecurityEvent/aviso. Participante de eliminación cierra/purga datos personales de pedidos pendientes conforme ADR0035.
 - [ ] Verde integración y pruebas de privacidad. Commit `feat(recuperacion): revisar pedidos y cerrar los de cuentas eliminadas`.
 
 ### T16 · Gestión de operadores
 
-Archivos: PlatformOperatorService/guard/repo/controller cuentas; tests PlatformOperators/LastOwner.
+Archivos: PlatformOperatorService/guard/repo/controller cuentas e invitaciones; tests PlatformOperators/LastOperatorAdministrator.
 
-- [ ] Rojo: conceder Owner/Support solo a cuenta activa con método propio verificado; cambiar/quitar roles versionado; no quitar/suspender/eliminar último Owner ni revocar autorización sin invalidar caché/tokens.
-- [ ] Cuentas incluye operadores; no pantalla/ruta nueva fuera del plan. Grant/revoke mantiene IsPlatformOperator en misma UoW y agrega evento con motivo. Último Owner serializado por lock global.
+- [ ] Rojo: invitar por correo con selección individual de las nueve claves; rechazar cuenta previa con el error indicado. Aceptar crea identidad exclusivamente Platform, sin Personal/Business. Permisos inválidos o repetidos rechazados, invitación/replay de un solo uso.
+- [ ] Cuentas incluye operadores; editar/quitar permisos versionado, sin roles. IsPlatformOperator y permisos se confirman juntos, con SecurityEvent y revocación de autorizaciones. No quitar/suspender/dar de baja al último operador activo con operators.manage; lock global serializa esa regla.
 - [ ] Verde permisos/cookies/seed/migración. Commit `feat(plataforma): administrar operadores`.
 
 ### T17 · Auditoría de seguridad
@@ -235,7 +249,8 @@ Archivos: PlatformOperatorService/guard/repo/controller cuentas; tests PlatformO
 Archivos: ISecurityEventReader/SecurityEventReader, PlatformAuditService/controllers/query; traducciones Audit/recursos; tests PlatformSecurityAudit.
 
 - [ ] Rojo: cursor estable fecha/Id, filtro actor/acción/objetivo; detalle con fecha y campos lectura, acciones traducidas, actores eliminados/objetivo conservado; payload sin correo/teléfono/token completos.
-- [ ] Join a nombres actuales o resumen histórico no personal según datos existentes; evento inmutable, no total de tabla creciente. GET listado/detalle separados.
+- [ ] SecurityEvent conserva claves con antes/después sin datos personales, destino tenant/account e IP enmascarada. T05/T08 y eventos administrativos usan ese contrato; el tipo Ingresos lee identity.LoginAudits y conserva método/resultado/código sin dirección ni código OTP.
+- [ ] Join a nombres actuales o resumen histórico no personal según datos existentes; evento inmutable, no total de tabla creciente. GET listado/detalle separados; el historial de organización filtra el destino en SQL.
 - [ ] Verde PostgreSQL/permissions/build. Commit `feat(plataforma): consultar auditoría de seguridad`.
 
 ### T18 · Versiones legales inmutables
@@ -266,7 +281,8 @@ Archivos: navigation/types/platform, Sidebar/AdminPanel/PrivateLayoutFrame, rout
 
 Archivos: `src/areas/platform/tenants/{api,pages,components}/`, locales y tests.
 
-- [ ] Copiar estados elegidos de Organizaciones/Organizacion y sus app móviles: filtros/conteos/1 y 50 filas, ficha con resumen e Historial como lista (sin pestañas de un elemento), diálogos aprobar/rechazar/crear/suspender/reactivar/cerrar/retry, Modules/PublicSite/Domain.
+- [ ] Copiar los tableros vigentes de Organizaciones/Organizacion y sus app móviles: filtros/conteos/1 y 50 filas, ficha y diálogos aprobar/rechazar/crear/suspender/reactivar/cerrar/retry, Modules/PublicSite/Domain.
+- [ ] Conectar las lecturas globales de R03: Dueños desde índice e identidad, Historial desde auditoría filtrada por organización y fecha/motivo del último estado. No leer Members/Invitations fuera de RLS. Retry no agrega motivo escrito.
 - [ ] Conectar API real y versiones; no duplicar handlers de E6 ni inventar ediciones ajenas; 409 conserva selección/draft, motivo obligatorio y acción irreversible roja.
 - [ ] Pantalla/red/errores/permisos, lint/build. Commit(s) coherentes `feat(plataforma): conectar organizaciones`.
 
@@ -274,7 +290,7 @@ Archivos: `src/areas/platform/tenants/{api,pages,components}/`, locales y tests.
 
 Archivos: `src/areas/platform/accounts/{api,pages,components}/`, locales/test.
 
-- [ ] Copiar Cuentas/Cuenta-Plat y móviles aprobados: estados derivados, métodos/organizaciones leídos, suspender/reactivar/cerrar sesiones/baja/operador con roles disponibles y bloqueos del último Owner.
+- [ ] Copiar Cuentas/Cuenta-Plat y móviles aprobados: estados derivados, métodos/organizaciones leídos, suspender/reactivar/cerrar sesiones/baja e invitar operador exclusivo con permisos individuales; bloquear el retiro del último administrador de operadores.
 - [ ] Motivo/version obligatorios en los diálogos, fechas mediante format, errores/409 conservan datos. No editar identidad desde Plataforma si el tablero no lo pide.
 - [ ] 1/50 filas, tests/lint/build. Commit(s) `feat(plataforma): conectar cuentas y operadores`.
 
@@ -296,7 +312,7 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 
 ### T25 · E2E completo y puerta de cierre
 
-- [ ] E2E E5 real: operador entra/F5; Support restricciones; crear organización con invitado sin cuenta y aceptar sin Personal; aprobar pendiente/retry sin duplicados; suspender Business deja Personal; módulos gate; despublicación bloquea E6; dominio conserva vínculos al quitar; suspender/reactivar/revocar/baja cuenta; recuperación nuevo correo aprobada; legal nueva versión aceptada; audit/settings guardados.
+- [ ] E2E E5 real: operador entra/F5 y navega Gestión/Administración por pantalla; operador con permisos reducidos muestra sus límites; crear organización con invitado sin cuenta y aceptar sin Personal; aprobar pendiente/retry sin duplicados; suspender Business deja Personal; módulos gate; despublicación bloquea E6; dominio conserva vínculos al quitar; suspender/reactivar/revocar/baja cuenta; recuperación nuevo correo aprobada; legal nueva versión aceptada; audit/settings guardados.
 - [ ] Mantener recorridos E3a/b/c, E4 y E6. Sin mocks/interceptación y PostgreSQL/pickup efímeros. Si una integración externa no puede correr localmente, anotarla pendiente sin inventar verde.
 - [ ] `dotnet build ArquitecturaBaseMultitenant.slnx` cero advertencias; `dotnet test` completo con Docker.
 - [ ] Front `npm test`, `npm run lint`, `npm run build`, `npm run contracts:check`, `npm run test:e2e:real` completos.
@@ -306,18 +322,19 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 ## Decisiones tomadas
 
 1. Catálogo productivo de módulos vacío en E5: los servicios del núcleo no son módulos y WhatsApp queda excluido. Los gates se ejercitan con TestFeatures y catálogo inyectado de test, nunca datos productivos de ejemplo.
-2. Owner/Support se persisten en asignación global única por cuenta; IsPlatformOperator conserva la selección de acceso pero no resuelve permisos por sí solo. Seed/migración preservan al operador existente como Owner.
+2. Decisión del usuario del 03/10 reemplaza Owner/Support: permisos individuales entre las nueve claves, identidad exclusiva de Plataforma e invitación por correo nuevo. Se rechaza una cuenta previa; el último operador activo con operators.manage no se puede quitar. R00 migra T01/T03 y preserva los permisos efectivos anteriores.
 3. El guard de acceso privado confirma un SecurityEvent antes de Enter mediante un servicio transaccional específico; el writer privado corre después, con una sola UoW propia. No Enter dentro de una transacción, ni helper con UoW, ni transaction anidada.
 4. Crear con invitación prepara roles/settings sin crear identidad: una entrada explícita del TenantProvisioner permite dueño pendiente, InvitationIssuer reserva Member(Invited) con TenantAdmin y la aceptación vigente vincula/crea cuenta sin Personal.
 5. El refinamiento visual pendiente se revisa como grupo concreto; aprobaciones desktop/menu/modal previas se conservan. Inicios de Organización y WhatsApp no se rediseñan en E5.
 6. Configuración exige motivo y versión; su evento se guarda en la misma transacción y la caché se invalida después. La gracia de baja de 30 días no es editable.
-7. Conteos globales de organizaciones se mantienen con deltas atómicos desde escrituras privadas bajo RLS. Plataforma lee solo metadatos y contacto global explícito; no entra a cada organización para armar un listado. La fecha histórica sin evidencia queda null.
+7. R02 mueve los conteos a una tabla global 1:1, mantenida con deltas atómicos desde escrituras privadas bajo RLS. Esos triggers no modifican Tenants ni su version. Plataforma lee solo metadatos y contacto global explícito; no entra a cada organización para armar un listado. La fecha histórica sin evidencia queda null.
 8. Crear copia los cinco campos del tablero (nombre, primera empresa, correo del Dueño, cultura y zona). No agrega un campo de slug ni de motivo: genera la dirección desde el nombre y, ante reserva/colisión/nombre inválido, usa `org-{operationId}`; la descripción fija de la acción sale de resources. Los otros cambios administrativos exigen motivo escrito. Muestra móvil corregida en front `d4d0627`.
 9. El retry incompleto solo reconstruye un miembro cuando existe registrante autoservicio activo; nunca convierte al operador creador en Dueño ni adivina el nombre de una empresa perdida. Sin responsable verificable conserva Provisioning y devuelve conflicto.
 10. Los deltas de conteos son constraint triggers `DEFERRABLE INITIALLY DEFERRED`, dentro de la misma transacción: se ejecutan después del SaveChanges para no adelantar xmin antes del UPDATE de estado. Se conserva el rechazo de versiones viejas. Referencia: [CREATE TRIGGER, PostgreSQL 18](https://www.postgresql.org/docs/current/sql-createtrigger.html).
 11. El filtro de módulos conserva filas crudas en caché y evalúa la vigencia con TimeProvider por petición; el apagado global gana. El gate se evalúa antes de los permisos, después de autenticación/acceso/tenant, para devolver 404 cuando el módulo está apagado. Una configuración inicial usa versión 0; la carrera de inserción se traduce a 409. Cambiar módulos exige SecurityEvent del destino en la misma UoW.
 12. Los tests que retroceden a una migración histórica preparan datos con SQL parametrizado de ese esquema, sin usar el modelo actual. Una fixture que conserva un Tenant entre transacciones recarga su xmin tras los triggers; esto no cambia la concurrencia productiva ni el rechazo de versiones viejas.
 13. Moderación utiliza la página de E6 y su versión, sin copiar contenido. Permitir publicación retira el bloqueo y deja la decisión de publicar a la organización. RLS permite lo publicado y oculta el borrador fuera del alcance. La consulta privada exige tenants.manage, conforme al catálogo de E5, y audita su motivo traducido antes de Enter.
+14. Las rutas de dominio conservan `{domain}` como nombre normalizado, conforme al plan maestro. E6 y Plataforma comparten la preparación DNS y la escritura Stage, que no abre otra transacción; cada caso de uso confirma sus propios eventos. La versión vista se verifica antes del DNS y de nuevo mediante xmin al guardar. El retiro conserva los vínculos ManagedByTenantId aprobados.
 
 ## Registro de resultados
 
@@ -327,11 +344,11 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 | T01 | Rojo CS0234 → 5/5 verde, build Domain 0 advertencias | `f03c1b1` | — |
 | T02 | E2E real rojo por pantalla E5 ausente; Aspire detenido | `4ce80b7` (registro) | `696c2b3` |
 | T03 | Permisos 6/6; roles PostgreSQL 3/3; seed 1/1; migraciones 4/4; inventarios 4/4 | `4ce80b7` | — |
-| T04 | Elección registrada por la conversación de diseño; escritorio v73 y móviles app validados | seguimiento de esta tarea | `e670892` (propuesta), `423891e` (diseño externo) |
+| T04 | Ver tableros vigentes del lienzo, v73 o posterior; diseño externo validado, propuesta descartada | seguimiento de esta tarea | `423891e` (diseño externo); `e670892` archivado |
 | T05 | Dominio 12/12; servicio 4/4; HTTP 3/3; recursos 6/6; accesos/contratos 15/15; migración/build verificados | `6a49970` | — |
 | T06 | Dominio nuevo 3/3 y regresiones 7/7; HTTP/RLS/tokens 5/5; recursos 6/6; inventarios 28/28; build/migración verificados | `f785e5b` | — |
 | T07 | Scope 3/3 + PG 2/2; core 3/3 + PG 2/2; HTTP 8/8; slug 5/5; regresiones 36/36; recursos 6/6; inventarios 32/32; build/SQL verificados | `b375f04`, `d27d7d3`, `f05c9df`, `6fa09c4` | `d4d0627` (muestra) |
 | T08 backend / A01 | Gates/edición real y regresiones; build completo 0 advertencias, suite completa 1452/1452 (6m23s); front de módulos pendiente | `2e5a06b` | — |
-| T09 | Moderación/avisos/replay/versión/aislamiento HTTP; regresiones E6 y contratos; suite completa 1454/1454 (6m36s), build 0 advertencias | commit de esta tarea | — |
+| T09 | Moderación/avisos/replay/versión/aislamiento HTTP; regresiones E6 y contratos; suite completa 1454/1454 (6m36s), build 0 advertencias | `cd3fedb` | — |
 
 No declarar cierre a partir de esta tabla sin completar T25.

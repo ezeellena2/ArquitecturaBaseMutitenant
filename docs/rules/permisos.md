@@ -16,11 +16,11 @@
   - `platform.legal.manage` (publicar una versión nueva de términos o privacidad);
   - `platform.operators.manage`, `platform.audit.read` y `platform.settings.manage`.
   
-  `platform.whatsapp.manage` entra recién en la Etapa 11 (canales de WhatsApp por organización), porque antes ninguna ruta lo usa. Roles de plataforma: **Owner** tiene todos; **Support**, `platform.tenants.read`, `platform.accounts.read`, `platform.recoveries.manage` y `platform.audit.read`.
+  Son nueve claves y se asignan individualmente a operadores exclusivos de Plataforma, sin roles Owner/Support. El correo invitado no puede pertenecer a una cuenta previa con perfiles de persona. La gestión de operadores protege al último operador activo con `platform.operators.manage` al quitar permisos, suspender o iniciar baja. `platform.whatsapp.manage` entra recién en la Etapa 11, porque antes ninguna ruta lo usa. R00 del plan E5 migra las asignaciones de T01/T03 conservando sus permisos efectivos.
 - **Un permiso nuevo:**
   1. se declara en `Permissions.cs` (organización y empresa), `PersonalPermissions.cs` (`personal.*`) o `PlatformPermissions.cs` (`platform.*`), y en su lista `All` / `OrganizationScoped` / `CompanyScoped` (el personal y el de plataforma, en su `All`);
   2. lleva `Permission.<código>` y `PermissionDescription.<código>` en `Permissions.resx` y `.en.resx`;
-  3. el seed se lo da a TenantAdmin (o CompanyAdmin, si es de empresa; o al Owner de plataforma, si es `platform.*`); uno `personal.*` no va al seed ni a ningún rol, porque la persona lo tiene implícito en su espacio personal;
+  3. el seed se lo da a TenantAdmin (o CompanyAdmin, si es de empresa; o al operador técnico inicial, si es `platform.*`); uno `personal.*` no va al seed ni a ningún rol, porque la persona lo tiene implícito en su espacio personal;
   4. cuando cambian los permisos de un rol, se llama a `IPermissionService.InvalidateRoleAsync`.
 
 ## Prohibido
