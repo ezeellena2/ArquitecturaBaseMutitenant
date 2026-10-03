@@ -1,4 +1,6 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ReferenceData;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
@@ -6,7 +8,8 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 namespace ArquitecturaBaseMultitenant.Application.Services.Companies;
 
 /// <summary>Resuelve los datos de referencia admitidos por la ficha de una empresa.</summary>
-internal sealed class CompanyReferenceDataResolver(ITaxIdTypeCatalog taxIdTypes, ITimeZoneCatalog timeZones)
+internal sealed class CompanyReferenceDataResolver(ITaxIdTypeCatalog taxIdTypes, ITimeZoneCatalog timeZones,
+    ITenantSettingsReader settings)
 {
     public async Task<Result<TaxId?>> CreateTaxIdAsync(string? typeCode, string? number,
         CancellationToken cancellationToken)
@@ -22,6 +25,14 @@ internal sealed class CompanyReferenceDataResolver(ITaxIdTypeCatalog taxIdTypes,
         return result.IsSuccess ? Result.Success<TaxId?>(result.Value) : TaxIdErrors.Invalid;
     }
 
-    public async Task<bool> IsAvailableTimeZoneAsync(string id, CancellationToken cancellationToken) =>
-        await timeZones.FindAsync(id, cancellationToken) is { IsEnabled: true };
+    /// <summary>Sin zona elegida, la empresa toma la de la organización («La de la organización» en el tablero).</summary>
+    public async Task<Result<string>> ResolveTimeZoneAsync(string? requested, CancellationToken cancellationToken)
+    {
+        var id = string.IsNullOrWhiteSpace(requested)
+            ? (await settings.FindCurrentAsync(cancellationToken))?.DefaultTimeZoneId
+            : requested;
+        return id is not null && await timeZones.FindAsync(id, cancellationToken) is { IsEnabled: true }
+            ? id
+            : CompanyErrors.TimeZoneUnavailable;
+    }
 }

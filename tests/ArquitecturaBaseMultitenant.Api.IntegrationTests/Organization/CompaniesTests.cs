@@ -18,6 +18,41 @@ public sealed class CompaniesTests(ApiFactory factory)
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
+    public async Task Without_a_zone_the_company_takes_the_organization_zone()
+    {
+        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var account = await AccountJourney.RegisterAsync(factory, client, Ct);
+        var tenant = Tenant.CreateBusiness("Empresas zona heredada", requiresApproval: false);
+        Assert.True(tenant.Activate().IsSuccess);
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenant.Id);
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+            {
+                services.GetRequiredService<TenantSpaceProvisioner>().Stage(tenant,
+                    TenantSettings.Create("es-AR", "America/Argentina/Cordoba", "ARS"), [account.UserId], account.UserId);
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+        await AccountJourney.AuthorizeAsync(client, "business", Ct);
+
+        // Tablero Empresas, «Zona de negocio: La de la organización».
+        using var created = await AccountJourney.PostAsync(client, "/api/companies", new
+        {
+            name = "Delta Norte S.A.",
+            taxIdType = (string?)null,
+            taxIdNumber = (string?)null,
+            timeZoneId = (string?)null,
+        }, Ct);
+        Assert.True(created.StatusCode == HttpStatusCode.Created, await created.Content.ReadAsStringAsync(Ct));
+        var companyId = await created.Content.ReadFromJsonAsync<Guid>(Ct);
+        using var detail = await client.GetAsync($"/api/companies/{companyId:D}", Ct);
+        using var json = JsonDocument.Parse(await detail.Content.ReadAsStringAsync(Ct));
+        Assert.Equal("America/Argentina/Cordoba", json.RootElement.GetProperty("timeZoneId").GetString());
+    }
+
+    [Fact]
     public async Task Owner_creates_edits_filters_and_deactivates_a_company_with_version_checks()
     {
         using var client = factory.CreateClient(new()

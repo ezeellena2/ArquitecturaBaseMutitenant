@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Models.Companies;
+using ArquitecturaBaseMultitenant.Application.Models.Tenancy;
 using ArquitecturaBaseMultitenant.Application.Services.Companies;
 using ArquitecturaBaseMultitenant.Application.UnitTests.TestDoubles;
 using ArquitecturaBaseMultitenant.Application.Validation.Companies;
@@ -175,7 +176,13 @@ public sealed class CompanyServiceTests
     }
 
     private static CompanyReferenceDataResolver CreateReferenceDataResolver() =>
-        new(new FakeTaxIdTypeCatalog(), new FakeTimeZoneCatalog());
+        new(new FakeTaxIdTypeCatalog(), new FakeTimeZoneCatalog(), new FakeTenantSettingsReader());
+
+    private sealed class FakeTenantSettingsReader : ITenantSettingsReader
+    {
+        public Task<TenantSettingsRow?> FindCurrentAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<TenantSettingsRow?>(new TenantSettingsRow(Guid.NewGuid(), "es-AR", "America/Argentina/Buenos_Aires", "ARS"));
+    }
 
     internal sealed class FakeCompanyReader : ICompanyReader
     {

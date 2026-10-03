@@ -16,7 +16,7 @@ La emisión y el encolado se delegan al `InvitationIssuer` compartido con la pla
 
 ## Empresas y membresías
 
-`/api/companies` contiene listado paginado y conteos, ficha, alta, edición versionada y cambio de estado (`GET .../paged`, `GET .../filter-counts`, `GET .../{id}`, `POST`, `PUT .../{id}`, `PUT .../{id}/status`). El CUIT, si existe, se valida y normaliza con `TaxId` y los catálogos habilitados; la zona horaria también sale del catálogo. El CUIT es único dentro de la organización. Una empresa se desactiva conservando datos y miembros.
+`/api/companies` contiene listado paginado y conteos, ficha, alta, edición versionada y cambio de estado (`GET .../paged`, `GET .../filter-counts`, `GET .../{id}`, `POST`, `PUT .../{id}`, `PUT .../{id}/status`). El CUIT, si existe, se valida y normaliza con `TaxId` y los catálogos habilitados; la zona horaria también sale del catálogo y, si no se elige, la empresa toma la de la organización («La de la organización» en el tablero). El CUIT es único dentro de la organización. Una empresa se desactiva conservando datos y miembros.
 
 `/api/companies/{companyId}/members` administra miembros y sus roles en esa empresa. `CompanyAdmin` es un rol de sistema por empresa. Los cambios de roles y estado usan versión y serializan las operaciones que podrían dejar a la empresa sin Administrador. No se puede quitar ni deshabilitar al último Administrador activo. La membresía de empresa no cambia la membresía de organización ni el acceso a otras empresas.
 

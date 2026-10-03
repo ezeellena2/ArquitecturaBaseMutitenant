@@ -63,10 +63,10 @@ internal sealed class CompanyService(
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             var taxId = await referenceData.CreateTaxIdAsync(request.TaxIdType, request.TaxIdNumber, cancellationToken);
             if (taxId.IsFailure) return taxId.Error;
-            if (!await referenceData.IsAvailableTimeZoneAsync(request.TimeZoneId!, cancellationToken))
-                return CompanyErrors.TimeZoneUnavailable;
+            var timeZone = await referenceData.ResolveTimeZoneAsync(request.TimeZoneId, cancellationToken);
+            if (timeZone.IsFailure) return timeZone.Error;
 
-            var created = Company.Create(request.Name, taxId.Value, request.TimeZoneId);
+            var created = Company.Create(request.Name, taxId.Value, timeZone.Value);
             if (created.IsFailure) return created.Error;
             try
             {
@@ -88,8 +88,8 @@ internal sealed class CompanyService(
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             var taxId = await referenceData.CreateTaxIdAsync(request.TaxIdType, request.TaxIdNumber, cancellationToken);
             if (taxId.IsFailure) return taxId.Error;
-            if (!await referenceData.IsAvailableTimeZoneAsync(request.TimeZoneId!, cancellationToken))
-                return CompanyErrors.TimeZoneUnavailable;
+            var timeZone = await referenceData.ResolveTimeZoneAsync(request.TimeZoneId, cancellationToken);
+            if (timeZone.IsFailure) return timeZone.Error;
 
             try
             {
@@ -101,7 +101,7 @@ internal sealed class CompanyService(
                         && await reader.ExistsTaxIdAsync(requestedTaxId.Country, requestedTaxId.Type,
                             requestedTaxId.Number, company.Id, ct))
                         return CompanyErrors.TaxIdAlreadyUsed;
-                    var updated = company.Update(request.Name, taxId.Value, request.TimeZoneId);
+                    var updated = company.Update(request.Name, taxId.Value, timeZone.Value);
                     if (updated.IsFailure) return updated;
                     companies.MarkUpdated(company);
                     return Result.Success();

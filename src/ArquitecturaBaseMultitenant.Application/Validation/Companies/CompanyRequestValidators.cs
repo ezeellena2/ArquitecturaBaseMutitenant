@@ -11,7 +11,6 @@ internal sealed class CreateCompanyRequestValidator : AbstractValidator<CreateCo
     {
         RuleFor(request => request.Name).NotEmpty().WithMessage(_ => ValidationTexts.Required)
             .MaximumLength(TextLimits.OrganizationName).WithMessage(_ => ValidationTexts.MaxLength);
-        RuleFor(request => request.TimeZoneId).NotEmpty().WithMessage(_ => ValidationTexts.Required);
         RuleFor(request => request).Must(TaxIdIsComplete).WithMessage(_ => ValidationTexts.Required);
     }
 
@@ -25,7 +24,6 @@ internal sealed class UpdateCompanyRequestValidator : AbstractValidator<UpdateCo
     {
         RuleFor(request => request.Name).NotEmpty().WithMessage(_ => ValidationTexts.Required)
             .MaximumLength(TextLimits.OrganizationName).WithMessage(_ => ValidationTexts.MaxLength);
-        RuleFor(request => request.TimeZoneId).NotEmpty().WithMessage(_ => ValidationTexts.Required);
         RuleFor(request => request).Must(TaxIdIsComplete).WithMessage(_ => ValidationTexts.Required);
         RuleFor(request => request.Version).NotNull().WithMessage(_ => ValidationTexts.Required);
     }
