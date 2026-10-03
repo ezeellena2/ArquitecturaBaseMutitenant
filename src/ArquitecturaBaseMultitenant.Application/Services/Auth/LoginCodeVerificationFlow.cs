@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
+using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
@@ -14,6 +15,8 @@ internal sealed class LoginCodeVerificationFlow(
     LoginCodeVerifier verifier,
     ILoginCodeRepository codes,
     LoginAccountGuard accounts,
+    ILoginMethodReader loginMethods,
+    LoginMethodAvailability availability,
     AccountDeletionCancelIssuer cancellation,
     ILoginAuditRepository audits,
     ISignInService signIn,
@@ -53,6 +56,11 @@ internal sealed class LoginCodeVerificationFlow(
             return Fail(userId, AccountErrors.Suspended);
         if (account.Status == UserStatus.PendingDeletion)
             return Fail(userId, cancellation.Issue(account, null, request.ReturnUrl!));
+
+        var emailMethod = (await loginMethods.ListByUserIdAsync(userId.Value, cancellationToken))
+            .SingleOrDefault(method => method.Type == LoginMethodType.Email && method.Value == destination.Value);
+        if (emailMethod is null || !await availability.IsAvailableAsync(userId.Value, emailMethod, cancellationToken))
+            return Fail(userId, LoginCodeErrors.Invalid(attemptsLeft: null));
 
         if (request.ReturnUrl != ReturnUrls.InvitationPath)
         {

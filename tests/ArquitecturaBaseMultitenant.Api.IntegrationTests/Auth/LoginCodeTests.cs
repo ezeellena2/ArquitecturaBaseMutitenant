@@ -4,12 +4,15 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 
@@ -147,6 +150,48 @@ public sealed class LoginCodeTests(ApiFactory factory)
             new { email, code, returnUrl = "/connect/authorize?client_id=web&access=consumer" }, Ct);
         Assert.Equal(HttpStatusCode.BadRequest, replay.StatusCode);
         Assert.False(replay.Headers.Contains("Set-Cookie"));
+    }
+
+    [Fact]
+    public async Task Inactive_managed_member_cannot_use_the_email_to_sign_into_personal_access()
+    {
+        var email = Email.Create($"managed-ex-member-{Guid.NewGuid():N}@example.test").Value;
+        using var signupClient = factory.CreateClient(new WebApplicationFactoryClientOptions
+            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var memberAccount = await AccountJourney.RegisterAsync(factory, signupClient, Ct, email);
+        var administratorId = await CreateVerifiedEmailAccountAsync($"managed-admin-{Guid.NewGuid():N}@example.test");
+        var tenantId = await CreateBusinessOrganizationAsync(memberAccount.UserId, administratorId);
+        await AssignManagedEmailAsync(memberAccount.UserId, tenantId);
+
+        await AgeLoginCodesAsync(email.Value);
+        using var loginClient = factory.CreateClient(new WebApplicationFactoryClientOptions
+            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        using var requested = await AccountJourney.PostAsync(loginClient, "/api/auth/login-code", new { email = email.Value }, Ct);
+        Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
+        var code = await ReadPickupCodeAsync(email.Value);
+
+        await DeactivateOrganizationMemberAsync(memberAccount.UserId, tenantId);
+        using var rejected = await AccountJourney.PostAsync(loginClient, "/api/auth/login-code/verify",
+            new { email = email.Value, code, returnUrl = "/connect/authorize?client_id=web&access=consumer" }, Ct);
+
+        Assert.Equal(HttpStatusCode.BadRequest, rejected.StatusCode);
+        using var problem = await rejected.Content.ReadFromJsonAsync<System.Text.Json.JsonDocument>(Ct);
+        Assert.Equal(LoginCodeErrors.InvalidCode, problem!.RootElement.GetProperty("code").GetString());
+        Assert.False(rejected.Headers.Contains("Set-Cookie"));
+
+        await AgeLoginCodesAsync(email.Value);
+        using var withheld = await AccountJourney.PostAsync(loginClient, "/api/auth/login-code",
+            new { email = email.Value }, Ct);
+        Assert.Equal(HttpStatusCode.Accepted, withheld.StatusCode);
+        await using var codeScope = factory.Services.CreateAsyncScope();
+        var destination = LoginCodeDestination.ForEmail(email);
+        var latestCode = await codeScope.ServiceProvider.GetRequiredService<IUnitOfWork>()
+            .ExecuteInTransactionAsync(async ct => Result.Success(await codeScope.ServiceProvider
+                .GetRequiredService<ILoginCodeRepository>()
+                .GetLatestAsync(destination, LoginCodePurpose.Login, requestedByUserId: null, ct)),
+                CommitPolicy.OnSuccess, Ct);
+        Assert.NotNull(latestCode.Value);
+        Assert.Null(latestCode.Value.SentAtUtc);
     }
 
     [Fact]
@@ -293,4 +338,48 @@ public sealed class LoginCodeTests(ApiFactory factory)
 
     private Task<string> ReadPickupCodeAsync(string email) =>
         PickupCodeReader.ReadAsync(factory.Services, email, Ct);
+
+    private async Task<Guid> CreateBusinessOrganizationAsync(Guid memberUserId, Guid ownerUserId)
+    {
+        var tenant = Tenant.CreateBusiness("Dominio administrado HTTP", requiresApproval: false);
+        Assert.True(tenant.Activate().IsSuccess);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenant.Id);
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+        {
+            services.GetRequiredService<TenantSpaceProvisioner>().Stage(tenant,
+                TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"),
+                [memberUserId, ownerUserId], ownerUserId);
+            return Task.FromResult(Result.Success());
+        }, CommitPolicy.OnSuccess, Ct);
+        return tenant.Id;
+    }
+
+    private async Task AssignManagedEmailAsync(Guid userId, Guid tenantId)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+        {
+            var method = Assert.Single(await services.GetRequiredService<ILoginMethodRepository>()
+                .ListByUserIdAsync(userId, ct));
+            method.AssignManagedByOrganization(tenantId);
+            return Result.Success();
+        }, CommitPolicy.OnSuccess, Ct);
+    }
+
+    private async Task DeactivateOrganizationMemberAsync(Guid userId, Guid tenantId)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenantId);
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+        {
+            var member = await services.GetRequiredService<IMemberRepository>().GetByUserIdAsync(userId, ct);
+            Assert.NotNull(member);
+            Assert.True(member.Deactivate().IsSuccess);
+            return Result.Success();
+        }, CommitPolicy.OnSuccess, Ct);
+    }
 }

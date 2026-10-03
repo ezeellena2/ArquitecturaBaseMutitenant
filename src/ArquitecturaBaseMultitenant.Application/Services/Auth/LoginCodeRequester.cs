@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
+using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
@@ -14,6 +15,8 @@ internal sealed class LoginCodeRequester(
     LoginCodeIssuer issuer,
     IUserLookup userLookup,
     IUserRepository users,
+    ILoginMethodReader loginMethods,
+    LoginMethodAvailability availability,
     IEnumerable<ILoginCodeChannel> channels,
     UserCultures userCultures,
     ISignInService signIn)
@@ -42,8 +45,13 @@ internal sealed class LoginCodeRequester(
             && account is { Status: UserStatus.Active or UserStatus.Suspended or UserStatus.PendingDeletion }
             && !await signIn.IsLockedOutAsync(knownUserId, cancellationToken))
         {
-            channel.EnqueueRenderedLoginCode(payload, knownUserId);
-            issued.Value.LoginCode.MarkSent(issued.Value.IssuedAtUtc);
+            var method = (await loginMethods.ListByUserIdAsync(knownUserId, cancellationToken))
+                .SingleOrDefault(value => value.Type == LoginMethodType.Email && value.Value == destination.Value);
+            if (method is not null && await availability.IsAvailableAsync(knownUserId, method, cancellationToken))
+            {
+                channel.EnqueueRenderedLoginCode(payload, knownUserId);
+                issued.Value.LoginCode.MarkSent(issued.Value.IssuedAtUtc);
+            }
         }
 
         return new RequestLoginCodeResponse(issued.Value.ResendCooldownSeconds);
