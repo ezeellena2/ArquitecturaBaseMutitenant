@@ -8,6 +8,7 @@ using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -45,13 +46,13 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
                 .ToDictionaryAsync(user => user.Id, user => user.DisplayName, cancellationToken);
         // «Quién» del detalle: nombre · correo (el verificado, primero el principal).
         var actorEmails = actorIds.Length == 0
-            ? new Dictionary<Guid, string>()
+            ? new Dictionary<Guid, Email>()
             : (await context.LoginMethods.AsNoTracking()
                     .Where(method => actorIds.Contains(method.UserId) && method.Type == LoginMethodType.Email
                         && method.VerifiedAtUtc != null)
                     .OrderByDescending(method => method.IsPrimary).ThenBy(method => method.Id)
                     .Select(method => new { method.UserId, method.Value }).ToArrayAsync(cancellationToken))
-                .GroupBy(method => method.UserId).ToDictionary(group => group.Key, group => group.First().Value);
+                .GroupBy(method => method.UserId).ToDictionary(group => group.Key, group => Email.Create(group.First().Value).Value);
         var displayData = await ResolveDisplayDataAsync(page.Items, cancellationToken);
         var rows = page.Items.Select(entry => new OrganizationAuditRow(entry.Id, entry.OccurredAtUtc,
             entry.Action, entry.EntityType, entry.EntityId, entry.ActorId, entry.ActorKind,

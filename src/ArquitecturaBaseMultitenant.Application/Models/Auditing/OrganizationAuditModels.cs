@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Models.Auditing;
 
@@ -16,7 +17,7 @@ public sealed record ListOrganizationAuditRequest : CursorRequest
 
 public sealed record OrganizationAuditRow(Guid Id, DateTime OccurredAtUtc, AuditAction Action, string EntityType,
     Guid EntityId, Guid? ActorId, AuditActorKind ActorKind, string? ActorDisplayName,
-    string? AffectedDisplayName, string? CompanyName, string Changes, string? ActorEmail = null);
+    string? AffectedDisplayName, string? CompanyName, string Changes, Email? ActorEmail = null);
 
 public sealed record OrganizationAuditChangeResponse(string Field, string? OldValue, string? NewValue);
 
@@ -28,4 +29,4 @@ public sealed record OrganizationAuditActorResponse(Guid? ActorId, string ActorK
 public sealed record OrganizationAuditEntryResponse(Guid Id, DateTime OccurredAtUtc, string Action,
     string ActionText, string EntityType, string EntityText, string? AffectedDisplayName, string WhereText,
     string ActorKind, string ActorText, Guid? ActorId, string? ActorDisplayName,
-    IReadOnlyList<OrganizationAuditChangeResponse> Changes, string? ActorEmail);
+    IReadOnlyList<OrganizationAuditChangeResponse> Changes, Email? ActorEmail);
