@@ -9236,6 +9236,33 @@
           "needsPersonalLoginMethod": {
             "type": "boolean",
             "default": false
+          },
+          "inviterRoles": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "companies": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "roles": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
           }
         },
         "description": "Solo datos presentables de la invitación autorizada; jamás hashes ni secretos."
