@@ -31,6 +31,10 @@ public static class DependencyInjection
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<ICompanyService, CompanyService>();
         services.AddScoped<ICompanyMembershipService, CompanyMembershipService>();
+        services.AddScoped<CompanyCreator>();
+        services.AddScoped<CompanyReferenceDataResolver>();
+        services.AddScoped<CompanyMembershipWriter>();
+        services.AddScoped<CompanyMembershipRoleManager>();
         services.AddScoped<IOrganizationUserService, OrganizationUserService>();
         services.AddScoped<IOrganizationSettingsService, OrganizationSettingsService>();
         services.AddScoped<OrganizationSettingsUpdater>();

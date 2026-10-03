@@ -94,10 +94,12 @@ public sealed class CompanyServiceTests
         var companyAdminRole = SystemRoles.CreateCompanyAdmin();
         var unitOfWork = new FakeUnitOfWork();
         using var fixture = new ServiceFixture<CompanyService>(new CreateCompanyRequestValidator());
-        var service = new CompanyService(new FakeCompanyReader(), companyRepository, companyMembershipRepository,
-            new FakeMemberRepository { Member = member }, new FakeRoleRepository { Role = companyAdminRole }, assignmentRepository,
-            new FakeTaxIdTypeCatalog(), new FakeTimeZoneCatalog(), new IdentifiedCurrentUser(userId),
-            fixture.Validator, unitOfWork, fixture.TimeProvider, fixture.Logger);
+        var reader = new FakeCompanyReader();
+        var service = new CompanyService(reader, companyRepository,
+            new CompanyCreator(reader, companyRepository, companyMembershipRepository,
+                new FakeMemberRepository { Member = member }, new FakeRoleRepository { Role = companyAdminRole },
+                assignmentRepository, new IdentifiedCurrentUser(userId), unitOfWork),
+            CreateReferenceDataResolver(), fixture.Validator, unitOfWork, fixture.TimeProvider, fixture.Logger);
 
         var result = await service.CreateAsync(new CreateCompanyRequest("Sucursal Centro", null, null,
             "America/Argentina/Buenos_Aires"), Ct);
@@ -145,11 +147,13 @@ public sealed class CompanyServiceTests
             },
         };
         using var fixture = new ServiceFixture<CompanyService>(new CreateCompanyRequestValidator());
-        var service = new CompanyService(new FakeCompanyReader(), new FakeCompanyRepository(),
-            new FakeCompanyMembershipRepository(), new FakeMemberRepository { Member = member },
-            new FakeRoleRepository(), new FakeRoleAssignmentRepository(), new FakeTaxIdTypeCatalog(),
-            new FakeTimeZoneCatalog(), new IdentifiedCurrentUser(userId), fixture.Validator, unitOfWork,
-            fixture.TimeProvider, fixture.Logger);
+        var reader = new FakeCompanyReader();
+        var companyRepository = new FakeCompanyRepository();
+        var service = new CompanyService(reader, companyRepository,
+            new CompanyCreator(reader, companyRepository, new FakeCompanyMembershipRepository(),
+                new FakeMemberRepository { Member = member }, new FakeRoleRepository(),
+                new FakeRoleAssignmentRepository(), new IdentifiedCurrentUser(userId), unitOfWork),
+            CreateReferenceDataResolver(), fixture.Validator, unitOfWork, fixture.TimeProvider, fixture.Logger);
 
         var result = await service.CreateAsync(new CreateCompanyRequest("Sucursal", null, null,
             "America/Argentina/Buenos_Aires"), Ct);
@@ -159,11 +163,19 @@ public sealed class CompanyServiceTests
     }
 
     private static CompanyService Create(FakeCompanyReader reader, ServiceFixture<CompanyService> fixture,
-        FakeUnitOfWork? unitOfWork = null, FakeCompanyRepository? companyRepository = null) =>
-        new(reader, companyRepository ?? new FakeCompanyRepository(), new FakeCompanyMembershipRepository(),
-            new FakeMemberRepository(), new FakeRoleRepository(), new FakeRoleAssignmentRepository(),
-            new FakeTaxIdTypeCatalog(), new FakeTimeZoneCatalog(), new FakeCurrentUser(), fixture.Validator,
-            unitOfWork ?? new FakeUnitOfWork(), fixture.TimeProvider, fixture.Logger);
+        FakeUnitOfWork? unitOfWork = null, FakeCompanyRepository? companyRepository = null)
+    {
+        var transaction = unitOfWork ?? new FakeUnitOfWork();
+        var repository = companyRepository ?? new FakeCompanyRepository();
+        return new CompanyService(reader, repository,
+            new CompanyCreator(reader, repository, new FakeCompanyMembershipRepository(),
+                new FakeMemberRepository(), new FakeRoleRepository(), new FakeRoleAssignmentRepository(),
+                new FakeCurrentUser(), transaction),
+            CreateReferenceDataResolver(), fixture.Validator, transaction, fixture.TimeProvider, fixture.Logger);
+    }
+
+    private static CompanyReferenceDataResolver CreateReferenceDataResolver() =>
+        new(new FakeTaxIdTypeCatalog(), new FakeTimeZoneCatalog());
 
     internal sealed class FakeCompanyReader : ICompanyReader
     {
