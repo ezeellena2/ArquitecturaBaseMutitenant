@@ -3,8 +3,10 @@ using ArquitecturaBaseMultitenant.Domain.Authentication;
 namespace ArquitecturaBaseMultitenant.Application.Models.Identity;
 
 /// <summary>Entrega métodos de ingreso y capacidades de gestión de la cuenta sin exponer los objetos de persistencia.</summary>
+/// <remarks><c>SoleOwnerOrganizations</c>: organizaciones donde la cuenta es la única Dueña; mientras haya alguna, no puede pedir la baja.</remarks>
 public sealed record AccountLoginMethodsResponse(IReadOnlyList<AccountLoginMethodResponse> Methods,
-    bool CanLinkGoogle, bool NeedsPersonalLoginMethod, int AccountDeletionGraceDays)
+    bool CanLinkGoogle, bool NeedsPersonalLoginMethod, int AccountDeletionGraceDays,
+    IReadOnlyList<string> SoleOwnerOrganizations)
 {
     public override string ToString() => nameof(AccountLoginMethodsResponse);
 }

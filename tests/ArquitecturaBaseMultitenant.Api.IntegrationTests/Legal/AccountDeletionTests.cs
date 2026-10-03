@@ -81,6 +81,8 @@ public sealed class AccountDeletionTests(ApiFactory factory)
                     TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"), [account.UserId]);
                 return Task.FromResult(Result.Success());
             }, CommitPolicy.OnSuccess, Ct);
+        // Tablero Cuenta, «Es la única Dueña»: Mi cuenta sabe de antemano por qué no puede darse de baja.
+        Assert.Equal(["Organización con única Dueña"], await SoleOwnerOrganizationsAsync(client));
         var secret = await IssueDeletionTicketAsync(services, context, work, account.UserId);
 
         using var response = await AccountJourney.PostAsync(client, "/api/me/deletion",
@@ -127,6 +129,7 @@ public sealed class AccountDeletionTests(ApiFactory factory)
                 return Result.Success();
             }, CommitPolicy.OnSuccess, Ct);
         }
+        Assert.Empty(await SoleOwnerOrganizationsAsync(client));
         var secret = await IssueDeletionTicketAsync(services, context, work, account.UserId);
 
         using var response = await AccountJourney.PostAsync(client, "/api/me/deletion",
@@ -234,6 +237,14 @@ public sealed class AccountDeletionTests(ApiFactory factory)
 
     private HttpClient CreateClient() => factory.CreateClient(new WebApplicationFactoryClientOptions
         { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+
+    private static async Task<string[]> SoleOwnerOrganizationsAsync(HttpClient client)
+    {
+        using var response = await client.GetAsync("/api/me/login-methods", Ct);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
+        return [.. json.RootElement.GetProperty("soleOwnerOrganizations").EnumerateArray().Select(name => name.GetString()!)];
+    }
 
     private static async Task<string> IssueDeletionTicketAsync(IServiceProvider services, ApplicationDbContext context,
         IUnitOfWork work, Guid userId)
