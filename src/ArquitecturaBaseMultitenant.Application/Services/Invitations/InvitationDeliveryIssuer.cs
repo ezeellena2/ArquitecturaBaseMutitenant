@@ -14,12 +14,13 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Invitations;
 
 /// <summary>Usa datos actuales y cultura/zona explícitas para encolar el canal disponible.</summary>
 internal sealed class InvitationDeliveryIssuer(IEnumerable<IInvitationChannel> channels, UserCultures cultures,
-    ITenantSettingsReader settings, IUserRepository users, ILoginMethodReader methods, IPublicOrigin origin)
+    ITenantSettingsReader settings, IUserRepository users, ILoginMethodReader methods, IPublicOrigin origin,
+    IInvitationReader invitations)
 {
     internal bool IsAvailable(string channel) => channels.Any(value => value.Key == channel);
 
     internal async Task EnqueueAsync(Invitation invitation, TenantRow organization, string token,
-        Guid? recipientId, CancellationToken ct, TenantSettings? preparedSettings = null)
+        Guid? recipientId, CancellationToken ct, TenantSettings? preparedSettings = null, InvitationGrantRow? grant = null)
     {
         var channel = channels.Single(value => value.Key == invitation.Channel);
         var inviter = await users.GetByIdAsync(invitation.InviterUserId, ct)
@@ -34,7 +35,9 @@ internal sealed class InvitationDeliveryIssuer(IEnumerable<IInvitationChannel> c
         var usesEmailCode = recipientId is { } userId && (await methods.ListByUserIdAsync(userId, ct))
             .Any(method => method.Type == LoginMethodType.Email && method.VerifiedAtUtc is not null
                 && method.Value == invitation.Destination.Value);
+        // Al invitar, la empresa y los roles todavía no están guardados y llegan del llamador; al reenviar, se leen.
+        grant ??= await invitations.FindGrantAsync(invitation.MemberId, null, ct);
         await channel.EnqueueAsync(invitation.Destination, new InvitationNotice(organization.Name, inviterName,
-            invitation.ExpiresAtUtc, timeZoneId, url, usesEmailCode), profile, recipientId, ct);
+            invitation.ExpiresAtUtc, timeZoneId, url, usesEmailCode, grant.Companies, grant.Roles), profile, recipientId, ct);
     }
 }

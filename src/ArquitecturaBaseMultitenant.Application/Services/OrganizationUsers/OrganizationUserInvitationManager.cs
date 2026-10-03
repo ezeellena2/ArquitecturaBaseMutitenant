@@ -27,13 +27,21 @@ internal sealed class OrganizationUserInvitationManager(
         return await unitOfWork.ExecuteInTransactionAsync(async ct =>
         {
             var issued = await issuer.IssueWithMemberAsync(
-                new IssueInvitationRequest(request.Email!, inviterId, InvitationChannel.Email), ct);
+                new IssueInvitationRequest(request.Email!, inviterId, InvitationChannel.Email), ct, grant: Grant(desired));
             if (issued.IsFailure) return issued.Error;
             var assigned = await assignmentManager.SetAsync(issued.Value.MemberId, desired, ct,
                 memberInUnitOfWork: issued.Value.Member);
             return assigned.IsFailure ? assigned.Error : Result<Guid>.Success(issued.Value.InvitationId);
         }, CommitPolicy.OnSuccess, cancellationToken);
     }
+
+    // Lo que el correo muestra como Empresa y Roles, en el mismo orden que la vista previa.
+    private static InvitationGrantRow Grant(DesiredOrganizationUserAssignments desired) => new([],
+        [.. desired.CompanyRoles.Values.Select(selection => selection.Company.Name).Order(StringComparer.CurrentCulture)],
+        [.. desired.OrganizationRoles.Select(role => role.Name).Order(StringComparer.Ordinal)
+            .Concat(desired.CompanyRoles.Values.SelectMany(selection => selection.Roles).Select(role => role.Name)
+                .Order(StringComparer.Ordinal))
+            .Distinct(StringComparer.Ordinal)]);
 
     internal Task<Result<Guid>> ResendAsync(Guid invitationId, CancellationToken cancellationToken) =>
         unitOfWork.ExecuteInTransactionAsync(async ct =>

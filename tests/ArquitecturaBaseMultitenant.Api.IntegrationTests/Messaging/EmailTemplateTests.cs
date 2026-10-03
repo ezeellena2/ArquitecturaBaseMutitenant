@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Invitations;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
 using ArquitecturaBaseMultitenant.Infrastructure.Phones;
 using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
@@ -65,6 +66,27 @@ public sealed class EmailTemplateTests
             var safeHtml = message.HtmlBody.Replace("protected-secret", "captura-sintetica", StringComparison.Ordinal);
             await File.WriteAllTextAsync(Path.Combine(captureDirectory, fileName), safeHtml, Ct);
         }
+    }
+
+    // Tablero Mensajes, «Invitación a una organización»: Empresa, Roles y Vence; los roles de sistema en el idioma del correo.
+    [Theory]
+    [InlineData("es-AR", "Empresa: Delta Norte S.A.", "Roles: Administrador, Solo lectura")]
+    [InlineData("en-US", "Company: Delta Norte S.A.", "Roles: Administrator, Solo lectura")]
+    public async Task Invitation_lists_the_company_and_the_roles_offered(string cultureCode, string company, string roles)
+    {
+        var profile = await new CultureProfiles(new JsonReferenceDataCatalog()).LoadAsync(cultureCode, Ct);
+        var renderer = new EmailTemplateRenderer(Options.Create(new EmailOptions { AppName = "Mi App" }), CreateFormatter());
+        var notice = new InvitationNotice("Grupo Delta", "Lucía Fernández",
+            new DateTime(2026, 10, 9, 1, 0, 0, DateTimeKind.Utc), "America/Argentina/Buenos_Aires",
+            "https://example.test/invitacion#protected-secret", false,
+            Companies: ["Delta Norte S.A."], Roles: [SystemRoles.CompanyAdmin, "Solo lectura"]);
+
+        var message = await renderer.RenderInvitationAsync("recipient@example.test", notice, profile, Ct);
+
+        Assert.Contains(company, message.TextBody);
+        Assert.Contains(roles, message.TextBody);
+        Assert.Contains("Delta Norte S.A.", message.HtmlBody);
+        Assert.DoesNotContain(SystemRoles.CompanyAdmin, message.HtmlBody);
     }
 
     [Theory]

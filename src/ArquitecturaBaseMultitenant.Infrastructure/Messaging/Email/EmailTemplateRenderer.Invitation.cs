@@ -20,12 +20,21 @@ internal sealed partial class EmailTemplateRenderer
             NotificationTexts.Get("Greeting.Unnamed", culture), notice.InviterName, notice.OrganizationName, options.Value.AppName);
         var action = NotificationTexts.Get("Invitation.Action", culture);
         var expiryLabel = NotificationTexts.Get("Invitation.ExpiresLabel", culture);
+        var details = new List<(string Label, string Value)>();
+        if (notice.Companies is { Count: > 0 } companies)
+            details.Add((NotificationTexts.Get("Invitation.CompanyLabel", culture), string.Join(", ", companies)));
+        if (notice.Roles is { Count: > 0 } roles)
+            details.Add((NotificationTexts.Get("Invitation.RolesLabel", culture),
+                string.Join(", ", roles.Select(role => RoleTexts.NameIn(role, culture.Culture)).Distinct(StringComparer.Ordinal))));
+        details.Add((expiryLabel, expires));
         var note = notice.UsesEmailCode ? NotificationTexts.Get("Invitation.Note", culture) : string.Empty;
         var footer = NotificationTexts.Get("Invitation.Footer", culture);
         var content = Fill("Invitation.html", new Dictionary<string, string>
         {
-            ["Title"] = Encode(title), ["Body"] = Encode(body), ["ExpiryLabel"] = Encode(expiryLabel),
-            ["Expiry"] = Encode(expires), ["ActionLabel"] = Encode(action), ["ActionUrl"] = Encode(notice.ActionUrl),
+            ["Title"] = Encode(title), ["Body"] = Encode(body),
+            ["Details"] = string.Concat(details.Select(detail =>
+                $"<tr><td style=\"padding:6px 16px;width:110px;color:#6b7280;\">{Encode(detail.Label)}</td><td style=\"padding:6px 16px;color:#111827;\">{Encode(detail.Value)}</td></tr>")),
+            ["ActionLabel"] = Encode(action), ["ActionUrl"] = Encode(notice.ActionUrl),
             ["Note"] = note.Length == 0 ? string.Empty : $"<p style=\"margin:20px 0 0;color:#6b7280;font-size:14px;\">{Encode(note)}</p>",
         });
         var html = Fill(LayoutTemplate, new Dictionary<string, string>
@@ -33,7 +42,9 @@ internal sealed partial class EmailTemplateRenderer
             ["Lang"] = Encode(culture.Entry.LanguageCode), ["Title"] = Encode(title), ["Header"] = HeaderHtml(),
             ["Content"] = content, ["Footer"] = Encode(footer),
         });
-        var text = new List<string> { title, body, expiryLabel + ": " + expires, action + ": " + notice.ActionUrl };
+        var text = new List<string> { title, body };
+        text.AddRange(details.Select(detail => detail.Label + ": " + detail.Value));
+        text.Add(action + ": " + notice.ActionUrl);
         if (note.Length > 0) text.Add(note);
         text.Add(footer);
         return new EmailMessage(to, subject, html, string.Join(Environment.NewLine + Environment.NewLine, text));

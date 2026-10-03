@@ -70,7 +70,7 @@ public sealed class InvitationsTests(ApiFactory factory)
             accessor.HttpContext = reload;
             var repeated = await services.GetRequiredService<IInvitationService>()
                 .PreviewAsync(new PreviewInvitationRequest(null), Ct);
-            Assert.Equal(preview.Value, repeated.Value);
+            Assert.Equivalent(preview.Value, repeated.Value, strict: true);
             using (services.GetRequiredService<ITenantScope>().Enter(tenantId))
                 Assert.Equal(InvitationStatus.Pending, (await services.GetRequiredService<IInvitationReader>()
                     .FindByIdAsync(invitation.Id, Ct))!.Status);

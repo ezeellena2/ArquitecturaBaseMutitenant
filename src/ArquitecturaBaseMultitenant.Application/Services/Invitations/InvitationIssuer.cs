@@ -23,7 +23,7 @@ internal sealed class InvitationIssuer(IInvitationRepository invitations, IMembe
     }
 
     public async Task<Result<IssuedInvitation>> IssueWithMemberAsync(IssueInvitationRequest request,
-        CancellationToken cancellationToken, TenantSettings? preparedSettings = null)
+        CancellationToken cancellationToken, TenantSettings? preparedSettings = null, InvitationGrantRow? grant = null)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(request.Destination);
@@ -58,7 +58,7 @@ internal sealed class InvitationIssuer(IInvitationRepository invitations, IMembe
             tokens.Hash(secret), timeProvider.GetUtcNow().UtcDateTime, TimeSpan.FromDays(options.Value.LifetimeDays));
         invitations.Add(invitation);
         var token = tokens.Protect(new InvitationTokenData(tenantId, invitation.Id, secret));
-        await delivery.EnqueueAsync(invitation, organization, token, userId, cancellationToken, preparedSettings);
+        await delivery.EnqueueAsync(invitation, organization, token, userId, cancellationToken, preparedSettings, grant);
         return new IssuedInvitation(invitation.Id, member);
     }
 }

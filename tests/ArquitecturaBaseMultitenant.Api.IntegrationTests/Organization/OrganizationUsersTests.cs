@@ -1,8 +1,12 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
 using ArquitecturaBaseMultitenant.Application.Models.Invitations;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
@@ -12,6 +16,9 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Organization;
@@ -288,6 +295,76 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
         // «Pidió la baja de su cuenta. Se elimina el …»
         Assert.Equal(requestedAtUtc.AddDays(30), pendingJson.RootElement.GetProperty("deletionScheduledForUtc")
             .GetDateTime(), TimeSpan.FromSeconds(1));
+    }
+
+    [Fact]
+    public async Task The_invitation_shows_who_invited_with_their_role_and_the_company_and_roles_offered()
+    {
+        using var ownerClient = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false });
+        var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
+        await CreateOrganizationAsync(owner.UserId);
+        await AccountJourney.AuthorizeAsync(ownerClient, "business", Ct);
+        using var createdCompany = await AccountJourney.PostAsync(ownerClient, "/api/companies", new
+        {
+            name = "Delta Norte S.A.",
+            taxIdType = (string?)null,
+            taxIdNumber = (string?)null,
+            timeZoneId = "America/Argentina/Buenos_Aires",
+        }, Ct);
+        Assert.Equal(HttpStatusCode.Created, createdCompany.StatusCode);
+        var companyId = await createdCompany.Content.ReadFromJsonAsync<Guid>(Ct);
+        using var roleResponse = await ownerClient.GetAsync("/api/roles/paged?scope=Company&page=1&pageSize=50", Ct);
+        using var rolesJson = JsonDocument.Parse(await roleResponse.Content.ReadAsStringAsync(Ct));
+        var companyAdminRoleId = Assert.Single(rolesJson.RootElement.GetProperty("items").EnumerateArray(),
+            role => role.GetProperty("isSystemRole").GetBoolean() && role.GetProperty("name").GetString() == "Administrador")
+            .GetProperty("id").GetGuid();
+
+        var recipient = Email.Create($"invite-{Guid.NewGuid():N}@example.test").Value;
+        using var issued = await AccountJourney.PostAsync(ownerClient, "/api/users/invitations", new
+        {
+            email = recipient.Value,
+            roleIds = Array.Empty<Guid>(),
+            companies = new[] { new { companyId, roleIds = new[] { companyAdminRoleId } } },
+        }, Ct);
+        Assert.True(issued.StatusCode == HttpStatusCode.Created, await issued.Content.ReadAsStringAsync(Ct));
+
+        // Tablero Mensajes: el correo lista Empresa y Roles; tablero Invitacion: «Lucía Fernández te invitó · Dueño».
+        var email = await InvitationEmailAsync(recipient);
+        Assert.Contains("Empresa: Delta Norte S.A.", email.TextBody);
+        Assert.Contains("Roles: Administrador", email.TextBody);
+        var token = Regex.Match(email.TextBody, @"/invitacion#(?<token>[A-Za-z0-9_-]+)").Groups["token"].Value;
+        var preview = await PreviewInvitationAsync(token);
+        Assert.True(preview.IsSuccess);
+        Assert.Equal(InvitationPreviewState.NoAccount, preview.Value.State);
+        Assert.Equal(["Dueño"], preview.Value.InviterRoles);
+        Assert.Equal(["Delta Norte S.A."], preview.Value.Companies);
+        Assert.Equal(["Administrador"], preview.Value.Roles);
+    }
+
+    private async Task<EmailMessage> InvitationEmailAsync(Email recipient)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var protector = services.GetRequiredService<IPayloadProtector>();
+        var payloads = await services.GetRequiredService<ApplicationDbContext>().OutboxMessages.AsNoTracking()
+            .Select(row => row.EncryptedPayload).ToListAsync(Ct);
+        return payloads.Select(payload => JsonSerializer.Deserialize<EmailMessage>(protector.Unprotect(payload)))
+            .Single(message => message?.To == recipient.Value)!;
+    }
+
+    private async Task<Result<InvitationPreviewResponse>> PreviewInvitationAsync(string token)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var accessor = services.GetRequiredService<IHttpContextAccessor>();
+        accessor.HttpContext = new DefaultHttpContext { RequestServices = services, Request = { Scheme = "https" } };
+        try
+        {
+            return await services.GetRequiredService<IInvitationService>()
+                .PreviewAsync(new PreviewInvitationRequest(token), Ct);
+        }
+        finally { accessor.HttpContext = null; }
     }
 
     private static async Task<uint> UserVersionAsync(HttpClient client, Guid memberId)

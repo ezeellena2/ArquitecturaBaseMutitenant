@@ -38,10 +38,10 @@ internal sealed class InvitationPreviewBuilder(IInvitationReader invitations, IU
                 || row.TenantStatus != TenantStatus.Active) return new(InvitationPreviewState.Invalid);
             var methodsForAccepted = await methods.ListByUserIdAsync(accepted, ct);
             var hasPersonalBackup = await availability.HasPersonalBackupAsync(accepted, methodsForAccepted, ct);
-            return Present(row, InvitationPreviewState.Accepted) with { NeedsPersonalLoginMethod = !hasPersonalBackup };
+            return await PresentAsync(row, InvitationPreviewState.Accepted, ct) with { NeedsPersonalLoginMethod = !hasPersonalBackup };
         }
-        if (timeProvider.GetUtcNow().UtcDateTime >= row.ExpiresAtUtc) return Present(row, InvitationPreviewState.Expired);
-        if (row.TenantStatus == TenantStatus.Suspended) return Present(row, InvitationPreviewState.OrganizationSuspended);
+        if (timeProvider.GetUtcNow().UtcDateTime >= row.ExpiresAtUtc) return await PresentAsync(row, InvitationPreviewState.Expired, ct);
+        if (row.TenantStatus == TenantStatus.Suspended) return await PresentAsync(row, InvitationPreviewState.OrganizationSuspended, ct);
         if (row.TenantStatus != TenantStatus.Active || row.MemberStatus != MemberStatus.Invited)
             return new(InvitationPreviewState.Invalid);
         var owners = await lookup.FindVerifiedUsersByEmailAsync(row.Destination, ct);
@@ -68,13 +68,22 @@ internal sealed class InvitationPreviewBuilder(IInvitationReader invitations, IU
             currentEmail = primary?.Type == LoginMethodType.Email
                 ? Email.Create(primary.Value).Value : primary?.ContactEmail;
         }
-        return Present(row, state) with { CanUseEmailCode = emailCode, CanUseGoogle = google, CurrentAccountEmail = currentEmail };
+        return await PresentAsync(row, state, ct) with { CanUseEmailCode = emailCode, CanUseGoogle = google, CurrentAccountEmail = currentEmail };
     }
 
-    private static InvitationPreviewResponse Present(InvitationRow row, InvitationPreviewState state) =>
-        new(state, row.TenantId, row.OrganizationName, row.Destination,
+    private async Task<InvitationPreviewResponse> PresentAsync(InvitationRow row, InvitationPreviewState state,
+        CancellationToken ct)
+    {
+        var grant = await invitations.FindGrantAsync(row.MemberId, row.InviterUserId, ct);
+        return new(state, row.TenantId, row.OrganizationName, row.Destination,
             row.InviterDeleted ? ErrorTexts.Get("Legal.AccountDeletion.DeletedDisplayName") : row.InviterName ?? row.OrganizationName,
-            row.IssuedAtUtc, row.ExpiresAtUtc);
+            row.IssuedAtUtc, row.ExpiresAtUtc,
+            InviterRoles: row.InviterDeleted ? [] : RoleNames(grant.InviterRoles), Companies: grant.Companies,
+            Roles: RoleNames(grant.Roles));
+    }
+
+    private static string[] RoleNames(IReadOnlyList<string> names) =>
+        [.. names.Select(RoleTexts.Name).Distinct(StringComparer.Ordinal)];
 
     internal static bool HashEquals(string expected, string actual) =>
         CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(expected), Encoding.UTF8.GetBytes(actual));

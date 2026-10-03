@@ -155,6 +155,8 @@ public sealed class InvitationServiceTests
         public bool IsEnabled => true;
         public Task<InvitationRow?> FindByIdAsync(Guid id, CancellationToken ct)
         { Reads++; return Task.FromResult<InvitationRow?>(Row); }
+        public Task<InvitationGrantRow> FindGrantAsync(Guid memberId, Guid? inviterUserId, CancellationToken ct) =>
+            Task.FromResult(InvitationGrantRow.Empty);
         public string GenerateSecret() => "nonce";
         public string Hash(string secret) => "hash:" + secret;
         public string Protect(InvitationTokenData data) => "valid";
