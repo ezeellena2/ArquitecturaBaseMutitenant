@@ -26,6 +26,8 @@ public sealed class ValidationProblemTests
     [InlineData(ErrorType.Conflict, "en-US", 409, "Conflict", "The request conflicts with the current state of the resource.")]
     [InlineData(ErrorType.TooManyRequests, "es-AR", 429, "Demasiadas solicitudes", "Hiciste demasiadas solicitudes. Esperá un momento y volvé a intentar.")]
     [InlineData(ErrorType.TooManyRequests, "en-US", 429, "Too many requests", "Too many requests. Wait a moment and try again.")]
+    [InlineData(ErrorType.ServiceUnavailable, "es-AR", 503, "Servicio no disponible", "No pudimos consultar el DNS ahora. Probá de nuevo en unos minutos.")]
+    [InlineData(ErrorType.ServiceUnavailable, "en-US", 503, "Service unavailable", "We could not query DNS right now. Try again in a few minutes.")]
     [InlineData(ErrorType.Failure, "es-AR", 500, "Error del servidor", "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.")]
     [InlineData(ErrorType.Failure, "en-US", 500, "Server error", "An unexpected error occurred. If the problem persists, report the trace id.")]
     public void Every_error_type_has_translated_title_and_detail(
@@ -40,11 +42,14 @@ public sealed class ValidationProblemTests
             ErrorType.NotFound => "Http.NotFound",
             ErrorType.Conflict => "Http.Conflict",
             ErrorType.TooManyRequests => "Http.TooManyRequests",
+            ErrorType.ServiceUnavailable => "Settings.TenantDomain.DnsUnavailable",
             _ => "General.Unexpected",
         };
         Error error = type == ErrorType.Validation
             ? new ValidationError(new Dictionary<string, string[]> { ["email"] = ["Invalid email."] })
-            : new Error(code, "Fallback.", type);
+            : type == ErrorType.ServiceUnavailable
+                ? new Error(code, "The DNS verification service is unavailable.", type)
+                : new Error(code, "Fallback.", type);
 
         var problem = Map(error);
 

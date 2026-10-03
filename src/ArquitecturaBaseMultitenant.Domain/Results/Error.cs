@@ -28,4 +28,7 @@ public record Error(string Code, string Description, ErrorType Type, IReadOnlyDi
 
     public static Error TooManyRequests(string code, string description, IReadOnlyDictionary<string, object?>? metadata = null) =>
         new(code, description, ErrorType.TooManyRequests, metadata);
+
+    public static Error ServiceUnavailable(string code, string description, IReadOnlyDictionary<string, object?>? metadata = null) =>
+        new(code, description, ErrorType.ServiceUnavailable, metadata);
 }

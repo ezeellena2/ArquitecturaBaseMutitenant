@@ -19,6 +19,7 @@
   <data name="Title.NotFound" xml:space="preserve"><value>No encontrado</value></data>
   <data name="Title.Conflict" xml:space="preserve"><value>Conflicto</value></data>
   <data name="Title.TooManyRequests" xml:space="preserve"><value>Demasiadas solicitudes</value></data>
+  <data name="Title.ServiceUnavailable" xml:space="preserve"><value>Servicio no disponible</value></data>
   <data name="Validation.Failed" xml:space="preserve"><value>Revisá los campos marcados.</value></data>
   <data name="Request.Invalid" xml:space="preserve"><value>La solicitud tiene un formato inválido.</value></data>
   <data name="General.Unexpected" xml:space="preserve"><value>Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.</value></data>
@@ -29,6 +30,7 @@
   <data name="Http.MethodNotAllowed" xml:space="preserve"><value>Esta operación no está permitida en este recurso.</value></data>
   <data name="Http.Conflict" xml:space="preserve"><value>La solicitud entra en conflicto con el estado actual del recurso.</value></data>
   <data name="Http.TooManyRequests" xml:space="preserve"><value>Hiciste demasiadas solicitudes. Esperá un momento y volvé a intentar.</value></data>
+  <data name="Http.ServiceUnavailable" xml:space="preserve"><value>El servicio no está disponible ahora. Probá de nuevo en unos minutos.</value></data>
   <data name="Auth.LoginCode.Invalid" xml:space="preserve"><value>El código no es válido.</value></data>
   <data name="Auth.LoginCode.Expired" xml:space="preserve"><value>El código venció. Pedí uno nuevo.</value></data>
   <data name="Auth.LoginCode.AlreadyUsed" xml:space="preserve"><value>El código ya se usó. Pedí uno nuevo.</value></data>

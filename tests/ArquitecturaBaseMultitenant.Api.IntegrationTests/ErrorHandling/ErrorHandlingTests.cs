@@ -18,6 +18,7 @@ public sealed class ErrorHandlingTests(ApiFactory factory)
     [InlineData("NotFound", HttpStatusCode.NotFound, "Http.NotFound")]
     [InlineData("Conflict", HttpStatusCode.Conflict, "Http.Conflict")]
     [InlineData("TooManyRequests", HttpStatusCode.TooManyRequests, "Http.TooManyRequests")]
+    [InlineData("ServiceUnavailable", HttpStatusCode.ServiceUnavailable, "Http.ServiceUnavailable")]
     [InlineData("Failure", HttpStatusCode.InternalServerError, "General.Unexpected")]
     public async Task Every_error_type_has_its_status_and_stable_problem_contract(
         string type, HttpStatusCode status, string code)

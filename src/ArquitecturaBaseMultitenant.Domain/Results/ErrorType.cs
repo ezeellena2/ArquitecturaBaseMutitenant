@@ -13,4 +13,5 @@ public enum ErrorType
     NotFound = 4,
     Conflict = 5,
     TooManyRequests = 6,
+    ServiceUnavailable = 7,
 }

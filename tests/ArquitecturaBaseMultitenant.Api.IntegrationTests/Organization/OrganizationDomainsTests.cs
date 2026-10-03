@@ -50,6 +50,15 @@ public sealed class OrganizationDomainsTests(ApiFactory factory)
         Assert.Equal(domain, registeredJson.RootElement.GetProperty("txtRecordName").GetString());
         var txtValue = registeredJson.RootElement.GetProperty("txtRecordValue").GetString()!;
 
+        dns.SetUnavailable(true);
+        using var unavailableDns = await AccountJourney.PostAsync(client,
+            $"/api/organization/settings/domains/{domainId:D}/verify", new { }, Ct);
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, unavailableDns.StatusCode);
+        using var unavailableProblem = JsonDocument.Parse(await unavailableDns.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(TenantDomainErrors.DnsUnavailableCode,
+            unavailableProblem.RootElement.GetProperty("code").GetString());
+        dns.SetUnavailable(false);
+
         using var missingTxt = await AccountJourney.PostAsync(client,
             $"/api/organization/settings/domains/{domainId:D}/verify", new { }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, missingTxt.StatusCode);
@@ -97,6 +106,35 @@ public sealed class OrganizationDomainsTests(ApiFactory factory)
         var laterEmail = Email.Create($"later@{domain}").Value;
         await AddAndVerifyEmailAsync(laterClient, laterAccount, laterEmail);
         await AssertManagedEmailAsync(laterAccount.UserId, laterEmail, tenantId, expectedTenantId: null);
+    }
+
+    [Fact]
+    public async Task Concurrent_organizations_cannot_register_the_same_email_domain()
+    {
+        using var firstClient = factory.CreateClient(new WebApplicationFactoryClientOptions
+            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        using var secondClient = factory.CreateClient(new WebApplicationFactoryClientOptions
+            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var firstOwner = await AccountJourney.RegisterAsync(factory, firstClient, Ct);
+        var secondOwner = await AccountJourney.RegisterAsync(factory, secondClient, Ct);
+        await CreateOrganizationAsync(firstOwner.UserId);
+        await CreateOrganizationAsync(secondOwner.UserId);
+        await AccountJourney.AuthorizeAsync(firstClient, "business", Ct);
+        await AccountJourney.AuthorizeAsync(secondClient, "business", Ct);
+        var domain = $"race-{Guid.NewGuid():N}.example.test";
+
+        var responses = await Task.WhenAll(
+            AccountJourney.PostAsync(firstClient, "/api/organization/settings/domains", new { domain }, Ct),
+            AccountJourney.PostAsync(secondClient, "/api/organization/settings/domains", new { domain }, Ct));
+        using var firstResponse = responses[0];
+        using var secondResponse = responses[1];
+
+        Assert.Contains(new[] { firstResponse.StatusCode, secondResponse.StatusCode },
+            status => status == HttpStatusCode.Created);
+        var rejected = firstResponse.StatusCode == HttpStatusCode.Conflict ? firstResponse : secondResponse;
+        Assert.Equal(HttpStatusCode.Conflict, rejected.StatusCode);
+        using var problem = JsonDocument.Parse(await rejected.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(TenantDomainErrors.AlreadyExistsCode, problem.RootElement.GetProperty("code").GetString());
     }
 
     private async Task<Guid> CreateOrganizationAsync(Guid ownerId)
@@ -150,10 +188,14 @@ public sealed class OrganizationDomainsTests(ApiFactory factory)
     private sealed class FakeDnsTxtLookup : IDnsTxtLookup
     {
         private readonly Dictionary<string, IReadOnlyList<string>> records = new(StringComparer.Ordinal);
+        private bool unavailable;
 
         public void Set(string domain, string value) => records[domain] = [value];
+        public void SetUnavailable(bool value) => unavailable = value;
 
         public Task<Result<IReadOnlyList<string>>> FindTxtRecordsAsync(string domain, CancellationToken cancellationToken) =>
-            Task.FromResult(Result.Success(records.GetValueOrDefault(domain, [])));
+            Task.FromResult(unavailable
+                ? Result.Failure<IReadOnlyList<string>>(TenantDomainErrors.DnsUnavailable)
+                : Result.Success(records.GetValueOrDefault(domain, [])));
     }
 }

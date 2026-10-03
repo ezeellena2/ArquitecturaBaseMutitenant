@@ -26,6 +26,7 @@ public sealed class TestController : ControllerBase
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status409Conflict)]
     [ProducesProblem(StatusCodes.Status429TooManyRequests)]
+    [ProducesProblem(StatusCodes.Status503ServiceUnavailable)]
     public IActionResult ResultByType(ErrorType type)
     {
         Error error = type switch
@@ -37,6 +38,7 @@ public sealed class TestController : ControllerBase
             ErrorType.Conflict => Error.Conflict("Http.Conflict", "Conflict."),
             ErrorType.TooManyRequests => Error.TooManyRequests("Http.TooManyRequests", "Too many requests.",
                 new Dictionary<string, object?> { ["retryAfter"] = 12 }),
+            ErrorType.ServiceUnavailable => Error.ServiceUnavailable("Http.ServiceUnavailable", "Service unavailable."),
             _ => Error.Failure("General.Unexpected", "Unexpected error."),
         };
 

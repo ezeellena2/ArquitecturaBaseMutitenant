@@ -26,6 +26,7 @@ internal static class ProblemDetailsMapper
         ErrorType.NotFound => StatusCodes.Status404NotFound,
         ErrorType.Conflict => StatusCodes.Status409Conflict,
         ErrorType.TooManyRequests => StatusCodes.Status429TooManyRequests,
+        ErrorType.ServiceUnavailable => StatusCodes.Status503ServiceUnavailable,
         _ => StatusCodes.Status500InternalServerError,
     };
 
@@ -133,6 +134,7 @@ internal static class ProblemDetailsMapper
         StatusCodes.Status405MethodNotAllowed => (ApiErrorCodes.MethodNotAllowed, ErrorTexts.Get("Title.MethodNotAllowed")),
         StatusCodes.Status409Conflict => (ApiErrorCodes.Conflict, ErrorTexts.Title(ErrorType.Conflict)),
         StatusCodes.Status429TooManyRequests => (ApiErrorCodes.TooManyRequests, ErrorTexts.Title(ErrorType.TooManyRequests)),
+        StatusCodes.Status503ServiceUnavailable => (ApiErrorCodes.ServiceUnavailable, ErrorTexts.Title(ErrorType.ServiceUnavailable)),
         >= StatusCodes.Status500InternalServerError => (ApiErrorCodes.Unexpected, ErrorTexts.Title(ErrorType.Failure)),
         _ => (ApiErrorCodes.InvalidRequest, ErrorTexts.Title(ErrorType.Validation)),
     };

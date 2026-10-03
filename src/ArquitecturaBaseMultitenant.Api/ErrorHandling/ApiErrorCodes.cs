@@ -18,4 +18,5 @@ internal static class ApiErrorCodes
     public const string Conflict = "Http.Conflict";
     public const string ConcurrencyConflict = "General.ConcurrencyConflict";
     public const string TooManyRequests = "Http.TooManyRequests";
+    public const string ServiceUnavailable = "Http.ServiceUnavailable";
 }

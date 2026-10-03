@@ -186,7 +186,7 @@ public sealed class OpenApiTests(ApiFactory factory)
         var responses = root.GetProperty("paths").GetProperty("/test/result/{type}")
             .GetProperty("get").GetProperty("responses");
 
-        foreach (var status in new[] { "400", "409", "429" })
+        foreach (var status in new[] { "400", "409", "429", "503" })
         {
             Assert.True(IsProblemDetails(responses.GetProperty(status)), status);
         }

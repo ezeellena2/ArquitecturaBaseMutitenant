@@ -20,7 +20,7 @@ public static class TenantDomainErrors
         "The email domain is already verified.");
     public static readonly Error TxtNotFound = Error.Conflict(TxtNotFoundCode,
         "The verification TXT record was not found.");
-    public static readonly Error DnsUnavailable = Error.Failure(DnsUnavailableCode,
+    public static readonly Error DnsUnavailable = Error.ServiceUnavailable(DnsUnavailableCode,
         "The DNS verification service is unavailable.");
     public static readonly Error AlreadyRemoved = Error.Conflict(AlreadyRemovedCode,
         "The email domain has already been removed.");

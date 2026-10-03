@@ -475,7 +475,7 @@ public sealed class RolesController(IRoleService service) : ControllerBase
 ### Tipos (`Domain/Results`)
 
 ```csharp
-public enum ErrorType { Failure, Validation, Unauthorized, Forbidden, NotFound, Conflict, TooManyRequests }
+public enum ErrorType { Failure, Validation, Unauthorized, Forbidden, NotFound, Conflict, TooManyRequests, ServiceUnavailable }
 public record Error(string Code, string Description, ErrorType Type, IReadOnlyDictionary<string, object?>? Metadata = null);
 public sealed record ValidationError(IReadOnlyDictionary<string, string[]> Errors) : Error("Validation.Failed", ..., ErrorType.Validation);
 public class Result { bool IsSuccess; Error Error; static Success(); implicit from Error }
@@ -505,10 +505,11 @@ public class Result<T> : Result { T Value; implicit from T y from Error }
 | NotFound | 404 |
 | Conflict | 409 |
 | TooManyRequests | 429 (+ `retryAfter`) |
+| ServiceUnavailable | 503 |
 | Failure | 500 |
 
 El cuerpo es `application/problem+json` con `title` y `detail` traducidos, `code`, `traceId`, `errors` y la metadata pública.
-- Los errores que arma la propia Api sin pasar por un `Result` tienen su código en `ApiErrorCodes`, con su clave en `Errors.resx` y `Errors.en.resx`: `Request.Invalid`, `Http.Unauthorized`, `Http.Forbidden`, `Http.NotFound`, `Http.MethodNotAllowed`, `Http.TooManyRequests`, `General.Unexpected` y `General.ConcurrencyConflict`. También los de idempotencia, que emite `IdempotencyFilter` como ProblemDetails directamente, sin pasar por el mapper: 409 `Request.InProgress`, 422 `Request.IdempotencyKeyReused` y 400 `Request.IdempotencyKeyRequired` (ver [idempotencia](../rules/idempotencia.md)).
+- Los errores que arma la propia Api sin pasar por un `Result` tienen su código en `ApiErrorCodes`, con su clave en `Errors.resx` y `Errors.en.resx`: `Request.Invalid`, `Http.Unauthorized`, `Http.Forbidden`, `Http.NotFound`, `Http.MethodNotAllowed`, `Http.TooManyRequests`, `Http.ServiceUnavailable`, `General.Unexpected` y `General.ConcurrencyConflict`. También los de idempotencia, que emite `IdempotencyFilter` como ProblemDetails directamente, sin pasar por el mapper: 409 `Request.InProgress`, 422 `Request.IdempotencyKeyReused` y 400 `Request.IdempotencyKeyRequired` (ver [idempotencia](../rules/idempotencia.md)).
 - El 400 de un cuerpo ilegible no trae `errors` a propósito.
 - **Multitenant:** una entidad de otra organización responde **404**, nunca 403, para no revelar que existe. Una organización que no está activa responde 403 con el código de su estado, que decide `TenantResolutionMiddleware`: `Tenancy.Tenant.Suspended`, `Tenancy.Tenant.PendingApproval` o `Tenancy.Tenant.Closed` (multitenancy.md §7).
 
