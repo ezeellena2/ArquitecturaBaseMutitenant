@@ -137,7 +137,7 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
     private static string AreaOf(string permission) =>
         permission[..permission.IndexOf('.', StringComparison.Ordinal)];
 
-    private static RoleResponse ToResponse(RoleRow role) => new(role.Id, RoleTexts.Name(role.Name), role.Description,
+    private static RoleResponse ToResponse(RoleRow role) => new(role.Id, RoleTexts.Name(role.Name), RoleTexts.Description(role.Name, role.Description),
         role.Scope, role.CompanyId, role.IsSystemRole, role.UserCount, role.Permissions,
         role.Version, role.CreatedAtUtc);
 }

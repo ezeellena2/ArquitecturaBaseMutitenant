@@ -125,6 +125,8 @@ public sealed class RolesTests(ApiFactory factory)
         using var pageJson = JsonDocument.Parse(await listResponse.Content.ReadAsStringAsync(Ct));
         var ownerRole = Assert.Single(pageJson.RootElement.GetProperty("items").EnumerateArray());
         Assert.True(ownerRole.GetProperty("isSystemRole").GetBoolean());
+        // Tablero Roles: «Dueño · Tiene todos los permisos de la organización.»
+        Assert.Equal("Tiene todos los permisos de la organización.", ownerRole.GetProperty("description").GetString());
         Assert.Equal(1, ownerRole.GetProperty("userCount").GetInt32());
         var ownerRoleId = ownerRole.GetProperty("id").GetGuid();
 

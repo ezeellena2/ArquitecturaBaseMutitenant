@@ -10,7 +10,7 @@
   <data name="Area.settings" xml:space="preserve"><value>Configuración</value></data>
   <data name="Area.audit" xml:space="preserve"><value>Auditoría</value></data>
   <data name="Area.publicpage" xml:space="preserve"><value>Página pública</value></data>
-  <data name="Area.company" xml:space="preserve"><value>Empresa</value></data>
+  <data name="Area.company" xml:space="preserve"><value>Miembros</value></data>
   <data name="Area.platform" xml:space="preserve"><value>Plataforma</value></data>
   <data name="Permission.users.read" xml:space="preserve"><value>Ver usuarios</value></data>
   <data name="Permission.users.invite" xml:space="preserve"><value>Invitar usuarios</value></data>
@@ -20,12 +20,12 @@
   <data name="Permission.roles.assign" xml:space="preserve"><value>Asignar roles</value></data>
   <data name="Permission.companies.read" xml:space="preserve"><value>Ver empresas</value></data>
   <data name="Permission.companies.manage" xml:space="preserve"><value>Administrar empresas</value></data>
-  <data name="Permission.settings.read" xml:space="preserve"><value>Ver configuración</value></data>
-  <data name="Permission.settings.manage" xml:space="preserve"><value>Administrar configuración</value></data>
-  <data name="Permission.audit.read" xml:space="preserve"><value>Ver auditoría</value></data>
+  <data name="Permission.settings.read" xml:space="preserve"><value>Ver la configuración</value></data>
+  <data name="Permission.settings.manage" xml:space="preserve"><value>Cambiar la configuración</value></data>
+  <data name="Permission.audit.read" xml:space="preserve"><value>Ver la auditoría</value></data>
   <data name="Permission.publicpage.manage" xml:space="preserve"><value>Administrar la página pública</value></data>
-  <data name="Permission.company.members.read" xml:space="preserve"><value>Ver integrantes de la empresa</value></data>
-  <data name="Permission.company.members.manage" xml:space="preserve"><value>Administrar integrantes de la empresa</value></data>
+  <data name="Permission.company.members.read" xml:space="preserve"><value>Ver miembros</value></data>
+  <data name="Permission.company.members.manage" xml:space="preserve"><value>Administrar miembros</value></data>
   <data name="Permission.platform.tenants.read" xml:space="preserve"><value>Ver organizaciones</value></data>
   <data name="Permission.platform.tenants.manage" xml:space="preserve"><value>Administrar organizaciones</value></data>
   <data name="Permission.platform.accounts.read" xml:space="preserve"><value>Ver cuentas</value></data>

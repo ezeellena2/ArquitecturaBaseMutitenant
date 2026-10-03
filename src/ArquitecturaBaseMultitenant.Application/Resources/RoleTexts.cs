@@ -12,6 +12,14 @@ public static class RoleTexts
 
     public static string Name(string name) => NameIn(name, CultureInfo.CurrentUICulture);
 
+    /// <summary>Los roles de sistema no guardan descripción: se toma la traducida.</summary>
+    public static string? Description(string name, string? description) => description ?? name switch
+    {
+        SystemRoles.TenantAdmin => Resources.GetString("SystemRole.TenantAdmin.Description", CultureInfo.CurrentUICulture),
+        SystemRoles.CompanyAdmin => Resources.GetString("SystemRole.CompanyAdmin.Description", CultureInfo.CurrentUICulture),
+        _ => null,
+    };
+
     /// <summary>Para mensajes que salen en el idioma de quien los recibe y no en el de la petición.</summary>
     public static string NameIn(string name, CultureInfo culture) => name switch
     {

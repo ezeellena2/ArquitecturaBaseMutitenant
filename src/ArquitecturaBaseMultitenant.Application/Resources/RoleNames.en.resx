@@ -6,4 +6,6 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="SystemRole.TenantAdmin" xml:space="preserve"><value>Owner</value></data>
   <data name="SystemRole.CompanyAdmin" xml:space="preserve"><value>Administrator</value></data>
+  <data name="SystemRole.TenantAdmin.Description" xml:space="preserve"><value>Has every permission in the organization.</value></data>
+  <data name="SystemRole.CompanyAdmin.Description" xml:space="preserve"><value>Manages the company: its members and their roles.</value></data>
 </root>
