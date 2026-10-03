@@ -10,12 +10,12 @@
 - se unifica cada regla duplicada;
 - se crean las piezas comunes del front.
 
-No hay pantallas nuevas.
+No hay pantallas nuevas. Solo se suman los teléfonos que faltaban de pantallas ya programadas (lienzo v78).
 
 **Fuentes:**
 - La [revisión de calidad de diseño](../reviews/2026-10-03-calidad-de-diseno.md) y sus anexos, con archivo y línea de cada hallazgo. Las líneas son del commit `1202433` del back y `961f786` del front, así que hay que buscar por símbolo.
 - El [ADR 0039](../decisions/0039-tope-de-dependencias-de-negocio.md) y la decisión D2 de la revisión.
-- El lienzo v77 (`../../../ArquitecturaBaseMutitenantFront/docs/design/lienzo/`), para lo que se ve: la columna Estado de Empresa, los mensajes y el formato del enmascarado.
+- El lienzo v78 (`../../../ArquitecturaBaseMutitenantFront/docs/design/lienzo/`), para lo que se ve: la columna Estado de Empresa, los mensajes y el formato del enmascarado.
 - AGENTS.md, `backend.md`, `frontend.md`, `arbol.md` de los dos repos y las fichas de `docs/rules/`.
 
 **Cuándo empieza:** cuando estén cerradas y commiteadas la Etapa 5 y la tanda de alineación (paquetes 1 y 3 e Inicios), con `git status` limpio en los dos repos.
@@ -173,9 +173,20 @@ Cada servicio de entrada abre la transacción en su método público, y los help
 - [ ] **F6 · Una sola cultura efectiva:** `resolveCulture` y `useEffectiveCulture`, que usan i18n, formatos, datos de referencia y `Accept-Language`. Se borra `useLanguagePreference`. Tests de precedencia.
 - [ ] **F7 · `useEditPage`** (guard, «Cambios sin guardar» y 409) y un `errors.ts` por feature, en Configuración, Página pública y la ficha de Usuario.
   - Arregla **B11**. Test: si salís con cambios sin guardar, te pide confirmar.
+- [ ] **Teléfonos que faltaban** (lienzo v78, front `f2eff7d`, `generadores/faltan_1004.py`):
+  - M-Sesion: 5 estados, como el arranque de la app;
+  - M-Perfil-Suspendido: 3 estados;
+  - M-Error-Org: 2 estados, con la barra de abajo del miembro (Inicio y Más);
+  - M-Avisos: 9 estados, sobre M-Configuracion. Es la forma en el teléfono de F2 y F7:
+    - lo pasajero va en una franja oscura abajo;
+    - lo que sigue va debajo de la barra;
+    - «¿Salir sin guardar?» va en una hoja sin ✕;
+    - «Reintentá en 0:39» va en el botón fijo.
+
+  Capturas a 390 px contra cada tablero.
 - [ ] **Hecho cuando:**
   - `npm run build` y `npm test` completos pasan;
-  - las capturas no cambian, salvo lo que arreglan B3 y B4.
+  - las capturas no cambian, salvo lo que arreglan B3 y B4 y los teléfonos de v78.
 
 ### 6. Front: Roles como referencia de verdad
 
