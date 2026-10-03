@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Time;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Dns;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Phones;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
@@ -41,6 +42,7 @@ public static class DependencyInjection
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<ITimeZoneService, TimeZoneService>();
         services.AddSingleton<IPhoneNumberDisplayFormatter, LibPhoneNumberDisplayFormatter>();
+        services.AddHttpClient<IDnsTxtLookup, CloudflareDnsTxtLookup>();
         services.AddOptions<LoginCodeOptions>()
             .BindConfiguration(LoginCodeOptions.SectionName)
             .ValidateDataAnnotations()

@@ -98,4 +98,11 @@ public sealed class LoginMethod : Entity
         VerifiedAtUtc is not null
         && channelAvailable
         && (ManagedByTenantId is null || managedMembershipActive);
+
+    public void AssignManagedByOrganization(Guid organizationId)
+    {
+        if (organizationId == Guid.Empty)
+            throw new ArgumentException("An organization ID is required.", nameof(organizationId));
+        ManagedByTenantId ??= organizationId;
+    }
 }

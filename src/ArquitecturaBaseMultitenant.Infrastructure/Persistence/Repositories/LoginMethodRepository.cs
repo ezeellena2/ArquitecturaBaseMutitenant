@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -42,6 +43,24 @@ internal sealed class LoginMethodRepository(ApplicationDbContext context) : ILog
     {
         context.RequireTransaction();
         return context.LoginMethods.SingleOrDefaultAsync(method => method.Id == methodId, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<LoginMethod>> ListVerifiedByEmailDomainAsync(OrganizationEmailDomain domain,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(domain);
+        context.RequireTransaction();
+        var pattern = $"%@{domain.Value}";
+        var methodIds = await context.Database.SqlQuery<Guid>($"""
+                SELECT "Id" AS "Value"
+                FROM identity."LoginMethods"
+                WHERE "VerifiedAtUtc" IS NOT NULL
+                  AND (("Type" = 'Email' AND "Value" ILIKE {pattern})
+                    OR ("Type" = 'Google' AND "ContactEmail" ILIKE {pattern}))
+                """).ToArrayAsync(cancellationToken);
+        if (methodIds.Length == 0) return [];
+        return await context.LoginMethods.Where(method => methodIds.Contains(method.Id))
+            .ToArrayAsync(cancellationToken);
     }
 
     public void Add(LoginMethod method)

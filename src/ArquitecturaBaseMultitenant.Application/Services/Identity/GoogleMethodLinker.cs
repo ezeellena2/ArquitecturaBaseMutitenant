@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
+using ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 
@@ -13,7 +14,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 /// </summary>
 internal sealed class GoogleMethodLinker(LoginMethodGuard guard, IExternalLoginLock loginLock,
     IUserLookup lookup, ILoginMethodRepository methods, LoginCodeIssuer codes, IUserRepository users,
-    LoginMethodNotifier notifier, TimeProvider timeProvider)
+    LoginMethodNotifier notifier, TimeProvider timeProvider, LoginMethodDomainAssigner emailDomains)
 {
     public async Task<Result> LinkAsync(Guid userId, ExternalLogin login, CancellationToken ct)
     {
@@ -41,6 +42,7 @@ internal sealed class GoogleMethodLinker(LoginMethodGuard guard, IExternalLoginL
         var all = await methods.ListByUserIdAsync(userId, ct);
         var method = LoginMethod.CreateGoogle(userId, login.ProviderKey, login.Email);
         method.Verify(timeProvider.GetUtcNow().UtcDateTime);
+        await emailDomains.AssignIfVerifiedAsync(method, login.Email, ct);
         if (!all.Any(value => value.IsPrimary))
         {
             method.MakePrimary();

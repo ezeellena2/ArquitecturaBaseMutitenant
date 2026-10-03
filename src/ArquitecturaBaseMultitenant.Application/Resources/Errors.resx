@@ -150,4 +150,11 @@
   <data name="Settings.Tenant.NotFound" xml:space="preserve"><value>No se encontró la configuración de la organización.</value></data>
   <data name="Tenancy.Tenant.NameRequired" xml:space="preserve"><value>Ingresá el nombre de la organización.</value></data>
   <data name="Tenancy.Tenant.NameTooLong" xml:space="preserve"><value>El nombre de la organización es demasiado largo.</value></data>
+  <data name="Settings.TenantDomain.InvalidDomain" xml:space="preserve"><value>Ingresá un dominio de correo válido.</value></data>
+  <data name="Settings.TenantDomain.AlreadyExists" xml:space="preserve"><value>Ese dominio ya está registrado por una organización.</value></data>
+  <data name="Settings.TenantDomain.NotFound" xml:space="preserve"><value>No se encontró el dominio de correo.</value></data>
+  <data name="Settings.TenantDomain.AlreadyVerified" xml:space="preserve"><value>El dominio ya está verificado.</value></data>
+  <data name="Settings.TenantDomain.TxtNotFound" xml:space="preserve"><value>No encontramos el registro TXT de verificación en el DNS.</value></data>
+  <data name="Settings.TenantDomain.DnsUnavailable" xml:space="preserve"><value>No pudimos consultar el DNS ahora. Probá de nuevo en unos minutos.</value></data>
+  <data name="Settings.TenantDomain.AlreadyRemoved" xml:space="preserve"><value>El dominio ya se quitó.</value></data>
 </root>

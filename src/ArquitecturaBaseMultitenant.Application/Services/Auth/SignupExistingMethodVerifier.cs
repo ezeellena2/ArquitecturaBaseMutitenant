@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
+using ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
@@ -9,7 +10,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
 /// <summary>Valida la cuenta existente y confirma su método de correo sin duplicar identidad.</summary>
 internal sealed class SignupExistingMethodVerifier(IUserRepository users,
-    ILoginMethodRepository methods, ILoginMethodReader methodReader, IUserLookup userLookup)
+    ILoginMethodRepository methods, ILoginMethodReader methodReader, IUserLookup userLookup,
+    LoginMethodDomainAssigner emailDomains)
 {
     internal Task<LoginMethodLookup?> FindAsync(LoginCodeDestination destination,
         CancellationToken cancellationToken) =>
@@ -39,6 +41,7 @@ internal sealed class SignupExistingMethodVerifier(IUserRepository users,
             var tracked = await methods.GetByIdAsync(method.MethodId, cancellationToken)
                 ?? throw new InvalidOperationException("The login method disappeared during signup.");
             tracked.Verify(nowUtc);
+            await emailDomains.AssignIfVerifiedAsync(tracked, email, cancellationToken);
             var existingMethods = await methodReader.ListByUserIdAsync(userId, cancellationToken);
             if (!existingMethods.Any(value => value.IsPrimary))
             {

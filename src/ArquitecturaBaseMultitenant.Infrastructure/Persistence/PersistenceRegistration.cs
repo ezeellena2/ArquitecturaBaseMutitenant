@@ -88,6 +88,8 @@ internal static class PersistenceRegistration
         services.AddScoped<IPersonalSpaceLock, PersonalSpaceLock>();
         services.AddScoped<ITenantSettingsRepository, TenantSettingsRepository>();
         services.AddScoped<ITenantSettingsReader, TenantSettingsReader>();
+        services.AddScoped<ITenantDomainRepository, TenantDomainRepository>();
+        services.AddScoped<ITenantDomainReader, TenantDomainReader>();
         services.AddScoped<TenantSettingsLoader>();
         services.AddScoped<IPlatformSettingsRepository, PlatformSettingsRepository>();
         services.AddScoped<IPlatformSettingsReader, PlatformSettingsReader>();

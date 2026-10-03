@@ -19,6 +19,12 @@ internal static class AdvisoryLockKeys
 
     public static string ExternalGoogleEmail(string email) => "google:email:" + email;
 
+    public static string TenantDomain(string domain)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(domain);
+        return "global:tenant-domain:" + domain;
+    }
+
     public static string PersonalSpace(Guid userId)
     {
         if (userId == Guid.Empty)

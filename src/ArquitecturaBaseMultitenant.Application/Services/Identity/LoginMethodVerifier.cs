@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
+using ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
@@ -10,7 +11,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 /// <summary>Verifica el código de un correo nuevo y, si la cuenta no tiene principal, lo promueve antes de avisar el cambio.</summary>
 internal sealed class LoginMethodVerifier(LoginMethodGuard guard, ILoginMethodRepository methods,
     ILoginCodeRepository codeRepository, LoginCodeVerifier codes, LoginMethodNotifier notifier,
-    IUserRepository users, TimeProvider timeProvider)
+    IUserRepository users, TimeProvider timeProvider, LoginMethodDomainAssigner emailDomains)
 {
     public async Task<Result> VerifyAsync(Guid userId, VerifyLoginMethodRequest request, CancellationToken ct)
     {
@@ -38,6 +39,7 @@ internal sealed class LoginMethodVerifier(LoginMethodGuard guard, ILoginMethodRe
             LoginCodePurpose.VerifyDestination, userId, request.Code!, ct);
         if (verified.IsFailure) return verified.Error;
         method.Verify(timeProvider.GetUtcNow().UtcDateTime);
+        await emailDomains.AssignIfVerifiedAsync(method, Email.Create(method.Value).Value, ct);
         var all = await methods.ListByUserIdAsync(userId, ct);
         if (!all.Any(value => value.IsPrimary))
         {

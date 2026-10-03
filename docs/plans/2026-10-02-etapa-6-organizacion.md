@@ -29,7 +29,7 @@
 - [x] Crear la primera empresa con CUIT opcional y zona inicial; validar el CUIT mediante `TaxId`/catálogo y guardarlo normalizado.
 - [x] Implementar el alta por correo y por Google, con aceptación vigente y sin crear acceso Personal. Aplicar modo de alta y máximo de organizaciones propias; devolver el estado de aprobación.
 - [x] Agregar ruta HTTP con antiforgery y cookie de identidad, declarar la ruta anónima existente, textos es/en, actualizar OpenAPI y prueba de integración para operación/replay y ausencia de Personal. El cliente generado y test de contrato back/front quedan pendientes del front.
-- [ ] Extender y ejecutar `test:e2e:real`: comprobar alta por correo y Google donde el proveedor local esté configurado, sesión B2B, `/org`, F5, cambio a Personal y que no exista espacio Personal creado por el alta empresarial. El daemon Docker no está disponible ahora, así que falta correr la prueba PostgreSQL.
+- [ ] Extender y ejecutar `test:e2e:real`: comprobar alta por correo y Google donde el proveedor local esté configurado, sesión B2B, `/org`, F5, cambio a Personal y que no exista espacio Personal creado por el alta empresarial. La base de integración ahora corre con PostgreSQL/Testcontainers; falta el recorrido E2E de cierre.
 - [ ] Verificar el build y los tests dirigidos del alcance; commitear plan, modelo/API y recorrido en cambios coherentes con rutas explícitas.
 
 ### 2. Empresas y roles por empresa
@@ -37,11 +37,11 @@
 - [x] Crear `Company`, configuración EF/migración e índices tenant-owned; la prueba de persistencia quedó bloqueada por falta del daemon Docker y se ejecutará en la puerta.
 - [x] Crear `TaxId` y `ArgentineCuitValidator` según `docs/rules/identificacion-fiscal.md`; agregar `TaxIdTests` y pruebas de propiedades para dígito, normalización, valor inválido y datos históricos nulos. Commits `234fc72`.
 - [x] Implementar servicio y API de listado paginado, conteos por estado, ficha, alta, edición concurrente (`version` y 409) y cambio de estado activo/inactivo; validar zona horaria y normalizar CUIT desde catálogos. Pruebas unitarias dirigidas para listado, conteos, alta, primer Administrador y concurrencia de estado. Commit `7fbc59a`.
-- [ ] Ejecutar las pruebas API con PostgreSQL para tenant isolation, estado/versiones, TaxId único, permisos efectivos solo para empresa activa y conteos/listados con 1 y 50 empresas. Los recorridos de integración ya están escritos; el daemon Docker sigue sin estar disponible.
+- [x] Ejecutar casos focales API con PostgreSQL para estado/versiones, permisos de empresa activa y listados/conteos de empresas y membresías. La suite completa de aislamiento, TaxId y concurrencia queda pendiente de la puerta final.
 - [x] Implementar membresías de empresa y asignación de roles mediante `RoleAssignment.CompanyId`, reutilizando catálogos y `RoleService`; agregar listado, conteos, alta, edición de roles y estado versionado bajo permisos de empresa. La prueba HTTP real cubre permisos antes y después, una y dos personas Administradoras, y el rechazo de quitar a la última.
 - [x] Proteger quitar o deshabilitar al último `CompanyAdmin` activo con lock transaccional; los tests unitarios del guard pasan. La prueba de concurrencia PostgreSQL está en `CompaniesTests` y pendiente de ejecución por Docker apagado.
-- [ ] Conectar el catálogo de empresas y roles a los flujos de Invitaciones, manteniendo los estados individuales de cada invitación.
-- [ ] Actualizar inventario de rutas, OpenAPI, contrato back/front, permisos existentes, textos bilingües y pruebas de aislamiento; build y pruebas focales. El controller y los contratos de miembros ya compilan; falta regenerar/contrastar el cliente front y correr integración con PostgreSQL.
+- [x] Conectar el catálogo de empresas y roles a los flujos de Invitaciones, manteniendo los estados individuales de cada invitación.
+- [x] Actualizar inventario de rutas, OpenAPI y permisos/textos existentes; los controllers y contratos compilan, y los recorridos focales de Empresas/Usuarios pasaron con PostgreSQL. El cliente front y el contrato back/front quedan pendientes.
 
 ### 3. Usuarios e invitaciones de la organización
 
@@ -52,17 +52,17 @@
 - [x] Al terminar o quitar una membresía, la disponibilidad de correos administrados se deriva de `UserTenantAccess`; se registra `OrganizationMembershipEnded` y se encola `ReviewLoginMethods` solo a otros métodos verificados disponibles. Prueba de plantilla bilingüe incluida; falta integrar/verificar con dominio comprobado y no comprobado en `ManagedEmailTests`.
 - [x] Preservar los cambios ya cerrados de invitación: ingresar para aceptar no crea Personal y el estado es por invitación. El E2E canónico existente no se modificó en este bloque.
 - [x] Agregar el controller, declaración explícita de rutas, OpenAPI, lector/servicio y pruebas de política/integración; back API e IntegrationTests compilan sin advertencias; Domain (221) y Application (392) pasan. Contrato y cliente front quedan pendientes del front.
-- [ ] Ejecutar con PostgreSQL las nuevas pruebas HTTP de Usuarios, aislamiento, concurrencia y `ManagedEmailTests`; Docker estaba inaccesible (`npipe://./pipe/docker_engine`).
+- [x] Ejecutar las pruebas HTTP focales de Usuarios, aislamiento básico, concurrencia y `ManagedEmailTests` con PostgreSQL; la suite completa de integración queda pendiente de la puerta final.
 
 ### 4. Configuración y dominio de correo
 
 - [x] Extender settings por organización con nombre, cultura, zona horaria y moneda desde catálogos; el formulario usa `TenantSettings.Version` y actualiza nombre/preferencias en una sola UoW. API, traducciones y prueba PostgreSQL de lectura/guardado/409 implementadas; build focal sin advertencias.
-- [ ] Ejecutar `OrganizationSettingsTests` con PostgreSQL para verificar aislamiento, permisos, invalidación de caché y 409; falta Docker.
-- [ ] Crear `platform.TenantDomains`, dominio global único y normalizado, token TXT de un solo propósito, estados `Pending | Verified`, persistencia, reader y auditoría.
-- [ ] Crear `TenantDomainService`, puerto `IDnsTxtLookup` y adaptador; tests deterministas del puerto para registro, verificación correcta/incorrecta, dominio en uso, retiro y reintentos. Nunca imprimir el token.
-- [ ] Al verificarse un dominio, asignar `ManagedByTenantId` a métodos existentes; al crear/verificar un nuevo LoginMethod, consultar dominio verificado y asignarlo sin abrir otro acceso.
-- [ ] Cubrir que los métodos administrados no permitan iniciar sesión si la membresía dejó de estar activa, que retirar el dominio limpie la administración de métodos según la política escrita y que otra organización no vea datos.
-- [ ] Probar rutas nuevas de integración/aislamiento, actualizar contratos y textos bilingües; build focal.
+- [x] Ejecutar `OrganizationSettingsTests` con PostgreSQL para verificar lectura/guardado de configuración y 409 por versión obsoleta; el aislamiento y la invalidación de caché quedan para la puerta final.
+- [x] Crear `platform.TenantDomains`, dominio global único y normalizado, token TXT de un solo propósito, estados `Pending | Verified | Removed`, persistencia con `xmin`, reader y auditoría.
+- [x] Crear `OrganizationDomainService`, puerto `IDnsTxtLookup` y adaptador DoH; integrar TXT incorrecto y correcto, dominio ocupado, reintentos y retiro. Nunca imprimir el token.
+- [x] Al verificarse un dominio, asignar `ManagedByTenantId` a métodos existentes; al crear/verificar un LoginMethod, consultar dominio verificado y asignarlo sin abrir otro acceso.
+- [x] Probar con PostgreSQL real la asociación de correos existentes y nuevos al verificar, la retención de vínculos al retirar, que nuevas asociaciones se detengan al retirarlo, el TXT inválido y la respuesta/listado.
+- [ ] Probar políticas de sesión de métodos administrados con membresía inactiva, aislamiento entre organizaciones y los casos de DNS no disponible/carrera de dominios. Actualizar contrato OpenAPI/front y textos bilingües; build focal.
 
 ### 5. Página pública y moderación
 
@@ -116,3 +116,6 @@
 - Al retirar una invitación sin cuenta pendiente, se conserva su fila y estado `Revoked`, y se marca `Member` como `Removed` junto con la limpieza de roles/membresías de empresa. Así el reenvío mantiene un solo miembro, y una invitación nueva posterior no deja asignaciones huérfanas. Las invitaciones para una cuenta existente conservan su Member para permitir re-invitarla.
 - La finalización o deshabilitación de una membresía no modifica los métodos de ingreso personales. Los métodos `ManagedByTenantId` de esa organización dejan de ser disponibles por el índice `UserTenantAccesses`; `ReviewLoginMethods` se encola a otros métodos verificados, excluyendo además los métodos originados por una invitación de esa organización y métodos administrados por otra organización cuya membresía no esté activa.
 - La edición de nombre, cultura, zona y moneda usa una versión única de `TenantSettings`; se fuerza su `UPDATE` aunque solo cambie el nombre global de `Tenant`, así `xmin` protege todo el guardado atómico sin una versión manual adicional ni una transacción parcial.
+- Quitar un dominio verificado impide nuevas asociaciones automáticas, pero conserva `ManagedByTenantId` en los métodos existentes para que un correo de un exmiembro no vuelva a habilitar Personal. El usuario aprobó cambiar el diálogo de retiro porque su texto anterior prometía quitar esa protección.
+- Los dominios se verifican consultando TXT mediante Cloudflare DNS-over-HTTPS, encapsulado detrás de `IDnsTxtLookup`; las pruebas reemplazan únicamente el puerto por un lector determinista.
+- La migración nueva usa la convención existente `IVersioned`/`xmin`; verifiqué su SQL con `dotnet ef migrations script` y Npgsql omite las operaciones a la columna de sistema.

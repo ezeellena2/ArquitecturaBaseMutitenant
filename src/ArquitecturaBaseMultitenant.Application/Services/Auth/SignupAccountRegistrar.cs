@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
@@ -8,7 +9,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
 /// <summary>Crea identidades por correo y sus consentimientos; solo el alta Personal crea un espacio Personal.</summary>
 internal sealed class SignupAccountRegistrar(IUserRepository users, ILoginMethodRepository methods,
-    ILegalRepository legal, IPersonalSpaceProvisioner personalSpaces, IRequestInfo requestInfo)
+    ILegalRepository legal, IPersonalSpaceProvisioner personalSpaces, IRequestInfo requestInfo,
+    LoginMethodDomainAssigner emailDomains)
 {
     internal async Task<(LegalDocument Terms, LegalDocument Privacy)> GetCurrentLegalAsync(
         DateTime nowUtc, CancellationToken cancellationToken)
@@ -26,6 +28,7 @@ internal sealed class SignupAccountRegistrar(IUserRepository users, ILoginMethod
         var userId = (await users.CreateAsync(null, draft.Culture, draft.TimeZoneId, cancellationToken)).Id;
         var loginMethod = LoginMethod.CreateEmail(userId, email);
         loginMethod.Verify(nowUtc);
+        await emailDomains.AssignIfVerifiedAsync(loginMethod, email, cancellationToken);
         if (loginMethod.MakePrimary().IsFailure)
             throw new InvalidOperationException("A verified signup method could not become primary.");
         methods.Add(loginMethod);
@@ -41,6 +44,7 @@ internal sealed class SignupAccountRegistrar(IUserRepository users, ILoginMethod
         var userId = (await users.CreateAsync(null, defaults.Culture, defaults.TimeZoneId, cancellationToken)).Id;
         var loginMethod = LoginMethod.CreateEmail(userId, email);
         loginMethod.Verify(nowUtc);
+        await emailDomains.AssignIfVerifiedAsync(loginMethod, email, cancellationToken);
         if (loginMethod.MakePrimary().IsFailure)
             throw new InvalidOperationException("A verified signup method could not become primary.");
         methods.Add(loginMethod);

@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
+using ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
@@ -18,7 +19,8 @@ internal sealed class GoogleAccountResolver(
     GoogleAccountRegistrar registrar,
     LoginMethodNotifier notifier,
     TimeProvider timeProvider,
-    GoogleAccountGuard guard)
+    GoogleAccountGuard guard,
+    LoginMethodDomainAssigner emailDomains)
 {
     internal Task<PersonalSpaceDraft> PrepareAsync(string? culture, string? timeZoneId,
         CancellationToken cancellationToken) => registrar.PrepareAsync(culture, timeZoneId, cancellationToken);
@@ -74,6 +76,7 @@ internal sealed class GoogleAccountResolver(
             var all = await methods.ListByUserIdAsync(userId, cancellationToken);
             var method = LoginMethod.CreateGoogle(userId, login.ProviderKey, email);
             method.Verify(timeProvider.GetUtcNow().UtcDateTime);
+            await emailDomains.AssignIfVerifiedAsync(method, email, cancellationToken);
             if (!all.Any(value => value.IsPrimary))
             {
                 method.MakePrimary();

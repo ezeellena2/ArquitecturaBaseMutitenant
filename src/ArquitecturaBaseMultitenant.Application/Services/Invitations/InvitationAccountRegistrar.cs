@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
@@ -8,7 +9,8 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 namespace ArquitecturaBaseMultitenant.Application.Services.Invitations;
 
 internal sealed class InvitationAccountRegistrar(IUserRepository users, ILoginMethodRepository methods,
-    IUserLookup lookup, ILegalRepository legal, IRequestInfo requestInfo, InvitationIdentityDefaults preferences)
+    IUserLookup lookup, ILegalRepository legal, IRequestInfo requestInfo, InvitationIdentityDefaults preferences,
+    LoginMethodDomainAssigner emailDomains)
 {
     internal async Task<Guid> RegisterAsync(Guid organizationId, Email email, DateTime nowUtc, CancellationToken ct)
     {
@@ -52,6 +54,7 @@ internal sealed class InvitationAccountRegistrar(IUserRepository users, ILoginMe
     {
         var method = LoginMethod.CreateInvitedEmail(userId, email, organizationId);
         method.Verify(nowUtc);
+        await emailDomains.AssignIfVerifiedAsync(method, email, ct);
         if (makePrimary && method.MakePrimary().IsFailure) throw new InvalidOperationException("A verified email could not become primary.");
         methods.Add(method);
         if (makePrimary) await users.SetPrimaryEmailAsync(userId, email, ct);

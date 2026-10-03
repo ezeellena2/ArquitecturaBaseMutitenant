@@ -53,6 +53,7 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<RoleAssignment> RoleAssignments => Set<RoleAssignment>();
     public DbSet<TenantSettings> TenantSettings => Set<TenantSettings>();
+    public DbSet<TenantDomain> TenantDomains => Set<TenantDomain>();
     public DbSet<PlatformSettings> PlatformSettings => Set<PlatformSettings>();
     public DbSet<SecurityEvent> SecurityEvents => Set<SecurityEvent>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();

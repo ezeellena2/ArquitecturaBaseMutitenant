@@ -31,6 +31,8 @@ public static class DependencyInjection
         services.AddScoped<ICompanyMembershipService, CompanyMembershipService>();
         services.AddScoped<IOrganizationUserService, OrganizationUserService>();
         services.AddScoped<IOrganizationSettingsService, OrganizationSettingsService>();
+        services.AddScoped<IOrganizationDomainService, OrganizationDomainService>();
+        services.AddScoped<LoginMethodDomainAssigner>();
         services.AddScoped<ILastCompanyAdminGuard, LastCompanyAdminGuard>();
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddScoped<IPlatformPermissionService, PlatformPermissionService>();

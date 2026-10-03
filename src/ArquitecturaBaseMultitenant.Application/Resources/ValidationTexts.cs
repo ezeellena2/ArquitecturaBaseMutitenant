@@ -15,6 +15,8 @@ public static class ValidationTexts
 
     public static string EmailInvalid => Get(nameof(EmailInvalid));
 
+    public static string DomainInvalid => Get(nameof(DomainInvalid));
+
     public static string PageInvalid => Get(nameof(PageInvalid));
 
     public static string PageSizeInvalid => Get(nameof(PageSizeInvalid));
