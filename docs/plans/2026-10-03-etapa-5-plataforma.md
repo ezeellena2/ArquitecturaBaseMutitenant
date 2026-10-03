@@ -143,6 +143,8 @@ Archivos: Domain/Features, Configuration/Features, puerto IFeatureService; Infra
 
 Archivos: PlatformActionGuard y servicio de registro de acceso; TenantScope; PublicPage y writer de moderación; PlatformPublicSiteController; SecurityEvent/recursos; tests PlatformScope/PublicPageModeration.
 
+Avance del acceso privado (prerrequisito de T07): prueba roja por tipos ausentes → 3/3 unitarias y 2/2 con PostgreSQL. Comprueba permisos persistidos, evento visible desde otra conexión antes de Enter, ausencia de transacción abierta y restauración del alcance ante excepción. Build Api 0 advertencias e inventarios existentes 12/12. Moderación sigue pendiente.
+
 - [ ] Rojo: operador sin Enter no ve datos; motivo/permiso preceden SecurityEvent confirmado y Enter sin transacción; excepciones restauran alcance. Support lectura conforme permiso, mutación 403.
 - [ ] GET solo metadatos de página; Unpublish vuelve Draft con bloqueo/actor/motivo/fecha, AllowPublish retira bloqueo; organización no publica bloqueada. Avisar Dueños sin exponer cuerpo/logo a plataforma si no lo requiere tablero.
 - [ ] Estados/409/aislamiento y regresión PublicPage E6; commit `feat(plataforma): moderar páginas públicas`.
@@ -296,6 +298,6 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 | T03 | Permisos 6/6; roles PostgreSQL 3/3; seed 1/1; migraciones 4/4; inventarios 4/4 | `4ce80b7` | — |
 | T04 | Propuesta conjunta verificada, elección pendiente; canvas intacto | seguimiento de esta tarea | `e670892` |
 | T05 | Dominio 12/12; servicio 4/4; HTTP 3/3; recursos 6/6; accesos/contratos 15/15; migración/build verificados | `6a49970` | — |
-| T06 | Dominio nuevo 3/3 y regresiones 7/7; HTTP/RLS/tokens 5/5; recursos 6/6; inventarios 28/28; build/migración verificados | commit de esta tarea | — |
+| T06 | Dominio nuevo 3/3 y regresiones 7/7; HTTP/RLS/tokens 5/5; recursos 6/6; inventarios 28/28; build/migración verificados | `f785e5b` | — |
 
 No declarar cierre a partir de esta tabla sin completar T25.

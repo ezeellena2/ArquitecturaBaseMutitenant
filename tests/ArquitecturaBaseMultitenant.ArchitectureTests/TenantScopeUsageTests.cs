@@ -20,6 +20,7 @@ public sealed class TenantScopeUsageTests
     private const string InvitationPreviewFlow = "ArquitecturaBaseMultitenant.Application.Services.Invitations.InvitationPreviewFlow";
     private const string InvitationAcceptanceResolver = "ArquitecturaBaseMultitenant.Application.Services.Invitations.InvitationAcceptanceResolver";
     private const string BusinessSignupTransactionRunner = "ArquitecturaBaseMultitenant.Application.Services.Auth.BusinessSignupTransactionRunner";
+    private const string PlatformActionGuard = "ArquitecturaBaseMultitenant.Application.Services.Platform.PlatformActionGuard";
 
     [Fact]
     public void Only_declared_adapters_and_signup_services_enter_a_tenant_scope()
@@ -61,7 +62,7 @@ public sealed class TenantScopeUsageTests
         [.. calls.Where(IsEnterCall)
             .Where(call => call.Owner is not (TenantJobRunner or TenantSettingsLoader
                 or AccountService or ConnectService or ExternalLoginService or AccountDeletionProcessingService
-                or InvitationPreviewFlow or InvitationAcceptanceResolver or BusinessSignupTransactionRunner))
+                or InvitationPreviewFlow or InvitationAcceptanceResolver or BusinessSignupTransactionRunner or PlatformActionGuard))
             .Select(call => $"{call.Owner}.{call.OwnerMethod}")
             .Distinct(StringComparer.Ordinal)];
 

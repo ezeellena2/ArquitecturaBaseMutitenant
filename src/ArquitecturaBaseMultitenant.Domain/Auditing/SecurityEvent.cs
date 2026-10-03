@@ -80,6 +80,15 @@ public sealed class SecurityEvent : Entity
         return ev;
     }
 
+    public static SecurityEvent ForPlatformTenantAccess(Guid operatorId, Guid tenantId, string reason, DateTime occurredAtUtc)
+    {
+        if (tenantId == Guid.Empty) throw new ArgumentException("A target organization is required.", nameof(tenantId));
+        var ev = ForPlatformAction(SecurityEventType.PlatformTenantEntered, AuditActorKind.PlatformOperator,
+            operatorId, reason, occurredAtUtc);
+        ev.TargetTenantId = tenantId;
+        return ev;
+    }
+
     private static SecurityEvent ForPlatformAction(SecurityEventType type, AuditActorKind actorKind,
         Guid actorId, string reason, DateTime occurredAtUtc)
     {

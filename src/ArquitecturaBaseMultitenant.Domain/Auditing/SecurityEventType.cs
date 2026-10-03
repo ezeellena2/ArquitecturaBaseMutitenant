@@ -20,4 +20,5 @@ public enum SecurityEventType
     OrganizationApproved,
     OrganizationCreated,
     OrganizationProvisioningRetried,
+    PlatformTenantEntered,
 }

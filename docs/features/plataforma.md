@@ -31,6 +31,8 @@ La aprobación, creación por invitación y reintento siguen en T07; E5 permanec
 
 ## Verificación
 
+El acceso privado pasa por `PlatformScopeAccessService`: valida acceso Platform, permiso persistido `platform.tenants.manage` y motivo; confirma el SecurityEvent previo en una UoW. `PlatformActionGuard` entra con `ITenantScope.Enter` después, sin transacción abierta, y restaura el alcance al disponer la lease. La operación privada usa luego su única UoW. Una falla posterior conserva el registro de entrada.
+
 - `PlatformRoleTests`: catálogo completo de Owner, alcance de Support, inmutabilidad y asignación global/versionada.
 - `PlatformPermissionServiceTests`: permisos por rol, cuenta inactiva, asignación ausente y cuenta no operadora.
 - `PlatformOperatorPersistenceTests`: versión, transacción, unicidad y actualización real desde operador legado en PostgreSQL aislado, sin Personal.
@@ -39,3 +41,4 @@ La aprobación, creación por invitación y reintento siguen en T07; E5 permanec
 - `PlatformSettingsTests` de integración: permisos reales, validación, lectura actualizada y 409 sin evento adicional en PostgreSQL aislado.
 - `PlatformTenantTests`: registro global inmutable/UTC y eventos con destino y operador.
 - `PlatformTenantAdministrationTests`: paginado/filtros/búsqueda/contacto, 401/403/404, transiciones y 409, revocación Business con Personal operativo, y conteos actualizados sin lectura de tablas privadas.
+- `PlatformScopeTests` de servicio e integración: sin permiso/motivo no registra ni entra; el evento está confirmado antes de consultar filas privadas, Support no entra y una excepción restaura el alcance.

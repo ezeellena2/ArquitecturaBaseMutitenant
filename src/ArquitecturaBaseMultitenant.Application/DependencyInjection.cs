@@ -67,6 +67,8 @@ public static class DependencyInjection
         services.AddScoped<Services.Platform.PlatformTenantStateWriter>();
         services.AddScoped<Services.Platform.PlatformTenantAudit>();
         services.AddScoped<Services.Platform.PlatformTenantNotifier>();
+        services.AddScoped<IPlatformScopeAccessService, Services.Platform.PlatformScopeAccessService>();
+        services.AddScoped<Services.Platform.PlatformActionGuard>();
         services.AddScoped<IOutboxDispatchService, OutboxDispatchService>();
         services.AddScoped<ILoginCodeService, LoginCodeService>();
         services.AddScoped<LoginCodeRequester>();
