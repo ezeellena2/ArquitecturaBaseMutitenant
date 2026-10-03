@@ -28,6 +28,6 @@ internal sealed class PlatformSettingsReader(
         context.PlatformSettings.AsNoTracking()
             .Where(settings => settings.Id == PlatformSettings.SingletonId)
             .Select(settings => new PlatformSettingsRow(settings.ConsumerSignup, settings.BusinessSignup,
-                settings.MaxOwnedOrganizations, settings.AccountDeletionGraceDays))
+                settings.MaxOwnedOrganizations, settings.AccountDeletionGraceDays, settings.Version))
             .SingleOrDefaultAsync(cancellationToken);
 }

@@ -15,9 +15,15 @@ Las colecciones de permisos son inmutables. `platform.PlatformRoleAssignments` t
 
 La migración de E5 convierte los operadores anteriores a Owner sin crear cuentas ni espacios personales. El seed técnico preserva una asignación existente (incluido Support) y solo agrega Owner al primer operador o a un indicador legado sin asignación. Se ejecuta dentro de la transacción/lock global del seed.
 
-## Lo verifica
+## Configuración global
+
+`GET/PUT /api/platform/settings` requiere `platform.settings.manage`. Expone los modos de registro de personas y organizaciones y el límite de organizaciones propias (mínimo uno). La gracia de baja permanece en 30 días. La edición exige motivo y versión xmin; un conflicto devuelve 409 sin guardar ni agregar un evento. El cambio y su SecurityEvent con el operador se confirman juntos; la caché global se invalida después del commit. Support y los accesos Consumer/Business no pueden consultar ni cambiar esta configuración.
+
+## Pruebas
 
 - `PlatformRoleTests`: catálogo completo de Owner, alcance de Support, inmutabilidad y asignación global/versionada.
 - `PlatformPermissionServiceTests`: permisos por rol, cuenta inactiva, asignación ausente y cuenta no operadora.
 - `PlatformOperatorPersistenceTests`: versión, transacción, unicidad y actualización real desde operador legado en PostgreSQL aislado, sin Personal.
 - `ProductionSeedTests`: Owner inicial, repetición del seed y preservación de una sola asignación.
+- `PlatformSettingsTests` de dominio y servicio: validación sin mutación, configuración versionada, evento y caché después del commit.
+- `PlatformSettingsTests` de integración: permisos reales, validación, lectura actualizada y 409 sin evento adicional en PostgreSQL aislado.

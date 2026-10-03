@@ -7,4 +7,5 @@ public sealed record PlatformSettingsRow(
     ConsumerSignupMode ConsumerSignup,
     BusinessSignupMode BusinessSignup,
     int MaxOwnedOrganizations,
-    int AccountDeletionGraceDays);
+    int AccountDeletionGraceDays,
+    uint Version = 0);

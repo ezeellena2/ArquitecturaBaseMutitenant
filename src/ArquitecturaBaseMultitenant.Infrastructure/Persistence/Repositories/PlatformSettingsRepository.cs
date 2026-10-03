@@ -21,4 +21,17 @@ internal sealed class PlatformSettingsRepository(ApplicationDbContext context) :
         context.RequireTransaction();
         context.PlatformSettings.Add(settings);
     }
+
+    public async Task<PlatformSettings?> GetForUpdateAsync(uint expectedVersion, CancellationToken cancellationToken)
+    {
+        var settings = await GetAsync(cancellationToken);
+        if (settings is not null) context.Entry(settings).Property(row => row.Version).OriginalValue = expectedVersion;
+        return settings;
+    }
+
+    public void MarkUpdated(PlatformSettings settings)
+    {
+        context.RequireTransaction();
+        context.Entry(settings).State = EntityState.Modified;
+    }
 }

@@ -61,6 +61,8 @@ public static class DependencyInjection
         services.AddScoped<ILastCompanyAdminGuard, LastCompanyAdminGuard>();
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddScoped<IPlatformPermissionService, PlatformPermissionService>();
+        services.AddScoped<IPlatformSettingsService, Services.Platform.PlatformSettingsService>();
+        services.AddScoped<Services.Platform.PlatformSettingsAudit>();
         services.AddScoped<IOutboxDispatchService, OutboxDispatchService>();
         services.AddScoped<ILoginCodeService, LoginCodeService>();
         services.AddScoped<LoginCodeRequester>();

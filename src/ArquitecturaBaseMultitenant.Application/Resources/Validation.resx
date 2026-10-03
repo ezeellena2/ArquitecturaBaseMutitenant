@@ -38,4 +38,5 @@
   <data name="InvitationEmailRequired" xml:space="preserve"><value>Cargá un correo para usar esta opción.</value></data>
   <data name="InvitationPhoneRequired" xml:space="preserve"><value>Cargá un número de WhatsApp para usar esta opción.</value></data>
   <data name="InvitationWhatsAppUnavailable" xml:space="preserve"><value>WhatsApp no está disponible en este sistema.</value></data>
+  <data name="OwnedOrganizationsMinimum" xml:space="preserve"><value>Permití al menos una organización por persona.</value></data>
 </root>

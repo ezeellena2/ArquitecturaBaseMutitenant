@@ -168,4 +168,5 @@
   <data name="PublicSite.PublicPage.BlockReasonRequired" xml:space="preserve"><value>A moderation block needs a reason.</value></data>
   <data name="PublicSite.PublicPage.NotFound" xml:space="preserve"><value>The public page was not found.</value></data>
   <data name="PublicSite.PublicPage.VersionConflict" xml:space="preserve"><value>The page changed since you opened it. Refresh it before saving.</value></data>
+  <data name="Settings.System.InvalidConfiguration" xml:space="preserve"><value>Choose valid signup modes and allow at least one organization per person.</value></data>
 </root>

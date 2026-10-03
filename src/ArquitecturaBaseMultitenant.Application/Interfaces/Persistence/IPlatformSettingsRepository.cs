@@ -6,6 +6,8 @@ namespace ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 public interface IPlatformSettingsRepository
 {
     Task<PlatformSettings?> GetAsync(CancellationToken cancellationToken);
+    Task<PlatformSettings?> GetForUpdateAsync(uint expectedVersion, CancellationToken cancellationToken);
+    void MarkUpdated(PlatformSettings settings);
 
     void Add(PlatformSettings settings);
 }

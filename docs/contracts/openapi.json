@@ -397,6 +397,165 @@
         }
       }
     },
+    "/api/platform/settings": {
+      "get": {
+        "tags": [
+          "Configuración de Plataforma"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformSettingsResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformSettingsResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformSettingsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Configuración de Plataforma"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePlatformSettingsHttpRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePlatformSettingsHttpRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePlatformSettingsHttpRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/companies/paged": {
       "get": {
         "tags": [
@@ -6661,6 +6820,15 @@
         },
         "description": "Recibe los datos de la primera organización y empresa sin imprimir datos fiscales en logs."
       },
+      "BusinessSignupMode": {
+        "enum": [
+          "Open",
+          "RequiresApproval",
+          "Closed"
+        ],
+        "type": "string",
+        "description": "Indica si el registro de empresas está abierto, requiere aprobación o está cerrado. Permite aplicar la\r\npolítica global del alta de organizaciones."
+      },
       "BusinessSignupResponse": {
         "required": [
           "tenantId",
@@ -7039,6 +7207,14 @@
             "type": "string"
           }
         }
+      },
+      "ConsumerSignupMode": {
+        "enum": [
+          "Open",
+          "Closed"
+        ],
+        "type": "string",
+        "description": "Indica si la plataforma admite nuevas cuentas personales. La regla de registro consulta este valor antes\r\nde crear una cuenta."
       },
       "CountryReferenceHttpResponse": {
         "required": [
@@ -8468,6 +8644,31 @@
           }
         }
       },
+      "PlatformSettingsResponse": {
+        "required": [
+          "consumerSignup",
+          "businessSignup",
+          "maxOwnedOrganizations",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "consumerSignup": {
+            "$ref": "#/components/schemas/ConsumerSignupMode"
+          },
+          "businessSignup": {
+            "$ref": "#/components/schemas/BusinessSignupMode"
+          },
+          "maxOwnedOrganizations": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
       "PreviewInvitationHttpRequest": {
         "type": "object",
         "properties": {
@@ -9191,6 +9392,51 @@
           }
         }
       },
+      "UpdatePlatformSettingsHttpRequest": {
+        "type": "object",
+        "properties": {
+          "consumerSignup": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ConsumerSignupMode"
+              }
+            ]
+          },
+          "businessSignup": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/BusinessSignupMode"
+              }
+            ]
+          },
+          "maxOwnedOrganizations": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "version": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "UpdatePublicPageHttpRequest": {
         "required": [
           "removeLogo"
@@ -9438,6 +9684,9 @@
   "tags": [
     {
       "name": "ReferenceData"
+    },
+    {
+      "name": "Configuración de Plataforma"
     },
     {
       "name": "Empresas"

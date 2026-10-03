@@ -1,0 +1,1 @@
+Validadores de pedidos de Plataforma. Leé [validacion](../../../../docs/rules/validacion.md), [textos-libres](../../../../docs/rules/textos-libres.md) y [plataforma](../../../../docs/features/plataforma.md). Copiá Roles: mensajes es/en desde ValidationTexts, sin lecturas de existencia/unicidad en validadores.

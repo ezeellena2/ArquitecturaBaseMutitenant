@@ -10,6 +10,32 @@ namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Settings;
 public sealed class PlatformSettingsTests
 {
     [Fact]
+    public void Editing_platform_settings_changes_signup_rules_without_changing_the_deletion_grace()
+    {
+        var settings = PlatformSettings.Create(ConsumerSignupMode.Open, BusinessSignupMode.Open, 1);
+
+        Assert.True(settings.Update(ConsumerSignupMode.Closed, BusinessSignupMode.RequiresApproval, 4).IsSuccess);
+        Assert.Equal(SignupErrors.Closed, settings.CanRegisterConsumer().Error);
+        Assert.Equal(BusinessSignupMode.RequiresApproval, settings.BusinessSignup);
+        Assert.Equal(4, settings.MaxOwnedOrganizations);
+        Assert.Equal(30, settings.AccountDeletionGraceDays);
+    }
+
+    [Theory]
+    [InlineData(ConsumerSignupMode.Open, BusinessSignupMode.Open, 0)]
+    [InlineData((ConsumerSignupMode)99, BusinessSignupMode.Open, 2)]
+    [InlineData(ConsumerSignupMode.Open, (BusinessSignupMode)99, 2)]
+    public void Invalid_platform_settings_do_not_change_saved_rules(ConsumerSignupMode consumer, BusinessSignupMode business, int limit)
+    {
+        var settings = PlatformSettings.Create(ConsumerSignupMode.Closed, BusinessSignupMode.Closed, 1);
+
+        Assert.Equal(SettingsErrors.InvalidPlatformConfiguration, settings.Update(consumer, business, limit).Error);
+        Assert.Equal(ConsumerSignupMode.Closed, settings.ConsumerSignup);
+        Assert.Equal(BusinessSignupMode.Closed, settings.BusinessSignup);
+        Assert.Equal(1, settings.MaxOwnedOrganizations);
+    }
+
+    [Fact]
     public void Closed_consumer_signup_blocks_personal_registration()
     {
         var closed = PlatformSettings.Create(ConsumerSignupMode.Closed, BusinessSignupMode.Open, 3);

@@ -5,7 +5,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 namespace ArquitecturaBaseMultitenant.Domain.Settings;
 
 /// <summary>Configuración global única para los modos de registro, el límite de organizaciones y la gracia de baja.</summary>
-public sealed class PlatformSettings : Entity, IAuditable
+public sealed class PlatformSettings : Entity, IAuditable, IVersioned
 {
     public const string SingletonIdValue = "00000000-0000-0000-0000-000000000001";
     public const int DeletionGraceDays = 30;
@@ -21,6 +21,7 @@ public sealed class PlatformSettings : Entity, IAuditable
     public Guid? CreatedBy { get; private set; }
     public DateTime? ModifiedAtUtc { get; private set; }
     public Guid? ModifiedBy { get; private set; }
+    public uint Version { get; private set; }
 
     public static PlatformSettings Create(ConsumerSignupMode consumerSignup, BusinessSignupMode businessSignup,
         int maxOwnedOrganizations)
@@ -44,6 +45,16 @@ public sealed class PlatformSettings : Entity, IAuditable
             MaxOwnedOrganizations = maxOwnedOrganizations,
             AccountDeletionGraceDays = DeletionGraceDays,
         };
+    }
+
+    public Result Update(ConsumerSignupMode consumerSignup, BusinessSignupMode businessSignup, int maxOwnedOrganizations)
+    {
+        if (!Enum.IsDefined(consumerSignup) || !Enum.IsDefined(businessSignup) || maxOwnedOrganizations < 1)
+            return SettingsErrors.InvalidPlatformConfiguration;
+        ConsumerSignup = consumerSignup;
+        BusinessSignup = businessSignup;
+        MaxOwnedOrganizations = maxOwnedOrganizations;
+        return Result.Success();
     }
 
     public Result CanRegisterConsumer() => CanRegisterConsumer(ConsumerSignup);

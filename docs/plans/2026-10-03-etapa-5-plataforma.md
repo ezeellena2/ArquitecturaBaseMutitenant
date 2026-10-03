@@ -110,9 +110,9 @@ Archivos front: `docs/design/lienzo/generadores/plataforma_*.py`, tableros propu
 
 Archivos: PlatformSettings/Configuration/Repository/Reader, modelos/validadores/PlatformSettingsService, controller/contratos; `PlatformSettingsServiceTests`, `PlatformSettingsTests`.
 
-- [ ] Rojo: modos ConsumerSignup/BusinessSignup/límite >=1; stale version 409; Support 403; cambios dejan motivo y SecurityEvent mismo commit.
-- [ ] IVersioned/xmin; GET/PUT con exactamente los tres campos del tablero; usar catálogos y enums vigentes, sin editar la gracia en UI. Recursos es/en y contrato.
-- [ ] Verde focal/integración/build. Commit `feat(plataforma): administrar configuración global`.
+- [x] Rojo por contrato ausente en dominio/servicio; inválidos no mutan; stale version 409; Support 403; cambios dejan motivo y SecurityEvent mismo commit.
+- [x] IVersioned/xmin; GET/PUT con exactamente los tres campos del tablero; enums vigentes, gracia fija. Recursos es/en y OpenAPI generado.
+- [x] Dominio 12/12, servicio 4/4, HTTP PostgreSQL 3/3, recursos 6/6, accesos 2/2 y contratos de entrada 13/13. Build Api 0 advertencias; SQL solo registra xmin (columna nativa de PostgreSQL); sin cambios de modelo pendientes. Commit `feat(plataforma): administrar configuración global`.
 
 ### T06 · Listados globales de organizaciones y estado
 
@@ -283,6 +283,7 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 3. El guard de acceso privado confirma un SecurityEvent antes de Enter mediante un servicio transaccional específico; el writer privado corre después, con una sola UoW propia. No Enter dentro de una transacción, ni helper con UoW, ni transaction anidada.
 4. Crear con invitación prepara roles/settings sin crear identidad: una entrada explícita del TenantProvisioner permite dueño pendiente, InvitationIssuer reserva Member(Invited) con TenantAdmin y la aceptación vigente vincula/crea cuenta sin Personal.
 5. El refinamiento visual pendiente se revisa como grupo concreto; aprobaciones desktop/menu/modal previas se conservan. Inicios de Organización y WhatsApp no se rediseñan en E5.
+6. Configuración exige motivo y versión; su evento se guarda en la misma transacción y la caché se invalida después. La gracia de baja de 30 días no es editable.
 
 ## Registro de resultados
 
@@ -290,7 +291,8 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 |---|---|---|---|
 | T00 | Línea de base limpia, Aspire parado, Docker disponible; revisión Approved | `fff99c9` | — |
 | T01 | Rojo CS0234 → 5/5 verde, build Domain 0 advertencias | `f03c1b1` | — |
-| T02 | E2E real rojo por pantalla E5 ausente; Aspire detenido | seguimiento de esta tarea | `696c2b3` |
-| T03 | Permisos 6/6; roles PostgreSQL 3/3; seed 1/1; migraciones 4/4; inventarios 4/4 | commit de esta tarea | — |
+| T02 | E2E real rojo por pantalla E5 ausente; Aspire detenido | `4ce80b7` (registro) | `696c2b3` |
+| T03 | Permisos 6/6; roles PostgreSQL 3/3; seed 1/1; migraciones 4/4; inventarios 4/4 | `4ce80b7` | — |
+| T05 | Dominio 12/12; servicio 4/4; HTTP 3/3; recursos 6/6; accesos/contratos 15/15; migración/build verificados | commit de esta tarea | — |
 
 No declarar cierre a partir de esta tabla sin completar T25.
