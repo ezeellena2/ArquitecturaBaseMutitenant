@@ -99,6 +99,40 @@ public sealed class AccountDeletionTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task The_sole_owner_of_a_suspended_organization_cannot_request_deletion_either()
+    {
+        using var client = CreateClient();
+        var account = await AccountJourney.RegisterAsync(factory, client, Ct);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var work = services.GetRequiredService<IUnitOfWork>();
+        var business = Tenant.CreateBusiness("Organización suspendida con única Dueña", false);
+        Assert.True(business.Activate().IsSuccess);
+        Assert.True(business.Suspend().IsSuccess);
+        using (services.GetRequiredService<ITenantScope>().Enter(business.Id))
+            await work.ExecuteInTransactionAsync(ct =>
+            {
+                services.GetRequiredService<TenantSpaceProvisioner>().Stage(business,
+                    TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"), [account.UserId]);
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+
+        // ADR 0035 (D5): bloquean todas las organizaciones no cerradas, como en la baja que inicia Plataforma. Al
+        // reactivarla, nadie podría administrarla.
+        Assert.Equal(["Organización suspendida con única Dueña"], await SoleOwnerOrganizationsAsync(client));
+        var secret = await IssueDeletionTicketAsync(services, context, work, account.UserId);
+        using var response = await AccountJourney.PostAsync(client, "/api/me/deletion",
+            new { reason = "Ya no la uso", reauthTicket = secret }, Ct);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        using var problem = await response.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+        Assert.Equal("Legal.AccountDeletion.LastAdmin", problem!.RootElement.GetProperty("code").GetString());
+        Assert.Equal(UserStatus.Active, (await services.GetRequiredService<IUserRepository>()
+            .GetByIdAsync(account.UserId, Ct))!.Status);
+    }
+
+    [Fact]
     public async Task Business_owner_can_request_deletion_when_another_active_owner_exists()
     {
         using var client = CreateClient();

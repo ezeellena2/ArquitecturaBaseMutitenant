@@ -70,7 +70,7 @@ public sealed class UserTenantAccessReaderTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task Tenant_admin_reader_counts_only_active_accounts_memberships_and_organizations()
+    public async Task Tenant_admin_reader_counts_active_owners_in_every_organization_that_is_not_closed()
     {
         await using var scope = factory.Services.CreateAsyncScope();
         var services = scope.ServiceProvider;
@@ -131,8 +131,12 @@ public sealed class UserTenantAccessReaderTests(ApiFactory factory)
         }
 
         var admins = services.GetRequiredService<ITenantAdminReader>();
-        Assert.Equal(1, await admins.CountActiveOwnersAsync(business.Id, Ct));
-        Assert.Equal(new[] { business.Id }, await admins.ListActiveTenantIdsForOwnerAsync(userIds[0], Ct));
+        // Solo cuenta la Dueña con cuenta y membresía activas; la baja pedida, la suspendida, la eliminada y la
+        // membresía inactiva no.
+        Assert.Equal(1, await admins.CountOtherActiveOwnersAsync(business.Id, userIds[1], Ct));
+        Assert.Equal(0, await admins.CountOtherActiveOwnersAsync(business.Id, userIds[0], Ct));
+        Assert.Equal(new[] { business.Id, pendingBusiness.Id }.Order(),
+            await admins.ListOwnedOpenTenantIdsAsync(userIds[0], Ct));
         Assert.Equal(new[] { business.Id, pendingBusiness.Id }.Order(),
             await admins.ListOwnedBusinessTenantIdsAsync(userIds[0], Ct));
 
@@ -145,8 +149,8 @@ public sealed class UserTenantAccessReaderTests(ApiFactory factory)
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
 
-        Assert.Equal(0, await admins.CountActiveOwnersAsync(business.Id, Ct));
-        Assert.Empty(await admins.ListActiveTenantIdsForOwnerAsync(userIds[0], Ct));
+        // Una organización cerrada ya no bloquea; una suspendida, sí (ADR 0035).
+        Assert.Equal(new[] { pendingBusiness.Id }, await admins.ListOwnedOpenTenantIdsAsync(userIds[0], Ct));
     }
 
     private async Task AddMemberAsync(Guid tenantId, Guid userId, DateTime joinedAtUtc)

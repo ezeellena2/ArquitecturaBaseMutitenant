@@ -9,12 +9,6 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
 /// <summary>Impide pedir la baja cuando la cuenta es operadora, ya está pendiente o no está activa.</summary>
 internal static class AccountDeletionPolicy
 {
-    internal static Error? CheckLastTenantAdmin(IEnumerable<int> activeOwnerCounts)
-    {
-        ArgumentNullException.ThrowIfNull(activeOwnerCounts);
-        return activeOwnerCounts.Any(count => count <= 1) ? AccountDeletionErrors.LastAdmin : null;
-    }
-
     internal static Error? CheckRequest(UserAccountRow account)
     {
         if (account.IsPlatformOperator) return AccountDeletionErrors.PlatformOperator;

@@ -93,7 +93,6 @@ public static class DependencyInjection
         services.AddScoped<IPlatformAuditService, Services.Platform.PlatformAuditService>();
         services.AddScoped<IPlatformLegalService, Services.Platform.PlatformLegalService>();
         services.AddScoped<Services.Platform.PlatformOperatorGuard>();
-        services.AddScoped<Services.Platform.PlatformSoleOwnerGuard>();
         services.AddScoped<Services.Platform.PlatformActionGuard>();
         services.AddScoped<Services.Platform.PlatformTenantSlugAllocator>();
         services.AddScoped<Services.Platform.PlatformTenantCreator>();

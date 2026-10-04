@@ -22,7 +22,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 /// métodos enmascarados, sus membresías desde el índice global y los permisos si es operadora.
 /// </summary>
 internal sealed class PlatformAccountService(IPlatformAccountReader reader, ILoginMethodReader methods,
-    LoginMethodAvailability availability, ITenantReader tenants, PlatformSoleOwnerGuard soleOwners,
+    LoginMethodAvailability availability, ITenantReader tenants, ILastTenantAdminGuard soleOwners,
     IPhoneNumberParser phones, IRequestValidator validator, TimeProvider clock,
     ILogger<PlatformAccountService> logger) : IPlatformAccountService
 {
@@ -65,7 +65,7 @@ internal sealed class PlatformAccountService(IPlatformAccountReader reader, ILog
                 ? new PlatformAccountDeletionResponse(requested, scheduled, row.DeletionRequestedByPlatform) : null;
             return new PlatformAccountDetailResponse(account.Id, DisplayName(account), Kind(account), account.State,
                 row.CreatedAtUtc, account.LastSignInAtUtc, account.LastSignInMethod, account.HasPersonalSpace, deletion,
-                loginMethods, row.Organizations, deleted ? [] : await soleOwners.ListAsync(accountId, ct),
+                loginMethods, row.Organizations, deleted ? [] : await soleOwners.ListSoleOwnedOrganizationsAsync(accountId, ct),
                 row.OperatorPermissions, row.OperatorVersion, account.Version);
         });
 

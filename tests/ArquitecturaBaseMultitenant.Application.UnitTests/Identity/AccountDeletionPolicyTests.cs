@@ -81,13 +81,4 @@ public sealed class AccountDeletionPolicyTests
             status, platformOperator, null, null);
         Assert.Equal(code, AccountDeletionPolicy.CheckRequest(row)!.Code);
     }
-
-    [Fact]
-    public void Last_active_owner_policy_blocks_when_any_open_organization_would_be_left_without_an_owner()
-    {
-        Assert.Equal("Legal.AccountDeletion.LastAdmin",
-            AccountDeletionPolicy.CheckLastTenantAdmin([2, 1])!.Code);
-        Assert.Null(AccountDeletionPolicy.CheckLastTenantAdmin([2, 3]));
-        Assert.Null(AccountDeletionPolicy.CheckLastTenantAdmin([]));
-    }
 }

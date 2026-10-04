@@ -18,11 +18,12 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 /// <summary>
 /// Baja iniciada por Plataforma (ADR 0035): sin reautenticar a la persona y con la misma gracia. Una cuenta
 /// activa pasa a PendingDeletion y puede cancelarla ingresando; una suspendida sigue suspendida con la fecha.
-/// Bloquean el único Dueño de una organización no cerrada y el último operador que administra operadores.
+/// Bloquean el único Dueño de una organización no cerrada (lo controla el participante de membresías, con la misma
+/// regla que la baja que pide la persona) y el último operador que administra operadores.
 /// Plataforma no cancela ni acorta la gracia.
 /// </summary>
 internal sealed class PlatformAccountDeletionService(IUserRepository users, ILoginMethodRepository accounts,
-    PlatformOperatorGuard operators, PlatformSoleOwnerGuard owners, AccountDeletionScheduler scheduler,
+    PlatformOperatorGuard operators, AccountDeletionScheduler scheduler,
     PlatformAudit audit, IAccessStatusCache statuses, ICurrentUser currentUser, IUnitOfWork unitOfWork,
     IRequestValidator validator, TimeProvider clock, ILogger<PlatformAccountDeletionService> logger)
     : IPlatformAccountDeletionService
@@ -51,7 +52,6 @@ internal sealed class PlatformAccountDeletionService(IUserRepository users, ILog
         if (account.DeletionScheduledForUtc is not null || account.Status == UserStatus.PendingDeletion)
             return AccountDeletionErrors.AlreadyPending;
         if (account.Status is not (UserStatus.Active or UserStatus.Suspended)) return UserErrors.InvalidTransition;
-        if (await owners.CheckAsync(accountId, ct) is { IsFailure: true } owned) return owned;
         var nowUtc = clock.GetUtcNow().UtcDateTime;
         if (await scheduler.CheckBlocksAsync(accountId, nowUtc, ct) is { } blocked) return blocked;
 

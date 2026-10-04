@@ -1,24 +1,38 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
 
-/// <summary>Impide dejar sin Dueño activo una organización abierta y serializa el conteo con cambios de asignación.</summary>
-internal sealed class LastTenantAdminGuard(ITenantAdminReader admins, ITenantAdminLock adminLocks) : ILastTenantAdminGuard
+/// <summary>
+/// La regla de la única Dueña (ADR 0035): bloquea cada organización no cerrada, incluidas las suspendidas, donde la
+/// cuenta es Dueña y no queda otra Dueña activa. La usan la baja que pide la persona, la que inicia Plataforma, quitar
+/// a una Dueña y las pantallas que avisan antes (Mi cuenta y la ficha de Cuentas). El conteo se serializa con los
+/// cambios de asignación mediante el lock compartido.
+/// </summary>
+internal sealed class LastTenantAdminGuard(ITenantAdminReader admins, ITenantAdminLock adminLocks,
+    ITenantReader tenants) : ILastTenantAdminGuard
 {
     public async Task<Result> CheckCanLeaveAsync(Guid userId, CancellationToken ct)
     {
-        var tenantIds = await admins.ListActiveTenantIdsForOwnerAsync(userId, ct);
+        var tenantIds = await admins.ListOwnedOpenTenantIdsAsync(userId, ct);
         foreach (var tenantId in tenantIds)
             await adminLocks.LockAssignmentsAsync(tenantId, ct);
 
-        var ownerCounts = new List<int>(tenantIds.Count);
         foreach (var tenantId in tenantIds)
-            ownerCounts.Add(await admins.CountActiveOwnersAsync(tenantId, ct));
+            if (await admins.CountOtherActiveOwnersAsync(tenantId, userId, ct) == 0)
+                return AccountDeletionErrors.LastAdmin;
+        return Result.Success();
+    }
 
-        return AccountDeletionPolicy.CheckLastTenantAdmin(ownerCounts) is { } blocked
-            ? blocked
-            : Result.Success();
+    public async Task<IReadOnlyList<string>> ListSoleOwnedOrganizationsAsync(Guid userId, CancellationToken ct)
+    {
+        var names = new List<string>();
+        foreach (var tenantId in await admins.ListOwnedOpenTenantIdsAsync(userId, ct))
+            if (await admins.CountOtherActiveOwnersAsync(tenantId, userId, ct) == 0
+                && await tenants.FindByIdAsync(tenantId, ct) is { } tenant)
+                names.Add(tenant.Name);
+        return [.. names.Order(StringComparer.CurrentCulture)];
     }
 }
