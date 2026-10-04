@@ -135,7 +135,6 @@
   <data name="Identity.Reauth.Invalid" xml:space="preserve"><value>The confirmation is invalid. Request a new code.</value></data>
   <data name="Identity.Reauth.Expired" xml:space="preserve"><value>The confirmation has expired. Request a new code.</value></data>
   <data name="Identity.Reauth.OtherMethodRequired" xml:space="preserve"><value>Confirm using another verified login method.</value></data>
-  <data name="Identity.LoginMethod.AlreadyUsed" xml:space="preserve"><value>This email is already associated with an account.</value></data>
   <data name="Identity.LoginMethod.NotFound" xml:space="preserve"><value>We could not find this sign-in method.</value></data>
   <data name="Identity.LoginMethod.AlreadyVerified" xml:space="preserve"><value>This sign-in method is already verified.</value></data>
   <data name="Identity.LoginMethod.LastMethod" xml:space="preserve"><value>You cannot remove your only sign-in method. Add and verify another one first.</value></data>

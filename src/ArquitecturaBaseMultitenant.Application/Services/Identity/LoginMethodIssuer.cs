@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
+using ArquitecturaBaseMultitenant.Application.Models.Notifications;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -9,11 +10,14 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
-/// <summary>Agrega un correo de ingreso no usado o reenvía su código de verificación; trabaja dentro de la transacción abierta por el servicio.</summary>
+/// <summary>
+/// Agrega un correo de ingreso o reenvía su código de verificación; trabaja dentro de la transacción abierta por el
+/// servicio. Un correo que ya es de una cuenta responde igual que uno libre (ADR 0041).
+/// </summary>
 internal sealed class LoginMethodIssuer(LoginMethodGuard guard, ILoginMethodRepository methods,
     IUserLookup lookup, LoginCodeIssuer codes,
     IEnumerable<ILoginCodeChannel> channels, UserCultures cultures, ReauthTicketConsumer tickets,
-    TimeProvider timeProvider)
+    AccountNoticeIssuer notices, TimeProvider timeProvider)
 {
     public async Task<Result<LoginMethodCodeResponse>> AddAsync(Guid userId, AddLoginEmailRequest request, CancellationToken ct)
     {
@@ -24,14 +28,21 @@ internal sealed class LoginMethodIssuer(LoginMethodGuard guard, ILoginMethodRepo
         var email = request.Email!;
         var destination = LoginCodeDestination.ForEmail(email);
         await codes.LockDestinationAsync(destination, ct);
-        var existing = await lookup.FindMethodAsync(LoginMethodType.Email, email.Value, ct);
-        if (existing is not null)
+        // Si ya es de una cuenta (un correo o el contacto de Google, verificados), la respuesta es la de uno libre:
+        // el código se emite para los límites y la espera, pero no se manda ni sirve, y a su dueño le llega el aviso.
+        var owners = await lookup.FindVerifiedUsersByEmailAsync(email, ct);
+        if (owners.Count > 0)
         {
-            if (existing.VerifiedAtUtc is not null || existing.UserId == userId)
-                return LoginMethodErrors.AlreadyUsed;
-            var pending = await methods.GetByIdAsync(existing.MethodId, ct);
-            if (pending is not null && pending.VerifiedAtUtc is null) methods.Remove(pending);
+            var hidden = await codes.IssueAccountCodeAsync(destination, LoginCodePurpose.VerifyDestination, userId, ct);
+            if (hidden.IsFailure) return hidden.Error;
+            await notices.EnqueueToOwnerAsync(owners[0], email.Value, new AccountNotice.LoginMethodInUse(), ct);
+            return new LoginMethodCodeResponse(Guid.CreateVersion7(), hidden.Value.ResendCooldownSeconds);
         }
+
+        // Un correo agregado y sin verificar, de esta cuenta o de otra, se reemplaza: es pedir otro código.
+        if (await lookup.FindMethodAsync(LoginMethodType.Email, email.Value, ct) is { } existing
+            && await methods.GetByIdAsync(existing.MethodId, ct) is { VerifiedAtUtc: null } pending)
+            methods.Remove(pending);
         var method = LoginMethod.CreateEmail(userId, email);
         var sent = await SendAsync(userId, method, account.Value.Culture, ct);
         if (sent.IsSuccess) methods.Add(method);

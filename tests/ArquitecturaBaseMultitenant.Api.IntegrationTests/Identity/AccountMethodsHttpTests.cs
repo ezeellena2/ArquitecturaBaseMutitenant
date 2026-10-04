@@ -5,10 +5,12 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Identity;
@@ -87,6 +89,83 @@ public sealed class AccountMethodsHttpTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Adding_an_email_of_another_account_answers_like_a_free_one_and_only_its_owner_hears()
+    {
+        using var ownerClient = factory.CreateClient(new WebApplicationFactoryClientOptions
+            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var account = await AccountJourney.RegisterAsync(factory, client, Ct);
+        await AgeCodesAsync(owner.Email.Value);
+        var free = "free-" + Guid.NewGuid().ToString("N") + "@example.test";
+        var before = await OutboxIdsAsync();
+
+        using var freeAdded = await AddEmailAsync(client, account, free);
+        using var takenAdded = await AddEmailAsync(client, account, owner.Email.Value);
+
+        // ADR 0041: la misma respuesta y la misma espera para reenviar.
+        Assert.Equal(HttpStatusCode.Accepted, freeAdded.StatusCode);
+        Assert.Equal(freeAdded.StatusCode, takenAdded.StatusCode);
+        using var freeBody = await freeAdded.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+        using var takenBody = await takenAdded.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+        Assert.Equal(freeBody!.RootElement.EnumerateObject().Select(property => property.Name),
+            takenBody!.RootElement.EnumerateObject().Select(property => property.Name));
+        Assert.Equal(freeBody.RootElement.GetProperty("resendAfterSeconds").GetInt32(),
+            takenBody.RootElement.GetProperty("resendAfterSeconds").GetInt32());
+        using var freeAgain = await AddEmailAsync(client, account, free);
+        using var takenAgain = await AddEmailAsync(client, account, owner.Email.Value);
+        Assert.Equal(HttpStatusCode.TooManyRequests, takenAgain.StatusCode);
+        Assert.Equal(freeAgain.StatusCode, takenAgain.StatusCode);
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        // Al dueño no le llega ningún código, solo el aviso; el correo ocupado no se suma a la otra cuenta.
+        var notice = Assert.Single(await EmailsToAsync(services, owner.Email.Value, before));
+        Assert.Equal("Ya tenés una cuenta con este correo", notice.Subject);
+        Assert.Contains("Alguien quiso agregar este correo para entrar a otra cuenta de", notice.TextBody);
+        Assert.Contains("Si fuiste vos, entrá con este correo: ya tenés una cuenta.", notice.TextBody);
+        Assert.Contains("Si no fuiste vos, ignorá este mensaje.", notice.TextBody);
+        Assert.DoesNotMatch(new System.Text.RegularExpressions.Regex(@"(?<!\d)\d{6}(?!\d)"), notice.TextBody);
+        Assert.False(await db.LoginCodes.AnyAsync(code => code.Destination == owner.Email.Value
+            && code.Purpose == LoginCodePurpose.VerifyDestination && code.SentAtUtc != null, Ct));
+        Assert.False(await db.LoginMethods.AnyAsync(method => method.UserId == account.UserId
+            && method.Value == owner.Email.Value, Ct));
+        Assert.Single(await EmailsToAsync(services, free, before));
+    }
+
+    /// <summary>Agrega un correo en Mi cuenta con un comprobante de reautenticación nuevo, como la pantalla.</summary>
+    private async Task<HttpResponseMessage> AddEmailAsync(HttpClient client, AccountJourney account, string email)
+    {
+        string ticket;
+        await using (var scope = factory.Services.CreateAsyncScope())
+            ticket = await AccountJourney.IssueReauthTicketAsync(scope.ServiceProvider, account.UserId,
+                ReauthAction.AddEmail, Ct);
+        return await AccountJourney.PostAsync(client, "/api/me/login-methods", new { email, reauthTicket = ticket }, Ct);
+    }
+
+    private async Task AgeCodesAsync(string destination) =>
+        await RecoveryJourney.AgeCodesAsync(factory, destination, Ct);
+
+    private async Task<Guid[]> OutboxIdsAsync()
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().OutboxMessages.AsNoTracking()
+            .Select(message => message.Id).ToArrayAsync(Ct);
+    }
+
+    private static async Task<EmailMessage[]> EmailsToAsync(IServiceProvider services, string to, Guid[] before)
+    {
+        var protector = services.GetRequiredService<IPayloadProtector>();
+        var payloads = await services.GetRequiredService<ApplicationDbContext>().OutboxMessages.AsNoTracking()
+            .Where(message => message.Channel == "email" && !before.Contains(message.Id))
+            .Select(message => message.EncryptedPayload).ToArrayAsync(Ct);
+        return [.. payloads.Select(payload => JsonSerializer.Deserialize<EmailMessage>(protector.Unprotect(payload))!)
+            .Where(message => string.Equals(message.To, to, StringComparison.OrdinalIgnoreCase))];
+    }
+
+    [Fact]
     public async Task Methods_require_authentication_and_foreign_method_returns_404()
     {
         using var anonymous = factory.CreateClient();
@@ -140,10 +219,11 @@ public sealed class AccountMethodsHttpTests(ApiFactory factory)
             Assert.Equal(methodId, returnedId);
         }
         var freshTicket = await AccountJourney.IssueReauthTicketAsync(scope.ServiceProvider, account.UserId, ReauthAction.AddEmail, Ct);
+        // Volver a agregar el mismo correo pendiente es pedir otro código: respeta la espera para reenviar.
         using var duplicate = await AccountJourney.PostAsync(client, "/api/me/login-methods", new { email, reauthTicket = freshTicket }, Ct);
-        Assert.Equal(HttpStatusCode.BadRequest, duplicate.StatusCode);
+        Assert.Equal(HttpStatusCode.TooManyRequests, duplicate.StatusCode);
         using var duplicateProblem = await duplicate.Content.ReadFromJsonAsync<JsonDocument>(Ct);
-        Assert.Contains("correo", duplicateProblem!.RootElement.GetProperty("errors").GetProperty("email")[0].GetString());
+        Assert.Equal(LoginCodeErrors.ResendTooSoonCode, duplicateProblem!.RootElement.GetProperty("code").GetString());
         var code = await PickupCodeReader.ReadAsync(factory.Services, email, Ct);
         using var verified = await AccountJourney.PostAsync(client,
             "/api/me/login-methods/" + methodId.ToString("D") + "/verify", new { code }, Ct);

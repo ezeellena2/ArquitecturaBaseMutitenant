@@ -43,6 +43,12 @@ public abstract record AccountNotice
     /// </summary>
     public sealed record RecoveryMethodInUse : AccountNotice;
 
+    /// <summary>
+    /// Al dueño de un correo que alguien quiso agregar en Mi cuenta, en lugar del código (ADR 0041, lienzo v83,
+    /// «Método de ingreso: ya es de una cuenta»).
+    /// </summary>
+    public sealed record LoginMethodInUse : AccountNotice;
+
     /// <summary>Al correo del operador invitado, con el enlace para entrar a Plataforma.</summary>
     public sealed record OperatorInvited(string ActionUrl) : AccountNotice;
 

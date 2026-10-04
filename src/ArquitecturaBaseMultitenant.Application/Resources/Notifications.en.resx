@@ -82,6 +82,11 @@
   <data name="RecoveryMethodInUse.Body" xml:space="preserve"><value>Someone asked to recover a {0} account and gave us this email address to contact them. This email address already belongs to an account, so we didn't send any code.</value></data>
   <data name="RecoveryMethodInUse.After" xml:space="preserve"><value>If it was you, sign in with this email address: there is nothing to recover.</value></data>
   <data name="RecoveryMethodInUse.Note" xml:space="preserve"><value>If it wasn't you, ignore this message.</value></data>
+  <data name="LoginMethodInUse.Subject" xml:space="preserve"><value>You already have an account with this email address</value></data>
+  <data name="LoginMethodInUse.Title" xml:space="preserve"><value>You already have an account with this email address</value></data>
+  <data name="LoginMethodInUse.Body" xml:space="preserve"><value>Someone wanted to add this email address to sign in to another {0} account. This email address already belongs to an account, so we didn't add it and didn't send any code.</value></data>
+  <data name="LoginMethodInUse.After" xml:space="preserve"><value>If it was you, sign in with this email address: you already have an account.</value></data>
+  <data name="LoginMethodInUse.Note" xml:space="preserve"><value>If it wasn't you, ignore this message.</value></data>
   <data name="OperatorInvited.Subject" xml:space="preserve"><value>You were invited as an operator</value></data>
   <data name="OperatorInvited.Title" xml:space="preserve"><value>You were invited as an operator</value></data>
   <data name="OperatorInvited.Body" xml:space="preserve"><value>You were invited to manage {0} as a platform operator. Sign in with this email address: we will send you a code to enter.</value></data>
