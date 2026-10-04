@@ -1,4 +1,3 @@
-using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -9,41 +8,27 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
 
-/// <summary>Registra un dominio único y crea el token de verificación TXT.</summary>
+/// <summary>Registra un dominio único y crea el token de verificación TXT, dentro de la transacción del servicio.</summary>
 internal sealed class OrganizationDomainRegistrar(ITenantDomainRepository domains,
-    ISecureTokenGenerator tokens, ITenantContext tenantContext, IAuditLog auditLog,
-    IUnitOfWork unitOfWork, TimeProvider timeProvider)
+    ISecureTokenGenerator tokens, ITenantContext tenantContext, IAuditLog auditLog, TimeProvider timeProvider)
 {
-    private const string DomainUniqueConstraint = "IX_TenantDomains_Domain";
-
     internal async Task<Result<OrganizationDomainResponse>> RegisterAsync(OrganizationEmailDomain domain,
-        CancellationToken cancellationToken)
+        CancellationToken ct)
     {
-        var organizationId = tenantContext.RequiredTenantId;
-        try
-        {
-            return await unitOfWork.ExecuteInTransactionAsync<Result<OrganizationDomainResponse>>(async ct =>
-            {
-                await domains.LockDomainAsync(domain, ct);
-                if (await domains.FindActiveByDomainAsync(domain, ct) is not null)
-                    return TenantDomainErrors.AlreadyExists;
-                var created = TenantDomain.Create(organizationId, domain, tokens.Generate(),
-                    timeProvider.GetUtcNow().UtcDateTime);
-                if (created.IsFailure) return created.Error;
-                domains.Add(created.Value);
-                auditLog.Record(AuditAction.Created, "TenantDomain", created.Value.Id,
-                    new Dictionary<string, object?>
-                    {
-                        ["domain"] = created.Value.Domain,
-                        ["status"] = created.Value.Status.ToString(),
-                    });
-                return ToResponse(created.Value);
-            }, CommitPolicy.OnSuccess, cancellationToken);
-        }
-        catch (UniqueConstraintViolationException exception) when (exception.ConstraintName == DomainUniqueConstraint)
-        {
+        await domains.LockDomainAsync(domain, ct);
+        if (await domains.FindActiveByDomainAsync(domain, ct) is not null)
             return TenantDomainErrors.AlreadyExists;
-        }
+        var created = TenantDomain.Create(tenantContext.RequiredTenantId, domain, tokens.Generate(),
+            timeProvider.GetUtcNow().UtcDateTime);
+        if (created.IsFailure) return created.Error;
+        domains.Add(created.Value);
+        auditLog.Record(AuditAction.Created, "TenantDomain", created.Value.Id,
+            new Dictionary<string, object?>
+            {
+                ["domain"] = created.Value.Domain,
+                ["status"] = created.Value.Status.ToString(),
+            });
+        return ToResponse(created.Value);
     }
 
     private static OrganizationDomainResponse ToResponse(TenantDomain domain) =>

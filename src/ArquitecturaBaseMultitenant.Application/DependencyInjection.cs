@@ -54,7 +54,6 @@ public static class DependencyInjection
         services.AddScoped<OrganizationUserStatusEditor>();
         services.AddScoped<OrganizationUserRemover>();
         services.AddScoped<IOrganizationSettingsService, OrganizationSettingsService>();
-        services.AddScoped<OrganizationSettingsUpdater>();
         services.AddScoped<IOrganizationDomainService, OrganizationDomainService>();
         services.AddScoped<OrganizationDomainRegistrar>();
         services.AddScoped<OrganizationDomainVerifier>();

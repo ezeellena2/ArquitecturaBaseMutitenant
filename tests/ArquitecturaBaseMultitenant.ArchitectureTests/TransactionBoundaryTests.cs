@@ -26,9 +26,6 @@ public sealed class TransactionBoundaryTests
         BusinessOrganizationCreator,
         "ArquitecturaBaseMultitenant.Application.Services.Auth.BusinessSignupCodeFlow",
         "ArquitecturaBaseMultitenant.Application.Services.Auth.BusinessSignupTransactionRunner",
-        "ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings.OrganizationDomainRegistrar",
-        "ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings.OrganizationSettingsUpdater",
-        "ArquitecturaBaseMultitenant.Application.Services.PublicSite.PublicPageEditor",
     };
     private const string IdempotencyStore = "ArquitecturaBaseMultitenant.Infrastructure.Idempotency.IdempotencyStore";
     private const string CacheExtensions = "ArquitecturaBaseMultitenant.Infrastructure.Caching.HybridCacheExtensions";

@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -15,6 +16,8 @@ internal sealed class OrganizationDomainService(ITenantDomainReader reader, IReq
     OrganizationDomainRemover remover, IUnitOfWork unitOfWork, TimeProvider timeProvider,
     ILogger<OrganizationDomainService> logger) : IOrganizationDomainService
 {
+    private const string DomainUniqueConstraint = "IX_TenantDomains_Domain";
+
     public Task<Result<IReadOnlyList<OrganizationDomainResponse>>> ListAsync(CancellationToken cancellationToken) =>
         OperationLog.RunAsync<IReadOnlyList<OrganizationDomainResponse>>(logger, timeProvider,
             "ListOrganizationDomains", async () =>
@@ -33,7 +36,16 @@ internal sealed class OrganizationDomainService(ITenantDomainReader reader, IReq
                 if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
                 var domain = OrganizationEmailDomain.Create(request.Domain);
                 if (domain.IsFailure) return domain.Error;
-                return await registrar.RegisterAsync(domain.Value, cancellationToken);
+                try
+                {
+                    return await unitOfWork.ExecuteInTransactionAsync(
+                        ct => registrar.RegisterAsync(domain.Value, ct), CommitPolicy.OnSuccess, cancellationToken);
+                }
+                catch (UniqueConstraintViolationException exception)
+                    when (exception.ConstraintName == DomainUniqueConstraint)
+                {
+                    return TenantDomainErrors.AlreadyExists;
+                }
             });
     }
 
