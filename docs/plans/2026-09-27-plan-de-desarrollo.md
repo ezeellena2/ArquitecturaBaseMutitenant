@@ -400,7 +400,7 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
    - tests de aislamiento entre personas, y entre el acceso B2C y el B2B de la misma persona.
 3. `TestFeatures` con controllers `[Access(Consumer)]` y `[PublicSite]` que prueban esa receta.
 
-**Front:** el sitio público, copiando Landing, Directorio y Pagina-Publica con sus tableros de teléfono. Las páginas públicas se piensan primero para el teléfono (P10) y, sin sesión, se ven como **web móvil con ☰**, no como app:
+**Front:** el sitio público, copiando Landing, Directorio y Pagina-Publica con sus tableros de teléfono. Las páginas públicas se piensan primero para el teléfono (P10). Sin sesión, la portada y el directorio se ven como **web móvil con ☰**, no como app (R14 de Criterio-Marco). La página pública de una organización, en su subdominio, es la misma tarjeta, sin ☰ (P97 de Decisiones por pantalla, lienzo v93):
 - el árbol de rutas por host en `routes.tsx` (con un subdominio arma `storefront`) y `usePublicSite`;
 - `areas/storefront` con la página pública del subdominio (publicada, sin sesión o con sesión, y «No disponible») y «Ingresá para continuar», que ingresa como persona y vuelve a la misma página;
 - en `areas/public/site`: la sección «Empresas en ArquitecturaBase» de la portada (buscador, tres empresas y «Ver todas las empresas»; «Empresas», arriba, baja a esa sección) y el directorio completo en `/empresas` (tarjetas con buscador y paginado; cada una lleva a la página pública en su subdominio);
