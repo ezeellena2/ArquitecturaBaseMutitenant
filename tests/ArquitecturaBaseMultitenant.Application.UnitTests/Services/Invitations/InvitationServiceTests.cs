@@ -148,8 +148,8 @@ public sealed class InvitationServiceTests
             Ports = new Ports(Fixture.TimeProvider.GetUtcNow().UtcDateTime);
             var availability = new LoginMethodAvailability([], Ports, Ports);
             var previews = new InvitationPreviewBuilder(Ports, Ports, Ports, availability, Ports, Fixture.TimeProvider, Ports);
-            Service = new InvitationService(new InvitationPreviewFlow(Ports, Ports, previews, Ports, Fixture.TimeProvider),
-                null!, null!, Fixture.Validator, new FakeUnitOfWork(), null!, Fixture.TimeProvider, Fixture.Logger);
+            Service = new InvitationService(new InvitationPreviewFlow(Ports, previews, Ports, Fixture.TimeProvider),
+                null!, null!, Ports, Fixture.Validator, new FakeUnitOfWork(), null!, Fixture.TimeProvider, Fixture.Logger);
         }
         public void Dispose() => Fixture.Dispose();
     }

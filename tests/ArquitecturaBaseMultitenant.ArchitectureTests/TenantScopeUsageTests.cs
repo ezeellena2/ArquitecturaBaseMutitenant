@@ -17,20 +17,17 @@ public sealed class TenantScopeUsageTests
     private const string ConnectService = "ArquitecturaBaseMultitenant.Application.Services.Auth.ConnectService";
     private const string ExternalLoginService = "ArquitecturaBaseMultitenant.Application.Services.Auth.ExternalLoginService";
     private const string AccountDeletionProcessingService = "ArquitecturaBaseMultitenant.Application.Services.Legal.AccountDeletionProcessingService";
-    private const string InvitationPreviewFlow = "ArquitecturaBaseMultitenant.Application.Services.Invitations.InvitationPreviewFlow";
-    private const string InvitationAcceptanceResolver = "ArquitecturaBaseMultitenant.Application.Services.Invitations.InvitationAcceptanceResolver";
+    private const string InvitationService = "ArquitecturaBaseMultitenant.Application.Services.Invitations.InvitationService";
     private const string BusinessSignupService = "ArquitecturaBaseMultitenant.Application.Services.Auth.BusinessSignupService";
     private const string PlatformActionGuard = "ArquitecturaBaseMultitenant.Application.Services.Platform.PlatformActionGuard";
 
     // Adaptadores de Infrastructure, servicios de entrada y PlatformActionGuard, que entra después de registrar el
-    // SecurityEvent (multitenancy.md). InvitationPreviewFlow e InvitationAcceptanceResolver son helpers que entran
-    // para leer la invitación antes de la transacción. Cada clase declarada tiene que seguir entrando: la que ya no
-    // lo necesita sale de la lista.
+    // SecurityEvent (multitenancy.md). Ningún otro helper entra: InvitationService entra antes de que sus helpers
+    // lean la invitación. Cada clase declarada tiene que seguir entrando: la que ya no lo necesita sale de la lista.
     private static readonly HashSet<string> Declared = new(StringComparer.Ordinal)
     {
         TenantJobRunner, TenantSettingsLoader, AccountService, ConnectService, ExternalLoginService,
-        AccountDeletionProcessingService, BusinessSignupService, PlatformActionGuard, InvitationPreviewFlow,
-        InvitationAcceptanceResolver,
+        AccountDeletionProcessingService, BusinessSignupService, InvitationService, PlatformActionGuard,
     };
 
     [Fact]
