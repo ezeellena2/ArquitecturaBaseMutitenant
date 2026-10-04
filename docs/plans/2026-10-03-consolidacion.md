@@ -262,6 +262,7 @@ Cada servicio de entrada abre la transacción en su método público, y los help
   - lo que mostraron las capturas, para que quede como el tablero:
     - «Crear rol» apagado mientras el formulario esté vacío;
     - «Vale en» sin asterisco, y el editor ya no crea roles con `?scope=AnyCompany` (enmienda de las ADR 0012 y 0034);
+    - «Vale en toda la organización» y «Vale en cada empresa», en minúscula (lienzo v96);
     - axe en Roles, Editar rol, Empresas, Ficha de empresa, Registrá tu empresa y Aceptar términos;
     - «Descripción» a todo el ancho;
     - «1 de 2» a la derecha, en su banda;
@@ -321,6 +322,7 @@ Segunda tanda del front (bloque 5, 2026-10-04): F5 y F6, más las marcas (E#) de
 - las filas de v92 (una segunda línea gris con `detail` en la columna) y el espacio entre opciones del menú lateral (hoy 39 px de una a otra; el tablero, 34);
 - los contratos regenerados: los `*HttpResponse`, `taxIdType` fuera de `companyPayload` y la ruta nueva de roles de una empresa;
 - las cuatro líneas de docs de v93 (los inicios, los avisos en el teléfono y el sitio público sin sesión);
+- en Mi cuenta, el ⋮ de «Cómo entrás» solo en las filas con acciones (lienzo v96): no lo lleva el principal si es el único método personal; lo llevan el correo de la empresa («Hacer principal» y «Quitar») y el teléfono sin verificar («Quitar»);
 - B4 en el front, con `canInCompany`: la ruta de la ficha de Empresa tiene que pedir un permiso de empresa, y `RequirePermission` hoy sabe solo de permisos de organización. Se resuelve en el manifiesto: la entrada declara su permiso de empresa y `RequirePermission` lo mira con el `companyId` de la ruta;
 - `/org/roles/new`: `frontend.md` §3 dice `/nuevo`, y el código se alinea al doc en el bloque 6.
 
