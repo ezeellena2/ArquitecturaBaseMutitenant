@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Common;
+using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Domain.Platform;
@@ -52,6 +53,13 @@ public sealed class AccountRecoveryRequest : Entity, IVersioned
 
     public DateTime CreatedAtUtc { get; private set; }
 
+    public DateTime? DecidedAtUtc { get; private set; }
+
+    public Guid? DecidedByOperatorId { get; private set; }
+
+    /// <summary>El motivo interno del operador; la persona no lo ve.</summary>
+    public string? DecisionReason { get; private set; }
+
     public uint Version { get; private set; }
 
     public static AccountRecoveryRequest Submit(Guid loginCodeId, LoginMethodType previousMethodType,
@@ -65,5 +73,32 @@ public sealed class AccountRecoveryRequest : Entity, IVersioned
                 "Only an email or a phone can be the previous method.");
         if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("The instant must be UTC.", nameof(nowUtc));
         return new AccountRecoveryRequest(loginCodeId, previousMethodType, previousMethodValue, newEmail, userId, nowUtc);
+    }
+
+    /// <summary>Aprobar exige una cuenta encontrada; el caso de uso suma el método nuevo como principal.</summary>
+    public Result Approve(Guid operatorId, string reason, DateTime nowUtc)
+    {
+        if (Status != AccountRecoveryStatus.Pending) return AccountRecoveryErrors.AlreadyResolved;
+        if (UserId is null) return AccountRecoveryErrors.NoAccount;
+        Decide(AccountRecoveryStatus.Approved, operatorId, reason, nowUtc);
+        return Result.Success();
+    }
+
+    public Result Reject(Guid operatorId, string reason, DateTime nowUtc)
+    {
+        if (Status != AccountRecoveryStatus.Pending) return AccountRecoveryErrors.AlreadyResolved;
+        Decide(AccountRecoveryStatus.Rejected, operatorId, reason, nowUtc);
+        return Result.Success();
+    }
+
+    private void Decide(AccountRecoveryStatus status, Guid operatorId, string reason, DateTime nowUtc)
+    {
+        if (operatorId == Guid.Empty) throw new ArgumentException("The operator is required.", nameof(operatorId));
+        ArgumentException.ThrowIfNullOrWhiteSpace(reason);
+        if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("The instant must be UTC.", nameof(nowUtc));
+        Status = status;
+        DecidedByOperatorId = operatorId;
+        DecisionReason = reason;
+        DecidedAtUtc = nowUtc;
     }
 }

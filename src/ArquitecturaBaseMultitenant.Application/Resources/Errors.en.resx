@@ -183,4 +183,8 @@
   <data name="Platform.Operator.PermissionRepeated" xml:space="preserve"><value>A platform permission is repeated.</value></data>
   <data name="Platform.Operator.LastManager" xml:space="preserve"><value>At least one active operator who can manage operators must remain.</value></data>
   <data name="Platform.AccountRecovery.VerificationRequired" xml:space="preserve"><value>Request a new code and verify it.</value></data>
+  <data name="Platform.AccountRecovery.NotFound" xml:space="preserve"><value>We couldn't find the request.</value></data>
+  <data name="Platform.AccountRecovery.AlreadyResolved" xml:space="preserve"><value>That request has already been resolved.</value></data>
+  <data name="Platform.AccountRecovery.NoAccount" xml:space="preserve"><value>No account has the previous method. It can only be rejected.</value></data>
+  <data name="Platform.AccountRecovery.MethodInUse" xml:space="preserve"><value>That email address already belongs to another account.</value></data>
 </root>

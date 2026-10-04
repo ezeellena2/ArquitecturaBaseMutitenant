@@ -25,6 +25,16 @@ internal sealed class PlatformAudit(ICurrentUser currentUser, ISecurityEventRepo
             clock.GetUtcNow().UtcDateTime).WithEvidence(changes, requestInfo.IpAddress));
     }
 
+    /// <summary>El operador autenticado que actúa; lo guarda la decisión de un pedido de recuperación.</summary>
+    internal Guid CurrentOperatorId() =>
+        currentUser.Access == Access.Platform && currentUser.UserId is { } id
+            ? id
+            : throw new InvalidOperationException("An authenticated platform operator is required.");
+
+    internal void RecordRecovery(Guid? accountId, SecurityEventType type, string reason, SecurityEventChanges changes) =>
+        events.Add(SecurityEvent.ForAccountRecovery(type, CurrentOperatorId(), accountId, reason,
+            clock.GetUtcNow().UtcDateTime).WithEvidence(changes, requestInfo.IpAddress));
+
     internal void RecordAccount(Guid accountId, SecurityEventType type, string reason, SecurityEventChanges changes)
     {
         if (currentUser.Access != Access.Platform || currentUser.UserId is not { } id)

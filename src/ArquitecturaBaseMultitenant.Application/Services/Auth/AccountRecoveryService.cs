@@ -87,6 +87,7 @@ internal sealed class AccountRecoveryService(
                 recoveries.Add(AccountRecoveryRequest.Submit(code.Id, type, value, newEmail, userId,
                     timeProvider.GetUtcNow().UtcDateTime));
                 await messenger.NotifyReceivedAsync(destination.Value, ct);
+                if (userId is { } found) await messenger.NotifyAccountAsync(found, ct);
                 return Result.Success();
             }, CommitPolicy.OnSuccess, cancellationToken);
         });

@@ -17,4 +17,10 @@ internal sealed class AccountRecoveryRepository(ApplicationDbContext context) : 
         context.RequireTransaction();
         context.AccountRecoveryRequests.Add(request);
     }
+
+    public Task<AccountRecoveryRequest?> GetForUpdateAsync(Guid id, CancellationToken cancellationToken)
+    {
+        context.RequireTransaction();
+        return context.AccountRecoveryRequests.SingleOrDefaultAsync(request => request.Id == id, cancellationToken);
+    }
 }

@@ -14,6 +14,13 @@ internal sealed class ListPlatformAccountsRequestValidator : PagedRequestValidat
     }
 }
 
+internal sealed class ListPlatformRecoveriesRequestValidator : PagedRequestValidator<ListPlatformRecoveriesRequest>
+{
+    public ListPlatformRecoveriesRequestValidator() : base(ListPlatformRecoveriesRequest.SortableFields) =>
+        RuleFor(r => r.Status).IsInEnum().When(r => r.Status is not null).WithMessage(_ => ValidationTexts.FilterInvalid);
+}
+
+/// <summary>Versión y motivo de una acción del operador: cuentas y pedidos de recuperación.</summary>
 internal sealed class PlatformAccountActionRequestValidator : AbstractValidator<PlatformAccountActionRequest>
 {
     public PlatformAccountActionRequestValidator()

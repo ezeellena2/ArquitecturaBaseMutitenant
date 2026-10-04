@@ -82,6 +82,19 @@
   <data name="RecoveryMethodInUse.Body" xml:space="preserve"><value>Someone asked to recover a {0} account and gave us this email address to contact them. This email address already belongs to an account, so we didn't send any code.</value></data>
   <data name="RecoveryMethodInUse.After" xml:space="preserve"><value>If it was you, sign in with this email address: there is nothing to recover.</value></data>
   <data name="RecoveryMethodInUse.Note" xml:space="preserve"><value>If it wasn't you, ignore this message.</value></data>
+  <data name="RecoveryRequested.Subject" xml:space="preserve"><value>Someone asked to recover your account</value></data>
+  <data name="RecoveryRequested.Title" xml:space="preserve"><value>Someone asked to recover your account</value></data>
+  <data name="RecoveryRequested.Body" xml:space="preserve"><value>{0} Someone asked to recover your {1} account and gave us a new email address to contact them. A person from the platform will review the request before making any change.</value></data>
+  <data name="RecoveryRequested.NoteSupport" xml:space="preserve"><value>If it wasn't you, write to {0}.</value></data>
+  <data name="RecoveryRequested.Note" xml:space="preserve"><value>If it wasn't you, review your sign-in methods in “My account”.</value></data>
+  <data name="RecoveryApproved.Subject" xml:space="preserve"><value>You recovered your account</value></data>
+  <data name="RecoveryApproved.Title" xml:space="preserve"><value>You recovered your account</value></data>
+  <data name="RecoveryApproved.Body" xml:space="preserve"><value>We approved your request. From now on you sign in to {0} with this email address, which is now your primary method.</value></data>
+  <data name="RecoveryApproved.Note" xml:space="preserve"><value>We recommend reviewing your sign-in methods in “My account”.</value></data>
+  <data name="RecoveryRejected.Subject" xml:space="preserve"><value>We couldn't recover your account</value></data>
+  <data name="RecoveryRejected.Title" xml:space="preserve"><value>We couldn't recover your account</value></data>
+  <data name="RecoveryRejected.Body" xml:space="preserve"><value>We reviewed your request and couldn't confirm that the account is yours.</value></data>
+  <data name="RecoveryRejected.Again" xml:space="preserve"><value>If you want, you can make a new request from “Can't sign in? Recover your account”.</value></data>
   <data name="PublicPageModeration.Title" xml:space="preserve"><value>Your page publication changed</value></data>
   <data name="PublicPageModeration.Subject" xml:space="preserve"><value>Organization page publication</value></data>
   <data name="PublicPageModeration.BlockedBody" xml:space="preserve"><value>{0} The platform unpublished the page for {1}. It is a draft and cannot be published until the platform allows it.</value></data>

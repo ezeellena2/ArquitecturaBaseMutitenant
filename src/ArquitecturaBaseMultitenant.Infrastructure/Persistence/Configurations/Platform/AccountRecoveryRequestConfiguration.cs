@@ -21,6 +21,7 @@ internal sealed class AccountRecoveryRequestConfiguration : IEntityTypeConfigura
         builder.Property(request => request.NewMethodType).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.Property(request => request.NewMethodValue).HasMaxLength(Email.MaxLength).IsRequired();
         builder.Property(request => request.Status).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
+        builder.Property(request => request.DecisionReason).HasMaxLength(TextLimits.Description);
         builder.HasIndex(request => request.LoginCodeId).IsUnique();
         builder.HasIndex(request => new { request.Status, request.CreatedAtUtc, request.Id });
         builder.HasIndex(request => request.UserId);

@@ -4,11 +4,14 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Legal;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.Messaging;
+using ArquitecturaBaseMultitenant.Domain.Platform;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -49,13 +52,19 @@ public sealed class AccountDeletionParticipantsTests(ApiFactory factory)
             }, CommitPolicy.OnSuccess, Ct);
         var ownedMessage = OutboxMessage.Enqueue("test", "owned", nowUtc, account.UserId);
         var otherMessage = OutboxMessage.Enqueue("test", "other", nowUtc, Guid.CreateVersion7());
+        var newEmail = Email.Create("nuevo-" + Guid.NewGuid().ToString("N") + "@example.test").Value;
+        var ownedRecovery = AccountRecoveryRequest.Submit(Guid.CreateVersion7(), LoginMethodType.Email,
+            account.Email.Value, newEmail, account.UserId, nowUtc);
+        var otherRecovery = AccountRecoveryRequest.Submit(Guid.CreateVersion7(), LoginMethodType.Email,
+            "otra@example.test", newEmail, Guid.CreateVersion7(), nowUtc);
         await work.ExecuteInTransactionAsync(ct =>
         {
             context.OutboxMessages.AddRange(ownedMessage, otherMessage);
+            context.AccountRecoveryRequests.AddRange(ownedRecovery, otherRecovery);
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, Ct);
         var participants = services.GetServices<IAccountDeletionParticipant>().ToArray();
-        Assert.Equal(4, participants.Length);
+        Assert.Equal(5, participants.Length);
         var membershipParticipant = Assert.Single(participants,
             participant => participant.GetType().Name == "MembershipDeletionParticipant");
         Assert.All(await context.LegalAcceptances.AsNoTracking().Where(row => row.UserId == account.UserId)
@@ -122,6 +131,9 @@ public sealed class AccountDeletionParticipantsTests(ApiFactory factory)
             foreach (var participant in participants) await participant.ExecuteAsync(global, ct);
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
+        // Los pedidos de «Recuperar mi cuenta» de la cuenta se cierran y sus datos personales se borran.
+        Assert.False(await context.AccountRecoveryRequests.AnyAsync(row => row.Id == ownedRecovery.Id, Ct));
+        Assert.True(await context.AccountRecoveryRequests.AnyAsync(row => row.Id == otherRecovery.Id, Ct));
         var acceptances = await context.LegalAcceptances.AsNoTracking().Where(row => row.UserId == account.UserId).ToArrayAsync(Ct);
         Assert.Equal(2, acceptances.Length);
         Assert.All(acceptances, row => { Assert.Null(row.IpAddress); Assert.Null(row.UserAgent); });

@@ -29,4 +29,6 @@ public enum SecurityEventType
     AccountSuspended,
     AccountReactivated,
     AccountSessionsRevoked,
+    AccountRecoveryApproved,
+    AccountRecoveryRejected,
 }

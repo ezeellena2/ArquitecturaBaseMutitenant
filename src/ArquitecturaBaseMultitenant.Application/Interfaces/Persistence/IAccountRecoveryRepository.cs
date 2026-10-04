@@ -9,4 +9,7 @@ public interface IAccountRecoveryRepository
     Task<bool> ExistsForLoginCodeAsync(Guid loginCodeId, CancellationToken cancellationToken);
 
     void Add(AccountRecoveryRequest request);
+
+    /// <summary>El pedido con seguimiento, para resolverlo dentro de la UoW.</summary>
+    Task<AccountRecoveryRequest?> GetForUpdateAsync(Guid id, CancellationToken cancellationToken);
 }

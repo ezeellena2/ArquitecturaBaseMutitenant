@@ -132,6 +132,18 @@ public sealed class SecurityEvent : Entity
         return ev;
     }
 
+    /// <summary>Un operador resolvió un pedido de «Recuperar mi cuenta»; sin cuenta encontrada, el destino queda vacío.</summary>
+    public static SecurityEvent ForAccountRecovery(SecurityEventType type, Guid operatorId, Guid? accountId,
+        string reason, DateTime occurredAtUtc)
+    {
+        if (type is not (SecurityEventType.AccountRecoveryApproved or SecurityEventType.AccountRecoveryRejected))
+            throw new ArgumentOutOfRangeException(nameof(type));
+        if (accountId == Guid.Empty) throw new ArgumentException("The account id cannot be empty.", nameof(accountId));
+        var ev = ForPlatformAction(type, AuditActorKind.PlatformOperator, operatorId, reason, occurredAtUtc);
+        ev.TargetAccountId = accountId;
+        return ev;
+    }
+
     public static SecurityEvent ForPlatformTenantAccess(Guid operatorId, Guid tenantId, string reason, DateTime occurredAtUtc)
     {
         if (tenantId == Guid.Empty) throw new ArgumentException("A target organization is required.", nameof(tenantId));

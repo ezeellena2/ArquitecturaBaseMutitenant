@@ -29,6 +29,31 @@ public sealed class AccountRecoveryRequestTests
     }
 
     [Fact]
+    public void A_pending_request_is_resolved_once_and_only_a_request_with_an_account_can_be_approved()
+    {
+        var operatorId = Guid.CreateVersion7();
+        var email = Email.Create("nuevo@example.com").Value;
+        var withAccount = AccountRecoveryRequest.Submit(Guid.CreateVersion7(), LoginMethodType.Email, "antes@example.com",
+            email, Guid.CreateVersion7(), NowUtc);
+        var withoutAccount = AccountRecoveryRequest.Submit(Guid.CreateVersion7(), LoginMethodType.Email, "antes@example.com",
+            email, null, NowUtc);
+
+        Assert.Equal(AccountRecoveryErrors.NoAccount, withoutAccount.Approve(operatorId, "Parece suya", NowUtc).Error);
+        Assert.Equal(AccountRecoveryStatus.Pending, withoutAccount.Status);
+        Assert.True(withoutAccount.Reject(operatorId, "Sin cuenta", NowUtc.AddMinutes(1)).IsSuccess);
+        Assert.Equal(AccountRecoveryStatus.Rejected, withoutAccount.Status);
+        Assert.Equal(operatorId, withoutAccount.DecidedByOperatorId);
+        Assert.Equal("Sin cuenta", withoutAccount.DecisionReason);
+        Assert.Equal(NowUtc.AddMinutes(1), withoutAccount.DecidedAtUtc);
+        Assert.Equal(AccountRecoveryErrors.AlreadyResolved, withoutAccount.Reject(operatorId, "Otra vez", NowUtc).Error);
+
+        Assert.True(withAccount.Approve(operatorId, "Confirmó sus datos", NowUtc).IsSuccess);
+        Assert.Equal(AccountRecoveryStatus.Approved, withAccount.Status);
+        Assert.Equal(AccountRecoveryErrors.AlreadyResolved, withAccount.Approve(operatorId, "Otra vez", NowUtc).Error);
+        Assert.Equal(AccountRecoveryErrors.AlreadyResolved, withAccount.Reject(operatorId, "Otra vez", NowUtc).Error);
+    }
+
+    [Fact]
     public void Without_an_account_the_request_is_kept_and_google_is_not_a_previous_method()
     {
         var email = Email.Create("nuevo@example.com").Value;

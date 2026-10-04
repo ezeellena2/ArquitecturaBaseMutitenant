@@ -43,7 +43,17 @@ public abstract record AccountNotice
     /// </summary>
     public sealed record RecoveryMethodInUse : AccountNotice;
 
-    public sealed record RecoveryApproved : AccountNotice;
+    /// <summary>Al correo nuevo, que ya es el principal de la cuenta, con el enlace para ingresar.</summary>
+    public sealed record RecoveryApproved(string ActionUrl) : AccountNotice;
+
+    /// <summary>
+    /// A los métodos que siguen andando de la cuenta encontrada, cuando alguien registra un pedido para recuperarla.
+    /// Nunca a quien hizo el pedido (ADR 0041).
+    /// </summary>
+    public sealed record RecoveryRequested : AccountNotice
+    {
+        public ArquitecturaBaseMultitenant.Domain.ValueObjects.Email? SupportEmail { get; init; }
+    }
 
     public sealed record RecoveryRejected : AccountNotice;
 }

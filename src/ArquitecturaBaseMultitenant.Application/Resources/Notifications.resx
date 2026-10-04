@@ -82,6 +82,19 @@
   <data name="RecoveryMethodInUse.Body" xml:space="preserve"><value>Alguien pidió recuperar una cuenta de {0} y nos dio este correo para escribirle. Este correo ya es de una cuenta, así que no mandamos ningún código.</value></data>
   <data name="RecoveryMethodInUse.After" xml:space="preserve"><value>Si fuiste vos, entrá con este correo: no hace falta recuperar nada.</value></data>
   <data name="RecoveryMethodInUse.Note" xml:space="preserve"><value>Si no fuiste vos, ignorá este mensaje.</value></data>
+  <data name="RecoveryRequested.Subject" xml:space="preserve"><value>Alguien pidió recuperar tu cuenta</value></data>
+  <data name="RecoveryRequested.Title" xml:space="preserve"><value>Alguien pidió recuperar tu cuenta</value></data>
+  <data name="RecoveryRequested.Body" xml:space="preserve"><value>{0} Alguien pidió recuperar tu cuenta de {1} y nos dio un correo nuevo para escribirle. Una persona de la plataforma va a revisar el pedido antes de hacer cualquier cambio.</value></data>
+  <data name="RecoveryRequested.NoteSupport" xml:space="preserve"><value>Si no fuiste vos, escribí a {0}.</value></data>
+  <data name="RecoveryRequested.Note" xml:space="preserve"><value>Si no fuiste vos, revisá tus métodos de ingreso en «Mi cuenta».</value></data>
+  <data name="RecoveryApproved.Subject" xml:space="preserve"><value>Recuperaste tu cuenta</value></data>
+  <data name="RecoveryApproved.Title" xml:space="preserve"><value>Recuperaste tu cuenta</value></data>
+  <data name="RecoveryApproved.Body" xml:space="preserve"><value>Aprobamos tu pedido. Desde ahora entrás a {0} con este correo, que quedó como tu método principal.</value></data>
+  <data name="RecoveryApproved.Note" xml:space="preserve"><value>Te recomendamos revisar tus métodos de ingreso en «Mi cuenta».</value></data>
+  <data name="RecoveryRejected.Subject" xml:space="preserve"><value>No pudimos recuperar tu cuenta</value></data>
+  <data name="RecoveryRejected.Title" xml:space="preserve"><value>No pudimos recuperar tu cuenta</value></data>
+  <data name="RecoveryRejected.Body" xml:space="preserve"><value>Revisamos tu pedido y no pudimos confirmar que la cuenta sea tuya.</value></data>
+  <data name="RecoveryRejected.Again" xml:space="preserve"><value>Si querés, podés hacer un pedido nuevo desde «¿No podés entrar? Recuperá tu cuenta».</value></data>
   <data name="PublicPageModeration.Title" xml:space="preserve"><value>Cambió la publicación de tu página</value></data>
   <data name="PublicPageModeration.Subject" xml:space="preserve"><value>Publicación de la página de tu organización</value></data>
   <data name="PublicPageModeration.BlockedBody" xml:space="preserve"><value>{0} La plataforma despublicó la página de {1}. Quedó en borrador y no se puede publicar hasta que la plataforma lo permita.</value></data>
