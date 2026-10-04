@@ -20,13 +20,6 @@ public sealed class TransactionBoundaryTests
     private const string Registration = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.PersistenceRegistration";
     private const string ReferenceSeed = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed.ReferenceDataSeeder";
     private const string DatabaseSeed = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed.DatabaseSeeder";
-    private const string BusinessOrganizationCreator = "ArquitecturaBaseMultitenant.Application.Services.Auth.BusinessOrganizationCreator";
-    private static readonly HashSet<string> TransactionBoundaryHelpers = new(StringComparer.Ordinal)
-    {
-        BusinessOrganizationCreator,
-        "ArquitecturaBaseMultitenant.Application.Services.Auth.BusinessSignupCodeFlow",
-        "ArquitecturaBaseMultitenant.Application.Services.Auth.BusinessSignupTransactionRunner",
-    };
     private const string IdempotencyStore = "ArquitecturaBaseMultitenant.Infrastructure.Idempotency.IdempotencyStore";
     private const string CacheExtensions = "ArquitecturaBaseMultitenant.Infrastructure.Caching.HybridCacheExtensions";
     private const string ApplicationServices = "ArquitecturaBaseMultitenant.Application.Services";
@@ -44,13 +37,12 @@ public sealed class TransactionBoundaryTests
     {
         var receivers = Receivers(Production.SelectMany(assembly => assembly.GetTypes())).ToArray();
 
-        // La lista cerrada admite los seeds técnicos y los coordinadores internos de transacciones.
-        // Estos helpers solo los invocan los servicios de caso de uso; no son puntos de entrada HTTP.
+        // Fuera de los servicios de entrada, solo los dos seeds técnicos. Los helpers trabajan dentro de la
+        // transacción que abre el servicio y no reciben IUnitOfWork (ADR 0039).
         Assert.Contains(receivers, type => type.FullName == ReferenceSeed);
         Assert.Contains(receivers, type => type.FullName == DatabaseSeed);
         Assert.Empty(receivers.Where(type => !IsService(type)
-            && type.FullName is not (ReferenceSeed or DatabaseSeed)
-            && !TransactionBoundaryHelpers.Contains(type.FullName ?? string.Empty))
+            && type.FullName is not (ReferenceSeed or DatabaseSeed))
             .Select(type => type.FullName));
 
         Assert.Contains(typeof(RogueReceiver), Receivers([typeof(RogueReceiver)]));
@@ -69,8 +61,7 @@ public sealed class TransactionBoundaryTests
 
         Assert.Contains(ReferenceSeed, callers);
         Assert.Contains(DatabaseSeed, callers);
-        Assert.DoesNotContain(callers, owner => owner is not (ReferenceSeed or DatabaseSeed)
-            && !IsService(owner) && !TransactionBoundaryHelpers.Contains(owner));
+        Assert.DoesNotContain(callers, owner => owner is not (ReferenceSeed or DatabaseSeed) && !IsService(owner));
 
         var control = ArchitectureIl.Calls(typeof(TransactionBoundaryTests).Assembly);
         Assert.Contains(control, call => call.Owner == typeof(TransactionBoundaryTests).FullName
@@ -183,8 +174,7 @@ public sealed class TransactionBoundaryTests
                     || parameter.ParameterType.FullName == UnitOfWorkClass)));
 
     private static bool IsService(string owner) =>
-        owner == BusinessOrganizationCreator
-        || Production.Select(assembly => assembly.GetType(owner)).OfType<Type>().Any(IsService);
+        Production.Select(assembly => assembly.GetType(owner)).OfType<Type>().Any(IsService);
 
     private static bool IsService(Type type) =>
         type.Namespace?.StartsWith(ApplicationServices + ".", StringComparison.Ordinal) == true

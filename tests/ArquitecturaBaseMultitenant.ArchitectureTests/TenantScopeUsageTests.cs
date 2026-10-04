@@ -22,6 +22,17 @@ public sealed class TenantScopeUsageTests
     private const string BusinessSignupService = "ArquitecturaBaseMultitenant.Application.Services.Auth.BusinessSignupService";
     private const string PlatformActionGuard = "ArquitecturaBaseMultitenant.Application.Services.Platform.PlatformActionGuard";
 
+    // Adaptadores de Infrastructure, servicios de entrada y PlatformActionGuard, que entra después de registrar el
+    // SecurityEvent (multitenancy.md). InvitationPreviewFlow e InvitationAcceptanceResolver son helpers que entran
+    // para leer la invitación antes de la transacción. Cada clase declarada tiene que seguir entrando: la que ya no
+    // lo necesita sale de la lista.
+    private static readonly HashSet<string> Declared = new(StringComparer.Ordinal)
+    {
+        TenantJobRunner, TenantSettingsLoader, AccountService, ConnectService, ExternalLoginService,
+        AccountDeletionProcessingService, BusinessSignupService, PlatformActionGuard, InvitationPreviewFlow,
+        InvitationAcceptanceResolver,
+    };
+
     [Fact]
     public void Only_declared_adapters_and_signup_services_enter_a_tenant_scope()
     {
@@ -32,12 +43,8 @@ public sealed class TenantScopeUsageTests
             Assembly.Load("ArquitecturaBaseMultitenant.Api"),
         }.SelectMany(ArchitectureIl.Calls).Where(IsEnterCall).ToArray();
 
-        Assert.Contains(calls, call => call.Owner == TenantJobRunner);
-        Assert.Contains(calls, call => call.Owner == TenantSettingsLoader);
-        Assert.Contains(calls, call => call.Owner == AccountService);
-        Assert.Contains(calls, call => call.Owner == ConnectService);
-        Assert.Contains(calls, call => call.Owner == ExternalLoginService);
-        Assert.Contains(calls, call => call.Owner == BusinessSignupService);
+        Assert.Equal(Declared.Order(StringComparer.Ordinal),
+            calls.Select(call => call.Owner).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal));
         Assert.Empty(UnauthorizedCallers(calls));
     }
 
@@ -60,9 +67,7 @@ public sealed class TenantScopeUsageTests
 
     private static string[] UnauthorizedCallers(IEnumerable<ArchitectureIl.Call> calls) =>
         [.. calls.Where(IsEnterCall)
-            .Where(call => call.Owner is not (TenantJobRunner or TenantSettingsLoader
-                or AccountService or ConnectService or ExternalLoginService or AccountDeletionProcessingService
-                or InvitationPreviewFlow or InvitationAcceptanceResolver or BusinessSignupService or PlatformActionGuard))
+            .Where(call => !Declared.Contains(call.Owner))
             .Select(call => $"{call.Owner}.{call.OwnerMethod}")
             .Distinct(StringComparer.Ordinal)];
 
