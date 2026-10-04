@@ -312,7 +312,12 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
   - en Personal, el menú y la flecha que el tablero no dibuja;
   - los filtros y el buscador de las listas, y el alto de las filas del teléfono;
   - los tamaños de texto que se desvían de la escala del lienzo, en el ingreso, el registro, la invitación, los términos, los errores, Mi cuenta y la Página pública.
-- [ ] **R2 · Avisos, diálogos y campos** (con F8, después de que Diseño publique v100):
+- [ ] **R2 · Avisos, diálogos y campos** (con F8, sobre el lienzo v100, front `e3f7fed`):
+  - lo que fijó v100:
+    - la franja de error del teléfono: 14,5 con interlineado 1,4, padding 12/14, radio 12 y el ícono arriba si ocupa dos líneas. En la compu sigue en 13, con las medidas de `.aviso-mal`;
+    - en Empresa, «Roles de …» y «Agregar miembro» van en el diálogo chico (420) y «Editar empresa», en el de 560;
+    - M-Error-Org con «No se pudo abrir», el modelo de la «Pantalla de error» en el teléfono;
+    - «Sumar empresa»: «Empresa» obligatoria, con asterisco, y «Roles en la empresa» opcional, que aparece al elegir la empresa;
   - el aviso «Guardamos…», la franja de error, la «Pantalla de error», el cartel del 409 y los textos de «¿Salir sin guardar?»;
   - las hojas del teléfono (la cruz y el alto completo);
   - los casilleros del código y «Verificar», las casillas bloqueadas y el tirador de los cuadros de texto;
