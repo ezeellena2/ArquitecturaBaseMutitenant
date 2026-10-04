@@ -18,6 +18,8 @@
 | `baja_cuenta_pedida` | Utility | la fecha de eliminación | se pidió la baja (§3.2) | E8 |
 | `baja_cuenta_cancelada` | Utility | — | se canceló la baja | E8 |
 | `cuenta_eliminada` | Utility | — | se completó la baja | E8 |
+| `baja_cuenta_plataforma` | Utility | la fecha de eliminación | la plataforma inició la baja de una cuenta activa: se cerraron sus sesiones y puede cancelarla ingresando antes de la fecha (ADR 0035, lienzo v85, Mensajes) | E8 |
+| `baja_cuenta_plataforma_suspendida` | Utility | la fecha de eliminación y el correo de soporte (Config-Plat › Contacto) | la plataforma inició la baja de una cuenta suspendida, que no puede cancelarla (ADR 0035, lienzo v85, Mensajes) | E8 |
 | `recuperacion_recibida` | Utility | — | recibimos el pedido de «Recuperar mi cuenta»; va al método nuevo | E8 |
 | `recuperacion_aprobada` | Utility | — | se aprobó: el método nuevo ya sirve para ingresar | E8 |
 | `recuperacion_rechazada` | Utility | — | se rechazó, sin revelar datos de la cuenta | E8 |
