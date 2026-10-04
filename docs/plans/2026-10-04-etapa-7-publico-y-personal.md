@@ -582,6 +582,12 @@ Commit `chore(capturas): los tableros de la Etapa 7, antes de programar`.
 
 **En cada avance (T11 a T15):** antes del commit de la tarea, el script captura la pantalla real de sus estados junto a su tablero, a 1440 y a 390, y se le manda al usuario la captura lado a lado. Si pide un cambio, se corrige antes de seguir.
 
+**La vista en vivo.** Mientras se programa, el usuario puede mirar la pantalla al lado de su tablero en una ventana que se actualiza sola con cada cambio del código. Al empezar cada tarea de T11 a T15, se le pasa el comando de su pantalla, que se corre desde el front:
+- con su caso de captura: `node scripts/recorrido-lienzo/vivo.mjs etapa-7/<id del caso>`. Toma los casos de `docs/design/capturas/etapa-7/manifest.json`, así que `capturar-etapa-7.mjs` escribe el manifiesto con la misma forma que el de la etapa 6;
+- antes de que exista el caso: `node scripts/recorrido-lienzo/vivo.mjs --tablero <Tablero> --ruta <ruta> [--telefono]`, solo con los datos básicos.
+
+Mientras alguien edita, la ventana puede verse rota un momento (por ejemplo, con las claves de traducción en lugar de los textos). Se arregla sola cuando termina el cambio.
+
 ### T10 · Front · Rutas por host y una sola dirección pública
 
 **Archivos nuevos:**
