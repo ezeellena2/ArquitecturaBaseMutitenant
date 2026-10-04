@@ -4,9 +4,12 @@ using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
+using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Organization;
@@ -80,5 +83,39 @@ public sealed class OrganizationSettingsTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
         using var staleJson = JsonDocument.Parse(await stale.Content.ReadAsStringAsync(Ct));
         Assert.Equal("General.ConcurrencyConflict", staleJson.RootElement.GetProperty("code").GetString());
+    }
+
+    [Fact]
+    public async Task A_save_leaves_a_single_audit_entry_whose_diff_has_only_the_edited_field()
+    {
+        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var account = await AccountJourney.RegisterAsync(factory, client, Ct);
+        var tenantId = await OrganizationJourney.StageAsync(factory, account, "Configuración auditada", Ct);
+        await AccountJourney.AuthorizeAsync(client, "business", Ct);
+        using var initial = await client.GetAsync("/api/organization/settings", Ct);
+        using var initialJson = JsonDocument.Parse(await initial.Content.ReadAsStringAsync(Ct));
+
+        // Tablero Auditoria-Org: «Cambió el idioma y la región predeterminados», con una sola fila.
+        using var saved = await client.PutAsJsonAsync("/api/organization/settings", new
+        {
+            name = "Configuración auditada",
+            defaultCulture = "en-US",
+            defaultTimeZoneId = "America/Argentina/Buenos_Aires",
+            defaultCurrency = "ARS",
+            version = initialJson.RootElement.GetProperty("version").GetUInt32(),
+        }, Ct);
+        Assert.True(saved.StatusCode == HttpStatusCode.NoContent, await saved.Content.ReadAsStringAsync(Ct));
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        using var tenantScope = scope.ServiceProvider.GetRequiredService<ITenantScope>().Enter(tenantId);
+        var entries = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<AuditEntry>()
+            .AsNoTracking().Where(entry => entry.TenantId == tenantId && entry.EntityType == "TenantSettings"
+                && entry.Action != AuditAction.Created).ToArrayAsync(Ct);
+        var entry = Assert.Single(entries);
+        using var diff = JsonDocument.Parse(entry.Changes);
+        var change = Assert.Single(diff.RootElement.EnumerateObject());
+        Assert.Equal("DefaultCulture", change.Name);
+        Assert.Equal("es-AR", change.Value.GetProperty("old").GetString());
+        Assert.Equal("en-US", change.Value.GetProperty("new").GetString());
     }
 }

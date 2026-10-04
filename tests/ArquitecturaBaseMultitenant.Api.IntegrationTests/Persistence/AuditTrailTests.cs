@@ -69,6 +69,25 @@ public sealed class AuditTrailTests
     }
 
     [Fact]
+    public void An_entity_marked_as_updated_records_only_the_properties_that_changed()
+    {
+        var tenantId = Guid.NewGuid();
+        using var context = CreateContext();
+        var record = new AuditedRecord(tenantId, "Before", "secret", "alice@example.com");
+        context.Attach(record);
+        // Como MarkUpdated de los repositorios: la entidad entera queda modificada.
+        context.Entry(record).State = EntityState.Modified;
+        record.Rename("After");
+
+        ApplyAudit(context, tenantId, new TestCurrentUser(Guid.NewGuid(), Access.Business));
+
+        var audit = Assert.Single(context.ChangeTracker.Entries<AuditEntry>()).Entity;
+        using var json = JsonDocument.Parse(audit.Changes);
+        // Quién y cuándo ya están en la entrada; el diff tiene solo lo que cambió.
+        Assert.Equal(["Name"], json.RootElement.EnumerateObject().Select(property => property.Name));
+    }
+
+    [Fact]
     public void Soft_delete_is_recorded_as_deleted_in_the_same_change_tracker()
     {
         var tenantId = Guid.NewGuid();

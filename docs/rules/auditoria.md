@@ -4,6 +4,7 @@
 
 ## Cómo se hace
 - La entidad implementa `IAuditable` (y `ISoftDeletable` si se borra lógicamente). No hay que hacer nada más: `AuditableEntityInterceptor` y `AuditTrailInterceptor` completan las marcas y el diff.
+- Un guardado deja una sola entrada por entidad: no se suma a mano otra con `IAuditLog` para el mismo cambio. El diff de una modificación lleva solo las propiedades cuyo valor cambió, aunque `MarkUpdated` marque la entidad entera, y no repite las marcas de quién y cuándo, que ya están en la entrada.
 - Un cambio privado deja una entrada en su tenant; uno público, en la organización; uno compartido, una por cada parte distinta. `AuditTrailInterceptor` deriva las contrapartes del ChangeTracker y fija `app.audit_counterpart_tenant_ids` **local a la transacción** antes del único `SaveChanges`. Una política RLS adicional permite solo esos INSERT en `tenant.AuditEntries`; las lecturas siguen limitadas al tenant activo. Esta lista nunca sale directamente de parámetros HTTP: el caso de uso valida la contraparte antes de crear el dato compartido.
 - Un cambio de `PlatformSettings` exige que el caso de uso agregue un `SecurityEvent` de tipo `PlatformSettingsChanged`, con motivo, en el mismo `IUnitOfWork`; el interceptor rechaza el guardado si falta. El seed inicial registra un evento con actor `System`.
 - El seed inicial que crea o habilita al operador registra `PlatformOperatorGranted`, actor `System` y motivo `Initial platform owner seed` en la misma UoW. Un método de correo existente debe estar verificado y no gestionado por una organización.
@@ -25,7 +26,7 @@
 - `Infrastructure/Persistence/Interceptors/AuditTrailInterceptor.cs` (E2)
 
 ## Lo verifica
-- `AuditingTests` (E2), `AuditTrailTests` (E2).
+- `AuditingTests` (E2), `AuditTrailTests` (E2) y `OrganizationSettingsTests.A_save_leaves_a_single_audit_entry_whose_diff_has_only_the_edited_field`.
 - Trigger `prevent_update_delete` (E2).
 - `TenantColumnsImmutabilityTests` (E2).
 

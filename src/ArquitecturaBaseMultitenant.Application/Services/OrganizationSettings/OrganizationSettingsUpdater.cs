@@ -3,7 +3,6 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Settings;
-using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 
@@ -11,8 +10,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
 
 /// <summary>Actualiza nombre y preferencias en una UoW y limpia la caché después del commit.</summary>
 internal sealed class OrganizationSettingsUpdater(ITenantSettingsRepository settingsRepository,
-    ITenantRepository tenantRepository, ITenantContext tenantContext, IAuditLog auditLog,
-    ITenantSettingsCache cache, IRequestValidator validator, IUnitOfWork unitOfWork)
+    ITenantRepository tenantRepository, ITenantContext tenantContext, ITenantSettingsCache cache, IRequestValidator validator, IUnitOfWork unitOfWork)
 {
     internal async Task<Result> UpdateAsync(UpdateOrganizationSettingsRequest request,
         CancellationToken cancellationToken)
@@ -33,15 +31,8 @@ internal sealed class OrganizationSettingsUpdater(ITenantSettingsRepository sett
                 request.DefaultCurrency);
             if (updated.IsFailure) return updated;
 
+            // AuditTrailInterceptor deja la única entrada, con lo que cambió (B9).
             settingsRepository.MarkUpdated(settings);
-            auditLog.Record(AuditAction.Updated, "TenantSettings", settings.Id,
-                new Dictionary<string, object?>
-                {
-                    ["name"] = tenant.Name,
-                    ["defaultCulture"] = settings.DefaultCulture,
-                    ["defaultTimeZoneId"] = settings.DefaultTimeZoneId,
-                    ["defaultCurrency"] = settings.DefaultCurrency,
-                });
             return Result.Success();
         }, CommitPolicy.OnSuccess, cancellationToken);
 

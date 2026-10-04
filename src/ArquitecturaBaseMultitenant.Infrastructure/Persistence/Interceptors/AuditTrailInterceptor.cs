@@ -22,6 +22,13 @@ internal sealed class AuditTrailInterceptor(
     private const string CounterpartSql =
         "SELECT set_config('app.audit_counterpart_tenant_ids', @tenant_ids, true)";
 
+    /// <summary>Quién y cuándo ya están en la propia entrada; no se repiten en el diff.</summary>
+    private static readonly HashSet<string> Stamps = new(StringComparer.Ordinal)
+    {
+        nameof(IAuditable.CreatedAtUtc), nameof(IAuditable.CreatedBy),
+        nameof(IAuditable.ModifiedAtUtc), nameof(IAuditable.ModifiedBy),
+    };
+
     public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
     {
         ArgumentNullException.ThrowIfNull(eventData);
@@ -173,7 +180,8 @@ internal sealed class AuditTrailInterceptor(
         foreach (var property in entry.Properties)
         {
             if (property.Metadata.PropertyInfo?.IsDefined(typeof(NotAuditedAttribute), true) == true ||
-                entry.State == EntityState.Modified && !property.IsModified)
+                Stamps.Contains(property.Metadata.Name) ||
+                entry.State == EntityState.Modified && !Changed(property))
             {
                 continue;
             }
@@ -187,6 +195,12 @@ internal sealed class AuditTrailInterceptor(
 
         return changes;
     }
+
+    /// <summary>
+    /// MarkUpdated marca la entidad entera: solo cuenta la propiedad cuyo valor cambió, comparado como lo compara EF.
+    /// </summary>
+    private static bool Changed(PropertyEntry property) =>
+        property.IsModified && !property.Metadata.GetValueComparer().Equals(property.OriginalValue, property.CurrentValue);
 
     private static object? SafeValue(string propertyName, object? value)
     {
