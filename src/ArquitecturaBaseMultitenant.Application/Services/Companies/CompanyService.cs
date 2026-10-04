@@ -61,7 +61,7 @@ internal sealed class CompanyService(
         return OperationLog.RunAsync(logger, timeProvider, "CreateCompany", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            var taxId = await referenceData.CreateTaxIdAsync(request.TaxIdType, request.TaxIdNumber, cancellationToken);
+            var taxId = await referenceData.ResolveTaxIdAsync(current: null, request.TaxIdNumber, cancellationToken);
             if (taxId.IsFailure) return taxId.Error;
             var timeZone = await referenceData.ResolveTimeZoneAsync(request.TimeZoneId, cancellationToken);
             if (timeZone.IsFailure) return timeZone.Error;
@@ -86,8 +86,6 @@ internal sealed class CompanyService(
         return OperationLog.RunAsync(logger, timeProvider, "UpdateCompany", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            var taxId = await referenceData.CreateTaxIdAsync(request.TaxIdType, request.TaxIdNumber, cancellationToken);
-            if (taxId.IsFailure) return taxId.Error;
             var timeZone = await referenceData.ResolveTimeZoneAsync(request.TimeZoneId, cancellationToken);
             if (timeZone.IsFailure) return timeZone.Error;
 
@@ -97,6 +95,8 @@ internal sealed class CompanyService(
                 {
                     var company = await companies.GetByIdAsync(request.CompanyId, request.Version!.Value, ct);
                     if (company is null) return CompanyErrors.NotFound;
+                    var taxId = await referenceData.ResolveTaxIdAsync(company.TaxId, request.TaxIdNumber, ct);
+                    if (taxId.IsFailure) return taxId.Error;
                     if (taxId.Value is { } requestedTaxId
                         && await reader.ExistsTaxIdAsync(requestedTaxId.Country, requestedTaxId.Type,
                             requestedTaxId.Number, company.Id, ct))

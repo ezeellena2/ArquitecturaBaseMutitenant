@@ -7,14 +7,14 @@ namespace ArquitecturaBaseMultitenant.Api.Contracts.Organization;
 public sealed record CompanyListHttpQuery(int? Page, int? PageSize, string? Sort, string? Search,
     CompanyStatus? Status);
 
-public sealed record CreateCompanyHttpRequest(string? Name, string? TaxIdType, string? TaxIdNumber,
-    string? TimeZoneId)
+/// <summary>Solo el número de identificación fiscal: el tipo sale del país de la organización.</summary>
+public sealed record CreateCompanyHttpRequest(string? Name, string? TaxIdNumber, string? TimeZoneId)
 {
     public override string ToString() => nameof(CreateCompanyHttpRequest);
 }
 
-public sealed record UpdateCompanyHttpRequest(string? Name, string? TaxIdType, string? TaxIdNumber,
-    string? TimeZoneId, uint? Version)
+/// <summary>Solo el número de identificación fiscal: el tipo sale del país de la organización.</summary>
+public sealed record UpdateCompanyHttpRequest(string? Name, string? TaxIdNumber, string? TimeZoneId, uint? Version)
 {
     public override string ToString() => nameof(UpdateCompanyHttpRequest);
 }

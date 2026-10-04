@@ -10,7 +10,10 @@ using ArquitecturaBaseMultitenant.Application.UnitTests.TestDoubles;
 using ArquitecturaBaseMultitenant.Application.Validation.Companies;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.ReferenceData;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Services.Companies;
 
@@ -77,7 +80,7 @@ public sealed class CompanyServiceTests
         var unitOfWork = new FakeUnitOfWork();
         var service = Create(new FakeCompanyReader(), fixture, unitOfWork);
 
-        var result = await service.CreateAsync(new CreateCompanyRequest(null, null, null, null), Ct);
+        var result = await service.CreateAsync(new CreateCompanyRequest(null, null, null), Ct);
 
         Assert.IsType<ValidationError>(result.Error);
         Assert.Equal(0, unitOfWork.Transactions);
@@ -102,7 +105,7 @@ public sealed class CompanyServiceTests
                 assignmentRepository, new IdentifiedCurrentUser(userId), unitOfWork),
             CreateReferenceDataResolver(), fixture.Validator, unitOfWork, fixture.TimeProvider, fixture.Logger);
 
-        var result = await service.CreateAsync(new CreateCompanyRequest("Sucursal Centro", null, null,
+        var result = await service.CreateAsync(new CreateCompanyRequest("Sucursal Centro", null,
             "America/Argentina/Buenos_Aires"), Ct);
 
         Assert.True(result.IsSuccess);
@@ -156,15 +159,82 @@ public sealed class CompanyServiceTests
                 new FakeRoleAssignmentRepository(), new IdentifiedCurrentUser(userId), unitOfWork),
             CreateReferenceDataResolver(), fixture.Validator, unitOfWork, fixture.TimeProvider, fixture.Logger);
 
-        var result = await service.CreateAsync(new CreateCompanyRequest("Sucursal", null, null,
+        var result = await service.CreateAsync(new CreateCompanyRequest("Sucursal", null,
             "America/Argentina/Buenos_Aires"), Ct);
 
         Assert.Equal(CompanyErrors.TaxIdAlreadyUsed, result.Error);
         Assert.Equal(1, unitOfWork.Rollbacks);
     }
 
+    [Fact]
+    public async Task The_tax_id_type_is_the_default_for_the_organization_country()
+    {
+        var created = await CreateWithTaxIdAsync("es-AR", "30-71234567-1");
+
+        // Argentina: la ficha pide solo el número y el tipo es la CUIT.
+        Assert.True(created.Result.IsSuccess);
+        Assert.Equal(("AR", "AR-CUIT", "30712345671"),
+            (created.Company!.TaxId!.Country, created.Company.TaxId.Type, created.Company.TaxId.Number));
+    }
+
+    [Fact]
+    public async Task In_a_country_without_a_company_tax_id_type_a_number_is_rejected_and_none_is_fine()
+    {
+        var withNumber = await CreateWithTaxIdAsync("en-US", "30-71234567-1");
+        var withoutNumber = await CreateWithTaxIdAsync("en-US", null);
+
+        Assert.Equal(TaxIdErrors.Invalid, withNumber.Result.Error);
+        Assert.Null(withNumber.Company);
+        Assert.True(withoutNumber.Result.IsSuccess);
+        Assert.Null(withoutNumber.Company!.TaxId);
+    }
+
+    [Fact]
+    public async Task Editing_keeps_the_saved_type_while_the_number_does_not_change()
+    {
+        var cuit = await ((ITaxIdTypeCatalog)new JsonReferenceDataCatalog()).FindAsync("AR-CUIT", Ct);
+        var saved = TaxId.Create("AR", TaxIdType.Create(cuit!.Code, cuit.CountryCode, cuit.Label, cuit.Mask,
+            cuit.ValidatorKey, cuit.AppliesTo, cuit.IsEnabled, cuit.SortOrder), "30712345671").Value;
+        var company = Company.Create("Delta Norte S.A.", saved, "America/Argentina/Buenos_Aires").Value;
+        var repository = new FakeCompanyRepository { Retrieved = company };
+        using var fixture = new ServiceFixture<CompanyService>(new UpdateCompanyRequestValidator());
+        // La organización pasó a «English (United States)», un país sin tipo para empresas.
+        var service = Create(new FakeCompanyReader(), fixture, companyRepository: repository, culture: "en-US");
+
+        var same = await service.UpdateAsync(new UpdateCompanyRequest(company.Id, "Delta Norte S.A. II",
+            "30-71234567-1", "America/Argentina/Buenos_Aires", 3), Ct);
+        var changed = await service.UpdateAsync(new UpdateCompanyRequest(company.Id, "Delta Norte S.A. II",
+            "20-12345678-6", "America/Argentina/Buenos_Aires", 3), Ct);
+
+        Assert.True(same.IsSuccess);
+        Assert.Equal(saved, company.TaxId);
+        Assert.Equal("Delta Norte S.A. II", company.Name);
+        Assert.Equal(TaxIdErrors.Invalid, changed.Error);
+    }
+
+    private static async Task<(Result<Guid> Result, Company? Company)> CreateWithTaxIdAsync(string culture,
+        string? taxIdNumber)
+    {
+        var userId = Guid.CreateVersion7();
+        var member = Member.Invite(userId);
+        Assert.True(member.Activate(new DateTime(2026, 10, 2, 12, 0, 0, DateTimeKind.Utc)).IsSuccess);
+        var companyRepository = new FakeCompanyRepository();
+        var unitOfWork = new FakeUnitOfWork();
+        using var fixture = new ServiceFixture<CompanyService>(new CreateCompanyRequestValidator());
+        var reader = new FakeCompanyReader();
+        var service = new CompanyService(reader, companyRepository,
+            new CompanyCreator(reader, companyRepository, new FakeCompanyMembershipRepository(),
+                new FakeMemberRepository { Member = member }, new FakeRoleRepository(),
+                new FakeRoleAssignmentRepository(), new IdentifiedCurrentUser(userId), unitOfWork),
+            CreateReferenceDataResolver(culture), fixture.Validator, unitOfWork, fixture.TimeProvider, fixture.Logger);
+
+        var result = await service.CreateAsync(new CreateCompanyRequest("Delta Norte S.A.", taxIdNumber,
+            "America/Argentina/Buenos_Aires"), Ct);
+        return (result, companyRepository.Added);
+    }
+
     private static CompanyService Create(FakeCompanyReader reader, ServiceFixture<CompanyService> fixture,
-        FakeUnitOfWork? unitOfWork = null, FakeCompanyRepository? companyRepository = null)
+        FakeUnitOfWork? unitOfWork = null, FakeCompanyRepository? companyRepository = null, string culture = "es-AR")
     {
         var transaction = unitOfWork ?? new FakeUnitOfWork();
         var repository = companyRepository ?? new FakeCompanyRepository();
@@ -172,16 +242,20 @@ public sealed class CompanyServiceTests
             new CompanyCreator(reader, repository, new FakeCompanyMembershipRepository(),
                 new FakeMemberRepository(), new FakeRoleRepository(), new FakeRoleAssignmentRepository(),
                 new FakeCurrentUser(), transaction),
-            CreateReferenceDataResolver(), fixture.Validator, transaction, fixture.TimeProvider, fixture.Logger);
+            CreateReferenceDataResolver(culture), fixture.Validator, transaction, fixture.TimeProvider, fixture.Logger);
     }
 
-    private static CompanyReferenceDataResolver CreateReferenceDataResolver() =>
-        new(new FakeTaxIdTypeCatalog(), new FakeTimeZoneCatalog(), new FakeTenantSettingsReader());
+    /// <summary>Los tipos fiscales y las culturas reales de los datos de referencia; la organización, con su cultura.</summary>
+    private static CompanyReferenceDataResolver CreateReferenceDataResolver(string culture = "es-AR")
+    {
+        var catalog = new JsonReferenceDataCatalog();
+        return new(catalog, new FakeTimeZoneCatalog(), new FakeTenantSettingsReader(culture), catalog);
+    }
 
-    private sealed class FakeTenantSettingsReader : ITenantSettingsReader
+    private sealed class FakeTenantSettingsReader(string culture) : ITenantSettingsReader
     {
         public Task<TenantSettingsRow?> FindCurrentAsync(CancellationToken cancellationToken) =>
-            Task.FromResult<TenantSettingsRow?>(new TenantSettingsRow(Guid.NewGuid(), "es-AR", "America/Argentina/Buenos_Aires", "ARS"));
+            Task.FromResult<TenantSettingsRow?>(new TenantSettingsRow(Guid.NewGuid(), culture, "America/Argentina/Buenos_Aires", "ARS"));
     }
 
     internal sealed class FakeCompanyReader : ICompanyReader
@@ -268,14 +342,6 @@ public sealed class CompanyServiceTests
             Task.FromResult<IReadOnlyList<RoleAssignment>>([]);
         public void Add(RoleAssignment assignment) => Added = assignment;
         public void Remove(RoleAssignment assignment) { }
-    }
-
-    internal sealed class FakeTaxIdTypeCatalog : ITaxIdTypeCatalog
-    {
-        public Task<IReadOnlyList<TaxIdTypeCatalogEntry>> ListAsync(CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<TaxIdTypeCatalogEntry>>([]);
-        public Task<TaxIdTypeCatalogEntry?> FindAsync(string code, CancellationToken cancellationToken) =>
-            Task.FromResult<TaxIdTypeCatalogEntry?>(null);
     }
 
     internal sealed class FakeTimeZoneCatalog : ITimeZoneCatalog

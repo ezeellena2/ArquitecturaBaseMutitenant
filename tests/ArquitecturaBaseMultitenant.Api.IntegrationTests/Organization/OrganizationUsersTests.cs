@@ -161,7 +161,6 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
         using var createdCompany = await AccountJourney.PostAsync(ownerClient, "/api/companies", new
         {
             name = "Sucursal inactiva",
-            taxIdType = (string?)null,
             taxIdNumber = (string?)null,
             timeZoneId = "America/Argentina/Buenos_Aires",
         }, Ct);
@@ -312,7 +311,6 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
         using var createdCompany = await AccountJourney.PostAsync(ownerClient, "/api/companies", new
         {
             name = "Delta Norte S.A.",
-            taxIdType = (string?)null,
             taxIdNumber = (string?)null,
             timeZoneId = "America/Argentina/Buenos_Aires",
         }, Ct);

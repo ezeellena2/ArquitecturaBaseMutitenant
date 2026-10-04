@@ -54,7 +54,6 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
         using var created = await AccountJourney.PostAsync(ownerClient, "/api/companies", new
         {
             name = "Delta Norte S.A.",
-            taxIdType = (string?)null,
             taxIdNumber = (string?)null,
             timeZoneId = "America/Argentina/Buenos_Aires",
         }, Ct);

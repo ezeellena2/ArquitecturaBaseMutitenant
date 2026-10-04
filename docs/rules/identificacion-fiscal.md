@@ -10,6 +10,7 @@
   - Ejemplo: `20-12345678-6` es válido (suma 148, 148 mod 11 = 5, 11 − 5 = 6).
   - Prefijos: 20, 23, 24 y 27 son personas; 30, 33 y 34, empresas. El tipo de dueño (persona o empresa) se valida contra el prefijo cuando corresponde.
 - `TaxIdTypes.Code` es un código de catálogo único por país y tipo (`AR-CUIT`). `TaxIdField` emite en E1 `{ "type": "AR-CUIT", "number": "20123456786" }`, sin separadores; Application busca ese código y deriva `country` del catálogo si recibe el par del field. Si recibe el contrato completo, comprueba que `country` coincida con `TaxIdTypes.CountryCode`. En E6, `TaxId.Create(país, tipo de catálogo, texto)` recibe el país, la fila del catálogo (con su clave de tipo y clave de algoritmo) y el número; devuelve `Result<TaxId>` con dígitos solos. Application valida que el tipo esté habilitado y corresponda al uso. Error: `TaxIds.TaxId.Invalid`, atado al campo.
+- **El tipo según el país (D6):** la ficha de Empresa pide solo el número. El tipo es el de empresas del país de la organización, que es la región de su «Idioma y región» (`TenantSettings.DefaultCulture`): el primer tipo habilitado de ese país que aplica a empresas (`Company` o `Both`), por `SortOrder` y después por código. En Argentina es la CUIT. Si el número no cambió, se conserva el tipo guardado, aunque la organización haya cambiado de país. Un país sin un tipo para empresas no admite un número (`TaxIds.TaxId.Invalid`). Lo resuelve `CompanyReferenceDataResolver`.
 - `ValidTaxIdType()` en Application comprueba que el tipo esté habilitado en el catálogo para un dato nuevo; Domain aplica el algoritmo correspondiente. El front crea en E1 `TaxIdField` con `stdnum`; el value object y el contrato HTTP completo del back llegan en E6.
 - **En la base:** `TaxCountry char(2)`, `TaxType varchar(16)`, `TaxNumber varchar(20)` con dígitos solos. Unicidad por tenant cuando el dato lo pide (dos empresas de la misma organización no comparten CUIT).
 - **JSON de salida (E6):** `{ "country": "AR", "type": "AR-CUIT", "number": "20123456786" }`. El `country` coincide con `TaxIdTypes.CountryCode`; no cambia el significado de `type` entre entrada y salida.
@@ -27,6 +28,7 @@
 
 ## Lo verifica
 - `TaxIdTests` (E6): los casos válidos e inválidos de `format-cases.json`, que también corre el front con `stdnum`.
+- `CompanyServiceTests` y `CompaniesTests`: el tipo de la empresa sale del país de la organización (Argentina y Estados Unidos) y se conserva si el número no cambia.
 - `TaxIdPropertyTests` (E6): ninguna propiedad `Cuit`, `Cuil` o `Dni` de tipo `string` (test de arquitectura).
 
 ## Detalle

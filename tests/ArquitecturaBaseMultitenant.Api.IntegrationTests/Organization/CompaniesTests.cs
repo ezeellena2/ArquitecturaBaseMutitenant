@@ -7,6 +7,7 @@ using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Organization;
@@ -41,7 +42,6 @@ public sealed class CompaniesTests(ApiFactory factory)
         using var created = await AccountJourney.PostAsync(client, "/api/companies", new
         {
             name = "Delta Norte S.A.",
-            taxIdType = (string?)null,
             taxIdNumber = (string?)null,
             timeZoneId = (string?)null,
         }, Ct);
@@ -86,7 +86,6 @@ public sealed class CompaniesTests(ApiFactory factory)
         using var created = await AccountJourney.PostAsync(client, "/api/companies", new
         {
             name = "Sucursal Centro",
-            taxIdType = (string?)null,
             taxIdNumber = (string?)null,
             timeZoneId = "America/Argentina/Buenos_Aires",
         }, Ct);
@@ -174,7 +173,6 @@ public sealed class CompaniesTests(ApiFactory factory)
         using var updated = await client.PutAsJsonAsync(detailPath, new
         {
             name = "Sucursal Centro II",
-            taxIdType = (string?)null,
             taxIdNumber = (string?)null,
             timeZoneId = "America/Argentina/Buenos_Aires",
             version = createdVersion,
@@ -184,7 +182,6 @@ public sealed class CompaniesTests(ApiFactory factory)
         using var staleUpdate = await client.PutAsJsonAsync(detailPath, new
         {
             name = "Versión obsoleta",
-            taxIdType = (string?)null,
             taxIdNumber = (string?)null,
             timeZoneId = "America/Argentina/Buenos_Aires",
             version = createdVersion,
@@ -263,6 +260,54 @@ public sealed class CompaniesTests(ApiFactory factory)
         Assert.Equal(owner.UserId, Assert.Single(await MembersAsync(client, membersPath + Uri.EscapeDataString(ownerText)))
             .GetProperty("userId").GetGuid());
         Assert.Empty(await MembersAsync(client, membersPath + Uri.EscapeDataString("%_\\")));
+    }
+
+    [Theory]
+    [InlineData("es-AR", HttpStatusCode.Created)]
+    [InlineData("en-US", HttpStatusCode.BadRequest)]
+    public async Task The_company_tax_id_takes_its_type_from_the_organization_country(string culture,
+        HttpStatusCode expected)
+    {
+        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
+        var tenant = Tenant.CreateBusiness("Empresas con CUIT", requiresApproval: false);
+        Assert.True(tenant.Activate().IsSuccess);
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenant.Id);
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+            {
+                services.GetRequiredService<TenantSpaceProvisioner>().Stage(tenant,
+                    TenantSettings.Create(culture, "America/Argentina/Buenos_Aires", "ARS"), [owner.UserId], owner.UserId);
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+        await AccountJourney.AuthorizeAsync(client, "business", Ct);
+
+        // D6: la ficha de Empresa pide solo el número.
+        using var created = await AccountJourney.PostAsync(client, "/api/companies", new
+        {
+            name = "Delta Norte S.A.",
+            taxIdNumber = "30-71234567-1",
+            timeZoneId = (string?)null,
+        }, Ct);
+
+        Assert.True(created.StatusCode == expected, await created.Content.ReadAsStringAsync(Ct));
+        if (expected != HttpStatusCode.Created)
+        {
+            using var problem = JsonDocument.Parse(await created.Content.ReadAsStringAsync(Ct));
+            Assert.Equal(TaxIdErrors.InvalidCode, problem.RootElement.GetProperty("code").GetString());
+            return;
+        }
+
+        var companyId = await created.Content.ReadFromJsonAsync<Guid>(Ct);
+        using var detail = await client.GetAsync($"/api/companies/{companyId:D}", Ct);
+        using var json = JsonDocument.Parse(await detail.Content.ReadAsStringAsync(Ct));
+        var taxId = json.RootElement.GetProperty("taxId");
+        Assert.Equal("AR", taxId.GetProperty("country").GetString());
+        Assert.Equal("AR-CUIT", taxId.GetProperty("type").GetString());
+        Assert.Equal("30712345671", taxId.GetProperty("number").GetString());
     }
 
     private static async Task<JsonElement[]> MembersAsync(HttpClient client, string path)

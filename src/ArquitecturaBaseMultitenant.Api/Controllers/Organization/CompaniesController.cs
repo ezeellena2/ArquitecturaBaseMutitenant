@@ -58,7 +58,7 @@ public sealed class CompaniesController(ICompanyService service) : ControllerBas
     [ProducesProblem(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Create([FromBody] CreateCompanyHttpRequest request,
         CancellationToken cancellationToken) =>
-        (await service.CreateAsync(new CreateCompanyRequest(request.Name, request.TaxIdType, request.TaxIdNumber,
+        (await service.CreateAsync(new CreateCompanyRequest(request.Name, request.TaxIdNumber,
             request.TimeZoneId), cancellationToken)).ToCreatedResult(this, nameof(Get), id => new { id });
 
     [HttpPut("{id:guid}")]
@@ -71,7 +71,7 @@ public sealed class CompaniesController(ICompanyService service) : ControllerBas
     [ProducesProblem(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateCompanyHttpRequest request,
         CancellationToken cancellationToken) =>
-        (await service.UpdateAsync(new UpdateCompanyRequest(id, request.Name, request.TaxIdType,
+        (await service.UpdateAsync(new UpdateCompanyRequest(id, request.Name,
             request.TaxIdNumber, request.TimeZoneId, request.Version), cancellationToken)).ToActionResult(this);
 
     [HttpPut("{id:guid}/status")]

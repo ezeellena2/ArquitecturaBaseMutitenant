@@ -54,7 +54,6 @@ internal static class OrganizationJourney
         using var created = await AccountJourney.PostAsync(client, "/api/companies", new
         {
             name,
-            taxIdType = (string?)null,
             taxIdNumber = (string?)null,
             timeZoneId = (string?)null,
         }, ct);

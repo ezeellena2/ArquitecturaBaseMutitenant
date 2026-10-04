@@ -180,7 +180,6 @@ public sealed class RolesTests(ApiFactory factory)
         using var created = await AccountJourney.PostAsync(client, "/api/companies", new
         {
             name,
-            taxIdType = (string?)null,
             taxIdNumber = (string?)null,
             timeZoneId = "America/Argentina/Buenos_Aires",
         }, Ct);

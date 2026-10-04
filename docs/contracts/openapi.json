@@ -11392,12 +11392,6 @@
               "string"
             ]
           },
-          "taxIdType": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
           "taxIdNumber": {
             "type": [
               "null",
@@ -11410,7 +11404,8 @@
               "string"
             ]
           }
-        }
+        },
+        "description": "Solo el número de identificación fiscal: el tipo sale del país de la organización."
       },
       "CreatedPlatformTenantResponse": {
         "required": [
@@ -15007,12 +15002,6 @@
               "string"
             ]
           },
-          "taxIdType": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
           "taxIdNumber": {
             "type": [
               "null",
@@ -15032,7 +15021,8 @@
             ],
             "format": "uint32"
           }
-        }
+        },
+        "description": "Solo el número de identificación fiscal: el tipo sale del país de la organización."
       },
       "UpdateCompanyMemberRolesHttpRequest": {
         "type": "object",
