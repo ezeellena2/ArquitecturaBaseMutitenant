@@ -22,7 +22,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 /// métodos enmascarados, sus membresías desde el índice global y los permisos si es operadora.
 /// </summary>
 internal sealed class PlatformAccountService(IPlatformAccountReader reader, ILoginMethodReader methods,
-    LoginMethodAvailability availability, ITenantReader tenants, SoleOwnerOrganizations soleOwners,
+    LoginMethodAvailability availability, ITenantReader tenants, PlatformSoleOwnerGuard soleOwners,
     IPhoneNumberParser phones, IRequestValidator validator, TimeProvider clock,
     ILogger<PlatformAccountService> logger) : IPlatformAccountService
 {

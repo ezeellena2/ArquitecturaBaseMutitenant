@@ -106,6 +106,7 @@ public sealed class ExplicitRouteInventoryTests(ApiFactory factory)
         "POST /api/platform/accounts/{id:guid}/suspend",
         "POST /api/platform/accounts/{id:guid}/reactivate",
         "POST /api/platform/accounts/{id:guid}/revoke-sessions",
+        "POST /api/platform/accounts/{id:guid}/deletion",
         "POST /api/me/external/google",
         "GET /api/me/login-methods",
         "POST /api/me/login-methods",

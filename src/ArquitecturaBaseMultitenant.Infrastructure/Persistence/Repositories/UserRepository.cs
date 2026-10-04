@@ -15,12 +15,19 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories;
 internal sealed class UserRepository(UserManager<ApplicationUser> manager, ApplicationDbContext context,
     TimeProvider timeProvider) : IUserRepository
 {
-    public async Task<Result> RequestDeletionAsync(Guid userId, string reason, DateTime requestedAtUtc, int graceDays,
-        CancellationToken cancellationToken)
+    public Task<Result> RequestDeletionAsync(Guid userId, string reason, DateTime requestedAtUtc, int graceDays,
+        CancellationToken cancellationToken) => RequestAsync(userId, reason, requestedAtUtc, graceDays, null, cancellationToken);
+
+    public Task<Result> RequestDeletionByOperatorAsync(Guid userId, Guid operatorId, string reason, DateTime requestedAtUtc,
+        int graceDays, CancellationToken cancellationToken) =>
+        RequestAsync(userId, reason, requestedAtUtc, graceDays, operatorId, cancellationToken);
+
+    private async Task<Result> RequestAsync(Guid userId, string reason, DateTime requestedAtUtc, int graceDays,
+        Guid? operatorId, CancellationToken cancellationToken)
     {
         context.RequireTransaction();
         var user = await RequireUserAsync(userId, cancellationToken);
-        var result = user.RequestDeletion(reason, requestedAtUtc, graceDays);
+        var result = user.RequestDeletion(reason, requestedAtUtc, graceDays, operatorId);
         if (result.IsSuccess) user.SecurityStamp = Guid.CreateVersion7().ToString("N");
         return result;
     }

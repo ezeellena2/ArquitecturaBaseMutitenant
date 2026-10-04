@@ -242,6 +242,8 @@ public sealed class ConnectServiceTests
 
         public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> RequestDeletionAsync(Guid userId, string reason,
             DateTime requestedAtUtc, int graceDays, CancellationToken ct) => throw new NotSupportedException();
+        public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> RequestDeletionByOperatorAsync(Guid userId, Guid operatorId,
+            string reason, DateTime requestedAtUtc, int graceDays, CancellationToken ct) => throw new NotSupportedException();
         public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> CancelDeletionAsync(Guid userId,
             DateTime cancelledAtUtc, CancellationToken ct) => throw new NotSupportedException();
         public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> CompleteDeletionAsync(Guid userId,

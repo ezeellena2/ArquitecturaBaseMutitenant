@@ -119,12 +119,12 @@ public sealed class SecurityEvent : Entity
         return ev;
     }
 
-    /// <summary>Acción de un operador sobre una cuenta: suspender, reactivar o cerrar sus sesiones.</summary>
+    /// <summary>Acción de un operador sobre una cuenta: suspender, reactivar, cerrar sus sesiones o iniciar la baja.</summary>
     public static SecurityEvent ForAccountAdministration(SecurityEventType type, Guid operatorId,
         Guid accountId, string reason, DateTime occurredAtUtc)
     {
         if (type is not (SecurityEventType.AccountSuspended or SecurityEventType.AccountReactivated
-            or SecurityEventType.AccountSessionsRevoked))
+            or SecurityEventType.AccountSessionsRevoked or SecurityEventType.AccountDeletionRequested))
             throw new ArgumentOutOfRangeException(nameof(type));
         if (accountId == Guid.Empty) throw new ArgumentException("A target account is required.", nameof(accountId));
         var ev = ForPlatformAction(type, AuditActorKind.PlatformOperator, operatorId, reason, occurredAtUtc);

@@ -83,7 +83,9 @@ public static class DependencyInjection
         services.AddScoped<IPlatformDomainService, Services.Platform.PlatformDomainService>();
         services.AddScoped<IPlatformAccountService, Services.Platform.PlatformAccountService>();
         services.AddScoped<IPlatformAccountStateService, Services.Platform.PlatformAccountStateService>();
+        services.AddScoped<IPlatformAccountDeletionService, Services.Platform.PlatformAccountDeletionService>();
         services.AddScoped<Services.Platform.PlatformOperatorGuard>();
+        services.AddScoped<Services.Platform.PlatformSoleOwnerGuard>();
         services.AddScoped<Services.Platform.PlatformActionGuard>();
         services.AddScoped<Services.Platform.PlatformTenantSlugAllocator>();
         services.AddScoped<Services.Platform.PlatformTenantCreator>();
@@ -127,6 +129,7 @@ public static class DependencyInjection
         services.AddScoped<LegalAcceptanceWriter>();
         services.AddScoped<IAccountDeletionService, AccountDeletionService>();
         services.AddScoped<AccountDeletionRequester>();
+        services.AddScoped<AccountDeletionScheduler>();
         services.AddScoped<LastTenantAdminGuard>();
         services.AddScoped<AccountDeletionNotifier>();
         services.AddScoped<AccountDeletionCanceller>();
@@ -164,7 +167,6 @@ public static class DependencyInjection
         services.AddScoped<LoginMethodNotifier>();
         services.AddScoped<GoogleMethodLinkFinalizer>();
         services.AddScoped<LoginMethodAvailability>();
-        services.AddScoped<SoleOwnerOrganizations>();
         services.AddScoped<LoginMethodChanger>();
         services.AddScoped<IReauthService, ReauthService>();
         services.AddScoped<ReauthIssuer>();

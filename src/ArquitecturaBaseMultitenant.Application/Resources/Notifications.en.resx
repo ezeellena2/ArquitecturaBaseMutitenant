@@ -33,6 +33,11 @@
   <data name="DeletionRequested.Body" xml:space="preserve"><value>{0} On {1} at {2}, you requested deletion of your {3} account and we signed you out of all sessions.</value></data>
   <data name="DeletionRequested.Scheduled" xml:space="preserve"><value>Your account will be deleted on {0}.</value></data>
   <data name="DeletionRequested.Note" xml:space="preserve"><value>If this wasn't you or you changed your mind, sign in before that date to cancel it.</value></data>
+  <data name="DeletionRequestedByPlatform.Subject" xml:space="preserve"><value>The platform started deleting your account</value></data>
+  <data name="DeletionRequestedByPlatform.Title" xml:space="preserve"><value>The platform started deleting your account</value></data>
+  <data name="DeletionRequestedByPlatform.Body" xml:space="preserve"><value>{0} On {1} at {2} the platform started deleting your {3} account and we closed all your sessions.</value></data>
+  <data name="DeletionRequestedByPlatform.Note" xml:space="preserve"><value>If you think this is a mistake, sign in before that date to cancel it.</value></data>
+  <data name="DeletionRequestedByPlatform.NoteSuspended" xml:space="preserve"><value>Your account is suspended, so you cannot cancel the deletion.</value></data>
   <data name="DeletionCancelled.Subject" xml:space="preserve"><value>You cancelled account deletion</value></data>
   <data name="DeletionCancelled.Title" xml:space="preserve"><value>You cancelled account deletion</value></data>
   <data name="DeletionCancelled.Body" xml:space="preserve"><value>{0} On {1} at {2}, you cancelled deletion of your {3} account. Your account remains active.</value></data>

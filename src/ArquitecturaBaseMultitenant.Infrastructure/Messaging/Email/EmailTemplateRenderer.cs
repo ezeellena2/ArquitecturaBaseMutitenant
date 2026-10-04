@@ -122,11 +122,14 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
         var date = formatter.FormatDate(notice.RequestedAtUtc, context);
         var time = formatter.FormatTime(notice.RequestedAtUtc, context);
         var scheduled = formatter.FormatDate(notice.ScheduledForUtc, context);
-        return ("DeletionRequested", "AccountDeletionRequested.html",
-            [NotificationTexts.Format("DeletionRequested.Body", culture, name, date, time, appName),
+        var key = notice.RequestedByPlatform ? "DeletionRequestedByPlatform" : "DeletionRequested";
+        var note = !notice.RequestedByPlatform ? "DeletionRequested.Note"
+            : notice.CanCancel ? "DeletionRequestedByPlatform.Note" : "DeletionRequestedByPlatform.NoteSuspended";
+        return (key, "AccountDeletionRequested.html",
+            [NotificationTexts.Format(key + ".Body", culture, name, date, time, appName),
                 NotificationTexts.Format("DeletionRequested.Scheduled", culture, scheduled)],
-            NotificationTexts.Get("Action.Login", culture), notice.ActionUrl,
-            NotificationTexts.Get("DeletionRequested.Note", culture));
+            notice.CanCancel ? NotificationTexts.Get("Action.Login", culture) : string.Empty, notice.ActionUrl,
+            NotificationTexts.Get(note, culture));
     }
 
     private async Task<(string Key, string Template, string[] Paragraphs, string Action, string Url, string Note)>

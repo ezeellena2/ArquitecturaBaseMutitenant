@@ -18,8 +18,13 @@ public abstract record AccountNotice
 
     public sealed record PublicPageModerated(string OrganizationName, bool IsBlocked) : AccountNotice;
 
+    /// <summary>Baja programada. Si la inició Plataforma, el texto lo dice; una cuenta suspendida no puede cancelarla.</summary>
     public sealed record DeletionRequested(DateTime RequestedAtUtc, DateTime ScheduledForUtc,
-        string TimeZoneId, string ActionUrl) : AccountNotice;
+        string TimeZoneId, string ActionUrl) : AccountNotice
+    {
+        public bool RequestedByPlatform { get; init; }
+        public bool CanCancel { get; init; } = true;
+    }
 
     public sealed record DeletionCancelled(DateTime OccurredAtUtc, string TimeZoneId,
         string ActionUrl) : AccountNotice;

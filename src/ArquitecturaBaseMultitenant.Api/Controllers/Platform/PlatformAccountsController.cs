@@ -18,7 +18,7 @@ namespace ArquitecturaBaseMultitenant.Api.Controllers.Platform;
 [Tags("Cuentas de Plataforma")]
 [Access(Access.Platform)]
 public sealed class PlatformAccountsController(IPlatformAccountService service,
-    IPlatformAccountStateService states) : ControllerBase
+    IPlatformAccountStateService states, IPlatformAccountDeletionService deletions) : ControllerBase
 {
     [HttpGet("paged")]
     [HasPlatformPermission(PlatformPermissions.Accounts.Read)]
@@ -82,4 +82,16 @@ public sealed class PlatformAccountsController(IPlatformAccountService service,
     [ProducesProblem(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> RevokeSessions(Guid id, [FromBody] PlatformAccountActionHttpRequest request, CancellationToken ct) =>
         (await states.RevokeSessionsAsync(id, request.ToModel(), ct)).ToActionResult(this);
+
+    [HttpPost("{id:guid}/deletion")]
+    [Idempotent]
+    [HasPlatformPermission(PlatformPermissions.Accounts.Manage)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
+    [ProducesProblem(StatusCodes.Status401Unauthorized)]
+    [ProducesProblem(StatusCodes.Status403Forbidden)]
+    [ProducesProblem(StatusCodes.Status404NotFound)]
+    [ProducesProblem(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> RequestDeletion(Guid id, [FromBody] PlatformAccountActionHttpRequest request, CancellationToken ct) =>
+        (await deletions.RequestDeletionAsync(id, request.ToModel(), ct)).ToActionResult(this);
 }

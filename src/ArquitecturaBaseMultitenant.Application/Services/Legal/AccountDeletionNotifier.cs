@@ -26,6 +26,20 @@ internal sealed class AccountDeletionNotifier(AccountNoticeIssuer notices, ISecu
             { RecipientName = account.DisplayName }, account.Culture, false, ct);
     }
 
+    // Baja iniciada por Plataforma: el SecurityEvent con el operador lo registra Plataforma; acá va solo el aviso.
+    internal Task PlatformRequestedAsync(UserAccountRow account, IReadOnlyList<LoginMethod> methods,
+        DateTime nowUtc, DateTime scheduledForUtc, bool canCancel, CancellationToken ct)
+    {
+        var url = origin.Value is { } value ? new Uri(value, "/login").AbsoluteUri : "/login";
+        return notices.EnqueueAsync(account.Id, methods,
+            new AccountNotice.DeletionRequested(nowUtc, scheduledForUtc, account.TimeZoneId, url)
+            {
+                RecipientName = account.DisplayName,
+                RequestedByPlatform = true,
+                CanCancel = canCancel,
+            }, account.Culture, false, ct);
+    }
+
     internal Task RequestedAsync(UserAccountRow account, IReadOnlyList<LoginMethod> methods,
         DateTime nowUtc, DateTime scheduledForUtc, CancellationToken ct)
     {

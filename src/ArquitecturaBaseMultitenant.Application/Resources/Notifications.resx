@@ -33,6 +33,11 @@
   <data name="DeletionRequested.Body" xml:space="preserve"><value>{0} El {1} a las {2} pediste la baja de tu cuenta de {3} y cerramos todas tus sesiones.</value></data>
   <data name="DeletionRequested.Scheduled" xml:space="preserve"><value>Tu cuenta se elimina el {0}.</value></data>
   <data name="DeletionRequested.Note" xml:space="preserve"><value>Si no fuiste vos o te arrepentiste, ingresá antes de esa fecha para cancelarla.</value></data>
+  <data name="DeletionRequestedByPlatform.Subject" xml:space="preserve"><value>La plataforma dio de baja tu cuenta</value></data>
+  <data name="DeletionRequestedByPlatform.Title" xml:space="preserve"><value>La plataforma dio de baja tu cuenta</value></data>
+  <data name="DeletionRequestedByPlatform.Body" xml:space="preserve"><value>{0} El {1} a las {2} la plataforma inició la baja de tu cuenta de {3} y cerramos todas tus sesiones.</value></data>
+  <data name="DeletionRequestedByPlatform.Note" xml:space="preserve"><value>Si creés que es un error, ingresá antes de esa fecha para cancelarla.</value></data>
+  <data name="DeletionRequestedByPlatform.NoteSuspended" xml:space="preserve"><value>Tu cuenta está suspendida, así que no podés cancelar la baja.</value></data>
   <data name="DeletionCancelled.Subject" xml:space="preserve"><value>Cancelaste la baja de tu cuenta</value></data>
   <data name="DeletionCancelled.Title" xml:space="preserve"><value>Cancelaste la baja de tu cuenta</value></data>
   <data name="DeletionCancelled.Body" xml:space="preserve"><value>{0} El {1} a las {2} cancelaste la baja de tu cuenta de {3}. Tu cuenta sigue activa.</value></data>

@@ -54,7 +54,8 @@ public sealed class AccountDeletionTests(ApiFactory factory)
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, Ct);
         var participants = services.GetServices<IAccountDeletionParticipant>().Append(new BlockingModule());
-        var requester = ActivatorUtilities.CreateInstance<AccountDeletionRequester>(services, participants);
+        var scheduler = ActivatorUtilities.CreateInstance<AccountDeletionScheduler>(services, participants);
+        var requester = ActivatorUtilities.CreateInstance<AccountDeletionRequester>(services, scheduler);
         var service = ActivatorUtilities.CreateInstance<AccountDeletionService>(services, new TestUser(account.UserId), requester);
         var result = await service.RequestAsync(new RequestAccountDeletionRequest("Ya no la uso", secret), Ct);
 

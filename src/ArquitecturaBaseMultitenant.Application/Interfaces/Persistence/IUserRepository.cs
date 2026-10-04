@@ -10,6 +10,10 @@ public interface IUserRepository
 {
     Task<Result> RequestDeletionAsync(Guid userId, string reason, DateTime requestedAtUtc, int graceDays,
         CancellationToken cancellationToken);
+
+    /// <summary>Baja iniciada por un operador: una cuenta suspendida la conserva suspendida con la fecha.</summary>
+    Task<Result> RequestDeletionByOperatorAsync(Guid userId, Guid operatorId, string reason, DateTime requestedAtUtc,
+        int graceDays, CancellationToken cancellationToken);
     Task<Result> CancelDeletionAsync(Guid userId, DateTime cancelledAtUtc, CancellationToken cancellationToken);
     Task<Result> CompleteDeletionAsync(Guid userId, DateTime deletedAtUtc, string deletedDisplayName,
         CancellationToken cancellationToken);

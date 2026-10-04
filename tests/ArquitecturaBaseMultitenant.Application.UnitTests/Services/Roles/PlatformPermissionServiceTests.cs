@@ -70,6 +70,7 @@ public sealed class PlatformPermissionServiceTests
     {
         public Task<UserAccountRow?> GetByIdAsync(Guid userId, CancellationToken ct) => Task.FromResult(account?.Id == userId ? account : null);
         public Task<Result> RequestDeletionAsync(Guid id, string reason, DateTime utc, int graceDays, CancellationToken ct) => throw new NotSupportedException();
+        public Task<Result> RequestDeletionByOperatorAsync(Guid id, Guid operatorId, string reason, DateTime utc, int graceDays, CancellationToken ct) => throw new NotSupportedException();
         public Task<Result> CancelDeletionAsync(Guid id, DateTime utc, CancellationToken ct) => throw new NotSupportedException();
         public Task<Result> CompleteDeletionAsync(Guid id, DateTime utc, string name, CancellationToken ct) => throw new NotSupportedException();
         public Task<Result> SuspendAsync(Guid id, CancellationToken ct) => throw new NotSupportedException();
