@@ -88,9 +88,9 @@
   <data name="OperatorInvited.Note" xml:space="preserve"><value>If you weren't expecting this invitation, ignore this email.</value></data>
   <data name="RecoveryRequested.Subject" xml:space="preserve"><value>Someone asked to recover your account</value></data>
   <data name="RecoveryRequested.Title" xml:space="preserve"><value>Someone asked to recover your account</value></data>
-  <data name="RecoveryRequested.Body" xml:space="preserve"><value>{0} Someone asked to recover your {1} account and gave us a new email address to contact them. A person from the platform will review the request before making any change.</value></data>
+  <data name="RecoveryRequested.Body" xml:space="preserve"><value>{0} On {1} at {2}, someone asked to recover your {3} account and gave us another email address or phone number to contact them.</value></data>
+  <data name="RecoveryRequested.After" xml:space="preserve"><value>A person from the platform reviews the request before changing anything. If it was you, you don't need to do anything.</value></data>
   <data name="RecoveryRequested.NoteSupport" xml:space="preserve"><value>If it wasn't you, write to {0}.</value></data>
-  <data name="RecoveryRequested.Note" xml:space="preserve"><value>If it wasn't you, review your sign-in methods in “My account”.</value></data>
   <data name="RecoveryApproved.Subject" xml:space="preserve"><value>You recovered your account</value></data>
   <data name="RecoveryApproved.Title" xml:space="preserve"><value>You recovered your account</value></data>
   <data name="RecoveryApproved.Body" xml:space="preserve"><value>We approved your request. From now on you sign in to {0} with this email address, which is now your primary method.</value></data>

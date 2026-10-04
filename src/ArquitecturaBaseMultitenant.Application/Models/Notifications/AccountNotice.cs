@@ -51,9 +51,10 @@ public abstract record AccountNotice
 
     /// <summary>
     /// A los métodos que siguen andando de la cuenta encontrada, cuando alguien registra un pedido para recuperarla.
-    /// Nunca a quien hizo el pedido (ADR 0041).
+    /// Nunca a quien hizo el pedido ni con el método nuevo, ni siquiera tapado (ADR 0041). Sin botón; la nota lleva
+    /// el correo de soporte de la configuración de la plataforma.
     /// </summary>
-    public sealed record RecoveryRequested : AccountNotice
+    public sealed record RecoveryRequested(DateTime RequestedAtUtc, string TimeZoneId) : AccountNotice
     {
         public ArquitecturaBaseMultitenant.Domain.ValueObjects.Email? SupportEmail { get; init; }
     }

@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
 using ArquitecturaBaseMultitenant.Infrastructure.Phones;
 using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
@@ -279,6 +280,39 @@ public sealed class EmailTemplateTests
         Assert.Contains("Hello, Diego.", message.TextBody);
         Assert.Contains("at 2:35", message.TextBody);
         Assert.Contains("Go to My Account", message.TextBody);
+    }
+
+    [Theory]
+    [InlineData("es-AR", "Alguien pidió recuperar tu cuenta",
+        "Hola, Diego. El 27/09/2026 a las 14:35 alguien pidió recuperar tu cuenta de ArquitecturaBase y nos dio otro correo o teléfono para escribirle.",
+        "Una persona de la plataforma revisa el pedido antes de cambiar algo. Si fuiste vos, no tenés que hacer nada.",
+        "Si no fuiste vos, escribí a soporte@ejemplo.com.")]
+    [InlineData("en-US", "Someone asked to recover your account",
+        "someone asked to recover your ArquitecturaBase account and gave us another email address or phone number to contact them.",
+        "A person from the platform reviews the request before changing anything. If it was you, you don't need to do anything.",
+        "If it wasn't you, write to soporte@ejemplo.com.")]
+    public async Task Recovery_request_notice_uses_the_approved_copy_without_button_or_new_method(string cultureCode,
+        string subject, string first, string second, string note)
+    {
+        var profile = await new CultureProfiles(new JsonReferenceDataCatalog()).LoadAsync(cultureCode, Ct);
+        var renderer = new EmailTemplateRenderer(Options.Create(new EmailOptions { AppName = "ArquitecturaBase" }),
+            CreateFormatter());
+        var requestedAtUtc = new DateTime(2026, 9, 27, 17, 35, 0, DateTimeKind.Utc);
+
+        // Lienzo v89, Mensajes: «Recuperación: aviso a la cuenta».
+        var message = await renderer.RenderAccountNoticeAsync("diego@example.test",
+            new AccountNotice.RecoveryRequested(requestedAtUtc, "America/Argentina/Buenos_Aires")
+            {
+                RecipientName = "Diego",
+                SupportEmail = Email.Create("soporte@ejemplo.com").Value,
+            }, profile, Ct);
+
+        Assert.Equal(subject, message.Subject);
+        Assert.Contains(first, message.TextBody);
+        Assert.Contains(second, message.TextBody);
+        Assert.Contains(note, message.TextBody);
+        Assert.DoesNotContain("<a href", message.HtmlBody);
+        Assert.DoesNotContain("@example.test", message.TextBody);
     }
 
     [Theory]

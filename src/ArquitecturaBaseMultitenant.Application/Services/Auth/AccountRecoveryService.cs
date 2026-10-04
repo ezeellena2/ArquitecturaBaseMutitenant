@@ -84,10 +84,10 @@ internal sealed class AccountRecoveryService(
                     return AccountRecoveryErrors.VerificationRequired;
                 var (type, value) = previous.Value;
                 var userId = await userLookup.FindVerifiedUserIdAsync(type, value, ct);
-                recoveries.Add(AccountRecoveryRequest.Submit(code.Id, type, value, newEmail, userId,
-                    timeProvider.GetUtcNow().UtcDateTime));
+                var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+                recoveries.Add(AccountRecoveryRequest.Submit(code.Id, type, value, newEmail, userId, nowUtc));
                 await messenger.NotifyReceivedAsync(destination.Value, ct);
-                if (userId is { } found) await messenger.NotifyAccountAsync(found, ct);
+                if (userId is { } found) await messenger.NotifyAccountAsync(found, nowUtc, ct);
                 return Result.Success();
             }, CommitPolicy.OnSuccess, cancellationToken);
         });

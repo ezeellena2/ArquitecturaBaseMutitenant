@@ -37,8 +37,8 @@ internal sealed class AccountRecoveryMessenger(IEnumerable<ILoginCodeChannel> co
         await EmailChannel().EnqueueAsync(null, email, new AccountNotice.RecoveryReceived(),
             await cultures.ResolveAsync(null, null, cancellationToken), cancellationToken);
 
-    /// <summary>A la cuenta encontrada por el método de antes: alguien pidió recuperarla (texto provisorio).</summary>
-    public async Task NotifyAccountAsync(Guid userId, CancellationToken cancellationToken)
+    /// <summary>A la cuenta encontrada por el método de antes: alguien pidió recuperarla (lienzo v89, Mensajes).</summary>
+    public async Task NotifyAccountAsync(Guid userId, DateTime requestedAtUtc, CancellationToken cancellationToken)
     {
         var account = await users.GetByIdAsync(userId, cancellationToken);
         if (account is null) return;
@@ -46,7 +46,8 @@ internal sealed class AccountRecoveryMessenger(IEnumerable<ILoginCodeChannel> co
             await methods.ListByUserIdAsync(userId, cancellationToken), cancellationToken);
         var support = (await settings.FindAsync(cancellationToken))?.SupportEmail;
         await notices.EnqueueAsync(userId, available,
-            new AccountNotice.RecoveryRequested { RecipientName = account.DisplayName, SupportEmail = support },
+            new AccountNotice.RecoveryRequested(requestedAtUtc, account.TimeZoneId)
+                { RecipientName = account.DisplayName, SupportEmail = support },
             account.Culture, principalOnly: false, cancellationToken);
     }
 

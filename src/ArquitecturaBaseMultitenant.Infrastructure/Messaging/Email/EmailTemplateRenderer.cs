@@ -67,11 +67,8 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
                 new[] { NotificationTexts.Format("OperatorInvited.Body", culture, appName) },
                 NotificationTexts.Get("Action.Login", culture), invited.ActionUrl,
                 NotificationTexts.Get("OperatorInvited.Note", culture)),
-            AccountNotice.RecoveryRequested requested => ("RecoveryRequested", "AccountDeleted.html",
-                new[] { NotificationTexts.Format("RecoveryRequested.Body", culture, greeting, appName) },
-                string.Empty, string.Empty, requested.SupportEmail is { } support
-                    ? NotificationTexts.Format("RecoveryRequested.NoteSupport", culture, support.Value)
-                    : NotificationTexts.Get("RecoveryRequested.Note", culture)),
+            AccountNotice.RecoveryRequested requested => await RecoveryRequestedAsync(requested, greeting, appName,
+                culture, cancellationToken),
             AccountNotice.RecoveryApproved approved => ("RecoveryApproved", "AccountDeletionCancelled.html",
                 new[] { NotificationTexts.Format("RecoveryApproved.Body", culture, appName) },
                 NotificationTexts.Get("Action.Login", culture), approved.ActionUrl,
@@ -110,6 +107,23 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
         if (note.Length > 0) textParts.Add(note);
         textParts.Add(NotificationTexts.Format("Layout.Footer", culture, appName));
         return new EmailMessage(to, subject, html, string.Join(Environment.NewLine + Environment.NewLine, textParts));
+    }
+
+    /// <summary>Lienzo v89: fecha y hora del pedido en la zona de la cuenta, sin botón y sin el método nuevo.</summary>
+    private async Task<(string Key, string Template, string[] Paragraphs, string Action, string Url, string Note)>
+        RecoveryRequestedAsync(AccountNotice.RecoveryRequested notice, string greeting, string appName,
+            CultureProfile culture, CancellationToken ct)
+    {
+        var formatter = _formatter ?? throw new InvalidOperationException("DisplayFormatter is required for account notices.");
+        var context = await formatter.CreateAsync(culture.Entry.Code, notice.TimeZoneId, ct);
+        return ("RecoveryRequested", "AccountDeleted.html",
+            [NotificationTexts.Format("RecoveryRequested.Body", culture, greeting,
+                    formatter.FormatDate(notice.RequestedAtUtc, context),
+                    formatter.FormatTime(notice.RequestedAtUtc, context), appName),
+                NotificationTexts.Get("RecoveryRequested.After", culture)],
+            string.Empty, string.Empty, notice.SupportEmail is { } support
+                ? NotificationTexts.Format("RecoveryRequested.NoteSupport", culture, support.Value)
+                : string.Empty);
     }
 
     private async Task<(string Key, string Template, string[] Paragraphs, string Action, string Url, string Note)>
