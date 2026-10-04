@@ -145,7 +145,7 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
                     FROM tenant."Invitations"
                     WHERE "TenantId" = {tenantId}
                       AND "Status" = 'Pending'
-                      AND "Destination" ILIKE {pattern} ESCAPE '\\'
+                      AND "Destination" ILIKE {pattern} ESCAPE '\'
                     """).ToArrayAsync(cancellationToken);
             rows = rows.Where(membership => invitationMatches.Contains(membership.MemberId)
                 || context.Members.AsNoTracking().Any(member => member.TenantId == tenantId

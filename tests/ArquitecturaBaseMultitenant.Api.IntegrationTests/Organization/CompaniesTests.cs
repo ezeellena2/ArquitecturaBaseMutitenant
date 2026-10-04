@@ -228,6 +228,51 @@ public sealed class CompaniesTests(ApiFactory factory)
         Assert.Equal(50, fiftyJson.RootElement.GetProperty("totalCount").GetInt32());
     }
 
+    [Fact]
+    public async Task Searching_company_members_by_text_finds_members_and_pending_invitations()
+    {
+        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
+        await OrganizationJourney.StageAsync(factory, owner, "Búsqueda de miembros", Ct);
+        await AccountJourney.AuthorizeAsync(client, "business", Ct);
+        var companyId = await OrganizationJourney.CreateCompanyAsync(client, "Delta Norte S.A.", Ct);
+        var membersPath = $"/api/companies/{companyId:D}/members/paged?pageSize=50&search=";
+        var ownerText = owner.Email.Value[..owner.Email.Value.IndexOf('@', StringComparison.Ordinal)][^12..];
+
+        // Sin invitaciones pendientes: busca por el correo del miembro.
+        var found = await MembersAsync(client, membersPath + Uri.EscapeDataString(ownerText));
+        Assert.Equal(owner.UserId, Assert.Single(found).GetProperty("userId").GetGuid());
+
+        using var rolesResponse = await client.GetAsync($"/api/roles/paged?companyId={companyId:D}&pageSize=50", Ct);
+        using var rolesJson = JsonDocument.Parse(await rolesResponse.Content.ReadAsStringAsync(Ct));
+        var adminRoleId = Assert.Single(rolesJson.RootElement.GetProperty("items").EnumerateArray(),
+            role => role.GetProperty("isSystemRole").GetBoolean()).GetProperty("id").GetGuid();
+        var invited = $"pendiente-{Guid.NewGuid():N}@example.test";
+        using var issued = await AccountJourney.PostAsync(client, "/api/users/invitations", new
+        {
+            email = invited,
+            roleIds = Array.Empty<Guid>(),
+            companies = new[] { new { companyId, roleIds = new[] { adminRoleId } } },
+        }, Ct);
+        Assert.True(issued.StatusCode == HttpStatusCode.Created, await issued.Content.ReadAsStringAsync(Ct));
+
+        // Con una invitación pendiente: la encuentra por su correo, y los comodines se buscan como texto.
+        var pending = Assert.Single(await MembersAsync(client, membersPath + Uri.EscapeDataString(invited[..20])));
+        Assert.Equal("Invited", pending.GetProperty("state").GetString());
+        Assert.Equal(invited, pending.GetProperty("email").GetString());
+        Assert.Equal(owner.UserId, Assert.Single(await MembersAsync(client, membersPath + Uri.EscapeDataString(ownerText)))
+            .GetProperty("userId").GetGuid());
+        Assert.Empty(await MembersAsync(client, membersPath + Uri.EscapeDataString("%_\\")));
+    }
+
+    private static async Task<JsonElement[]> MembersAsync(HttpClient client, string path)
+    {
+        using var response = await client.GetAsync(path, Ct);
+        Assert.True(response.StatusCode == HttpStatusCode.OK, await response.Content.ReadAsStringAsync(Ct));
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
+        return [.. json.RootElement.GetProperty("items").EnumerateArray().Select(item => item.Clone())];
+    }
+
     private async Task AddCompaniesAsync(Guid tenantId, int count)
     {
         await using var scope = factory.Services.CreateAsyncScope();
