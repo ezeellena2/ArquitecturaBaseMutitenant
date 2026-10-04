@@ -19,6 +19,7 @@
 - `MaskedIpAddress` conserva IPv4 sin el último octeto e IPv6 sin los últimos 80 bits; IPv4 mapeada se normaliza. Una IP ausente o inválida queda null. `AuditTrailInterceptor` completa la IP de los eventos nuevos con `IRequestInfo`, sin alterar su diff ni los eventos ya guardados. Las filas históricas sin evidencia mantienen diff vacío y campos desconocidos null.
 - En Plataforma, el tipo «Ingresos» se consulta desde `identity.LoginAudits`, con método/resultado y códigos de error técnicos, sin dirección completa ni código OTP. No se inventan ingresos como SecurityEvents.
 - Las acciones se traducen con `AuditAction.<código>` en `Audit.resx`.
+- **El «Qué» de una entrada** sale de `AuditSummary.<Entidad>.<variante>`, después `.<acción>` y después `AuditSummary.<Entidad>` (`AuditTexts.Summary`). Un cambio de un solo campo usa como variante el nombre del campo: tiene su texto solo si el tablero lo dibuja («Cambió la zona de …», «Cambió el idioma y la región predeterminados»); si no, vale el de la acción. Un texto sin `{0}` no necesita el nombre de lo afectado.
 
 ## Prohibido
 - Setear a mano `CreatedBy` o `ModifiedAtUtc`.

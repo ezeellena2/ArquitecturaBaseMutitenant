@@ -30,6 +30,8 @@
   <data name="AuditSummary.Role.Updated" xml:space="preserve"><value>Changed role {0}</value></data>
   <data name="AuditSummary.Role.Deleted" xml:space="preserve"><value>Removed role {0}</value></data>
   <data name="AuditSummary.Role.Restored" xml:space="preserve"><value>Restored role {0}</value></data>
+  <data name="AuditSummary.Company.TimeZoneId" xml:space="preserve"><value>Changed the time zone of {0}</value></data>
+  <data name="AuditSummary.TenantSettings.DefaultCulture" xml:space="preserve"><value>Changed the default language and region</value></data>
   <data name="Location.Organization" xml:space="preserve"><value>Entire organization</value></data>
   <data name="Entity.Member" xml:space="preserve"><value>a user</value></data>
   <data name="Entity.Invitation" xml:space="preserve"><value>an invitation</value></data>

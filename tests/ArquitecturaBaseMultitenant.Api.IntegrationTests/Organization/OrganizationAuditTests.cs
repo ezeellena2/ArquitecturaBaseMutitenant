@@ -186,6 +186,17 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
                    version = settings.GetProperty("version").GetUInt32(),
                }, Ct))
             Assert.True(changed.StatusCode == HttpStatusCode.NoContent, await changed.Content.ReadAsStringAsync(Ct));
+        // Dos campos en un guardado: el resumen general.
+        settings = await JsonAsync(client, "/api/organization/settings");
+        using (var both = await client.PutAsJsonAsync("/api/organization/settings", new
+               {
+                   name = settings.GetProperty("name").GetString(),
+                   defaultCulture = "es-AR",
+                   defaultTimeZoneId = "America/Argentina/Cordoba",
+                   defaultCurrency = settings.GetProperty("defaultCurrency").GetString(),
+                   version = settings.GetProperty("version").GetUInt32(),
+               }, Ct))
+            Assert.True(both.StatusCode == HttpStatusCode.NoContent, await both.Content.ReadAsStringAsync(Ct));
         var delta = await JsonAsync(client, $"/api/companies/{company.CompanyId:D}");
         using (var moved = await client.PutAsJsonAsync($"/api/companies/{company.CompanyId:D}", new
                {
@@ -201,10 +212,13 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
         var spanish = await DetailsAsync(client, "es-AR");
         Assert.DoesNotContain(spanish.Values.SelectMany(rows => rows), row => row.StartsWith("un registro:", StringComparison.Ordinal));
         Assert.Equal(["Estado: Activo → Deshabilitado"], spanish["Deshabilitó a Tomás Acosta"]);
-        // El idioma, en su propio idioma, como el selector de idioma y región y el tablero.
+        // Un cambio de un solo campo dice cuál, como el tablero: «Cambió el idioma y la región predeterminados» y
+        // «Cambió la zona de …». El idioma, en su propio idioma, como el selector de idioma y región.
         Assert.Equal(["Idioma y región: Español (Argentina) → English (United States)"],
-            spanish["Cambió la configuración de la organización"]);
-        Assert.Equal(["Zona de negocio: Buenos Aires (GMT−3) → Córdoba (GMT−3)"], spanish["Cambió la empresa Delta S.A."]);
+            spanish["Cambió el idioma y la región predeterminados"]);
+        Assert.Equal(["Zona de negocio: Buenos Aires (GMT−3) → Córdoba (GMT−3)"], spanish["Cambió la zona de Delta S.A."]);
+        Assert.Equal(["Idioma y región: English (United States) → Español (Argentina)",
+            "Zona horaria: Buenos Aires (GMT−3) → Córdoba (GMT−3)"], spanish["Cambió la configuración de la organización"]);
         Assert.Equal(["Nombre:  → Ventas", "Permisos:  → Ver miembros"], spanish["Creó el rol Ventas"]);
         Assert.Equal(["Nombre:  → Delta S.A."], spanish["Creó la empresa Delta S.A."]);
 
@@ -212,8 +226,11 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
         Assert.DoesNotContain(english.Values.SelectMany(rows => rows), row => row.StartsWith("a record:", StringComparison.Ordinal));
         Assert.Equal(["Status: Active → Disabled"], english["Disabled Tomás Acosta"]);
         Assert.Equal(["Language and region: Español (Argentina) → English (United States)"],
-            english["Changed organization settings"]);
-        Assert.Equal(["Business time zone: Buenos Aires (GMT−3) → Córdoba (GMT−3)"], english["Changed company Delta S.A."]);
+            english["Changed the default language and region"]);
+        Assert.Equal(["Business time zone: Buenos Aires (GMT−3) → Córdoba (GMT−3)"],
+            english["Changed the time zone of Delta S.A."]);
+        Assert.Equal(["Language and region: English (United States) → Español (Argentina)",
+            "Time zone: Buenos Aires (GMT−3) → Córdoba (GMT−3)"], english["Changed organization settings"]);
         Assert.Equal(["Email:  → va•••@example.test", "Company:  → Delta S.A.", "Roles in the company:  → Solo lectura"],
             english["Invited va•••@example.test"]);
     }

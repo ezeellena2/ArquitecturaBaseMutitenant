@@ -26,28 +26,31 @@ public static class AuditTexts
         ResourceManager.GetString($"Value.{entityType}.Status.{status}", CultureInfo.CurrentUICulture);
 
     /// <summary>
-    /// «Qué» de una entrada. La variante nombra un cambio más preciso que la acción, como «Deshabilitó a {0}» en lugar
-    /// de «Cambió los datos de {0}»; sin texto para la variante, vale el de la acción.
+    /// «Qué» de una entrada: <c>AuditSummary.{entidad}.{variante}</c>, después <c>.{acción}</c> y después el de la
+    /// entidad. La variante nombra un cambio más preciso que la acción, como «Deshabilitó a {0}» en lugar de «Cambió
+    /// los datos de {0}», o un campo solo, como «Cambió la zona de {0}». Un texto con {0} pide el nombre de lo afectado;
+    /// sin nombre, se salta. Sin ningún texto, «{acción} {entidad}».
     /// </summary>
     public static string Summary(AuditAction action, string entityType, string? affectedDisplayName,
         string? variant = null)
     {
-        if (string.IsNullOrWhiteSpace(affectedDisplayName)) return $"{Action(action)} {Entity(entityType)}";
-
-        string[] keys = entityType switch
+        var named = !string.IsNullOrWhiteSpace(affectedDisplayName);
+        string?[] keys =
+        [
+            variant is null ? null : $"AuditSummary.{entityType}.{variant}",
+            $"AuditSummary.{entityType}.{action}",
+            $"AuditSummary.{entityType}",
+        ];
+        foreach (var key in keys.OfType<string>())
         {
-            "RoleAssignment" => ["AuditSummary.RoleAssignment"],
-            "CompanyMembership" => [$"AuditSummary.CompanyMembership.{variant ?? action.ToString()}",
-                "AuditSummary.CompanyMembership"],
-            "Member" or "Invitation" or "Company" or "Role" =>
-                [$"AuditSummary.{entityType}.{variant ?? action.ToString()}", $"AuditSummary.{entityType}.{action}"],
-            _ => [],
-        };
-        var template = keys.Select(key => ResourceManager.GetString(key, CultureInfo.CurrentUICulture))
-            .FirstOrDefault(text => text is not null);
-        return template is null
+            if (ResourceManager.GetString(key, CultureInfo.CurrentUICulture) is not { } template) continue;
+            if (!template.Contains("{0}", StringComparison.Ordinal)) return template;
+            if (named) return template.Replace("{0}", affectedDisplayName, StringComparison.Ordinal);
+        }
+
+        return named
             ? $"{Action(action)} {Entity(entityType)} · {affectedDisplayName}"
-            : template.Replace("{0}", affectedDisplayName, StringComparison.Ordinal);
+            : $"{Action(action)} {Entity(entityType)}";
     }
 
     public static string WholeOrganization() => Get("Location.Organization");

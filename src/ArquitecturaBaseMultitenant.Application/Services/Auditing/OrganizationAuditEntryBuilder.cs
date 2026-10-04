@@ -57,19 +57,26 @@ internal sealed class OrganizationAuditEntryBuilder(DisplayFormatter formatter)
             row.ActorKind == AuditActorKind.User ? row.ActorEmail : null);
     }
 
-    /// <summary>«Deshabilitó a…», «Habilitó a…» y «Quitó a…»: el cambio de estado de un miembro, como Usuarios.</summary>
+    /// <summary>
+    /// Un «Qué» más preciso que la acción, si tiene su texto (<see cref="AuditTexts.Summary"/>): el cambio de estado
+    /// de un miembro («Deshabilitó a…», «Habilitó a…» y «Quitó a…», como Usuarios) o el campo de un cambio de un solo
+    /// campo («Cambió la zona de…», como el tablero).
+    /// </summary>
     private static string? Variant(OrganizationAuditRow row, JsonElement changes)
     {
-        if (row.EntityType != nameof(Member) || row.Action != AuditAction.Updated
-            || changes.ValueKind != JsonValueKind.Object || !changes.TryGetProperty("Status", out var status)
-            || !TryOldNew(status, out var oldValue, out var newValue)) return null;
-        return (StatusName(row.EntityType, oldValue), StatusName(row.EntityType, newValue)) switch
-        {
-            (_, nameof(MemberStatus.Removed)) => nameof(AuditAction.Deleted),
-            (nameof(MemberStatus.Active), nameof(MemberStatus.Inactive)) => "Disabled",
-            (nameof(MemberStatus.Inactive), nameof(MemberStatus.Active)) => "Enabled",
-            _ => null,
-        };
+        if (row.Action != AuditAction.Updated || changes.ValueKind != JsonValueKind.Object) return null;
+        if (row.EntityType == nameof(Member) && changes.TryGetProperty("Status", out var status)
+            && TryOldNew(status, out var oldValue, out var newValue)
+            && (StatusName(row.EntityType, oldValue), StatusName(row.EntityType, newValue)) switch
+            {
+                (_, nameof(MemberStatus.Removed)) => nameof(AuditAction.Deleted),
+                (nameof(MemberStatus.Active), nameof(MemberStatus.Inactive)) => "Disabled",
+                (nameof(MemberStatus.Inactive), nameof(MemberStatus.Active)) => "Enabled",
+                _ => null,
+            } is { } memberChange) return memberChange;
+
+        string[] fields = [.. changes.EnumerateObject().Select(field => field.Name).Take(2)];
+        return fields.Length == 1 ? fields[0] : null;
     }
 
     private async Task<List<OrganizationAuditChangeResponse>> ChangesAsync(OrganizationAuditRow row,
