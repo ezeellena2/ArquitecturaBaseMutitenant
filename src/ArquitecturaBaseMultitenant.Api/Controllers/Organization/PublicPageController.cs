@@ -18,7 +18,7 @@ public sealed class PublicPageController(IPublicPageService service) : Controlle
 {
     [HttpGet]
     [HasPermission(Permissions.PublicPage.Manage)]
-    [ProducesResponseType<PublicPageResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<PublicPageHttpResponse>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status401Unauthorized)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]
     [ProducesProblem(StatusCodes.Status404NotFound)]

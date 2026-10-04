@@ -29,7 +29,7 @@ public sealed class InvitationsHttpTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.BadRequest, missingAntiforgery.StatusCode);
         Assert.Equal("Validation.Failed", await ProblemCodeAsync(missingAntiforgery));
 
-        var antiforgery = await client.GetFromJsonAsync<GoogleSignupAntiforgeryResponse>(
+        var antiforgery = await client.GetFromJsonAsync<GoogleSignupAntiforgeryHttpResponse>(
             "/api/auth/external/google/antiforgery", Ct);
         using var request = new HttpRequestMessage(HttpMethod.Post, "/api/invitations/preview")
         {
@@ -60,7 +60,7 @@ public sealed class InvitationsHttpTests(ApiFactory factory)
             BaseAddress = new Uri("https://localhost"),
             AllowAutoRedirect = false,
         });
-        var antiforgery = await client.GetFromJsonAsync<GoogleSignupAntiforgeryResponse>(
+        var antiforgery = await client.GetFromJsonAsync<GoogleSignupAntiforgeryHttpResponse>(
             "/api/auth/external/google/antiforgery", Ct);
 
         using var missingAntiforgery = CreateAcceptRequest(Guid.NewGuid().ToString("D"), null);

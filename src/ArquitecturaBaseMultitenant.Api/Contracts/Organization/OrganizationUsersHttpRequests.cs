@@ -22,7 +22,7 @@ public sealed record UpdateOrganizationUserHttpRequest(IReadOnlyCollection<Guid>
 
 public sealed record ChangeOrganizationUserStatusHttpRequest(bool? IsActive, uint? Version);
 
-public sealed record OrganizationUserResponse(Guid MemberId, Guid? UserId, string DisplayName, string? Email,
+public sealed record OrganizationUserHttpResponse(Guid MemberId, Guid? UserId, string DisplayName, string? Email,
     OrganizationUserState State, bool HasManagedEmail, IReadOnlyList<OrganizationUserRoleRow> Roles,
     IReadOnlyList<OrganizationUserCompanyRow> Companies, Guid? InvitationId,
     DateTime? InvitationIssuedAtUtc, DateTime? InvitationExpiresAtUtc, uint Version, DateTime CreatedAtUtc,
@@ -54,7 +54,7 @@ public static class OrganizationUserHttpMappings
             new InviteCompanyRolesRequest(company.CompanyId, company.RoleIds)).ToArray(), request.Version,
             request.IsActive);
 
-    public static OrganizationUserResponse ToHttpResponse(this OrganizationUserModelResponse response) => new(
+    public static OrganizationUserHttpResponse ToHttpResponse(this OrganizationUserModelResponse response) => new(
         response.MemberId, response.UserId, response.DisplayName, response.Email?.DisplayValue, response.State,
         response.HasManagedEmail, response.Roles, response.Companies, response.InvitationId,
         response.InvitationIssuedAtUtc, response.InvitationExpiresAtUtc, response.Version, response.CreatedAtUtc,

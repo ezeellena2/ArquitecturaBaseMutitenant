@@ -13,7 +13,8 @@
   - `POST` que crea: `ToCreatedResult(this, nameof(Get), id => new { id })` → 201 con `Location`;
   - `PUT` y `DELETE` → 204;
   - `GET` → 200;
-  - un trabajo aceptado → `ToAcceptedResult`.
+  - un trabajo aceptado → `ToAcceptedResult`;
+  - lo que devuelve es un modelo de Application (`*Response`) o, si la respuesta lleva value objects o es de protocolo, un `*HttpResponse` de `Api/Contracts` (ADR 0002, enmienda del 2026-10-03), nunca una entidad ni un tipo de Infrastructure.
 - Un `POST` que crea o envía lleva `[Idempotent]` ([idempotencia](idempotencia.md)). Una acción de un módulo lleva `[FeatureGate]` ([modulos-habilitados](modulos-habilitados.md)). Un `PUT` o `DELETE` de una entidad `IVersioned` recibe `version` ([concurrencia](concurrencia.md)).
 - Cada acción declara su acceso ([multitenancy](multitenancy.md), [permisos](permisos.md)): `[Access(Business)]` + `[HasPermission]` o `[HasCompanyPermission]`; `[Access(Platform)]` + `[HasPlatformPermission]`; `[Access(Consumer)]` sin permiso (la persona tiene implícitos los `personal.*`); `[PublicSite][AllowAnonymous]` solo si responde en el subdominio de una organización publicada (`PublicPageController`); o solo `[AllowAnonymous]` si es anónima del dominio principal (ingreso, registro, "Registrá tu empresa", invitación, enlace, `GET` de documentos legales, `GET /api/reference-data` y sus rutas por catálogo, directorio, pedido de "Recuperar mi cuenta", cancelar la baja, webhooks), y entonces su controller va en la lista explícita de `AccessDeclarationTests` (E3). Además lleva `[ProducesResponseType<T>(status)]` y los errores extra con `[ProducesProblem(status)]`.
 - Rutas en inglés, plural y kebab-case (`api/companies/{companyId}/members`). Sin versionado (ADR 0005).
@@ -40,6 +41,7 @@
 
 ## Lo verifica
 - `ControllerInputContractTests` (E1), `ControllerServiceRepositoryTests` (E1): reconoce todo tipo derivado de `ControllerBase`, incluso si no termina en `Controller`, y revisa constructor, parámetros de acción y dependencias; prohíbe `DateTimeOffset` también en propiedades anidadas de contratos; `MinimalApiRoutesTests` (E0).
+- `ControllerOutputContractTests`: lo que declara cada acción en `ProducesResponseType` es un modelo de Application o un `*HttpResponse` de `Api/Contracts`.
 - `EnumAndOffsetJsonTests` (E1): nombres de enum aceptados y números rechazados con 400 ProblemDetails.
 - `AccessDeclarationTests` (E3): toda ruta declara `[Access]` o `[PublicSite]`; una con solo `[AllowAnonymous]` pasa únicamente si su controller está en la lista explícita del test.
 - `ExplicitRouteInventoryTests` (E1): inventaría cada endpoint de producción salvo health, exige verbo HTTP y que su ruta tenga un prefijo declarado en `BackendPrefixes`.

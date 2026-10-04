@@ -10,7 +10,6 @@ using ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.AspNetCore.Mvc;
-using OrganizationUserContractResponse = ArquitecturaBaseMultitenant.Api.Contracts.Organization.OrganizationUserResponse;
 
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Organization;
 
@@ -22,7 +21,7 @@ public sealed class OrganizationUsersController(IOrganizationUserService service
 {
     [HttpGet("paged")]
     [HasPermission(Permissions.Users.Read)]
-    [ProducesResponseType<PagedResult<OrganizationUserContractResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<PagedResult<OrganizationUserHttpResponse>>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status401Unauthorized)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]
@@ -32,7 +31,7 @@ public sealed class OrganizationUsersController(IOrganizationUserService service
         var result = await service.ListAsync(query.ToModel(), cancellationToken);
         if (result.IsFailure) return result.ToActionResult(this);
         var page = result.Value;
-        return Ok(new PagedResult<OrganizationUserContractResponse>([.. page.Items.Select(item => item.ToHttpResponse())],
+        return Ok(new PagedResult<OrganizationUserHttpResponse>([.. page.Items.Select(item => item.ToHttpResponse())],
             page.Page, page.PageSize, page.TotalCount));
     }
 
@@ -48,7 +47,7 @@ public sealed class OrganizationUsersController(IOrganizationUserService service
 
     [HttpGet("{memberId:guid}")]
     [HasPermission(Permissions.Users.Read)]
-    [ProducesResponseType<OrganizationUserContractResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<OrganizationUserHttpResponse>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status401Unauthorized)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]
     [ProducesProblem(StatusCodes.Status404NotFound)]

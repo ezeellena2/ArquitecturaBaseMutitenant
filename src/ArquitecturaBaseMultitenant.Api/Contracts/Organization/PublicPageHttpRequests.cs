@@ -19,7 +19,7 @@ public sealed record SetPublicPagePublicationHttpRequest(uint? Version)
     public override string ToString() => nameof(SetPublicPagePublicationHttpRequest);
 }
 
-public sealed record PublicPageResponse(string? Slug, string Name, string? Description,
+public sealed record PublicPageHttpResponse(string? Slug, string Name, string? Description,
     string? LogoDataUri, string? ContactEmail, string? ContactPhone, string? Address,
     string? Website, bool IsPublished, DateTime? PublishBlockedAtUtc,
     string? PublishBlockedReason, uint Version);
@@ -48,7 +48,7 @@ public static class PublicPageHttpMappings
     public static SetPublicPagePublicationRequest ToModel(this SetPublicPagePublicationHttpRequest request) =>
         new(request.Version);
 
-    public static PublicPageResponse ToHttpResponse(this PublicPageModelResponse response) => new(response.Slug,
+    public static PublicPageHttpResponse ToHttpResponse(this PublicPageModelResponse response) => new(response.Slug,
         response.Name, response.Description, response.LogoDataUri, response.ContactEmail?.DisplayValue,
         response.ContactPhone?.Value, response.Address, response.Website, response.IsPublished,
         response.PublishBlockedAtUtc, response.PublishBlockedReason, response.Version);

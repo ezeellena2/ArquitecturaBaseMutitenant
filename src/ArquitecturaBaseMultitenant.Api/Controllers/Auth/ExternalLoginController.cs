@@ -55,13 +55,13 @@ public sealed class ExternalLoginController(
     }
 
     [HttpGet("google/antiforgery")]
-    [ProducesResponseType<GoogleSignupAntiforgeryResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<GoogleSignupAntiforgeryHttpResponse>(StatusCodes.Status200OK)]
     public IActionResult GoogleSignupAntiforgery([FromServices] IAntiforgery antiforgery)
     {
         Response.Headers.CacheControl = "no-store";
         var token = antiforgery.GetAndStoreTokens(HttpContext).RequestToken
             ?? throw new InvalidOperationException("The antiforgery request token was not created.");
-        return Ok(new GoogleSignupAntiforgeryResponse(token));
+        return Ok(new GoogleSignupAntiforgeryHttpResponse(token));
     }
 
     [HttpPost("google")]

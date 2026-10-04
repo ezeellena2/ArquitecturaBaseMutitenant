@@ -105,7 +105,7 @@ public sealed class PlatformTenantProvisioningHttpTests(ApiFactory factory)
         }
         using var recipient = Client();
         using var csrfResponse = await recipient.GetAsync("/api/auth/external/google/antiforgery", Ct);
-        var csrf = await csrfResponse.Content.ReadFromJsonAsync<GoogleSignupAntiforgeryResponse>(Ct);
+        var csrf = await csrfResponse.Content.ReadFromJsonAsync<GoogleSignupAntiforgeryHttpResponse>(Ct);
         recipient.DefaultRequestHeaders.Add("RequestVerificationToken", csrf!.RequestToken);
         using var preview = await recipient.PostAsJsonAsync("/api/invitations/preview", new { token }, Ct);
         Assert.Equal(HttpStatusCode.OK, preview.StatusCode);

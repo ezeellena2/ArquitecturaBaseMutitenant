@@ -5005,17 +5005,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedResultOfCompanyMemberResponse"
+                  "$ref": "#/components/schemas/PagedResultOfCompanyMemberHttpResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedResultOfCompanyMemberResponse"
+                  "$ref": "#/components/schemas/PagedResultOfCompanyMemberHttpResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedResultOfCompanyMemberResponse"
+                  "$ref": "#/components/schemas/PagedResultOfCompanyMemberHttpResponse"
                 }
               }
             }
@@ -6415,17 +6415,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedResultOfOrganizationUserResponse"
+                  "$ref": "#/components/schemas/PagedResultOfOrganizationUserHttpResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedResultOfOrganizationUserResponse"
+                  "$ref": "#/components/schemas/PagedResultOfOrganizationUserHttpResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedResultOfOrganizationUserResponse"
+                  "$ref": "#/components/schemas/PagedResultOfOrganizationUserHttpResponse"
                 }
               }
             }
@@ -6624,17 +6624,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/OrganizationUserResponse"
+                  "$ref": "#/components/schemas/OrganizationUserHttpResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OrganizationUserResponse"
+                  "$ref": "#/components/schemas/OrganizationUserHttpResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OrganizationUserResponse"
+                  "$ref": "#/components/schemas/OrganizationUserHttpResponse"
                 }
               }
             }
@@ -7319,17 +7319,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/PublicPageResponse"
+                  "$ref": "#/components/schemas/PublicPageHttpResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PublicPageResponse"
+                  "$ref": "#/components/schemas/PublicPageHttpResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PublicPageResponse"
+                  "$ref": "#/components/schemas/PublicPageHttpResponse"
                 }
               }
             }
@@ -8929,17 +8929,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/GoogleSignupAntiforgeryResponse"
+                  "$ref": "#/components/schemas/GoogleSignupAntiforgeryHttpResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GoogleSignupAntiforgeryResponse"
+                  "$ref": "#/components/schemas/GoogleSignupAntiforgeryHttpResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GoogleSignupAntiforgeryResponse"
+                  "$ref": "#/components/schemas/GoogleSignupAntiforgeryHttpResponse"
                 }
               }
             }
@@ -11146,7 +11146,7 @@
           }
         }
       },
-      "CompanyMemberResponse": {
+      "CompanyMemberHttpResponse": {
         "required": [
           "memberId",
           "displayName",
@@ -11756,7 +11756,7 @@
         },
         "description": "Entrega la URL del desafío Google al controller sin exponerla en la representación textual del objeto."
       },
-      "GoogleSignupAntiforgeryResponse": {
+      "GoogleSignupAntiforgeryHttpResponse": {
         "required": [
           "requestToken"
         ],
@@ -12738,7 +12738,7 @@
           }
         }
       },
-      "OrganizationUserResponse": {
+      "OrganizationUserHttpResponse": {
         "required": [
           "memberId",
           "displayName",
@@ -12899,7 +12899,7 @@
           }
         }
       },
-      "PagedResultOfCompanyMemberResponse": {
+      "PagedResultOfCompanyMemberHttpResponse": {
         "required": [
           "items",
           "page",
@@ -12911,7 +12911,7 @@
           "items": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/CompanyMemberResponse"
+              "$ref": "#/components/schemas/CompanyMemberHttpResponse"
             }
           },
           "page": {
@@ -12979,7 +12979,7 @@
         },
         "description": "Representa una página y el total de resultados para que el consumidor pueda mostrar navegación anterior y siguiente."
       },
-      "PagedResultOfOrganizationUserResponse": {
+      "PagedResultOfOrganizationUserHttpResponse": {
         "required": [
           "items",
           "page",
@@ -12991,7 +12991,7 @@
           "items": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/OrganizationUserResponse"
+              "$ref": "#/components/schemas/OrganizationUserHttpResponse"
             }
           },
           "page": {
@@ -14386,7 +14386,7 @@
           }
         }
       },
-      "PublicPageResponse": {
+      "PublicPageHttpResponse": {
         "required": [
           "name",
           "isPublished",

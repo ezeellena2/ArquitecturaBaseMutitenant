@@ -14,7 +14,7 @@ public sealed record UpdateCompanyMemberRolesHttpRequest(IReadOnlyCollection<Gui
 
 public sealed record ChangeCompanyMemberStatusHttpRequest(CompanyMembershipStatus? Status, uint? Version);
 
-public sealed record CompanyMemberResponse(Guid MemberId, Guid? UserId, string DisplayName, string? Email,
+public sealed record CompanyMemberHttpResponse(Guid MemberId, Guid? UserId, string DisplayName, string? Email,
     CompanyMemberState State, CompanyMembershipStatus MembershipStatus,
     IReadOnlyList<CompanyMemberRoleResponse> Roles, uint Version, DateTime CreatedAtUtc);
 
@@ -31,7 +31,7 @@ public static class CompanyMemberHttpMappings
         WithoutRoles = request.WithoutRoles,
     };
 
-    public static CompanyMemberResponse ToHttpResponse(this CompanyMemberModelResponse response) => new(
+    public static CompanyMemberHttpResponse ToHttpResponse(this CompanyMemberModelResponse response) => new(
         response.MemberId, response.UserId, response.DisplayName, response.Email?.DisplayValue,
         response.State, response.MembershipStatus, response.Roles, response.Version, response.CreatedAtUtc);
 }

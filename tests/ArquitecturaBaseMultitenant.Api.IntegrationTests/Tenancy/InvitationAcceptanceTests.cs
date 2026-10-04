@@ -51,7 +51,7 @@ public sealed class InvitationAcceptanceTests(ApiFactory factory)
 
         using var csrfResponse = await client.GetAsync("/api/auth/external/google/antiforgery", Ct);
         csrfResponse.EnsureSuccessStatusCode();
-        var csrf = await csrfResponse.Content.ReadFromJsonAsync<GoogleSignupAntiforgeryResponse>(Ct);
+        var csrf = await csrfResponse.Content.ReadFromJsonAsync<GoogleSignupAntiforgeryHttpResponse>(Ct);
         var csrfCookie = CookiePair(csrfResponse, "__Host-MtSignupCsrf");
 
         using var missingCsrf = await client.PostAsJsonAsync("/api/invitations/preview", new { issued.Token }, Ct);
@@ -117,7 +117,7 @@ public sealed class InvitationAcceptanceTests(ApiFactory factory)
             HandleCookies = false,
         });
         using var otherCsrfResponse = await otherBrowser.GetAsync("/api/auth/external/google/antiforgery", Ct);
-        var otherCsrf = await otherCsrfResponse.Content.ReadFromJsonAsync<GoogleSignupAntiforgeryResponse>(Ct);
+        var otherCsrf = await otherCsrfResponse.Content.ReadFromJsonAsync<GoogleSignupAntiforgeryHttpResponse>(Ct);
         var otherCsrfCookie = CookiePair(otherCsrfResponse, "__Host-MtSignupCsrf");
         using var otherPreviewRequest = JsonRequest(HttpMethod.Post, "/api/invitations/preview", new { token = (string?)null }, otherCsrfCookie);
         otherPreviewRequest.Headers.Add("RequestVerificationToken", otherCsrf!.RequestToken);
