@@ -4614,20 +4614,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "string",
-                  "format": "uuid"
+                  "$ref": "#/components/schemas/OrganizationInvitationIssuedResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "string",
-                  "format": "uuid"
+                  "$ref": "#/components/schemas/OrganizationInvitationIssuedResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "string",
-                  "format": "uuid"
+                  "$ref": "#/components/schemas/OrganizationInvitationIssuedResponse"
                 }
               }
             }
@@ -9756,6 +9753,24 @@
             "format": "uint32"
           }
         }
+      },
+      "OrganizationInvitationIssuedResponse": {
+        "required": [
+          "invitationId",
+          "expiresAtUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "invitationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expiresAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "description": "La invitación emitida y cuándo vence, para el aviso «Invitamos a … La invitación vence el …»."
       },
       "OrganizationSettingsResponse": {
         "required": [
