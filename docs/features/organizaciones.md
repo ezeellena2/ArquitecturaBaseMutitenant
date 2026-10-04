@@ -30,7 +30,9 @@ La emisión y el encolado se delegan al `InvitationIssuer` compartido con la pla
 
 `/api/organization/public-page` lee y guarda el borrador versionado; `POST .../publish` y `POST .../unpublish` publican o retiran la página. El contenido y el logo pertenecen a `public_site`. El logo se valida por firma y tamaño, se guarda como bytes y no admite URL arbitraria. Moderación bloqueada impide volver a publicar hasta que se resuelva.
 
-`/api/organization/audit` devuelve eventos traducidos con filtros y cursor. El día se interpreta en la zona de la organización; los datos de contacto y fiscales se enmascaran. La descripción nombra a la persona afectada y la columna `Dónde` identifica la empresa cuando corresponde. «Quién» muestra el nombre y el correo de quien actuó (`actorEmail`); si ya no es miembro de la organización, solo su nombre (D7). La consulta no cuenta toda la tabla append-only.
+`/api/organization/audit` devuelve eventos traducidos con filtros y cursor. El día se interpreta en la zona de la organización; los datos de contacto y fiscales se enmascaran. La descripción nombra a la persona afectada y la columna `Dónde` identifica la empresa cuando corresponde. «Quién» muestra el nombre y el correo de quien actuó (`actorEmail`); si ya no es miembro de la organización, solo su nombre (D7). Solo una persona lleva su identificador: de Plataforma se dice «Plataforma», sin el operador. La consulta no cuenta toda la tabla append-only.
+
+En el mismo cursor van las acciones de Plataforma sobre la organización que dibuja el tablero Auditoria-Org: hoy, «La plataforma aprobó la organización», leída de su `SecurityEvent` sin el operador, el motivo ni la IP. Una invitación que venció pendiente queda una sola vez, por el Sistema y con la fecha en que venció («Venció la invitación a …»): la registra `InvitationExpiryWorker`, cada hora ([auditoría](../rules/auditoria.md)).
 
 ## Acceso, datos y verificación
 
