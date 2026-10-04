@@ -215,12 +215,16 @@ Cada servicio de entrada abre la transacción en su método público, y los help
 - [ ] **Enmascarado:** `PersonalDataMask` en `Application/Common`, para correo y teléfono, con el formato que muestra el lienzo. La parte de correos ya existe desde T11 de la Etapa 5 (`Common/Text/PersonalDataMask.Email`, «lu•••@dominio»); falta el teléfono y migrar los demás usos.
   - Lo usan el interceptor de auditoría, la cuenta, los avisos y el reader de auditoría.
   - Se borra `IPhoneNumberParser.Mask`.
-- [ ] **Auditoría de roles, como el tablero Auditoria-Org.** Cuando cambian los roles de una persona en una empresa, queda un solo cambio, «Roles en la empresa: antes → después». Hoy queda una entrada por cada asignación.
+- [x] **Auditoría de roles, como el tablero Auditoria-Org.** Cuando cambian los roles de una persona en una empresa, queda un solo cambio, «Roles en la empresa: antes → después». Hoy queda una entrada por cada asignación.
   - Test: asignar y quitar roles en una sola operación deja una entrada, con el antes y el después.
   - Hoy el detalle muestra filas «Empresa» y «un registro» con identificadores internos (lo vio la revisión de capturas del 2026-10-03). Regla: el detalle nunca muestra un identificador interno, y un test lo controla.
-- [ ] **Índices únicos:** `UniqueKeys` con sus nombres, usados en `HasDatabaseName` y en cada `catch`. Test: cada clave existe en el modelo.
+
+  Hecho en `4812ef8` (decisiones 46 y 47): `RoleAssignmentTrail` deja una entrada por persona y lugar, con los nombres antes y después, y `OrganizationAuditService` no muestra identificadores. `OrganizationAuditTests.Changing_the_roles_of_a_person_in_a_company_leaves_one_entry_with_the_roles_before_and_after`: rojo con tres entradas (la membresía vacía y una por asignación), verde con una, «Solo lectura, Ventas → Compras, Solo lectura». `The_audit_detail_never_shows_an_internal_identifier`: rojo con ids en el detalle. `Audit_returns_affected_person_and_company_for_role_changes` controla además la fila del tablero, «Roles en la empresa: Sin roles → Solo lectura».
+- [x] **Índices únicos:** `UniqueKeys` con sus nombres, usados en `HasDatabaseName` y en cada `catch`. Test: cada clave existe en el modelo.
   - Suma la Página pública guardada dos veces a la vez por primera vez: hoy la segunda recibe 500 al chocar con «una página por organización». Pasa a 409 `General.ConcurrencyConflict`, como en `PlatformFeatureService`, con su test (decisión 28).
   - `RoleService` traduce la clave del nombre, y eso arregla **B10**. Test: dos altas simultáneas con el mismo nombre dan una creada y un 409.
+
+  Hecho en `e2ecafc` (decisiones 43 a 45), con el índice trigram de `tenant.Invitations.Destination` que había quedado abierto en la decisión 41. `UniqueKeyRaceTests` retiene a los dos pedidos hasta que los dos pasaron el control previo: rojos con `UniqueConstraintViolationException` (500) en el nombre del rol y en la página, verdes con una creada y un 409. `DbContextModelTests.Every_unique_key_names_a_unique_index_of_the_model` (rojo con una sola clave) y `UniqueKeysTests` (rojo con seis nombres escritos a mano en Application).
 - [ ] **Registro:**
   - `AddApplication` se parte en un `*Registration.cs` por área;
   - se borra el registro duplicado de `LastTenantAdminGuard`;
@@ -228,10 +232,12 @@ Cada servicio de entrada abre la transacción en su método público, y los help
 
   Tests: cada clase de `Services` se registra una sola vez, y `ApiFactory` corre con `ValidateOnBuild`.
 - [ ] **Sufijos:** la lista cerrada de sufijos de helpers, con los que quedaron después del bloque 3, va en `capas-y-flujo.md` y la verifica `ApplicationServicesTests`.
-- [ ] **Personas asignadas a un rol** (decisión 42, la eligió el usuario): `CountUsersAsync` cuenta todas las asignaciones, activas, invitadas y desactivadas.
+- [x] **Personas asignadas a un rol** (decisión 42, la eligió el usuario): `CountUsersAsync` cuenta todas las asignaciones, activas, invitadas y desactivadas.
   - Mientras alguien tenga el rol, no se puede cambiar dónde vale.
   - Borrarlo responde un 409 claro, en lugar de chocar con la clave foránea.
   - Tests con un rol asignado solo a un invitado y solo a un desactivado: cambiar dónde vale y borrarlo.
+
+  Hecho en `e8d0d94` (decisión 48). `RolesTests.A_role_held_only_by_an_invited_person_counts_as_assigned` y `A_role_held_only_by_a_deactivated_person_counts_as_assigned`: rojos con `userCount` 0, verdes con 1, 409 `Roles.Role.ScopeChangeHasUsers` al cambiar dónde vale y 409 `Roles.Role.HasUsers` al borrarlo.
 - [ ] **Repetir el alta de una empresa** (decisión 36): con el mismo `operationId` y sin la respuesta guardada (la clave venció o hubo un corte), hoy responde 409 en lugar de devolver la organización. La regla de idempotencia pide devolverla. Arreglo con el test de la repetición idéntica, primero en rojo.
 - [ ] **Invitaciones** (decisión 35): la entrada al alcance de la organización pasa a `InvitationService`; se borra el reenvío de `InvitationAcceptanceResolver.Enter` y `TenantScopeUsageTests` queda sin esos dos helpers.
 - [ ] **Hecho cuando** la suite completa del back pasa.
@@ -490,3 +496,26 @@ Bloque 4 del back, primera parte (alcance de un rol, estado de un miembro y bús
 42. **Hallazgo sin corregir, D2 y los invitados:** `RoleReader.CountUsersAsync` cuenta solo miembros activos. Por el código, un rol asignado solo a invitados o a miembros inactivos puede cambiar de alcance, y esas asignaciones dejan de valer: los permisos efectivos las ignoran. Borrarlo chocaría con la clave foránea `Restrict` de `RoleAssignments`. Decidir si un invitado cuenta como «persona asignada» es de producto. **Lo decidió el usuario el 2026-10-04:** cuentan todas las asignaciones, también las de invitados y desactivados.
 
 Verificación: `dotnet build` de la solución con 0 advertencias y `dotnet test` completo con Docker **1588/1588** (8m 51s). Durante el trabajo: arquitectura 142/142, unitarios de Application 451/451, dominio de roles 17/17 y la integración de Organización y Tenancy 142/142 (Usuarios, Empresas, Roles, permisos, Inicio y Auditoría incluidos).
+
+Bloque 4 del back, segunda parte (índices únicos, auditoría de roles y personas asignadas a un rol, 2026-10-04):
+
+43. **Índices únicos, cuáles van en `UniqueKeys`:** los seis que traduce un `catch`: el nombre de un rol, el slug de la organización, el dominio de correo, el módulo de una organización, la identificación fiscal de una empresa y la página pública. Los demás índices únicos no tienen un `catch` y conservan su nombre, como `IX_LoginMethods_UserId_Primary`. Cada configuración fija el nombre que el índice ya tenía, así que la base no renombra nada: la migración del ítem solo crea el índice trigram y el snapshot suma los `HasDatabaseName`. La regla quedó en `persistencia-ef.md`.
+44. **B10 y la página pública, cómo se prueba la carrera:** `UniqueKeyRaceTests` usa un host de prueba que decora la pieza del control previo (`IRoleReader.ExistsByNameAsync` y `IPublicPageRepository.GetCurrentAsync`) y retiene a cada pedido hasta que llegan los dos. Así el choque con el índice ocurre siempre y no depende de la suerte. Los tests llaman al servicio, como `ConnectServiceConcurrencyTests`.
+    - `RoleService` traduce el choque también al renombrar: dos cambios de nombre simultáneos tienen la misma carrera.
+    - La página responde `ConcurrencyConflictException` (409 `General.ConcurrencyConflict`) y no un error propio: los dos guardaron con la versión 0, así que es una edición simultánea, y la pantalla ya sabe ofrecer «Ver lo nuevo».
+45. **Índice trigram de las invitaciones:** `IX_Invitations_Search_Destination`, GIN sobre `public.f_unaccent(lower("Destination"))`, la misma expresión que arma `ApplySearch`. Va en la migración `InvitationDestinationSearchIndex`, solo con SQL, revisado con `migrations script`. **Queda abierto:** otras columnas buscables tampoco tienen su índice trigram: `tenant.Roles` (`Name` y `Description`), `tenant.Companies` (`Name` y `TaxNumber`), `platform.SecurityEvents.Reason`, `identity.LoginMethods.ContactEmail` y las de `platform.AccountRecoveryRequests`. No eran de este ítem.
+46. **Auditoría de roles, una entrada por persona y lugar:**
+    - `RoleAssignmentTrail` agrupa en el interceptor las asignaciones que cambian en un guardado: una entrada `RoleAssignment` por persona y lugar (la organización o una empresa), con la acción `Updated` y el miembro como `EntityId`. Si los roles quedaron iguales, no hay entrada.
+    - El cambio es «Roles en la empresa» o «Roles de la organización», los textos que ya usa el front. Los nombres se guardan al escribir, así el historial se lee igual aunque después se renombre o se borre el rol. Los roles de sistema se traducen al leer. Sin roles se lee «Sin roles», como la fila «Sin roles → Solo lectura» del tablero.
+    - Vale para todos los caminos sin que el servicio haga nada: Empresas, Usuarios, el alta de una organización o de una empresa, la invitación y la baja de una cuenta. Antes y después salen del ChangeTracker: todos esos caminos cargan primero los roles que la persona ya tiene en ese lugar, y la regla de `auditoria.md` lo pide.
+    - Una modificación sin ningún valor distinto no deja entrada. Cambiar roles desde Empresas dejaba, además, «Cambió el acceso de…» vacío, porque la membresía se marca modificada para cambiar su versión.
+47. **El detalle sin identificadores:** `OrganizationAuditService` no muestra un valor que es un identificador. Se van las filas con ids de las asignaciones, las membresías, los miembros, las invitaciones y los roles («Empresa», «un registro»). La persona y la empresa siguen en «Qué» y «Dónde». Las entradas viejas, una por asignación, quedan sin filas de detalle. **Queda abierto**, porque no era de este ítem:
+    - el detalle muestra todavía filas «un registro» con fechas y valores técnicos (`Channel`, `IssuedAtUtc`, `ExpiresAtUtc`, `JoinedAtUtc`) y estados en inglés (`Active`);
+    - agregar a alguien a una empresa con roles, o invitarlo, deja dos entradas: la membresía o la invitación, y sus roles. El tablero muestra una sola, «Agregó a Paula Méndez» con «Roles en la empresa» adentro;
+    - los roles de una persona invitada salen como «Cambió una asignación de rol», sin nombre, porque todavía no tiene cuenta.
+48. **Personas asignadas, una sola cuenta:** `CountUsersAsync` lee la cuenta de la proyección de la lista y la ficha: las personas distintas con una asignación del rol, sin mirar su estado. Quien fue quitado de la organización no cuenta, porque quitarlo borra sus asignaciones.
+    - Cambia lo que se ve: la columna de personas de Roles y la de los roles de una empresa cuentan también a invitados y desactivados. El aviso previo del front al borrar (`userCount > 0`) coincide ahora con la respuesta del back.
+    - Borrar un rol con asignaciones responde el código que ya existía, 409 `Roles.Role.HasUsers` con `userCount`: no hizo falta uno nuevo.
+    - **Queda abierto:** si alguien asigna el rol en el mismo instante en que otro lo borra, uno de los dos choca con la clave foránea y recibe 500. Es una carrera como B10; se arreglaría traduciendo el 23503 como el 23505.
+
+Verificación (en `e8d0d94`): `dotnet build` de la solución con 0 advertencias y `dotnet test` completo con Docker **1596/1596** (9m 31s). Durante el trabajo: arquitectura 143/143 (`UniqueKeysTests` y `HarnessTests` incluidos), unitarios de Application 451/451 (`ResourceParityTests` incluido), dominio 285/285 y la integración de Organización, Tenancy, Persistencia y Legales 300/300 con la auditoría nueva; después, Roles, Empresas, Usuarios, Invitaciones y `RolePersistenceTests` 36/36.
