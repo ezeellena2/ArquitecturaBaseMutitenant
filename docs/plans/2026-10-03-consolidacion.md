@@ -139,6 +139,23 @@ B4, B6, B8, B10, B11 y B12 se arreglan con su pieza, en los bloques 4 y 5.
   - el mismo nombre dos veces en una empresa da 409;
   - el mismo nombre dos veces en toda la organización da 409.
 
+### 1c. Decisiones del lienzo v99 (2026-10-04)
+
+El usuario las resolvió con Diseño (front `706cd3c`). Todas están en Decisiones por pantalla.
+
+- [ ] **Fecha corta en las listas del teléfono.** Sin el año solo en las listas del teléfono y solo para el año en curso (`27/09` y `27/09 10:42`; en en-US, `09/27`). La de otro año va completa, y en la compu siempre lleva el año.
+  - Front: la ficha `formatos.md` suma «Fecha corta», `useFormat` la da y las listas del teléfono la usan. Tests en es-AR y en-US, con el año en curso y con otro año.
+- [ ] **Subtítulo «Administración» en el teléfono.** El 403 y el 404 ya lo hacen así en la app. Falta M-Auditoria-Org, que muestra «Últimos 30 días» (el filtro) en lugar de «Administración».
+- [ ] **El correo del perfil activo en tu menú** (el pie en la compu, «Más» en el teléfono):
+  - en una organización, el correo que administra esa organización y, si no hay, el principal;
+  - en el perfil personal, el principal.
+  - Back: `/api/me` devuelve el correo del perfil activo, con su test. Front: el menú lo muestra.
+- [ ] **Invitar un correo con una invitación de operador pendiente o vencida.** Hoy da «Ese correo ya tiene una cuenta…» (decisión 22). Pasa a un error propio, 409 con «Ese correo ya tiene una invitación. Reenviala desde la lista.», en es y en en, con su test. Las pantallas de Cuentas lo usan en la Etapa 5.
+- [ ] **El correo de un operador invitado por alguien sin nombre:** se verifica que el asunto y el texto sean los de Mensajes › «Invitación como operador: sin nombre»: «El equipo de ArquitecturaBase te invitó como operador» y «Hola. El equipo de ArquitecturaBase te invitó a sumarte como operador de la plataforma.».
+- Sin trabajo, porque la app ya es así:
+  - M-Usuario: «Estado» y «Roles de la organización» abren hojas de opciones;
+  - M-Pagina-Org: el país y el número del teléfono van en dos campos.
+
 ### 2. Arnés y referencias
 
 - [ ] Los «Copiá de» apuntan a referencias sanas:
