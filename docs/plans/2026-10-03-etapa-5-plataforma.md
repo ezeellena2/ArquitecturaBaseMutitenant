@@ -263,6 +263,26 @@ Archivos: PlatformOperatorService/guard/repo/controller cuentas e invitaciones; 
 - [x] `PlatformOperatorInvitationService` (7 dependencias de negocio) crea con `PlatformOperatorProvisioner` la identidad exclusiva (cuenta operadora, correo verificado como principal, permisos; cultura y zona de los datos de referencia, sin Personal), bajo el lock del destino del ingreso. `PlatformOperatorService` (5) cambia los permisos o quita el operador con la versión de la asignación (expuesta como `operatorVersion` en la ficha), nunca sobre sí mismo, y llama a `PlatformOperatorGuard` cuando el cambio deja sin `operators.manage`; quitar borra la asignación, desmarca la cuenta y cierra sus sesiones. Los permisos rigen por pedido, sin caché. `ConnectService` responde `Tenancy.Access.PlatformOnly` a un operador en Consumer y Business (no se le crea Personal) y la aceptación de una invitación de organización por un operador da `Invitations.Invitation.PlatformOperator`.
 - [x] Verde: operadores **3/3**, aceptación del operador **1/1**, Application **443/443**, dominio **270/270**, arquitectura **154/154**; integración completa en la tabla de registro. Commit `feat(plataforma): administrar operadores`.
 
+### T16b · La invitación de un operador vence (agregada el 2026-10-04)
+
+Fuente: [ADR 0042](../decisions/0042-operadores-de-plataforma.md), lienzo v90 (front `b9a4cf2`), Cuentas, M-Cuentas y Mensajes › «Invitación como operador». Corrige lo que entregó T16, que crea la cuenta activa en el momento. La programa la consolidación del back, después de su primera tanda, para no pisar `Notifications.resx`.
+
+- [ ] Rojo:
+  - la invitación queda pendiente hasta el primer ingreso con código a Plataforma y vence a los 7 días;
+  - mientras está pendiente no hay sesiones, y vencida no se puede entrar;
+  - «Reenviar invitación» renueva los 7 días y manda el correo de nuevo;
+  - «Revocar invitación» la borra y libera el correo;
+  - en Cuentas (y en el filtro Estado), «Invitación pendiente» y «Invitación vencida», cuyo ⋮ trae solo esas dos acciones;
+  - los permisos y el último administrador siguen como en T16.
+- [ ] El aviso `OperatorInvited` suma quién invita y los permisos por nombre, con los textos de v90:
+  - asunto: «{quien invita} te invitó como operador de {app}»;
+  - título: «Te invitaron como operador»;
+  - datos: Permisos y Vence;
+  - botón «Ingresar»;
+  - las dos notas;
+  - sale solo por correo.
+- [ ] Verde, y `docs/features/plataforma.md` deja de decir «crea enseguida la identidad». Commit `feat(plataforma): la invitación de operador vence`.
+
 ### T17 · Auditoría de seguridad
 
 Archivos: ISecurityEventReader/SecurityEventReader, PlatformAuditService/controllers/query; traducciones Audit/recursos; tests PlatformSecurityAudit.
