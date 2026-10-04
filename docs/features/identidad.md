@@ -74,4 +74,4 @@ Cada navegación a otra invitación monta un flujo nuevo: aceptación, consentim
 
 - Seguir las fichas [datos-personales](../rules/datos-personales.md), [multitenancy](../rules/multitenancy.md), [guardado](../rules/guardado.md), [result-y-errores](../rules/result-y-errores.md), [emails](../rules/emails.md), [telefonos](../rules/telefonos.md), [api-http](../rules/api-http.md) y [tests](../rules/tests.md).
 - `ApplicationUser` vive en `Infrastructure/Identity`; las reglas sin dependencia de Identity, en `Domain/Users` y `Domain/Authentication`. Los servicios usan repositorios y readers explícitos; una escritura pública tiene un solo límite `IUnitOfWork`.
-- Probar las reglas puras en `Domain.UnitTests`, la cuenta Identity en `Application.UnitTests`, las rutas y el aislamiento en `Api.IntegrationTests`, y la presencia de piezas de 3a en `Stage3aInventoryTests`.
+- Probar las reglas puras en `Domain.UnitTests`, la cuenta Identity en `Application.UnitTests` y las rutas y el aislamiento en `Api.IntegrationTests`.
