@@ -44,11 +44,20 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
             : await context.Users.AsNoTracking().Where(user => actorIds.Contains(user.Id))
                 .Select(user => new { user.Id, user.DisplayName })
                 .ToDictionaryAsync(user => user.Id, user => user.DisplayName, cancellationToken);
-        // «Quién» del detalle: nombre · correo (el verificado, primero el principal).
-        var actorEmails = actorIds.Length == 0
+        // «Quién» del detalle: nombre · correo (el verificado, primero el principal). Quien ya no es miembro de la
+        // organización se muestra solo con su nombre (D7).
+        var tenantId = tenantContext.RequiredTenantId;
+        var memberActorIds = actorIds.Length == 0
+            ? []
+            : await context.Members.AsNoTracking()
+                .Where(member => member.TenantId == tenantId && member.UserId != null
+                    && actorIds.Contains(member.UserId.Value)
+                    && (member.Status == MemberStatus.Active || member.Status == MemberStatus.Inactive))
+                .Select(member => member.UserId!.Value).ToArrayAsync(cancellationToken);
+        var actorEmails = memberActorIds.Length == 0
             ? new Dictionary<Guid, Email>()
             : (await context.LoginMethods.AsNoTracking()
-                    .Where(method => actorIds.Contains(method.UserId) && method.Type == LoginMethodType.Email
+                    .Where(method => memberActorIds.Contains(method.UserId) && method.Type == LoginMethodType.Email
                         && method.VerifiedAtUtc != null)
                     .OrderByDescending(method => method.IsPrimary).ThenBy(method => method.Id)
                     .Select(method => new { method.UserId, method.Value }).ToArrayAsync(cancellationToken))

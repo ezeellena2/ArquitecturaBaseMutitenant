@@ -5,12 +5,15 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Organization;
@@ -67,6 +70,80 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
 
         // Tablero Auditoria-Org, detalle: «Quién: Lucía Fernández · lucia.fernandez@delta.ejemplo.com».
         Assert.Equal(owner.Email.Value, entry.GetProperty("actorEmail").GetString());
+    }
+
+    [Fact]
+    public async Task Someone_who_is_no_longer_a_member_appears_only_with_their_name()
+    {
+        using var ownerClient = Client();
+        var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
+        var tenant = await CreateBusinessAsync("Auditoría ex miembros", "auditoria-ex-miembros", owner.UserId);
+        await AccountJourney.AuthorizeAsync(ownerClient, "business", Ct);
+        var former = ApplicationUser.Create("Tomás Acosta", "es-AR", "America/Argentina/Buenos_Aires").Value;
+        var created = await factory.Services.GetRequiredService<UserManager<ApplicationUser>>().CreateAsync(former);
+        Assert.True(created.Succeeded, string.Join("; ", created.Errors.Select(error => error.Description)));
+        var formerEmail = $"tomas-{Guid.NewGuid():N}@example.test";
+        var memberId = await SeedActingMemberAsync(tenant.Id, former.Id, formerEmail);
+
+        var whileMember = await ActorEntryAsync(ownerClient, former.Id);
+        Assert.Equal(formerEmail, whileMember.GetProperty("actorEmail").GetString());
+
+        await RemoveMemberAsync(tenant.Id, memberId);
+
+        // D7: quien ya no es miembro se muestra solo con su nombre, sin el correo.
+        var afterLeaving = await ActorEntryAsync(ownerClient, former.Id);
+        Assert.Equal("Tomás Acosta", afterLeaving.GetProperty("actorDisplayName").GetString());
+        Assert.True(!afterLeaving.TryGetProperty("actorEmail", out var email) || email.ValueKind == JsonValueKind.Null);
+        Assert.DoesNotContain(formerEmail, afterLeaving.GetRawText(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static async Task<JsonElement> ActorEntryAsync(HttpClient client, Guid actorId)
+    {
+        using var response = await client.GetAsync($"/api/organization/audit?period=all&actorId={actorId:D}&limit=50", Ct);
+        Assert.True(response.StatusCode == HttpStatusCode.OK, await response.Content.ReadAsStringAsync(Ct));
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
+        return Assert.Single(json.RootElement.GetProperty("items").EnumerateArray()).Clone();
+    }
+
+    /// <summary>Suma a la cuenta como miembro activo con un correo verificado y deja una acción suya en la auditoría.</summary>
+    private async Task<Guid> SeedActingMemberAsync(Guid tenantId, Guid userId, string email)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        var member = Member.Invite(userId);
+        Assert.True(member.Activate(nowUtc).IsSuccess);
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+        {
+            var method = LoginMethod.CreateEmail(userId, Email.Create(email).Value);
+            Assert.True(method.Verify(nowUtc).IsSuccess);
+            context.LoginMethods.Add(method);
+            return Task.FromResult(Result.Success());
+        }, CommitPolicy.OnSuccess, Ct);
+        using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenantId);
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+        {
+            context.Members.Add(member);
+            context.Add(AuditEntry.Create(tenantId, AuditActorKind.User, userId, AuditAction.Created, "Company",
+                Guid.CreateVersion7(), "{}", nowUtc));
+            return Task.FromResult(Result.Success());
+        }, CommitPolicy.OnSuccess, Ct);
+        return member.Id;
+    }
+
+    private async Task RemoveMemberAsync(Guid tenantId, Guid memberId)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenantId);
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+        {
+            var member = await services.GetRequiredService<ApplicationDbContext>().Members
+                .SingleAsync(row => row.Id == memberId, ct);
+            Assert.True(member.Remove().IsSuccess);
+            return Result.Success();
+        }, CommitPolicy.OnSuccess, Ct);
     }
 
     [Fact]
