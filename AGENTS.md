@@ -43,7 +43,7 @@ El inventario de todos los estándares transversales (los definidos y los propue
 ## Forma de trabajo
 - Commits chicos, en español, con conventional commits. **Commitear cada cambio coherente y verificado**; los pasos internos de una tarea no requieren commits separados. No acumular trabajo terminado sin commitear.
 - TDD donde hay lógica: test dirigido rojo → verde y build del proyecto afectado durante el trabajo. Si cambia una ruta, persistencia, autenticación o aislamiento, correr además la integración y los tests de seguridad afectados. La solución completa (`dotnet build` sin advertencias y `dotnet test` con Docker) se verifica al cerrar la etapa y en CI; no se repite por cada paso. Apagar Aspire con `aspire stop` si se levantó.
-- Una pantalla nueva del front se dibuja antes de programarse.
+- Una pantalla nueva del front se dibuja antes de programarse. **El usuario ve cada pantalla antes y durante:** antes de programar el front, se le muestra el tablero tal como va a quedar (1440 y 390, con sus estados) y se espera su visto bueno; mientras se programa, en cada avance se le manda la captura lado a lado, tablero y app (regla `pantallas-y-ui` del front).
 
 ## Reglas que no se negocian
 1. **Capas:** Domain ← Application ← Infrastructure; Api compone. El recorrido es `Controllers → I<X>Service → <X>Service → I<X>Repository/I<X>Reader/Integrations → Infrastructure`. Sin handlers ni CQRS con `ICommand`, sin repositorio genérico, sin Minimal APIs de negocio, sin Scrutor ni AutoMapper.
