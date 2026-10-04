@@ -347,7 +347,13 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
     - el aviso de sesión ajena de la invitación va en la franja ámbar;
     - el caso «antes de deshabilitarte» no llega, porque el back responde antes `CannotDisableSelf`.
   - Lo del lienzo quedó en Diseño: `.ap-txt-l` en M-Avisos, el aviso viejo de Invitacion, el círculo de Ingreso y la franja `.msj`.
-- [ ] **R2b · Diálogos, hojas y campos** (sobre el lienzo v100, front `e3f7fed`):
+- [x] **R2b · Diálogos, hojas y campos** (front `48b6753` a `c23dd88`). `npm test` 952/952, lint sin errores y build en verde; 34 estados capturados en `docs/design/capturas/consolidacion/r2b/`.
+  - Piezas:
+    - `dialog.tsx`, con `size="sm"` (420), la cruz solo en la compu, el encabezado del teléfono, las hojas a todo el alto y `DialogBody`;
+    - `OtpInput`, con 22 en el ingreso y en el teléfono, y 18 en los diálogos de la compu;
+    - `checkbox` (la bloqueada, en gris) y `textarea` (84, sin tirador).
+  - «Verificar» ya no se apaga: la franja dice «Escribí los 6 números del código.», como el tablero y Criterio · Botones.
+  - Lo que pedía:
   - lo que fijó v100:
     - la franja de error del teléfono: 14,5 con interlineado 1,4, padding 12/14, radio 12 y el ícono arriba si ocupa dos líneas. En la compu sigue en 13, con las medidas de `.aviso-mal`;
     - en Empresa, «Roles de …» y «Agregar miembro» van en el diálogo chico (420) y «Editar empresa», en el de 560;
@@ -379,6 +385,13 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
   - el error de «Quitar de la organización» va en la franja, como el tablero, y no en el aviso de abajo;
   - los avisos de una prueba no quedan para la siguiente (se limpian entre pruebas; hoy pasa en `RoleEditorPage.test`);
   - el arnés visual (`src/test/visualApp.tsx`) usa `createQueryClient`, el de la app, para que las capturas muestren los avisos globales como los ve el usuario;
+  - lo que encontró R2b:
+    - el error de «Invitar usuario» va arriba de los botones, no arriba de los campos;
+    - accesibilidad: con un `Select` adentro, `FormField` no le pasa al control que es obligatorio;
+    - los anchos de diálogo fuera del criterio: Auditoría (640) y la vista previa de la Página pública (600) pasan a `size`;
+    - los diálogos de Configuración pasan al cuerpo común (`DialogBody`);
+    - «Agregar miembro» no apaga el botón hasta elegir a alguien: Criterio · Botones lo prohíbe y el tablero lo dibuja activo;
+    - el texto «Elegí un usuario…» del tablero (la app dice «Elegí una persona…»).
 - [ ] **Tests lentos con la máquina cargada** (va en R2c): en la corrida completa, los de `CompaniesPage`, `CompanyDetailPage`, `SettingsPage` y `UserDetailPage` se pasan de 5 s. Solos pasan. Se hacen más livianos, o, si no se puede, el límite se sube en ese test con un comentario que diga por qué. Una suite que falla al azar no sirve de red.
 - [ ] **Hecho cuando** el relevamiento, vuelto a correr, no tiene diferencias «Nueva» de las etapas 1 a 6, salvo las que el usuario aceptó.
 
