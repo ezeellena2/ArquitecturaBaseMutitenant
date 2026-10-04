@@ -74,6 +74,7 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
     {
         base.ConfigureConventions(configurationBuilder);
         EmailConvention.Configure(configurationBuilder);
+        PhoneNumberConvention.Configure(configurationBuilder);
     }
 
     protected override void OnModelCreating(ModelBuilder builder)

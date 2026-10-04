@@ -50,6 +50,6 @@ public static class PublicPageHttpMappings
 
     public static PublicPageResponse ToHttpResponse(this PublicPageModelResponse response) => new(response.Slug,
         response.Name, response.Description, response.LogoDataUri, response.ContactEmail?.DisplayValue,
-        response.ContactPhone, response.Address, response.Website, response.IsPublished,
+        response.ContactPhone?.Value, response.Address, response.Website, response.IsPublished,
         response.PublishBlockedAtUtc, response.PublishBlockedReason, response.Version);
 }

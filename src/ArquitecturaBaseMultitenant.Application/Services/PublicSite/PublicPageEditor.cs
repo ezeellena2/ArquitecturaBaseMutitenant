@@ -8,6 +8,7 @@ using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.PublicSite;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.PublicSite;
 
@@ -26,12 +27,12 @@ internal sealed class PublicPageEditor(IPublicPageRepository pages, ITenantRepos
         if (slug.IsFailure) return slug.Error;
         var decodedLogo = DecodeLogo(request);
         if (decodedLogo.IsFailure) return decodedLogo.Error;
-        string? contactPhone = null;
+        PhoneNumber? contactPhone = null;
         if (!string.IsNullOrWhiteSpace(request.ContactPhoneNumber))
         {
             var phone = phoneParser.Parse(request.ContactPhoneCountry, request.ContactPhoneNumber, PhoneUsage.Any);
             if (phone.IsFailure) return FieldErrors.On(phone.Error, "contactPhone");
-            contactPhone = phone.Value.Value;
+            contactPhone = phone.Value;
         }
 
         try

@@ -10,11 +10,11 @@ public sealed record UpdatePublicPageRequest(string? Slug, string? Name, string?
 public sealed record SetPublicPagePublicationRequest(uint? Version);
 
 public sealed record PublicPageResponse(string? Slug, string Name, string? Description,
-    string? LogoDataUri, Email? ContactEmail, string? ContactPhone, string? Address,
+    string? LogoDataUri, Email? ContactEmail, PhoneNumber? ContactPhone, string? Address,
     string? Website, bool IsPublished, DateTime? PublishBlockedAtUtc,
     string? PublishBlockedReason, uint Version);
 
 public sealed record PublicPageRow(string Name, string? Description, byte[]? LogoBytes,
-    string? LogoContentType, Email? ContactEmail, string? ContactPhone, string? Address,
+    string? LogoContentType, Email? ContactEmail, PhoneNumber? ContactPhone, string? Address,
     string? Website, bool IsPublished, DateTime? PublishBlockedAtUtc,
     string? PublishBlockedReason, uint Version);

@@ -18,7 +18,6 @@ internal sealed class PublicPageConfiguration : IEntityTypeConfiguration<PublicP
         builder.Property(page => page.LogoBytes).HasColumnType("bytea");
         builder.Property(page => page.LogoContentType).HasMaxLength(TextLimits.ShortCode);
         builder.Property(page => page.ContactEmail).HasMaxLength(Email.MaxLength);
-        builder.Property(page => page.ContactPhone).HasMaxLength(TextLimits.PhoneNumber);
         builder.Property(page => page.Address).HasMaxLength(TextLimits.Description);
         builder.Property(page => page.Website).HasMaxLength(TextLimits.WebAddress);
         builder.Property(page => page.PublishBlockedReason).HasMaxLength(TextLimits.Description);

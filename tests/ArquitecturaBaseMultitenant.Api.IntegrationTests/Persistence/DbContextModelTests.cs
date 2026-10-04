@@ -2,7 +2,9 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Common;
+using ArquitecturaBaseMultitenant.Domain.PublicSite;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
@@ -84,6 +86,19 @@ public sealed class DbContextModelTests
         Assert.Contains(foreignKeys, key => key.PrincipalEntityType.ClrType == typeof(Member)
             && key.Properties.Select(property => property.Name).SequenceEqual(["TenantId", "MemberId"]));
         Assert.Equal(TextLimits.ShortName, access.FindProperty("RoleName")!.GetMaxLength());
+    }
+
+    [Fact]
+    public void Public_page_contact_phone_is_stored_as_e164_like_every_phone_column()
+    {
+        using var context = CreateContext();
+        var phone = context.Model.FindEntityType(typeof(PublicPage))!
+            .FindProperty(nameof(PublicPage.ContactPhone))!;
+
+        // telefonos.md: un teléfono viaja como PhoneNumber y una columna que guarda solo teléfonos es varchar(16).
+        Assert.Equal(typeof(PhoneNumber), phone.ClrType);
+        Assert.Equal(PhoneNumber.MaxLength, phone.GetMaxLength());
+        Assert.NotNull(phone.GetValueConverter());
     }
 
     [Fact]

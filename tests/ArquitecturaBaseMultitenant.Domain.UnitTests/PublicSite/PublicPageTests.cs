@@ -12,7 +12,7 @@ public sealed class PublicPageTests
 
         Assert.False(page.IsPublished);
         Assert.True(page.UpdateContent("Grupo Delta", "Una descripción", Email.Create("hola@example.com").Value,
-            "+541145678900", "Buenos Aires", "https://example.com").IsSuccess);
+            PhoneNumber.Create("+541145678900").Value, "Buenos Aires", "https://example.com").IsSuccess);
         Assert.True(page.Publish().IsSuccess);
         Assert.True(page.IsPublished);
         Assert.True(page.Unpublish().IsSuccess);
