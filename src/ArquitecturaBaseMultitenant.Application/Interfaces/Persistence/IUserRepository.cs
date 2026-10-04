@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 
@@ -12,6 +13,12 @@ public interface IUserRepository
     Task<Result> CancelDeletionAsync(Guid userId, DateTime cancelledAtUtc, CancellationToken cancellationToken);
     Task<Result> CompleteDeletionAsync(Guid userId, DateTime deletedAtUtc, string deletedDisplayName,
         CancellationToken cancellationToken);
+    /// <summary>Suspende una cuenta Active dentro de la UoW del llamador.</summary>
+    Task<Result> SuspendAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>Levanta la suspensión: vuelve a Active o, con una baja programada, a PendingDeletion.</summary>
+    Task<Result<UserStatus>> ReactivateAsync(Guid userId, CancellationToken cancellationToken);
+
     Task<UserAccountRow> CreateAsync(string? displayName, string culture, string timeZoneId,
         CancellationToken cancellationToken);
 

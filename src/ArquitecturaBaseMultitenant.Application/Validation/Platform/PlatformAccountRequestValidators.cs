@@ -13,3 +13,12 @@ internal sealed class ListPlatformAccountsRequestValidator : PagedRequestValidat
         RuleFor(r => r.Kind).IsInEnum().When(r => r.Kind is not null).WithMessage(_ => ValidationTexts.FilterInvalid);
     }
 }
+
+internal sealed class PlatformAccountActionRequestValidator : AbstractValidator<PlatformAccountActionRequest>
+{
+    public PlatformAccountActionRequestValidator()
+    {
+        RuleFor(r => r.Version).NotNull().WithMessage(_ => ValidationTexts.Required);
+        RuleFor(r => r.Reason).Required().Description();
+    }
+}

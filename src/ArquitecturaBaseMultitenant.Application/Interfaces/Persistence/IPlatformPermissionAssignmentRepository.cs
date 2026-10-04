@@ -8,4 +8,10 @@ public interface IPlatformPermissionAssignmentRepository
     Task<PlatformPermissionAssignment?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken);
     void Add(PlatformPermissionAssignment assignment);
     void Remove(PlatformPermissionAssignment assignment);
+
+    /// <summary>Lock global: quitar, suspender o dar de baja a un operador se serializa con este lock.</summary>
+    Task LockOperatorsAsync(CancellationToken cancellationToken);
+
+    /// <summary>Operadores activos con <c>platform.operators.manage</c>, leídos dentro de la transacción.</summary>
+    Task<IReadOnlyList<Guid>> ListActiveManagerIdsAsync(CancellationToken cancellationToken);
 }

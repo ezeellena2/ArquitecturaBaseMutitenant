@@ -9,6 +9,9 @@ internal static class AdvisoryLockKeys
     public const string ReferenceDataSeed = "p:ref:seed";
     public const string Seed = "seed:database";
 
+    /// <summary>Serializa los cambios que pueden dejar a Plataforma sin un operador que administre operadores.</summary>
+    public const string PlatformOperators = "global:platform-operators";
+
     public static string Account(Guid userId)
     {
         if (userId == Guid.Empty) throw new ArgumentException("A user ID is required.", nameof(userId));

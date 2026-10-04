@@ -26,4 +26,7 @@ public enum SecurityEventType
     PublicPagePublicationAllowed,
     OrganizationDomainVerified,
     OrganizationDomainRemoved,
+    AccountSuspended,
+    AccountReactivated,
+    AccountSessionsRevoked,
 }

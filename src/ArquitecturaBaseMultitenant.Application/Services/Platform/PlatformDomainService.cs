@@ -20,7 +20,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 /// </summary>
 internal sealed class PlatformDomainService(ITenantReader tenants, ITenantDomainReader domains,
     PlatformActionGuard guard, OrganizationDomainVerifier verifier, OrganizationDomainRemover remover,
-    PlatformTenantAudit audit, IUnitOfWork unitOfWork, IRequestValidator validator, TimeProvider clock,
+    PlatformAudit audit, IUnitOfWork unitOfWork, IRequestValidator validator, TimeProvider clock,
     ILogger<PlatformDomainService> logger) : IPlatformDomainService
 {
     public Task<Result<IReadOnlyList<OrganizationDomainResponse>>> ListAsync(Guid tenantId, CancellationToken cancellationToken) =>

@@ -8,7 +8,7 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
 /// <summary>Prepara una transición global dentro de la UoW del servicio.</summary>
-internal sealed class PlatformTenantStateWriter(IPlatformTenantRepository tenants, PlatformTenantAudit audit,
+internal sealed class PlatformTenantStateWriter(IPlatformTenantRepository tenants, PlatformAudit audit,
     PlatformTenantNotifier notices, ITokenRevoker tokens)
 {
     internal async Task<Result> ChangeAsync(Guid id, PlatformTenantAction action, PlatformTenantStateRequest request, CancellationToken ct)

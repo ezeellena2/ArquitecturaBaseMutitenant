@@ -72,6 +72,8 @@ public sealed class PlatformPermissionServiceTests
         public Task<Result> RequestDeletionAsync(Guid id, string reason, DateTime utc, int graceDays, CancellationToken ct) => throw new NotSupportedException();
         public Task<Result> CancelDeletionAsync(Guid id, DateTime utc, CancellationToken ct) => throw new NotSupportedException();
         public Task<Result> CompleteDeletionAsync(Guid id, DateTime utc, string name, CancellationToken ct) => throw new NotSupportedException();
+        public Task<Result> SuspendAsync(Guid id, CancellationToken ct) => throw new NotSupportedException();
+        public Task<Result<UserStatus>> ReactivateAsync(Guid id, CancellationToken ct) => throw new NotSupportedException();
         public Task<UserAccountRow> CreateAsync(string? name, string culture, string zone, CancellationToken ct) => throw new NotSupportedException();
         public Task SetPrimaryEmailAsync(Guid id, Email email, CancellationToken ct) => throw new NotSupportedException();
         public Task SetPrimaryContactAsync(Guid id, Email? email, PhoneNumber? phone, CancellationToken ct) => throw new NotSupportedException();

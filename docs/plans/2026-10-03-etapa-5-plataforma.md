@@ -223,9 +223,9 @@ Archivos: IPlatformReader/PlatformReader (identidad global explícita), Account 
 
 Archivos: PlatformAccountService/writer, IUserRepository/UserRepository/ApplicationUser, ITokenRevoker/ISignInService, cache/events/notices; tests PlatformAccountState y integración de tokens.
 
-- [ ] Rojo: suspensión revoca todos los accesos/sesiones; reactivación con baja programada deja PendingDeletion; revoke-sessions mantiene estado; un operador sin accounts.manage no muta; proteger al último operador activo con operators.manage.
-- [ ] Motivo y version en cambios, lock por cuenta; SecurityEvent con actor operador y avisos existentes en mismo commit; caché tras guardar.
-- [ ] Tokens/cookie/F5 regresión y build. Commit `feat(plataforma): administrar estado y sesiones de cuentas`.
+- [x] Rojo en worktree aislado por tipos ausentes (CS0117: `AccountSuspended`, `AccountReactivated`, `AccountSessionsRevoked`, `LastManagerCode`). Cubre: 401 sin sesión, 403 con solo `accounts.read`, 400 sin motivo o versión, 404 para un id inexistente; suspender revoca el token de la persona (401 en `/api/me`) y repetirla da 409 `Users.User.InvalidTransition`; reactivar con versión vieja da 409 y con la vigente vuelve a Active y deja ingresar con un código nuevo; cerrar sesiones revoca sin cambiar el estado, cambia la versión y su reenvío es idempotente; una cuenta suspendida con baja programada vuelve a PendingDeletion; el último operador con `operators.manage` no se suspende (409 `Platform.Operator.LastManager`) hasta que hay otro, y un operador no se suspende a sí mismo (403 `Users.User.CannotModifySelf`).
+- [x] Motivo, versión y lock por cuenta; `PlatformOperatorGuard` toma antes el lock global de operadores. SecurityEvent con operador, cuenta, motivo, diff de `status` e IP enmascarada en la misma transacción; caché de estado después del commit. No hay avisos previstos (el tablero no los muestra). `PlatformTenantAudit` pasa a `PlatformAudit` porque registra organizaciones y cuentas; `PlatformAccountStateService` tiene 7 dependencias de negocio y abre su transacción.
+- [x] Verde: estado de cuentas **3/3**; cuentas, organizaciones, moderación, dominios, inventario y OpenAPI **20/20**; Application **441/441**; arquitectura **154/154**; build 0 advertencias. OpenAPI solo agrega las tres rutas y el contrato del pedido. Commit `feat(plataforma): administrar estado y sesiones de cuentas`.
 
 ### T13 · Baja por Plataforma (ADR 0035)
 
@@ -385,6 +385,7 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 | T08 back | `/api/me.features` vacío en Plataforma y en espacios no disponibles: rojo de control 4/18 → 18/18; front pendiente | `93e2304` | — |
 | R00 modelo | Permisos individuales y migración que conserva los efectivos; dominio 8/8, servicio 6/6, Application 433/433, arquitectura 154/154, PostgreSQL 32/32 | `f2b3e9a` | — |
 | Alta: Empresa y Roles | Correo del Dueño invitado con la primera empresa y los roles (alineación 1.4, pedido de la Guía): rojo → 10/10 | `ddd1572` | — |
-| T11 | Cuentas globales con estados derivados, ficha y contacto del Dueño invitado; integración 77/77, Application 440/440, dominio 264/264, arquitectura 154/154 | commit de esta tarea | — |
+| T11 | Cuentas globales con estados derivados, ficha y contacto del Dueño invitado; integración 77/77, Application 440/440, dominio 264/264, arquitectura 154/154 | `8cb28e2` | — |
+| T12 | Suspender, reactivar y cerrar sesiones con el último administrador de operadores protegido; 3/3 + 20/20, Application 441/441, arquitectura 154/154 | commit de esta tarea | — |
 
 No declarar cierre a partir de esta tabla sin completar T25.

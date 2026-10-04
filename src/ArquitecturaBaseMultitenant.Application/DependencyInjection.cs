@@ -75,13 +75,15 @@ public static class DependencyInjection
         services.AddScoped<Services.Platform.PlatformFeatureWriter>();
         services.AddScoped<ITenantAdministrationService, Services.Platform.TenantAdministrationService>();
         services.AddScoped<Services.Platform.PlatformTenantStateWriter>();
-        services.AddScoped<Services.Platform.PlatformTenantAudit>();
+        services.AddScoped<Services.Platform.PlatformAudit>();
         services.AddScoped<Services.Platform.PlatformTenantNotifier>();
         services.AddScoped<IPlatformScopeAccessService, Services.Platform.PlatformScopeAccessService>();
         services.AddScoped<IPlatformPublicSiteService, Services.Platform.PlatformPublicSiteService>();
         services.AddScoped<Services.Platform.PlatformPublicSiteWriter>();
         services.AddScoped<IPlatformDomainService, Services.Platform.PlatformDomainService>();
         services.AddScoped<IPlatformAccountService, Services.Platform.PlatformAccountService>();
+        services.AddScoped<IPlatformAccountStateService, Services.Platform.PlatformAccountStateService>();
+        services.AddScoped<Services.Platform.PlatformOperatorGuard>();
         services.AddScoped<Services.Platform.PlatformActionGuard>();
         services.AddScoped<Services.Platform.PlatformTenantSlugAllocator>();
         services.AddScoped<Services.Platform.PlatformTenantCreator>();

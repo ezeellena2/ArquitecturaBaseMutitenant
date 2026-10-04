@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.AspNetCore.Identity;
@@ -35,6 +36,20 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
     {
         context.RequireTransaction();
         return (await RequireUserAsync(userId, cancellationToken)).CompleteDeletion(deletedAtUtc, deletedDisplayName);
+    }
+
+    public async Task<Result> SuspendAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        context.RequireTransaction();
+        return (await RequireUserAsync(userId, cancellationToken)).Suspend();
+    }
+
+    public async Task<Result<UserStatus>> ReactivateAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        context.RequireTransaction();
+        var user = await RequireUserAsync(userId, cancellationToken);
+        var reactivated = user.Reactivate();
+        return reactivated.IsFailure ? reactivated.Error : user.Status;
     }
 
     public async Task<UserAccountRow> CreateAsync(string? displayName, string culture, string timeZoneId,

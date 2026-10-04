@@ -13,7 +13,7 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
 internal sealed class PlatformTenantCreator(ITenantRepository tenants, ICompanyRepository companies,
-    InvitationIssuer invitations, TenantProvisioner provisioner, PlatformTenantAudit audit,
+    InvitationIssuer invitations, TenantProvisioner provisioner, PlatformAudit audit,
     PlatformTenantSlugAllocator slugs, IPendingTenantOwnerRepository pendingOwners, TimeProvider clock)
 {
     internal async Task<Result<CreatedPlatformTenantResponse>> CreateAsync(Guid id, Guid operatorId,

@@ -3,6 +3,12 @@ using ArquitecturaBaseMultitenant.Application.Models.Platform;
 
 namespace ArquitecturaBaseMultitenant.Api.Contracts.Platform;
 
+public sealed record PlatformAccountActionHttpRequest(uint? Version, string? Reason)
+{
+    public PlatformAccountActionRequest ToModel() => new(Version, Reason);
+    public override string ToString() => nameof(PlatformAccountActionHttpRequest);
+}
+
 public sealed class PlatformAccountsQuery
 {
     public int Page { get; init; } = PagedRequest.DefaultPage;

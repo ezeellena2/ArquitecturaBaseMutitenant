@@ -1,4 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Domain.Authorization;
+using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.Platform;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -26,5 +28,18 @@ internal sealed class PlatformPermissionAssignmentRepository(ApplicationDbContex
     {
         context.RequireTransaction();
         context.PlatformPermissionAssignments.Remove(assignment);
+    }
+
+    public Task LockOperatorsAsync(CancellationToken cancellationToken) =>
+        context.AcquireAdvisoryLocksAsync([AdvisoryLockKeys.PlatformOperators], cancellationToken);
+
+    public async Task<IReadOnlyList<Guid>> ListActiveManagerIdsAsync(CancellationToken cancellationToken)
+    {
+        context.RequireTransaction();
+        return await (from assignment in context.PlatformPermissionAssignments.AsNoTracking()
+                      join user in context.Users.AsNoTracking() on assignment.UserId equals user.Id
+                      where user.Status == UserStatus.Active && user.IsPlatformOperator
+                          && assignment.Permissions.Contains(PlatformPermissions.Operators.Manage)
+                      select assignment.UserId).ToArrayAsync(cancellationToken);
     }
 }

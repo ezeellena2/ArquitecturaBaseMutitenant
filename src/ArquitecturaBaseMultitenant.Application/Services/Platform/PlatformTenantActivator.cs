@@ -11,7 +11,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
 internal sealed class PlatformTenantActivator(IPlatformTenantRepository tenants, ITenantProvisioningReader metadata,
     IMemberRepository members, ITenantSettingsRepository settings, TenantProvisioner provisioner,
-    PlatformTenantAudit audit, IUserRepository users)
+    PlatformAudit audit, IUserRepository users)
 {
     internal async Task<Result> ActivateAsync(Guid id, bool retry, PlatformTenantStateRequest request,
         TenantSettings fallbackSettings, DateTime nowUtc, CancellationToken ct)

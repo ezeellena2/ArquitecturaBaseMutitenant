@@ -246,6 +246,10 @@ public sealed class ConnectServiceTests
             DateTime cancelledAtUtc, CancellationToken ct) => throw new NotSupportedException();
         public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> CompleteDeletionAsync(Guid userId,
             DateTime deletedAtUtc, string deletedDisplayName, CancellationToken ct) => throw new NotSupportedException();
+        public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> SuspendAsync(Guid userId, CancellationToken ct) =>
+            throw new NotSupportedException();
+        public Task<ArquitecturaBaseMultitenant.Domain.Results.Result<UserStatus>> ReactivateAsync(Guid userId,
+            CancellationToken ct) => throw new NotSupportedException();
         public Task<UserAccountRow> CreateAsync(string? displayName, string culture, string timeZoneId,
             CancellationToken cancellationToken) => throw new NotSupportedException();
 
