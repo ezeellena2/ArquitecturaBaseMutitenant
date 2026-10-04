@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Application.Services.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
+using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
@@ -32,8 +33,10 @@ internal sealed class PlatformTenantCreator(ITenantRepository tenants, ICompanyR
         if (company.IsFailure) return company.Error;
         tenants.Add(tenant);
         companies.Add(company.Value);
+        // Como una invitación común, el correo lista Empresa y Roles: Dueño y Administrador de la primera empresa.
+        var grant = new InvitationGrantRow([], [company.Value.Name], [SystemRoles.TenantAdmin, SystemRoles.CompanyAdmin]);
         var issued = await invitations.IssueWithMemberAsync(new IssueInvitationRequest(request.OwnerEmail,
-            operatorId, InvitationChannel.Email), ct, settings);
+            operatorId, InvitationChannel.Email), ct, settings, grant);
         if (issued.IsFailure) return issued.Error;
         var prepared = await provisioner.StageBusinessOwnerAsync(tenant, settings, issued.Value.Member, ct, company.Value.Id);
         if (prepared.IsFailure) return prepared.Error;

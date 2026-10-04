@@ -88,6 +88,9 @@ public sealed class PlatformTenantProvisioningHttpTests(ApiFactory factory)
             var outbox = await db.OutboxMessages.AsNoTracking().Where(o => o.Channel == "email" && !previousOutbox.Contains(o.Id)).ToListAsync(Ct);
             var message = outbox.Select(o => JsonSerializer.Deserialize<EmailMessage>(services.GetRequiredService<IPayloadProtector>().Unprotect(o.EncryptedPayload))!)
                 .Single(m => m.To == email.Value);
+            // Alineación 1.4: como una invitación común, el correo lista Empresa y Roles (Dueño y Administrador).
+            Assert.Contains("Company: Primera empresa", message.TextBody);
+            Assert.Contains("Roles: Owner, Administrator", message.TextBody);
             token = Regex.Match(message.TextBody, @"/invitacion#(?<token>[A-Za-z0-9_-]+)").Groups["token"].Value;
             Assert.False(string.IsNullOrEmpty(token));
         }
