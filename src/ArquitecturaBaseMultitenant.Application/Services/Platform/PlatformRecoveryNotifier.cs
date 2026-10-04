@@ -3,23 +3,26 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Application.Models.Notifications;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
+using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
-using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
 /// <summary>
-/// Avisos de la decisión al correo nuevo del pedido, dentro de la UoW. Aprobado sale en la cultura de la cuenta, que
-/// ahora tiene ese correo; rechazado, en la cultura por defecto y sin cuenta, para no delatar ninguna.
+/// Avisos de la decisión, dentro de la UoW. Aprobado sale al correo nuevo en la cultura de la cuenta, que ahora tiene
+/// ese correo, y además, como cualquier método agregado, a todos los métodos de la cuenta (ADR 0033); rechazado, en la
+/// cultura por defecto y sin cuenta, para no delatar ninguna.
 /// </summary>
 internal sealed class PlatformRecoveryNotifier(IEnumerable<IAccountNoticeChannel> channels, UserCultures cultures,
-    IPublicOrigin origin)
+    IPublicOrigin origin, LoginMethodNotifier loginMethods)
 {
-    public async Task ApprovedAsync(UserAccountRow account, Email email, CancellationToken ct)
+    public async Task ApprovedAsync(UserAccountRow account, LoginMethod added, IReadOnlyList<LoginMethod> methods,
+        CancellationToken ct)
     {
         var url = origin.Value is { } value ? new Uri(value, "/login").AbsoluteUri : "/login";
-        await EmailChannel().EnqueueAsync(account.Id, email.Value, new AccountNotice.RecoveryApproved(url),
+        await EmailChannel().EnqueueAsync(account.Id, added.Value, new AccountNotice.RecoveryApproved(url),
             await cultures.ResolveAsync(account.Culture, null, ct), ct);
+        await loginMethods.ChangedAsync(account, methods, added, "Added", ct);
     }
 
     public async Task RejectedAsync(string email, CancellationToken ct) =>

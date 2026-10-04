@@ -85,9 +85,16 @@ public sealed class PlatformRecoveryTests(ApiFactory factory)
             Assert.Equal(AuditActorKind.PlatformOperator, ev.ActorKind);
             Assert.Equal("Confirmó sus datos por videollamada.", ev.Reason);
             Assert.DoesNotContain(newEmail, ev.Changes);
-            var notice = Assert.Single(await EmailsAsync(services, newEmail, newOutbox));
-            Assert.Equal("Recuperaste tu cuenta", notice.Subject);
+            var notice = Assert.Single(await EmailsAsync(services, newEmail, newOutbox),
+                message => message.Subject == "Recuperaste tu cuenta");
             Assert.DoesNotContain("videollamada", notice.TextBody);
+            // ADR 0033: como cualquier método nuevo, el correo sumado se avisa en todos los métodos de la cuenta.
+            Assert.Equal("Agregaste un correo a tu cuenta",
+                Assert.Single(await EmailsAsync(services, account.Email.Value, newOutbox)).Subject);
+            Assert.Single(await EmailsAsync(services, newEmail, newOutbox),
+                message => message.Subject == "Agregaste un correo a tu cuenta");
+            Assert.True(await db.SecurityEvents.AsNoTracking().AnyAsync(item =>
+                item.Type == SecurityEventType.LoginMethodChanged && item.TargetAccountId == account.UserId, Ct));
         }
 
         // Con el correo nuevo ya puede entrar.

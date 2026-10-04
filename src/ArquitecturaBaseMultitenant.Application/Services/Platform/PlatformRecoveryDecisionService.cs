@@ -74,7 +74,8 @@ internal sealed class PlatformRecoveryDecisionService(
                 await users.SetPrimaryEmailAsync(userId, email, work);
                 audit.RecordRecovery(userId, SecurityEventType.AccountRecoveryApproved, request.Reason!,
                     StatusChange(AccountRecoveryStatus.Approved));
-                await notifier.ApprovedAsync(account, email, work);
+                await notifier.ApprovedAsync(account, method,
+                    [.. await methods.ListByUserIdAsync(userId, work), method], work);
                 return Result.Success();
             }, CommitPolicy.OnSuccess, ct);
         });
