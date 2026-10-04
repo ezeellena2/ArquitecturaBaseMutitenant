@@ -10,8 +10,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
 /// <summary>
 /// Avisos de la decisión, dentro de la UoW. Aprobado sale al correo nuevo en la cultura de la cuenta, que ahora tiene
-/// ese correo, y además, como cualquier método agregado, a todos los métodos de la cuenta (ADR 0033); rechazado, en la
-/// cultura por defecto y sin cuenta, para no delatar ninguna.
+/// ese correo, y el aviso de método agregado va a los demás métodos de la cuenta (ADR 0033): el correo nuevo recibe
+/// un solo aviso. Rechazado sale en la cultura por defecto y sin cuenta, para no delatar ninguna.
 /// </summary>
 internal sealed class PlatformRecoveryNotifier(IEnumerable<IAccountNoticeChannel> channels, UserCultures cultures,
     IPublicOrigin origin, LoginMethodNotifier loginMethods)
@@ -22,7 +22,7 @@ internal sealed class PlatformRecoveryNotifier(IEnumerable<IAccountNoticeChannel
         var url = origin.Value is { } value ? new Uri(value, "/login").AbsoluteUri : "/login";
         await EmailChannel().EnqueueAsync(account.Id, added.Value, new AccountNotice.RecoveryApproved(url),
             await cultures.ResolveAsync(account.Culture, null, ct), ct);
-        await loginMethods.ChangedAsync(account, methods, added, "Added", ct);
+        await loginMethods.ChangedAsync(account, [.. methods.Where(method => method.Id != added.Id)], added, "Added", ct);
     }
 
     public async Task RejectedAsync(string email, CancellationToken ct) =>
