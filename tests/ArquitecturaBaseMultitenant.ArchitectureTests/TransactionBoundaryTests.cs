@@ -30,10 +30,6 @@ public sealed class TransactionBoundaryTests
         "ArquitecturaBaseMultitenant.Application.Services.Companies.CompanyMembershipWriter",
         "ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings.OrganizationDomainRegistrar",
         "ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings.OrganizationSettingsUpdater",
-        "ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers.OrganizationUserEditor",
-        "ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers.OrganizationUserInvitationManager",
-        "ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers.OrganizationUserRemover",
-        "ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers.OrganizationUserStatusEditor",
         "ArquitecturaBaseMultitenant.Application.Services.PublicSite.PublicPageEditor",
     };
     private const string IdempotencyStore = "ArquitecturaBaseMultitenant.Infrastructure.Idempotency.IdempotencyStore";

@@ -21,7 +21,10 @@ internal sealed class OrganizationUserService(
     ICurrentUser currentUser,
     OrganizationUserAssignmentManager assignments,
     OrganizationUserInvitationManager invitations,
-    OrganizationUserLifecycleCoordinator lifecycle,
+    OrganizationUserEditor editor,
+    OrganizationUserStatusEditor statusEditor,
+    OrganizationUserRemover remover,
+    IUnitOfWork unitOfWork,
     TimeProvider timeProvider,
     ILogger<OrganizationUserService> logger) : IOrganizationUserService
 {
@@ -67,7 +70,9 @@ internal sealed class OrganizationUserService(
             if (currentUser.UserId is not { } inviterId || inviterId == Guid.Empty) return AccessErrors.NotMember;
             var desired = await assignments.ValidateAsync(request.RoleIds!, request.Companies!, cancellationToken);
             if (desired.IsFailure) return desired.Error;
-            return await invitations.InviteAsync(request, desired.Value, cancellationToken);
+            return await unitOfWork.ExecuteInTransactionAsync(
+                ct => invitations.InviteAsync(request, desired.Value, inviterId, ct), CommitPolicy.OnSuccess,
+                cancellationToken);
         });
     }
 
@@ -75,14 +80,16 @@ internal sealed class OrganizationUserService(
         OperationLog.RunAsync(logger, timeProvider, "ResendOrganizationInvitation", async () =>
         {
             if (invitationId == Guid.Empty) return InvitationErrors.Invalid;
-            return await invitations.ResendAsync(invitationId, cancellationToken);
+            return await unitOfWork.ExecuteInTransactionAsync(ct => invitations.ResendAsync(invitationId, ct),
+                CommitPolicy.OnSuccess, cancellationToken);
         });
 
     public Task<Result> RevokeInvitationAsync(Guid invitationId, CancellationToken cancellationToken) =>
         OperationLog.RunAsync(logger, timeProvider, "RevokeOrganizationInvitation", async () =>
         {
             if (invitationId == Guid.Empty) return InvitationErrors.Invalid;
-            return await invitations.RevokeAsync(invitationId, cancellationToken);
+            return await unitOfWork.ExecuteInTransactionAsync(ct => invitations.RevokeAsync(invitationId, ct),
+                CommitPolicy.OnSuccess, cancellationToken);
         });
 
     public Task<Result> UpdateAsync(UpdateOrganizationUserRequest request, CancellationToken cancellationToken)
@@ -93,7 +100,9 @@ internal sealed class OrganizationUserService(
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             var desired = await assignments.ValidateAsync(request.RoleIds!, request.Companies!, cancellationToken);
             if (desired.IsFailure) return desired.Error;
-            return await lifecycle.UpdateAsync(request, desired.Value, currentUser.UserId, cancellationToken);
+            return await unitOfWork.ExecuteInTransactionAsync(
+                ct => editor.UpdateAsync(request, desired.Value, currentUser.UserId, ct), CommitPolicy.OnSuccess,
+                cancellationToken);
         });
     }
 
@@ -104,7 +113,9 @@ internal sealed class OrganizationUserService(
         return OperationLog.RunAsync(logger, timeProvider, "ChangeOrganizationUserStatus", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            return await lifecycle.ChangeStatusAsync(request, currentUser.UserId, cancellationToken);
+            return await unitOfWork.ExecuteInTransactionAsync(
+                ct => statusEditor.ChangeStatusAsync(request, currentUser.UserId, ct), CommitPolicy.OnSuccess,
+                cancellationToken);
         });
     }
 
@@ -112,7 +123,8 @@ internal sealed class OrganizationUserService(
         OperationLog.RunAsync(logger, timeProvider, "RemoveOrganizationUser", async () =>
         {
             if (memberId == Guid.Empty || version is null) return UserErrors.NotFound;
-            return await lifecycle.RemoveAsync(memberId, version.Value, cancellationToken);
+            return await unitOfWork.ExecuteInTransactionAsync(ct => remover.RemoveAsync(memberId, version.Value, ct),
+                CommitPolicy.OnSuccess, cancellationToken);
         });
 
     private OrganizationUserResponse ToResponse(OrganizationUserRow row) => new(row.MemberId, row.UserId,

@@ -52,9 +52,7 @@ public static class DependencyInjection
         services.AddScoped<OrganizationMembershipEndNotifier>();
         services.AddScoped<OrganizationUserEditor>();
         services.AddScoped<OrganizationUserStatusEditor>();
-        services.AddScoped<OrganizationUserExitEffects>();
         services.AddScoped<OrganizationUserRemover>();
-        services.AddScoped<OrganizationUserLifecycleCoordinator>();
         services.AddScoped<IOrganizationSettingsService, OrganizationSettingsService>();
         services.AddScoped<OrganizationSettingsUpdater>();
         services.AddScoped<IOrganizationDomainService, OrganizationDomainService>();

@@ -15,19 +15,17 @@ internal sealed class OrganizationUserStatusEditor(
     OrganizationUserAssignmentManager assignments,
     OrganizationUserAdministratorGuard administrators,
     OrganizationMembershipEndNotifier membershipEndNotifier,
-    IUnitOfWork unitOfWork,
     TimeProvider timeProvider)
 {
-    internal Task<Result> ChangeStatusAsync(ChangeOrganizationUserStatusRequest request, Guid? currentUserId,
-        CancellationToken cancellationToken) =>
-        unitOfWork.ExecuteInTransactionAsync(async ct =>
-        {
-            var member = await members.GetByIdAsync(request.MemberId, request.Version!.Value, ct);
-            if (member is null) return MemberErrors.NotFound;
-            return await ApplyAsync(member, request.IsActive!.Value, currentUserId, ct);
-        }, CommitPolicy.OnSuccess, cancellationToken);
+    internal async Task<Result> ChangeStatusAsync(ChangeOrganizationUserStatusRequest request, Guid? currentUserId,
+        CancellationToken ct)
+    {
+        var member = await members.GetByIdAsync(request.MemberId, request.Version!.Value, ct);
+        if (member is null) return MemberErrors.NotFound;
+        return await ApplyAsync(member, request.IsActive!.Value, currentUserId, ct);
+    }
 
-    /// <summary>Cambia el estado dentro de una transacción ya abierta; también lo usa «Guardar cambios» del usuario.</summary>
+    /// <summary>Cambia el estado de un miembro ya cargado; también lo usa «Guardar cambios» del usuario.</summary>
     internal async Task<Result> ApplyAsync(Member member, bool isActive, Guid? currentUserId, CancellationToken ct)
     {
         if (member.Status is MemberStatus.Invited or MemberStatus.Removed)
