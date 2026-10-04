@@ -31,4 +31,7 @@ public enum SecurityEventType
     AccountSessionsRevoked,
     AccountRecoveryApproved,
     AccountRecoveryRejected,
+    PlatformOperatorInvited,
+    PlatformOperatorPermissionsChanged,
+    PlatformOperatorRemoved,
 }

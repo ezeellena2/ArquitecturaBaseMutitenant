@@ -63,6 +63,10 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
             AccountNotice.RecoveryReceived => ("RecoveryReceived", "AccountDeleted.html",
                 new[] { NotificationTexts.Format("RecoveryReceived.Body", culture, appName) },
                 string.Empty, string.Empty, NotificationTexts.Get("RecoveryReceived.Note", culture)),
+            AccountNotice.OperatorInvited invited => ("OperatorInvited", "AccountDeletionCancelled.html",
+                new[] { NotificationTexts.Format("OperatorInvited.Body", culture, appName) },
+                NotificationTexts.Get("Action.Login", culture), invited.ActionUrl,
+                NotificationTexts.Get("OperatorInvited.Note", culture)),
             AccountNotice.RecoveryRequested requested => ("RecoveryRequested", "AccountDeleted.html",
                 new[] { NotificationTexts.Format("RecoveryRequested.Body", culture, greeting, appName) },
                 string.Empty, string.Empty, requested.SupportEmail is { } support

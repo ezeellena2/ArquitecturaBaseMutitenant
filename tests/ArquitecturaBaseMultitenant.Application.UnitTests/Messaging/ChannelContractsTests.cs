@@ -19,10 +19,10 @@ public sealed class ChannelContractsTests
             .ToArray();
 
         Assert.True(typeof(AccountNotice).IsAbstract);
-        Assert.Equal(12, notices.Length);
+        Assert.Equal(13, notices.Length);
         Assert.All(notices, type => Assert.True(type.IsSealed));
         Assert.Equal(["AccountDeleted", "DeletionCancelled", "DeletionRequested",
-                "LoginMethodChanged", "OrganizationRejected", "PublicPageModerated", "RecoveryApproved", "RecoveryMethodInUse",
+                "LoginMethodChanged", "OperatorInvited", "OrganizationRejected", "PublicPageModerated", "RecoveryApproved", "RecoveryMethodInUse",
                 "RecoveryReceived", "RecoveryRejected", "RecoveryRequested", "ReviewLoginMethods"],
             notices.Select(type => type.Name).Order(StringComparer.Ordinal).ToArray());
     }

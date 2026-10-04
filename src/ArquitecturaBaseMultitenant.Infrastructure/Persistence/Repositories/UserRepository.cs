@@ -59,6 +59,14 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
         return reactivated.IsFailure ? reactivated.Error : user.Status;
     }
 
+    public async Task SetPlatformOperatorAsync(Guid userId, bool isOperator, CancellationToken cancellationToken)
+    {
+        context.RequireTransaction();
+        var user = await RequireUserAsync(userId, cancellationToken);
+        if (isOperator) user.GrantPlatformOperator();
+        else user.RevokePlatformOperator();
+    }
+
     public async Task<UserAccountRow> CreateAsync(string? displayName, string culture, string timeZoneId,
         CancellationToken cancellationToken)
     {

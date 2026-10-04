@@ -13,6 +13,7 @@ public static class AccessErrors
     public const string WrongCode = "Tenancy.Access.Wrong";
     public const string NotMemberCode = "Tenancy.Access.NotMember";
     public const string ConsumerCannotCreateBusinessCode = "Tenancy.Access.ConsumerCannotCreateBusiness";
+    public const string PlatformOnlyCode = "Tenancy.Access.PlatformOnly";
 
     // El acceso actual (persona, empresa o plataforma) no está habilitado para esta operación.
     public static readonly Error Wrong = Error.Forbidden(WrongCode, "The selected access cannot perform this operation.");
@@ -20,4 +21,6 @@ public static class AccessErrors
     public static readonly Error NotMember = Error.Forbidden(NotMemberCode, "The user is not a member of this organization.");
     // El acceso como persona no permite crear una organización de empresa.
     public static readonly Error ConsumerCannotCreateBusiness = Error.Forbidden(ConsumerCannotCreateBusinessCode, "The consumer access cannot create a business.");
+    // Una cuenta de operador solo entra a Plataforma: nunca como persona ni a una organización (ADR 0042).
+    public static readonly Error PlatformOnly = Error.Forbidden(PlatformOnlyCode, "A platform operator account can only enter the platform.");
 }

@@ -101,6 +101,12 @@ internal sealed class ConnectService(IUserRepository users, IUserTenantAccessRea
                 : AccessErrors.Wrong;
         }
 
+        // ADR 0042: una cuenta operadora nunca entra como persona ni a una organización, ni se le crea un Personal.
+        if (account.IsPlatformOperator)
+        {
+            return AccessErrors.PlatformOnly;
+        }
+
         var memberships = await accesses.ListForUserAsync(userId, cancellationToken);
         if (access == Access.Business)
         {

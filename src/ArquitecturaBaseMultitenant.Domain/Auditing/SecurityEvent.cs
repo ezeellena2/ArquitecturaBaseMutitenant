@@ -132,6 +132,19 @@ public sealed class SecurityEvent : Entity
         return ev;
     }
 
+    /// <summary>Un operador invitó a otro, le cambió los permisos o le quitó el acceso de operador.</summary>
+    public static SecurityEvent ForPlatformOperatorAdministration(SecurityEventType type, Guid operatorId,
+        Guid accountId, string reason, DateTime occurredAtUtc)
+    {
+        if (type is not (SecurityEventType.PlatformOperatorInvited or SecurityEventType.PlatformOperatorPermissionsChanged
+            or SecurityEventType.PlatformOperatorRemoved))
+            throw new ArgumentOutOfRangeException(nameof(type));
+        if (accountId == Guid.Empty) throw new ArgumentException("A target account is required.", nameof(accountId));
+        var ev = ForPlatformAction(type, AuditActorKind.PlatformOperator, operatorId, reason, occurredAtUtc);
+        ev.TargetAccountId = accountId;
+        return ev;
+    }
+
     /// <summary>Un operador resolvió un pedido de «Recuperar mi cuenta»; sin cuenta encontrada, el destino queda vacío.</summary>
     public static SecurityEvent ForAccountRecovery(SecurityEventType type, Guid operatorId, Guid? accountId,
         string reason, DateTime occurredAtUtc)

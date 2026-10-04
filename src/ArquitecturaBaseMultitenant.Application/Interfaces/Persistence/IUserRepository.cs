@@ -23,6 +23,9 @@ public interface IUserRepository
     /// <summary>Levanta la suspensión: vuelve a Active o, con una baja programada, a PendingDeletion.</summary>
     Task<Result<UserStatus>> ReactivateAsync(Guid userId, CancellationToken cancellationToken);
 
+    /// <summary>Marca o desmarca la cuenta como operadora; los permisos se guardan aparte, en la misma UoW.</summary>
+    Task SetPlatformOperatorAsync(Guid userId, bool isOperator, CancellationToken cancellationToken);
+
     Task<UserAccountRow> CreateAsync(string? displayName, string culture, string timeZoneId,
         CancellationToken cancellationToken);
 

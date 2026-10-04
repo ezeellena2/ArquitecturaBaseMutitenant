@@ -71,7 +71,7 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
             : null;
         return new PlatformAccountDetailRow(account, identity.CreatedAtUtc, identity.DeletionRequestedAtUtc,
             identity.DeletionScheduledForUtc, identity.RequestedByPlatform, organizations,
-            assignment is null ? null : [.. assignment.Permissions]);
+            assignment is null ? null : [.. assignment.Permissions], assignment?.Version);
     }
 
     private IQueryable<AccountProjection> Accounts(IReadOnlyCollection<LoginMethodType> signInTypes)

@@ -82,6 +82,10 @@
   <data name="RecoveryMethodInUse.Body" xml:space="preserve"><value>Someone asked to recover a {0} account and gave us this email address to contact them. This email address already belongs to an account, so we didn't send any code.</value></data>
   <data name="RecoveryMethodInUse.After" xml:space="preserve"><value>If it was you, sign in with this email address: there is nothing to recover.</value></data>
   <data name="RecoveryMethodInUse.Note" xml:space="preserve"><value>If it wasn't you, ignore this message.</value></data>
+  <data name="OperatorInvited.Subject" xml:space="preserve"><value>You were invited as an operator</value></data>
+  <data name="OperatorInvited.Title" xml:space="preserve"><value>You were invited as an operator</value></data>
+  <data name="OperatorInvited.Body" xml:space="preserve"><value>You were invited to manage {0} as a platform operator. Sign in with this email address: we will send you a code to enter.</value></data>
+  <data name="OperatorInvited.Note" xml:space="preserve"><value>If you weren't expecting this invitation, ignore this email.</value></data>
   <data name="RecoveryRequested.Subject" xml:space="preserve"><value>Someone asked to recover your account</value></data>
   <data name="RecoveryRequested.Title" xml:space="preserve"><value>Someone asked to recover your account</value></data>
   <data name="RecoveryRequested.Body" xml:space="preserve"><value>{0} Someone asked to recover your {1} account and gave us a new email address to contact them. A person from the platform will review the request before making any change.</value></data>

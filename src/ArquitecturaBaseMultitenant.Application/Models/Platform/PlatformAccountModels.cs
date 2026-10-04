@@ -42,7 +42,7 @@ public sealed record PlatformAccountDetailResponse(Guid Id, string? DisplayName,
     bool HasPersonalSpace, PlatformAccountDeletionResponse? Deletion,
     IReadOnlyList<PlatformAccountLoginMethodResponse> LoginMethods,
     IReadOnlyList<PlatformAccountMembershipResponse> Organizations, IReadOnlyList<string> SoleOwnerOrganizations,
-    IReadOnlyList<string>? OperatorPermissions, uint Version);
+    IReadOnlyList<string>? OperatorPermissions, uint? OperatorVersion, uint Version);
 
 public sealed record PlatformAccountDeletionResponse(DateTime RequestedAtUtc, DateTime ScheduledForUtc,
     bool RequestedByPlatform);
@@ -61,4 +61,5 @@ public sealed record PlatformAccountRow(Guid Id, string? DisplayName, Email? Pri
 
 public sealed record PlatformAccountDetailRow(PlatformAccountRow Account, DateTime? CreatedAtUtc,
     DateTime? DeletionRequestedAtUtc, DateTime? DeletionScheduledForUtc, bool DeletionRequestedByPlatform,
-    IReadOnlyList<PlatformAccountMembershipResponse> Organizations, IReadOnlyList<string>? OperatorPermissions);
+    IReadOnlyList<PlatformAccountMembershipResponse> Organizations, IReadOnlyList<string>? OperatorPermissions,
+    uint? OperatorVersion = null);

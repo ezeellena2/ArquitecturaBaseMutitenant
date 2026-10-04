@@ -182,6 +182,34 @@ public sealed class ConnectServiceTests
         Assert.Equal(["prepare", "enter", "lock", "stage", "commit", "exit"], events);
     }
 
+    [Theory]
+    [InlineData(Access.Consumer)]
+    [InlineData(Access.Business)]
+    public async Task An_operator_never_enters_as_a_person_or_an_organization_and_gets_no_personal_space(Access access)
+    {
+        // ADR 0042: aunque tenga una membresía previa, la cuenta operadora solo entra a Plataforma.
+        using var fixture = new ServiceFixture<ConnectService>();
+        var events = new List<string>();
+        var account = Account(isPlatformOperator: true);
+        var memberships = new[]
+        {
+            AccessRow(Guid.CreateVersion7(), TenantKind.Personal),
+            AccessRow(Guid.CreateVersion7(), TenantKind.Business),
+        };
+        var unit = new FakeUnitOfWork(events);
+        var service = new ConnectService(new StubUsers(account), new StubAccesses(memberships),
+            new StubPersonalSpaceProvisioner(events), new StubPersonalSpaceLock(events), new StubTenantScope(events),
+            unit, fixture.TimeProvider, fixture.Logger);
+
+        var selected = await service.SelectAccessAsync(account.Id, access, null, Ct);
+        var active = await service.GetActiveUserAsync(account.Id, access, null, Ct);
+
+        Assert.Equal(AccessErrors.PlatformOnlyCode, selected.Error.Code);
+        Assert.Equal(AccessErrors.PlatformOnlyCode, active.Error.Code);
+        Assert.Equal(0, unit.Transactions);
+        Assert.Empty(events);
+    }
+
     private static UserAccountRow Account(UserStatus status = UserStatus.Active, bool isPlatformOperator = false) =>
         new(Guid.CreateVersion7(), "Ana", "es-AR", "America/Argentina/Buenos_Aires", status,
             isPlatformOperator, null, null);
@@ -244,6 +272,7 @@ public sealed class ConnectServiceTests
             DateTime requestedAtUtc, int graceDays, CancellationToken ct) => throw new NotSupportedException();
         public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> RequestDeletionByOperatorAsync(Guid userId, Guid operatorId,
             string reason, DateTime requestedAtUtc, int graceDays, CancellationToken ct) => throw new NotSupportedException();
+        public Task SetPlatformOperatorAsync(Guid userId, bool isOperator, CancellationToken ct) => throw new NotSupportedException();
         public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> CancelDeletionAsync(Guid userId,
             DateTime cancelledAtUtc, CancellationToken ct) => throw new NotSupportedException();
         public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> CompleteDeletionAsync(Guid userId,

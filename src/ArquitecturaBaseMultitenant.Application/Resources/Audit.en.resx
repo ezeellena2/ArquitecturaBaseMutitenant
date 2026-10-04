@@ -69,4 +69,5 @@
   <data name="Platform.PublicPageMetadataReadReason" xml:space="preserve"><value>Public page publication metadata consulted.</value></data>
   <data name="Field.PublishBlocked" xml:space="preserve"><value>Publication blocked</value></data>
   <data name="Platform.DomainMetadataReadReason" xml:space="preserve"><value>Organization email domain queried.</value></data>
+  <data name="Platform.OperatorInvitationReason" xml:space="preserve"><value>Operator invitation.</value></data>
 </root>

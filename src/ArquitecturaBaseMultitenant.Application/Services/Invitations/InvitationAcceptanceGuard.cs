@@ -33,6 +33,7 @@ internal sealed class InvitationAcceptanceGuard(IExternalLoginLock externalLock,
         {
             var user = await users.GetByIdAsync(existing, ct);
             if (user is null || user.Status is UserStatus.Suspended or UserStatus.Deleted) return AccountErrors.Suspended;
+            if (user.IsPlatformOperator) return InvitationErrors.PlatformOperator;
             if (user.Status == UserStatus.PendingDeletion) return AccountErrors.PendingDeletion;
             if (context.CurrentUserId is null) return InvitationErrors.SignInRequired;
             if (await signIn.IsLockedOutAsync(existing, ct)) return AccountErrors.LockedOut;

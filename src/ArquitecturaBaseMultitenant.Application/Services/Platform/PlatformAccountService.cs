@@ -66,7 +66,7 @@ internal sealed class PlatformAccountService(IPlatformAccountReader reader, ILog
             return new PlatformAccountDetailResponse(account.Id, DisplayName(account), Kind(account), account.State,
                 row.CreatedAtUtc, account.LastSignInAtUtc, account.LastSignInMethod, account.HasPersonalSpace, deletion,
                 loginMethods, row.Organizations, deleted ? [] : await soleOwners.ListAsync(accountId, ct),
-                row.OperatorPermissions, account.Version);
+                row.OperatorPermissions, row.OperatorVersion, account.Version);
         });
 
     private static PlatformAccountResponse ToResponse(PlatformAccountRow row) =>

@@ -43,6 +43,9 @@ public abstract record AccountNotice
     /// </summary>
     public sealed record RecoveryMethodInUse : AccountNotice;
 
+    /// <summary>Al correo del operador invitado, con el enlace para entrar a Plataforma.</summary>
+    public sealed record OperatorInvited(string ActionUrl) : AccountNotice;
+
     /// <summary>Al correo nuevo, que ya es el principal de la cuenta, con el enlace para ingresar.</summary>
     public sealed record RecoveryApproved(string ActionUrl) : AccountNotice;
 

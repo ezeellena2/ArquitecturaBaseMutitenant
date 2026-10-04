@@ -45,7 +45,8 @@ public sealed class PlatformPermissionAssignment : Entity, IVersioned
 
     public bool Grants(string permission) => _permissions.Contains(permission, StringComparer.Ordinal);
 
-    private static Result Validate(IReadOnlyCollection<string>? permissions)
+    /// <summary>Al menos un permiso, todos del catálogo y sin repetir.</summary>
+    public static Result Validate(IReadOnlyCollection<string>? permissions)
     {
         if (permissions is null || permissions.Count == 0) return PlatformOperatorErrors.PermissionsRequired;
         if (permissions.Any(permission => !PlatformPermissions.All.Contains(permission, StringComparer.Ordinal)))

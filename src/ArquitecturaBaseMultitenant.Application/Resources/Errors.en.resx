@@ -130,6 +130,7 @@
   <data name="Tenancy.Access.Wrong" xml:space="preserve"><value>This access cannot perform the action.</value></data>
   <data name="Tenancy.Access.NotMember" xml:space="preserve"><value>You are not a member of this organization.</value></data>
   <data name="Tenancy.Access.ConsumerCannotCreateBusiness" xml:space="preserve"><value>Use Register your business to create an organization.</value></data>
+  <data name="Tenancy.Access.PlatformOnly" xml:space="preserve"><value>This is a platform operator account: it can only enter the platform.</value></data>
   <data name="Identity.Reauth.Invalid" xml:space="preserve"><value>The confirmation is invalid. Request a new code.</value></data>
   <data name="Identity.Reauth.Expired" xml:space="preserve"><value>The confirmation has expired. Request a new code.</value></data>
   <data name="Identity.Reauth.OtherMethodRequired" xml:space="preserve"><value>Confirm using another verified login method.</value></data>
@@ -156,6 +157,7 @@
   <data name="Invitations.Invitation.SignInRequired" xml:space="preserve"><value>Sign in to accept the invitation.</value></data>
   <data name="Invitations.Invitation.WrongAccount" xml:space="preserve"><value>This invitation is for another account.</value></data>
   <data name="Invitations.Invitation.ChannelUnavailable" xml:space="preserve"><value>This invitation channel is unavailable.</value></data>
+  <data name="Invitations.Invitation.PlatformOperator" xml:space="preserve"><value>This platform operator account cannot join an organization.</value></data>
   <data name="Settings.Tenant.ConfigurationRequired" xml:space="preserve"><value>The organization culture, time zone, and currency are required.</value></data>
   <data name="Settings.Tenant.NotFound" xml:space="preserve"><value>The organization settings were not found.</value></data>
   <data name="Tenancy.Tenant.NameRequired" xml:space="preserve"><value>Enter the organization name.</value></data>
@@ -182,6 +184,8 @@
   <data name="Platform.Operator.PermissionNotFound" xml:space="preserve"><value>The permission is not in the platform catalog.</value></data>
   <data name="Platform.Operator.PermissionRepeated" xml:space="preserve"><value>A platform permission is repeated.</value></data>
   <data name="Platform.Operator.LastManager" xml:space="preserve"><value>At least one active operator who can manage operators must remain.</value></data>
+  <data name="Platform.Operator.AccountExists" xml:space="preserve"><value>That email address already has an account. An operator cannot have personal profiles.</value></data>
+  <data name="Platform.Operator.NotOperator" xml:space="preserve"><value>That account is not a platform operator.</value></data>
   <data name="Platform.AccountRecovery.VerificationRequired" xml:space="preserve"><value>Request a new code and verify it.</value></data>
   <data name="Platform.AccountRecovery.NotFound" xml:space="preserve"><value>We couldn't find the request.</value></data>
   <data name="Platform.AccountRecovery.AlreadyResolved" xml:space="preserve"><value>That request has already been resolved.</value></data>

@@ -427,6 +427,28 @@ public sealed class InvitationAcceptanceTests(ApiFactory factory)
         Assert.DoesNotContain(preview.Cookies, cookie => cookie.StartsWith(".AspNetCore.Identity.Application=", StringComparison.Ordinal));
     }
 
+    [Fact]
+    public async Task A_platform_operator_cannot_accept_an_organization_invitation()
+    {
+        // ADR 0042: un operador nunca entra a una organización. Quien invita no se entera (ADR 0041); el rechazo es al aceptar.
+        var issued = await IssueAsync("existing");
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                await services.GetRequiredService<IUserRepository>().SetPlatformOperatorAsync(issued.RecipientId!.Value, true, ct);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+
+        var accepted = await AcceptAsync(issued, issued.RecipientId);
+
+        Assert.True(accepted.Result.IsFailure);
+        Assert.Equal(InvitationErrors.PlatformOperatorCode, accepted.Result.Error.Code);
+        await AssertPendingAsync(issued);
+    }
+
     private async Task AssertPendingAsync(Issued issued)
     {
         await using var scope = factory.Services.CreateAsyncScope();

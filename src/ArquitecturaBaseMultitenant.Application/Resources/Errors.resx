@@ -179,9 +179,13 @@
   <data name="Settings.System.InvalidConfiguration" xml:space="preserve"><value>Elegí modos de registro válidos y permití al menos una organización por persona.</value></data>
   <data name="Tenancy.Tenant.NotFound" xml:space="preserve"><value>No encontramos la organización.</value></data>
   <data name="Platform.Operator.PermissionsRequired" xml:space="preserve"><value>Elegí al menos un permiso de plataforma.</value></data>
+  <data name="Invitations.Invitation.PlatformOperator" xml:space="preserve"><value>Esta cuenta es de un operador de la plataforma y no puede entrar a una organización.</value></data>
+  <data name="Tenancy.Access.PlatformOnly" xml:space="preserve"><value>Esta cuenta es de un operador: solo entra a Plataforma.</value></data>
   <data name="Platform.Operator.PermissionNotFound" xml:space="preserve"><value>El permiso no forma parte del catálogo de la plataforma.</value></data>
   <data name="Platform.Operator.PermissionRepeated" xml:space="preserve"><value>Un permiso de plataforma está repetido.</value></data>
   <data name="Platform.Operator.LastManager" xml:space="preserve"><value>Tiene que quedar al menos un operador activo que pueda administrar operadores.</value></data>
+  <data name="Platform.Operator.AccountExists" xml:space="preserve"><value>Ese correo ya tiene una cuenta. Un operador no puede tener perfiles de persona.</value></data>
+  <data name="Platform.Operator.NotOperator" xml:space="preserve"><value>Esa cuenta no es de un operador.</value></data>
   <data name="Platform.AccountRecovery.VerificationRequired" xml:space="preserve"><value>Pedí un código nuevo y verificalo.</value></data>
   <data name="Platform.AccountRecovery.NotFound" xml:space="preserve"><value>No encontramos el pedido.</value></data>
   <data name="Platform.AccountRecovery.AlreadyResolved" xml:space="preserve"><value>Ese pedido ya se resolvió.</value></data>

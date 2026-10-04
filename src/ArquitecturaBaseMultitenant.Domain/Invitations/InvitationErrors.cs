@@ -12,6 +12,7 @@ public static class InvitationErrors
     public const string SignInRequiredCode = "Invitations.Invitation.SignInRequired";
     public const string WrongAccountCode = "Invitations.Invitation.WrongAccount";
     public const string ChannelUnavailableCode = "Invitations.Invitation.ChannelUnavailable";
+    public const string PlatformOperatorCode = "Invitations.Invitation.PlatformOperator";
 
     public static readonly Error Invalid = Error.Validation(InvalidCode, "The invitation is not valid.");
     public static readonly Error Expired = Error.Validation(ExpiredCode, "The invitation has expired.");
@@ -20,4 +21,6 @@ public static class InvitationErrors
     public static readonly Error SignInRequired = Error.Unauthorized(SignInRequiredCode, "Sign in to accept the invitation.");
     public static readonly Error WrongAccount = Error.Forbidden(WrongAccountCode, "The signed-in account cannot accept this invitation.");
     public static readonly Error ChannelUnavailable = Error.Validation(ChannelUnavailableCode, "The invitation channel is unavailable.");
+    /// <summary>Un operador de plataforma nunca entra a una organización (ADR 0042); quien invita no se entera.</summary>
+    public static readonly Error PlatformOperator = Error.Forbidden(PlatformOperatorCode, "A platform operator cannot join an organization.");
 }

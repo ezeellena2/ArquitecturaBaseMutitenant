@@ -87,6 +87,9 @@ public static class DependencyInjection
         services.AddScoped<IPlatformRecoveryService, Services.Platform.PlatformRecoveryService>();
         services.AddScoped<IPlatformRecoveryDecisionService, Services.Platform.PlatformRecoveryDecisionService>();
         services.AddScoped<Services.Platform.PlatformRecoveryNotifier>();
+        services.AddScoped<IPlatformOperatorInvitationService, Services.Platform.PlatformOperatorInvitationService>();
+        services.AddScoped<IPlatformOperatorService, Services.Platform.PlatformOperatorService>();
+        services.AddScoped<Services.Platform.PlatformOperatorProvisioner>();
         services.AddScoped<Services.Platform.PlatformOperatorGuard>();
         services.AddScoped<Services.Platform.PlatformSoleOwnerGuard>();
         services.AddScoped<Services.Platform.PlatformActionGuard>();

@@ -106,6 +106,8 @@ public sealed class ApplicationUser : IdentityUser<Guid>, IVersioned
 
     public void GrantPlatformOperator() => IsPlatformOperator = true;
 
+    public void RevokePlatformOperator() => IsPlatformOperator = false;
+
     public Result RequestDeletion(string reason, DateTime requestedAtUtc, int graceDays, Guid? operatorId = null)
     {
         RequireUtc(requestedAtUtc);
