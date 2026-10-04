@@ -158,11 +158,11 @@ B4, B6, B8, B10, B11 y B12 se arreglan con su pieza, en los bloques 4 y 5.
 
 Cada servicio de entrada abre la transacción en su método público, y los helpers trabajan adentro sin recibir `IUnitOfWork`. Si un servicio pasa de 8 dependencias de negocio, se parte por caso de uso; por ejemplo, en Usuarios, las invitaciones aparte de los miembros.
 
-- [ ] **Usuarios:**
+- [x] **Usuarios:** hecho en `16dee4e` (el arreglo) y `3739c24` (la transacción). `OrganizationUserService` abre la transacción en sus seis métodos que escriben y queda con 7 dependencias de negocio, así que no se parte (decisión 24).
   - `OrganizationUserEditor`, `OrganizationUserStatusEditor`, `OrganizationUserRemover` y `OrganizationUserInvitationManager` dejan de recibir `IUnitOfWork`;
   - se borran `OrganizationUserLifecycleCoordinator` y `OrganizationUserExitEffects`;
-  - corregir `OrganizationUserAdministratorGuard`: usa `CheckCanLeaveAsync`, que mira todas las organizaciones de la cuenta. Así, quitar el rol de Dueña en una organización falla si la cuenta es la única Dueña de otra. Tiene que mirar solo la organización actual, y va con su test (lo encontró la tanda 1).
-- [ ] **Empresas:**
+  - corregir `OrganizationUserAdministratorGuard`: usa `CheckCanLeaveAsync`, que mira todas las organizaciones de la cuenta. Así, quitar el rol de Dueña en una organización falla si la cuenta es la única Dueña de otra. Tiene que mirar solo la organización actual, y va con su test (lo encontró la tanda 1). Test `OrganizationUsersTests.Demoting_an_owner_checks_only_this_organization`: rojo con 409 `Tenancy.Member.LastTenantAdmin` al desactivar a una Dueña de acá que es la única Dueña de otra organización; verde con `ILastTenantAdminGuard.CheckAnotherOwnerAsync` (decisión 23).
+- [x] **Empresas:** hecho en `a76545e`. `CompanyService` y `CompanyMembershipService` abren la transacción; `CompanyServiceTests` 10/10 (decisión 25).
   - `CompanyCreator` y `CompanyMembershipWriter` dejan de recibir `IUnitOfWork`;
   - `CompanyMembershipRoleManager` pierde los métodos que solo reenvían;
   - el control «la empresa existe y está activa» queda una sola vez, adentro de la transacción.
@@ -176,7 +176,7 @@ Cada servicio de entrada abre la transacción en su método público, y los help
   - pasa de 10 clases a 3 o 4, con un solo `OperationLog` por pedido;
   - `TenantProvisioner` se conserva, porque lo usa Plataforma.
 - [ ] **Ingreso:** se borra `SignupVerificationFlow`, y quien lo usaba inyecta directo.
-- [ ] **Invitaciones:** `InvitationAcceptanceCredentials` también solo reenvía; se absorbe.
+- [x] **Invitaciones:** `InvitationAcceptanceCredentials` también solo reenvía; se absorbe. Hecho en `2f6d6ea`: `InvitationAcceptor` inyecta directo lo que reenviaba y queda con 8 dependencias de negocio. El borrado del archivo quedó en `bd0b4f3`, un commit de docs de otra conversación, porque estaba preparado en el índice; en ese commit la solución no compila.
 - [ ] **Plataforma:** los helpers de la Etapa 5 que reciben `IUnitOfWork` hacen el mismo cambio.
 - [ ] **Listas blancas:** en `TransactionBoundaryTests` quedan solo los dos seeds. Con el mismo criterio se revisa la lista de `TenantScopeUsageTests`.
 - [ ] **Hecho cuando** la suite completa del back pasa y la lista blanca no tiene helpers.
@@ -334,5 +334,14 @@ Segunda tanda del front (bloque 5, 2026-10-04): F5 y F6, más las marcas (E#) de
 - `/org/roles/new`: `frontend.md` §3 dice `/nuevo`, y el código se alinea al doc en el bloque 6.
 
 **Hallazgos sin corregir:**
-- `OrganizationUserAdministratorGuard` protege a la última Dueña con `ILastTenantAdminGuard.CheckCanLeaveAsync`, que mira todas las organizaciones de la cuenta: quitar el rol de Dueña en una organización falla si esa cuenta es la única Dueña de otra. Viene de antes; con D5 también cuentan las suspendidas. Va con Usuarios en el bloque 3.
+- ~~`OrganizationUserAdministratorGuard` protege a la última Dueña con `ILastTenantAdminGuard.CheckCanLeaveAsync`, que mira todas las organizaciones de la cuenta: quitar el rol de Dueña en una organización falla si esa cuenta es la única Dueña de otra. Viene de antes; con D5 también cuentan las suspendidas. Va con Usuarios en el bloque 3.~~ Resuelto en `16dee4e` (decisión 23).
 - ~~`HarnessTests.Closed_stage_verification_tests_and_tools_exist` falla por docs del front sin `(E#)`.~~ Resuelto con las marcas del front (`33ee1d5`): la suite completa de la tanda 2 lo pasó.
+
+Bloque 3 del back, primera parte (Usuarios, Empresas e Invitaciones, 2026-10-04):
+
+23. **La última Dueña, por organización:** quitarle a una Dueña el rol, la membresía o el acceso en Usuarios mira solo esa organización. Lo hace `ILastTenantAdminGuard.CheckAnotherOwnerAsync(tenantId, userId)`: toma el lock de las asignaciones de esa organización, cuenta las otras Dueñas activas y responde `Tenancy.Member.LastTenantAdmin`. La organización sale de la membresía (`Member.TenantId`), que ya se cargó con el filtro de la organización actual. La regla sigue en una sola pieza (D5): la baja de la cuenta sigue mirando todas con `CheckCanLeaveAsync`. `docs/features/roles.md` lo dice.
+24. **Usuarios no se parte:** con el conteo de la ADR 0039, `OrganizationUserService` queda con 7 dependencias de negocio, así que no se parte en invitaciones y miembros (la revisión lo proponía con el conteo viejo). El editor, el de estado, el que quita y el de invitaciones siguen como helpers, sin `IUnitOfWork`. Invitar recibe del servicio el `inviterId` que ya controló; el mismo control repetido adentro se borró. El que quita inyecta directo `OrganizationUserAccessCleaner` y `OrganizationMembershipEndNotifier`, como ya lo hacía el de estado.
+25. **Empresas, el orden de los errores:** el control «la empresa existe y está activa» queda en `CompanyMembershipWriter.LockActiveCompanyAsync`, después del lock del último Administrador. La validación de roles (`ValidateRoleIdsAsync`) pasó adentro, después de ese control, para que los errores salgan en el mismo orden que antes: empresa, roles y miembro. Un pedido que falla por la empresa o los roles ahora abre la transacción y la descarta; antes cortaba afuera. Sin los reenvíos de `CompanyMembershipRoleManager`, el writer inyecta `IRoleRepository` e `IRoleAssignmentRepository` y queda con 8 dependencias de negocio.
+26. **Lista blanca:** en `TransactionBoundaryTests` quedan `BusinessOrganizationCreator`, `BusinessSignupCodeFlow`, `BusinessSignupTransactionRunner`, `OrganizationDomainRegistrar`, `OrganizationSettingsUpdater` y `PublicPageEditor`, que son de los otros ítems del bloque 3.
+
+Verificación: `dotnet build` de la solución con 0 advertencias y `dotnet test` completo con Docker **1566/1566** (8m 40s). Durante el trabajo: arquitectura 142/142 (`TransactionBoundaryTests` y `ServiceDependencyCountTests` incluidos) y la integración de Usuarios, Empresas, Invitaciones, Roles, Inicio y Auditoría en verde.
