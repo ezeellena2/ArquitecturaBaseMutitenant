@@ -1,8 +1,14 @@
 # Etapa 7: área B2C, sitio público e interacción — plan ejecutable
 
-> **Para agentes:** plan ejecutable de la Etapa 7. Seguí el orden de cada repo, completá las casillas con evidencia real y commiteá cada cambio coherente y verificado con rutas explícitas (`git add -- <rutas>`, nunca `git add .`). Antes de tocar una carpeta, leé su `AGENTS.md` y las fichas que nombra.
+> **Para Codex, que programa esta etapa:**
+> - Antes de empezar, leé el `AGENTS.md` de la raíz de cada repo. Antes de tocar una carpeta, leé su `AGENTS.md` y las fichas que nombra.
+> - Seguí las tareas en el orden de «Orden y dependencias». Cada tarea de lógica sigue el «Protocolo»: rojo, implementación, verde y commit.
+> - Marcá cada casilla con su evidencia (el comando y su resultado) y completá el «Registro de resultados».
+> - Commiteá cada cambio coherente y verificado, en español, con rutas explícitas (`git add -- <rutas>`, nunca `git add .`). Todo en `main`, sin push.
+> - Si algo no está en este plan, en las fichas ni en ArquitecturaBase: si es técnico, decidí lo más simple, anotalo en «Decisiones tomadas» y seguí. Si cambia lo que ve o puede hacer un usuario, frená y preguntale al usuario.
+> - **Pantallas:** antes de programar el front, el usuario ve los tableros y da su visto bueno; en cada avance del front, le mandás la captura lado a lado («Antes de T10»).
 
-**Estado:** borrador del 2026-10-04, revisado por la Guía. No se programa nada hasta que el usuario resuelva «Para decidir antes de empezar» y apruebe el plan (T00).
+**Estado:** listo para programar. El usuario resolvió sus puntos el 2026-10-04 (ver «Decisiones tomadas») y lo programa Codex. Antes de empezar, T00.
 
 **Objetivo:**
 - dejar el área personal lista para que cada producto le sume sus módulos B2C con la misma receta que los B2B (`docs/features/personal.md`);
@@ -27,7 +33,10 @@
 - [`arbol.md`](../architecture/arbol.md): las entradas [E7].
 - ADR 0021, 0031 y 0032 (en el [índice](../decisions/README.md)) y [0035](../decisions/0035-baja-de-cuenta.md).
 - Front: `docs/architecture/frontend.md` §2, §3 y §4 («Auth» y «Teléfono»), `docs/architecture/arbol.md` y las fichas `accesos-y-permisos`, `paginado-y-listados`, `responsive` y `tests`.
-- Lienzo vigente (front `docs/design/lienzo/`, v93, `b99384a`): Landing, Landing-Movil, Directorio, M-Directorio, Pagina-Publica y M-Pagina-Publica, con todos sus estados; Criterio-Marco y Criterio-Decisiones (P92 a P97).
+- Lienzo vigente, en `docs/design/lienzo/` del front (v94 o posterior). Cada tablero es un archivo `<Nombre>.dc.html`:
+  - los seis del alcance: `Landing`, `Landing-Movil`, `Directorio`, `M-Directorio`, `Pagina-Publica` y `M-Pagina-Publica`, con todos sus estados;
+  - los criterios: `Criterio-Marco` y `Criterio-Decisiones` (P92 a P97);
+  - para recorrerlos estado por estado en Chrome: `node scripts/recorrido-lienzo/recorrido.mjs`, desde el front.
 - [Revisión de decisiones del 2026-10-03](../reviews/2026-10-03-revision-de-decisiones.md):
   - P92: la portada;
   - P97 y R14: el ☰, ya resuelto en el lienzo v93 y en el plan maestro;
@@ -129,9 +138,12 @@ Se copian tal cual: la estructura, los textos, el orden y los estados.
 - **Repositorio:** se trabaja en `main`, sin push. Un worktree corto, solo si otra conversación toca los mismos archivos.
 - **Datos:** sin datos de ejemplo en Development: no se siembra ninguna organización ni página publicada. Los tests, las capturas y el E2E usan sus propias bases.
 - **Lienzo:**
-  - lo toca solo la conversación de Diseño;
-  - no se programa nada que el tablero no tenga: si falta algo, se dibuja primero;
-  - las capturas se le mandan al usuario antes del cierre y no se autoaprueban.
+  - lo toca solo la conversación de Diseño. Si a un tablero le falta algo, se frena y se le pide al usuario que lo dibuje Diseño;
+  - no se programa nada que el tablero no tenga;
+  - **el usuario ve cada pantalla antes y durante** (`AGENTS.md` y la ficha `pantallas-y-ui` del front):
+    - antes de programar el front, se le muestran los tableros tal como van a quedar, a 1440 y a 390 y con sus estados, y se espera su visto bueno («Antes de T10»);
+    - en cada avance del front (T11 a T15), se le manda la captura lado a lado, tablero y app, a 1440 y a 390. No todo junto al final;
+  - las capturas no se autoaprueban.
 - **Arnés:**
   - no nacen guardas de arquitectura nuevas: se amplían las que existen (`AccessDeclarationTests`, `ExplicitRouteInventoryTests`, `SpaHostingTests`, `AccountDeletionParticipantsTests`);
   - nacen solo los tests que nombran las fichas (`SubdomainTests`, `routes-by-host.test.ts`) y los de conducta de cada tarea.
@@ -139,15 +151,15 @@ Se copian tal cual: la estructura, los textos, el orden y los estados.
   - se usan `usePagedQuery` (el directorio), `apiErrorMessage` y `actionErrorMessage` (los errores de carga) y `tenancy/access.ts` con `useSignOut` (las puertas, el inicio y «Salir»);
   - `usePermissions` casi no se usa: el sitio público y el área personal no piden permisos. La navegación personal usa su `hasFeature`, a través de `visibleNavigation`;
   - `useEditPage` (F7) no hace falta, porque la etapa no tiene pantallas de edición; se nombra para que nadie arme otro guard;
-  - si una pieza no existe al llegar a su tarea, no se crea una igual en la E7: se avisa a la Guía.
+  - si una pieza no existe al llegar a su tarea, no se crea una igual en la E7: se frena y se le avisa al usuario.
 - **Datos personales:** nunca se registran correos, teléfonos, códigos ni tokens. La copia de los datos de una persona en un dato compartido no va a la auditoría.
 - **Decisiones técnicas menores:** primero, cómo lo hace ArquitecturaBase; si no está ahí, la más simple. Se anotan en «Decisiones tomadas». Solo se pregunta lo que cambia el producto o contradice una regla escrita.
 
-**Quién:**
-- Back y front van en paralelo, un agente por repo, con archivos que no se cruzan. Dentro de cada repo, las tareas van en orden.
-- El front genera sus tipos cuando el back commitea T02 y T03. Hasta entonces avanza con lo que no usa esos tipos: el árbol por host y la dirección pública (T10, salvo `usePublicSite`) y el marco (T11).
-- Si las pantallas de la Etapa 5 (T19 a T25) avanzan al mismo tiempo, comparten `routes.tsx`, `layouts/` y `locales/`. Por eso: commits chicos, rebase antes de cada commit y nunca un archivo de la otra conversación en el commit propio.
-- La puerta (T18 a T20) la cierra un solo agente, con los dos repos.
+**Orden y dependencias:**
+- Lo programa Codex, en este orden: T00; el back, de T01 a T09; el front, desde «Antes de T10» hasta T17; la puerta, de T18 a T20.
+- Si el usuario abre una segunda sesión para el front, puede arrancar antes de que termine el back con lo que no usa tipos nuevos: «Antes de T10», T10 (salvo `usePublicSite`) y T11. Lo demás del front espera a que el back commitee T02 y T03 y se regeneren los tipos (`npm run contracts`). Las dos sesiones nunca tocan el mismo repo.
+- Si otra conversación trabaja al mismo tiempo en el mismo repo (por ejemplo, las pantallas de la Etapa 5, T19 a T25 de su plan), comparten `routes.tsx`, `layouts/` y `locales/`: commits chicos y nunca un archivo de la otra conversación en el commit propio.
+- La puerta (T18 a T20) la cierra una sola sesión, con los dos repos.
 
 ## Protocolo de cada tarea de lógica
 
@@ -225,13 +237,14 @@ Se fija acá para que los dos repos avancen en paralelo. El back lo publica en `
   - Aspire apagado (`aspire ps` vacío);
   - el último commit de cada repo, anotado en «Registro de resultados».
 - [ ] **La línea de base del arnés:** `realinear-docs --detectar` sale 0 en los dos repos y `ClosedStages` sigue en `{0,1,2,3,4,6}` (más el 5, si ya cerró).
-- [ ] **Los tableros del alcance validados en el lienzo vigente** (v93 o posterior):
+- [ ] **Los tableros del alcance validados en el lienzo vigente** (v94 o posterior):
   - Landing, Landing-Movil, Directorio, M-Directorio, Pagina-Publica y M-Pagina-Publica, sin «· por refinar» ni «· para aprobar»;
   - Criterio-Marco con la excepción del ☰ para el sitio público sin sesión (R14);
-  - Criterio-Decisiones con P92 a P97.
+  - Criterio-Decisiones con P92 a P97;
+  - Landing y Landing-Movil con el estado «Sin empresas» de la sección de empresas (decisión 5). Si falta, se frena y se le pide al usuario que lo dibuje Diseño.
   - Si el README del lienzo trae una versión posterior, se releen los estados de esos seis tableros y se corrige «Lo que dicen los tableros».
-- [ ] **«Para decidir antes de empezar» resuelto por el usuario.** Cada respuesta se pasa al texto de las tareas que toca y la sección se borra.
-- [ ] **El plan aprobado por el usuario,** con sus respuestas pasadas a las tareas. Commit solo del plan: `docs(plan): la Etapa 7 aprobada`.
+- [x] **Los puntos del usuario, resueltos** (2026-10-04): sus respuestas están en las tareas y en «Decisiones tomadas», de la 3 a la 8.
+- [x] **El plan aprobado por el usuario** (2026-10-04), que se lo asignó a Codex.
 
 ## Back (T01 a T09)
 
@@ -354,7 +367,7 @@ Se fija acá para que los dos repos avancen en paralelo. El back lo publica en `
 
 **Archivos que cambian:**
 - `OpenIddictRegistration.cs` (registra el validador);
-- `Api/Hosting/SecurityHeadersExtensions.cs` y el armado del ingreso (`ConnectService`), solo con la opción A de «Para decidir» 1;
+- `Api/Hosting/SecurityHeadersExtensions.cs` y el armado del ingreso (`ConnectService`), por la decisión 3;
 - `SubdomainTests` y `Hosting/SecurityHeadersTests.cs`;
 - `Support/AccountJourney.cs` (`AuthorizeAsync`), si hace falta un `redirect_uri` de subdominio;
 - `multitenancy.md` §5, `backend.md` §13 y `docs/features/identidad.md`.
@@ -366,8 +379,8 @@ Se fija acá para que los dos repos avancen en paralelo. El back lo publica en `
   - `Code_issued_for_a_subdomain_is_exchanged_on_its_own_origin_with_the_fixed_issuer`: `authorize` en el dominio principal y el canje en `/connect/token` del subdominio; el token trae el `iss` fijo, `access=consumer` y el `tenant_id` del espacio personal;
   - `Userinfo_and_revocation_answer_on_the_subdomain_origin`;
   - `Logout_returns_only_to_a_published_subdomain`;
-  - con la opción A: `Silent_sign_in_never_creates_the_personal_space`: con `prompt=none` y `access=consumer`, una cuenta sin espacio personal recibe `login_required` y no se le crea;
-  - con la opción A: `SecurityHeadersTests.Only_organization_subdomains_can_frame_the_authorize_endpoint` y `SecurityHeadersTests.Subdomain_documents_can_frame_the_main_domain_authorize`.
+  - `Silent_sign_in_never_creates_the_personal_space`: con `prompt=none` y `access=consumer`, una cuenta sin espacio personal recibe `login_required` y no se le crea;
+  - `SecurityHeadersTests.Only_organization_subdomains_can_frame_the_authorize_endpoint` y `SecurityHeadersTests.Subdomain_documents_can_frame_the_main_domain_authorize`.
 - [ ] **Implementación:**
   - el validador amplía la validación de OpenIddict del cliente `web`:
     - la lista fija de `Authentication:Clients:Web` queda igual;
@@ -375,11 +388,11 @@ Se fija acá para que los dos repos avancen en paralelo. El back lo publica en `
     - nunca un comodín;
   - lo mismo vale para `post_logout_redirect_uri` (`https://<slug>.<principal>/`);
   - el issuer sigue fijo y `/connect/*` ya atiende cualquier host;
-  - con la opción A, la CSP se abre lo justo:
+  - la CSP se abre lo justo (decisión 3):
     - `/connect/authorize` admite que lo enmarquen los subdominios (`frame-ancestors` con `<esquema>://*.<principal>[:puerto]`);
     - el SPA de un subdominio admite enmarcar el issuer (`frame-src`);
     - nada más cambia;
-  - con la opción A, el ingreso en silencio (`prompt=none`) nunca crea el espacio personal: si la cuenta no lo tiene, responde `login_required`. Lo crea solo «Ingresá para continuar», que la persona toca.
+  - el ingreso en silencio (`prompt=none`) nunca crea el espacio personal: si la cuenta no lo tiene, responde `login_required`. Lo crea solo «Ingresá para continuar», que la persona toca.
 - [ ] **Verde:**
   - `SubdomainTests`, `ConnectTests` y `SecurityHeadersTests`;
   - las regresiones de ingreso (`LoginCodeTests` y `SignupTests`);
@@ -391,35 +404,39 @@ Se fija acá para que los dos repos avancen en paralelo. El back lo publica en `
 
 ### T05 · Back · El mismo origen en cada host y el dominio de desarrollo
 
-**Archivos que cambian:**
+**Archivos que cambian** (el dominio de desarrollo, por la decisión 3):
 - `tests/…Api.IntegrationTests/Hosting/SpaHostingTests.cs`;
-- con la opción A de «Para decidir» 1:
-  - `Api/appsettings.Development.json` (`Authentication:Issuer`, `RedirectUris` y `PostLogoutRedirectUris`);
-  - `AppHost/AppHost.cs` (el mismo issuer llega al front como `VITE_AUTH_ISSUER`);
-  - el test de configuración de arranque;
-  - `docs/operations/configuracion.md`.
+- `Api/appsettings.Development.json` (`Authentication:Issuer`, `RedirectUris` y `PostLogoutRedirectUris`);
+- `AppHost/AppHost.cs` (el mismo issuer llega al front como `VITE_AUTH_ISSUER`);
+- el test de configuración de arranque;
+- `docs/operations/configuracion.md`.
 
 - [ ] **Rojo:**
   - `SpaHostingTests.Subdomain_api_answers_on_its_own_origin_without_cors_headers`: un pedido con el `Origin` de otro host no recibe `Access-Control-Allow-*`, y un preflight `OPTIONS` tampoco;
-  - con la opción A: `StartupConfigurationTests.Development_uses_localtest_me_for_the_main_domain_and_its_subdomains`.
+  - `StartupConfigurationTests.Development_uses_localtest_me_for_the_main_domain_and_its_subdomains`.
 - [ ] **Implementación:**
   - no se agregan CORS ni un prefijo nuevo: `/api/public-site` y `/api/directory` viven bajo `/api`, que ya está en `BackendPrefixes`;
-  - con la opción A, el dominio principal de desarrollo pasa a `https://localtest.me:5174`:
+  - el dominio principal de desarrollo pasa a `https://localtest.me:5174`:
     - Vite ya acepta `*.localtest.me` y no cambia el `Host`;
     - `configuracion.md` dice qué URI sumar en la consola de Google para ingresar con Google en desarrollo;
-    - también dice que el certificado de desarrollo no cubre `localtest.me`.
+    - también dice que el certificado de desarrollo no cubre `localtest.me`;
+    - la consola de Google la toca el usuario, no Codex: al terminar T05, avisale que sume `https://localtest.me:5174/signin-google`. Hasta que lo haga, en desarrollo falla solo el ingreso con Google; el código por correo sigue andando.
 - [ ] **Verde:** `SpaHostingTests` y el test de configuración; build sin advertencias. Commit `chore(hosting): el sitio público en el mismo origen en cada host, también en desarrollo`.
 
 **Hecho cuando** cada host sirve su SPA y su Api sin CORS, y el desarrollo usa el dominio que se eligió.
 
 ### T06 · Back · La mecánica de interacción con `TestFeatures`
 
-**Archivos:** todo va en el proyecto de tests, salvo `PartyPolicy`.
+**Archivos:** todo va en el proyecto de tests, salvo `PartyPolicy` y los docs de la decisión 4.
 - `Domain/Common/PartyPolicy.cs`: devuelve un `Result` con un error común (`Tenancy.Party.NotAllowed`, 403) en lugar de un `bool`, con sus textos en `Errors.resx` y `.en.resx`;
 - `tests/…Domain.UnitTests/Tenancy/PartyPolicyTests.cs`;
 - `TestFeatures/Isolation/{Deal,DealsController,PostersController,IsolationSchema,IsolationModelCustomizer}.cs` y un servicio de prueba para los `Deal`;
 - la fábrica de estos tests, que suma `IsolationModelCustomizer` al `ApplicationDbContext` del host. Conviene una fábrica propia, para no cambiar el modelo de las demás pruebas;
-- `tests/…Api.IntegrationTests/Tenancy/EngagementTests.cs` (nuevo).
+- `tests/…Api.IntegrationTests/Tenancy/EngagementTests.cs` (nuevo);
+- por la decisión 4, en el mismo commit:
+  - `AccessDeclarationTests`: la regla pasa a «`[PublicSite]` va con `[AllowAnonymous]` o con `[Access(Consumer)]`, nunca con Business ni Platform». El rojo es la ruta nueva del `Deal` contra la regla vieja;
+  - la enmienda de la ADR 0021: una línea «Enmienda 2026-10-04» en su fila del índice `docs/decisions/README.md`;
+  - `multitenancy.md` §8, `docs/rules/api-http.md` y `docs/rules/multitenancy.md`.
 
 **El `Deal`, como un módulo de verdad:**
 - `Status`: `Requested`, `Confirmed`, `Rejected` o `Cancelled`;
@@ -429,11 +446,11 @@ Se fija acá para que los dos repos avancen en paralelo. El back lo publica en `
 - su módulo de prueba, `test-deals`, de los dos lados, registrado en el catálogo de prueba como los de `FeatureProbeController`.
 
 **La persona:**
-- `POST /test/deals` (`[Access(Consumer)]` + `[PublicSite]` y `[Idempotent]`), según «Para decidir» 2:
+- `POST /test/deals` (`[Access(Consumer)]` + `[PublicSite]` y `[Idempotent]`), por la decisión 4:
   - la organización sale del subdominio (`IPublicSiteContext`), nunca del cuerpo;
   - el espacio personal lo sella el interceptor;
   - el nombre se copia de la cuenta;
-  - el pedido mira los módulos de la organización del subdominio: si `test-deals` está apagado ahí, responde como cualquier módulo apagado (decisión tomada 2);
+  - el pedido mira los módulos de la organización del subdominio: si `test-deals` está apagado ahí, responde como cualquier módulo apagado (decisión 2);
 - `POST /test/deals/{id}/cancel`;
 - `GET /test/deals`: lo que pidió, en todas las organizaciones.
 
@@ -475,7 +492,7 @@ Se fija acá para que los dos repos avancen en paralelo. El back lo publica en `
 - `Infrastructure/Identity/Deletion/EngagementDeletionParticipant.cs`, junto a los otros cinco participantes.
 
 **Archivos que cambian:**
-- `Domain/Common/IConsumerBusinessShared.cs`: el contrato para reemplazar la copia (decisión tomada 1);
+- `Domain/Common/IConsumerBusinessShared.cs`: el contrato para reemplazar la copia (decisión 1);
 - la retención: la tabla global, su migración y el paso en `AccountDeletionWorker`;
 - `TestFeatures/Isolation/Deal.cs`;
 - `Legal/AccountDeletionTests.cs` y `Legal/AccountDeletionParticipantsTests.cs`;
@@ -543,13 +560,25 @@ Se fija acá para que los dos repos avancen en paralelo. El back lo publica en `
   - `multitenancy.md` §5, §8 y §13 (la tabla de tests, con los de HTTP);
   - `docs/rules/{multitenancy,api-http,modulos-habilitados}.md`: «Lo verifica» y los nombres; `modulos-habilitados.md` todavía nombra `PublicPageAdminController`.
 - [ ] **ADR y fichas funcionales:**
-  - la enmienda de la ADR 0021 en el índice, si se aprueba «Para decidir» 2;
+  - la enmienda de la ADR 0021 (hecha en T06), verificada en el índice;
   - `docs/features/{sitio-publico,personal,identidad,organizaciones}.md`.
 - [ ] **Verde:** `HarnessTests` en verde y `realinear-docs --detectar` en 0 en el back. Commit `docs(etapa-7): fichas, árbol y decisiones del sitio público y del área personal`.
 
 **Hecho cuando** los docs del back describen lo que hay, sin [E7] pendientes.
 
 ## Front (T10 a T17)
+
+### Antes de T10 · Los tableros, con el visto bueno del usuario
+
+**Archivos:** `scripts/capturar-etapa-7.mjs` (copiá `capturar-etapa-6.mjs`) y `docs/design/capturas/etapa-7/`.
+
+- [ ] **El script de capturas nace acá,** con la lista de estados de T18. Por ahora captura solo los tableros, a 1440 × 900 y a 390 × 844.
+- [ ] **Se le muestran al usuario** los tableros tal como van a quedar, con todos sus estados: los PNG en `docs/design/capturas/etapa-7/tableros/` y, en el mensaje, qué estado es cada uno. También puede recorrerlos con `node scripts/recorrido-lienzo/recorrido.mjs`.
+- [ ] **Su visto bueno, antes de programar.** Si pide un cambio, se frena: el cambio lo dibuja Diseño y se le vuelve a mostrar.
+
+Commit `chore(capturas): los tableros de la Etapa 7, antes de programar`.
+
+**En cada avance (T11 a T15):** antes del commit de la tarea, el script captura la pantalla real de sus estados junto a su tablero, a 1440 y a 390, y se le manda al usuario la captura lado a lado. Si pide un cambio, se corrige antes de seguir.
 
 ### T10 · Front · Rutas por host y una sola dirección pública
 
@@ -563,7 +592,8 @@ Se fija acá para que los dos repos avancen en paralelo. El back lo publica en `
 - `src/app/{routes,router}.tsx`: el árbol por host;
 - `src/test/utils/renderWithProviders.tsx`: la opción `host`;
 - `src/areas/business/public-page/pages/PublicPagePage.tsx` («Ver página») y `src/areas/public/auth/pages/BusinessSignupPage.tsx` (el sufijo del slug): usan la pieza nueva en lugar de `publicUrl` y `.plataforma.com` fijos;
-- con la opción A de «Para decidir» 1: el issuer por defecto de `authConfig.ts`.
+- el issuer por defecto de `authConfig.ts`, que pasa a `https://localtest.me:5174/` (decisión 3);
+- la URL del dominio principal en el E2E real (`scripts/test-e2e-real.test.mjs` y lo que lo prepara), que pasa a `https://localtest.me:5174`.
 
 - [ ] **Rojo:**
   - `routes-by-host.test.ts`:
@@ -575,7 +605,7 @@ Se fija acá para que los dos repos avancen en paralelo. El back lo publica en `
 - [ ] **Implementación:**
   - `routes.tsx` elige el árbol por el host;
   - el subdominio lleva el `AppShell` (por los avisos genéricos y `Legal.AcceptanceRequired`), `/` con la página pública y `/auth/callback`;
-  - con la opción A, también `SessionRecovery`.
+  - también `SessionRecovery`, que recupera la sesión como en el dominio principal (decisión 3).
 - [ ] **Verde:** los tests focales, lint y build. Commit `feat(sitio-publico): rutas por host y una sola dirección pública por organización`.
 
 **Hecho cuando** el mismo SPA arma el sitio de la plataforma o el de una organización según el host, y la dirección pública sale de un solo lugar.
@@ -591,6 +621,7 @@ Se fija acá para que los dos repos avancen en paralelo. El back lo publica en `
   - «en el teléfono, la portada y el directorio llevan "Ingresar" y ☰, con Personas, Cómo empezar, Empresas e "Ingresá como empresa"; en el directorio, "Empresas" va marcada»;
   - «la página de una organización no lleva ☰ ni botones de ingreso; con sesión, lleva tu menú»;
   - «cada pie, como su tablero»;
+  - «la portada y el directorio llevan el mismo encabezado con sesión o sin ella» (decisión 8);
   - axe.
 - [ ] **Implementación:**
   - **las variantes:**
@@ -619,7 +650,8 @@ Se fija acá para que los dos repos avancen en paralelo. El back lo publica en `
   - «después de "Dos lados separados" va "Empresas en ArquitecturaBase", con el buscador, tres empresas y "Ver todas las empresas", y después "Tu empresa, en tres pasos"»;
   - «cada tarjeta muestra el logo o las iniciales, el nombre, la descripción y la dirección del subdominio, y lleva a su página»;
   - «"Empresas", arriba, baja a esa sección»;
-  - el buscador y la portada sin empresas, según «Para decidir» 3;
+  - «escribir en "Buscar una empresa" y apretar Enter abre `/empresas?search=<texto>`» (decisión 5);
+  - «sin empresas publicadas, la sección muestra "Todavía no hay empresas publicadas"» (decisión 5);
   - es-AR y en-US, axe y 390.
 - [ ] **Implementación:**
   - se saca `landing.hero.kicker`;
@@ -686,7 +718,7 @@ Se fija acá para que los dos repos avancen en paralelo. El back lo publica en `
 - `src/areas/storefront/pages/PublicPage.tsx`;
 - `src/auth/{authConfig.ts,SessionRecovery.tsx}` y sus tests;
 - `src/tenancy/{AccessMenu,useProfiles}.tsx`: los enlaces al dominio principal;
-- `src/areas/public/auth/pages/{LoginPage,SignupPage}.tsx`, si se aprueba «Para decidir» 5.
+- `src/areas/public/auth/pages/{LoginPage,SignupPage}.tsx`: el registro conserva el regreso (decisión 7).
 
 - [ ] **Rojo:**
   - «"Ingresá para continuar" entra como persona (`access=consumer`) y vuelve a la misma página»;
@@ -694,8 +726,9 @@ Se fija acá para que los dos repos avancen en paralelo. El back lo publica en `
   - «en el teléfono, "Tu cuenta" abre tu menú en una hoja con manija»;
   - «"Salir" vuelve a la página sin sesión»;
   - `authConfig.test.ts`: «en un subdominio, `redirect_uri`, `silent_redirect_uri` y `post_logout_redirect_uri` son del origen propio, y `authority` es el issuer»;
-  - con la opción A de «Para decidir» 1: «al abrir o recargar la página, recupera la sesión sin pedir el código» y «una cuenta sin espacio personal sigue sin sesión»;
-  - lo que se decida en «Para decidir» 4 (tu menú) y 5 (crear la cuenta).
+  - «al abrir o recargar la página, recupera la sesión sin pedir el código» y «una cuenta sin espacio personal sigue sin sesión» (decisión 3);
+  - «con organizaciones, tu menú las lista como siempre; elegir una abre `/org` del dominio principal en esa organización» (decisión 6);
+  - «"Creá una" desde "Ingresá para continuar" registra la cuenta y vuelve a la misma página pública» (decisión 7).
 - [ ] **Implementación:**
   - `signinRedirect` con `returnTo` = la página actual y `extraQueryParams: { access: "consumer" }`;
   - «Salir» usa `useSignOut`;
@@ -735,7 +768,7 @@ Se fija acá para que los dos repos avancen en paralelo. El back lo publica en `
 
 ### T18 · Las capturas contra el lienzo
 
-**Archivos:** `scripts/capturar-etapa-7.mjs` (copiá `capturar-etapa-6.mjs`) y `docs/design/capturas/etapa-7/` (`manifest.json`, los PNG y `comparacion.md`).
+**Archivos:** `scripts/capturar-etapa-7.mjs` (nació antes de T10) y `docs/design/capturas/etapa-7/` (`manifest.json`, los PNG y `comparacion.md`).
 
 - [ ] **Qué se captura:** cada estado, de la pantalla real y de su tablero, a 1440 × 900 y a 390 × 844, con los mismos datos del tablero (Grupo Delta, Omega S.A. y Sigma S.R.L.):
   - **la portada:** en el teléfono, también con el ☰ abierto;
@@ -745,7 +778,7 @@ Se fija acá para que los dos repos avancen en paralelo. El back lo publica en `
     - «Publicada, con sesión», con tu menú abierto (el menú en la compu y la hoja en el teléfono);
     - «No disponible».
 - [ ] **Diferencias:** cada una se corrige o se anota en `comparacion.md` con su motivo, para que el usuario la apruebe.
-- [ ] **Revisión:** las capturas se le mandan al usuario antes del cierre.
+- [ ] **Revisión:** el juego completo se le manda al usuario antes del cierre, aunque ya haya visto cada avance.
 
 ### T19 · El E2E real
 
@@ -753,12 +786,12 @@ Se fija acá para que los dos repos avancen en paralelo. El back lo publica en `
 - [ ] **El recorrido.** Va sin mocks ni intercepción, con PostgreSQL y pickup propios del E2E. La organización del E2E tiene la página publicada, desde la pantalla como en la E6 o desde el preparador; nunca en Development.
   1. un visitante abre la página de la organización en su subdominio y ve «Publicada, sin sesión»;
   2. toca «Ingresá para continuar», ingresa como persona con el código del `.eml` y vuelve a la misma página, con su menú;
-  3. con la opción A de «Para decidir» 1, recargar la página conserva la sesión;
+  3. recargar la página conserva la sesión (decisión 3);
   4. «Salir» vuelve a la página sin sesión;
   5. en el dominio principal, `/empresas` busca la organización por una parte del nombre sin acentos, la tarjeta aparece y lleva al subdominio;
   6. el subdominio de una organización suspendida muestra «No disponible». Si no hay una pantalla de la E5 para suspenderla, la deja así el preparador;
   7. en el teléfono (390), la portada y el directorio tienen ☰ y la página pública no.
-- [ ] **Los recorridos de las etapas cerradas** (E3a, E3b, E3c, E4 y E6) siguen en verde. Si la E5 sigue abierta y su caso todavía está en rojo porque le faltan pantallas (R06 de su plan), se anota en el informe y se consulta con la Guía antes de cerrar.
+- [ ] **Los recorridos de las etapas cerradas** (E3a, E3b, E3c, E4 y E6) siguen en verde. Si la E5 sigue abierta y su caso todavía está en rojo porque le faltan pantallas (R06 de su plan), se anota en el informe y se le consulta al usuario antes de cerrar.
 
 ### T20 · La puerta general y el cierre
 
@@ -789,11 +822,11 @@ Se fija acá para que los dos repos avancen en paralelo. El back lo publica en `
 - **Los avisos de un módulo a las dos partes** (multitenancy.md §10, paso 5): los define cada módulo, con el outbox.
 - **El rate limit más estricto en las páginas públicas, la caché en Redis y el fuzz de aislamiento por subdominio:** Etapa 9.
 - **«Exportar mis datos»:** Etapa 10.
-- **El menú de la persona para un módulo compartido** (qué organizaciones lo prenden): llega con el primer módulo compartido real, porque necesita un dibujo. `personal.md` lo anota y `modulos-habilitados.md` lo marca `Pendiente:` (decisión tomada 2).
+- **El menú de la persona para un módulo compartido** (qué organizaciones lo prenden): llega con el primer módulo compartido real, porque necesita un dibujo. `personal.md` lo anota y `modulos-habilitados.md` lo marca `Pendiente:` (decisión 2).
 
 ## Decisiones tomadas
 
-La Guía tomó las dos primeras al revisar el plan. Las que se tomen al programar siguen la numeración, con su motivo; si cambian una conducta, también van en su ficha y con su test.
+Las dos primeras salieron de la revisión del plan; de la 3 a la 8 las decidió el usuario el 2026-10-04. Las que se tomen al programar siguen la numeración, con su motivo; si cambian una conducta, también van en su ficha y con su test.
 
 1. **La baja en los datos compartidos (T07).**
    - `IConsumerBusinessShared` suma un método para reemplazar la copia: así ningún dato compartido nace sin decir qué borra. Cambia una marca de `Domain/Common`, así que se anota en la ADR 0035.
@@ -805,6 +838,15 @@ La Guía tomó las dos primeras al revisar el plan. Las que se tomen al programa
    - El `Deal` lo cumple donde se interactúa: un pedido en el subdominio mira los módulos de esa organización.
    - El menú de la persona para un módulo compartido queda para el primer módulo real, porque necesita un dibujo.
    - *Motivo:* es una regla escrita y el `Deal` es la guía que copia un producto.
+3. **La sesión en el subdominio (T04, T05, T10 y T15).** La sesión se recupera al abrir y al recargar la página de una organización, como dice `multitenancy.md` §5:
+   - la CSP se abre lo justo: los subdominios pueden enmarcar `/connect/authorize`, y el SPA de un subdominio puede enmarcar el dominio principal;
+   - en silencio nunca se crea el espacio personal: una cuenta que no lo tiene sigue sin sesión en el subdominio hasta que toca «Ingresá para continuar»;
+   - en desarrollo, el dominio principal pasa a `https://localtest.me:5174`: así el dominio principal y los subdominios son el mismo sitio y la cookie llega al iframe. El usuario suma `https://localtest.me:5174/signin-google` en la consola de Google. El certificado de desarrollo no cubre `localtest.me`, así que el navegador avisa una vez por dirección.
+4. **Pedir desde la página pública (T06).** `[PublicSite]` admite `[Access(Consumer)]`, nunca Business ni Platform. El tenant activo sale del claim, y la otra parte, del subdominio, nunca del cuerpo. Se enmienda la ADR 0021.
+5. **La sección de empresas de la portada (T12).** Enter en «Buscar una empresa» abre `/empresas?search=<texto>`. Sin empresas publicadas, la sección muestra «Todavía no hay empresas publicadas», el texto del directorio; Diseño suma ese estado a Landing y Landing-Movil.
+6. **Tu menú en la página pública (T15).** Es el mismo menú de siempre: con organizaciones, las lista, y elegir una abre `/org` del dominio principal en esa organización. «Mi cuenta» abre `/cuenta` del dominio principal.
+7. **Crear la cuenta desde «Ingresá para continuar» (T15).** El registro conserva el regreso y, al terminar, vuelve a la misma página pública.
+8. **`/empresas` con sesión (T11).** Lleva el mismo encabezado con sesión o sin ella, como el tablero Directorio.
 
 ## Registro de resultados
 
@@ -820,6 +862,7 @@ La Guía tomó las dos primeras al revisar el plan. Las que se tomen al programa
 | T07 | pendiente | | — |
 | T08 | pendiente | | — |
 | T09 | pendiente | | — |
+| Antes de T10 | pendiente | — | |
 | T10 | pendiente | — | |
 | T11 | pendiente | — | |
 | T12 | pendiente | — | |
@@ -833,69 +876,3 @@ La Guía tomó las dos primeras al revisar el plan. Las que se tomen al programa
 | T20 | pendiente | | |
 
 No se declara el cierre a partir de esta tabla sin completar T20.
-
-## Para decidir antes de empezar
-
-Son puntos ambiguos o contradictorios entre el plan maestro, los docs y el lienzo. Cada uno trae una recomendación. Al decidirlos, el texto de las tareas se ajusta y esta sección se borra (T00).
-
-### 1. La sesión en el subdominio y el dominio de desarrollo
-
-**El problema.** `multitenancy.md` §5 dice que, si la persona ya ingresó, no tiene que volver a hacerlo en otro subdominio (`prompt=none`). Lo mismo hace falta para que la sesión siga después de recargar la página. Las dos cosas necesitan un iframe silencioso del subdominio al dominio principal, el mismo mecanismo que ya usa el dominio principal al recargar (`SessionRecovery`). Hoy lo impiden dos cosas:
-- la CSP (`frame-src 'self'` y `frame-ancestors 'self'`);
-- en desarrollo, el dominio principal es `localhost:5174` y los subdominios, `*.localtest.me`: son sitios distintos, así que la cookie de `/connect` no llega al iframe.
-
-**A (recomendada):** la sesión se recupera al abrir y al recargar, como dice §5.
-- La CSP se abre lo justo: los subdominios pueden enmarcar `/connect/authorize`, y el subdominio puede enmarcar el dominio principal.
-- En silencio nunca se crea el espacio personal: una cuenta que no lo tiene sigue sin sesión en el subdominio hasta que toca «Ingresá para continuar».
-- En desarrollo, el dominio principal pasa a `https://localtest.me:5174`. Cambian `appsettings.Development.json`, el issuer por defecto del front y la URL del E2E.
-- Para ingresar con Google en desarrollo, hay que sumar `https://localtest.me:5174/signin-google` en la consola de Google.
-- El certificado de desarrollo no cubre `localtest.me`: el navegador avisa una vez por dirección, como ya pasa hoy con los subdominios. El E2E ya ignora ese aviso.
-
-**B:** sin sesión silenciosa en el subdominio.
-- La sesión dura lo que la pestaña después de «Ingresá para continuar».
-- Al recargar o al abrir otra organización se vuelve a ver el botón. Tocarlo entra sin pedir el código si la cookie sigue viva.
-- No cambian la CSP ni el dominio de desarrollo, y se corrige §5.
-
-### 2. Pedir algo desde la página pública
-
-**El problema.** Hoy `[PublicSite]` va solo con `[AllowAnonymous]`: lo dicen `AccessDeclarationTests` («public site requires anonymous without access») y `multitenancy.md` §8. Pero en §10 la persona pide «desde la página de la organización», y esa ruta necesita dos cosas:
-- la sesión de la persona (`[Access(Consumer)]`);
-- la organización del subdominio (`[PublicSite]`).
-
-**Recomendado:** admitir `[PublicSite]` + `[Access(Consumer)]`, nunca con Business ni Platform.
-- El tenant activo sale del claim, y la otra parte, del subdominio, nunca del cuerpo.
-- Se enmiendan la ADR 0021 (en el índice), `multitenancy.md` §8, `api-http.md`, `docs/rules/multitenancy.md` y `AccessDeclarationTests`.
-
-**Alternativa:** `[Access(Consumer)]` con el slug de la organización en la ruta (`/api/<módulo>/{slug}/…`), resuelto contra lo publicado. Sirve también desde el dominio principal, pero suma otra forma de nombrar a la otra parte.
-
-### 3. La sección de empresas de la portada
-
-**El problema.** El tablero dibuja el buscador y tres empresas, pero no dice qué hace el buscador ni qué se ve sin empresas publicadas.
-
-**Recomendado:** escribir y apretar Enter abre `/empresas?search=<texto>`, el directorio, que ya tiene «Sin resultados». Sin empresas publicadas, la sección muestra «Todavía no hay empresas publicadas», el texto del directorio. Diseño suma ese estado a Landing y Landing-Movil antes de programarlo.
-
-**Alternativa:** el buscador filtra las tres tarjetas en el lugar y la sección se oculta sin empresas. Las dos cosas se dibujan antes.
-
-### 4. Tu menú en la página pública
-
-**El problema.** Pagina-Publica dibuja a una persona que solo tiene Personal. No dice qué pasa si también es de una organización, ni adónde va «Mi cuenta», que vive en el dominio principal.
-
-**Recomendado:** el mismo menú de siempre, porque `multitenancy.md` §3 dice que «la lista es la misma en los dos lados». Elegir una organización abre `/org` del dominio principal en esa organización, y «Mi cuenta» abre `/cuenta`.
-
-**Alternativa:** en la página pública, tu menú muestra solo Personal, Mi cuenta y Salir, como el tablero.
-
-### 5. Crear la cuenta desde «Ingresá para continuar»
-
-**El problema.** Una persona sin cuenta llega a Ingreso y toca «Creá una». Hoy ese enlace pierde el regreso: al terminar el registro, la persona queda en su inicio personal y no en la página de la organización.
-
-**Recomendado:** el registro conserva el regreso y, al terminar, vuelve a la misma página pública. No hacen falta pantallas nuevas.
-
-**Alternativa:** queda como está, y la persona vuelve a abrir la página.
-
-### 6. `/empresas` con sesión
-
-**El problema.** El tablero Directorio dibuja solo el encabezado sin sesión, con «Ingresá como empresa» e «Ingresar».
-
-**Recomendado:** en la E7, el mismo encabezado con sesión o sin ella, como el tablero. Si querés tu menú ahí, Diseño lo dibuja primero.
-
-**Alternativa:** tu menú en lugar de los botones, como en la página pública con sesión. Necesita el dibujo.
