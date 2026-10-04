@@ -23,12 +23,14 @@ internal sealed class UserLookup(ApplicationDbContext context) : IUserLookup
             .Select(method => (Guid?)method.UserId)
             .SingleOrDefaultAsync(cancellationToken);
 
+    // El verificado, si lo hay (es único); si no, uno pendiente: un valor puede estar pendiente en varias cuentas.
     public Task<LoginMethodLookup?> FindMethodAsync(
         LoginMethodType type, string value, CancellationToken cancellationToken) =>
         context.LoginMethods.AsNoTracking()
             .Where(method => method.Type == type && method.Value == value)
+            .OrderByDescending(method => method.VerifiedAtUtc != null).ThenBy(method => method.Id)
             .Select(method => new LoginMethodLookup(method.Id, method.UserId, method.VerifiedAtUtc))
-            .SingleOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
 
     public Task<string?> FindDisplayNameAsync(Guid userId, CancellationToken cancellationToken) =>
         context.Users.AsNoTracking()

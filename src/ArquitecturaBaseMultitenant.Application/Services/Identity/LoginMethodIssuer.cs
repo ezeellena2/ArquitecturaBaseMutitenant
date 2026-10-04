@@ -12,7 +12,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
 /// <summary>
 /// Agrega un correo de ingreso o reenvía su código de verificación; trabaja dentro de la transacción abierta por el
-/// servicio. Un correo que ya es de una cuenta responde igual que uno libre (ADR 0041).
+/// servicio. Un correo que ya es de otra cuenta responde igual que uno libre en cada paso (ADR 0041): queda pendiente,
+/// el código se emite sin mandarse ni servir y a su dueño le llega el aviso.
 /// </summary>
 internal sealed class LoginMethodIssuer(LoginMethodGuard guard, ILoginMethodRepository methods,
     IUserLookup lookup, LoginCodeIssuer codes,
@@ -37,14 +38,21 @@ internal sealed class LoginMethodIssuer(LoginMethodGuard guard, ILoginMethodRepo
             ?? (existing is { VerifiedAtUtc: not null } ? existing.UserId : null);
         if (owner is { } ownerId)
         {
-            var hidden = await codes.IssueAccountCodeAsync(destination, LoginCodePurpose.VerifyDestination, userId, ct);
+            var hidden = await NotifyOwnerAsync(userId, ownerId, email, ct);
             if (hidden.IsFailure) return hidden.Error;
-            await notices.EnqueueToOwnerAsync(ownerId, email.Value, new AccountNotice.LoginMethodInUse(), ct);
-            return new LoginMethodCodeResponse(Guid.CreateVersion7(), hidden.Value.ResendCooldownSeconds);
+            // Un correo ya verificado en esta misma cuenta no se repite. El de otra cuenta queda pendiente, como uno
+            // libre (D4b): el índice único vale solo para los verificados.
+            if (ownerId == userId) return new LoginMethodCodeResponse(Guid.CreateVersion7(), hidden.Value);
+            await RemoveOwnPendingAsync(userId, email.Value, ct);
+            var hiddenMethod = LoginMethod.CreateEmail(userId, email);
+            methods.Add(hiddenMethod);
+            return new LoginMethodCodeResponse(hiddenMethod.Id, hidden.Value);
         }
 
         // Un correo agregado y sin verificar, de esta cuenta o de otra, se reemplaza: es pedir otro código.
-        if (existing is not null && await methods.GetByIdAsync(existing.MethodId, ct) is { VerifiedAtUtc: null } pending)
+        await RemoveOwnPendingAsync(userId, email.Value, ct);
+        if (existing is { VerifiedAtUtc: null } && existing.UserId != userId
+            && await methods.GetByIdAsync(existing.MethodId, ct) is { VerifiedAtUtc: null } pending)
             methods.Remove(pending);
         var method = LoginMethod.CreateEmail(userId, email);
         var sent = await SendAsync(userId, method, account.Value.Culture, ct);
@@ -74,7 +82,33 @@ internal sealed class LoginMethodIssuer(LoginMethodGuard guard, ILoginMethodRepo
                     ? LoginCodeErrors.AlreadyUsed
                     : LoginCodeErrors.Expired;
         }
+        // Si el correo es de otra cuenta, el reenvío responde igual que con uno libre y vuelve a avisarle al dueño.
+        var email = Email.Create(method.Value).Value;
+        var owner = (await lookup.FindVerifiedUsersByEmailAsync(email, ct)).Where(id => id != userId)
+            .Select(id => (Guid?)id).FirstOrDefault();
+        if (owner is { } ownerId)
+        {
+            var hidden = await NotifyOwnerAsync(userId, ownerId, email, ct);
+            return hidden.IsFailure ? hidden.Error : new LoginMethodCodeResponse(method.Id, hidden.Value);
+        }
         return await SendAsync(userId, method, account.Value.Culture, ct);
+    }
+
+    // El código se emite para los límites y la espera, pero no se manda ni sirve; al dueño le llega el aviso.
+    private async Task<Result<int>> NotifyOwnerAsync(Guid userId, Guid ownerId, Email email, CancellationToken ct)
+    {
+        var hidden = await codes.IssueAccountCodeAsync(LoginCodeDestination.ForEmail(email),
+            LoginCodePurpose.VerifyDestination, userId, ct);
+        if (hidden.IsFailure) return hidden.Error;
+        await notices.EnqueueToOwnerAsync(ownerId, email.Value, new AccountNotice.LoginMethodInUse(), ct);
+        return hidden.Value.ResendCooldownSeconds;
+    }
+
+    private async Task RemoveOwnPendingAsync(Guid userId, string value, CancellationToken ct)
+    {
+        foreach (var own in (await methods.ListByUserIdAsync(userId, ct)).Where(method =>
+                     method.Type == LoginMethodType.Email && method.Value == value && method.VerifiedAtUtc is null))
+            methods.Remove(own);
     }
 
     private async Task<Result<LoginMethodCodeResponse>> SendAsync(Guid userId, LoginMethod method,

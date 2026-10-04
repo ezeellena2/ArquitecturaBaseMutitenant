@@ -69,6 +69,7 @@ public sealed class LoginCodeTests
         var userId = Guid.CreateVersion7();
         var code = LoginCode.Issue(LoginCodeDestination.ForEmail(Email.Create("ana@example.com").Value),
             LoginCodePurpose.VerifyDestination, userId, "hash", IssuedAtUtc, TimeSpan.FromMinutes(10), 3);
+        code.MarkSent(IssuedAtUtc);
 
         Assert.Equal(LoginCodeErrors.Invalid(null),
             code.VerifyFor(Guid.CreateVersion7(), LoginCodePurpose.VerifyDestination, "hash", IssuedAtUtc).Error);
@@ -82,11 +83,31 @@ public sealed class LoginCodeTests
         var userId = Guid.CreateVersion7();
         var code = LoginCode.Issue(LoginCodeDestination.ForEmail(Email.Create("ana@example.com").Value),
             LoginCodePurpose.Reauthenticate, userId, "hash", IssuedAtUtc, TimeSpan.FromMinutes(5), 3);
+        code.MarkSent(IssuedAtUtc);
 
         Assert.Equal(LoginCodeErrors.InvalidCode,
             code.VerifyFor(userId, LoginCodePurpose.VerifyDestination, "hash", IssuedAtUtc).Error.Code);
         Assert.Equal(3, code.AttemptsLeft);
         Assert.True(code.VerifyFor(userId, LoginCodePurpose.Reauthenticate, "hash", IssuedAtUtc).IsSuccess);
+    }
+
+    // D4b (ADR 0041): agregar en Mi cuenta un correo de otra cuenta deja un código sin mandar, que nunca sirve.
+    [Fact]
+    public void An_unsent_or_unusable_destination_code_fails_like_a_wrong_code_and_spends_attempts()
+    {
+        var userId = Guid.CreateVersion7();
+        var unsent = LoginCode.Issue(LoginCodeDestination.ForEmail(Email.Create("ana@example.com").Value),
+            LoginCodePurpose.VerifyDestination, userId, "hash", IssuedAtUtc, TimeSpan.FromMinutes(10), 3);
+        var first = unsent.VerifyFor(userId, LoginCodePurpose.VerifyDestination, "hash", IssuedAtUtc).Error;
+        Assert.Equal(LoginCodeErrors.InvalidCode, first.Code);
+        Assert.Equal(2, first.Metadata![LoginCodeErrors.AttemptsLeftKey]);
+
+        var sent = LoginCode.Issue(LoginCodeDestination.ForEmail(Email.Create("ana@example.com").Value),
+            LoginCodePurpose.VerifyDestination, userId, "hash", IssuedAtUtc, TimeSpan.FromMinutes(10), 3);
+        sent.MarkSent(IssuedAtUtc);
+        Assert.Equal(2, sent.VerifyFor(userId, LoginCodePurpose.VerifyDestination, "hash", IssuedAtUtc, usable: false)
+            .Error.Metadata![LoginCodeErrors.AttemptsLeftKey]);
+        Assert.True(sent.VerifyFor(userId, LoginCodePurpose.VerifyDestination, "hash", IssuedAtUtc).IsSuccess);
     }
 
     [Fact]

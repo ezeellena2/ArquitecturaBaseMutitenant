@@ -72,7 +72,7 @@ internal sealed record AccountJourney(Guid UserId, Email Email)
     }
 
     internal static async Task<string> IssueReauthTicketAsync(IServiceProvider services, Guid userId,
-        ReauthAction action, CancellationToken ct)
+        ReauthAction action, CancellationToken ct, Guid? targetMethodId = null)
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
         var source = await context.LoginMethods.AsNoTracking().FirstAsync(method =>
@@ -81,7 +81,7 @@ internal sealed record AccountJourney(Guid UserId, Email Email)
         var secret = secrets.Generate();
         await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(token =>
         {
-            context.ReauthTickets.Add(ReauthTicket.Issue(userId, action, source.Id, null, secrets.Hash(secret),
+            context.ReauthTickets.Add(ReauthTicket.Issue(userId, action, source.Id, targetMethodId, secrets.Hash(secret),
                 services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime).Value);
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, ct);

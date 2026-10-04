@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
@@ -11,7 +12,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 /// <summary>Verifica el código de un correo nuevo y, si la cuenta no tiene principal, lo promueve antes de avisar el cambio.</summary>
 internal sealed class LoginMethodVerifier(LoginMethodGuard guard, ILoginMethodRepository methods,
     ILoginCodeRepository codeRepository, LoginCodeVerifier codes, LoginMethodNotifier notifier,
-    IUserRepository users, TimeProvider timeProvider, LoginMethodDomainAssigner emailDomains)
+    IUserRepository users, TimeProvider timeProvider, LoginMethodDomainAssigner emailDomains, IUserLookup lookup)
 {
     public async Task<Result> VerifyAsync(Guid userId, VerifyLoginMethodRequest request, CancellationToken ct)
     {
@@ -35,8 +36,11 @@ internal sealed class LoginMethodVerifier(LoginMethodGuard guard, ILoginMethodRe
                     ? LoginCodeErrors.AlreadyUsed
                     : LoginCodeErrors.Expired;
         }
+        // Si el correo ya es de otra cuenta, el código no sirve: falla como uno mal escrito (ADR 0041, D4b).
+        var usable = !(await lookup.FindVerifiedUsersByEmailAsync(Email.Create(method.Value).Value, ct))
+            .Any(id => id != userId);
         var verified = await codes.VerifyAsync(destination,
-            LoginCodePurpose.VerifyDestination, userId, request.Code!, ct);
+            LoginCodePurpose.VerifyDestination, userId, request.Code!, ct, usable);
         if (verified.IsFailure) return verified.Error;
         method.Verify(timeProvider.GetUtcNow().UtcDateTime);
         await emailDomains.AssignIfVerifiedAsync(method, Email.Create(method.Value).Value, ct);

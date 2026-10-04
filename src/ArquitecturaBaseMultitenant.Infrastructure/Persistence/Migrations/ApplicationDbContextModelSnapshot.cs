@@ -267,6 +267,10 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId");
 
                     b.HasIndex("Type", "Value")
+                        .IsUnique()
+                        .HasFilter("\"VerifiedAtUtc\" IS NOT NULL");
+
+                    b.HasIndex("UserId", "Type", "Value")
                         .IsUnique();
 
                     b.HasIndex(new[] { "UserId" }, "IX_LoginMethods_UserId_Primary")

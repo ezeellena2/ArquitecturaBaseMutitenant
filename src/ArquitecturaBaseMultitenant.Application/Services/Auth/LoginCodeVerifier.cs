@@ -14,8 +14,9 @@ internal sealed class LoginCodeVerifier(
     ILoginCodeHasher codeHasher,
     TimeProvider timeProvider)
 {
+    // Con usable en falso, el código de una cuenta falla como uno mal escrito: su destino ya es de otra cuenta.
     public async Task<Result> VerifyAsync(LoginCodeDestination destination, LoginCodePurpose purpose,
-        Guid? requestedByUserId, string code, CancellationToken cancellationToken)
+        Guid? requestedByUserId, string code, CancellationToken cancellationToken, bool usable = true)
     {
         ArgumentNullException.ThrowIfNull(destination);
         ArgumentException.ThrowIfNullOrWhiteSpace(code);
@@ -30,7 +31,7 @@ internal sealed class LoginCodeVerifier(
         var hash = codeHasher.Hash(destination, purpose, code);
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         return requestedByUserId is { } userId
-            ? row.VerifyFor(userId, purpose, hash, nowUtc)
+            ? row.VerifyFor(userId, purpose, hash, nowUtc, usable)
             : row.Verify(purpose, hash, nowUtc);
     }
 

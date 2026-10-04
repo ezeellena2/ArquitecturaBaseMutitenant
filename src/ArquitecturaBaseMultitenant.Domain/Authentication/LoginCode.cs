@@ -159,14 +159,17 @@ public sealed class LoginCode : Entity
     /// Verifica un código de una cuenta para la cuenta <paramref name="userId"/>.
     /// Si el código es de ingreso o lo pidió otra cuenta, la respuesta es la misma que cuando no hay código y no se
     /// toca ningún contador: así no se sabe que otra cuenta está vinculando ese destino, ni se le gastan los intentos.
+    /// Un código que no se mandó, o cuyo destino ya es de otra cuenta (<paramref name="usable"/> en falso), falla como
+    /// uno mal escrito y gasta el intento (ADR 0041).
     /// </summary>
-    public Result VerifyFor(Guid userId, LoginCodePurpose expectedPurpose, string codeHash, DateTime nowUtc)
+    public Result VerifyFor(Guid userId, LoginCodePurpose expectedPurpose, string codeHash, DateTime nowUtc,
+        bool usable = true)
     {
         ArgumentNullException.ThrowIfNull(codeHash);
 
         return expectedPurpose is LoginCodePurpose.VerifyDestination or LoginCodePurpose.Reauthenticate
             && Purpose == expectedPurpose && RequestedByUserId == userId
-            ? Check(codeHash, nowUtc)
+            ? Check(codeHash, nowUtc, usable: usable && SentAtUtc is not null)
             : LoginCodeErrors.Invalid(attemptsLeft: null);
     }
 
@@ -200,7 +203,7 @@ public sealed class LoginCode : Entity
         ArgumentNullException.ThrowIfNull(codeHash);
 
         return Purpose == LoginCodePurpose.AccountRecovery && MatchesNonce(nonceHash)
-            ? Check(codeHash, nowUtc, wasSent: SentAtUtc is not null)
+            ? Check(codeHash, nowUtc, usable: SentAtUtc is not null)
             : LoginCodeErrors.Invalid(attemptsLeft: null);
     }
 
@@ -216,7 +219,7 @@ public sealed class LoginCode : Entity
         NonceHash is not null && nonceHash is not null
         && CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(NonceHash), Encoding.UTF8.GetBytes(nonceHash));
 
-    private Result Check(string codeHash, DateTime nowUtc, bool wasSent = true)
+    private Result Check(string codeHash, DateTime nowUtc, bool usable = true)
     {
         if (nowUtc.Kind != DateTimeKind.Utc)
         {
@@ -245,7 +248,7 @@ public sealed class LoginCode : Entity
 
         // Comparación en tiempo constante: no revela cuántos caracteres coinciden.
         if (!CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(CodeHash), Encoding.UTF8.GetBytes(codeHash))
-            | !wasSent)
+            | !usable)
         {
             FailedAttempts++;
 
