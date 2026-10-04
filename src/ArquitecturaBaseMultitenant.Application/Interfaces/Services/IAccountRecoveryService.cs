@@ -15,10 +15,4 @@ public interface IAccountRecoveryService
     Task<Result> VerifyCodeAsync(VerifyRecoveryCodeRequest request, CancellationToken cancellationToken);
 
     Task<Result> SubmitAsync(SubmitAccountRecoveryRequest request, CancellationToken cancellationToken);
-
-    /// <summary>
-    /// Avisa a las cuentas encontradas de los pedidos ya registrados y devuelve cuántos pedidos resolvió. Lo llama un
-    /// trabajo en segundo plano, fuera de la respuesta del pedido, para no delatar la cuenta por el tiempo.
-    /// </summary>
-    Task<Result<int>> NotifyAccountsAsync(CancellationToken cancellationToken);
 }

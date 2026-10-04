@@ -20,7 +20,7 @@ internal sealed partial class AccountRecoveryNoticeWorker(IServiceScopeFactory s
         while (!ct.IsCancellationRequested)
         {
             await using var scope = scopes.CreateAsyncScope();
-            var notified = await scope.ServiceProvider.GetRequiredService<IAccountRecoveryService>()
+            var notified = await scope.ServiceProvider.GetRequiredService<IAccountRecoveryNoticeService>()
                 .NotifyAccountsAsync(ct);
             if (notified.IsFailure)
             {
