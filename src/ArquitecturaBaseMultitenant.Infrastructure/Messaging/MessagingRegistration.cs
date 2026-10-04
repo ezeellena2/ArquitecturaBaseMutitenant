@@ -1,4 +1,3 @@
-using ArquitecturaBaseMultitenant.Application.Configuration.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,10 +12,6 @@ internal static class MessagingRegistration
     internal static IServiceCollection AddMessaging(this IServiceCollection services,
         IConfiguration configuration, IHostEnvironment environment)
     {
-        services.AddOptions<OutboxOptions>()
-            .BindConfiguration(OutboxOptions.SectionName)
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
         services.AddScoped<IOutbox, Outbox>();
         services.AddScoped<IOutboxDispatchStore, OutboxDispatchStore>();
         // El host de pruebas despacha explícitamente para verificar locks y reintentos sin carreras.

@@ -261,7 +261,7 @@ Casos de uso, puertos, modelos, validación y textos. Referencia solo a Domain.
 ```
 ArquitecturaBaseMultitenant.Application/
 ├── ArquitecturaBaseMultitenant.Application.csproj    NeutralLanguage=es, InternalsVisibleTo tests
-├── DependencyInjection.cs                            [E1] AddApplication(): registro explícito
+├── DependencyInjection.cs                            [E1] AddApplication(): llama a Services/<Área>/<Área>Registration.cs, con las opciones de cada área
 ├── Common/                                           [E1]
 │   ├── Pagination/
 │   │   ├── PagedRequest.cs                           Page, PageSize (10 por defecto | 20 | 50 | 100), Sort, Search

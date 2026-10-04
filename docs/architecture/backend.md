@@ -175,7 +175,8 @@ Reglas de Domain:
 
 ```
 Application/
-├─ DependencyInjection.cs              AddApplication(): options, servicios, helpers y validadores, uno por uno y explícitos
+├─ DependencyInjection.cs              AddApplication(): un *Registration.cs por área (Services/<Área>/), con sus options,
+│                                      servicios y helpers uno por uno; validadores y DisplayFormatter
 ├─ Common/
 │  ├─ Pagination/                      PagedRequest, PagedResult<T>, CursorRequest, CursorResult<T>, SortDescriptor
 │  ├─ Validation/                      IRequestValidator, RequestValidator, ValidationRules, FieldErrors, PagedRequestValidator<T>,
@@ -527,7 +528,7 @@ El cuerpo es `application/problem+json` con `title` y `detail` traducidos, `code
 
 | Capa | Punto de entrada | Qué registra |
 |---|---|---|
-| Application | `AddApplication()` | Options (`BindConfiguration + ValidateDataAnnotations + ValidateOnStart`), cada servicio y helper con `AddScoped`, uno por uno, validadores (`AddValidatorsFromAssembly(includeInternalTypes: true)`), `IRequestValidator` y `ReferenceDataService` (los puertos viven aquí, los implementa Infrastructure) |
+| Application | `AddApplication()` | Un `<Área>Registration.cs` por área en `Services/<Área>/`, con sus options (`BindConfiguration + ValidateDataAnnotations + ValidateOnStart`) y cada servicio y helper con `AddScoped`, uno por uno y una sola vez; validadores (`AddValidatorsFromAssembly(includeInternalTypes: true)`), `IRequestValidator` y `ReferenceDataService` (los puertos viven aquí, los implementa Infrastructure) |
 | Infrastructure | `AddInfrastructure(cfg, env)` | En E1, `JsonReferenceDataCatalog` para los cinco puertos y `TryAddSingleton(TimeProvider.System)`, sin base. Desde E2, `ReferenceDataReader`/HybridCache y `ReferenceDataSeeder` reemplazan el adaptador JSON; se agregan `TenantContext` (scoped, un registro para `ITenantContext` y otro para `ITenantScope`), interceptores (en orden: TenantStamp → SoftDelete → Auditable → AuditTrail; más TenantConnection), `AddDbContext`, `IUnitOfWork`, repositorios, readers y los subregistros `AddIdentityServices`, `AddOpenIddictServer`, `AddMessaging`, `AddCaching`. Los módulos se registran aparte, con su `AddWhatsAppModule()` en cada capa, llamado desde `Program.cs` |
 | Api | `AddPresentation()` | ProblemDetails, `GlobalExceptionHandler`, autorización (policy provider y handlers), localización, rate limiting, OpenAPI, `AddControllers` con un solo `ConfigureJson` |
 

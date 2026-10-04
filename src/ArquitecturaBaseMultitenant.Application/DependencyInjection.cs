@@ -1,180 +1,53 @@
-using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
-using ArquitecturaBaseMultitenant.Application.Services.ReferenceData;
-using ArquitecturaBaseMultitenant.Application.Services.Messaging;
-using ArquitecturaBaseMultitenant.Application.Services.Profile;
+using ArquitecturaBaseMultitenant.Application.Common.Validation;
+using ArquitecturaBaseMultitenant.Application.Services.Auditing;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
-using ArquitecturaBaseMultitenant.Application.Services.Legal;
+using ArquitecturaBaseMultitenant.Application.Services.Companies;
+using ArquitecturaBaseMultitenant.Application.Services.Home;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Application.Services.Invitations;
-using ArquitecturaBaseMultitenant.Application.Services.Roles;
-using ArquitecturaBaseMultitenant.Application.Services.Companies;
-using ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
+using ArquitecturaBaseMultitenant.Application.Services.Legal;
+using ArquitecturaBaseMultitenant.Application.Services.Messaging;
 using ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
+using ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
+using ArquitecturaBaseMultitenant.Application.Services.Platform;
+using ArquitecturaBaseMultitenant.Application.Services.Profile;
 using ArquitecturaBaseMultitenant.Application.Services.PublicSite;
-using ArquitecturaBaseMultitenant.Application.Services.Auditing;
+using ArquitecturaBaseMultitenant.Application.Services.ReferenceData;
+using ArquitecturaBaseMultitenant.Application.Services.Roles;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Application;
 
-/// <summary>Registra los casos de uso, sus colaboradores y la validación de Application para que la Api los consuma mediante interfaces.</summary>
+/// <summary>
+/// Registra los casos de uso, sus colaboradores, las opciones y la validación de Application para que la Api los
+/// consuma mediante interfaces. Cada área tiene su <c>*Registration.cs</c>, explícito y sin reflexión.
+/// </summary>
 public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.AddScoped<IReferenceDataService, ReferenceDataService>();
-        services.AddScoped<ITenantSlugAvailabilityService, TenantSlugAvailabilityService>();
-        services.AddScoped<IRoleService, RoleService>();
-        services.AddScoped<IHomeService, Services.Home.HomeService>();
-        services.AddScoped<Services.Home.OrganizationHomeAreas>();
-        services.AddScoped<Services.Home.MemberHomeCompanies>();
-        // «Para resolver» (ADR 0040): una fuente por área; un módulo suma la suya en su propio registro.
-        services.AddScoped<IPendingItemSource, OrganizationUserPendingItems>();
-        services.AddScoped<IPendingItemSource, OrganizationDomainPendingItems>();
-        services.AddScoped<IPendingItemSource, PublicPagePendingItems>();
-        services.AddScoped<ICompanyService, CompanyService>();
-        services.AddScoped<ICompanyMembershipService, CompanyMembershipService>();
-        services.AddScoped<CompanyCreator>();
-        services.AddScoped<CompanyReferenceDataResolver>();
-        services.AddScoped<CompanyMembershipWriter>();
-        services.AddScoped<RoleAssignmentGuard>();
-        services.AddScoped<IOrganizationUserService, OrganizationUserService>();
-        services.AddScoped<OrganizationUserAssignmentManager>();
-        services.AddScoped<OrganizationUserAdministratorGuard>();
-        services.AddScoped<OrganizationUserAccessCleaner>();
-        services.AddScoped<OrganizationUserInvitationManager>();
-        services.AddScoped<OrganizationMembershipEndNoticeContextProvider>();
-        services.AddScoped<OrganizationAvailableLoginMethodsResolver>();
-        services.AddScoped<OrganizationMembershipEndNotifier>();
-        services.AddScoped<OrganizationUserEditor>();
-        services.AddScoped<OrganizationUserStatusEditor>();
-        services.AddScoped<OrganizationUserRemover>();
-        services.AddScoped<IOrganizationSettingsService, OrganizationSettingsService>();
-        services.AddScoped<IOrganizationDomainService, OrganizationDomainService>();
-        services.AddScoped<OrganizationDomainRegistrar>();
-        services.AddScoped<OrganizationDomainVerifier>();
-        services.AddScoped<OrganizationDomainRemover>();
-        services.AddScoped<IPublicPageService, PublicPageService>();
-        services.AddScoped<PublicPageEditor>();
-        services.AddScoped<IOrganizationAuditService, OrganizationAuditService>();
-        services.AddScoped<LoginMethodDomainAssigner>();
-        services.AddScoped<ILastCompanyAdminGuard, LastCompanyAdminGuard>();
-        services.AddScoped<IPermissionService, PermissionService>();
-        services.AddScoped<IPlatformPermissionService, PlatformPermissionService>();
-        services.AddScoped<IPlatformSettingsService, Services.Platform.PlatformSettingsService>();
-        services.AddScoped<Services.Platform.PlatformSettingsAudit>();
-        services.AddScoped<IPlatformFeatureService, Services.Platform.PlatformFeatureService>();
-        services.AddScoped<Services.Platform.PlatformFeatureListing>();
-        services.AddScoped<Services.Platform.PlatformFeatureWriter>();
-        services.AddScoped<ITenantAdministrationService, Services.Platform.TenantAdministrationService>();
-        services.AddScoped<Services.Platform.PlatformTenantStateWriter>();
-        services.AddScoped<Services.Platform.PlatformAudit>();
-        services.AddScoped<Services.Platform.PlatformTenantNotifier>();
-        services.AddScoped<IPlatformScopeAccessService, Services.Platform.PlatformScopeAccessService>();
-        services.AddScoped<IPlatformPublicSiteService, Services.Platform.PlatformPublicSiteService>();
-        services.AddScoped<Services.Platform.PlatformPublicSiteWriter>();
-        services.AddScoped<IPlatformDomainService, Services.Platform.PlatformDomainService>();
-        services.AddScoped<IPlatformAccountService, Services.Platform.PlatformAccountService>();
-        services.AddScoped<IPlatformAccountStateService, Services.Platform.PlatformAccountStateService>();
-        services.AddScoped<IPlatformAccountDeletionService, Services.Platform.PlatformAccountDeletionService>();
-        services.AddScoped<IPlatformRecoveryService, Services.Platform.PlatformRecoveryService>();
-        services.AddScoped<IPlatformRecoveryDecisionService, Services.Platform.PlatformRecoveryDecisionService>();
-        services.AddScoped<Services.Platform.PlatformRecoveryNotifier>();
-        services.AddScoped<IPlatformOperatorInvitationService, Services.Platform.PlatformOperatorInvitationService>();
-        services.AddScoped<IPlatformOperatorService, Services.Platform.PlatformOperatorService>();
-        services.AddScoped<Services.Platform.PlatformOperatorProvisioner>();
-        services.AddScoped<Services.Platform.PlatformOperatorInvitationNotifier>();
-        services.AddScoped<IPlatformAuditService, Services.Platform.PlatformAuditService>();
-        services.AddScoped<IPlatformLegalService, Services.Platform.PlatformLegalService>();
-        services.AddScoped<Services.Platform.PlatformOperatorGuard>();
-        services.AddScoped<Services.Platform.PlatformActionGuard>();
-        services.AddScoped<Services.Platform.PlatformTenantSlugAllocator>();
-        services.AddScoped<Services.Platform.PlatformTenantCreator>();
-        services.AddScoped<Services.Platform.PlatformTenantActivator>();
-        services.AddScoped<IOutboxDispatchService, OutboxDispatchService>();
-        services.AddScoped<ILoginCodeService, LoginCodeService>();
-        services.AddScoped<IAccountRecoveryService, AccountRecoveryService>();
-        services.AddScoped<IAccountRecoveryNoticeService, AccountRecoveryNoticeService>();
-        services.AddScoped<AccountRecoveryMessenger>();
-        services.AddScoped<LoginCodeRequester>();
-        services.AddScoped<LoginCodeVerificationFlow>();
-        services.AddScoped<LoginCodeAttemptCoordinator>();
-        services.AddScoped<ILoginMethodsService, LoginMethodsService>();
-        services.AddScoped<IAccountService, AccountService>();
-        services.AddScoped<IBusinessSignupService, BusinessSignupService>();
-        services.AddScoped<BusinessOrganizationCreator>();
-        services.AddScoped<BusinessSignupPolicy>();
-        services.AddScoped<SignupCodeRequester>();
-        services.AddScoped<SignupVerificationCore>();
-        services.AddScoped<SignupAccountRegistrar>();
-        services.AddScoped<SignupExistingMethodVerifier>();
-        services.AddScoped<IExternalLoginService, ExternalLoginService>();
-        services.AddScoped<GoogleAccountResolver>();
-        services.AddScoped<GoogleAccountMethodFinalizer>();
-        services.AddScoped<GoogleAccountGuard>();
-        services.AddScoped<GoogleAccountRegistrar>();
-        services.AddScoped<IConnectService, ConnectService>();
-        services.AddScoped<IConnectAuthorizationService, ConnectAuthorizationService>();
-        services.AddScoped<IConnectLogoutService, ConnectLogoutService>();
-        services.AddScoped<IProfileService, ProfileService>();
-        services.AddScoped<ILastTenantAdminGuard, LastTenantAdminGuard>();
-        services.AddScoped<ProfilePreferences>();
-        services.AddScoped<ProfileSnapshotBuilder>();
-        services.AddScoped<ILegalService, LegalService>();
-        services.AddScoped<ILegalAcceptanceService, LegalAcceptanceService>();
-        services.AddScoped<LegalAcceptanceGuard>();
-        services.AddScoped<LegalAcceptanceWriter>();
-        services.AddScoped<IAccountDeletionService, AccountDeletionService>();
-        services.AddScoped<AccountDeletionRequester>();
-        services.AddScoped<AccountDeletionScheduler>();
-        services.AddScoped<LastTenantAdminGuard>();
-        services.AddScoped<AccountDeletionNotifier>();
-        services.AddScoped<AccountDeletionCanceller>();
-        services.AddScoped<AccountDeletionSessionRestorer>();
-        services.AddScoped<IAccountDeletionProcessingService, AccountDeletionProcessingService>();
-        services.AddScoped<AccountDeletionProcessor>();
-        services.AddScoped<AccountDeletionCancelIssuer>();
-        services.AddScoped<LoginAccountGuard>();
-        services.AddScoped<SignupPolicy>();
-        services.AddScoped<IPersonalSpaceProvisioner, PersonalSpaceProvisioner>();
-        services.AddScoped<TenantSpaceProvisioner>();
-        services.AddScoped<TenantProvisioningReplayVerifier>();
-        services.AddScoped<TenantProvisioner>();
-        services.AddScoped<LoginCodeIssuer>();
-        services.AddScoped<LoginCodeVerifier>();
-        services.AddScoped<UserCultures>();
-        services.AddScoped<InvitationIssuer>();
-        services.AddScoped<InvitationIssuingGuard>();
-        services.AddScoped<InvitationDeliveryIssuer>();
-        services.AddScoped<IInvitationService, InvitationService>();
-        services.AddScoped<InvitationPreviewBuilder>();
-        services.AddScoped<InvitationPreviewFlow>();
-        services.AddScoped<InvitationAcceptanceResolver>();
-        services.AddScoped<InvitationAcceptanceGuard>();
-        services.AddScoped<InvitationIdentityDefaults>();
-        services.AddScoped<InvitationAccountRegistrar>();
-        services.AddScoped<InvitationAcceptor>();
-        services.AddScoped<InvitationSessionRestorer>();
-        services.AddScoped<AccountNoticeIssuer>();
-        services.AddScoped<ILoginMethodManagementService, LoginMethodManagementService>();
-        services.AddScoped<LoginMethodGuard>();
-        services.AddScoped<LoginMethodIssuer>();
-        services.AddScoped<LoginMethodVerifier>();
-        services.AddScoped<LoginMethodNotifier>();
-        services.AddScoped<GoogleMethodLinkFinalizer>();
-        services.AddScoped<LoginMethodAvailability>();
-        services.AddScoped<LoginMethodChanger>();
-        services.AddScoped<IReauthService, ReauthService>();
-        services.AddScoped<ReauthIssuer>();
-        services.AddScoped<ReauthVerifier>();
-        services.AddScoped<ReauthTicketConsumer>();
-        services.AddScoped<IAccountGoogleService, AccountGoogleService>();
-        services.AddScoped<GoogleMethodLinker>();
-        services.AddScoped<IAccountLoginMethodsService, AccountLoginMethodsService>();
+        // «Para resolver» (ADR 0040) junta los pendientes en el orden en que se registran sus fuentes: Usuarios,
+        // Configuración y Página pública. Un módulo suma la suya en su propio registro.
+        services
+            .AddReferenceData()
+            .AddRoles()
+            .AddHome()
+            .AddOrganizationUsers()
+            .AddOrganizationSettings()
+            .AddPublicSite()
+            .AddCompanies()
+            .AddAuditing()
+            .AddPlatform()
+            .AddMessaging()
+            .AddAuth()
+            .AddProfile()
+            .AddLegal()
+            .AddInvitations()
+            .AddIdentity();
         services.AddScoped<DisplayFormatter>();
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
         services.AddScoped<IRequestValidator, RequestValidator>();

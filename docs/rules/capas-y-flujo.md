@@ -7,7 +7,7 @@
 - **Application:** `Interfaces/Services/I<X>Service.cs` + `Services/<Área>/<X>Service.cs` (`internal sealed partial`), modelos, validadores y puertos en `Interfaces/{Persistence,Integrations}`.
 - **Infrastructure:** implementaciones de EF (`Persistence/{Repositories,Readers}`) y adaptadores técnicos (`<Tema>/`).
 - **Api:** el controller inyecta **solo** `I<X>Service`; contratos en `Api/Contracts/<Área>`.
-- Registro en DI: cada capa en su `DependencyInjection.cs`, uno por uno y explícito. `Program.cs` solo compone.
+- Registro en DI: cada capa en su `DependencyInjection.cs`, que llama a un `*Registration.cs` por área. En Application es `Services/<Área>/<Área>Registration.cs` y registra también las opciones del área (`BindConfiguration`, `ValidateDataAnnotations` y `ValidateOnStart`). Cada clase se registra una sola vez, uno por uno y explícito. `Program.cs` solo compone.
 - Lo que crece se parte por responsabilidad en helpers con sufijo fijo: `Policy` (decide), `Guard` (protege una regla), `Issuer` (emite), `Verifier` (verifica) y `Linker` (vincula). **Máximo 8 dependencias de negocio** por clase de servicios. No cuentan `ILogger<T>`, `TimeProvider`, `IRequestValidator` ni `IUnitOfWork`; todo lo demás cuenta, incluido `IOptions<T>` ([ADR 0039](../decisions/0039-tope-de-dependencias-de-negocio.md)). No crear clases que solo reenvían para cumplir el tope.
 - El método público del servicio abre la transacción. Los helpers trabajan dentro de ella y no reciben `IUnitOfWork`.
 
@@ -26,6 +26,7 @@
 - `ControllerServiceRepositoryTests` (E1): los controllers inyectan solo `I*Service`.
 - `ApplicationPublicApiTests` (E1): sin `IQueryable` ni `Expression`.
 - `ApplicationServicesTests` (E1), `ServiceDependencyCountTests` (E1), `MinimalApiRoutesTests` (E0).
+- `DependencyInjectionTests` (E6): cada clase de `Services` se registra una sola vez, y Application registra y valida sus opciones. `ServiceProviderValidationTests` (E6): `ApiFactory` construye cada registro al arrancar (`ValidateOnBuild`).
 
 ## Detalle
 [backend.md §3–§5 y §7](../architecture/backend.md#3-capas-y-dependencias)

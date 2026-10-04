@@ -3,8 +3,6 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Time;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Dns;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Phones;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
-using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
-using ArquitecturaBaseMultitenant.Application.Configuration.Invitations;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
 using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
@@ -45,10 +43,6 @@ public static class DependencyInjection
         services.AddSingleton<IPhoneNumberDisplayFormatter, LibPhoneNumberDisplayFormatter>();
         services.AddSingleton<IPhoneNumberParser, LibPhoneNumberParser>();
         services.AddHttpClient<IDnsTxtLookup, CloudflareDnsTxtLookup>();
-        services.AddOptions<LoginCodeOptions>()
-            .BindConfiguration(LoginCodeOptions.SectionName)
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
         services.AddOptions<LoginCodeHashOptions>()
             .BindConfiguration(LoginCodeHashOptions.SectionName)
             .ValidateDataAnnotations();
@@ -57,8 +51,6 @@ public static class DependencyInjection
         services.AddSingleton<ISecureTokenGenerator, SecureTokenGenerator>();
         services.AddSingleton<IPayloadProtector, PayloadProtector>();
         services.AddSingleton<IInvitationTokenProtector, InvitationTokenProtector>();
-        services.AddOptions<InvitationOptions>().BindConfiguration(InvitationOptions.SectionName)
-            .ValidateDataAnnotations().ValidateOnStart();
         services.AddCaching();
 
         services.AddPersistence(configuration);

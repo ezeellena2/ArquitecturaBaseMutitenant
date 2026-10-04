@@ -79,6 +79,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
+        // Como Development: cada registro se construye al arrancar, así una dependencia sin registrar rompe la suite
+        // entera. ValidateScopes queda apagado porque hay pruebas que leen servicios scoped desde la raíz.
+        builder.UseDefaultServiceProvider(options => options.ValidateOnBuild = true);
         builder.UseSetting("ConnectionStrings:postgres-bootstrap", BootstrapConnectionString);
         builder.UseSetting("ConnectionStrings:appdb-admin", AdminConnectionString);
         builder.UseSetting("ConnectionStrings:appdb", RuntimeConnectionString);

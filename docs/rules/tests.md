@@ -18,6 +18,7 @@
 - **Ruta nueva:** fila en `ExplicitRouteInventoryTests`, test de éxito, errores, 401/403 y **un test de aislamiento** (el id de otro tenant da 404).
 - **Datos de prueba:** se preparan dentro de un límite real (`factory.InTransactionAsync`).
 - Lo que existe solo para probar va en `TestFeatures/`, nunca en `src/`.
+- `ApiFactory` arranca con `ValidateOnBuild`, como Development: una clase que pide algo sin registrar rompe el arranque de toda la suite. `ValidateScopes` queda apagado porque hay pruebas que leen servicios scoped desde la raíz.
 - Para aislar `Widget`, `Poster` y `Deal`, la fixture aplica primero las migraciones reales y después llama a `IsolationSchema.ApplyAsync(connection)` del proyecto de tests. Ese helper crea sus tablas con SQL generado por las mismas plantillas de `RlsSql`: `EnableTenantRls`, `EnablePublicRls` y `EnablePartiesRls`. Estas tablas no llevan migraciones productivas.
 - `ApiFactory` configura un pickup `.eml` único por fixture bajo el directorio temporal del sistema y lo borra al terminar; los tests leen los códigos mediante `Support/PickupCodeReader`, filtrando por destinatario y consumiendo solo ese archivo.
 - `Tenancy/SuspensionJourneyTests` ejerce estado de organización, membresía y cuenta en base real, cachés reales, token B2B, ruta protegida, `/api/me` y refresh.
