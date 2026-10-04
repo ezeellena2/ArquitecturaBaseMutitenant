@@ -373,9 +373,11 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
   - deja a Roles como referencia de verdad.
 - **Qué no hace:** no agrega pantallas nuevas.
 - **Orden con la Etapa 5** (cambio aprobado el 2026-10-03):
-  1. el back pendiente de la 5 (T10 a T18);
+  1. en paralelo:
+     - el back pendiente de la 5 (T10 a T18);
+     - la alineación del front: Paquete 2, punto 1.11, Paquete 4 con los teléfonos de v78 y Paquete 5, que es el A00 del plan de la 5;
   2. la consolidación;
-  3. el front de la 5 (T19 a T25), que ya usa las piezas comunes y cierra la etapa.
+  3. las pantallas de la 5 (T19 a T25), que ya usan las piezas comunes y cierran la etapa.
 
 ---
 

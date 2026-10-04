@@ -18,7 +18,12 @@ No hay pantallas nuevas. Los teléfonos de v78 necesitan el marco de app (Paquet
 - El lienzo v78 (`../../../ArquitecturaBaseMutitenantFront/docs/design/lienzo/`), para lo que se ve: la columna Estado de Empresa, los mensajes y el formato del enmascarado.
 - AGENTS.md, `backend.md`, `frontend.md`, `arbol.md` de los dos repos y las fichas de `docs/rules/`.
 
-**Cuándo empieza:** cuando estén commiteados la tanda de alineación (paquetes 1 y 3 e Inicios) y el back pendiente de la Etapa 5 (T10 a T18), con `git status` limpio en los dos repos. El front de la Etapa 5 (T19 a T25) va después de esta consolidación, para usar sus piezas comunes.
+**Cuándo empieza:** cuando estén commiteados, con `git status` limpio en los dos repos:
+- la tanda de alineación (paquetes 1 y 3 e Inicios);
+- el back pendiente de la Etapa 5 (T10 a T18);
+- la alineación del front que «Paquete 0» hace en paralelo desde el 2026-10-03, con aprobación del usuario: Paquete 2, punto 1.11, Paquete 4 (con los teléfonos de v78) y Paquete 5.
+
+Las pantallas de la Etapa 5 (T19 a T25) van después de esta consolidación, para usar sus piezas comunes.
 
 **Quién:** Claude programa y verifica. Usa dos agentes en paralelo solo donde los archivos no se cruzan: el back en los bloques 3 y 4, y el front en los bloques 5 y 6. Cada entrega se revisa antes del commit.
 
