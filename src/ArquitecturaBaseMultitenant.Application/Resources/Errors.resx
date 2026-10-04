@@ -175,7 +175,6 @@
   <data name="PublicSite.PublicPage.PublishBlocked" xml:space="preserve"><value>La plataforma bloqueó esta página. No podés volver a publicarla hasta que se habilite.</value></data>
   <data name="PublicSite.PublicPage.BlockReasonRequired" xml:space="preserve"><value>El bloqueo de moderación necesita un motivo.</value></data>
   <data name="PublicSite.PublicPage.NotFound" xml:space="preserve"><value>No se encontró la página pública.</value></data>
-  <data name="PublicSite.PublicPage.VersionConflict" xml:space="preserve"><value>La página cambió desde que la abriste. Actualizala antes de guardar.</value></data>
   <data name="Settings.System.InvalidConfiguration" xml:space="preserve"><value>Elegí modos de registro válidos y permití al menos una organización por persona.</value></data>
   <data name="Tenancy.Tenant.NotFound" xml:space="preserve"><value>No encontramos la organización.</value></data>
   <data name="Platform.Operator.PermissionsRequired" xml:space="preserve"><value>Elegí al menos un permiso de plataforma.</value></data>

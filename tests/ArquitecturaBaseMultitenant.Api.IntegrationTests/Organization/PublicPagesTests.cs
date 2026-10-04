@@ -139,6 +139,42 @@ public sealed class PublicPagesTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.Conflict, reserved.StatusCode);
     }
 
+    [Fact]
+    public async Task Saving_with_a_stale_version_answers_the_common_concurrency_conflict()
+    {
+        using var client = Client();
+        var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
+        await CreateBusinessAsync("Página con versión vieja", "pagina-version-vieja", owner.UserId);
+        await AccountJourney.AuthorizeAsync(client, "business", Ct);
+
+        // docs/rules/concurrencia.md: una versión vieja da 409 General.ConcurrencyConflict, que es el que hace
+        // salir «Ver lo nuevo» en la pantalla. Vale también antes de que la página exista.
+        using var neverSaved = await SavePageAsync(client, version: 7);
+        await AssertConcurrencyConflictAsync(neverSaved);
+
+        using var created = await SavePageAsync(client, version: 0);
+        Assert.True(created.StatusCode == HttpStatusCode.NoContent, await created.Content.ReadAsStringAsync(Ct));
+
+        using var stale = await SavePageAsync(client, version: 0);
+        await AssertConcurrencyConflictAsync(stale);
+    }
+
+    private static Task<HttpResponseMessage> SavePageAsync(HttpClient client, uint version) =>
+        client.PutAsJsonAsync("/api/organization/public-page", new
+        {
+            slug = "pagina-version-vieja",
+            name = "Grupo Versión",
+            removeLogo = false,
+            version,
+        }, Ct);
+
+    private static async Task AssertConcurrencyConflictAsync(HttpResponseMessage response)
+    {
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        using var problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
+        Assert.Equal("General.ConcurrencyConflict", problem.RootElement.GetProperty("code").GetString());
+    }
+
     private HttpClient Client() => factory.CreateClient(new()
     {
         BaseAddress = new Uri("https://localhost"),

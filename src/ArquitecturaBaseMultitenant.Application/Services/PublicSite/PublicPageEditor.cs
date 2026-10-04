@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.PublicSite;
@@ -29,7 +30,9 @@ internal sealed class PublicPageEditor(IPublicPageRepository pages, ITenantRepos
         }
 
         var page = await pages.GetCurrentAsync(request.Version!.Value, ct);
-        if (page is null && request.Version.Value != 0) return PublicPageErrors.VersionConflict;
+        // Sin página guardada, la única versión vigente es 0: otra es vieja y responde como cualquier edición
+        // simultánea (docs/rules/concurrencia.md).
+        if (page is null && request.Version.Value != 0) throw new ConcurrencyConflictException();
         var isNew = page is null;
         page ??= PublicPage.Create();
         var updated = page.UpdateContent(request.Name, request.Description, request.ContactEmail,
