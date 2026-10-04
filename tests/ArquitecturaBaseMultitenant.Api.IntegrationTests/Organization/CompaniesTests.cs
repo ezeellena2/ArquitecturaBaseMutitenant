@@ -4,6 +4,7 @@ using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
+using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -308,6 +309,79 @@ public sealed class CompaniesTests(ApiFactory factory)
         Assert.Equal("AR", taxId.GetProperty("country").GetString());
         Assert.Equal("AR-CUIT", taxId.GetProperty("type").GetString());
         Assert.Equal("30712345671", taxId.GetProperty("number").GetString());
+    }
+
+    // B4: un Administrador de empresa sin roles de la organización usa su empresa con sus permisos por empresa.
+    [Fact]
+    public async Task A_company_admin_without_organization_roles_gets_its_company_permissions_and_assignable_roles()
+    {
+        using var ownerClient = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
+        var tenantId = await OrganizationJourney.StageAsync(factory, owner, "Permisos por empresa", Ct);
+        await AccountJourney.AuthorizeAsync(ownerClient, "business", Ct);
+        var companyId = await OrganizationJourney.CreateCompanyAsync(ownerClient, "Delta Norte S.A.", Ct);
+        var otherCompanyId = await OrganizationJourney.CreateCompanyAsync(ownerClient, "Delta Sur S.A.", Ct);
+        await CreateRoleAsync(ownerClient, "Solo lectura Norte", "SpecificCompany", companyId);
+        await CreateRoleAsync(ownerClient, "Solo lectura Sur", "SpecificCompany", otherCompanyId);
+        await CreateRoleAsync(ownerClient, "Lectura en cada empresa", "AnyCompany", null);
+        using var ownerRoles = await ownerClient.GetAsync("/api/roles/paged?scope=Company&page=1&pageSize=50", Ct);
+        using var ownerRolesJson = JsonDocument.Parse(await ownerRoles.Content.ReadAsStringAsync(Ct));
+        var companyAdminRoleId = ownerRolesJson.RootElement.GetProperty("items").EnumerateArray()
+            .Single(role => role.GetProperty("isSystemRole").GetBoolean()).GetProperty("id").GetGuid();
+
+        using var adminClient = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var admin = await AccountJourney.RegisterAsync(factory, adminClient, Ct);
+        var memberId = await OrganizationJourney.AddActiveMemberAsync(factory, tenantId, admin.UserId, Ct);
+        using var added = await AccountJourney.PostAsync(ownerClient, $"/api/companies/{companyId:D}/members",
+            new { memberId, roleIds = new[] { companyAdminRoleId } }, Ct);
+        Assert.True(added.StatusCode == HttpStatusCode.NoContent, await added.Content.ReadAsStringAsync(Ct));
+        await AccountJourney.AuthorizeAsync(adminClient, "business", Ct);
+
+        // /api/me: ningún permiso de la organización y los de su empresa, solo para esa empresa.
+        using var me = await adminClient.GetAsync("/api/me", Ct);
+        Assert.Equal(HttpStatusCode.OK, me.StatusCode);
+        using var meJson = JsonDocument.Parse(await me.Content.ReadAsStringAsync(Ct));
+        var effective = meJson.RootElement.GetProperty("effectivePermissions");
+        Assert.Empty(effective.GetProperty("organization").EnumerateArray());
+        var company = Assert.Single(effective.GetProperty("companies").EnumerateObject());
+        Assert.Equal(companyId, Guid.Parse(company.Name));
+        Assert.Equal([Permissions.Company.Members.Manage, Permissions.Company.Members.Read],
+            company.Value.EnumerateArray().Select(permission => permission.GetString()).Order(StringComparer.Ordinal));
+
+        // Los roles que se pueden asignar en su empresa: los de cada empresa y los propios, sin los de otra empresa ni
+        // los de toda la organización. La lista de roles de la organización sigue pidiendo roles.read.
+        var names = await RoleNamesAsync(adminClient, $"/api/companies/{companyId:D}/roles/paged?page=1&pageSize=50");
+        Assert.Equal(["Administrador", "Lectura en cada empresa", "Solo lectura Norte"], names.Order(StringComparer.Ordinal));
+        Assert.Equal(["Solo lectura Norte"],
+            await RoleNamesAsync(adminClient, $"/api/companies/{companyId:D}/roles/paged?search=norte"));
+        using var organizationRoles = await adminClient.GetAsync("/api/roles/paged?page=1&pageSize=10", Ct);
+        Assert.Equal(HttpStatusCode.Forbidden, organizationRoles.StatusCode);
+        using var otherCompany = await adminClient.GetAsync($"/api/companies/{otherCompanyId:D}/roles/paged", Ct);
+        Assert.Equal(HttpStatusCode.Forbidden, otherCompany.StatusCode);
+        Assert.Equal(2, (await MembersAsync(adminClient, $"/api/companies/{companyId:D}/members/paged?pageSize=50")).Length);
+    }
+
+    private static async Task CreateRoleAsync(HttpClient client, string name, string scope, Guid? companyId)
+    {
+        using var created = await AccountJourney.PostAsync(client, "/api/roles", new
+        {
+            name,
+            description = (string?)null,
+            scope,
+            companyId,
+            permissions = new[] { Permissions.Company.Members.Read },
+        }, Ct);
+        Assert.True(created.StatusCode == HttpStatusCode.Created, await created.Content.ReadAsStringAsync(Ct));
+    }
+
+    private static async Task<string?[]> RoleNamesAsync(HttpClient client, string path)
+    {
+        using var response = await client.GetAsync(path, Ct);
+        Assert.True(response.StatusCode == HttpStatusCode.OK, await response.Content.ReadAsStringAsync(Ct));
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
+        var items = json.RootElement.GetProperty("items").EnumerateArray().ToArray();
+        Assert.Equal(items.Length, json.RootElement.GetProperty("totalCount").GetInt32());
+        return [.. items.Select(role => role.GetProperty("name").GetString())];
     }
 
     private static async Task<JsonElement[]> MembersAsync(HttpClient client, string path)

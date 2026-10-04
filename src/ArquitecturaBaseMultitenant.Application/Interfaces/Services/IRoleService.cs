@@ -8,6 +8,13 @@ public interface IRoleService
 {
     Task<Result<PagedResult<RoleResponse>>> ListAsync(ListRolesRequest request, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Los roles que se pueden asignar en una empresa: los que valen en cada empresa y los propios de esa empresa.
+    /// Lo pide quien ve los miembros de la empresa, sin permisos de roles de la organización.
+    /// </summary>
+    Task<Result<PagedResult<RoleResponse>>> ListForCompanyAsync(Guid companyId, ListRolesRequest request,
+        CancellationToken cancellationToken);
+
     Task<Result<RoleResponse>> GetAsync(Guid roleId, CancellationToken cancellationToken);
 
     Task<Result<IReadOnlyList<PermissionGroupResponse>>> GetPermissionsAsync(CancellationToken cancellationToken);

@@ -321,6 +321,9 @@ public sealed class ProfileServiceTests
             Task.FromResult<IReadOnlyList<string>>([]);
         public Task<IReadOnlyList<string>> GetCompanyPermissionsAsync(Guid userId, Guid companyId,
             CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<string>>([]);
+        public Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> GetPermissionsByCompanyAsync(Guid userId,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, IReadOnlyList<string>>>(new Dictionary<Guid, IReadOnlyList<string>>());
         public Task<bool> HasPermissionAsync(Guid userId, string permission, CancellationToken cancellationToken) =>
             Task.FromResult(false);
         public Task<bool> HasCompanyPermissionAsync(Guid userId, Guid companyId, string permission,

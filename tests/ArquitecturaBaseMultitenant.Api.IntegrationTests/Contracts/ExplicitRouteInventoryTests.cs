@@ -63,6 +63,7 @@ public sealed class ExplicitRouteInventoryTests(ApiFactory factory)
         "POST /api/companies/{companyid:guid}/members",
         "PUT /api/companies/{companyid:guid}/members/{memberid:guid}/roles",
         "PUT /api/companies/{companyid:guid}/members/{memberid:guid}/status",
+        "GET /api/companies/{companyid:guid}/roles/paged",
         "GET /api/organization/settings/domains",
         "POST /api/organization/settings/domains",
         "POST /api/organization/settings/domains/{domainid:guid}/verify",

@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Roles;
 using ArquitecturaBaseMultitenant.Application.Services.Roles;
+using ArquitecturaBaseMultitenant.Application.UnitTests.Services.Companies;
 using ArquitecturaBaseMultitenant.Application.UnitTests.TestDoubles;
 using ArquitecturaBaseMultitenant.Application.Validation.Roles;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
@@ -19,6 +20,7 @@ public sealed class RoleServiceWriteTests
         var unitOfWork = new FakeUnitOfWork();
         var service = new RoleService(new RoleServiceTests.FakeRoleReader(),
             new RoleServiceTests.FakeRoleRepository(), new RoleServiceTests.FakePermissionService(),
+            new CompanyServiceTests.FakeCompanyReader(),
             fixture.Validator, unitOfWork, fixture.TimeProvider, fixture.Logger);
 
         var result = await service.CreateAsync(new CreateRoleRequest(null, null, null, null, null), Ct);
@@ -35,8 +37,8 @@ public sealed class RoleServiceWriteTests
         var unitOfWork = new FakeUnitOfWork();
         using var fixture = new ServiceFixture<RoleService>(new DeleteRoleRequestValidator());
         var service = new RoleService(new RoleServiceTests.FakeRoleReader(), repository,
-            new RoleServiceTests.FakePermissionService(), fixture.Validator, unitOfWork,
-            fixture.TimeProvider, fixture.Logger);
+            new RoleServiceTests.FakePermissionService(), new CompanyServiceTests.FakeCompanyReader(), fixture.Validator,
+            unitOfWork, fixture.TimeProvider, fixture.Logger);
 
         var result = await service.DeleteAsync(new DeleteRoleRequest(role.Id, 0), Ct);
 
@@ -54,8 +56,8 @@ public sealed class RoleServiceWriteTests
         var repository = new RecordingRoleRepository(role);
         using var fixture = new ServiceFixture<RoleService>(new UpdateRoleRequestValidator());
         var service = new RoleService(new RoleServiceTests.FakeRoleReader { UserCount = 2 }, repository,
-            new RoleServiceTests.FakePermissionService(), fixture.Validator, new FakeUnitOfWork(),
-            fixture.TimeProvider, fixture.Logger);
+            new RoleServiceTests.FakePermissionService(), new CompanyServiceTests.FakeCompanyReader(), fixture.Validator,
+            new FakeUnitOfWork(), fixture.TimeProvider, fixture.Logger);
 
         var moved = await service.UpdateAsync(new UpdateRoleRequest(role.Id, "Lectores", null,
             RoleScope.SpecificCompany, Guid.CreateVersion7(), [Permissions.Company.Members.Read], 0), Ct);
@@ -79,8 +81,8 @@ public sealed class RoleServiceWriteTests
             [Permissions.Company.Members.Read]).Value;
         using var fixture = new ServiceFixture<RoleService>(new UpdateRoleRequestValidator());
         var service = new RoleService(new RoleServiceTests.FakeRoleReader(), new RecordingRoleRepository(role),
-            new RoleServiceTests.FakePermissionService(), fixture.Validator, new FakeUnitOfWork(),
-            fixture.TimeProvider, fixture.Logger);
+            new RoleServiceTests.FakePermissionService(), new CompanyServiceTests.FakeCompanyReader(), fixture.Validator,
+            new FakeUnitOfWork(), fixture.TimeProvider, fixture.Logger);
 
         var result = await service.UpdateAsync(new UpdateRoleRequest(role.Id, "Lectores", null,
             RoleScope.AnyCompany, null, [Permissions.Company.Members.Read], 0), Ct);

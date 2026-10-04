@@ -7,13 +7,14 @@ using ArquitecturaBaseMultitenant.Application.Models.Roles;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Roles;
 
 /// <summary>Administra roles tenant-scoped; cada escritura valida antes y usa una única transacción.</summary>
 internal sealed class RoleService(IRoleReader roles, IRoleRepository repository, IPermissionService permissions,
-    IRequestValidator validator, IUnitOfWork unitOfWork, TimeProvider timeProvider,
+    ICompanyReader companies, IRequestValidator validator, IUnitOfWork unitOfWork, TimeProvider timeProvider,
     ILogger<RoleService> logger) : IRoleService
 {
     public Task<Result<PagedResult<RoleResponse>>> ListAsync(ListRolesRequest request,
@@ -24,6 +25,21 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             var page = await roles.ListAsync(request, cancellationToken);
+            return Result.Success(new PagedResult<RoleResponse>([.. page.Items.Select(ToResponse)],
+                page.Page, page.PageSize, page.TotalCount));
+        });
+    }
+
+    public Task<Result<PagedResult<RoleResponse>>> ListForCompanyAsync(Guid companyId, ListRolesRequest request,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        return OperationLog.RunAsync(logger, timeProvider, "ListCompanyRoles", async () =>
+        {
+            var filtered = request with { Scope = null, CompanyId = companyId };
+            if (await validator.ValidateAsync(filtered, cancellationToken) is { } invalid) return invalid;
+            if (await companies.FindByIdAsync(companyId, cancellationToken) is null) return CompanyErrors.NotFound;
+            var page = await roles.ListAsync(filtered, cancellationToken);
             return Result.Success(new PagedResult<RoleResponse>([.. page.Items.Select(ToResponse)],
                 page.Page, page.PageSize, page.TotalCount));
         });

@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Roles;
 using ArquitecturaBaseMultitenant.Application.Services.Roles;
+using ArquitecturaBaseMultitenant.Application.UnitTests.Services.Companies;
 using ArquitecturaBaseMultitenant.Application.UnitTests.TestDoubles;
 using ArquitecturaBaseMultitenant.Application.Validation.Roles;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
@@ -64,8 +65,8 @@ public sealed class RoleServiceTests
     }
 
     private static RoleService Create(FakeRoleReader reader, ServiceFixture<RoleService> fixture) =>
-        new(reader, new FakeRoleRepository(), new FakePermissionService(), fixture.Validator,
-            new FakeUnitOfWork(), fixture.TimeProvider, fixture.Logger);
+        new(reader, new FakeRoleRepository(), new FakePermissionService(), new CompanyServiceTests.FakeCompanyReader(),
+            fixture.Validator, new FakeUnitOfWork(), fixture.TimeProvider, fixture.Logger);
 
     internal sealed class FakeRoleReader : IRoleReader
     {
@@ -107,6 +108,9 @@ public sealed class RoleServiceTests
             Task.FromResult<IReadOnlyList<string>>([]);
         public Task<IReadOnlyList<string>> GetCompanyPermissionsAsync(Guid userId, Guid companyId, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<string>>([]);
+        public Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> GetPermissionsByCompanyAsync(Guid userId,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, IReadOnlyList<string>>>(new Dictionary<Guid, IReadOnlyList<string>>());
         public Task<bool> HasPermissionAsync(Guid userId, string permission, CancellationToken cancellationToken) => Task.FromResult(false);
         public Task<bool> HasCompanyPermissionAsync(Guid userId, Guid companyId, string permission, CancellationToken cancellationToken) =>
             Task.FromResult(false);

@@ -34,13 +34,17 @@ internal sealed class ProfileSnapshotBuilder(IUserRepository users, IUserTenantA
         var currencyCode = await preferences.FindCurrencyCodeAsync(account.Culture, mayReadSettings, cancellationToken);
         var methods = await loginMethods.ListByUserIdAsync(userId, cancellationToken);
         var hasPersonalMethod = await availability.HasPersonalBackupAsync(userId, methods, cancellationToken);
-        IReadOnlyList<string> organizationPermissions = access == Access.Business && mayReadSettings
+        var readsPermissions = access == Access.Business && mayReadSettings;
+        IReadOnlyList<string> organizationPermissions = readsPermissions
             ? await permissions.GetOrganizationPermissionsAsync(userId, cancellationToken)
             : [];
+        var companyPermissions = readsPermissions
+            ? await permissions.GetPermissionsByCompanyAsync(userId, cancellationToken)
+            : new Dictionary<Guid, IReadOnlyList<string>>();
 
         return new MeResponse(account.Id, account.DisplayName, account.PrimaryEmail, access,
             activeTenantId, personalSpace, organizations,
-            new EffectivePermissions(organizationPermissions, new Dictionary<Guid, IReadOnlyList<string>>()),
+            new EffectivePermissions(organizationPermissions, companyPermissions),
             account.Culture, account.TimeZoneId, currencyCode,
             mayReadSettings ? await features.ListEnabledAsync(cancellationToken) : [])
         {
