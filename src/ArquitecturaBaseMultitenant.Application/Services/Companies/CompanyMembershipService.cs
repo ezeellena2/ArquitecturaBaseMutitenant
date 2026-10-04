@@ -18,6 +18,7 @@ internal sealed class CompanyMembershipService(
     ICompanyReader companies,
     CompanyMembershipWriter writer,
     IRequestValidator validator,
+    IUnitOfWork unitOfWork,
     TimeProvider timeProvider,
     ILogger<CompanyMembershipService> logger) : ICompanyMembershipService
 {
@@ -54,7 +55,8 @@ internal sealed class CompanyMembershipService(
         return OperationLog.RunAsync(logger, timeProvider, "AddCompanyMember", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            return await writer.AddAsync(request, cancellationToken);
+            return await unitOfWork.ExecuteInTransactionAsync(ct => writer.AddAsync(request, ct),
+                CommitPolicy.OnSuccess, cancellationToken);
         });
     }
 
@@ -65,7 +67,8 @@ internal sealed class CompanyMembershipService(
         return OperationLog.RunAsync(logger, timeProvider, "UpdateCompanyMemberRoles", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            return await writer.UpdateRolesAsync(request, cancellationToken);
+            return await unitOfWork.ExecuteInTransactionAsync(ct => writer.UpdateRolesAsync(request, ct),
+                CommitPolicy.OnSuccess, cancellationToken);
         });
     }
 
@@ -76,7 +79,8 @@ internal sealed class CompanyMembershipService(
         return OperationLog.RunAsync(logger, timeProvider, "ChangeCompanyMemberStatus", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            return await writer.ChangeStatusAsync(request, cancellationToken);
+            return await unitOfWork.ExecuteInTransactionAsync(ct => writer.ChangeStatusAsync(request, ct),
+                CommitPolicy.OnSuccess, cancellationToken);
         });
     }
 

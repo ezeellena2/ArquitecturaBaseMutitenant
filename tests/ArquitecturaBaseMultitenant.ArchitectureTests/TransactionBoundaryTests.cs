@@ -26,8 +26,6 @@ public sealed class TransactionBoundaryTests
         BusinessOrganizationCreator,
         "ArquitecturaBaseMultitenant.Application.Services.Auth.BusinessSignupCodeFlow",
         "ArquitecturaBaseMultitenant.Application.Services.Auth.BusinessSignupTransactionRunner",
-        "ArquitecturaBaseMultitenant.Application.Services.Companies.CompanyCreator",
-        "ArquitecturaBaseMultitenant.Application.Services.Companies.CompanyMembershipWriter",
         "ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings.OrganizationDomainRegistrar",
         "ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings.OrganizationSettingsUpdater",
         "ArquitecturaBaseMultitenant.Application.Services.PublicSite.PublicPageEditor",

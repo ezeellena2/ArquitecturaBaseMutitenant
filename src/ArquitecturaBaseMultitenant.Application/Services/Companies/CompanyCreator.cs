@@ -6,7 +6,9 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Companies;
 
-/// <summary>Guarda una empresa nueva junto con su primera membresía y rol administrador.</summary>
+/// <summary>
+/// Agrega una empresa nueva junto con su primera membresía y rol administrador, dentro de la transacción del servicio.
+/// </summary>
 internal sealed class CompanyCreator(
     ICompanyReader reader,
     ICompanyRepository companies,
@@ -14,14 +16,9 @@ internal sealed class CompanyCreator(
     IMemberRepository members,
     IRoleRepository roles,
     IRoleAssignmentRepository assignments,
-    ICurrentUser currentUser,
-    IUnitOfWork unitOfWork)
+    ICurrentUser currentUser)
 {
-    public Task<Result<Guid>> CreateAsync(Company company, CancellationToken cancellationToken) =>
-        unitOfWork.ExecuteInTransactionAsync(ct => CreateCoreAsync(company, ct),
-            CommitPolicy.OnSuccess, cancellationToken);
-
-    private async Task<Result<Guid>> CreateCoreAsync(Company company, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> CreateAsync(Company company, CancellationToken cancellationToken)
     {
         if (company.TaxId is { } taxId && await reader.ExistsTaxIdAsync(taxId.Country, taxId.Type,
                 taxId.Number, excludedCompanyId: null, cancellationToken))

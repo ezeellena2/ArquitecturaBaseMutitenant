@@ -102,7 +102,7 @@ public sealed class CompanyServiceTests
         var service = new CompanyService(reader, companyRepository,
             new CompanyCreator(reader, companyRepository, companyMembershipRepository,
                 new FakeMemberRepository { Member = member }, new FakeRoleRepository { Role = companyAdminRole },
-                assignmentRepository, new IdentifiedCurrentUser(userId), unitOfWork),
+                assignmentRepository, new IdentifiedCurrentUser(userId)),
             CreateReferenceDataResolver(), fixture.Validator, unitOfWork, fixture.TimeProvider, fixture.Logger);
 
         var result = await service.CreateAsync(new CreateCompanyRequest("Sucursal Centro", null,
@@ -156,7 +156,7 @@ public sealed class CompanyServiceTests
         var service = new CompanyService(reader, companyRepository,
             new CompanyCreator(reader, companyRepository, new FakeCompanyMembershipRepository(),
                 new FakeMemberRepository { Member = member }, new FakeRoleRepository(),
-                new FakeRoleAssignmentRepository(), new IdentifiedCurrentUser(userId), unitOfWork),
+                new FakeRoleAssignmentRepository(), new IdentifiedCurrentUser(userId)),
             CreateReferenceDataResolver(), fixture.Validator, unitOfWork, fixture.TimeProvider, fixture.Logger);
 
         var result = await service.CreateAsync(new CreateCompanyRequest("Sucursal", null,
@@ -225,7 +225,7 @@ public sealed class CompanyServiceTests
         var service = new CompanyService(reader, companyRepository,
             new CompanyCreator(reader, companyRepository, new FakeCompanyMembershipRepository(),
                 new FakeMemberRepository { Member = member }, new FakeRoleRepository(),
-                new FakeRoleAssignmentRepository(), new IdentifiedCurrentUser(userId), unitOfWork),
+                new FakeRoleAssignmentRepository(), new IdentifiedCurrentUser(userId)),
             CreateReferenceDataResolver(culture), fixture.Validator, unitOfWork, fixture.TimeProvider, fixture.Logger);
 
         var result = await service.CreateAsync(new CreateCompanyRequest("Delta Norte S.A.", taxIdNumber,
@@ -241,7 +241,7 @@ public sealed class CompanyServiceTests
         return new CompanyService(reader, repository,
             new CompanyCreator(reader, repository, new FakeCompanyMembershipRepository(),
                 new FakeMemberRepository(), new FakeRoleRepository(), new FakeRoleAssignmentRepository(),
-                new FakeCurrentUser(), transaction),
+                new FakeCurrentUser()),
             CreateReferenceDataResolver(culture), fixture.Validator, transaction, fixture.TimeProvider, fixture.Logger);
     }
 

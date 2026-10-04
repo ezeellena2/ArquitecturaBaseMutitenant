@@ -4,11 +4,10 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Companies;
 
-/// <summary>Valida roles de empresa y sincroniza sus asignaciones sin tocar otros alcances.</summary>
+/// <summary>Valida roles de empresa y arma sus asignaciones sin tocar otros alcances.</summary>
 internal sealed class CompanyMembershipRoleManager(
     IRoleRepository roles,
-    IRoleReader roleReader,
-    IRoleAssignmentRepository assignments)
+    IRoleReader roleReader)
 {
     public async Task<Result<Guid[]>> ValidateRoleIdsAsync(Guid companyId, Guid[] roleIds,
         CancellationToken cancellationToken)
@@ -46,14 +45,4 @@ internal sealed class CompanyMembershipRoleManager(
 
         return result.ToArray();
     }
-
-    public Task<Role?> GetByNameAsync(string name, CancellationToken cancellationToken) =>
-        roles.GetByNameAsync(name, cancellationToken);
-
-    public Task<IReadOnlyList<RoleAssignment>> ListForMemberAsync(Guid memberId,
-        CancellationToken cancellationToken) => assignments.ListForMemberAsync(memberId, cancellationToken);
-
-    public void Add(RoleAssignment assignment) => assignments.Add(assignment);
-
-    public void Remove(RoleAssignment assignment) => assignments.Remove(assignment);
 }

@@ -70,7 +70,8 @@ internal sealed class CompanyService(
             if (created.IsFailure) return created.Error;
             try
             {
-                return await creator.CreateAsync(created.Value, cancellationToken);
+                return await unitOfWork.ExecuteInTransactionAsync(ct => creator.CreateAsync(created.Value, ct),
+                    CommitPolicy.OnSuccess, cancellationToken);
             }
             catch (UniqueConstraintViolationException exception)
                 when (exception.ConstraintName == TaxIdUniqueConstraint)
