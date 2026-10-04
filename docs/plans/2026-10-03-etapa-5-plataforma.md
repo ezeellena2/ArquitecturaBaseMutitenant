@@ -61,7 +61,7 @@ Si Visual Studio mantiene bloqueados bin/obj, usar `-p:ArtifactsPath=<directorio
 | Borde HTTP | `Api/Controllers/Platform/` y `Api/Contracts/Platform/`; controllers separados por área; recuperación pública en `Api/Controllers/Auth/AccountRecoveryController.cs` con AllowAnonymous |
 | Integraciones | `Infrastructure/Features/{TenantFeatureFilter,FeatureService,DisabledFeatureHandler}.cs`, registro DI; recuperación/cambios globales encolan por los puertos existentes de correo y avisos de cuenta |
 | Front | `src/areas/platform/{tenants,accounts,recoveries,legal,audit,settings}/{api,pages}/`; cuenta incluye operadores. Recuperación pública en `src/areas/public/auth/pages/RecoverAccountPage.tsx` |
-| Marco y módulos | `src/layouts/navigation/{types,platform}.ts`, PrivateLayoutFrame, Sidebar, AdminPanel; `src/auth/{useFeature,Feature,FeatureRoute}.tsx`, rutas y filtrado de navegación |
+| Marco y módulos | `src/layouts/navigation/{types,platform}.ts`, PrivateLayoutFrame, Sidebar, AdminPanel; `feature` en el manifiesto de rutas y `visibleNavigation`, con `hasFeature` de `usePermissions` (consolidación F5) |
 | Textos y docs | resources es/en del back; namespaces `platform*` es/en del front; `docs/features/plataforma.md`; docs identidad/organizaciones/guías/reglas realmente afectadas; punteros AGENTS/CLAUDE de carpetas nuevas |
 
 Rutas definitivas que se implementan y prueban (no sustituir las ya fijadas por el maestro):
@@ -192,7 +192,7 @@ Avance backend: FeatureGate rojo por tipos ausentes y administración rojo por r
 - [x] Agregar paquete central y registro Microsoft.FeatureManagement.AspNetCore, filtro Tenant/caché t:{id}:features, DisabledFeatureHandler; persistir origen/vencimiento/version, motivo y SecurityEvent al cambiar desde Plataforma.
 - [x] Catálogo productivo inicialmente vacío: núcleo siempre disponible, sin módulos de ejemplo ni WhatsApp. Gates de recorrido viven en TestFeatures; el framework soporta catálogo de nuevos módulos reales siguiendo guía.
 - [x] Back: `features` de `/api/me` siempre presente, lista vacía cuando corresponde. La conducta ya estaba en `2e5a06b` (FeatureGateTests: Business vacío, habilitado y vencido, Consumer solo lo suyo; OpenApiContractTests lee ambos repos). Faltaba evidencia de Plataforma y de un espacio no disponible: `ProfileServiceTests` suma organización suspendida o cerrada, miembro inactivo y acceso Platform, todos con `[]` y sin consultar `IFeatureService`. Rojo de control en un worktree aislado, quitando la guarda `mayReadSettings`: 4 de 18 fallidos; verde **18/18**. Commit `test(modulos): /api/me sin módulos en Plataforma ni en espacios no disponibles`.
-- [ ] Front, en T19–T20 o el bloque 5 de la consolidación (manifiesto de rutas): useFeature/Feature/FeatureRoute y `feature` en rutas/navegación.
+- [x] Front: lo trajo la consolidación (F5, front `5ee936c` y `5fcf5c3`). `feature` va en el manifiesto de rutas; `RequirePermission` responde como un 404 si el módulo está apagado (`RequirePermission.test.tsx`); el menú lo filtra `visibleNavigation` con `hasFeature` de `usePermissions`. No hay `useFeature`, `<Feature>` ni `FeatureRoute`.
 
 ### T09 · Entrada privada y moderación de página
 
