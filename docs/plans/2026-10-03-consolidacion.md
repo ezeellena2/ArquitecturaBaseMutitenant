@@ -367,6 +367,17 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
   - las hojas del teléfono (la cruz y el alto completo);
   - los casilleros del código y «Verificar», las casillas bloqueadas y el tirador de los cuadros de texto;
   - el diálogo de baja con su cruz y el «Motivo» en el teléfono.
+- **Lo que fijó el lienzo v104** (front `7c60d17`, aprobado por el usuario). Los tableros pasaron a los criterios, y la app ya sigue casi todo. Queda para R2c y R3:
+  - sin ☰ en las pantallas con sesión, también en Organización: queda la flecha redonda de 28 en el borde;
+  - el avatar con degradé (`--marca` a `--marca-2`, 135°) en todos lados, también en el teléfono;
+  - el buscador de las listas, de 36 × 360, con la lupa de 16 a 12 del borde, el texto a 36 y letra de 13;
+  - «Dirección de la página» del registro, de 44 con radio 10;
+  - los mensajes de ingreso y registro (`.msj`) con triángulo en los de atención y círculo en los de error, en `currentColor`;
+  - Invitación «Aceptada»: el cartel sin botón;
+  - «Sumar» de «Sumar empresa» nunca apagado: sin empresa, el campo queda en rojo con «Elegí una empresa.» y se limpia al elegir una. Lo mismo vale para «Agregar miembro»;
+  - «Todos» a la derecha de «Roles en la empresa» en M-Usuario-Empresa;
+  - los datos de las capturas con los CUIT del lienzo, que pasan el dígito verificador: 30-71234567-1, 30-71555444-1 y 30-12345678-1;
+  - para las pantallas de Plataforma (Etapa 5): el marco del criterio en sus ocho tableros, y WhatsApp como grupo cerrado de Administración que lleva a Plat-WA-Numero.
 - [ ] **R3 · Lo de cada pantalla:**
   - la segunda línea de las filas (v92) y el ⋮ de «Cómo entrás» (v96);
   - el paginador «1 de 1» y las pestañas de Empresa;
