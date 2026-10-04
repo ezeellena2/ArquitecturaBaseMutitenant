@@ -23,6 +23,7 @@ using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
@@ -525,6 +526,9 @@ public sealed class InvitationAcceptanceTests(ApiFactory factory)
 
     private async Task<Issued> IssueAsync(string recipientKind)
     {
+        // Primero la seed: así los documentos legales de prueba de abajo nunca reemplazan a los reales, que leen
+        // MeTests y LegalAcceptanceTests cuando corren después en la misma base.
+        await factory.Services.SeedDatabaseAsync(Ct);
         var email = Email.Create($"accept-{Guid.NewGuid():N}@example.test").Value;
         Guid? recipient = recipientKind == "none" ? null : await CreateAccountAsync(email, recipientKind == "google");
         var inviter = await CreateAccountAsync(Email.Create($"inviter-{Guid.NewGuid():N}@example.test").Value);
