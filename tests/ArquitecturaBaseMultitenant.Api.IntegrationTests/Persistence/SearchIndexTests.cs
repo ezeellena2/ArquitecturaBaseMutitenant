@@ -12,7 +12,8 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 /// <summary>
 /// Cada columna que busca un reader con <c>ApplySearch</c> tiene su índice GIN trigram sobre
 /// <c>f_unaccent(lower(columna))</c>, la misma expresión de la búsqueda (paginado-y-busqueda.md). Las columnas salen
-/// del código de los readers; las que se buscan dentro de una subconsulta van en <see cref="Indirect"/>.
+/// del código de los readers; las que se buscan dentro de una subconsulta van en <see cref="Indirect"/>, y las que se
+/// buscan con SQL, en <see cref="SqlSearches"/>.
 /// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class SearchIndexTests(ApiFactory factory)
@@ -28,6 +29,18 @@ public sealed class SearchIndexTests(ApiFactory factory)
         new("identity", "AspNetUsers", "Email"),
         new("platform", "PendingTenantOwners", "Address"),
     ];
+
+    // OrganizationAuditReader busca con SQL en el texto de los cambios: "Changes" es jsonb y ApplySearch no lo pasa a
+    // texto. Usa la misma expresión de ApplySearch, sobre "Changes"::text, y cada columna tiene su índice trigram.
+    private static readonly SqlSearch[] SqlSearches =
+    [
+        new("OrganizationAuditReader.cs", new("tenant", "AuditEntries", "EntityType"),
+            "public.f_unaccent(lower(\"EntityType\")) LIKE public.f_unaccent(lower({pattern}))"),
+        new("OrganizationAuditReader.cs", new("tenant", "AuditEntries", "Changes"),
+            "public.f_unaccent(lower(\"Changes\"::text)) LIKE public.f_unaccent(lower({pattern}))"),
+    ];
+
+    private static readonly Regex SqlLike = new(@"\bI?LIKE\b", RegexOptions.CultureInvariant);
 
     private static readonly Regex Source = new(@"context\.(?<set>\w+)", RegexOptions.CultureInvariant);
 
@@ -58,6 +71,34 @@ public sealed class SearchIndexTests(ApiFactory factory)
             .Select(column => $"{column.Schema}.{column.Table}.{column.Column}"));
     }
 
+    [Fact]
+    public async Task A_search_written_in_sql_uses_the_search_expression_and_has_its_trigram_index()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var sources = Directory.EnumerateFiles(ReadersDirectory(), "*.cs", SearchOption.AllDirectories)
+            .ToDictionary(path => Path.GetFileName(path), File.ReadAllText, StringComparer.Ordinal);
+
+        // Un reader que busca con LIKE en SQL está en la lista, con la expresión de ApplySearch y no con ILIKE.
+        Assert.Equal(SqlSearches.Select(search => search.File).Distinct().Order(StringComparer.Ordinal),
+            sources.Where(source => source.Value.Contains("FromSql", StringComparison.Ordinal)
+                    && SqlLike.IsMatch(source.Value))
+                .Select(source => source.Key).Order(StringComparer.Ordinal));
+        Assert.Empty(SqlSearches.Where(search => !sources[search.File].Contains(search.Expression, StringComparison.Ordinal))
+            .Select(search => $"{search.File}: {search.Expression}"));
+        Assert.DoesNotContain(SqlSearches.Select(search => search.File).Distinct(),
+            file => sources[file].Contains("ILIKE", StringComparison.OrdinalIgnoreCase));
+
+        var indexes = await TrigramIndexesAsync(cancellationToken);
+        Assert.Empty(SqlSearches.Select(search => search.Column)
+            .Where(column => !indexes.Any(index => index.Schema == column.Schema && index.Table == column.Table
+                && index.Definition.Contains("f_unaccent(lower(", StringComparison.Ordinal)
+                && index.Definition.Contains($"\"{column.Column}\"", StringComparison.Ordinal)))
+            .Select(column => $"{column.Schema}.{column.Table}.{column.Column}"));
+    }
+
+    private static string ReadersDirectory() => Path.Combine(FindRepositoryRoot(), "src",
+        "ArquitecturaBaseMultitenant.Infrastructure", "Persistence", "Readers");
+
     private static SearchedColumn Column(IModel model, SearchField field)
     {
         var set = typeof(ApplicationDbContext).GetProperty(field.Set!,
@@ -73,9 +114,7 @@ public sealed class SearchIndexTests(ApiFactory factory)
     // Cada campo simple de ApplySearch (x => x.Columna o EF.Property) con el DbSet de su sentencia, si lo hay.
     private static IEnumerable<SearchField> ReaderSearchFields()
     {
-        var readers = Path.Combine(FindRepositoryRoot(), "src", "ArquitecturaBaseMultitenant.Infrastructure",
-            "Persistence", "Readers");
-        foreach (var path in Directory.EnumerateFiles(readers, "*.cs", SearchOption.AllDirectories))
+        foreach (var path in Directory.EnumerateFiles(ReadersDirectory(), "*.cs", SearchOption.AllDirectories))
         {
             var source = File.ReadAllText(path);
             for (var call = source.IndexOf(ApplySearchCall, StringComparison.Ordinal); call >= 0;
@@ -150,4 +189,6 @@ public sealed class SearchIndexTests(ApiFactory factory)
     private sealed record SearchField(string File, string? Set, string Property);
 
     private sealed record SearchedColumn(string Schema, string Table, string Column);
+
+    private sealed record SqlSearch(string File, SearchedColumn Column, string Expression);
 }

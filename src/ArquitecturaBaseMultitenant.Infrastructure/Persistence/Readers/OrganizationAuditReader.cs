@@ -220,15 +220,16 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
         IQueryable<AuditEntry> entries;
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
-            var pattern = $"%{EscapeLike(request.Search.Trim())}%";
-            var matchingActorIds = await context.Users.AsNoTracking()
-                .Where(user => user.DisplayName != null && EF.Functions.ILike(user.DisplayName, pattern, "\\"))
+            var matchingActorIds = await context.Users.AsNoTracking().ApplySearch(request.Search, user => user.DisplayName)
                 .Select(user => user.Id).ToArrayAsync(cancellationToken);
+            // La expresión de ApplySearch, con sus índices trigram (IX_AuditEntries_Search_*): "Changes" es jsonb y
+            // ApplySearch no lo pasa a texto. Lo controla SearchIndexTests.
+            var pattern = $"%{EscapeLike(request.Search.Trim())}%";
             entries = context.Set<AuditEntry>().FromSqlInterpolated($"""
                 SELECT * FROM tenant."AuditEntries"
                 WHERE "TenantId" = {tenantId}
-                  AND ("EntityType" ILIKE {pattern} ESCAPE E'\\'
-                    OR "Changes"::text ILIKE {pattern} ESCAPE E'\\'
+                  AND (public.f_unaccent(lower("EntityType")) LIKE public.f_unaccent(lower({pattern})) ESCAPE E'\\'
+                    OR public.f_unaccent(lower("Changes"::text)) LIKE public.f_unaccent(lower({pattern})) ESCAPE E'\\'
                     OR "ActorId" = ANY ({matchingActorIds}))
                 """).AsNoTracking();
         }
