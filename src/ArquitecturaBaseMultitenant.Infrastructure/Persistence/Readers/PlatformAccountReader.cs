@@ -110,14 +110,20 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
             query = query.Where(account => account.IsOperator == isOperator);
         }
 
-        // Nombre, correo principal y cualquier correo o teléfono de ingreso, con la misma búsqueda sin acentos
-        // y con comodines escapados; nunca se registra el texto buscado.
+        // Nombre y métodos de ingreso (correo, teléfono y el correo de contacto de Google), con la misma búsqueda sin
+        // acentos y con comodines escapados. La copia ApplicationUser.Email no se usa para buscar (emails.md); nunca se
+        // registra el texto buscado.
         if (string.IsNullOrWhiteSpace(request.Search)) return query;
-        var byProfile = context.Users.AsNoTracking()
-            .ApplySearch(request.Search, user => user.DisplayName, user => user.Email).Select(user => user.Id);
+        var byName = context.Users.AsNoTracking()
+            .ApplySearch(request.Search, user => user.DisplayName).Select(user => user.Id);
         var byMethod = context.LoginMethods.AsNoTracking().Where(method => method.Type != LoginMethodType.Google)
             .ApplySearch(request.Search, method => method.Value).Select(method => method.UserId);
-        return query.Where(account => byProfile.Contains(account.Id) || byMethod.Contains(account.Id));
+        var byGoogleContact = context.LoginMethods.AsNoTracking()
+            .Where(method => method.Type == LoginMethodType.Google && method.ContactEmail != null)
+            .ApplySearch(request.Search, method => EF.Property<string>(method, nameof(LoginMethod.ContactEmail)))
+            .Select(method => method.UserId);
+        return query.Where(account => byName.Contains(account.Id) || byMethod.Contains(account.Id)
+            || byGoogleContact.Contains(account.Id));
     }
 
     private IQueryable<PlatformAccountRow> Rows(IQueryable<AccountProjection> query) =>

@@ -93,6 +93,9 @@ public sealed class PlatformAccountAdministrationTests(ApiFactory factory)
         Assert.Equal([seeded.Active], Ids(await GetAsync(client, "paged?search=alvaro")));
         Assert.Equal([seeded.ManagedActive], Ids(await GetAsync(client, "paged?search=" + Uri.EscapeDataString(seeded.SecondaryFragment))));
         Assert.Empty(Ids(await GetAsync(client, "paged?search=%25")));
+        // Se busca por los métodos de ingreso: la copia Users.Email no encuentra nada (emails.md).
+        Assert.Empty(Ids(await GetAsync(client, "paged?search=copia-vieja-" + seeded.Prefix)));
+        Assert.Equal([seeded.Suspended], Ids(await GetAsync(client, "paged?search=beatriz.google")));
 
         var firstPage = await GetAsync(client, "paged?page=1&pageSize=10&kind=Person");
         Assert.Equal(8, firstPage.GetProperty("totalCount").GetInt32());
@@ -224,10 +227,14 @@ public sealed class PlatformAccountAdministrationTests(ApiFactory factory)
             Method(managedActive.Id, secondary, false, now, null),
             Method(managedOnly.Id, "ignacio@" + prefix + ".test", true, now, activeOrganization.Id),
             Method(operatorUser.Id, "hugo@" + prefix + ".test", true, now, null),
+            LoginMethod.CreateGoogle(suspended.Id, "google-" + prefix,
+                Email.Create("beatriz.google@" + prefix + ".test").Value),
         };
         // Users.Email es la copia del método principal, como la mantiene la cuenta.
         foreach (var user in new[] { active, suspended, pending, recovery, suspendedWithoutMethods, managedActive, managedOnly, operatorUser })
             user.Email = methods.Single(method => method.UserId == user.Id && method.IsPrimary).Value;
+        // Una copia que ya no coincide con ningún método.
+        suspendedWithoutMethods.Email = "copia-vieja-" + prefix + "@example.test";
         var lastSignIn = now.AddMinutes(-55);
         await work.ExecuteInTransactionAsync(_ =>
         {
