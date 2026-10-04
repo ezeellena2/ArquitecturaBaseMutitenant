@@ -188,7 +188,8 @@ Avance backend: FeatureGate rojo por tipos ausentes y administración rojo por r
 - [x] Rojo: apagado 404 ProblemDetails, prendido 200; emergencia global gana; Trial vence en límite exacto; caché invalida; alcance Consumer/Business no se mezcla.
 - [x] Agregar paquete central y registro Microsoft.FeatureManagement.AspNetCore, filtro Tenant/caché t:{id}:features, DisabledFeatureHandler; persistir origen/vencimiento/version, motivo y SecurityEvent al cambiar desde Plataforma.
 - [x] Catálogo productivo inicialmente vacío: núcleo siempre disponible, sin módulos de ejemplo ni WhatsApp. Gates de recorrido viven en TestFeatures; el framework soporta catálogo de nuevos módulos reales siguiendo guía.
-- [ ] `features` de `/api/me` siempre presente, lista vacía cuando corresponda; front useFeature/Feature/FeatureRoute y `feature` en rutas/navegación. Contrato lee ambos repos. Commit `feat(modulos): habilitar funcionalidades por organización`.
+- [x] Back: `features` de `/api/me` siempre presente, lista vacía cuando corresponde. La conducta ya estaba en `2e5a06b` (FeatureGateTests: Business vacío, habilitado y vencido, Consumer solo lo suyo; OpenApiContractTests lee ambos repos). Faltaba evidencia de Plataforma y de un espacio no disponible: `ProfileServiceTests` suma organización suspendida o cerrada, miembro inactivo y acceso Platform, todos con `[]` y sin consultar `IFeatureService`. Rojo de control en un worktree aislado, quitando la guarda `mayReadSettings`: 4 de 18 fallidos; verde **18/18**. Commit `test(modulos): /api/me sin módulos en Plataforma ni en espacios no disponibles`.
+- [ ] Front, en T19–T20 o el bloque 5 de la consolidación (manifiesto de rutas): useFeature/Feature/FeatureRoute y `feature` en rutas/navegación.
 
 ### T09 · Entrada privada y moderación de página
 
@@ -352,6 +353,8 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 13. Moderación utiliza la página de E6 y su versión, sin copiar contenido. Permitir publicación retira el bloqueo y deja la decisión de publicar a la organización. RLS permite lo publicado y oculta el borrador fuera del alcance. La consulta privada exige tenants.manage, conforme al catálogo de E5, y audita su motivo traducido antes de Enter.
 14. Las rutas de dominio conservan `{domain}` como nombre normalizado, conforme al plan maestro. E6 y Plataforma comparten la preparación DNS y la escritura Stage, que no abre otra transacción; cada servicio de entrada abre la suya y confirma sus propios eventos (ADR 0039), así que el verificador y el removedor de E6 dejan de recibir `IUnitOfWork` ya en T10, adelantando esa parte del bloque 3 de la consolidación. La versión vista se verifica antes del DNS y de nuevo mediante xmin al guardar. El retiro conserva los vínculos ManagedByTenantId aprobados. El DELETE recibe motivo y versión en el cuerpo, porque el motivo es texto libre y no va en la URL.
 15. Los avisos administrativos solo cubren rechazo y moderación. Se seleccionan Dueños desde el índice global con identidad Active; el principal debe ser verificado, tener canal y no ser administrado por otra organización. Si no cumple, se reutiliza el resolver de métodos disponibles con el mismo filtro de organización. El contrato del aviso no acepta el motivo interno.
+16. Decisión del usuario del 03/10, para T14: «Recuperar mi cuenta» no revela si el correo nuevo ya es de otra cuenta. La respuesta pública es la misma; a ese correo le llega un aviso de que ya tiene una cuenta en lugar de un código, así que el pedido no avanza. El texto del tablero «Ese correo ya lo usa otra cuenta.» lo ajusta la conversación de diseño.
+17. Decisión del usuario del 03/10, para T16: un operador nunca entra como persona ni a una organización. Con su correo solo se entra a Plataforma: la conexión rechaza los accesos Consumer y Business de una cuenta operadora sin crearle Personal, e invitar a un operador a una organización se rechaza. Un Personal previo queda sin uso y no se borra; para usar el producto como persona o empresa se usa otro correo.
 
 ## Registro de resultados
 
@@ -377,6 +380,7 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 | R06 (parcial) | Ingreso por .eml y /api/me 200; rojo por pantalla Organizaciones ausente, 94,326 s. Falta operador reducido y verde en T21–T23 | `0a36f5f` | `a0f094c` (incluido por otra conversación) |
 | R07 | Propuesta archivada; fuente exclusiva lienzo vigente, sin modificarlo; suite front 751/751 | este seguimiento | `fe4cfbf` |
 | R08 | Comentario E9 de navigation/platform.ts registrado en backlog; sin cambios ejecutables, misma suite 1473/1473 de R01 y revisión del diff | `4ad757c` | — |
-| T10 | Rojo en worktree limpio (404 por 401, inventario) → dominios Plataforma + E6 + inventario + OpenAPI 10/10; arquitectura 10/10; build Api 0 advertencias | commit de esta tarea | — |
+| T10 | Rojo en worktree limpio (404 por 401, inventario) → dominios Plataforma + E6 + inventario + OpenAPI 10/10; arquitectura 10/10; build Api 0 advertencias | `4bb5c35` | — |
+| T08 back | `/api/me.features` vacío en Plataforma y en espacios no disponibles: rojo de control 4/18 → 18/18; front pendiente | commit de esta tarea | — |
 
 No declarar cierre a partir de esta tabla sin completar T25.

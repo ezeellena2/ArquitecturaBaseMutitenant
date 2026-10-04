@@ -156,6 +156,50 @@ public sealed class ProfileServiceTests
         Assert.Equal(0, settings.Reads);
     }
 
+    [Theory]
+    [InlineData(TenantStatus.Active, MemberStatus.Active, true)]
+    [InlineData(TenantStatus.Suspended, MemberStatus.Active, false)]
+    [InlineData(TenantStatus.Closed, MemberStatus.Active, false)]
+    [InlineData(TenantStatus.Active, MemberStatus.Inactive, false)]
+    public async Task Me_lists_features_only_for_an_available_active_business_space(TenantStatus tenantStatus,
+        MemberStatus memberStatus, bool listed)
+    {
+        using var fixture = new ServiceFixture<ProfileService>();
+        var userId = Guid.CreateVersion7();
+        var tenantId = Guid.CreateVersion7();
+        var accesses = new StubAccesses([
+            new(tenantId, TenantKind.Business, "Empresa A", "empresa-a", tenantStatus, memberStatus, null),
+        ]);
+        var features = new StubFeatures(["test-business"]);
+        var service = CreateService(new StubCurrentUser(userId, Access.Business),
+            new FakeTenantContext { TenantId = tenantId, TenantKind = TenantKind.Business },
+            new StubUsers(Account(userId)), accesses, new StubSettings(null), fixture, features: features);
+
+        var result = await service.GetAsync(Ct);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(listed ? ["test-business"] : [], result.Value.Features);
+        Assert.Equal(listed ? 1 : 0, features.Calls);
+    }
+
+    [Fact]
+    public async Task Platform_me_always_has_an_empty_feature_list()
+    {
+        using var fixture = new ServiceFixture<ProfileService>();
+        var userId = Guid.CreateVersion7();
+        var features = new StubFeatures(["test-business"]);
+        var service = CreateService(new StubCurrentUser(userId, Access.Platform), new FakeTenantContext(),
+            new StubUsers(Account(userId) with { IsPlatformOperator = true }), new StubAccesses([]),
+            new StubSettings(null), fixture, features: features);
+
+        var result = await service.GetAsync(Ct);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value.Features);
+        Assert.Empty(result.Value.Features);
+        Assert.Equal(0, features.Calls);
+    }
+
     [Fact]
     public async Task Update_validates_before_transaction_then_writes_once()
     {
@@ -191,12 +235,13 @@ public sealed class ProfileServiceTests
 
     private static ProfileService CreateService(ICurrentUser current, ITenantContext context,
         IUserRepository users, IUserTenantAccessReader accesses, ITenantSettingsReader settings,
-        ServiceFixture<ProfileService> fixture, IUnitOfWork? unitOfWork = null)
+        ServiceFixture<ProfileService> fixture, IUnitOfWork? unitOfWork = null, IFeatureService? features = null)
     {
         var catalog = new JsonReferenceDataCatalog();
         var availability = new LoginMethodAvailability([], new StubGoogle(), new StubMemberships());
         var snapshots = new ProfileSnapshotBuilder(users, accesses, new ProfilePreferences(settings, catalog, catalog), new StubMethods(),
-            availability, new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider), new StubPermissions(), new StubFeatures());
+            availability, new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider), new StubPermissions(),
+            features ?? new StubFeatures());
         return new ProfileService(current, context, snapshots, users, fixture.Validator,
             unitOfWork ?? new FakeUnitOfWork(), fixture.TimeProvider, fixture.Logger);
     }
@@ -277,11 +322,17 @@ public sealed class ProfileServiceTests
     }
 
     private sealed class StubGoogle(bool enabled = false) : IGoogleAvailability { public bool IsEnabled => enabled; }
-    private sealed class StubFeatures : IFeatureService
+    private sealed class StubFeatures(IReadOnlyList<string>? enabled = null) : IFeatureService
     {
+        public int Calls { get; private set; }
+
         public Task<bool> IsEnabledAsync(string key, CancellationToken cancellationToken) => Task.FromResult(false);
-        public Task<IReadOnlyList<string>> ListEnabledAsync(CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<string>>([]);
+
+        public Task<IReadOnlyList<string>> ListEnabledAsync(CancellationToken cancellationToken)
+        {
+            Calls++;
+            return Task.FromResult(enabled ?? []);
+        }
     }
     private sealed class StubMemberships : ILoginMethodMembershipReader
     {
