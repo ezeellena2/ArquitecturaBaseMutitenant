@@ -364,6 +364,64 @@ public sealed class CompaniesTests(ApiFactory factory)
         Assert.Equal(2, (await MembersAsync(adminClient, $"/api/companies/{companyId:D}/members/paged?pageSize=50")).Length);
     }
 
+    // Alcance de un rol: Usuarios y Empresas pasan por la misma regla (RoleAssignment.Check) y responden el mismo
+    // código para el mismo caso.
+    [Fact]
+    public async Task Users_and_companies_refuse_a_role_outside_its_scope_with_the_same_code()
+    {
+        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
+        await OrganizationJourney.StageAsync(factory, owner, "Alcance de los roles", Ct);
+        await AccountJourney.AuthorizeAsync(client, "business", Ct);
+        var companyId = await OrganizationJourney.CreateCompanyAsync(client, "Delta Norte S.A.", Ct);
+        var otherCompanyId = await OrganizationJourney.CreateCompanyAsync(client, "Delta Sur S.A.", Ct);
+        await CreateRoleAsync(client, "Solo lectura Sur", "SpecificCompany", otherCompanyId);
+        using var rolesResponse = await client.GetAsync("/api/roles/paged?page=1&pageSize=50", Ct);
+        using var rolesJson = JsonDocument.Parse(await rolesResponse.Content.ReadAsStringAsync(Ct));
+        var roles = rolesJson.RootElement.GetProperty("items").EnumerateArray().ToArray();
+        var ownerRoleId = roles.Single(role => role.GetProperty("isSystemRole").GetBoolean()
+            && role.GetProperty("scope").GetString() == "Organization").GetProperty("id").GetGuid();
+        var companyAdminRoleId = roles.Single(role => role.GetProperty("isSystemRole").GetBoolean()
+            && role.GetProperty("scope").GetString() == "AnyCompany").GetProperty("id").GetGuid();
+        var otherCompanyRoleId = roles.Single(role => role.GetProperty("name").GetString() == "Solo lectura Sur")
+            .GetProperty("id").GetGuid();
+        var ownerMemberId = Assert.Single(await MembersAsync(client, "/api/users/paged?pageSize=10"))
+            .GetProperty("memberId").GetGuid();
+
+        async Task AssertRefusedAsync(string path, object body, string code)
+        {
+            using var response = await AccountJourney.PostAsync(client, path, body, Ct);
+            var content = await response.Content.ReadAsStringAsync(Ct);
+            Assert.True(response.StatusCode == HttpStatusCode.BadRequest, content);
+            using var problem = JsonDocument.Parse(content);
+            Assert.Equal(code, problem.RootElement.GetProperty("code").GetString());
+        }
+
+        var membersPath = $"/api/companies/{companyId:D}/members";
+        object Invitation(Guid[] organizationRoleIds, Guid[] companyRoleIds) => new
+        {
+            email = $"alcance-{Guid.NewGuid():N}@example.test",
+            roleIds = organizationRoleIds,
+            companies = companyRoleIds.Length == 0
+                ? Array.Empty<object>()
+                : new object[] { new { companyId, roleIds = companyRoleIds } },
+        };
+
+        // Un rol de toda la organización, en una empresa.
+        await AssertRefusedAsync(membersPath, new { memberId = ownerMemberId, roleIds = new[] { ownerRoleId } },
+            "Roles.RoleAssignment.CompanyNotAllowed");
+        await AssertRefusedAsync("/api/users/invitations", Invitation([], [ownerRoleId]),
+            "Roles.RoleAssignment.CompanyNotAllowed");
+        // El rol propio de otra empresa.
+        await AssertRefusedAsync(membersPath, new { memberId = ownerMemberId, roleIds = new[] { otherCompanyRoleId } },
+            "Roles.RoleAssignment.CompanyMismatch");
+        await AssertRefusedAsync("/api/users/invitations", Invitation([], [otherCompanyRoleId]),
+            "Roles.RoleAssignment.CompanyMismatch");
+        // Un rol de empresa entre los de la organización.
+        await AssertRefusedAsync("/api/users/invitations", Invitation([companyAdminRoleId], []),
+            "Roles.RoleAssignment.CompanyRequired");
+    }
+
     private static async Task CreateRoleAsync(HttpClient client, string name, string scope, Guid? companyId)
     {
         using var created = await AccountJourney.PostAsync(client, "/api/roles", new

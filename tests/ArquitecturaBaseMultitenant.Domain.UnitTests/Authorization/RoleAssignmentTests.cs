@@ -4,61 +4,61 @@ namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Authorization;
 
 public sealed class RoleAssignmentTests
 {
-    [Fact]
-    public void Organization_role_is_assigned_without_a_company()
+    private static readonly Guid CompanyA = Guid.CreateVersion7();
+    private static readonly Guid CompanyB = Guid.CreateVersion7();
+
+    /// <summary>La matriz completa de dónde vale un rol: alcance × empresa del rol × dónde se asigna.</summary>
+    public static TheoryData<RoleScope, Guid?, Guid?, string?> Matrix => new()
+    {
+        { RoleScope.Organization, null, null, null },
+        { RoleScope.Organization, null, CompanyA, RoleAssignmentErrors.CompanyNotAllowedCode },
+        { RoleScope.AnyCompany, null, null, RoleAssignmentErrors.CompanyRequiredCode },
+        { RoleScope.AnyCompany, null, CompanyA, null },
+        { RoleScope.AnyCompany, null, CompanyB, null },
+        { RoleScope.SpecificCompany, CompanyA, null, RoleAssignmentErrors.CompanyRequiredCode },
+        { RoleScope.SpecificCompany, CompanyA, CompanyA, null },
+        { RoleScope.SpecificCompany, CompanyA, CompanyB, RoleAssignmentErrors.CompanyMismatchCode },
+    };
+
+    [Theory]
+    [MemberData(nameof(Matrix))]
+    public void Check_answers_where_each_role_scope_can_be_assigned(RoleScope scope, Guid? roleCompanyId,
+        Guid? companyId, string? expectedCode)
+    {
+        Assert.Equal(expectedCode, RoleAssignment.Check(scope, roleCompanyId, companyId)?.Code);
+    }
+
+    [Theory]
+    [MemberData(nameof(Matrix))]
+    public void Assign_follows_the_same_matrix_without_loading_the_role(RoleScope scope, Guid? roleCompanyId,
+        Guid? companyId, string? expectedCode)
     {
         var memberId = Guid.CreateVersion7();
-        var role = Role.Create("Dueño adjunto", null, RoleScope.Organization, null, Permissions.All).Value;
+        var roleId = Guid.CreateVersion7();
 
-        var result = RoleAssignment.Assign(memberId, role, null);
+        var result = RoleAssignment.Assign(memberId, roleId, scope, roleCompanyId, companyId);
+
+        if (expectedCode is not null)
+        {
+            Assert.Equal(expectedCode, result.Error.Code);
+            return;
+        }
 
         Assert.True(result.IsSuccess);
         Assert.Equal(memberId, result.Value.MemberId);
-        Assert.Equal(role.Id, result.Value.RoleId);
-        Assert.Null(result.Value.CompanyId);
+        Assert.Equal(roleId, result.Value.RoleId);
+        Assert.Equal(companyId, result.Value.CompanyId);
     }
 
     [Fact]
-    public void Any_company_role_requires_the_selected_company()
+    public void Assign_takes_the_scope_of_a_created_role()
     {
-        var memberId = Guid.CreateVersion7();
-        var companyId = Guid.CreateVersion7();
-        var role = Role.Create("Administrador", null, RoleScope.AnyCompany, null,
-            [Permissions.Company.Members.Manage]).Value;
-
-        var missingCompany = RoleAssignment.Assign(memberId, role, null);
-        var assigned = RoleAssignment.Assign(memberId, role, companyId);
-
-        Assert.Equal(RoleAssignmentErrors.CompanyRequired, missingCompany.Error);
-        Assert.True(assigned.IsSuccess);
-        Assert.Equal(companyId, assigned.Value.CompanyId);
-    }
-
-    [Fact]
-    public void Specific_company_role_can_only_be_assigned_to_its_company()
-    {
-        var memberId = Guid.CreateVersion7();
-        var companyId = Guid.CreateVersion7();
-        var otherCompanyId = Guid.CreateVersion7();
-        var role = Role.Create("Local", null, RoleScope.SpecificCompany, companyId,
+        var role = Role.Create("Local", null, RoleScope.SpecificCompany, CompanyA,
             [Permissions.Company.Members.Read]).Value;
 
-        var otherCompany = RoleAssignment.Assign(memberId, role, otherCompanyId);
-        var assigned = RoleAssignment.Assign(memberId, role, companyId);
+        var assigned = RoleAssignment.Assign(Guid.CreateVersion7(), role.Id, role.Scope, role.CompanyId, CompanyA);
 
-        Assert.Equal(RoleAssignmentErrors.CompanyMismatch, otherCompany.Error);
-        Assert.True(assigned.IsSuccess);
-        Assert.Equal(companyId, assigned.Value.CompanyId);
-    }
-
-    [Fact]
-    public void Company_assignment_is_rejected_for_an_organization_role()
-    {
-        var memberId = Guid.CreateVersion7();
-        var role = Role.Create("Lectores", null, RoleScope.Organization, null, [Permissions.Roles.Read]).Value;
-
-        var result = RoleAssignment.Assign(memberId, role, Guid.CreateVersion7());
-
-        Assert.Equal(RoleAssignmentErrors.CompanyNotAllowed, result.Error);
+        Assert.Equal(role.Id, assigned.Value.RoleId);
+        Assert.Equal(CompanyA, assigned.Value.CompanyId);
     }
 }

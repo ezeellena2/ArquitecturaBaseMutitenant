@@ -263,7 +263,7 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
             var role = Role.Create("Solo lectura", null, RoleScope.AnyCompany, null,
                 [Permissions.Company.Members.Read]).Value;
             var membership = CompanyMembership.Create(company.Id, member.Id).Value;
-            var assignment = RoleAssignment.Assign(member.Id, role, company.Id).Value;
+            var assignment = RoleAssignment.Assign(member.Id, role.Id, role.Scope, role.CompanyId, company.Id).Value;
             context.AddRange(member, company, role, membership, assignment);
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, Ct);

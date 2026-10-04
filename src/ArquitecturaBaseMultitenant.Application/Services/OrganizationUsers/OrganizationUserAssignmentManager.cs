@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Companies;
 using ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
 using ArquitecturaBaseMultitenant.Application.Models.Roles;
+using ArquitecturaBaseMultitenant.Application.Services.Roles;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -11,8 +12,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
 /// <summary>Valida roles por alcance y sincroniza asignaciones y membresías de una persona.</summary>
 internal sealed class OrganizationUserAssignmentManager(
     ICompanyReader companies,
-    IRoleReader roleReader,
-    IRoleRepository roles,
+    RoleAssignmentGuard roleGuard,
     IRoleAssignmentRepository assignments,
     ICompanyMembershipRepository companyMemberships,
     IMemberRepository members)
@@ -21,14 +21,8 @@ internal sealed class OrganizationUserAssignmentManager(
         IReadOnlyCollection<Guid> roleIds, IReadOnlyCollection<InviteCompanyRolesRequest> requestedCompanies,
         CancellationToken cancellationToken)
     {
-        var organizationRoles = new List<RoleRow>();
-        foreach (var id in roleIds.Distinct())
-        {
-            var role = await roleReader.FindByIdAsync(id, cancellationToken);
-            if (role is null) return RoleErrors.NotFound;
-            if (role.Scope != RoleScope.Organization) return RoleErrors.CompanyNotAllowed;
-            organizationRoles.Add(role);
-        }
+        var organizationRoles = await roleGuard.CheckAsync(roleIds, companyId: null, cancellationToken);
+        if (organizationRoles.IsFailure) return organizationRoles.Error;
 
         var companyRoles = new Dictionary<Guid, (CompanyRow Company, IReadOnlyList<RoleRow> Roles)>();
         foreach (var requested in requestedCompanies)
@@ -36,20 +30,12 @@ internal sealed class OrganizationUserAssignmentManager(
             var company = await companies.FindByIdAsync(requested.CompanyId, cancellationToken);
             if (company is null) return CompanyErrors.NotFound;
             if (company.Status != CompanyStatus.Active) return CompanyErrors.Inactive;
-            var selected = new List<RoleRow>();
-            foreach (var roleId in requested.RoleIds!.Distinct())
-            {
-                var role = await roleReader.FindByIdAsync(roleId, cancellationToken);
-                if (role is null) return RoleErrors.NotFound;
-                if (role.Scope == RoleScope.Organization) return RoleAssignmentErrors.CompanyNotAllowed;
-                if (role.Scope == RoleScope.SpecificCompany && role.CompanyId != company.Id)
-                    return RoleAssignmentErrors.CompanyMismatch;
-                selected.Add(role);
-            }
-            companyRoles.Add(company.Id, (company, selected));
+            var selected = await roleGuard.CheckAsync(requested.RoleIds!, company.Id, cancellationToken);
+            if (selected.IsFailure) return selected.Error;
+            companyRoles.Add(company.Id, (company, selected.Value));
         }
 
-        return new DesiredOrganizationUserAssignments(organizationRoles, companyRoles);
+        return new DesiredOrganizationUserAssignments(organizationRoles.Value, companyRoles);
     }
 
     internal async Task<OrganizationUserAssignmentSnapshot> GetSnapshotAsync(Guid memberId,
@@ -66,26 +52,15 @@ internal sealed class OrganizationUserAssignmentManager(
         snapshot ??= await GetSnapshotAsync(memberId, cancellationToken);
 
         var desiredAssignments = new List<RoleAssignment>();
-        foreach (var roleRow in desired.OrganizationRoles)
-        {
-            var role = await roles.GetByIdAsync(roleRow.Id, roleRow.Version, cancellationToken);
-            if (role is null) return RoleErrors.NotFound;
-            if (role.Scope != RoleScope.Organization) return RoleErrors.CompanyNotAllowed;
-            var assignment = RoleAssignment.Assign(memberId, role, companyId: null);
-            if (assignment.IsFailure) return assignment.Error;
-            desiredAssignments.Add(assignment.Value);
-        }
+        var organizationAssignments = await RecheckAsync(memberId, desired.OrganizationRoles, null,
+            cancellationToken);
+        if (organizationAssignments.IsFailure) return organizationAssignments.Error;
+        desiredAssignments.AddRange(organizationAssignments.Value);
         foreach (var (companyId, selection) in desired.CompanyRoles)
-        foreach (var roleRow in selection.Roles)
         {
-            var role = await roles.GetByIdAsync(roleRow.Id, roleRow.Version, cancellationToken);
-            if (role is null) return RoleErrors.NotFound;
-            if (role.Scope == RoleScope.Organization) return RoleAssignmentErrors.CompanyNotAllowed;
-            if (role.Scope == RoleScope.SpecificCompany && role.CompanyId != companyId)
-                return RoleAssignmentErrors.CompanyMismatch;
-            var assignment = RoleAssignment.Assign(memberId, role, companyId);
-            if (assignment.IsFailure) return assignment.Error;
-            desiredAssignments.Add(assignment.Value);
+            var companyAssignments = await RecheckAsync(memberId, selection.Roles, companyId, cancellationToken);
+            if (companyAssignments.IsFailure) return companyAssignments.Error;
+            desiredAssignments.AddRange(companyAssignments.Value);
         }
 
         var desiredKeys = desiredAssignments.Select(AssignmentKey).ToHashSet();
@@ -139,6 +114,14 @@ internal sealed class OrganizationUserAssignmentManager(
             membership.SetStatus(CompanyMembershipStatus.Inactive);
             companyMemberships.MarkUpdated(membership);
         }
+    }
+
+    // Adentro de la transacción cada rol se vuelve a controlar: pudo borrarse o cambiar de alcance desde la validación.
+    private async Task<Result<RoleAssignment[]>> RecheckAsync(Guid memberId, IReadOnlyList<RoleRow> validated,
+        Guid? companyId, CancellationToken cancellationToken)
+    {
+        var current = await roleGuard.CheckAsync(validated.Select(role => role.Id), companyId, cancellationToken);
+        return current.IsFailure ? current.Error : RoleAssignmentGuard.Assign(memberId, current.Value, companyId);
     }
 
     private static (Guid RoleId, Guid? CompanyId) AssignmentKey(RoleAssignment assignment) =>

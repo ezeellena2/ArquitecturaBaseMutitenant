@@ -14,6 +14,7 @@
 - `/api/me` trae en `effectivePermissions.companies` los permisos de cada empresa activa donde la persona es miembro activo y tiene alguno, con los de la organización incluidos, como los calcula `[HasCompanyPermission]` (`IPermissionService.GetPermissionsByCompanyAsync`). Son las mismas empresas que «Tus empresas» del inicio.
 - Las escrituras de roles validan antes de la transacción, usan una única `IUnitOfWork`, preservan `Version` y devuelven 409 ante concurrencia. Los permisos cacheados se invalidan después del commit.
 - El nombre de un rol se repite entre empresas, como en el tablero Roles («Solo lectura» en cada empresa), pero no dentro de una misma empresa. Los roles sin empresa, los de toda la organización y los que valen en cada empresa, son únicos entre sí. Repetirlo da 409 `Roles.Role.AlreadyExists`. Lo hace cumplir el índice único organización + empresa + nombre normalizado, con `NULLS NOT DISTINCT` (`UniqueKeys.RoleName`), decisión D3 del 2026-10-03.
+- Dónde vale un rol al asignarlo: el de la organización, sin empresa; el de cada empresa, en cualquiera; el de una empresa, solo en la suya. Es una sola regla, `RoleAssignment.Check` (Domain), que Usuarios y Empresas usan por `RoleAssignmentGuard`, y responde lo mismo desde las dos áreas: 400 `Roles.RoleAssignment.CompanyNotAllowed` (un rol de la organización en una empresa), `Roles.RoleAssignment.CompanyRequired` (un rol de empresa sin empresa) o `Roles.RoleAssignment.CompanyMismatch` (el rol de otra empresa). `RoleAssignment.Assign` recibe el id, el alcance y la empresa del rol, sin cargar la entidad. Los permisos efectivos (`ListRoleIdsForUserAsync`) cuentan cada asignación solo donde la regla dice que vale.
 - Un rol con personas asignadas no cambia dónde vale (su alcance o su empresa), porque esas asignaciones dejarían de valer en silencio. Es el mismo criterio que para borrarlo (`Roles.Role.HasUsers`): al guardar, la respuesta es 409 `Roles.Role.ScopeChangeHasUsers` con `userCount`. Sin personas asignadas, el alcance cambia; el nombre, la descripción y los permisos se editan siempre (decisión D2 de la [revisión de calidad](../reviews/2026-10-03-calidad-de-diseno.md)).
 
 ## Carpetas
@@ -45,7 +46,7 @@ Las pantallas de Roles y el enlace de Administración esperan la aprobación de 
 
 ## Lo verifica
 
-- Domain: `RoleTests`, `RoleAssignmentTests` y `PermissionsTests`.
+- Domain: `RoleTests`, `RoleAssignmentTests` (la matriz de dónde vale un rol) y `PermissionsTests`.
 - Application: `RoleServiceTests`, `RoleServiceWriteTests`, `PermissionTextsTests` y los tests de políticas de baja.
-- API: `RolesTests`, `PermissionAuthorizationTests`, `RolePersistenceTests`, `UserTenantAccessReaderTests`, `AccountDeletionTests` y `OrganizationUsersTests` (la última Dueña de cada organización) (Docker/Testcontainers).
+- API: `RolesTests`, `PermissionAuthorizationTests`, `RolePersistenceTests` (la matriz de permisos efectivos), `UserTenantAccessReaderTests`, `AccountDeletionTests`, `OrganizationUsersTests` (la última Dueña de cada organización) y `CompaniesTests` (el mismo código de alcance desde Usuarios y Empresas) (Docker/Testcontainers).
 - Contrato cruzado: `ArquitecturaBaseMutitenantFront/src/test/roles-contract.test.ts` lee controller, contratos y OpenAPI del back, además de los tipos generados del front.

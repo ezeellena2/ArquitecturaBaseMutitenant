@@ -1,7 +1,9 @@
 using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
@@ -99,6 +101,90 @@ public sealed class RolePersistenceTests(ApiFactory factory)
         await Assert.ThrowsAsync<ConcurrencyConflictException>(() =>
             secondServices.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(
                 _ => Task.FromResult(Result.Success()), CommitPolicy.OnSuccess, Ct));
+    }
+
+    /// <summary>
+    /// La matriz de permisos efectivos: cada asignación cuenta solo donde <see cref="RoleAssignment.Check"/> dice que
+    /// el rol vale. Las asignaciones que dejaron de valer (el rol cambió de alcance por fuera del servicio) no dan
+    /// permisos en ningún lado.
+    /// </summary>
+    [Fact]
+    public async Task Effective_roles_count_each_assignment_only_where_its_role_is_valid()
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var work = services.GetRequiredService<IUnitOfWork>();
+        var userId = Guid.Empty;
+        await work.ExecuteInTransactionAsync(async ct =>
+        {
+            userId = (await services.GetRequiredService<IUserRepository>().CreateAsync(null, "es-AR",
+                "America/Argentina/Buenos_Aires", ct)).Id;
+            return Result.Success();
+        }, CommitPolicy.OnSuccess, Ct);
+        var tenant = Tenant.CreateBusiness("Organización de permisos efectivos", requiresApproval: false);
+        Assert.True(tenant.Activate().IsSuccess);
+        using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenant.Id);
+        await work.ExecuteInTransactionAsync(ct =>
+        {
+            services.GetRequiredService<TenantSpaceProvisioner>().Stage(tenant,
+                TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"), [userId], userId);
+            return Task.FromResult(Result.Success());
+        }, CommitPolicy.OnSuccess, Ct);
+
+        const string timeZone = "America/Argentina/Buenos_Aires";
+        string[] companyPermissions = [Permissions.Company.Members.Read];
+        var companyA = Company.Create("Empresa A", null, timeZone).Value;
+        var companyB = Company.Create("Empresa B", null, timeZone).Value;
+        var inactiveCompany = Company.Create("Empresa inactiva", null, timeZone).Value;
+        inactiveCompany.SetStatus(CompanyStatus.Inactive);
+        var anyCompany = Role.Create("En cada empresa", null, RoleScope.AnyCompany, null, companyPermissions).Value;
+        var onlyA = Role.Create("Solo en A", null, RoleScope.SpecificCompany, companyA.Id, companyPermissions).Value;
+        var becomesOrganization = Role.Create("Pasa a la organización", null, RoleScope.AnyCompany, null,
+            companyPermissions).Value;
+        var movesToB = Role.Create("Pasa a B", null, RoleScope.SpecificCompany, companyA.Id, companyPermissions).Value;
+        await work.ExecuteInTransactionAsync(async ct =>
+        {
+            var member = await context.Members.SingleAsync(row => row.UserId == userId, ct);
+            context.Companies.AddRange(companyA, companyB, inactiveCompany);
+            context.Roles.AddRange(anyCompany, onlyA, becomesOrganization, movesToB);
+            var inactiveMembership = CompanyMembership.Create(companyB.Id, member.Id).Value;
+            inactiveMembership.SetStatus(CompanyMembershipStatus.Inactive);
+            context.CompanyMemberships.AddRange(CompanyMembership.Create(companyA.Id, member.Id).Value,
+                inactiveMembership, CompanyMembership.Create(inactiveCompany.Id, member.Id).Value);
+            foreach (var (role, companyId) in new[]
+                     {
+                         (anyCompany, companyA.Id), (anyCompany, companyB.Id), (anyCompany, inactiveCompany.Id),
+                         (onlyA, companyA.Id), (becomesOrganization, companyA.Id), (movesToB, companyA.Id),
+                     })
+                context.RoleAssignments.Add(RoleAssignment.Assign(member.Id, role.Id, role.Scope, role.CompanyId,
+                    companyId).Value);
+            return Result.Success();
+        }, CommitPolicy.OnSuccess, Ct);
+        await work.ExecuteInTransactionAsync(ct =>
+        {
+            Assert.True(becomesOrganization.Update(becomesOrganization.Name, null, RoleScope.Organization, null,
+                companyPermissions).IsSuccess);
+            Assert.True(movesToB.Update(movesToB.Name, null, RoleScope.SpecificCompany, companyB.Id,
+                companyPermissions).IsSuccess);
+            return Task.FromResult(Result.Success());
+        }, CommitPolicy.OnSuccess, Ct);
+        Assert.NotNull(RoleAssignment.Check(becomesOrganization.Scope, becomesOrganization.CompanyId, companyA.Id));
+        Assert.NotNull(RoleAssignment.Check(movesToB.Scope, movesToB.CompanyId, companyA.Id));
+
+        var reader = services.GetRequiredService<IRoleReader>();
+        var owner = await context.Roles.SingleAsync(role => role.Name == SystemRoles.TenantAdmin, Ct);
+        async Task<Guid[]> EffectiveAsync(Guid? companyId) =>
+            [.. (await reader.ListRoleIdsForUserAsync(userId, companyId, Ct)).Order()];
+
+        // La organización: solo los roles sin empresa.
+        Assert.Equal([owner.Id], await EffectiveAsync(null));
+        // A: los de la organización, el de cada empresa y el propio de A; los que cambiaron de alcance, no.
+        Assert.Equal(new[] { owner.Id, anyCompany.Id, onlyA.Id }.Order(), await EffectiveAsync(companyA.Id));
+        // B: la membresía está inactiva, y «Pasa a B» está asignado en A.
+        Assert.Equal([owner.Id], await EffectiveAsync(companyB.Id));
+        // Una empresa inactiva no da permisos.
+        Assert.Empty(await EffectiveAsync(inactiveCompany.Id));
     }
 
     private async Task<Tenant> CreateBusinessTenantAsync(string name)

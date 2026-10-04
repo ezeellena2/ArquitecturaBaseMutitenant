@@ -114,7 +114,7 @@ public sealed class UserTenantAccessReaderTests(ApiFactory factory)
                     Assert.True(member.Activate(nowUtc).IsSuccess);
                     if (index == 4) Assert.True(member.Deactivate().IsSuccess);
                     context.Members.Add(member);
-                    context.RoleAssignments.Add(RoleAssignment.Assign(member.Id, tenantAdmin, null).Value);
+                    context.RoleAssignments.Add(RoleAssignment.Assign(member.Id, tenantAdmin.Id, tenantAdmin.Scope, tenantAdmin.CompanyId, null).Value);
                 }
                 return Result.Success();
             }, CommitPolicy.OnSuccess, Ct);

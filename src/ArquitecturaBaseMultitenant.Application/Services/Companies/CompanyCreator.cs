@@ -33,7 +33,8 @@ internal sealed class CompanyCreator(
         if (adminRole is null) throw new InvalidOperationException("The CompanyAdmin system role has not been seeded.");
         var membership = CompanyMembership.Create(company.Id, member.Id);
         if (membership.IsFailure) return membership.Error;
-        var assignment = RoleAssignment.Assign(member.Id, adminRole, company.Id);
+        var assignment = RoleAssignment.Assign(member.Id, adminRole.Id, adminRole.Scope, adminRole.CompanyId,
+            company.Id);
         if (assignment.IsFailure) return assignment.Error;
 
         companies.Add(company);

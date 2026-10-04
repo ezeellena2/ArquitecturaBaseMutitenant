@@ -44,13 +44,15 @@ public sealed class TenantSpaceProvisioner(
         foreach (var role in missing) roles.Add(role);
         var tenantAdmin = defaults.Single(r => r.Name == SystemRoles.TenantAdmin);
         if (!ownerAssignments.Any(a => a.RoleId == tenantAdmin.Id && a.CompanyId == null))
-            assignments.Add(RoleAssignment.Assign(owner.Id, tenantAdmin, null).Value);
+            assignments.Add(RoleAssignment.Assign(owner.Id, tenantAdmin.Id, tenantAdmin.Scope, tenantAdmin.CompanyId,
+                null).Value);
         if (companyId is { } initialCompany)
         {
             if (membership is null) companyMemberships.Add(CompanyMembership.Create(initialCompany, owner.Id).Value);
             var companyAdmin = defaults.Single(r => r.Name == SystemRoles.CompanyAdmin);
             if (!ownerAssignments.Any(a => a.RoleId == companyAdmin.Id && a.CompanyId == initialCompany))
-                assignments.Add(RoleAssignment.Assign(owner.Id, companyAdmin, initialCompany).Value);
+                assignments.Add(RoleAssignment.Assign(owner.Id, companyAdmin.Id, companyAdmin.Scope,
+                    companyAdmin.CompanyId, initialCompany).Value);
         }
         if (currentSettings is null) settings.Add(requestedSettings);
         return Result.Success();
@@ -96,7 +98,8 @@ public sealed class TenantSpaceProvisioner(
 
             var owner = tenantMembers[businessOwnerUserId ?? userIds.First()];
             var tenantAdmin = systemRoles.Single(role => role.Name == SystemRoles.TenantAdmin);
-            var assignment = RoleAssignment.Assign(owner.Id, tenantAdmin, companyId: null);
+            var assignment = RoleAssignment.Assign(owner.Id, tenantAdmin.Id, tenantAdmin.Scope, tenantAdmin.CompanyId,
+                companyId: null);
             if (assignment.IsFailure)
                 throw new InvalidOperationException("The initial organization owner could not be assigned.");
             assignments.Add(assignment.Value);
@@ -107,7 +110,8 @@ public sealed class TenantSpaceProvisioner(
                 var companyMembership = CompanyMembership.Create(initialCompanyId, owner.Id);
                 if (companyMembership.IsFailure)
                     throw new InvalidOperationException("The initial company membership could not be created.");
-                var companyAssignment = RoleAssignment.Assign(owner.Id, companyAdmin, initialCompanyId);
+                var companyAssignment = RoleAssignment.Assign(owner.Id, companyAdmin.Id, companyAdmin.Scope,
+                    companyAdmin.CompanyId, initialCompanyId);
                 if (companyAssignment.IsFailure)
                     throw new InvalidOperationException("The initial company administrator could not be assigned.");
                 companyMemberships.Add(companyMembership.Value);

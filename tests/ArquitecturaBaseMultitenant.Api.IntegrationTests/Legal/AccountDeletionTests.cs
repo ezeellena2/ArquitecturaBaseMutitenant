@@ -160,7 +160,7 @@ public sealed class AccountDeletionTests(ApiFactory factory)
                 Assert.True(member.Activate(services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime).IsSuccess);
                 context.Members.Add(member);
                 var tenantAdmin = await context.Roles.SingleAsync(role => role.Name == SystemRoles.TenantAdmin, ct);
-                context.RoleAssignments.Add(RoleAssignment.Assign(member.Id, tenantAdmin, null).Value);
+                context.RoleAssignments.Add(RoleAssignment.Assign(member.Id, tenantAdmin.Id, tenantAdmin.Scope, tenantAdmin.CompanyId, null).Value);
                 return Result.Success();
             }, CommitPolicy.OnSuccess, Ct);
         }
@@ -232,7 +232,7 @@ public sealed class AccountDeletionTests(ApiFactory factory)
                 Assert.True(member.Activate(services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime).IsSuccess);
                 context.Members.Add(member);
                 var tenantAdmin = await context.Roles.SingleAsync(role => role.Name == SystemRoles.TenantAdmin, ct);
-                context.RoleAssignments.Add(RoleAssignment.Assign(member.Id, tenantAdmin, null).Value);
+                context.RoleAssignments.Add(RoleAssignment.Assign(member.Id, tenantAdmin.Id, tenantAdmin.Scope, tenantAdmin.CompanyId, null).Value);
                 return Result.Success();
             }, CommitPolicy.OnSuccess, Ct);
         }

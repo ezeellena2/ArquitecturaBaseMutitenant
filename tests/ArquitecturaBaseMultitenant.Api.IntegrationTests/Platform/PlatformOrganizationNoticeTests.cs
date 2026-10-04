@@ -80,10 +80,10 @@ public sealed class PlatformOrganizationNoticeTests(ApiFactory factory)
                 Assert.NotNull(second);
                 Assert.NotNull(former);
                 Assert.NotNull(role);
-                services.GetRequiredService<IRoleAssignmentRepository>().Add(RoleAssignment.Assign(second.Id, role, null).Value);
+                services.GetRequiredService<IRoleAssignmentRepository>().Add(RoleAssignment.Assign(second.Id, role.Id, role.Scope, role.CompanyId, null).Value);
                 var inactive = await members.GetByUserIdAsync(suspended.Id, ct);
                 Assert.NotNull(inactive);
-                services.GetRequiredService<IRoleAssignmentRepository>().Add(RoleAssignment.Assign(inactive.Id, role, null).Value);
+                services.GetRequiredService<IRoleAssignmentRepository>().Add(RoleAssignment.Assign(inactive.Id, role.Id, role.Scope, role.CompanyId, null).Value);
                 Assert.True(former.Remove().IsSuccess);
                 return Result.Success();
             }, CommitPolicy.OnSuccess, Ct);

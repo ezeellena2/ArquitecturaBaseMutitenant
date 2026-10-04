@@ -41,7 +41,7 @@ public static class DependencyInjection
         services.AddScoped<CompanyCreator>();
         services.AddScoped<CompanyReferenceDataResolver>();
         services.AddScoped<CompanyMembershipWriter>();
-        services.AddScoped<CompanyMembershipRoleManager>();
+        services.AddScoped<RoleAssignmentGuard>();
         services.AddScoped<IOrganizationUserService, OrganizationUserService>();
         services.AddScoped<OrganizationUserAssignmentManager>();
         services.AddScoped<OrganizationUserAdministratorGuard>();
