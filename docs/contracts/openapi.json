@@ -3318,6 +3318,65 @@
         }
       }
     },
+    "/api/home": {
+      "get": {
+        "tags": [
+          "Inicio"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/HomeResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HomeResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HomeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/organization/audit": {
       "get": {
         "tags": [
@@ -9181,6 +9240,191 @@
         },
         "description": "Token de formulario de un solo origen para iniciar Registro con Google."
       },
+      "HomeAudit": {
+        "type": "object",
+        "properties": {
+          "lastChangeAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        },
+        "description": "El último cambio de la auditoría; `null` si todavía no hay."
+      },
+      "HomeCompanyCard": {
+        "required": [
+          "companyId",
+          "name",
+          "roles"
+        ],
+        "type": "object",
+        "properties": {
+          "companyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "memberCount": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          }
+        },
+        "description": "«Tus empresas»: una empresa donde la persona tiene roles; los miembros, solo si puede verlos."
+      },
+      "HomeCount": {
+        "required": [
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "HomeOrganizationSummary": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/HomeCount"
+              }
+            ]
+          },
+          "roles": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/HomeCount"
+              }
+            ]
+          },
+          "companies": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/HomeCount"
+              }
+            ]
+          },
+          "publicPage": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/HomePublicPage"
+              }
+            ]
+          },
+          "settings": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/HomeSettings"
+              }
+            ]
+          },
+          "audit": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/HomeAudit"
+              }
+            ]
+          }
+        },
+        "description": "Una tarjeta por área, con su dato real; `null` si quien mira no tiene el permiso del área."
+      },
+      "HomePublicPage": {
+        "required": [
+          "state"
+        ],
+        "type": "object",
+        "properties": {
+          "state": {
+            "$ref": "#/components/schemas/HomePublicPageState"
+          }
+        }
+      },
+      "HomePublicPageState": {
+        "enum": [
+          "Published",
+          "Draft",
+          "Blocked"
+        ],
+        "type": "string"
+      },
+      "HomeResponse": {
+        "required": [
+          "companies",
+          "pending"
+        ],
+        "type": "object",
+        "properties": {
+          "organization": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/HomeOrganizationSummary"
+              }
+            ]
+          },
+          "companies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HomeCompanyCard"
+            }
+          },
+          "pending": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PendingItem"
+            }
+          }
+        },
+        "description": "Inicio de la organización (ADR 0040). Quien tiene permisos de la organización ve las tarjetas de sus áreas; quien\r\nsolo tiene roles en empresas ve «Tus empresas». Debajo, «Para resolver»."
+      },
+      "HomeSettings": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "description": "El dominio de correo de la organización; `null` si no tiene."
+      },
       "InvitationPreviewResponse": {
         "required": [
           "state"
@@ -10294,6 +10538,53 @@
           }
         },
         "description": "Expone la fecha programada y el comprobante temporal para cancelar una baja sin iniciar sesión."
+      },
+      "PendingItem": {
+        "required": [
+          "area",
+          "kind",
+          "urgent"
+        ],
+        "type": "object",
+        "properties": {
+          "area": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "subject": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "urgent": {
+            "type": "boolean"
+          },
+          "sinceUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "dueAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "targetId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        },
+        "description": "Una fila de «Para resolver». `Area` y `Kind` son claves estables: el front arma el texto, el estado y la\r\nacción. `SinceUtc` ordena; `DueAtUtc` es la fecha del detalle (por ejemplo, cuándo se elimina)."
       },
       "PendingLegalDocumentResponse": {
         "required": [
@@ -11727,6 +12018,9 @@
     },
     {
       "name": "Miembros de empresa"
+    },
+    {
+      "name": "Inicio"
     },
     {
       "name": "Auditoría de la organización"
