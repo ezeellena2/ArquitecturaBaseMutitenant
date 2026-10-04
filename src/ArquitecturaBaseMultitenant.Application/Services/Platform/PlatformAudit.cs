@@ -31,6 +31,10 @@ internal sealed class PlatformAudit(ICurrentUser currentUser, ISecurityEventRepo
             ? id
             : throw new InvalidOperationException("An authenticated platform operator is required.");
 
+    internal void RecordLegalPublication(string reason, SecurityEventChanges changes) =>
+        events.Add(SecurityEvent.ForLegalPublication(CurrentOperatorId(), reason, clock.GetUtcNow().UtcDateTime)
+            .WithEvidence(changes, requestInfo.IpAddress));
+
     internal void RecordOperator(Guid accountId, SecurityEventType type, string reason, SecurityEventChanges changes) =>
         events.Add(SecurityEvent.ForPlatformOperatorAdministration(type, CurrentOperatorId(), accountId, reason,
             clock.GetUtcNow().UtcDateTime).WithEvidence(changes, requestInfo.IpAddress));

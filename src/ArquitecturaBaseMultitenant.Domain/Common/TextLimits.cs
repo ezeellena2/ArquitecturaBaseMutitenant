@@ -8,6 +8,8 @@ public static class TextLimits
     public const int ShortName = 60;
     public const int Description = 500;
     public const int LongText = 4000;
+    /// <summary>El texto de una versión de términos o privacidad, en una cultura.</summary>
+    public const int LegalDocument = 100_000;
     public const int AuditSearch = 100;
     public const int TaxIdType = 16;
     public const int TaxIdNumber = 32;

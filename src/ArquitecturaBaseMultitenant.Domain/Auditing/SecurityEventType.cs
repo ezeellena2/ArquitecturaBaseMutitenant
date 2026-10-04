@@ -34,4 +34,5 @@ public enum SecurityEventType
     PlatformOperatorInvited,
     PlatformOperatorPermissionsChanged,
     PlatformOperatorRemoved,
+    LegalDocumentPublished,
 }

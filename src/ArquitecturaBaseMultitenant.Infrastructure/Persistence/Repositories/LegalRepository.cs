@@ -26,6 +26,16 @@ internal sealed class LegalRepository(ApplicationDbContext context) : ILegalRepo
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public Task LockKindAsync(LegalDocumentKind kind, CancellationToken cancellationToken) =>
+        context.AcquireAdvisoryLocksAsync([AdvisoryLockKeys.LegalDocument(kind)], cancellationToken);
+
+    public async Task<int> GetLatestVersionAsync(LegalDocumentKind kind, CancellationToken cancellationToken)
+    {
+        context.RequireTransaction();
+        return await context.LegalDocuments.Where(document => document.Kind == kind)
+            .MaxAsync(document => (int?)document.Version, cancellationToken) ?? 0;
+    }
+
     public void AddDocument(LegalDocument document)
     {
         ArgumentNullException.ThrowIfNull(document);

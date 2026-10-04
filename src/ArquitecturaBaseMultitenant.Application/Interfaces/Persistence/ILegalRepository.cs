@@ -9,6 +9,12 @@ public interface ILegalRepository
     Task<LegalDocument?> GetCurrentDocumentAsync(LegalDocumentKind kind,
         DateTime nowUtc, CancellationToken cancellationToken);
 
+    /// <summary>Lock global por tipo: serializa la numeración de las versiones nuevas.</summary>
+    Task LockKindAsync(LegalDocumentKind kind, CancellationToken cancellationToken);
+
+    /// <summary>El número de la última versión del tipo, vigente o futura; 0 si no hay ninguna.</summary>
+    Task<int> GetLatestVersionAsync(LegalDocumentKind kind, CancellationToken cancellationToken);
+
     void AddDocument(LegalDocument document);
 
     void AddContent(LegalDocumentContent content);

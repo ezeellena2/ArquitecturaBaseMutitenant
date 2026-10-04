@@ -98,6 +98,8 @@
   <data name="SecurityEvent.PlatformOperatorInvited" xml:space="preserve"><value>Invited an operator</value></data>
   <data name="SecurityEvent.PlatformOperatorPermissionsChanged" xml:space="preserve"><value>Changed the operator permissions</value></data>
   <data name="SecurityEvent.PlatformOperatorRemoved" xml:space="preserve"><value>Removed the operator</value></data>
+  <data name="SecurityEvent.LegalDocumentPublished" xml:space="preserve"><value>Published a legal document version</value></data>
+  <data name="Platform.LegalPublicationReason" xml:space="preserve"><value>Legal document version published.</value></data>
   <data name="SignIn.Code" xml:space="preserve"><value>Signed in with an email code</value></data>
   <data name="SignIn.Google" xml:space="preserve"><value>Signed in with Google</value></data>
   <data name="SignIn.WhatsAppCode" xml:space="preserve"><value>Signed in with a WhatsApp code</value></data>

@@ -132,6 +132,11 @@ public sealed class SecurityEvent : Entity
         return ev;
     }
 
+    /// <summary>Un operador publicó una versión nueva de un documento legal; no tiene destino.</summary>
+    public static SecurityEvent ForLegalPublication(Guid operatorId, string reason, DateTime occurredAtUtc) =>
+        ForPlatformAction(SecurityEventType.LegalDocumentPublished, AuditActorKind.PlatformOperator, operatorId,
+            reason, occurredAtUtc);
+
     /// <summary>Un operador invitó a otro, le cambió los permisos o le quitó el acceso de operador.</summary>
     public static SecurityEvent ForPlatformOperatorAdministration(SecurityEventType type, Guid operatorId,
         Guid accountId, string reason, DateTime occurredAtUtc)

@@ -187,6 +187,8 @@
   <data name="Platform.Operator.AccountExists" xml:space="preserve"><value>Ese correo ya tiene una cuenta. Un operador no puede tener perfiles de persona.</value></data>
   <data name="Platform.Operator.NotOperator" xml:space="preserve"><value>Esa cuenta no es de un operador.</value></data>
   <data name="Platform.Audit.NotFound" xml:space="preserve"><value>No encontramos ese evento.</value></data>
+  <data name="Legal.Publication.EffectiveDatePast" xml:space="preserve"><value>La vigencia no puede ser anterior a hoy.</value></data>
+  <data name="Legal.Publication.CulturesMismatch" xml:space="preserve"><value>Escribí el contenido una vez en cada idioma.</value></data>
   <data name="Platform.AccountRecovery.VerificationRequired" xml:space="preserve"><value>Pedí un código nuevo y verificalo.</value></data>
   <data name="Platform.AccountRecovery.NotFound" xml:space="preserve"><value>No encontramos el pedido.</value></data>
   <data name="Platform.AccountRecovery.AlreadyResolved" xml:space="preserve"><value>Ese pedido ya se resolvió.</value></data>

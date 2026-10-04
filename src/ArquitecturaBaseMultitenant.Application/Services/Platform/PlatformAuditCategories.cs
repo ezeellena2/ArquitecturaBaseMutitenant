@@ -30,7 +30,7 @@ internal static class PlatformAuditCategories
             or SecurityEventType.AccountRecoveryRejected => Accounts,
         SecurityEventType.PlatformOperatorGranted or SecurityEventType.PlatformOperatorInvited
             or SecurityEventType.PlatformOperatorPermissionsChanged or SecurityEventType.PlatformOperatorRemoved => Operators,
-        SecurityEventType.PlatformSettingsChanged => Settings,
+        SecurityEventType.PlatformSettingsChanged or SecurityEventType.LegalDocumentPublished => Settings,
         _ => Other,
     };
 

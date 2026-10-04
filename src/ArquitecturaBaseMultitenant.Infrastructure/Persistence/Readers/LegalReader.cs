@@ -8,6 +8,22 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 /// <summary>Proyecta la versión legal vigente por cultura y las aceptaciones pendientes de una cuenta. Las consultas son de lectura y no modifican la prueba de aceptación.</summary>
 internal sealed class LegalReader(ApplicationDbContext context) : ILegalReader
 {
+    public async Task<IReadOnlyList<ArquitecturaBaseMultitenant.Application.Models.Platform.LegalVersionRow>> ListVersionsAsync(
+        CancellationToken cancellationToken) =>
+        await context.LegalDocuments.AsNoTracking()
+            .OrderBy(row => row.Kind).ThenByDescending(row => row.Version)
+            .Select(row => new ArquitecturaBaseMultitenant.Application.Models.Platform.LegalVersionRow(
+                row.Id, row.Kind, row.Version, row.EffectiveAtUtc))
+            .ToArrayAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<ArquitecturaBaseMultitenant.Application.Models.Platform.PlatformLegalContentResponse>> ListContentsAsync(
+        Guid documentId, CancellationToken cancellationToken) =>
+        await context.LegalDocumentContents.AsNoTracking()
+            .Where(row => row.LegalDocumentId == documentId).OrderBy(row => row.Culture)
+            .Select(row => new ArquitecturaBaseMultitenant.Application.Models.Platform.PlatformLegalContentResponse(
+                row.Culture, row.Text))
+            .ToArrayAsync(cancellationToken);
+
     public async Task<IReadOnlyList<PendingLegalDocumentResponse>> ListPendingAsync(Guid userId, DateTime nowUtc,
         CancellationToken cancellationToken)
     {

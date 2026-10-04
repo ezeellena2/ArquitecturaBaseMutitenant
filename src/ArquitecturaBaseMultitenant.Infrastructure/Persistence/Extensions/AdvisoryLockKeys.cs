@@ -12,6 +12,10 @@ internal static class AdvisoryLockKeys
     /// <summary>Serializa los cambios que pueden dejar a Plataforma sin un operador que administre operadores.</summary>
     public const string PlatformOperators = "global:platform-operators";
 
+    /// <summary>Serializa la numeración de las versiones de un tipo de documento legal.</summary>
+    public static string LegalDocument(ArquitecturaBaseMultitenant.Domain.Legal.LegalDocumentKind kind) =>
+        "global:legal-document:" + kind;
+
     public static string Account(Guid userId)
     {
         if (userId == Guid.Empty) throw new ArgumentException("A user ID is required.", nameof(userId));

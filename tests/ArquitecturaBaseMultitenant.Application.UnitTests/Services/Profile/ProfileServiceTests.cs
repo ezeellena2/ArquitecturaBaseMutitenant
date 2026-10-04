@@ -351,5 +351,9 @@ public sealed class ProfileServiceTests
             CancellationToken ct) => Task.FromResult<IReadOnlyList<PendingLegalDocumentResponse>>([]);
         public Task<LegalDocumentRow?> FindCurrentAsync(LegalDocumentKind kind, string culture, DateTime nowUtc,
             CancellationToken ct) => throw new NotSupportedException();
+        public Task<IReadOnlyList<ArquitecturaBaseMultitenant.Application.Models.Platform.LegalVersionRow>> ListVersionsAsync(
+            CancellationToken ct) => throw new NotSupportedException();
+        public Task<IReadOnlyList<ArquitecturaBaseMultitenant.Application.Models.Platform.PlatformLegalContentResponse>> ListContentsAsync(
+            Guid documentId, CancellationToken ct) => throw new NotSupportedException();
     }
 }
