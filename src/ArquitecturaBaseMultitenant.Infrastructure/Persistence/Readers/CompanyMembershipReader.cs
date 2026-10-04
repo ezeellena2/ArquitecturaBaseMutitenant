@@ -93,6 +93,44 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
             await WithState(rows, tenantId, CompanyMemberState.Invited).CountAsync(cancellationToken));
     }
 
+    public async Task<IReadOnlyList<UserCompanyRow>> ListActiveForUserAsync(Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var tenantId = tenantContext.RequiredTenantId;
+        var companies = await (from membership in context.CompanyMemberships.AsNoTracking()
+                               join member in context.Members.AsNoTracking()
+                                   on new { membership.TenantId, membership.MemberId }
+                                   equals new { member.TenantId, MemberId = member.Id }
+                               join company in context.Companies.AsNoTracking()
+                                   on new { membership.TenantId, membership.CompanyId }
+                                   equals new { company.TenantId, CompanyId = company.Id }
+                               where membership.TenantId == tenantId && member.UserId == userId
+                                   && member.Status == MemberStatus.Active
+                                   && membership.Status == CompanyMembershipStatus.Active
+                                   && company.Status == CompanyStatus.Active
+                               orderby company.Name, company.Id
+                               select new { membership.MemberId, CompanyId = company.Id, company.Name })
+            .ToArrayAsync(cancellationToken);
+        if (companies.Length == 0) return [];
+
+        var memberIds = companies.Select(item => item.MemberId).Distinct().ToArray();
+        var companyIds = companies.Select(item => item.CompanyId).ToArray();
+        var roles = await (from assignment in context.RoleAssignments.AsNoTracking()
+                           join role in context.Roles.AsNoTracking()
+                               on new { assignment.TenantId, assignment.RoleId }
+                               equals new { role.TenantId, RoleId = role.Id }
+                           where assignment.TenantId == tenantId && memberIds.Contains(assignment.MemberId)
+                               && assignment.CompanyId != null && companyIds.Contains(assignment.CompanyId.Value)
+                           orderby role.Name
+                           select new { CompanyId = assignment.CompanyId!.Value, Role = new CompanyMemberRoleRow(role.Id,
+                               role.Name, role.IsSystemRole, role.Scope, role.CompanyId) })
+            .ToArrayAsync(cancellationToken);
+        var rolesByCompany = roles.GroupBy(item => item.CompanyId)
+            .ToDictionary(group => group.Key, group => (IReadOnlyList<CompanyMemberRoleRow>)[.. group.Select(item => item.Role)]);
+        return [.. companies.Select(item => new UserCompanyRow(item.CompanyId, item.Name,
+            rolesByCompany.GetValueOrDefault(item.CompanyId, [])))];
+    }
+
     private async Task<IQueryable<CompanyMembership>> Memberships(Guid tenantId, Guid companyId,
         ListCompanyMembersRequest request, CancellationToken cancellationToken)
     {

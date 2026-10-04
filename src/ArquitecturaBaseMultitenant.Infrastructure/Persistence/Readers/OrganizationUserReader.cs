@@ -166,7 +166,8 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
                                   .OrderByDescending(method => method.IsPrimary).ThenBy(method => method.Id)
                                   .Select(method => method.Value).FirstOrDefault(),
                               user == null ? null : user.Status, member.Status, member.Version, member.CreatedAtUtc,
-                              user == null ? null : user.DeletionScheduledForUtc))
+                              user == null ? null : user.DeletionScheduledForUtc,
+                              user == null ? null : user.DeletionRequestedAtUtc))
             .ToArrayAsync(cancellationToken);
         var byId = rows.ToDictionary(row => row.MemberId);
         return members.Select(member => byId[member.Id]).ToArray();
@@ -241,7 +242,7 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
                 invitation?.Status, invitation?.Id, invitation?.IssuedAtUtc, invitation?.ExpiresAtUtc,
                 rolesByMember.GetValueOrDefault(row.MemberId, []),
                 companiesByMember.GetValueOrDefault(row.MemberId, []), row.Version, row.CreatedAtUtc,
-                row.DeletionScheduledForUtc);
+                row.DeletionScheduledForUtc, row.DeletionRequestedAtUtc);
         })];
     }
 
@@ -257,5 +258,5 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
 
     private sealed record UserProjection(Guid MemberId, Guid? UserId, string DisplayName, string? Email,
         UserStatus? UserStatus, MemberStatus MemberStatus, uint Version, DateTime CreatedAtUtc,
-        DateTime? DeletionScheduledForUtc);
+        DateTime? DeletionScheduledForUtc, DateTime? DeletionRequestedAtUtc);
 }

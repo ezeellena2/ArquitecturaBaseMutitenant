@@ -35,7 +35,7 @@ public sealed record OrganizationUserRow(Guid MemberId, Guid? UserId, string Dis
     InvitationStatus? InvitationStatus, Guid? InvitationId, DateTime? InvitationIssuedAtUtc,
     DateTime? InvitationExpiresAtUtc, IReadOnlyList<OrganizationUserRoleRow> Roles,
     IReadOnlyList<OrganizationUserCompanyRow> Companies, uint Version, DateTime CreatedAtUtc,
-    DateTime? DeletionScheduledForUtc);
+    DateTime? DeletionScheduledForUtc, DateTime? DeletionRequestedAtUtc = null);
 
 public sealed record OrganizationUserResponse(Guid MemberId, Guid? UserId, string DisplayName, Email? Email,
     OrganizationUserState State, bool HasManagedEmail, IReadOnlyList<OrganizationUserRoleRow> Roles,

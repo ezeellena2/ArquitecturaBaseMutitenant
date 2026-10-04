@@ -29,6 +29,13 @@ public static class DependencyInjection
         services.AddScoped<IReferenceDataService, ReferenceDataService>();
         services.AddScoped<ITenantSlugAvailabilityService, TenantSlugAvailabilityService>();
         services.AddScoped<IRoleService, RoleService>();
+        services.AddScoped<IHomeService, Services.Home.HomeService>();
+        services.AddScoped<Services.Home.OrganizationHomeAreas>();
+        services.AddScoped<Services.Home.MemberHomeCompanies>();
+        // «Para resolver» (ADR 0040): una fuente por área; un módulo suma la suya en su propio registro.
+        services.AddScoped<IPendingItemSource, OrganizationUserPendingItems>();
+        services.AddScoped<IPendingItemSource, OrganizationDomainPendingItems>();
+        services.AddScoped<IPendingItemSource, PublicPagePendingItems>();
         services.AddScoped<ICompanyService, CompanyService>();
         services.AddScoped<ICompanyMembershipService, CompanyMembershipService>();
         services.AddScoped<CompanyCreator>();

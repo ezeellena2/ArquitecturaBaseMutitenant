@@ -10,4 +10,5 @@ public interface ICompanyMembershipReader
         CancellationToken cancellationToken);
     Task<CompanyMemberFilterCountsResponse> GetFilterCountsAsync(Guid companyId,
         ListCompanyMembersRequest request, CancellationToken cancellationToken);
+    Task<IReadOnlyList<UserCompanyRow>> ListActiveForUserAsync(Guid userId, CancellationToken cancellationToken);
 }

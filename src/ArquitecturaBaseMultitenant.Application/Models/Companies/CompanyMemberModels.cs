@@ -24,6 +24,9 @@ public sealed record ListCompanyMembersRequest : PagedRequest
 
 public sealed record CompanyMemberRoleRow(Guid Id, string Name, bool IsSystemRole, RoleScope Scope, Guid? CompanyId);
 
+/// <summary>Una empresa activa donde la persona es miembro activo, con sus roles en esa empresa.</summary>
+public sealed record UserCompanyRow(Guid CompanyId, string CompanyName, IReadOnlyList<CompanyMemberRoleRow> Roles);
+
 public sealed record CompanyMemberRow(Guid MemberId, Guid? UserId, string DisplayName, Email? Email,
     MemberStatus MemberStatus, UserStatus? UserStatus, CompanyMembershipStatus MembershipStatus,
     IReadOnlyList<CompanyMemberRoleRow> Roles, uint Version, DateTime CreatedAtUtc);
