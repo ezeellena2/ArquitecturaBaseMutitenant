@@ -9840,6 +9840,12 @@
             "items": {
               "type": "string"
             }
+          },
+          "currentAccountName": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
         "description": "Solo datos presentables de la invitación autorizada; jamás hashes ni secretos."
