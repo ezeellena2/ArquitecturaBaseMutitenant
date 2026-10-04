@@ -285,7 +285,7 @@ Cada servicio de entrada abre la transacción en su método público, y los help
   - alta de un rol con nombre repetido y su corrección;
   - un Administrador de empresa en la ficha de su empresa, con búsqueda y estado de los miembros;
   - salir de Configuración sin guardar.
-- [ ] Capturas de las pantallas tocadas contra sus tableros, en la compu y en el teléfono, revisadas por el usuario.
+- [ ] Capturas de **todas** las pantallas que ya existen de las etapas 1 a 6 contra el lienzo vigente, no solo de las tocadas, en la compu y en el teléfono. Lo pidió el usuario el 2026-10-04: todo hasta la 6 alineado. Cada diferencia se corrige o se le muestra al usuario para que decida.
 - [ ] `realinear-docs --detectar` sale 0 en los dos repos.
 - [ ] Informe en `docs/reviews/<fecha>-consolidacion.md`:
   - lo hecho;

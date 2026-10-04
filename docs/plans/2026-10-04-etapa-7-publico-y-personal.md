@@ -160,7 +160,7 @@ Se copian tal cual: la estructura, los textos, el orden y los estados.
 **Orden y dependencias:**
 - Lo programa Codex, en este orden: T00; el back, de T01 a T09; el front, desde «Antes de T10» hasta T17; la puerta, de T18 a T20.
 - Si el usuario abre una segunda sesión para el front, puede arrancar antes de que termine el back con lo que no usa tipos nuevos: «Antes de T10», T10 (salvo `usePublicSite`) y T11. Lo demás del front espera a que el back commitee T02 y T03 y se regeneren los tipos (`npm run contracts`). Las dos sesiones nunca tocan el mismo repo.
-- Si otra conversación trabaja al mismo tiempo en el mismo repo (por ejemplo, las pantallas de la Etapa 5, T19 a T25 de su plan), comparten `routes.tsx`, `layouts/` y `locales/`: commits chicos y nunca un archivo de la otra conversación en el commit propio.
+- Si otra conversación trabaja al mismo tiempo en el mismo repo, pueden compartir `routes.tsx`, `layouts/` y `locales/`: commits chicos y nunca un archivo de la otra conversación en el commit propio.
 - La puerta (T18 a T20) la cierra una sola sesión, con los dos repos.
 
 ## Protocolo de cada tarea de lógica
@@ -238,7 +238,7 @@ Se fija acá para que los dos repos avancen en paralelo. El back lo publica en `
   - sin trabajo de otra conversación a medio commitear (al escribir este plan había cambios sin commitear en los dos repos);
   - Aspire apagado (`aspire ps` vacío);
   - el último commit de cada repo, anotado en «Registro de resultados».
-- [ ] **La línea de base del arnés:** `realinear-docs --detectar` sale 0 en los dos repos y `ClosedStages` sigue en `{0,1,2,3,4,6}` (más el 5, si ya cerró).
+- [ ] **La línea de base del arnés:** `realinear-docs --detectar` sale 0 en los dos repos y `ClosedStages` está en `{0,1,2,3,4,5,6}`. La Etapa 7 arranca recién con la 5 cerrada (decisión del usuario del 2026-10-04).
 - [ ] **Los tableros del alcance validados en el lienzo vigente** (v95 o posterior):
   - Landing, Landing-Movil, Directorio, M-Directorio, Pagina-Publica y M-Pagina-Publica, sin «· por refinar» ni «· para aprobar»;
   - Criterio-Marco con la excepción del ☰ para el sitio público sin sesión (R14);
@@ -799,7 +799,7 @@ Mientras alguien edita, la ventana puede verse rota un momento (por ejemplo, con
   5. en el dominio principal, `/empresas` busca la organización por una parte del nombre sin acentos, la tarjeta aparece y lleva al subdominio;
   6. el subdominio de una organización suspendida muestra «No disponible». Si no hay una pantalla de la E5 para suspenderla, la deja así el preparador;
   7. en el teléfono (390), la portada y el directorio tienen ☰ y la página pública no.
-- [ ] **Los recorridos de las etapas cerradas** (E3a, E3b, E3c, E4 y E6) siguen en verde. Si la E5 sigue abierta y su caso todavía está en rojo porque le faltan pantallas (R06 de su plan), se anota en el informe y se le consulta al usuario antes de cerrar.
+- [ ] **Los recorridos de las etapas cerradas** (E3a, E3b, E3c, E4, E5 y E6) siguen en verde.
 
 ### T20 · La puerta general y el cierre
 

@@ -13,7 +13,7 @@
 1. **Back, ya:** T10 a T18 y el punto pendiente de T08 (`features` en `/api/me`), sin pantallas.
 2. **Front, después de la [consolidación](2026-10-03-consolidacion.md):** T19 a T25. Así las pantallas de Plataforma nacen con las piezas comunes del front (errores, permisos, paginado, accesos y edición) y no repiten la duplicación que encontró la revisión de calidad.
 
-La etapa cierra con T25.
+La etapa cierra con T25. El 2026-10-04 el usuario confirmó que las pantallas (T19 a T25) las programa Claude con agentes, después de la consolidación, y que la Etapa 7 espera a que cierre la 5.
 
 ## Fuentes, restricciones y punto de partida
 

@@ -57,7 +57,7 @@ El resultado tiene que servir para empezar productos reales.
 | 5 | Plataforma: organizaciones, aprobaciones, **módulos por organización**, moderación de páginas públicas, dominio verificado, identidades (con la baja iniciada por la plataforma), recuperaciones de cuenta, documentos legales, operadores, auditoría de seguridad | ✔ | ✔ | 4 y 6 |
 | 6 | Área B2B: **"Registrá tu empresa"**, usuarios, empresas, membresías, configuración, auditoría, **mi página pública** | ✔ | ✔ | 4 |
 | C | **Consolidación previa a la 7** ([plan](2026-10-03-consolidacion.md)): los bugs de la revisión de calidad, el ADR 0039 aplicado a lo existente, las reglas duplicadas unificadas, los permisos por empresa de punta a punta y las piezas comunes del front | ✔ | ✔ | 6 y el back de la 5 |
-| 7 | Área B2C y **sitio público**: el área personal lista para sumar módulos (receta `personal.md`), páginas por subdominio, directorio, ingreso desde un subdominio, y la **mecánica de interacción** persona ↔ empresa probada de punta a punta | ✔ | ✔ | 6 y C |
+| 7 | Área B2C y **sitio público**: el área personal lista para sumar módulos (receta `personal.md`), páginas por subdominio, directorio, ingreso desde un subdominio, y la **mecánica de interacción** persona ↔ empresa probada de punta a punta | ✔ | ✔ | 5, 6 y C |
 | 8 | WhatsApp (número de la plataforma: códigos, invitaciones, avisos de la cuenta, bot de ingreso) | ✔ | ✔ | 3 |
 | 9 | Endurecimiento: TOTP para operadores, **caché en Redis**, rate limit, headers, observabilidad, fuzz de aislamiento | ✔ | ✔ | 5–8 |
 | 10 | Despliegue y operación: CI/CD, migration bundle, backup, runbook, exportar mis datos | ✔ | ✔ | 9 |
@@ -377,7 +377,8 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
      - el back pendiente de la 5 (T10 a T18);
      - la alineación del front: Paquete 2, punto 1.11, Paquete 4 con los teléfonos de v78 y Paquete 5, que es el A00 del plan de la 5;
   2. la consolidación;
-  3. las pantallas de la 5 (T19 a T25), que ya usan las piezas comunes y cierran la etapa.
+  3. las pantallas de la 5 (T19 a T25), que ya usan las piezas comunes y cierran la etapa;
+  4. la Etapa 7, que programa Codex, recién con la 5 cerrada. El 2026-10-04 el usuario pidió que antes de seguir quede todo hasta la 6 cerrado, documentado y alineado: pantallas, lienzo y una sola forma de programar.
 
 ---
 
