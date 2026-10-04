@@ -147,6 +147,50 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Demoting_an_owner_checks_only_this_organization()
+    {
+        using var ownerClient = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false });
+        var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
+        using var memberClient = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false });
+        var user = await AccountJourney.RegisterAsync(factory, memberClient, Ct);
+        var (tenantId, _) = await CreateOrganizationAsync(owner.UserId);
+        // La otra cuenta es la única Dueña de otra organización.
+        await CreateOrganizationAsync(user.UserId);
+        await AccountJourney.AuthorizeAsync(ownerClient, "business", Ct);
+        var memberId = await AddActiveMemberAsync(tenantId, user.UserId);
+        using var rolesResponse = await ownerClient.GetAsync("/api/roles/paged?scope=Organization&page=1&pageSize=50", Ct);
+        Assert.Equal(HttpStatusCode.OK, rolesResponse.StatusCode);
+        using var rolesJson = JsonDocument.Parse(await rolesResponse.Content.ReadAsStringAsync(Ct));
+        var ownerRoleId = Assert.Single(rolesJson.RootElement.GetProperty("items").EnumerateArray(),
+            role => role.GetProperty("isSystemRole").GetBoolean() && role.GetProperty("name").GetString() == "Dueño")
+            .GetProperty("id").GetGuid();
+        using var promoted = await ownerClient.PutAsJsonAsync($"/api/users/{memberId:D}", new
+        {
+            roleIds = new[] { ownerRoleId },
+            companies = Array.Empty<object>(),
+            version = await UserVersionAsync(ownerClient, memberId),
+        }, Ct);
+        Assert.True(promoted.StatusCode == HttpStatusCode.NoContent, await promoted.Content.ReadAsStringAsync(Ct));
+
+        // Acá queda otra Dueña activa: desactivarla y quitarle el rol no mira la otra organización.
+        using var disabled = await ownerClient.PutAsJsonAsync($"/api/users/{memberId:D}/status",
+            new { isActive = false, version = await UserVersionAsync(ownerClient, memberId) }, Ct);
+        Assert.True(disabled.StatusCode == HttpStatusCode.NoContent, await disabled.Content.ReadAsStringAsync(Ct));
+        using var enabled = await ownerClient.PutAsJsonAsync($"/api/users/{memberId:D}/status",
+            new { isActive = true, version = await UserVersionAsync(ownerClient, memberId) }, Ct);
+        Assert.True(enabled.StatusCode == HttpStatusCode.NoContent, await enabled.Content.ReadAsStringAsync(Ct));
+        using var demoted = await ownerClient.PutAsJsonAsync($"/api/users/{memberId:D}", new
+        {
+            roleIds = Array.Empty<Guid>(),
+            companies = Array.Empty<object>(),
+            version = await UserVersionAsync(ownerClient, memberId),
+        }, Ct);
+        Assert.True(demoted.StatusCode == HttpStatusCode.NoContent, await demoted.Content.ReadAsStringAsync(Ct));
+    }
+
+    [Fact]
     public async Task Updating_organization_roles_preserves_company_roles_for_an_inactive_membership()
     {
         using var ownerClient = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"),

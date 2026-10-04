@@ -1,7 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
-using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
@@ -27,9 +26,8 @@ internal sealed class OrganizationUserAdministratorGuard(
             && snapshot.Assignments.Any(row => row.RoleId == ownerRole.Id && row.CompanyId is null)
             && !keepsOwner && member.UserId is { } ownerId)
         {
-            var canLeave = await lastTenantAdmin.CheckCanLeaveAsync(ownerId, cancellationToken);
-            if (canLeave.IsFailure) return canLeave.Error.Code == AccountDeletionErrors.LastAdmin.Code
-                ? MemberErrors.LastTenantAdmin : canLeave;
+            var canLeave = await lastTenantAdmin.CheckAnotherOwnerAsync(member.TenantId, ownerId, cancellationToken);
+            if (canLeave.IsFailure) return canLeave;
         }
 
         var companyAdmin = await roles.GetByNameAsync(SystemRoles.CompanyAdmin, cancellationToken);
