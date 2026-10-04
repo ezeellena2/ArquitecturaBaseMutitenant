@@ -47,7 +47,10 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
         }, Ct);
         Assert.True(issued.StatusCode == HttpStatusCode.Created,
             await issued.Content.ReadAsStringAsync(Ct));
-        var invitationId = await issued.Content.ReadFromJsonAsync<Guid>(Ct);
+        // Tablero Usuarios: «Invitamos a … La invitación vence el …».
+        using var issuedJson = JsonDocument.Parse(await issued.Content.ReadAsStringAsync(Ct));
+        var invitationId = issuedJson.RootElement.GetProperty("invitationId").GetGuid();
+        var expiresAtUtc = issuedJson.RootElement.GetProperty("expiresAtUtc").GetDateTime();
 
         using var listed = await ownerClient.GetAsync("/api/users/paged?page=1&pageSize=50&state=Invited", Ct);
         Assert.Equal(HttpStatusCode.OK, listed.StatusCode);
@@ -67,8 +70,9 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
         {
             using var tenant = scope.ServiceProvider.GetRequiredService<ITenantScope>().Enter(tenantId);
             var invitations = scope.ServiceProvider.GetRequiredService<IInvitationReader>();
-            Assert.Equal(InvitationStatus.Revoked,
-                (await invitations.FindByIdAsync(invitationId, Ct))!.Status);
+            var first = await invitations.FindByIdAsync(invitationId, Ct);
+            Assert.Equal(InvitationStatus.Revoked, first!.Status);
+            Assert.Equal(first.ExpiresAtUtc, expiresAtUtc.ToUniversalTime(), TimeSpan.FromMilliseconds(1));
             var current = await invitations.FindByIdAsync(resentInvitationId, Ct);
             Assert.Equal(InvitationStatus.Pending, current!.Status);
             Assert.Equal(invitedMemberId, current.MemberId);

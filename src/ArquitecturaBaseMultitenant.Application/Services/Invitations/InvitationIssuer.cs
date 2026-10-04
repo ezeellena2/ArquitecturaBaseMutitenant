@@ -59,6 +59,6 @@ internal sealed class InvitationIssuer(IInvitationRepository invitations, IMembe
         invitations.Add(invitation);
         var token = tokens.Protect(new InvitationTokenData(tenantId, invitation.Id, secret));
         await delivery.EnqueueAsync(invitation, organization, token, userId, cancellationToken, preparedSettings, grant);
-        return new IssuedInvitation(invitation.Id, member);
+        return new IssuedInvitation(invitation.Id, member, invitation.ExpiresAtUtc);
     }
 }

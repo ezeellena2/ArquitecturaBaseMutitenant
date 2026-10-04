@@ -57,7 +57,7 @@ internal sealed class OrganizationUserService(
             return row is null ? MemberErrors.NotFound : ToResponse(row);
         });
 
-    public Task<Result<Guid>> InviteAsync(InviteOrganizationUserRequest request,
+    public Task<Result<OrganizationInvitationIssuedResponse>> InviteAsync(InviteOrganizationUserRequest request,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);

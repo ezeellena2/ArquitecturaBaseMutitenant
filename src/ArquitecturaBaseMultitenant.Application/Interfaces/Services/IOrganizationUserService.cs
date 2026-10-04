@@ -11,7 +11,8 @@ public interface IOrganizationUserService
     Task<Result<OrganizationUserFilterCountsResponse>> GetFilterCountsAsync(ListOrganizationUsersRequest request,
         CancellationToken cancellationToken);
     Task<Result<OrganizationUserResponse>> GetAsync(Guid memberId, CancellationToken cancellationToken);
-    Task<Result<Guid>> InviteAsync(InviteOrganizationUserRequest request, CancellationToken cancellationToken);
+    Task<Result<OrganizationInvitationIssuedResponse>> InviteAsync(InviteOrganizationUserRequest request,
+        CancellationToken cancellationToken);
     Task<Result<Guid>> ResendInvitationAsync(Guid invitationId, CancellationToken cancellationToken);
     Task<Result> RevokeInvitationAsync(Guid invitationId, CancellationToken cancellationToken);
     Task<Result> UpdateAsync(UpdateOrganizationUserRequest request, CancellationToken cancellationToken);

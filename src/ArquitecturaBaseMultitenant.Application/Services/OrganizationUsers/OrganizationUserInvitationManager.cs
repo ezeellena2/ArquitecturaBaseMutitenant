@@ -20,7 +20,7 @@ internal sealed class OrganizationUserInvitationManager(
     IUnitOfWork unitOfWork,
     TimeProvider timeProvider)
 {
-    internal async Task<Result<Guid>> InviteAsync(InviteOrganizationUserRequest request,
+    internal async Task<Result<OrganizationInvitationIssuedResponse>> InviteAsync(InviteOrganizationUserRequest request,
         DesiredOrganizationUserAssignments desired, CancellationToken cancellationToken)
     {
         if (currentUser.UserId is not { } inviterId || inviterId == Guid.Empty) return AccessErrors.NotMember;
@@ -31,7 +31,9 @@ internal sealed class OrganizationUserInvitationManager(
             if (issued.IsFailure) return issued.Error;
             var assigned = await assignmentManager.SetAsync(issued.Value.MemberId, desired, ct,
                 memberInUnitOfWork: issued.Value.Member);
-            return assigned.IsFailure ? assigned.Error : Result<Guid>.Success(issued.Value.InvitationId);
+            return assigned.IsFailure ? assigned.Error
+                : Result<OrganizationInvitationIssuedResponse>.Success(
+                    new OrganizationInvitationIssuedResponse(issued.Value.InvitationId, issued.Value.ExpiresAtUtc));
         }, CommitPolicy.OnSuccess, cancellationToken);
     }
 

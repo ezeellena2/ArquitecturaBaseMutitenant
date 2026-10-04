@@ -51,6 +51,9 @@ public sealed record InviteOrganizationUserRequest(Email? Email, IReadOnlyCollec
 
 public sealed record InviteCompanyRolesRequest(Guid CompanyId, IReadOnlyCollection<Guid>? RoleIds);
 
+/// <summary>La invitación emitida y cuándo vence, para el aviso «Invitamos a … La invitación vence el …».</summary>
+public sealed record OrganizationInvitationIssuedResponse(Guid InvitationId, DateTime ExpiresAtUtc);
+
 /// <summary>Guarda roles y empresas; <c>IsActive</c> cambia el estado en la misma operación (null lo deja igual).</summary>
 public sealed record UpdateOrganizationUserRequest(Guid MemberId, IReadOnlyCollection<Guid>? RoleIds,
     IReadOnlyCollection<InviteCompanyRolesRequest>? Companies, uint? Version, bool? IsActive = null);
