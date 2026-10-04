@@ -48,15 +48,13 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
     {
         ArgumentNullException.ThrowIfNull(request);
         var tenantId = tenantContext.RequiredTenantId;
-        var rows = await Memberships(tenantId, companyId, request, cancellationToken);
-        var totalCount = await rows.CountAsync(cancellationToken);
-        var ordered = rows.ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort, row => row.MemberId);
-        var page = await ordered.Skip((request.Page - 1) * request.PageSize).Take(request.PageSize)
-            .ToArrayAsync(cancellationToken);
-        if (page.Length == 0)
-            return new PagedResult<CompanyMemberRow>([], request.Page, request.PageSize, totalCount);
+        var page = await Memberships(tenantId, companyId, request)
+            .ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort, row => row.MemberId)
+            .ToPagedResultAsync(request, cancellationToken);
+        if (page.Items.Count == 0)
+            return new PagedResult<CompanyMemberRow>([], page.Page, page.PageSize, page.TotalCount);
 
-        var memberIds = page.Select(row => row.MemberId).ToArray();
+        var memberIds = page.Items.Select(row => row.MemberId).ToArray();
         var pageRows = await ProjectAsync(tenantId, companyId, memberIds, cancellationToken);
         var rowsById = pageRows.ToDictionary(member => member.MemberId);
         var roleRows = await (from assignment in context.RoleAssignments.AsNoTracking()
@@ -80,14 +78,14 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
         var pendingEmails = invitationEmails.GroupBy(item => item.MemberId)
             .ToDictionary(group => group.Key, group => group.First().Destination.DisplayValue);
 
-        var mapped = page.Select(state => (state.State, Member: rowsById[state.MemberId]))
+        var mapped = page.Items.Select(state => (state.State, Member: rowsById[state.MemberId]))
             .Select(item => new CompanyMemberRow(item.Member.MemberId, item.Member.UserId,
             item.Member.DisplayName.Length == 0
                 ? pendingEmails.GetValueOrDefault(item.Member.MemberId, "") : item.Member.DisplayName,
             ToEmail(item.Member.Email ?? pendingEmails.GetValueOrDefault(item.Member.MemberId)), item.State,
             item.Member.MembershipStatus, rolesByMember.GetValueOrDefault(item.Member.MemberId, []),
             item.Member.Version, item.Member.CreatedAtUtc)).ToArray();
-        return new PagedResult<CompanyMemberRow>(mapped, request.Page, request.PageSize, totalCount);
+        return new PagedResult<CompanyMemberRow>(mapped, page.Page, page.PageSize, page.TotalCount);
     }
 
     public async Task<CompanyMemberFilterCountsResponse> GetFilterCountsAsync(Guid companyId,
@@ -95,8 +93,7 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
     {
         ArgumentNullException.ThrowIfNull(request);
         var tenantId = tenantContext.RequiredTenantId;
-        var rows = await Memberships(tenantId, companyId, request with { State = null }, cancellationToken);
-        var counts = await rows.GroupBy(row => row.State)
+        var counts = await Memberships(tenantId, companyId, request with { State = null }).GroupBy(row => row.State)
             .Select(group => new { State = group.Key, Count = group.Count() })
             .ToDictionaryAsync(group => group.State, group => group.Count, cancellationToken);
         int Count(CompanyMemberState state) => counts.GetValueOrDefault(state);
@@ -143,30 +140,15 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
             rolesByCompany.GetValueOrDefault(item.CompanyId, [])))];
     }
 
-    private async Task<IQueryable<StateRow>> Memberships(Guid tenantId, Guid companyId,
-        ListCompanyMembersRequest request, CancellationToken cancellationToken)
+    private IQueryable<StateRow> Memberships(Guid tenantId, Guid companyId, ListCompanyMembersRequest request)
     {
         var rows = context.CompanyMemberships.AsNoTracking()
             .Where(membership => membership.TenantId == tenantId && membership.CompanyId == companyId);
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
-            var pattern = $"%{EscapeLike(request.Search.Trim())}%";
-            var invitationMatches = await context.Database.SqlQuery<Guid>($"""
-                    SELECT DISTINCT "MemberId" AS "Value"
-                    FROM tenant."Invitations"
-                    WHERE "TenantId" = {tenantId}
-                      AND "Status" = 'Pending'
-                      AND "Destination" ILIKE {pattern} ESCAPE '\'
-                    """).ToArrayAsync(cancellationToken);
-            rows = rows.Where(membership => invitationMatches.Contains(membership.MemberId)
-                || context.Members.AsNoTracking().Any(member => member.TenantId == tenantId
-                    && member.Id == membership.MemberId
-                    && (context.Users.AsNoTracking().Any(user => user.Id == member.UserId
-                            && user.DisplayName != null && EF.Functions.ILike(user.DisplayName, pattern, "\\"))
-                        || context.LoginMethods.AsNoTracking().Any(method => method.UserId == member.UserId
-                            && method.Type == LoginMethodType.Email && method.VerifiedAtUtc != null
-                            && EF.Functions.ILike(method.Value, pattern, "\\")))));
+            var matching = MemberSearch.MatchingMemberIds(context, tenantId, request.Search);
+            rows = rows.Where(membership => matching.Contains(membership.MemberId));
         }
 
         if (request.RoleId is { } roleId)
@@ -223,11 +205,6 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
                 .Select(method => method.Value).FirstOrDefault(),
             membership.Status, membership.Version, membership.CreatedAtUtc))
         .ToArrayAsync(cancellationToken);
-
-    private static string EscapeLike(string value) => value
-        .Replace("\\", "\\\\", StringComparison.Ordinal)
-        .Replace("%", "\\%", StringComparison.Ordinal)
-        .Replace("_", "\\_", StringComparison.Ordinal);
 
     private static Email? ToEmail(string? value) => value is null ? null : Email.Create(value).Value;
 

@@ -31,6 +31,8 @@ public sealed partial class IdentityStorageAccessTests
         Infrastructure + "Persistence.Readers.SecurityEventReader",
         Infrastructure + "Persistence.Readers.CompanyAdminReader",
         Infrastructure + "Persistence.Readers.CompanyMembershipReader",
+        // La búsqueda de personas de Usuarios y Miembros de empresa: nombre y correos verificados.
+        Infrastructure + "Persistence.Readers.MemberSearch",
         Infrastructure + "Persistence.Readers.OrganizationAuditReader",
         Infrastructure + "Persistence.Readers.OrganizationUserReader",
         Infrastructure + "Persistence.Readers.TenantDomainReader",

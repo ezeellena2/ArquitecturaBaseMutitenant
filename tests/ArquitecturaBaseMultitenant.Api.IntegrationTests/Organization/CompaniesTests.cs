@@ -364,6 +364,33 @@ public sealed class CompaniesTests(ApiFactory factory)
         Assert.Equal(2, (await MembersAsync(adminClient, $"/api/companies/{companyId:D}/members/paged?pageSize=50")).Length);
     }
 
+    // Búsqueda: los miembros de una empresa se buscan con ApplySearch, sin acentos ni mayúsculas, como el resto.
+    [Fact]
+    public async Task Searching_company_members_ignores_accents_and_case()
+    {
+        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
+        var tenantId = await OrganizationJourney.StageAsync(factory, owner, "Búsqueda con acentos", Ct);
+        await AccountJourney.AuthorizeAsync(client, "business", Ct);
+        var companyId = await OrganizationJourney.CreateCompanyAsync(client, "Delta Norte S.A.", Ct);
+        using var rolesResponse = await client.GetAsync($"/api/roles/paged?companyId={companyId:D}&pageSize=50", Ct);
+        using var rolesJson = JsonDocument.Parse(await rolesResponse.Content.ReadAsStringAsync(Ct));
+        var adminRoleId = Assert.Single(rolesJson.RootElement.GetProperty("items").EnumerateArray(),
+            role => role.GetProperty("isSystemRole").GetBoolean()).GetProperty("id").GetGuid();
+        var memberId = await OrganizationJourney.AddNamedMemberAsync(factory, tenantId, "Lucía Pérez", Ct);
+        using var added = await AccountJourney.PostAsync(client, $"/api/companies/{companyId:D}/members",
+            new { memberId, roleIds = new[] { adminRoleId } }, Ct);
+        Assert.True(added.StatusCode == HttpStatusCode.NoContent, await added.Content.ReadAsStringAsync(Ct));
+        var membersPath = $"/api/companies/{companyId:D}/members/paged?pageSize=50&search=";
+
+        foreach (var search in new[] { "perez", "PÉREZ", "lucia pe" })
+        {
+            var found = Assert.Single(await MembersAsync(client, membersPath + Uri.EscapeDataString(search)));
+            Assert.Equal(memberId, found.GetProperty("memberId").GetGuid());
+        }
+        Assert.Empty(await MembersAsync(client, membersPath + Uri.EscapeDataString("pérezz")));
+    }
+
     // B8: un invitado al que le sacaron la empresa queda con la membresía inactiva. Tiene un solo estado, el de la
     // política (Invitado), y se cuenta una sola vez.
     [Fact]

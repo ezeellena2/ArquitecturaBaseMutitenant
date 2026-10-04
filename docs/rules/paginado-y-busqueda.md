@@ -17,6 +17,7 @@
 - **Respuesta:** `PagedResult<XRow>`. Una página fuera de rango devuelve `items` vacío con el `totalCount` real, sin error.
 - **Filtros y conteos:** una sola función `ApplyXFilters`, que usan el listado y `GET …/filter-counts`.
 - **Búsqueda:** siempre `ApplySearch`. No distingue acentos ni mayúsculas y escapa `%` y `_`. Cada columna buscable lleva un índice GIN trigram sobre `f_unaccent(lower(col))`.
+  - Para buscar entre varios valores de una fila (todos los correos verificados de una persona), cada tabla filtra con `ApplySearch` y las partes se combinan con `Contains`: `MemberSearch` lo hace para Usuarios y Miembros de empresa. Una columna con conversor (un `Email`) se busca con `EF.Property<string>`.
 - **Índices:** cada campo del `SortMap` tiene `(TenantId, campo, Id)`.
 - **Orden de textos:** lo da la collation ICU `es-AR` de la base ([persistencia-ef](persistencia-ef.md)), sin `ToLower` ni `COLLATE` a mano.
 - **Cursor:** `CursorRequest`, `CursorResult<T>` y `ToCursorResultAsync`. Orden fijo por instante UTC e Id, del más nuevo al más viejo; sin total. `CursorCodec` codifica ambos en base64url; un cursor inválido devuelve 400 `Validation.Failed` con `errors.after`.
@@ -33,7 +34,7 @@
 - `Infrastructure/Persistence/Readers/RoleReader.cs` y `Application/Models/Roles/ListRolesRequest.cs` (E4)
 
 ## Lo verifica
-- `PaginationTests` (E2), `CursorPaginationTests` (E2), `SearchTests` (E2).
+- `PaginationTests` (E2), `CursorPaginationTests` (E2), `SearchTests` (E2); la búsqueda con acentos de Usuarios y Miembros de empresa, en `OrganizationUsersTests` (E6) y `CompaniesTests` (E6).
 - `SortIndexTests` (E2): índice por cada campo de un `SortMap`.
 - `PagedRequestValidatorTests` (E1) y `OpenApiTests` (contrato de tamaños de página).
 

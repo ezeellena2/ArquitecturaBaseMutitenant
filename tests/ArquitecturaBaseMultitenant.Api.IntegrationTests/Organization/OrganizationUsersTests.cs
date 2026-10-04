@@ -146,6 +146,41 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
         Assert.Equal("Tenancy.Member.LastTenantAdmin", rolesProblem.RootElement.GetProperty("code").GetString());
     }
 
+    // Búsqueda: Usuarios busca con ApplySearch, sin acentos ni mayúsculas, por nombre, correo e invitación pendiente.
+    [Fact]
+    public async Task Searching_users_ignores_accents_and_finds_pending_invitations()
+    {
+        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false });
+        var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
+        var (tenantId, ownerMemberId) = await CreateOrganizationAsync(owner.UserId);
+        await AccountJourney.AuthorizeAsync(client, "business", Ct);
+        var memberId = await OrganizationJourney.AddNamedMemberAsync(factory, tenantId, "Lucía Pérez", Ct);
+        var invited = $"pendiente-{Guid.NewGuid():N}@example.test";
+        using var issued = await AccountJourney.PostAsync(client, "/api/users/invitations", new
+        {
+            email = invited,
+            roleIds = Array.Empty<Guid>(),
+            companies = Array.Empty<object>(),
+        }, Ct);
+        Assert.True(issued.StatusCode == HttpStatusCode.Created, await issued.Content.ReadAsStringAsync(Ct));
+        const string path = "/api/users/paged?pageSize=50&search=";
+
+        foreach (var search in new[] { "perez", "PÉREZ", "lucia pe" })
+            Assert.Equal(memberId, Assert.Single(await UsersAsync(client, path + Uri.EscapeDataString(search)))
+                .GetProperty("memberId").GetGuid());
+        // El correo de la cuenta y el de una invitación pendiente; los comodines se buscan como texto.
+        var ownerText = owner.Email.Value[..owner.Email.Value.IndexOf('@', StringComparison.Ordinal)][^12..];
+        Assert.Equal(ownerMemberId, Assert.Single(await UsersAsync(client, path + Uri.EscapeDataString(ownerText)))
+            .GetProperty("memberId").GetGuid());
+        Assert.Equal(invited, Assert.Single(await UsersAsync(client, path + Uri.EscapeDataString(invited[..20])))
+            .GetProperty("email").GetString());
+        Assert.Empty(await UsersAsync(client, path + Uri.EscapeDataString("%_\\")));
+        // Ordenar por correo, con una invitación pendiente en la lista, responde.
+        foreach (var sort in new[] { "email", "-email" })
+            Assert.Equal(3, (await UsersAsync(client, $"/api/users/paged?pageSize=50&sort={sort}")).Length);
+    }
+
     [Fact]
     public async Task Demoting_an_owner_checks_only_this_organization()
     {
@@ -429,6 +464,14 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
         return json.RootElement.GetProperty("version").GetUInt32();
+    }
+
+    private static async Task<JsonElement[]> UsersAsync(HttpClient client, string path)
+    {
+        using var response = await client.GetAsync(path, Ct);
+        Assert.True(response.StatusCode == HttpStatusCode.OK, await response.Content.ReadAsStringAsync(Ct));
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
+        return [.. json.RootElement.GetProperty("items").EnumerateArray().Select(item => item.Clone())];
     }
 
     private static async Task<string?> UserStateAsync(HttpClient client, Guid memberId)

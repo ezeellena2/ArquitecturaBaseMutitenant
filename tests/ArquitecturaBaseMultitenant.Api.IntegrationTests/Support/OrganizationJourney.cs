@@ -32,6 +32,22 @@ internal static class OrganizationJourney
         return tenant.Id;
     }
 
+    /// <summary>Crea una cuenta con ese nombre, sin métodos de ingreso, y la suma como miembro activo, sin roles.</summary>
+    internal static async Task<Guid> AddNamedMemberAsync(ApiFactory factory, Guid tenantId, string displayName,
+        CancellationToken ct)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var userId = Guid.Empty;
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async work =>
+        {
+            userId = (await services.GetRequiredService<IUserRepository>().CreateAsync(displayName, "es-AR",
+                "America/Argentina/Buenos_Aires", work)).Id;
+            return Result.Success();
+        }, CommitPolicy.OnSuccess, ct);
+        return await AddActiveMemberAsync(factory, tenantId, userId, ct);
+    }
+
     /// <summary>Suma una cuenta como miembro activo, sin roles.</summary>
     internal static async Task<Guid> AddActiveMemberAsync(ApiFactory factory, Guid tenantId, Guid userId,
         CancellationToken ct)

@@ -53,8 +53,7 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
         ArgumentNullException.ThrowIfNull(request);
         RequireUtc(nowUtc);
         var tenantId = tenantContext.RequiredTenantId;
-        var rows = await Filtered(tenantId, request, nowUtc, cancellationToken);
-        var page = await rows.ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort, row => row.MemberId)
+        var page = await Filtered(tenantId, request, nowUtc).ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort, row => row.MemberId)
             .ToPagedResultAsync(request, cancellationToken);
         if (page.Items.Count == 0)
             return new PagedResult<OrganizationUserRow>([], page.Page, page.PageSize, page.TotalCount);
@@ -69,8 +68,7 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
         ArgumentNullException.ThrowIfNull(request);
         RequireUtc(nowUtc);
         var tenantId = tenantContext.RequiredTenantId;
-        var rows = await Filtered(tenantId, request with { State = null }, nowUtc, cancellationToken);
-        var counts = await rows.GroupBy(row => row.State)
+        var counts = await Filtered(tenantId, request with { State = null }, nowUtc).GroupBy(row => row.State)
             .Select(group => new { State = group.Key, Count = group.Count() })
             .ToDictionaryAsync(group => group.State, group => group.Count, cancellationToken);
         int Count(OrganizationUserState state) => counts.GetValueOrDefault(state);
@@ -90,26 +88,13 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
         return row is null ? null : (await HydrateAsync(tenantId, [row], cancellationToken))[0];
     }
 
-    private async Task<IQueryable<StateRow>> Filtered(Guid tenantId, ListOrganizationUsersRequest request,
-        DateTime nowUtc, CancellationToken cancellationToken)
+    private IQueryable<StateRow> Filtered(Guid tenantId, ListOrganizationUsersRequest request, DateTime nowUtc)
     {
         var members = Members(tenantId);
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
-            var pattern = $"%{EscapeLike(request.Search.Trim())}%";
-            var invitationMatches = await context.Database.SqlQuery<Guid>($"""
-                    SELECT DISTINCT "MemberId" AS "Value"
-                    FROM tenant."Invitations"
-                    WHERE "TenantId" = {tenantId}
-                      AND "Status" = 'Pending'
-                      AND "Destination" ILIKE {pattern} ESCAPE '\'
-                    """).ToArrayAsync(cancellationToken);
-            members = members.Where(member => context.Users.AsNoTracking().Any(user => user.Id == member.UserId
-                    && user.DisplayName != null && EF.Functions.ILike(user.DisplayName, pattern, "\\"))
-                || context.LoginMethods.AsNoTracking().Any(method => method.UserId == member.UserId
-                    && method.Type == LoginMethodType.Email && method.VerifiedAtUtc != null
-                    && EF.Functions.ILike(method.Value, pattern, "\\"))
-                || invitationMatches.Contains(member.Id));
+            var matching = MemberSearch.MatchingMemberIds(context, tenantId, request.Search);
+            members = members.Where(member => matching.Contains(member.Id));
         }
 
         if (request.CompanyId is { } companyId)
@@ -256,11 +241,6 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
     {
         if (value.Kind != DateTimeKind.Utc) throw new ArgumentException("The instant must be UTC.", nameof(value));
     }
-
-    private static string EscapeLike(string value) => value
-        .Replace("\\", "\\\\", StringComparison.Ordinal)
-        .Replace("%", "\\%", StringComparison.Ordinal)
-        .Replace("_", "\\_", StringComparison.Ordinal);
 
     /// <summary>Lo que decide el estado, el orden y la búsqueda de una persona, leído en SQL.</summary>
     internal sealed class StateInput
