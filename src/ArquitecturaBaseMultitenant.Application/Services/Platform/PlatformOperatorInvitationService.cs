@@ -16,9 +16,10 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
 /// <summary>
 /// Invita operadores (ADR 0042). Un correo que ya tiene cuenta se rechaza con su motivo: es la excepción de la ADR
-/// 0041, porque invitar pide <c>platform.operators.manage</c>. La invitación figura en Cuentas como pendiente hasta el
-/// primer ingreso con código a Plataforma y vence a los 7 días. Reenviar renueva el plazo y manda el correo de nuevo;
-/// revocar la borra y libera el correo. Cada acción deja su SecurityEvent con un motivo fijo.
+/// 0041, porque invitar pide <c>platform.operators.manage</c>. Si esa cuenta es una invitación de operador sin
+/// aceptar, vigente o vencida, el motivo pide reenviarla desde la lista (lienzo v99). La invitación figura en Cuentas
+/// como pendiente hasta el primer ingreso con código a Plataforma y vence a los 7 días. Reenviar renueva el plazo y
+/// manda el correo de nuevo; revocar la borra y libera el correo. Cada acción deja su SecurityEvent con un motivo fijo.
 /// </summary>
 internal sealed class PlatformOperatorInvitationService(
     PlatformOperatorProvisioner provisioner,
@@ -44,8 +45,11 @@ internal sealed class PlatformOperatorInvitationService(
             {
                 // El mismo lock que el ingreso y el registro con ese correo: nadie crea la cuenta en el medio.
                 await codes.LockDestinationAsync(LoginCodeDestination.ForEmail(email), work);
-                if (await lookup.FindMethodAsync(LoginMethodType.Email, email.Value, work) is not null
-                    || (await lookup.FindVerifiedUsersByEmailAsync(email, work)).Count > 0)
+                if (await lookup.FindMethodAsync(LoginMethodType.Email, email.Value, work) is { } existing)
+                    return await provisioner.IsPendingAsync(existing.UserId, work)
+                        ? PlatformOperatorErrors.InvitationExists
+                        : PlatformOperatorErrors.AccountExists;
+                if ((await lookup.FindVerifiedUsersByEmailAsync(email, work)).Count > 0)
                     return PlatformOperatorErrors.AccountExists;
                 var invited = await provisioner.CreateAsync(email, request.Permissions!, clock.GetUtcNow().UtcDateTime, work);
                 if (invited.IsFailure) return invited.Error;

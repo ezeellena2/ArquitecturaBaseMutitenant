@@ -9,6 +9,7 @@ public static class PlatformOperatorErrors
     public const string PermissionRepeatedCode = "Platform.Operator.PermissionRepeated";
     public const string LastManagerCode = "Platform.Operator.LastManager";
     public const string AccountExistsCode = "Platform.Operator.AccountExists";
+    public const string InvitationExistsCode = "Platform.Operator.InvitationExists";
     public const string NotOperatorCode = "Platform.Operator.NotOperator";
     public const string InvitationPendingCode = "Platform.Operator.InvitationPending";
     public const string NoPendingInvitationCode = "Platform.Operator.NoPendingInvitation";
@@ -27,6 +28,12 @@ public static class PlatformOperatorErrors
     /// </summary>
     public static readonly Error AccountExists = Error.Conflict(AccountExistsCode,
         "The email already belongs to an account; an operator cannot have personal profiles.");
+    /// <summary>
+    /// El correo ya tiene una invitación de operador sin aceptar, vigente o vencida: se reenvía desde la lista
+    /// (lienzo v99).
+    /// </summary>
+    public static readonly Error InvitationExists = Error.Conflict(InvitationExistsCode,
+        "The email already has an operator invitation; resend it from the list.");
     public static readonly Error NotOperator = Error.NotFound(NotOperatorCode, "The account is not a platform operator.");
 
     /// <summary>ADR 0042: una invitación de operador sin aceptar solo se reenvía o se revoca.</summary>

@@ -279,6 +279,28 @@ public sealed class PlatformOperatorTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Inviting_an_email_with_a_pending_or_expired_invitation_asks_to_resend_it()
+    {
+        var (manager, _) = await OperatorAsync([PlatformPermissions.Operators.Manage, PlatformPermissions.Accounts.Read]);
+        var (id, email) = await InviteAsync(manager, [PlatformPermissions.Audit.Read]);
+
+        await AssertInvitationExistsAsync();
+        await ExpireAsync(id);
+        await AssertInvitationExistsAsync();
+
+        async Task AssertInvitationExistsAsync()
+        {
+            using var again = await PlatformJourney.PostAsync(manager, "/api/platform/operators/invitations",
+                new { email, permissions = new[] { PlatformPermissions.Audit.Read } }, Ct);
+            Assert.Equal(HttpStatusCode.Conflict, again.StatusCode);
+            var problem = await JsonAsync(again);
+            Assert.Equal(PlatformOperatorErrors.InvitationExistsCode, problem.GetProperty("code").GetString());
+            Assert.Equal("Ese correo ya tiene una invitación. Reenviala desde la lista.",
+                problem.GetProperty("detail").GetString());
+        }
+    }
+
+    [Fact]
     public async Task Invitations_reject_accounts_that_already_exist_and_invalid_permissions()
     {
         var (manager, _) = await OperatorAsync([PlatformPermissions.Operators.Manage, PlatformPermissions.Accounts.Read]);

@@ -46,6 +46,10 @@ internal sealed class PlatformOperatorProvisioner(IUserRepository users, ILoginM
             account.Culture, account.TimeZoneId);
     }
 
+    /// <summary>La cuenta es una invitación de operador sin aceptar, vigente o vencida.</summary>
+    public async Task<bool> IsPendingAsync(Guid accountId, CancellationToken ct) =>
+        (await users.GetByIdAsync(accountId, ct))?.HasPendingOperatorInvitation == true;
+
     /// <summary>Reenviar: bajo el lock de la cuenta, la invitación vigente o vencida vence de nuevo en 7 días.</summary>
     public async Task<Result<PlatformOperatorInvitee>> RenewAsync(Guid accountId, DateTime nowUtc, CancellationToken ct)
     {
