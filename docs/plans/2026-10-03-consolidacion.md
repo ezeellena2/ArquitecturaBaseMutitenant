@@ -228,6 +228,10 @@ Cada servicio de entrada abre la transacción en su método público, y los help
 
   Tests: cada clase de `Services` se registra una sola vez, y `ApiFactory` corre con `ValidateOnBuild`.
 - [ ] **Sufijos:** la lista cerrada de sufijos de helpers, con los que quedaron después del bloque 3, va en `capas-y-flujo.md` y la verifica `ApplicationServicesTests`.
+- [ ] **Personas asignadas a un rol** (decisión 42, la eligió el usuario): `CountUsersAsync` cuenta todas las asignaciones, activas, invitadas y desactivadas.
+  - Mientras alguien tenga el rol, no se puede cambiar dónde vale.
+  - Borrarlo responde un 409 claro, en lugar de chocar con la clave foránea.
+  - Tests con un rol asignado solo a un invitado y solo a un desactivado: cambiar dónde vale y borrarlo.
 - [ ] **Repetir el alta de una empresa** (decisión 36): con el mismo `operationId` y sin la respuesta guardada (la clave venció o hubo un corte), hoy responde 409 en lugar de devolver la organización. La regla de idempotencia pide devolverla. Arreglo con el test de la repetición idéntica, primero en rojo.
 - [ ] **Invitaciones** (decisión 35): la entrada al alcance de la organización pasa a `InvitationService`; se borra el reenvío de `InvitationAcceptanceResolver.Enter` y `TenantScopeUsageTests` queda sin esos dos helpers.
 - [ ] **Hecho cuando** la suite completa del back pasa.
@@ -330,6 +334,7 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
   - las decisiones de v99 del front: la fecha corta, el subtítulo de M-Auditoria-Org y el correo del perfil activo;
   - «10 correos administrados» y los contratos regenerados;
   - las cuatro líneas de docs de v93.
+- [ ] **Tests lentos con la máquina cargada:** en la corrida completa, los de `CompaniesPage`, `CompanyDetailPage`, `SettingsPage` y `UserDetailPage` se pasan de 5 s. Solos pasan. Se hacen más livianos, o, si no se puede, el límite se sube en ese test con un comentario que diga por qué. Una suite que falla al azar no sirve de red.
 - [ ] **Hecho cuando** el relevamiento, vuelto a correr, no tiene diferencias «Nueva» de las etapas 1 a 6, salvo las que el usuario aceptó.
 
 ### 6. Front: Roles como referencia de verdad
@@ -482,6 +487,6 @@ Bloque 4 del back, primera parte (alcance de un rol, estado de un miembro y bús
     - El destino de una invitación es un `Email` con conversor: se busca y se ordena con `EF.Property<string>`. Así se arregló también ordenar Usuarios por correo: `/api/users/paged?sort=email` respondía 500, porque el orden leía `Destination.Value`, que EF no traduce. El front no ordena por correo; el test de búsqueda de Usuarios lo cubre.
     - Miembros de empresa pagina con `ToPagedResultAsync`.
     - **Queda abierto:** `OrganizationAuditReader` sigue con SQL crudo y su `EscapeLike`, porque busca en el JSON de los cambios y no es de miembros ni invitaciones. `tenant.Invitations.Destination` no tiene el índice trigram que la ficha pide para cada columna buscable; tampoco lo tenía antes.
-42. **Hallazgo sin corregir, D2 y los invitados:** `RoleReader.CountUsersAsync` cuenta solo miembros activos. Por el código, un rol asignado solo a invitados o a miembros inactivos puede cambiar de alcance, y esas asignaciones dejan de valer: los permisos efectivos las ignoran. Borrarlo chocaría con la clave foránea `Restrict` de `RoleAssignments`. Decidir si un invitado cuenta como «persona asignada» es de producto.
+42. **Hallazgo sin corregir, D2 y los invitados:** `RoleReader.CountUsersAsync` cuenta solo miembros activos. Por el código, un rol asignado solo a invitados o a miembros inactivos puede cambiar de alcance, y esas asignaciones dejan de valer: los permisos efectivos las ignoran. Borrarlo chocaría con la clave foránea `Restrict` de `RoleAssignments`. Decidir si un invitado cuenta como «persona asignada» es de producto. **Lo decidió el usuario el 2026-10-04:** cuentan todas las asignaciones, también las de invitados y desactivados.
 
 Verificación: `dotnet build` de la solución con 0 advertencias y `dotnet test` completo con Docker **1588/1588** (8m 51s). Durante el trabajo: arquitectura 142/142, unitarios de Application 451/451, dominio de roles 17/17 y la integración de Organización y Tenancy 142/142 (Usuarios, Empresas, Roles, permisos, Inicio y Auditoría incluidos).
