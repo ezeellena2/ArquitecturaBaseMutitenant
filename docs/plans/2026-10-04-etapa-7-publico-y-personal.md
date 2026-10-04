@@ -33,7 +33,7 @@
 - [`arbol.md`](../architecture/arbol.md): las entradas [E7].
 - ADR 0021, 0031 y 0032 (en el [índice](../decisions/README.md)) y [0035](../decisions/0035-baja-de-cuenta.md).
 - Front: `docs/architecture/frontend.md` §2, §3 y §4 («Auth» y «Teléfono»), `docs/architecture/arbol.md` y las fichas `accesos-y-permisos`, `paginado-y-listados`, `responsive` y `tests`.
-- Lienzo vigente, en `docs/design/lienzo/` del front (v94 o posterior). Cada tablero es un archivo `<Nombre>.dc.html`:
+- Lienzo vigente, en `docs/design/lienzo/` del front (v95 o posterior). Cada tablero es un archivo `<Nombre>.dc.html`:
   - los seis del alcance: `Landing`, `Landing-Movil`, `Directorio`, `M-Directorio`, `Pagina-Publica` y `M-Pagina-Publica`, con todos sus estados;
   - los criterios: `Criterio-Marco` y `Criterio-Decisiones` (P92 a P97);
   - para recorrerlos estado por estado en Chrome: `node scripts/recorrido-lienzo/recorrido.mjs`, desde el front.
@@ -54,7 +54,9 @@ Se copian tal cual: la estructura, los textos, el orden y los estados.
 - **Héroe, sin etiqueta:** «Para vos / y para tu empresa.», su texto, «Crear mi cuenta» y «Registrá tu empresa».
 - **Secciones, en este orden:**
   1. «Dos lados separados» (`#personas`);
-  2. «Empresas en ArquitecturaBase» (`#empresas`): el buscador «Buscar una empresa», tres tarjetas (logo, nombre, descripción y dirección, como «delta.plataforma.com») y «Ver todas las empresas», que lleva a `/empresas`;
+  2. «Empresas en ArquitecturaBase» (`#empresas`), con dos estados (el Tweak «empresas» del tablero):
+     - «Con empresas»: el buscador «Buscar una empresa», tres tarjetas (logo, nombre, descripción y dirección, como «delta.plataforma.com») y «Ver todas las empresas», que lleva a `/empresas`;
+     - «Sin empresas»: el buscador y «Todavía no hay empresas publicadas», con el mismo texto y el mismo estilo que el directorio vacío. No lleva «Ver todas las empresas»;
   3. «Tu empresa, en tres pasos» (`#empezar`);
   4. «Probalo hoy».
 - «Empresas», arriba, baja a `#empresas`.
@@ -215,7 +217,7 @@ Se fija acá para que los dos repos avancen en paralelo. El back lo publica en `
   - El orden por defecto es `name`; `pageSize`, 10, 20, 50 o 100; la búsqueda mira el nombre.
 - `GET /api/directory/{slug}/logo` devuelve la imagen o 404.
 - La portada pide `page=1&pageSize=10` y muestra las tres primeras, porque `PagedRequest` no tiene un tamaño 3.
-- **Nombres de las rutas.** Los comentarios de los tableros dicen `/api/public/site` y `/api/public/businesses`. Se usan `api/public-site` (como el `slug-availability` que ya existe) y `api/directory`, porque `api-http.md` prohíbe un prefijo de acceso en la ruta.
+- **Nombres de las rutas.** Son `api/public-site` (como el `slug-availability` que ya existe) y `api/directory`, porque `api-http.md` prohíbe un prefijo de acceso en la ruta. Los comentarios de los tableros usan los mismos desde el lienzo v95.
 
 **Ingresar desde un subdominio** (OIDC, cliente `web`):
 - `authorize` y `logout` navegan al issuer fijo, con:
@@ -237,11 +239,11 @@ Se fija acá para que los dos repos avancen en paralelo. El back lo publica en `
   - Aspire apagado (`aspire ps` vacío);
   - el último commit de cada repo, anotado en «Registro de resultados».
 - [ ] **La línea de base del arnés:** `realinear-docs --detectar` sale 0 en los dos repos y `ClosedStages` sigue en `{0,1,2,3,4,6}` (más el 5, si ya cerró).
-- [ ] **Los tableros del alcance validados en el lienzo vigente** (v94 o posterior):
+- [ ] **Los tableros del alcance validados en el lienzo vigente** (v95 o posterior):
   - Landing, Landing-Movil, Directorio, M-Directorio, Pagina-Publica y M-Pagina-Publica, sin «· por refinar» ni «· para aprobar»;
   - Criterio-Marco con la excepción del ☰ para el sitio público sin sesión (R14);
   - Criterio-Decisiones con P92 a P97;
-  - Landing y Landing-Movil con el estado «Sin empresas» de la sección de empresas (decisión 5). Si falta, se frena y se le pide al usuario que lo dibuje Diseño.
+  - Landing y Landing-Movil con el estado «Sin empresas» de la sección de empresas (decisión 5; está desde el lienzo v95).
   - Si el README del lienzo trae una versión posterior, se releen los estados de esos seis tableros y se corrige «Lo que dicen los tableros».
 - [x] **Los puntos del usuario, resueltos** (2026-10-04): sus respuestas están en las tareas y en «Decisiones tomadas», de la 3 a la 8.
 - [x] **El plan aprobado por el usuario** (2026-10-04), que se lo asignó a Codex.
@@ -651,7 +653,7 @@ Commit `chore(capturas): los tableros de la Etapa 7, antes de programar`.
   - «cada tarjeta muestra el logo o las iniciales, el nombre, la descripción y la dirección del subdominio, y lleva a su página»;
   - «"Empresas", arriba, baja a esa sección»;
   - «escribir en "Buscar una empresa" y apretar Enter abre `/empresas?search=<texto>`» (decisión 5);
-  - «sin empresas publicadas, la sección muestra "Todavía no hay empresas publicadas"» (decisión 5);
+  - «sin empresas publicadas, la sección muestra el buscador y "Todavía no hay empresas publicadas", sin "Ver todas las empresas"» (decisión 5);
   - es-AR y en-US, axe y 390.
 - [ ] **Implementación:**
   - se saca `landing.hero.kicker`;
@@ -771,7 +773,7 @@ Commit `chore(capturas): los tableros de la Etapa 7, antes de programar`.
 **Archivos:** `scripts/capturar-etapa-7.mjs` (nació antes de T10) y `docs/design/capturas/etapa-7/` (`manifest.json`, los PNG y `comparacion.md`).
 
 - [ ] **Qué se captura:** cada estado, de la pantalla real y de su tablero, a 1440 × 900 y a 390 × 844, con los mismos datos del tablero (Grupo Delta, Omega S.A. y Sigma S.R.L.):
-  - **la portada:** en el teléfono, también con el ☰ abierto;
+  - **la portada:** «Con empresas» y «Sin empresas»; en el teléfono, también con el ☰ abierto;
   - **el directorio:** «Con empresas», «Sin resultados» y «Todavía no hay empresas»; en el teléfono, también con el ☰ abierto;
   - **la página pública:**
     - «Publicada, sin sesión»;
@@ -843,7 +845,7 @@ Las dos primeras salieron de la revisión del plan; de la 3 a la 8 las decidió 
    - en silencio nunca se crea el espacio personal: una cuenta que no lo tiene sigue sin sesión en el subdominio hasta que toca «Ingresá para continuar»;
    - en desarrollo, el dominio principal pasa a `https://localtest.me:5174`: así el dominio principal y los subdominios son el mismo sitio y la cookie llega al iframe. El usuario suma `https://localtest.me:5174/signin-google` en la consola de Google. El certificado de desarrollo no cubre `localtest.me`, así que el navegador avisa una vez por dirección.
 4. **Pedir desde la página pública (T06).** `[PublicSite]` admite `[Access(Consumer)]`, nunca Business ni Platform. El tenant activo sale del claim, y la otra parte, del subdominio, nunca del cuerpo. Se enmienda la ADR 0021.
-5. **La sección de empresas de la portada (T12).** Enter en «Buscar una empresa» abre `/empresas?search=<texto>`. Sin empresas publicadas, la sección muestra «Todavía no hay empresas publicadas», el texto del directorio; Diseño suma ese estado a Landing y Landing-Movil.
+5. **La sección de empresas de la portada (T12).** Enter en «Buscar una empresa» abre `/empresas?search=<texto>`. Sin empresas publicadas, la sección muestra el buscador y «Todavía no hay empresas publicadas», el texto del directorio, sin «Ver todas las empresas» (Landing y Landing-Movil, desde el lienzo v95).
 6. **Tu menú en la página pública (T15).** Es el mismo menú de siempre: con organizaciones, las lista, y elegir una abre `/org` del dominio principal en esa organización. «Mi cuenta» abre `/cuenta` del dominio principal.
 7. **Crear la cuenta desde «Ingresá para continuar» (T15).** El registro conserva el regreso y, al terminar, vuelve a la misma página pública.
 8. **`/empresas` con sesión (T11).** Lleva el mismo encabezado con sesión o sin ella, como el tablero Directorio.
