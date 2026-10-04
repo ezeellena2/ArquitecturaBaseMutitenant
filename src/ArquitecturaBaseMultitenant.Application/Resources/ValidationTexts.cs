@@ -65,5 +65,13 @@ public static class ValidationTexts
 
     public static string InvitationWhatsAppUnavailable => Get(nameof(InvitationWhatsAppUnavailable));
 
+    public static string SlugInvalid => Get(nameof(SlugInvalid));
+
+    public static string WebsiteInvalid => Get(nameof(WebsiteInvalid));
+
+    public static string LogoInvalid => Get(nameof(LogoInvalid));
+
+    public static string LogoRemoveConflict => Get(nameof(LogoRemoveConflict));
+
     private static string Get(string key) => ResourceManager.GetString(key, CultureInfo.CurrentUICulture) ?? key;
 }
