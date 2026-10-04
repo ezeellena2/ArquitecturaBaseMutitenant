@@ -61,6 +61,7 @@ Las pantallas de la Etapa 5 (T19 a T25) van después de esta consolidación, par
   - los códigos de error, permisos y rutas, cada uno en su ficha de `docs/features`;
   - la fila de `capas-y-flujo.md` en AGENTS.md.
   - `arbol.md` y `backend.md` ubican el alta de empresa en `Services/Organizations/`, y el código está en `Services/Auth/`: los docs se llevan al código.
+  - los `AGENTS.md` nombran los sufijos viejos: la raíz y `Services/AGENTS.md` listan cinco (`*Policy`, `*Guard`, `*Issuer`, `*Verifier`, `*Linker`). Pasan a mandar a la lista cerrada de 22 de `capas-y-flujo.md` (decisión 58). `Services/Auth/AGENTS.md` todavía dice `UserCultures`, que ahora es `UserCultureResolver`.
 
   Al usuario va solo lo que cambia el producto.
 - [x] Sumar la consolidación al plan maestro como paso previo de la Etapa 7. Se hizo al aprobar el plan.
