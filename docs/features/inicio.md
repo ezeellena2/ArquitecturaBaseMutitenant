@@ -18,6 +18,18 @@ Lo primero que ve un miembro al entrar a `/org`. Arriba, una tarjeta por área c
 - **Un módulo** registra su propia fuente en su registro, sin que el núcleo lo conozca. WhatsApp sin medio de pago llega con la Etapa 11.
 - **Decisión 8 del usuario:** hasta B4, el Administrador de empresa ve solo «Tus empresas». Su fila por empresa se suma en la consolidación, junto con su ficha y sus permisos por empresa.
 
+## Front
+
+- `areas/business/home` del front pinta lo que devuelve la API. No deduce permisos: muestra las tarjetas y filas que vienen.
+- Un `Kind` que el front no conoce no se muestra.
+- **Enlaces de cada fila:**
+  - «Reenviar» va a Usuarios filtrado por vencidas, como el tablero;
+  - «Ver» de la baja va a la ficha del usuario;
+  - «Verificar» va a Configuración;
+  - «Ver» de la página va a Página pública.
+- **Teléfono** (menos de 768 px): con tarjetas de la organización va la pantalla de app de M-Inicio-Org, con saludo, atajos redondos con el globito de sus pendientes y filas con botón cápsula. La barra de abajo y la de arriba son del marco de app (Paquete 4). Inicio-Miembro no tiene teléfono propio: se acomoda la de la compu.
+- **La página en borrador no tiene «Desde»:** la página no guarda cuándo dejó de estar publicada.
+
 ## Carpetas
 
 | Carpeta | Responsabilidad |
@@ -33,3 +45,5 @@ Lo primero que ve un miembro al entrar a `/org`. Arriba, una tarjeta por área c
 
 - Application: `PendingItemOrderTests`.
 - API: `HomeTests` (tarjetas iguales a cada área; sin permiso, ni la tarjeta ni la fila) y `HomeIsolationTests` (lo de otra organización nunca aparece), con Docker/Testcontainers.
+- Front: `BusinessHomePage.test.tsx` (Inicio-Org, vacío, Inicio-Miembro y teléfono, con axe) y `formatters.test.ts` («hoy, 10:42»).
+- E2E real: el Dueño ve las áreas y la página en borrador en «Para resolver» al entrar a `/org`.
