@@ -72,8 +72,10 @@ public sealed class LoginPersistenceTests(ApiFactory factory)
         Assert.Throws<InvalidOperationException>(() => audits.Add(audit));
     }
 
+    // D4b (ADR 0041): un método verificado es único en todo el sistema; uno pendiente, solo dentro de su cuenta, así
+    // el correo de otra cuenta queda pendiente como uno libre.
     [Fact]
-    public async Task Method_value_is_unique_across_global_accounts()
+    public async Task A_verified_method_value_is_unique_across_accounts_and_a_pending_one_within_its_account()
     {
         using var client = factory.CreateClient();
         await using var scope = factory.Services.CreateAsyncScope();
@@ -81,20 +83,41 @@ public sealed class LoginPersistenceTests(ApiFactory factory)
         var users = services.GetRequiredService<IUserRepository>();
         var methods = services.GetRequiredService<ILoginMethodRepository>();
         var unitOfWork = services.GetRequiredService<IUnitOfWork>();
+        var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
         var email = Email.Create($"unique-{Guid.NewGuid():N}@example.test").Value;
+        Guid firstId = Guid.Empty;
 
         await unitOfWork.ExecuteInTransactionAsync(async ct =>
         {
-            var first = await users.CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct);
-            methods.Add(LoginMethod.CreateEmail(first.Id, email));
+            firstId = (await users.CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct)).Id;
+            var verified = LoginMethod.CreateEmail(firstId, email);
+            verified.Verify(nowUtc);
+            methods.Add(verified);
+            var second = await users.CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct);
+            methods.Add(LoginMethod.CreateEmail(second.Id, email));
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
 
         await Assert.ThrowsAsync<UniqueConstraintViolationException>(() =>
             unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
-                var second = await users.CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct);
-                methods.Add(LoginMethod.CreateEmail(second.Id, email));
+                var third = await users.CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct);
+                var duplicate = LoginMethod.CreateEmail(third.Id, email);
+                duplicate.Verify(nowUtc);
+                methods.Add(duplicate);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct));
+
+        await using var pendingScope = factory.Services.CreateAsyncScope();
+        var pendingServices = pendingScope.ServiceProvider;
+        var pendingMethods = pendingServices.GetRequiredService<ILoginMethodRepository>();
+        var pendingUsers = pendingServices.GetRequiredService<IUserRepository>();
+        await Assert.ThrowsAsync<UniqueConstraintViolationException>(() =>
+            pendingServices.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                var fourth = await pendingUsers.CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct);
+                pendingMethods.Add(LoginMethod.CreateEmail(fourth.Id, email));
+                pendingMethods.Add(LoginMethod.CreateEmail(fourth.Id, email));
                 return Result.Success();
             }, CommitPolicy.OnSuccess, Ct));
     }
