@@ -87,6 +87,20 @@ public sealed class DisplayFormatter(
         return entry is null ? null : context.Profile.Translate(entry.Translations, item => item.DisplayCulture).Name;
     }
 
+    /// <summary>
+    /// «English (United States)»: la cultura en su propio idioma, como el selector de idioma y región de la app, para
+    /// que cada persona reconozca la suya. Sin traducción a ese idioma, sigue su cadena de caída.
+    /// </summary>
+    /// <returns>null si la cultura no está en el catálogo.</returns>
+    public async Task<string?> FormatCultureInItsOwnLanguageAsync(string cultureCode,
+        CancellationToken cancellationToken = default)
+    {
+        var entry = await cultures.FindAsync(cultureCode, cancellationToken);
+        if (entry is null) return null;
+        var own = await new CultureProfiles(cultures).LoadAsync(entry.Code, cancellationToken);
+        return own.Translate(entry.Translations, item => item.DisplayCulture).Name;
+    }
+
     /// <summary>«peso argentino (ARS)», como las pantallas: el nombre en el idioma del contexto y el código.</summary>
     /// <returns>null si la moneda no está en el catálogo.</returns>
     public async Task<string?> FormatCurrencyAsync(string currencyCode, DisplayFormatContext context,

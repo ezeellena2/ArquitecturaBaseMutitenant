@@ -14,8 +14,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auditing;
 /// <summary>
 /// Arma las entradas de la auditoría de la organización como el tablero Auditoria-Org, en el idioma de quien mira.
 /// Un campo va al detalle solo con su nombre (<c>Field.*</c> de Audit.resx) y un valor que se puede mostrar: un estado
-/// con las palabras de las pantallas, una zona, un idioma o una moneda como los muestran, los permisos y los roles por
-/// nombre, y un correo o un teléfono enmascarados. Lo demás (identificadores, fechas técnicas, canales, estados sin
+/// con las palabras de las pantallas, una zona o una moneda como las muestran, un idioma en su propio idioma (como su
+/// selector), los permisos y los roles por nombre, y un correo o un teléfono enmascarados. Lo demás (identificadores, fechas técnicas, canales, estados sin
 /// palabra) queda fuera del detalle.
 /// </summary>
 internal sealed class OrganizationAuditEntryBuilder(DisplayFormatter formatter)
@@ -146,7 +146,8 @@ internal sealed class OrganizationAuditEntryBuilder(DisplayFormatter formatter)
         var shown = field switch
         {
             "DefaultTimeZoneId" or "TimeZoneId" => await formatter.FormatTimeZoneAsync(text, context, cancellationToken),
-            "DefaultCulture" => await formatter.FormatCultureAsync(text, context, cancellationToken),
+            // El idioma, en su propio idioma, como el selector de idioma y región y el tablero.
+            "DefaultCulture" => await formatter.FormatCultureInItsOwnLanguageAsync(text, cancellationToken),
             "DefaultCurrency" => await formatter.FormatCurrencyAsync(text, context, cancellationToken),
             "TaxNumber" or "TaxId" => TaxNumber(text),
             "Name" when entityType == nameof(Role) => RoleTexts.Name(text),
