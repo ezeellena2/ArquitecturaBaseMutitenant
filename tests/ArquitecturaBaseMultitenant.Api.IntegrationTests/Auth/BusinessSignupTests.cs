@@ -210,6 +210,32 @@ public sealed class BusinessSignupTests(ApiFactory factory)
         Assert.Equal(TenantSlugErrors.Taken.Code, taken.Error.Code);
     }
 
+    [Fact]
+    public async Task Repeating_the_same_creation_without_the_saved_response_returns_the_organization()
+    {
+        // La respuesta guardada por Idempotency-Key venció o no llegó a guardarse: el mismo operationId con los
+        // mismos datos llega al servicio y devuelve la organización que ya creó, sin crear otra.
+        await factory.Services.SeedDatabaseAsync(Ct);
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
+            HandleCookies = true,
+        });
+        var account = await AccountJourney.RegisterAsync(factory, client, Ct);
+        var operationId = Guid.NewGuid();
+        var request = new BusinessSignupRequest("Organización idéntica", $"same-{Guid.NewGuid():N}"[..20],
+            "Empresa idéntica", new BusinessSignupTaxId("AR-CUIT", "30-71234567-1"), true);
+
+        var created = await CreateOrganizationAsync(account.UserId, operationId, request);
+        var repeated = await CreateOrganizationAsync(account.UserId, operationId, request);
+
+        Assert.True(created.IsSuccess, created.IsFailure ? created.Error.Code : null);
+        Assert.True(repeated.IsSuccess, repeated.IsFailure ? repeated.Error.Code : null);
+        Assert.Equal(created.Value, repeated.Value);
+        Assert.Equal(operationId, repeated.Value.TenantId);
+    }
+
     private async Task<Result<BusinessSignupResponse>> CreateOrganizationAsync(Guid userId, Guid operationId,
         BusinessSignupRequest request)
     {

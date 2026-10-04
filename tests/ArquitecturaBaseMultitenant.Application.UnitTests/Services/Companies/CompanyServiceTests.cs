@@ -289,6 +289,8 @@ public sealed class CompanyServiceTests
         public Company? Retrieved { get; init; }
         public uint? ExpectedVersion { get; private set; }
         public bool Updated { get; private set; }
+        public Task<Company?> GetByIdAsync(Guid companyId, CancellationToken cancellationToken) =>
+            Task.FromResult(Retrieved is { } company && company.Id == companyId ? company : null);
         public Task<Company?> GetByIdAsync(Guid companyId, uint expectedVersion, CancellationToken cancellationToken)
         {
             ExpectedVersion = expectedVersion;

@@ -68,7 +68,8 @@ internal sealed class BusinessOrganizationCreator(
             || existing.Slug != slug.Value)
             return TenantErrors.ProvisioningConflict;
 
-        var company = await companies.GetByIdAsync(firstCompanyId, 0, cancellationToken);
+        // Solo se compara: la empresa se carga con su versión, así guardar la cuenta no la toma como editada.
+        var company = await companies.GetByIdAsync(firstCompanyId, cancellationToken);
         if (company is null || company.Name != request.FirstCompanyName!.Trim()
             || !Equals(company.TaxId, requestedTaxId))
             return TenantErrors.ProvisioningConflict;

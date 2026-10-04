@@ -9,13 +9,17 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories;
 internal sealed class CompanyRepository(ApplicationDbContext context, ITenantContext tenantContext)
     : ICompanyRepository
 {
-    public async Task<Company?> GetByIdAsync(Guid companyId, uint expectedVersion,
-        CancellationToken cancellationToken)
+    public Task<Company?> GetByIdAsync(Guid companyId, CancellationToken cancellationToken)
     {
         context.RequireTransaction();
         _ = tenantContext.RequiredTenantId;
-        var company = await context.Companies.SingleOrDefaultAsync(row => row.Id == companyId,
-            cancellationToken);
+        return context.Companies.SingleOrDefaultAsync(row => row.Id == companyId, cancellationToken);
+    }
+
+    public async Task<Company?> GetByIdAsync(Guid companyId, uint expectedVersion,
+        CancellationToken cancellationToken)
+    {
+        var company = await GetByIdAsync(companyId, cancellationToken);
         if (company is not null)
             context.Entry(company).Property(candidate => candidate.Version).OriginalValue = expectedVersion;
         return company;
