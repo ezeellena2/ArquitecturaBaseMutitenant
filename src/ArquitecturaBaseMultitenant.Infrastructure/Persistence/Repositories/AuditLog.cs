@@ -13,11 +13,13 @@ internal sealed class AuditLog(
     ICurrentUser currentUser,
     TimeProvider timeProvider) : IAuditLog
 {
-    public void Record(AuditAction action, string entityType, Guid entityId, IReadOnlyDictionary<string, object?> data)
+    public void Record(AuditAction action, string entityType, Guid entityId, IReadOnlyDictionary<string, object?> data,
+        DateTime? occurredAtUtc = null)
     {
         ArgumentNullException.ThrowIfNull(data);
         var (actorKind, actorId) = AuditActorResolver.Resolve(currentUser);
         context.Add(AuditEntry.Create(tenantContext.RequiredTenantId, actorKind, actorId,
-            action, entityType, entityId, JsonSerializer.Serialize(data), timeProvider.GetUtcNow().UtcDateTime));
+            action, entityType, entityId, JsonSerializer.Serialize(data),
+            occurredAtUtc ?? timeProvider.GetUtcNow().UtcDateTime));
     }
 }

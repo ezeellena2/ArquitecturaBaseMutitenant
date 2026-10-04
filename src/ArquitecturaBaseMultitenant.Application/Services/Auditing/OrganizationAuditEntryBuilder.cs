@@ -58,22 +58,22 @@ internal sealed class OrganizationAuditEntryBuilder(DisplayFormatter formatter)
     }
 
     /// <summary>
-    /// Un «Qué» más preciso que la acción, si tiene su texto (<see cref="AuditTexts.Summary"/>): el cambio de estado
-    /// de un miembro («Deshabilitó a…», «Habilitó a…» y «Quitó a…», como Usuarios) o el campo de un cambio de un solo
-    /// campo («Cambió la zona de…», como el tablero).
+    /// Un «Qué» más preciso que la acción, si tiene su texto (<see cref="AuditTexts.Summary"/>): un cambio de estado
+    /// («Deshabilitó a…», «Habilitó a…» y «Quitó a…», como Usuarios, o «Venció la invitación a…») o el campo de un
+    /// cambio de un solo campo («Cambió la zona de…», como el tablero).
     /// </summary>
     private static string? Variant(OrganizationAuditRow row, JsonElement changes)
     {
         if (row.Action != AuditAction.Updated || changes.ValueKind != JsonValueKind.Object) return null;
-        if (row.EntityType == nameof(Member) && changes.TryGetProperty("Status", out var status)
-            && TryOldNew(status, out var oldValue, out var newValue)
-            && (StatusName(row.EntityType, oldValue), StatusName(row.EntityType, newValue)) switch
+        if (changes.TryGetProperty("Status", out var status) && TryOldNew(status, out var oldValue, out var newValue)
+            && (row.EntityType, StatusName(row.EntityType, oldValue), StatusName(row.EntityType, newValue)) switch
             {
-                (_, nameof(MemberStatus.Removed)) => nameof(AuditAction.Deleted),
-                (nameof(MemberStatus.Active), nameof(MemberStatus.Inactive)) => "Disabled",
-                (nameof(MemberStatus.Inactive), nameof(MemberStatus.Active)) => "Enabled",
+                (nameof(Member), _, nameof(MemberStatus.Removed)) => nameof(AuditAction.Deleted),
+                (nameof(Member), nameof(MemberStatus.Active), nameof(MemberStatus.Inactive)) => "Disabled",
+                (nameof(Member), nameof(MemberStatus.Inactive), nameof(MemberStatus.Active)) => "Enabled",
+                (nameof(Invitation), _, AuditChangeKeys.ExpiredInvitationStatus) => "Expired",
                 _ => null,
-            } is { } memberChange) return memberChange;
+            } is { } statusChange) return statusChange;
 
         string[] fields = [.. changes.EnumerateObject().Select(field => field.Name).Take(2)];
         return fields.Length == 1 ? fields[0] : null;
@@ -99,8 +99,9 @@ internal sealed class OrganizationAuditEntryBuilder(DisplayFormatter formatter)
                         RoleNames(oldValue), RoleNames(newValue)));
                     continue;
                 case AuditChangeKeys.CompanyIds:
-                    // Las empresas de una invitación, por nombre: son las de «Dónde».
-                    if (row.CompanyName is { } companies)
+                    // Las empresas de una invitación, por nombre: son las de «Dónde». Solo al invitar, como el
+                    // tablero; su vencimiento las muestra solo en «Dónde».
+                    if (row.Action == AuditAction.Created && row.CompanyName is { } companies)
                         rows.Add(new OrganizationAuditChangeResponse(AuditTexts.Field("CompanyId"), null, companies));
                     continue;
             }

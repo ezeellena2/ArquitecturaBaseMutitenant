@@ -13,7 +13,8 @@
 - Un cambio de `PlatformSettings` exige que el caso de uso agregue un `SecurityEvent` de tipo `PlatformSettingsChanged`, con motivo, en el mismo `IUnitOfWork`; el interceptor rechaza el guardado si falta. El seed inicial registra un evento con actor `System`.
 - El seed inicial que crea o habilita al operador registra `PlatformOperatorGranted`, actor `System` y motivo `Initial platform owner seed` en la misma UoW. Un método de correo existente debe estar verificado y no gestionado por una organización.
 - Datos sensibles (tokens, hashes): `[NotAudited]` en la propiedad.
-- Evento que no es un cambio de entidad (una exportación, reenviar una invitación): `IAuditLog.Record(action, entityType, entityId, data)` **dentro** del límite.
+- Evento que no es un cambio de entidad (una exportación, reenviar una invitación): `IAuditLog.Record(action, entityType, entityId, data)` **dentro** del límite. Un hecho que pasó antes de registrarse lleva su fecha real (`occurredAtUtc`); los demás, el ahora del reloj.
+- **El vencimiento de una invitación:** vence por fecha, sin que nadie haga nada. `InvitationExpiryWorker` (cada hora, una organización activa por vez, con `TenantJobRunner`) deja «Venció la invitación a …» una sola vez (`Invitation.ExpiryRecordedAtUtc`, bajo un lock de la organización), con la fecha en que venció, el sistema como actor, «Estado: Invitación pendiente → Invitación vencida» y, en «Dónde», las empresas de la persona invitada. Cuenta también la que se revocó o se reenvió ya vencida. «Vencida» no es un estado guardado: sigue saliendo de la fecha.
 - Acción de un operador sobre una organización: `PlatformActionGuard` exige el motivo y registra el `SecurityEvent` **antes** de `Enter`.
 - El `SecurityEvent` guarda `TargetTenantId` o `TargetAccountId` según el destino y un resumen `Changes` JSON de claves técnicas con `before`/`after`. `SecurityEventChanges` admite booleanos, cantidades, enums y fechas UTC; omite valores iguales y no acepta nombres, contactos ni texto libre. El motivo interno se conserva aparte y no entra en ese resumen ni en correos.
 - `MaskedIpAddress` conserva IPv4 sin el último octeto e IPv6 sin los últimos 80 bits; IPv4 mapeada se normaliza. Una IP ausente o inválida queda null. `AuditTrailInterceptor` completa la IP de los eventos nuevos con `IRequestInfo`, sin alterar su diff ni los eventos ya guardados. Las filas históricas sin evidencia mantienen diff vacío y campos desconocidos null.
@@ -32,7 +33,7 @@
 
 ## Lo verifica
 - `AuditingTests` (E2), `AuditTrailTests` (E2) y `OrganizationSettingsTests.A_save_leaves_a_single_audit_entry_whose_diff_has_only_the_edited_field`.
-- `OrganizationAuditTests` (E6): cambiar los roles de una persona en una empresa deja una entrada con los roles antes y después, y el detalle nunca muestra un identificador interno. Invitar a alguien o agregarlo a una empresa deja una sola entrada con sus roles, y revocar su invitación o quitarlo de una empresa, también. Los roles de un invitado salen con su correo enmascarado, y cada fila del detalle lleva su nombre y su valor en es y en en.
+- `OrganizationAuditTests` (E6): cambiar los roles de una persona en una empresa deja una entrada con los roles antes y después, y el detalle nunca muestra un identificador interno. Invitar a alguien o agregarlo a una empresa deja una sola entrada con sus roles, y revocar su invitación o quitarlo de una empresa, también. Una invitación vencida queda una sola vez, por el sistema y con la fecha en que venció (con `InvitationTests` del dominio). Los roles de un invitado salen con su correo enmascarado, y cada fila del detalle lleva su nombre y su valor en es y en en.
 - Trigger `prevent_update_delete` (E2).
 - `TenantColumnsImmutabilityTests` (E2).
 

@@ -22,6 +22,7 @@
   <data name="AuditSummary.Invitation.Updated" xml:space="preserve"><value>Cambió la invitación de {0}</value></data>
   <data name="AuditSummary.Invitation.Deleted" xml:space="preserve"><value>Quitó la invitación de {0}</value></data>
   <data name="AuditSummary.Invitation.Restored" xml:space="preserve"><value>Restauró la invitación de {0}</value></data>
+  <data name="AuditSummary.Invitation.Expired" xml:space="preserve"><value>Venció la invitación a {0}</value></data>
   <data name="AuditSummary.Company.Created" xml:space="preserve"><value>Creó la empresa {0}</value></data>
   <data name="AuditSummary.Company.Updated" xml:space="preserve"><value>Cambió la empresa {0}</value></data>
   <data name="AuditSummary.Company.Deleted" xml:space="preserve"><value>Quitó la empresa {0}</value></data>
@@ -78,6 +79,7 @@
   <data name="Value.Invitation.Status.Pending" xml:space="preserve"><value>Invitación pendiente</value></data>
   <data name="Value.Invitation.Status.Accepted" xml:space="preserve"><value>Invitación aceptada</value></data>
   <data name="Value.Invitation.Status.Revoked" xml:space="preserve"><value>Invitación revocada</value></data>
+  <data name="Value.Invitation.Status.Expired" xml:space="preserve"><value>Invitación vencida</value></data>
   <data name="Value.NoRoles" xml:space="preserve"><value>Sin roles</value></data>
   <data name="Field.TaxId" xml:space="preserve"><value>Identificación fiscal</value></data>
   <data name="Field.Website" xml:space="preserve"><value>Sitio web</value></data>

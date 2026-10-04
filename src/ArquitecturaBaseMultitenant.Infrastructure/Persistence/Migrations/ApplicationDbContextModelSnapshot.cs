@@ -533,6 +533,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("ExpiresAtUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("ExpiryRecordedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("InviterUserId")
                         .HasColumnType("uuid");
 

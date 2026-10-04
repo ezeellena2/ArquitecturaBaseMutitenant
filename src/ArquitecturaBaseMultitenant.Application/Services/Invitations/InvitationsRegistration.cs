@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Invitations;
 
-/// <summary>Registra las invitaciones (emitir, mostrar y aceptar), con sus opciones.</summary>
+/// <summary>Registra las invitaciones (emitir, mostrar, aceptar y registrar su vencimiento), con sus opciones.</summary>
 internal static class InvitationsRegistration
 {
     internal static IServiceCollection AddInvitations(this IServiceCollection services)
@@ -25,6 +25,7 @@ internal static class InvitationsRegistration
         services.AddScoped<InvitationAccountRegistrar>();
         services.AddScoped<InvitationAcceptanceWriter>();
         services.AddScoped<InvitationSessionRestorer>();
+        services.AddScoped<IInvitationExpiryService, InvitationExpiryService>();
         return services;
     }
 }

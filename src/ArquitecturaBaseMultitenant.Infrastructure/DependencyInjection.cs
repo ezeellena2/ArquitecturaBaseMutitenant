@@ -91,6 +91,7 @@ public static class DependencyInjection
             {
                 services.AddHostedService<AccountDeletionWorker>();
                 services.AddHostedService<AccountRecoveryNoticeWorker>();
+                services.AddHostedService<InvitationExpiryWorker>();
             }
         }
 

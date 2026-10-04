@@ -12,6 +12,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
@@ -205,6 +206,47 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task An_expired_invitation_is_recorded_once_by_the_system_on_its_expiry_date()
+    {
+        using var client = Client();
+        var company = await StageCompanyMemberAsync(client, "Auditoría vencimiento");
+        await InviteToCompanyAsync(client, company, "carla.bianchi@example.test");
+        var invited = (await JsonAsync(client, "/api/users/paged?pageSize=50&search=carla")).GetProperty("items")
+            .EnumerateArray().Single();
+        var expiredAtUtc = await ExpireInvitationAsync(company.TenantId, invited.GetProperty("invitationId").GetGuid());
+        var before = await EntryIdsAsync(client);
+
+        // El proceso de fondo corre más de una vez: el vencimiento queda registrado una sola.
+        var worker = ActivatorUtilities.CreateInstance<InvitationExpiryWorker>(factory.Services);
+        await worker.RunOnceAsync(Ct);
+        await worker.RunOnceAsync(Ct);
+
+        // Tablero Auditoria-Org: «Venció la invitación a …», en su empresa, por el Sistema y con la fecha en que venció.
+        var entry = Assert.Single(await NewEntriesAsync(client, before));
+        Assert.Equal("Venció la invitación a ca•••@example.test", entry.GetProperty("actionText").GetString());
+        Assert.Equal("Delta S.A.", entry.GetProperty("whereText").GetString());
+        Assert.Equal("System", entry.GetProperty("actorKind").GetString());
+        Assert.Equal("Sistema", entry.GetProperty("actorText").GetString());
+        Assert.Equal(expiredAtUtc, entry.GetProperty("occurredAtUtc").GetDateTime().ToUniversalTime());
+        Assert.Equal(["Estado: Invitación pendiente → Invitación vencida"], Rows(entry));
+    }
+
+    /// <summary>Deja la invitación vencida hace dos días, en segundos enteros, como si hubiera pasado el tiempo.</summary>
+    private async Task<DateTime> ExpireInvitationAsync(Guid tenantId, Guid invitationId)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        var expiredAtUtc = new DateTime(nowUtc.Ticks - nowUtc.Ticks % TimeSpan.TicksPerSecond, DateTimeKind.Utc)
+            .AddDays(-2);
+        using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenantId);
+        Assert.Equal(1, await services.GetRequiredService<ApplicationDbContext>().Invitations
+            .Where(invitation => invitation.Id == invitationId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(invitation => invitation.ExpiresAtUtc, expiredAtUtc), Ct));
+        return expiredAtUtc;
+    }
+
+    [Fact]
     public async Task Someone_without_a_name_or_an_invitation_appears_with_their_masked_email()
     {
         using var client = Client();
@@ -322,7 +364,7 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
         var readOnly = await CreateCompanyRoleAsync(client, "Solo lectura", companyId);
         var purchases = await CreateCompanyRoleAsync(client, "Compras", companyId);
         var memberId = await OrganizationJourney.AddNamedMemberAsync(factory, tenantId, "Tomás Acosta", Ct);
-        return new AuditedCompany(companyId, memberId, sales, readOnly, purchases);
+        return new AuditedCompany(tenantId, companyId, memberId, sales, readOnly, purchases);
     }
 
     private static async Task AddToCompanyAsync(HttpClient client, AuditedCompany company, params Guid[] roleIds)
@@ -425,7 +467,8 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
             .Select(item => item.Clone())];
     }
 
-    private sealed record AuditedCompany(Guid CompanyId, Guid MemberId, Guid Sales, Guid ReadOnly, Guid Purchases);
+    private sealed record AuditedCompany(Guid TenantId, Guid CompanyId, Guid MemberId, Guid Sales, Guid ReadOnly,
+        Guid Purchases);
 
     [Fact]
     public async Task Audit_detail_shows_who_acted_with_name_and_email()

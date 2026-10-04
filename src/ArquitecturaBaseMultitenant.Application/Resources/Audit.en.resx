@@ -22,6 +22,7 @@
   <data name="AuditSummary.Invitation.Updated" xml:space="preserve"><value>Changed the invitation for {0}</value></data>
   <data name="AuditSummary.Invitation.Deleted" xml:space="preserve"><value>Removed the invitation for {0}</value></data>
   <data name="AuditSummary.Invitation.Restored" xml:space="preserve"><value>Restored the invitation for {0}</value></data>
+  <data name="AuditSummary.Invitation.Expired" xml:space="preserve"><value>The invitation to {0} expired</value></data>
   <data name="AuditSummary.Company.Created" xml:space="preserve"><value>Created company {0}</value></data>
   <data name="AuditSummary.Company.Updated" xml:space="preserve"><value>Changed company {0}</value></data>
   <data name="AuditSummary.Company.Deleted" xml:space="preserve"><value>Removed company {0}</value></data>
@@ -78,6 +79,7 @@
   <data name="Value.Invitation.Status.Pending" xml:space="preserve"><value>Invitation pending</value></data>
   <data name="Value.Invitation.Status.Accepted" xml:space="preserve"><value>Invitation accepted</value></data>
   <data name="Value.Invitation.Status.Revoked" xml:space="preserve"><value>Invitation revoked</value></data>
+  <data name="Value.Invitation.Status.Expired" xml:space="preserve"><value>Invitation expired</value></data>
   <data name="Value.NoRoles" xml:space="preserve"><value>No roles</value></data>
   <data name="Field.TaxId" xml:space="preserve"><value>Tax ID</value></data>
   <data name="Field.Website" xml:space="preserve"><value>Website</value></data>

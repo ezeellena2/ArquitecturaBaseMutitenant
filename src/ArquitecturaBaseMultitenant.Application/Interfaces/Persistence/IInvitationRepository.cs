@@ -14,5 +14,13 @@ public interface IInvitationRepository
         CancellationToken cancellationToken);
     Task<IReadOnlyList<Invitation>> ListPendingForMemberAsync(Guid memberId,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Hasta <paramref name="limit"/> invitaciones que vencieron pendientes y todavía no quedaron en la auditoría
+    /// (<see cref="Invitation.RecordExpiry"/>), las más viejas primero. Toma antes un lock de la organización, para
+    /// que dos procesos no registren el mismo vencimiento.
+    /// </summary>
+    Task<IReadOnlyList<Invitation>> ListUnrecordedExpiriesAsync(DateTime nowUtc, int limit,
+        CancellationToken cancellationToken);
     void Add(Invitation invitation);
 }

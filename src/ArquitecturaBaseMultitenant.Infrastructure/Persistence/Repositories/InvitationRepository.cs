@@ -54,6 +54,22 @@ internal sealed class InvitationRepository(ApplicationDbContext context, ITenant
             && invitation.Status == InvitationStatus.Pending).ToArrayAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Invitation>> ListUnrecordedExpiriesAsync(DateTime nowUtc, int limit,
+        CancellationToken cancellationToken)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(limit, 1);
+        var tenantId = tenantContext.RequiredTenantId;
+        await context.AcquireAdvisoryLocksAsync(
+            [AdvisoryLockKeys.For(tenantId, "invitation-expiry", tenantId)], cancellationToken);
+        // La regla de Invitation.RecordExpiry: pendiente al vencer, aunque después se la haya revocado.
+        return await context.Invitations.Where(invitation => invitation.ExpiryRecordedAtUtc == null
+                && invitation.ExpiresAtUtc <= nowUtc
+                && (invitation.Status == InvitationStatus.Pending || invitation.Status == InvitationStatus.Revoked
+                    && invitation.RevokedAtUtc >= invitation.ExpiresAtUtc))
+            .OrderBy(invitation => invitation.ExpiresAtUtc).ThenBy(invitation => invitation.Id)
+            .Take(limit).ToArrayAsync(cancellationToken);
+    }
+
     public void Add(Invitation invitation)
     {
         ArgumentNullException.ThrowIfNull(invitation);

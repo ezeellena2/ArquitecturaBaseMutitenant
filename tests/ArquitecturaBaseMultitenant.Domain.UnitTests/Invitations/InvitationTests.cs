@@ -96,6 +96,30 @@ public sealed class InvitationTests
         Assert.Equal(Guid.Empty, invitation.TenantId);
     }
 
+    [Fact]
+    public void Its_expiry_is_recorded_once_and_only_if_it_expired_while_pending()
+    {
+        var pending = Issue();
+        Assert.False(pending.RecordExpiry(IssuedAtUtc.AddDays(6)));
+        Assert.True(pending.RecordExpiry(IssuedAtUtc.AddDays(8)));
+        Assert.Equal(IssuedAtUtc.AddDays(8), pending.ExpiryRecordedAtUtc);
+        Assert.False(pending.RecordExpiry(IssuedAtUtc.AddDays(9)));
+        Assert.Equal(InvitationStatus.Pending, pending.Status);
+
+        var accepted = Issue();
+        Assert.True(accepted.Accept(Guid.CreateVersion7(), "hash", IssuedAtUtc.AddDays(1)).IsSuccess);
+        Assert.False(accepted.RecordExpiry(IssuedAtUtc.AddDays(8)));
+
+        var revokedInTime = Issue();
+        Assert.True(revokedInTime.Revoke(IssuedAtUtc.AddDays(1)).IsSuccess);
+        Assert.False(revokedInTime.RecordExpiry(IssuedAtUtc.AddDays(8)));
+
+        // Reenviarla ya vencida la revoca: venció igual.
+        var revokedExpired = Issue();
+        Assert.True(revokedExpired.Revoke(IssuedAtUtc.AddDays(8)).IsSuccess);
+        Assert.True(revokedExpired.RecordExpiry(IssuedAtUtc.AddDays(9)));
+    }
+
     private static Invitation Issue() => Invitation.Issue(Guid.CreateVersion7(), Guid.CreateVersion7(),
         Email.Create("ANA@example.test").Value, InvitationChannel.Email, "hash", IssuedAtUtc, TimeSpan.FromDays(7));
 }

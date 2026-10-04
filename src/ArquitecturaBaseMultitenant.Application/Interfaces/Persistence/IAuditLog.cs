@@ -7,7 +7,10 @@ public interface IAuditLog
 {
     /// <summary>
     /// Agrega un evento que no surge de un cambio de entidad. Los datos sensibles de <paramref name="data"/>
-    /// deben llegar enmascarados; Infrastructure los serializa para AuditEntry.
+    /// deben llegar enmascarados; Infrastructure los serializa para AuditEntry. <paramref name="occurredAtUtc"/> va
+    /// solo para un hecho que pasó antes de registrarse, como el vencimiento de una invitación, con su fecha real; sin
+    /// valor, el ahora del reloj.
     /// </summary>
-    void Record(AuditAction action, string entityType, Guid entityId, IReadOnlyDictionary<string, object?> data);
+    void Record(AuditAction action, string entityType, Guid entityId, IReadOnlyDictionary<string, object?> data,
+        DateTime? occurredAtUtc = null);
 }

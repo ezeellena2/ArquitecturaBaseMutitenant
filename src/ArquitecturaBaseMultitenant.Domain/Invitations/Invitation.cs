@@ -32,6 +32,9 @@ public sealed class Invitation : Entity, ITenantOwned, IAuditable
     public DateTime? RevokedAtUtc { get; private set; }
     [NotAudited]
     public string? BootstrapNonceHash { get; private set; }
+    /// <summary>Cuándo quedó en la auditoría que venció sin aceptarse. Es técnico: la entrada lleva su propia fecha.</summary>
+    [NotAudited]
+    public DateTime? ExpiryRecordedAtUtc { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public Guid? CreatedBy { get; private set; }
     public DateTime? ModifiedAtUtc { get; private set; }
@@ -104,6 +107,26 @@ public sealed class Invitation : Entity, ITenantOwned, IAuditable
         Status = InvitationStatus.Revoked;
         RevokedAtUtc ??= nowUtc;
         return Result.Success();
+    }
+
+    /// <summary>
+    /// Deja constancia, una sola vez, de que venció sin aceptarse: estaba pendiente al vencer, aunque después se la
+    /// haya revocado (reenviarla la revoca). No cambia el estado: «vencida» sigue saliendo de la fecha.
+    /// </summary>
+    /// <returns>true si había que registrarlo; false si todavía no venció, no venció pendiente o ya estaba registrado.</returns>
+    public bool RecordExpiry(DateTime nowUtc)
+    {
+        RequireUtc(nowUtc);
+        if (ExpiryRecordedAtUtc is not null || nowUtc < ExpiresAtUtc) return false;
+        var expiredWhilePending = Status switch
+        {
+            InvitationStatus.Pending => true,
+            InvitationStatus.Revoked => RevokedAtUtc is { } revokedAtUtc && revokedAtUtc >= ExpiresAtUtc,
+            _ => false,
+        };
+        if (!expiredWhilePending) return false;
+        ExpiryRecordedAtUtc = nowUtc;
+        return true;
     }
 
     public override string ToString() => $"Invitation {{ Id = {Id}, Status = {Status} }}";
