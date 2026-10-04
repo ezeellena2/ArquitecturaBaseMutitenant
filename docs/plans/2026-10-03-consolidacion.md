@@ -137,6 +137,7 @@ B4, B6, B8, B10, B11 y B12 se arreglan con su pieza, en los bloques 4 y 5.
 - [ ] Crear el `AGENTS.md` de `Services/OrganizationUsers`.
 - [ ] Agregar un test que exija un mensaje propio en cada regla de validación: recorre `CreateDescriptor()` de cada validador del ensamblado.
 - [ ] Borrar `Stage3aInventoryTests`.
+- [ ] **Capturas de la 3b contra el lienzo vigente:** el script todavía compara contra la copia v35 e inyecta estados internos. Hay que pasarlo al lienzo vigente y sumar el test del Paquete 6 de la alineación: falla si una etapa nueva apunta a otra copia del lienzo.
 - [ ] **Salida del Api** (enmienda de la ADR 0002): lo que devuelve un controller es un `*Response` de Application o un `*HttpResponse` de `Api/Contracts`. Renombrar los tres `*Response` del Api que no siguen el sufijo, corregir `Api/Contracts/AGENTS.md` y sumar un test de salida junto a `ControllerInputContractTests`.
 - [ ] **Accesibilidad** (ADR 0029):
   - el «Copiá de» de `accesibilidad.md` apunta a `UsersPage.test.tsx`, que corre axe;
