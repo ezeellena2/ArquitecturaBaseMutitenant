@@ -122,7 +122,7 @@
   <data name="Companies.Membership.NotFound" xml:space="preserve"><value>We could not find this company membership.</value></data>
   <data name="Companies.Membership.AlreadyExists" xml:space="preserve"><value>This person already belongs to the company.</value></data>
   <data name="Companies.Membership.MemberInactive" xml:space="preserve"><value>Only a person with active access to the organization can be added.</value></data>
-  <data name="Companies.Membership.LastCompanyAdmin" xml:space="preserve"><value>You cannot remove the company's last administrator.</value></data>
+  <data name="Companies.Membership.LastCompanyAdmin" xml:space="preserve"><value>The company must keep at least one administrator.</value></data>
   <data name="Tenancy.Tenant.InvalidTransition" xml:space="preserve"><value>The organization cannot change to that state.</value></data>
   <data name="Tenancy.Tenant.ProvisioningConflict" xml:space="preserve"><value>The organization already exists with different configuration data.</value></data>
   <data name="Tenancy.Member.Inactive" xml:space="preserve"><value>Your access to this organization is disabled.</value></data>

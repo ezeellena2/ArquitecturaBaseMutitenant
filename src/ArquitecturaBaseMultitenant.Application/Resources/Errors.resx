@@ -122,7 +122,7 @@
   <data name="Companies.Membership.NotFound" xml:space="preserve"><value>No encontramos esta membresía de empresa.</value></data>
   <data name="Companies.Membership.AlreadyExists" xml:space="preserve"><value>Esta persona ya pertenece a la empresa.</value></data>
   <data name="Companies.Membership.MemberInactive" xml:space="preserve"><value>Solo podés sumar a una persona con acceso activo a la organización.</value></data>
-  <data name="Companies.Membership.LastCompanyAdmin" xml:space="preserve"><value>No podés quitar al último administrador de la empresa.</value></data>
+  <data name="Companies.Membership.LastCompanyAdmin" xml:space="preserve"><value>Tiene que quedar al menos un administrador en la empresa.</value></data>
   <data name="Tenancy.Tenant.InvalidTransition" xml:space="preserve"><value>La organización no puede pasar a ese estado.</value></data>
   <data name="Tenancy.Tenant.ProvisioningConflict" xml:space="preserve"><value>La organización ya existe con otros datos de configuración.</value></data>
   <data name="Tenancy.Member.Inactive" xml:space="preserve"><value>Tu acceso a esta organización está deshabilitado.</value></data>

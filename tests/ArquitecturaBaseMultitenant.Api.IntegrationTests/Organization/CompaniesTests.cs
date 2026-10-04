@@ -122,6 +122,9 @@ public sealed class CompaniesTests(ApiFactory factory)
         using var lastAdminProblem = JsonDocument.Parse(await refusedLastAdminRemoval.Content.ReadAsStringAsync(Ct));
         Assert.Equal(CompanyMembershipErrors.LastCompanyAdminCode,
             lastAdminProblem.RootElement.GetProperty("code").GetString());
+        // El texto del tablero de Empresa (lienzo v97), uno solo para todos los caminos.
+        Assert.Equal("Tiene que quedar al menos un administrador en la empresa.",
+            lastAdminProblem.RootElement.GetProperty("detail").GetString());
 
         Guid otherMemberId;
         await using (var scope = factory.Services.CreateAsyncScope())
