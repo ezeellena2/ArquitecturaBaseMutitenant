@@ -9,7 +9,7 @@ public sealed record InvitationPreviewResponse(InvitationPreviewState State, Gui
     DateTime? IssuedAtUtc = null, DateTime? ExpiresAtUtc = null, Email? CurrentAccountEmail = null,
     bool CanUseEmailCode = false, bool CanUseGoogle = false, bool NeedsPersonalLoginMethod = false,
     IReadOnlyList<string>? InviterRoles = null, IReadOnlyList<string>? Companies = null,
-    IReadOnlyList<string>? Roles = null)
+    IReadOnlyList<string>? Roles = null, string? CurrentAccountName = null)
 {
     public override string ToString() => $"InvitationPreviewResponse {{ State = {State} }}";
 }

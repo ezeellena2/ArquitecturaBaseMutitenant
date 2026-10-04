@@ -61,14 +61,18 @@ internal sealed class InvitationPreviewBuilder(IInvitationReader invitations, IU
                 google |= method.Type == LoginMethodType.Google && method.ContactEmail == row.Destination;
             }
         Email? currentEmail = null;
+        string? currentName = null;
         if (state == InvitationPreviewState.WrongSession && userId is { } current)
         {
+            // Tablero Invitacion (sesión ajena): «Seguir como Lucía».
+            currentName = await lookup.FindDisplayNameAsync(current, ct);
             var ownMethods = await methods.ListByUserIdAsync(current, ct);
             var primary = ownMethods.FirstOrDefault(method => method.IsPrimary && method.VerifiedAtUtc is not null);
             currentEmail = primary?.Type == LoginMethodType.Email
                 ? Email.Create(primary.Value).Value : primary?.ContactEmail;
         }
-        return await PresentAsync(row, state, ct) with { CanUseEmailCode = emailCode, CanUseGoogle = google, CurrentAccountEmail = currentEmail };
+        return await PresentAsync(row, state, ct) with { CanUseEmailCode = emailCode, CanUseGoogle = google, CurrentAccountEmail = currentEmail,
+            CurrentAccountName = currentName };
     }
 
     private async Task<InvitationPreviewResponse> PresentAsync(InvitationRow row, InvitationPreviewState state,

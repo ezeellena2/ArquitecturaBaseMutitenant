@@ -29,4 +29,10 @@ internal sealed class UserLookup(ApplicationDbContext context) : IUserLookup
             .Where(method => method.Type == type && method.Value == value)
             .Select(method => new LoginMethodLookup(method.Id, method.UserId, method.VerifiedAtUtc))
             .SingleOrDefaultAsync(cancellationToken);
+
+    public Task<string?> FindDisplayNameAsync(Guid userId, CancellationToken cancellationToken) =>
+        context.Users.AsNoTracking()
+            .Where(user => user.Id == userId)
+            .Select(user => user.DisplayName)
+            .SingleOrDefaultAsync(cancellationToken);
 }

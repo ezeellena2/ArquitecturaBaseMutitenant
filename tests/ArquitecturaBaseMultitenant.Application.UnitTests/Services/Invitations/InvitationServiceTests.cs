@@ -57,6 +57,22 @@ public sealed class InvitationServiceTests
         Assert.Equal(0, setup.Ports.SignIns);
     }
 
+    [Fact]
+    public async Task Preview_with_another_session_names_that_account_for_continue_as()
+    {
+        // Tablero Invitacion (sesión ajena): «Seguir como Lucía».
+        using var setup = new Setup();
+        setup.Ports.Owners = [Guid.CreateVersion7()];
+        var other = Guid.CreateVersion7();
+        setup.Ports.UserId = other;
+        setup.Ports.DisplayNames[other] = "Lucía Fernández";
+
+        var preview = await setup.Service.PreviewAsync(new PreviewInvitationRequest("valid"), Ct);
+
+        Assert.Equal(InvitationPreviewState.WrongSession, preview.Value.State);
+        Assert.Equal("Lucía Fernández", preview.Value.CurrentAccountName);
+    }
+
     [Theory]
     [InlineData("expired", InvitationPreviewState.Expired)]
     [InlineData("revoked", InvitationPreviewState.Invalid)]
@@ -148,6 +164,7 @@ public sealed class InvitationServiceTests
         public InvitationRow Row { get; set; }
         public Guid? UserId { get; set; }
         public IReadOnlyList<Guid> Owners { get; set; } = [];
+        public Dictionary<Guid, string> DisplayNames { get; } = [];
         public InvitationContinuation? Continuation { get; set; }
         public int Entries { get; private set; }
         public int Reads { get; private set; }
@@ -171,6 +188,7 @@ public sealed class InvitationServiceTests
         public Task<IReadOnlyList<Guid>> FindVerifiedUsersByEmailAsync(Email email, CancellationToken ct) => Task.FromResult(Owners);
         public Task<Guid?> FindVerifiedUserIdAsync(LoginMethodType type, string value, CancellationToken ct) => Task.FromResult<Guid?>(null);
         public Task<LoginMethodLookup?> FindMethodAsync(LoginMethodType type, string value, CancellationToken ct) => Task.FromResult<LoginMethodLookup?>(null);
+        public Task<string?> FindDisplayNameAsync(Guid userId, CancellationToken ct) => Task.FromResult(DisplayNames.GetValueOrDefault(userId));
         public Task<IReadOnlyList<LoginMethodRow>> ListByUserIdAsync(Guid userId, CancellationToken ct) => Task.FromResult<IReadOnlyList<LoginMethodRow>>([]);
         public Task<bool> IsActiveAsync(Guid userId, Guid tenantId, CancellationToken ct) => Task.FromResult(true);
         private sealed class Scope : IDisposable { public void Dispose() { } }

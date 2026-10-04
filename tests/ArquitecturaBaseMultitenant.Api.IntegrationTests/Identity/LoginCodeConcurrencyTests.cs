@@ -168,6 +168,9 @@ public sealed class LoginCodeConcurrencyTests(ApiFactory factory)
 
         public Task<LoginMethodLookup?> FindMethodAsync(LoginMethodType type, string value, CancellationToken ct) =>
             inner.FindMethodAsync(type, value, ct);
+
+        public Task<string?> FindDisplayNameAsync(Guid userId, CancellationToken ct) =>
+            inner.FindDisplayNameAsync(userId, ct);
     }
 
     private sealed class PausedLoginCodeRepository(ILoginCodeRepository inner, LoginCodeReadGate gate)
