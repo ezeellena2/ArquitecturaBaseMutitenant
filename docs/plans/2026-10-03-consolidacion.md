@@ -327,7 +327,22 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
   - en Personal, el menú y la flecha que el tablero no dibuja;
   - los filtros y el buscador de las listas, y el alto de las filas del teléfono;
   - los tamaños de texto que se desvían de la escala del lienzo, en el ingreso, el registro, la invitación, los términos, los errores, Mi cuenta y la Página pública.
-- [ ] **R2 · Avisos, diálogos y campos** (con F8, sobre el lienzo v100, front `e3f7fed`):
+- [x] **R2a · Avisos y errores** (front `efe3437` a `5f5b912`). `npm test` 943/943, lint sin errores y build en verde; 26 pares de capturas en `docs/design/capturas/consolidacion/r2a/`.
+  - Piezas:
+    - `LoadErrorPage`, la «Pantalla de error» común: la entrada que lee `/api/me`, seis fichas y `AppErrorPage`;
+    - `FormError`, con `.aviso-mal` en la compu y v100 en el teléfono;
+    - `Banner`, en `--alerta-tx`, que ahora usa también `ConcurrencyBanner`;
+    - el aviso pasajero, blanco con sombra;
+    - el texto de los diálogos (13,5 y 14,5);
+    - `areas/business/users/errors.ts`.
+  - Decisiones:
+    - el círculo de la pantalla de error es gris con el ícono rojo, como lo dibujan los tableros;
+    - la pantalla de error no muestra el detalle, y sale solo si no hay nada que mostrar;
+    - `AppErrorPage` dice «Reintentar»;
+    - el aviso de sesión ajena de la invitación va en la franja ámbar;
+    - el caso «antes de deshabilitarte» no llega, porque el back responde antes `CannotDisableSelf`.
+  - Lo del lienzo quedó en Diseño: `.ap-txt-l` en M-Avisos, el aviso viejo de Invitacion, el círculo de Ingreso y la franja `.msj`.
+- [ ] **R2b · Diálogos, hojas y campos** (sobre el lienzo v100, front `e3f7fed`):
   - lo que fijó v100:
     - la franja de error del teléfono: 14,5 con interlineado 1,4, padding 12/14, radio 12 y el ícono arriba si ocupa dos líneas. En la compu sigue en 13, con las medidas de `.aviso-mal`;
     - en Empresa, «Roles de …» y «Agregar miembro» van en el diálogo chico (420) y «Editar empresa», en el de 560;
@@ -354,7 +369,12 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
     - los enlaces de texto del ingreso en `--marca-tx`, como la variante link de `Button`;
     - el paginador y «Cargar más» en 12 y 14, como los tableros;
     - **una sola pieza para el ingreso y el registro:** hoy hay tres copias de la pantalla de estado y del paso del código, una por página. Se arma una pieza común y las tres páginas la usan.
-- [ ] **Tests lentos con la máquina cargada** (va en R2): en la corrida completa, los de `CompaniesPage`, `CompanyDetailPage`, `SettingsPage` y `UserDetailPage` se pasan de 5 s. Solos pasan. Se hacen más livianos, o, si no se puede, el límite se sube en ese test con un comentario que diga por qué. Una suite que falla al azar no sirve de red.
+- [ ] **R2c · Errores y tests:**
+  - un 404 en una ficha muestra `NotFoundPage`, como pide `errores.md`; para eso sube a `shared/ui`, como `ForbiddenPage`;
+  - el error de «Quitar de la organización» va en la franja, como el tablero, y no en el aviso de abajo;
+  - los avisos de una prueba no quedan para la siguiente (se limpian entre pruebas; hoy pasa en `RoleEditorPage.test`);
+  - el arnés visual (`src/test/visualApp.tsx`) usa `createQueryClient`, el de la app, para que las capturas muestren los avisos globales como los ve el usuario;
+- [ ] **Tests lentos con la máquina cargada** (va en R2c): en la corrida completa, los de `CompaniesPage`, `CompanyDetailPage`, `SettingsPage` y `UserDetailPage` se pasan de 5 s. Solos pasan. Se hacen más livianos, o, si no se puede, el límite se sube en ese test con un comentario que diga por qué. Una suite que falla al azar no sirve de red.
 - [ ] **Hecho cuando** el relevamiento, vuelto a correr, no tiene diferencias «Nueva» de las etapas 1 a 6, salvo las que el usuario aceptó.
 
 ### 6. Front: Roles como referencia de verdad
