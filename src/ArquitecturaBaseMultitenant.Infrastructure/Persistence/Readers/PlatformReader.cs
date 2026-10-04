@@ -58,7 +58,9 @@ internal sealed class PlatformReader(ApplicationDbContext context) : IPlatformRe
                     .Where(a => a.TenantId == t.Id && a.Status == MemberStatus.Active && a.RoleName == SystemRoles.TenantAdmin)
                     .OrderBy(a => a.JoinedAtUtc).ThenBy(a => a.UserId).Select(a => (Guid?)a.UserId).FirstOrDefault()
                     ?? (t.RegistrationSource == TenantRegistrationSource.SelfService ? t.RegisteredByUserId : null)))
-                    .Select(u => u.Email).FirstOrDefault());
+                    .Select(u => u.Email).FirstOrDefault(),
+                t => context.PendingTenantOwners.Where(owner => owner.TenantId == t.Id)
+                    .OrderBy(owner => owner.InvitationId).Select(owner => owner.Address).FirstOrDefault());
         }
         return query;
     }
@@ -70,7 +72,10 @@ internal sealed class PlatformReader(ApplicationDbContext context) : IPlatformRe
             && a.RoleName == SystemRoles.TenantAdmin).OrderBy(a => a.JoinedAtUtc).ThenBy(a => a.UserId)
             .Select(a => (Guid?)a.UserId).FirstOrDefault()
         let userId = ownerId ?? (t.RegistrationSource == TenantRegistrationSource.SelfService ? t.RegisteredByUserId : null)
+        // Sin Dueño activo ni registrante, el contacto es el Dueño invitado desde Plataforma (sin nombre).
         let ownerEmail = context.Users.Where(u => u.Id == userId).Select(u => u.Email).FirstOrDefault()
+            ?? context.PendingTenantOwners.Where(owner => owner.TenantId == t.Id)
+                .OrderBy(owner => owner.InvitationId).Select(owner => owner.Address).FirstOrDefault()
         select new PlatformTenantResponse(t.Id, t.Name, t.Slug, t.Status, t.RegistrationSource,
             t.CreatedAtUtc, counters.CompanyCount, counters.MemberCount, t.Version,
             context.Users.Where(u => u.Id == userId).Select(u => u.DisplayName).FirstOrDefault(),

@@ -44,16 +44,21 @@ public sealed class SecurityEventTests
     {
         var actorId = Guid.CreateVersion7();
         var tenantId = Guid.CreateVersion7();
+        var accountId = Guid.CreateVersion7();
         var occurredAtUtc = new DateTime(2026, 10, 2, 13, 0, 0, DateTimeKind.Utc);
 
-        var securityEvent = SecurityEvent.ForOrganizationMembershipEnded(actorId, tenantId, occurredAtUtc);
+        var securityEvent = SecurityEvent.ForOrganizationMembershipEnded(actorId, tenantId, accountId, occurredAtUtc);
 
         Assert.Equal(SecurityEventType.OrganizationMembershipEnded, securityEvent.Type);
         Assert.Equal(AuditActorKind.User, securityEvent.ActorKind);
         Assert.Equal(actorId, securityEvent.ActorId);
         Assert.Equal(tenantId, securityEvent.TargetTenantId);
+        // La ficha de Plataforma muestra cuándo terminó la membresía de esa cuenta.
+        Assert.Equal(accountId, securityEvent.TargetAccountId);
         Assert.Equal(occurredAtUtc, securityEvent.OccurredAtUtc);
         Assert.Null(securityEvent.Reason);
+        Assert.Throws<ArgumentException>(() =>
+            SecurityEvent.ForOrganizationMembershipEnded(actorId, tenantId, Guid.Empty, occurredAtUtc));
     }
 
     [Theory]

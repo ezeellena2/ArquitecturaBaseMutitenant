@@ -67,6 +67,15 @@ public sealed class PlatformTenantProvisioningHttpTests(ApiFactory factory)
         using var replay = await CreateAsync(client, operationId, body);
         Assert.Equal(HttpStatusCode.Created, replay.StatusCode);
         Assert.Equal("true", Assert.Single(replay.Headers.GetValues("Idempotent-Replayed")));
+        // El tablero Organizaciones muestra el correo del Dueño desde el alta, aunque aún no tenga cuenta.
+        using var pendingContact = await client.GetAsync($"/api/platform/tenants/{operationId:D}", Ct);
+        using var pendingJson = JsonDocument.Parse(await pendingContact.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(email.Value, pendingJson.RootElement.GetProperty("ownerEmail").GetString());
+        Assert.Equal(JsonValueKind.Null, pendingJson.RootElement.GetProperty("ownerName").ValueKind);
+        using var byPendingEmail = await client.GetAsync("/api/platform/tenants/paged?search=" + Uri.EscapeDataString(email.Value), Ct);
+        using var byPendingEmailJson = JsonDocument.Parse(await byPendingEmail.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(operationId, Assert.Single(byPendingEmailJson.RootElement.GetProperty("items").EnumerateArray())
+            .GetProperty("id").GetGuid());
 
         string token;
         Guid memberId;
@@ -114,6 +123,11 @@ public sealed class PlatformTenantProvisioningHttpTests(ApiFactory factory)
         var admin = await checkDb.Roles.SingleAsync(r => r.Name == SystemRoles.TenantAdmin, Ct);
         Assert.Contains(await checkDb.RoleAssignments.ToListAsync(Ct), a => a.MemberId == memberId && a.RoleId == admin.Id && a.CompanyId == null);
         Assert.Equal(MemberStatus.Active, (await checkDb.Members.AsNoTracking().SingleAsync(Ct)).Status);
+        // Aceptada la invitación, el contacto sale de la identidad y no queda una copia del correo.
+        Assert.False(await checkDb.PendingTenantOwners.AnyAsync(owner => owner.TenantId == operationId, Ct));
+        using var ownerContact = await client.GetAsync($"/api/platform/tenants/{operationId:D}", Ct);
+        using var ownerJson = JsonDocument.Parse(await ownerContact.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(email.Value, ownerJson.RootElement.GetProperty("ownerEmail").GetString());
     }
 
     [Theory]
@@ -300,6 +314,46 @@ public sealed class PlatformTenantProvisioningHttpTests(ApiFactory factory)
         Assert.Equal(2, await db.Roles.CountAsync(Ct));
         Assert.Equal(1, await db.RoleAssignments.CountAsync(Ct));
         Assert.Equal(1, await db.TenantSettings.CountAsync(Ct));
+    }
+
+    [Fact]
+    public async Task A_revoked_owner_invitation_leaves_no_copy_of_the_invited_email()
+    {
+        using var client = Client();
+        var operatorAccount = await AccountJourney.RegisterAsync(factory, client, Ct);
+        await GrantAsync(operatorAccount.UserId, PlatformOperators.All);
+        await AccountJourney.AuthorizeAsync(client, "platform", Ct);
+        var operationId = Guid.NewGuid();
+        var email = Email.Create($"revoked-owner-{Guid.NewGuid():N}@example.test").Value;
+        using var created = await CreateAsync(client, operationId, new
+        {
+            name = "Revocada " + operationId.ToString("N")[..8], firstCompanyName = "Primera empresa",
+            ownerEmail = email.Value, culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires",
+        });
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        using var createdJson = JsonDocument.Parse(await created.Content.ReadAsStringAsync(Ct));
+        var invitationId = createdJson.RootElement.GetProperty("invitationId").GetGuid();
+
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            Assert.True(await services.GetRequiredService<ApplicationDbContext>().PendingTenantOwners
+                .AnyAsync(owner => owner.InvitationId == invitationId, Ct));
+            using var tenant = services.GetRequiredService<ITenantScope>().Enter(operationId);
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                var invitation = await services.GetRequiredService<IInvitationRepository>().GetByIdAsync(invitationId, ct);
+                Assert.NotNull(invitation);
+                return invitation.Revoke(services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime);
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+
+        await using var check = factory.Services.CreateAsyncScope();
+        Assert.False(await check.ServiceProvider.GetRequiredService<ApplicationDbContext>().PendingTenantOwners
+            .AnyAsync(owner => owner.TenantId == operationId, Ct));
+        using var contact = await client.GetAsync($"/api/platform/tenants/{operationId:D}", Ct);
+        using var contactJson = JsonDocument.Parse(await contact.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(JsonValueKind.Null, contactJson.RootElement.GetProperty("ownerEmail").ValueKind);
     }
 
     private async Task<int> CountUsersAsync()

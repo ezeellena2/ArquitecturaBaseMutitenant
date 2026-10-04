@@ -26,13 +26,16 @@ public sealed class ApplicationUser : IdentityUser<Guid>, IVersioned
     public string? DeletionReason { get; private set; }
     public Guid? DeletionRequestedByOperatorId { get; private set; }
     public DateTime? DeletedAtUtc { get; private set; }
+    public DateTime? CreatedAtUtc { get; private set; }
     public Guid? DeletionLeaseId { get; private set; }
     public DateTime? DeletionLeaseExpiresAtUtc { get; private set; }
 
-    public static Result<ApplicationUser> Create(string? displayName, string culture, string timeZoneId)
+    public static Result<ApplicationUser> Create(string? displayName, string culture, string timeZoneId,
+        DateTime? createdAtUtc = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(culture);
         ArgumentException.ThrowIfNullOrWhiteSpace(timeZoneId);
+        if (createdAtUtc is { } created) RequireUtc(created);
         if (!IsValidDisplayName(displayName))
         {
             return UserErrors.InvalidDisplayName;
@@ -44,6 +47,7 @@ public sealed class ApplicationUser : IdentityUser<Guid>, IVersioned
             DisplayName = displayName,
             Culture = culture,
             TimeZoneId = timeZoneId,
+            CreatedAtUtc = createdAtUtc,
         };
         user.UserName = user.Id.ToString("D", CultureInfo.InvariantCulture);
         return user;

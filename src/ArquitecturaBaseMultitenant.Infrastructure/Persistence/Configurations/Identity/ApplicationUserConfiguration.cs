@@ -18,5 +18,7 @@ internal sealed class ApplicationUserConfiguration : IEntityTypeConfiguration<Ap
         builder.Property(user => user.Status).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.Property(user => user.DeletionReason).HasMaxLength(TextLimits.Description);
         builder.HasIndex(user => user.DeletionScheduledForUtc);
+        // Orden por nombre del listado global de cuentas de Plataforma, con desempate estable.
+        builder.HasIndex(user => new { user.DisplayName, user.Id });
     }
 }

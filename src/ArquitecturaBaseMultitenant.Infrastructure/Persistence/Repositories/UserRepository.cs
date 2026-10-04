@@ -11,7 +11,8 @@ using Microsoft.EntityFrameworkCore;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories;
 
 /// <summary>Identidad global; UserManager escribe solo dentro de la UoW del caso de uso.</summary>
-internal sealed class UserRepository(UserManager<ApplicationUser> manager, ApplicationDbContext context) : IUserRepository
+internal sealed class UserRepository(UserManager<ApplicationUser> manager, ApplicationDbContext context,
+    TimeProvider timeProvider) : IUserRepository
 {
     public async Task<Result> RequestDeletionAsync(Guid userId, string reason, DateTime requestedAtUtc, int graceDays,
         CancellationToken cancellationToken)
@@ -40,7 +41,7 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
         CancellationToken cancellationToken)
     {
         context.RequireTransaction();
-        var created = ApplicationUser.Create(displayName, culture, timeZoneId);
+        var created = ApplicationUser.Create(displayName, culture, timeZoneId, timeProvider.GetUtcNow().UtcDateTime);
         if (created.IsFailure)
         {
             throw new InvalidOperationException("The user must be validated before persistence.");

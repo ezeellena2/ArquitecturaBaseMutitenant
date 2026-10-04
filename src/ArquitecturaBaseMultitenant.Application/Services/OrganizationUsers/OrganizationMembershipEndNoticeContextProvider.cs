@@ -31,7 +31,7 @@ internal sealed class OrganizationMembershipEndNoticeContextProvider(
         if (currentUser.UserId is not { } actorId || actorId == Guid.Empty) return AccessErrors.NotMember;
         var tenantId = tenantContext.RequiredTenantId;
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
-        securityEvents.Add(SecurityEvent.ForOrganizationMembershipEnded(actorId, tenantId, nowUtc));
+        securityEvents.Add(SecurityEvent.ForOrganizationMembershipEnded(actorId, tenantId, userId, nowUtc));
 
         var account = await users.GetByIdAsync(userId, cancellationToken);
         if (account is null || account.Status == UserStatus.Deleted)

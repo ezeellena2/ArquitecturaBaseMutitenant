@@ -20,18 +20,24 @@ internal sealed class LoginMethodAvailability(IEnumerable<ILoginCodeChannel> cha
         var result = new List<LoginMethod>();
         foreach (var method in methods)
         {
-            var channelAvailable = method.Type switch
-            {
-                LoginMethodType.Email => channels.Any(channel => channel.Key == LoginCodeChannel.Email),
-                LoginMethodType.Google => google.IsEnabled,
-                _ => false,
-            };
+            var channelAvailable = HasChannel(method.Type);
             var managedActive = method.ManagedByTenantId is not { } tenantId ||
                 await memberships.IsActiveAsync(method.UserId, tenantId, ct);
             if (method.CanSignIn(channelAvailable, managedActive)) result.Add(method);
         }
         return result;
     }
+
+    /// <summary>Tipos de método con canal configurado; Plataforma deriva NeedsRecovery en SQL con esta misma regla.</summary>
+    public IReadOnlyCollection<LoginMethodType> SignInTypes() =>
+        [.. Enum.GetValues<LoginMethodType>().Where(HasChannel)];
+
+    private bool HasChannel(LoginMethodType type) => type switch
+    {
+        LoginMethodType.Email => channels.Any(channel => channel.Key == LoginCodeChannel.Email),
+        LoginMethodType.Google => google.IsEnabled,
+        _ => false,
+    };
 
     public bool CanReceiveCode(LoginMethod method) => method.Type is LoginMethodType.Email or LoginMethodType.Google
         && LoginMethodNotifier.Contact(method) is not null && channels.Any(channel => channel.Key == LoginCodeChannel.Email);
@@ -42,12 +48,7 @@ internal sealed class LoginMethodAvailability(IEnumerable<ILoginCodeChannel> cha
 
     public async Task<bool> IsAvailableAsync(Guid userId, LoginMethodRow method, CancellationToken ct)
     {
-        var channelAvailable = method.Type switch
-        {
-            LoginMethodType.Email => channels.Any(channel => channel.Key == LoginCodeChannel.Email),
-            LoginMethodType.Google => google.IsEnabled,
-            _ => false,
-        };
+        var channelAvailable = HasChannel(method.Type);
         return method.VerifiedAtUtc is not null && channelAvailable
             && (method.ManagedByTenantId is not { } tenantId || await memberships.IsActiveAsync(userId, tenantId, ct));
     }

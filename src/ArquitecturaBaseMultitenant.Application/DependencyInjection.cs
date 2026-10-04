@@ -81,6 +81,7 @@ public static class DependencyInjection
         services.AddScoped<IPlatformPublicSiteService, Services.Platform.PlatformPublicSiteService>();
         services.AddScoped<Services.Platform.PlatformPublicSiteWriter>();
         services.AddScoped<IPlatformDomainService, Services.Platform.PlatformDomainService>();
+        services.AddScoped<IPlatformAccountService, Services.Platform.PlatformAccountService>();
         services.AddScoped<Services.Platform.PlatformActionGuard>();
         services.AddScoped<Services.Platform.PlatformTenantSlugAllocator>();
         services.AddScoped<Services.Platform.PlatformTenantCreator>();
@@ -161,6 +162,7 @@ public static class DependencyInjection
         services.AddScoped<LoginMethodNotifier>();
         services.AddScoped<GoogleMethodLinkFinalizer>();
         services.AddScoped<LoginMethodAvailability>();
+        services.AddScoped<SoleOwnerOrganizations>();
         services.AddScoped<LoginMethodChanger>();
         services.AddScoped<IReauthService, ReauthService>();
         services.AddScoped<ReauthIssuer>();

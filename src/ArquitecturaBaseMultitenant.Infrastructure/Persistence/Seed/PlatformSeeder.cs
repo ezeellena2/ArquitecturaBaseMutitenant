@@ -116,7 +116,8 @@ internal sealed class PlatformSeeder(
             throw new InvalidOperationException("The default culture country has no time zone in reference data.");
         }
 
-        var created = ApplicationUser.Create(owner.DisplayName, defaultCulture.Code, timeZone);
+        var created = ApplicationUser.Create(owner.DisplayName, defaultCulture.Code, timeZone,
+            timeProvider.GetUtcNow().UtcDateTime);
         if (created.IsFailure)
         {
             throw new InvalidOperationException("Seed:PlatformOwner:DisplayName is invalid.");

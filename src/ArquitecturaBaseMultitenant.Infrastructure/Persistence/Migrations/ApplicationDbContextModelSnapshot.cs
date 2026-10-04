@@ -1568,6 +1568,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("text");
 
+                    b.Property<DateTime?>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Culture")
                         .IsRequired()
                         .HasMaxLength(60)
@@ -1672,6 +1675,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex");
 
+                    b.HasIndex("DisplayName", "Id");
+
                     b.ToTable("AspNetUsers", "identity");
                 });
 
@@ -1700,6 +1705,27 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId");
 
                     b.ToTable("UserTenantAccesses", "identity");
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Infrastructure.Persistence.PendingTenantOwner", b =>
+                {
+                    b.Property<Guid>("InvitationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("InvitationId");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("PendingTenantOwners", "platform");
                 });
 
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Infrastructure.Persistence.TenantCounters", b =>
@@ -2391,6 +2417,15 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasOne("ArquitecturaBaseMultitenant.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Infrastructure.Persistence.PendingTenantOwner", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

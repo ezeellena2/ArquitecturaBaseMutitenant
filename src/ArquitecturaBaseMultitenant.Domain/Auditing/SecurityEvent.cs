@@ -46,11 +46,12 @@ public sealed class SecurityEvent : Entity
         };
     }
 
-    public static SecurityEvent ForOrganizationMembershipEnded(Guid actorId, Guid tenantId,
+    public static SecurityEvent ForOrganizationMembershipEnded(Guid actorId, Guid tenantId, Guid accountId,
         DateTime occurredAtUtc)
     {
         if (actorId == Guid.Empty) throw new ArgumentException("The actor id cannot be empty.", nameof(actorId));
         if (tenantId == Guid.Empty) throw new ArgumentException("The tenant id cannot be empty.", nameof(tenantId));
+        if (accountId == Guid.Empty) throw new ArgumentException("The account id cannot be empty.", nameof(accountId));
         if (occurredAtUtc.Kind != DateTimeKind.Utc)
             throw new ArgumentException("The occurrence instant must be UTC.", nameof(occurredAtUtc));
 
@@ -60,6 +61,7 @@ public sealed class SecurityEvent : Entity
             ActorKind = AuditActorKind.User,
             ActorId = actorId,
             TargetTenantId = tenantId,
+            TargetAccountId = accountId,
             OccurredAtUtc = occurredAtUtc,
         };
     }

@@ -33,6 +33,7 @@ public sealed class DataClassificationTests
         typeof(LoginAudit).FullName!,
         typeof(Tenant).FullName!,
         "ArquitecturaBaseMultitenant.Infrastructure.Persistence.TenantCounters", // Agregados globales técnicos mantenidos por triggers; no contiene filas privadas.
+        "ArquitecturaBaseMultitenant.Infrastructure.Persistence.PendingTenantOwner", // Contacto global del Dueño invitado por Plataforma; un trigger lo borra cuando la invitación deja de estar pendiente.
         typeof(ReservedTenantSlug).FullName!, // Reservas globales que impiden colisiones de dominios entre organizaciones.
         typeof(TenantDomain).FullName!, // Verificación de dominios global, administrada desde cada organización.
         typeof(PlatformSettings).FullName!,

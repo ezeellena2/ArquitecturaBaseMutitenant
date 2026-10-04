@@ -397,6 +397,328 @@
         }
       }
     },
+    "/api/platform/accounts/paged": {
+      "get": {
+        "tags": [
+          "Cuentas de Plataforma"
+        ],
+        "parameters": [
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "enum": [
+                10,
+                20,
+                50,
+                100
+              ],
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "State",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PlatformAccountState"
+            }
+          },
+          {
+            "name": "Kind",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PlatformAccountKind"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfPlatformAccountResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfPlatformAccountResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfPlatformAccountResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/platform/accounts/filter-counts": {
+      "get": {
+        "tags": [
+          "Cuentas de Plataforma"
+        ],
+        "parameters": [
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "enum": [
+                10,
+                20,
+                50,
+                100
+              ],
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "State",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PlatformAccountState"
+            }
+          },
+          {
+            "name": "Kind",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PlatformAccountKind"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformAccountFilterCounts"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformAccountFilterCounts"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformAccountFilterCounts"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/platform/accounts/{id}": {
+      "get": {
+        "tags": [
+          "Cuentas de Plataforma"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformAccountDetailResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformAccountDetailResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformAccountDetailResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/platform/tenants/{id}/domains": {
       "get": {
         "tags": [
@@ -9976,6 +10298,19 @@
         },
         "description": "Versión y texto vigente de un documento legal en una cultura."
       },
+      "LoginAuditMethod": {
+        "enum": [
+          "Code",
+          "Google",
+          "WhatsAppCode",
+          "WhatsAppLink",
+          null
+        ],
+        "type": [
+          "null",
+          "string"
+        ]
+      },
       "LoginChannelAvailability": {
         "required": [
           "key",
@@ -10756,6 +11091,46 @@
         },
         "description": "Representa una página y el total de resultados para que el consumidor pueda mostrar navegación anterior y siguiente."
       },
+      "PagedResultOfPlatformAccountResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlatformAccountResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hasPrevious": {
+            "type": "boolean"
+          },
+          "hasNext": {
+            "type": "boolean"
+          }
+        },
+        "description": "Representa una página y el total de resultados para que el consumidor pueda mostrar navegación anterior y siguiente."
+      },
       "PagedResultOfPlatformTenantResponse": {
         "required": [
           "items",
@@ -10993,6 +11368,357 @@
           }
         },
         "description": "País elegido y número escrito; el parser del servicio produce E.164."
+      },
+      "PlatformAccountDeletionResponse": {
+        "required": [
+          "requestedAtUtc",
+          "scheduledForUtc",
+          "requestedByPlatform"
+        ],
+        "type": "object",
+        "properties": {
+          "requestedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "scheduledForUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "requestedByPlatform": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PlatformAccountDetailResponse": {
+        "required": [
+          "id",
+          "kind",
+          "state",
+          "hasPersonalSpace",
+          "loginMethods",
+          "organizations",
+          "soleOwnerOrganizations",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "kind": {
+            "$ref": "#/components/schemas/PlatformAccountKind"
+          },
+          "state": {
+            "$ref": "#/components/schemas/PlatformAccountState"
+          },
+          "createdAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "lastSignInAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "lastSignInMethod": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LoginAuditMethod"
+              }
+            ]
+          },
+          "hasPersonalSpace": {
+            "type": "boolean"
+          },
+          "deletion": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PlatformAccountDeletionResponse"
+              }
+            ]
+          },
+          "loginMethods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlatformAccountLoginMethodResponse"
+            }
+          },
+          "organizations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlatformAccountMembershipResponse"
+            }
+          },
+          "soleOwnerOrganizations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "operatorPermissions": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        },
+        "description": "Ficha: métodos enmascarados, membresías desde el índice global y permisos si es operador."
+      },
+      "PlatformAccountFilterCounts": {
+        "required": [
+          "total",
+          "states",
+          "kinds"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "states": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlatformAccountStateCount"
+            }
+          },
+          "kinds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlatformAccountKindCount"
+            }
+          }
+        }
+      },
+      "PlatformAccountKind": {
+        "enum": [
+          "Person",
+          "Operator"
+        ],
+        "type": "string"
+      },
+      "PlatformAccountKindCount": {
+        "required": [
+          "kind",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/PlatformAccountKind"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PlatformAccountLoginMethodResponse": {
+        "required": [
+          "id",
+          "type",
+          "maskedValue",
+          "isPrimary",
+          "canSignIn"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "$ref": "#/components/schemas/LoginMethodType"
+          },
+          "maskedValue": {
+            "type": "string"
+          },
+          "isPrimary": {
+            "type": "boolean"
+          },
+          "verifiedAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "managedByOrganizationName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "canSignIn": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PlatformAccountMembershipResponse": {
+        "required": [
+          "tenantId",
+          "name",
+          "status",
+          "tenantStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "roleName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "joinedAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MemberStatus"
+          },
+          "tenantStatus": {
+            "$ref": "#/components/schemas/TenantStatus"
+          },
+          "endedAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        },
+        "description": "EndedAtUtc sale del último SecurityEvent de fin de membresía de esa cuenta; sin evidencia queda null."
+      },
+      "PlatformAccountResponse": {
+        "required": [
+          "id",
+          "kind",
+          "state",
+          "hasPersonalSpace",
+          "organizationCount",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "primaryEmail": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Email"
+              }
+            ]
+          },
+          "kind": {
+            "$ref": "#/components/schemas/PlatformAccountKind"
+          },
+          "state": {
+            "$ref": "#/components/schemas/PlatformAccountState"
+          },
+          "hasPersonalSpace": {
+            "type": "boolean"
+          },
+          "organizationCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lastSignInAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "lastSignInMethod": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LoginAuditMethod"
+              }
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        },
+        "description": "Fila del listado: el correo principal completo identifica la cuenta, como en el tablero Cuentas."
+      },
+      "PlatformAccountState": {
+        "enum": [
+          "Active",
+          "Suspended",
+          "NeedsRecovery",
+          "PendingDeletion",
+          "Deleted"
+        ],
+        "type": "string",
+        "description": "Estado que ve Plataforma. NeedsRecovery se deriva: cuenta Active sin ningún método que sirva para ingresar;\r\nlos demás estados de la cuenta tienen prioridad."
+      },
+      "PlatformAccountStateCount": {
+        "required": [
+          "state",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "state": {
+            "$ref": "#/components/schemas/PlatformAccountState"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
       },
       "PlatformFeatureResponse": {
         "required": [
@@ -12327,6 +13053,9 @@
   "tags": [
     {
       "name": "ReferenceData"
+    },
+    {
+      "name": "Cuentas de Plataforma"
     },
     {
       "name": "Dominios de organización"

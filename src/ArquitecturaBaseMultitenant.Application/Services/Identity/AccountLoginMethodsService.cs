@@ -14,7 +14,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 /// <summary>Construye la lista de métodos de ingreso de la cuenta, con disponibilidad, contacto de respaldo y acciones permitidas para cada uno.</summary>
 internal sealed class AccountLoginMethodsService(ICurrentUser currentUser, ILoginMethodReader methods,
     ITenantReader tenants, LoginMethodAvailability availability, IGoogleAvailability google,
-    IPlatformSettingsReader settings, ITenantAdminReader admins, TimeProvider timeProvider,
+    IPlatformSettingsReader settings, SoleOwnerOrganizations soleOwners, TimeProvider timeProvider,
     ILogger<AccountLoginMethodsService> logger) : IAccountLoginMethodsService
 {
     public Task<Result<AccountLoginMethodsResponse>> ListAsync(CancellationToken ct) =>
@@ -44,18 +44,8 @@ internal sealed class AccountLoginMethodsService(ICurrentUser currentUser, ILogi
             var platform = await settings.FindAsync(ct) ?? throw new InvalidOperationException("Platform settings have not been seeded.");
             return new AccountLoginMethodsResponse(rows, google.IsEnabled && !all.Any(method => method.Type == LoginMethodType.Google),
                 !await availability.HasPersonalBackupAsync(userId, all, ct), platform.AccountDeletionGraceDays,
-                await SoleOwnerOrganizationsAsync(userId, ct));
+                await soleOwners.ListAsync(userId, ct));
         });
-
-    // El mismo conteo que LastTenantAdminGuard al pedir la baja, sin bloquear: solo informa a Mi cuenta.
-    private async Task<IReadOnlyList<string>> SoleOwnerOrganizationsAsync(Guid userId, CancellationToken ct)
-    {
-        var names = new List<string>();
-        foreach (var tenantId in await admins.ListActiveTenantIdsForOwnerAsync(userId, ct))
-            if (await admins.CountActiveOwnersAsync(tenantId, ct) <= 1 && await tenants.FindByIdAsync(tenantId, ct) is { } tenant)
-                names.Add(tenant.Name);
-        return [.. names.Order(StringComparer.CurrentCulture)];
-    }
 
     private static string Mask(LoginMethodRow method)
     {

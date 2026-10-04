@@ -14,7 +14,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
 internal sealed class PlatformTenantCreator(ITenantRepository tenants, ICompanyRepository companies,
     InvitationIssuer invitations, TenantProvisioner provisioner, PlatformTenantAudit audit,
-    PlatformTenantSlugAllocator slugs, TimeProvider clock)
+    PlatformTenantSlugAllocator slugs, IPendingTenantOwnerRepository pendingOwners, TimeProvider clock)
 {
     internal async Task<Result<CreatedPlatformTenantResponse>> CreateAsync(Guid id, Guid operatorId,
         CreatePlatformTenantRequest request, TenantSettings settings, string reason, CancellationToken ct)
@@ -38,6 +38,7 @@ internal sealed class PlatformTenantCreator(ITenantRepository tenants, ICompanyR
         var issued = await invitations.IssueWithMemberAsync(new IssueInvitationRequest(request.OwnerEmail,
             operatorId, InvitationChannel.Email), ct, settings, grant);
         if (issued.IsFailure) return issued.Error;
+        pendingOwners.Add(id, issued.Value.InvitationId, request.OwnerEmail);
         var prepared = await provisioner.StageBusinessOwnerAsync(tenant, settings, issued.Value.Member, ct, company.Value.Id);
         if (prepared.IsFailure) return prepared.Error;
         var changes = new SecurityEventChanges();
