@@ -14,7 +14,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Platform;
 
-/// <summary>Operadores de Plataforma (ADR 0042): invitar y cambiar o quitar sus permisos.</summary>
+/// <summary>
+/// Operadores de Plataforma (ADR 0042): invitar, reenviar o revocar la invitación, y cambiar o quitar sus permisos.
+/// </summary>
 [ApiController]
 [Tags("Operadores de Plataforma")]
 [Access(Access.Platform)]
@@ -38,6 +40,27 @@ public sealed class PlatformOperatorsController(IPlatformOperatorInvitationServi
             ? Result.Failure(invited.Error).ToActionResult(this)
             : Created($"/api/platform/accounts/{invited.Value.Id:D}", invited.Value);
     }
+
+    /// <summary>«Reenviar invitación»: renueva los 7 días de una invitación sin aceptar y manda el correo de nuevo.</summary>
+    [HttpPost("api/platform/operators/{id:guid}/invitation/resend")]
+    [Idempotent]
+    [ProducesResponseType<PlatformOperatorInvitationResponse>(StatusCodes.Status200OK)]
+    [ProducesProblem(StatusCodes.Status401Unauthorized)]
+    [ProducesProblem(StatusCodes.Status403Forbidden)]
+    [ProducesProblem(StatusCodes.Status404NotFound)]
+    [ProducesProblem(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> ResendInvitation(Guid id, CancellationToken ct) =>
+        (await invitations.ResendAsync(id, ct)).ToActionResult(this);
+
+    /// <summary>«Revocar invitación»: borra una invitación sin aceptar y libera el correo.</summary>
+    [HttpDelete("api/platform/operators/{id:guid}/invitation")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesProblem(StatusCodes.Status401Unauthorized)]
+    [ProducesProblem(StatusCodes.Status403Forbidden)]
+    [ProducesProblem(StatusCodes.Status404NotFound)]
+    [ProducesProblem(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> RevokeInvitation(Guid id, CancellationToken ct) =>
+        (await invitations.RevokeAsync(id, ct)).ToActionResult(this);
 
     [HttpPut("api/platform/accounts/{id:guid}/operator")]
     [Idempotent]

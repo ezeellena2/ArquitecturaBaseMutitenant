@@ -87,10 +87,14 @@
   <data name="LoginMethodInUse.Body" xml:space="preserve"><value>Someone wanted to add this email address to sign in to another {0} account. This email address already belongs to an account, so we didn't add it and didn't send any code.</value></data>
   <data name="LoginMethodInUse.After" xml:space="preserve"><value>If it was you, sign in with this email address: you already have an account.</value></data>
   <data name="LoginMethodInUse.Note" xml:space="preserve"><value>If it wasn't you, ignore this message.</value></data>
-  <data name="OperatorInvited.Subject" xml:space="preserve"><value>You were invited as an operator</value></data>
+  <data name="OperatorInvited.Subject" xml:space="preserve"><value>{0} invited you as an operator of {1}</value></data>
   <data name="OperatorInvited.Title" xml:space="preserve"><value>You were invited as an operator</value></data>
-  <data name="OperatorInvited.Body" xml:space="preserve"><value>You were invited to manage {0} as a platform operator. Sign in with this email address: we will send you a code to enter.</value></data>
-  <data name="OperatorInvited.Note" xml:space="preserve"><value>If you weren't expecting this invitation, ignore this email.</value></data>
+  <data name="OperatorInvited.Body" xml:space="preserve"><value>{0} {1} invited you to join the {2} platform as an operator.</value></data>
+  <data name="OperatorInvited.UnnamedInviter" xml:space="preserve"><value>The {0} team</value></data>
+  <data name="OperatorInvited.PermissionsLabel" xml:space="preserve"><value>Permissions</value></data>
+  <data name="OperatorInvited.Note" xml:space="preserve"><value>To sign in, use this email address before the invitation expires: we will send you an access code.</value></data>
+  <data name="OperatorInvited.PlatformOnly" xml:space="preserve"><value>This account is only for operating the platform: it is not used as a person or to enter an organization.</value></data>
+  <data name="List.And" xml:space="preserve"><value>{0} and {1}</value></data>
   <data name="RecoveryRequested.Subject" xml:space="preserve"><value>Someone asked to recover your account</value></data>
   <data name="RecoveryRequested.Title" xml:space="preserve"><value>Someone asked to recover your account</value></data>
   <data name="RecoveryRequested.Body" xml:space="preserve"><value>{0} On {1} at {2}, someone asked to recover your {3} account and gave us another email address or phone number to contact them.</value></data>

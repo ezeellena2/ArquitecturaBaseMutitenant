@@ -279,6 +279,14 @@ public sealed class ProfileServiceTests
         public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> RequestDeletionByOperatorAsync(Guid userId, Guid operatorId,
             string reason, DateTime requestedAtUtc, int graceDays, CancellationToken ct) => throw new NotSupportedException();
         public Task SetPlatformOperatorAsync(Guid userId, bool isOperator, CancellationToken ct) => throw new NotSupportedException();
+        public Task InvitePlatformOperatorAsync(Guid userId, DateTime expiresAtUtc, CancellationToken ct) =>
+            throw new NotSupportedException();
+        public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> RenewOperatorInvitationAsync(Guid userId, DateTime expiresAtUtc,
+            CancellationToken ct) => throw new NotSupportedException();
+        public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> AcceptOperatorInvitationAsync(Guid userId, DateTime acceptedAtUtc,
+            CancellationToken ct) => throw new NotSupportedException();
+        public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> DiscardOperatorInvitationAsync(Guid userId, DateTime discardedAtUtc,
+            string deletedDisplayName, CancellationToken ct) => throw new NotSupportedException();
         public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> CancelDeletionAsync(Guid userId,
             DateTime cancelledAtUtc, CancellationToken ct) => throw new NotSupportedException();
         public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> CompleteDeletionAsync(Guid userId,

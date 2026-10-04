@@ -26,6 +26,19 @@ public interface IUserRepository
     /// <summary>Marca o desmarca la cuenta como operadora; los permisos se guardan aparte, en la misma UoW.</summary>
     Task SetPlatformOperatorAsync(Guid userId, bool isOperator, CancellationToken cancellationToken);
 
+    /// <summary>ADR 0042: marca la cuenta nueva como operadora, con la invitación pendiente hasta la fecha dada.</summary>
+    Task InvitePlatformOperatorAsync(Guid userId, DateTime expiresAtUtc, CancellationToken cancellationToken);
+
+    /// <summary>Renueva el vencimiento de una invitación de operador sin aceptar.</summary>
+    Task<Result> RenewOperatorInvitationAsync(Guid userId, DateTime expiresAtUtc, CancellationToken cancellationToken);
+
+    /// <summary>Acepta la invitación de operador con el primer ingreso, si todavía no venció.</summary>
+    Task<Result> AcceptOperatorInvitationAsync(Guid userId, DateTime acceptedAtUtc, CancellationToken cancellationToken);
+
+    /// <summary>Revoca la invitación: la identidad queda eliminada y anónima, fuera de Cuentas.</summary>
+    Task<Result> DiscardOperatorInvitationAsync(Guid userId, DateTime discardedAtUtc, string deletedDisplayName,
+        CancellationToken cancellationToken);
+
     Task<UserAccountRow> CreateAsync(string? displayName, string culture, string timeZoneId,
         CancellationToken cancellationToken);
 

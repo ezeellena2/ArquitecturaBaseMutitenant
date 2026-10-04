@@ -70,6 +70,8 @@
   <data name="Field.PublishBlocked" xml:space="preserve"><value>Publication blocked</value></data>
   <data name="Platform.DomainMetadataReadReason" xml:space="preserve"><value>Organization email domain queried.</value></data>
   <data name="Platform.OperatorInvitationReason" xml:space="preserve"><value>Operator invitation.</value></data>
+  <data name="Platform.OperatorInvitationResendReason" xml:space="preserve"><value>Operator invitation resent.</value></data>
+  <data name="Platform.OperatorInvitationRevokeReason" xml:space="preserve"><value>Operator invitation revoked.</value></data>
   <data name="SecurityEvent.LoginMethodChanged" xml:space="preserve"><value>Changed a sign-in method</value></data>
   <data name="SecurityEvent.AccountDeletionRequested" xml:space="preserve"><value>Requested the account deletion</value></data>
   <data name="SecurityEvent.AccountDeletionCancelled" xml:space="preserve"><value>Cancelled the account deletion</value></data>
@@ -98,6 +100,8 @@
   <data name="SecurityEvent.PlatformOperatorInvited" xml:space="preserve"><value>Invited an operator</value></data>
   <data name="SecurityEvent.PlatformOperatorPermissionsChanged" xml:space="preserve"><value>Changed the operator permissions</value></data>
   <data name="SecurityEvent.PlatformOperatorRemoved" xml:space="preserve"><value>Removed the operator</value></data>
+  <data name="SecurityEvent.PlatformOperatorInvitationResent" xml:space="preserve"><value>Resent an operator invitation</value></data>
+  <data name="SecurityEvent.PlatformOperatorInvitationRevoked" xml:space="preserve"><value>Revoked an operator invitation</value></data>
   <data name="SecurityEvent.LegalDocumentPublished" xml:space="preserve"><value>Published a legal document version</value></data>
   <data name="Platform.LegalPublicationReason" xml:space="preserve"><value>Legal document version published.</value></data>
   <data name="SignIn.Code" xml:space="preserve"><value>Signed in with an email code</value></data>

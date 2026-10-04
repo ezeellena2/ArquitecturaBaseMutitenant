@@ -35,6 +35,8 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(notice);
+        if (notice is AccountNotice.OperatorInvited operatorInvited)
+            return await RenderOperatorInvitedAsync(to, operatorInvited, culture, cancellationToken);
         var greeting = string.IsNullOrWhiteSpace(notice.RecipientName)
             ? NotificationTexts.Get("Greeting.Unnamed", culture)
             : NotificationTexts.Format("Greeting.Named", culture, notice.RecipientName);
@@ -63,10 +65,6 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
             AccountNotice.RecoveryReceived => ("RecoveryReceived", "AccountDeleted.html",
                 new[] { NotificationTexts.Format("RecoveryReceived.Body", culture, appName) },
                 string.Empty, string.Empty, NotificationTexts.Get("RecoveryReceived.Note", culture)),
-            AccountNotice.OperatorInvited invited => ("OperatorInvited", "AccountDeletionCancelled.html",
-                new[] { NotificationTexts.Format("OperatorInvited.Body", culture, appName) },
-                NotificationTexts.Get("Action.Login", culture), invited.ActionUrl,
-                NotificationTexts.Get("OperatorInvited.Note", culture)),
             AccountNotice.RecoveryRequested requested => await RecoveryRequestedAsync(requested, greeting, appName,
                 culture, cancellationToken),
             AccountNotice.RecoveryApproved approved => ("RecoveryApproved", "AccountDeletionCancelled.html",

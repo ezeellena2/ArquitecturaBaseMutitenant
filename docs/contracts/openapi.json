@@ -2189,6 +2189,171 @@
         }
       }
     },
+    "/api/platform/operators/{id}/invitation/resend": {
+      "post": {
+        "tags": [
+          "Operadores de Plataforma"
+        ],
+        "summary": "«Reenviar invitación»: renueva los 7 días de una invitación sin aceptar y manda el correo de nuevo.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformOperatorInvitationResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformOperatorInvitationResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformOperatorInvitationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/platform/operators/{id}/invitation": {
+      "delete": {
+        "tags": [
+          "Operadores de Plataforma"
+        ],
+        "summary": "«Revocar invitación»: borra una invitación sin aceptar y libera el correo.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/platform/accounts/{id}/operator": {
       "put": {
         "tags": [
@@ -13555,6 +13720,13 @@
               }
             ]
           },
+          "invitationExpiresAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
           "hasPersonalSpace": {
             "type": "boolean"
           },
@@ -13805,12 +13977,19 @@
               }
             ]
           },
+          "invitationExpiresAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
           "version": {
             "type": "integer",
             "format": "uint32"
           }
         },
-        "description": "Fila del listado: el correo principal completo identifica la cuenta, como en el tablero Cuentas."
+        "description": "Fila del listado: el correo principal completo identifica la cuenta, como en el tablero Cuentas. Una invitación de\r\noperador sin aceptar lleva su vencimiento (ADR 0042)."
       },
       "PlatformAccountState": {
         "enum": [
@@ -13818,10 +13997,12 @@
           "Suspended",
           "NeedsRecovery",
           "PendingDeletion",
-          "Deleted"
+          "Deleted",
+          "Invited",
+          "InvitationExpired"
         ],
         "type": "string",
-        "description": "Estado que ve Plataforma. NeedsRecovery se deriva: cuenta Active sin ningún método que sirva para ingresar;\r\nlos demás estados de la cuenta tienen prioridad."
+        "description": "Estado que ve Plataforma. NeedsRecovery se deriva: cuenta Active sin ningún método que sirva para ingresar;\r\nlos demás estados de la cuenta tienen prioridad. Invited e InvitationExpired son la invitación de un operador\r\nsin aceptar, vigente o vencida (ADR 0042)."
       },
       "PlatformAccountStateCount": {
         "required": [
@@ -14079,16 +14260,21 @@
       },
       "PlatformOperatorInvitationResponse": {
         "required": [
-          "id"
+          "id",
+          "expiresAtUtc"
         ],
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
             "format": "uuid"
+          },
+          "expiresAtUtc": {
+            "type": "string",
+            "format": "date-time"
           }
         },
-        "description": "La cuenta del operador invitado: aparece enseguida en Cuentas."
+        "description": "La cuenta del operador invitado, que figura en Cuentas como «Invitación pendiente», y el vencimiento de la\r\ninvitación (ADR 0042)."
       },
       "PlatformPublicSiteResponse": {
         "required": [

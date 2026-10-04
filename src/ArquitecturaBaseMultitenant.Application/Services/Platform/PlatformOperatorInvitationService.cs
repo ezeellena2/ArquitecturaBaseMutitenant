@@ -1,11 +1,8 @@
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
-using ArquitecturaBaseMultitenant.Application.Models.Notifications;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
@@ -19,17 +16,16 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
 /// <summary>
 /// Invita operadores (ADR 0042). Un correo que ya tiene cuenta se rechaza con su motivo: es la excepción de la ADR
-/// 0041, porque invitar pide <c>platform.operators.manage</c>. El invitado aparece enseguida en Cuentas y entra con
-/// código a Plataforma; el aviso de invitación lleva un texto provisorio hasta el tablero de Mensajes.
+/// 0041, porque invitar pide <c>platform.operators.manage</c>. La invitación figura en Cuentas como pendiente hasta el
+/// primer ingreso con código a Plataforma y vence a los 7 días. Reenviar renueva el plazo y manda el correo de nuevo;
+/// revocar la borra y libera el correo. Cada acción deja su SecurityEvent con un motivo fijo.
 /// </summary>
 internal sealed class PlatformOperatorInvitationService(
     PlatformOperatorProvisioner provisioner,
+    PlatformOperatorInvitationNotifier notifier,
     IUserLookup lookup,
     LoginCodeIssuer codes,
     PlatformAudit audit,
-    IEnumerable<IAccountNoticeChannel> channels,
-    UserCultures cultures,
-    IPublicOrigin origin,
     IRequestValidator validator,
     IUnitOfWork unitOfWork,
     TimeProvider clock,
@@ -51,18 +47,39 @@ internal sealed class PlatformOperatorInvitationService(
                 if (await lookup.FindMethodAsync(LoginMethodType.Email, email.Value, work) is not null
                     || (await lookup.FindVerifiedUsersByEmailAsync(email, work)).Count > 0)
                     return PlatformOperatorErrors.AccountExists;
-                var created = await provisioner.CreateAsync(email, request.Permissions!, clock.GetUtcNow().UtcDateTime, work);
-                if (created.IsFailure) return created.Error;
-                audit.RecordOperator(created.Value, SecurityEventType.PlatformOperatorInvited,
+                var invited = await provisioner.CreateAsync(email, request.Permissions!, clock.GetUtcNow().UtcDateTime, work);
+                if (invited.IsFailure) return invited.Error;
+                audit.RecordOperator(invited.Value.Id, SecurityEventType.PlatformOperatorInvited,
                     AuditTexts.OperatorInvitationReason(), PlatformOperatorChanges.Between([], request.Permissions!));
-                var url = origin.Value is { } value ? new Uri(value, "/plataforma").AbsoluteUri : "/plataforma";
-                var channel = channels.FirstOrDefault(item => item.MethodType == LoginMethodType.Email)
-                    ?? throw new InvalidOperationException("The email notice channel is not registered.");
-                await channel.EnqueueAsync(created.Value, email.Value, new AccountNotice.OperatorInvited(url),
-                    await cultures.ResolveAsync(null, null, work), work);
-                return new PlatformOperatorInvitationResponse(created.Value);
+                await notifier.EnqueueAsync(invited.Value, audit.CurrentOperatorId(), work);
+                return new PlatformOperatorInvitationResponse(invited.Value.Id, invited.Value.ExpiresAtUtc);
             }, CommitPolicy.OnSuccess, ct);
         });
+
+    public Task<Result<PlatformOperatorInvitationResponse>> ResendAsync(Guid accountId, CancellationToken ct) =>
+        OperationLog.RunAsync<PlatformOperatorInvitationResponse>(logger, clock, "ResendPlatformOperatorInvitation", () =>
+            unitOfWork.ExecuteInTransactionAsync<Result<PlatformOperatorInvitationResponse>>(async work =>
+            {
+                var renewed = await provisioner.RenewAsync(accountId, clock.GetUtcNow().UtcDateTime, work);
+                if (renewed.IsFailure) return renewed.Error;
+                var changes = new SecurityEventChanges();
+                changes.AddUtc("invitation.expiresAtUtc", renewed.Value.PreviousExpiresAtUtc, renewed.Value.ExpiresAtUtc);
+                audit.RecordOperator(accountId, SecurityEventType.PlatformOperatorInvitationResent,
+                    AuditTexts.OperatorInvitationResendReason(), changes);
+                await notifier.EnqueueAsync(renewed.Value, audit.CurrentOperatorId(), work);
+                return new PlatformOperatorInvitationResponse(accountId, renewed.Value.ExpiresAtUtc);
+            }, CommitPolicy.OnSuccess, ct));
+
+    public Task<Result> RevokeAsync(Guid accountId, CancellationToken ct) =>
+        OperationLog.RunAsync(logger, clock, "RevokePlatformOperatorInvitation", () =>
+            unitOfWork.ExecuteInTransactionAsync<Result>(async work =>
+            {
+                var discarded = await provisioner.DiscardAsync(accountId, clock.GetUtcNow().UtcDateTime, work);
+                if (discarded.IsFailure) return discarded.Error;
+                audit.RecordOperator(accountId, SecurityEventType.PlatformOperatorInvitationRevoked,
+                    AuditTexts.OperatorInvitationRevokeReason(), PlatformOperatorChanges.Between(discarded.Value, []));
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, ct));
 }
 
 /// <summary>El diff de permisos de un operador: cada clave técnica que cambió, con antes y después.</summary>

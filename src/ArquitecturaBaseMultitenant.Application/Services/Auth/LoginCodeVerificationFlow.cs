@@ -68,6 +68,9 @@ internal sealed class LoginCodeVerificationFlow(
             }
         }
 
+        var invitation = await accounts.AcceptOperatorInvitationAsync(account, request.ReturnUrl!, cancellationToken);
+        if (invitation.IsFailure) return Fail(userId, invitation.Error);
+
         await attempts.ResetFailedAttemptsAsync(userId.Value, cancellationToken);
         attempts.RecordSuccess(userId.Value);
         return userId.Value;

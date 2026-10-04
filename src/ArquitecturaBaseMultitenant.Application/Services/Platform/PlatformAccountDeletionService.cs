@@ -9,6 +9,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Application.Services.Legal;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Legal;
+using ArquitecturaBaseMultitenant.Domain.Platform;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.Extensions.Logging;
@@ -49,6 +50,8 @@ internal sealed class PlatformAccountDeletionService(IUserRepository users, ILog
         var account = await users.GetByIdAsync(accountId, ct);
         if (account is null) return UserErrors.NotFound;
         if (account.Version != request.Version!.Value) throw new ConcurrencyConflictException();
+        // ADR 0042: una invitación de operador sin aceptar solo se reenvía o se revoca.
+        if (account.HasPendingOperatorInvitation) return PlatformOperatorErrors.InvitationPending;
         if (account.DeletionScheduledForUtc is not null || account.Status == UserStatus.PendingDeletion)
             return AccountDeletionErrors.AlreadyPending;
         if (account.Status is not (UserStatus.Active or UserStatus.Suspended)) return UserErrors.InvalidTransition;

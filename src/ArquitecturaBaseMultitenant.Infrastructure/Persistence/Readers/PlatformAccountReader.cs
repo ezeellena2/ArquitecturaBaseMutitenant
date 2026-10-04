@@ -14,7 +14,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 /// <summary>
 /// Lee la identidad global, sus métodos, el índice de accesos y los ingresos. Nunca consulta Members ni
 /// Invitations: las membresías salen de la proyección global. El estado derivado se calcula en SQL con la
-/// misma regla que <c>LoginMethodAvailability</c>, para filtrar, contar y mostrar con una sola expresión.
+/// misma regla que <c>LoginMethodAvailability</c>, para filtrar, contar y mostrar con una sola expresión. Una
+/// invitación de operador sin aceptar es Invited o InvitationExpired según <c>nowUtc</c>; una revocada no figura
+/// (ADR 0042).
 /// </summary>
 internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPlatformAccountReader
 {
@@ -24,14 +26,14 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
     };
 
     public Task<PagedResult<PlatformAccountRow>> ListAsync(ListPlatformAccountsRequest request,
-        IReadOnlyCollection<LoginMethodType> signInTypes, CancellationToken ct) =>
-        Rows(Filter(Accounts(signInTypes), request).ApplySort(SortDescriptor.Parse(request.Sort), Sort,
+        IReadOnlyCollection<LoginMethodType> signInTypes, DateTime nowUtc, CancellationToken ct) =>
+        Rows(Filter(Accounts(signInTypes, nowUtc), request).ApplySort(SortDescriptor.Parse(request.Sort), Sort,
             new SortDescriptor("name", false), account => account.Id)).ToPagedResultAsync(request, ct);
 
     public async Task<PlatformAccountFilterCounts> CountAsync(ListPlatformAccountsRequest request,
-        IReadOnlyCollection<LoginMethodType> signInTypes, CancellationToken ct)
+        IReadOnlyCollection<LoginMethodType> signInTypes, DateTime nowUtc, CancellationToken ct)
     {
-        var accounts = Accounts(signInTypes);
+        var accounts = Accounts(signInTypes, nowUtc);
         var states = await Filter(accounts, request with { State = null }).GroupBy(account => account.State)
             .Select(group => new PlatformAccountStateCount(group.Key, group.Count())).ToArrayAsync(ct);
         var kinds = await Filter(accounts, request with { Kind = null }).GroupBy(account => account.IsOperator)
@@ -42,9 +44,9 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
     }
 
     public async Task<PlatformAccountDetailRow?> FindAsync(Guid accountId, IReadOnlyCollection<LoginMethodType> signInTypes,
-        CancellationToken ct)
+        DateTime nowUtc, CancellationToken ct)
     {
-        var account = await Rows(Accounts(signInTypes).Where(row => row.Id == accountId)).SingleOrDefaultAsync(ct);
+        var account = await Rows(Accounts(signInTypes, nowUtc).Where(row => row.Id == accountId)).SingleOrDefaultAsync(ct);
         if (account is null) return null;
         var identity = await context.Users.AsNoTracking().Where(user => user.Id == accountId)
             .Select(user => new
@@ -74,12 +76,14 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
             assignment is null ? null : [.. assignment.Permissions], assignment?.Version);
     }
 
-    private IQueryable<AccountProjection> Accounts(IReadOnlyCollection<LoginMethodType> signInTypes)
+    private IQueryable<AccountProjection> Accounts(IReadOnlyCollection<LoginMethodType> signInTypes, DateTime nowUtc)
     {
         var email = signInTypes.Contains(LoginMethodType.Email);
         var google = signInTypes.Contains(LoginMethodType.Google);
         var phone = signInTypes.Contains(LoginMethodType.Phone);
         return from user in context.Users.AsNoTracking()
+               // Una invitación de operador revocada no es una cuenta: queda eliminada con su vencimiento como marca.
+               where user.Status != UserStatus.Deleted || user.OperatorInvitationExpiresAtUtc == null
                let usable = context.LoginMethods.Any(method => method.UserId == user.Id && method.VerifiedAtUtc != null
                    && ((method.Type == LoginMethodType.Email && email) || (method.Type == LoginMethodType.Google && google)
                        || (method.Type == LoginMethodType.Phone && phone))
@@ -93,8 +97,12 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
                    Email = user.Email,
                    IsOperator = user.IsPlatformOperator,
                    Version = user.Version,
+                   InvitationExpiresAtUtc = user.OperatorInvitationExpiresAtUtc,
                    State = user.Status == UserStatus.Active
-                       ? (usable ? PlatformAccountState.Active : PlatformAccountState.NeedsRecovery)
+                       ? (user.OperatorInvitationExpiresAtUtc != null
+                           ? (user.OperatorInvitationExpiresAtUtc > nowUtc
+                               ? PlatformAccountState.Invited : PlatformAccountState.InvitationExpired)
+                           : usable ? PlatformAccountState.Active : PlatformAccountState.NeedsRecovery)
                        : user.Status == UserStatus.Suspended ? PlatformAccountState.Suspended
                        : user.Status == UserStatus.PendingDeletion ? PlatformAccountState.PendingDeletion
                        : PlatformAccountState.Deleted,
@@ -141,7 +149,7 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
             context.LoginAudits.Where(audit => audit.UserId == account.Id && audit.Succeeded)
                 .OrderByDescending(audit => audit.OccurredAtUtc).ThenByDescending(audit => audit.Id)
                 .Select(audit => (LoginAuditMethod?)audit.Method).FirstOrDefault(),
-            account.Version);
+            account.InvitationExpiresAtUtc, account.Version);
 
     private sealed class AccountProjection
     {
@@ -150,6 +158,7 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
         public string? Email { get; init; }
         public bool IsOperator { get; init; }
         public PlatformAccountState State { get; init; }
+        public DateTime? InvitationExpiresAtUtc { get; init; }
         public uint Version { get; init; }
     }
 }

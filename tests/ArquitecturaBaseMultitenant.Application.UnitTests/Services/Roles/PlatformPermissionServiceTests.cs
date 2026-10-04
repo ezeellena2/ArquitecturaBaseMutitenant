@@ -54,6 +54,19 @@ public sealed class PlatformPermissionServiceTests
         Assert.Empty(await Create(null, [.. PlatformPermissions.All]).GetPermissionsAsync(Guid.CreateVersion7(), Ct));
     }
 
+    [Fact]
+    public async Task A_pending_operator_invitation_has_no_permissions_until_it_is_accepted()
+    {
+        var invited = Account(UserStatus.Active, true) with
+        {
+            OperatorInvitationExpiresAtUtc = new DateTime(2026, 10, 11, 12, 0, 0, DateTimeKind.Utc),
+        };
+
+        Assert.Empty(await Create(invited, [.. PlatformPermissions.All]).GetPermissionsAsync(invited.Id, Ct));
+        Assert.False(await Create(invited, [.. PlatformPermissions.All])
+            .HasPermissionAsync(invited.Id, PlatformPermissions.Operators.Manage, Ct));
+    }
+
     private static UserAccountRow Account(UserStatus status, bool isOperator) =>
         new(Guid.CreateVersion7(), "Operador", "es-AR", "America/Argentina/Buenos_Aires", status, isOperator, null, null);
 
@@ -72,6 +85,14 @@ public sealed class PlatformPermissionServiceTests
         public Task<Result> RequestDeletionAsync(Guid id, string reason, DateTime utc, int graceDays, CancellationToken ct) => throw new NotSupportedException();
         public Task<Result> RequestDeletionByOperatorAsync(Guid id, Guid operatorId, string reason, DateTime utc, int graceDays, CancellationToken ct) => throw new NotSupportedException();
         public Task SetPlatformOperatorAsync(Guid userId, bool isOperator, CancellationToken ct) => throw new NotSupportedException();
+        public Task InvitePlatformOperatorAsync(Guid userId, DateTime expiresAtUtc, CancellationToken ct) =>
+            throw new NotSupportedException();
+        public Task<Result> RenewOperatorInvitationAsync(Guid userId, DateTime expiresAtUtc,
+            CancellationToken ct) => throw new NotSupportedException();
+        public Task<Result> AcceptOperatorInvitationAsync(Guid userId, DateTime acceptedAtUtc,
+            CancellationToken ct) => throw new NotSupportedException();
+        public Task<Result> DiscardOperatorInvitationAsync(Guid userId, DateTime discardedAtUtc,
+            string deletedDisplayName, CancellationToken ct) => throw new NotSupportedException();
         public Task<Result> CancelDeletionAsync(Guid id, DateTime utc, CancellationToken ct) => throw new NotSupportedException();
         public Task<Result> CompleteDeletionAsync(Guid id, DateTime utc, string name, CancellationToken ct) => throw new NotSupportedException();
         public Task<Result> SuspendAsync(Guid id, CancellationToken ct) => throw new NotSupportedException();

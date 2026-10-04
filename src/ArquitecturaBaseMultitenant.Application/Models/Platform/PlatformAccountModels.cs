@@ -7,9 +7,10 @@ namespace ArquitecturaBaseMultitenant.Application.Models.Platform;
 
 /// <summary>
 /// Estado que ve Plataforma. NeedsRecovery se deriva: cuenta Active sin ningún método que sirva para ingresar;
-/// los demás estados de la cuenta tienen prioridad.
+/// los demás estados de la cuenta tienen prioridad. Invited e InvitationExpired son la invitación de un operador
+/// sin aceptar, vigente o vencida (ADR 0042).
 /// </summary>
-public enum PlatformAccountState { Active, Suspended, NeedsRecovery, PendingDeletion, Deleted }
+public enum PlatformAccountState { Active, Suspended, NeedsRecovery, PendingDeletion, Deleted, Invited, InvitationExpired }
 
 public enum PlatformAccountKind { Person, Operator }
 
@@ -26,10 +27,13 @@ public sealed record ListPlatformAccountsRequest : PagedRequest
     public PlatformAccountKind? Kind { get; init; }
 }
 
-/// <summary>Fila del listado: el correo principal completo identifica la cuenta, como en el tablero Cuentas.</summary>
+/// <summary>
+/// Fila del listado: el correo principal completo identifica la cuenta, como en el tablero Cuentas. Una invitación de
+/// operador sin aceptar lleva su vencimiento (ADR 0042).
+/// </summary>
 public sealed record PlatformAccountResponse(Guid Id, string? DisplayName, Email? PrimaryEmail,
     PlatformAccountKind Kind, PlatformAccountState State, bool HasPersonalSpace, int OrganizationCount,
-    DateTime? LastSignInAtUtc, LoginAuditMethod? LastSignInMethod, uint Version);
+    DateTime? LastSignInAtUtc, LoginAuditMethod? LastSignInMethod, DateTime? InvitationExpiresAtUtc, uint Version);
 
 public sealed record PlatformAccountStateCount(PlatformAccountState State, int Count);
 public sealed record PlatformAccountKindCount(PlatformAccountKind Kind, int Count);
@@ -39,7 +43,7 @@ public sealed record PlatformAccountFilterCounts(int Total, IReadOnlyList<Platfo
 /// <summary>Ficha: métodos enmascarados, membresías desde el índice global y permisos si es operador.</summary>
 public sealed record PlatformAccountDetailResponse(Guid Id, string? DisplayName, PlatformAccountKind Kind,
     PlatformAccountState State, DateTime? CreatedAtUtc, DateTime? LastSignInAtUtc, LoginAuditMethod? LastSignInMethod,
-    bool HasPersonalSpace, PlatformAccountDeletionResponse? Deletion,
+    DateTime? InvitationExpiresAtUtc, bool HasPersonalSpace, PlatformAccountDeletionResponse? Deletion,
     IReadOnlyList<PlatformAccountLoginMethodResponse> LoginMethods,
     IReadOnlyList<PlatformAccountMembershipResponse> Organizations, IReadOnlyList<string> SoleOwnerOrganizations,
     IReadOnlyList<string>? OperatorPermissions, uint? OperatorVersion, uint Version);
@@ -57,7 +61,7 @@ public sealed record PlatformAccountMembershipResponse(Guid TenantId, string Nam
 /// <summary>Proyección del reader global; el servicio la completa con métodos y textos.</summary>
 public sealed record PlatformAccountRow(Guid Id, string? DisplayName, Email? PrimaryEmail, bool IsOperator,
     PlatformAccountState State, bool HasPersonalSpace, int OrganizationCount, DateTime? LastSignInAtUtc,
-    LoginAuditMethod? LastSignInMethod, uint Version);
+    LoginAuditMethod? LastSignInMethod, DateTime? InvitationExpiresAtUtc, uint Version);
 
 public sealed record PlatformAccountDetailRow(PlatformAccountRow Account, DateTime? CreatedAtUtc,
     DateTime? DeletionRequestedAtUtc, DateTime? DeletionScheduledForUtc, bool DeletionRequestedByPlatform,

@@ -8,6 +8,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
+using ArquitecturaBaseMultitenant.Domain.Platform;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.Extensions.Logging;
@@ -63,6 +64,8 @@ internal sealed class PlatformAccountStateService(IUserRepository users, ISignIn
         if (account is null) return UserErrors.NotFound;
         if (account.Version != request.Version!.Value) throw new ConcurrencyConflictException();
         if (account.Status == UserStatus.Deleted) return UserErrors.InvalidTransition;
+        // ADR 0042: una invitación de operador sin aceptar solo se reenvía o se revoca.
+        if (account.HasPendingOperatorInvitation) return PlatformOperatorErrors.InvitationPending;
 
         var after = account.Status;
         switch (change)

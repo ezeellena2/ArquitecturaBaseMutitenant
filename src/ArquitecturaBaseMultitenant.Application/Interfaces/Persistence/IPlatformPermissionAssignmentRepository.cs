@@ -12,6 +12,9 @@ public interface IPlatformPermissionAssignmentRepository
     /// <summary>Lock global: quitar, suspender o dar de baja a un operador se serializa con este lock.</summary>
     Task LockOperatorsAsync(CancellationToken cancellationToken);
 
-    /// <summary>Operadores activos con <c>platform.operators.manage</c>, leídos dentro de la transacción.</summary>
+    /// <summary>
+    /// Operadores activos con <c>platform.operators.manage</c>, leídos dentro de la transacción; una invitación sin
+    /// aceptar no cuenta.
+    /// </summary>
     Task<IReadOnlyList<Guid>> ListActiveManagerIdsAsync(CancellationToken cancellationToken);
 }

@@ -49,8 +49,13 @@ public abstract record AccountNotice
     /// </summary>
     public sealed record LoginMethodInUse : AccountNotice;
 
-    /// <summary>Al correo del operador invitado, con el enlace para entrar a Plataforma.</summary>
-    public sealed record OperatorInvited(string ActionUrl) : AccountNotice;
+    /// <summary>
+    /// Al correo del operador invitado (lienzo v90, Mensajes › «Invitación como operador»): quién invita, las claves
+    /// de los permisos, que se muestran por nombre, el vencimiento en la zona dada y el enlace para entrar a
+    /// Plataforma. Sale solo por correo.
+    /// </summary>
+    public sealed record OperatorInvited(string? InviterName, IReadOnlyList<string> Permissions, DateTime ExpiresAtUtc,
+        string TimeZoneId, string ActionUrl) : AccountNotice;
 
     /// <summary>Al correo nuevo, que ya es el principal de la cuenta, con el enlace para ingresar.</summary>
     public sealed record RecoveryApproved(string ActionUrl) : AccountNotice;

@@ -186,6 +186,8 @@
   <data name="Platform.Operator.LastManager" xml:space="preserve"><value>Tiene que quedar al menos un operador activo que pueda administrar operadores.</value></data>
   <data name="Platform.Operator.AccountExists" xml:space="preserve"><value>Ese correo ya tiene una cuenta. Un operador no puede tener perfiles de persona.</value></data>
   <data name="Platform.Operator.NotOperator" xml:space="preserve"><value>Esa cuenta no es de un operador.</value></data>
+  <data name="Platform.Operator.InvitationPending" xml:space="preserve"><value>Esa cuenta tiene una invitación de operador pendiente: solo se puede reenviar o revocar.</value></data>
+  <data name="Platform.Operator.NoPendingInvitation" xml:space="preserve"><value>Esa cuenta no tiene una invitación de operador pendiente.</value></data>
   <data name="Platform.Audit.NotFound" xml:space="preserve"><value>No encontramos ese evento.</value></data>
   <data name="Legal.Publication.EffectiveDatePast" xml:space="preserve"><value>La vigencia no puede ser anterior a hoy.</value></data>
   <data name="Legal.Publication.CulturesMismatch" xml:space="preserve"><value>Escribí el contenido una vez en cada idioma.</value></data>

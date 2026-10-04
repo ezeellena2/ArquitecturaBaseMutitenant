@@ -186,6 +186,8 @@
   <data name="Platform.Operator.LastManager" xml:space="preserve"><value>At least one active operator who can manage operators must remain.</value></data>
   <data name="Platform.Operator.AccountExists" xml:space="preserve"><value>That email address already has an account. An operator cannot have personal profiles.</value></data>
   <data name="Platform.Operator.NotOperator" xml:space="preserve"><value>That account is not a platform operator.</value></data>
+  <data name="Platform.Operator.InvitationPending" xml:space="preserve"><value>That account has a pending operator invitation: it can only be resent or revoked.</value></data>
+  <data name="Platform.Operator.NoPendingInvitation" xml:space="preserve"><value>That account has no pending operator invitation.</value></data>
   <data name="Platform.Audit.NotFound" xml:space="preserve"><value>We couldn't find that event.</value></data>
   <data name="Legal.Publication.EffectiveDatePast" xml:space="preserve"><value>The effective date cannot be earlier than today.</value></data>
   <data name="Legal.Publication.CulturesMismatch" xml:space="preserve"><value>Write the content once in each language.</value></data>

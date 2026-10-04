@@ -305,6 +305,49 @@ public sealed class GoogleLoginTests(ApiFactory factory)
         Assert.Equal(1, await CountUsersByEmailAsync(address));
     }
 
+    [Fact]
+    public async Task Verified_Google_email_neither_signs_in_nor_links_a_pending_operator_invitation()
+    {
+        await factory.Services.SeedDatabaseAsync(Ct);
+        var address = $"google-operador-{Guid.NewGuid():N}@example.test";
+        var invitedId = Guid.Empty;
+        await using (var seedScope = factory.Services.CreateAsyncScope())
+        {
+            var services = seedScope.ServiceProvider;
+            var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                var users = services.GetRequiredService<IUserRepository>();
+                var user = await users.CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct);
+                invitedId = user.Id;
+                var email = Email.Create(address).Value;
+                var method = LoginMethod.CreateEmail(user.Id, email);
+                method.Verify(nowUtc);
+                method.MakePrimary();
+                services.GetRequiredService<ILoginMethodRepository>().Add(method);
+                await users.SetPrimaryEmailAsync(user.Id, email, ct);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+            // Como la deja «Invitar operador»: operadora, con la invitación sin aceptar (ADR 0042).
+            Assert.Equal(1, await services.GetRequiredService<ApplicationDbContext>().Users
+                .Where(user => user.Id == invitedId)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(user => user.IsPlatformOperator, true)
+                    .SetProperty(user => user.OperatorInvitationExpiresAtUtc, nowUtc.AddDays(7)), Ct));
+        }
+        var subject = Guid.NewGuid().ToString("N");
+        var google = new GoogleSignInDouble(new ExternalLogin("Google", subject, Email.Create(address).Value, true, "Nombre"));
+        await using var host = HostWith(google);
+        await using var scope = host.Services.CreateAsyncScope();
+
+        var result = await scope.ServiceProvider.GetRequiredService<IExternalLoginService>()
+            .SignInAsync(new ExternalSignInRequest("/connect/authorize?client_id=web&access=platform", false, false), Ct);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ExternalLoginErrors.FailedCode, result.Error.Code);
+        Assert.Null(google.SignedInUserId);
+        Assert.Equal(0, await CountMethodsAsync(subject));
+    }
+
     private Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program> HostWith(GoogleSignInDouble google) =>
         factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
         {

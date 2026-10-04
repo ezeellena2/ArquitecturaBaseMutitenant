@@ -45,6 +45,8 @@ public static class AuditTexts
     public static string PublicPageMetadataReadReason() => Get("Platform.PublicPageMetadataReadReason");
     public static string DomainMetadataReadReason() => Get("Platform.DomainMetadataReadReason");
     public static string OperatorInvitationReason() => Get("Platform.OperatorInvitationReason");
+    public static string OperatorInvitationResendReason() => Get("Platform.OperatorInvitationResendReason");
+    public static string OperatorInvitationRevokeReason() => Get("Platform.OperatorInvitationRevokeReason");
     public static string LegalPublicationReason() => Get("Platform.LegalPublicationReason");
     public static string SecurityEvent(SecurityEventType type) => Get("SecurityEvent." + type);
     public static string SignIn(ArquitecturaBaseMultitenant.Domain.Authentication.LoginAuditMethod method) => Get("SignIn." + method);

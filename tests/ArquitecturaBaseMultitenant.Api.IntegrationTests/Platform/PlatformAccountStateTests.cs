@@ -148,6 +148,11 @@ public sealed class PlatformAccountStateTests(ApiFactory factory)
         await PlatformOperators.GrantAsync(isolated.Services, supportAccount.UserId,
             [PlatformPermissions.Accounts.Read, PlatformPermissions.Accounts.Manage], Ct);
         await AccountJourney.AuthorizeAsync(support, "platform", Ct);
+        // Una invitación pendiente con operators.manage no cuenta: esa persona todavía no entró (ADR 0042).
+        await AccountJourney.AuthorizeAsync(manager, "platform", Ct);
+        using (var pending = await PlatformJourney.PostAsync(manager, "/api/platform/operators/invitations",
+                   new { email = $"pendiente-{Guid.NewGuid():N}@example.test", permissions = new[] { PlatformPermissions.Operators.Manage } }, Ct))
+            Assert.Equal(HttpStatusCode.Created, pending.StatusCode);
         var path = $"/api/platform/accounts/{managerAccount.UserId:D}/suspend";
 
         using var lastManager = await PlatformJourney.PostAsync(support, path,

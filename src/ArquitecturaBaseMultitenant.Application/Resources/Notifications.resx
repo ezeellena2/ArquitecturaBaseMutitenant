@@ -87,10 +87,14 @@
   <data name="LoginMethodInUse.Body" xml:space="preserve"><value>Alguien quiso agregar este correo para entrar a otra cuenta de {0}. Este correo ya es de una cuenta, así que no lo agregamos y no mandamos ningún código.</value></data>
   <data name="LoginMethodInUse.After" xml:space="preserve"><value>Si fuiste vos, entrá con este correo: ya tenés una cuenta.</value></data>
   <data name="LoginMethodInUse.Note" xml:space="preserve"><value>Si no fuiste vos, ignorá este mensaje.</value></data>
-  <data name="OperatorInvited.Subject" xml:space="preserve"><value>Te invitaron como operador</value></data>
+  <data name="OperatorInvited.Subject" xml:space="preserve"><value>{0} te invitó como operador de {1}</value></data>
   <data name="OperatorInvited.Title" xml:space="preserve"><value>Te invitaron como operador</value></data>
-  <data name="OperatorInvited.Body" xml:space="preserve"><value>Te invitaron a administrar {0} como operador de la plataforma. Entrá con este correo: te mandamos un código para ingresar.</value></data>
-  <data name="OperatorInvited.Note" xml:space="preserve"><value>Si no esperabas esta invitación, ignorá este correo.</value></data>
+  <data name="OperatorInvited.Body" xml:space="preserve"><value>{0} {1} te invitó a sumarte como operador de la plataforma {2}.</value></data>
+  <data name="OperatorInvited.UnnamedInviter" xml:space="preserve"><value>El equipo de {0}</value></data>
+  <data name="OperatorInvited.PermissionsLabel" xml:space="preserve"><value>Permisos</value></data>
+  <data name="OperatorInvited.Note" xml:space="preserve"><value>Para entrar, usá este correo antes de que venza la invitación: te vamos a mandar un código de acceso.</value></data>
+  <data name="OperatorInvited.PlatformOnly" xml:space="preserve"><value>Esta cuenta es solo para operar la plataforma: no se usa como persona ni para entrar a una organización.</value></data>
+  <data name="List.And" xml:space="preserve"><value>{0} y {1}</value></data>
   <data name="RecoveryRequested.Subject" xml:space="preserve"><value>Alguien pidió recuperar tu cuenta</value></data>
   <data name="RecoveryRequested.Title" xml:space="preserve"><value>Alguien pidió recuperar tu cuenta</value></data>
   <data name="RecoveryRequested.Body" xml:space="preserve"><value>{0} El {1} a las {2} alguien pidió recuperar tu cuenta de {3} y nos dio otro correo o teléfono para escribirle.</value></data>

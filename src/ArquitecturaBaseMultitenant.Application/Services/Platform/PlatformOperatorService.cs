@@ -17,7 +17,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 /// <summary>
 /// Cambia o quita los permisos de un operador con la versión de su asignación y motivo. Nadie actúa sobre sí mismo y
 /// siempre queda un operador activo con <c>platform.operators.manage</c> (lock global de <see cref="PlatformOperatorGuard"/>).
-/// Quitar el acceso cierra todas sus sesiones; la cuenta queda sin operador ni permisos.
+/// Quitar el acceso cierra todas sus sesiones; la cuenta queda sin operador ni permisos. Una invitación sin aceptar
+/// no se cambia ni se quita: se reenvía o se revoca (ADR 0042).
 /// </summary>
 internal sealed class PlatformOperatorService(
     IPlatformPermissionAssignmentRepository assignments,
@@ -82,6 +83,8 @@ internal sealed class PlatformOperatorService(
         if (account is null || account.Status == UserStatus.Deleted) return UserErrors.NotFound;
         var assignment = await assignments.GetByUserIdAsync(accountId, ct);
         if (assignment is null || !account.IsPlatformOperator) return PlatformOperatorErrors.NotOperator;
+        // ADR 0042: una invitación sin aceptar solo se reenvía o se revoca.
+        if (account.HasPendingOperatorInvitation) return PlatformOperatorErrors.InvitationPending;
         if (assignment.Version != version) throw new ConcurrencyConflictException();
         return assignment;
     }

@@ -18,6 +18,8 @@ internal sealed class GoogleAccountGuard(IUserRepository users, ISignInService s
         var account = await users.GetByIdAsync(userId, cancellationToken);
         if (account is null || account.Status is UserStatus.Suspended or UserStatus.Deleted)
             return AccountErrors.Suspended;
+        // ADR 0042: una invitación de operador se acepta solo con código; con Google no entra ni se vincula.
+        if (account.HasPendingOperatorInvitation) return ExternalLoginErrors.Failed;
         if (await signIn.IsLockedOutAsync(userId, cancellationToken)) return AccountErrors.LockedOut;
         if (account.Status == UserStatus.PendingDeletion) return cancellation.Issue(account, methodId, returnUrl);
         return account;

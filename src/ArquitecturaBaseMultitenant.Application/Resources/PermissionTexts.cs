@@ -13,6 +13,10 @@ public static class PermissionTexts
 
     public static string Permission(string permission) => Get("Permission." + permission);
 
+    /// <summary>Para mensajes que salen en el idioma de quien los recibe y no en el de la petición.</summary>
+    public static string PermissionIn(string permission, CultureInfo culture) =>
+        ResourceManager.GetString("Permission." + permission, culture) ?? permission;
+
     public static string Description(string permission) => Get("PermissionDescription." + permission);
 
     private static string Get(string key) => ResourceManager.GetString(key, CultureInfo.CurrentUICulture) ?? key;

@@ -41,7 +41,10 @@ internal sealed class LoginCodeRequester(
             ?? throw new InvalidOperationException("The email login channel is not registered.");
         var payload = channel.RenderLoginCode(destination.Value, issued.Value.Code,
             issued.Value.LifetimeMinutes, culture);
-        if (userId is { } knownUserId
+        // ADR 0042: con una invitación de operador vencida no se entra; no sale el código, como sin cuenta.
+        var expiredInvitation = account?.OperatorInvitationExpiresAtUtc is { } expiresAtUtc
+            && expiresAtUtc <= issued.Value.IssuedAtUtc;
+        if (userId is { } knownUserId && !expiredInvitation
             && account is { Status: UserStatus.Active or UserStatus.Suspended or UserStatus.PendingDeletion }
             && !await signIn.IsLockedOutAsync(knownUserId, cancellationToken))
         {

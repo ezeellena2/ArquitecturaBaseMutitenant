@@ -67,6 +67,34 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
         else user.RevokePlatformOperator();
     }
 
+    public async Task InvitePlatformOperatorAsync(Guid userId, DateTime expiresAtUtc, CancellationToken cancellationToken)
+    {
+        context.RequireTransaction();
+        (await RequireUserAsync(userId, cancellationToken)).InvitePlatformOperator(expiresAtUtc);
+    }
+
+    public async Task<Result> RenewOperatorInvitationAsync(Guid userId, DateTime expiresAtUtc,
+        CancellationToken cancellationToken)
+    {
+        context.RequireTransaction();
+        return (await RequireUserAsync(userId, cancellationToken)).RenewOperatorInvitation(expiresAtUtc);
+    }
+
+    public async Task<Result> AcceptOperatorInvitationAsync(Guid userId, DateTime acceptedAtUtc,
+        CancellationToken cancellationToken)
+    {
+        context.RequireTransaction();
+        return (await RequireUserAsync(userId, cancellationToken)).AcceptOperatorInvitation(acceptedAtUtc);
+    }
+
+    public async Task<Result> DiscardOperatorInvitationAsync(Guid userId, DateTime discardedAtUtc,
+        string deletedDisplayName, CancellationToken cancellationToken)
+    {
+        context.RequireTransaction();
+        return (await RequireUserAsync(userId, cancellationToken))
+            .DiscardOperatorInvitation(discardedAtUtc, deletedDisplayName);
+    }
+
     public async Task<UserAccountRow> CreateAsync(string? displayName, string culture, string timeZoneId,
         CancellationToken cancellationToken)
     {
@@ -142,7 +170,7 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
     private static UserAccountRow ToRow(ApplicationUser user) =>
         new(user.Id, user.DisplayName, user.Culture, user.TimeZoneId, user.Status,
             user.IsPlatformOperator, user.Email is null ? null : Email.Create(user.Email).Value,
-            user.LastBusinessTenantId, user.Version, user.DeletionScheduledForUtc);
+            user.LastBusinessTenantId, user.Version, user.DeletionScheduledForUtc, user.OperatorInvitationExpiresAtUtc);
 
     private static void EnsureSucceeded(IdentityResult result, string action)
     {

@@ -70,6 +70,8 @@
   <data name="Field.PublishBlocked" xml:space="preserve"><value>Publicación bloqueada</value></data>
   <data name="Platform.DomainMetadataReadReason" xml:space="preserve"><value>Consulta del dominio de correo de la organización.</value></data>
   <data name="Platform.OperatorInvitationReason" xml:space="preserve"><value>Invitación de operador.</value></data>
+  <data name="Platform.OperatorInvitationResendReason" xml:space="preserve"><value>Reenvío de la invitación de operador.</value></data>
+  <data name="Platform.OperatorInvitationRevokeReason" xml:space="preserve"><value>Revocación de la invitación de operador.</value></data>
   <data name="SecurityEvent.LoginMethodChanged" xml:space="preserve"><value>Cambió un método de ingreso</value></data>
   <data name="SecurityEvent.AccountDeletionRequested" xml:space="preserve"><value>Pidió la baja de la cuenta</value></data>
   <data name="SecurityEvent.AccountDeletionCancelled" xml:space="preserve"><value>Canceló la baja de la cuenta</value></data>
@@ -98,6 +100,8 @@
   <data name="SecurityEvent.PlatformOperatorInvited" xml:space="preserve"><value>Invitó a un operador</value></data>
   <data name="SecurityEvent.PlatformOperatorPermissionsChanged" xml:space="preserve"><value>Cambió los permisos del operador</value></data>
   <data name="SecurityEvent.PlatformOperatorRemoved" xml:space="preserve"><value>Quitó al operador</value></data>
+  <data name="SecurityEvent.PlatformOperatorInvitationResent" xml:space="preserve"><value>Reenvió la invitación de un operador</value></data>
+  <data name="SecurityEvent.PlatformOperatorInvitationRevoked" xml:space="preserve"><value>Revocó la invitación de un operador</value></data>
   <data name="SecurityEvent.LegalDocumentPublished" xml:space="preserve"><value>Publicó una versión de un documento legal</value></data>
   <data name="Platform.LegalPublicationReason" xml:space="preserve"><value>Publicación de una versión de un documento legal.</value></data>
   <data name="SignIn.Code" xml:space="preserve"><value>Ingresó con un código por correo</value></data>

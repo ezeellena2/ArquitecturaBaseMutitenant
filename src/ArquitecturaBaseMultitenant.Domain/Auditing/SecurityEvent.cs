@@ -137,11 +137,15 @@ public sealed class SecurityEvent : Entity
         ForPlatformAction(SecurityEventType.LegalDocumentPublished, AuditActorKind.PlatformOperator, operatorId,
             reason, occurredAtUtc);
 
-    /// <summary>Un operador invitó a otro, le cambió los permisos o le quitó el acceso de operador.</summary>
+    /// <summary>
+    /// Un operador invitó a otro, reenvió o revocó su invitación, le cambió los permisos o le quitó el acceso de
+    /// operador.
+    /// </summary>
     public static SecurityEvent ForPlatformOperatorAdministration(SecurityEventType type, Guid operatorId,
         Guid accountId, string reason, DateTime occurredAtUtc)
     {
-        if (type is not (SecurityEventType.PlatformOperatorInvited or SecurityEventType.PlatformOperatorPermissionsChanged
+        if (type is not (SecurityEventType.PlatformOperatorInvited or SecurityEventType.PlatformOperatorInvitationResent
+            or SecurityEventType.PlatformOperatorInvitationRevoked or SecurityEventType.PlatformOperatorPermissionsChanged
             or SecurityEventType.PlatformOperatorRemoved))
             throw new ArgumentOutOfRangeException(nameof(type));
         if (accountId == Guid.Empty) throw new ArgumentException("A target account is required.", nameof(accountId));

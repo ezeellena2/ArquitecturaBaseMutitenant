@@ -31,7 +31,8 @@ internal sealed class PlatformPermissionService(IUserRepository users, IPlatform
     private async Task<Result<IReadOnlyList<string>>> ReadAsync(Guid userId, CancellationToken cancellationToken)
     {
         var user = await users.GetByIdAsync(userId, cancellationToken);
-        if (user is not { Status: UserStatus.Active, IsPlatformOperator: true })
+        // ADR 0042: una invitación sin aceptar todavía no da permisos.
+        if (user is not { Status: UserStatus.Active, IsPlatformOperator: true, HasPendingOperatorInvitation: false })
             return Result.Success<IReadOnlyList<string>>([]);
         var permissions = await assignments.FindPermissionsAsync(userId, cancellationToken);
         return Result.Success(permissions ?? []);
