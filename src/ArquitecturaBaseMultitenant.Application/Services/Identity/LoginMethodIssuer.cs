@@ -28,20 +28,23 @@ internal sealed class LoginMethodIssuer(LoginMethodGuard guard, ILoginMethodRepo
         var email = request.Email!;
         var destination = LoginCodeDestination.ForEmail(email);
         await codes.LockDestinationAsync(destination, ct);
-        // Si ya es de una cuenta (un correo o el contacto de Google, verificados), la respuesta es la de uno libre:
-        // el código se emite para los límites y la espera, pero no se manda ni sirve, y a su dueño le llega el aviso.
+        // Si ya es de otra cuenta (un correo o el contacto de Google, verificados), o ya es un correo verificado de esta,
+        // la respuesta es la de uno libre: el código se emite para los límites y la espera, pero no se manda ni sirve,
+        // y a su dueño le llega el aviso. El contacto del propio Google sí se puede sumar como correo.
         var owners = await lookup.FindVerifiedUsersByEmailAsync(email, ct);
-        if (owners.Count > 0)
+        var existing = await lookup.FindMethodAsync(LoginMethodType.Email, email.Value, ct);
+        var owner = owners.Where(id => id != userId).Select(id => (Guid?)id).FirstOrDefault()
+            ?? (existing is { VerifiedAtUtc: not null } ? existing.UserId : null);
+        if (owner is { } ownerId)
         {
             var hidden = await codes.IssueAccountCodeAsync(destination, LoginCodePurpose.VerifyDestination, userId, ct);
             if (hidden.IsFailure) return hidden.Error;
-            await notices.EnqueueToOwnerAsync(owners[0], email.Value, new AccountNotice.LoginMethodInUse(), ct);
+            await notices.EnqueueToOwnerAsync(ownerId, email.Value, new AccountNotice.LoginMethodInUse(), ct);
             return new LoginMethodCodeResponse(Guid.CreateVersion7(), hidden.Value.ResendCooldownSeconds);
         }
 
         // Un correo agregado y sin verificar, de esta cuenta o de otra, se reemplaza: es pedir otro código.
-        if (await lookup.FindMethodAsync(LoginMethodType.Email, email.Value, ct) is { } existing
-            && await methods.GetByIdAsync(existing.MethodId, ct) is { VerifiedAtUtc: null } pending)
+        if (existing is not null && await methods.GetByIdAsync(existing.MethodId, ct) is { VerifiedAtUtc: null } pending)
             methods.Remove(pending);
         var method = LoginMethod.CreateEmail(userId, email);
         var sent = await SendAsync(userId, method, account.Value.Culture, ct);

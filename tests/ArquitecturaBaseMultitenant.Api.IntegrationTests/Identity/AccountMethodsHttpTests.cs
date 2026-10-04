@@ -135,6 +135,40 @@ public sealed class AccountMethodsHttpTests(ApiFactory factory)
         Assert.Single(await EmailsToAsync(services, free, before));
     }
 
+    [Fact]
+    public async Task An_account_can_still_add_the_email_of_its_own_google_sign_in()
+    {
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var account = await AccountJourney.RegisterAsync(factory, client, Ct);
+        var contact = "google-contact-" + Guid.NewGuid().ToString("N") + "@example.test";
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+            {
+                var google = LoginMethod.CreateGoogle(account.UserId, "google-" + Guid.NewGuid().ToString("N"),
+                    Email.Create(contact).Value);
+                Assert.True(google.Verify(nowUtc).IsSuccess);
+                services.GetRequiredService<ApplicationDbContext>().LoginMethods.Add(google);
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+        var before = await OutboxIdsAsync();
+
+        // El contacto de su propio Google no es «de otra cuenta»: se suma como correo, con su código.
+        using var added = await AddEmailAsync(client, account, contact);
+
+        Assert.Equal(HttpStatusCode.Accepted, added.StatusCode);
+        await using var check = factory.Services.CreateAsyncScope();
+        var message = Assert.Single(await EmailsToAsync(check.ServiceProvider, contact, before));
+        Assert.NotEqual("Ya tenés una cuenta con este correo", message.Subject);
+        Assert.True(await check.ServiceProvider.GetRequiredService<ApplicationDbContext>().LoginMethods.AnyAsync(
+            method => method.UserId == account.UserId && method.Type == LoginMethodType.Email
+                && method.Value == contact && method.VerifiedAtUtc == null, Ct));
+    }
+
     /// <summary>Agrega un correo en Mi cuenta con un comprobante de reautenticación nuevo, como la pantalla.</summary>
     private async Task<HttpResponseMessage> AddEmailAsync(HttpClient client, AccountJourney account, string email)
     {
