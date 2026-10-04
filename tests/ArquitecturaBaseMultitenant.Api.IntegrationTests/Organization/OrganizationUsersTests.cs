@@ -323,6 +323,7 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
             .GetProperty("id").GetGuid();
 
         var recipient = Email.Create($"invite-{Guid.NewGuid():N}@example.test").Value;
+        var before = await OutboxIdsAsync();
         using var issued = await AccountJourney.PostAsync(ownerClient, "/api/users/invitations", new
         {
             email = recipient.Value,
@@ -332,7 +333,7 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
         Assert.True(issued.StatusCode == HttpStatusCode.Created, await issued.Content.ReadAsStringAsync(Ct));
 
         // Tablero Mensajes: el correo lista Empresa y Roles; tablero Invitacion: «Lucía Fernández te invitó · Dueño».
-        var email = await InvitationEmailAsync(recipient);
+        var email = await InvitationEmailAsync(recipient, before);
         Assert.Contains("Empresa: Delta Norte S.A.", email.TextBody);
         Assert.Contains("Roles: Administrador", email.TextBody);
         var token = Regex.Match(email.TextBody, @"/invitacion#(?<token>[A-Za-z0-9_-]+)").Groups["token"].Value;
@@ -344,29 +345,24 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
         Assert.Equal(["Administrador"], preview.Value.Roles);
     }
 
-    private async Task<EmailMessage> InvitationEmailAsync(Email recipient)
+    private async Task<Guid[]> OutboxIdsAsync()
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().OutboxMessages.AsNoTracking()
+            .Select(row => row.Id).ToArrayAsync(Ct);
+    }
+
+    /// <summary>El correo de la invitación entre los que se encolaron después de <paramref name="before"/>, como InvitationsTests.</summary>
+    private async Task<EmailMessage> InvitationEmailAsync(Email recipient, Guid[] before)
     {
         await using var scope = factory.Services.CreateAsyncScope();
         var services = scope.ServiceProvider;
         var protector = services.GetRequiredService<IPayloadProtector>();
         var payloads = await services.GetRequiredService<ApplicationDbContext>().OutboxMessages.AsNoTracking()
-            .Where(row => row.Channel == "email" && row.EncryptedPayload != string.Empty)
+            .Where(row => row.Channel == "email" && !before.Contains(row.Id))
             .Select(row => row.EncryptedPayload).ToListAsync(Ct);
-        var messages = new List<EmailMessage>();
-        foreach (var payload in payloads)
-        {
-            string cleartext;
-            try { cleartext = protector.Unprotect(payload); }
-            catch (Exception exception) when (exception is System.Security.Cryptography.CryptographicException
-                or FormatException)
-            {
-                // Other tests in this fixture deliberately enqueue invalid payloads.
-                continue;
-            }
-            if (JsonSerializer.Deserialize<EmailMessage>(cleartext) is { } message)
-                messages.Add(message);
-        }
-        return Assert.Single(messages, message => message.To == recipient.Value);
+        return Assert.Single(payloads.Select(payload => JsonSerializer.Deserialize<EmailMessage>(protector.Unprotect(payload))!),
+            message => message.To == recipient.Value);
     }
 
     private async Task<Result<InvitationPreviewResponse>> PreviewInvitationAsync(string token)
