@@ -43,6 +43,7 @@ public static class AuditTexts
     public static string OrganizationCreationReason() => Get("Platform.OrganizationCreationReason");
     public static string OrganizationRetryReason() => Get("Platform.OrganizationRetryReason");
     public static string PublicPageMetadataReadReason() => Get("Platform.PublicPageMetadataReadReason");
+    public static string DomainMetadataReadReason() => Get("Platform.DomainMetadataReadReason");
 
     private static string Get(string key) => ResourceManager.GetString(key, CultureInfo.CurrentUICulture) ??
         ResourceManager.GetString("Fallback", CultureInfo.CurrentUICulture) ?? "Registro";

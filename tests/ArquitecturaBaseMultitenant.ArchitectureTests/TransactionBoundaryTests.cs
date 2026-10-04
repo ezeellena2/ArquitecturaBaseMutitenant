@@ -29,8 +29,6 @@ public sealed class TransactionBoundaryTests
         "ArquitecturaBaseMultitenant.Application.Services.Companies.CompanyCreator",
         "ArquitecturaBaseMultitenant.Application.Services.Companies.CompanyMembershipWriter",
         "ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings.OrganizationDomainRegistrar",
-        "ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings.OrganizationDomainRemover",
-        "ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings.OrganizationDomainVerifier",
         "ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings.OrganizationSettingsUpdater",
         "ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers.OrganizationUserEditor",
         "ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers.OrganizationUserInvitationManager",

@@ -68,4 +68,5 @@
   <data name="Platform.OrganizationRetryReason" xml:space="preserve"><value>Reintentar el alta</value></data>
   <data name="Platform.PublicPageMetadataReadReason" xml:space="preserve"><value>Consulta de los metadatos de publicación de la página pública.</value></data>
   <data name="Field.PublishBlocked" xml:space="preserve"><value>Publicación bloqueada</value></data>
+  <data name="Platform.DomainMetadataReadReason" xml:space="preserve"><value>Consulta del dominio de correo de la organización.</value></data>
 </root>

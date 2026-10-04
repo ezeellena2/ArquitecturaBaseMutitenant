@@ -24,4 +24,6 @@ public enum SecurityEventType
     TenantFeaturesChanged,
     PublicPageUnpublished,
     PublicPagePublicationAllowed,
+    OrganizationDomainVerified,
+    OrganizationDomainRemoved,
 }

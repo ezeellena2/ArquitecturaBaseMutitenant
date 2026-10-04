@@ -108,7 +108,8 @@ public sealed class SecurityEvent : Entity
             or SecurityEventType.OrganizationReactivated or SecurityEventType.OrganizationClosed
             or SecurityEventType.OrganizationApproved or SecurityEventType.OrganizationCreated
             or SecurityEventType.OrganizationProvisioningRetried
-            or SecurityEventType.PublicPageUnpublished or SecurityEventType.PublicPagePublicationAllowed))
+            or SecurityEventType.PublicPageUnpublished or SecurityEventType.PublicPagePublicationAllowed
+            or SecurityEventType.OrganizationDomainVerified or SecurityEventType.OrganizationDomainRemoved))
             throw new ArgumentOutOfRangeException(nameof(type));
         if (tenantId == Guid.Empty) throw new ArgumentException("A target organization is required.", nameof(tenantId));
         var ev = ForPlatformAction(type, AuditActorKind.PlatformOperator, operatorId, reason, occurredAtUtc);

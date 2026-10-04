@@ -12,7 +12,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
 /// <summary>Valida las solicitudes y coordina el ciclo de vida del dominio organizacional.</summary>
 internal sealed class OrganizationDomainService(ITenantDomainReader reader, IRequestValidator validator,
     OrganizationDomainRegistrar registrar, OrganizationDomainVerifier verifier,
-    OrganizationDomainRemover remover, TimeProvider timeProvider,
+    OrganizationDomainRemover remover, IUnitOfWork unitOfWork, TimeProvider timeProvider,
     ILogger<OrganizationDomainService> logger) : IOrganizationDomainService
 {
     public Task<Result<IReadOnlyList<OrganizationDomainResponse>>> ListAsync(CancellationToken cancellationToken) =>
@@ -43,8 +43,10 @@ internal sealed class OrganizationDomainService(ITenantDomainReader reader, IReq
             if (domainId == Guid.Empty) return TenantDomainErrors.NotFound;
             var pending = await reader.FindCurrentByIdAsync(domainId, cancellationToken);
             if (pending is null) return TenantDomainErrors.NotFound;
-            if (pending.Status == TenantDomainStatus.Verified) return TenantDomainErrors.AlreadyVerified;
-            return await verifier.VerifyAsync(pending, cancellationToken);
+            var prepared = await verifier.PrepareAsync(pending, cancellationToken);
+            if (prepared.IsFailure) return prepared;
+            return await unitOfWork.ExecuteInTransactionAsync(ct => verifier.StageAsync(pending, ct),
+                CommitPolicy.OnSuccess, cancellationToken);
         });
 
     public Task<Result> RemoveAsync(RemoveOrganizationDomainRequest request, CancellationToken cancellationToken)
@@ -55,11 +57,12 @@ internal sealed class OrganizationDomainService(ITenantDomainReader reader, IReq
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             var current = await reader.FindCurrentByIdAsync(request.DomainId, cancellationToken);
             if (current is null) return TenantDomainErrors.NotFound;
-            return await remover.RemoveAsync(request, current, cancellationToken);
+            return await unitOfWork.ExecuteInTransactionAsync(ct => remover.StageAsync(current,
+                request.Version!.Value, ct), CommitPolicy.OnSuccess, cancellationToken);
         });
     }
 
-    private static OrganizationDomainResponse ToResponse(OrganizationDomainRow domain) =>
+    internal static OrganizationDomainResponse ToResponse(OrganizationDomainRow domain) =>
         new(domain.Id, domain.Domain, domain.Status,
             domain.Status == TenantDomainStatus.Pending ? domain.Domain : null,
             domain.Status == TenantDomainStatus.Pending ? TenantDomain.TxtRecordPrefix + domain.VerificationToken : null,

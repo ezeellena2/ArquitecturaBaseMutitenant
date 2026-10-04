@@ -80,6 +80,7 @@ public static class DependencyInjection
         services.AddScoped<IPlatformScopeAccessService, Services.Platform.PlatformScopeAccessService>();
         services.AddScoped<IPlatformPublicSiteService, Services.Platform.PlatformPublicSiteService>();
         services.AddScoped<Services.Platform.PlatformPublicSiteWriter>();
+        services.AddScoped<IPlatformDomainService, Services.Platform.PlatformDomainService>();
         services.AddScoped<Services.Platform.PlatformActionGuard>();
         services.AddScoped<Services.Platform.PlatformTenantSlugAllocator>();
         services.AddScoped<Services.Platform.PlatformTenantCreator>();

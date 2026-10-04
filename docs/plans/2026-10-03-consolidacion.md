@@ -105,8 +105,8 @@ Cada servicio de entrada abre la transacción en su método público, y los help
   - el control «la empresa existe y está activa» queda una sola vez, adentro de la transacción.
 - [ ] **Configuración, dominios y página pública:**
   - `OrganizationSettingsService` valida y abre la transacción; `OrganizationSettingsUpdater` se absorbe o deja de recibir `IUnitOfWork`;
-  - `OrganizationDomainRegistrar`, `OrganizationDomainRemover`, `OrganizationDomainVerifier` y `PublicPageEditor` dejan de recibir `IUnitOfWork`;
-  - el verificador consulta el DNS fuera de la transacción, y toma el lock y recarga con versión adentro.
+  - `OrganizationDomainRegistrar` y `PublicPageEditor` dejan de recibir `IUnitOfWork`;
+  - `OrganizationDomainRemover` y `OrganizationDomainVerifier` ya se ordenaron en T10 de la Etapa 5: el verificador consulta el DNS fuera de la transacción, y toma el lock y recarga con versión adentro.
 - [ ] **Alta de empresa:**
   - `BusinessSignupService` abre la transacción;
   - `BusinessOrganizationCreator`, `BusinessSignupTransactionRunner` y `BusinessSignupCodeFlow` dejan de recibir `IUnitOfWork`;
