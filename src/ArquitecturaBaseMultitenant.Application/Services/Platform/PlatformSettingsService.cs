@@ -21,7 +21,15 @@ internal sealed class PlatformSettingsService(IPlatformSettingsReader reader, IP
         {
             var settings = await reader.FindAsync(cancellationToken);
             return settings is null ? SettingsErrors.NotFound :
-                new PlatformSettingsResponse(settings.ConsumerSignup, settings.BusinessSignup, settings.MaxOwnedOrganizations, settings.Version);
+                new PlatformSettingsResponse(settings.ConsumerSignup, settings.BusinessSignup, settings.MaxOwnedOrganizations,
+                    settings.SalesEmail, settings.SupportEmail, settings.Version);
+        });
+
+    public Task<Result<PlatformContactResponse>> GetContactAsync(CancellationToken cancellationToken) =>
+        OperationLog.RunAsync<PlatformContactResponse>(logger, timeProvider, "GetPlatformContact", async () =>
+        {
+            var settings = await reader.FindAsync(cancellationToken);
+            return settings is null ? SettingsErrors.NotFound : new PlatformContactResponse(settings.SalesEmail, settings.SupportEmail);
         });
 
     public Task<Result> UpdateAsync(UpdatePlatformSettingsRequest request, CancellationToken cancellationToken)
@@ -38,7 +46,11 @@ internal sealed class PlatformSettingsService(IPlatformSettingsReader reader, IP
                 changes.AddEnum("consumerSignup", settings.ConsumerSignup, request.ConsumerSignup!.Value);
                 changes.AddEnum("businessSignup", settings.BusinessSignup, request.BusinessSignup!.Value);
                 changes.AddCount("maxOwnedOrganizations", settings.MaxOwnedOrganizations, request.MaxOwnedOrganizations);
-                var changed = settings.Update(request.ConsumerSignup!.Value, request.BusinessSignup!.Value, request.MaxOwnedOrganizations!.Value);
+                // Los correos son datos de contacto: el diff solo dice que cambiaron.
+                if (settings.SalesEmail != request.SalesEmail) changes.AddBoolean("salesEmailChanged", false, true);
+                if (settings.SupportEmail != request.SupportEmail) changes.AddBoolean("supportEmailChanged", false, true);
+                var changed = settings.Update(request.ConsumerSignup!.Value, request.BusinessSignup!.Value,
+                    request.MaxOwnedOrganizations!.Value, request.SalesEmail!, request.SupportEmail!);
                 if (changed.IsFailure) return changed;
                 repository.MarkUpdated(settings);
                 audit.Record(request.Reason!, changes);

@@ -75,8 +75,10 @@ public sealed class PlatformAccountDeletionTests(ApiFactory factory)
             Assert.Equal(operatorAccount.UserId, platformEvent.ActorId);
             Assert.Equal("Pedido legal recibido por correo.", platformEvent.Reason);
             var notice = await NoticeAsync(services, account.UserId, outboxBefore);
-            Assert.Equal("La plataforma dio de baja tu cuenta", notice.Subject);
-            Assert.Contains("ingresá antes de esa fecha para cancelarla", notice.TextBody);
+            Assert.Equal("La plataforma inició la baja de tu cuenta", notice.Subject);
+            Assert.Contains("y cerramos todas tus sesiones.", notice.TextBody);
+            Assert.Contains("Ingresar:", notice.TextBody);
+            Assert.Contains("Si creés que es un error, ingresá antes de esa fecha para cancelarla.", notice.TextBody);
             Assert.DoesNotContain("Pedido legal", notice.TextBody);
         }
 
@@ -99,6 +101,7 @@ public sealed class PlatformAccountDeletionTests(ApiFactory factory)
         using var suspended = await PlatformJourney.PostAsync(platform, accounts + "/suspend",
             new { version = await VersionAsync(platform, account.UserId), reason = "Denuncia" }, Ct);
         Assert.Equal(HttpStatusCode.NoContent, suspended.StatusCode);
+        var support = await ConfigureSupportEmailAsync(platform);
         var outboxBefore = await OutboxIdsAsync(account.UserId);
 
         using var requested = await PlatformJourney.PostAsync(platform, accounts + "/deletion",
@@ -111,7 +114,12 @@ public sealed class PlatformAccountDeletionTests(ApiFactory factory)
         await using (var scope = factory.Services.CreateAsyncScope())
         {
             var notice = await NoticeAsync(scope.ServiceProvider, account.UserId, outboxBefore);
-            Assert.Contains("no podés cancelar la baja", notice.TextBody);
+            Assert.Equal("La plataforma inició la baja de tu cuenta", notice.Subject);
+            // Las sesiones ya se cerraron al suspenderla y una cuenta suspendida no puede entrar: sin botón.
+            Assert.DoesNotContain("cerramos todas tus sesiones", notice.TextBody);
+            Assert.DoesNotContain("Ingresar:", notice.TextBody);
+            Assert.Contains("Tu cuenta está suspendida, así que no podés cancelar la baja. Si creés que es un error, escribí a "
+                + support + ".", notice.TextBody);
         }
         await AgeLoginCodesAsync(account.Email.Value);
         using var login = await AccountJourney.PostAsync(person, "/api/auth/login-code", new { email = account.Email.Value }, Ct);
@@ -194,6 +202,26 @@ public sealed class PlatformAccountDeletionTests(ApiFactory factory)
 
     private static async Task<uint> VersionAsync(HttpClient client, Guid accountId) =>
         (await DetailAsync(client, accountId)).GetProperty("version").GetUInt32();
+
+    /// <summary>Carga el correo de soporte en Configuración sin cambiar las demás reglas.</summary>
+    private static async Task<string> ConfigureSupportEmailAsync(HttpClient platform)
+    {
+        using var current = await platform.GetAsync("/api/platform/settings", Ct);
+        Assert.Equal(HttpStatusCode.OK, current.StatusCode);
+        var settings = JsonDocument.Parse(await current.Content.ReadAsStringAsync(Ct)).RootElement;
+        // Sin números: el lector del pickup toma seis dígitos seguidos como un código.
+        const string support = "soporte.plataforma@example.test";
+        using var saved = await platform.PutAsJsonAsync("/api/platform/settings", new
+        {
+            consumerSignup = settings.GetProperty("consumerSignup").GetString(),
+            businessSignup = settings.GetProperty("businessSignup").GetString(),
+            maxOwnedOrganizations = settings.GetProperty("maxOwnedOrganizations").GetInt32(),
+            salesEmail = "ventas@example.test", supportEmail = support,
+            version = settings.GetProperty("version").GetUInt32(), reason = "Contacto de soporte",
+        }, Ct);
+        Assert.Equal(HttpStatusCode.NoContent, saved.StatusCode);
+        return support;
+    }
 
     private static async Task<string?> CodeAsync(HttpResponseMessage response)
     {

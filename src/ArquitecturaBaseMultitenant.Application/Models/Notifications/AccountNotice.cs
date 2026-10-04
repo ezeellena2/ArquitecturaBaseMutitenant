@@ -18,12 +18,16 @@ public abstract record AccountNotice
 
     public sealed record PublicPageModerated(string OrganizationName, bool IsBlocked) : AccountNotice;
 
-    /// <summary>Baja programada. Si la inició Plataforma, el texto lo dice; una cuenta suspendida no puede cancelarla.</summary>
+    /// <summary>
+    /// Baja programada. Si la inició Plataforma, el texto lo dice; una cuenta suspendida no puede cancelarla y el aviso
+    /// ofrece el correo de soporte, si está cargado.
+    /// </summary>
     public sealed record DeletionRequested(DateTime RequestedAtUtc, DateTime ScheduledForUtc,
         string TimeZoneId, string ActionUrl) : AccountNotice
     {
         public bool RequestedByPlatform { get; init; }
         public bool CanCancel { get; init; } = true;
+        public ArquitecturaBaseMultitenant.Domain.ValueObjects.Email? SupportEmail { get; init; }
     }
 
     public sealed record DeletionCancelled(DateTime OccurredAtUtc, string TimeZoneId,

@@ -1,10 +1,14 @@
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Domain.Settings;
 
-/// <summary>Configuración global única para los modos de registro, el límite de organizaciones y la gracia de baja.</summary>
+/// <summary>
+/// Configuración global única para los modos de registro, el límite de organizaciones, la gracia de baja y los correos
+/// de contacto. Los correos quedan vacíos hasta que un operador los carga.
+/// </summary>
 public sealed class PlatformSettings : Entity, IAuditable, IVersioned
 {
     public const string SingletonIdValue = "00000000-0000-0000-0000-000000000001";
@@ -17,6 +21,8 @@ public sealed class PlatformSettings : Entity, IAuditable, IVersioned
     public BusinessSignupMode BusinessSignup { get; private set; }
     public int MaxOwnedOrganizations { get; private set; }
     public int AccountDeletionGraceDays { get; private set; }
+    public Email? SalesEmail { get; private set; }
+    public Email? SupportEmail { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public Guid? CreatedBy { get; private set; }
     public DateTime? ModifiedAtUtc { get; private set; }
@@ -47,13 +53,17 @@ public sealed class PlatformSettings : Entity, IAuditable, IVersioned
         };
     }
 
-    public Result Update(ConsumerSignupMode consumerSignup, BusinessSignupMode businessSignup, int maxOwnedOrganizations)
+    public Result Update(ConsumerSignupMode consumerSignup, BusinessSignupMode businessSignup, int maxOwnedOrganizations,
+        Email salesEmail, Email supportEmail)
     {
-        if (!Enum.IsDefined(consumerSignup) || !Enum.IsDefined(businessSignup) || maxOwnedOrganizations < 1)
+        if (!Enum.IsDefined(consumerSignup) || !Enum.IsDefined(businessSignup) || maxOwnedOrganizations < 1
+            || salesEmail is null || supportEmail is null)
             return SettingsErrors.InvalidPlatformConfiguration;
         ConsumerSignup = consumerSignup;
         BusinessSignup = businessSignup;
         MaxOwnedOrganizations = maxOwnedOrganizations;
+        SalesEmail = salesEmail;
+        SupportEmail = supportEmail;
         return Result.Success();
     }
 

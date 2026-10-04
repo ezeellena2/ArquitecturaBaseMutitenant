@@ -15,6 +15,8 @@ internal sealed class UpdatePlatformSettingsRequestValidator : AbstractValidator
             .Must(mode => mode is null || Enum.IsDefined(mode.Value)).WithMessage(_ => ValidationTexts.RegistrationModeInvalid);
         RuleFor(request => request.MaxOwnedOrganizations).NotNull().WithMessage(_ => ValidationTexts.Required)
             .GreaterThanOrEqualTo(1).WithMessage(_ => ValidationTexts.OwnedOrganizationsMinimum);
+        RuleFor(request => request.SalesEmail).NotNull().WithMessage(_ => ValidationTexts.EmailInvalid);
+        RuleFor(request => request.SupportEmail).NotNull().WithMessage(_ => ValidationTexts.EmailInvalid);
         RuleFor(request => request.Version).NotNull().WithMessage(_ => ValidationTexts.Required);
         RuleFor(request => request.Reason).Required().Description();
     }

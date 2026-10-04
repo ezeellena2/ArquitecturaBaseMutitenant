@@ -130,13 +130,18 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
         var time = formatter.FormatTime(notice.RequestedAtUtc, context);
         var scheduled = formatter.FormatDate(notice.ScheduledForUtc, context);
         var key = notice.RequestedByPlatform ? "DeletionRequestedByPlatform" : "DeletionRequested";
-        var note = !notice.RequestedByPlatform ? "DeletionRequested.Note"
-            : notice.CanCancel ? "DeletionRequestedByPlatform.Note" : "DeletionRequestedByPlatform.NoteSuspended";
+        // Una cuenta suspendida ya tiene las sesiones cerradas y no puede entrar: sin «cerramos tus sesiones» ni botón.
+        var body = notice.RequestedByPlatform && !notice.CanCancel ? key + ".BodySuspended" : key + ".Body";
+        var note = !notice.RequestedByPlatform ? NotificationTexts.Get("DeletionRequested.Note", culture)
+            : notice.CanCancel ? NotificationTexts.Get("DeletionRequestedByPlatform.Note", culture)
+            : notice.SupportEmail is { } support
+                ? NotificationTexts.Get("DeletionRequestedByPlatform.NoteSuspended", culture) + " "
+                    + NotificationTexts.Format("DeletionRequestedByPlatform.SupportContact", culture, support.Value)
+                : NotificationTexts.Get("DeletionRequestedByPlatform.NoteSuspended", culture);
         return (key, "AccountDeletionRequested.html",
-            [NotificationTexts.Format(key + ".Body", culture, name, date, time, appName),
+            [NotificationTexts.Format(body, culture, name, date, time, appName),
                 NotificationTexts.Format("DeletionRequested.Scheduled", culture, scheduled)],
-            notice.CanCancel ? NotificationTexts.Get("Action.Login", culture) : string.Empty, notice.ActionUrl,
-            NotificationTexts.Get(note, culture));
+            notice.CanCancel ? NotificationTexts.Get("Action.Login", culture) : string.Empty, notice.ActionUrl, note);
     }
 
     private async Task<(string Key, string Template, string[] Paragraphs, string Action, string Url, string Note)>

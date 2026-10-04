@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Api.Tenancy;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
+using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.AspNetCore.Mvc;
 
@@ -33,6 +34,10 @@ public sealed class PlatformSettingsController(IPlatformSettingsService service)
     [ProducesProblem(StatusCodes.Status403Forbidden)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     [ProducesProblem(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Update([FromBody] UpdatePlatformSettingsHttpRequest request, CancellationToken cancellationToken) =>
-        (await service.UpdateAsync(request.ToModel(), cancellationToken)).ToActionResult(this);
+    public async Task<IActionResult> Update([FromBody] UpdatePlatformSettingsHttpRequest request, CancellationToken cancellationToken)
+    {
+        var model = request.ToModel();
+        if (model.IsFailure) return Result.Failure(model.Error).ToActionResult(this);
+        return (await service.UpdateAsync(model.Value, cancellationToken)).ToActionResult(this);
+    }
 }

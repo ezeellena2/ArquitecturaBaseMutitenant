@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Settings;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Settings;
 
@@ -9,12 +10,19 @@ namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Settings;
 /// </summary>
 public sealed class PlatformSettingsTests
 {
+    private static readonly Email Sales = Email.Create("ventas@example.com").Value;
+    private static readonly Email Support = Email.Create("soporte@example.com").Value;
+
     [Fact]
     public void Editing_platform_settings_changes_signup_rules_without_changing_the_deletion_grace()
     {
         var settings = PlatformSettings.Create(ConsumerSignupMode.Open, BusinessSignupMode.Open, 1);
 
-        Assert.True(settings.Update(ConsumerSignupMode.Closed, BusinessSignupMode.RequiresApproval, 4).IsSuccess);
+        Assert.Null(settings.SalesEmail);
+        Assert.Null(settings.SupportEmail);
+        Assert.True(settings.Update(ConsumerSignupMode.Closed, BusinessSignupMode.RequiresApproval, 4, Sales, Support).IsSuccess);
+        Assert.Equal(Sales, settings.SalesEmail);
+        Assert.Equal(Support, settings.SupportEmail);
         Assert.Equal(SignupErrors.Closed, settings.CanRegisterConsumer().Error);
         Assert.Equal(BusinessSignupMode.RequiresApproval, settings.BusinessSignup);
         Assert.Equal(4, settings.MaxOwnedOrganizations);
@@ -29,7 +37,8 @@ public sealed class PlatformSettingsTests
     {
         var settings = PlatformSettings.Create(ConsumerSignupMode.Closed, BusinessSignupMode.Closed, 1);
 
-        Assert.Equal(SettingsErrors.InvalidPlatformConfiguration, settings.Update(consumer, business, limit).Error);
+        Assert.Equal(SettingsErrors.InvalidPlatformConfiguration, settings.Update(consumer, business, limit, Sales, Support).Error);
+        Assert.Null(settings.SalesEmail);
         Assert.Equal(ConsumerSignupMode.Closed, settings.ConsumerSignup);
         Assert.Equal(BusinessSignupMode.Closed, settings.BusinessSignup);
         Assert.Equal(1, settings.MaxOwnedOrganizations);

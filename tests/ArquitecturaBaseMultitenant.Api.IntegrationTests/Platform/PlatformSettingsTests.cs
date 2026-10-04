@@ -27,9 +27,16 @@ public sealed class PlatformSettingsTests
         Assert.Equal(HttpStatusCode.OK, initial.StatusCode);
         using var initialJson = JsonDocument.Parse(await initial.Content.ReadAsStringAsync(Ct));
         var originalVersion = initialJson.RootElement.GetProperty("version").GetUInt32();
+        Assert.Equal(JsonValueKind.Null, initialJson.RootElement.GetProperty("salesEmail").ValueKind);
+        using var anonymous = isolated.CreateClient(new() { BaseAddress = new Uri("https://localhost") });
+        using var noContact = await anonymous.GetAsync("/api/contact", Ct);
+        Assert.Equal(HttpStatusCode.OK, noContact.StatusCode);
+        Assert.Equal(JsonValueKind.Null, JsonDocument.Parse(await noContact.Content.ReadAsStringAsync(Ct))
+            .RootElement.GetProperty("supportEmail").ValueKind);
         using var saved = await client.PutAsJsonAsync("/api/platform/settings", new
         {
             consumerSignup = "Closed", businessSignup = "RequiresApproval", maxOwnedOrganizations = 3,
+            salesEmail = "Ventas@Example.com", supportEmail = "soporte@example.com",
             version = originalVersion, reason = "Control del alta de prueba",
         }, Ct);
         Assert.Equal(HttpStatusCode.NoContent, saved.StatusCode);
@@ -39,10 +46,19 @@ public sealed class PlatformSettingsTests
         Assert.Equal("RequiresApproval", updatedJson.RootElement.GetProperty("businessSignup").GetString());
         Assert.Equal(3, updatedJson.RootElement.GetProperty("maxOwnedOrganizations").GetInt32());
         Assert.NotEqual(originalVersion, updatedJson.RootElement.GetProperty("version").GetUInt32());
+        Assert.Equal("ventas@example.com", updatedJson.RootElement.GetProperty("salesEmail").GetString());
+        Assert.Equal("soporte@example.com", updatedJson.RootElement.GetProperty("supportEmail").GetString());
+        // Ingreso y Registro los leen sin sesión.
+        using var contact = await anonymous.GetAsync("/api/contact", Ct);
+        Assert.Equal(HttpStatusCode.OK, contact.StatusCode);
+        using var contactJson = JsonDocument.Parse(await contact.Content.ReadAsStringAsync(Ct));
+        Assert.Equal("ventas@example.com", contactJson.RootElement.GetProperty("salesEmail").GetString());
+        Assert.Equal("soporte@example.com", contactJson.RootElement.GetProperty("supportEmail").GetString());
 
         using var stale = await client.PutAsJsonAsync("/api/platform/settings", new
         {
             consumerSignup = "Open", businessSignup = "Open", maxOwnedOrganizations = 1,
+            salesEmail = "ventas@example.com", supportEmail = "soporte@example.com",
             version = originalVersion, reason = "Cambio obsoleto",
         }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
@@ -59,6 +75,8 @@ public sealed class PlatformSettingsTests
         Assert.Equal("Closed", diff.RootElement.GetProperty("consumerSignup").GetProperty("after").GetString());
         Assert.Equal(3, diff.RootElement.GetProperty("maxOwnedOrganizations").GetProperty("after").GetInt32());
         Assert.DoesNotContain("Control del alta de prueba", ev.Changes);
+        Assert.True(diff.RootElement.GetProperty("salesEmailChanged").GetProperty("after").GetBoolean());
+        Assert.DoesNotContain("example.com", ev.Changes);
         Assert.Null(ev.TargetTenantId);
         Assert.Null(ev.TargetAccountId);
         Assert.Equal(Domain.Settings.ConsumerSignupMode.Closed, (await context.PlatformSettings.AsNoTracking().SingleAsync(Ct)).ConsumerSignup);
@@ -81,7 +99,8 @@ public sealed class PlatformSettingsTests
         Assert.Equal(HttpStatusCode.Forbidden, support.StatusCode);
         using var supportUpdate = await client.PutAsJsonAsync("/api/platform/settings", new
         {
-            consumerSignup = "Open", businessSignup = "Open", maxOwnedOrganizations = 2, version = 1u, reason = "Cambio no autorizado",
+            consumerSignup = "Open", businessSignup = "Open", maxOwnedOrganizations = 2,
+            salesEmail = "ventas@example.com", supportEmail = "soporte@example.com", version = 1u, reason = "Cambio no autorizado",
         }, Ct);
         Assert.Equal(HttpStatusCode.Forbidden, supportUpdate.StatusCode);
     }
@@ -97,9 +116,20 @@ public sealed class PlatformSettingsTests
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
         using var invalid = await client.PutAsJsonAsync("/api/platform/settings", new
         {
-            consumerSignup = "Open", businessSignup = "Open", maxOwnedOrganizations = 0, version = 1u, reason = " ",
+            consumerSignup = "Open", businessSignup = "Open", maxOwnedOrganizations = 0,
+            salesEmail = "ventas@example.com", supportEmail = "soporte@example.com", version = 1u, reason = " ",
         }, Ct);
         Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
+        using var badContact = await client.PutAsJsonAsync("/api/platform/settings", new
+        {
+            consumerSignup = "Open", businessSignup = "Open", maxOwnedOrganizations = 2,
+            salesEmail = "no-es-un-correo", supportEmail = "", version = 1u, reason = "Contacto",
+        }, Ct);
+        Assert.Equal(HttpStatusCode.BadRequest, badContact.StatusCode);
+        using var contactProblem = JsonDocument.Parse(await badContact.Content.ReadAsStringAsync(Ct));
+        var contactErrors = contactProblem.RootElement.GetProperty("errors");
+        Assert.Equal("Ingresá un correo válido.", contactErrors.GetProperty("salesEmail")[0].GetString());
+        Assert.Equal("Ingresá un correo válido.", contactErrors.GetProperty("supportEmail")[0].GetString());
         using var problem = JsonDocument.Parse(await invalid.Content.ReadAsStringAsync(Ct));
         Assert.True(problem.RootElement.GetProperty("errors").TryGetProperty("reason", out _));
         Assert.True(problem.RootElement.GetProperty("errors").TryGetProperty("maxOwnedOrganizations", out _));

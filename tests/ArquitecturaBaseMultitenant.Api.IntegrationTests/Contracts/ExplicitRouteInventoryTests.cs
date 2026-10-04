@@ -28,6 +28,7 @@ public sealed class ExplicitRouteInventoryTests(ApiFactory factory)
         "POST /api/account-recovery/code",
         "POST /api/account-recovery/verify",
         "POST /api/account-recovery",
+        "GET /api/contact",
         "POST /api/auth/deletion/pending",
         "POST /api/auth/deletion/cancel",
         "GET /api/auth/methods",

@@ -7558,6 +7558,45 @@
         }
       }
     },
+    "/api/contact": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformContactResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformContactResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformContactResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/external/google": {
       "get": {
         "tags": [
@@ -12353,6 +12392,32 @@
           }
         }
       },
+      "PlatformContactResponse": {
+        "type": "object",
+        "properties": {
+          "salesEmail": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Email"
+              }
+            ]
+          },
+          "supportEmail": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Email"
+              }
+            ]
+          }
+        },
+        "description": "Los correos de contacto que muestran Ingreso y Registro, sin sesión; null mientras no se cargaron."
+      },
       "PlatformFeatureResponse": {
         "required": [
           "key",
@@ -12443,6 +12508,26 @@
           "maxOwnedOrganizations": {
             "type": "integer",
             "format": "int32"
+          },
+          "salesEmail": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Email"
+              }
+            ]
+          },
+          "supportEmail": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Email"
+              }
+            ]
           },
           "version": {
             "type": "integer",
@@ -13471,6 +13556,18 @@
               "integer"
             ],
             "format": "int32"
+          },
+          "salesEmail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "supportEmail": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "version": {
             "type": [

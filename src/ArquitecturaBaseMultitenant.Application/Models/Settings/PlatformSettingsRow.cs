@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Domain.Settings;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Models.Settings;
 
@@ -8,4 +9,6 @@ public sealed record PlatformSettingsRow(
     BusinessSignupMode BusinessSignup,
     int MaxOwnedOrganizations,
     int AccountDeletionGraceDays,
-    uint Version = 0);
+    uint Version = 0,
+    Email? SalesEmail = null,
+    Email? SupportEmail = null);

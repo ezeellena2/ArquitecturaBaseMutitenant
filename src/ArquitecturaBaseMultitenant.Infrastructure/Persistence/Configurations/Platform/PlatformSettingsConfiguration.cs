@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Settings;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -14,5 +15,7 @@ internal sealed class PlatformSettingsConfiguration : IEntityTypeConfiguration<P
         builder.HasKey(settings => settings.Id);
         builder.Property(settings => settings.ConsumerSignup).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.Property(settings => settings.BusinessSignup).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
+        builder.Property(settings => settings.SalesEmail).HasMaxLength(Email.MaxLength);
+        builder.Property(settings => settings.SupportEmail).HasMaxLength(Email.MaxLength);
     }
 }

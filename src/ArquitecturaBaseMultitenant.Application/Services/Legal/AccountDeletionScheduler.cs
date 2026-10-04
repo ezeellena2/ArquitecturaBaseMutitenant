@@ -49,7 +49,7 @@ internal sealed class AccountDeletionScheduler(IUserRepository users, IEnumerabl
         var loginMethods = await methods.ListByUserIdAsync(account.Id, ct);
         if (operatorId is null) await notifier.RequestedAsync(account, loginMethods, nowUtc, scheduledForUtc, ct);
         else await notifier.PlatformRequestedAsync(account, loginMethods, nowUtc, scheduledForUtc,
-            canCancel: account.Status == UserStatus.Active, ct);
+            canCancel: account.Status == UserStatus.Active, platform.SupportEmail, ct);
         return scheduledForUtc;
     }
 }

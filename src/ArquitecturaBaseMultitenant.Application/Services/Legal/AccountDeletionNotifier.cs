@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Notifications;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
 
@@ -28,7 +29,7 @@ internal sealed class AccountDeletionNotifier(AccountNoticeIssuer notices, ISecu
 
     // Baja iniciada por Plataforma: el SecurityEvent con el operador lo registra Plataforma; acá va solo el aviso.
     internal Task PlatformRequestedAsync(UserAccountRow account, IReadOnlyList<LoginMethod> methods,
-        DateTime nowUtc, DateTime scheduledForUtc, bool canCancel, CancellationToken ct)
+        DateTime nowUtc, DateTime scheduledForUtc, bool canCancel, Email? supportEmail, CancellationToken ct)
     {
         var url = origin.Value is { } value ? new Uri(value, "/login").AbsoluteUri : "/login";
         return notices.EnqueueAsync(account.Id, methods,
@@ -37,6 +38,7 @@ internal sealed class AccountDeletionNotifier(AccountNoticeIssuer notices, ISecu
                 RecipientName = account.DisplayName,
                 RequestedByPlatform = true,
                 CanCancel = canCancel,
+                SupportEmail = supportEmail,
             }, account.Culture, false, ct);
     }
 

@@ -9,12 +9,16 @@ using ArquitecturaBaseMultitenant.Application.Validation.Platform;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using System.Text.Json;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Services.Platform;
 
 public sealed class PlatformSettingsServiceTests
 {
+    private static readonly Email Sales = Email.Create("ventas@example.com").Value;
+    private static readonly Email Support = Email.Create("soporte@example.com").Value;
+
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
@@ -27,7 +31,7 @@ public sealed class PlatformSettingsServiceTests
         var unitOfWork = new FakeUnitOfWork(events);
         var service = Create(fixture, repository, audit, unitOfWork, new StubCache(events));
 
-        var result = await service.UpdateAsync(new(ConsumerSignupMode.Closed, BusinessSignupMode.RequiresApproval, 3, 7, "Control del alta"), Ct);
+        var result = await service.UpdateAsync(new(ConsumerSignupMode.Closed, BusinessSignupMode.RequiresApproval, 3, Sales, Support, 7, "Control del alta"), Ct);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(7u, repository.ExpectedVersion);
@@ -42,7 +46,12 @@ public sealed class PlatformSettingsServiceTests
         Assert.Equal(fixture.TimeProvider.GetUtcNow().UtcDateTime, securityEvent.OccurredAtUtc);
         Assert.Equal("203.0.113.*", securityEvent.MaskedIpAddress);
         using var changes = JsonDocument.Parse(securityEvent.Changes);
-        Assert.Equal(3, changes.RootElement.EnumerateObject().Count());
+        Assert.Equal(5, changes.RootElement.EnumerateObject().Count());
+        // Los correos de contacto quedan como «cambió», sin el valor.
+        Assert.True(changes.RootElement.GetProperty("salesEmailChanged").GetProperty("after").GetBoolean());
+        Assert.True(changes.RootElement.GetProperty("supportEmailChanged").GetProperty("after").GetBoolean());
+        Assert.DoesNotContain("example.com", securityEvent.Changes);
+        Assert.Equal(Support, repository.Settings.SupportEmail);
         Assert.Equal("Open", changes.RootElement.GetProperty("consumerSignup").GetProperty("before").GetString());
         Assert.Equal("Closed", changes.RootElement.GetProperty("consumerSignup").GetProperty("after").GetString());
         Assert.Equal(1, changes.RootElement.GetProperty("maxOwnedOrganizations").GetProperty("before").GetInt32());
@@ -60,7 +69,7 @@ public sealed class PlatformSettingsServiceTests
         var audit = new StubEvents();
         var service = Create(fixture, new StubRepository(), audit, unitOfWork, new StubCache([]));
 
-        Assert.True((await service.UpdateAsync(new(ConsumerSignupMode.Open, BusinessSignupMode.Open, limit, 1, reason), Ct)).IsFailure);
+        Assert.True((await service.UpdateAsync(new(ConsumerSignupMode.Open, BusinessSignupMode.Open, limit, Sales, Support, 1, reason), Ct)).IsFailure);
         Assert.Equal(0, unitOfWork.Transactions);
         Assert.Empty(audit.Items);
     }
@@ -73,7 +82,7 @@ public sealed class PlatformSettingsServiceTests
         var unitOfWork = new FakeUnitOfWork { CommitFailure = new ConcurrencyConflictException() };
         var service = Create(fixture, new StubRepository(), new StubEvents(), unitOfWork, new StubCache(events));
 
-        await Assert.ThrowsAsync<ConcurrencyConflictException>(() => service.UpdateAsync(new(ConsumerSignupMode.Open, BusinessSignupMode.Closed, 2, 1, "Cambio"), Ct));
+        await Assert.ThrowsAsync<ConcurrencyConflictException>(() => service.UpdateAsync(new(ConsumerSignupMode.Open, BusinessSignupMode.Closed, 2, Sales, Support, 1, "Cambio"), Ct));
         Assert.Empty(events);
     }
 
