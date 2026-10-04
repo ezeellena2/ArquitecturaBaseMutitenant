@@ -33,6 +33,7 @@
   <data name="AuditSummary.Role.Restored" xml:space="preserve"><value>Restauró el rol {0}</value></data>
   <data name="AuditSummary.Company.TimeZoneId" xml:space="preserve"><value>Cambió la zona de {0}</value></data>
   <data name="AuditSummary.TenantSettings.DefaultCulture" xml:space="preserve"><value>Cambió el idioma y la región predeterminados</value></data>
+  <data name="AuditSummary.Tenant.Approved" xml:space="preserve"><value>La plataforma aprobó la organización</value></data>
   <data name="Location.Organization" xml:space="preserve"><value>Toda la organización</value></data>
   <data name="Entity.Member" xml:space="preserve"><value>un usuario</value></data>
   <data name="Entity.Invitation" xml:space="preserve"><value>una invitación</value></data>
@@ -80,6 +81,8 @@
   <data name="Value.Invitation.Status.Accepted" xml:space="preserve"><value>Invitación aceptada</value></data>
   <data name="Value.Invitation.Status.Revoked" xml:space="preserve"><value>Invitación revocada</value></data>
   <data name="Value.Invitation.Status.Expired" xml:space="preserve"><value>Invitación vencida</value></data>
+  <data name="Value.Tenant.Status.PendingApproval" xml:space="preserve"><value>Espera aprobación</value></data>
+  <data name="Value.Tenant.Status.Active" xml:space="preserve"><value>Activa</value></data>
   <data name="Value.NoRoles" xml:space="preserve"><value>Sin roles</value></data>
   <data name="Field.TaxId" xml:space="preserve"><value>Identificación fiscal</value></data>
   <data name="Field.Website" xml:space="preserve"><value>Sitio web</value></data>

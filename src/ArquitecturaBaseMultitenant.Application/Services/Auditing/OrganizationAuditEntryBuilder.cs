@@ -26,6 +26,7 @@ internal sealed class OrganizationAuditEntryBuilder(DisplayFormatter formatter)
         [nameof(CompanyMembership)] = typeof(CompanyMembershipStatus),
         [nameof(Company)] = typeof(CompanyStatus),
         [nameof(Invitation)] = typeof(InvitationStatus),
+        [nameof(Tenant)] = typeof(TenantStatus),
     };
 
     internal async Task<IReadOnlyList<OrganizationAuditEntryResponse>> BuildAsync(
@@ -51,7 +52,9 @@ internal sealed class OrganizationAuditEntryBuilder(DisplayFormatter formatter)
             AuditTexts.Summary(row.Action, row.EntityType, affected, Variant(row, changes)),
             row.EntityType, AuditTexts.Entity(row.EntityType), affected,
             row.CompanyName ?? AuditTexts.WholeOrganization(),
-            row.ActorKind.ToString(), AuditTexts.Actor(row.ActorKind), row.ActorId,
+            // Solo una persona va con su identificador: qué operador de Plataforma actuó es un dato de Plataforma.
+            row.ActorKind.ToString(), AuditTexts.Actor(row.ActorKind),
+            row.ActorKind == AuditActorKind.User ? row.ActorId : null,
             row.ActorKind == AuditActorKind.User ? row.ActorDisplayName : null,
             await ChangesAsync(row, changes, context, cancellationToken),
             row.ActorKind == AuditActorKind.User ? row.ActorEmail : null);
@@ -72,6 +75,7 @@ internal sealed class OrganizationAuditEntryBuilder(DisplayFormatter formatter)
                 (nameof(Member), nameof(MemberStatus.Active), nameof(MemberStatus.Inactive)) => "Disabled",
                 (nameof(Member), nameof(MemberStatus.Inactive), nameof(MemberStatus.Active)) => "Enabled",
                 (nameof(Invitation), _, AuditChangeKeys.ExpiredInvitationStatus) => "Expired",
+                (nameof(Tenant), nameof(TenantStatus.PendingApproval), nameof(TenantStatus.Active)) => "Approved",
                 _ => null,
             } is { } statusChange) return statusChange;
 

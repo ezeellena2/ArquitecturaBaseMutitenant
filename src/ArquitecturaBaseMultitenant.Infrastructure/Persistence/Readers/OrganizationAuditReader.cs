@@ -24,21 +24,66 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
         ["roles"] = ["Role", "RoleAssignment"],
         ["companies"] = ["Company", "CompanyMembership"],
         ["settings"] = ["TenantSettings", "TenantDomain"],
-        ["organization"] = ["PublicPage", "Tenant"],
+        ["organization"] = ["PublicPage", nameof(Tenant)],
     };
+
+    /// <summary>
+    /// Las acciones de Plataforma sobre la organización que muestra su auditoría, como el tablero Auditoria-Org, con el
+    /// cambio de estado que significan. Salen de los <see cref="SecurityEvent"/> con <c>TargetTenantId</c>: de cada una
+    /// se lee solo la fecha y el tipo, nunca el operador, el motivo ni la IP, que son de Plataforma.
+    /// </summary>
+    private static readonly Dictionary<SecurityEventType, (TenantStatus Before, TenantStatus After)> PlatformActions =
+        new() { [SecurityEventType.OrganizationApproved] = (TenantStatus.PendingApproval, TenantStatus.Active) };
 
     public async Task<CursorResult<OrganizationAuditRow>> ListAsync(ListOrganizationAuditRequest request,
         DateTime? startUtc, DateTime? endUtc, CancellationToken cancellationToken)
     {
+        var tenantId = tenantContext.RequiredTenantId;
         var entries = await FilteredAsync(request, startUtc, endUtc, cancellationToken);
         if (request.ActorId is { } actorId)
         {
-            entries = entries.Where(entry => entry.ActorId == actorId);
+            // «Quién» filtra por persona: el operador de Plataforma no se muestra.
+            entries = entries.Where(entry => entry.ActorId == actorId && entry.ActorKind == AuditActorKind.User);
         }
 
-        var page = await entries.ToCursorResultAsync(request, entry => entry.OccurredAtUtc,
-            entry => entry.Id, cancellationToken);
-        var actorIds = page.Items.Where(entry => entry.ActorKind == AuditActorKind.User && entry.ActorId != null)
+        // Las entradas y las acciones de Plataforma van en un mismo cursor, por fecha.
+        var feed = entries.Select(entry => new FeedKey
+        {
+            Id = entry.Id, OccurredAtUtc = entry.OccurredAtUtc, FromPlatform = false,
+        });
+        if (ShowsPlatformActions(request))
+        {
+            feed = feed.Concat(PlatformActionsOf(tenantId, startUtc, endUtc).Select(action => new FeedKey
+            {
+                Id = action.Id, OccurredAtUtc = action.OccurredAtUtc, FromPlatform = true,
+            }));
+        }
+
+        var page = await feed.ToCursorResultAsync(request, key => key.OccurredAtUtc, key => key.Id, cancellationToken);
+        var auditIds = page.Items.Where(key => !key.FromPlatform).Select(key => key.Id).ToArray();
+        AuditEntry[] audit = auditIds.Length == 0
+            ? []
+            : await context.Set<AuditEntry>().AsNoTracking()
+                .Where(entry => entry.TenantId == tenantId && auditIds.Contains(entry.Id))
+                .ToArrayAsync(cancellationToken);
+        var platformIds = page.Items.Where(key => key.FromPlatform).Select(key => key.Id).ToArray();
+        var platform = platformIds.Length == 0
+            ? new Dictionary<Guid, SecurityEventType>()
+            : await context.SecurityEvents.AsNoTracking().Where(action => platformIds.Contains(action.Id))
+                .ToDictionaryAsync(action => action.Id, action => action.Type, cancellationToken);
+        var rows = await RowsAsync(audit, cancellationToken);
+        return new CursorResult<OrganizationAuditRow>([
+            .. page.Items.Select(key => key.FromPlatform
+                ? PlatformRow(key, tenantId, platform[key.Id])
+                : rows[key.Id]),
+        ], page.NextCursor, page.HasMore);
+    }
+
+    private async Task<Dictionary<Guid, OrganizationAuditRow>> RowsAsync(AuditEntry[] page,
+        CancellationToken cancellationToken)
+    {
+        if (page.Length == 0) return [];
+        var actorIds = page.Where(entry => entry.ActorKind == AuditActorKind.User && entry.ActorId != null)
             .Select(entry => entry.ActorId!.Value).Distinct().ToArray();
         var actors = actorIds.Length == 0
             ? new Dictionary<Guid, string?>()
@@ -63,17 +108,51 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
                     .OrderByDescending(method => method.IsPrimary).ThenBy(method => method.Id)
                     .Select(method => new { method.UserId, method.Value }).ToArrayAsync(cancellationToken))
                 .GroupBy(method => method.UserId).ToDictionary(group => group.Key, group => Email.Create(group.First().Value).Value);
-        var displayData = await ResolveDisplayDataAsync(page.Items, cancellationToken);
-        var rows = page.Items.Select(entry => new OrganizationAuditRow(entry.Id, entry.OccurredAtUtc,
+        var displayData = await ResolveDisplayDataAsync(page, cancellationToken);
+        return page.ToDictionary(entry => entry.Id, entry => new OrganizationAuditRow(entry.Id, entry.OccurredAtUtc,
             entry.Action, entry.EntityType, entry.EntityId, entry.ActorId, entry.ActorKind,
             entry.ActorId is { } id ? actors.GetValueOrDefault(id) : null,
             displayData[entry.Id].AffectedDisplayName, displayData[entry.Id].CompanyName,
-            entry.Changes, entry.ActorId is { } emailOwner ? actorEmails.GetValueOrDefault(emailOwner) : null)).ToArray();
-        return new CursorResult<OrganizationAuditRow>(rows, page.NextCursor, page.HasMore);
+            entry.Changes, entry.ActorId is { } emailOwner ? actorEmails.GetValueOrDefault(emailOwner) : null));
+    }
+
+    // Sin búsqueda ni persona: la búsqueda mira los cambios y quién actuó, y una acción de Plataforma no muestra ninguno
+    // de los dos. El tema es «Organización».
+    private static bool ShowsPlatformActions(ListOrganizationAuditRequest request) =>
+        string.IsNullOrWhiteSpace(request.Search) && request.ActorId is null
+        && (request.Category is null || Categories[request.Category].Contains(nameof(Tenant)));
+
+    private IQueryable<SecurityEvent> PlatformActionsOf(Guid tenantId, DateTime? startUtc, DateTime? endUtc)
+    {
+        SecurityEventType[] types = [.. PlatformActions.Keys];
+        var actions = context.SecurityEvents.AsNoTracking()
+            .Where(action => action.TargetTenantId == tenantId && types.Contains(action.Type));
+        if (startUtc is { } start) actions = actions.Where(action => action.OccurredAtUtc >= start);
+        if (endUtc is { } end) actions = actions.Where(action => action.OccurredAtUtc < end);
+        return actions;
+    }
+
+    /// <summary>
+    /// La acción de Plataforma como una entrada de la organización: la organización cambió de estado, por Plataforma,
+    /// sin decir qué operador fue.
+    /// </summary>
+    private static OrganizationAuditRow PlatformRow(FeedKey key, Guid tenantId, SecurityEventType type)
+    {
+        var (before, after) = PlatformActions[type];
+        var changes = JsonSerializer.Serialize(new Dictionary<string, object?>(StringComparer.Ordinal)
+        {
+            [nameof(Tenant.Status)] = new Dictionary<string, object?>(StringComparer.Ordinal)
+            {
+                ["old"] = before.ToString(),
+                ["new"] = after.ToString(),
+            },
+        });
+        return new OrganizationAuditRow(key.Id, key.OccurredAtUtc, AuditAction.Updated, nameof(Tenant), tenantId,
+            null, AuditActorKind.PlatformOperator, null, null, null, changes);
     }
 
     private async Task<Dictionary<Guid, AuditDisplayData>> ResolveDisplayDataAsync(
-        IReadOnlyCollection<AuditEntry> entries, CancellationToken cancellationToken)
+        AuditEntry[] entries, CancellationToken cancellationToken)
     {
         var invitationIds = entries.Where(entry => entry.EntityType == nameof(Invitation))
             .Select(entry => entry.EntityId).Distinct().ToArray();
@@ -167,7 +246,7 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
                 .Select(company => new { company.Id, company.Name })
                 .ToDictionaryAsync(company => company.Id, company => company.Name, cancellationToken);
 
-        var result = new Dictionary<Guid, AuditDisplayData>(entries.Count);
+        var result = new Dictionary<Guid, AuditDisplayData>(entries.Length);
         foreach (var entry in entries)
         {
             var memberId = entry.EntityType switch
@@ -213,10 +292,16 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
     public async Task<IReadOnlyList<OrganizationAuditActorRow>> ListActorsAsync(ListOrganizationAuditRequest request,
         DateTime? startUtc, DateTime? endUtc, CancellationToken cancellationToken)
     {
-        var actors = await (await FilteredAsync(request with { ActorId = null }, startUtc, endUtc,
-                cancellationToken))
+        var unfiltered = request with { ActorId = null };
+        var stored = await (await FilteredAsync(unfiltered, startUtc, endUtc, cancellationToken))
             .Select(entry => new { entry.ActorId, entry.ActorKind })
             .Distinct().ToArrayAsync(cancellationToken);
+        // Solo una persona va con su identificador: qué operador de Plataforma actuó es un dato interno de Plataforma.
+        var actors = stored.Select(actor => (ActorId: actor.ActorKind == AuditActorKind.User ? actor.ActorId : null,
+            actor.ActorKind)).ToHashSet();
+        if (ShowsPlatformActions(unfiltered) && !actors.Contains((null, AuditActorKind.PlatformOperator))
+            && await PlatformActionsOf(tenantContext.RequiredTenantId, startUtc, endUtc).AnyAsync(cancellationToken))
+            actors.Add((null, AuditActorKind.PlatformOperator));
         var actorIds = actors.Where(actor => actor.ActorKind == AuditActorKind.User && actor.ActorId != null)
             .Select(actor => actor.ActorId!.Value).Distinct().ToArray();
         var names = actorIds.Length == 0
@@ -316,4 +401,12 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
     }
 
     private sealed record AuditDisplayData(string? AffectedDisplayName, string? CompanyName);
+
+    /// <summary>Una entrada o una acción de Plataforma en el cursor de la auditoría.</summary>
+    private sealed class FeedKey
+    {
+        public Guid Id { get; init; }
+        public DateTime OccurredAtUtc { get; init; }
+        public bool FromPlatform { get; init; }
+    }
 }
