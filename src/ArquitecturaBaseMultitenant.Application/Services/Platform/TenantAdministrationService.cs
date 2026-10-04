@@ -7,15 +7,18 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Application.Resources;
+using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
-internal sealed class TenantAdministrationService(IPlatformReader reader, IRequestValidator validator,
-    IUnitOfWork unitOfWork, PlatformTenantStateWriter writer, ITenantStatusCache cache,
-    TimeProvider clock, ILogger<TenantAdministrationService> logger, PlatformTenantProvisioning provisioning) : ITenantAdministrationService
+internal sealed class TenantAdministrationService(IPlatformReader reader, PlatformTenantStateWriter writer,
+    ITenantStatusCache cache, PlatformActionGuard guard, PlatformTenantCreator creator,
+    PlatformTenantActivator activator, IPersonalSpaceProvisioner defaults, IRequestValidator validator,
+    IUnitOfWork unitOfWork, TimeProvider clock, ILogger<TenantAdministrationService> logger)
+    : ITenantAdministrationService
 {
     public Task<Result<CreatedPlatformTenantResponse>> CreateAsync(Guid operationId, CreatePlatformTenantRequest request, CancellationToken ct) =>
         OperationLog.RunAsync<CreatedPlatformTenantResponse>(logger, clock, "CreatePlatformTenant", async () =>
@@ -23,15 +26,15 @@ internal sealed class TenantAdministrationService(IPlatformReader reader, IReque
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
             if (operationId == Guid.Empty) return TenantErrors.ProvisioningConflict;
-            var settings = await provisioning.PrepareAsync(request.Culture, request.TimeZoneId, ct);
+            var settings = (await defaults.PrepareAsync(request.Culture, request.TimeZoneId, ct)).Settings;
             var reason = AuditTexts.OrganizationCreationReason();
-            var authorized = await provisioning.EnterAsync(operationId, reason, ct);
+            var authorized = await guard.EnterAsync(operationId, reason, ct);
             if (authorized.IsFailure) return authorized.Error;
             using var lease = authorized.Value;
             try
             {
                 var result = await unitOfWork.ExecuteInTransactionAsync(tx =>
-                    provisioning.CreateAsync(operationId, lease.OperatorId, request, settings, reason, tx), CommitPolicy.OnSuccess, ct);
+                    creator.CreateAsync(operationId, lease.OperatorId, request, settings, reason, tx), CommitPolicy.OnSuccess, ct);
                 if (result.IsSuccess) await cache.InvalidateAsync(operationId, ct);
                 return result;
             }
@@ -47,12 +50,12 @@ internal sealed class TenantAdministrationService(IPlatformReader reader, IReque
             ArgumentNullException.ThrowIfNull(request);
             request = retry ? request with { Reason = AuditTexts.OrganizationRetryReason() } : request;
             if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
-            var settings = await provisioning.PrepareAsync(null, null, ct);
-            var authorized = await provisioning.EnterAsync(tenantId, request.Reason!, ct);
+            var settings = (await defaults.PrepareAsync(null, null, ct)).Settings;
+            var authorized = await guard.EnterAsync(tenantId, request.Reason!, ct);
             if (authorized.IsFailure) return authorized.Error;
             using var lease = authorized.Value;
             var result = await unitOfWork.ExecuteInTransactionAsync(tx =>
-                provisioning.ActivateAsync(tenantId, retry, request, settings, clock.GetUtcNow().UtcDateTime, tx), CommitPolicy.OnSuccess, ct);
+                activator.ActivateAsync(tenantId, retry, request, settings, clock.GetUtcNow().UtcDateTime, tx), CommitPolicy.OnSuccess, ct);
             if (result.IsSuccess) await cache.InvalidateAsync(tenantId, ct);
             return result;
         });
