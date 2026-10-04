@@ -179,7 +179,8 @@ public sealed class PlatformOperatorTests(ApiFactory factory)
         {
             var services = scope.ServiceProvider;
             var notice = Assert.Single(await EmailsAsync(services, email, outbox));
-            Assert.Contains("te invitó como operador de", notice.Subject, StringComparison.Ordinal);
+            // Quien reenvía no tiene nombre: Mensajes › «Invitación como operador: sin nombre».
+            Assert.Equal("El equipo de Arquitectura Base te invitó como operador", notice.Subject);
             var ev = await services.GetRequiredService<ApplicationDbContext>().SecurityEvents.AsNoTracking()
                 .SingleAsync(item => item.Type == SecurityEventType.PlatformOperatorInvitationResent && item.TargetAccountId == id, Ct);
             Assert.Equal(managerId, ev.ActorId);
