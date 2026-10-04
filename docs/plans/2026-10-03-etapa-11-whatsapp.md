@@ -61,7 +61,8 @@
 
 - [ ] Etiquetas y consentimiento de promociones: el bot pregunta y «Baja» lo corta solo. Importar contactos (CSV o Excel) con «Descargar ejemplo» (Nombre, Teléfono, Etiqueta, Acepta promociones); el consentimiento va por contacto, en esa columna, con su origen guardado. Sin «Sí», el contacto queda «Sin respuesta» y no entra en difusiones.
 - [ ] Vincular con la cuenta: el bot ofrece el enlace; con la aceptación de la persona, la organización ve su nombre verificado. La persona puede desvincular. Sumarlo a «Exportar mis datos» y a la baja de la cuenta.
-- [ ] «Cargar teléfonos de empleados»: revisar cada número (miembro, con cuenta, sin cuenta, inválido) y confirmar los vínculos y las invitaciones, que salen por WhatsApp. `[Idempotent]`.
+- [ ] «Cargar teléfonos de empleados»: revisar cada número (ya es miembro, se invita o inválido), sin revelar si tiene cuenta (ADR 0041), y confirmar los vínculos y las invitaciones, que salen por WhatsApp. La cuenta se vincula al aceptar. `[Idempotent]`.
+- [ ] Fuente de «Para resolver» del módulo (ADR 0040): un `IPendingItemSource` de WhatsApp para «Falta medio de pago».
 
 ### 5. Plantillas y difusiones
 

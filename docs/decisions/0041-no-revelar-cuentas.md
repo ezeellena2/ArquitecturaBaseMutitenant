@@ -15,7 +15,9 @@ Ninguna pantalla, respuesta de la API ni mensaje a quien hace el pedido revela s
 - **Mi cuenta, agregar un correo o un WhatsApp:** si es de otra cuenta, la pantalla sigue igual, no se manda código y al dueño le llega un aviso. Desaparecen «Este número ya está asociado a una cuenta.» y su versión para el correo.
 - **La respuesta es la misma en todos los casos:** mismo código HTTP, mismo cuerpo y la misma espera para reenviar. Los límites por destino y por cuenta se aplican igual.
 
-**Excepción:** un operador de plataforma con permiso sobre las cuentas ya las ve en Plataforma › Cuentas. Por eso, al invitar a un operador, sigue valiendo el rechazo de un correo que ya tiene cuenta (decisión de operadores del 2026-10-03).
+**Excepción:** «Invitar operador», que pide `platform.operators.manage`, un permiso de confianza. Al invitar a un operador sigue valiendo el rechazo de un correo que ya tiene cuenta ([0042](0042-operadores-de-plataforma.md)).
+
+**Fuera de la regla:** vincular Google a la cuenta. Para vincular hay que probar con OAuth que esa cuenta de Google es tuya, así que el error `Identity.Google.AlreadyUsed` no revela nada a un tercero y se conserva.
 
 ## Alternativas descartadas
 

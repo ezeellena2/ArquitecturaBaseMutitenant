@@ -49,6 +49,8 @@ No hay pantallas nuevas. Los teléfonos de v78 necesitan el marco de app (Paquet
   - `capas-y-flujo.md`, `guardado.md` y `backend.md` §4.
 - [ ] Línea de base: `realinear-docs --detectar` en los dos repos. El 2026-10-03, el back dio 372 hallazgos automáticos, 193 de modelo y 217 preguntas.
 - [ ] Aplicar lo automático con `realinear-docs --sin-modelo` en los dos repos.
+- [ ] Corregir los docs viejos (📄) y aplicar las enmiendas de la [revisión de decisiones](../reviews/2026-10-03-revision-de-decisiones.md). La lista está en su «Reparto» y el detalle con archivo y línea, en sus anexos. Incluye los docs que dicen que el CI ya compara los contratos (ADR 0016) y `backend.md:53` (ADR 0017).
+- [ ] Borrar las cuatro carpetas sobrantes de `tools/` (`LocalSetup`, `PlatformBootstrap`, `PlatformOperatorAdmin` y `Setup`), que solo tienen `bin` y `obj` y no están versionadas.
 - [ ] Resolver los hallazgos de modelo y las preguntas, comparando con el código:
   - `arbol.md` de los dos repos, llevado al árbol real;
   - los códigos de error, permisos y rutas, cada uno en su ficha de `docs/features`;
@@ -85,13 +87,26 @@ B4, B6, B8, B10, B11 y B12 se arreglan con su pieza, en los bloques 4 y 5.
 ### 1b. Pendientes del cierre de los paquetes 1 y 3
 
 - [ ] **1.2 · Configuración › dominio:** mostrar cuántos correos administra el dominio. Quedó esperando los archivos de dominios de Plataforma, ya commiteados en `4bb5c35`. Back con su test y front como el tablero.
-- [ ] **1.3 · Teléfono de la página pública:** revisar la columna `varchar(16)` contra `telefonos.md` y migrarla si hace falta.
+- [ ] **1.3 · Teléfono de la página pública:** revisar la columna `varchar(16)` contra `telefonos.md` y migrarla si hace falta, y pasar `PublicPage.ContactPhone` al value object `PhoneNumber`.
+- [ ] **D5 · Única Dueña y baja** ([ADR 0035](../decisions/0035-baja-de-cuenta.md), decisión del usuario del 2026-10-03):
+  - bloquean la baja todas las organizaciones no cerradas, incluidas las suspendidas;
+  - la baja que pide la persona deja de mirar solo las activas (`UserTenantAccessReader`) y usa la misma regla que la baja por Plataforma;
+  - test con una organización suspendida;
+  - actualizar `roles.md` e `identidad.md`.
+- [ ] **D6 · Tipo de identificación fiscal según el país** (decisión del usuario del 2026-10-03):
+  - la ficha de Empresa sigue pidiendo solo el número;
+  - el tipo sale del tipo por defecto del país de la organización, según los datos de referencia: CUIT en Argentina;
+  - `identificacion-fiscal.md` lo dice;
+  - tests con Argentina y con otro país.
+- [ ] **D7 · Auditoría y ex miembros** (decisión del usuario del 2026-10-03):
+  - si quien actuó ya no es miembro de la organización, se muestra solo su nombre, sin el correo (`OrganizationAuditReader`);
+  - test con un ex miembro.
 - [ ] **D4 · Mi cuenta: agregar un correo sin revelar si es de otra cuenta** ([ADR 0041](../decisions/0041-no-revelar-cuentas.md)).
   - Si el correo es de otra cuenta, la respuesta y la pantalla son las mismas que con uno libre. No se manda código, y a su dueño le llega el aviso «Método de ingreso: ya es de una cuenta» (lienzo v83, Mensajes):
     - asunto y título: «Ya tenés una cuenta con este correo»;
     - texto: «Alguien quiso agregar este correo para entrar a otra cuenta de ArquitecturaBase. Este correo ya es de una cuenta, así que no lo agregamos y no mandamos ningún código. / Si fuiste vos, entrá con este correo: ya tenés una cuenta.»;
     - nota: «Si no fuiste vos, ignorá este mensaje.».
-  - Sale el texto «…ya está asociada a otra cuenta.» de `account.json` y su error del back.
+  - Sale de esta respuesta el error `Identity.LoginMethod.AlreadyUsed` («Este correo ya está asociado a una cuenta.», en `Errors.resx`). El de Google (`Identity.Google.AlreadyUsed`) se conserva, porque vincular Google queda fuera de la 0041.
   - Tests: el correo libre y el de otra cuenta dan la misma respuesta; en el segundo, el aviso se encola y no se emite ningún código.
 - [ ] **D3 · Nombres de rol repetidos, como el tablero Roles** (decisión del usuario del 2026-10-03):
   - un rol de una empresa puede llamarse igual que el de otra empresa;
@@ -112,6 +127,10 @@ B4, B6, B8, B10, B11 y B12 se arreglan con su pieza, en los bloques 4 y 5.
 - [ ] Crear el `AGENTS.md` de `Services/OrganizationUsers`.
 - [ ] Agregar un test que exija un mensaje propio en cada regla de validación: recorre `CreateDescriptor()` de cada validador del ensamblado.
 - [ ] Borrar `Stage3aInventoryTests`.
+- [ ] **Salida del Api** (enmienda de la ADR 0002): lo que devuelve un controller es un `*Response` de Application o un `*HttpResponse` de `Api/Contracts`. Renombrar los tres `*Response` del Api que no siguen el sufijo, corregir `Api/Contracts/AGENTS.md` y sumar un test de salida junto a `ControllerInputContractTests`.
+- [ ] **Accesibilidad** (ADR 0029):
+  - el «Copiá de» de `accesibilidad.md` apunta a `UsersPage.test.tsx`, que corre axe;
+  - un chequeo en el arnés del front exige que todo `pages/*Page.test.tsx` corra axe.
 - [ ] `OrganizationUsersTests.InvitationEmailAsync`: guardar los ids del outbox antes de invitar, como hace `InvitationsTests`, en lugar del try/catch que saltea los mensajes que no se pueden descifrar.
 
 ### 3. Back: la transacción vuelve al servicio, sin clases que solo reenvían
@@ -135,6 +154,7 @@ Cada servicio de entrada abre la transacción en su método público, y los help
   - pasa de 10 clases a 3 o 4, con un solo `OperationLog` por pedido;
   - `TenantProvisioner` se conserva, porque lo usa Plataforma.
 - [ ] **Ingreso:** se borra `SignupVerificationFlow`, y quien lo usaba inyecta directo.
+- [ ] **Invitaciones:** `InvitationAcceptanceCredentials` también solo reenvía; se absorbe.
 - [ ] **Plataforma:** los helpers de la Etapa 5 que reciben `IUnitOfWork` hacen el mismo cambio.
 - [ ] **Listas blancas:** en `TransactionBoundaryTests` quedan solo los dos seeds. Con el mismo criterio se revisa la lista de `TenantScopeUsageTests`.
 - [ ] **Hecho cuando** la suite completa del back pasa y la lista blanca no tiene helpers.
@@ -194,7 +214,7 @@ Cada servicio de entrada abre la transacción en su método público, y los help
   - integración con un usuario que solo tiene `CompanyAdmin`: entra a la ficha de su empresa y ve miembros, roles y filtros;
   - E2E real del mismo recorrido.
 
-  Si los Inicios ya llenaron el mapa, solo se verifica.
+  Si los Inicios ya llenaron el mapa, solo se verifica. Con el mapa llega también la fila por empresa de Inicio-Miembro: su «Para resolver», con la columna Empresa.
 - [ ] **F6 · Una sola cultura efectiva:** `resolveCulture` y `useEffectiveCulture`, que usan i18n, formatos, datos de referencia y `Accept-Language`. Se borra `useLanguagePreference`. Tests de precedencia.
 - [ ] **F7 · `useEditPage`** (guard, «Cambios sin guardar» y 409) y un `errors.ts` por feature, en Configuración, Página pública y la ficha de Usuario.
   - Arregla **B11**. Test: si salís con cambios sin guardar, te pide confirmar.
@@ -211,7 +231,8 @@ Cada servicio de entrada abre la transacción en su método público, y los help
   - tests con axe y a 390 px, y «sin coincidencias» en `RolesPage`;
   - lo que mostraron las capturas, para que quede como el tablero:
     - «Crear rol» apagado mientras el formulario esté vacío;
-    - «Vale en» sin asterisco;
+    - «Vale en» sin asterisco, y el editor ya no crea roles con `?scope=AnyCompany` (enmienda de las ADR 0012 y 0034);
+    - axe en Roles, Editar rol, Empresas, Ficha de empresa, Registrá tu empresa y Aceptar términos;
     - «Descripción» a todo el ancho;
     - «1 de 2» a la derecha, en su banda.
 - [ ] **`CompanyDetailPage`,** partida según `arbol.md`:

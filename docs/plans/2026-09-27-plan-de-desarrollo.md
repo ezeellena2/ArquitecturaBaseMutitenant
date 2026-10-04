@@ -31,7 +31,9 @@ El resultado tiene que servir para empezar productos reales.
    - toda carpeta nueva del mapa (`arnes.md` §3) tiene su `AGENTS.md` + `CLAUDE.md`;
    - toda convención transversal nueva o modificada actualiza su ficha en `docs/rules/` y usa una verificación pertinente, existente o nueva; una decisión local se registra en la feature o el informe, con test de conducta si agrega lógica;
    - los "Copiá de" marcados con esta etapa ya apuntan a archivos reales;
-   - `HarnessTests` y `harness.test.ts` están en verde; `HarnessStage` se sube al cerrar la etapa y exige los tests nombrados en las fichas hasta esa etapa.
+   - `HarnessTests` y `harness.test.ts` están en verde. Al cerrar la etapa se suma a `ClosedStages`, la lista explícita de etapas cerradas, y desde ahí se exigen los tests que nombran sus fichas;
+   - **decisiones** (desde la revisión del 2026-10-03): cada decisión nueva queda en su ADR o en «Decisiones tomadas» del informe, en su ficha y, si es una conducta, con su test. Si una decisión reemplaza a otra, la vieja se enmienda en el mismo commit;
+   - `node scripts/arneses/arnes.mjs realinear-docs --detectar` sale 0 en los dos repos.
 8. `aspire stop` si se levantó el AppHost.
 9. Desde la E3, si la etapa programa pantallas: **comparación visual con el lienzo** de las pantallas y estados nuevos o modificados. Una pantalla nueva incluye todos sus estados aprobados aplicables; una modificación posterior recaptura solo los estados afectados. Por cada estado comparado, una captura de la pantalla real y otra del tablero en `docs/design/lienzo/`, las dos a 1440 × 900 y a 390 × 844 (Playwright), guardadas en `docs/design/capturas/etapa-N/`. Tienen que coincidir: la estructura, los textos, el orden, los colores (tokens de tema.md), los controles y los estados. Cualquier diferencia se corrige, o se anota con su motivo en el informe de la etapa para que el usuario la apruebe. **No se inventa nada que el tablero no tenga:** ni campos, ni textos, ni pantallas, ni acciones. Si falta algo, se dibuja primero.
 10. Desde la E3a y en **cada etapa posterior**, `npm run test:e2e:real` del front pasa contra el front y la Api reales, con una base PostgreSQL exclusiva del E2E, separada del volumen de Development de Aspire, `Email:Delivery=PickupDirectory` y un directorio temporal de `.eml`. Playwright no intercepta peticiones ni usa mocks: el runner crea en esa base la persona y la organización necesarias, registra una cuenta por código leído del `.eml`, sale, entra por la puerta empresa con su propia cuenta, comprueba `/org`, F5, cambio a Personal y logout. La prueba exige `E2E_PICKUP_DIR` absoluto; ningún valor de secreto, correo ni código se imprime. Sin esta prueba verde, la etapa no se cierra aunque pasen build, tests de integración y capturas.
@@ -400,7 +402,8 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
 - el árbol de rutas por host en `routes.tsx` (con un subdominio arma `storefront`) y `usePublicSite`;
 - `areas/storefront` con la página pública del subdominio (publicada, sin sesión o con sesión, y «No disponible») y «Ingresá para continuar», que ingresa como persona y vuelve a la misma página;
 - en `areas/public/site`: la sección «Empresas en ArquitecturaBase» de la portada (buscador, tres empresas y «Ver todas las empresas»; «Empresas», arriba, baja a esa sección) y el directorio completo en `/empresas` (tarjetas con buscador y paginado; cada una lleva a la página pública en su subdominio);
-- todo dentro de `SiteLayout`.
+- todo dentro de `SiteLayout`;
+- la portada sin la etiqueta del héroe y con el menú en el orden del tablero: Personas, Cómo empezar y Empresas (revisión de decisiones, P92).
 
 Además, `navigation/personal.ts` queda listo para sumar módulos B2C. El `PersonalLayout` y el inicio personal ya están desde la Etapa 3.
 
@@ -456,6 +459,7 @@ Además, `navigation/personal.ts` queda listo para sumar módulos B2C. El `Perso
 ## Etapa 10: despliegue y operación
 
 - Dockerfile de la Api con el SPA en wwwroot.
+- Chequeo cruzado de contratos en el CI del front: descarga también el repo del back y corre `contracts:check` sin saltearlo (enmienda de la ADR 0016). Si el repo del back es privado, se usa un token de solo lectura.
 - Migration bundle ejecutado con `mt_owner`.
 - CI/CD con GitHub Actions y OIDC.
 - Secretos, certificados de OpenIddict y SMTP real.
