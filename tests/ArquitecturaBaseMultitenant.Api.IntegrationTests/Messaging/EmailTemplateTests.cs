@@ -106,6 +106,27 @@ public sealed class EmailTemplateTests
         Assert.DoesNotContain(SystemRoles.CompanyAdmin, message.HtmlBody);
     }
 
+    // Tablero Mensajes, «Invitación como operador» y «… sin nombre»: sin nombre firma el equipo y no repite la app.
+    [Theory]
+    [InlineData("Martín Sosa", "Martín Sosa te invitó como operador de ArquitecturaBase",
+        "Hola. Martín Sosa te invitó a sumarte como operador de la plataforma ArquitecturaBase.")]
+    [InlineData(null, "El equipo de ArquitecturaBase te invitó como operador",
+        "Hola. El equipo de ArquitecturaBase te invitó a sumarte como operador de la plataforma.")]
+    public async Task Operator_invitation_matches_the_board_with_and_without_the_inviter_name(string? inviter,
+        string subject, string body)
+    {
+        var profile = await new CultureProfiles(new JsonReferenceDataCatalog()).LoadAsync("es-AR", Ct);
+        var renderer = new EmailTemplateRenderer(Options.Create(new EmailOptions { AppName = "ArquitecturaBase" }),
+            CreateFormatter());
+
+        var message = await renderer.RenderAccountNoticeAsync("operator@example.test",
+            new AccountNotice.OperatorInvited(inviter, [], new DateTime(2026, 10, 4, 15, 0, 0, DateTimeKind.Utc),
+                "America/Argentina/Buenos_Aires", "https://example.test/plataforma"), profile, Ct);
+
+        Assert.Equal(subject, message.Subject);
+        Assert.Contains(body, message.TextBody);
+    }
+
     [Theory]
     [InlineData("es-AR", "Confirmá tu correo", "es tu código para agregar este correo")]
     [InlineData("en-US", "Confirm your email", "is your code to add this email")]

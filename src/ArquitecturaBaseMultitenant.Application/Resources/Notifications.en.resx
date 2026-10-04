@@ -91,6 +91,8 @@
   <data name="OperatorInvited.Title" xml:space="preserve"><value>You were invited as an operator</value></data>
   <data name="OperatorInvited.Body" xml:space="preserve"><value>{0} {1} invited you to join the {2} platform as an operator.</value></data>
   <data name="OperatorInvited.UnnamedInviter" xml:space="preserve"><value>The {0} team</value></data>
+  <data name="OperatorInvited.UnnamedSubject" xml:space="preserve"><value>{0} invited you as an operator</value></data>
+  <data name="OperatorInvited.UnnamedBody" xml:space="preserve"><value>{0} {1} invited you to join the platform as an operator.</value></data>
   <data name="OperatorInvited.PermissionsLabel" xml:space="preserve"><value>Permissions</value></data>
   <data name="OperatorInvited.Note" xml:space="preserve"><value>To sign in, use this email address before the invitation expires: we will send you an access code.</value></data>
   <data name="OperatorInvited.PlatformOnly" xml:space="preserve"><value>This account is only for operating the platform: it is not used as a person or to enter an organization.</value></data>

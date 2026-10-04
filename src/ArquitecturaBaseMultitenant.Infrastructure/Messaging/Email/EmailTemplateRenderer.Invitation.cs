@@ -41,16 +41,18 @@ internal sealed partial class EmailTemplateRenderer
         var formatter = _formatter ?? throw new InvalidOperationException("DisplayFormatter is required for invitations.");
         var context = await formatter.CreateAsync(culture.Entry.Code, notice.TimeZoneId, cancellationToken);
         var appName = options.Value.AppName;
-        var inviter = string.IsNullOrWhiteSpace(notice.InviterName)
-            ? NotificationTexts.Format("OperatorInvited.UnnamedInviter", culture, appName)
-            : notice.InviterName;
+        var greeting = NotificationTexts.Get("Greeting.Unnamed", culture);
+        // Sin nombre firma «El equipo de {app}», y el asunto y el texto no repiten la app (Mensajes › «… sin nombre»).
+        var team = NotificationTexts.Format("OperatorInvited.UnnamedInviter", culture, appName);
+        var (subject, body) = string.IsNullOrWhiteSpace(notice.InviterName)
+            ? (NotificationTexts.Format("OperatorInvited.UnnamedSubject", culture, team),
+                NotificationTexts.Format("OperatorInvited.UnnamedBody", culture, greeting, team))
+            : (NotificationTexts.Format("OperatorInvited.Subject", culture, notice.InviterName, appName),
+                NotificationTexts.Format("OperatorInvited.Body", culture, greeting, notice.InviterName, appName));
         var permissions = notice.Permissions
             .Select(permission => PermissionTexts.PermissionIn(permission, culture.Culture)).ToArray();
-        return ComposeInvitation(to, culture,
-            NotificationTexts.Format("OperatorInvited.Subject", culture, inviter, appName),
-            NotificationTexts.Get("OperatorInvited.Title", culture),
-            NotificationTexts.Format("OperatorInvited.Body", culture, NotificationTexts.Get("Greeting.Unnamed", culture),
-                inviter, appName),
+        return ComposeInvitation(to, culture, subject,
+            NotificationTexts.Get("OperatorInvited.Title", culture), body,
             [
                 (NotificationTexts.Get("OperatorInvited.PermissionsLabel", culture), JoinList(permissions, culture)),
                 (NotificationTexts.Get("Invitation.ExpiresLabel", culture), formatter.FormatDate(notice.ExpiresAtUtc, context)),
