@@ -75,12 +75,14 @@ internal sealed class PlatformLegalService(
             var today = DateOnly.FromDateTime(timeZones.ConvertToLocal(nowUtc, zone));
             if (effectiveOn < today) return FieldErrors.On(LegalPublicationErrors.EffectiveDatePast, "effectiveOn");
             // Hoy rige desde ahora: el comienzo del día podría quedar antes que la versión vigente y no regir nunca.
-            var effectiveAtUtc = effectiveOn == today ? nowUtc : timeZones.GetDayRangeUtc(effectiveOn, zone).StartUtc;
             var kind = request.Kind!.Value;
 
             return await unitOfWork.ExecuteInTransactionAsync<Result<PublishedLegalDocumentResponse>>(async work =>
             {
                 await legal.LockKindAsync(kind, work);
+                // El reloj se lee con el lock tomado: dos publicaciones de hoy no quedan con vigencias invertidas.
+                var effectiveAtUtc = effectiveOn == today ? clock.GetUtcNow().UtcDateTime
+                    : timeZones.GetDayRangeUtc(effectiveOn, zone).StartUtc;
                 var latest = await legal.GetLatestVersionAsync(kind, work);
                 var document = LegalDocument.Create(kind, latest + 1, effectiveAtUtc);
                 legal.AddDocument(document);

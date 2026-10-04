@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
@@ -29,6 +30,8 @@ internal sealed class SignupExistingMethodVerifier(IUserRepository users,
         var account = await users.GetByIdAsync(userId, cancellationToken);
         if (account is null || account.Status is UserStatus.Suspended or UserStatus.Deleted)
             return AccountErrors.Suspended;
+        // ADR 0042: una cuenta de operador no entra por el registro de persona ni de empresa.
+        if (account.IsPlatformOperator) return AccessErrors.PlatformOnly;
         return account.Status == UserStatus.PendingDeletion ? AccountErrors.PendingDeletion : null;
     }
 

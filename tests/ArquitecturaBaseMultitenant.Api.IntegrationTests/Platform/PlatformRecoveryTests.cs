@@ -165,6 +165,36 @@ public sealed class PlatformRecoveryTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
     }
 
+    [Fact]
+    public async Task A_recovery_for_an_operator_account_cannot_be_approved()
+    {
+        // Si no, quien solo revisa recuperaciones podría darse la cuenta de un operador con más permisos.
+        using var target = await OperatorAsync([PlatformPermissions.Operators.Manage]);
+        var targetEmail = await EmailOfAsync(target);
+        var newEmail = $"toma-{Guid.NewGuid():N}@example.test";
+        using var anonymous = Client();
+        await RecoveryJourney.SubmitAsync(factory, anonymous, newEmail, targetEmail, Ct);
+        using var reviewer = await OperatorAsync([PlatformPermissions.Recoveries.Manage]);
+        var row = await RowAsync(reviewer, newEmail);
+        var id = row.GetProperty("id").GetGuid();
+
+        using var approved = await PlatformJourney.PostAsync(reviewer, $"/api/platform/recoveries/{id:D}/approve",
+            new { version = row.GetProperty("version").GetUInt32(), reason = "Parece suya" }, Ct);
+
+        Assert.Equal(HttpStatusCode.Conflict, approved.StatusCode);
+        Assert.Equal(AccountRecoveryErrors.OperatorAccountCode, await CodeAsync(approved));
+        await using var scope = factory.Services.CreateAsyncScope();
+        Assert.False(await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().LoginMethods
+            .AnyAsync(method => method.Value == newEmail, Ct));
+    }
+
+    private static async Task<string> EmailOfAsync(HttpClient client)
+    {
+        using var me = await client.GetAsync("/api/me", Ct);
+        Assert.True(me.StatusCode == HttpStatusCode.OK, await me.Content.ReadAsStringAsync(Ct));
+        return JsonDocument.Parse(await me.Content.ReadAsStringAsync(Ct)).RootElement.GetProperty("email").GetString()!;
+    }
+
     private HttpClient Client() =>
         factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
 

@@ -51,9 +51,12 @@ internal sealed class PlatformRecoveryDecisionService(
                 await methods.LockUserAsync(userId, work);
                 var account = await users.GetByIdAsync(userId, work);
                 if (account is null || account.Status == UserStatus.Deleted) return AccountRecoveryErrors.NoAccount;
+                if (account.IsPlatformOperator) return AccountRecoveryErrors.OperatorAccount;
                 var email = Email.Create(recovery.NewMethodValue).Value;
                 await codes.LockDestinationAsync(LoginCodeDestination.ForEmail(email), work);
-                if ((await lookup.FindVerifiedUsersByEmailAsync(email, work)).Count > 0) return AccountRecoveryErrors.MethodInUse;
+                var owners = await lookup.FindVerifiedUsersByEmailAsync(email, work);
+                if (owners.Contains(userId)) return AccountRecoveryErrors.MethodAlreadyOnAccount;
+                if (owners.Count > 0) return AccountRecoveryErrors.MethodInUse;
                 // Un correo agregado y sin verificar por otra cuenta se retira, como al verificarlo desde Mi cuenta.
                 if (await lookup.FindMethodAsync(LoginMethodType.Email, email.Value, work) is { } existing
                     && await methods.GetByIdAsync(existing.MethodId, work) is { VerifiedAtUtc: null } unverified)

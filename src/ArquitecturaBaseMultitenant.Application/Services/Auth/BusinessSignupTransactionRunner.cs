@@ -36,6 +36,8 @@ internal sealed class BusinessSignupTransactionRunner(
                     return BusinessSignupErrors.IdentityRequired;
                 if (account.Status == UserStatus.Suspended) return AccountErrors.Suspended;
                 if (account.Status == UserStatus.PendingDeletion) return AccountErrors.PendingDeletion;
+                // ADR 0042: un operador nunca queda como Dueño de una organización.
+                if (account.IsPlatformOperator) return AccessErrors.PlatformOnly;
                 return await execute(account, ct);
             }, CommitPolicy.OnSuccess, cancellationToken);
         }

@@ -115,6 +115,53 @@ public sealed class BusinessSignupTests(ApiFactory factory)
         Assert.Equal("Validation.Failed", problem!.RootElement.GetProperty("code").GetString());
     }
 
+    [Fact]
+    public async Task A_platform_operator_cannot_create_an_organization()
+    {
+        // ADR 0042: con la sesión de identidad o verificando el correo, un operador nunca queda como Dueño de una organización.
+        await factory.Services.SeedDatabaseAsync(Ct);
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
+            HandleCookies = true,
+        });
+        var account = await AccountJourney.RegisterAsync(factory, client, Ct);
+        await PlatformOperators.GrantAsync(factory.Services, account.UserId, PlatformOperators.All, Ct);
+        client.DefaultRequestHeaders.Authorization = null;
+
+        using var antiforgery = await client.GetAsync("/api/auth/external/google/antiforgery", Ct);
+        using var tokenBody = await antiforgery.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+        using var signup = new HttpRequestMessage(HttpMethod.Post, "/api/auth/business-signup")
+        {
+            Content = JsonContent.Create(new
+            {
+                organizationName = "Organización del operador",
+                slug = $"op-{Guid.NewGuid():N}"[..20],
+                firstCompanyName = "Empresa del operador",
+                taxId = (string?)null,
+                acceptedTerms = true,
+            }),
+        };
+        signup.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("D"));
+        signup.Headers.Add("RequestVerificationToken", tokenBody!.RootElement.GetProperty("requestToken").GetString());
+        using var created = await client.SendAsync(signup, Ct);
+        Assert.Equal(HttpStatusCode.Forbidden, created.StatusCode);
+        Assert.Equal("Tenancy.Access.PlatformOnly", (await created.Content.ReadFromJsonAsync<JsonDocument>(Ct))!
+            .RootElement.GetProperty("code").GetString());
+
+        await RecoveryJourney.AgeCodesAsync(factory, account.Email.Value, Ct);
+        using var requested = await PostAsync(client, "/api/auth/business-signup/code",
+            new { email = account.Email.Value, acceptedTerms = true, culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires" });
+        Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
+        var code = await PickupCodeReader.ReadAsync(factory.Services, account.Email.Value, Ct);
+        using var verified = await PostAsync(client, "/api/auth/business-signup/verify",
+            new { email = account.Email.Value, code, acceptedTerms = true, culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires" });
+        Assert.Equal(HttpStatusCode.Forbidden, verified.StatusCode);
+        Assert.Equal("Tenancy.Access.PlatformOnly", (await verified.Content.ReadFromJsonAsync<JsonDocument>(Ct))!
+            .RootElement.GetProperty("code").GetString());
+    }
+
     private async Task AssertBusinessRowsAsync(string email, Guid tenantId, string slug)
     {
         await using var connection = new NpgsqlConnection(factory.AdminConnectionString);

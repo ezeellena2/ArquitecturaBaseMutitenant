@@ -9,6 +9,8 @@ public static class AccountRecoveryErrors
     public const string AlreadyResolvedCode = "Platform.AccountRecovery.AlreadyResolved";
     public const string NoAccountCode = "Platform.AccountRecovery.NoAccount";
     public const string MethodInUseCode = "Platform.AccountRecovery.MethodInUse";
+    public const string MethodAlreadyOnAccountCode = "Platform.AccountRecovery.MethodAlreadyOnAccount";
+    public const string OperatorAccountCode = "Platform.AccountRecovery.OperatorAccount";
 
     /// <summary>
     /// El pedido no tiene un código verificado con su nonce, el código venció o ya registró un pedido. Es la misma
@@ -29,4 +31,14 @@ public static class AccountRecoveryErrors
     /// <summary>El correo nuevo ya es de una cuenta: el operador lo ve en Cuentas, así que se le puede decir.</summary>
     public static readonly Error MethodInUse = Error.Conflict(MethodInUseCode,
         "The new method already belongs to an account.");
+
+    public static readonly Error MethodAlreadyOnAccount = Error.Conflict(MethodAlreadyOnAccountCode,
+        "The new method is already a sign-in method of that account.");
+
+    /// <summary>
+    /// Una cuenta de operador no se recupera por esta vía: quien solo revisa recuperaciones se quedaría con una cuenta
+    /// que puede tener más permisos que los suyos.
+    /// </summary>
+    public static readonly Error OperatorAccount = Error.Conflict(OperatorAccountCode,
+        "A platform operator account cannot be recovered this way.");
 }
