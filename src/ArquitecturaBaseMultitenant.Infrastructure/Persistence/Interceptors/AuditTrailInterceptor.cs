@@ -2,6 +2,7 @@ using System.Data.Common;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
+using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Features;
 using ArquitecturaBaseMultitenant.Domain.Settings;
@@ -34,7 +35,9 @@ internal sealed class AuditTrailInterceptor(
         ArgumentNullException.ThrowIfNull(eventData);
         if (eventData.Context is { } context)
         {
-            SetCounterparts(context, PrepareAuditEntries(context));
+            var roleChanges = RoleAssignmentTrail.Collect(context);
+            SetCounterparts(context, PrepareAuditEntries(context, roleChanges,
+                RoleAssignmentTrail.LoadNames(context, roleChanges)));
         }
 
         return base.SavingChanges(eventData, result);
@@ -48,7 +51,10 @@ internal sealed class AuditTrailInterceptor(
         ArgumentNullException.ThrowIfNull(eventData);
         if (eventData.Context is { } context)
         {
-            await SetCounterpartsAsync(context, PrepareAuditEntries(context), cancellationToken);
+            var roleChanges = RoleAssignmentTrail.Collect(context);
+            var roleNames = await RoleAssignmentTrail.LoadNamesAsync(context, roleChanges, cancellationToken);
+            await SetCounterpartsAsync(context, PrepareAuditEntries(context, roleChanges, roleNames),
+                cancellationToken);
         }
 
         return await base.SavingChangesAsync(eventData, result, cancellationToken);
@@ -58,6 +64,13 @@ internal sealed class AuditTrailInterceptor(
     internal IReadOnlyCollection<Guid> PrepareAuditEntries(DbContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
+        var roleChanges = RoleAssignmentTrail.Collect(context);
+        return PrepareAuditEntries(context, roleChanges, RoleAssignmentTrail.LoadNames(context, roleChanges));
+    }
+
+    private HashSet<Guid> PrepareAuditEntries(DbContext context,
+        IReadOnlyCollection<RoleAssignmentTrail.RoleSetChange> roleChanges, IReadOnlyDictionary<Guid, string> roleNames)
+    {
         RejectHistoryMutations(context);
         foreach (var entry in context.ChangeTracker.Entries<SecurityEvent>().Where(entry => entry.State == EntityState.Added))
             entry.Entity.WithRequestIp(requestInfo.IpAddress);
@@ -65,8 +78,10 @@ internal sealed class AuditTrailInterceptor(
             .Where(entry => entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
             .ToArray();
         RequireGlobalSecurityEvents(context, allChanged);
-        var changed = allChanged.Where(entry => entry.Entity is not (PlatformSettings or TenantFeature)).ToArray();
-        if (changed.Length == 0)
+        // Las asignaciones de rol dejan un cambio por persona y lugar (RoleAssignmentTrail), no uno por asignación.
+        var changed = allChanged.Where(entry => entry.Entity is not (PlatformSettings or TenantFeature or RoleAssignment))
+            .ToArray();
+        if (changed.Length == 0 && roleChanges.Count == 0)
         {
             return [];
         }
@@ -75,6 +90,17 @@ internal sealed class AuditTrailInterceptor(
         var (actorKind, actorId) = AuditActorResolver.Resolve(currentUser);
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         var counterparts = new HashSet<Guid>();
+        foreach (var change in roleChanges)
+        {
+            if (change.Place.TenantId != activeTenantId)
+            {
+                throw new InvalidOperationException("The audited entity does not belong to the active tenant.");
+            }
+
+            context.Add(AuditEntry.Create(activeTenantId, actorKind, actorId, AuditAction.Updated,
+                nameof(RoleAssignment), change.Place.MemberId, JsonSerializer.Serialize(change.Diff(roleNames)), nowUtc));
+        }
+
         foreach (var entry in changed)
         {
             var tenants = TenantIds(entry.Entity);
@@ -83,8 +109,15 @@ internal sealed class AuditTrailInterceptor(
                 throw new InvalidOperationException("The audited entity does not belong to the active tenant.");
             }
 
+            var diff = Diff(entry);
+            // MarkUpdated sin ningún valor distinto (por ejemplo, para cambiar la versión) no es un cambio.
+            if (entry.State == EntityState.Modified && diff.Count == 0)
+            {
+                continue;
+            }
+
             var action = Action(entry);
-            var changes = JsonSerializer.Serialize(Diff(entry));
+            var changes = JsonSerializer.Serialize(diff);
             var entityId = entry.Entity is Entity entity ? entity.Id :
                 throw new InvalidOperationException("An auditable entity must have an Id.");
             foreach (var tenantId in tenants)
@@ -225,7 +258,7 @@ internal sealed class AuditTrailInterceptor(
         return value;
     }
 
-    private static void SetCounterparts(DbContext context, IReadOnlyCollection<Guid> counterparts)
+    private static void SetCounterparts(DbContext context, HashSet<Guid> counterparts)
     {
         if (counterparts.Count == 0)
         {
@@ -238,7 +271,7 @@ internal sealed class AuditTrailInterceptor(
 
     private static async Task SetCounterpartsAsync(
         DbContext context,
-        IReadOnlyCollection<Guid> counterparts,
+        HashSet<Guid> counterparts,
         CancellationToken cancellationToken)
     {
         if (counterparts.Count == 0)
@@ -250,7 +283,7 @@ internal sealed class AuditTrailInterceptor(
         await command.ExecuteScalarAsync(cancellationToken);
     }
 
-    private static DbCommand CreateCounterpartCommand(DbContext context, IReadOnlyCollection<Guid> counterparts)
+    private static DbCommand CreateCounterpartCommand(DbContext context, HashSet<Guid> counterparts)
     {
         var transaction = context.Database.CurrentTransaction ??
             throw new InvalidOperationException("Shared audit entries require an active transaction.");

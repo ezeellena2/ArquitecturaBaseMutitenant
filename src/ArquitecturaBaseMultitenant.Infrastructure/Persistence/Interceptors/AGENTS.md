@@ -1,4 +1,4 @@
-Interceptores EF de persistencia. `TenantConnectionInterceptor` fija `app.tenant_id` al abrir cada conexión y `TenantStampInterceptor` sella la columna de la parte activa antes de guardar. `SoftDeleteInterceptor`, `AuditableEntityInterceptor` y `AuditTrailInterceptor` se ejecutan en ese orden y dejan el cambio y el rastro en el mismo guardado. El subdominio nunca autoriza datos privados.
+Interceptores EF de persistencia. `TenantConnectionInterceptor` fija `app.tenant_id` al abrir cada conexión y `TenantStampInterceptor` sella la columna de la parte activa antes de guardar. `SoftDeleteInterceptor`, `AuditableEntityInterceptor` y `AuditTrailInterceptor` se ejecutan en ese orden y dejan el cambio y el rastro en el mismo guardado. `RoleAssignmentTrail` agrupa las asignaciones de rol: una entrada por persona y lugar, con los roles antes y después. El subdominio nunca autoriza datos privados.
 
 Antes de escribir, leé: [multitenancy](../../../../docs/rules/multitenancy.md) · [persistencia-ef](../../../../docs/rules/persistencia-ef.md) · [auditoria](../../../../docs/rules/auditoria.md) · [tests](../../../../docs/rules/tests.md).
 

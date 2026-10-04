@@ -4,7 +4,9 @@
 
 ## Cómo se hace
 - La entidad implementa `IAuditable` (y `ISoftDeletable` si se borra lógicamente). No hay que hacer nada más: `AuditableEntityInterceptor` y `AuditTrailInterceptor` completan las marcas y el diff.
-- Un guardado deja una sola entrada por entidad: no se suma a mano otra con `IAuditLog` para el mismo cambio. El diff de una modificación lleva solo las propiedades cuyo valor cambió, aunque `MarkUpdated` marque la entidad entera, y no repite las marcas de quién y cuándo, que ya están en la entrada.
+- Un guardado deja una sola entrada por entidad: no se suma a mano otra con `IAuditLog` para el mismo cambio. El diff de una modificación lleva solo las propiedades cuyo valor cambió, aunque `MarkUpdated` marque la entidad entera, y no repite las marcas de quién y cuándo, que ya están en la entrada. Una modificación sin ningún valor distinto (un `MarkUpdated` que solo cambia la versión) no deja entrada.
+- **Roles de una persona:** las asignaciones de rol no dejan una entrada cada una. Los roles de una persona en un lugar, la organización o una empresa, dejan una sola entrada `RoleAssignment` con el cambio «Roles de la organización» o «Roles en la empresa»: los nombres antes y después, guardados al escribir (`AuditChangeKeys`), como el tablero Auditoria-Org. Lo arma `RoleAssignmentTrail` desde el ChangeTracker, así que quien cambia los roles de una persona en un lugar carga primero los que ya tiene ahí.
+- **Nada interno en el detalle:** la auditoría de la organización nunca muestra un identificador interno. La persona, la empresa y el rol salen por nombre; un valor que es un identificador no se muestra (`OrganizationAuditService`).
 - Un cambio privado deja una entrada en su tenant; uno público, en la organización; uno compartido, una por cada parte distinta. `AuditTrailInterceptor` deriva las contrapartes del ChangeTracker y fija `app.audit_counterpart_tenant_ids` **local a la transacción** antes del único `SaveChanges`. Una política RLS adicional permite solo esos INSERT en `tenant.AuditEntries`; las lecturas siguen limitadas al tenant activo. Esta lista nunca sale directamente de parámetros HTTP: el caso de uso valida la contraparte antes de crear el dato compartido.
 - Un cambio de `PlatformSettings` exige que el caso de uso agregue un `SecurityEvent` de tipo `PlatformSettingsChanged`, con motivo, en el mismo `IUnitOfWork`; el interceptor rechaza el guardado si falta. El seed inicial registra un evento con actor `System`.
 - El seed inicial que crea o habilita al operador registra `PlatformOperatorGranted`, actor `System` y motivo `Initial platform owner seed` en la misma UoW. Un método de correo existente debe estar verificado y no gestionado por una organización.
@@ -27,6 +29,7 @@
 
 ## Lo verifica
 - `AuditingTests` (E2), `AuditTrailTests` (E2) y `OrganizationSettingsTests.A_save_leaves_a_single_audit_entry_whose_diff_has_only_the_edited_field`.
+- `OrganizationAuditTests` (E6): cambiar los roles de una persona en una empresa deja una entrada con los roles antes y después, y el detalle nunca muestra un identificador interno.
 - Trigger `prevent_update_delete` (E2).
 - `TenantColumnsImmutabilityTests` (E2).
 

@@ -58,6 +58,9 @@
   <data name="Field.Phone" xml:space="preserve"><value>Teléfono</value></data>
   <data name="Field.RoleIds" xml:space="preserve"><value>Roles</value></data>
   <data name="Field.CompanyId" xml:space="preserve"><value>Empresa</value></data>
+  <data name="Field.CompanyRoles" xml:space="preserve"><value>Roles en la empresa</value></data>
+  <data name="Field.OrganizationRoles" xml:space="preserve"><value>Roles de la organización</value></data>
+  <data name="Value.NoRoles" xml:space="preserve"><value>Sin roles</value></data>
   <data name="Field.TaxId" xml:space="preserve"><value>Identificación fiscal</value></data>
   <data name="Field.Website" xml:space="preserve"><value>Sitio web</value></data>
   <data name="Field.Address" xml:space="preserve"><value>Dirección</value></data>

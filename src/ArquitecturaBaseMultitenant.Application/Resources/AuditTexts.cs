@@ -40,6 +40,7 @@ public static class AuditTexts
     }
 
     public static string WholeOrganization() => Get("Location.Organization");
+    public static string NoRoles() => Get("Value.NoRoles");
     public static string OrganizationCreationReason() => Get("Platform.OrganizationCreationReason");
     public static string OrganizationRetryReason() => Get("Platform.OrganizationRetryReason");
     public static string PublicPageMetadataReadReason() => Get("Platform.PublicPageMetadataReadReason");

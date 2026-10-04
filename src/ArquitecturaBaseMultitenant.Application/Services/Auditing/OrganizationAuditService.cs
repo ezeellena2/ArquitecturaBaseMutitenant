@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
@@ -112,6 +113,16 @@ internal sealed class OrganizationAuditService(IOrganizationAuditReader reader,
                     continue;
                 }
 
+                if (property.Name is AuditChangeKeys.OrganizationRoles or AuditChangeKeys.CompanyRoles)
+                {
+                    changes.Add(new OrganizationAuditChangeResponse(AuditTexts.Field(property.Name),
+                        RoleNames(oldValue), RoleNames(newValue)));
+                    continue;
+                }
+
+                // Un identificador interno no se muestra nunca: la persona, la empresa y el rol ya salen por nombre.
+                if (IsInternalId(oldValue) || IsInternalId(newValue)) continue;
+
                 var oldText = SafeValue(property.Name, oldValue);
                 var newText = SafeValue(property.Name, newValue);
                 if (oldText is null && newText is null) continue;
@@ -124,6 +135,23 @@ internal sealed class OrganizationAuditService(IOrganizationAuditReader reader,
         {
             return [];
         }
+    }
+
+    private static bool IsInternalId(JsonElement value) =>
+        value.ValueKind == JsonValueKind.String && Guid.TryParse(value.GetString(), out _);
+
+    /// <summary>Tablero Auditoria-Org: «Roles en la empresa: Sin roles → Solo lectura», por nombre y en orden.</summary>
+    private static string RoleNames(JsonElement value)
+    {
+        string[] names = value.ValueKind == JsonValueKind.Array
+            ?
+            [
+                .. value.EnumerateArray().Where(item => item.ValueKind == JsonValueKind.String)
+                    .Select(item => RoleTexts.Name(item.GetString()!))
+                    .Order(StringComparer.Create(CultureInfo.CurrentCulture, ignoreCase: true)),
+            ]
+            : [];
+        return names.Length == 0 ? AuditTexts.NoRoles() : string.Join(", ", names);
     }
 
     private static string? SafeValue(string field, JsonElement value)
