@@ -222,7 +222,10 @@ Cada servicio de entrada abre la transacción en su método público, y los help
 - [x] **F4 · `tenancy/access.ts`** (front `1b5272a`) concentra el tipo `Access` del contrato, el inicio y el ingreso de cada acceso, la organización activa y los estados no disponibles. Se suma `useSignOut`.
   - Fuera de ahí no queda ningún literal `"/org"` ni `"/login/empresa"`.
   - Tests de las funciones puras.
-- [ ] **F5 · `usePermissions`,** con `can`, `canInCompany` y códigos tipados, y un manifiesto de rutas único para `routes.tsx` y el menú. Con tests.
+- [x] **F5 · `usePermissions`,** con `can`, `canInCompany` y códigos tipados, y un manifiesto de rutas único para `routes.tsx` y el menú (front `5ee936c` y `5fcf5c3`).
+  - Tests: `usePermissions.test.ts`, `RequirePermission.test.tsx`, `visible.test.ts` y, en `routes.test.tsx`, «la ruta %s pide el permiso de su manifiesto…».
+  - `hasFeature` vive en `usePermissions` y reemplaza a `useFeature`, `<Feature>` y `FeatureRoute`, que nunca existieron. `RequirePermission` responde como un 404 con el módulo apagado, y como «No tenés permiso» sin el permiso. `visibleNavigation` filtra el menú lateral y «Más».
+  - `canInCompany` usa `companies[companyId] ?? organization`: con el mapa del back (decisión 13), una empresa que no figura cae en los permisos de la organización, y eso es lo correcto.
 - [ ] **B4 · Permisos por empresa de punta a punta.** Hoy un Administrador de empresa no puede usar las pantallas de su empresa (confirmado leyendo el código):
   - `ProfileSnapshotBuilder` manda vacío `effectivePermissions.companies` en `/api/me`;
   - `permissions` trae solo los permisos de la organización;
@@ -240,7 +243,9 @@ Cada servicio de entrada abre la transacción en su método público, y los help
   Si los Inicios ya llenaron el mapa, solo se verifica. Con el mapa llega también la fila por empresa de Inicio-Miembro: su «Para resolver», con la columna Empresa.
 
   Back hecho en `2197699` (tanda 2): `/api/me` llena `effectivePermissions.companies` y `GET /api/companies/{companyId}/roles/paged` responde bajo `[HasCompanyPermission(company.members.read)]`; test `CompaniesTests.A_company_admin_without_organization_roles_gets_its_company_permissions_and_assignable_roles` (rojo: el mapa vacío). Ver la decisión 13. **Falta:** `canInCompany` y la ficha en el front, el E2E real y la fila por empresa de «Para resolver» de Inicio-Miembro (back y front), que no entró en esta tanda.
-- [ ] **F6 · Una sola cultura efectiva:** `resolveCulture` y `useEffectiveCulture`, que usan i18n, formatos, datos de referencia y `Accept-Language`. Se borra `useLanguagePreference`. Tests de precedencia.
+- [x] **F6 · Una sola cultura efectiva** (front `f7f9737`): `resolveCulture` y `useEffectiveCulture`, que usan i18n, formatos, datos de referencia y `Accept-Language`. Se borró `useLanguagePreference`.
+  - Tests: `i18n.test.tsx` (`resolveCulture`), `safeStorage.test.ts` y `useFormat.account.test.tsx`.
+  - El catálogo se pide dos veces solo si la cultura de la cuenta difiere de la elegida en el navegador; evitarlo obligaría a esperar `/api/me`. Queda así.
 - [ ] **F7 · `useEditPage`** (guard, «Cambios sin guardar» y 409) y un `errors.ts` por feature, en Configuración, Página pública y la ficha de Usuario.
   - Arregla **B11**. Test: si salís con cambios sin guardar, te pide confirmar.
 - [ ] **Hecho cuando:**
@@ -311,6 +316,14 @@ Segunda tanda del back (bloques 1b y 5, 2026-10-04):
 
 Verificación de la tanda 2: `dotnet build` de la solución con 0 advertencias y `dotnet test` completo con Docker **1560/1560** (7m 39s). T16b no entró en esta tanda: queda para un agente nuevo, con la ADR 0042 y la tarea del plan de la Etapa 5 sin cambios.
 
+Segunda tanda del front (bloque 5, 2026-10-04): F5 y F6, más las marcas (E#) de «Lo verifica» en las fichas del front (`33ee1d5`). `npm test` 900/900, lint sin errores y build en verde. Quedan para agentes nuevos:
+- F7 con B11, y los avisos que salen dos veces (`/api/me` y la ficha de Empresa);
+- las filas de v92 (una segunda línea gris con `detail` en la columna) y el espacio entre opciones del menú lateral (hoy 39 px de una a otra; el tablero, 34);
+- los contratos regenerados: los `*HttpResponse`, `taxIdType` fuera de `companyPayload` y la ruta nueva de roles de una empresa;
+- las cuatro líneas de docs de v93 (los inicios, los avisos en el teléfono y el sitio público sin sesión);
+- B4 en el front, con `canInCompany`: la ruta de la ficha de Empresa tiene que pedir un permiso de empresa, y `RequirePermission` hoy sabe solo de permisos de organización. Se resuelve en el manifiesto: la entrada declara su permiso de empresa y `RequirePermission` lo mira con el `companyId` de la ruta;
+- `/org/roles/new`: `frontend.md` §3 dice `/nuevo`, y el código se alinea al doc en el bloque 6.
+
 **Hallazgos sin corregir:**
 - `OrganizationUserAdministratorGuard` protege a la última Dueña con `ILastTenantAdminGuard.CheckCanLeaveAsync`, que mira todas las organizaciones de la cuenta: quitar el rol de Dueña en una organización falla si esa cuenta es la única Dueña de otra. Viene de antes; con D5 también cuentan las suspendidas. Va con Usuarios en el bloque 3.
-- `HarnessTests.Closed_stage_verification_tests_and_tools_exist` falla solo por docs del front (`errores.md`, `formularios.md`, `paginado-y-listados.md` y `responsive.md` nombran tests sin `(E#)`), que está cambiando otra conversación. Las fichas del back quedan sin hallazgos.
+- ~~`HarnessTests.Closed_stage_verification_tests_and_tools_exist` falla por docs del front sin `(E#)`.~~ Resuelto con las marcas del front (`33ee1d5`): la suite completa de la tanda 2 lo pasó.
