@@ -409,6 +409,7 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 | T17 | Auditoría de seguridad por cursor con los ingresos; 3/3 + 28/28, dominio 270/270, Application 443/443, arquitectura 154/154 | `3e0a646` | — |
 | T18 | Versiones legales inmutables con lock por tipo; 2/2 + 34/34, dominio 270/270, Application 443/443, arquitectura 154/154 | `1dfb159` | — |
 | Seed de invitaciones | El ayudante de `InvitationAcceptanceTests` siembra antes de crear documentos de prueba (los 4 rojos que dependían del orden); 29/29 | `c1ce7f6` | — |
-| Revisión T15–T18 | Aprobar una recuperación sobre una cuenta de operador da 409; un operador no crea organizaciones por «Registrá tu empresa» ni pasa el registro con su correo; la vigencia legal de hoy se calcula con el lock; mensaje propio cuando el correo ya es de la misma cuenta. Rojo 0/2, verde 20/20 | commit de esta tarea | — |
+| Revisión T15–T18 | Aprobar una recuperación sobre una cuenta de operador da 409; un operador no crea organizaciones por «Registrá tu empresa» ni pasa el registro con su correo; la vigencia legal de hoy se calcula con el lock; mensaje propio cuando el correo ya es de la misma cuenta. Rojo 0/2, verde 20/20 | `9b2b0e3` | — |
+| Cierre del back (T10–T18) | `dotnet build` de la solución con 0 advertencias y `dotnet test` completo con Docker: **1545/1545** (dominio 270, Application 443, arquitectura 154, integración 678). El front de la etapa (T19–T25) sigue después de la consolidación | este commit | — |
 
 No declarar cierre a partir de esta tabla sin completar T25.
