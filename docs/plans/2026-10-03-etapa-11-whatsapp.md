@@ -14,8 +14,7 @@
 
 ## Pendiente de diseño (no se programa hasta que esté dibujado y aprobado)
 
-- Las ventanas del alta embebida de Meta. Se dibujan cuando el dueño lo pida.
-- Los inicios (Inicio-Org e Inicio-Miembro) siguen «para repensar», con la idea de un menú propio para las acciones pendientes.
+Nada. El alta de Meta quedó aprobada en el lienzo v84 (sección 2). Los Inicios se aprobaron en v77 y ya están programados (ADR 0040); a la Etapa 11 le toca solo la fuente de «Para resolver» de WhatsApp.
 
 ## Seguimiento
 
@@ -34,6 +33,23 @@
 
 ### 2. Conectar números (alta embebida de Meta)
 
+- [ ] **Pantallas del alta** (lienzo v84, front `a085cfd`).
+  - **Tableros:**
+    - WA-Alta-Meta: la ventana de Meta, en 8 pasos, en inglés como sus capturas;
+    - WA-Alta-Coexistencia: el número que ya está en la app WhatsApp Business;
+    - WA-Alta y M-WA-Alta: lo nuestro alrededor de la ventana;
+    - Plat-WA-Alta y M-Plat-WA-Alta: el número de la plataforma.
+  - **Decisiones del usuario:**
+    - «Atiende a» va antes de abrir Meta, así que «Cancelar» no deja nada a medias. Sin empresas, la ventana se abre directo.
+    - Al volver hay tres resultados:
+      - «Número conectado»;
+      - «No se conectó el número» (evento `CANCEL`);
+      - el error de Meta con su código (evento `ERROR`, el `error_id`).
+    - Cerrar la ventana en la última pantalla cuenta como terminado.
+    - No hay estado «nombre en revisión»: Meta revisa el nombre visible recién cuando sube el límite de mensajes, no al conectar.
+    - La plataforma no tiene «Atiende a», y su error manda al soporte de Meta.
+    - En el teléfono, la ventana de Meta no se dibuja, porque Meta no publica cómo se ve en el celular.
+  - **Aviso técnico:** si el teléfono es una PWA instalada, hay que probar que la ventana de Meta le devuelva el resultado.
 - [ ] Recibir lo que devuelve el alta (id de la cuenta de WhatsApp Business y del número), cambiar el código por el token del negocio, suscribirse a los webhooks de esa cuenta y registrar el número. Nunca registrar tokens en logs. Soportar coexistencia.
 - [ ] Consultar si la cuenta tiene medio de pago: sin medio de pago, el estado es «Falta medio de pago», con «Comprobar». Llevar los mensajes del mes por número.
 - [ ] «Cambiar a quién atiende» y «Desconectar», con su auditoría.
