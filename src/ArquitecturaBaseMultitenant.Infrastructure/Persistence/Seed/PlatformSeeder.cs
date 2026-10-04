@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Platform;
 using ArquitecturaBaseMultitenant.Domain.Settings;
@@ -70,7 +71,7 @@ internal sealed class PlatformSeeder(
         if (operatorIds.Length > 0)
         {
             foreach (var userId in operatorIds)
-                await EnsureOwnerAssignmentAsync(userId, cancellationToken);
+                await EnsureAssignmentAsync(userId, cancellationToken);
             return;
         }
 
@@ -102,7 +103,7 @@ internal sealed class PlatformSeeder(
                 securityEvents.Add(SecurityEvent.ForPlatformOperatorGrant(
                     "Initial platform owner seed", timeProvider.GetUtcNow().UtcDateTime, existing.Id));
             }
-            await EnsureOwnerAssignmentAsync(existing.Id, cancellationToken);
+            await EnsureAssignmentAsync(existing.Id, cancellationToken);
 
             return;
         }
@@ -135,16 +136,21 @@ internal sealed class PlatformSeeder(
         }
 
         context.LoginMethods.Add(loginMethod);
-        context.PlatformRoleAssignments.Add(PlatformRoleAssignment.Create(user.Id, PlatformRole.Owner));
+        context.PlatformPermissionAssignments.Add(CompleteCatalog(user.Id));
         securityEvents.Add(SecurityEvent.ForPlatformOperatorGrant(
             "Initial platform owner seed", timeProvider.GetUtcNow().UtcDateTime, user.Id));
     }
 
-    private async Task EnsureOwnerAssignmentAsync(Guid userId, CancellationToken cancellationToken)
+    // Un operador sin asignación (el primero o un indicador anterior a E5) recibe el catálogo completo;
+    // una asignación existente se conserva tal cual.
+    private async Task EnsureAssignmentAsync(Guid userId, CancellationToken cancellationToken)
     {
-        if (!await context.PlatformRoleAssignments.AnyAsync(assignment => assignment.UserId == userId, cancellationToken))
-            context.PlatformRoleAssignments.Add(PlatformRoleAssignment.Create(userId, PlatformRole.Owner));
+        if (!await context.PlatformPermissionAssignments.AnyAsync(assignment => assignment.UserId == userId, cancellationToken))
+            context.PlatformPermissionAssignments.Add(CompleteCatalog(userId));
     }
+
+    private static PlatformPermissionAssignment CompleteCatalog(Guid userId) =>
+        PlatformPermissionAssignment.Create(userId, PlatformPermissions.All).Value;
 
     private static void EnsureSucceeded(IdentityResult result, string action)
     {

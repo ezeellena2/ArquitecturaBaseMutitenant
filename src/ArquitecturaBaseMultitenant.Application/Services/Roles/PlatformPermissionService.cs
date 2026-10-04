@@ -1,15 +1,14 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
-using ArquitecturaBaseMultitenant.Domain.Platform;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Roles;
 
-/// <summary>Resuelve el rol persistido de operadores activos, sin conceder permisos por el indicador de acceso.</summary>
-internal sealed class PlatformPermissionService(IUserRepository users, IPlatformRoleAssignmentReader roles,
+/// <summary>Resuelve los permisos persistidos de operadores activos, sin conceder permisos por el indicador de acceso.</summary>
+internal sealed class PlatformPermissionService(IUserRepository users, IPlatformPermissionAssignmentReader assignments,
     TimeProvider timeProvider, ILogger<PlatformPermissionService> logger) : IPlatformPermissionService
 {
     public async Task<IReadOnlyList<string>> GetPermissionsAsync(Guid userId, CancellationToken cancellationToken)
@@ -34,7 +33,7 @@ internal sealed class PlatformPermissionService(IUserRepository users, IPlatform
         var user = await users.GetByIdAsync(userId, cancellationToken);
         if (user is not { Status: UserStatus.Active, IsPlatformOperator: true })
             return Result.Success<IReadOnlyList<string>>([]);
-        var role = await roles.FindRoleAsync(userId, cancellationToken);
-        return Result.Success<IReadOnlyList<string>>(role is null ? [] : [.. PlatformRolePermissions.For(role.Value)]);
+        var permissions = await assignments.FindPermissionsAsync(userId, cancellationToken);
+        return Result.Success(permissions ?? []);
     }
 }

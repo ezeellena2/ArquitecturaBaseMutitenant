@@ -178,4 +178,7 @@
   <data name="PublicSite.PublicPage.VersionConflict" xml:space="preserve"><value>La página cambió desde que la abriste. Actualizala antes de guardar.</value></data>
   <data name="Settings.System.InvalidConfiguration" xml:space="preserve"><value>Elegí modos de registro válidos y permití al menos una organización por persona.</value></data>
   <data name="Tenancy.Tenant.NotFound" xml:space="preserve"><value>No encontramos la organización.</value></data>
+  <data name="Platform.Operator.PermissionsRequired" xml:space="preserve"><value>Elegí al menos un permiso de plataforma.</value></data>
+  <data name="Platform.Operator.PermissionNotFound" xml:space="preserve"><value>El permiso no forma parte del catálogo de la plataforma.</value></data>
+  <data name="Platform.Operator.PermissionRepeated" xml:space="preserve"><value>Un permiso de plataforma está repetido.</value></data>
 </root>

@@ -2,12 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
-using ArquitecturaBaseMultitenant.Domain.Platform;
-using ArquitecturaBaseMultitenant.Domain.Results;
-using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -25,7 +20,7 @@ public sealed class PlatformSettingsTests
         await isolated.InitializeAsync();
         using var client = isolated.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var account = await AccountJourney.RegisterAsync(isolated, client, Ct);
-        await GrantAsync(isolated, account.UserId, PlatformRole.Owner);
+        await GrantAsync(isolated, account.UserId, PlatformOperators.All);
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
 
         using var initial = await client.GetAsync("/api/platform/settings", Ct);
@@ -80,7 +75,7 @@ public sealed class PlatformSettingsTests
         var account = await AccountJourney.RegisterAsync(isolated, client, Ct);
         using var consumer = await client.GetAsync("/api/platform/settings", Ct);
         Assert.Equal(HttpStatusCode.Forbidden, consumer.StatusCode);
-        await GrantAsync(isolated, account.UserId, PlatformRole.Support);
+        await GrantAsync(isolated, account.UserId, PlatformOperators.Reduced);
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
         using var support = await client.GetAsync("/api/platform/settings", Ct);
         Assert.Equal(HttpStatusCode.Forbidden, support.StatusCode);
@@ -98,7 +93,7 @@ public sealed class PlatformSettingsTests
         await isolated.InitializeAsync();
         using var client = isolated.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var account = await AccountJourney.RegisterAsync(isolated, client, Ct);
-        await GrantAsync(isolated, account.UserId, PlatformRole.Owner);
+        await GrantAsync(isolated, account.UserId, PlatformOperators.All);
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
         using var invalid = await client.PutAsJsonAsync("/api/platform/settings", new
         {
@@ -113,19 +108,6 @@ public sealed class PlatformSettingsTests
             .AnyAsync(item => item.ActorId == account.UserId && item.Type == Domain.Auditing.SecurityEventType.PlatformSettingsChanged, Ct));
     }
 
-    private static async Task GrantAsync(ApiFactory factory, Guid userId, PlatformRole role)
-    {
-        await using var scope = factory.Services.CreateAsyncScope();
-        var services = scope.ServiceProvider;
-        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
-        {
-            var manager = services.GetRequiredService<UserManager<ApplicationUser>>();
-            var user = await manager.FindByIdAsync(userId.ToString("D"));
-            Assert.NotNull(user);
-            user.GrantPlatformOperator();
-            Assert.True((await manager.UpdateAsync(user)).Succeeded);
-            services.GetRequiredService<IPlatformRoleAssignmentRepository>().Add(PlatformRoleAssignment.Create(userId, role));
-            return Result.Success();
-        }, CommitPolicy.OnSuccess, Ct);
-    }
+    private static Task GrantAsync(ApiFactory factory, Guid userId, IReadOnlyCollection<string> permissions)
+        => PlatformOperators.GrantAsync(factory.Services, userId, permissions, Ct);
 }

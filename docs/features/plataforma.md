@@ -4,20 +4,15 @@ Administración global operada con `access=platform`, separada de la administrac
 
 ## Operadores y permisos
 
-Una cuenta operadora tiene una asignación global versionada de `PlatformRole`, independiente de los roles privados de organización. El catálogo de permisos sigue siendo `PlatformPermissions`; no se agregan claves para representar roles.
+Una cuenta operadora tiene permisos individuales, elegidos de a uno entre las nueve claves de `PlatformPermissions` (decisión del usuario del 03/10). No hay roles de Plataforma: Owner y Support se retiraron en R00. Los permisos de Plataforma son independientes de los roles privados de organización.
 
-| Rol | Permisos |
-|---|---|
-| Owner | Todas las claves de `PlatformPermissions.All` |
-| Support | `platform.tenants.read`, `platform.accounts.read`, `platform.recoveries.manage`, `platform.audit.read` |
+`platform.PlatformPermissionAssignments` tiene una asignación por UserId, con FK a la identidad global, los permisos en `text[]` y versión xmin. `PlatformPermissionAssignment` exige al menos un permiso (`Platform.Operator.PermissionsRequired`), solo claves del catálogo (`Platform.Operator.PermissionNotFound`) y ninguna repetida (`Platform.Operator.PermissionRepeated`); guarda los permisos en el orden del catálogo y su colección es de solo lectura. `PlatformPermissionService` consulta la asignación persistida sin cachear permisos revocables: exige cuenta Active y el indicador IsPlatformOperator; un indicador sin asignación nunca concede permisos.
 
-Las colecciones de permisos son inmutables. `platform.PlatformRoleAssignments` tiene una asignación única por UserId, FK a la identidad global y versión xmin. `PlatformPermissionService` consulta el rol persistido sin cachear permisos revocables: exige cuenta Active y el indicador IsPlatformOperator; un indicador sin asignación nunca concede permisos. Las rutas y la protección del último Owner se completan en T16.
-
-La migración de E5 convierte los operadores anteriores a Owner sin crear cuentas ni espacios personales. El seed técnico preserva una asignación existente (incluido Support) y solo agrega Owner al primer operador o a un indicador legado sin asignación. Se ejecuta dentro de la transacción/lock global del seed.
+La migración `PlatformOperatorPermissions` renombra la tabla anterior y convierte cada rol en los permisos que concedía: Owner en las nueve claves y Support en `platform.tenants.read`, `platform.accounts.read`, `platform.recoveries.manage` y `platform.audit.read`. Conserva las filas, su xmin, la FK y los permisos del runtime; un rol desconocido hace fallar la migración. Su Down tiene pérdida: solo el catálogo completo vuelve a Owner y el resto pasa a Support. El seed técnico preserva una asignación existente y solo asigna el catálogo completo al primer operador o a un indicador legado sin asignación, dentro de la transacción y el lock global del seed. La invitación de operadores, la exclusividad de su identidad y la protección del último operador con `platform.operators.manage` se completan en T12, T13 y T16.
 
 ## Configuración global
 
-`GET/PUT /api/platform/settings` requiere `platform.settings.manage`. Expone los modos de registro de personas y organizaciones y el límite de organizaciones propias (mínimo uno). La gracia de baja permanece en 30 días. La edición exige motivo y versión xmin; un conflicto devuelve 409 sin guardar ni agregar un evento. El cambio y su SecurityEvent con el operador se confirman juntos; la caché global se invalida después del commit. Support y los accesos Consumer/Business no pueden consultar ni cambiar esta configuración.
+`GET/PUT /api/platform/settings` requiere `platform.settings.manage`. Expone los modos de registro de personas y organizaciones y el límite de organizaciones propias (mínimo uno). La gracia de baja permanece en 30 días. La edición exige motivo y versión xmin; un conflicto devuelve 409 sin guardar ni agregar un evento. El cambio y su SecurityEvent con el operador se confirman juntos; la caché global se invalida después del commit. Un operador sin `platform.settings.manage` y los accesos Consumer/Business no pueden consultar ni cambiar esta configuración.
 
 ## Organizaciones: consulta y estado
 
@@ -39,19 +34,19 @@ Los avisos de rechazo y moderación se dirigen exclusivamente a Dueños con memb
 
 El catálogo `Domain/Features/Features.All` está vacío en la plantilla; las piezas del núcleo siempre existen. Cada módulo real declara alcance Consumer/Business/Both y su default. `platform.TenantFeatures` conserva enabled, origen Plan/Manual/Trial, vencimiento UTC y versión xmin por espacio y clave. Trial exige fecha; en el límite exacto ya está apagado.
 
-`GET /api/platform/tenants/{id}/features` requiere tenants.read y proyecta únicamente módulos compatibles con Business. `PUT /{featureKey}` requiere tenants.manage, motivo y versión (0 para la configuración inicial sin fila). Guarda la habilitación y SecurityEvent para el destino juntos; las ediciones viejas y carreras del alta devuelven 409 sin evento adicional. Personal e ids inexistentes responden 404. Support puede consultar y no modificar.
+`GET /api/platform/tenants/{id}/features` requiere tenants.read y proyecta únicamente módulos compatibles con Business. `PUT /{featureKey}` requiere tenants.manage, motivo y versión (0 para la configuración inicial sin fila). Guarda la habilitación y SecurityEvent para el destino juntos; las ediciones viejas y carreras del alta devuelven 409 sin evento adicional. Personal e ids inexistentes responden 404. Un operador con `platform.tenants.read` y sin `platform.tenants.manage` puede consultar y no modificar.
 
 FeatureManagement es scoped. El filtro Tenant utiliza el contexto activo firmado y una caché por espacio con filas crudas, invalidada después del commit; el reloj se evalúa en cada consulta. El apagado global en configuración prevalece. El middleware de API oculta el módulo con 404 antes de comprobar permisos, después de validar autenticación/acceso/estado; la librería FeatureGate y su handler mantienen la misma respuesta. `/api/me.features` contiene solo claves efectivas del acceso activo y permanece presente con lista vacía cuando corresponde. El consumo front de módulos sigue pendiente en T08.
 
 ## Moderación de páginas públicas
 
-`GET /api/platform/tenants/{id}/public-site` exige `platform.tenants.manage` y devuelve solo metadatos de publicación, nombre, slug y versión; no consulta contenido, logo ni contacto. Confirma el SecurityEvent de consulta antes de entrar al alcance privado. Support conserva el listado global de organizaciones, pero no entra a los datos privados de moderación.
+`GET /api/platform/tenants/{id}/public-site` exige `platform.tenants.manage` y devuelve solo metadatos de publicación, nombre, slug y versión; no consulta contenido, logo ni contacto. Confirma el SecurityEvent de consulta antes de entrar al alcance privado. Un operador con solo `platform.tenants.read` conserva el listado global de organizaciones, pero no entra a los datos privados de moderación.
 
 `POST .../unpublish` y `POST .../allow-publish` requieren motivo, versión e Idempotency-Key. Reutilizan la página de E6: despublicar deja borrador bloqueado con operador/fecha/motivo; permitir retira el bloqueo y conserva el borrador hasta que la organización decida publicarlo. El cambio, su SecurityEvent, la auditoría de organización y los avisos a sus Dueños activos se confirman juntos. Una edición vieja devuelve 409 sin aviso ni evento de cambio adicional; el registro previo del intento de entrada permanece. El replay no duplica cambios ni correos. Una organización no puede publicar mientras el bloqueo siga vigente.
 
 ## Dominios de correo de una organización
 
-`GET /api/platform/tenants/{id}/domains` lista los dominios vigentes (pendientes y verificados) de una organización Business, con su desafío TXT mientras estén pendientes. `POST /{domain}/verify` (con Idempotency-Key) y `DELETE /{domain}` reciben motivo y versión en el cuerpo; `{domain}` es el nombre normalizado. Si el DNS no responde, verificar da 503 `Settings.TenantDomain.DnsUnavailable`. Las tres rutas exigen `platform.tenants.manage`: Support y los accesos Consumer/Business reciben 403, Personal o un id inexistente 404, y un dominio de otra organización 404.
+`GET /api/platform/tenants/{id}/domains` lista los dominios vigentes (pendientes y verificados) de una organización Business, con su desafío TXT mientras estén pendientes. `POST /{domain}/verify` (con Idempotency-Key) y `DELETE /{domain}` reciben motivo y versión en el cuerpo; `{domain}` es el nombre normalizado. Si el DNS no responde, verificar da 503 `Settings.TenantDomain.DnsUnavailable`. Las tres rutas exigen `platform.tenants.manage`: un operador sin ese permiso y los accesos Consumer/Business reciben 403, Personal o un id inexistente 404, y un dominio de otra organización 404.
 
 Reutilizan la lógica de E6: verificar consulta el TXT por el puerto de DNS fuera de la transacción y, adentro, toma el lock del dominio, relee con la versión vista y vincula a la organización los métodos verificados existentes; los nuevos se vinculan al verificarse. Quitar detiene las vinculaciones futuras y conserva `ManagedByTenantId` en los métodos ya vinculados, así que un exmiembro no vuelve a ingresar con ese correo. La consulta confirma su SecurityEvent de entrada antes de `ITenantScope.Enter`; el cambio, su SecurityEvent (`OrganizationDomainVerified` u `OrganizationDomainRemoved`, con el diff de `domain.verified` y `domain.present`, sin el nombre del dominio) y la auditoría de la organización se confirman juntos. La versión vieja da 409 sin evento de cambio; sin TXT, 409 `Settings.TenantDomain.TxtNotFound`; un dominio ya verificado, 409 `Settings.TenantDomain.AlreadyVerified`.
 
@@ -63,17 +58,17 @@ IPv4 conserva tres octetos; IPv6 conserva los primeros 48 bits y la IPv4 mapeada
 
 El acceso privado pasa por `PlatformScopeAccessService`: valida acceso Platform, permiso persistido `platform.tenants.manage` y motivo; confirma el SecurityEvent previo en una UoW. `PlatformActionGuard` entra con `ITenantScope.Enter` después, sin transacción abierta, y restaura el alcance al disponer la lease. La operación privada usa luego su única UoW. Una falla posterior conserva el registro de entrada.
 
-- `PlatformRoleTests`: catálogo completo de Owner, alcance de Support, inmutabilidad y asignación global/versionada.
-- `PlatformPermissionServiceTests`: permisos por rol, cuenta inactiva, asignación ausente y cuenta no operadora.
-- `PlatformOperatorPersistenceTests`: versión, transacción, unicidad y actualización real desde operador legado en PostgreSQL aislado, sin Personal.
-- `ProductionSeedTests`: Owner inicial, repetición del seed y preservación de una sola asignación.
+- `PlatformPermissionAssignmentTests`: asignación global y versionada, orden del catálogo, conjunto vacío, clave desconocida o de organización y repetida rechazados sin mutar, colección de solo lectura.
+- `PlatformPermissionServiceTests`: exactamente los permisos persistidos, cuenta inactiva, asignación ausente y cuenta no operadora.
+- `PlatformOperatorPersistenceTests`: versión, transacción y unicidad en PostgreSQL aislado; la migración convierte Owner/Support en sus permisos y vuelve con la pérdida documentada.
+- `ProductionSeedTests`: catálogo completo para el operador inicial, repetición del seed y preservación de una sola asignación.
 - `PlatformSettingsTests` de dominio y servicio: validación sin mutación, configuración versionada, evento y caché después del commit.
 - `PlatformSettingsTests` de integración: permisos reales, validación, lectura actualizada y 409 sin evento adicional en PostgreSQL aislado.
 - `PlatformTenantTests`: registro global inmutable/UTC y eventos con destino y operador.
 - `PlatformTenantAdministrationTests`: paginado/filtros/búsqueda/contacto, 401/403/404, transiciones y 409, revocación Business con Personal operativo, y conteos actualizados sin lectura de tablas privadas.
-- `PlatformScopeTests` de servicio e integración: sin permiso/motivo no registra ni entra; el evento está confirmado antes de consultar filas privadas, Support no entra y una excepción restaura el alcance.
+- `PlatformScopeTests` de servicio e integración: sin permiso/motivo no registra ni entra; el evento está confirmado antes de consultar filas privadas, un operador sin `platform.tenants.manage` no entra y una excepción restaura el alcance.
 - `PlatformProvisioningTests`: Dueño invitado sin identidad, replay sin duplicados y preferencias incompatibles sin reemplazar lo existente.
 - `PlatformTenantProvisioningHttpTests`: 401/403, creación/aceptación/replay, aprobación/retry, reparación y rollback, versiones viejas, idempotencia y concurrencia sin duplicados.
 - `FeatureGateTests`, `PlatformFeatureAdministrationTests` y `ModuleControllersTests`: apagado, emergencia, permisos, expiración con caché, aislamiento de acceso, edición y carrera, y núcleo sin gates. El contrato de `/api/me.features` lee el backend y el tipo generado consumido por el front.
-- `PublicPageModerationTests`: HTTP/PG real, 401/403/404, metadatos sin contenido, permisos Owner/Support, motivo, versión, replay, avisos sin duplicados, auditoría y aislamiento del borrador; `PublicPagesTests` conserva la regresión E6.
+- `PublicPageModerationTests`: HTTP/PG real, 401/403/404, metadatos sin contenido, permisos completos y reducidos, motivo, versión, replay, avisos sin duplicados, auditoría y aislamiento del borrador; `PublicPagesTests` conserva la regresión E6.
 - `PlatformOrganizationNoticeTests`: rechazo y moderación en PostgreSQL/outbox real; principal seguro, alternativa disponible, correo administrado ajeno, registrante retirado e identidad suspendida. Ningún motivo interno se incluye en los correos. El recorrido de estados comprueba la ausencia de avisos no previstos.

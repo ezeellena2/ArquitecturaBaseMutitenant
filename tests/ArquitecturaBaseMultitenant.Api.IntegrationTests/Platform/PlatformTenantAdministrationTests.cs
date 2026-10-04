@@ -4,9 +4,7 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
-using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -38,7 +36,7 @@ public sealed class PlatformTenantAdministrationTests(ApiFactory factory)
     {
         using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
-        await GrantAsync(factory, account.UserId, Domain.Platform.PlatformRole.Owner);
+        await GrantAsync(factory, account.UserId, PlatformOperators.All);
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
         var prefix = "Listado" + Guid.NewGuid().ToString("N")[..8];
         var first = await SeedBusinessAsync(factory, prefix + " Álamo", false, account.UserId);
@@ -74,7 +72,7 @@ public sealed class PlatformTenantAdministrationTests(ApiFactory factory)
     {
         using var ownerClient = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
-        await GrantAsync(factory, owner.UserId, Domain.Platform.PlatformRole.Owner);
+        await GrantAsync(factory, owner.UserId, PlatformOperators.All);
         await AccountJourney.AuthorizeAsync(ownerClient, "platform", Ct);
         using var consumerClient = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var member = await AccountJourney.RegisterAsync(factory, consumerClient, Ct);
@@ -129,7 +127,7 @@ public sealed class PlatformTenantAdministrationTests(ApiFactory factory)
         var id = await SeedBusinessAsync(factory, "Soporte " + Guid.NewGuid().ToString("N")[..8], false, support.UserId);
         using var consumer = await client.GetAsync("/api/platform/tenants/paged", Ct);
         Assert.Equal(HttpStatusCode.Forbidden, consumer.StatusCode);
-        await GrantAsync(factory, support.UserId, Domain.Platform.PlatformRole.Support);
+        await GrantAsync(factory, support.UserId, PlatformOperators.Reduced);
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
         using var listed = await client.GetAsync("/api/platform/tenants/paged", Ct);
         Assert.Equal(HttpStatusCode.OK, listed.StatusCode);
@@ -147,7 +145,7 @@ public sealed class PlatformTenantAdministrationTests(ApiFactory factory)
     {
         using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
-        await GrantAsync(factory, account.UserId, Domain.Platform.PlatformRole.Owner);
+        await GrantAsync(factory, account.UserId, PlatformOperators.All);
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
         var id = await SeedBusinessAsync(factory, "Versión y conteo " + Guid.NewGuid().ToString("N")[..8], false, account.UserId);
         var original = await VersionAsync(client, id);
@@ -245,21 +243,8 @@ public sealed class PlatformTenantAdministrationTests(ApiFactory factory)
         return json.RootElement.GetProperty("version").GetUInt32();
     }
 
-    private static async Task GrantAsync(ApiFactory isolated, Guid userId, Domain.Platform.PlatformRole role)
-    {
-        await using var scope = isolated.Services.CreateAsyncScope();
-        var services = scope.ServiceProvider;
-        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
-        {
-            var manager = services.GetRequiredService<UserManager<ApplicationUser>>();
-            var user = await manager.FindByIdAsync(userId.ToString("D"));
-            Assert.NotNull(user);
-            user.GrantPlatformOperator();
-            Assert.True((await manager.UpdateAsync(user)).Succeeded);
-            services.GetRequiredService<IPlatformRoleAssignmentRepository>().Add(Domain.Platform.PlatformRoleAssignment.Create(userId, role));
-            return Result.Success();
-        }, CommitPolicy.OnSuccess, Ct);
-    }
+    private static Task GrantAsync(ApiFactory isolated, Guid userId, IReadOnlyCollection<string> permissions)
+        => PlatformOperators.GrantAsync(isolated.Services, userId, permissions, Ct);
 
     private static async Task<Guid> SeedBusinessAsync(ApiFactory isolated, string name, bool pending, Guid ownerId)
     {

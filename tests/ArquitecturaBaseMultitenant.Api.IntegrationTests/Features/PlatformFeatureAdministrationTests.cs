@@ -3,14 +3,9 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Features;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
-using ArquitecturaBaseMultitenant.Domain.Platform;
-using ArquitecturaBaseMultitenant.Domain.Results;
-using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -42,7 +37,7 @@ public sealed class PlatformFeatureAdministrationTests
         var path = $"/api/platform/tenants/{tenantId:D}/features";
         using var businessAccess = await client.GetAsync(path, Ct);
         Assert.Equal(HttpStatusCode.Forbidden, businessAccess.StatusCode);
-        await GrantAsync(host.Services, account.UserId, PlatformRole.Owner);
+        await GrantAsync(host.Services, account.UserId, PlatformOperators.All);
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
         using var initial = await client.GetAsync(path, Ct);
         Assert.Equal(HttpStatusCode.OK, initial.StatusCode);
@@ -101,7 +96,7 @@ public sealed class PlatformFeatureAdministrationTests
             Assert.DoesNotContain(account.Email.Value, trial.Changes);
             Assert.Null(trial.TargetAccountId);
         }
-        await GrantAsync(host.Services, account.UserId, PlatformRole.Support);
+        await GrantAsync(host.Services, account.UserId, PlatformOperators.Reduced);
         using var support = await client.PutAsJsonAsync(path + "/test-business", new
         { enabled = false, source = "Manual", version, reason = "Sin permiso" }, Ct);
         Assert.Equal(HttpStatusCode.Forbidden, support.StatusCode);
@@ -109,22 +104,6 @@ public sealed class PlatformFeatureAdministrationTests
         Assert.Equal(HttpStatusCode.OK, supportRead.StatusCode);
     }
 
-    private static async Task GrantAsync(IServiceProvider provider, Guid userId, PlatformRole role)
-    {
-        await using var scope = provider.CreateAsyncScope();
-        var services = scope.ServiceProvider;
-        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
-        {
-            var manager = services.GetRequiredService<UserManager<ApplicationUser>>();
-            var user = await manager.FindByIdAsync(userId.ToString("D"));
-            Assert.NotNull(user);
-            user.GrantPlatformOperator();
-            Assert.True((await manager.UpdateAsync(user)).Succeeded);
-            var repository = services.GetRequiredService<IPlatformRoleAssignmentRepository>();
-            var existing = await repository.GetByUserIdAsync(userId, ct);
-            if (existing is null) repository.Add(PlatformRoleAssignment.Create(userId, role));
-            else existing.ChangeRole(role);
-            return Result.Success();
-        }, CommitPolicy.OnSuccess, Ct);
-    }
+    private static Task GrantAsync(IServiceProvider provider, Guid userId, IReadOnlyCollection<string> permissions)
+        => PlatformOperators.GrantAsync(provider, userId, permissions, Ct);
 }

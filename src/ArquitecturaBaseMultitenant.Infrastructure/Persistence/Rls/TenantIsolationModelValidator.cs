@@ -71,7 +71,7 @@ internal static class TenantIsolationModelValidator
         type == typeof(TenantDomain) ||
         type == typeof(PlatformSettings) ||
         type == typeof(TenantFeature) ||
-        type == typeof(PlatformRoleAssignment) ||
+        type == typeof(PlatformPermissionAssignment) ||
         type == typeof(SecurityEvent) ||
         type == typeof(OutboxMessage) ||
         type == typeof(LegalDocument) ||

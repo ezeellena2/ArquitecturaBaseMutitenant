@@ -2,7 +2,6 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Application.Services.Roles;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
-using ArquitecturaBaseMultitenant.Domain.Platform;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
@@ -14,16 +13,22 @@ public sealed class PlatformPermissionServiceTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
+    public static TheoryData<string[]> Assignments => new()
+    {
+        { [.. PlatformPermissions.All] },
+        { [PlatformPermissions.Tenants.Read, PlatformPermissions.Recoveries.Manage] },
+    };
+
     [Theory]
-    [InlineData(PlatformRole.Owner)]
-    [InlineData(PlatformRole.Support)]
-    public async Task Active_operator_gets_only_the_persisted_role_permissions(PlatformRole role)
+    [MemberData(nameof(Assignments))]
+    public async Task Active_operator_gets_exactly_the_persisted_permissions(string[] assigned)
     {
         var user = Account(UserStatus.Active, true);
-        var service = Create(user, role);
+        var service = Create(user, assigned);
 
-        Assert.Equal(PlatformRolePermissions.For(role).Order(), (await service.GetPermissionsAsync(user.Id, Ct)).Order());
-        Assert.Equal(role == PlatformRole.Owner, await service.HasPermissionAsync(user.Id, PlatformPermissions.Settings.Manage, Ct));
+        Assert.Equal(assigned, await service.GetPermissionsAsync(user.Id, Ct));
+        Assert.Equal(assigned.Contains(PlatformPermissions.Settings.Manage),
+            await service.HasPermissionAsync(user.Id, PlatformPermissions.Settings.Manage, Ct));
         Assert.True(await service.HasPermissionAsync(user.Id, PlatformPermissions.Recoveries.Manage, Ct));
     }
 
@@ -31,33 +36,34 @@ public sealed class PlatformPermissionServiceTests
     [InlineData(UserStatus.Suspended)]
     [InlineData(UserStatus.PendingDeletion)]
     [InlineData(UserStatus.Deleted)]
-    public async Task Inactive_operator_has_no_permissions_even_with_an_owner_assignment(UserStatus status)
+    public async Task Inactive_operator_has_no_permissions_even_with_the_complete_catalog(UserStatus status)
     {
         var user = Account(status, true);
 
-        Assert.Empty(await Create(user, PlatformRole.Owner).GetPermissionsAsync(user.Id, Ct));
+        Assert.Empty(await Create(user, [.. PlatformPermissions.All]).GetPermissionsAsync(user.Id, Ct));
     }
 
     [Fact]
-    public async Task Missing_assignment_or_operator_flag_never_falls_back_to_owner()
+    public async Task Missing_assignment_or_operator_flag_never_grants_permissions()
     {
-        var operatorWithoutRole = Account(UserStatus.Active, true);
+        var operatorWithoutAssignment = Account(UserStatus.Active, true);
         var nonOperator = Account(UserStatus.Active, false);
 
-        Assert.Empty(await Create(operatorWithoutRole, null).GetPermissionsAsync(operatorWithoutRole.Id, Ct));
-        Assert.Empty(await Create(nonOperator, PlatformRole.Owner).GetPermissionsAsync(nonOperator.Id, Ct));
-        Assert.Empty(await Create(null, PlatformRole.Owner).GetPermissionsAsync(Guid.CreateVersion7(), Ct));
+        Assert.Empty(await Create(operatorWithoutAssignment, null).GetPermissionsAsync(operatorWithoutAssignment.Id, Ct));
+        Assert.Empty(await Create(nonOperator, [.. PlatformPermissions.All]).GetPermissionsAsync(nonOperator.Id, Ct));
+        Assert.Empty(await Create(null, [.. PlatformPermissions.All]).GetPermissionsAsync(Guid.CreateVersion7(), Ct));
     }
 
     private static UserAccountRow Account(UserStatus status, bool isOperator) =>
         new(Guid.CreateVersion7(), "Operador", "es-AR", "America/Argentina/Buenos_Aires", status, isOperator, null, null);
 
-    private static PlatformPermissionService Create(UserAccountRow? account, PlatformRole? role) =>
-        new(new StubUsers(account), new StubRoles(role), TimeProvider.System, NullLogger<PlatformPermissionService>.Instance);
+    private static PlatformPermissionService Create(UserAccountRow? account, string[]? permissions) =>
+        new(new StubUsers(account), new StubAssignments(permissions), TimeProvider.System, NullLogger<PlatformPermissionService>.Instance);
 
-    private sealed class StubRoles(PlatformRole? role) : IPlatformRoleAssignmentReader
+    private sealed class StubAssignments(string[]? permissions) : IPlatformPermissionAssignmentReader
     {
-        public Task<PlatformRole?> FindRoleAsync(Guid userId, CancellationToken ct) => Task.FromResult(role);
+        public Task<IReadOnlyList<string>?> FindPermissionsAsync(Guid userId, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<string>?>(permissions);
     }
 
     private sealed class StubUsers(UserAccountRow? account) : IUserRepository

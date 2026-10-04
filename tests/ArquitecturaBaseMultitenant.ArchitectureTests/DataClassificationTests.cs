@@ -37,7 +37,7 @@ public sealed class DataClassificationTests
         typeof(TenantDomain).FullName!, // Verificación de dominios global, administrada desde cada organización.
         typeof(PlatformSettings).FullName!,
         typeof(TenantFeature).FullName!, // Habilitaciones administradas globalmente por Plataforma.
-        typeof(PlatformRoleAssignment).FullName!, // Autorización global de operadores, independiente de una organización.
+        typeof(PlatformPermissionAssignment).FullName!, // Autorización global de operadores, independiente de una organización.
         typeof(SecurityEvent).FullName!,
         typeof(OutboxMessage).FullName!,
         typeof(LegalDocument).FullName!,

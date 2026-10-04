@@ -155,7 +155,7 @@ Domain/
 │  ├─ RoleAssignment.cs          UserId, RoleId, CompanyId? (null ⇒ toda la organización)
 │  ├─ SystemRoles.cs             TenantAdmin ("Dueño"), CompanyAdmin ("Administrador")
 │  └─ RoleErrors.cs
-├─ Platform/                     PlatformRole (Owner|Support), PlatformRoleAssignment, PlatformErrors
+├─ Platform/                     PlatformPermissionAssignment (permisos individuales por operador), PlatformOperatorErrors
 ├─ Settings/                     TenantSettings (cultura, zona y moneda por defecto), PlatformSettings, SettingsErrors
 ├─ Legal/                        LegalDocument, LegalDocumentContent (una fila por cultura), LegalDocumentKind, LegalAcceptance,
 │                                LegalErrors, AccountDeletionErrors (ReauthRequired, LastAdmin, PlatformOperator, AlreadyPending,
@@ -254,7 +254,7 @@ Infrastructure/
 │  ├─ UniqueViolations.cs
 │  ├─ Configurations/
 │  │  ├─ Platform/                     TenantConfiguration, PlatformSettingsConfiguration, SecurityEventConfiguration,
-│  │  │                                OutboxMessageConfiguration, PlatformRoleAssignmentConfiguration, IdempotencyKeyConfiguration,
+│  │  │                                OutboxMessageConfiguration, PlatformPermissionAssignmentConfiguration, IdempotencyKeyConfiguration,
 │  │  │                                LegalDocumentConfiguration, LegalDocumentContentConfiguration, TenantFeatureConfiguration;
 │  │  │                                ReferenceData/ (una configuración por catálogo y por tabla de traducción, E2, sin RLS)
 │  │  ├─ Identity/                     ApplicationUserConfiguration, LoginMethodConfiguration (índice único Type+Value),
@@ -556,7 +556,7 @@ El cuerpo es `application/problem+json` con `title` y `detail` traducidos, `code
 ## 9. Persistencia
 
 - **Un solo `ApplicationDbContext`**, con cinco esquemas:
-  - **`platform`**: Tenants, TenantFeatures, TenantDomains (dominios de correo verificados), PlatformSettings, PlatformRoleAssignments, SecurityEvents, LegalDocuments y LegalDocumentContents (un texto por documento y por idioma), AccountRecoveryRequests ("Recuperar mi cuenta"), DataExports ("Exportar mis datos"), IdempotencyKeys, OutboxMessages, WhatsAppChannels, OpenIddict y DataProtection. Sin RLS.
+  - **`platform`**: Tenants, TenantFeatures, TenantDomains (dominios de correo verificados), PlatformSettings, PlatformPermissionAssignments, SecurityEvents, LegalDocuments y LegalDocumentContents (un texto por documento y por idioma), AccountRecoveryRequests ("Recuperar mi cuenta"), DataExports ("Exportar mis datos"), IdempotencyKeys, OutboxMessages, WhatsAppChannels, OpenIddict y DataProtection. Sin RLS.
   - **`identity`**: AspNetUsers (global, sin `TenantId`), **LoginMethods** (la única fuente de los correos y teléfonos de una cuenta, cada uno único en todo el sistema), `UserTenantAccesses` (proyección global de membresías), LegalAcceptances, UserLogins, UserTokens, LoginCodes, LoginLinks, LoginAudits, WhatsAppContacts y WhatsAppMessages (el número de la plataforma habla con la identidad, no con un acceso). Sin RLS; la leen `Infrastructure/Identity`, `Infrastructure/Modules/WhatsApp`, los readers que parten de `Members` y estos adaptadores explícitos de `Infrastructure/Persistence`: `Repositories/{User,LoginMethod,LoginCode,LoginAudit,Legal,AccountDeletion}Repository y `Identity/Deletion/LegalAcceptanceDeletionParticipant`` y `Readers/{LoginMethodReader,UserTenantAccessReader,LoginMethodMembershipReader,LegalReader,AccountDeletionTenantReader}`. `IdentityStorageAccessTests` inspecciona las llamadas IL a los DbSet globales y `Set<T>()` en todo Infrastructure, y fija una lista cerrada de adaptadores que pueden usarlos. El índice de membresías se consulta solo para `ConnectService`, `TenantResolutionMiddleware` (por `AccessStatusCache`) y `/api/me` (por `ProfileSnapshotBuilder`); la gestión de métodos administrados usa un puerto específico `ILoginMethodMembershipReader` que devuelve solo la disponibilidad de la membresía/organización por UserId y TenantId; la búsqueda global por valor de un método de ingreso sigue exclusivamente en `Infrastructure/Identity/UserLookup` ([ADR 0011](../decisions/README.md)).
   - **`tenant`**, datos **privados** con **RLS forzado**: Members, Invitations, Companies, CompanyMemberships, Roles, RoleAssignments, TenantSettings, AuditEntries y lo privado que sumen los módulos B2B y B2C.
   - **`public_site`**, datos **públicos** de cada organización con RLS por publicación: PublicPages (nombre, logo, descripción, contacto y estado; el slug es el de la organización, en `platform.Tenants`) y lo que publiquen los módulos.
@@ -679,7 +679,7 @@ La pantalla "Auditoría" de la organización lee `AuditEntries` paginadas y filt
     - `platform.legal.manage` (publicar una versión nueva de términos o privacidad);
     - `platform.operators.manage`, `platform.audit.read`, `platform.settings.manage`;
     - `platform.whatsapp.manage` no entra al catálogo hasta la Etapa 11 (canales de WhatsApp por organización), porque ninguna ruta anterior lo usa.
-- **Roles de plataforma** (`PlatformRole`): **Owner** tiene todos los permisos de plataforma; **Support** tiene `platform.tenants.read`, `platform.accounts.read`, `platform.recoveries.manage` y `platform.audit.read`.
+- **Permisos de plataforma por operador** (`PlatformPermissionAssignment`): cada operador tiene las claves elegidas de a una, al menos una y sin repetir; no hay roles de plataforma (Owner y Support se retiraron en la Etapa 5, con una migración que conservó sus permisos efectivos).
 - **Roles de la organización** (`tenant.Roles`), con **tres alcances** (en pantalla, la columna "Vale en"):
   - **`Organization`** ("Toda la organización"): se asigna sin empresa y vale en la organización y en todas sus empresas.
   - **`AnyCompany`** ("Cada empresa"): es un rol de empresa reutilizable; se asigna **con** una empresa y vale solo en esa. Ejemplo: el Administrador de empresa.

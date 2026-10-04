@@ -691,16 +691,15 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.ToTable("OutboxMessages", "platform");
                 });
 
-            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Platform.PlatformRoleAssignment", b =>
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Platform.PlatformPermissionAssignment", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Role")
+                    b.PrimitiveCollection<string[]>("Permissions")
                         .IsRequired()
-                        .HasMaxLength(60)
-                        .HasColumnType("character varying(60)");
+                        .HasColumnType("text[]");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -716,7 +715,7 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("PlatformRoleAssignments", "platform");
+                    b.ToTable("PlatformPermissionAssignments", "platform");
                 });
 
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.PublicSite.PublicPage", b =>
@@ -2147,7 +2146,7 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Platform.PlatformRoleAssignment", b =>
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Platform.PlatformPermissionAssignment", b =>
                 {
                     b.HasOne("ArquitecturaBaseMultitenant.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()

@@ -5,14 +5,11 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Dns;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
-using ArquitecturaBaseMultitenant.Domain.Platform;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
-using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
@@ -56,7 +53,7 @@ public sealed class PlatformDomainAdministrationTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.Forbidden, denied.StatusCode);
 
         var account = await AccountJourney.RegisterAsync(factory, platform, Ct);
-        await GrantAsync(account.UserId, PlatformRole.Owner);
+        await GrantAsync(account.UserId, PlatformOperators.All);
         await AccountJourney.AuthorizeAsync(platform, "platform", Ct);
         var path = $"/api/platform/tenants/{tenantId:D}/domains";
         using var listed = await platform.GetAsync(path, Ct);
@@ -155,7 +152,7 @@ public sealed class PlatformDomainAdministrationTests(ApiFactory factory)
         }, Ct);
         Assert.Equal(HttpStatusCode.Accepted, login.StatusCode);
         Assert.Equal(outboxBefore, await OutboxCountAsync(owner.UserId));
-        await GrantAsync(account.UserId, PlatformRole.Support);
+        await GrantAsync(account.UserId, PlatformOperators.Reduced);
         using var supportDenied = await platform.GetAsync(path, Ct);
         Assert.Equal(HttpStatusCode.Forbidden, supportDenied.StatusCode);
         using var unknownTenant = await platform.GetAsync($"/api/platform/tenants/{Guid.NewGuid():D}/domains", Ct);
@@ -241,24 +238,8 @@ public sealed class PlatformDomainAdministrationTests(ApiFactory factory)
         return tenant.Id;
     }
 
-    private async Task GrantAsync(Guid userId, PlatformRole role)
-    {
-        await using var scope = factory.Services.CreateAsyncScope();
-        var services = scope.ServiceProvider;
-        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
-        {
-            var manager = services.GetRequiredService<UserManager<ApplicationUser>>();
-            var user = await manager.FindByIdAsync(userId.ToString("D"));
-            Assert.NotNull(user);
-            user.GrantPlatformOperator();
-            Assert.True((await manager.UpdateAsync(user)).Succeeded);
-            var repository = services.GetRequiredService<IPlatformRoleAssignmentRepository>();
-            var existing = await repository.GetByUserIdAsync(userId, ct);
-            if (existing is null) repository.Add(PlatformRoleAssignment.Create(userId, role));
-            else existing.ChangeRole(role);
-            return Result.Success();
-        }, CommitPolicy.OnSuccess, Ct);
-    }
+    private Task GrantAsync(Guid userId, IReadOnlyCollection<string> permissions)
+        => PlatformOperators.GrantAsync(factory.Services, userId, permissions, Ct);
 
     private sealed class Dns : IDnsTxtLookup
     {

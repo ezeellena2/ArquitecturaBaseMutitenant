@@ -9,14 +9,11 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
-using ArquitecturaBaseMultitenant.Domain.Platform;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
-using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -38,7 +35,7 @@ public sealed class PlatformTenantProvisioningHttpTests(ApiFactory factory)
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
         var operatorAccount = await AccountJourney.RegisterAsync(factory, client, Ct);
-        await GrantAsync(operatorAccount.UserId, PlatformRole.Support);
+        await GrantAsync(operatorAccount.UserId, PlatformOperators.Reduced);
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
         foreach (var path in new[] { "", $"/{Guid.NewGuid():D}/approve", $"/{Guid.NewGuid():D}/retry-provisioning" })
         {
@@ -52,7 +49,7 @@ public sealed class PlatformTenantProvisioningHttpTests(ApiFactory factory)
     {
         using var client = Client();
         var operatorAccount = await AccountJourney.RegisterAsync(factory, client, Ct);
-        await GrantAsync(operatorAccount.UserId, PlatformRole.Owner);
+        await GrantAsync(operatorAccount.UserId, PlatformOperators.All);
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
         var operationId = Guid.NewGuid();
         var email = Email.Create($"platform-invited-{Guid.NewGuid():N}@example.test").Value;
@@ -123,7 +120,7 @@ public sealed class PlatformTenantProvisioningHttpTests(ApiFactory factory)
     {
         using var client = Client();
         var operatorAccount = await AccountJourney.RegisterAsync(factory, client, Ct);
-        await GrantAsync(operatorAccount.UserId, PlatformRole.Owner);
+        await GrantAsync(operatorAccount.UserId, PlatformOperators.All);
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
         var tenant = Tenant.CreateBusiness("Reanudar alta", pendingApproval);
         await using (var setup = factory.Services.CreateAsyncScope())
@@ -167,7 +164,7 @@ public sealed class PlatformTenantProvisioningHttpTests(ApiFactory factory)
     {
         using var client = Client();
         var operatorAccount = await AccountJourney.RegisterAsync(factory, client, Ct);
-        await GrantAsync(operatorAccount.UserId, PlatformRole.Owner);
+        await GrantAsync(operatorAccount.UserId, PlatformOperators.All);
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
         var tenant = Tenant.CreateBusiness("Alta incompleta", false);
         await using (var scope = factory.Services.CreateAsyncScope())
@@ -205,7 +202,7 @@ public sealed class PlatformTenantProvisioningHttpTests(ApiFactory factory)
     {
         using var client = Client();
         var operatorAccount = await AccountJourney.RegisterAsync(factory, client, Ct);
-        await GrantAsync(operatorAccount.UserId, PlatformRole.Owner);
+        await GrantAsync(operatorAccount.UserId, PlatformOperators.All);
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
         var id = Guid.NewGuid();
         using var invalid = await CreateAsync(client, id, new { name = "Falta empresa", firstCompanyName = "", ownerEmail = "not-an-email", culture = "es-AR", timeZoneId = "UTC" });
@@ -239,7 +236,7 @@ public sealed class PlatformTenantProvisioningHttpTests(ApiFactory factory)
     {
         using var client = Client();
         var operatorAccount = await AccountJourney.RegisterAsync(factory, client, Ct);
-        await GrantAsync(operatorAccount.UserId, PlatformRole.Owner);
+        await GrantAsync(operatorAccount.UserId, PlatformOperators.All);
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
         var tenant = Tenant.CreateBusiness("Aprobación repetida", true);
         await using (var scope = factory.Services.CreateAsyncScope())
@@ -271,7 +268,7 @@ public sealed class PlatformTenantProvisioningHttpTests(ApiFactory factory)
     {
         using var client = Client();
         var operatorAccount = await AccountJourney.RegisterAsync(factory, client, Ct);
-        await GrantAsync(operatorAccount.UserId, PlatformRole.Owner);
+        await GrantAsync(operatorAccount.UserId, PlatformOperators.All);
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
         var tenant = Tenant.CreateBusiness("Alta concurrente", false);
         await using (var setup = factory.Services.CreateAsyncScope())
@@ -315,19 +312,6 @@ public sealed class PlatformTenantProvisioningHttpTests(ApiFactory factory)
         request.Headers.Add("Idempotency-Key", operationId.ToString("D"));
         return await client.SendAsync(request, Ct);
     }
-    private async Task GrantAsync(Guid userId, PlatformRole role)
-    {
-        await using var scope = factory.Services.CreateAsyncScope();
-        var services = scope.ServiceProvider;
-        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async _ =>
-        {
-            var users = services.GetRequiredService<UserManager<ApplicationUser>>();
-            var user = await users.FindByIdAsync(userId.ToString("D"));
-            Assert.NotNull(user);
-            user.GrantPlatformOperator();
-            Assert.True((await users.UpdateAsync(user)).Succeeded);
-            services.GetRequiredService<IPlatformRoleAssignmentRepository>().Add(PlatformRoleAssignment.Create(userId, role));
-            return Result.Success();
-        }, CommitPolicy.OnSuccess, Ct);
-    }
+    private Task GrantAsync(Guid userId, IReadOnlyCollection<string> permissions)
+        => PlatformOperators.GrantAsync(factory.Services, userId, permissions, Ct);
 }

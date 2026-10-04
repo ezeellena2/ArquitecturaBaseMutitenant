@@ -231,9 +231,8 @@ ArquitecturaBaseMultitenant.Domain/
 │   ├── BusinessSignupMode.cs                         [E3] Open | RequiresApproval | Closed
 │   └── SettingsErrors.cs
 ├── Platform/                                         [E5]
-│   ├── PlatformRole.cs                               Owner (todos los permisos) | Support (tenants.read, accounts.read, recoveries.manage, audit.read)
-│   ├── PlatformRoleAssignment.cs
-│   └── PlatformErrors.cs                             Platform.*
+│   ├── PlatformPermissionAssignment.cs               permisos individuales por operador, sin roles
+│   └── PlatformOperatorErrors.cs                     Platform.Operator.*
 ├── Auditing/                                         [E2–E3]
 │   ├── AuditEntry.cs                                 [E2] tenant, append-only
 │   ├── AuditAction.cs                                [E2] Created | Updated | Deleted | Restored | Custom
@@ -349,7 +348,8 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── IPermissionReader.cs                      [E4]
 │   │   ├── IPlatformSettingsRepository.cs            [E3]
 │   │   ├── IPlatformSettingsReader.cs                [E3]
-│   │   ├── IPlatformRoleAssignmentRepository.cs      [E5]
+│   │   ├── IPlatformPermissionAssignmentRepository.cs [E5]
+│   │   ├── IPlatformPermissionAssignmentReader.cs    [E5]
 │   │   ├── IPlatformReader.cs                        [E5] organizaciones, identidades y operadores (vista de plataforma)
 │   │   ├── ISecurityEventRepository.cs               [E3]
 │   │   ├── ISecurityEventReader.cs                   [E5]
@@ -674,7 +674,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   │   ├── TenantConfiguration.cs                 [E3]
 │   │   │   ├── OutboxMessageConfiguration.cs          [E3]
 │   │   │   ├── PlatformSettingsConfiguration.cs       [E3]
-│   │   │   ├── PlatformRoleAssignmentConfiguration.cs [E5]
+│   │   │   ├── PlatformPermissionAssignmentConfiguration.cs [E5]
 │   │   │   └── SecurityEventConfiguration.cs          [E3]
 │   │   ├── Identity/
 │   │   │   ├── ApplicationUserConfiguration.cs        [E3] Email y PhoneNumber sin índice único (copia del método principal)
@@ -724,7 +724,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   ├── RoleRepository.cs                          [E4]
 │   │   ├── RoleAssignmentRepository.cs                [E4]
 │   │   ├── PlatformSettingsRepository.cs              [E3]
-│   │   ├── PlatformRoleAssignmentRepository.cs        [E5]
+│   │   ├── PlatformPermissionAssignmentRepository.cs  [E5]
 │   │   ├── SecurityEventRepository.cs                 [E3]
 │   │   ├── CompanyRepository.cs                       [E6]
 │   │   └── CompanyMembershipRepository.cs           [E6]

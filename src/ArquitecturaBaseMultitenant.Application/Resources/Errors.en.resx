@@ -178,4 +178,7 @@
   <data name="PublicSite.PublicPage.VersionConflict" xml:space="preserve"><value>The page changed since you opened it. Refresh it before saving.</value></data>
   <data name="Settings.System.InvalidConfiguration" xml:space="preserve"><value>Choose valid signup modes and allow at least one organization per person.</value></data>
   <data name="Tenancy.Tenant.NotFound" xml:space="preserve"><value>The organization was not found.</value></data>
+  <data name="Platform.Operator.PermissionsRequired" xml:space="preserve"><value>Choose at least one platform permission.</value></data>
+  <data name="Platform.Operator.PermissionNotFound" xml:space="preserve"><value>The permission is not in the platform catalog.</value></data>
+  <data name="Platform.Operator.PermissionRepeated" xml:space="preserve"><value>A platform permission is repeated.</value></data>
 </root>

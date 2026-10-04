@@ -23,9 +23,9 @@ public sealed class PlatformScopeTests(ApiFactory factory)
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Theory]
-    [InlineData(PlatformRole.Owner, true)]
-    [InlineData(PlatformRole.Support, false)]
-    public async Task Private_access_requires_persisted_permission_and_committed_event(PlatformRole role, bool allowed)
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Private_access_requires_persisted_permission_and_committed_event(bool allowed)
     {
         using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
@@ -42,7 +42,8 @@ public sealed class PlatformScopeTests(ApiFactory factory)
             Assert.NotNull(user);
             user.GrantPlatformOperator();
             Assert.True((await users.UpdateAsync(user)).Succeeded);
-            services.GetRequiredService<IPlatformRoleAssignmentRepository>().Add(PlatformRoleAssignment.Create(user.Id, role));
+            services.GetRequiredService<IPlatformPermissionAssignmentRepository>().Add(PlatformPermissionAssignment.Create(user.Id,
+                allowed ? PlatformOperators.All : PlatformOperators.Reduced).Value);
             services.GetRequiredService<ITenantRepository>().Add(tenant);
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);

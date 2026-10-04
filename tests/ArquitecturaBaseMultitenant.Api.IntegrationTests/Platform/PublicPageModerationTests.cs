@@ -5,13 +5,10 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
-using ArquitecturaBaseMultitenant.Domain.Platform;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
-using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -51,7 +48,7 @@ public sealed class PublicPageModerationTests(ApiFactory factory)
 
         using var platform = Client();
         var account = await AccountJourney.RegisterAsync(factory, platform, Ct);
-        await GrantAsync(account.UserId, PlatformRole.Owner);
+        await GrantAsync(account.UserId, PlatformOperators.All);
         await AccountJourney.AuthorizeAsync(platform, "platform", Ct);
         var otherTenant = await CreateBusinessAsync(member.UserId);
         var otherPath = $"/api/platform/tenants/{otherTenant.Id:D}/public-site";
@@ -115,7 +112,7 @@ public sealed class PublicPageModerationTests(ApiFactory factory)
             Assert.Single(events, e => e.Type.ToString() == "PublicPagePublicationAllowed");
             Assert.All(events, e => Assert.Equal(account.UserId, e.ActorId));
         }
-        await GrantAsync(account.UserId, PlatformRole.Support);
+        await GrantAsync(account.UserId, PlatformOperators.Reduced);
         using var supportDenied = await platform.GetAsync(path, Ct);
         Assert.Equal(HttpStatusCode.Forbidden, supportDenied.StatusCode);
         using var supportCannotChange = await PlatformJourney.PostAsync(platform, path + "/unpublish", new { version = allowedVersion, reason = "Sin permiso" }, Ct);
@@ -141,24 +138,8 @@ public sealed class PublicPageModerationTests(ApiFactory factory)
         return tenant;
     }
 
-    private async Task GrantAsync(Guid userId, PlatformRole role)
-    {
-        await using var scope = factory.Services.CreateAsyncScope();
-        var services = scope.ServiceProvider;
-        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
-        {
-            var manager = services.GetRequiredService<UserManager<ApplicationUser>>();
-            var user = await manager.FindByIdAsync(userId.ToString("D"));
-            Assert.NotNull(user);
-            user.GrantPlatformOperator();
-            Assert.True((await manager.UpdateAsync(user)).Succeeded);
-            var repository = services.GetRequiredService<IPlatformRoleAssignmentRepository>();
-            var existing = await repository.GetByUserIdAsync(userId, ct);
-            if (existing is null) repository.Add(PlatformRoleAssignment.Create(userId, role));
-            else existing.ChangeRole(role);
-            return Result.Success();
-        }, CommitPolicy.OnSuccess, Ct);
-    }
+    private Task GrantAsync(Guid userId, IReadOnlyCollection<string> permissions)
+        => PlatformOperators.GrantAsync(factory.Services, userId, permissions, Ct);
 
     private async Task<int> OutboxCountAsync()
     {
