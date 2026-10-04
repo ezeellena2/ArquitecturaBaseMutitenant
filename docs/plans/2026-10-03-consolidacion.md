@@ -388,6 +388,40 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
   - «Ese correo ya lo usa otra cuenta» no va (ADR 0041): agregar un correo de otra cuenta sigue a «Verificar» igual. Se verifica que la app no lo muestre;
   - el error genérico al guardar en M-Usuario va en la franja debajo de la barra, con el texto del back;
   - el relevamiento final captura también los estados nuevos de v106.
+- **R3 se parte en cuatro tandas.** R3a con R3d, y R3b con R3c, pueden ir en paralelo porque tocan archivos distintos:
+  - **R3a · Marco y listas:**
+    - sin ☰ con sesión y el avatar con degradé en el teléfono (v104);
+    - el buscador de 36 × 360;
+    - la segunda línea de las filas (v92);
+    - el ⋮ de «Cómo entrás» (v96);
+    - el paginador «1 de 1», en 12, y «Cargar más», en 14;
+    - las pestañas de Empresa;
+    - la fecha corta y el subtítulo de M-Auditoria-Org (v99);
+    - el relleno de `Section` (16);
+    - el aviso con «Copiar código» con el botón debajo del texto, como el tablero Avisos;
+    - los límites viejos de 10 y 15 s de esas suites, con su comentario o sin el límite.
+  - **R3b · Fichas y hojas:**
+    - las hojas de M-Usuario (v99) y el desplegable de roles de la compu con casillas y descripción;
+    - «Todos» a la derecha en M-Usuario-Empresa;
+    - el ícono y el asterisco de Configuración, y el panel de la Página pública;
+    - M-Inicio-Miembro en «billetera» (v106);
+    - las hojas de Empresa desde abajo (v106);
+    - la franja de error de M-Usuario (v106);
+    - el nombre de la empresa con su mensaje al tocar Guardar y el CUIT revisado al guardar, como pide Criterio · Formularios;
+    - «Verificar» del dominio en el teléfono (el rótulo del TXT y «Copiar»).
+  - **R3c · Contratos y auditoría:**
+    - `npm run contracts`: los `*HttpResponse`, `taxIdType`, los códigos nuevos, la ruta de roles de una empresa y la descripción de `/api/me`;
+    - la pantalla de Auditoría con el contrato nuevo, `organization-audit-contract.test.ts` en verde y los datos de las capturas regenerados;
+    - el correo del perfil activo en tu menú y «10 correos administrados» en Configuración;
+    - las cuatro líneas de docs de v93.
+  - **R3d · Ingreso y registro:**
+    - una sola pieza para la pantalla de estado y el paso del código, que usan las tres páginas;
+    - los enlaces de texto en `--marca-tx`;
+    - «Te quedan N intentos» con su segunda línea;
+    - los `.msj` con triángulo o círculo (v104);
+    - «Dirección de la página», de 44 con radio 10;
+    - Invitación «Aceptada», con el cartel sin botón;
+    - verificar que «Ese correo ya lo usa otra cuenta» no aparezca (ADR 0041).
 - [ ] **R3 · Lo de cada pantalla:**
   - la segunda línea de las filas (v92) y el ⋮ de «Cómo entrás» (v96);
   - el paginador «1 de 1» y las pestañas de Empresa;
@@ -401,7 +435,14 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
     - los enlaces de texto del ingreso en `--marca-tx`, como la variante link de `Button`;
     - el paginador y «Cargar más» en 12 y 14, como los tableros;
     - **una sola pieza para el ingreso y el registro:** hoy hay tres copias de la pantalla de estado y del paso del código, una por página. Se arma una pieza común y las tres páginas la usan.
-- [ ] **R2c · Errores y tests:**
+- [x] **R2c · Errores, botones y tests** (front `8e2c9c2` a `84409d4`; 963 tests en verde, lint y build). Hay una sola falla: `organization-audit-contract.test.ts`, que compara con el back y quedó vieja por el cambio de la auditoría (`20b5b12`); va en R3c. Capturas en `r2c/`.
+  - `NotFoundPage` pasó a `shared/ui`: la usan la ruta que no existe, el módulo apagado y las fichas de Usuario, Empresa y Rol.
+  - Ningún botón se apaga por un formulario incompleto: «Sumar», «Agregar miembro», «Crear empresa», «Guardar cambios» y «Siguiente» de «Agregar dominio».
+  - `Select` recibe el rótulo, lo obligatorio y el error de `FormField`.
+  - `resetBetweenTests` limpia los avisos entre pruebas.
+  - El arnés visual usa `createQueryClient`.
+  - Los tests lentos quedaron por debajo de 3 s; los dos que no bajan llevan 10 s, con su comentario.
+  - Lo que pedía:
   - un 404 en una ficha muestra `NotFoundPage`, como pide `errores.md`; para eso sube a `shared/ui`, como `ForbiddenPage`;
   - el error de «Quitar de la organización» va en la franja, como el tablero, y no en el aviso de abajo;
   - los avisos de una prueba no quedan para la siguiente (se limpian entre pruebas; hoy pasa en `RoleEditorPage.test`);
