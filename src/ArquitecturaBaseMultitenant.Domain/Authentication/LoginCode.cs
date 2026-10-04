@@ -52,6 +52,12 @@ public sealed class LoginCode : Entity
     public Guid? SourceMethodId { get; private set; }
     public Guid? TargetMethodId { get; private set; }
 
+    /// <summary>
+    /// El hash del nonce del navegador que pidió un código de «Recuperar mi cuenta». Solo ese navegador puede
+    /// verificarlo y registrar el pedido.
+    /// </summary>
+    public string? NonceHash { get; private set; }
+
     public string CodeHash { get; private set; }
 
     public DateTime CreatedAtUtc { get; private set; }
@@ -101,8 +107,9 @@ public sealed class LoginCode : Entity
         switch (purpose)
         {
             case LoginCodePurpose.Login or LoginCodePurpose.Signup or LoginCodePurpose.BusinessSignup
+                or LoginCodePurpose.AccountRecovery
                 when requestedByUserId is not null:
-                throw new ArgumentException("A login or signup code cannot be requested by an account.", nameof(requestedByUserId));
+                throw new ArgumentException("A login, signup or recovery code cannot be requested by an account.", nameof(requestedByUserId));
 
             case LoginCodePurpose.VerifyDestination or LoginCodePurpose.Reauthenticate
                 when requestedByUserId is null || requestedByUserId == Guid.Empty:
@@ -110,7 +117,7 @@ public sealed class LoginCode : Entity
                     "The code needs the account that requested it.", nameof(requestedByUserId));
 
             case LoginCodePurpose.Login or LoginCodePurpose.Signup or LoginCodePurpose.BusinessSignup
-                or LoginCodePurpose.VerifyDestination or LoginCodePurpose.Reauthenticate:
+                or LoginCodePurpose.VerifyDestination or LoginCodePurpose.Reauthenticate or LoginCodePurpose.AccountRecovery:
                 break;
 
             default:
@@ -176,7 +183,40 @@ public sealed class LoginCode : Entity
     public bool MatchesReauthentication(ReauthAction action, Guid sourceMethodId, Guid? targetMethodId) =>
         ReauthAction == action && SourceMethodId == sourceMethodId && TargetMethodId == targetMethodId;
 
-    private Result Check(string codeHash, DateTime nowUtc)
+    public void BindRecoveryNonce(string nonceHash)
+    {
+        if (Purpose != LoginCodePurpose.AccountRecovery || NonceHash is not null || string.IsNullOrWhiteSpace(nonceHash))
+            throw new InvalidOperationException("Only a new recovery code can be bound to a nonce.");
+        NonceHash = nonceHash;
+    }
+
+    /// <summary>
+    /// Verifica un código de recuperación. Con otro nonce responde como si no hubiera código y no gasta intentos. Un
+    /// código que no se mandó, porque el correo ya era de una cuenta, falla como un código mal escrito: los intentos
+    /// restantes no delatan que no hubo código.
+    /// </summary>
+    public Result VerifyRecovery(string nonceHash, string codeHash, DateTime nowUtc)
+    {
+        ArgumentNullException.ThrowIfNull(codeHash);
+
+        return Purpose == LoginCodePurpose.AccountRecovery && MatchesNonce(nonceHash)
+            ? Check(codeHash, nowUtc, wasSent: SentAtUtc is not null)
+            : LoginCodeErrors.Invalid(attemptsLeft: null);
+    }
+
+    /// <summary>
+    /// Si el código de recuperación se verificó con este nonce y no pasó, desde la verificación, otro tanto como su
+    /// vigencia: habilita registrar el pedido.
+    /// </summary>
+    public bool IsVerifiedRecovery(string nonceHash, DateTime nowUtc) =>
+        Purpose == LoginCodePurpose.AccountRecovery && InvalidatedAtUtc is null && ConsumedAtUtc is { } consumedAtUtc
+        && nowUtc < consumedAtUtc + (ExpiresAtUtc - CreatedAtUtc) && MatchesNonce(nonceHash);
+
+    private bool MatchesNonce(string nonceHash) =>
+        NonceHash is not null && nonceHash is not null
+        && CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(NonceHash), Encoding.UTF8.GetBytes(nonceHash));
+
+    private Result Check(string codeHash, DateTime nowUtc, bool wasSent = true)
     {
         if (nowUtc.Kind != DateTimeKind.Utc)
         {
@@ -204,7 +244,8 @@ public sealed class LoginCode : Entity
         }
 
         // Comparación en tiempo constante: no revela cuántos caracteres coinciden.
-        if (!CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(CodeHash), Encoding.UTF8.GetBytes(codeHash)))
+        if (!CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(CodeHash), Encoding.UTF8.GetBytes(codeHash))
+            | !wasSent)
         {
             FailedAttempts++;
 

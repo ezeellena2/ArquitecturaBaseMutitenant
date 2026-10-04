@@ -39,6 +39,7 @@ public sealed class DataClassificationTests
         typeof(PlatformSettings).FullName!,
         typeof(TenantFeature).FullName!, // Habilitaciones administradas globalmente por Plataforma.
         typeof(PlatformPermissionAssignment).FullName!, // Autorización global de operadores, independiente de una organización.
+        typeof(AccountRecoveryRequest).FullName!, // «Recuperar mi cuenta»: pedido público global, anterior a cualquier sesión u organización.
         typeof(SecurityEvent).FullName!,
         typeof(OutboxMessage).FullName!,
         typeof(LegalDocument).FullName!,

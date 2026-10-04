@@ -45,6 +45,8 @@ public static class ValidationTexts
 
     public static string RegistrationModeInvalid => Get(nameof(RegistrationModeInvalid));
     public static string FilterInvalid => Get(nameof(FilterInvalid));
+    public static string NonceFormat => Get(nameof(NonceFormat));
+    public static string RecoveryMethodRepeated => Get(nameof(RecoveryMethodRepeated));
     public static string OwnedOrganizationsMinimum => Get(nameof(OwnedOrganizationsMinimum));
 
     public static string PermissionUnknown => Get(nameof(PermissionUnknown));

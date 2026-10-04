@@ -33,4 +33,31 @@ internal sealed class LoginCodeVerifier(
             ? row.VerifyFor(userId, purpose, hash, nowUtc)
             : row.Verify(purpose, hash, nowUtc);
     }
+
+    /// <summary>Verifica el código de «Recuperar mi cuenta» con el nonce con el que se pidió.</summary>
+    public async Task<Result> VerifyRecoveryAsync(LoginCodeDestination destination, string nonceHash, string code,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        ArgumentException.ThrowIfNullOrWhiteSpace(code);
+        await loginCodes.LockDestinationAsync(destination, cancellationToken);
+        var row = await loginCodes.FindRecoveryByNonceAsync(destination, nonceHash, cancellationToken);
+        return row is null
+            ? LoginCodeErrors.Invalid(attemptsLeft: null)
+            : row.VerifyRecovery(nonceHash, codeHash: codeHasher.Hash(destination, LoginCodePurpose.AccountRecovery, code),
+                timeProvider.GetUtcNow().UtcDateTime);
+    }
+
+    /// <summary>
+    /// El código de recuperación ya verificado con este nonce y vigente, bajo el lock del destino; null si no hay. Se
+    /// busca por el nonce y no por el último código: otro pedido para el mismo correo no corta este.
+    /// </summary>
+    public async Task<LoginCode?> FindVerifiedRecoveryAsync(LoginCodeDestination destination, string nonceHash,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        await loginCodes.LockDestinationAsync(destination, cancellationToken);
+        var row = await loginCodes.FindRecoveryByNonceAsync(destination, nonceHash, cancellationToken);
+        return row is not null && row.IsVerifiedRecovery(nonceHash, timeProvider.GetUtcNow().UtcDateTime) ? row : null;
+    }
 }

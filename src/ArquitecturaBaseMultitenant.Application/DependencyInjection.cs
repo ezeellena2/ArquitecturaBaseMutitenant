@@ -93,6 +93,8 @@ public static class DependencyInjection
         services.AddScoped<Services.Platform.PlatformTenantProvisioning>();
         services.AddScoped<IOutboxDispatchService, OutboxDispatchService>();
         services.AddScoped<ILoginCodeService, LoginCodeService>();
+        services.AddScoped<IAccountRecoveryService, AccountRecoveryService>();
+        services.AddScoped<AccountRecoveryMessenger>();
         services.AddScoped<LoginCodeRequester>();
         services.AddScoped<LoginCodeVerificationFlow>();
         services.AddScoped<LoginCodeAttemptCoordinator>();

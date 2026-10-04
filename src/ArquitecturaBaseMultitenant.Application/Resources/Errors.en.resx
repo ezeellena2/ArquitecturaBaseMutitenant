@@ -182,4 +182,5 @@
   <data name="Platform.Operator.PermissionNotFound" xml:space="preserve"><value>The permission is not in the platform catalog.</value></data>
   <data name="Platform.Operator.PermissionRepeated" xml:space="preserve"><value>A platform permission is repeated.</value></data>
   <data name="Platform.Operator.LastManager" xml:space="preserve"><value>At least one active operator who can manage operators must remain.</value></data>
+  <data name="Platform.AccountRecovery.VerificationRequired" xml:space="preserve"><value>Request a new code and verify it.</value></data>
 </root>

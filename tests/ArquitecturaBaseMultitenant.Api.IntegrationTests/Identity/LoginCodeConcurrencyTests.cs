@@ -190,6 +190,10 @@ public sealed class LoginCodeConcurrencyTests(ApiFactory factory)
             return code;
         }
 
+        public Task<LoginCode?> FindRecoveryByNonceAsync(LoginCodeDestination destination, string nonceHash,
+            CancellationToken cancellationToken) =>
+            inner.FindRecoveryByNonceAsync(destination, nonceHash, cancellationToken);
+
         public Task<IReadOnlyList<LoginCode>> ListActiveAsync(LoginCodeDestination destination,
             LoginCodePurpose purpose, Guid? requestedByUserId, DateTime nowUtc,
             CancellationToken cancellationToken) =>

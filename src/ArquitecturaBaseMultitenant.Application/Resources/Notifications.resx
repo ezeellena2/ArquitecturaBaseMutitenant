@@ -71,6 +71,15 @@
   <data name="OrganizationRejected.Subject" xml:space="preserve"><value>Solicitud de alta de tu organización</value></data>
   <data name="OrganizationRejected.Body" xml:space="preserve"><value>{0} No aprobamos la solicitud de alta de {1}.</value></data>
   <data name="OrganizationRejected.PersonalUnaffected" xml:space="preserve"><value>Tu cuenta y tu espacio personal siguen funcionando.</value></data>
+  <data name="RecoveryReceived.Subject" xml:space="preserve"><value>Recibimos tu pedido para recuperar tu cuenta</value></data>
+  <data name="RecoveryReceived.Title" xml:space="preserve"><value>Recibimos tu pedido</value></data>
+  <data name="RecoveryReceived.Body" xml:space="preserve"><value>Recibimos tu pedido para recuperar tu cuenta de {0}. Lo revisa una persona de la plataforma y te avisamos a este correo.</value></data>
+  <data name="RecoveryReceived.Note" xml:space="preserve"><value>Si no pediste esto, ignorá este mensaje.</value></data>
+  <data name="RecoveryMethodInUse.Subject" xml:space="preserve"><value>Ya tenés una cuenta con este correo</value></data>
+  <data name="RecoveryMethodInUse.Title" xml:space="preserve"><value>Ya tenés una cuenta con este correo</value></data>
+  <data name="RecoveryMethodInUse.Body" xml:space="preserve"><value>Alguien pidió recuperar una cuenta de {0} y nos dio este correo para escribirle. Este correo ya es de una cuenta, así que no mandamos ningún código.</value></data>
+  <data name="RecoveryMethodInUse.After" xml:space="preserve"><value>Si fuiste vos, entrá con este correo: no hace falta recuperar nada.</value></data>
+  <data name="RecoveryMethodInUse.Note" xml:space="preserve"><value>Si no fuiste vos, ignorá este mensaje.</value></data>
   <data name="PublicPageModeration.Title" xml:space="preserve"><value>Cambió la publicación de tu página</value></data>
   <data name="PublicPageModeration.Subject" xml:space="preserve"><value>Publicación de la página de tu organización</value></data>
   <data name="PublicPageModeration.BlockedBody" xml:space="preserve"><value>{0} La plataforma despublicó la página de {1}. Quedó en borrador y no se puede publicar hasta que la plataforma lo permita.</value></data>

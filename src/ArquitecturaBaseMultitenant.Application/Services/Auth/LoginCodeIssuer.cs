@@ -39,6 +39,16 @@ internal sealed class LoginCodeIssuer(
         return IssueAsync(destination, purpose, userId, cancellationToken);
     }
 
+    /// <summary>El código de «Recuperar mi cuenta», atado al hash del nonce del navegador que lo pidió.</summary>
+    public async Task<Result<IssuedLoginCode>> IssueRecoveryCodeAsync(LoginCodeDestination destination,
+        string nonceHash, CancellationToken cancellationToken)
+    {
+        var issued = await IssueAsync(destination, LoginCodePurpose.AccountRecovery, requestedByUserId: null,
+            cancellationToken);
+        if (issued.IsSuccess) issued.Value.LoginCode.BindRecoveryNonce(nonceHash);
+        return issued;
+    }
+
     public Task LockDestinationAsync(LoginCodeDestination destination, CancellationToken cancellationToken) =>
         loginCodes.LockDestinationAsync(destination, cancellationToken);
 

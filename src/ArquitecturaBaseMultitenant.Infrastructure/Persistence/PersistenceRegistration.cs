@@ -70,6 +70,7 @@ internal static class PersistenceRegistration
         services.AddScoped<IPlatformReader, PlatformReader>();
         services.AddScoped<IPlatformAccountReader, PlatformAccountReader>();
         services.AddScoped<IPendingTenantOwnerRepository, PendingTenantOwnerRepository>();
+        services.AddScoped<IAccountRecoveryRepository, AccountRecoveryRepository>();
         services.AddScoped<ITenantReader, TenantReader>();
         services.AddScoped<ITenantSlugAvailabilityReader, TenantSlugAvailabilityReader>();
         services.AddScoped<IMemberRepository, MemberRepository>();

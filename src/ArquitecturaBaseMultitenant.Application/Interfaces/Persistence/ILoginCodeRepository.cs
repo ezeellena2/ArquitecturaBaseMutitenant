@@ -13,6 +13,13 @@ public interface ILoginCodeRepository
     Task<LoginCode?> GetLatestAsync(LoginCodeDestination destination, LoginCodePurpose purpose,
         Guid? requestedByUserId, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// El último código de «Recuperar mi cuenta» de este destino pedido con ese nonce y no reemplazado. Se busca por el
+    /// hash, sin comparar en tiempo constante: el nonce tiene 256 bits.
+    /// </summary>
+    Task<LoginCode?> FindRecoveryByNonceAsync(LoginCodeDestination destination, string nonceHash,
+        CancellationToken cancellationToken);
+
     Task<IReadOnlyList<LoginCode>> ListActiveAsync(LoginCodeDestination destination, LoginCodePurpose purpose,
         Guid? requestedByUserId, DateTime nowUtc, CancellationToken cancellationToken);
 

@@ -90,6 +90,59 @@ public sealed class LoginCodeTests
     }
 
     [Fact]
+    public void Recovery_code_is_bound_to_its_nonce_and_unlocks_the_request_once_verified()
+    {
+        var code = RecoveryCode();
+        code.MarkSent(IssuedAtUtc);
+
+        Assert.Throws<InvalidOperationException>(() => code.BindRecoveryNonce("other-nonce"));
+        Assert.Equal(LoginCodeErrors.Invalid(null), code.VerifyRecovery("other-nonce", "hash", IssuedAtUtc).Error);
+        Assert.Equal(LoginCodeErrors.InvalidCode, code.Verify(LoginCodePurpose.Login, "hash", IssuedAtUtc).Error.Code);
+        Assert.Equal(3, code.AttemptsLeft);
+        Assert.False(code.IsVerifiedRecovery("nonce", IssuedAtUtc));
+        Assert.True(code.VerifyRecovery("nonce", "hash", IssuedAtUtc.AddMinutes(1)).IsSuccess);
+        Assert.True(code.IsVerifiedRecovery("nonce", IssuedAtUtc.AddMinutes(2)));
+        Assert.False(code.IsVerifiedRecovery("other-nonce", IssuedAtUtc.AddMinutes(2)));
+        // Desde la verificación queda otro tanto como la vigencia del código para registrar el pedido.
+        Assert.True(code.IsVerifiedRecovery("nonce", IssuedAtUtc.AddMinutes(10.5)));
+        Assert.False(code.IsVerifiedRecovery("nonce", IssuedAtUtc.AddMinutes(11)));
+        Assert.Equal(LoginCodeErrors.AlreadyUsed, code.VerifyRecovery("nonce", "hash", IssuedAtUtc.AddMinutes(2)).Error);
+    }
+
+    [Fact]
+    public void Unsent_recovery_code_fails_like_a_wrong_code_and_spends_attempts()
+    {
+        var code = RecoveryCode();
+
+        var first = code.VerifyRecovery("nonce", "hash", IssuedAtUtc).Error;
+        Assert.Equal(LoginCodeErrors.InvalidCode, first.Code);
+        Assert.Equal(2, first.Metadata![LoginCodeErrors.AttemptsLeftKey]);
+        Assert.Equal(1, code.VerifyRecovery("nonce", "hash", IssuedAtUtc).Error.Metadata![LoginCodeErrors.AttemptsLeftKey]);
+        Assert.Equal(LoginCodeErrors.TooManyAttempts, code.VerifyRecovery("nonce", "hash", IssuedAtUtc).Error);
+        Assert.False(code.IsVerifiedRecovery("nonce", IssuedAtUtc));
+    }
+
+    [Fact]
+    public void Recovery_code_has_no_account_and_only_recovery_codes_take_a_nonce()
+    {
+        var destination = LoginCodeDestination.ForEmail(Email.Create("ana@example.com").Value);
+
+        Assert.Throws<ArgumentException>(() => LoginCode.Issue(destination, LoginCodePurpose.AccountRecovery,
+            Guid.CreateVersion7(), "hash", IssuedAtUtc, TimeSpan.FromMinutes(10), 3));
+        var login = LoginCode.Issue(destination, LoginCodePurpose.Login, null, "hash", IssuedAtUtc,
+            TimeSpan.FromMinutes(10), 3);
+        Assert.Throws<InvalidOperationException>(() => login.BindRecoveryNonce("nonce"));
+    }
+
+    private static LoginCode RecoveryCode()
+    {
+        var code = LoginCode.Issue(LoginCodeDestination.ForEmail(Email.Create("nuevo@example.com").Value),
+            LoginCodePurpose.AccountRecovery, null, "hash", IssuedAtUtc, TimeSpan.FromMinutes(10), 3);
+        code.BindRecoveryNonce("nonce");
+        return code;
+    }
+
+    [Fact]
     public void A_phone_channel_is_known_only_when_a_module_registers_it()
     {
         var channels = new HashSet<string>(StringComparer.Ordinal) { LoginCodeChannel.Email };

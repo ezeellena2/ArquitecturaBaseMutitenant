@@ -151,6 +151,9 @@ public sealed class LoginCodeFlowTests
             return Task.FromResult(Codes.LastOrDefault(code => Matches(code, destination, purpose, requestedByUserId)));
         }
 
+        public Task<LoginCode?> FindRecoveryByNonceAsync(LoginCodeDestination destination, string nonceHash,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
+
         public Task<IReadOnlyList<LoginCode>> ListActiveAsync(LoginCodeDestination destination, LoginCodePurpose purpose,
             Guid? requestedByUserId, DateTime nowUtc, CancellationToken cancellationToken)
         {

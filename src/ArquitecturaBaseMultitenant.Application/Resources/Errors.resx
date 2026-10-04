@@ -182,4 +182,5 @@
   <data name="Platform.Operator.PermissionNotFound" xml:space="preserve"><value>El permiso no forma parte del catálogo de la plataforma.</value></data>
   <data name="Platform.Operator.PermissionRepeated" xml:space="preserve"><value>Un permiso de plataforma está repetido.</value></data>
   <data name="Platform.Operator.LastManager" xml:space="preserve"><value>Tiene que quedar al menos un operador activo que pueda administrar operadores.</value></data>
+  <data name="Platform.AccountRecovery.VerificationRequired" xml:space="preserve"><value>Pedí un código nuevo y verificalo.</value></data>
 </root>

@@ -22,4 +22,10 @@ public enum LoginCodePurpose
 
     /// <summary>Confirmar que quien cambia un método sigue controlando otro método.</summary>
     Reauthenticate = 4,
+
+    /// <summary>
+    /// Verificar el método nuevo de «Recuperar mi cuenta». No tiene cuenta: queda atado al nonce del navegador que lo
+    /// pidió.
+    /// </summary>
+    AccountRecovery = 6,
 }

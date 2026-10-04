@@ -12,5 +12,6 @@ public interface ILoginCodeChannel
     void EnqueueRenderedLoginCode(string payload, Guid? userId = null);
 
     void EnqueueSignup(string destination, string code, int lifetimeMinutes, CultureProfile culture);
-    void EnqueueVerification(Guid userId, string destination, string code, int lifetimeMinutes, CultureProfile culture);
+    /// <summary>El código para verificar un destino; sin cuenta en «Recuperar mi cuenta».</summary>
+    void EnqueueVerification(Guid? userId, string destination, string code, int lifetimeMinutes, CultureProfile culture);
 }

@@ -23,6 +23,17 @@ internal sealed class LoginCodeRepository(ApplicationDbContext context) : ILogin
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public Task<LoginCode?> FindRecoveryByNonceAsync(LoginCodeDestination destination, string nonceHash,
+        CancellationToken cancellationToken)
+    {
+        context.RequireTransaction();
+        return context.LoginCodes
+            .Where(code => code.Destination == destination.Value && code.Purpose == LoginCodePurpose.AccountRecovery
+                && code.NonceHash == nonceHash && code.InvalidatedAtUtc == null)
+            .OrderByDescending(code => code.CreatedAtUtc)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<LoginCode>> ListActiveAsync(LoginCodeDestination destination,
         LoginCodePurpose purpose, Guid? requestedByUserId, DateTime nowUtc, CancellationToken cancellationToken)
     {

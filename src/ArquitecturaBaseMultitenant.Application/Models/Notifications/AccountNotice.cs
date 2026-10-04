@@ -31,7 +31,13 @@ public abstract record AccountNotice
 
     public sealed record AccountDeleted : AccountNotice;
 
+    /// <summary>Al método nuevo de «Recuperar mi cuenta»: no revela si había una cuenta.</summary>
     public sealed record RecoveryReceived : AccountNotice;
+
+    /// <summary>
+    /// Al dueño de un correo que alguien dio como método nuevo de «Recuperar mi cuenta», en lugar del código (ADR 0041).
+    /// </summary>
+    public sealed record RecoveryMethodInUse : AccountNotice;
 
     public sealed record RecoveryApproved : AccountNotice;
 

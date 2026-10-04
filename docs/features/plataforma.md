@@ -74,6 +74,16 @@ Bloquean el último operador activo con `platform.operators.manage` (`PlatformOp
 
 El contacto del Dueño de una organización creada desde Plataforma se ve desde el alta: `platform.PendingTenantOwners` guarda el correo invitado en la misma UoW del alta, y la lista y la búsqueda de organizaciones lo usan cuando no hay Dueño activo ni registrante. Un trigger sobre `tenant.Invitations` borra esa copia cuando la invitación se acepta, se revoca o se elimina (también al revocarla la baja de una cuenta), así Plataforma no lee Invitations ni conserva un correo huérfano. Runtime solo puede agregarla y leerla.
 
+## Recuperar mi cuenta: pedido público
+
+Sin sesión y en tres pasos, todos con Idempotency-Key y los límites por IP del ingreso por código. Ninguna respuesta revela si un correo tiene cuenta (ADR 0041) y ninguna entrega una sesión.
+
+1. `POST /api/account-recovery/code` con el correo nuevo y un `nonce` que genera el navegador (43 caracteres base64url; la base guarda su hash en el código). Responde 202 con la espera para reenviar. Si el correo ya es de una cuenta, el código se emite igual (los límites por destino, compartidos con el ingreso, no cambian), no se manda y a su dueño le llega «Ya tenés una cuenta con este correo».
+2. `POST /api/account-recovery/verify` con correo, nonce y código: 204. Otro nonce responde como un código inexistente y no gasta intentos; un código que no se mandó falla como uno mal escrito, con los mismos intentos restantes. Los intentos fallidos se guardan.
+3. `POST /api/account-recovery` con correo, nonce y el método de antes (`previousEmail` o `previousPhone`, no los dos; distinto del nuevo): 202. Exige el código verificado con ese nonce y vigente, y cada código registra un solo pedido (índice único y lock del destino). El pedido `platform.AccountRecoveryRequests` queda Pending con la cuenta que tiene verificado el método de antes, o sin cuenta, y al correo nuevo le llega «Recibimos tu pedido», en la cultura por defecto.
+
+Por ahora el método nuevo es solo un correo: el teléfono llega con el canal de WhatsApp (Etapa 8). Los valores quedan en claro, como en `identity.LoginMethods`, porque la bandeja busca por ellos y aprobar crea el método; nunca van a logs ni a la auditoría.
+
 ## Verificación de accesos y flujos
 
 Los `SecurityEvent` de configuración, módulos, cambios de estado y moderación conservan el diff técnico de claves con `before`/`after`, el destino de organización o cuenta y la IP enmascarada. El diff solo admite booleanos, cantidades, enums y UTC; omite valores iguales y no recibe nombre, correo, dominio ni contenido de la página. El motivo interno va aparte. Las entradas técnicas sin modificación conservan un diff vacío; un retry que no cambia el estado no inventa una transición.
