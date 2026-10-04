@@ -425,11 +425,12 @@ Además, `navigation/personal.ts` queda listo para sumar módulos B2C. El `Perso
 - **Mi cuenta › WhatsApp** (lienzo v79, front `830e9c2`), con los tableros Cuenta, Cuenta-Agregar, Cuenta-Verificar y Cuenta-Metodo y sus teléfonos:
   - sumar el número con `PhoneField usage="whatsapp"`, que ofrece solo los países de `WhatsApp:AllowedCountries`;
   - verificarlo con un código por WhatsApp;
-  - errores: país no habilitado, solo para un número nuevo; número de otra cuenta; código incorrecto y vencido;
+  - errores: país no habilitado, solo para un número nuevo; código incorrecto y vencido;
+  - si el número es de otra cuenta, la pantalla sigue igual, no se manda código y a su dueño le llega un aviso ([ADR 0041](../decisions/0041-no-revelar-cuentas.md)). Diseño ajusta Cuenta-Agregar;
   - desde el ⋮, «Hacer principal» y «Quitar», con el código a otro método;
   - sin el módulo, no aparecen ni la fila ni la opción.
 - **No hay «Cambiar número»** (decisión del usuario del 2026-10-03): se agrega el nuevo y se quita el viejo.
-- **Textos nuevos** para los resources: «Este número ya está asociado a una cuenta.», «Verificar tu WhatsApp», «¿Quitar este WhatsApp?» y «¿Hacer principal este WhatsApp?». Las pantallas de WhatsApp de la plataforma y de las organizaciones llegan en la Etapa 11 (ADR 0038), ya dibujadas y aprobadas en el lienzo v65.
+- **Textos nuevos** para los resources: «Verificar tu WhatsApp», «¿Quitar este WhatsApp?» y «¿Hacer principal este WhatsApp?». Se descartó «Este número ya está asociado a una cuenta.» por la ADR 0041. Las pantallas de WhatsApp de la plataforma y de las organizaciones llegan en la Etapa 11 (ADR 0038), ya dibujadas y aprobadas en el lienzo v65.
 
 **Puerta:** la general, más un recorrido real: con el webhook de Meta apuntando al túnel del multitenant (`configuracion.md` §4), ingresar con un código por WhatsApp y escribirle al bot. Además, **la prueba de fuego**: en una copia descartable, quitar el módulo siguiendo `quitar-whatsapp.md`, y el build y los tests del núcleo tienen que quedar en verde.
 

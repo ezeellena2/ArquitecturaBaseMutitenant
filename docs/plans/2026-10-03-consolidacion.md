@@ -86,6 +86,10 @@ B4, B6, B8, B10, B11 y B12 se arreglan con su pieza, en los bloques 4 y 5.
 
 - [ ] **1.2 · Configuración › dominio:** mostrar cuántos correos administra el dominio. Quedó esperando los archivos de dominios de Plataforma, ya commiteados en `4bb5c35`. Back con su test y front como el tablero.
 - [ ] **1.3 · Teléfono de la página pública:** revisar la columna `varchar(16)` contra `telefonos.md` y migrarla si hace falta.
+- [ ] **D4 · Mi cuenta: agregar un correo sin revelar si es de otra cuenta** ([ADR 0041](../decisions/0041-no-revelar-cuentas.md)).
+  - Si el correo es de otra cuenta, la respuesta y la pantalla son las mismas que con uno libre. No se manda código, y a su dueño le llega el aviso que Diseño sume en Mensajes.
+  - Sale el texto «…ya está asociada a otra cuenta.» de `account.json` y su error del back.
+  - Tests: el correo libre y el de otra cuenta dan la misma respuesta; en el segundo, el aviso se encola y no se emite ningún código.
 - [ ] **D3 · Nombres de rol repetidos, como el tablero Roles** (decisión del usuario del 2026-10-03):
   - un rol de una empresa puede llamarse igual que el de otra empresa;
   - los roles de toda la organización siguen siendo únicos entre sí.
@@ -143,7 +147,7 @@ Cada servicio de entrada abre la transacción en su método público, y los help
 - [ ] **Estado de un miembro:** una sola expresión SQL para filtrar, mostrar y contar (con un `GroupBy`), en Usuarios y en Miembros de empresa. La política de C# queda como especificación, con un test de paridad.
   - Esto arregla **B8**. Test: un invitado con su membresía inactiva aparece en un solo estado y se cuenta una vez.
 - [ ] **Búsqueda:** miembros e invitaciones usan `ApplySearch` y `ToPagedResultAsync`, sin SQL crudo ni `EscapeLike` propio. Tests de búsqueda con acentos en `/api/users/paged` y `/members/paged`.
-- [ ] **Enmascarado:** `PersonalDataMask` en `Application/Common`, para correo y teléfono, con el formato que muestra el lienzo.
+- [ ] **Enmascarado:** `PersonalDataMask` en `Application/Common`, para correo y teléfono, con el formato que muestra el lienzo. La parte de correos ya existe desde T11 de la Etapa 5 (`Common/Text/PersonalDataMask.Email`, «lu•••@dominio»); falta el teléfono y migrar los demás usos.
   - Lo usan el interceptor de auditoría, la cuenta, los avisos y el reader de auditoría.
   - Se borra `IPhoneNumberParser.Mask`.
 - [ ] **Auditoría de roles, como el tablero Auditoria-Org.** Cuando cambian los roles de una persona en una empresa, queda un solo cambio, «Roles en la empresa: antes → después». Hoy queda una entrada por cada asignación.
