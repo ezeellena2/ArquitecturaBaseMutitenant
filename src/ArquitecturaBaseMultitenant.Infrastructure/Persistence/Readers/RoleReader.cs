@@ -77,14 +77,9 @@ internal sealed class RoleReader(ApplicationDbContext context, ITenantContext te
             && (excludedRoleId == null || role.Id != excludedRoleId), cancellationToken);
     }
 
-    public Task<int> CountUsersAsync(Guid roleId, CancellationToken cancellationToken)
-    {
-        var tenantId = tenantContext.RequiredTenantId;
-        return context.Members.AsNoTracking().CountAsync(member => member.TenantId == tenantId
-            && member.Status == MemberStatus.Active
-            && context.RoleAssignments.Any(assignment => assignment.TenantId == tenantId
-                && assignment.RoleId == roleId && assignment.MemberId == member.Id), cancellationToken);
-    }
+    /// <summary>La misma cuenta que muestran la lista y la ficha (<see cref="Project"/>).</summary>
+    public async Task<int> CountUsersAsync(Guid roleId, CancellationToken cancellationToken) =>
+        (await FindByIdAsync(roleId, cancellationToken))?.UserCount ?? 0;
 
     public async Task<IReadOnlyList<Guid>> ListRoleIdsForUserAsync(Guid userId, Guid? companyId,
         CancellationToken cancellationToken)
@@ -126,6 +121,8 @@ internal sealed class RoleReader(ApplicationDbContext context, ITenantContext te
         return permissions is null ? [] : permissions.Order(StringComparer.Ordinal).ToArray();
     }
 
+    // Personas asignadas a un rol (decisión 42): cada persona con una asignación del rol, activa, invitada o
+    // desactivada. Mientras haya una, el rol no cambia dónde vale ni se borra (la clave foránea es Restrict).
     private IQueryable<RoleRow> Project(IQueryable<Role> roles, Guid tenantId) => roles.Select(role => new RoleRow(
         role.Id,
         role.Name,
@@ -133,9 +130,8 @@ internal sealed class RoleReader(ApplicationDbContext context, ITenantContext te
         role.Scope,
         role.CompanyId,
         role.IsSystemRole,
-        context.Members.Count(member => member.TenantId == tenantId && member.Status == MemberStatus.Active
-            && context.RoleAssignments.Any(assignment => assignment.TenantId == tenantId
-                && assignment.RoleId == role.Id && assignment.MemberId == member.Id)),
+        context.RoleAssignments.Where(assignment => assignment.TenantId == tenantId && assignment.RoleId == role.Id)
+            .Select(assignment => assignment.MemberId).Distinct().Count(),
         role.Permissions.ToArray(),
         role.Version,
         role.CreatedAtUtc));

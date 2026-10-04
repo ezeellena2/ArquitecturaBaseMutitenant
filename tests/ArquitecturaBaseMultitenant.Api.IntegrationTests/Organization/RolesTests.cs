@@ -102,6 +102,79 @@ public sealed class RolesTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task A_role_held_only_by_an_invited_person_counts_as_assigned()
+    {
+        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
+        await OrganizationJourney.StageAsync(factory, owner, "Rol de una invitada", Ct);
+        await AccountJourney.AuthorizeAsync(client, "business", Ct);
+        var north = await CreateCompanyAsync(client, "Delta Norte S.A.");
+        var south = await CreateCompanyAsync(client, "Delta Sur S.R.L.");
+        var role = await CreateRoleAsync(client, "Lectura Norte", north);
+        using var invited = await AccountJourney.PostAsync(client, "/api/users/invitations", new
+        {
+            email = "valentina.ruiz@example.test",
+            roleIds = Array.Empty<Guid>(),
+            companies = new[] { new { companyId = north, roleIds = new[] { role } } },
+        }, Ct);
+        Assert.True(invited.StatusCode == HttpStatusCode.Created, await invited.Content.ReadAsStringAsync(Ct));
+
+        // Decisión 42: quien tiene el rol en una invitación pendiente cuenta como persona asignada.
+        await AssertRoleIsHeldByOneAsync(client, role, "Lectura Norte", south);
+    }
+
+    [Fact]
+    public async Task A_role_held_only_by_a_deactivated_person_counts_as_assigned()
+    {
+        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
+        using var colleagueClient = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var colleague = await AccountJourney.RegisterAsync(factory, colleagueClient, Ct);
+        var tenantId = await OrganizationJourney.StageAsync(factory, owner, "Rol de un desactivado", Ct);
+        var colleagueMemberId = await OrganizationJourney.AddActiveMemberAsync(factory, tenantId, colleague.UserId, Ct);
+        await AccountJourney.AuthorizeAsync(client, "business", Ct);
+        var north = await CreateCompanyAsync(client, "Delta Norte S.A.");
+        var south = await CreateCompanyAsync(client, "Delta Sur S.R.L.");
+        var role = await CreateRoleAsync(client, "Lectura Norte", north);
+        using var added = await AccountJourney.PostAsync(client, $"/api/companies/{north:D}/members",
+            new { memberId = colleagueMemberId, roleIds = new[] { role } }, Ct);
+        Assert.True(added.StatusCode == HttpStatusCode.NoContent, await added.Content.ReadAsStringAsync(Ct));
+        using var user = await client.GetAsync($"/api/users/{colleagueMemberId:D}", Ct);
+        using var userJson = JsonDocument.Parse(await user.Content.ReadAsStringAsync(Ct));
+        using var disabled = await client.PutAsJsonAsync($"/api/users/{colleagueMemberId:D}/status",
+            new { isActive = false, version = userJson.RootElement.GetProperty("version").GetUInt32() }, Ct);
+        Assert.True(disabled.StatusCode == HttpStatusCode.NoContent, await disabled.Content.ReadAsStringAsync(Ct));
+
+        // Decisión 42: desactivarla no le quita el rol, que vuelve a valer si se la reactiva.
+        await AssertRoleIsHeldByOneAsync(client, role, "Lectura Norte", south);
+    }
+
+    /// <summary>
+    /// La ficha cuenta a esa persona, el rol no cambia dónde vale y borrarlo responde 409 con cuántas personas lo
+    /// tienen, en lugar de chocar con la clave foránea de las asignaciones.
+    /// </summary>
+    private static async Task AssertRoleIsHeldByOneAsync(HttpClient client, Guid roleId, string name,
+        Guid otherCompanyId)
+    {
+        using var detail = await client.GetAsync($"/api/roles/{roleId:D}", Ct);
+        using var json = JsonDocument.Parse(await detail.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(1, json.RootElement.GetProperty("userCount").GetInt32());
+
+        using var moved = await MoveRoleAsync(client, roleId, name, otherCompanyId);
+        Assert.Equal(HttpStatusCode.Conflict, moved.StatusCode);
+        Assert.Equal(RoleErrors.ScopeChangeHasUsersCode, await ProblemCodeAsync(moved));
+
+        using var deleted = await client.SendAsync(new HttpRequestMessage(HttpMethod.Delete, $"/api/roles/{roleId:D}")
+        {
+            Content = JsonContent.Create(new { version = json.RootElement.GetProperty("version").GetUInt32() }),
+        }, Ct);
+        Assert.Equal(HttpStatusCode.Conflict, deleted.StatusCode);
+        using var problem = JsonDocument.Parse(await deleted.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(RoleErrors.HasUsersCode, problem.RootElement.GetProperty("code").GetString());
+        Assert.Equal(1, problem.RootElement.GetProperty(RoleErrors.UserCountKey).GetInt32());
+    }
+
+    [Fact]
     public async Task A_role_name_repeats_across_companies_but_not_within_a_company_or_the_whole_organization()
     {
         using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
