@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -15,22 +16,32 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITenantContext tenantContext)
     : ICompanyMembershipReader
 {
-    private SortMap<CompanyMembership> Sort => new()
+    private static readonly SortMap<StateRow> Sort = new()
     {
-        ["displayName"] = membership => context.Members.AsNoTracking()
-            .Where(member => member.TenantId == membership.TenantId && member.Id == membership.MemberId)
-            .Select(member => context.Users.AsNoTracking().Where(user => user.Id == member.UserId)
-                .Select(user => user.DisplayName ?? string.Empty).FirstOrDefault()).FirstOrDefault(),
-        ["email"] = membership => context.Members.AsNoTracking()
-            .Where(member => member.TenantId == membership.TenantId && member.Id == membership.MemberId)
-            .Select(member => context.LoginMethods.AsNoTracking()
-                .Where(method => method.UserId == member.UserId && method.Type == LoginMethodType.Email
-                    && method.VerifiedAtUtc != null)
-                .OrderByDescending(method => method.IsPrimary).ThenBy(method => method.Id)
-                .Select(method => method.Value).FirstOrDefault()).FirstOrDefault(),
+        ["displayName"] = row => row.DisplayName,
+        ["email"] = row => row.Email,
     };
 
     private static readonly SortDescriptor DefaultSort = new("displayName", Descending: false);
+
+    /// <summary>
+    /// El estado de un miembro de la empresa en SQL: la única expresión que usan el filtro, la fila y los conteos.
+    /// Sigue a <c>CompanyMemberStatePolicy</c>, y un test de paridad las compara.
+    /// </summary>
+    internal static readonly Expression<Func<StateInput, StateRow>> WithState = input => new StateRow
+    {
+        MemberId = input.MemberId,
+        DisplayName = input.DisplayName,
+        Email = input.Email,
+        State = input.MemberStatus == MemberStatus.Invited
+            ? CompanyMemberState.Invited
+            : input.MembershipStatus == CompanyMembershipStatus.Inactive || input.MemberStatus != MemberStatus.Active
+                || input.UserStatus == UserStatus.Suspended || input.UserStatus == UserStatus.Deleted
+                ? CompanyMemberState.Inactive
+                : input.UserStatus == UserStatus.PendingDeletion
+                    ? CompanyMemberState.PendingDeletion
+                    : CompanyMemberState.Active,
+    };
 
     public async Task<PagedResult<CompanyMemberRow>> ListAsync(Guid companyId,
         ListCompanyMembersRequest request, CancellationToken cancellationToken)
@@ -39,14 +50,13 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
         var tenantId = tenantContext.RequiredTenantId;
         var rows = await Memberships(tenantId, companyId, request, cancellationToken);
         var totalCount = await rows.CountAsync(cancellationToken);
-        var ordered = rows.ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort,
-            membership => membership.MemberId);
+        var ordered = rows.ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort, row => row.MemberId);
         var page = await ordered.Skip((request.Page - 1) * request.PageSize).Take(request.PageSize)
             .ToArrayAsync(cancellationToken);
         if (page.Length == 0)
             return new PagedResult<CompanyMemberRow>([], request.Page, request.PageSize, totalCount);
 
-        var memberIds = page.Select(membership => membership.MemberId).ToArray();
+        var memberIds = page.Select(row => row.MemberId).ToArray();
         var pageRows = await ProjectAsync(tenantId, companyId, memberIds, cancellationToken);
         var rowsById = pageRows.ToDictionary(member => member.MemberId);
         var roleRows = await (from assignment in context.RoleAssignments.AsNoTracking()
@@ -70,12 +80,13 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
         var pendingEmails = invitationEmails.GroupBy(item => item.MemberId)
             .ToDictionary(group => group.Key, group => group.First().Destination.DisplayValue);
 
-        var mapped = page.Select(membership => rowsById[membership.MemberId])
-            .Select(member => new CompanyMemberRow(member.MemberId, member.UserId,
-            member.DisplayName.Length == 0 ? pendingEmails.GetValueOrDefault(member.MemberId, "") : member.DisplayName,
-            ToEmail(member.Email ?? pendingEmails.GetValueOrDefault(member.MemberId)), member.MemberStatus,
-            member.UserStatus, member.MembershipStatus, rolesByMember.GetValueOrDefault(member.MemberId, []),
-            member.Version, member.CreatedAtUtc)).ToArray();
+        var mapped = page.Select(state => (state.State, Member: rowsById[state.MemberId]))
+            .Select(item => new CompanyMemberRow(item.Member.MemberId, item.Member.UserId,
+            item.Member.DisplayName.Length == 0
+                ? pendingEmails.GetValueOrDefault(item.Member.MemberId, "") : item.Member.DisplayName,
+            ToEmail(item.Member.Email ?? pendingEmails.GetValueOrDefault(item.Member.MemberId)), item.State,
+            item.Member.MembershipStatus, rolesByMember.GetValueOrDefault(item.Member.MemberId, []),
+            item.Member.Version, item.Member.CreatedAtUtc)).ToArray();
         return new PagedResult<CompanyMemberRow>(mapped, request.Page, request.PageSize, totalCount);
     }
 
@@ -85,12 +96,13 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
         ArgumentNullException.ThrowIfNull(request);
         var tenantId = tenantContext.RequiredTenantId;
         var rows = await Memberships(tenantId, companyId, request with { State = null }, cancellationToken);
-        return new CompanyMemberFilterCountsResponse(
-            await rows.CountAsync(cancellationToken),
-            await WithState(rows, tenantId, CompanyMemberState.Active).CountAsync(cancellationToken),
-            await WithState(rows, tenantId, CompanyMemberState.PendingDeletion).CountAsync(cancellationToken),
-            await WithState(rows, tenantId, CompanyMemberState.Inactive).CountAsync(cancellationToken),
-            await WithState(rows, tenantId, CompanyMemberState.Invited).CountAsync(cancellationToken));
+        var counts = await rows.GroupBy(row => row.State)
+            .Select(group => new { State = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(group => group.State, group => group.Count, cancellationToken);
+        int Count(CompanyMemberState state) => counts.GetValueOrDefault(state);
+        return new CompanyMemberFilterCountsResponse(counts.Values.Sum(), Count(CompanyMemberState.Active),
+            Count(CompanyMemberState.PendingDeletion), Count(CompanyMemberState.Inactive),
+            Count(CompanyMemberState.Invited));
     }
 
     public async Task<IReadOnlyList<UserCompanyRow>> ListActiveForUserAsync(Guid userId,
@@ -131,7 +143,7 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
             rolesByCompany.GetValueOrDefault(item.CompanyId, [])))];
     }
 
-    private async Task<IQueryable<CompanyMembership>> Memberships(Guid tenantId, Guid companyId,
+    private async Task<IQueryable<StateRow>> Memberships(Guid tenantId, Guid companyId,
         ListCompanyMembersRequest request, CancellationToken cancellationToken)
     {
         var rows = context.CompanyMemberships.AsNoTracking()
@@ -157,9 +169,6 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
                             && EF.Functions.ILike(method.Value, pattern, "\\")))));
         }
 
-        if (request.State is { } state)
-            rows = WithState(rows, tenantId, state);
-
         if (request.RoleId is { } roleId)
             rows = rows.Where(membership => context.RoleAssignments.Any(assignment => assignment.TenantId == tenantId
                 && assignment.CompanyId == companyId && assignment.MemberId == membership.MemberId
@@ -167,29 +176,32 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
         if (request.WithoutRoles is true)
             rows = rows.Where(membership => !context.RoleAssignments.Any(assignment => assignment.TenantId == tenantId
                 && assignment.CompanyId == companyId && assignment.MemberId == membership.MemberId));
-        return rows;
+        var states = States(rows, tenantId);
+        return request.State is { } state ? states.Where(row => row.State == state) : states;
     }
 
-    private IQueryable<CompanyMembership> WithState(IQueryable<CompanyMembership> rows, Guid tenantId,
-        CompanyMemberState state) => state switch
-    {
-        CompanyMemberState.Active => rows.Where(membership => membership.Status == CompanyMembershipStatus.Active
-            && context.Members.Any(member => member.TenantId == tenantId && member.Id == membership.MemberId
-                && member.Status == MemberStatus.Active
-                && context.Users.Any(user => user.Id == member.UserId && user.Status == UserStatus.Active))),
-        CompanyMemberState.PendingDeletion => rows.Where(membership => membership.Status == CompanyMembershipStatus.Active
-            && context.Members.Any(member => member.TenantId == tenantId && member.Id == membership.MemberId
-                && member.Status == MemberStatus.Active
-                && context.Users.Any(user => user.Id == member.UserId && user.Status == UserStatus.PendingDeletion))),
-        CompanyMemberState.Inactive => rows.Where(membership => membership.Status == CompanyMembershipStatus.Inactive
-            || context.Members.Any(member => member.TenantId == tenantId && member.Id == membership.MemberId
-                && (member.Status == MemberStatus.Inactive || member.Status == MemberStatus.Removed
-                    || context.Users.Any(user => user.Id == member.UserId
-                        && (user.Status == UserStatus.Suspended || user.Status == UserStatus.Deleted))))),
-        CompanyMemberState.Invited => rows.Where(membership => context.Members.Any(member =>
-            member.TenantId == tenantId && member.Id == membership.MemberId && member.Status == MemberStatus.Invited)),
-        _ => rows,
-    };
+    // Lee una sola vez lo que decide el estado y el orden, y le aplica la expresión del estado.
+    private IQueryable<StateRow> States(IQueryable<CompanyMembership> memberships, Guid tenantId) =>
+        (from membership in memberships
+         join member in context.Members.AsNoTracking()
+             on new { membership.TenantId, membership.MemberId } equals new { member.TenantId, MemberId = member.Id }
+         where member.TenantId == tenantId
+         select new StateInput
+         {
+             MemberId = membership.MemberId,
+             MemberStatus = member.Status,
+             UserStatus = context.Users.Where(user => user.Id == member.UserId)
+                 .Select(user => (UserStatus?)user.Status).FirstOrDefault(),
+             MembershipStatus = membership.Status,
+             DisplayName = context.Users.Where(user => user.Id == member.UserId)
+                 .Select(user => user.DisplayName ?? string.Empty).FirstOrDefault(),
+             Email = context.LoginMethods
+                 .Where(method => method.UserId == member.UserId && method.Type == LoginMethodType.Email
+                     && method.VerifiedAtUtc != null)
+                 .OrderByDescending(method => method.IsPrimary).ThenBy(method => method.Id)
+                 .Select(method => method.Value).FirstOrDefault(),
+         })
+        .Select(WithState);
 
     private async Task<MemberProjection[]> ProjectAsync(Guid tenantId, Guid companyId, Guid[] memberIds,
         CancellationToken cancellationToken) => await (
@@ -209,8 +221,7 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
                     && method.VerifiedAtUtc != null)
                 .OrderByDescending(method => method.IsPrimary).ThenBy(method => method.Id)
                 .Select(method => method.Value).FirstOrDefault(),
-            member.Status, user == null ? null : user.Status, membership.Status,
-            membership.Version, membership.CreatedAtUtc))
+            membership.Status, membership.Version, membership.CreatedAtUtc))
         .ToArrayAsync(cancellationToken);
 
     private static string EscapeLike(string value) => value
@@ -220,7 +231,26 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
 
     private static Email? ToEmail(string? value) => value is null ? null : Email.Create(value).Value;
 
+    /// <summary>Lo que decide el estado y el orden de un miembro de la empresa, leído en SQL.</summary>
+    internal sealed class StateInput
+    {
+        public Guid MemberId { get; init; }
+        public MemberStatus MemberStatus { get; init; }
+        public UserStatus? UserStatus { get; init; }
+        public CompanyMembershipStatus MembershipStatus { get; init; }
+        public string? DisplayName { get; init; }
+        public string? Email { get; init; }
+    }
+
+    /// <summary>Un miembro con su estado: lo que se filtra, se ordena y se cuenta.</summary>
+    internal sealed class StateRow
+    {
+        public Guid MemberId { get; init; }
+        public CompanyMemberState State { get; init; }
+        public string? DisplayName { get; init; }
+        public string? Email { get; init; }
+    }
+
     private sealed record MemberProjection(Guid MemberId, Guid? UserId, string DisplayName, string? Email,
-        MemberStatus MemberStatus, UserStatus? UserStatus, CompanyMembershipStatus MembershipStatus,
-        uint Version, DateTime CreatedAtUtc);
+        CompanyMembershipStatus MembershipStatus, uint Version, DateTime CreatedAtUtc);
 }

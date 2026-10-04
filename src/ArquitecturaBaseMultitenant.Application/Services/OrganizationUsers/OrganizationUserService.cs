@@ -127,10 +127,9 @@ internal sealed class OrganizationUserService(
                 CommitPolicy.OnSuccess, cancellationToken);
         });
 
-    private OrganizationUserResponse ToResponse(OrganizationUserRow row) => new(row.MemberId, row.UserId,
+    private static OrganizationUserResponse ToResponse(OrganizationUserRow row) => new(row.MemberId, row.UserId,
         row.DisplayName.Length == 0 ? row.Email?.DisplayValue ?? string.Empty : row.DisplayName, row.Email,
-        OrganizationUserStatePolicy.Resolve(row.MemberStatus, row.UserStatus, row.InvitationStatus,
-            row.InvitationExpiresAtUtc, timeProvider.GetUtcNow().UtcDateTime), row.HasManagedEmail,
+        row.State, row.HasManagedEmail,
         [.. row.Roles.Select(Translate)],
         [.. row.Companies.Select(company => company with { Roles = [.. company.Roles.Select(Translate)] })],
         row.InvitationId, row.InvitationIssuedAtUtc, row.InvitationExpiresAtUtc, row.Version, row.CreatedAtUtc,

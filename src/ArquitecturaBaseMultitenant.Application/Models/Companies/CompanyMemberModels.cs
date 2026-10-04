@@ -1,7 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
-using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Models.Companies;
@@ -27,8 +26,9 @@ public sealed record CompanyMemberRoleRow(Guid Id, string Name, bool IsSystemRol
 /// <summary>Una empresa activa donde la persona es miembro activo, con sus roles en esa empresa.</summary>
 public sealed record UserCompanyRow(Guid CompanyId, string CompanyName, IReadOnlyList<CompanyMemberRoleRow> Roles);
 
+/// <summary>Un miembro de la empresa; <c>State</c> lo calcula el reader en SQL (CompanyMemberStatePolicy).</summary>
 public sealed record CompanyMemberRow(Guid MemberId, Guid? UserId, string DisplayName, Email? Email,
-    MemberStatus MemberStatus, UserStatus? UserStatus, CompanyMembershipStatus MembershipStatus,
+    CompanyMemberState State, CompanyMembershipStatus MembershipStatus,
     IReadOnlyList<CompanyMemberRoleRow> Roles, uint Version, DateTime CreatedAtUtc);
 
 public sealed record CompanyMemberResponse(Guid MemberId, Guid? UserId, string DisplayName, Email? Email,

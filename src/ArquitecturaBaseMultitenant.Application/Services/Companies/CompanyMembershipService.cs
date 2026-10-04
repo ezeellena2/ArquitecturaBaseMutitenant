@@ -7,7 +7,6 @@ using ArquitecturaBaseMultitenant.Application.Models.Companies;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
-using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Companies;
@@ -85,17 +84,7 @@ internal sealed class CompanyMembershipService(
     }
 
     private static CompanyMemberResponse ToResponse(CompanyMemberRow member) => new(member.MemberId, member.UserId,
-        member.DisplayName, member.Email, GetState(member), member.MembershipStatus,
+        member.DisplayName, member.Email, member.State, member.MembershipStatus,
         [.. member.Roles.Select(role => new CompanyMemberRoleResponse(role.Id, RoleTexts.Name(role.Name),
             role.IsSystemRole, role.Scope, role.CompanyId))], member.Version, member.CreatedAtUtc);
-
-    private static CompanyMemberState GetState(CompanyMemberRow member)
-    {
-        if (member.MemberStatus == MemberStatus.Invited) return CompanyMemberState.Invited;
-        if (member.MembershipStatus == CompanyMembershipStatus.Inactive || member.MemberStatus != MemberStatus.Active
-            || member.UserStatus is UserStatus.Suspended or UserStatus.Deleted)
-            return CompanyMemberState.Inactive;
-        return member.UserStatus == UserStatus.PendingDeletion
-            ? CompanyMemberState.PendingDeletion : CompanyMemberState.Active;
-    }
 }

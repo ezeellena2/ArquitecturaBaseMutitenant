@@ -364,6 +364,56 @@ public sealed class CompaniesTests(ApiFactory factory)
         Assert.Equal(2, (await MembersAsync(adminClient, $"/api/companies/{companyId:D}/members/paged?pageSize=50")).Length);
     }
 
+    // B8: un invitado al que le sacaron la empresa queda con la membresía inactiva. Tiene un solo estado, el de la
+    // política (Invitado), y se cuenta una sola vez.
+    [Fact]
+    public async Task An_invited_member_with_an_inactive_membership_has_one_state_and_counts_once()
+    {
+        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
+        await OrganizationJourney.StageAsync(factory, owner, "Estado de los miembros", Ct);
+        await AccountJourney.AuthorizeAsync(client, "business", Ct);
+        var companyId = await OrganizationJourney.CreateCompanyAsync(client, "Delta Norte S.A.", Ct);
+        using var rolesResponse = await client.GetAsync($"/api/roles/paged?companyId={companyId:D}&pageSize=50", Ct);
+        using var rolesJson = JsonDocument.Parse(await rolesResponse.Content.ReadAsStringAsync(Ct));
+        var adminRoleId = Assert.Single(rolesJson.RootElement.GetProperty("items").EnumerateArray(),
+            role => role.GetProperty("isSystemRole").GetBoolean()).GetProperty("id").GetGuid();
+        using var issued = await AccountJourney.PostAsync(client, "/api/users/invitations", new
+        {
+            email = $"sin-empresa-{Guid.NewGuid():N}@example.test",
+            roleIds = Array.Empty<Guid>(),
+            companies = new[] { new { companyId, roleIds = new[] { adminRoleId } } },
+        }, Ct);
+        Assert.True(issued.StatusCode == HttpStatusCode.Created, await issued.Content.ReadAsStringAsync(Ct));
+        var invitedUser = Assert.Single(await MembersAsync(client, "/api/users/paged?pageSize=50&state=Invited"));
+        var memberId = invitedUser.GetProperty("memberId").GetGuid();
+        using var edited = await client.PutAsJsonAsync($"/api/users/{memberId:D}", new
+        {
+            roleIds = Array.Empty<Guid>(),
+            companies = Array.Empty<object>(),
+            version = invitedUser.GetProperty("version").GetUInt32(),
+        }, Ct);
+        Assert.True(edited.StatusCode == HttpStatusCode.NoContent, await edited.Content.ReadAsStringAsync(Ct));
+
+        var membersPath = $"/api/companies/{companyId:D}/members";
+        var row = Assert.Single(await MembersAsync(client, membersPath + "/paged?pageSize=50"),
+            item => item.GetProperty("memberId").GetGuid() == memberId);
+        Assert.Equal("Invited", row.GetProperty("state").GetString());
+        Assert.Equal("Inactive", row.GetProperty("membershipStatus").GetString());
+        Assert.Contains(await MembersAsync(client, membersPath + "/paged?pageSize=50&state=Invited"),
+            item => item.GetProperty("memberId").GetGuid() == memberId);
+        Assert.DoesNotContain(await MembersAsync(client, membersPath + "/paged?pageSize=50&state=Inactive"),
+            item => item.GetProperty("memberId").GetGuid() == memberId);
+        using var counts = await client.GetAsync(membersPath + "/filter-counts", Ct);
+        Assert.Equal(HttpStatusCode.OK, counts.StatusCode);
+        using var countsJson = JsonDocument.Parse(await counts.Content.ReadAsStringAsync(Ct));
+        int Count(string state) => countsJson.RootElement.GetProperty(state).GetInt32();
+        Assert.Equal(2, Count("all"));
+        Assert.Equal(1, Count("invited"));
+        Assert.Equal(0, Count("inactive"));
+        Assert.Equal(Count("all"), Count("active") + Count("pendingDeletion") + Count("inactive") + Count("invited"));
+    }
+
     // Alcance de un rol: Usuarios y Empresas pasan por la misma regla (RoleAssignment.Check) y responden el mismo
     // código para el mismo caso.
     [Fact]

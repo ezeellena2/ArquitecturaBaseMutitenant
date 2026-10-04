@@ -1,8 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
-using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
-using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
@@ -30,9 +28,9 @@ public sealed record OrganizationUserRoleRow(Guid Id, string Name, bool IsSystem
 public sealed record OrganizationUserCompanyRow(Guid CompanyId, string CompanyName,
     CompanyMembershipStatus Status, IReadOnlyList<OrganizationUserRoleRow> Roles);
 
+/// <summary>Una persona de la organización; <c>State</c> lo calcula el reader en SQL (OrganizationUserStatePolicy).</summary>
 public sealed record OrganizationUserRow(Guid MemberId, Guid? UserId, string DisplayName, Email? Email,
-    bool HasManagedEmail, MemberStatus MemberStatus, UserStatus? UserStatus,
-    InvitationStatus? InvitationStatus, Guid? InvitationId, DateTime? InvitationIssuedAtUtc,
+    bool HasManagedEmail, OrganizationUserState State, Guid? InvitationId, DateTime? InvitationIssuedAtUtc,
     DateTime? InvitationExpiresAtUtc, IReadOnlyList<OrganizationUserRoleRow> Roles,
     IReadOnlyList<OrganizationUserCompanyRow> Companies, uint Version, DateTime CreatedAtUtc,
     DateTime? DeletionScheduledForUtc, DateTime? DeletionRequestedAtUtc = null);

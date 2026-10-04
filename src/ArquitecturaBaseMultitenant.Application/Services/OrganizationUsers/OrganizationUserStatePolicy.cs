@@ -5,6 +5,10 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
 
+/// <summary>
+/// El estado de una persona de la organización, como especificación. Filtrar, mostrar y contar usan la misma regla en
+/// una sola expresión SQL (<c>OrganizationUserReader.WithState</c>), y un test de paridad las compara.
+/// </summary>
 internal static class OrganizationUserStatePolicy
 {
     public static OrganizationUserState Resolve(MemberStatus memberStatus, UserStatus? userStatus,
