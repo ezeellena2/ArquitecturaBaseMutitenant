@@ -70,10 +70,10 @@ Las pantallas de la Etapa 5 (T19 a T25) van después de esta consolidación, par
 - [x] **B1 · Buscar con texto entre los miembros de una empresa da 500.** Hecho en `cfbf1bd`; test `CompaniesTests.Searching_company_members_by_text_finds_members_and_pending_invitations` (rojo con «invalid escape string»).
   - Test: integración de `GET /api/companies/{id}/members/paged?search=`, con y sin invitaciones pendientes.
   - Arreglo: un solo carácter en el `ESCAPE` de `CompanyMembershipReader`. El bloque 4 después lo reemplaza por `ApplySearch`.
-- [ ] **B2 · El alta de un rol se traba con 422 después de un error.**
+- [x] **B2 · El alta de un rol se traba con 422 después de un error.** Hecho en el front, `1c2151f` (`RoleEditorPage.test`).
   - Test de `RoleEditorPage`: el nombre está repetido (409), se corrige y el segundo «Guardar» sale con otra clave y crea el rol.
   - Arreglo: `useIdempotentMutation`.
-- [ ] **B3 · A los miembros de Empresa les falta la columna «Estado».**
+- [x] **B3 · A los miembros de Empresa les falta la columna «Estado».** Ya estaba arreglado; el test de encabezados y el fin de la columna de relleno están en el front, `acc4613`.
   - Test de encabezados: Miembro, Roles en la empresa, Estado y Acciones, como el tablero Empresa.
   - Arreglo: la factory de columnas recibe la de acciones, y se borra la columna de relleno de Empresas.
 - [x] **B5 · Página pública muestra mensajes de validación equivocados.** Hecho en `100d713`; test `PublicPageValidationTests` (Application.UnitTests).
@@ -119,6 +119,15 @@ B4, B6, B8, B10, B11 y B12 se arreglan con su pieza, en los bloques 4 y 5.
     - nota: «Si no fuiste vos, ignorá este mensaje.».
   - Sale de esta respuesta el error `Identity.LoginMethod.AlreadyUsed` («Este correo ya está asociado a una cuenta.», en `Errors.resx`). El de Google (`Identity.Google.AlreadyUsed`) se conserva, porque vincular Google queda fuera de la 0041.
   - Tests: el correo libre y el de otra cuenta dan la misma respuesta; en el segundo, el aviso se encola y no se emite ningún código.
+- [ ] **D4b · La ADR 0041 hasta el final en Mi cuenta** (tanda 2 del back). Con el `methodId` que devuelve D4, hoy verificar y reenviar dan 404 y la lista no muestra el correo como pendiente: eso delata la cuenta.
+  - El correo de otra cuenta aparece en la lista como pendiente, igual que uno libre.
+  - Verificarlo responde como un código incorrecto (cuenta el intento).
+  - Reenviar responde igual que con uno libre.
+  - El pendiente se puede quitar y vence como cualquier otro.
+  - El pendiente no choca con el índice único de `LoginMethods`; por ejemplo, el índice único vale solo para los métodos verificados.
+  - Tests de la misma respuesta en cada paso.
+- [ ] **Un solo aviso al método nuevo de una recuperación** (tanda 2 del back): hoy recibe «recuperación aprobada» y además «agregaste un correo». El aviso de método agregado va a los demás métodos, no al nuevo.
+- [ ] **D6, front:** si el país de la organización no tiene un tipo fiscal para empresas, el campo no aparece (decisión 10 del back).
 - [x] **D3 · Nombres de rol repetidos, como el tablero Roles** (decisión del usuario del 2026-10-03). Hecho en `2956276`, con la migración `RoleNamePerCompany`; tests `RolesTests.A_role_name_repeats_across_companies_but_not_within_a_company_or_the_whole_organization`, `DbContextModelTests.E4_roles_are_private_versioned_and_assignments_have_tenant_scoped_keys` y `RolePersistenceTests`.
   - un rol de una empresa puede llamarse igual que el de otra empresa;
   - los roles de toda la organización siguen siendo únicos entre sí.
@@ -151,7 +160,8 @@ Cada servicio de entrada abre la transacción en su método público, y los help
 
 - [ ] **Usuarios:**
   - `OrganizationUserEditor`, `OrganizationUserStatusEditor`, `OrganizationUserRemover` y `OrganizationUserInvitationManager` dejan de recibir `IUnitOfWork`;
-  - se borran `OrganizationUserLifecycleCoordinator` y `OrganizationUserExitEffects`.
+  - se borran `OrganizationUserLifecycleCoordinator` y `OrganizationUserExitEffects`;
+  - corregir `OrganizationUserAdministratorGuard`: usa `CheckCanLeaveAsync`, que mira todas las organizaciones de la cuenta. Así, quitar el rol de Dueña en una organización falla si la cuenta es la única Dueña de otra. Tiene que mirar solo la organización actual, y va con su test (lo encontró la tanda 1).
 - [ ] **Empresas:**
   - `CompanyCreator` y `CompanyMembershipWriter` dejan de recibir `IUnitOfWork`;
   - `CompanyMembershipRoleManager` pierde los métodos que solo reenvían;
@@ -201,15 +211,15 @@ Cada servicio de entrada abre la transacción en su método público, y los help
 
 ### 5. Front: piezas comunes
 
-- [ ] **F1 · El 403 bloquea la vista solo si viene de la consulta principal.**
+- [x] **F1 · El 403 bloquea la vista solo si viene de la consulta principal.** Front `fcde757`.
   - `httpClient` solo transporta, y `QueryCache.onError` publica cuando la consulta lo declara en `meta`.
   - `Legal.AcceptanceRequired` sigue su camino.
   - Test: un 403 en una consulta secundaria no reemplaza la pantalla.
-- [ ] **F2 · Un mensaje de error común:** `shared/api/errorMessage.ts` y un `MutationCache` para red, 5xx (con el traceId) y 429. Se borran los cuatro `failureMessage` y los `error.message` crudos.
+- [x] **F2 · Un mensaje de error común** (front `4d836d5`, con B12): `shared/api/errorMessage.ts` y un `MutationCache` para red, 5xx (con el traceId) y 429. Se borran los cuatro `failureMessage` y los `error.message` crudos.
   - Arregla **B12**. Test: si se corta la red al guardar, aparece «No pudimos conectarnos» con «Reintentar».
-- [ ] **F3 · `usePagedQuery`** en las cinco listas: filtros, debounce, consulta, corrección de página y las props de `Pagination`.
+- [x] **F3 · `usePagedQuery`** (front `28cd128`, con B6) en las cuatro listas paginadas. Auditoría usa cursor y queda afuera, como pide su ficha: filtros, debounce, consulta, corrección de página y las props de `Pagination`.
   - Arregla **B6**. Test: al borrar el único ítem de la última página, vuelve a la anterior.
-- [ ] **F4 · `tenancy/access.ts`** concentra el tipo `Access` del contrato, el inicio y el ingreso de cada acceso, la organización activa y los estados no disponibles. Se suma `useSignOut`.
+- [x] **F4 · `tenancy/access.ts`** (front `1b5272a`) concentra el tipo `Access` del contrato, el inicio y el ingreso de cada acceso, la organización activa y los estados no disponibles. Se suma `useSignOut`.
   - Fuera de ahí no queda ningún literal `"/org"` ni `"/login/empresa"`.
   - Tests de las funciones puras.
 - [ ] **F5 · `usePermissions`,** con `can`, `canInCompany` y códigos tipados, y un manifiesto de rutas único para `routes.tsx` y el menú. Con tests.
