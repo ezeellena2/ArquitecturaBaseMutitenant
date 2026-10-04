@@ -108,6 +108,115 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
         Assert.Contains("Roles en la empresa", shown);
     }
 
+    [Fact]
+    public async Task Adding_a_person_to_a_company_with_roles_leaves_one_entry_like_the_board()
+    {
+        using var client = Client();
+        var company = await StageCompanyAsync(client, "Auditoría agregar a empresa");
+        var before = await EntryIdsAsync(client);
+
+        await AddToCompanyAsync(client, company, company.ReadOnly);
+
+        // Tablero Auditoria-Org: «Agregó a Paula Méndez», en la empresa, con «Roles en la empresa» adentro.
+        var entry = Assert.Single(await NewEntriesAsync(client, before));
+        Assert.Equal("Agregó a Tomás Acosta", entry.GetProperty("actionText").GetString());
+        Assert.Equal("Delta S.A.", entry.GetProperty("whereText").GetString());
+        Assert.Equal(["Roles en la empresa:  → Solo lectura"], Rows(entry));
+    }
+
+    [Fact]
+    public async Task Inviting_a_person_leaves_one_entry_with_the_email_the_company_and_the_roles_like_the_board()
+    {
+        using var client = Client();
+        var company = await StageCompanyMemberAsync(client, "Auditoría invitar");
+        var before = await EntryIdsAsync(client);
+
+        await InviteToCompanyAsync(client, company, "valentina.ruiz@example.test");
+
+        // Tablero Auditoria-Org: «Invitó a valentina.ruiz@…» con Correo, Empresa y Roles en la empresa. El correo va
+        // enmascarado (auditoria.md).
+        var entry = Assert.Single(await NewEntriesAsync(client, before));
+        Assert.Equal("Invitó a va•••@example.test", entry.GetProperty("actionText").GetString());
+        Assert.Equal("Delta S.A.", entry.GetProperty("whereText").GetString());
+        Assert.Equal(["Correo:  → va•••@example.test", "Empresa:  → Delta S.A.", "Roles en la empresa:  → Solo lectura"],
+            Rows(entry));
+    }
+
+    [Fact]
+    public async Task The_roles_of_an_invited_person_appear_with_their_masked_email()
+    {
+        using var client = Client();
+        var company = await StageCompanyMemberAsync(client, "Auditoría roles de un invitado");
+        await InviteToCompanyAsync(client, company, "valentina.ruiz@example.test");
+        var invited = (await JsonAsync(client, "/api/users/paged?pageSize=50&search=valentina")).GetProperty("items")
+            .EnumerateArray().Single();
+        var before = await EntryIdsAsync(client);
+
+        using var saved = await client.PutAsJsonAsync($"/api/users/{invited.GetProperty("memberId").GetGuid():D}", new
+        {
+            roleIds = Array.Empty<Guid>(),
+            companies = new[] { new { companyId = company.CompanyId, roleIds = new[] { company.ReadOnly, company.Purchases } } },
+            version = invited.GetProperty("version").GetUInt32(),
+        }, Ct);
+        Assert.True(saved.StatusCode == HttpStatusCode.NoContent, await saved.Content.ReadAsStringAsync(Ct));
+
+        // Todavía no tiene cuenta ni nombre: se lo nombra por el correo de su invitación, enmascarado.
+        var entry = Assert.Single(await NewEntriesAsync(client, before));
+        Assert.Equal("Cambió los roles de va•••@example.test", entry.GetProperty("actionText").GetString());
+        Assert.Equal(["Roles en la empresa: Solo lectura → Compras, Solo lectura"], Rows(entry));
+    }
+
+    [Fact]
+    public async Task Each_detail_row_shows_its_field_by_name_and_its_value_in_the_viewer_language()
+    {
+        using var client = Client();
+        var company = await StageCompanyMemberAsync(client, "Auditoría valores");
+        await InviteToCompanyAsync(client, company, "valentina.ruiz@example.test");
+        var member = await JsonAsync(client, $"/api/users/{company.MemberId:D}");
+        using (var disabled = await client.PutAsJsonAsync($"/api/users/{company.MemberId:D}/status",
+                   new { isActive = false, version = member.GetProperty("version").GetUInt32() }, Ct))
+            Assert.True(disabled.StatusCode == HttpStatusCode.NoContent, await disabled.Content.ReadAsStringAsync(Ct));
+        var settings = await JsonAsync(client, "/api/organization/settings");
+        using (var changed = await client.PutAsJsonAsync("/api/organization/settings", new
+               {
+                   name = settings.GetProperty("name").GetString(),
+                   defaultCulture = "en-US",
+                   defaultTimeZoneId = settings.GetProperty("defaultTimeZoneId").GetString(),
+                   defaultCurrency = settings.GetProperty("defaultCurrency").GetString(),
+                   version = settings.GetProperty("version").GetUInt32(),
+               }, Ct))
+            Assert.True(changed.StatusCode == HttpStatusCode.NoContent, await changed.Content.ReadAsStringAsync(Ct));
+        var delta = await JsonAsync(client, $"/api/companies/{company.CompanyId:D}");
+        using (var moved = await client.PutAsJsonAsync($"/api/companies/{company.CompanyId:D}", new
+               {
+                   name = "Delta S.A.",
+                   taxIdNumber = (string?)null,
+                   timeZoneId = "America/Argentina/Cordoba",
+                   version = delta.GetProperty("version").GetUInt32(),
+               }, Ct))
+            Assert.True(moved.StatusCode == HttpStatusCode.NoContent, await moved.Content.ReadAsStringAsync(Ct));
+
+        // Tablero Auditoria-Org: cada fila con su nombre y su valor, nunca «un registro», fechas, canales ni estados
+        // en inglés.
+        var spanish = await DetailsAsync(client, "es-AR");
+        Assert.DoesNotContain(spanish.Values.SelectMany(rows => rows), row => row.StartsWith("un registro:", StringComparison.Ordinal));
+        Assert.Equal(["Estado: Activo → Deshabilitado"], spanish["Deshabilitó a Tomás Acosta"]);
+        Assert.Equal(["Idioma y región: Español (Argentina) → Inglés (Estados Unidos)"],
+            spanish["Cambió la configuración de la organización"]);
+        Assert.Equal(["Zona de negocio: Buenos Aires (GMT−3) → Córdoba (GMT−3)"], spanish["Cambió la empresa Delta S.A."]);
+        Assert.Equal(["Nombre:  → Ventas", "Permisos:  → Ver miembros"], spanish["Creó el rol Ventas"]);
+        Assert.Equal(["Nombre:  → Delta S.A."], spanish["Creó la empresa Delta S.A."]);
+
+        var english = await DetailsAsync(client, "en-US");
+        Assert.DoesNotContain(english.Values.SelectMany(rows => rows), row => row.StartsWith("a record:", StringComparison.Ordinal));
+        Assert.Equal(["Status: Active → Disabled"], english["Disabled Tomás Acosta"]);
+        Assert.Equal(["Language and region: Spanish (Argentina) → English (United States)"],
+            english["Changed organization settings"]);
+        Assert.Equal(["Business time zone: Buenos Aires (GMT−3) → Córdoba (GMT−3)"], english["Changed company Delta S.A."]);
+        Assert.Equal(["Email:  → va•••@example.test", "Company:  → Delta S.A.", "Roles in the company:  → Solo lectura"],
+            english["Invited va•••@example.test"]);
+    }
+
     private static readonly Regex InternalId = new(
         "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|[0-9a-f]{32}",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
@@ -120,6 +229,14 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
     /// <summary>Una empresa con tres roles propios y Tomás Acosta en ella con Ventas y Solo lectura.</summary>
     private async Task<AuditedCompany> StageCompanyMemberAsync(HttpClient client, string organizationName)
     {
+        var company = await StageCompanyAsync(client, organizationName);
+        await AddToCompanyAsync(client, company, company.Sales, company.ReadOnly);
+        return company;
+    }
+
+    /// <summary>Una empresa con tres roles propios y Tomás Acosta en la organización, todavía fuera de la empresa.</summary>
+    private async Task<AuditedCompany> StageCompanyAsync(HttpClient client, string organizationName)
+    {
         var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
         var tenantId = await OrganizationJourney.StageAsync(factory, owner, organizationName, Ct);
         await AccountJourney.AuthorizeAsync(client, "business", Ct);
@@ -128,10 +245,54 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
         var readOnly = await CreateCompanyRoleAsync(client, "Solo lectura", companyId);
         var purchases = await CreateCompanyRoleAsync(client, "Compras", companyId);
         var memberId = await OrganizationJourney.AddNamedMemberAsync(factory, tenantId, "Tomás Acosta", Ct);
-        using var added = await AccountJourney.PostAsync(client, $"/api/companies/{companyId:D}/members",
-            new { memberId, roleIds = new[] { sales, readOnly } }, Ct);
-        Assert.True(added.StatusCode == HttpStatusCode.NoContent, await added.Content.ReadAsStringAsync(Ct));
         return new AuditedCompany(companyId, memberId, sales, readOnly, purchases);
+    }
+
+    private static async Task AddToCompanyAsync(HttpClient client, AuditedCompany company, params Guid[] roleIds)
+    {
+        using var added = await AccountJourney.PostAsync(client, $"/api/companies/{company.CompanyId:D}/members",
+            new { memberId = company.MemberId, roleIds }, Ct);
+        Assert.True(added.StatusCode == HttpStatusCode.NoContent, await added.Content.ReadAsStringAsync(Ct));
+    }
+
+    private static async Task InviteToCompanyAsync(HttpClient client, AuditedCompany company, string email)
+    {
+        using var invited = await AccountJourney.PostAsync(client, "/api/users/invitations", new
+        {
+            email,
+            roleIds = Array.Empty<Guid>(),
+            companies = new[] { new { companyId = company.CompanyId, roleIds = new[] { company.ReadOnly } } },
+        }, Ct);
+        Assert.True(invited.StatusCode == HttpStatusCode.Created, await invited.Content.ReadAsStringAsync(Ct));
+    }
+
+    /// <summary>Las filas del detalle de cada entrada, por su «Qué», en el idioma pedido.</summary>
+    private static async Task<Dictionary<string, string[]>> DetailsAsync(
+        HttpClient client, string culture)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/organization/audit?period=all&limit=100");
+        request.Headers.AcceptLanguage.ParseAdd(culture);
+        using var response = await client.SendAsync(request, Ct);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
+        return json.RootElement.GetProperty("items").EnumerateArray()
+            .GroupBy(item => item.GetProperty("actionText").GetString()!)
+            .ToDictionary(group => group.Key, group => Rows(group.First()));
+    }
+
+    /// <summary>«Campo: antes → después», como el detalle del tablero; un lado vacío queda en blanco.</summary>
+    private static string[] Rows(JsonElement entry) =>
+    [
+        .. entry.GetProperty("changes").EnumerateArray()
+            .Select(change => $"{Text(change, "field")}: {Text(change, "oldValue")} → {Text(change, "newValue")}"),
+    ];
+
+    private static async Task<JsonElement> JsonAsync(HttpClient client, string path)
+    {
+        using var response = await client.GetAsync(path, Ct);
+        Assert.True(response.StatusCode == HttpStatusCode.OK, await response.Content.ReadAsStringAsync(Ct));
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
+        return json.RootElement.Clone();
     }
 
     private static async Task<Guid> CreateCompanyRoleAsync(HttpClient client, string name, Guid companyId)
@@ -387,17 +548,22 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
         var services = scope.ServiceProvider;
         using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenantId);
         var context = services.GetRequiredService<ApplicationDbContext>();
-        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+        var unitOfWork = services.GetRequiredService<IUnitOfWork>();
+        var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        var member = Member.Invite(userId);
+        Assert.True(member.Activate(nowUtc).IsSuccess);
+        var company = Company.Create("Delta S.A.", null, "America/Argentina/Buenos_Aires").Value;
+        var role = Role.Create("Solo lectura", null, RoleScope.AnyCompany, null,
+            [Permissions.Company.Members.Read]).Value;
+        await unitOfWork.ExecuteInTransactionAsync(_ =>
         {
-            var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
-            var member = Member.Invite(userId);
-            Assert.True(member.Activate(nowUtc).IsSuccess);
-            var company = Company.Create("Delta S.A.", null, "America/Argentina/Buenos_Aires").Value;
-            var role = Role.Create("Solo lectura", null, RoleScope.AnyCompany, null,
-                [Permissions.Company.Members.Read]).Value;
-            var membership = CompanyMembership.Create(company.Id, member.Id).Value;
-            var assignment = RoleAssignment.Assign(member.Id, role.Id, role.Scope, role.CompanyId, company.Id).Value;
-            context.AddRange(member, company, role, membership, assignment);
+            context.AddRange(member, company, role, CompanyMembership.Create(company.Id, member.Id).Value);
+            return Task.FromResult(Result.Success());
+        }, CommitPolicy.OnSuccess, Ct);
+        // En otro guardado, para que sea un cambio de roles y no el alta en la empresa (que los lleva adentro).
+        await unitOfWork.ExecuteInTransactionAsync(_ =>
+        {
+            context.Add(RoleAssignment.Assign(member.Id, role.Id, role.Scope, role.CompanyId, company.Id).Value);
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, Ct);
     }

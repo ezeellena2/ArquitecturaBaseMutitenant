@@ -91,7 +91,9 @@ internal sealed class AuditTrailInterceptor(
         var (actorKind, actorId) = AuditActorResolver.Resolve(currentUser);
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         var counterparts = new HashSet<Guid>();
-        foreach (var change in roleChanges)
+        // Invitar a alguien o agregarlo a una empresa deja una sola entrada, con sus roles adentro.
+        var access = AccessChangeTrail.Plan(changed, roleChanges);
+        foreach (var change in access.StandaloneRoleChanges)
         {
             if (change.Place.TenantId != activeTenantId)
             {
@@ -110,6 +112,11 @@ internal sealed class AuditTrailInterceptor(
                 throw new InvalidOperationException("The audited entity does not belong to the active tenant.");
             }
 
+            if (access.IsPartOfInvitation(entry))
+            {
+                continue;
+            }
+
             var diff = Diff(entry);
             // MarkUpdated sin ningún valor distinto (por ejemplo, para cambiar la versión) no es un cambio.
             if (entry.State == EntityState.Modified && diff.Count == 0)
@@ -117,6 +124,7 @@ internal sealed class AuditTrailInterceptor(
                 continue;
             }
 
+            access.Complete(entry, diff, roleNames);
             var action = Action(entry);
             var changes = JsonSerializer.Serialize(diff);
             var entityId = entry.Entity is Entity entity ? entity.Id :

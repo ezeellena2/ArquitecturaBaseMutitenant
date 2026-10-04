@@ -104,6 +104,19 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
                 .ToDictionaryAsync(user => user.Id, user => user.DisplayName, cancellationToken);
         var memberNames = members.ToDictionary(member => member.Id,
             member => member.UserId is { } userId ? userNames.GetValueOrDefault(userId) : null);
+        // Quien todavía no tiene cuenta ni nombre se nombra por el correo de su última invitación, enmascarado.
+        var unnamedMemberIds = memberNames.Where(pair => string.IsNullOrWhiteSpace(pair.Value))
+            .Select(pair => pair.Key).ToArray();
+        if (unnamedMemberIds.Length > 0)
+        {
+            var destinations = await context.Invitations.AsNoTracking()
+                .Where(invitation => unnamedMemberIds.Contains(invitation.MemberId))
+                .OrderByDescending(invitation => invitation.IssuedAtUtc)
+                .Select(invitation => new { invitation.MemberId, invitation.Destination })
+                .ToArrayAsync(cancellationToken);
+            foreach (var invited in destinations.GroupBy(invitation => invitation.MemberId))
+                memberNames[invited.Key] = PersonalDataMask.Email(invited.First().Destination.DisplayValue);
+        }
 
         var roleIds = entries.Select(entry => entry.EntityType switch
             {
@@ -118,6 +131,8 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
                 .Select(role => new { role.Id, role.Name, role.CompanyId }).ToArrayAsync(cancellationToken);
         var roleDetails = roles.ToDictionary(role => role.Id);
 
+        var invitationCompanies = entries.Where(entry => entry.EntityType == nameof(Invitation))
+            .ToDictionary(entry => entry.Id, entry => ReadGuids(entry.Changes, AuditChangeKeys.CompanyIds));
         var companyIds = entries.Select(entry => entry.EntityType switch
             {
                 nameof(Company) => entry.EntityId,
@@ -126,6 +141,7 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
                 _ => null,
             })
             .Concat(roleDetails.Values.Where(role => role.CompanyId.HasValue).Select(role => role.CompanyId))
+            .Concat(invitationCompanies.Values.SelectMany(ids => ids).Select(id => (Guid?)id))
             .Where(id => id.HasValue).Select(id => id!.Value).Distinct().ToArray();
         var companyNames = companyIds.Length == 0
             ? new Dictionary<Guid, string>()
@@ -163,8 +179,14 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
                 invitations.TryGetValue(entry.EntityId, out var invitation))
                 affectedName = PersonalDataMask.Email(invitation.Destination.DisplayValue);
 
-            result[entry.Id] = new AuditDisplayData(affectedName,
-                companyId is { } companyGuid ? companyNames.GetValueOrDefault(companyGuid) : null);
+            // Una invitación a empresas va en esas empresas, por nombre y en orden.
+            var companyName = companyId is { } companyGuid
+                ? companyNames.GetValueOrDefault(companyGuid)
+                : invitationCompanies.GetValueOrDefault(entry.Id) is { Length: > 0 } invited
+                    ? string.Join(", ", invited.Select(id => companyNames.GetValueOrDefault(id)).OfType<string>()
+                        .Order(StringComparer.CurrentCulture))
+                    : null;
+            result[entry.Id] = new AuditDisplayData(affectedName, string.IsNullOrEmpty(companyName) ? null : companyName);
         }
 
         return result;
@@ -249,6 +271,28 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
         catch (JsonException)
         {
             return null;
+        }
+    }
+
+    private static Guid[] ReadGuids(string changes, string propertyName)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(changes);
+            if (document.RootElement.ValueKind != JsonValueKind.Object
+                || !document.RootElement.TryGetProperty(propertyName, out var property)
+                || property.ValueKind != JsonValueKind.Object
+                || !property.TryGetProperty("new", out var value) || value.ValueKind != JsonValueKind.Array) return [];
+            return
+            [
+                .. value.EnumerateArray().Where(item => item.ValueKind == JsonValueKind.String)
+                    .Select(item => Guid.TryParse(item.GetString(), out var id) ? id : Guid.Empty)
+                    .Where(id => id != Guid.Empty),
+            ];
+        }
+        catch (JsonException)
+        {
+            return [];
         }
     }
 

@@ -9,6 +9,7 @@ internal static class AuditingRegistration
     internal static IServiceCollection AddAuditing(this IServiceCollection services)
     {
         services.AddScoped<IOrganizationAuditService, OrganizationAuditService>();
+        services.AddScoped<OrganizationAuditEntryBuilder>();
         return services;
     }
 }

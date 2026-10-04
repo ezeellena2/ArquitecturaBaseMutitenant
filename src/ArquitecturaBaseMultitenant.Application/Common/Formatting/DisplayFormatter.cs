@@ -49,6 +49,56 @@ public sealed class DisplayFormatter(
             await new CultureProfiles(cultures).LoadAsync(culture, cancellationToken), timeZone);
     }
 
+    /// <summary>El contexto en el idioma de la petición en curso; sin cultura, la predeterminada del catálogo.</summary>
+    public async Task<DisplayFormatContext> CreateForCurrentCultureAsync(string timeZone,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(timeZone);
+        var culture = CultureInfo.CurrentUICulture.Name;
+        return new DisplayFormatContext(await new CultureProfiles(cultures)
+            .LoadAsync(culture.Length == 0 ? null : culture, cancellationToken), timeZone);
+    }
+
+    /// <summary>«Córdoba (GMT−3)», como las pantallas: la ciudad en el idioma del contexto y el desfase de ahora.</summary>
+    /// <returns>null si la zona no está en el catálogo.</returns>
+    public async Task<string?> FormatTimeZoneAsync(string timeZoneId, DisplayFormatContext context,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        var zone = await timeZones.FindAsync(timeZoneId, cancellationToken);
+        if (zone is null) return null;
+        var city = context.Profile.Translate(zone.Translations, item => item.Culture).City;
+        var totalMinutes = (int)zoneService.GetUtcOffset(zone.Id, clock.GetUtcNow().UtcDateTime).TotalMinutes;
+        var sign = totalMinutes < 0 ? '−' : '+';
+        var absolute = Math.Abs(totalMinutes);
+        var hours = (absolute / 60).ToString(CultureInfo.InvariantCulture);
+        var minutes = absolute % 60;
+        var offset = minutes == 0 ? hours : hours + ":" + minutes.ToString("00", CultureInfo.InvariantCulture);
+        return $"{city} (GMT{sign}{offset})";
+    }
+
+    /// <summary>El nombre de la cultura en el idioma del contexto: «Español (Argentina)».</summary>
+    /// <returns>null si la cultura no está en el catálogo.</returns>
+    public async Task<string?> FormatCultureAsync(string cultureCode, DisplayFormatContext context,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        var entry = await cultures.FindAsync(cultureCode, cancellationToken);
+        return entry is null ? null : context.Profile.Translate(entry.Translations, item => item.DisplayCulture).Name;
+    }
+
+    /// <summary>«peso argentino (ARS)», como las pantallas: el nombre en el idioma del contexto y el código.</summary>
+    /// <returns>null si la moneda no está en el catálogo.</returns>
+    public async Task<string?> FormatCurrencyAsync(string currencyCode, DisplayFormatContext context,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        var currency = await currencies.FindAsync(currencyCode, cancellationToken);
+        return currency is null
+            ? null
+            : $"{context.Profile.Translate(currency.Translations, item => item.Culture).Name} ({currency.Code})";
+    }
+
     public string FormatInstant(DateTime instantUtc, DisplayFormatContext context)
     {
         return LocalInstant(instantUtc, context)
@@ -155,8 +205,8 @@ public sealed class DisplayFormatter(
             "fileSize" => FormatFileSize(input, profile),
             "duration" => FormatDuration(input, profile),
             "phone" => await FormatPhoneAsync(ParsePhone(input), context, cancellationToken),
-            "timeZone" => await FormatTimeZoneAsync(input, profile, cancellationToken),
-            "culture" => await FormatCultureAsync(input, profile, cancellationToken),
+            "timeZone" => await FormatTimeZoneAsync(input, context, cancellationToken),
+            "culture" => await FormatCultureAsync(input, context, cancellationToken),
             "taxId" => await FormatTaxIdAsync(input, cancellationToken),
             "email" => FormatEmail(input),
             "enum" => FormatEnum(input, profile),
@@ -295,28 +345,15 @@ public sealed class DisplayFormatter(
         return string.Join(" ", parts);
     }
 
-    private async Task<string> FormatTimeZoneAsync(JsonElement input, CultureProfile profile, CancellationToken cancellationToken)
-    {
-        var id = input.GetString()!;
-        var zone = await timeZones.FindAsync(id, cancellationToken)
+    private async Task<string> FormatTimeZoneAsync(JsonElement input, DisplayFormatContext context,
+        CancellationToken cancellationToken) =>
+        await FormatTimeZoneAsync(input.GetString()!, context, cancellationToken)
             ?? throw new ArgumentException("The time zone is not in the reference catalog.", nameof(input));
-        var city = profile.Translate(zone.Translations, item => item.Culture).City;
-        var totalMinutes = (int)zoneService.GetUtcOffset(zone.Id, clock.GetUtcNow().UtcDateTime).TotalMinutes;
-        var sign = totalMinutes < 0 ? '−' : '+';
-        var absolute = Math.Abs(totalMinutes);
-        var hours = (absolute / 60).ToString(CultureInfo.InvariantCulture);
-        var minutes = absolute % 60;
-        var offset = minutes == 0 ? hours : hours + ":" + minutes.ToString("00", CultureInfo.InvariantCulture);
-        return $"{city} (GMT{sign}{offset})";
-    }
 
-    private async Task<string> FormatCultureAsync(JsonElement input, CultureProfile profile, CancellationToken cancellationToken)
-    {
-        var code = input.GetString()!;
-        var entry = await cultures.FindAsync(code, cancellationToken)
+    private async Task<string> FormatCultureAsync(JsonElement input, DisplayFormatContext context,
+        CancellationToken cancellationToken) =>
+        await FormatCultureAsync(input.GetString()!, context, cancellationToken)
             ?? throw new ArgumentException("The culture is not in the reference catalog.", nameof(input));
-        return profile.Translate(entry.Translations, item => item.DisplayCulture).Name;
-    }
 
     private async Task<string> FormatTaxIdAsync(JsonElement input, CancellationToken cancellationToken)
     {

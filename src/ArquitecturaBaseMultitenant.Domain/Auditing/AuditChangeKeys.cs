@@ -11,4 +11,7 @@ public static class AuditChangeKeys
 
     /// <summary>Los roles de una persona en una empresa, por nombre, antes y después.</summary>
     public const string CompanyRoles = "CompanyRoles";
+
+    /// <summary>Las empresas de una invitación, por su identificador: la lectura las muestra por nombre.</summary>
+    public const string CompanyIds = "CompanyIds";
 }

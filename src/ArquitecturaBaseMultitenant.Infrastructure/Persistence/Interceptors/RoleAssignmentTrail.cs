@@ -93,15 +93,15 @@ internal static class RoleAssignmentTrail
             return diff;
         }
 
-        private static Dictionary<string, object?> Value(object? oldValue, object? newValue) => new()
+        internal static Dictionary<string, object?> Value(object? oldValue, object? newValue) => new()
         {
             ["old"] = oldValue,
             ["new"] = newValue,
         };
 
-        private static string[] Names(IEnumerable<Guid> roleIds, IReadOnlyDictionary<Guid, string> names) =>
+        internal static string[] Names(IEnumerable<Guid> roleIds, IReadOnlyDictionary<Guid, string> names) =>
         [
-            .. roleIds.Select(roleId => names.GetValueOrDefault(roleId)).OfType<string>()
+            .. roleIds.Select(roleId => names.GetValueOrDefault(roleId)).OfType<string>().Distinct(StringComparer.Ordinal)
                 .Order(StringComparer.Ordinal),
         ];
     }
