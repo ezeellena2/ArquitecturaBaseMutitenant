@@ -296,6 +296,37 @@ Cada servicio de entrada abre la transacción en su método público, y los help
   - `npm run build` y `npm test` completos pasan;
   - las capturas no cambian, salvo lo que arreglan B3 y B4.
 
+### 5b. Front: alineación visual con el relevamiento
+
+El relevamiento del 2026-10-04 (front `fd25c5f`, [relevamiento.md](../../../ArquitecturaBaseMutitenantFront/docs/design/capturas/consolidacion/relevamiento/relevamiento.md)) comparó 111 estados de 17 pantallas con el lienzo v99, a 1440 y a 390: coinciden 35 de 222 capturas.
+- El usuario eligió alinear dentro de la consolidación lo que sale de las piezas comunes y lo de cada pantalla, las piezas comunes primero, con la captura lado a lado en cada avance.
+- Lo del lienzo va a Diseño.
+- Lo de otras etapas queda para su momento: WhatsApp, «Recuperá tu cuenta», Plataforma, «Exportar mis datos» y la portada.
+
+Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las corrige en la pieza común cuando la hay y vuelve a capturar sus casos del manifiesto del relevamiento.
+
+- [ ] **R1 · Marco, tipografía y listas:**
+  - los tamaños y pesos de letra del marco: el nombre de la organización, las migas y tu nombre;
+  - el avatar, y el menú de perfiles;
+  - el espacio entre opciones del menú lateral (v92);
+  - en Personal, el menú y la flecha que el tablero no dibuja;
+  - los filtros y el buscador de las listas, y el alto de las filas del teléfono;
+  - los tamaños de texto que se desvían de la escala del lienzo, en el ingreso, el registro, la invitación, los términos, los errores, Mi cuenta y la Página pública.
+- [ ] **R2 · Avisos, diálogos y campos** (con F8, después de que Diseño publique v100):
+  - el aviso «Guardamos…», la franja de error, la «Pantalla de error», el cartel del 409 y los textos de «¿Salir sin guardar?»;
+  - las hojas del teléfono (la cruz y el alto completo);
+  - los casilleros del código y «Verificar», las casillas bloqueadas y el tirador de los cuadros de texto;
+  - el diálogo de baja con su cruz y el «Motivo» en el teléfono.
+- [ ] **R3 · Lo de cada pantalla:**
+  - la segunda línea de las filas (v92) y el ⋮ de «Cómo entrás» (v96);
+  - el paginador «1 de 1» y las pestañas de Empresa;
+  - las hojas de Usuario de v99, el desplegable de roles con casillas y descripción, y «Sumar empresa»;
+  - el ícono y el asterisco de Configuración, y el panel de la Página pública;
+  - las decisiones de v99 del front: la fecha corta, el subtítulo de M-Auditoria-Org y el correo del perfil activo;
+  - «10 correos administrados» y los contratos regenerados;
+  - las cuatro líneas de docs de v93.
+- [ ] **Hecho cuando** el relevamiento, vuelto a correr, no tiene diferencias «Nueva» de las etapas 1 a 6, salvo las que el usuario aceptó.
+
 ### 6. Front: Roles como referencia de verdad
 
 - [ ] **`RoleEditorPage`:**
