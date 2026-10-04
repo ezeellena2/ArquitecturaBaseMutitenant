@@ -91,7 +91,7 @@ internal sealed class AuditTrailInterceptor(
         var (actorKind, actorId) = AuditActorResolver.Resolve(currentUser);
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         var counterparts = new HashSet<Guid>();
-        // Invitar a alguien o agregarlo a una empresa deja una sola entrada, con sus roles adentro.
+        // Invitar a alguien, revocar su invitación, o agregarlo a una empresa o quitarlo de ella deja una sola entrada.
         var access = AccessChangeTrail.Plan(changed, roleChanges);
         foreach (var change in access.StandaloneRoleChanges)
         {

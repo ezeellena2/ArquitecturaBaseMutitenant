@@ -167,6 +167,44 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Removing_a_person_from_a_company_leaves_one_entry_with_the_roles_they_had_there()
+    {
+        using var client = Client();
+        var company = await StageCompanyMemberAsync(client, "Auditoría quitar de empresa");
+        var before = await EntryIdsAsync(client);
+
+        // «Quitar de la empresa» de la ficha de Empresa: la membresía queda inactiva y se van sus roles ahí.
+        await ChangeCompanyMemberStatusAsync(client, company, "Inactive");
+
+        // Como agregar a alguien: una sola entrada, con «Roles en la empresa» adentro.
+        var entry = Assert.Single(await NewEntriesAsync(client, before));
+        Assert.Equal("Cambió el acceso de Tomás Acosta", entry.GetProperty("actionText").GetString());
+        Assert.Equal("Delta S.A.", entry.GetProperty("whereText").GetString());
+        Assert.Equal(["Estado: Activo → Inactivo", "Roles en la empresa: Solo lectura, Ventas → "], Rows(entry));
+    }
+
+    [Fact]
+    public async Task Revoking_an_invitation_leaves_one_entry()
+    {
+        using var client = Client();
+        var company = await StageCompanyMemberAsync(client, "Auditoría revocar");
+        await InviteToCompanyAsync(client, company, "valentina.ruiz@example.test");
+        var invited = (await JsonAsync(client, "/api/users/paged?pageSize=50&search=valentina")).GetProperty("items")
+            .EnumerateArray().Single();
+        var before = await EntryIdsAsync(client);
+
+        // «Revocar invitación» de Usuarios: la persona invitada sale también de la organización y de sus empresas.
+        using (var revoked = await client.DeleteAsync(
+                   $"/api/users/invitations/{invited.GetProperty("invitationId").GetGuid():D}", Ct))
+            Assert.True(revoked.StatusCode == HttpStatusCode.NoContent, await revoked.Content.ReadAsStringAsync(Ct));
+
+        // Como invitar: una sola entrada. El miembro, la membresía y los roles de la persona invitada van adentro.
+        var entry = Assert.Single(await NewEntriesAsync(client, before));
+        Assert.Equal("Cambió la invitación de va•••@example.test", entry.GetProperty("actionText").GetString());
+        Assert.Equal(["Estado: Invitación pendiente → Invitación revocada"], Rows(entry));
+    }
+
+    [Fact]
     public async Task Someone_without_a_name_or_an_invitation_appears_with_their_masked_email()
     {
         using var client = Client();
@@ -357,6 +395,17 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
             .GetProperty("version").GetUInt32();
         using var saved = await client.PutAsJsonAsync(
             $"/api/companies/{company.CompanyId:D}/members/{company.MemberId:D}/roles", new { roleIds, version }, Ct);
+        Assert.True(saved.StatusCode == HttpStatusCode.NoContent, await saved.Content.ReadAsStringAsync(Ct));
+    }
+
+    private static async Task ChangeCompanyMemberStatusAsync(HttpClient client, AuditedCompany company, string status)
+    {
+        var version = (await JsonAsync(client, $"/api/companies/{company.CompanyId:D}/members/paged?pageSize=50"))
+            .GetProperty("items").EnumerateArray()
+            .Single(row => row.GetProperty("memberId").GetGuid() == company.MemberId)
+            .GetProperty("version").GetUInt32();
+        using var saved = await client.PutAsJsonAsync(
+            $"/api/companies/{company.CompanyId:D}/members/{company.MemberId:D}/status", new { status, version }, Ct);
         Assert.True(saved.StatusCode == HttpStatusCode.NoContent, await saved.Content.ReadAsStringAsync(Ct));
     }
 
