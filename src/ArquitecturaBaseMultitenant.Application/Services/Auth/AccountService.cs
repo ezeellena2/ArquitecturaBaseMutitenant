@@ -10,7 +10,8 @@ using Microsoft.Extensions.Logging;
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
 /// <summary>Registro por correo: el código prueba posesión y el alta completa es atómica.</summary>
-internal sealed class AccountService(SignupCodeRequester requester, SignupVerificationFlow verification,
+internal sealed class AccountService(SignupCodeRequester requester, IPersonalSpaceProvisioner personalSpaces,
+    SignupVerificationCore verification,
     IRequestValidator validator, IUnitOfWork unitOfWork, ITenantScope tenantScope,
     ISignInService signIn, TimeProvider timeProvider,
     ILogger<AccountService> logger) : IAccountService
@@ -30,7 +31,7 @@ internal sealed class AccountService(SignupCodeRequester requester, SignupVerifi
         {
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            var draft = await verification.PrepareAsync(request, cancellationToken);
+            var draft = await personalSpaces.PrepareAsync(request.Culture, request.TimeZoneId, cancellationToken);
             using var scope = tenantScope.Enter(draft.Tenant.Id);
             var verified = await unitOfWork.ExecuteInTransactionAsync(
                 ct => verification.VerifyAsync(request, draft, ct), CommitPolicy.OnAnyResult, cancellationToken);

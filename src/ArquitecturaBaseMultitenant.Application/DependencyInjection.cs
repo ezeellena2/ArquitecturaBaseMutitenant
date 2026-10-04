@@ -115,7 +115,6 @@ public static class DependencyInjection
         services.AddScoped<BusinessSignupLegalAcceptor>();
         services.AddScoped<BusinessSignupRequestResolver>();
         services.AddScoped<SignupCodeRequester>();
-        services.AddScoped<SignupVerificationFlow>();
         services.AddScoped<SignupVerificationCore>();
         services.AddScoped<SignupAccountRegistrar>();
         services.AddScoped<SignupExistingMethodVerifier>();
