@@ -17,6 +17,7 @@ public static class RoleErrors
     public const string NotFoundCode = "Roles.Role.NotFound";
     public const string AlreadyExistsCode = "Roles.Role.AlreadyExists";
     public const string HasUsersCode = "Roles.Role.HasUsers";
+    public const string ScopeChangeHasUsersCode = "Roles.Role.ScopeChangeHasUsers";
 
     public const string UserCountKey = "userCount";
 
@@ -35,4 +36,9 @@ public static class RoleErrors
 
     public static Error HasUsers(int userCount) => Error.Conflict(HasUsersCode,
         "The role still has users assigned.", new Dictionary<string, object?> { [UserCountKey] = userCount });
+
+    /// <summary>Como al borrarlo: con personas asignadas, el rol no cambia dónde vale (decisión D2).</summary>
+    public static Error ScopeChangeHasUsers(int userCount) => Error.Conflict(ScopeChangeHasUsersCode,
+        "The role still has users assigned and cannot change its scope.",
+        new Dictionary<string, object?> { [UserCountKey] = userCount });
 }

@@ -112,6 +112,9 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
     {
         var role = await repository.GetByIdAsync(request.RoleId, request.Version!.Value, cancellationToken);
         if (role is null) return RoleErrors.NotFound;
+        if (!role.IsSystemRole && role.ChangesScope(request.Scope!.Value, request.CompanyId)
+            && await roles.CountUsersAsync(role.Id, cancellationToken) is var userCount and > 0)
+            return RoleErrors.ScopeChangeHasUsers(userCount);
         var updated = role.Update(request.Name, request.Description, request.Scope!.Value, request.CompanyId,
             NormalizePermissions(request.Permissions!));
         if (updated.IsFailure) return updated;

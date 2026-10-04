@@ -94,6 +94,12 @@ public sealed class Role : Entity, ITenantOwned, IAuditable, IVersioned
         return Result.Success();
     }
 
+    /// <summary>
+    /// Si el rol pasaría a valer en otro lugar. Con personas asignadas no puede (D2): sus asignaciones dejarían de
+    /// valer en silencio.
+    /// </summary>
+    public bool ChangesScope(RoleScope scope, Guid? companyId) => Scope != scope || CompanyId != companyId;
+
     private static Result Validate(string? name, string? description, RoleScope scope, Guid? companyId,
         IReadOnlyCollection<string>? permissions, bool isSystemRole)
     {

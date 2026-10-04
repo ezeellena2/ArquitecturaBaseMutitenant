@@ -73,6 +73,7 @@ public sealed class RoleServiceTests
         public ListRolesRequest? PageRequest { get; private set; }
         public RoleRow? Role { get; init; }
         public bool NameExists { get; init; }
+        public int UserCount { get; init; }
 
         public Task<IReadOnlyList<RoleRow>> ListAllAsync(CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<RoleRow>>([]);
         public Task<PagedResult<RoleRow>> ListAsync(ListRolesRequest request, CancellationToken cancellationToken)
@@ -83,7 +84,7 @@ public sealed class RoleServiceTests
         public Task<RoleRow?> FindByIdAsync(Guid roleId, CancellationToken cancellationToken) => Task.FromResult(Role);
         public Task<bool> ExistsByNameAsync(string name, Guid? excludedRoleId, CancellationToken cancellationToken) =>
             Task.FromResult(NameExists);
-        public Task<int> CountUsersAsync(Guid roleId, CancellationToken cancellationToken) => Task.FromResult(0);
+        public Task<int> CountUsersAsync(Guid roleId, CancellationToken cancellationToken) => Task.FromResult(UserCount);
         public Task<IReadOnlyList<Guid>> ListRoleIdsForUserAsync(Guid userId, Guid? companyId, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<Guid>>([]);
         public Task<IReadOnlyList<string>> ListPermissionsForRoleAsync(Guid roleId, CancellationToken cancellationToken) =>

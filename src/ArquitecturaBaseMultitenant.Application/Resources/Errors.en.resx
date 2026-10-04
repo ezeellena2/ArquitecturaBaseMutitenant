@@ -94,6 +94,7 @@
   <data name="Roles.Role.AlreadyExists" xml:space="preserve"><value>A role with that name already exists.</value></data>
   <data name="Roles.Role.SystemRoleCannotChange" xml:space="preserve"><value>System roles can't be renamed, deleted or have their permissions changed.</value></data>
   <data name="Roles.Role.HasUsers" xml:space="preserve"><value>The role still has users assigned. Reassign them before deleting it.</value></data>
+  <data name="Roles.Role.ScopeChangeHasUsers" xml:space="preserve"><value>The role still has users assigned. Reassign them before changing where it applies.</value></data>
   <data name="General.ConcurrencyConflict" xml:space="preserve"><value>Someone else changed this. Review the latest version before saving.</value></data>
   <data name="Request.InProgress" xml:space="preserve"><value>The request is still being processed.</value></data>
   <data name="Request.IdempotencyKeyRequired" xml:space="preserve"><value>A key identifying this request is required.</value></data>

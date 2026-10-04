@@ -66,6 +66,71 @@ public sealed class RolesTests(ApiFactory factory)
         Assert.DoesNotContain(roles, role => role.Scope == nameof(RoleScope.Organization));
     }
 
+    [Fact]
+    public async Task A_role_with_assigned_people_cannot_change_where_it_applies_but_one_without_people_can()
+    {
+        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
+        using var colleagueClient = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var colleague = await AccountJourney.RegisterAsync(factory, colleagueClient, Ct);
+        var tenantId = await OrganizationJourney.StageAsync(factory, owner, "Roles con personas", Ct);
+        var colleagueMemberId = await OrganizationJourney.AddActiveMemberAsync(factory, tenantId, colleague.UserId, Ct);
+        await AccountJourney.AuthorizeAsync(client, "business", Ct);
+        var north = await CreateCompanyAsync(client, "Delta Norte S.A.");
+        var south = await CreateCompanyAsync(client, "Delta Sur S.R.L.");
+        var assigned = await CreateRoleAsync(client, "Lectura Norte", north);
+        var unassigned = await CreateRoleAsync(client, "Lectura libre", north);
+        using var added = await AccountJourney.PostAsync(client, $"/api/companies/{north:D}/members",
+            new { memberId = colleagueMemberId, roleIds = new[] { assigned } }, Ct);
+        Assert.True(added.StatusCode == HttpStatusCode.NoContent, await added.Content.ReadAsStringAsync(Ct));
+
+        // Como al borrar un rol con usuarios: el error aparece al guardar, con cuántas personas lo tienen.
+        using var refused = await MoveRoleAsync(client, assigned, "Lectura Norte", south);
+        Assert.Equal(HttpStatusCode.Conflict, refused.StatusCode);
+        using var problem = JsonDocument.Parse(await refused.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(RoleErrors.ScopeChangeHasUsersCode, problem.RootElement.GetProperty("code").GetString());
+        Assert.Equal(1, problem.RootElement.GetProperty(RoleErrors.UserCountKey).GetInt32());
+        using var assignedDetail = await client.GetAsync($"/api/roles/{assigned:D}", Ct);
+        using var assignedJson = JsonDocument.Parse(await assignedDetail.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(north, assignedJson.RootElement.GetProperty("companyId").GetGuid());
+
+        using var moved = await MoveRoleAsync(client, unassigned, "Lectura libre", south);
+        Assert.Equal(HttpStatusCode.NoContent, moved.StatusCode);
+        using var movedDetail = await client.GetAsync($"/api/roles/{unassigned:D}", Ct);
+        using var movedJson = JsonDocument.Parse(await movedDetail.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(south, movedJson.RootElement.GetProperty("companyId").GetGuid());
+    }
+
+    private static async Task<Guid> CreateRoleAsync(HttpClient client, string name, Guid companyId)
+    {
+        using var created = await AccountJourney.PostAsync(client, "/api/roles", new
+        {
+            name,
+            description = (string?)null,
+            scope = nameof(RoleScope.SpecificCompany),
+            companyId,
+            permissions = new[] { Permissions.Company.Members.Read },
+        }, Ct);
+        Assert.True(created.StatusCode == HttpStatusCode.Created, await created.Content.ReadAsStringAsync(Ct));
+        return await created.Content.ReadFromJsonAsync<Guid>(Ct);
+    }
+
+    private static async Task<HttpResponseMessage> MoveRoleAsync(HttpClient client, Guid roleId, string name,
+        Guid companyId)
+    {
+        using var detail = await client.GetAsync($"/api/roles/{roleId:D}", Ct);
+        using var json = JsonDocument.Parse(await detail.Content.ReadAsStringAsync(Ct));
+        return await client.PutAsJsonAsync($"/api/roles/{roleId:D}", new
+        {
+            name,
+            description = (string?)null,
+            scope = nameof(RoleScope.SpecificCompany),
+            companyId,
+            permissions = new[] { Permissions.Company.Members.Read },
+            version = json.RootElement.GetProperty("version").GetUInt32(),
+        }, Ct);
+    }
+
     private static async Task<Guid> CreateCompanyAsync(HttpClient client, string name)
     {
         using var created = await AccountJourney.PostAsync(client, "/api/companies", new

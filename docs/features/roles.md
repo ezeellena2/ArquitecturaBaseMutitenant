@@ -11,6 +11,7 @@
 - La baja de una cuenta no puede dejar sin Dueño activo a una organización abierta. El conteo incluye solo cuenta, miembro y organización activos. La verificación se serializa con cambios de asignación mediante el lock compartido `ITenantAdminLock`; E6 lo toma al asignar o quitar `TenantAdmin` y devuelve `Legal.AccountDeletion.LastAdmin` al intentar retirar al último Dueño.
 - `GET /api/roles/paged` filtra por `scope` (`Organization` o `Company`) y por `companyId`: los roles de esa empresa y los que valen en cada empresa, como el filtro «Vale en» del tablero Roles. La pantalla ofrece «Toda la organización» o una empresa por nombre; «Cada empresa» queda solo en la API y en los roles de sistema.
 - Las escrituras de roles validan antes de la transacción, usan una única `IUnitOfWork`, preservan `Version` y devuelven 409 ante concurrencia. Los permisos cacheados se invalidan después del commit.
+- Un rol con personas asignadas no cambia dónde vale (su alcance o su empresa), porque esas asignaciones dejarían de valer en silencio. Es el mismo criterio que para borrarlo (`Roles.Role.HasUsers`): al guardar, la respuesta es 409 `Roles.Role.ScopeChangeHasUsers` con `userCount`. Sin personas asignadas, el alcance cambia; el nombre, la descripción y los permisos se editan siempre (decisión D2 de la [revisión de calidad](../reviews/2026-10-03-calidad-de-diseno.md)).
 
 ## Carpetas
 

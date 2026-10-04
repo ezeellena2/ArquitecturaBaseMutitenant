@@ -45,6 +45,51 @@ public sealed class RoleServiceWriteTests
         Assert.False(repository.WasRemoved);
     }
 
+    [Fact]
+    public async Task A_role_with_assigned_users_cannot_change_where_it_applies()
+    {
+        var north = Guid.CreateVersion7();
+        var role = Role.Create("Lectores", null, RoleScope.SpecificCompany, north,
+            [Permissions.Company.Members.Read]).Value;
+        var repository = new RecordingRoleRepository(role);
+        using var fixture = new ServiceFixture<RoleService>(new UpdateRoleRequestValidator());
+        var service = new RoleService(new RoleServiceTests.FakeRoleReader { UserCount = 2 }, repository,
+            new RoleServiceTests.FakePermissionService(), fixture.Validator, new FakeUnitOfWork(),
+            fixture.TimeProvider, fixture.Logger);
+
+        var moved = await service.UpdateAsync(new UpdateRoleRequest(role.Id, "Lectores", null,
+            RoleScope.SpecificCompany, Guid.CreateVersion7(), [Permissions.Company.Members.Read], 0), Ct);
+        var everywhere = await service.UpdateAsync(new UpdateRoleRequest(role.Id, "Lectores", null,
+            RoleScope.AnyCompany, null, [Permissions.Company.Members.Read], 0), Ct);
+        var renamed = await service.UpdateAsync(new UpdateRoleRequest(role.Id, "Lectores Norte", null,
+            RoleScope.SpecificCompany, north, [Permissions.Company.Members.Read], 0), Ct);
+
+        Assert.Equal(RoleErrors.ScopeChangeHasUsersCode, moved.Error.Code);
+        Assert.Equal(2, moved.Error.Metadata![RoleErrors.UserCountKey]);
+        Assert.Equal(RoleErrors.ScopeChangeHasUsersCode, everywhere.Error.Code);
+        Assert.True(renamed.IsSuccess);
+        Assert.Equal(north, role.CompanyId);
+        Assert.Equal("Lectores Norte", role.Name);
+    }
+
+    [Fact]
+    public async Task A_role_without_assigned_users_changes_where_it_applies()
+    {
+        var role = Role.Create("Lectores", null, RoleScope.SpecificCompany, Guid.CreateVersion7(),
+            [Permissions.Company.Members.Read]).Value;
+        using var fixture = new ServiceFixture<RoleService>(new UpdateRoleRequestValidator());
+        var service = new RoleService(new RoleServiceTests.FakeRoleReader(), new RecordingRoleRepository(role),
+            new RoleServiceTests.FakePermissionService(), fixture.Validator, new FakeUnitOfWork(),
+            fixture.TimeProvider, fixture.Logger);
+
+        var result = await service.UpdateAsync(new UpdateRoleRequest(role.Id, "Lectores", null,
+            RoleScope.AnyCompany, null, [Permissions.Company.Members.Read], 0), Ct);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(RoleScope.AnyCompany, role.Scope);
+        Assert.Null(role.CompanyId);
+    }
+
     private sealed class RecordingRoleRepository(Role role) : IRoleRepository
     {
         public bool WasRemoved { get; private set; }

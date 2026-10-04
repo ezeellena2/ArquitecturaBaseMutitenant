@@ -89,6 +89,21 @@ public sealed class RoleTests
     }
 
     [Fact]
+    public void The_scope_changes_when_it_applies_somewhere_else_but_not_when_only_the_name_changes()
+    {
+        var north = Guid.CreateVersion7();
+        var role = Role.Create("Lectores Norte", null, RoleScope.SpecificCompany, north,
+            [Permissions.Company.Members.Read]).Value;
+
+        Assert.False(role.ChangesScope(RoleScope.SpecificCompany, north));
+        Assert.True(role.ChangesScope(RoleScope.SpecificCompany, Guid.CreateVersion7()));
+        Assert.True(role.ChangesScope(RoleScope.AnyCompany, null));
+        Assert.True(role.ChangesScope(RoleScope.Organization, null));
+        Assert.Equal(RoleErrors.ScopeChangeHasUsersCode, RoleErrors.ScopeChangeHasUsers(3).Code);
+        Assert.Equal(3, RoleErrors.ScopeChangeHasUsers(3).Metadata![RoleErrors.UserCountKey]);
+    }
+
+    [Fact]
     public void System_roles_are_immutable_and_cover_their_access_scopes()
     {
         var tenantAdmin = SystemRoles.CreateTenantAdmin();
