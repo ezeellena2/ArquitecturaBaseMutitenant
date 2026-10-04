@@ -246,8 +246,24 @@ Cada servicio de entrada abre la transacción en su método público, y los help
 - [x] **F6 · Una sola cultura efectiva** (front `f7f9737`): `resolveCulture` y `useEffectiveCulture`, que usan i18n, formatos, datos de referencia y `Accept-Language`. Se borró `useLanguagePreference`.
   - Tests: `i18n.test.tsx` (`resolveCulture`), `safeStorage.test.ts` y `useFormat.account.test.tsx`.
   - El catálogo se pide dos veces solo si la cultura de la cuenta difiere de la elegida en el navegador; evitarlo obligaría a esperar `/api/me`. Queda así.
-- [ ] **F7 · `useEditPage`** (guard, «Cambios sin guardar» y 409) y un `errors.ts` por feature, en Configuración, Página pública y la ficha de Usuario.
-  - Arregla **B11**. Test: si salís con cambios sin guardar, te pide confirmar.
+- [x] **F7 · `useEditPage`** (guard, «Cambios sin guardar» y 409) en Configuración, Página pública y la ficha de Usuario (front `a6ced5c` a `bcfcc48`). El usuario vio los tableros antes de programar y eligió aplicar a las tres los estados de Configuración (tablero Avisos y criterios).
+  - Arregla **B11** (`a2da32b`). Test: `SettingsPage.test.tsx`, editar y tocar el menú muestra «¿Salir sin guardar?».
+  - Sin `errors.ts`: ninguna de las tres pantallas traduce un código propio, y la ficha de estructura no deja crear archivos que la feature no necesita.
+  - Los avisos que salían dos veces (`25ea5c3`, `5609326`): `/api/me` muestra un solo aviso, y la ficha de Empresa ya no tiene su `ConcurrencyBanner`. El error de cada diálogo, el 409 incluido, va en la franja arriba de los botones.
+  - Después de un 409 (`General.ConcurrencyConflict`) en un diálogo, cerrarlo vuelve a leer la ficha si no tiene cambios sin guardar (`5609326`, `3f87201`).
+  - Diálogos (`9957b92`, `75bedd7` y `e531b9c`):
+    - el fondo, sin difuminar (lienzo v97);
+    - la franja de `CompaniesPage`, arriba de los botones;
+    - «Sumar empresa», de 420 px.
+  - La letra de la franja en la app del teléfono queda en 14,5, como los avisos de M-Avisos (`1dbb394`); falta que Diseño la confirme.
+  - Verificación: `npm test` 920/920, lint sin errores y build en verde. Capturas lado a lado en `docs/design/capturas/consolidacion/f7/` (fases 2 y 3), con su manifiesto para la vista en vivo.
+- [ ] **F8 · Avisos y diálogos al detalle** (lo que mostraron las capturas de F7):
+  - una pieza común de «Pantalla de error», como la de Criterio-Avisos (centrada, con el ícono, «No pudimos abrir esta pantalla» y «Reintentar»), para `LegalAcceptanceGate` y para las fichas que no cargan. Hoy la ficha de Usuario ni siquiera tiene «Reintentar»;
+  - la franja (`FormError`) con las medidas del tablero (`.aviso-mal`: padding 10/12, radio 8, ícono 16 y su rojo);
+  - el diálogo de roles de Empresa: el encabezado sin bajada (Criterio-Diálogos) y el campo vacío con «Sin roles»;
+  - «Sumar empresa» como su tablero, y si el tablero choca con un criterio, manda el criterio;
+  - las hojas a todo el alto del teléfono (Empresa y Empresas), con el título arriba y no flotando en el medio;
+  - el último administrador de una empresa con un solo texto, el del tablero: «Tiene que quedar al menos un administrador en la empresa.» Hoy hay tres versiones: la del tablero, la de la app y la del back.
 - [ ] **Hecho cuando:**
   - `npm run build` y `npm test` completos pasan;
   - las capturas no cambian, salvo lo que arreglan B3 y B4.
@@ -334,6 +350,7 @@ Segunda tanda del front (bloque 5, 2026-10-04): F5 y F6, más las marcas (E#) de
 - `/org/roles/new`: `frontend.md` §3 dice `/nuevo`, y el código se alinea al doc en el bloque 6.
 
 **Hallazgos sin corregir:**
+- `bd0b4f3` (docs del plan) arrastró un `git rm` que otro agente tenía preparado en el índice, así que en ese commit la solución no compila; vuelve a compilar desde `2f6d6ea`. No se reescribe la historia. Desde ahí, cada commit lleva su pathspec (`git commit -- <rutas>`).
 - ~~`OrganizationUserAdministratorGuard` protege a la última Dueña con `ILastTenantAdminGuard.CheckCanLeaveAsync`, que mira todas las organizaciones de la cuenta: quitar el rol de Dueña en una organización falla si esa cuenta es la única Dueña de otra. Viene de antes; con D5 también cuentan las suspendidas. Va con Usuarios en el bloque 3.~~ Resuelto en `16dee4e` (decisión 23).
 - ~~`HarnessTests.Closed_stage_verification_tests_and_tools_exist` falla por docs del front sin `(E#)`.~~ Resuelto con las marcas del front (`33ee1d5`): la suite completa de la tanda 2 lo pasó.
 
