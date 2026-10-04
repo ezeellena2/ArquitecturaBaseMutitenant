@@ -52,6 +52,32 @@ public sealed class ProfileServiceTests
         Assert.Equal(warning, profile!.NeedsPersonalLoginMethod);
     }
 
+    [Theory]
+    [InlineData(Access.Business, "managed", "ana@empresa-a.test")]
+    [InlineData(Access.Business, "unmanaged", "ana@example.test")]
+    [InlineData(Access.Consumer, null, "ana@example.test")]
+    public async Task Me_email_is_the_one_of_the_active_profile(Access access, string? organization, string expected)
+    {
+        var id = Guid.CreateVersion7();
+        var managedId = Guid.CreateVersion7();
+        var unmanagedId = Guid.CreateVersion7();
+        var catalog = new JsonReferenceDataCatalog();
+        using var fixture = new ServiceFixture<ProfileService>();
+        var verifiedAtUtc = fixture.TimeProvider.GetUtcNow().UtcDateTime;
+        var snapshots = new ProfileSnapshotBuilder(new StubUsers(Account(id)), new StubAccesses([]),
+            new ProfilePreferencesResolver(new StubSettings(null), catalog, catalog), new StubMethods([
+                new(Guid.CreateVersion7(), LoginMethodType.Email, "ana@example.test", true, verifiedAtUtc, null),
+                new(Guid.CreateVersion7(), LoginMethodType.Email, "ana@empresa-a.test", false, verifiedAtUtc, managedId),
+            ]),
+            new LoginMethodAvailabilityPolicy([], new StubGoogle(), new StubMemberships()),
+            new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider), new StubPermissions(), new StubFeatures());
+        Guid? activeTenantId = organization switch { "managed" => managedId, "unmanaged" => unmanagedId, _ => null };
+
+        var profile = await snapshots.BuildAsync(id, access, activeTenantId, Ct);
+
+        Assert.Equal(expected, profile!.Email?.Value);
+    }
+
     [Fact]
     public async Task Update_requires_enabled_culture_and_time_zone_from_catalogs()
     {

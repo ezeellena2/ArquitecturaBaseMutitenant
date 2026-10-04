@@ -12690,7 +12690,7 @@
             }
           }
         },
-        "description": "Cuenta, accesos y preferencias efectivas de la sesión actual."
+        "description": "Cuenta, accesos y preferencias efectivas de la sesión actual. El correo es el del perfil activo: en una\r\norganización, el verificado que ella administra y, si no hay, el principal; en los demás perfiles, el principal."
       },
       "OrganizationAuditActorResponse": {
         "required": [

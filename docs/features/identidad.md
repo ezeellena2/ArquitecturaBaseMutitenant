@@ -26,6 +26,8 @@ La gestión conserva `LoginMethods.Value` como clave global del método. En Goog
 
 `/cuenta` conserva el acceso actual y permite editar nombre, cultura y zona con `Version` de `/api/me`; un 409 conserva el borrador hasta que se elija «Ver lo nuevo» o «Seguir editando». El idioma cambia después de guardar. «Mi cuenta» aparece en el menú de identidad y en la navegación personal dibujada en el lienzo.
 
+El `email` de `/api/me` es el del perfil activo, el que muestra el menú (el pie en la compu, «Más» en el teléfono): en una organización, el correo verificado que ella administra y, si no hay, el principal; en el perfil personal, el principal (lienzo v99, `ProfileServiceTests`).
+
 | Operación | Ruta |
 |---|---|
 | Perfil global y versión | `GET/PUT /api/me` |
