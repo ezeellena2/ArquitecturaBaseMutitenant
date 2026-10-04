@@ -33,6 +33,7 @@ public sealed partial class IdentityStorageAccessTests
         Infrastructure + "Persistence.Readers.CompanyMembershipReader",
         Infrastructure + "Persistence.Readers.OrganizationAuditReader",
         Infrastructure + "Persistence.Readers.OrganizationUserReader",
+        Infrastructure + "Persistence.Readers.TenantDomainReader",
         Infrastructure + "Persistence.Repositories.LegalRepository",
         Infrastructure + "Persistence.Repositories.LoginAuditRepository",
         Infrastructure + "Persistence.Repositories.LoginCodeRepository",

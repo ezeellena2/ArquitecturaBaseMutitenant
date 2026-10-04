@@ -12544,7 +12544,8 @@
           "domain",
           "status",
           "createdAtUtc",
-          "version"
+          "version",
+          "managedEmailCount"
         ],
         "type": "object",
         "properties": {
@@ -12584,8 +12585,13 @@
           "version": {
             "type": "integer",
             "format": "uint32"
+          },
+          "managedEmailCount": {
+            "type": "integer",
+            "format": "int32"
           }
-        }
+        },
+        "description": "Un dominio de correo de la organización; ManagedEmailCount cuenta los correos verificados de ese dominio que administra."
       },
       "OrganizationInvitationIssuedResponse": {
         "required": [

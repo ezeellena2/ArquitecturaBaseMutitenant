@@ -49,6 +49,7 @@ public sealed class OrganizationDomainsTests(ApiFactory factory)
         var domainId = registeredJson.RootElement.GetProperty("id").GetGuid();
         Assert.Equal(domain, registeredJson.RootElement.GetProperty("txtRecordName").GetString());
         var txtValue = registeredJson.RootElement.GetProperty("txtRecordValue").GetString()!;
+        Assert.Equal(0, registeredJson.RootElement.GetProperty("managedEmailCount").GetInt32());
 
         dns.SetUnavailable(true);
         using var unavailableDns = await AccountJourney.PostAsync(client,
@@ -86,6 +87,8 @@ public sealed class OrganizationDomainsTests(ApiFactory factory)
         using var listedJson = JsonDocument.Parse(await listed.Content.ReadAsStringAsync(Ct));
         var currentDomain = Assert.Single(listedJson.RootElement.EnumerateArray());
         Assert.Equal("Verified", currentDomain.GetProperty("status").GetString());
+        // Tablero Configuración: «Verificado · 2 correos administrados por …», el de la Dueña y el del colega.
+        Assert.Equal(2, currentDomain.GetProperty("managedEmailCount").GetInt32());
         var version = currentDomain.GetProperty("version").GetUInt32();
 
         using var removed = await client.DeleteAsync(

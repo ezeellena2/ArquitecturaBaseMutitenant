@@ -50,5 +50,5 @@ internal sealed class OrganizationDomainRegistrar(ITenantDomainRepository domain
         new(domain.Id, domain.Domain, domain.Status,
             domain.Status == TenantDomainStatus.Pending ? domain.Domain : null,
             domain.Status == TenantDomainStatus.Pending ? domain.TxtRecordValue : null,
-            domain.CreatedAtUtc, domain.VerifiedAtUtc, domain.Version);
+            domain.CreatedAtUtc, domain.VerifiedAtUtc, domain.Version, ManagedEmailCount: 0);
 }

@@ -66,5 +66,5 @@ internal sealed class OrganizationDomainService(ITenantDomainReader reader, IReq
         new(domain.Id, domain.Domain, domain.Status,
             domain.Status == TenantDomainStatus.Pending ? domain.Domain : null,
             domain.Status == TenantDomainStatus.Pending ? TenantDomain.TxtRecordPrefix + domain.VerificationToken : null,
-            domain.CreatedAtUtc, domain.VerifiedAtUtc, domain.Version);
+            domain.CreatedAtUtc, domain.VerifiedAtUtc, domain.Version, domain.ManagedEmailCount);
 }

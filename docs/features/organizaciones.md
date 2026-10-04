@@ -24,7 +24,7 @@ La emisión y el encolado se delegan al `InvitationIssuer` compartido con la pla
 
 `/api/organization/settings` lee y actualiza el nombre, la cultura, la zona horaria y la moneda de la organización en un solo cambio versionado; una versión vieja responde 409.
 
-`/api/organization/settings/domains` lista y registra un dominio, solicita su verificación TXT, y lo retira con versión. Cada dominio es globalmente único. La verificación consulta DNS TXT y vincula métodos de ingreso existentes y futuros al `ManagedByTenantId` de la organización. Un método administrado solo se puede usar mientras haya membresía activa. Retirar un dominio impide asociaciones automáticas nuevas, pero conserva el vínculo de correos ya administrados para que una persona que salió no recupere el acceso Personal por ese correo.
+`/api/organization/settings/domains` lista y registra un dominio, solicita su verificación TXT, y lo retira con versión. Cada dominio es globalmente único. La verificación consulta DNS TXT y vincula métodos de ingreso existentes y futuros al `ManagedByTenantId` de la organización. Un método administrado solo se puede usar mientras haya membresía activa. Retirar un dominio impide asociaciones automáticas nuevas, pero conserva el vínculo de correos ya administrados para que una persona que salió no recupere el acceso Personal por ese correo. Cada dominio de la lista trae `managedEmailCount`: cuántos correos verificados de ese dominio administra la organización, como muestra el tablero Configuración («Verificado · 10 correos administrados por…»).
 
 ## Página pública y auditoría
 

@@ -1,12 +1,16 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 
-/// <summary>Expone únicamente los dominios activos de la organización técnica seleccionada.</summary>
+/// <summary>
+/// Expone únicamente los dominios activos de la organización técnica seleccionada, con cuántos correos verificados de
+/// ese dominio administra. Lee los métodos de ingreso globales solo para contarlos.
+/// </summary>
 internal sealed class TenantDomainReader(ApplicationDbContext context, ITenantContext tenantContext)
     : ITenantDomainReader
 {
@@ -17,7 +21,10 @@ internal sealed class TenantDomainReader(ApplicationDbContext context, ITenantCo
             .Where(domain => domain.OrganizationId == organizationId && domain.Status != TenantDomainStatus.Removed)
             .OrderBy(domain => domain.Domain)
             .Select(domain => new OrganizationDomainRow(domain.Id, domain.Domain, domain.Status,
-                domain.VerificationToken, domain.CreatedAtUtc, domain.VerifiedAtUtc, domain.Version))
+                domain.VerificationToken, domain.CreatedAtUtc, domain.VerifiedAtUtc, domain.Version,
+                context.LoginMethods.Count(method => method.Type == LoginMethodType.Email
+                    && method.ManagedByTenantId == organizationId && method.VerifiedAtUtc != null
+                    && method.Value.EndsWith("@" + domain.Domain))))
             .ToArrayAsync(cancellationToken);
     }
 
@@ -30,7 +37,10 @@ internal sealed class TenantDomainReader(ApplicationDbContext context, ITenantCo
             .Where(domain => domain.OrganizationId == organizationId && domain.Id == domainId
                 && domain.Status != TenantDomainStatus.Removed)
             .Select(domain => new OrganizationDomainRow(domain.Id, domain.Domain, domain.Status,
-                domain.VerificationToken, domain.CreatedAtUtc, domain.VerifiedAtUtc, domain.Version))
+                domain.VerificationToken, domain.CreatedAtUtc, domain.VerifiedAtUtc, domain.Version,
+                context.LoginMethods.Count(method => method.Type == LoginMethodType.Email
+                    && method.ManagedByTenantId == organizationId && method.VerifiedAtUtc != null
+                    && method.Value.EndsWith("@" + domain.Domain))))
             .SingleOrDefaultAsync(cancellationToken);
     }
 }
