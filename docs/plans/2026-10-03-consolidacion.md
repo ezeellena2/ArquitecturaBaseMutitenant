@@ -199,7 +199,12 @@ Cada servicio de entrada abre la transacción en su método público, y los help
   - RHF con zod y `errors.ts`;
   - `lib/` con tests, para el selector de permisos y los roles de sistema;
   - los componentes que pide `arbol.md`: `PermissionPicker` y `RoleScopeField`;
-  - tests con axe y a 390 px, y «sin coincidencias» en `RolesPage`.
+  - tests con axe y a 390 px, y «sin coincidencias» en `RolesPage`;
+  - lo que mostraron las capturas, para que quede como el tablero:
+    - «Crear rol» apagado mientras el formulario esté vacío;
+    - «Vale en» sin asterisco;
+    - «Descripción» a todo el ancho;
+    - «1 de 2» a la derecha, en su banda.
 - [ ] **`CompanyDetailPage`,** partida según `arbol.md`:
   - `CompanyDialog` (compartido con Empresas), `AddMemberDialog`, `MemberRolesDialog`, `tabs/CompanyMembersTab` y `tabs/CompanyRolesTab`;
   - cada pieza es dueña de su borrador, su mutación y su error;

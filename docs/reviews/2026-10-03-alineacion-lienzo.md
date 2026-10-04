@@ -102,6 +102,14 @@ Todo en `F/src/shared/ui`; arregla muchas pantallas de una vez.
 - **FilterBar** con un texto propio para el botón vacío («Vale en: todos», con «Todos» marcado).
 - **Tabs:** píldora con el número.
 - **`AddLoginMethodDialog`** compartido, para que «Agregar» del Inicio-Personal abra Cuenta-Agregar (cierra el punto 1.12).
+- **De la revisión de las 33 capturas:**
+  - en los listados, los nombres no van en verde como enlace;
+  - las columnas se alinean como el tablero (Estado, Miembros y Usuarios);
+  - el asterisco de obligatorio va en rojo;
+  - el botón principal lleva el degradé del tablero;
+  - el fondo de los diálogos va desenfocado;
+  - un valor vacío del desplegable, como «Ninguno», va en el gris de campo vacío;
+  - idioma, zona y moneda usan un solo desplegable con búsqueda, y la moneda lleva su código («Peso argentino (ARS)»).
 
 ## Paquete 3 · Textos es/en (S a M)
 
