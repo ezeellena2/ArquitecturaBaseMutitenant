@@ -279,6 +279,9 @@ ArquitecturaBaseMultitenant.Application/
 │   │   └── CursorRequestValidator.cs                 cursor válido, límite ≤ 100
 │   ├── Logging/
 │   │   └── OperationLog.cs                           LogHandling/LogHandled/LogFailed con [LoggerMessage]
+│   ├── Text/
+│   │   ├── TextNormalizer.cs                         [E1] trim, NFC, sin caracteres de control ni de ancho cero
+│   │   └── PersonalDataMask.cs                       [E5] el único enmascarado: correo «lu•••@dominio», teléfono «•••• 4521»
 │   ├── Formatting/                                   [E1] presentación unificada del lado del back (backend.md §18)
 │   │   ├── DisplayFormatter.cs                       [E1] todos los tipos de formatos.md, con cultura y zona explícitas
 │   │   ├── CultureProfiles.cs                        [E1] adapta patrones de ICultureCatalog (JSON E1, tabla E2), sin lista fija
@@ -391,7 +394,7 @@ ArquitecturaBaseMultitenant.Application/
 │       │   └── ITimeZoneService.cs                   [E1] conversión y GetDayRangeUtc con TimeZoneInfo; catálogo en ReferenceData/
 │       └── Phones/
 │           ├── IPhoneNumberDisplayFormatter.cs      [E1] formato nacional/internacional de E.164 sin lista de países
-│           ├── IPhoneNumberParser.cs                [E3] Parse(country, number, PhoneUsage) → Result<PhoneNumber>; Mask
+│           ├── IPhoneNumberParser.cs                [E3] Parse(country, number, PhoneUsage) → Result<PhoneNumber>
 │           ├── PhoneUsage.cs                        [E3] Any | Mobile; no nombra WhatsApp (sus países los controla el módulo)
 │           └── IPhoneLinkObserver.cs                [E3] el núcleo avisa cambios de teléfono; el módulo suelta el contacto
 ├── Models/                                           [E1] *Request (entrada), *Response (salida), ReadModels/*Row (proyección)

@@ -1,6 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Phones;
 using ArquitecturaBaseMultitenant.Domain.Users;
-using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Phones;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Common;
@@ -48,11 +47,5 @@ public sealed class LibPhoneNumberParserTests
 
         Assert.True(parsed.IsFailure);
         Assert.Equal(PhoneErrors.NotMobileCode, parsed.Error.Code);
-    }
-
-    [Fact]
-    public void Masks_the_middle_of_the_number_for_logs()
-    {
-        Assert.Equal("+54 9 11 •••• 6789", parser.Mask(PhoneNumber.Create("+5491143216789").Value));
     }
 }

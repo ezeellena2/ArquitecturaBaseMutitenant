@@ -11,7 +11,4 @@ public interface IPhoneNumberParser
     /// <c>Users.Phone.Invalid</c> o, con <see cref="PhoneUsage.Mobile"/>, <c>Users.Phone.NotMobile</c>.
     /// </summary>
     Result<PhoneNumber> Parse(string? country, string? number, PhoneUsage usage);
-
-    /// <summary>El número para un log: código de país, característica y los últimos cuatro (+54 9 11 •••• 6789).</summary>
-    string Mask(PhoneNumber phone);
 }

@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Application.Common.Text;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Time;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -168,16 +169,10 @@ internal sealed class OrganizationAuditService(IOrganizationAuditReader reader,
         };
         if (text is null) return null;
         if (field.Contains("Email", StringComparison.OrdinalIgnoreCase) || text.Contains('@'))
-        {
-            var at = text.LastIndexOf('@');
-            return at < 0 ? "***" : "***" + text[at..];
-        }
+            return PersonalDataMask.Email(text);
 
         if (field.Contains("Phone", StringComparison.OrdinalIgnoreCase) || field.Contains("Tel", StringComparison.OrdinalIgnoreCase))
-        {
-            var digits = new string(text.Where(char.IsAsciiDigit).ToArray());
-            return digits.Length < 4 ? "***" : "***" + digits[^4..];
-        }
+            return PersonalDataMask.Phone(text);
 
         if (field.Contains("TaxId", StringComparison.OrdinalIgnoreCase))
         {

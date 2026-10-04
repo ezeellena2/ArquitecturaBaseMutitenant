@@ -1,5 +1,6 @@
 using System.Data.Common;
 using System.Text.Json;
+using ArquitecturaBaseMultitenant.Application.Common.Text;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
@@ -244,15 +245,12 @@ internal sealed class AuditTrailInterceptor(
 
         if (propertyName.Contains("Email", StringComparison.OrdinalIgnoreCase))
         {
-            var text = value.ToString() ?? string.Empty;
-            var at = text.LastIndexOf('@');
-            return at < 0 ? "***" : "***" + text[at..];
+            return PersonalDataMask.Email(value.ToString() ?? string.Empty);
         }
 
         if (propertyName.Contains("Phone", StringComparison.OrdinalIgnoreCase))
         {
-            var digits = new string((value.ToString() ?? string.Empty).Where(char.IsAsciiDigit).ToArray());
-            return digits.Length < 4 ? "***" : "***" + digits[^4..];
+            return PersonalDataMask.Phone(value.ToString() ?? string.Empty);
         }
 
         return value;

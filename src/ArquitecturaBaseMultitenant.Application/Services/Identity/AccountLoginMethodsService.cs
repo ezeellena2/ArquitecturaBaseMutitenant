@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
+using ArquitecturaBaseMultitenant.Application.Common.Text;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -39,18 +40,12 @@ internal sealed class AccountLoginMethodsService(ICurrentUser currentUser, ILogi
                     method.Type == LoginMethodType.Google ? method.ContactEmail?.Value : method.Value,
                     method.IsPrimary, method.VerifiedAtUtc is not null, method.ManagedByTenantId, organization?.Name,
                     canRemove, !method.IsPrimary && isAvailable && backup is not null,
-                    backup is null ? null : Mask(backup)));
+                    backup is null ? null
+                        : PersonalDataMask.LoginMethod(backup.Type, backup.Value, backup.ContactEmail?.Value)));
             }
             var platform = await settings.FindAsync(ct) ?? throw new InvalidOperationException("Platform settings have not been seeded.");
             return new AccountLoginMethodsResponse(rows, google.IsEnabled && !all.Any(method => method.Type == LoginMethodType.Google),
                 !await availability.HasPersonalBackupAsync(userId, all, ct), platform.AccountDeletionGraceDays,
                 await soleOwners.ListSoleOwnedOrganizationsAsync(userId, ct));
         });
-
-    private static string Mask(LoginMethodRow method)
-    {
-        var contact = method.Type == LoginMethodType.Google ? method.ContactEmail!.Value : method.Value;
-        var at = contact.IndexOf('@', StringComparison.Ordinal);
-        return at > 0 ? contact[..1] + "***" + contact[at..] : "••••" + contact[^Math.Min(4, contact.Length)..];
-    }
 }

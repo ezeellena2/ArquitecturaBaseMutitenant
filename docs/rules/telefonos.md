@@ -16,7 +16,7 @@
 - **Salida (JSON):** el E.164 como texto. El país no se manda: sale del número.
 - **País de entrada:** `ValidCountry()` de Application consulta `ICountryCatalog`; `GET /api/reference-data` abastece el selector, sin una lista de países en el código.
 - **Correo y WhatsApp:** crear `ctx = await DisplayFormatter.CreateAsync(culture, timeZone)` y llamar `await FormatPhoneAsync(phone, ctx)` con `PhoneNumber`. Usa las mismas reglas que `PhoneText`: nacional si el país coincide con la cultura, internacional si no. `format-cases.json` fija el texto exacto si las librerías difieren.
-- **Logs:** siempre `IPhoneNumberParser.Mask(phone)` (`+54 9 11 •••• 6789`).
+- **Enmascarado** (logs, pantallas, avisos y auditoría): siempre `PersonalDataMask.Phone` (`•••• 6789`). Muestra solo los últimos cuatro dígitos: la característica depende del formato de cada país, que vive en libphonenumber, y el enmascarado no lo usa.
 
 ## Prohibido
 - Guardar el número con espacios, guiones, `0` o `15`, o sin el `+país`.

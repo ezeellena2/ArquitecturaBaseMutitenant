@@ -22,7 +22,7 @@
 - Setear a mano `CreatedBy` o `ModifiedAtUtc`.
 - Escribir en `AuditEntries` fuera de los interceptores o de `IAuditLog`.
 - Actualizar o borrar un `AuditEntry`: el trigger lo impide.
-- Auditar datos personales completos (teléfono, email) en el diff: van enmascarados.
+- Auditar datos personales completos (teléfono, email) en el diff: van enmascarados con `PersonalDataMask`.
 
 ## Copiá de
 - `Infrastructure/Persistence/Interceptors/AuditTrailInterceptor.cs` (E2)

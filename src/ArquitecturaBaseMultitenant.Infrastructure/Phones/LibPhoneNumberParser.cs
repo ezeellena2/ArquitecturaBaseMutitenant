@@ -39,16 +39,6 @@ public sealed class LibPhoneNumberParser : IPhoneNumberParser
         return DomainPhoneNumber.Create(Util.Format(parsed, PhoneNumberFormat.E164));
     }
 
-    public string Mask(DomainPhoneNumber phone)
-    {
-        ArgumentNullException.ThrowIfNull(phone);
-        var groups = Util.Format(Util.Parse(phone.Value, null), PhoneNumberFormat.INTERNATIONAL)
-            .Replace('-', ' ').Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (groups.Length < 3) return string.Concat(phone.Value.AsSpan(0, Math.Min(3, phone.Value.Length)), " •••• ", phone.Value.AsSpan(Math.Max(0, phone.Value.Length - 4)));
-        groups[^2] = "••••";
-        return string.Join(' ', groups);
-    }
-
     private static bool IsMobile(PhoneNumber number) =>
         Util.GetNumberType(number) is PhoneNumberType.MOBILE or PhoneNumberType.FIXED_LINE_OR_MOBILE;
 

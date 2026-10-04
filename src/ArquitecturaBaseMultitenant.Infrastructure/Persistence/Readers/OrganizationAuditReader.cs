@@ -1,5 +1,6 @@
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Application.Common.Text;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Auditing;
@@ -160,7 +161,7 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
                 affectedName = role?.Name;
             if (string.IsNullOrWhiteSpace(affectedName) && entry.EntityType == nameof(Invitation) &&
                 invitations.TryGetValue(entry.EntityId, out var invitation))
-                affectedName = MaskEmail(invitation.Destination.DisplayValue);
+                affectedName = PersonalDataMask.Email(invitation.Destination.DisplayValue);
 
             result[entry.Id] = new AuditDisplayData(affectedName,
                 companyId is { } companyGuid ? companyNames.GetValueOrDefault(companyGuid) : null);
@@ -249,12 +250,6 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
         {
             return null;
         }
-    }
-
-    private static string MaskEmail(string email)
-    {
-        var at = email.LastIndexOf('@');
-        return at < 0 ? "***" : "***" + email[at..];
     }
 
     private sealed record AuditDisplayData(string? AffectedDisplayName, string? CompanyName);

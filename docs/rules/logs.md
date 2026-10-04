@@ -6,7 +6,7 @@
 - **En un servicio:** `OperationLog.RunAsync(logger, timeProvider, "UpdateRole", async () => { … })`. Registra el inicio, la duración al terminar y el código de error si falla. La cancelación se propaga sin registrar el evento de error 103. Es una línea por método; `TimeProvider` se inyecta.
 - **Un log propio:** `[LoggerMessage(Level = …, Message = "…")] private static partial void LogX(ILogger logger, …);` en una clase `partial`.
 - Mensajes en inglés, con parámetros estructurados (`{RoleId}`), no concatenados.
-- Teléfonos enmascarados con `IPhoneNumberParser.Mask` (`+54 9 11 •••• 6789`); correos enmascarados con la primera letra y el dominio (`j***@gmail.com`), como dice [emails](emails.md).
+- Correos y teléfonos, siempre con `PersonalDataMask` (`Application/Common/Text`): el correo con dos letras y el dominio (`lu•••@gmail.com`), y el teléfono con sus últimos cuatro dígitos (`•••• 6789`). Es el mismo formato de las pantallas, los avisos y la auditoría.
 - El `TenantId` va en el scope del request (lo pone el middleware) y en la traza (`tenant.id`).
 - OpenIddict emite parámetros OIDC y claims personales en sus trazas internas. Su categoría se limita a `Warning` mediante `LoggerFilterOptions` después de cargar la configuración; una captura de pruebas en `Trace` sigue observando los logs de la aplicación sin exponer esos valores.
 
@@ -22,6 +22,7 @@
 - `CA1848` (E0) como warning con `TreatWarningsAsErrors`: un `logger.LogX` directo rompe el build.
 - `SensitiveToStringLoggingTests` (E1): instancia los contratos HTTP de entrada con un valor centinela y comprueba que `ToString()` no lo revele. `ControllerInputContractTests` (E1) comprueba que los parámetros de entrada sean contratos de Api.
 - `OperationLogTests` (E1): una cancelación conserva la excepción y no produce el evento 103; una excepción real sí lo produce sin revelar su mensaje.
+- `PersonalDataMaskTests` (E5): el formato del correo y del teléfono, y que un valor ya enmascarado no muestre más.
 - `IngressJourneyTests` (E3, parte 3a) captura `Trace`, scopes y excepciones en registro e ingreso empresarial; comprueba que no aparezcan códigos, correos completos ni refresh tokens.
 
 ## Detalle

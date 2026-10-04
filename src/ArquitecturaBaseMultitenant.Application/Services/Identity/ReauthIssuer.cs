@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Common.Text;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
@@ -46,6 +47,7 @@ internal sealed class ReauthIssuer(LoginMethodGuard guard, ILoginMethodRepositor
         channel.EnqueueRenderedLoginCode(channel.RenderLoginCode(destination.Value, code.Code, code.LifetimeMinutes,
             await cultures.ResolveAsync(account.Value.Culture, null, ct)), userId);
         code.LoginCode.MarkSent(code.IssuedAtUtc);
-        return new ReauthCodeResponse(source.Id, LoginMethodNotifier.Mask(source), code.ResendCooldownSeconds);
+        return new ReauthCodeResponse(source.Id,
+            PersonalDataMask.LoginMethod(source.Type, source.Value, source.ContactEmail?.Value), code.ResendCooldownSeconds);
     }
 }

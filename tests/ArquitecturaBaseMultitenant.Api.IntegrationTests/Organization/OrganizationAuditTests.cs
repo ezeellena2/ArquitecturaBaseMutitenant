@@ -319,8 +319,10 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
         var result = searchJson.RootElement.GetProperty("items");
         var match = Assert.Single(result.EnumerateArray());
         Assert.DoesNotContain("private-004@example.test", match.GetRawText(), StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("***@example.test", match.GetRawText(), StringComparison.Ordinal);
-        Assert.Contains("***8900", match.GetRawText(), StringComparison.Ordinal);
+        var values = match.GetProperty("changes").EnumerateArray()
+            .Select(change => change.GetProperty("newValue").GetString()).ToArray();
+        Assert.Contains("pr•••@example.test", values);
+        Assert.Contains("•••• 8900", values);
 
         using var actors = await ownerClient.GetAsync("/api/organization/audit/actors?period=all&category=users", Ct);
         Assert.Equal(HttpStatusCode.OK, actors.StatusCode);

@@ -22,7 +22,7 @@
 - Expresiones regulares propias.
 - Trucos de un proveedor, como sacar los puntos o lo que va después del `+` en Gmail: mezclarían personas distintas.
 - Comparar sin normalizar.
-- Mostrar el correo en un log (se enmascara: `j***@gmail.com`).
+- Mostrar el correo en un log (se enmascara con `PersonalDataMask.Email`: `lu•••@gmail.com`).
 
 ## Copiá de
 - `Domain/ValueObjects/Email.cs` (E1), que parte del de `../ArquitecturaBase` y le suma la normalización.

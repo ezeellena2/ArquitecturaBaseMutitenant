@@ -2,17 +2,13 @@ using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Common.Text;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Phones;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
-using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
-using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
-using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
@@ -23,7 +19,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 /// </summary>
 internal sealed class PlatformAccountService(IPlatformAccountReader reader, ILoginMethodReader methods,
     LoginMethodAvailability availability, ITenantReader tenants, ILastTenantAdminGuard soleOwners,
-    IPhoneNumberParser phones, IRequestValidator validator, TimeProvider clock,
+    IRequestValidator validator, TimeProvider clock,
     ILogger<PlatformAccountService> logger) : IPlatformAccountService
 {
     public Task<Result<PagedResult<PlatformAccountResponse>>> ListAsync(ListPlatformAccountsRequest request, CancellationToken ct) =>
@@ -56,7 +52,8 @@ internal sealed class PlatformAccountService(IPlatformAccountReader reader, ILog
                 .OrderByDescending(method => method.IsPrimary).ThenBy(method => method.Id))
             {
                 var organization = method.ManagedByTenantId is { } tenantId ? await tenants.FindByIdAsync(tenantId, ct) : null;
-                loginMethods.Add(new PlatformAccountLoginMethodResponse(method.Id, method.Type, Mask(method),
+                loginMethods.Add(new PlatformAccountLoginMethodResponse(method.Id, method.Type,
+                    PersonalDataMask.LoginMethod(method.Type, method.Value, method.ContactEmail?.Value),
                     method.IsPrimary, method.VerifiedAtUtc, organization?.Name,
                     await availability.IsAvailableAsync(accountId, method, ct)));
             }
@@ -80,11 +77,4 @@ internal sealed class PlatformAccountService(IPlatformAccountReader reader, ILog
 
     private static PlatformAccountKind Kind(PlatformAccountRow row) =>
         row.IsOperator ? PlatformAccountKind.Operator : PlatformAccountKind.Person;
-
-    private string Mask(LoginMethodRow method) => method.Type switch
-    {
-        LoginMethodType.Email => PersonalDataMask.Email(method.Value),
-        LoginMethodType.Google => method.ContactEmail is { } contact ? PersonalDataMask.Email(contact.Value) : "Google",
-        _ => PhoneNumber.Create(method.Value) is { IsSuccess: true } phone ? phones.Mask(phone.Value) : PersonalDataMask.Email(string.Empty),
-    };
 }
