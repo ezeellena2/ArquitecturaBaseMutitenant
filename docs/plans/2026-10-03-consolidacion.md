@@ -315,7 +315,10 @@ El relevamiento del 2026-10-04 (front `fd25c5f`, [relevamiento.md](../../../Arqu
 
 Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las corrige en la pieza común cuando la hay y vuelve a capturar sus casos del manifiesto del relevamiento.
 
-- [ ] **R1 · Marco, tipografía y listas:**
+- [x] **R1 · Marco, tipografía y listas** (front `1f028f0` a `eb41575`, con el panel de v102). `npm test` 930/930, lint sin errores y build en verde. Las 222 capturas contra v102 están en `docs/design/capturas/consolidacion/r1/`.
+  - Piezas: `menuRow.ts`, `Avatar`, `FilterBar`, `ListRow`, `FormField`, `List` y `ErrorPageFrame`, más los tokens `--lado-t2` y `--lado-guia`.
+  - Lo que es del lienzo quedó en Diseño: el marco viejo de ocho tableros, el avatar del teléfono, el ☰ en Organización, el alto del buscador y el interlineado de los rótulos.
+  - Lo que pedía:
   - los tamaños y pesos de letra del marco: el nombre de la organización, las migas y tu nombre;
   - el avatar, y el menú de perfiles;
   - el espacio entre opciones del menú lateral (v92);
@@ -328,6 +331,10 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
     - en Empresa, «Roles de …» y «Agregar miembro» van en el diálogo chico (420) y «Editar empresa», en el de 560;
     - M-Error-Org con «No se pudo abrir», el modelo de la «Pantalla de error» en el teléfono;
     - «Sumar empresa»: «Empresa» obligatoria, con asterisco, y «Roles en la empresa» opcional, que aparece al elegir la empresa;
+  - lo que encontró R1:
+    - el texto de `Banner` en `--alerta-tx`, y el aviso de la invitación pasado a `Banner`;
+    - el texto de los diálogos en 13,5;
+    - la hoja de `SearchSelect` en el teléfono (de Paquete 0) usa `Dialog`: si cambian la cruz o el alto de las hojas, cambia también;
   - el aviso «Guardamos…», la franja de error, la «Pantalla de error», el cartel del 409 y los textos de «¿Salir sin guardar?»;
   - las hojas del teléfono (la cruz y el alto completo);
   - los casilleros del código y «Verificar», las casillas bloqueadas y el tirador de los cuadros de texto;
@@ -340,7 +347,12 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
   - las decisiones de v99 del front: la fecha corta, el subtítulo de M-Auditoria-Org y el correo del perfil activo;
   - «10 correos administrados» y los contratos regenerados;
   - las cuatro líneas de docs de v93.
-- [ ] **Tests lentos con la máquina cargada:** en la corrida completa, los de `CompaniesPage`, `CompanyDetailPage`, `SettingsPage` y `UserDetailPage` se pasan de 5 s. Solos pasan. Se hacen más livianos, o, si no se puede, el límite se sube en ese test con un comentario que diga por qué. Una suite que falla al azar no sirve de red.
+  - lo que encontró R1:
+    - el relleno de arriba de las cajas de los formularios (`Section`): 16, como el criterio, y no 20;
+    - los enlaces de texto del ingreso en `--marca-tx`, como la variante link de `Button`;
+    - el paginador y «Cargar más» en 12 y 14, como los tableros;
+    - **una sola pieza para el ingreso y el registro:** hoy hay tres copias de la pantalla de estado y del paso del código, una por página. Se arma una pieza común y las tres páginas la usan.
+- [ ] **Tests lentos con la máquina cargada** (va en R2): en la corrida completa, los de `CompaniesPage`, `CompanyDetailPage`, `SettingsPage` y `UserDetailPage` se pasan de 5 s. Solos pasan. Se hacen más livianos, o, si no se puede, el límite se sube en ese test con un comentario que diga por qué. Una suite que falla al azar no sirve de red.
 - [ ] **Hecho cuando** el relevamiento, vuelto a correr, no tiene diferencias «Nueva» de las etapas 1 a 6, salvo las que el usuario aceptó.
 
 ### 6. Front: Roles como referencia de verdad
