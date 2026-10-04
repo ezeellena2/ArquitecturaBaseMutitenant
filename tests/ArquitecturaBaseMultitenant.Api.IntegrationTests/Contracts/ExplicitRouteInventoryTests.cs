@@ -112,6 +112,8 @@ public sealed class ExplicitRouteInventoryTests(ApiFactory factory)
         "POST /api/platform/accounts/{id:guid}/revoke-sessions",
         "POST /api/platform/accounts/{id:guid}/deletion",
         "POST /api/platform/operators/invitations",
+        "GET /api/platform/audit",
+        "GET /api/platform/audit/{id:guid}",
         "PUT /api/platform/accounts/{id:guid}/operator",
         "DELETE /api/platform/accounts/{id:guid}/operator",
         "GET /api/platform/recoveries/paged",

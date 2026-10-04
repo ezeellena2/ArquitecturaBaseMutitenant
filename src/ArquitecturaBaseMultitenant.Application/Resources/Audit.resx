@@ -70,4 +70,42 @@
   <data name="Field.PublishBlocked" xml:space="preserve"><value>Publicación bloqueada</value></data>
   <data name="Platform.DomainMetadataReadReason" xml:space="preserve"><value>Consulta del dominio de correo de la organización.</value></data>
   <data name="Platform.OperatorInvitationReason" xml:space="preserve"><value>Invitación de operador.</value></data>
+  <data name="SecurityEvent.LoginMethodChanged" xml:space="preserve"><value>Cambió un método de ingreso</value></data>
+  <data name="SecurityEvent.AccountDeletionRequested" xml:space="preserve"><value>Pidió la baja de la cuenta</value></data>
+  <data name="SecurityEvent.AccountDeletionCancelled" xml:space="preserve"><value>Canceló la baja de la cuenta</value></data>
+  <data name="SecurityEvent.AccountDeleted" xml:space="preserve"><value>Eliminó la cuenta</value></data>
+  <data name="SecurityEvent.OrganizationMembershipEnded" xml:space="preserve"><value>Terminó la membresía en la organización</value></data>
+  <data name="SecurityEvent.PlatformSettingsChanged" xml:space="preserve"><value>Cambió la configuración de la plataforma</value></data>
+  <data name="SecurityEvent.PlatformOperatorGranted" xml:space="preserve"><value>Habilitó al operador inicial</value></data>
+  <data name="SecurityEvent.OrganizationRejected" xml:space="preserve"><value>Rechazó el alta de la organización</value></data>
+  <data name="SecurityEvent.OrganizationSuspended" xml:space="preserve"><value>Suspendió la organización</value></data>
+  <data name="SecurityEvent.OrganizationReactivated" xml:space="preserve"><value>Reactivó la organización</value></data>
+  <data name="SecurityEvent.OrganizationClosed" xml:space="preserve"><value>Cerró la organización</value></data>
+  <data name="SecurityEvent.OrganizationApproved" xml:space="preserve"><value>Aprobó el alta de la organización</value></data>
+  <data name="SecurityEvent.OrganizationCreated" xml:space="preserve"><value>Creó la organización</value></data>
+  <data name="SecurityEvent.OrganizationProvisioningRetried" xml:space="preserve"><value>Reintentó el alta de la organización</value></data>
+  <data name="SecurityEvent.PlatformTenantEntered" xml:space="preserve"><value>Entró a los datos de la organización</value></data>
+  <data name="SecurityEvent.TenantFeaturesChanged" xml:space="preserve"><value>Cambió los módulos de la organización</value></data>
+  <data name="SecurityEvent.PublicPageUnpublished" xml:space="preserve"><value>Despublicó la página pública</value></data>
+  <data name="SecurityEvent.PublicPagePublicationAllowed" xml:space="preserve"><value>Permitió publicar la página pública</value></data>
+  <data name="SecurityEvent.OrganizationDomainVerified" xml:space="preserve"><value>Verificó el dominio de correo</value></data>
+  <data name="SecurityEvent.OrganizationDomainRemoved" xml:space="preserve"><value>Quitó el dominio de correo</value></data>
+  <data name="SecurityEvent.AccountSuspended" xml:space="preserve"><value>Suspendió la cuenta</value></data>
+  <data name="SecurityEvent.AccountReactivated" xml:space="preserve"><value>Reactivó la cuenta</value></data>
+  <data name="SecurityEvent.AccountSessionsRevoked" xml:space="preserve"><value>Cerró las sesiones de la cuenta</value></data>
+  <data name="SecurityEvent.AccountRecoveryApproved" xml:space="preserve"><value>Aprobó un pedido de recuperación</value></data>
+  <data name="SecurityEvent.AccountRecoveryRejected" xml:space="preserve"><value>Rechazó un pedido de recuperación</value></data>
+  <data name="SecurityEvent.PlatformOperatorInvited" xml:space="preserve"><value>Invitó a un operador</value></data>
+  <data name="SecurityEvent.PlatformOperatorPermissionsChanged" xml:space="preserve"><value>Cambió los permisos del operador</value></data>
+  <data name="SecurityEvent.PlatformOperatorRemoved" xml:space="preserve"><value>Quitó al operador</value></data>
+  <data name="SignIn.Code" xml:space="preserve"><value>Ingresó con un código por correo</value></data>
+  <data name="SignIn.Google" xml:space="preserve"><value>Ingresó con Google</value></data>
+  <data name="SignIn.WhatsAppCode" xml:space="preserve"><value>Ingresó con un código por WhatsApp</value></data>
+  <data name="SignIn.WhatsAppLink" xml:space="preserve"><value>Ingresó con un enlace de WhatsApp</value></data>
+  <data name="SignIn.Failed" xml:space="preserve"><value>No pudo ingresar: {0}</value></data>
+  <data name="ActorRole.User" xml:space="preserve"><value>Persona</value></data>
+  <data name="ActorRole.PlatformOperator" xml:space="preserve"><value>Operador</value></data>
+  <data name="ActorRole.System" xml:space="preserve"><value>Automático</value></data>
+  <data name="Target.Platform" xml:space="preserve"><value>Plataforma</value></data>
+  <data name="Target.UnknownAccount" xml:space="preserve"><value>Cuenta sin datos</value></data>
 </root>

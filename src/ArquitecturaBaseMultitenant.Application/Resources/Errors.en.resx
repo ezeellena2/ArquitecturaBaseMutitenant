@@ -186,6 +186,7 @@
   <data name="Platform.Operator.LastManager" xml:space="preserve"><value>At least one active operator who can manage operators must remain.</value></data>
   <data name="Platform.Operator.AccountExists" xml:space="preserve"><value>That email address already has an account. An operator cannot have personal profiles.</value></data>
   <data name="Platform.Operator.NotOperator" xml:space="preserve"><value>That account is not a platform operator.</value></data>
+  <data name="Platform.Audit.NotFound" xml:space="preserve"><value>We couldn't find that event.</value></data>
   <data name="Platform.AccountRecovery.VerificationRequired" xml:space="preserve"><value>Request a new code and verify it.</value></data>
   <data name="Platform.AccountRecovery.NotFound" xml:space="preserve"><value>We couldn't find the request.</value></data>
   <data name="Platform.AccountRecovery.AlreadyResolved" xml:space="preserve"><value>That request has already been resolved.</value></data>

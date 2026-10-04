@@ -21,6 +21,8 @@ internal sealed class SecurityEventConfiguration : IEntityTypeConfiguration<Secu
         builder.HasIndex(securityEvent => new { securityEvent.ActorId, securityEvent.OccurredAtUtc });
         builder.HasIndex(securityEvent => new { securityEvent.TargetTenantId, securityEvent.OccurredAtUtc });
         builder.HasIndex(securityEvent => new { securityEvent.TargetAccountId, securityEvent.OccurredAtUtc });
+        // El listado global de Auditoría recorre por fecha e Id, con cursor.
+        builder.HasIndex(securityEvent => new { securityEvent.OccurredAtUtc, securityEvent.Id });
         foreach (var property in builder.Metadata.GetProperties())
         {
             property.SetAfterSaveBehavior(PropertySaveBehavior.Throw);

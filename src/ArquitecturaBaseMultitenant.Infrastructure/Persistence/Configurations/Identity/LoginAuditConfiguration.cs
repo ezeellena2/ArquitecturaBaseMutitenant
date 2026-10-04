@@ -16,6 +16,7 @@ internal sealed class LoginAuditConfiguration : IEntityTypeConfiguration<LoginAu
         builder.Property(audit => audit.Method).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.Property(audit => audit.FailureCode).HasMaxLength(TextLimits.ShortName);
         builder.HasIndex(audit => new { audit.UserId, audit.OccurredAtUtc });
+        builder.HasIndex(audit => new { audit.OccurredAtUtc, audit.Id });
         builder.HasOne<Infrastructure.Identity.ApplicationUser>().WithMany()
             .HasForeignKey(audit => audit.UserId).OnDelete(DeleteBehavior.Restrict);
         foreach (var property in builder.Metadata.GetProperties())

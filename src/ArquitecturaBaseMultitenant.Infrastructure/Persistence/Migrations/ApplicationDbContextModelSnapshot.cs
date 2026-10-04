@@ -112,6 +112,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ActorId", "OccurredAtUtc");
 
+                    b.HasIndex("OccurredAtUtc", "Id");
+
                     b.HasIndex("TargetAccountId", "OccurredAtUtc");
 
                     b.HasIndex("TargetTenantId", "OccurredAtUtc");
@@ -144,6 +146,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OccurredAtUtc", "Id");
 
                     b.HasIndex("UserId", "OccurredAtUtc");
 
