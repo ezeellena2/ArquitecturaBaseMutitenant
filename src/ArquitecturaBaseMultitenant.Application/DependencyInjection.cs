@@ -107,13 +107,8 @@ public static class DependencyInjection
         services.AddScoped<ILoginMethodsService, LoginMethodsService>();
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IBusinessSignupService, BusinessSignupService>();
-        services.AddScoped<BusinessSignupCodeFlow>();
         services.AddScoped<BusinessOrganizationCreator>();
-        services.AddScoped<BusinessSignupTransactionRunner>();
-        services.AddScoped<BusinessSignupPolicyReader>();
-        services.AddScoped<BusinessSignupOrganizationProvisioner>();
-        services.AddScoped<BusinessSignupLegalAcceptor>();
-        services.AddScoped<BusinessSignupRequestResolver>();
+        services.AddScoped<BusinessSignupPolicy>();
         services.AddScoped<SignupCodeRequester>();
         services.AddScoped<SignupVerificationCore>();
         services.AddScoped<SignupAccountRegistrar>();

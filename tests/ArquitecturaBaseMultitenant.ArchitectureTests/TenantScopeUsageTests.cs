@@ -19,7 +19,7 @@ public sealed class TenantScopeUsageTests
     private const string AccountDeletionProcessingService = "ArquitecturaBaseMultitenant.Application.Services.Legal.AccountDeletionProcessingService";
     private const string InvitationPreviewFlow = "ArquitecturaBaseMultitenant.Application.Services.Invitations.InvitationPreviewFlow";
     private const string InvitationAcceptanceResolver = "ArquitecturaBaseMultitenant.Application.Services.Invitations.InvitationAcceptanceResolver";
-    private const string BusinessSignupTransactionRunner = "ArquitecturaBaseMultitenant.Application.Services.Auth.BusinessSignupTransactionRunner";
+    private const string BusinessSignupService = "ArquitecturaBaseMultitenant.Application.Services.Auth.BusinessSignupService";
     private const string PlatformActionGuard = "ArquitecturaBaseMultitenant.Application.Services.Platform.PlatformActionGuard";
 
     [Fact]
@@ -37,7 +37,7 @@ public sealed class TenantScopeUsageTests
         Assert.Contains(calls, call => call.Owner == AccountService);
         Assert.Contains(calls, call => call.Owner == ConnectService);
         Assert.Contains(calls, call => call.Owner == ExternalLoginService);
-        Assert.Contains(calls, call => call.Owner == BusinessSignupTransactionRunner);
+        Assert.Contains(calls, call => call.Owner == BusinessSignupService);
         Assert.Empty(UnauthorizedCallers(calls));
     }
 
@@ -62,7 +62,7 @@ public sealed class TenantScopeUsageTests
         [.. calls.Where(IsEnterCall)
             .Where(call => call.Owner is not (TenantJobRunner or TenantSettingsLoader
                 or AccountService or ConnectService or ExternalLoginService or AccountDeletionProcessingService
-                or InvitationPreviewFlow or InvitationAcceptanceResolver or BusinessSignupTransactionRunner or PlatformActionGuard))
+                or InvitationPreviewFlow or InvitationAcceptanceResolver or BusinessSignupService or PlatformActionGuard))
             .Select(call => $"{call.Owner}.{call.OwnerMethod}")
             .Distinct(StringComparer.Ordinal)];
 

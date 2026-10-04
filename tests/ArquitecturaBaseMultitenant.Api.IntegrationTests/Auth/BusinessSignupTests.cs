@@ -2,8 +2,14 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Auth;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
@@ -160,6 +166,56 @@ public sealed class BusinessSignupTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.Forbidden, verified.StatusCode);
         Assert.Equal("Tenancy.Access.PlatformOnly", (await verified.Content.ReadFromJsonAsync<JsonDocument>(Ct))!
             .RootElement.GetProperty("code").GetString());
+    }
+
+    [Fact]
+    public async Task A_creation_that_reaches_the_service_checks_the_repetition_the_limit_and_the_slug()
+    {
+        // Sin la respuesta guardada por Idempotency-Key, el pedido llega al servicio: el mismo operationId con otros
+        // datos es un conflicto, otra organización choca con el límite de organizaciones propias y otra cuenta no
+        // puede usar el mismo slug.
+        await factory.Services.SeedDatabaseAsync(Ct);
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
+            HandleCookies = true,
+        });
+        var account = await AccountJourney.RegisterAsync(factory, client, Ct);
+        var operationId = Guid.NewGuid();
+        var request = new BusinessSignupRequest("Organización repetida", $"rep-{Guid.NewGuid():N}"[..20],
+            "Empresa repetida", null, true);
+
+        var created = await CreateOrganizationAsync(account.UserId, operationId, request);
+        var changed = await CreateOrganizationAsync(account.UserId, operationId,
+            request with { FirstCompanyName = "Otra empresa" });
+        var another = await CreateOrganizationAsync(account.UserId, Guid.NewGuid(),
+            request with { Slug = $"otra-{Guid.NewGuid():N}"[..20] });
+        using var otherClient = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
+            HandleCookies = true,
+        });
+        var otherAccount = await AccountJourney.RegisterAsync(factory, otherClient, Ct);
+        var taken = await CreateOrganizationAsync(otherAccount.UserId, Guid.NewGuid(), request);
+
+        Assert.True(created.IsSuccess, created.IsFailure ? created.Error.Code : null);
+        Assert.Equal(operationId, created.Value.TenantId);
+        Assert.Equal(TenantStatus.Active, created.Value.Status);
+        Assert.False(created.Value.RequiresApproval);
+        Assert.Equal(account.Email.Value, created.Value.NotificationEmail?.Value);
+        Assert.Equal(TenantErrors.ProvisioningConflict.Code, changed.Error.Code);
+        Assert.Equal(BusinessSignupErrors.LimitReachedCode, another.Error.Code);
+        Assert.Equal(TenantSlugErrors.Taken.Code, taken.Error.Code);
+    }
+
+    private async Task<Result<BusinessSignupResponse>> CreateOrganizationAsync(Guid userId, Guid operationId,
+        BusinessSignupRequest request)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<IBusinessSignupService>()
+            .CreateOrganizationAsync(userId, operationId, request, Ct);
     }
 
     private async Task AssertBusinessRowsAsync(string email, Guid tenantId, string slug)

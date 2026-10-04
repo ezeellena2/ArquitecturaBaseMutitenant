@@ -3,7 +3,6 @@ using ArquitecturaBaseMultitenant.Application.UnitTests.TestDoubles;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Services.Auth;
 
@@ -76,8 +75,7 @@ public sealed class TenantProvisionerTests
         var replayVerifier = new TenantProvisioningReplayVerifier(tenants, members, null!, null!, null!, settings);
         var newTenantProvisioner = new TenantSpaceProvisioner(tenants, members, null!, null!, null!, settings,
             TimeProvider.System);
-        return new TenantProvisioner(newTenantProvisioner, replayVerifier, tenantContext, TimeProvider.System,
-            NullLogger<TenantProvisioner>.Instance);
+        return new TenantProvisioner(newTenantProvisioner, replayVerifier, tenantContext);
     }
 
     private sealed class FakeTenantRepository(Tenant? existing) : ITenantRepository
