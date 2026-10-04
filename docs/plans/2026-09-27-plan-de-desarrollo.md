@@ -73,7 +73,7 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
 | 5 | Organizaciones, Organizacion, Cuentas, Cuenta-Plat, Recuperaciones, Recuperar, Legales, Auditoria-Plat y Config-Plat |
 | 6 | Registro-Empresa, Inicio-Org, Inicio-Miembro, Usuarios, Usuario, Empresas, Empresa, Configuracion (con el dominio de correo), Pagina-Org y Auditoria-Org |
 | 7 | Landing (la sección «Empresas en ArquitecturaBase» de la portada), Directorio (`/empresas`) y Pagina-Publica, con sus teléfonos (Landing-Movil, M-Directorio y M-Pagina-Publica, como web móvil) |
-| 8 | Ingreso, Registro y Cuenta (los estados de WhatsApp), Enlace y Mensajes (canal WhatsApp, incluido «Enlace para entrar (bot)») |
+| 8 | Ingreso y Registro (los estados de WhatsApp); Cuenta, Cuenta-Agregar, Cuenta-Verificar y Cuenta-Metodo (Mi cuenta › WhatsApp, lienzo v79) con sus teléfonos; Enlace, y Mensajes (canal WhatsApp, incluido «Enlace para entrar (bot)») |
 | 9 | Ingreso: los estados del operador (segundo factor, código del autenticador incorrecto, código de recuperación, configurar el autenticador y guardar los códigos) |
 | 10 | Cuenta (Privacidad: Exportar mis datos) y Mensajes (Exportación de datos lista, por correo) |
 
@@ -420,7 +420,16 @@ Además, `navigation/personal.ts` queda listo para sumar módulos B2C. El `Perso
 6. `ModuleIsolationTests`: el núcleo no referencia `*.Modules.*`.
 7. `docs/features/whatsapp.md` y `docs/guides/quitar-whatsapp.md`.
 
-**Front:** ingreso, registro y enlace por WhatsApp (`/login/enlace`, tablero Enlace), y `PhoneField` en la cuenta (vincular y desvincular), copiando los estados de WhatsApp de Ingreso, Registro, Cuenta y Enlace y el canal WhatsApp de Mensajes. Las pantallas de WhatsApp de la plataforma y de las organizaciones llegan en la Etapa 11 (ADR 0038), ya dibujadas y aprobadas en el lienzo v65.
+**Front:**
+- **Ingreso, registro y enlace por WhatsApp** (`/login/enlace`, tablero Enlace), copiando los estados de WhatsApp de Ingreso, Registro y Enlace y el canal WhatsApp de Mensajes.
+- **Mi cuenta › WhatsApp** (lienzo v79, front `830e9c2`), con los tableros Cuenta, Cuenta-Agregar, Cuenta-Verificar y Cuenta-Metodo y sus teléfonos:
+  - sumar el número con `PhoneField usage="whatsapp"`, que ofrece solo los países de `WhatsApp:AllowedCountries`;
+  - verificarlo con un código por WhatsApp;
+  - errores: país no habilitado, solo para un número nuevo; número de otra cuenta; código incorrecto y vencido;
+  - desde el ⋮, «Hacer principal» y «Quitar», con el código a otro método;
+  - sin el módulo, no aparecen ni la fila ni la opción.
+- **No hay «Cambiar número»** (decisión del usuario del 2026-10-03): se agrega el nuevo y se quita el viejo.
+- **Textos nuevos** para los resources: «Este número ya está asociado a una cuenta.», «Verificar tu WhatsApp», «¿Quitar este WhatsApp?» y «¿Hacer principal este WhatsApp?». Las pantallas de WhatsApp de la plataforma y de las organizaciones llegan en la Etapa 11 (ADR 0038), ya dibujadas y aprobadas en el lienzo v65.
 
 **Puerta:** la general, más un recorrido real: con el webhook de Meta apuntando al túnel del multitenant (`configuracion.md` §4), ingresar con un código por WhatsApp y escribirle al bot. Además, **la prueba de fuego**: en una copia descartable, quitar el módulo siguiendo `quitar-whatsapp.md`, y el build y los tests del núcleo tienen que quedar en verde.
 
