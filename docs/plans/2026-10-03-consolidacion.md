@@ -10,7 +10,7 @@
 - se unifica cada regla duplicada;
 - se crean las piezas comunes del front.
 
-No hay pantallas nuevas. Solo se suman los teléfonos que faltaban de pantallas ya programadas (lienzo v78).
+No hay pantallas nuevas. Los teléfonos de v78 necesitan el marco de app (Paquete 4), así que van con el front de la Etapa 5.
 
 **Fuentes:**
 - La [revisión de calidad de diseño](../reviews/2026-10-03-calidad-de-diseno.md) y sus anexos, con archivo y línea de cada hallazgo. Las líneas son del commit `1202433` del back y `961f786` del front, así que hay que buscar por símbolo.
@@ -81,6 +81,12 @@ No hay pantallas nuevas. Solo se suman los teléfonos que faltaban de pantallas 
   - Arreglo: sacar la entrada manual que sobra y hacer que el interceptor omita las propiedades que no cambiaron.
 
 B4, B6, B8, B10, B11 y B12 se arreglan con su pieza, en los bloques 4 y 5.
+
+### 1b. Pendientes del cierre de los paquetes 1 y 3
+
+- [ ] **1.2 · Configuración › dominio:** mostrar cuántos correos administra el dominio. Quedó esperando los archivos de dominios de Plataforma, ya commiteados en `4bb5c35`. Back con su test y front como el tablero.
+- [ ] **1.3 · Teléfono de la página pública:** revisar la columna `varchar(16)` contra `telefonos.md` y migrarla si hace falta.
+- [ ] **D3 · Nombres de rol repetidos:** el índice exige un nombre único en toda la organización, pero el tablero Roles repite «Solo lectura» en tres empresas. Se aplica la regla que decida el usuario.
 
 ### 2. Arnés y referencias
 
@@ -174,20 +180,9 @@ Cada servicio de entrada abre la transacción en su método público, y los help
 - [ ] **F6 · Una sola cultura efectiva:** `resolveCulture` y `useEffectiveCulture`, que usan i18n, formatos, datos de referencia y `Accept-Language`. Se borra `useLanguagePreference`. Tests de precedencia.
 - [ ] **F7 · `useEditPage`** (guard, «Cambios sin guardar» y 409) y un `errors.ts` por feature, en Configuración, Página pública y la ficha de Usuario.
   - Arregla **B11**. Test: si salís con cambios sin guardar, te pide confirmar.
-- [ ] **Teléfonos que faltaban** (lienzo v78, front `f2eff7d`, `generadores/faltan_1004.py`):
-  - M-Sesion: 5 estados, como el arranque de la app;
-  - M-Perfil-Suspendido: 3 estados;
-  - M-Error-Org: 2 estados, con la barra de abajo del miembro (Inicio y Más);
-  - M-Avisos: 9 estados, sobre M-Configuracion. Es la forma en el teléfono de F2 y F7:
-    - lo pasajero va en una franja oscura abajo;
-    - lo que sigue va debajo de la barra;
-    - «¿Salir sin guardar?» va en una hoja sin ✕;
-    - «Reintentá en 0:39» va en el botón fijo.
-
-  Capturas a 390 px contra cada tablero.
 - [ ] **Hecho cuando:**
   - `npm run build` y `npm test` completos pasan;
-  - las capturas no cambian, salvo lo que arreglan B3 y B4 y los teléfonos de v78.
+  - las capturas no cambian, salvo lo que arreglan B3 y B4.
 
 ### 6. Front: Roles como referencia de verdad
 

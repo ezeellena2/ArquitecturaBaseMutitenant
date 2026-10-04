@@ -94,6 +94,15 @@ Todo en `F/src/shared/ui`; arregla muchas pantallas de una vez.
   - Mi cuenta: «Tenés {{days}} días para arrepentirte.».
   - Sumar a shared/ui el ⓘ y el diálogo «Aviso importante» (hoy PublicPagePage arma el suyo).
 
+**Agregado al cerrar los paquetes 1 y 3 (2026-10-03).** Estos puntos van con el Paquete 2, en el front de la Etapa 5:
+- **AuthLayout:** el kicker «Sin contraseñas» como texto plano, y una prop para el párrafo del panel de Registro-Empresa. Con eso cierra la parte de front del punto 1.13; el correo de ventas sale de la configuración de la plataforma (decisión 6).
+- **PhoneField** compacto: «AR +54» más el número.
+- **Banner** sin borde, y lugar para «Todos» en **FormField**.
+- **Botón de peligro** con borde, y un aviso importante compartido.
+- **FilterBar** con un texto propio para el botón vacío («Vale en: todos», con «Todos» marcado).
+- **Tabs:** píldora con el número.
+- **`AddLoginMethodDialog`** compartido, para que «Agregar» del Inicio-Personal abra Cuenta-Agregar (cierra el punto 1.12).
+
 ## Paquete 3 · Textos es/en (S a M)
 
 - **Locales del front:**
@@ -158,6 +167,16 @@ Orden propuesto:
 6. Edición: ‹ + título de 20, ⋮ en la barra y acción fija, en Usuario, Rol, Configuración y Página pública.
 7. Perfil personal e Ingreso, según lo dibujado en el paso 1.
 8. Docs, tests y capturas nuevas a 390×844 contra los M-* vigentes.
+
+**Agregado (lienzo v78, front `f2eff7d`, `generadores/faltan_1004.py`).** Estos teléfonos van con el marco de app, en el front de la Etapa 5:
+- **M-Sesion:** 5 estados, como el arranque de la app.
+- **M-Perfil-Suspendido:** 3 estados.
+- **M-Error-Org:** 2 estados, con la barra de abajo del miembro (Inicio y Más).
+- **M-Avisos:** 9 estados, sobre M-Configuracion.
+  - Lo pasajero va en una franja oscura abajo.
+  - Lo que sigue va debajo de la barra.
+  - «¿Salir sin guardar?» va en una hoja sin ✕.
+  - «Reintentá en 0:39» va en el botón fijo.
 
 ## Paquete 5 · Documentación (M)
 
