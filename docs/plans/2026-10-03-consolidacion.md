@@ -203,15 +203,15 @@ Cada servicio de entrada abre la transacción en su método público, y los help
 
 ### 4. Back: una sola pieza por regla duplicada
 
-- [ ] **Alcance de un rol:**
+- [x] **Alcance de un rol:** hecho en `e59149d` (decisiones 37 y 38).
   - `RoleAssignment.Check` en Domain: una función pura que devuelve el error o nada;
   - un solo guard para Usuarios y Empresas, con un solo código de error;
   - `Assign` recibe un valor simple, no la entidad.
 
-  Tests: la matriz de dominio y la de permisos efectivos (`ListRoleIdsForUserAsync`).
-- [ ] **Estado de un miembro:** una sola expresión SQL para filtrar, mostrar y contar (con un `GroupBy`), en Usuarios y en Miembros de empresa. La política de C# queda como especificación, con un test de paridad.
-  - Esto arregla **B8**. Test: un invitado con su membresía inactiva aparece en un solo estado y se cuenta una vez.
-- [ ] **Búsqueda:** miembros e invitaciones usan `ApplySearch` y `ToPagedResultAsync`, sin SQL crudo ni `EscapeLike` propio. Tests de búsqueda con acentos en `/api/users/paged` y `/members/paged`.
+  Tests: la matriz de dominio y la de permisos efectivos (`ListRoleIdsForUserAsync`). Hechos: `RoleAssignmentTests` 17/17 (la matriz de `Check` y la de `Assign`) y `RolePersistenceTests.Effective_roles_count_each_assignment_only_where_its_role_is_valid` (la organización, una empresa, la membresía inactiva, la empresa inactiva y dos asignaciones que dejaron de valer). Además, `CompaniesTests.Users_and_companies_refuse_a_role_outside_its_scope_with_the_same_code`: con el código anterior, Empresas respondía `Roles.Role.CompanyNotAllowed` donde Usuarios respondía `Roles.RoleAssignment.CompanyNotAllowed`. Se borró `CompanyMembershipRoleManager`.
+- [x] **Estado de un miembro:** una sola expresión SQL para filtrar, mostrar y contar (con un `GroupBy`), en Usuarios y en Miembros de empresa. La política de C# queda como especificación, con un test de paridad. Hecho en `d55a19c`: `WithState` en cada reader y `MemberStateParityTests` 2/2 contra `OrganizationUserStatePolicy` y `CompanyMemberStatePolicy` (decisiones 39 y 40).
+  - Esto arregla **B8**. Test: un invitado con su membresía inactiva aparece en un solo estado y se cuenta una vez. `CompaniesTests.An_invited_member_with_an_inactive_membership_has_one_state_and_counts_once`: rojo con el invitado también en el filtro Inactivo («Filter matched in collection»), verde con la expresión única.
+- [x] **Búsqueda:** miembros e invitaciones usan `ApplySearch` y `ToPagedResultAsync`, sin SQL crudo ni `EscapeLike` propio. Tests de búsqueda con acentos en `/api/users/paged` y `/members/paged`. Hecho en `974b03c`, con `MemberSearch` (decisión 41). `OrganizationUsersTests.Searching_users_ignores_accents_and_finds_pending_invitations` y `CompaniesTests.Searching_company_members_ignores_accents_and_case`: rojos con «perez» sin encontrar a «Lucía Pérez», verdes con `ApplySearch`.
 - [ ] **Enmascarado:** `PersonalDataMask` en `Application/Common`, para correo y teléfono, con el formato que muestra el lienzo. La parte de correos ya existe desde T11 de la Etapa 5 (`Common/Text/PersonalDataMask.Email`, «lu•••@dominio»); falta el teléfono y migrar los demás usos.
   - Lo usan el interceptor de auditoría, la cuenta, los avisos y el reader de auditoría.
   - Se borra `IPhoneNumberParser.Mask`.
@@ -454,3 +454,34 @@ Bloque 3 del back, tercera parte (Alta de empresa, Plataforma y listas blancas, 
     - Ya pasaba antes de este bloque: lo mostró el test nuevo antes de mover el código. Arreglarlo cambia lo que recibe quien repite el pedido, así que no lo toqué. El test nuevo cubre la repetición con otros datos, no la idéntica.
 
 Verificación (en `0f565d5`): `dotnet build` de la solución con 0 advertencias y `dotnet test` completo con Docker **1568/1568** (7m 56s). Durante el trabajo: arquitectura 142/142 (`TransactionBoundaryTests`, `TenantScopeUsageTests` y `ServiceDependencyCountTests` incluidos), unitarios de Application 451/451 y la integración del registro de empresa, Plataforma, Ingreso y códigos de ingreso en verde.
+
+Bloque 4 del back, primera parte (alcance de un rol, estado de un miembro y búsqueda, 2026-10-04):
+
+37. **Alcance de un rol, un código por caso:** «un solo código» se aplicó como el mismo código para el mismo caso, desde Usuarios y desde Empresas. La regla responde los tres de `RoleAssignmentErrors`, todos 400:
+    - `Roles.RoleAssignment.CompanyNotAllowed`: un rol de toda la organización, en una empresa. Empresas respondía `Roles.Role.CompanyNotAllowed`.
+    - `Roles.RoleAssignment.CompanyRequired`: un rol de empresa entre los roles de la organización. Usuarios respondía `Roles.Role.CompanyNotAllowed`.
+    - `Roles.RoleAssignment.CompanyMismatch`: el rol propio de otra empresa. No cambia.
+
+    `RoleErrors.CompanyNotAllowed` y `RoleErrors.CompanyRequired` quedan solo para definir un rol. Los textos ya estaban en los dos `.resx`, y el front no nombra estos códigos: muestra el `detail`.
+38. **Alcance de un rol, dónde queda cada pieza:**
+    - `RoleAssignment.Check(scope, roleCompanyId, companyId)` devuelve `Error?`. `Assign(memberId, roleId, scope, roleCompanyId, companyId)` la usa, así que no se puede crear una asignación inválida.
+    - `RoleAssignmentGuard` (`Services/Roles`, 1 dependencia) lee cada rol con `IRoleReader` y aplica `Check`. Su `Assign` arma las asignaciones de los roles ya leídos, sin volver a cargarlos.
+    - Usuarios valida antes de la transacción y vuelve a controlar adentro, porque el rol pudo borrarse o cambiar de alcance. Empresas controla una vez, adentro.
+    - Ya no se carga la entidad `Role` para asignar. La versión que se le fijaba no controlaba nada, porque la entidad no se modificaba.
+    - `OrganizationUserAssignmentManager` pasa de 6 a 5 dependencias de negocio y `CompanyMembershipWriter` sigue en 8.
+    - Los permisos efectivos (`RoleReader.ListRoleIdsForUserAsync`) conservan su filtro en SQL como defensa, por el hallazgo de la decisión 42. La matriz de `RolePersistenceTests` lo compara con `Check`.
+39. **Estado de un miembro, la expresión única:**
+    - Cada reader lee una vez, en SQL, lo que decide el estado: el del miembro, el de la cuenta, el vencimiento de la invitación pendiente más nueva y, en empresas, la membresía. Lee también el nombre y el correo por los que se ordena.
+    - Sobre eso aplica `WithState`, una expresión estática que EF traduce a un `CASE`. El filtro es `State == x`, la fila trae el estado (los servicios ya no lo calculan) y los conteos salen de un `GroupBy`, así que suman el total.
+    - Las políticas quedan en `src` solo como especificación, como pide el plan: `OrganizationUserStatePolicy` y `CompanyMemberStatePolicy`, que sale de `CompanyMembershipService.GetState`. `MemberStateParityTests` compila `WithState` y lo compara con cada política en todas las combinaciones.
+    - `OrganizationUserRow` y `CompanyMemberRow` cambian los estados sueltos por `State`. Las respuestas HTTP no cambian.
+40. **B8, qué estado gana:** el de la política, que era el que ya mostraba la fila. Un invitado es «Invitado» aunque su membresía en la empresa esté inactiva. Cambian el filtro «Inactivo» de Miembros de empresa, que ya no lo incluye, y su conteo.
+41. **Búsqueda de personas:**
+    - Se busca lo mismo que antes: el nombre, cualquier correo verificado y el destino de una invitación pendiente. Ahora, sin acentos ni mayúsculas.
+    - `ApplySearch` busca en columnas de una fila, y una persona tiene varios correos. Por eso cada parte filtra su tabla con `ApplySearch` y `MemberSearch` las combina con `Contains`. Lo comparten Usuarios y Miembros de empresa, y entra en la lista cerrada de `IdentityStorageAccessTests`. La ficha `paginado-y-busqueda.md` lo dice.
+    - El destino de una invitación es un `Email` con conversor: se busca y se ordena con `EF.Property<string>`. Así se arregló también ordenar Usuarios por correo: `/api/users/paged?sort=email` respondía 500, porque el orden leía `Destination.Value`, que EF no traduce. El front no ordena por correo; el test de búsqueda de Usuarios lo cubre.
+    - Miembros de empresa pagina con `ToPagedResultAsync`.
+    - **Queda abierto:** `OrganizationAuditReader` sigue con SQL crudo y su `EscapeLike`, porque busca en el JSON de los cambios y no es de miembros ni invitaciones. `tenant.Invitations.Destination` no tiene el índice trigram que la ficha pide para cada columna buscable; tampoco lo tenía antes.
+42. **Hallazgo sin corregir, D2 y los invitados:** `RoleReader.CountUsersAsync` cuenta solo miembros activos. Por el código, un rol asignado solo a invitados o a miembros inactivos puede cambiar de alcance, y esas asignaciones dejan de valer: los permisos efectivos las ignoran. Borrarlo chocaría con la clave foránea `Restrict` de `RoleAssignments`. Decidir si un invitado cuenta como «persona asignada» es de producto.
+
+Verificación: `dotnet build` de la solución con 0 advertencias y `dotnet test` completo con Docker **1588/1588** (8m 51s). Durante el trabajo: arquitectura 142/142, unitarios de Application 451/451, dominio de roles 17/17 y la integración de Organización y Tenancy 142/142 (Usuarios, Empresas, Roles, permisos, Inicio y Auditoría incluidos).
