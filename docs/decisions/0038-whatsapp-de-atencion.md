@@ -42,6 +42,29 @@ El plan tenía el número de la plataforma (Etapa 8: códigos, invitaciones, avi
 - Organización: un área «WhatsApp» con cuatro permisos: **Atender clientes** (incluye ver contactos), **Atender internos**, **Mandar difusiones** y **Administrar WhatsApp** (números, bot, equipos y plantillas). Solo aparece si el módulo está prendido.
 - Plataforma: `platform.whatsapp.manage` (Etapa 11) más uno para atender las consultas del número propio. El nombre exacto lo fija el plan de la etapa.
 
+### El número de la plataforma (precisión del 2026-10-03)
+
+Lo decidió el dueño del producto junto con los tableros `Plat-WA-*` y `M-Plat-WA-*` del lienzo v80 (front `cb40cdb`).
+
+- **Qué hace el número:** códigos, invitaciones, avisos y consultas.
+- **Qué no tiene:** contactos ni difusiones. Una difusión puede bajar la calidad del número en Meta y cortar los códigos de ingreso de todos.
+- **Menú:**
+  - «WhatsApp» va directo a la bandeja **Consultas**, sin panel y sin Clientes ni Internos. Desde una conversación, «Ver la cuenta» lleva a la ficha de la cuenta.
+  - Administración › WhatsApp tiene Número, Bot, Equipos y Plantillas.
+  - En el teléfono, la barra de abajo dice «Consultas», y «Más» trae las cuatro secciones.
+- **Número:**
+  - «Qué hace» muestra códigos y avisos como «Siempre», y las consultas con un interruptor.
+  - Estados: conectado, falta medio de pago y sin número.
+  - **Si falta el medio de pago, los códigos y avisos salen solo por correo.**
+- **Bot:**
+  - No tiene selector de número.
+  - La opción del sistema «Entrar a mi cuenta» manda el enlace para entrar (Etapa 8). No se borra y existe solo en la plataforma.
+- **Equipos:** son de operadores (por ejemplo, Soporte y Altas), sin elegir bandeja.
+- **Plantillas:**
+  - Dos pestañas: «Para consultas» y «Del sistema».
+  - Las del sistema son las de [`whatsapp-plantillas.md`](../operations/whatsapp-plantillas.md): no se editan ni se borran, y el ⋮ solo deja ver el texto.
+  - Sin plantillas de marketing.
+
 ## Alternativas descartadas
 
 - Un bot por persona B2C: Meta no da la API a personas, y no tiene un caso de uso.
@@ -53,4 +76,4 @@ El plan tenía el número de la plataforma (Etapa 8: códigos, invitaciones, avi
 
 ## Consecuencias
 
-La Etapa 11 deja de ser «canales por organización» y pasa a ser el módulo de atención completo, el mismo para la plataforma y para las organizaciones. Sigue siendo quitable (ADR 0007): el núcleo no conoce WhatsApp y todo entra por puertos. Lo que la Etapa 8 deja hecho (cliente de Cloud API, webhook, plantillas y teléfono como método de ingreso) se reusa. Los teléfonos (`M-WA-*`) quedaron dibujados como app el 2026-10-03: barra de abajo con «Más», título en la barra, listas de borde a borde, hojas desde abajo y «+» flotante (regla en «Criterio · Marco y pantallas»). Pendiente de diseño: las ventanas del alta de Meta, que se dibujan cuando el dueño lo pida.
+La Etapa 11 deja de ser «canales por organización» y pasa a ser el módulo de atención completo, el mismo para la plataforma y para las organizaciones. La plataforma usa solo una parte del módulo, como dice «El número de la plataforma» más abajo. Sigue siendo quitable (ADR 0007): el núcleo no conoce WhatsApp y todo entra por puertos. Lo que la Etapa 8 deja hecho (cliente de Cloud API, webhook, plantillas y teléfono como método de ingreso) se reusa. Los teléfonos (`M-WA-*`) quedaron dibujados como app el 2026-10-03: barra de abajo con «Más», título en la barra, listas de borde a borde, hojas desde abajo y «+» flotante (regla en «Criterio · Marco y pantallas»). Pendiente de diseño: las ventanas del alta de Meta, que se dibujan cuando el dueño lo pida.

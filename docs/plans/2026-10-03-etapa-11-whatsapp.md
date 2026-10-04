@@ -37,7 +37,16 @@
 - [ ] Recibir lo que devuelve el alta (id de la cuenta de WhatsApp Business y del número), cambiar el código por el token del negocio, suscribirse a los webhooks de esa cuenta y registrar el número. Nunca registrar tokens en logs. Soportar coexistencia.
 - [ ] Consultar si la cuenta tiene medio de pago: sin medio de pago, el estado es «Falta medio de pago», con «Comprobar». Llevar los mensajes del mes por número.
 - [ ] «Cambiar a quién atiende» y «Desconectar», con su auditoría.
-- [ ] Plataforma › WhatsApp: el número propio con el mismo flujo, que también atiende consultas.
+- [ ] **Plataforma › WhatsApp** (lienzo v80, front `cb40cdb`, tableros `Plat-WA-*` y `M-Plat-WA-*`; [ADR 0038](../decisions/0038-whatsapp-de-atencion.md), «El número de la plataforma»). El número propio atiende solo consultas, además de códigos, invitaciones y avisos.
+  - **Consultas:** bandeja sin Clientes ni Internos, con «Ver la cuenta», que lleva a Cuenta-Plat.
+  - **Número:**
+    - «Qué hace»: códigos y avisos como «Siempre», y consultas con un interruptor;
+    - estados: conectado, falta medio de pago y sin número;
+    - si falta el medio de pago, los códigos y avisos salen solo por correo.
+  - **Bot:** con la opción del sistema «Entrar a mi cuenta», que no se borra.
+  - **Equipos:** de operadores.
+  - **Plantillas:** «Para consultas» y «Del sistema», estas últimas solo de lectura.
+  - Sin contactos, sin difusiones y sin marketing.
 
 ### 3. Entrada de mensajes y bandejas
 
@@ -64,6 +73,7 @@
 
 - [ ] Chats (Clientes e Internos, filtros, tomar, pasar, notas, 24 h, elegir plantilla), Contactos (importar), Ficha del contacto, Difusiones, Nueva difusión y Resultados.
 - [ ] Administración › WhatsApp: Números (falta medio de pago), Bot con «Configuración» y «Recorrido», Equipos y Plantillas.
+- [ ] Teléfono de Plataforma (`M-Plat-WA-*`): en la barra de abajo, «Consultas» en lugar de «Chats», sin Contactos ni Difusiones; «Más» (M-Mas-Plat) suma WhatsApp con Número, Bot, Equipos y Plantillas.
 - [ ] Teléfono como app (`M-WA-*`): barra de abajo con Inicio, Chats, Contactos, Difusiones y «Más»; dentro de un chat y en las pantallas con acción fija abajo, sin barra. Diálogos como hojas desde abajo y «+» flotante para crear.
 - [ ] Área WhatsApp en Rol, «Cargar teléfonos» en Usuarios, «Mensajes» en el perfil personal, el menú de Plataforma («WhatsApp» y la configuración aparte) y el correo «Chats esperando».
 
