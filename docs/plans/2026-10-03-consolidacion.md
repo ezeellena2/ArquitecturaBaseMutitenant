@@ -240,7 +240,8 @@ Cada servicio de entrada abre la transacción en su método público, y los help
     - «Vale en» sin asterisco, y el editor ya no crea roles con `?scope=AnyCompany` (enmienda de las ADR 0012 y 0034);
     - axe en Roles, Editar rol, Empresas, Ficha de empresa, Registrá tu empresa y Aceptar términos;
     - «Descripción» a todo el ancho;
-    - «1 de 2» a la derecha, en su banda.
+    - «1 de 2» a la derecha, en su banda;
+    - al rehacer el editor, conservar los botones de v87: «Descartar cambios» al editar (vuelve a lo guardado, sin salir) y «Cancelar» al crear. Los cambia «Paquete 0» en el Paquete 4.
 - [ ] **`CompanyDetailPage`,** partida según `arbol.md`:
   - `CompanyDialog` (compartido con Empresas), `AddMemberDialog`, `MemberRolesDialog`, `tabs/CompanyMembersTab` y `tabs/CompanyRolesTab`;
   - cada pieza es dueña de su borrador, su mutación y su error;
