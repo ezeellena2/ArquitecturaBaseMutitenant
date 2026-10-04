@@ -426,7 +426,7 @@ Además, `navigation/personal.ts` queda listo para sumar módulos B2C. El `Perso
   - sumar el número con `PhoneField usage="whatsapp"`, que ofrece solo los países de `WhatsApp:AllowedCountries`;
   - verificarlo con un código por WhatsApp;
   - errores: país no habilitado, solo para un número nuevo; código incorrecto y vencido;
-  - si el número es de otra cuenta, la pantalla sigue igual, no se manda código y a su dueño le llega un aviso ([ADR 0041](../decisions/0041-no-revelar-cuentas.md)). Diseño ajusta Cuenta-Agregar;
+  - si el número es de otra cuenta, la pantalla sigue igual, no se manda código y a su dueño le llega por WhatsApp la plantilla `metodo_ingreso_en_uso` ([ADR 0041](../decisions/0041-no-revelar-cuentas.md); Cuenta-Agregar y Mensajes del lienzo v83);
   - desde el ⋮, «Hacer principal» y «Quitar», con el código a otro método;
   - sin el módulo, no aparecen ni la fila ni la opción.
 - **No hay «Cambiar número»** (decisión del usuario del 2026-10-03): se agrega el nuevo y se quita el viejo.

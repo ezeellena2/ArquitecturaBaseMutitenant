@@ -87,7 +87,10 @@ B4, B6, B8, B10, B11 y B12 se arreglan con su pieza, en los bloques 4 y 5.
 - [ ] **1.2 · Configuración › dominio:** mostrar cuántos correos administra el dominio. Quedó esperando los archivos de dominios de Plataforma, ya commiteados en `4bb5c35`. Back con su test y front como el tablero.
 - [ ] **1.3 · Teléfono de la página pública:** revisar la columna `varchar(16)` contra `telefonos.md` y migrarla si hace falta.
 - [ ] **D4 · Mi cuenta: agregar un correo sin revelar si es de otra cuenta** ([ADR 0041](../decisions/0041-no-revelar-cuentas.md)).
-  - Si el correo es de otra cuenta, la respuesta y la pantalla son las mismas que con uno libre. No se manda código, y a su dueño le llega el aviso que Diseño sume en Mensajes.
+  - Si el correo es de otra cuenta, la respuesta y la pantalla son las mismas que con uno libre. No se manda código, y a su dueño le llega el aviso «Método de ingreso: ya es de una cuenta» (lienzo v83, Mensajes):
+    - asunto y título: «Ya tenés una cuenta con este correo»;
+    - texto: «Alguien quiso agregar este correo para entrar a otra cuenta de ArquitecturaBase. Este correo ya es de una cuenta, así que no lo agregamos y no mandamos ningún código. / Si fuiste vos, entrá con este correo: ya tenés una cuenta.»;
+    - nota: «Si no fuiste vos, ignorá este mensaje.».
   - Sale el texto «…ya está asociada a otra cuenta.» de `account.json` y su error del back.
   - Tests: el correo libre y el de otra cuenta dan la misma respuesta; en el segundo, el aviso se encola y no se emite ningún código.
 - [ ] **D3 · Nombres de rol repetidos, como el tablero Roles** (decisión del usuario del 2026-10-03):

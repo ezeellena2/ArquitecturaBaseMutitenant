@@ -21,6 +21,7 @@
 | `recuperacion_recibida` | Utility | — | recibimos el pedido de «Recuperar mi cuenta»; va al método nuevo | E8 |
 | `recuperacion_aprobada` | Utility | — | se aprobó: el método nuevo ya sirve para ingresar | E8 |
 | `recuperacion_rechazada` | Utility | — | se rechazó, sin revelar datos de la cuenta | E8 |
+| `metodo_ingreso_en_uso` | Utility | — | alguien quiso agregar este número para entrar a otra cuenta, pero ya es de una cuenta. No se agrega ni se manda código, y la pantalla de quien lo pidió no cambia (ADR 0041, lienzo v83, Mensajes) | E8 |
 | `recuperacion_metodo_en_uso` | Utility | — | alguien pidió recuperar una cuenta con este número, que ya es de otra cuenta. No se manda código, y la pantalla de quien lo pidió no cambia (lienzo v82, Mensajes) | E8 |
 
 - **Cómo salen los avisos de la cuenta** (las ocho plantillas Utility desde `aviso_metodo_ingreso`): el núcleo los manda por el puerto `IAccountNoticeChannel` con un `AccountNotice` cerrado, uno por plantilla y en el orden de la tabla: `LoginMethodChanged`, `ReviewLoginMethods`, `DeletionRequested`, `DeletionCancelled`, `AccountDeleted`, `RecoveryReceived`, `RecoveryApproved` y `RecoveryRejected`. Cada implementación atiende un tipo de método: la del núcleo, los correos (canal `"email"`); la del módulo, `WhatsAppAccountNoticeChannel`, los teléfonos (canal `"whatsapp"`), con estas plantillas. Sin el módulo, los teléfonos no reciben aviso y no es un error. Siempre por el outbox, cifrado.
