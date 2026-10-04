@@ -29,7 +29,7 @@ internal sealed class PlatformFeatureService(PlatformFeatureListing listing, Pla
                 if (result.IsSuccess) await cache.InvalidateAsync(tenantId, cancellationToken);
                 return result;
             }
-            catch (UniqueConstraintViolationException exception) when (exception.ConstraintName == "IX_TenantFeatures_TenantId_FeatureKey")
+            catch (UniqueConstraintViolationException exception) when (exception.ConstraintName == UniqueKeys.TenantFeature)
             {
                 throw new ConcurrencyConflictException("The initial module configuration was changed concurrently.", exception);
             }

@@ -1,3 +1,4 @@
+using System.Reflection;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
@@ -95,6 +96,25 @@ public sealed class DbContextModelTests
         Assert.Contains(foreignKeys, key => key.PrincipalEntityType.ClrType == typeof(Member)
             && key.Properties.Select(property => property.Name).SequenceEqual(["TenantId", "MemberId"]));
         Assert.Equal(TextLimits.ShortName, access.FindProperty("RoleName")!.GetMaxLength());
+    }
+
+    [Fact]
+    public void Every_unique_key_names_a_unique_index_of_the_model()
+    {
+        using var context = CreateContext();
+        var uniqueIndexes = context.Model.GetEntityTypes()
+            .SelectMany(entity => entity.GetIndexes())
+            .Where(index => index.IsUnique)
+            .Select(index => index.GetDatabaseName())
+            .ToHashSet(StringComparer.Ordinal);
+        var keys = typeof(UniqueKeys).GetFields(BindingFlags.Public | BindingFlags.Static)
+            .Where(field => field.IsLiteral)
+            .Select(field => (string)field.GetRawConstantValue()!)
+            .ToArray();
+
+        // Un catch compara el nombre que trae el choque: si la clave no es un índice único del modelo, no coincide nunca.
+        Assert.True(keys.Length > 1, "UniqueKeys tiene los índices únicos que traduce un catch.");
+        Assert.All(keys, key => Assert.Contains(key, uniqueIndexes));
     }
 
     [Fact]

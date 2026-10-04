@@ -19,8 +19,6 @@ internal sealed class PublicPageService(IPublicPageReader reader, ITenantReader 
     IRequestValidator validator, IUnitOfWork unitOfWork, TimeProvider timeProvider,
     ILogger<PublicPageService> logger) : IPublicPageService
 {
-    private const string TenantSlugConstraint = "IX_Tenants_Slug";
-
     public Task<Result<PublicPageResponse>> GetAsync(CancellationToken cancellationToken) =>
         OperationLog.RunAsync<PublicPageResponse>(logger, timeProvider, "GetOrganizationPublicPage", async () =>
         {
@@ -52,9 +50,14 @@ internal sealed class PublicPageService(IPublicPageReader reader, ITenantReader 
                     ct => editor.UpdateAsync(request, slug.Value, logo.Value, contactPhone.Value, ct),
                     CommitPolicy.OnSuccess, cancellationToken);
             }
-            catch (UniqueConstraintViolationException exception) when (exception.ConstraintName == TenantSlugConstraint)
+            catch (UniqueConstraintViolationException exception) when (exception.ConstraintName == UniqueKeys.TenantSlug)
             {
                 return TenantSlugErrors.Taken;
+            }
+            catch (UniqueConstraintViolationException exception) when (exception.ConstraintName == UniqueKeys.PublicPage)
+            {
+                // Dos primeros guardados a la vez: los dos vieron la versión 0 y el otro guardó antes (decisión 28).
+                throw new ConcurrencyConflictException("The public page was first saved concurrently.", exception);
             }
         });
     }

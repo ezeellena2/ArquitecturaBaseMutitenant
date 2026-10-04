@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.PublicSite;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
@@ -21,7 +22,7 @@ internal sealed class PublicPageConfiguration : IEntityTypeConfiguration<PublicP
         builder.Property(page => page.Address).HasMaxLength(TextLimits.Description);
         builder.Property(page => page.Website).HasMaxLength(TextLimits.WebAddress);
         builder.Property(page => page.PublishBlockedReason).HasMaxLength(TextLimits.Description);
-        builder.HasIndex(page => page.BusinessTenantId).IsUnique();
+        builder.HasIndex(page => page.BusinessTenantId).IsUnique().HasDatabaseName(UniqueKeys.PublicPage);
         builder.HasOne<TenantEntity>().WithMany()
             .HasForeignKey(page => page.BusinessTenantId).OnDelete(DeleteBehavior.Restrict);
     }

@@ -19,6 +19,7 @@
 - **Migración:** el comando de [`docs/guides/migracion.md`](../guides/migracion.md) (E2). Cada tabla nueva llama al helper RLS de su clase: `tenant` → `EnableTenantRls`, `public_site` → `EnablePublicRls`, `engagement` → `EnablePartiesRls` ([multitenancy](multitenancy.md)). Si la tabla es de `tenant`, además lleva un índice `(TenantId, campo, Id)` por cada campo de su `SortMap` ([paginado-y-busqueda](paginado-y-busqueda.md)). Se revisa el SQL generado antes de commitear.
 - **Orden alfabético en español (collation):** la base se crea con collation **ICU `es-AR`**: `CREATE DATABASE … LOCALE_PROVIDER icu ICU_LOCALE 'es-AR' TEMPLATE template0`. Así "Álvarez" queda antes que "Zapata" y "Ñandú" después de "Nuñez". En Development la crea `DatabaseBootstrapExtensions`; en producción, el DBA con el mismo comando. `RuntimeRoleValidator` **aborta** el arranque si la base no es ICU `es-AR`.
 - **Versión:** una entidad que se edita desde una pantalla implementa `IVersioned` ([concurrencia](concurrencia.md)).
+- **Índice único que traduce un caso de uso:** el control previo del servicio («¿ya existe?») no alcanza ante dos pedidos simultáneos; la barrera es el índice. Su nombre va en `UniqueKeys` (`Application/Interfaces/Persistence`), la configuración lo fija con `HasDatabaseName(UniqueKeys.X)` y el servicio lo compara en `catch (UniqueConstraintViolationException e) when (e.ConstraintName == UniqueKeys.X)`, alrededor de la transacción. Un dato repetido devuelve su `Error` (`RoleErrors.AlreadyExists`, `TenantSlugErrors.Taken`); dos primeros guardados del mismo registro son una edición simultánea y lanzan `ConcurrencyConflictException` (`PlatformFeatureService`, `PublicPageService`). Nunca un nombre de índice escrito a mano en Application.
 - **Largos:** `HasMaxLength(TextLimits.X)`, nunca un número suelto ([textos-libres](textos-libres.md)). Los correos, CUIT y teléfonos son value objects ([emails](emails.md), [identificacion-fiscal](identificacion-fiscal.md), [telefonos](telefonos.md)).
 - **Soft delete:** `ISoftDeletable` y `Remove()`. El interceptor lo convierte en una marca. Para ver lo borrado: `IgnoreQueryFilters(["SoftDelete"])`.
 
@@ -38,6 +39,7 @@
 - `CollationTests` (E2): orden real de "Álvarez", "Ñandú", "Nuñez" y "Zapata" contra la base de los tests (Testcontainers creada con ICU `es-AR`).
 - `MigrationsTests` (E2): falla si falta una migración.
 - `RlsPolicyInventoryTests` (E2), `SortIndexTests` (E2), `TransactionBoundaryTests` (E2).
+- `DbContextModelTests` (E6): cada clave de `UniqueKeys` es un índice único del modelo. `UniqueKeysTests` (E6): Application no escribe nombres de índice. `UniqueKeyRaceTests` (E6): dos pedidos que pasan juntos el control previo, y uno guarda mientras el otro recibe 409.
 
 ## Detalle
 [backend.md §9](../architecture/backend.md#9-persistencia)

@@ -38,7 +38,7 @@ internal sealed class TenantAdministrationService(IPlatformReader reader, Platfo
                 if (result.IsSuccess) await cache.InvalidateAsync(operationId, ct);
                 return result;
             }
-            catch (UniqueConstraintViolationException exception) when (exception.ConstraintName == "IX_Tenants_Slug")
+            catch (UniqueConstraintViolationException exception) when (exception.ConstraintName == UniqueKeys.TenantSlug)
             {
                 return TenantSlugErrors.Taken;
             }

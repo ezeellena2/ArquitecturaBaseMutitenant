@@ -22,8 +22,6 @@ internal sealed class CompanyService(
     TimeProvider timeProvider,
     ILogger<CompanyService> logger) : ICompanyService
 {
-    private const string TaxIdUniqueConstraint = "IX_Companies_TenantId_TaxCountry_TaxType_TaxNumber";
-
     public Task<Result<PagedResult<CompanyResponse>>> ListAsync(ListCompaniesRequest request,
         CancellationToken cancellationToken)
     {
@@ -74,7 +72,7 @@ internal sealed class CompanyService(
                     CommitPolicy.OnSuccess, cancellationToken);
             }
             catch (UniqueConstraintViolationException exception)
-                when (exception.ConstraintName == TaxIdUniqueConstraint)
+                when (exception.ConstraintName == UniqueKeys.CompanyTaxId)
             {
                 return CompanyErrors.TaxIdAlreadyUsed;
             }
@@ -109,7 +107,7 @@ internal sealed class CompanyService(
                 }, CommitPolicy.OnSuccess, cancellationToken);
             }
             catch (UniqueConstraintViolationException exception)
-                when (exception.ConstraintName == TaxIdUniqueConstraint)
+                when (exception.ConstraintName == UniqueKeys.CompanyTaxId)
             {
                 return CompanyErrors.TaxIdAlreadyUsed;
             }

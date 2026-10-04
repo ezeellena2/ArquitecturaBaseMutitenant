@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Common;
 using Microsoft.EntityFrameworkCore;
@@ -20,7 +21,7 @@ internal sealed class TenantDomainConfiguration : IEntityTypeConfiguration<Tenan
         builder.Property(domain => domain.CreatedAtUtc).IsRequired();
         builder.Ignore(domain => domain.TxtRecordValue);
         builder.HasIndex(domain => domain.Domain).IsUnique()
-            .HasFilter("\"Status\" <> 'Removed'");
+            .HasFilter("\"Status\" <> 'Removed'").HasDatabaseName(UniqueKeys.TenantDomain);
         builder.HasIndex(domain => new { domain.OrganizationId, domain.Status });
         builder.HasOne<TenantEntity>().WithMany()
             .HasForeignKey(domain => domain.OrganizationId).OnDelete(DeleteBehavior.Restrict);

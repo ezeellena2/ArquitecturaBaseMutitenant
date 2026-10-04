@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
@@ -77,8 +78,16 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
                 NormalizePermissions(request.Permissions!));
             if (roleResult.IsFailure) return roleResult.Error;
 
-            return await unitOfWork.ExecuteInTransactionAsync(
-                ct => CreateCoreAsync(roleResult.Value, ct), CommitPolicy.OnSuccess, cancellationToken);
+            try
+            {
+                return await unitOfWork.ExecuteInTransactionAsync(
+                    ct => CreateCoreAsync(roleResult.Value, ct), CommitPolicy.OnSuccess, cancellationToken);
+            }
+            catch (UniqueConstraintViolationException exception) when (exception.ConstraintName == UniqueKeys.RoleName)
+            {
+                // B10: otro pedido guardó el mismo nombre después de nuestro control y antes del commit.
+                return RoleErrors.AlreadyExists;
+            }
         });
     }
 
@@ -88,8 +97,17 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
         return OperationLog.RunAsync(logger, timeProvider, "UpdateRole", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            var result = await unitOfWork.ExecuteInTransactionAsync(
-                ct => UpdateCoreAsync(request, ct), CommitPolicy.OnSuccess, cancellationToken);
+            Result result;
+            try
+            {
+                result = await unitOfWork.ExecuteInTransactionAsync(
+                    ct => UpdateCoreAsync(request, ct), CommitPolicy.OnSuccess, cancellationToken);
+            }
+            catch (UniqueConstraintViolationException exception) when (exception.ConstraintName == UniqueKeys.RoleName)
+            {
+                return RoleErrors.AlreadyExists;
+            }
+
             if (result.IsSuccess)
             {
                 await permissions.InvalidateRoleAsync(request.RoleId, cancellationToken);

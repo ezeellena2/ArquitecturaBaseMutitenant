@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Features;
 using TenantEntity = ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant;
@@ -15,7 +16,8 @@ internal sealed class TenantFeatureConfiguration : IEntityTypeConfiguration<Tena
         builder.HasKey(row => row.Id);
         builder.Property(row => row.FeatureKey).HasMaxLength(TextLimits.ShortName);
         builder.Property(row => row.Source).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
-        builder.HasIndex(row => new { row.TenantId, row.FeatureKey }).IsUnique();
+        builder.HasIndex(row => new { row.TenantId, row.FeatureKey }).IsUnique()
+            .HasDatabaseName(UniqueKeys.TenantFeature);
         builder.HasOne<TenantEntity>().WithMany().HasForeignKey(row => row.TenantId).OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.ReferenceData;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -26,7 +27,7 @@ internal sealed class CompanyConfiguration : IEntityTypeConfiguration<Company>
         builder.HasIndex(company => new
         {
             company.TenantId, company.TaxCountry, company.TaxType, company.TaxNumber,
-        }).IsUnique().HasFilter("\"TaxCountry\" IS NOT NULL");
+        }).IsUnique().HasFilter("\"TaxCountry\" IS NOT NULL").HasDatabaseName(UniqueKeys.CompanyTaxId);
         builder.HasOne<TenantEntity>().WithMany()
             .HasForeignKey(company => company.TenantId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<ReferenceTimeZone>().WithMany()

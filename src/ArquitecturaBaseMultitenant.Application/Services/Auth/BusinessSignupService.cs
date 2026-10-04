@@ -76,7 +76,7 @@ internal sealed class BusinessSignupService(SignupCodeRequester codes, SignupVer
                         CommitPolicy.OnSuccess, cancellationToken);
                 }
                 catch (UniqueConstraintViolationException exception)
-                    when (exception.ConstraintName == "IX_Tenants_Slug")
+                    when (exception.ConstraintName == UniqueKeys.TenantSlug)
                 {
                     return TenantSlugErrors.Taken;
                 }

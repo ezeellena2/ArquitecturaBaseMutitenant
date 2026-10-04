@@ -490,7 +490,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("TenantId", "FeatureKey")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("IX_TenantFeatures_TenantId_FeatureKey");
 
                     b.ToTable("TenantFeatures", "platform");
                 });
@@ -867,7 +868,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasKey("BusinessTenantId", "Id");
 
                     b.HasIndex("BusinessTenantId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("IX_PublicPages_BusinessTenantId");
 
                     b.ToTable("PublicPages", "public_site");
                 });
@@ -1356,6 +1358,7 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TenantId", "TaxCountry", "TaxType", "TaxNumber")
                         .IsUnique()
+                        .HasDatabaseName("IX_Companies_TenantId_TaxCountry_TaxType_TaxNumber")
                         .HasFilter("\"TaxCountry\" IS NOT NULL");
 
                     b.ToTable("Companies", "tenant");
@@ -1545,7 +1548,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Slug")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("IX_Tenants_Slug");
 
                     b.HasIndex("CreatedAtUtc", "Id");
 
@@ -1596,6 +1600,7 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("Domain")
                         .IsUnique()
+                        .HasDatabaseName("IX_TenantDomains_Domain")
                         .HasFilter("\"Status\" <> 'Removed'");
 
                     b.HasIndex("OrganizationId", "Status");
