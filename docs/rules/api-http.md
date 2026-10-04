@@ -41,7 +41,7 @@
 
 ## Lo verifica
 - `ControllerInputContractTests` (E1), `ControllerServiceRepositoryTests` (E1): reconoce todo tipo derivado de `ControllerBase`, incluso si no termina en `Controller`, y revisa constructor, parámetros de acción y dependencias; prohíbe `DateTimeOffset` también en propiedades anidadas de contratos; `MinimalApiRoutesTests` (E0).
-- `ControllerOutputContractTests`: lo que declara cada acción en `ProducesResponseType` es un modelo de Application o un `*HttpResponse` de `Api/Contracts`.
+- `ControllerOutputContractTests` (E7): lo que declara cada acción en `ProducesResponseType` es un modelo de Application o un `*HttpResponse` de `Api/Contracts`.
 - `EnumAndOffsetJsonTests` (E1): nombres de enum aceptados y números rechazados con 400 ProblemDetails.
 - `AccessDeclarationTests` (E3): toda ruta declara `[Access]` o `[PublicSite]`; una con solo `[AllowAnonymous]` pasa únicamente si su controller está en la lista explícita del test.
 - `ExplicitRouteInventoryTests` (E1): inventaría cada endpoint de producción salvo health, exige verbo HTTP y que su ruta tenga un prefijo declarado en `BackendPrefixes`.

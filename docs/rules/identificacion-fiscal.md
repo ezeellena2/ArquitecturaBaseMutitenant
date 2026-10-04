@@ -28,7 +28,7 @@
 
 ## Lo verifica
 - `TaxIdTests` (E6): los casos válidos e inválidos de `format-cases.json`, que también corre el front con `stdnum`.
-- `CompanyServiceTests` y `CompaniesTests`: el tipo de la empresa sale del país de la organización (Argentina y Estados Unidos) y se conserva si el número no cambia.
+- `CompanyServiceTests` (E6) y `CompaniesTests` (E6): el tipo de la empresa sale del país de la organización (Argentina y Estados Unidos) y se conserva si el número no cambia.
 - `TaxIdPropertyTests` (E6): ninguna propiedad `Cuit`, `Cuil` o `Dni` de tipo `string` (test de arquitectura).
 
 ## Detalle
