@@ -102,7 +102,7 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
 
     private async Task<Result<Guid>> CreateCoreAsync(Role role, CancellationToken cancellationToken)
     {
-        if (await roles.ExistsByNameAsync(role.Name, excludedRoleId: null, cancellationToken))
+        if (await roles.ExistsByNameAsync(role.Name, role.CompanyId, excludedRoleId: null, cancellationToken))
             return RoleErrors.AlreadyExists;
         repository.Add(role);
         return role.Id;
@@ -118,7 +118,8 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
         var updated = role.Update(request.Name, request.Description, request.Scope!.Value, request.CompanyId,
             NormalizePermissions(request.Permissions!));
         if (updated.IsFailure) return updated;
-        if (await roles.ExistsByNameAsync(role.Name, role.Id, cancellationToken)) return RoleErrors.AlreadyExists;
+        if (await roles.ExistsByNameAsync(role.Name, role.CompanyId, role.Id, cancellationToken))
+            return RoleErrors.AlreadyExists;
         repository.MarkUpdated(role);
         return Result.Success();
     }

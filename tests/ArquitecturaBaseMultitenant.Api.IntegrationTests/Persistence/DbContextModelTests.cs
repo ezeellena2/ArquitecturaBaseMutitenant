@@ -10,6 +10,8 @@ using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -65,7 +67,14 @@ public sealed class DbContextModelTests
         Assert.Equal("Tenant", Assert.Single(role.GetDeclaredQueryFilters()).Key);
         Assert.Equal("text[]", role.FindProperty(nameof(Role.Permissions))!.GetColumnType());
         Assert.Equal(TextLimits.ShortName, role.FindProperty(nameof(Role.NormalizedName))!.GetMaxLength());
-        Assert.Contains(role.GetIndexes(), index => index.IsUnique
+        // D3: el nombre es único por empresa; los roles sin empresa (toda la organización) comparten un solo espacio.
+        var roleName = Assert.Single(role.GetIndexes(), index => index.IsUnique
+            && index.Properties.Select(property => property.Name).SequenceEqual(["TenantId", "CompanyId", "NormalizedName"]));
+        Assert.Equal(UniqueKeys.RoleName, roleName.GetDatabaseName());
+        // NULLS NOT DISTINCT es una anotación de migración: se lee del modelo de diseño.
+        Assert.False(context.GetService<IDesignTimeModel>().Model.FindEntityType(typeof(Role))!.GetIndexes()
+            .Single(index => index.GetDatabaseName() == UniqueKeys.RoleName).GetAreNullsDistinct());
+        Assert.DoesNotContain(role.GetIndexes(), index => index.IsUnique
             && index.Properties.Select(property => property.Name).SequenceEqual(["TenantId", "NormalizedName"]));
         Assert.Contains(role.GetIndexes(), index =>
             index.Properties.Select(property => property.Name).SequenceEqual(["TenantId", "Name", "Id"]));

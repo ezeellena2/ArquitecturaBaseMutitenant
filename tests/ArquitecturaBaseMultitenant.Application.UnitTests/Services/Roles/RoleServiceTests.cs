@@ -82,7 +82,8 @@ public sealed class RoleServiceTests
             return Task.FromResult(Page);
         }
         public Task<RoleRow?> FindByIdAsync(Guid roleId, CancellationToken cancellationToken) => Task.FromResult(Role);
-        public Task<bool> ExistsByNameAsync(string name, Guid? excludedRoleId, CancellationToken cancellationToken) =>
+        public Task<bool> ExistsByNameAsync(string name, Guid? companyId, Guid? excludedRoleId,
+            CancellationToken cancellationToken) =>
             Task.FromResult(NameExists);
         public Task<int> CountUsersAsync(Guid roleId, CancellationToken cancellationToken) => Task.FromResult(UserCount);
         public Task<IReadOnlyList<Guid>> ListRoleIdsForUserAsync(Guid userId, Guid? companyId, CancellationToken cancellationToken) =>

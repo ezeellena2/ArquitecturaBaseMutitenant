@@ -12,7 +12,8 @@ public interface IRoleReader
 
     Task<RoleRow?> FindByIdAsync(Guid roleId, CancellationToken cancellationToken);
 
-    Task<bool> ExistsByNameAsync(string name, Guid? excludedRoleId, CancellationToken cancellationToken);
+    /// <summary>Si ya hay otro rol con ese nombre en la misma empresa, o entre los que no tienen empresa (D3).</summary>
+    Task<bool> ExistsByNameAsync(string name, Guid? companyId, Guid? excludedRoleId, CancellationToken cancellationToken);
 
     Task<int> CountUsersAsync(Guid roleId, CancellationToken cancellationToken);
 

@@ -381,10 +381,11 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasKey("TenantId", "Id");
 
-                    b.HasIndex("TenantId", "CompanyId");
+                    b.HasIndex("TenantId", "CompanyId", "NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Roles_TenantId_CompanyId_NormalizedName");
 
-                    b.HasIndex("TenantId", "NormalizedName")
-                        .IsUnique();
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "NormalizedName"), false);
 
                     b.HasIndex("TenantId", "CreatedAtUtc", "Id");
 

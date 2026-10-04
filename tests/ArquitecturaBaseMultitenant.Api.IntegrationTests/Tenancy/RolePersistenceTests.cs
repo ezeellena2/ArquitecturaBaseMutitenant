@@ -43,7 +43,8 @@ public sealed class RolePersistenceTests(ApiFactory factory)
         var details = await reader.FindByIdAsync(role.Id, Ct);
         Assert.Equal(row.Id, details?.Id);
         Assert.Equal(row.Permissions, details?.Permissions);
-        Assert.True(await reader.ExistsByNameAsync(" lector ", null, Ct));
+        Assert.True(await reader.ExistsByNameAsync(" lector ", companyId: null, excludedRoleId: null, Ct));
+        Assert.False(await reader.ExistsByNameAsync(" lector ", Guid.CreateVersion7(), excludedRoleId: null, Ct));
     }
 
     [Fact]

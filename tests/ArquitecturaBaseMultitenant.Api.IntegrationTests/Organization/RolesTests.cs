@@ -101,6 +101,50 @@ public sealed class RolesTests(ApiFactory factory)
         Assert.Equal(south, movedJson.RootElement.GetProperty("companyId").GetGuid());
     }
 
+    [Fact]
+    public async Task A_role_name_repeats_across_companies_but_not_within_a_company_or_the_whole_organization()
+    {
+        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
+        await OrganizationJourney.StageAsync(factory, owner, "Nombres de rol", Ct);
+        await AccountJourney.AuthorizeAsync(client, "business", Ct);
+        var north = await CreateCompanyAsync(client, "Delta Norte S.A.");
+        var south = await CreateCompanyAsync(client, "Delta Sur S.R.L.");
+
+        // Tablero Roles: cada empresa tiene su «Solo lectura».
+        await CreateRoleAsync(client, "Solo lectura", north);
+        await CreateRoleAsync(client, "Solo lectura", south);
+
+        using var sameCompany = await PostRoleAsync(client, " solo LECTURA ", nameof(RoleScope.SpecificCompany), north);
+        Assert.Equal(HttpStatusCode.Conflict, sameCompany.StatusCode);
+        Assert.Equal(RoleErrors.AlreadyExistsCode, await ProblemCodeAsync(sameCompany));
+
+        using var organizationRole = await PostRoleAsync(client, "Solo lectura", nameof(RoleScope.Organization), null);
+        Assert.Equal(HttpStatusCode.Created, organizationRole.StatusCode);
+        using var sameOrganization = await PostRoleAsync(client, "Solo lectura", nameof(RoleScope.Organization), null);
+        Assert.Equal(HttpStatusCode.Conflict, sameOrganization.StatusCode);
+        Assert.Equal(RoleErrors.AlreadyExistsCode, await ProblemCodeAsync(sameOrganization));
+        // Los de cada empresa, sin una empresa en particular, comparten nombres con los de toda la organización.
+        using var everyCompany = await PostRoleAsync(client, "Solo lectura", nameof(RoleScope.AnyCompany), null);
+        Assert.Equal(HttpStatusCode.Conflict, everyCompany.StatusCode);
+    }
+
+    private static Task<HttpResponseMessage> PostRoleAsync(HttpClient client, string name, string scope,
+        Guid? companyId) => AccountJourney.PostAsync(client, "/api/roles", new
+        {
+            name,
+            description = (string?)null,
+            scope,
+            companyId,
+            permissions = new[] { Permissions.Company.Members.Read },
+        }, Ct);
+
+    private static async Task<string?> ProblemCodeAsync(HttpResponseMessage response)
+    {
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
+        return json.RootElement.GetProperty("code").GetString();
+    }
+
     private static async Task<Guid> CreateRoleAsync(HttpClient client, string name, Guid companyId)
     {
         using var created = await AccountJourney.PostAsync(client, "/api/roles", new

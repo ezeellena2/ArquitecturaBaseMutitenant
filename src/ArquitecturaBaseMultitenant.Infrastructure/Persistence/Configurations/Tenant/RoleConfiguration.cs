@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -20,7 +21,9 @@ internal sealed class RoleConfiguration : IEntityTypeConfiguration<Role>
         builder.Property(role => role.Scope).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.Property(role => role.Permissions).HasField("_permissions")
             .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnType("text[]").IsRequired();
-        builder.HasIndex(role => new { role.TenantId, role.NormalizedName }).IsUnique();
+        // D3: un nombre por empresa; los roles sin empresa comparten uno solo entre sí.
+        builder.HasIndex(role => new { role.TenantId, role.CompanyId, role.NormalizedName }).IsUnique()
+            .AreNullsDistinct(false).HasDatabaseName(UniqueKeys.RoleName);
         builder.HasIndex(role => new { role.TenantId, role.Name, role.Id });
         builder.HasIndex(role => new { role.TenantId, role.CreatedAtUtc, role.Id });
         builder.HasOne<TenantEntity>().WithMany()

@@ -66,13 +66,14 @@ internal sealed class RoleReader(ApplicationDbContext context, ITenantContext te
         return row is null ? null : SortPermissions(row);
     }
 
-    public Task<bool> ExistsByNameAsync(string name, Guid? excludedRoleId, CancellationToken cancellationToken)
+    public Task<bool> ExistsByNameAsync(string name, Guid? companyId, Guid? excludedRoleId,
+        CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         var tenantId = tenantContext.RequiredTenantId;
         var normalized = Role.NormalizeName(name);
         return context.Roles.AsNoTracking().AnyAsync(role => role.TenantId == tenantId
-            && role.NormalizedName == normalized
+            && role.NormalizedName == normalized && role.CompanyId == companyId
             && (excludedRoleId == null || role.Id != excludedRoleId), cancellationToken);
     }
 
