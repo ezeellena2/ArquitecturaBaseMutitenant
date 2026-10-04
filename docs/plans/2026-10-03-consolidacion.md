@@ -86,7 +86,16 @@ B4, B6, B8, B10, B11 y B12 se arreglan con su pieza, en los bloques 4 y 5.
 
 - [ ] **1.2 · Configuración › dominio:** mostrar cuántos correos administra el dominio. Quedó esperando los archivos de dominios de Plataforma, ya commiteados en `4bb5c35`. Back con su test y front como el tablero.
 - [ ] **1.3 · Teléfono de la página pública:** revisar la columna `varchar(16)` contra `telefonos.md` y migrarla si hace falta.
-- [ ] **D3 · Nombres de rol repetidos:** el índice exige un nombre único en toda la organización, pero el tablero Roles repite «Solo lectura» en tres empresas. Se aplica la regla que decida el usuario.
+- [ ] **D3 · Nombres de rol repetidos, como el tablero Roles** (decisión del usuario del 2026-10-03):
+  - un rol de una empresa puede llamarse igual que el de otra empresa;
+  - los roles de toda la organización siguen siendo únicos entre sí.
+
+  El índice único pasa a organización + empresa + nombre (`NULLS NOT DISTINCT` para los de toda la organización) y su nombre entra en `UniqueKeys`. Hay que actualizar `docs/features/roles.md`.
+
+  Tests:
+  - dos empresas con «Solo lectura» se crean;
+  - el mismo nombre dos veces en una empresa da 409;
+  - el mismo nombre dos veces en toda la organización da 409.
 
 ### 2. Arnés y referencias
 
