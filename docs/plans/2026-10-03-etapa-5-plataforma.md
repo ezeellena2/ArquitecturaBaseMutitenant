@@ -267,21 +267,29 @@ Archivos: PlatformOperatorService/guard/repo/controller cuentas e invitaciones; 
 
 Fuente: [ADR 0042](../decisions/0042-operadores-de-plataforma.md), lienzo v90 (front `b9a4cf2`), Cuentas, M-Cuentas y Mensajes › «Invitación como operador». Corrige lo que entregó T16, que crea la cuenta activa en el momento. La programa la consolidación del back, después de su primera tanda, para no pisar `Notifications.resx`.
 
-- [ ] Rojo:
+- [x] Rojo:
   - la invitación queda pendiente hasta el primer ingreso con código a Plataforma y vence a los 7 días;
   - mientras está pendiente no hay sesiones, y vencida no se puede entrar;
   - «Reenviar invitación» renueva los 7 días y manda el correo de nuevo;
   - «Revocar invitación» la borra y libera el correo;
   - en Cuentas (y en el filtro Estado), «Invitación pendiente» y «Invitación vencida», cuyo ⋮ trae solo esas dos acciones;
   - los permisos y el último administrador siguen como en T16.
-- [ ] El aviso `OperatorInvited` suma quién invita y los permisos por nombre, con los textos de v90:
+
+  Evidencia: con solo el andamiaje (valores de enum, códigos de error y la columna), Application **6/7** (`PlatformPermissionServiceTests`: la invitación pendiente tenía permisos) e integración focal **19/26**: `PlatformOperatorTests` 2/6 (la invitada quedaba Active, la respuesta no traía `expiresAtUtc`, suspender una pendiente daba 204 y no había rutas para reenviar ni revocar), `GoogleLoginTests` (Google entraba y se vinculaba a la invitación pendiente), `PlatformAccountStateTests` (una invitación pendiente con `operators.manage` contaba: suspender al último administrador daba 204) y `ExplicitRouteInventoryTests` (rutas ausentes). Comando: `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/... -- --filter-class <clase>` por cada clase.
+- [x] El aviso `OperatorInvited` suma quién invita y los permisos por nombre, con los textos de v90:
   - asunto: «{quien invita} te invitó como operador de {app}»;
   - título: «Te invitaron como operador»;
   - datos: Permisos y Vence;
   - botón «Ingresar»;
   - las dos notas;
   - sale solo por correo.
-- [ ] Verde, y `docs/features/plataforma.md` deja de decir «crea enseguida la identidad». Commit `feat(plataforma): la invitación de operador vence`.
+
+  `PlatformOperatorInvitationNotifier` lo encola solo en el canal de correo, en la cultura y la zona de la cuenta invitada; el renderer usa la plantilla de las invitaciones (datos en grilla, botón, notas y pie). Los permisos salen por nombre en el idioma del aviso (`PermissionTexts.PermissionIn`), unidos con «, » y «y».
+- [x] Verde, y `docs/features/plataforma.md` deja de decir «crea enseguida la identidad». Commit `feat(plataforma): la invitación de operador vence` (`8604c94`).
+
+  La cuenta guarda el vencimiento (`OperatorInvitationExpiresAtUtc`, migración `OperatorInvitationExpiry`, una columna nula sin cambio de datos). `PlatformOperatorInvitationService` invita, reenvía (`POST /api/platform/operators/{id}/invitation/resend`, 200 con `id` y `expiresAtUtc`) y revoca (`DELETE /api/platform/operators/{id}/invitation`, 204), con `PlatformOperatorProvisioner` bajo el lock de la cuenta. `LoginAccountGuard` acepta la invitación con el primer ingreso con código a Plataforma; `LoginCodeRequester` no manda el código a una vencida; `GoogleAccountGuard` la rechaza. Cuentas suma los estados `Invited` e `InvitationExpired` y `invitationExpiresAtUtc`; una revocada no figura. Decisiones 16 a 22 de la consolidación.
+
+  Verde: Application **451/451**, dominio **272/272**, arquitectura **141/142** (falla `HarnessTests`: `formularios.md:48` del front nombra `useEditPage.test.tsx` y `SettingsPage.test.tsx` sin la marca (E#) desde el commit del front `a6ced5c`; no es de esta tarea), integración focal **26/26** (`PlatformOperatorTests` 6/6, `GoogleLoginTests`, `PlatformAccountStateTests`, `ExplicitRouteInventoryTests`) y relacionada **62/62** (ingreso con código, OpenAPI, avisos, migraciones, Cuentas, bajas, auditoría, identidad e invitaciones); `dotnet build` de la solución con 0 advertencias; `dotnet test` completo con Docker **1564/1565** (7m 41s), con la misma única falla de `HarnessTests`.
 
 ### T17 · Auditoría de seguridad
 
