@@ -175,6 +175,7 @@ Cada servicio de entrada abre la transacción en su método público, y los help
   - Se borra `IPhoneNumberParser.Mask`.
 - [ ] **Auditoría de roles, como el tablero Auditoria-Org.** Cuando cambian los roles de una persona en una empresa, queda un solo cambio, «Roles en la empresa: antes → después». Hoy queda una entrada por cada asignación.
   - Test: asignar y quitar roles en una sola operación deja una entrada, con el antes y el después.
+  - Hoy el detalle muestra filas «Empresa» y «un registro» con identificadores internos (lo vio la revisión de capturas del 2026-10-03). Regla: el detalle nunca muestra un identificador interno, y un test lo controla.
 - [ ] **Índices únicos:** `UniqueKeys` con sus nombres, usados en `HasDatabaseName` y en cada `catch`. Test: cada clave existe en el modelo.
   - `RoleService` traduce la clave del nombre, y eso arregla **B10**. Test: dos altas simultáneas con el mismo nombre dan una creada y un 409.
 - [ ] **Registro:**
