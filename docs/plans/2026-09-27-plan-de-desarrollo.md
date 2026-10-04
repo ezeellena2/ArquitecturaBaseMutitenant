@@ -435,7 +435,7 @@ Además, `navigation/personal.ts` queda listo para sumar módulos B2C. El `Perso
 **Front:**
 - **Ingreso, registro y enlace por WhatsApp** (`/login/enlace`, tablero Enlace), copiando los estados de WhatsApp de Ingreso, Registro y Enlace y el canal WhatsApp de Mensajes.
 - **Mi cuenta › WhatsApp** (lienzo v79, front `830e9c2`), con los tableros Cuenta, Cuenta-Agregar, Cuenta-Verificar y Cuenta-Metodo y sus teléfonos:
-  - sumar el número con `PhoneField usage="whatsapp"`, que ofrece solo los países de `WhatsApp:AllowedCountries`;
+  - sumar el número con `PhoneField usage="whatsapp"`, que ofrece solo los países de `WhatsApp:AllowedCountries`. La lista de países lleva buscador solo con más de 10 opciones (Criterio · Formularios; lienzo v101);
   - verificarlo con un código por WhatsApp;
   - errores: país no habilitado, solo para un número nuevo; código incorrecto y vencido;
   - si el número es de otra cuenta, la pantalla sigue igual, no se manda código y a su dueño le llega por WhatsApp la plantilla `metodo_ingreso_en_uso` ([ADR 0041](../decisions/0041-no-revelar-cuentas.md); Cuenta-Agregar y Mensajes del lienzo v83);
