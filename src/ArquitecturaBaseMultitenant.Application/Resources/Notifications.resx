@@ -16,8 +16,9 @@
   <data name="Notice.NotMe" xml:space="preserve"><value>Si no fuiste vos, entrá a tu cuenta y revisá tus métodos de ingreso. Si no podés entrar, usá «Recuperá tu cuenta».</value></data>
   <data name="ReviewLoginMethods.Subject" xml:space="preserve"><value>Revisá tus métodos de ingreso</value></data>
   <data name="ReviewLoginMethods.Title" xml:space="preserve"><value>Revisá tus métodos de ingreso</value></data>
-  <data name="ReviewLoginMethods.Body" xml:space="preserve"><value>{0} Terminó tu acceso a {1}. Si usabas un correo administrado por la organización, ya no sirve para ingresar. Revisá que tengas otros métodos de ingreso verificados.</value></data>
-  <data name="ReviewLoginMethods.Note" xml:space="preserve"><value>Si ese era tu único método, vas a tener que recuperar tu cuenta.</value></data>
+  <data name="ReviewLoginMethods.Body" xml:space="preserve"><value>{0} Ya no sos miembro de {1}. Tu cuenta de {2} sigue activa.</value></data>
+  <data name="ReviewLoginMethods.ManagedEmail" xml:space="preserve"><value>Si entrabas con un correo administrado por {0}, ya no te sirve. Agregá un correo personal o tu WhatsApp para no perder tu cuenta.</value></data>
+  <data name="ReviewLoginMethods.Action" xml:space="preserve"><value>Revisar mis métodos</value></data>
   <data name="LoginMethodAddedPhone.Subject" xml:space="preserve"><value>Agregaste un WhatsApp a tu cuenta</value></data>
   <data name="LoginMethodAddedPhone.Title" xml:space="preserve"><value>Agregaste un método de ingreso</value></data>
   <data name="LoginMethodAddedPhone.Body" xml:space="preserve"><value>{0} El {1} a las {2} agregaste el WhatsApp {3} a tu cuenta de {4}.</value></data>

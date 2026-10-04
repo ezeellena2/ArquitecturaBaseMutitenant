@@ -212,10 +212,16 @@ public sealed class EmailTemplateTests
     }
 
     [Theory]
-    [InlineData("es-AR", "Revisá tus métodos de ingreso", "Terminó tu acceso a", "verificados")]
-    [InlineData("en-US", "Review your sign-in methods", "Your access to", "verified")]
-    public async Task Membership_end_notice_explains_managed_email_and_links_to_account(string cultureCode,
-        string subject, string body, string verified)
+    [InlineData("es-AR", "Revisá tus métodos de ingreso",
+        "Hola, Lucía. Ya no sos miembro de Delta <Sur>. Tu cuenta de ArquitecturaBase sigue activa.",
+        "Si entrabas con un correo administrado por Delta <Sur>, ya no te sirve. Agregá un correo personal o tu WhatsApp para no perder tu cuenta.",
+        "Revisar mis métodos")]
+    [InlineData("en-US", "Review your sign-in methods",
+        "Hello, Lucía. You are no longer a member of Delta <Sur>. Your ArquitecturaBase account is still active.",
+        "If you signed in with an email managed by Delta <Sur>, it no longer works. Add a personal email or your WhatsApp so you don't lose your account.",
+        "Review my methods")]
+    public async Task Membership_end_notice_matches_the_approved_board_and_links_to_account(string cultureCode,
+        string subject, string body, string managedEmail, string action)
     {
         var profile = await new CultureProfiles(new JsonReferenceDataCatalog()).LoadAsync(cultureCode, Ct);
         var renderer = new EmailTemplateRenderer(Options.Create(new EmailOptions { AppName = "ArquitecturaBase" }));
@@ -226,8 +232,8 @@ public sealed class EmailTemplateTests
 
         Assert.Equal(subject, message.Subject);
         Assert.Contains(body, message.TextBody);
-        Assert.Contains(verified, message.TextBody, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("https://example.test/cuenta", message.TextBody);
+        Assert.Contains(managedEmail, message.TextBody);
+        Assert.Contains($"{action}: https://example.test/cuenta", message.TextBody);
         Assert.Contains("Delta &lt;Sur&gt;", message.HtmlBody);
         Assert.DoesNotContain("Delta <Sur>", message.HtmlBody);
     }

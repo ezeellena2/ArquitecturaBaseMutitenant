@@ -16,8 +16,9 @@
   <data name="Notice.NotMe" xml:space="preserve"><value>If this wasn't you, sign in and review your sign-in methods. If you can't sign in, use “Recover your account”.</value></data>
   <data name="ReviewLoginMethods.Subject" xml:space="preserve"><value>Review your sign-in methods</value></data>
   <data name="ReviewLoginMethods.Title" xml:space="preserve"><value>Review your sign-in methods</value></data>
-  <data name="ReviewLoginMethods.Body" xml:space="preserve"><value>{0} Your access to {1} has ended. If you used an organization-managed email, you can no longer use it to sign in. Make sure you have other verified sign-in methods.</value></data>
-  <data name="ReviewLoginMethods.Note" xml:space="preserve"><value>If that was your only method, you will need to recover your account.</value></data>
+  <data name="ReviewLoginMethods.Body" xml:space="preserve"><value>{0} You are no longer a member of {1}. Your {2} account is still active.</value></data>
+  <data name="ReviewLoginMethods.ManagedEmail" xml:space="preserve"><value>If you signed in with an email managed by {0}, it no longer works. Add a personal email or your WhatsApp so you don't lose your account.</value></data>
+  <data name="ReviewLoginMethods.Action" xml:space="preserve"><value>Review my methods</value></data>
   <data name="LoginMethodAddedPhone.Subject" xml:space="preserve"><value>You added WhatsApp to your account</value></data>
   <data name="LoginMethodAddedPhone.Title" xml:space="preserve"><value>You added a sign-in method</value></data>
   <data name="LoginMethodAddedPhone.Body" xml:space="preserve"><value>{0} On {1} at {2}, you added WhatsApp {3} to your {4} account.</value></data>
