@@ -2207,7 +2207,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("TenantId", "RoleId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_RoleAssignments_Roles_TenantId_RoleId");
                 });
 
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Features.TenantFeature", b =>

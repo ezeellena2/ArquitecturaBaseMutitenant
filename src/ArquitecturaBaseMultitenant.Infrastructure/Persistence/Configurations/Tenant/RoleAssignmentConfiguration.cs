@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +25,7 @@ internal sealed class RoleAssignmentConfiguration : IEntityTypeConfiguration<Rol
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Role>().WithMany()
             .HasForeignKey(assignment => new { assignment.TenantId, assignment.RoleId })
+            .HasConstraintName(ForeignKeys.RoleAssignmentRole)
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Company>().WithMany()
             .HasForeignKey(assignment => new { assignment.TenantId, assignment.CompanyId })

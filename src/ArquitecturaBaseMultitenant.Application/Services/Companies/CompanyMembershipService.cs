@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
@@ -5,6 +6,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Companies;
 using ArquitecturaBaseMultitenant.Application.Resources;
+using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using Microsoft.Extensions.Logging;
@@ -54,8 +56,17 @@ internal sealed class CompanyMembershipService(
         return OperationLog.RunAsync(logger, timeProvider, "AddCompanyMember", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            return await unitOfWork.ExecuteInTransactionAsync(ct => writer.AddAsync(request, ct),
-                CommitPolicy.OnSuccess, cancellationToken);
+            try
+            {
+                return await unitOfWork.ExecuteInTransactionAsync(ct => writer.AddAsync(request, ct),
+                    CommitPolicy.OnSuccess, cancellationToken);
+            }
+            catch (ForeignKeyViolationException exception)
+                when (exception.ConstraintName == ForeignKeys.RoleAssignmentRole)
+            {
+                // Otro pedido borró el rol después de controlarlo y antes del commit.
+                return RoleErrors.NotFound;
+            }
         });
     }
 
@@ -66,8 +77,16 @@ internal sealed class CompanyMembershipService(
         return OperationLog.RunAsync(logger, timeProvider, "UpdateCompanyMemberRoles", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            return await unitOfWork.ExecuteInTransactionAsync(ct => writer.UpdateRolesAsync(request, ct),
-                CommitPolicy.OnSuccess, cancellationToken);
+            try
+            {
+                return await unitOfWork.ExecuteInTransactionAsync(ct => writer.UpdateRolesAsync(request, ct),
+                    CommitPolicy.OnSuccess, cancellationToken);
+            }
+            catch (ForeignKeyViolationException exception)
+                when (exception.ConstraintName == ForeignKeys.RoleAssignmentRole)
+            {
+                return RoleErrors.NotFound;
+            }
         });
     }
 

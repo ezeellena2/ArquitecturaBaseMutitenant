@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
@@ -6,6 +7,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
 using ArquitecturaBaseMultitenant.Application.Resources;
+using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -70,9 +72,18 @@ internal sealed class OrganizationUserService(
             if (currentUser.UserId is not { } inviterId || inviterId == Guid.Empty) return AccessErrors.NotMember;
             var desired = await assignments.ValidateAsync(request.RoleIds!, request.Companies!, cancellationToken);
             if (desired.IsFailure) return desired.Error;
-            return await unitOfWork.ExecuteInTransactionAsync(
-                ct => invitations.InviteAsync(request, desired.Value, inviterId, ct), CommitPolicy.OnSuccess,
-                cancellationToken);
+            try
+            {
+                return await unitOfWork.ExecuteInTransactionAsync(
+                    ct => invitations.InviteAsync(request, desired.Value, inviterId, ct), CommitPolicy.OnSuccess,
+                    cancellationToken);
+            }
+            catch (ForeignKeyViolationException exception)
+                when (exception.ConstraintName == ForeignKeys.RoleAssignmentRole)
+            {
+                // Otro pedido borró un rol después de controlarlo y antes del commit.
+                return RoleErrors.NotFound;
+            }
         });
     }
 
@@ -100,9 +111,17 @@ internal sealed class OrganizationUserService(
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             var desired = await assignments.ValidateAsync(request.RoleIds!, request.Companies!, cancellationToken);
             if (desired.IsFailure) return desired.Error;
-            return await unitOfWork.ExecuteInTransactionAsync(
-                ct => editor.UpdateAsync(request, desired.Value, currentUser.UserId, ct), CommitPolicy.OnSuccess,
-                cancellationToken);
+            try
+            {
+                return await unitOfWork.ExecuteInTransactionAsync(
+                    ct => editor.UpdateAsync(request, desired.Value, currentUser.UserId, ct), CommitPolicy.OnSuccess,
+                    cancellationToken);
+            }
+            catch (ForeignKeyViolationException exception)
+                when (exception.ConstraintName == ForeignKeys.RoleAssignmentRole)
+            {
+                return RoleErrors.NotFound;
+            }
         });
     }
 

@@ -285,6 +285,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   └── SupportedCultures.cs                      [E1] lee ICultureCatalog; es-AR y en-US habilitadas inicialmente
 │   └── Exceptions/                                    [E2]
 │       ├── UniqueConstraintViolationException.cs     [E2] con UnitOfWork
+│       ├── ForeignKeyViolationException.cs           [E6] con UnitOfWork
 │       └── InvalidCursorException.cs                  [E2] Api la traduce sin depender de Infrastructure
 ├── Configuration/                                    [E3]
 │   ├── Auth/                                         [E3]
@@ -654,7 +655,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   ├── PersistenceRegistration.cs                     [E2] DbContext (appdb), interceptores, UoW, repositorios, readers
 │   ├── UnitOfWork.cs                                  [E2]
 │   ├── TenantContext.cs                               [E2] implementa ITenantContext + ITenantScope
-│   ├── UniqueViolations.cs                            [E2] nombre de índice → error de negocio
+│   ├── ConstraintViolations.cs                        [E2] índice único o clave foránea → excepción con su nombre
 │   ├── DatabaseBootstrapExtensions.cs                 [E2] solo Development: crea la base con ICU es-AR, crea mt_app, migra y hace el seed (appdb-admin)
 │   ├── Configurations/                                una IEntityTypeConfiguration<T> por entidad
 │   │   ├── Platform/

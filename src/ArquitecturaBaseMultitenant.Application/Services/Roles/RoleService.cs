@@ -123,8 +123,19 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
         return OperationLog.RunAsync(logger, timeProvider, "DeleteRole", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            var result = await unitOfWork.ExecuteInTransactionAsync(
-                ct => DeleteCoreAsync(request, ct), CommitPolicy.OnSuccess, cancellationToken);
+            Result result;
+            try
+            {
+                result = await unitOfWork.ExecuteInTransactionAsync(
+                    ct => DeleteCoreAsync(request, ct), CommitPolicy.OnSuccess, cancellationToken);
+            }
+            catch (ForeignKeyViolationException exception)
+                when (exception.ConstraintName == ForeignKeys.RoleAssignmentRole)
+            {
+                // Otro pedido asignó el rol después de contar sus personas y antes del commit.
+                return RoleErrors.HasUsers(Math.Max(1, await roles.CountUsersAsync(request.RoleId, cancellationToken)));
+            }
+
             if (result.IsSuccess)
             {
                 await permissions.InvalidateRoleAsync(request.RoleId, cancellationToken);

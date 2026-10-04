@@ -182,7 +182,7 @@ Application/
 │  │                                   CursorRequestValidator<T>
 │  ├─ Logging/                         OperationLog.RunAsync(logger, timeProvider, "Operación", trabajo): inicio, fin y código de error
 │  ├─ Formatting/                      DisplayFormatter, CultureProfiles, SupportedCultures (desde el catálogo; §18)
-│  └─ Exceptions/                      UniqueConstraintViolationException, ConcurrencyConflictException
+│  └─ Exceptions/                      UniqueConstraintViolationException, ForeignKeyViolationException, ConcurrencyConflictException
 ├─ Configuration/<Área>/               opciones funcionales (LoginCodeOptions, InvitationOptions…) con SectionName
 ├─ Interfaces/
 │  ├─ Services/                        I<X>Service, uno por área (lo que inyectan los controllers), entre ellos IAccountDeletionService
@@ -251,7 +251,7 @@ Infrastructure/
 │  ├─ PersistenceRegistration.cs
 │  ├─ UnitOfWork.cs                    ExecuteInTransactionAsync + SET LOCAL app.tenant_id
 │  ├─ TenantContext.cs                 holder scoped (implementa ITenantContext y ITenantScope)
-│  ├─ UniqueViolations.cs
+│  ├─ ConstraintViolations.cs
 │  ├─ Configurations/
 │  │  ├─ Platform/                     TenantConfiguration, PlatformSettingsConfiguration, SecurityEventConfiguration,
 │  │  │                                OutboxMessageConfiguration, PlatformPermissionAssignmentConfiguration, IdempotencyKeyConfiguration,
@@ -461,7 +461,7 @@ public sealed class RolesController(IRoleService service) : ControllerBase
 | `IUnitOfWork` | único punto de guardado | `ExecuteInTransactionAsync<TResult>(work, CommitPolicy, ct) where TResult : Result` |
 
 - `CommitPolicy.OnSuccess` es la regla; `OnAnyResult` se usa cuando también hay que guardar un fallo (intentos, códigos consumidos, auditoría de seguridad).
-- La transacción es READ COMMITTED, un solo `SaveChanges`, sin anidar (anidar lanza). Ante una excepción: rollback y `ChangeTracker.Clear()`. El error 23505 se traduce a `UniqueConstraintViolationException`, y el servicio lo convierte en su `Error` comparando `ConstraintName` con `UniqueKeys` ([persistencia-ef](../rules/persistencia-ef.md)). `DbUpdateConcurrencyException` se traduce a `ConcurrencyConflictException` (P1, ver [concurrencia](../rules/concurrencia.md)), y el servicio no la atrapa.
+- La transacción es READ COMMITTED, un solo `SaveChanges`, sin anidar (anidar lanza). Ante una excepción: rollback y `ChangeTracker.Clear()`. El error 23505 se traduce a `UniqueConstraintViolationException`, y el servicio lo convierte en su `Error` comparando `ConstraintName` con `UniqueKeys` ([persistencia-ef](../rules/persistencia-ef.md)). Los errores 23503 y 23001 de una clave foránea se traducen a `ForeignKeyViolationException`, que el servicio compara con `ForeignKeys`. `DbUpdateConcurrencyException` se traduce a `ConcurrencyConflictException` (P1, ver [concurrencia](../rules/concurrencia.md)), y el servicio no la atrapa.
 - **Multitenant:** al abrir el límite, `UnitOfWork` ejecuta `SELECT set_config('app.tenant_id', @id, true)` con el tenant del `ITenantContext`. El detalle está en [`multitenancy.md`](multitenancy.md).
 - Locks de un caso de uso tenant: `pg_advisory_xact_lock` con `AdvisoryLockKeys.For(tenantId, recurso, id)`, que siempre incluye el `TenantId`, o `FOR NO KEY UPDATE`. El seed global de referencias usa `AdvisoryLockKeys.ReferenceDataSeed`, sin tenant. Ambos exigen un límite de `IUnitOfWork` abierto.
 - Prohibido `ExecuteUpdate` y `ExecuteDelete` sobre entidades `IAuditable` o `ISoftDeletable`.

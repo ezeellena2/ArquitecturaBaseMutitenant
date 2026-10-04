@@ -118,6 +118,24 @@ public sealed class DbContextModelTests
     }
 
     [Fact]
+    public void Every_foreign_key_constant_names_a_foreign_key_of_the_model()
+    {
+        using var context = CreateContext();
+        var modelForeignKeys = context.Model.GetEntityTypes()
+            .SelectMany(entity => entity.GetForeignKeys())
+            .Select(foreignKey => foreignKey.GetConstraintName())
+            .ToHashSet(StringComparer.Ordinal);
+        var keys = typeof(ForeignKeys).GetFields(BindingFlags.Public | BindingFlags.Static)
+            .Where(field => field.IsLiteral)
+            .Select(field => (string)field.GetRawConstantValue()!)
+            .ToArray();
+
+        // Como con UniqueKeys: si la clave no es una clave foránea del modelo, el catch no coincide nunca.
+        Assert.NotEmpty(keys);
+        Assert.All(keys, key => Assert.Contains(key, modelForeignKeys));
+    }
+
+    [Fact]
     public void Public_page_contact_phone_is_stored_as_e164_like_every_phone_column()
     {
         using var context = CreateContext();

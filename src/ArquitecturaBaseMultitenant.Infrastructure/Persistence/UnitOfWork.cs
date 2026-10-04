@@ -67,9 +67,9 @@ internal sealed partial class UnitOfWork(
                 throw new ConcurrencyConflictException("The row changed since it was read.", exception);
             }
 
-            if (UniqueViolations.Translate(exception) is { } unique)
+            if (ConstraintViolations.Translate(exception) is { } violation)
             {
-                throw unique;
+                throw violation;
             }
 
             throw;
