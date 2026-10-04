@@ -18,7 +18,7 @@ No hay pantallas nuevas. Solo se suman los teléfonos que faltaban de pantallas 
 - El lienzo v78 (`../../../ArquitecturaBaseMutitenantFront/docs/design/lienzo/`), para lo que se ve: la columna Estado de Empresa, los mensajes y el formato del enmascarado.
 - AGENTS.md, `backend.md`, `frontend.md`, `arbol.md` de los dos repos y las fichas de `docs/rules/`.
 
-**Cuándo empieza:** cuando estén cerradas y commiteadas la Etapa 5 y la tanda de alineación (paquetes 1 y 3 e Inicios), con `git status` limpio en los dos repos.
+**Cuándo empieza:** cuando estén commiteados la tanda de alineación (paquetes 1 y 3 e Inicios) y el back pendiente de la Etapa 5 (T10 a T18), con `git status` limpio en los dos repos. El front de la Etapa 5 (T19 a T25) va después de esta consolidación, para usar sus piezas comunes.
 
 **Quién:** Claude programa y verifica. Usa dos agentes en paralelo solo donde los archivos no se cruzan: el back en los bloques 3 y 4, y el front en los bloques 5 y 6. Cada entrega se revisa antes del commit.
 
@@ -90,6 +90,7 @@ B4, B6, B8, B10, B11 y B12 se arreglan con su pieza, en los bloques 4 y 5.
 - [ ] Crear el `AGENTS.md` de `Services/OrganizationUsers`.
 - [ ] Agregar un test que exija un mensaje propio en cada regla de validación: recorre `CreateDescriptor()` de cada validador del ensamblado.
 - [ ] Borrar `Stage3aInventoryTests`.
+- [ ] `OrganizationUsersTests.InvitationEmailAsync`: guardar los ids del outbox antes de invitar, como hace `InvitationsTests`, en lugar del try/catch que saltea los mensajes que no se pueden descifrar.
 
 ### 3. Back: la transacción vuelve al servicio, sin clases que solo reenvían
 

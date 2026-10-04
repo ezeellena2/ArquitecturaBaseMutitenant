@@ -8,6 +8,13 @@
 
 **Tecnologías:** .NET 10, EF Core/Npgsql, PostgreSQL 18, Aspire 13.5, Microsoft.FeatureManagement.AspNetCore, HybridCache, React/TypeScript, TanStack Query, i18next, Vitest y Playwright.
 
+**Cambio de orden (2026-10-03, aprobado por el usuario).** Codex dejó la etapa abierta después de T09, con T10 sin commitear, y la sigue Claude en dos partes:
+
+1. **Back, ya:** T10 a T18 y el punto pendiente de T08 (`features` en `/api/me`), sin pantallas.
+2. **Front, después de la [consolidación](2026-10-03-consolidacion.md):** T19 a T25. Así las pantallas de Plataforma nacen con las piezas comunes del front (errores, permisos, paginado, accesos y edición) y no repiten la duplicación que encontró la revisión de calidad.
+
+La etapa cierra con T25.
+
 ## Fuentes, restricciones y punto de partida
 
 - Back: `C:/Users/ezequ/source/repos/ArquitecturaBaseMutitenant`, main limpio, `a12edb7`.

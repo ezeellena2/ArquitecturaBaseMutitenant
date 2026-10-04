@@ -54,7 +54,7 @@ El resultado tiene que servir para empezar productos reales.
 | 4 | Autorización y Roles (área de referencia) | ✔ | ✔ | 3 |
 | 5 | Plataforma: organizaciones, aprobaciones, **módulos por organización**, moderación de páginas públicas, dominio verificado, identidades (con la baja iniciada por la plataforma), recuperaciones de cuenta, documentos legales, operadores, auditoría de seguridad | ✔ | ✔ | 4 y 6 |
 | 6 | Área B2B: **"Registrá tu empresa"**, usuarios, empresas, membresías, configuración, auditoría, **mi página pública** | ✔ | ✔ | 4 |
-| C | **Consolidación previa a la 7** ([plan](2026-10-03-consolidacion.md)): los bugs de la revisión de calidad, el ADR 0039 aplicado a lo existente, las reglas duplicadas unificadas, los permisos por empresa de punta a punta y las piezas comunes del front | ✔ | ✔ | 5 y 6 |
+| C | **Consolidación previa a la 7** ([plan](2026-10-03-consolidacion.md)): los bugs de la revisión de calidad, el ADR 0039 aplicado a lo existente, las reglas duplicadas unificadas, los permisos por empresa de punta a punta y las piezas comunes del front | ✔ | ✔ | 6 y el back de la 5 |
 | 7 | Área B2C y **sitio público**: el área personal lista para sumar módulos (receta `personal.md`), páginas por subdominio, directorio, ingreso desde un subdominio, y la **mecánica de interacción** persona ↔ empresa probada de punta a punta | ✔ | ✔ | 6 y C |
 | 8 | WhatsApp (número de la plataforma: códigos, invitaciones, avisos de la cuenta, bot de ingreso) | ✔ | ✔ | 3 |
 | 9 | Endurecimiento: TOTP para operadores, **caché en Redis**, rate limit, headers, observabilidad, fuzz de aislamiento | ✔ | ✔ | 5–8 |
@@ -370,6 +370,10 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
   - suma las piezas comunes del front: errores, permisos (incluidos los permisos por empresa), paginado, accesos, cultura y edición;
   - deja a Roles como referencia de verdad.
 - **Qué no hace:** no agrega pantallas nuevas.
+- **Orden con la Etapa 5** (cambio aprobado el 2026-10-03):
+  1. el back pendiente de la 5 (T10 a T18);
+  2. la consolidación;
+  3. el front de la 5 (T19 a T25), que ya usa las piezas comunes y cierra la etapa.
 
 ---
 
