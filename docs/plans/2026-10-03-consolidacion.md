@@ -60,6 +60,7 @@ Las pantallas de la Etapa 5 (T19 a T25) van después de esta consolidación, par
   - `arbol.md` de los dos repos, llevado al árbol real;
   - los códigos de error, permisos y rutas, cada uno en su ficha de `docs/features`;
   - la fila de `capas-y-flujo.md` en AGENTS.md.
+  - `arbol.md` y `backend.md` ubican el alta de empresa en `Services/Organizations/`, y el código está en `Services/Auth/`: los docs se llevan al código.
 
   Al usuario va solo lo que cambia el producto.
 - [x] Sumar la consolidación al plan maestro como paso previo de la Etapa 7. Se hizo al aprobar el plan.
@@ -227,6 +228,8 @@ Cada servicio de entrada abre la transacción en su método público, y los help
 
   Tests: cada clase de `Services` se registra una sola vez, y `ApiFactory` corre con `ValidateOnBuild`.
 - [ ] **Sufijos:** la lista cerrada de sufijos de helpers, con los que quedaron después del bloque 3, va en `capas-y-flujo.md` y la verifica `ApplicationServicesTests`.
+- [ ] **Repetir el alta de una empresa** (decisión 36): con el mismo `operationId` y sin la respuesta guardada (la clave venció o hubo un corte), hoy responde 409 en lugar de devolver la organización. La regla de idempotencia pide devolverla. Arreglo con el test de la repetición idéntica, primero en rojo.
+- [ ] **Invitaciones** (decisión 35): la entrada al alcance de la organización pasa a `InvitationService`; se borra el reenvío de `InvitationAcceptanceResolver.Enter` y `TenantScopeUsageTests` queda sin esos dos helpers.
 - [ ] **Hecho cuando** la suite completa del back pasa.
 
 ### 5. Front: piezas comunes
