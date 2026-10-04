@@ -43,8 +43,8 @@ public sealed class ProfileServiceTests
         var method = new LoginMethodRow(Guid.CreateVersion7(), LoginMethodType.Google, "subject", true,
             verified ? fixture.TimeProvider.GetUtcNow().UtcDateTime : null, managed ? Guid.CreateVersion7() : null);
         var snapshots = new ProfileSnapshotBuilder(new StubUsers(Account(id)), new StubAccesses([]),
-            new ProfilePreferences(new StubSettings(null), catalog, catalog), new StubMethods([method]),
-            new LoginMethodAvailability([], new StubGoogle(available), new StubMemberships()),
+            new ProfilePreferencesResolver(new StubSettings(null), catalog, catalog), new StubMethods([method]),
+            new LoginMethodAvailabilityPolicy([], new StubGoogle(available), new StubMemberships()),
             new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider), new StubPermissions(), new StubFeatures());
 
         var profile = await snapshots.BuildAsync(id, Access.Consumer, null, Ct);
@@ -238,8 +238,8 @@ public sealed class ProfileServiceTests
         ServiceFixture<ProfileService> fixture, IUnitOfWork? unitOfWork = null, IFeatureService? features = null)
     {
         var catalog = new JsonReferenceDataCatalog();
-        var availability = new LoginMethodAvailability([], new StubGoogle(), new StubMemberships());
-        var snapshots = new ProfileSnapshotBuilder(users, accesses, new ProfilePreferences(settings, catalog, catalog), new StubMethods(),
+        var availability = new LoginMethodAvailabilityPolicy([], new StubGoogle(), new StubMemberships());
+        var snapshots = new ProfileSnapshotBuilder(users, accesses, new ProfilePreferencesResolver(settings, catalog, catalog), new StubMethods(),
             availability, new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider), new StubPermissions(),
             features ?? new StubFeatures());
         return new ProfileService(current, context, snapshots, users, fixture.Validator,

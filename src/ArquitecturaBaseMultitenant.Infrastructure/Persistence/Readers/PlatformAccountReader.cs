@@ -14,7 +14,7 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 /// <summary>
 /// Lee la identidad global, sus métodos, el índice de accesos y los ingresos. Nunca consulta Members ni
 /// Invitations: las membresías salen de la proyección global. El estado derivado se calcula en SQL con la
-/// misma regla que <c>LoginMethodAvailability</c>, para filtrar, contar y mostrar con una sola expresión. Una
+/// misma regla que <c>LoginMethodAvailabilityPolicy</c>, para filtrar, contar y mostrar con una sola expresión. Una
 /// invitación de operador sin aceptar es Invited o InvitationExpired según <c>nowUtc</c>; una revocada no figura
 /// (ADR 0042).
 /// </summary>

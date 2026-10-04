@@ -5,7 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Services.Auth;
 namespace ArquitecturaBaseMultitenant.Application.Services.Invitations;
 
 /// <summary>Elige preferencias desde la organización y catálogos; nunca prepara un espacio Personal.</summary>
-internal sealed class InvitationIdentityDefaults(ITenantSettingsReader settings, UserCultures cultures,
+internal sealed class InvitationIdentityDefaultsResolver(ITenantSettingsReader settings, UserCultureResolver cultures,
     ICountryCatalog countries, ITimeZoneCatalog timeZones)
 {
     internal async Task<(string Culture, string TimeZoneId)> ReadAsync(CancellationToken ct)

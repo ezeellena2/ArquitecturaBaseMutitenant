@@ -7,7 +7,7 @@ using ArquitecturaBaseMultitenant.Domain.Authentication;
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
 /// <summary>Encola dentro de la UoW del caso de uso, sin duplicar contactos de Google y correo.</summary>
-internal sealed class AccountNoticeIssuer(IEnumerable<IAccountNoticeChannel> channels, UserCultures cultures,
+internal sealed class AccountNoticeIssuer(IEnumerable<IAccountNoticeChannel> channels, UserCultureResolver cultures,
     IUserRepository users)
 {
     /// <summary>

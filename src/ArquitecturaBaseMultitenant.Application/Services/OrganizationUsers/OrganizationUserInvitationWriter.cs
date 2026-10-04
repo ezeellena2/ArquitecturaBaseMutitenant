@@ -12,13 +12,13 @@ namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
 /// <summary>
 /// Invita, reenvía y revoca dentro de la transacción del servicio; cada reenvío es una invitación independiente.
 /// </summary>
-internal sealed class OrganizationUserInvitationManager(
+internal sealed class OrganizationUserInvitationWriter(
     IInvitationRepository invitations,
     InvitationIssuer issuer,
     IExternalLoginLock externalLoginLock,
     ICurrentUser currentUser,
-    OrganizationUserAccessCleaner accessCleaner,
-    OrganizationUserAssignmentManager assignmentManager,
+    OrganizationUserAccessRemover accessCleaner,
+    OrganizationUserAssignmentWriter assignmentManager,
     TimeProvider timeProvider)
 {
     internal async Task<Result<OrganizationInvitationIssuedResponse>> InviteAsync(InviteOrganizationUserRequest request,

@@ -12,7 +12,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Home;
 /// Arma el inicio en un solo pedido de lectura (ADR 0040). Con permisos de la organización, las tarjetas de sus áreas;
 /// si no, «Tus empresas». «Para resolver» junta lo que cada área aporta por <see cref="IPendingItemSource"/>.
 /// </summary>
-internal sealed class HomeService(OrganizationHomeAreas areas, MemberHomeCompanies companies,
+internal sealed class HomeService(OrganizationHomeAreasBuilder areas, MemberHomeCompaniesBuilder companies,
     IEnumerable<IPendingItemSource> sources, IPermissionService permissions, ICurrentUser currentUser,
     TimeProvider timeProvider, ILogger<HomeService> logger) : IHomeService
 {

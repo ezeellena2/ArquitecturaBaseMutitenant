@@ -9,8 +9,8 @@ internal static class HomeRegistration
     internal static IServiceCollection AddHome(this IServiceCollection services)
     {
         services.AddScoped<IHomeService, HomeService>();
-        services.AddScoped<OrganizationHomeAreas>();
-        services.AddScoped<MemberHomeCompanies>();
+        services.AddScoped<OrganizationHomeAreasBuilder>();
+        services.AddScoped<MemberHomeCompaniesBuilder>();
         return services;
     }
 }

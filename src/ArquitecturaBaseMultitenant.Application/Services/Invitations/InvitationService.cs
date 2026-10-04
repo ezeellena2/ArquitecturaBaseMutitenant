@@ -13,8 +13,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Invitations;
 /// Muestra y acepta una invitación. Entra a la organización del token solo después de probarlo, y lee la invitación
 /// adentro, antes de abrir la transacción.
 /// </summary>
-internal sealed class InvitationService(InvitationPreviewFlow previews, InvitationAcceptanceResolver resolver,
-    InvitationAcceptor acceptor, ITenantScope tenantScope, IRequestValidator validator, IUnitOfWork unitOfWork,
+internal sealed class InvitationService(InvitationPreviewResolver previews, InvitationAcceptanceResolver resolver,
+    InvitationAcceptanceWriter acceptor, ITenantScope tenantScope, IRequestValidator validator, IUnitOfWork unitOfWork,
     InvitationSessionRestorer sessions, TimeProvider timeProvider,
     ILogger<InvitationService> logger) : IInvitationService
 {

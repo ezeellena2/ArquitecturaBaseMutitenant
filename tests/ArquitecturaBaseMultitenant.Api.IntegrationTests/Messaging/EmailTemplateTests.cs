@@ -170,7 +170,7 @@ public sealed class EmailTemplateTests
     [Fact]
     public async Task User_culture_prefers_enabled_account_then_organization_then_catalog_default()
     {
-        var cultures = new UserCultures(new JsonReferenceDataCatalog());
+        var cultures = new UserCultureResolver(new JsonReferenceDataCatalog());
 
         Assert.Equal("en-US", (await cultures.ResolveAsync("en-US", "es-AR", Ct)).Entry.Code);
         Assert.Equal("en-US", (await cultures.ResolveAsync("de-DE", "en-US", Ct)).Entry.Code);

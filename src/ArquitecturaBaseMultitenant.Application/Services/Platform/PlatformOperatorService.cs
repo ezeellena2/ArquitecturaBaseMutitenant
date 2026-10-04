@@ -25,7 +25,7 @@ internal sealed class PlatformOperatorService(
     PlatformOperatorGuard operators,
     IUserRepository users,
     ISignInService sessions,
-    PlatformAudit audit,
+    PlatformAuditWriter audit,
     IRequestValidator validator,
     IUnitOfWork unitOfWork,
     TimeProvider clock,

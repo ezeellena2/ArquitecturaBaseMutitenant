@@ -6,7 +6,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
 /// <summary>Coordina lock, intentos fallidos y auditoría del código de ingreso.</summary>
-internal sealed class LoginCodeAttemptCoordinator(ILoginCodeRepository codes, ISignInService signIn,
+internal sealed class LoginCodeAttemptGuard(ILoginCodeRepository codes, ISignInService signIn,
     ILoginAuditRepository audits, TimeProvider timeProvider)
 {
     internal Task LockDestinationAsync(LoginCodeDestination destination, CancellationToken cancellationToken) =>

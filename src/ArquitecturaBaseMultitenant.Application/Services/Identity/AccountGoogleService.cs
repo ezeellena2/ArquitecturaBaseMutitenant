@@ -18,7 +18,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 /// </summary>
 internal sealed class AccountGoogleService(ISignInService signIn, GoogleMethodLinker linker,
     IUnitOfWork unitOfWork, TimeProvider timeProvider, ILogger<AccountGoogleService> logger,
-    ICurrentUser currentUser, LoginMethodGuard guard, ReauthTicketConsumer tickets) : IAccountGoogleService
+    ICurrentUser currentUser, LoginMethodGuard guard, ReauthTicketVerifier tickets) : IAccountGoogleService
 {
     public Task<Result<Guid>> GetLinkUserIdAsync(string? reauthTicket, CancellationToken cancellationToken) =>
         OperationLog.RunAsync<Guid>(logger, timeProvider, "PrepareAccountGoogleLink", async () =>

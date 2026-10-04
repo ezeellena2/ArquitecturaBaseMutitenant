@@ -17,17 +17,17 @@ internal static class AuthRegistration
         services.AddScoped<ILoginCodeService, LoginCodeService>();
         services.AddScoped<IAccountRecoveryService, AccountRecoveryService>();
         services.AddScoped<IAccountRecoveryNoticeService, AccountRecoveryNoticeService>();
-        services.AddScoped<AccountRecoveryMessenger>();
+        services.AddScoped<AccountRecoveryNotifier>();
         services.AddScoped<LoginCodeRequester>();
-        services.AddScoped<LoginCodeVerificationFlow>();
-        services.AddScoped<LoginCodeAttemptCoordinator>();
+        services.AddScoped<LoginVerifier>();
+        services.AddScoped<LoginCodeAttemptGuard>();
         services.AddScoped<ILoginMethodsService, LoginMethodsService>();
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IBusinessSignupService, BusinessSignupService>();
         services.AddScoped<BusinessOrganizationCreator>();
         services.AddScoped<BusinessSignupPolicy>();
         services.AddScoped<SignupCodeRequester>();
-        services.AddScoped<SignupVerificationCore>();
+        services.AddScoped<SignupCodeVerifier>();
         services.AddScoped<SignupAccountRegistrar>();
         services.AddScoped<SignupExistingMethodVerifier>();
         services.AddScoped<IExternalLoginService, ExternalLoginService>();
@@ -46,7 +46,7 @@ internal static class AuthRegistration
         services.AddScoped<TenantProvisioner>();
         services.AddScoped<LoginCodeIssuer>();
         services.AddScoped<LoginCodeVerifier>();
-        services.AddScoped<UserCultures>();
+        services.AddScoped<UserCultureResolver>();
         return services;
     }
 }

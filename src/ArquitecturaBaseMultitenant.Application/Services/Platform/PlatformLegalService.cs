@@ -26,7 +26,7 @@ internal sealed class PlatformLegalService(
     ICultureCatalog cultures,
     IUserRepository users,
     ITimeZoneService timeZones,
-    PlatformAudit audit,
+    PlatformAuditWriter audit,
     IRequestValidator validator,
     IUnitOfWork unitOfWork,
     TimeProvider clock,

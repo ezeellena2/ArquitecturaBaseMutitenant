@@ -60,7 +60,7 @@ Cada fila es una carpeta que lleva `AGENTS.md` + `CLAUDE.md`. Los punteros se es
 | `Domain/ReferenceData/` | entidades globales de los cinco catálogos y sus traducciones, sin dependencia de Application ni RLS | datos-de-referencia, capas-y-flujo | `Currency.cs` (E2) |
 | `Domain/Features/` | catálogo de módulos | modulos-habilitados | `Features.cs` (E5) |
 | `Domain/<Módulo>/` | entidades y `<X>Errors` del módulo (hoy `Domain/WhatsApp/`); se borra junto con sus `Modules/` | modulos | — |
-| `Application/Services/` | servicio + helpers (`Policy`, `Guard`, `Issuer`, `Verifier`, `Linker`) | guardado, result-y-errores, validacion, logs, multitenancy | `Services/Roles/RoleService.cs` (E4) |
+| `Application/Services/` | servicio + helpers con un sufijo de la lista cerrada de capas-y-flujo (`Policy`, `Guard`, `Issuer`, `Verifier`, `Linker` y los demás de la tabla) | guardado, result-y-errores, validacion, logs, multitenancy, capas-y-flujo | `Services/Roles/RoleService.cs` (E4) |
 | `Application/Interfaces/Services/` | una interfaz por servicio; lo único que inyecta un controller | capas-y-flujo | `IRoleService.cs` (E4) |
 | `Application/Interfaces/Persistence/` | `I<X>Repository` (escribe), `I<X>Reader` (lee), `IUnitOfWork`, `ITenantScope`. Nada de `IQueryable` | persistencia-ef, paginado-y-busqueda | `IRoleRepository.cs`, `IRoleReader.cs` (E4) |
 | `Application/Interfaces/ReferenceData/` | puertos de moneda, país, zona, cultura y tipo fiscal; Domain nunca los referencia | datos-de-referencia, capas-y-flujo | `ICurrencyCatalog.cs` (E1) |

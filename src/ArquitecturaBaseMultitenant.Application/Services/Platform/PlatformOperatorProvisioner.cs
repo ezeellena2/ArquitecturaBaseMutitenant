@@ -21,7 +21,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 /// de referencia, como en el seed del primer operador. También renueva y revoca la invitación sin aceptar.
 /// </summary>
 internal sealed class PlatformOperatorProvisioner(IUserRepository users, ILoginMethodRepository methods,
-    IPlatformPermissionAssignmentRepository assignments, UserCultures cultures, ICountryCatalog countries,
+    IPlatformPermissionAssignmentRepository assignments, UserCultureResolver cultures, ICountryCatalog countries,
     IOptions<InvitationOptions> invitations)
 {
     public async Task<Result<PlatformOperatorInvitee>> CreateAsync(Email email, IReadOnlyCollection<string> permissions,

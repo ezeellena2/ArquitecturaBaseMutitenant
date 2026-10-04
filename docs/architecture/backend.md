@@ -106,7 +106,7 @@ Prohibido:
 
 | Principio | Regla concreta |
 |---|---|
-| **S**, responsabilidad única | Un servicio por área funcional, con **8 dependencias de negocio como máximo** (lo verifica un test; ADR 0039). No cuentan `ILogger<T>`, `TimeProvider`, `IRequestValidator` ni `IUnitOfWork`; todo lo demás cuenta, incluido `IOptions<T>`. Lo que crece se parte por responsabilidad en helpers con sufijo fijo: `*Policy` (decide), `*Guard` (verifica invariantes y devuelve `Error?`), `*Issuer` (emite códigos, enlaces o invitaciones), `*Verifier` (valida lo emitido), `*Linker` (vincula entidades). Los helpers no guardan ni reciben `IUnitOfWork`; no crear clases que solo reenvían |
+| **S**, responsabilidad única | Un servicio por área funcional, con **8 dependencias de negocio como máximo** (lo verifica un test; ADR 0039). No cuentan `ILogger<T>`, `TimeProvider`, `IRequestValidator` ni `IUnitOfWork`; todo lo demás cuenta, incluido `IOptions<T>`. Lo que crece se parte por responsabilidad en helpers, con un sufijo de la lista cerrada de [capas-y-flujo](../rules/capas-y-flujo.md): `*Policy` (decide), `*Guard` (protege una regla y devuelve el error), `*Issuer` (emite códigos, tickets, invitaciones o avisos), `*Verifier` (verifica lo que entra), `*Linker` (vincula un método con algo de afuera) y los demás de esa tabla (`ApplicationServicesTests` la lee). Los helpers no guardan ni reciben `IUnitOfWork`; no crear clases que solo reenvían |
 | **O**, abierto/cerrado | Módulos quitables (`Modules/WhatsApp` en Application, Infrastructure y Api), que se enchufan al núcleo por puertos: `ILoginCodeChannel`, `IInvitationChannel`, `IAccountNoticeChannel`, `IPhoneLinkObserver`. El núcleo no cambia cuando se agrega o se quita un módulo, y no referencia ningún `*.Modules.*` (test). Los errores y permisos nuevos se suman a catálogos, sin tocar el mapper |
 | **L**, sustitución de Liskov | Las implementaciones de un puerto respetan el contrato completo, incluido el "fallo cerrado" (por ejemplo, `DisabledWhatsAppAvailability` responde "no disponible", no lanza). Los dobles de test implementan la misma semántica (`FakeUnitOfWork` usa la misma `CommitPolicy`) |
 | **I**, segregación de interfaces | Lectura y escritura separadas (`I<X>Reader` / `I<X>Repository`). `ISignInService` con 12 miembros como máximo (test). `ICurrentUser`, `ITenantContext` e `IRequestInfo` separados |
@@ -207,7 +207,7 @@ Application/
 ├─ Services/
 │  ├─ Auth/                            AccountService (registro B2C), LoginCodeService, LoginLinkService, ExternalLoginService,
 │  │                                   ConnectService (emisión + cambio de acceso u organización), LoginCodeIssuer, LoginCodeVerifier,
-│  │                                   LoginLinkIssuer, SignupPolicy, AccessSwitchPolicy, UserCultures
+│  │                                   LoginLinkIssuer, SignupPolicy, AccessSwitchPolicy, UserCultureResolver
 │  ├─ Identity/                        ReauthVerifier: el ReauthTicket de 5 minutos que usan la baja y los cambios de métodos de ingreso
 │  ├─ Invitations/                     InvitationService, InvitationIssuer (lo usan UserService y TenantAdministrationService)
 │  ├─ Profile/                         ProfileService (cuenta, idioma, zona), DestinationCodeVerifier

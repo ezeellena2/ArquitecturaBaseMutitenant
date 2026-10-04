@@ -18,12 +18,12 @@ internal static class InvitationsRegistration
         services.AddScoped<InvitationDeliveryIssuer>();
         services.AddScoped<IInvitationService, InvitationService>();
         services.AddScoped<InvitationPreviewBuilder>();
-        services.AddScoped<InvitationPreviewFlow>();
+        services.AddScoped<InvitationPreviewResolver>();
         services.AddScoped<InvitationAcceptanceResolver>();
         services.AddScoped<InvitationAcceptanceGuard>();
-        services.AddScoped<InvitationIdentityDefaults>();
+        services.AddScoped<InvitationIdentityDefaultsResolver>();
         services.AddScoped<InvitationAccountRegistrar>();
-        services.AddScoped<InvitationAcceptor>();
+        services.AddScoped<InvitationAcceptanceWriter>();
         services.AddScoped<InvitationSessionRestorer>();
         return services;
     }

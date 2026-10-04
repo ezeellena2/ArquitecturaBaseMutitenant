@@ -543,7 +543,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── SignupPolicy.cs                           ¿el registro está abierto? ¿el email está libre?
 │   │   ├── LoginCodeService.cs
 │   │   ├── LoginCodeRequester.cs                     [E3] emisión y mensaje dentro de la UoW de LoginCodeService
-│   │   ├── LoginCodeVerificationFlow.cs              [E3] verificación, intentos y auditoría dentro de esa UoW
+│   │   ├── LoginVerifier.cs                          [E3] verificación, intentos y auditoría dentro de esa UoW
 │   │   ├── LoginCodeIssuer.cs
 │   │   ├── LoginCodeVerifier.cs
 │   │   ├── LoginLinkService.cs                       [E8]
@@ -551,7 +551,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── ConnectService.cs
 │   │   ├── ConnectLogoutService.cs                   [E3]
 │   │   ├── AccessSwitchPolicy.cs                     acceso pedido válido: membresía activa (B2B) o identidad activa (B2C)
-│   │   ├── UserCultures.cs                           cultura efectiva para mensajes en segundo plano
+│   │   ├── UserCultureResolver.cs                    cultura efectiva para mensajes en segundo plano
 │   │   └── ExternalLoginService.cs                   [E3]
 │   ├── Invitations/                                  [E3]
 │   │   ├── InvitationService.cs                      vista previa y aceptación, con y sin cuenta previa (sin cuenta crea la identidad sin

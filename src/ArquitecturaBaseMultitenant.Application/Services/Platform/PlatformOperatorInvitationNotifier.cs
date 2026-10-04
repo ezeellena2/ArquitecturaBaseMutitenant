@@ -13,7 +13,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 /// Sale solo por correo (ADR 0042).
 /// </summary>
 internal sealed class PlatformOperatorInvitationNotifier(IEnumerable<IAccountNoticeChannel> channels,
-    UserCultures cultures, IPublicOrigin origin, IUserRepository users)
+    UserCultureResolver cultures, IPublicOrigin origin, IUserRepository users)
 {
     internal async Task EnqueueAsync(PlatformOperatorInvitee invitee, Guid inviterId, CancellationToken ct)
     {

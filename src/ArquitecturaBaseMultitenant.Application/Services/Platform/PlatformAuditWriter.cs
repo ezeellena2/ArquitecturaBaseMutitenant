@@ -6,7 +6,7 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
 /// <summary>Agrega el SecurityEvent del operador con su destino, el diff técnico y la IP enmascarada.</summary>
-internal sealed class PlatformAudit(ICurrentUser currentUser, ISecurityEventRepository events,
+internal sealed class PlatformAuditWriter(ICurrentUser currentUser, ISecurityEventRepository events,
     TimeProvider clock, IRequestInfo requestInfo)
 {
     internal void RecordFeatures(Guid tenantId, string reason, SecurityEventChanges changes)

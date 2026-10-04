@@ -12,7 +12,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 /// <summary>Una UoW por pedido o verificación; la cookie sale después del commit.</summary>
 internal sealed class LoginCodeService(
     LoginCodeRequester requester,
-    LoginCodeVerificationFlow verification,
+    LoginVerifier verification,
     ISignInService signIn,
     IRequestValidator validator,
     IUnitOfWork unitOfWork,

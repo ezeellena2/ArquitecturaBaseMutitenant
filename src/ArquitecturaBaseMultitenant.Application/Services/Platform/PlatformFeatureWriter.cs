@@ -9,7 +9,7 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
 internal sealed class PlatformFeatureWriter(ITenantReader tenants, ITenantFeatureRepository features,
-    IFeatureCatalog catalog, PlatformAudit audit)
+    IFeatureCatalog catalog, PlatformAuditWriter audit)
 {
     internal async Task<Result> UpdateAsync(Guid tenantId, string key, UpdatePlatformFeatureRequest request, CancellationToken ct)
     {

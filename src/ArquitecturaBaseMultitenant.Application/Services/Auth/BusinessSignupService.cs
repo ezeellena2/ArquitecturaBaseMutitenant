@@ -20,7 +20,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 /// Alta de empresa: verifica el correo sin crear un espacio Personal y crea la organización con su primera empresa.
 /// Cada método abre su única transacción.
 /// </summary>
-internal sealed class BusinessSignupService(SignupCodeRequester codes, SignupVerificationCore verification,
+internal sealed class BusinessSignupService(SignupCodeRequester codes, SignupCodeVerifier verification,
     IPersonalSpaceProvisioner defaults, ISignInService signIn, ITaxIdTypeCatalog taxIdTypes,
     BusinessOrganizationCreator organizations, ITenantContext tenantContext, ITenantScope tenantScope,
     IRequestValidator validator, IUnitOfWork unitOfWork, TimeProvider timeProvider,

@@ -10,11 +10,11 @@ internal static class OrganizationUsersRegistration
     {
         services.AddScoped<IPendingItemSource, OrganizationUserPendingItems>();
         services.AddScoped<IOrganizationUserService, OrganizationUserService>();
-        services.AddScoped<OrganizationUserAssignmentManager>();
+        services.AddScoped<OrganizationUserAssignmentWriter>();
         services.AddScoped<OrganizationUserAdministratorGuard>();
-        services.AddScoped<OrganizationUserAccessCleaner>();
-        services.AddScoped<OrganizationUserInvitationManager>();
-        services.AddScoped<OrganizationMembershipEndNoticeContextProvider>();
+        services.AddScoped<OrganizationUserAccessRemover>();
+        services.AddScoped<OrganizationUserInvitationWriter>();
+        services.AddScoped<OrganizationMembershipEndNoticeBuilder>();
         services.AddScoped<OrganizationAvailableLoginMethodsResolver>();
         services.AddScoped<OrganizationMembershipEndNotifier>();
         services.AddScoped<OrganizationUserEditor>();

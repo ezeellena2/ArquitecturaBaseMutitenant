@@ -6,7 +6,7 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
-internal sealed class PlatformTenantSlugAllocator(ITenantSlugAvailabilityReader slugs)
+internal sealed class PlatformTenantSlugResolver(ITenantSlugAvailabilityReader slugs)
 {
     internal async Task<Result<string>> AllocateAsync(string name, Guid operationId, CancellationToken ct)
     {

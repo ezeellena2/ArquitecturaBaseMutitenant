@@ -11,9 +11,9 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 /// defecto y sin cuenta: usar la de la cuenta encontrada delataría que existe. El aviso al dueño de un correo ocupado
 /// sale en su cultura, y el aviso a la cuenta encontrada va a sus métodos que siguen andando.
 /// </summary>
-internal sealed class AccountRecoveryMessenger(IEnumerable<ILoginCodeChannel> codeChannels,
-    IEnumerable<IAccountNoticeChannel> noticeChannels, UserCultures cultures, IUserRepository users,
-    ILoginMethodRepository methods, LoginMethodAvailability availability, AccountNoticeIssuer notices,
+internal sealed class AccountRecoveryNotifier(IEnumerable<ILoginCodeChannel> codeChannels,
+    IEnumerable<IAccountNoticeChannel> noticeChannels, UserCultureResolver cultures, IUserRepository users,
+    ILoginMethodRepository methods, LoginMethodAvailabilityPolicy availability, AccountNoticeIssuer notices,
     IPlatformSettingsReader settings)
 {
     public async Task SendCodeAsync(LoginCodeDestination destination, IssuedLoginCode issued,

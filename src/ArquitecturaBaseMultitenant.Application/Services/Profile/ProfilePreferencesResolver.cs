@@ -4,7 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 namespace ArquitecturaBaseMultitenant.Application.Services.Profile;
 
 /// <summary>Resuelve la moneda visible del perfil desde preferencias autorizadas y catálogos habilitados.</summary>
-internal sealed class ProfilePreferences(ITenantSettingsReader settings, ICultureCatalog cultures,
+internal sealed class ProfilePreferencesResolver(ITenantSettingsReader settings, ICultureCatalog cultures,
     ICountryCatalog countries)
 {
     internal async Task<string?> FindCurrencyCodeAsync(string cultureCode, bool mayReadTenantSettings,

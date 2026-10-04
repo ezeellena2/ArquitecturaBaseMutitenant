@@ -25,7 +25,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 /// </summary>
 internal sealed class PlatformAccountDeletionService(IUserRepository users, ILoginMethodRepository accounts,
     PlatformOperatorGuard operators, AccountDeletionScheduler scheduler,
-    PlatformAudit audit, IAccessStatusCache statuses, ICurrentUser currentUser, IUnitOfWork unitOfWork,
+    PlatformAuditWriter audit, IAccessStatusCache statuses, ICurrentUser currentUser, IUnitOfWork unitOfWork,
     IRequestValidator validator, TimeProvider clock, ILogger<PlatformAccountDeletionService> logger)
     : IPlatformAccountDeletionService
 {

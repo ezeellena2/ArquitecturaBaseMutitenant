@@ -15,12 +15,12 @@ internal static class IdentityRegistration
         services.AddScoped<LoginMethodVerifier>();
         services.AddScoped<LoginMethodNotifier>();
         services.AddScoped<GoogleMethodLinkFinalizer>();
-        services.AddScoped<LoginMethodAvailability>();
-        services.AddScoped<LoginMethodChanger>();
+        services.AddScoped<LoginMethodAvailabilityPolicy>();
+        services.AddScoped<LoginMethodEditor>();
         services.AddScoped<IReauthService, ReauthService>();
         services.AddScoped<ReauthIssuer>();
         services.AddScoped<ReauthVerifier>();
-        services.AddScoped<ReauthTicketConsumer>();
+        services.AddScoped<ReauthTicketVerifier>();
         services.AddScoped<IAccountGoogleService, AccountGoogleService>();
         services.AddScoped<GoogleMethodLinker>();
         services.AddScoped<IAccountLoginMethodsService, AccountLoginMethodsService>();

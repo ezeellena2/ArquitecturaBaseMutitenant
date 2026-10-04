@@ -10,7 +10,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 /// <summary>Crea identidades por correo y sus consentimientos; solo el alta Personal crea un espacio Personal.</summary>
 internal sealed class SignupAccountRegistrar(IUserRepository users, ILoginMethodRepository methods,
     ILegalRepository legal, IPersonalSpaceProvisioner personalSpaces, IRequestInfo requestInfo,
-    LoginMethodDomainAssigner emailDomains)
+    LoginMethodDomainLinker emailDomains)
 {
     internal async Task<(LegalDocument Terms, LegalDocument Privacy)> GetCurrentLegalAsync(
         DateTime nowUtc, CancellationToken cancellationToken)

@@ -6,7 +6,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
 
 /// <summary>Notifica una salida usando solo métodos de ingreso que la persona conserva disponibles.</summary>
 internal sealed class OrganizationMembershipEndNotifier(
-    OrganizationMembershipEndNoticeContextProvider contexts,
+    OrganizationMembershipEndNoticeBuilder contexts,
     OrganizationAvailableLoginMethodsResolver loginMethods,
     AccountNoticeIssuer accountNotices)
 {

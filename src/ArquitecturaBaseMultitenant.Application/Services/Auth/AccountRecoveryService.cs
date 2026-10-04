@@ -22,7 +22,7 @@ internal sealed class AccountRecoveryService(
     LoginCodeVerifier verifier,
     ISecureTokenGenerator secrets,
     IUserLookup userLookup,
-    AccountRecoveryMessenger messenger,
+    AccountRecoveryNotifier messenger,
     IAccountRecoveryRepository recoveries,
     IPhoneNumberParser phones,
     IRequestValidator validator,

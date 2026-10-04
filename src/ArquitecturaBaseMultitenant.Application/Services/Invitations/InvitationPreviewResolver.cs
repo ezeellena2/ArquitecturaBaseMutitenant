@@ -8,7 +8,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Invitations;
 /// Prueba el token antes de entrar y mantiene la continuación únicamente después de leer sus datos reales. La entrada
 /// a la organización del token la hace <see cref="InvitationService"/>.
 /// </summary>
-internal sealed class InvitationPreviewFlow(IInvitationTokenProtector tokens, InvitationPreviewBuilder previews,
+internal sealed class InvitationPreviewResolver(IInvitationTokenProtector tokens, InvitationPreviewBuilder previews,
     IInvitationFlowContext flow, TimeProvider timeProvider)
 {
     /// <summary>El token del pedido o, al recargar, el de la continuación. Sin un token válido, borra la continuación.</summary>

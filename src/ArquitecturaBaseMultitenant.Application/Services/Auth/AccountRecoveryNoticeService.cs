@@ -13,7 +13,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 /// </summary>
 internal sealed class AccountRecoveryNoticeService(
     IAccountRecoveryRepository recoveries,
-    AccountRecoveryMessenger messenger,
+    AccountRecoveryNotifier messenger,
     IUnitOfWork unitOfWork,
     TimeProvider timeProvider,
     ILogger<AccountRecoveryNoticeService> logger) : IAccountRecoveryNoticeService

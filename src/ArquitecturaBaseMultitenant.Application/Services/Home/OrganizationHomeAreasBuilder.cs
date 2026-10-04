@@ -13,7 +13,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Home;
 /// Las tarjetas de Inicio-Org. Cada una cuenta con el reader de su área, así el número es el mismo que muestra el área,
 /// y solo se calcula si quien mira tiene el permiso de verla.
 /// </summary>
-internal sealed class OrganizationHomeAreas(IOrganizationUserReader users, IRoleReader roles, ICompanyReader companies,
+internal sealed class OrganizationHomeAreasBuilder(IOrganizationUserReader users, IRoleReader roles, ICompanyReader companies,
     IPublicPageReader publicPages, ITenantDomainReader domains, IOrganizationAuditReader audit,
     TimeProvider timeProvider)
 {

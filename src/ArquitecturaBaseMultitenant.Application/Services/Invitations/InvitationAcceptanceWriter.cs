@@ -8,9 +8,9 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Invitations;
 
-internal sealed class InvitationAcceptor(IInvitationRepository invitations, IMemberRepository members,
+internal sealed class InvitationAcceptanceWriter(IInvitationRepository invitations, IMemberRepository members,
     ITenantReader tenants, InvitationAcceptanceGuard guard, InvitationAccountRegistrar registrar,
-    ILoginMethodReader methods, LoginMethodAvailability availability, IInvitationTokenProtector tokens,
+    ILoginMethodReader methods, LoginMethodAvailabilityPolicy availability, IInvitationTokenProtector tokens,
     TimeProvider timeProvider)
 {
     internal async Task<Result<InvitationAcceptanceOutcome>> AcceptAsync(InvitationAcceptanceContext context, CancellationToken ct)

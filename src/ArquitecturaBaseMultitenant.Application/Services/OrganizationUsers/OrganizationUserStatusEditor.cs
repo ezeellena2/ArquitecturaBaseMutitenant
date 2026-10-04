@@ -12,7 +12,7 @@ internal sealed class OrganizationUserStatusEditor(
     IMemberRepository members,
     IMemberReader memberReader,
     ILoginMethodRepository loginMethods,
-    OrganizationUserAssignmentManager assignments,
+    OrganizationUserAssignmentWriter assignments,
     OrganizationUserAdministratorGuard administrators,
     OrganizationMembershipEndNotifier membershipEndNotifier,
     TimeProvider timeProvider)

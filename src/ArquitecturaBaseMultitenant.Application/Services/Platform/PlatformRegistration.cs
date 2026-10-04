@@ -9,13 +9,13 @@ internal static class PlatformRegistration
     internal static IServiceCollection AddPlatform(this IServiceCollection services)
     {
         services.AddScoped<IPlatformSettingsService, PlatformSettingsService>();
-        services.AddScoped<PlatformSettingsAudit>();
+        services.AddScoped<PlatformSettingsAuditWriter>();
         services.AddScoped<IPlatformFeatureService, PlatformFeatureService>();
-        services.AddScoped<PlatformFeatureListing>();
+        services.AddScoped<PlatformFeatureListBuilder>();
         services.AddScoped<PlatformFeatureWriter>();
         services.AddScoped<ITenantAdministrationService, TenantAdministrationService>();
         services.AddScoped<PlatformTenantStateWriter>();
-        services.AddScoped<PlatformAudit>();
+        services.AddScoped<PlatformAuditWriter>();
         services.AddScoped<PlatformTenantNotifier>();
         services.AddScoped<IPlatformScopeAccessService, PlatformScopeAccessService>();
         services.AddScoped<IPlatformPublicSiteService, PlatformPublicSiteService>();
@@ -35,7 +35,7 @@ internal static class PlatformRegistration
         services.AddScoped<IPlatformLegalService, PlatformLegalService>();
         services.AddScoped<PlatformOperatorGuard>();
         services.AddScoped<PlatformActionGuard>();
-        services.AddScoped<PlatformTenantSlugAllocator>();
+        services.AddScoped<PlatformTenantSlugResolver>();
         services.AddScoped<PlatformTenantCreator>();
         services.AddScoped<PlatformTenantActivator>();
         return services;

@@ -8,7 +8,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
 /// <summary>Aplica la política de alta y encola el código en la transacción del llamador.</summary>
 internal sealed class SignupCodeRequester(SignupPolicy policy, LoginCodeIssuer issuer,
-    ILoginCodeRepository codes, UserCultures userCultures, IEnumerable<ILoginCodeChannel> channels)
+    ILoginCodeRepository codes, UserCultureResolver userCultures, IEnumerable<ILoginCodeChannel> channels)
 {
     internal async Task<Result<RequestLoginCodeResponse>> RequestAsync(SignupRequest request,
         CancellationToken cancellationToken)

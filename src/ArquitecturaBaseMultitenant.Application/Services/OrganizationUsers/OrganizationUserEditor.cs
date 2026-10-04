@@ -14,7 +14,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
 internal sealed class OrganizationUserEditor(
     IMemberRepository members,
     IMemberReader memberReader,
-    OrganizationUserAssignmentManager assignments,
+    OrganizationUserAssignmentWriter assignments,
     OrganizationUserAdministratorGuard administrators,
     OrganizationUserStatusEditor statusEditor)
 {

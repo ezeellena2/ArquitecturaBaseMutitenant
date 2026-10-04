@@ -1,16 +1,21 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
+using ArquitecturaBaseMultitenant.Application;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
 /// <summary>
-/// Comprueba que cada servicio de Application implemente su interfaz de servicio. Mantiene explícito el
-/// contrato que consumen los controllers.
+/// Comprueba que cada servicio de Application implemente su interfaz de servicio, y que cada helper termine con un
+/// sufijo de la lista cerrada de <c>capas-y-flujo.md</c>. Mantiene explícito el contrato que consumen los controllers
+/// y el vocabulario de las piezas de un área.
 /// </summary>
-public sealed class ApplicationServicesTests
+public sealed partial class ApplicationServicesTests
 {
     private const string ServicesNamespace = "ArquitecturaBaseMultitenant.Application.Services";
     private const string ServiceInterfacesNamespace = "ArquitecturaBaseMultitenant.Application.Interfaces.Services";
+    private const string SuffixesHeading = "**Sufijos de los helpers**";
 
     private static readonly Assembly ApplicationAssembly = Assembly.Load("ArquitecturaBaseMultitenant.Application");
 
@@ -40,6 +45,77 @@ public sealed class ApplicationServicesTests
     public void Detector_rejects_a_service_without_its_interface() =>
         Assert.False(HasServiceContract(typeof(UncontractedService)));
 
+    [Fact]
+    public void Every_helper_ends_with_a_suffix_of_the_closed_list()
+    {
+        var suffixes = ClosedHelperSuffixes();
+        Assert.NotEmpty(suffixes);
+
+        var outside = Helpers()
+            .Where(helper => !HasClosedSuffix(helper, suffixes))
+            .Select(helper => helper.Name);
+
+        Assert.Empty(outside);
+    }
+
+    [Fact]
+    public void Every_suffix_of_the_closed_list_is_in_use()
+    {
+        // La lista es la de los helpers que existen: un sufijo que ya nadie usa sale de la tabla.
+        var helpers = Helpers();
+
+        var unused = ClosedHelperSuffixes()
+            .Where(suffix => !helpers.Any(helper => helper.Name.EndsWith(suffix, StringComparison.Ordinal)));
+
+        Assert.Empty(unused);
+    }
+
+    [Fact]
+    public void Detector_rejects_a_helper_whose_suffix_is_not_in_the_list() =>
+        Assert.False(HasClosedSuffix(typeof(PaymentCoordinator), ["Guard", "Policy"]));
+
+    /// <summary>
+    /// Un helper es una clase de Services que arma el contenedor y no termina en Service. Así no entran los modelos
+    /// internos (<c>IssuedLoginCode</c>), los records, las clases estáticas ni los <c>*Registration</c>.
+    /// </summary>
+    private static Type[] Helpers()
+    {
+        var registrations = new ServiceCollection();
+        registrations.AddApplication();
+
+        return
+        [
+            .. registrations
+                .Where(descriptor => !descriptor.IsKeyedService)
+                .Select(descriptor => descriptor.ImplementationType)
+                .OfType<Type>()
+                .Where(type => IsInNamespace(type, ServicesNamespace)
+                    && !type.Name.EndsWith("Service", StringComparison.Ordinal))
+                .Distinct(),
+        ];
+    }
+
+    /// <summary>La tabla de capas-y-flujo.md que sigue a «Sufijos de los helpers»: una fila por sufijo.</summary>
+    private static string[] ClosedHelperSuffixes()
+    {
+        var lines = File.ReadAllLines(Path.Combine(SolutionRoot.FullPath, "docs", "rules", "capas-y-flujo.md"));
+        var start = Array.FindIndex(lines, line => line.StartsWith(SuffixesHeading, StringComparison.Ordinal));
+        Assert.True(start >= 0, $"capas-y-flujo.md no tiene la lista {SuffixesHeading}.");
+
+        return
+        [
+            .. lines.Skip(start + 1)
+                .SkipWhile(line => !line.StartsWith('|'))
+                .TakeWhile(line => line.StartsWith('|'))
+                .Select(line => SuffixRow().Match(line))
+                .Where(match => match.Success)
+                .Select(match => match.Groups["suffix"].Value),
+        ];
+    }
+
+    private static bool HasClosedSuffix(Type helper, IEnumerable<string> suffixes) =>
+        suffixes.Any(suffix => helper.Name.EndsWith(suffix, StringComparison.Ordinal));
+
     private static bool HasServiceContract(Type service) =>
         service.GetInterfaces().Any(contract => IsInNamespace(contract, ServiceInterfacesNamespace));
 
@@ -47,7 +123,12 @@ public sealed class ApplicationServicesTests
         type.Namespace == @namespace
         || type.Namespace?.StartsWith(@namespace + ".", StringComparison.Ordinal) == true;
 
-#pragma warning disable CA1812 // Signature-only test probe.
+    [GeneratedRegex(@"^\|\s*`(?<suffix>[A-Za-z]+)`\s*\|", RegexOptions.CultureInvariant)]
+    private static partial Regex SuffixRow();
+
+#pragma warning disable CA1812 // Signature-only test probes.
     private sealed class UncontractedService;
+
+    private sealed class PaymentCoordinator;
 #pragma warning restore CA1812
 }

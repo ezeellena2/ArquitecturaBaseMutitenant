@@ -6,7 +6,7 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
 /// <summary>Prepara el evento del operador en la transacción que modifica la configuración.</summary>
-internal sealed class PlatformSettingsAudit(ICurrentUser currentUser, ISecurityEventRepository events,
+internal sealed class PlatformSettingsAuditWriter(ICurrentUser currentUser, ISecurityEventRepository events,
     TimeProvider timeProvider, IRequestInfo requestInfo)
 {
     internal void Record(string reason, SecurityEventChanges changes)

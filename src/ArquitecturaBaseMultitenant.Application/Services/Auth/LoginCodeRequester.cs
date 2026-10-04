@@ -16,9 +16,9 @@ internal sealed class LoginCodeRequester(
     IUserLookup userLookup,
     IUserRepository users,
     ILoginMethodReader loginMethods,
-    LoginMethodAvailability availability,
+    LoginMethodAvailabilityPolicy availability,
     IEnumerable<ILoginCodeChannel> channels,
-    UserCultures userCultures,
+    UserCultureResolver userCultures,
     ISignInService signIn)
 {
     internal async Task<Result<RequestLoginCodeResponse>> RequestAsync(

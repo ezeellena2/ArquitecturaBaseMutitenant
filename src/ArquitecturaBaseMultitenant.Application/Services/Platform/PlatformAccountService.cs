@@ -18,7 +18,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 /// métodos enmascarados, sus membresías desde el índice global y los permisos si es operadora.
 /// </summary>
 internal sealed class PlatformAccountService(IPlatformAccountReader reader, ILoginMethodReader methods,
-    LoginMethodAvailability availability, ITenantReader tenants, ILastTenantAdminGuard soleOwners,
+    LoginMethodAvailabilityPolicy availability, ITenantReader tenants, ILastTenantAdminGuard soleOwners,
     IRequestValidator validator, TimeProvider clock,
     ILogger<PlatformAccountService> logger) : IPlatformAccountService
 {

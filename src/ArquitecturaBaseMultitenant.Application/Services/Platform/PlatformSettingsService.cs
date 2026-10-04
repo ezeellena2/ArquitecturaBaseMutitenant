@@ -13,7 +13,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
 /// <summary>Consulta y modifica las reglas globales con evento en el mismo commit y caché posterior.</summary>
 internal sealed class PlatformSettingsService(IPlatformSettingsReader reader, IPlatformSettingsRepository repository,
-    IUnitOfWork unitOfWork, IRequestValidator validator, PlatformSettingsAudit audit, IPlatformSettingsCache cache,
+    IUnitOfWork unitOfWork, IRequestValidator validator, PlatformSettingsAuditWriter audit, IPlatformSettingsCache cache,
     TimeProvider timeProvider, ILogger<PlatformSettingsService> logger) : IPlatformSettingsService
 {
     public Task<Result<PlatformSettingsResponse>> GetAsync(CancellationToken cancellationToken) =>

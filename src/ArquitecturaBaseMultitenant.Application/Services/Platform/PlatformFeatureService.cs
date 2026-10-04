@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
-internal sealed class PlatformFeatureService(PlatformFeatureListing listing, PlatformFeatureWriter writer,
+internal sealed class PlatformFeatureService(PlatformFeatureListBuilder listing, PlatformFeatureWriter writer,
     IUnitOfWork unitOfWork, IRequestValidator validator, ITenantFeatureCache cache,
     TimeProvider clock, ILogger<PlatformFeatureService> logger) : IPlatformFeatureService
 {

@@ -9,8 +9,8 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 namespace ArquitecturaBaseMultitenant.Application.Services.Invitations;
 
 internal sealed class InvitationAccountRegistrar(IUserRepository users, ILoginMethodRepository methods,
-    IUserLookup lookup, ILegalRepository legal, IRequestInfo requestInfo, InvitationIdentityDefaults preferences,
-    LoginMethodDomainAssigner emailDomains)
+    IUserLookup lookup, ILegalRepository legal, IRequestInfo requestInfo, InvitationIdentityDefaultsResolver preferences,
+    LoginMethodDomainLinker emailDomains)
 {
     internal async Task<Guid> RegisterAsync(Guid organizationId, Email email, DateTime nowUtc, CancellationToken ct)
     {

@@ -16,7 +16,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Invitations;
 
 /// <summary>Lee exclusivamente dentro del alcance probado y no consume ni modifica la invitación.</summary>
 internal sealed class InvitationPreviewBuilder(IInvitationReader invitations, IUserLookup lookup,
-    ILoginMethodReader methods, LoginMethodAvailability availability, IInvitationFlowContext flow,
+    ILoginMethodReader methods, LoginMethodAvailabilityPolicy availability, IInvitationFlowContext flow,
     TimeProvider timeProvider, IInvitationTokenProtector tokens)
 {
     internal async Task<InvitationPreviewResponse> BuildAsync(InvitationTokenData proof, string tokenHash, CancellationToken ct)

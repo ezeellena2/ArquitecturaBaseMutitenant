@@ -25,7 +25,7 @@ internal sealed class PlatformOperatorInvitationService(
     PlatformOperatorInvitationNotifier notifier,
     IUserLookup lookup,
     LoginCodeIssuer codes,
-    PlatformAudit audit,
+    PlatformAuditWriter audit,
     IRequestValidator validator,
     IUnitOfWork unitOfWork,
     TimeProvider clock,

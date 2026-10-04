@@ -11,7 +11,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Home;
 /// «Tus empresas» de Inicio-Miembro: las empresas donde la persona tiene permisos, según
 /// <see cref="IPermissionService.GetCompanyPermissionsAsync"/>, con sus roles y los miembros si puede verlos.
 /// </summary>
-internal sealed class MemberHomeCompanies(ICompanyMembershipReader memberships, IPermissionService permissions)
+internal sealed class MemberHomeCompaniesBuilder(ICompanyMembershipReader memberships, IPermissionService permissions)
 {
     public async Task<IReadOnlyList<HomeCompanyCard>> ListAsync(Guid userId, CancellationToken cancellationToken)
     {

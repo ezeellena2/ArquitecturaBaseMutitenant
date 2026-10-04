@@ -8,7 +8,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
 /// <summary>Decide qué métodos verificados pueden usarse para ingresar o respaldar otro método según canales configurados y membresías activas.</summary>
-internal sealed class LoginMethodAvailability(IEnumerable<ILoginCodeChannel> channels,
+internal sealed class LoginMethodAvailabilityPolicy(IEnumerable<ILoginCodeChannel> channels,
     IGoogleAvailability google, ILoginMethodMembershipReader memberships)
 {
     internal static bool WasVerifiedBeforeSession(LoginMethod method, DateTime? sessionStartedAtUtc) =>

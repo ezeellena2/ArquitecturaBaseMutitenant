@@ -203,7 +203,7 @@ public sealed class InvitationAcceptanceTests(ApiFactory factory)
             services.GetRequiredService<ILoginMethodRepository>().Add(own);
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, Ct);
-        Assert.True(await services.GetRequiredService<LoginMethodAvailability>().HasPersonalBackupAsync(userId,
+        Assert.True(await services.GetRequiredService<LoginMethodAvailabilityPolicy>().HasPersonalBackupAsync(userId,
             await services.GetRequiredService<ILoginMethodReader>().ListByUserIdAsync(userId, Ct), Ct));
         var preview = await PreviewAsync(issued, null, userId);
         Assert.Equal(InvitationPreviewState.Accepted, preview.Result.Value.State);

@@ -9,9 +9,9 @@ internal sealed class OrganizationUserRemover(
     IMemberRepository members,
     IMemberReader memberReader,
     ILoginMethodRepository loginMethods,
-    OrganizationUserAssignmentManager assignments,
+    OrganizationUserAssignmentWriter assignments,
     OrganizationUserAdministratorGuard administrators,
-    OrganizationUserAccessCleaner accessCleaner,
+    OrganizationUserAccessRemover accessCleaner,
     OrganizationMembershipEndNotifier membershipEndNotifier,
     TimeProvider timeProvider)
 {

@@ -17,7 +17,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 /// </summary>
 internal sealed class LoginMethodIssuer(LoginMethodGuard guard, ILoginMethodRepository methods,
     IUserLookup lookup, LoginCodeIssuer codes,
-    IEnumerable<ILoginCodeChannel> channels, UserCultures cultures, ReauthTicketConsumer tickets,
+    IEnumerable<ILoginCodeChannel> channels, UserCultureResolver cultures, ReauthTicketVerifier tickets,
     AccountNoticeIssuer notices, TimeProvider timeProvider)
 {
     public async Task<Result<LoginMethodCodeResponse>> AddAsync(Guid userId, AddLoginEmailRequest request, CancellationToken ct)

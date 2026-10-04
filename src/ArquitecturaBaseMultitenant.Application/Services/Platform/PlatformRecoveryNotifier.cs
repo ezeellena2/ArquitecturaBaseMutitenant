@@ -13,7 +13,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 /// ese correo, y el aviso de método agregado va a los demás métodos de la cuenta (ADR 0033): el correo nuevo recibe
 /// un solo aviso. Rechazado sale en la cultura por defecto y sin cuenta, para no delatar ninguna.
 /// </summary>
-internal sealed class PlatformRecoveryNotifier(IEnumerable<IAccountNoticeChannel> channels, UserCultures cultures,
+internal sealed class PlatformRecoveryNotifier(IEnumerable<IAccountNoticeChannel> channels, UserCultureResolver cultures,
     IPublicOrigin origin, LoginMethodNotifier loginMethods)
 {
     public async Task ApprovedAsync(UserAccountRow account, LoginMethod added, IReadOnlyList<LoginMethod> methods,

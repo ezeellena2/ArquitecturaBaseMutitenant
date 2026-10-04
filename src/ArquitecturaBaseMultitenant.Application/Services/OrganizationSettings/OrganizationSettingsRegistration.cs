@@ -14,7 +14,7 @@ internal static class OrganizationSettingsRegistration
         services.AddScoped<OrganizationDomainRegistrar>();
         services.AddScoped<OrganizationDomainVerifier>();
         services.AddScoped<OrganizationDomainRemover>();
-        services.AddScoped<LoginMethodDomainAssigner>();
+        services.AddScoped<LoginMethodDomainLinker>();
         return services;
     }
 }

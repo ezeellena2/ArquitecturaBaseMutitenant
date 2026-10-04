@@ -13,7 +13,7 @@ using ArquitecturaBaseMultitenant.Domain.Settings;
 namespace ArquitecturaBaseMultitenant.Application.Services.Invitations;
 
 /// <summary>Usa datos actuales y cultura/zona explícitas para encolar el canal disponible.</summary>
-internal sealed class InvitationDeliveryIssuer(IEnumerable<IInvitationChannel> channels, UserCultures cultures,
+internal sealed class InvitationDeliveryIssuer(IEnumerable<IInvitationChannel> channels, UserCultureResolver cultures,
     ITenantSettingsReader settings, IUserRepository users, ILoginMethodReader methods, IPublicOrigin origin,
     IInvitationReader invitations)
 {

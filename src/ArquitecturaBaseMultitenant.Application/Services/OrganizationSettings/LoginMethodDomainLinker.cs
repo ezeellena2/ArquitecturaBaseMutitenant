@@ -6,7 +6,7 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
 
 /// <summary>Marca solo métodos cuyo correo coincide con un dominio verificado, sin crear un acceso.</summary>
-internal sealed class LoginMethodDomainAssigner(ITenantDomainRepository domains)
+internal sealed class LoginMethodDomainLinker(ITenantDomainRepository domains)
 {
     public async Task AssignIfVerifiedAsync(LoginMethod method, Email? email,
         CancellationToken cancellationToken)

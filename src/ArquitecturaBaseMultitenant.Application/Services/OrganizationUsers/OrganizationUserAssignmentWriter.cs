@@ -10,7 +10,7 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
 
 /// <summary>Valida roles por alcance y sincroniza asignaciones y membresías de una persona.</summary>
-internal sealed class OrganizationUserAssignmentManager(
+internal sealed class OrganizationUserAssignmentWriter(
     ICompanyReader companies,
     RoleAssignmentGuard roleGuard,
     IRoleAssignmentRepository assignments,

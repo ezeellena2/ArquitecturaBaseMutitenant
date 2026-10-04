@@ -12,7 +12,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 /// <summary>Valida la cuenta existente y confirma su método de correo sin duplicar identidad.</summary>
 internal sealed class SignupExistingMethodVerifier(IUserRepository users,
     ILoginMethodRepository methods, ILoginMethodReader methodReader, IUserLookup userLookup,
-    LoginMethodDomainAssigner emailDomains)
+    LoginMethodDomainLinker emailDomains)
 {
     internal Task<LoginMethodLookup?> FindAsync(LoginCodeDestination destination,
         CancellationToken cancellationToken) =>

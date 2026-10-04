@@ -12,8 +12,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
 /// <summary>Elige un método de respaldo distinto del objetivo y emite el código que prueba la autorización para una acción sensible.</summary>
 internal sealed class ReauthIssuer(LoginMethodGuard guard, ILoginMethodRepository methods,
-    LoginMethodAvailability availability, LoginCodeIssuer codes, IEnumerable<ILoginCodeChannel> channels,
-    UserCultures cultures)
+    LoginMethodAvailabilityPolicy availability, LoginCodeIssuer codes, IEnumerable<ILoginCodeChannel> channels,
+    UserCultureResolver cultures)
 {
     public async Task<Result<ReauthCodeResponse>> RequestAsync(Guid userId, RequestReauthRequest request,
         DateTime? sessionStartedAtUtc, CancellationToken ct)
@@ -28,13 +28,13 @@ internal sealed class ReauthIssuer(LoginMethodGuard guard, ILoginMethodRepositor
         {
             var target = all.SingleOrDefault(method => method.Id == targetId);
             if (target is null) return LoginMethodErrors.NotFound;
-            if (request.Action == ReauthAction.RemoveMethod && LoginMethodAvailability.CheckRemoval(target, available) is { } blocked)
+            if (request.Action == ReauthAction.RemoveMethod && LoginMethodAvailabilityPolicy.CheckRemoval(target, available) is { } blocked)
                 return blocked;
             if (request.Action == ReauthAction.MakePrimary && !available.Any(method => method.Id == targetId))
                 return LoginMethodErrors.NotVerified;
         }
         var source = available.Where(method => method.Id != request.TargetMethodId && availability.CanReceiveCode(method)
-                && LoginMethodAvailability.WasVerifiedBeforeSession(method, sessionStartedAtUtc))
+                && LoginMethodAvailabilityPolicy.WasVerifiedBeforeSession(method, sessionStartedAtUtc))
             .OrderByDescending(method => method.IsPrimary).ThenBy(method => method.ManagedByTenantId is not null)
             .ThenBy(method => method.Id).FirstOrDefault();
         if (source is null) return ReauthErrors.OtherMethodRequired;

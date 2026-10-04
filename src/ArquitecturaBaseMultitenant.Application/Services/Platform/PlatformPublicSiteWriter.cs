@@ -8,7 +8,7 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
 internal sealed class PlatformPublicSiteWriter(IPublicPageRepository pages, ITenantRepository tenants,
-    PlatformAudit audit, IAuditLog auditLog, PlatformTenantNotifier notices, TimeProvider clock)
+    PlatformAuditWriter audit, IAuditLog auditLog, PlatformTenantNotifier notices, TimeProvider clock)
 {
     internal async Task<Result> ChangeAsync(Guid tenantId, Guid operatorId, PlatformTenantStateRequest request,
         bool blocked, CancellationToken ct)

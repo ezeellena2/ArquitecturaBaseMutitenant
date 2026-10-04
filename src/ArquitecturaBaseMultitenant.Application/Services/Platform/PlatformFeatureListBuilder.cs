@@ -7,7 +7,7 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
-internal sealed class PlatformFeatureListing(ITenantReader tenants, ITenantFeatureReader features, IFeatureCatalog catalog)
+internal sealed class PlatformFeatureListBuilder(ITenantReader tenants, ITenantFeatureReader features, IFeatureCatalog catalog)
 {
     internal async Task<Result<IReadOnlyList<PlatformFeatureResponse>>> ListAsync(Guid tenantId, CancellationToken ct)
     {

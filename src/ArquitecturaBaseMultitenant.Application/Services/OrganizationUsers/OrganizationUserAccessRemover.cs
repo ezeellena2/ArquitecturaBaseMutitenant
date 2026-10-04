@@ -6,10 +6,10 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
 
 /// <summary>Limpia accesos y membresías de empresa al revocar una invitación huérfana o quitar a alguien.</summary>
-internal sealed class OrganizationUserAccessCleaner(
+internal sealed class OrganizationUserAccessRemover(
     IInvitationRepository invitations,
     IMemberRepository members,
-    OrganizationUserAssignmentManager assignments)
+    OrganizationUserAssignmentWriter assignments)
 {
     internal async Task<Result> RemoveUnacceptedMemberIfOrphanedAsync(Guid invitationId, Guid memberId,
         CancellationToken cancellationToken)

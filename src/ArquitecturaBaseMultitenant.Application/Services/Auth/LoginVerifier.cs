@@ -10,12 +10,12 @@ using ArquitecturaBaseMultitenant.Application.Services.Legal;
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
 /// <summary>Verifica código y cuenta, conserva intentos y auditoría dentro del límite del llamador.</summary>
-internal sealed class LoginCodeVerificationFlow(
+internal sealed class LoginVerifier(
     LoginCodeVerifier verifier,
-    LoginCodeAttemptCoordinator attempts,
+    LoginCodeAttemptGuard attempts,
     LoginAccountGuard accounts,
     ILoginMethodReader loginMethods,
-    LoginMethodAvailability availability,
+    LoginMethodAvailabilityPolicy availability,
     AccountDeletionCancelIssuer cancellation,
     IConnectService connect)
 {

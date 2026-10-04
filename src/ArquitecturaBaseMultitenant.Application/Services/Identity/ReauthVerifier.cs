@@ -9,7 +9,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
 /// <summary>Comprueba el código de respaldo vinculado a la acción y emite un ticket de uso único para completarla.</summary>
 internal sealed class ReauthVerifier(LoginMethodGuard guard, ILoginMethodRepository methods,
-    LoginMethodAvailability availability, ILoginCodeRepository codes, ILoginCodeHasher hasher,
+    LoginMethodAvailabilityPolicy availability, ILoginCodeRepository codes, ILoginCodeHasher hasher,
     IReauthTicketRepository tickets, ISecureTokenGenerator secrets, TimeProvider timeProvider)
 {
     public async Task<Result<ReauthResponse>> VerifyAsync(Guid userId, VerifyReauthRequest request,
@@ -23,7 +23,7 @@ internal sealed class ReauthVerifier(LoginMethodGuard guard, ILoginMethodReposit
             return LoginMethodErrors.NotFound;
         var source = (await availability.AvailableAsync(all, ct)).SingleOrDefault(method => method.Id == request.SourceMethodId);
         if (source is null || !availability.CanReceiveCode(source)
-            || !LoginMethodAvailability.WasVerifiedBeforeSession(source, sessionStartedAtUtc)) return ReauthErrors.Invalid;
+            || !LoginMethodAvailabilityPolicy.WasVerifiedBeforeSession(source, sessionStartedAtUtc)) return ReauthErrors.Invalid;
         var destination = LoginCodeDestination.ForEmail(Email.Create(LoginMethodNotifier.Contact(source)).Value);
         await codes.LockDestinationAsync(destination, ct);
         var code = await codes.GetLatestAsync(destination, LoginCodePurpose.Reauthenticate, userId, ct);

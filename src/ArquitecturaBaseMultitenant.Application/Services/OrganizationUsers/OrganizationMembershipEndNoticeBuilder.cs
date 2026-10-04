@@ -16,7 +16,7 @@ internal sealed record OrganizationMembershipEndNoticeContext(
     string AccountUrl);
 
 /// <summary>Registra el evento de seguridad y prepara los datos de la notificación de fin de membresía.</summary>
-internal sealed class OrganizationMembershipEndNoticeContextProvider(
+internal sealed class OrganizationMembershipEndNoticeBuilder(
     ICurrentUser currentUser,
     ITenantContext tenantContext,
     TimeProvider timeProvider,

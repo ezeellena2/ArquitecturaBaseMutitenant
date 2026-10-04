@@ -89,7 +89,7 @@ public sealed class PlatformSettingsServiceTests
     private static PlatformSettingsService Create(ServiceFixture<PlatformSettingsService> fixture, StubRepository repository,
         StubEvents events, FakeUnitOfWork unitOfWork, StubCache cache) =>
         new(new StubReader(), repository, unitOfWork, fixture.Validator,
-            new PlatformSettingsAudit(new StubUser(), events, fixture.TimeProvider, new StubRequest()), cache, fixture.TimeProvider, fixture.Logger);
+            new PlatformSettingsAuditWriter(new StubUser(), events, fixture.TimeProvider, new StubRequest()), cache, fixture.TimeProvider, fixture.Logger);
 
     private sealed class StubReader : IPlatformSettingsReader
     {

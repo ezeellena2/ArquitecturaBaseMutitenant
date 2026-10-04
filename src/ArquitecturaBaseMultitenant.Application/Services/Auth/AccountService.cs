@@ -11,7 +11,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
 /// <summary>Registro por correo: el código prueba posesión y el alta completa es atómica.</summary>
 internal sealed class AccountService(SignupCodeRequester requester, IPersonalSpaceProvisioner personalSpaces,
-    SignupVerificationCore verification,
+    SignupCodeVerifier verification,
     IRequestValidator validator, IUnitOfWork unitOfWork, ITenantScope tenantScope,
     ISignInService signIn, TimeProvider timeProvider,
     ILogger<AccountService> logger) : IAccountService

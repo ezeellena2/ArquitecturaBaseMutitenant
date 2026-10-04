@@ -10,8 +10,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Profile;
 
 /// <summary>Compone la cuenta y sus accesos globales con las preferencias del tenant activo.</summary>
 internal sealed class ProfileSnapshotBuilder(IUserRepository users, IUserTenantAccessReader accesses,
-    ProfilePreferences preferences,
-    ILoginMethodReader loginMethods, LoginMethodAvailability availability, LegalAcceptanceGuard legal,
+    ProfilePreferencesResolver preferences,
+    ILoginMethodReader loginMethods, LoginMethodAvailabilityPolicy availability, LegalAcceptanceGuard legal,
     IPermissionService permissions, IFeatureService features)
 {
     internal async Task<MeResponse?> BuildAsync(Guid userId, Access access, Guid? activeTenantId,

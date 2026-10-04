@@ -9,7 +9,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
 /// <summary>Persiste el ingreso Google y sincroniza el contacto primario con su aviso de seguridad.</summary>
 internal sealed class GoogleAccountMethodFinalizer(ILoginMethodRepository methods, IUserRepository users,
-    LoginMethodNotifier notifier, TimeProvider timeProvider, LoginMethodDomainAssigner emailDomains)
+    LoginMethodNotifier notifier, TimeProvider timeProvider, LoginMethodDomainLinker emailDomains)
 {
     internal async Task AddGoogleMethodAsync(UserAccountRow account, Guid userId, string providerKey,
         Email? email, IReadOnlyList<LoginMethod> existingMethods, CancellationToken cancellationToken)

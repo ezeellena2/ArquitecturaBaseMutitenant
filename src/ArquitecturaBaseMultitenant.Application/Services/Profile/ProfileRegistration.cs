@@ -9,7 +9,7 @@ internal static class ProfileRegistration
     internal static IServiceCollection AddProfile(this IServiceCollection services)
     {
         services.AddScoped<IProfileService, ProfileService>();
-        services.AddScoped<ProfilePreferences>();
+        services.AddScoped<ProfilePreferencesResolver>();
         services.AddScoped<ProfileSnapshotBuilder>();
         return services;
     }

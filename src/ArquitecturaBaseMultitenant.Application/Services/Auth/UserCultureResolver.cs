@@ -4,7 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
 /// <summary>Resolves a notification culture from enabled reference data.</summary>
-internal sealed class UserCultures(ICultureCatalog catalog)
+internal sealed class UserCultureResolver(ICultureCatalog catalog)
 {
     public async Task<CultureProfile> ResolveAsync(string? accountCulture, string? organizationCulture,
         CancellationToken cancellationToken)

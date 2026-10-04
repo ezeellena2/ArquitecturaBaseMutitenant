@@ -8,7 +8,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
 /// <summary>Bloquea, relee y verifica el código antes de registrar o confirmar una cuenta.</summary>
-internal sealed class SignupVerificationCore(ILoginCodeRepository codes,
+internal sealed class SignupCodeVerifier(ILoginCodeRepository codes,
     LoginCodeVerifier verifier, SignupPolicy policy, SignupAccountRegistrar registrar,
     SignupExistingMethodVerifier existingMethods, ILoginAuditRepository audits,
     ISignInService signIn, TimeProvider timeProvider)

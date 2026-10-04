@@ -10,7 +10,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
 
 /// <summary>La baja que pide la persona: comprueba su estado, los bloqueos y la reautenticación antes de programarla.</summary>
 internal sealed class AccountDeletionRequester(ILoginMethodRepository methods, IUserRepository users,
-    ReauthTicketConsumer tickets, AccountDeletionScheduler scheduler, TimeProvider timeProvider)
+    ReauthTicketVerifier tickets, AccountDeletionScheduler scheduler, TimeProvider timeProvider)
 {
     internal async Task<Result<AccountDeletionResponse>> RequestAsync(Guid userId,
         RequestAccountDeletionRequest request, CancellationToken ct)

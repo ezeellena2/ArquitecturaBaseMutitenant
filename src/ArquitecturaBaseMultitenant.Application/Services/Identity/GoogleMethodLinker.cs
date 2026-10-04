@@ -14,7 +14,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 /// </summary>
 internal sealed class GoogleMethodLinker(LoginMethodGuard guard, IExternalLoginLock loginLock,
     IUserLookup lookup, ILoginMethodRepository methods, LoginCodeIssuer codes,
-    TimeProvider timeProvider, LoginMethodDomainAssigner emailDomains, GoogleMethodLinkFinalizer finalizer)
+    TimeProvider timeProvider, LoginMethodDomainLinker emailDomains, GoogleMethodLinkFinalizer finalizer)
 {
     public async Task<Result> LinkAsync(Guid userId, ExternalLogin login, CancellationToken ct)
     {

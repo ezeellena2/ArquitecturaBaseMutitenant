@@ -22,7 +22,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 /// invalida después del commit. No hay avisos previstos para estas acciones.
 /// </summary>
 internal sealed class PlatformAccountStateService(IUserRepository users, ISignInService sessions,
-    ILoginMethodRepository accounts, PlatformOperatorGuard operators, PlatformAudit audit,
+    ILoginMethodRepository accounts, PlatformOperatorGuard operators, PlatformAuditWriter audit,
     IAccessStatusCache statuses, ICurrentUser currentUser, IUnitOfWork unitOfWork, IRequestValidator validator,
     TimeProvider clock, ILogger<PlatformAccountStateService> logger) : IPlatformAccountStateService
 {
