@@ -218,6 +218,7 @@ Cada servicio de entrada abre la transacción en su método público, y los help
   - Test: asignar y quitar roles en una sola operación deja una entrada, con el antes y el después.
   - Hoy el detalle muestra filas «Empresa» y «un registro» con identificadores internos (lo vio la revisión de capturas del 2026-10-03). Regla: el detalle nunca muestra un identificador interno, y un test lo controla.
 - [ ] **Índices únicos:** `UniqueKeys` con sus nombres, usados en `HasDatabaseName` y en cada `catch`. Test: cada clave existe en el modelo.
+  - Suma la Página pública guardada dos veces a la vez por primera vez: hoy la segunda recibe 500 al chocar con «una página por organización». Pasa a 409 `General.ConcurrencyConflict`, como en `PlatformFeatureService`, con su test (decisión 28).
   - `RoleService` traduce la clave del nombre, y eso arregla **B10**. Test: dos altas simultáneas con el mismo nombre dan una creada y un 409.
 - [ ] **Registro:**
   - `AddApplication` se parte en un `*Registration.cs` por área;
@@ -282,7 +283,12 @@ Cada servicio de entrada abre la transacción en su método público, y los help
   - el diálogo de roles de Empresa: el encabezado sin bajada (Criterio-Diálogos) y el campo vacío con «Sin roles»;
   - «Sumar empresa» como su tablero, y si el tablero choca con un criterio, manda el criterio;
   - las hojas a todo el alto del teléfono (Empresa y Empresas), con el título arriba y no flotando en el medio;
-  - el último administrador de una empresa con un solo texto, el del tablero: «Tiene que quedar al menos un administrador en la empresa.» Hoy hay tres versiones: la del tablero, la de la app y la del back.
+  - el último administrador de una empresa con un solo texto, el del tablero: «Tiene que quedar al menos un administrador en la empresa.». El back ya lo tiene (`95d853f`); la app tiene que usar ese;
+  - la última Dueña según el caso, con un `errors.ts` en la ficha de Usuario para `Tenancy.Member.LastTenantAdmin`. El back no lo cambia, porque el mismo código sale por varios caminos (decisión 29):
+    - si se saca el rol ella misma: «Tiene que quedar al menos un Dueño. Dale el rol a otra persona antes de quitártelo.»;
+    - si se va ella misma de la organización: «…antes de salir de la organización.», como el tablero;
+    - si se lo hace otra persona: el texto del back, «Tiene que quedar al menos un Dueño activo.»;
+  - `scripts/capturar-f7.mjs` y su manifiesto simulan para la Página pública el 409 viejo (`PublicSite.PublicPage.VersionConflict`); pasan a `General.ConcurrencyConflict`, como en Configuración.
 - [ ] **Hecho cuando:**
   - `npm run build` y `npm test` completos pasan;
   - las capturas no cambian, salvo lo que arreglan B3 y B4.
