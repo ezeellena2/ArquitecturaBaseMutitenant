@@ -705,6 +705,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("AccountNotifiedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -761,6 +764,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("CreatedAtUtc", "Id")
+                        .HasFilter("\"AccountNotifiedAtUtc\" IS NULL");
 
                     b.HasIndex("Status", "CreatedAtUtc", "Id");
 

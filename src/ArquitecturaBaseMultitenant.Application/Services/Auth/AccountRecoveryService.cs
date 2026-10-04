@@ -30,6 +30,8 @@ internal sealed class AccountRecoveryService(
     TimeProvider timeProvider,
     ILogger<AccountRecoveryService> logger) : IAccountRecoveryService
 {
+    private const int AccountNoticeBatchSize = 50;
+
     public Task<Result<RequestLoginCodeResponse>> RequestCodeAsync(RequestRecoveryCodeRequest request,
         CancellationToken cancellationToken) =>
         OperationLog.RunAsync<RequestLoginCodeResponse>(logger, timeProvider, "RequestRecoveryCode", async () =>
@@ -84,13 +86,30 @@ internal sealed class AccountRecoveryService(
                     return AccountRecoveryErrors.VerificationRequired;
                 var (type, value) = previous.Value;
                 var userId = await userLookup.FindVerifiedUserIdAsync(type, value, ct);
-                var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
-                recoveries.Add(AccountRecoveryRequest.Submit(code.Id, type, value, newEmail, userId, nowUtc));
+                recoveries.Add(AccountRecoveryRequest.Submit(code.Id, type, value, newEmail, userId,
+                    timeProvider.GetUtcNow().UtcDateTime));
+                // El aviso a la cuenta encontrada sale después, con NotifyAccountsAsync: así el pedido escribe lo
+                // mismo y tarda lo mismo exista o no la cuenta (ADR 0041).
                 await messenger.NotifyReceivedAsync(destination.Value, ct);
-                if (userId is { } found) await messenger.NotifyAccountAsync(found, nowUtc, ct);
                 return Result.Success();
             }, CommitPolicy.OnSuccess, cancellationToken);
         });
+
+    public Task<Result<int>> NotifyAccountsAsync(CancellationToken cancellationToken) =>
+        OperationLog.RunAsync(logger, timeProvider, "NotifyAccountRecoveryAccounts", () =>
+            unitOfWork.ExecuteInTransactionAsync<Result<int>>(async ct =>
+            {
+                var pending = await recoveries.ListAwaitingAccountNoticeAsync(AccountNoticeBatchSize, ct);
+                var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+                foreach (var recovery in pending)
+                {
+                    if (recovery.UserId is { } userId)
+                        await messenger.NotifyAccountAsync(userId, recovery.CreatedAtUtc, ct);
+                    recovery.MarkAccountNotified(nowUtc);
+                }
+
+                return pending.Count;
+            }, CommitPolicy.OnSuccess, cancellationToken));
 
     private Result<(LoginMethodType Type, string Value)> PreviousMethod(SubmitAccountRecoveryRequest request)
     {

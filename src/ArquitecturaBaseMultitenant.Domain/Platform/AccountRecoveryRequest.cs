@@ -60,6 +60,12 @@ public sealed class AccountRecoveryRequest : Entity, IVersioned
     /// <summary>El motivo interno del operador; la persona no lo ve.</summary>
     public string? DecisionReason { get; private set; }
 
+    /// <summary>
+    /// Cuándo se resolvió el aviso a la cuenta encontrada. Lo encola un trabajo aparte, después de la respuesta del
+    /// pedido, para que el pedido haga lo mismo exista o no la cuenta (ADR 0041). Sin cuenta, solo se marca.
+    /// </summary>
+    public DateTime? AccountNotifiedAtUtc { get; private set; }
+
     public uint Version { get; private set; }
 
     public static AccountRecoveryRequest Submit(Guid loginCodeId, LoginMethodType previousMethodType,
@@ -82,6 +88,12 @@ public sealed class AccountRecoveryRequest : Entity, IVersioned
         if (UserId is null) return AccountRecoveryErrors.NoAccount;
         Decide(AccountRecoveryStatus.Approved, operatorId, reason, nowUtc);
         return Result.Success();
+    }
+
+    public void MarkAccountNotified(DateTime nowUtc)
+    {
+        if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("The instant must be UTC.", nameof(nowUtc));
+        AccountNotifiedAtUtc ??= nowUtc;
     }
 
     public Result Reject(Guid operatorId, string reason, DateTime nowUtc)

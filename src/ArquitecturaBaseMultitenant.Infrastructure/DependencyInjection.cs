@@ -95,7 +95,11 @@ public static class DependencyInjection
             services.AddSingleton<IIdempotencyStore>(provider => new IdempotencyStore(
                 runtimeConnection, provider.GetRequiredService<TimeProvider>()));
             services.AddHostedService<IdempotencyCleanupWorker>();
-            if (!environment.IsEnvironment("Testing")) services.AddHostedService<AccountDeletionWorker>();
+            if (!environment.IsEnvironment("Testing"))
+            {
+                services.AddHostedService<AccountDeletionWorker>();
+                services.AddHostedService<AccountRecoveryNoticeWorker>();
+            }
         }
 
         return services;

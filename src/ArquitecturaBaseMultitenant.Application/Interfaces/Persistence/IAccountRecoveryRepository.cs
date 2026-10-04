@@ -12,4 +12,11 @@ public interface IAccountRecoveryRepository
 
     /// <summary>El pedido con seguimiento, para resolverlo dentro de la UoW.</summary>
     Task<AccountRecoveryRequest?> GetForUpdateAsync(Guid id, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Los pedidos más viejos cuyo aviso a la cuenta todavía no se resolvió, con seguimiento y bloqueados para que
+    /// otro trabajo en paralelo no los repita.
+    /// </summary>
+    Task<IReadOnlyList<AccountRecoveryRequest>> ListAwaitingAccountNoticeAsync(int limit,
+        CancellationToken cancellationToken);
 }

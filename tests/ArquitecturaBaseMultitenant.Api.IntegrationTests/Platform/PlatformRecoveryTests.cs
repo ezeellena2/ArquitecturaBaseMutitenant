@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Platform;
+using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +32,8 @@ public sealed class PlatformRecoveryTests(ApiFactory factory)
         var accountOutbox = await OutboxIdsAsync();
         using var anonymous = Client();
         await RecoveryJourney.SubmitAsync(factory, anonymous, newEmail, account.Email.Value, Ct);
+        // El aviso a la cuenta sale fuera de la respuesta del pedido (ADR 0041).
+        await ActivatorUtilities.CreateInstance<AccountRecoveryNoticeWorker>(factory.Services).RunOnceAsync(Ct);
         await using (var scope = factory.Services.CreateAsyncScope())
         {
             // A la cuenta le avisan por sus métodos; a quien hizo el pedido, nada que la delate.

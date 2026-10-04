@@ -23,4 +23,18 @@ internal sealed class AccountRecoveryRepository(ApplicationDbContext context) : 
         context.RequireTransaction();
         return context.AccountRecoveryRequests.SingleOrDefaultAsync(request => request.Id == id, cancellationToken);
     }
+
+    public async Task<IReadOnlyList<AccountRecoveryRequest>> ListAwaitingAccountNoticeAsync(int limit,
+        CancellationToken cancellationToken)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(limit, 1);
+        context.RequireTransaction();
+        return await context.AccountRecoveryRequests.FromSqlInterpolated($"""
+            SELECT *, xmin FROM platform."AccountRecoveryRequests"
+            WHERE "AccountNotifiedAtUtc" IS NULL
+            ORDER BY "CreatedAtUtc", "Id"
+            LIMIT {limit}
+            FOR UPDATE SKIP LOCKED
+            """).ToListAsync(cancellationToken);
+    }
 }

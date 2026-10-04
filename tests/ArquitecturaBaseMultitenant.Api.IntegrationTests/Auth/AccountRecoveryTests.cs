@@ -11,6 +11,7 @@ using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Platform;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
@@ -263,6 +264,68 @@ public sealed class AccountRecoveryTests(ApiFactory factory)
         Assert.Equal("+5491123456789", request.PreviousMethodValue);
         Assert.Equal("Recibimos tu pedido para recuperar tu cuenta",
             Assert.Single(await EmailsToAsync(services, newEmail, before)).Subject);
+    }
+
+    [Fact]
+    public async Task Registering_a_request_writes_the_same_with_or_without_an_account_and_the_account_hears_afterwards()
+    {
+        using var person = Client();
+        var account = await AccountJourney.RegisterAsync(factory, person, Ct);
+        using var anonymous = Client();
+        var forAccount = $"recover-{Guid.NewGuid():N}@example.test";
+        var forNobody = $"recover-{Guid.NewGuid():N}@example.test";
+
+        var withAccount = await SubmitCountingWritesAsync(anonymous, forAccount, account.Email.Value);
+        var withoutAccount = await SubmitCountingWritesAsync(anonymous, forNobody, $"nadie-{Guid.NewGuid():N}@example.test");
+
+        // ADR 0041: el pedido escribe lo mismo exista o no la cuenta (el pedido y el acuse al correo nuevo); el aviso
+        // a la cuenta no se decide ni se encola durante la respuesta.
+        Assert.Equal((Requests: 1, Messages: 1), withAccount);
+        Assert.Equal(withoutAccount, withAccount);
+        var before = await OutboxIdsAsync();
+        await ActivatorUtilities.CreateInstance<AccountRecoveryNoticeWorker>(factory.Services).RunOnceAsync(Ct);
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var warning = Assert.Single(await EmailsToAsync(services, account.Email.Value, before));
+        Assert.Equal("Alguien pidió recuperar tu cuenta", warning.Subject);
+        Assert.DoesNotContain(forAccount, warning.TextBody, StringComparison.OrdinalIgnoreCase);
+        Assert.Empty(await EmailsToAsync(services, forAccount, before));
+        Assert.Empty(await EmailsToAsync(services, forNobody, before));
+        Assert.False(await services.GetRequiredService<ApplicationDbContext>().AccountRecoveryRequests.AnyAsync(
+            request => (request.NewMethodValue == forAccount || request.NewMethodValue == forNobody)
+                && request.AccountNotifiedAtUtc == null, Ct));
+        // Una segunda pasada no repite el aviso.
+        var afterFirstPass = await OutboxIdsAsync();
+        await ActivatorUtilities.CreateInstance<AccountRecoveryNoticeWorker>(factory.Services).RunOnceAsync(Ct);
+        Assert.Empty(await EmailsToAsync(services, account.Email.Value, afterFirstPass));
+    }
+
+    /// <summary>Pide, verifica y registra un pedido; cuenta los pedidos y los mensajes que escribió el registro.</summary>
+    private async Task<(int Requests, int Messages)> SubmitCountingWritesAsync(HttpClient client, string newEmail,
+        string previousEmail)
+    {
+        var nonce = Nonce();
+        using var requested = await AccountJourney.PostAsync(client, "/api/account-recovery/code",
+            new { email = newEmail, nonce }, Ct);
+        Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
+        var code = await PickupCodeReader.ReadAsync(factory.Services, newEmail, Ct);
+        using var verified = await AccountJourney.PostAsync(client, "/api/account-recovery/verify",
+            new { email = newEmail, nonce, code }, Ct);
+        Assert.Equal(HttpStatusCode.NoContent, verified.StatusCode);
+        var (requestsBefore, messagesBefore) = await CountWritesAsync();
+        using var submitted = await AccountJourney.PostAsync(client, "/api/account-recovery",
+            new { email = newEmail, nonce, previousEmail }, Ct);
+        Assert.Equal(HttpStatusCode.Accepted, submitted.StatusCode);
+        var (requestsAfter, messagesAfter) = await CountWritesAsync();
+        return (requestsAfter - requestsBefore, messagesAfter - messagesBefore);
+    }
+
+    private async Task<(int Requests, int Messages)> CountWritesAsync()
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        return (await db.AccountRecoveryRequests.CountAsync(Ct), await db.OutboxMessages.CountAsync(Ct));
     }
 
     private async Task AgeLoginCodesAsync(string email)
