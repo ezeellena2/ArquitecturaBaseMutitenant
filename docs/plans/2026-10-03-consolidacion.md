@@ -183,16 +183,18 @@ Cada servicio de entrada abre la transacción en su método público, y los help
   - `CompanyCreator` y `CompanyMembershipWriter` dejan de recibir `IUnitOfWork`;
   - `CompanyMembershipRoleManager` pierde los métodos que solo reenvían;
   - el control «la empresa existe y está activa» queda una sola vez, adentro de la transacción.
-- [ ] **Configuración, dominios y página pública:**
-  - `OrganizationSettingsService` valida y abre la transacción; `OrganizationSettingsUpdater` se absorbe o deja de recibir `IUnitOfWork`;
-  - `OrganizationDomainRegistrar` y `PublicPageEditor` dejan de recibir `IUnitOfWork`;
-  - `OrganizationDomainRemover` y `OrganizationDomainVerifier` ya se ordenaron en T10 de la Etapa 5: el verificador consulta el DNS fuera de la transacción, y toma el lock y recarga con versión adentro.
+- [x] **Configuración, dominios y página pública:** hecho en `4d4f479` (la transacción) y `709b9e2` (el arreglo). La integración de Configuración, Dominios, Página pública, su moderación y Dominios de Plataforma da 8/8, y arquitectura 142/142 (decisiones 27 y 28).
+  - `OrganizationSettingsService` valida y abre la transacción; `OrganizationSettingsUpdater` se absorbe o deja de recibir `IUnitOfWork`. Se absorbió y se borró;
+  - `OrganizationDomainRegistrar` y `PublicPageEditor` dejan de recibir `IUnitOfWork`. `OrganizationDomainService` y `PublicPageService` abren la transacción;
+  - `OrganizationDomainRemover` y `OrganizationDomainVerifier` ya se ordenaron en T10 de la Etapa 5: el verificador consulta el DNS fuera de la transacción, y toma el lock y recarga con versión adentro;
+  - arreglar la Página pública (lo encontró el front): guardar con una versión vieja respondía 409 `PublicSite.PublicPage.VersionConflict`, y la regla pide `General.ConcurrencyConflict`, que es el que hace salir «Ver lo nuevo». Test `PublicPagesTests.Saving_with_a_stale_version_answers_the_common_concurrency_conflict`: rojo con `PublicSite.PublicPage.VersionConflict` y verde con el código común. El código propio y sus textos se borraron.
 - [ ] **Alta de empresa:**
   - `BusinessSignupService` abre la transacción;
   - `BusinessOrganizationCreator`, `BusinessSignupTransactionRunner` y `BusinessSignupCodeFlow` dejan de recibir `IUnitOfWork`;
   - pasa de 10 clases a 3 o 4, con un solo `OperationLog` por pedido;
   - `TenantProvisioner` se conserva, porque lo usa Plataforma.
-- [ ] **Ingreso:** se borra `SignupVerificationFlow`, y quien lo usaba inyecta directo.
+- [x] **Ingreso:** se borra `SignupVerificationFlow`, y quien lo usaba inyecta directo. Hecho en `fe6fe7d`: `AccountService` inyecta `IPersonalSpaceProvisioner` y `SignupVerificationCore`, y queda con 5 dependencias de negocio. La integración de Registro, Ingreso y Legales da 18/18.
+- [x] **Textos de la última Dueña y del último administrador de una empresa** (pedido junto con este bloque): hecho en `95d853f`. El del administrador de una empresa pasa al texto del tablero; el de la Dueña queda como está (decisión 29). Test: `CompaniesTests` compara el detalle, rojo con el texto viejo y verde con el nuevo.
 - [x] **Invitaciones:** `InvitationAcceptanceCredentials` también solo reenvía; se absorbe. Hecho en `2f6d6ea`: `InvitationAcceptor` inyecta directo lo que reenviaba y queda con 8 dependencias de negocio. El borrado del archivo quedó en `bd0b4f3`, un commit de docs de otra conversación, porque estaba preparado en el índice; en ese commit la solución no compila.
 - [ ] **Plataforma:** los helpers de la Etapa 5 que reciben `IUnitOfWork` hacen el mismo cambio.
 - [ ] **Listas blancas:** en `TransactionBoundaryTests` quedan solo los dos seeds. Con el mismo criterio se revisa la lista de `TenantScopeUsageTests`.
@@ -379,3 +381,14 @@ Bloque 3 del back, primera parte (Usuarios, Empresas e Invitaciones, 2026-10-04)
 26. **Lista blanca:** en `TransactionBoundaryTests` quedan `BusinessOrganizationCreator`, `BusinessSignupCodeFlow`, `BusinessSignupTransactionRunner`, `OrganizationDomainRegistrar`, `OrganizationSettingsUpdater` y `PublicPageEditor`, que son de los otros ítems del bloque 3.
 
 Verificación: `dotnet build` de la solución con 0 advertencias y `dotnet test` completo con Docker **1566/1566** (8m 40s). Durante el trabajo: arquitectura 142/142 (`TransactionBoundaryTests` y `ServiceDependencyCountTests` incluidos) y la integración de Usuarios, Empresas, Invitaciones, Roles, Inicio y Auditoría en verde.
+
+Bloque 3 del back, segunda parte (Configuración, dominios, página pública e Ingreso, 2026-10-04):
+
+27. **Configuración, qué queda afuera de la transacción:** `PublicPageService` interpreta el slug, el logo y el teléfono de contacto antes de abrir la transacción, como `CompanyService` arma la empresa. Son errores de validación y no abren el límite. Por eso el servicio inyecta `IPhoneNumberParser`. Los índices únicos del dominio (`IX_TenantDomains_Domain`) y del slug (`IX_Tenants_Slug`) se traducen en el servicio, que es el que recibe la excepción del commit; sus nombres pasan a `UniqueKeys` en el bloque 4. Dependencias de negocio: `OrganizationSettingsService` 5, `OrganizationDomainService` 4, `PublicPageService` 5 y `PublicPageEditor` 5.
+28. **Página pública, versión vieja:** sin página guardada, la única versión vigente es 0. Otra versión es vieja: lanza `ConcurrencyConflictException` y responde 409 `General.ConcurrencyConflict`, como los servicios de Plataforma que comparan la versión a mano. Con la página guardada, una versión vieja ya respondía el código común; el mismo test lo controla. **Queda abierto:** si dos personas guardan la página por primera vez al mismo tiempo, la segunda choca con el índice único de `PublicPages` (una página por organización) y recibe 500 en vez de 409. No es de este ítem y probarlo pide una carrera. Se arregla como en `PlatformFeatureService`, que traduce ese choque a `ConcurrencyConflictException`.
+29. **Textos de la última Dueña y del último administrador de una empresa:**
+    - `Companies.Membership.LastCompanyAdmin` pasa a «Tiene que quedar al menos un administrador en la empresa.» («The company must keep at least one administrator.»), el texto del tablero de Empresa (lienzo v97, diálogo de roles). Sirve para todos sus caminos: quitarle el rol o quitarla de la empresa en la ficha de Empresa, y cambiarle los roles, desactivarla o quitarla de la organización desde Usuarios. El front va a usar el mismo texto.
+    - `Tenancy.Member.LastTenantAdmin` sigue diciendo «Tiene que quedar al menos un Dueño activo.». El texto del tablero de Usuario («…Dale el rol a otra persona antes de quitártelo.») le habla a quien se saca el rol a sí misma. El mismo código responde también cuando la única Dueña se quita a sí misma de la organización (ahí el tablero dice «…antes de salir de la organización.»), y cuando alguien con `users.manage` que no es Dueña le saca el rol, la desactiva o la quita (al desactivar, el tablero de Usuarios dice «Tiene que quedar al menos un Dueño activo.»). Desactivarse a una misma no llega a este código: antes responde `Tenancy.Member.CannotDisableSelf`. El front sabe si la persona es ella misma y puede elegir el texto de cada camino.
+30. **Lista blanca:** en `TransactionBoundaryTests` quedan `BusinessOrganizationCreator`, `BusinessSignupCodeFlow` y `BusinessSignupTransactionRunner`, que son del alta de empresa.
+
+Verificación (en `95d853f`): `dotnet build` de la solución con 0 advertencias y `dotnet test` completo con Docker **1567/1567** (8m 11s). Durante el trabajo: arquitectura 142/142 (`TransactionBoundaryTests` y `ServiceDependencyCountTests` incluidos), `ResourceParityTests` 6/6 y la integración de Configuración, Dominios, Página pública, Registro, Ingreso, Legales, Empresas y Usuarios en verde.
