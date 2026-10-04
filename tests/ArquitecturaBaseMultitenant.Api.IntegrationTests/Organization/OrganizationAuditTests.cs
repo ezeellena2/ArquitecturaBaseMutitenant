@@ -167,6 +167,27 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Someone_without_a_name_or_an_invitation_appears_with_their_masked_email()
+    {
+        using var client = Client();
+        var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
+        await OrganizationJourney.StageAsync(factory, owner, "Auditoría sin nombre", Ct);
+        await AccountJourney.AuthorizeAsync(client, "business", Ct);
+        var before = await EntryIdsAsync(client);
+
+        // Quien registró la organización no puso su nombre ni tiene invitación; crear una empresa lo suma a ella.
+        await OrganizationJourney.CreateCompanyAsync(client, "Delta S.A.", Ct);
+
+        // Tablero Auditoria-Org: «Agregó a …», con lo que haya: su nombre o su correo, enmascarado.
+        var added = Assert.Single(await NewEntriesAsync(client, before),
+            entry => entry.GetProperty("entityType").GetString() == "CompanyMembership");
+        Assert.Equal("Agregó a ac•••@example.test", added.GetProperty("actionText").GetString());
+        Assert.Equal("ac•••@example.test", added.GetProperty("affectedDisplayName").GetString());
+        Assert.Equal("Delta S.A.", added.GetProperty("whereText").GetString());
+        Assert.Equal(["Roles en la empresa:  → Administrador"], Rows(added));
+    }
+
+    [Fact]
     public async Task Each_detail_row_shows_its_field_by_name_and_its_value_in_the_viewer_language()
     {
         using var client = Client();

@@ -118,6 +118,24 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
                 memberNames[invited.Key] = PersonalDataMask.Email(invited.First().Destination.DisplayValue);
         }
 
+        // Sin nombre ni invitación, por su correo verificado (primero el principal), enmascarado, como lo muestra
+        // Usuarios: por ejemplo, quien registró la organización y todavía no puso su nombre.
+        var unnamedAccounts = members.Where(member => member.UserId.HasValue
+                && string.IsNullOrWhiteSpace(memberNames[member.Id]))
+            .ToDictionary(member => member.Id, member => member.UserId!.Value);
+        if (unnamedAccounts.Count > 0)
+        {
+            var accountIds = unnamedAccounts.Values.Distinct().ToArray();
+            var emails = (await context.LoginMethods.AsNoTracking()
+                    .Where(method => accountIds.Contains(method.UserId) && method.Type == LoginMethodType.Email
+                        && method.VerifiedAtUtc != null)
+                    .OrderByDescending(method => method.IsPrimary).ThenBy(method => method.Id)
+                    .Select(method => new { method.UserId, method.Value }).ToArrayAsync(cancellationToken))
+                .GroupBy(method => method.UserId).ToDictionary(group => group.Key, group => group.First().Value);
+            foreach (var (memberId, accountId) in unnamedAccounts)
+                if (emails.TryGetValue(accountId, out var email)) memberNames[memberId] = PersonalDataMask.Email(email);
+        }
+
         var roleIds = entries.Select(entry => entry.EntityType switch
             {
                 nameof(Role) => entry.EntityId,
