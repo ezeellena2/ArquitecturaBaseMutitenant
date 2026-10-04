@@ -61,6 +61,7 @@ Las pantallas de la Etapa 5 (T19 a T25) van después de esta consolidación, par
   - los códigos de error, permisos y rutas, cada uno en su ficha de `docs/features`;
   - la fila de `capas-y-flujo.md` en AGENTS.md.
   - `arbol.md` y `backend.md` ubican el alta de empresa en `Services/Organizations/`, y el código está en `Services/Auth/`: los docs se llevan al código.
+  - `Persistence/Interceptors/AGENTS.md` no nombra `AccessChangeTrail` ni `RoleAssignmentTrail`.
   - los `AGENTS.md` nombran los sufijos viejos: la raíz y `Services/AGENTS.md` listan cinco (`*Policy`, `*Guard`, `*Issuer`, `*Verifier`, `*Linker`). Pasan a mandar a la lista cerrada de 22 de `capas-y-flujo.md` (decisión 58). `Services/Auth/AGENTS.md` todavía dice `UserCultures`, que ahora es `UserCultureResolver`.
 
   Al usuario va solo lo que cambia el producto.
@@ -381,6 +382,12 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
   - «Todos» a la derecha de «Roles en la empresa» en M-Usuario-Empresa;
   - los datos de las capturas con los CUIT del lienzo, que pasan el dígito verificador: 30-71234567-1, 30-71555444-1 y 30-12345678-1;
   - para las pantallas de Plataforma (Etapa 5): el marco del criterio en sus ocho tableros, y WhatsApp como grupo cerrado de Administración que lleva a Plat-WA-Numero.
+- **Lo que fijó el lienzo v106** (front `3a35235`, aprobado por el usuario). Dibuja todos los estados de las etapas 1 a 6 que la app tenía y el lienzo no. Para la app, en R3:
+  - M-Inicio-Miembro, en «billetera»: cabecera de color, «Hola, …», la organización y «Tus empresas» en filas;
+  - crear y editar empresa en el teléfono, y la hoja de roles de un miembro, son hojas que suben desde abajo, no a pantalla completa. Reemplaza lo que R2b hizo con las hojas a todo el alto;
+  - «Ese correo ya lo usa otra cuenta» no va (ADR 0041): agregar un correo de otra cuenta sigue a «Verificar» igual. Se verifica que la app no lo muestre;
+  - el error genérico al guardar en M-Usuario va en la franja debajo de la barra, con el texto del back;
+  - el relevamiento final captura también los estados nuevos de v106.
 - [ ] **R3 · Lo de cada pantalla:**
   - la segunda línea de las filas (v92) y el ⋮ de «Cómo entrás» (v96);
   - el paginador «1 de 1» y las pestañas de Empresa;
