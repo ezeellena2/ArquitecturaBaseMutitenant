@@ -30,4 +30,5 @@ Ninguna pantalla, respuesta de la API ni mensaje a quien hace el pedido revela s
   - el correo, que ya está programado, se corrige en la consolidación previa a la Etapa 7;
   - el WhatsApp nace así en la Etapa 8.
 - **Lienzo:** Diseño ajusta Cuenta-Agregar y M-Cuenta-Agregar y suma en Mensajes el aviso para quien ya tenía ese correo o número.
-- **Tests:** un caso con el correo libre y otro con el correo de otra cuenta tienen que dar la misma respuesta. En el segundo, el aviso se encola al dueño y no se emite ningún código.
+- **Tests:** un caso con el correo libre y otro con el correo de otra cuenta tienen que dar la misma respuesta. En el segundo, el aviso se encola al dueño y no se manda ningún código.
+- **Precisión del 2026-10-04 (T14):** con un destino ocupado se guarda internamente un código que no se manda y no sirve para nada. Así los límites, los intentos y la espera para reenviar se comportan igual que con un destino libre y no delatan la cuenta.
