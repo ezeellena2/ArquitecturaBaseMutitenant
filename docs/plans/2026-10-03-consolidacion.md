@@ -93,6 +93,11 @@ B4, B6, B8, B10, B11 y B12 se arreglan con su pieza, en los bloques 4 y 5.
 
 - [ ] **1.2 · Configuración › dominio:** mostrar cuántos correos administra el dominio. Quedó esperando los archivos de dominios de Plataforma, ya commiteados en `4bb5c35`. Back con su test y front como el tablero.
 - [ ] **1.3 · Teléfono de la página pública:** revisar la columna `varchar(16)` contra `telefonos.md` y migrarla si hace falta, y pasar `PublicPage.ContactPhone` al value object `PhoneNumber`.
+- [ ] **Recuperar sin delatar por el tiempo** (ADR 0041; lo vio el back de la Etapa 5, decisiones 22 a 26 de su plan):
+  - hoy el aviso a la cuenta suma tiempo solo cuando la cuenta existe;
+  - el pedido tiene que hacer el mismo trabajo en los dos casos: el aviso se decide y se encola fuera de la respuesta, o las dos ramas escriben lo mismo;
+  - test: con una cuenta que existe y con una que no, el pedido hace las mismas escrituras.
+- [ ] **Aprobar una recuperación avisa a todos los métodos** (ADR 0033): el método que se suma al aprobar dispara el aviso de método agregado en todos los métodos de la cuenta, como cualquier método nuevo. Hoy solo se avisa al correo nuevo. Va con su test.
 - [ ] **D5 · Única Dueña y baja** ([ADR 0035](../decisions/0035-baja-de-cuenta.md), decisión del usuario del 2026-10-03):
   - bloquean la baja todas las organizaciones no cerradas, incluidas las suspendidas;
   - la baja que pide la persona deja de mirar solo las activas (`UserTenantAccessReader`) y usa la misma regla que la baja por Plataforma;

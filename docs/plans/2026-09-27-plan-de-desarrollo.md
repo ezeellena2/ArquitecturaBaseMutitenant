@@ -416,6 +416,12 @@ Además, `navigation/personal.ts` queda listo para sumar módulos B2C. El `Perso
 **Objetivo:** que WhatsApp nazca como módulo y un proyecto sin WhatsApp lo quite borrando carpetas y una línea. Es el mismo diseño que la Etapa 6 de ArquitecturaBase (backend.md §15).
 
 **Back:**
+0. **Primer paso, antes de sumar teléfonos:** la consolidación de identidad de la [revisión de calidad](../reviews/2026-10-03-calidad-de-diseno.md) («Primer paso de la Etapa 8»):
+   - `AccountRegistrar` con `LegalConsentRecorder`;
+   - `LoginCodeAttemptVerifier`;
+   - `LoginMethodLinker`. Toma también el lock de Google al sumar un método: hoy no lo toman Mi cuenta, «Invitar operador» ni la aprobación de una recuperación (decisiones 22 a 26 del back de la Etapa 5);
+   - `AccountLifecycle` en `Domain/Users`;
+   - `enum LoginMethodChange`.
 1. Las carpetas `Domain/WhatsApp` y `Modules/WhatsApp` en Application, Infrastructure y Api, con un `AddWhatsAppModule()` por capa llamado desde `Program.cs`. Las configuraciones EF del módulo las aplica el propio módulo.
 2. Adaptadores de los puertos del núcleo: `WhatsAppLoginCodeChannel`, `WhatsAppInvitationChannel`, `WhatsAppAccountNoticeChannel` (los avisos de la cuenta a los métodos `Phone`, con las plantillas `aviso_metodo_ingreso`, `revisa_metodos_ingreso`, `baja_cuenta_pedida`, `baja_cuenta_cancelada` y `cuenta_eliminada`; "Exportación lista" sigue solo por correo) y `WhatsAppPhoneLinkObserver`. También nacen acá `LoginLinkService`, `LoginLinkIssuer`, su controller, contratos y tests del enlace de un solo uso del bot.
 3. Cliente de Cloud API y opciones validadas, con **las mismas claves `WhatsApp:*` que ArquitecturaBase** y los valores no secretos copiados de allá (`configuracion.md` §3), salvo las plantillas: `WhatsApp:Templates:Invitation` pasa a `invitacion_organizacion` (reemplaza a `invitacion_acceso`) y cada plantilla nueva de [`whatsapp-plantillas.md`](../operations/whatsapp-plantillas.md) suma su clave `WhatsApp:Templates:<Nombre>`. Envío por el outbox (canal `"whatsapp"`, cifrado), con esas plantillas, creadas en Meta al empezar la etapa (la aprobación tarda). Registro B2C por WhatsApp.
