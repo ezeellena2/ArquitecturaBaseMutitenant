@@ -67,7 +67,7 @@ Las pantallas de la Etapa 5 (T19 a T25) van después de esta consolidación, par
 
 ### 1. Bugs que se arreglan por su cuenta (test rojo → arreglo → verde)
 
-- [ ] **B1 · Buscar con texto entre los miembros de una empresa da 500.**
+- [x] **B1 · Buscar con texto entre los miembros de una empresa da 500.** Hecho en `cfbf1bd`; test `CompaniesTests.Searching_company_members_by_text_finds_members_and_pending_invitations` (rojo con «invalid escape string»).
   - Test: integración de `GET /api/companies/{id}/members/paged?search=`, con y sin invitaciones pendientes.
   - Arreglo: un solo carácter en el `ESCAPE` de `CompanyMembershipReader`. El bloque 4 después lo reemplaza por `ApplySearch`.
 - [ ] **B2 · El alta de un rol se traba con 422 después de un error.**
@@ -76,14 +76,14 @@ Las pantallas de la Etapa 5 (T19 a T25) van después de esta consolidación, par
 - [ ] **B3 · A los miembros de Empresa les falta la columna «Estado».**
   - Test de encabezados: Miembro, Roles en la empresa, Estado y Acciones, como el tablero Empresa.
   - Arreglo: la factory de columnas recibe la de acciones, y se borra la columna de relleno de Empresas.
-- [ ] **B5 · Página pública muestra mensajes de validación equivocados.**
+- [x] **B5 · Página pública muestra mensajes de validación equivocados.** Hecho en `100d713`; test `PublicPageValidationTests` (Application.UnitTests).
   - Test del validador: cada regla tiene su texto; el slug y el logo ya no dicen «La página debe estar entre…», y el nombre usa `ValidationRules.OrganizationName()`.
   - Arreglo: textos propios en `Validation.resx` y `.en.resx`.
-- [ ] **B7 + D2 · Un rol con personas asignadas no puede cambiar de alcance.**
+- [ ] **B7 + D2 · Un rol con personas asignadas no puede cambiar de alcance.** Back hecho en `600405a`: 409 `Roles.Role.ScopeChangeHasUsers` con `userCount`, textos es/en y `roles.md`; tests `RoleTests.The_scope_changes_when_it_applies_somewhere_else_but_not_when_only_the_name_changes`, `RoleServiceWriteTests.A_role_with_assigned_users_cannot_change_where_it_applies` y `…without_assigned_users_changes_where_it_applies`, `RolesTests.A_role_with_assigned_people_cannot_change_where_it_applies_but_one_without_people_can`. **Falta el front.**
   - Tests de dominio o servicio, y de integración: si el rol tiene asignaciones, cambiar el alcance da un error propio con el conteo; si no tiene, el alcance cambia.
   - Front: el error aparece al guardar, igual que al borrar.
   - Textos en es y en; actualizar `docs/features/roles.md`.
-- [ ] **B9 · Configuración audita dos veces cada guardado.**
+- [x] **B9 · Configuración audita dos veces cada guardado.** Hecho en `9b6cb5c`; tests `OrganizationSettingsTests.A_save_leaves_a_single_audit_entry_whose_diff_has_only_the_edited_field` y `AuditTrailTests.An_entity_marked_as_updated_records_only_the_properties_that_changed`. Ver la decisión 1.
   - Test: un guardado deja una sola entrada, y si se edita un campo, el diff tiene solo ese campo.
   - Arreglo: sacar la entrada manual que sobra y hacer que el interceptor omita las propiedades que no cambiaron.
 
@@ -91,34 +91,35 @@ B4, B6, B8, B10, B11 y B12 se arreglan con su pieza, en los bloques 4 y 5.
 
 ### 1b. Pendientes del cierre de los paquetes 1 y 3
 
-- [ ] **1.2 · Configuración › dominio:** mostrar cuántos correos administra el dominio. Quedó esperando los archivos de dominios de Plataforma, ya commiteados en `4bb5c35`. Back con su test y front como el tablero.
-- [ ] **1.3 · Teléfono de la página pública:** revisar la columna `varchar(16)` contra `telefonos.md` y migrarla si hace falta, y pasar `PublicPage.ContactPhone` al value object `PhoneNumber`.
-- [ ] **Recuperar sin delatar por el tiempo** (ADR 0041; lo vio el back de la Etapa 5, decisiones 22 a 26 de su plan):
+- [ ] **1.2 · Configuración › dominio:** mostrar cuántos correos administra el dominio. Quedó esperando los archivos de dominios de Plataforma, ya commiteados en `4bb5c35`. Back con su test y front como el tablero. Back hecho en `7cb8f75`: `managedEmailCount` en cada dominio (también en Plataforma); test `OrganizationDomainsTests.Owner_verifies_removes_and_keeps_existing_login_method_associations`. **Falta el front.**
+- [x] **1.3 · Teléfono de la página pública:** revisar la columna `varchar(16)` contra `telefonos.md` y migrarla si hace falta, y pasar `PublicPage.ContactPhone` al value object `PhoneNumber`. Hecho en `fe74254`, con la migración `PublicPageContactPhoneE164` (varchar(100) → varchar(16)); test `DbContextModelTests.Public_page_contact_phone_is_stored_as_e164_like_every_phone_column`. Ver la decisión 3.
+- [x] **Recuperar sin delatar por el tiempo** (ADR 0041; lo vio el back de la Etapa 5, decisiones 22 a 26 de su plan). Hecho en `e433c2c` y `533215d`, con la migración `AccountRecoveryDeferredNotice`; test `AccountRecoveryTests.Registering_a_request_writes_the_same_with_or_without_an_account_and_the_account_hears_afterwards`. Ver la decisión 4.
   - hoy el aviso a la cuenta suma tiempo solo cuando la cuenta existe;
   - el pedido tiene que hacer el mismo trabajo en los dos casos: el aviso se decide y se encola fuera de la respuesta, o las dos ramas escriben lo mismo;
   - test: con una cuenta que existe y con una que no, el pedido hace las mismas escrituras.
-- [ ] **Aprobar una recuperación avisa a todos los métodos** (ADR 0033): el método que se suma al aprobar dispara el aviso de método agregado en todos los métodos de la cuenta, como cualquier método nuevo. Hoy solo se avisa al correo nuevo. Va con su test.
-- [ ] **D5 · Única Dueña y baja** ([ADR 0035](../decisions/0035-baja-de-cuenta.md), decisión del usuario del 2026-10-03):
+- [x] **Aprobar una recuperación avisa a todos los métodos** (ADR 0033): el método que se suma al aprobar dispara el aviso de método agregado en todos los métodos de la cuenta, como cualquier método nuevo. Hoy solo se avisa al correo nuevo. Va con su test. Hecho en `8d4e1e5`; test `PlatformRecoveryTests.Approving_makes_the_new_email_the_primary_method_and_the_person_enters_with_it`.
+- [x] **Aviso «Alguien pidió recuperar tu cuenta» con los textos de v89** (agregado del 2026-10-04, lienzo v89 aprobado): saludo, fecha y hora del pedido, quién revisa, la nota con el correo de soporte y sin botón ni el método nuevo; sale la nota alternativa `RecoveryRequested.Note`. Hecho en `f89686c`; test `EmailTemplateTests.Recovery_request_notice_uses_the_approved_copy_without_button_or_new_method`. La plantilla de WhatsApp es de la Etapa 8.
+- [x] **D5 · Única Dueña y baja** ([ADR 0035](../decisions/0035-baja-de-cuenta.md), decisión del usuario del 2026-10-03). Hecho en `3e66117`; tests `AccountDeletionTests.The_sole_owner_of_a_suspended_organization_cannot_request_deletion_either` y `UserTenantAccessReaderTests.Tenant_admin_reader_counts_active_owners_in_every_organization_that_is_not_closed`. Ver la decisión 9.
   - bloquean la baja todas las organizaciones no cerradas, incluidas las suspendidas;
   - la baja que pide la persona deja de mirar solo las activas (`UserTenantAccessReader`) y usa la misma regla que la baja por Plataforma;
   - test con una organización suspendida;
   - actualizar `roles.md` e `identidad.md`.
-- [ ] **D6 · Tipo de identificación fiscal según el país** (decisión del usuario del 2026-10-03):
+- [ ] **D6 · Tipo de identificación fiscal según el país** (decisión del usuario del 2026-10-03). Back hecho en `c1c15cd`: el contrato deja `taxIdType`; tests `CompanyServiceTests.The_tax_id_type_is_the_default_for_the_organization_country`, `…In_a_country_without_a_company_tax_id_type…`, `…Editing_keeps_the_saved_type…` y `CompaniesTests.The_company_tax_id_takes_its_type_from_the_organization_country` (Argentina y Estados Unidos). Ver la decisión 10. **Falta el front.**
   - la ficha de Empresa sigue pidiendo solo el número;
   - el tipo sale del tipo por defecto del país de la organización, según los datos de referencia: CUIT en Argentina;
   - `identificacion-fiscal.md` lo dice;
   - tests con Argentina y con otro país.
-- [ ] **D7 · Auditoría y ex miembros** (decisión del usuario del 2026-10-03):
+- [x] **D7 · Auditoría y ex miembros** (decisión del usuario del 2026-10-03). Hecho en `f24df16`; test `OrganizationAuditTests.Someone_who_is_no_longer_a_member_appears_only_with_their_name`.
   - si quien actuó ya no es miembro de la organización, se muestra solo su nombre, sin el correo (`OrganizationAuditReader`);
   - test con un ex miembro.
-- [ ] **D4 · Mi cuenta: agregar un correo sin revelar si es de otra cuenta** ([ADR 0041](../decisions/0041-no-revelar-cuentas.md)).
+- [ ] **D4 · Mi cuenta: agregar un correo sin revelar si es de otra cuenta** ([ADR 0041](../decisions/0041-no-revelar-cuentas.md)). Back hecho en `8cb4830` y `b05caca`; tests `AccountMethodsHttpTests.Adding_an_email_of_another_account_answers_like_a_free_one_and_only_its_owner_hears` y `…An_account_can_still_add_the_email_of_its_own_google_sign_in`. Ver la decisión 8: los pasos siguientes (verificar, reenviar y la lista) todavía delatan y esperan una decisión. **Falta el front.**
   - Si el correo es de otra cuenta, la respuesta y la pantalla son las mismas que con uno libre. No se manda código, y a su dueño le llega el aviso «Método de ingreso: ya es de una cuenta» (lienzo v83, Mensajes):
     - asunto y título: «Ya tenés una cuenta con este correo»;
     - texto: «Alguien quiso agregar este correo para entrar a otra cuenta de ArquitecturaBase. Este correo ya es de una cuenta, así que no lo agregamos y no mandamos ningún código. / Si fuiste vos, entrá con este correo: ya tenés una cuenta.»;
     - nota: «Si no fuiste vos, ignorá este mensaje.».
   - Sale de esta respuesta el error `Identity.LoginMethod.AlreadyUsed` («Este correo ya está asociado a una cuenta.», en `Errors.resx`). El de Google (`Identity.Google.AlreadyUsed`) se conserva, porque vincular Google queda fuera de la 0041.
   - Tests: el correo libre y el de otra cuenta dan la misma respuesta; en el segundo, el aviso se encola y no se emite ningún código.
-- [ ] **D3 · Nombres de rol repetidos, como el tablero Roles** (decisión del usuario del 2026-10-03):
+- [x] **D3 · Nombres de rol repetidos, como el tablero Roles** (decisión del usuario del 2026-10-03). Hecho en `2956276`, con la migración `RoleNamePerCompany`; tests `RolesTests.A_role_name_repeats_across_companies_but_not_within_a_company_or_the_whole_organization`, `DbContextModelTests.E4_roles_are_private_versioned_and_assignments_have_tenant_scoped_keys` y `RolePersistenceTests`.
   - un rol de una empresa puede llamarse igual que el de otra empresa;
   - los roles de toda la organización siguen siendo únicos entre sí.
 
@@ -135,14 +136,14 @@ B4, B6, B8, B10, B11 y B12 se arreglan con su pieza, en los bloques 4 y 5.
   - **back:** `RoleService`, `RoleReader` y `CompanyReader`. Va en los `AGENTS.md` de `Services/PublicSite`, `Services/OrganizationSettings` y `Persistence/Readers`, y en `paginado-y-busqueda.md`;
   - **front:** `personal/account` para formularios y diálogos, y `UsersPage` para listados, hasta que el bloque 6 deje Roles como referencia.
 - [ ] Crear el `AGENTS.md` de `Services/OrganizationUsers`.
-- [ ] Agregar un test que exija un mensaje propio en cada regla de validación: recorre `CreateDescriptor()` de cada validador del ensamblado.
-- [ ] Borrar `Stage3aInventoryTests`.
+- [x] Agregar un test que exija un mensaje propio en cada regla de validación: recorre `CreateDescriptor()` de cada validador del ensamblado. Hecho en `74ee2fc`: `ValidationMessageTests`, con caso de control; encontró el filtro de estado de Empresas.
+- [x] Borrar `Stage3aInventoryTests`. Hecho en `3dafde9`.
 - [ ] **Capturas de la 3b contra el lienzo vigente:** el script todavía compara contra la copia v35 e inyecta estados internos. Hay que pasarlo al lienzo vigente y sumar el test del Paquete 6 de la alineación: falla si una etapa nueva apunta a otra copia del lienzo.
-- [ ] **Salida del Api** (enmienda de la ADR 0002): lo que devuelve un controller es un `*Response` de Application o un `*HttpResponse` de `Api/Contracts`. Renombrar los tres `*Response` del Api que no siguen el sufijo, corregir `Api/Contracts/AGENTS.md` y sumar un test de salida junto a `ControllerInputContractTests`.
+- [x] **Salida del Api** (enmienda de la ADR 0002): lo que devuelve un controller es un `*Response` de Application o un `*HttpResponse` de `Api/Contracts`. Renombrar los tres `*Response` del Api que no siguen el sufijo, corregir `Api/Contracts/AGENTS.md` y sumar un test de salida junto a `ControllerInputContractTests`. Hecho en `f47dcd0`, con `ControllerOutputContractTests`; ver la decisión 12. Falta regenerar los contratos del front.
 - [ ] **Accesibilidad** (ADR 0029):
   - el «Copiá de» de `accesibilidad.md` apunta a `UsersPage.test.tsx`, que corre axe;
   - un chequeo en el arnés del front exige que todo `pages/*Page.test.tsx` corra axe.
-- [ ] `OrganizationUsersTests.InvitationEmailAsync`: guardar los ids del outbox antes de invitar, como hace `InvitationsTests`, en lugar del try/catch que saltea los mensajes que no se pueden descifrar.
+- [x] `OrganizationUsersTests.InvitationEmailAsync`: guardar los ids del outbox antes de invitar, como hace `InvitationsTests`, en lugar del try/catch que saltea los mensajes que no se pueden descifrar. Hecho en `2cd3893`.
 
 ### 3. Back: la transacción vuelve al servicio, sin clases que solo reenvían
 
@@ -275,4 +276,21 @@ Cada servicio de entrada abre la transacción en su método público, y los help
 
 ## Decisiones tomadas
 
-Se completa durante el trabajo.
+Primera tanda del back (bloques 1, 1b y 2, 2026-10-04):
+
+1. **B9:** el diff de una modificación lleva solo las propiedades cuyo valor cambió (con el comparador de EF) y no repite las marcas de quién y cuándo (`CreatedAtUtc`, `CreatedBy`, `ModifiedAtUtc`, `ModifiedBy`), que ya están en la entrada; sin eso, el diff nunca tendría «solo ese campo». El nombre de la organización vive en `platform.Tenants`, que es global y no lo audita el interceptor: la entrada manual que se sacó lo guardaba sin antes y después, y el detalle no lo mostraba. Un cambio solo de nombre deja la entrada de Configuración sin filas.
+2. **1.2:** `managedEmailCount` cuenta los métodos de correo verificados de ese dominio con `ManagedByTenantId` de la organización, en la misma consulta de `TenantDomainReader`, que entra en la lista cerrada de `IdentityStorageAccessTests`. Plataforma recibe el mismo dato.
+3. **1.3:** `PhoneNumber` se mapea con `PhoneNumberConvention`, como `Email`: sin una convención, EF tomaba el value object como entidad.
+4. **Recuperar sin delatar por el tiempo:** el aviso a la cuenta lo encola `AccountRecoveryNoticeWorker` cada 30 segundos con `AccountRecoveryNoticeService`, que toma los pedidos con `AccountNotifiedAtUtc` vacío (`FOR UPDATE SKIP LOCKED`, índice parcial) y los marca, con cuenta o sin ella. Es un servicio aparte para que su categoría de logs quede en Warning, como el outbox, sin silenciar los de «Recuperar mi cuenta». La migración marca como avisados los pedidos anteriores. Marcar cambia el `xmin` del pedido: si un operador lo abrió antes, aprobar da 409 y hay que recargar.
+5. **Textos de v89:** si la configuración de la plataforma todavía no tiene correo de soporte (recién instalada), el aviso sale sin nota en vez de fallar.
+6. **Aprobar una recuperación:** «Agregaste un correo a tu cuenta» llega a todos los métodos verificados, el nuevo incluido, así que el correo nuevo recibe ese aviso y «Recuperaste tu cuenta». Sale por `PlatformRecoveryNotifier`, para que el servicio de decisión no pase de 8 dependencias.
+7. **D3:** `UniqueKeys` nace en `Application/Interfaces/Persistence` con `RoleName`; traducir la violación de ese índice en `RoleService` es B10, del bloque 4. Con el índice del plan, un rol de una empresa puede llamarse igual que uno que vale en cada empresa, y los dos aparecen en esa empresa; el bloque 6 deja de crear roles de «Cada empresa» desde el editor.
+8. **D4:** un correo verificado de otra cuenta (un método de correo o el contacto de Google) responde 202 con un `methodId` nuevo y la misma espera; el código se guarda para los límites y no se manda; el aviso al dueño lo encola `AccountNoticeIssuer.EnqueueToOwnerAsync`, que ahora usa también Recuperar. Un correo ya verificado en la misma cuenta responde igual y el aviso le llega a ella (antes era el error; un texto propio para ese caso sería una decisión de producto). El contacto del propio Google se sigue pudiendo sumar como correo (`b05caca`). Volver a agregar un correo propio sin verificar es pedir otro código. **Queda abierto, porque cambia lo que ve la persona:** los pasos siguientes todavía delatan, porque ese `methodId` no existe (verificar y reenviar dan 404) y la lista no muestra el correo pendiente. Cerrarlo pide decidir cómo se guarda un pendiente que no puede chocar con el índice único de `LoginMethods`.
+9. **D5:** la regla queda en una sola pieza, `LastTenantAdminGuard` (organizaciones no cerradas y otra Dueña con cuenta y membresía activas); se borran `PlatformSoleOwnerGuard`, `ListActiveTenantIdsForOwnerAsync`, `CountActiveOwnersAsync` y `AccountDeletionPolicy.CheckLastTenantAdmin`.
+10. **D6:** el país de la organización es la región de su «Idioma y región» (`TenantSettings.DefaultCulture`), como ya lo usa `PersonalSpaceProvisioner`. El tipo por defecto es el primer tipo habilitado del país que aplica a empresas, por `SortOrder` y después por código. Si el número no cambió, se conserva el tipo guardado. Un país sin tipo para empresas no admite número (`TaxIds.TaxId.Invalid`).
+11. **D7:** es miembro quien tiene la membresía activa o deshabilitada; con la membresía quitada (o solo invitada), se muestra solo el nombre.
+12. **Salida del Api:** además de los tres renombres, `GoogleSignupAntiforgeryResponse` pasa a `*HttpResponse` porque es de protocolo. Del lado de Application el test acepta cualquier modelo de `Application.Models`: cinco salidas no terminan en `Response` (`LegalDocumentRow`, `PendingDeletionState` y los tres `Platform*FilterCounts`) y renombrarlas cambiaría esquemas que ya usa el front.
+
+**Hallazgos sin corregir:**
+- `OrganizationUserAdministratorGuard` protege a la última Dueña con `ILastTenantAdminGuard.CheckCanLeaveAsync`, que mira todas las organizaciones de la cuenta: quitar el rol de Dueña en una organización falla si esa cuenta es la única Dueña de otra. Viene de antes; con D5 también cuentan las suspendidas. Va con Usuarios en el bloque 3.
+- `HarnessTests.Closed_stage_verification_tests_and_tools_exist` falla solo por docs del front (`errores.md`, `formularios.md`, `paginado-y-listados.md` y `responsive.md` nombran tests sin `(E#)`), que está cambiando otra conversación. Las fichas del back quedan sin hallazgos.
