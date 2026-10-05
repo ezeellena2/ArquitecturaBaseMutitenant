@@ -454,6 +454,12 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
     - la pantalla de Auditoría con el contrato nuevo, `organization-audit-contract.test.ts` en verde y los datos de las capturas regenerados;
     - el correo del perfil activo en tu menú y «10 correos administrados» en Configuración;
     - las cuatro líneas de docs de v93.
+    - **la vista previa de la Página pública** (lienzo v107, Tweak «Borrador: vista previa» de Pagina-Org y M-Pagina-Org):
+      - en la compu, el diálogo «Vista previa» de 640, con la tarjeta de Pagina-Publica tal cual sobre su fondo (logo, nombre, descripción, los cuatro datos e «Ingresá para continuar» sin acción) y «Cerrar» primario;
+      - en el teléfono, la hoja desde abajo con la tarjeta de M-Pagina-Publica y «Cerrar»;
+      - abre desde «Vista previa» de la banda cuando la página no está publicada;
+      - la tarjeta es una pieza común: la reusa la Etapa 7 para la página del subdominio (T14 de su plan);
+    - la flecha para achicar el menú en el borde del último panel: Administración si está abierta, si no el menú (v107). Se verifica en Personal y en Organización.
   - **R3e · Piezas comunes que faltan** (las encontró R3d):
     - la franja de error en el teléfono, en 14,5 con 12/14 y radio 12, también en las páginas públicas, como dibujan M-Ingreso, M-Registro, M-Registro-Empresa y M-Invitacion (v104). `formularios.md` todavía dice 13 y se corrige;
     - `FormError` con tono de información, para «Tu sesión venció»;
