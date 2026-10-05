@@ -82,7 +82,7 @@ Las pantallas de la Etapa 5 (T19 a T25) van después de esta consolidación, par
 - [x] **B5 · Página pública muestra mensajes de validación equivocados.** Hecho en `100d713`; test `PublicPageValidationTests` (Application.UnitTests).
   - Test del validador: cada regla tiene su texto; el slug y el logo ya no dicen «La página debe estar entre…», y el nombre usa `ValidationRules.OrganizationName()`.
   - Arreglo: textos propios en `Validation.resx` y `.en.resx`.
-- [ ] **B7 + D2 · Un rol con personas asignadas no puede cambiar de alcance.** Back hecho en `600405a`: 409 `Roles.Role.ScopeChangeHasUsers` con `userCount`, textos es/en y `roles.md`; tests `RoleTests.The_scope_changes_when_it_applies_somewhere_else_but_not_when_only_the_name_changes`, `RoleServiceWriteTests.A_role_with_assigned_users_cannot_change_where_it_applies` y `…without_assigned_users_changes_where_it_applies`, `RolesTests.A_role_with_assigned_people_cannot_change_where_it_applies_but_one_without_people_can`. **Falta el front.**
+- [x] **B7 + D2 · Un rol con personas asignadas no puede cambiar de alcance.** Front en `20ddae0`: el 409 sale en la franja con el texto del back y lo escrito no se pierde. Back hecho en `600405a`: 409 `Roles.Role.ScopeChangeHasUsers` con `userCount`, textos es/en y `roles.md`; tests `RoleTests.The_scope_changes_when_it_applies_somewhere_else_but_not_when_only_the_name_changes`, `RoleServiceWriteTests.A_role_with_assigned_users_cannot_change_where_it_applies` y `…without_assigned_users_changes_where_it_applies`, `RolesTests.A_role_with_assigned_people_cannot_change_where_it_applies_but_one_without_people_can`. **Falta el front.**
   - Tests de dominio o servicio, y de integración: si el rol tiene asignaciones, cambiar el alcance da un error propio con el conteo; si no tiene, el alcance cambia.
   - Front: el error aparece al guardar, igual que al borrar.
   - Textos en es y en; actualizar `docs/features/roles.md`.
@@ -615,12 +615,22 @@ Lo que dejaron las tandas 6a, 6b y 6c, y lo que el usuario decide con Diseño en
 ### 6f. Front: las piezas que dejó el relevamiento final (tanda 6d-5)
 
 La puerta pasó (back `3d8af5e`, front `3cad8b6`; informe en [2026-10-05-consolidacion.md](../reviews/2026-10-05-consolidacion.md)). Su relevamiento (292 capturas contra v107) muestra diferencias que salen casi todas de cuatro piezas comunes, más unas pocas puntuales:
-- [ ] la marca «ArquitecturaBase» más apretada en `AuthLayout` (sola mueve 54 capturas);
-- [ ] los íconos 2 a 4 px más grandes;
-- [ ] los espacios del teléfono: la bajada del encabezado y entre campos;
-- [ ] las sombras de los diálogos;
-- [ ] «Último cambio» cortado en el Inicio, Mi cuenta sin el módulo de WhatsApp («Agregar correo»), el correo tapado en «Te mandamos un código a…», «Verificado» y Google en los métodos, la ⓘ de la página despublicada en el teléfono y la cabecera pública del teléfono;
-- [ ] B7 + D2 en el front: el test propio del 409 al cambiar dónde vale un rol con personas.
+- [x] la marca «ArquitecturaBase» más apretada en `AuthLayout` (sola mueve 54 capturas; front `7feb533`);
+- [x] los íconos 2 a 4 px más grandes (`05f7ec8`, con `IconDefaults`);
+- [x] los espacios del teléfono: la bajada del encabezado y entre campos (`ea4e8be` y `a6353f5`);
+- [x] las sombras de los diálogos (`45163aa`, con `--sombra-dialogo` y `--sombra-menu`);
+- [x] «Último cambio» cortado en el Inicio, Mi cuenta sin el módulo de WhatsApp («Agregar correo»), el correo tapado en «Te mandamos un código a…», «Verificado» y Google en los métodos, la ⓘ de la página despublicada en el teléfono y la cabecera pública del teléfono;
+- [x] B7 + D2 en el front: el test propio del 409 al cambiar dónde vale un rol con personas (`20ddae0`). Con 6d-5 coinciden 97 de 292 capturas contra v108 (antes, 18); 1225 tests, lint y build.
+- [ ] **6d-6, las últimas piezas comunes:**
+  - de los diálogos: el cuerpo, la ✕ y el encabezado (N6);
+  - la banda del título (N7) y el botón de la caja (N8);
+  - los ⋮ y las flechitas del teléfono (N9);
+  - el «+» flotante (N10), los separadores (N11) y las cajas con sombra (N12);
+  - las pestañas de Empresa en el teléfono (N22);
+  - la cabecera pública de la compu;
+  - el interruptor trabado que abre su aviso (Criterio · Avisos);
+  - de v108: la confirmación de revocar («El enlace deja de funcionar.»), «Venció …» en Usuarios de la compu y «Revocar invitación» con ✕;
+  - según decida el usuario, los desplegables debajo del campo y de su ancho.
 
 ### 7. Puerta
 
