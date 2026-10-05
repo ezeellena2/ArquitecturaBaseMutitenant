@@ -1,1 +1,1 @@
-Reglas puras de invitación: vigencia, uso único y bootstrap. Leé [tests](../../../docs/rules/tests.md). Copiá de `../Authentication/LoginCodeTests.cs`.
+Reglas puras de invitación: vigencia, uso único y bootstrap. Antes de tocar esto, leé `docs/features/identidad.md` (3c · Invitaciones). Leé [tests](../../../docs/rules/tests.md). Copiá de `../Authentication/LoginCodeTests.cs`.

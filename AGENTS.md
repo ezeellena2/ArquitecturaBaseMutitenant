@@ -6,7 +6,7 @@ La arquitectura canónica está en dos documentos:
 - [`docs/architecture/backend.md`](docs/architecture/backend.md): capas, patrones y carpetas;
 - [`docs/architecture/multitenancy.md`](docs/architecture/multitenancy.md): organizaciones, empresas y aislamiento.
 
-Las áreas de referencia tienen una ficha funcional: [Identidad e ingreso](docs/features/identidad.md) y [Roles y permisos](docs/features/roles.md). Leé la ficha del área antes de cambiar su conducta o sus límites.
+Cada área tiene su ficha funcional en `docs/features/`, como [Identidad e ingreso](docs/features/identidad.md). El área de referencia para copiar código es Roles ([Roles y permisos](docs/features/roles.md)). Leé la ficha del área antes de cambiar su conducta o sus límites.
 
 Las decisiones están en [`docs/decisions/README.md`](docs/decisions/README.md) y el plan en [`docs/plans/2026-09-27-plan-de-desarrollo.md`](docs/plans/2026-09-27-plan-de-desarrollo.md).
 
@@ -35,7 +35,8 @@ Las decisiones están en [`docs/decisions/README.md`](docs/decisions/README.md) 
 | tocar WhatsApp u otro módulo | [modulos](docs/rules/modulos.md); un mensaje nuevo por WhatsApp: [plantillas](docs/operations/whatsapp-plantillas.md) |
 | configurar Google, Gmail o WhatsApp, o cargar secretos | [configuracion](docs/operations/configuracion.md) (nunca un secreto en el repo) |
 | escribir tests | [tests](docs/rules/tests.md) |
-| agregar un área completa | `docs/guides/agregar-un-area.md` (nace en la Etapa 4) |
+| crear un servicio, un helper, un puerto o un controller | [capas-y-flujo](docs/rules/capas-y-flujo.md) (la lista cerrada de sufijos de los helpers) |
+| agregar un área completa | [agregar-un-area](docs/guides/agregar-un-area.md) |
 | correr o crear un arnés ejecutable (realinear docs, programar una rutina) | [scripts/arneses/README.md](scripts/arneses/README.md), [agregar-un-arnes](docs/guides/agregar-un-arnes.md) |
 
 El inventario de todos los estándares transversales (los definidos y los propuestos) está en [`docs/architecture/estandares.md`](docs/architecture/estandares.md). Si una regla no está escrita: **copiá cómo lo resuelve ArquitecturaBase** (`../ArquitecturaBase`, `../ArquitecturaBaseFront`); si tampoco está ahí, **decidí vos lo más simple y coherente con estos docs, anotalo en la sección «Decisiones tomadas» del informe de la etapa y seguí**. Frená y preguntá **solo** si la decisión cambia el producto (qué ve o puede hacer un usuario, una pantalla del lienzo, el modelo de accesos) o contradice una regla escrita. Una duda técnica menor nunca frena una etapa. Una convención transversal nueva se agrega a la ficha y se verifica con un test pertinente, existente o nuevo; una decisión local queda en la feature o el informe, con test de conducta si agrega lógica.
@@ -50,7 +51,7 @@ El inventario de todos los estándares transversales (los definidos y los propue
 2. **Una sola forma de guardar:** `IUnitOfWork.ExecuteInTransactionAsync(work, CommitPolicy, ct)`, una vez por cada método público que escribe. Se valida afuera; adentro van locks → lecturas → reglas → escrituras; después del commit, caché y logs.
 3. **Result:** las reglas de negocio devuelven `Result`/`Result<T>` con errores de `<Entidad>Errors` y código `Area.Entidad.Motivo`. Las excepciones son solo para bugs. Toda respuesta de error es ProblemDetails con `code` y `traceId`.
 4. **Accesos y tenant (B2C + B2B):** una cuenta, dos accesos (`access=consumer|business`) más `platform`. Una persona B2C nunca crea empresas. El tenant sale solo del claim `tenant_id`; el subdominio resuelve solo lo público. Todo dato se clasifica: privado (`ITenantOwned`, `tenant`), público (`IPublishedByBusiness`, `public_site`) o compartido (`IConsumerBusinessShared`, `engagement`), con su helper RLS. Nunca se setean a mano las columnas de tenant ni se ignoran filtros fuera de la lista blanca. Las rutas declaran `[Access(...)]` o `[PublicSite]` (solo el subdominio de una organización publicada); las anónimas del dominio principal (ingreso, registro, invitación, legales, contacto, directorio, webhooks) llevan solo `[AllowAnonymous]` y su controller va en la lista explícita de `AccessDeclarationTests`. Un recurso ajeno responde 404 ([multitenancy](docs/rules/multitenancy.md)).
-5. **Plataforma:** entra a una organización solo con `ITenantScope.Enter(tenantId)`, después de autorizar y de registrar el `SecurityEvent`, y nunca con una transacción abierta.
+5. **Plataforma:** entra a una organización solo con `ITenantScope.Enter(tenantId)`, después de autorizar y de registrar el `SecurityEvent`, y nunca con una transacción abierta. La cuenta de un operador es exclusiva de Plataforma, con permisos individuales y sin roles: no tiene perfiles de persona ni entra a una organización ([ADR 0042](docs/decisions/0042-operadores-de-plataforma.md)).
 6. **Permisos, no roles:** `[HasPermission]`, `[HasCompanyPermission]` o `[HasPlatformPermission]`. Un permiso nuevo va en el catálogo, en `Permissions.resx` y `.en.resx`, y en el seed de los roles de sistema.
 7. **Tiempo:** `TimeProvider` inyectado, `DateTime` UTC con sufijo `Utc`, `DateOnly` para fechas civiles, ISO con `Z`. `BannedSymbols.txt` rompe el build.
 8. **Datos y formatos:** montos siempre como `Money` (monto + moneda ISO); `decimal` y nunca `double`; porcentajes como fracción; `null` para "sin dato"; redondeo `AwayFromZero` en el backend. Lo que ve un usuario en correos y WhatsApp se formatea solo con `DisplayFormatter`, con cultura y zona explícitas ([backend.md §18](docs/architecture/backend.md#18-representación-y-formato-de-datos-unificado)).
@@ -65,7 +66,7 @@ El inventario de todos los estándares transversales (los definidos y los propue
 | Controller / contrato HTTP | `Api/Controllers/<Área>/` · `Api/Contracts/<Área>/` |
 | Adaptador de la petición | `Api/RequestContext/`, `Api/Tenancy/` |
 | Interfaz de servicio | `Application/Interfaces/Services/` |
-| Servicio y helpers (`*Policy`, `*Guard`, `*Issuer`, `*Verifier`, `*Linker`) | `Application/Services/<Área>/` |
+| Servicio y helpers (un sufijo de la lista cerrada de [capas-y-flujo](docs/rules/capas-y-flujo.md)) | `Application/Services/<Área>/` |
 | Repositorio, reader, `IUnitOfWork`, `ITenantScope` | `Application/Interfaces/Persistence/` |
 | Puerto externo | `Application/Interfaces/Integrations/<Tema>/` |
 | Modelos / validadores / opciones | `Application/Models/<Área>/` · `Application/Validation/<Área>/` · `Application/Configuration/<Área>/` |
@@ -74,7 +75,7 @@ El inventario de todos los estándares transversales (los definidos y los propue
 | Permisos | `Domain/Authorization/Permissions.cs` (organización y empresa), `PersonalPermissions.cs`, `PlatformPermissions.cs` |
 | EF: repositorio / reader / configuración / migración | `Infrastructure/Persistence/{Repositories,Readers,Configurations/<Esquema>,Migrations}/` |
 | Adaptador técnico o worker | `Infrastructure/<Tema>/` |
-| Módulo quitable (WhatsApp) | `Domain/WhatsApp/` y `Modules/WhatsApp/` en Application, Infrastructure y Api; se enchufa por puertos del núcleo; el núcleo nunca referencia `*.Modules.*` |
+| Módulo quitable (WhatsApp, E8) | `Domain/WhatsApp/` y `Modules/WhatsApp/` en Application, Infrastructure y Api (E8); se enchufa por puertos del núcleo; el núcleo nunca referencia `*.Modules.*` |
 | Receta paso a paso | `docs/guides/` (agregar un área, permiso nuevo, migración, prefijo de backend, quitar WhatsApp) |
 | Registro DI | `DependencyInjection.cs` o `*Registration.cs` de la capa dueña |
 | Tests | `tests/<Proyecto>/<Área>/`; los de aislamiento, en `Api.IntegrationTests/Tenancy/` |

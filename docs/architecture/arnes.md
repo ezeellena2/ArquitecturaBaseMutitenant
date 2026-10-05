@@ -59,7 +59,7 @@ Cada fila es una carpeta que lleva `AGENTS.md` + `CLAUDE.md`. Los punteros se es
 | `Domain/ValueObjects/TaxIdValidators/` | Algoritmos de identificación fiscal puros; los tipos habilitados salen del catálogo en Application | identificacion-fiscal, datos-de-referencia | `ArgentineCuitValidator.cs` (E6) |
 | `Domain/ReferenceData/` | entidades globales de los cinco catálogos y sus traducciones, sin dependencia de Application ni RLS | datos-de-referencia, capas-y-flujo | `Currency.cs` (E2) |
 | `Domain/Features/` | catálogo de módulos | modulos-habilitados | `Features.cs` (E5) |
-| `Domain/<Módulo>/` | entidades y `<X>Errors` del módulo (hoy `Domain/WhatsApp/`); se borra junto con sus `Modules/` | modulos | — |
+| `Domain/<Módulo>/` | entidades y `<X>Errors` del módulo (`Domain/WhatsApp/` nace en la E8); se borra junto con sus `Modules/` (E8) | modulos | — |
 | `Application/Services/` | servicio + helpers con un sufijo de la lista cerrada de capas-y-flujo (`Policy`, `Guard`, `Issuer`, `Verifier`, `Linker` y los demás de la tabla) | guardado, result-y-errores, validacion, logs, multitenancy, capas-y-flujo | `Services/Roles/RoleService.cs` (E4) |
 | `Application/Interfaces/Services/` | una interfaz por servicio; lo único que inyecta un controller | capas-y-flujo | `IRoleService.cs` (E4) |
 | `Application/Interfaces/Persistence/` | `I<X>Repository` (escribe), `I<X>Reader` (lee), `IUnitOfWork`, `ITenantScope`. Nada de `IQueryable` | persistencia-ef, paginado-y-busqueda | `IRoleRepository.cs`, `IRoleReader.cs` (E4) |
@@ -72,7 +72,11 @@ Cada fila es una carpeta que lleva `AGENTS.md` + `CLAUDE.md`. Los punteros se es
 | `Application/Services/ReferenceData/` | servicio que combina los puertos y entrega los catálogos a la Api | datos-de-referencia, capas-y-flujo | `ReferenceDataService.cs` (E1) |
 | `Application/Resources/` | `.resx` es + en; la clave de un error es su código | textos-y-traducciones | `Errors.resx` (E1) |
 | `Application/Common/Formatting/` | `DisplayFormatter` y perfiles de cultura. **Único** lugar que formatea en el back | numeros-y-moneda, fechas-y-zonas | — |
+| `Application/Common/Exceptions/` | excepciones técnicas que Infrastructure le pasa a Application (concurrencia, índice único, clave foránea, cursor); las reglas de negocio devuelven `Result` | result-y-errores, concurrencia | `UniqueConstraintViolationException.cs` (E2) |
+| `Application/Common/Logging/` | `OperationLog` y sus `[LoggerMessage]`: inicio, fin y código de error de cada método público de un servicio | logs | `OperationLog.cs` (E1) |
+| `Application/Configuration/<Área>/` | opciones de Application por área, validadas al arrancar y sin secretos; se registran en el `*Registration.cs` de su área | capas-y-flujo, fechas-y-zonas | `Auth/LoginCodeOptions.cs` (E3) |
 | `Application/Modules/<Módulo>/` | un módulo quitable; el núcleo no lo referencia | modulos | `Modules/WhatsApp/` (E8) |
+| `Infrastructure/Persistence/` | `ApplicationDbContext`, `UnitOfWork`, `TenantContext` y los límites de persistencia; el tenant nunca sale del host ni de datos HTTP | persistencia-ef, multitenancy, guardado | `TenantContext.cs` (E2) |
 | `Infrastructure/Persistence/Configurations/<Esquema>/` | una `IEntityTypeConfiguration` por entidad; `decimal` con precisión; enums como texto | persistencia-ef, numeros-y-moneda, multitenancy | `Tenant/RoleConfiguration.cs` (E4) |
 | `Infrastructure/Persistence/Configurations/Platform/ReferenceData/` | una configuración EF por tabla de referencia global, sin RLS | datos-de-referencia, persistencia-ef | `CurrencyConfiguration.cs` (E2) |
 | `Infrastructure/Persistence/Migrations/` | se generan con el comando de la guía; cada tabla nueva llama al helper RLS de su clase (`EnableTenantRls`, `EnablePublicRls` o `EnablePartiesRls`) + índices del `SortMap` | persistencia-ef, multitenancy, paginado-y-busqueda | `docs/guides/migracion.md` (E2) |
@@ -85,16 +89,27 @@ Cada fila es una carpeta que lleva `AGENTS.md` + `CLAUDE.md`. Los punteros se es
 | `Infrastructure/Phones/` | adaptador libphonenumber de presentación E1; parser de entrada E3 | telefonos, capas-y-flujo | `LibPhoneNumberDisplayFormatter.cs` (E1) |
 | `Infrastructure/Persistence/Readers/Platform/` | **única** lista blanca para ignorar el filtro `"Tenant"` | multitenancy | — |
 | `Infrastructure/Features/` | filtro de módulos por tenant | modulos-habilitados | `TenantFeatureFilter.cs` (E5) |
+| `Infrastructure/BackgroundJobs/` | workers: un scope DI por organización y `ITenantScope.Enter` antes de abrir la transacción | multitenancy, tests | `TenantJobRunner.cs` (E2) |
+| `Infrastructure/Caching/` | HybridCache: claves de `CacheKeys` con prefijo de alcance; se invalida después del commit | multitenancy, guardado | `HybridCacheExtensions.cs` (E2) |
+| `Infrastructure/Idempotency/` | persistencia técnica de `[Idempotent]` en `platform`: reserva, respuesta guardada y limpieza | idempotencia, persistencia-ef | `IdempotencyStore.cs` (E2) |
+| `Infrastructure/Identity/Deletion/` | participantes de la baja de una cuenta: trabajan en el alcance y la transacción que abre el worker; nunca `Enter` ni `SaveChanges` | datos-personales, multitenancy, auditoria | `MembershipDeletionParticipant.cs` (E3) |
+| `Infrastructure/Messaging/` | outbox persistente y su dispatcher; el payload cifrado nunca va a los logs | guardado, logs | `Outbox.cs` (E3) |
+| `Infrastructure/Messaging/Email/Templates/` | plantillas HTML embebidas: estructura y marcadores `{{Nombre}}`; el texto sale de `Notifications.resx` | textos-y-traducciones, logs | `LoginCode.html` (E3) |
 | `Infrastructure/Modules/<Módulo>/` | adaptadores del módulo | modulos | — |
 | `Api/Modules/<Módulo>/` | lo HTTP del módulo (su `*ApiModule`, controllers como el del webhook, convención de rutas condicional); el núcleo no lo referencia | modulos | — |
 | `Api/Controllers/` | controllers finos: contrato → servicio → `ToActionResult`; `[Access]` + permiso, `[PublicSite]` (subdominio de una organización publicada) o solo `[AllowAnonymous]` si el controller está en la lista de `AccessDeclarationTests` | api-http, permisos, multitenancy | `Organization/RolesController.cs` (E4) |
 | `Api/Controllers/ReferenceData/` | ruta anónima de catálogos globales, con ETag; no recibe catálogos directamente | datos-de-referencia, api-http | `ReferenceDataController.cs` (E1) |
-| `Api/Contracts/` | `*HttpRequest` / `*Query`, props nullable, `ToString()` sin datos personales; los de edición y borrado traen `version` | api-http, paginado-y-busqueda, concurrencia | `Organization/CreateRoleHttpRequest.cs` (E4) |
+| `Api/Contracts/` | `*HttpRequest` / `*Query`, props nullable, `ToString()` sin datos personales; los de edición y borrado traen `version` | api-http, paginado-y-busqueda, concurrencia | `Organization/RolesHttpRequests.cs` (E4) |
 | `Api/Contracts/ReferenceData/` | contrato de salida de los cinco catálogos para OpenAPI | datos-de-referencia, api-http | `ReferenceDataHttpResponse.cs` (E1) |
 | `Api/Idempotency/` | `[Idempotent]` y su filtro; nada más va acá | idempotencia | `IdempotencyFilter.cs` (E2) |
 | `Api/Json/` | conversores globales (UTC, `Money`, texto normalizado) | textos-libres, fechas-y-zonas, numeros-y-moneda | `NormalizedStringJsonConverter.cs` (E1) |
+| `Api/Features/` | puerta de los módulos opcionales: `FeatureGateMiddleware` oculta con 404 un módulo apagado; no reemplaza `[Access]` ni el permiso | modulos-habilitados, api-http, permisos | `FeatureGateMiddleware.cs` (E5) |
+| `Api/Legal/` | `LegalAcceptanceMiddleware`: 403 `Legal.AcceptanceRequired` hasta aceptar los documentos vigentes; no escribe ni accede a EF | datos-personales, api-http | `LegalAcceptanceMiddleware.cs` (E3) |
+| `Api/RateLimiting/` | políticas de ingreso por IP (`RateLimitPolicies`), con 429 ProblemDetails y `Retry-After` | api-http | `RateLimitPolicies.cs` (E3) |
 | `tests/*.Application.UnitTests/Services/` | tests del servicio con dobles a mano | tests | `Services/Roles/RoleServiceWriteTests.cs` (E4) |
 | `tests/*.Api.IntegrationTests/` | rutas + aislamiento entre tenants | tests, multitenancy | `Organization/RolesTests.cs` (E4) |
+| `tests/*.Api.IntegrationTests/TestFeatures/` | controllers y entidades solo para tests, expuestos por `TestControllerApplicationPart`; nunca en `src/` ni en una migración productiva | tests, multitenancy | `TestFeatures/Isolation/WidgetsController.cs` (E2) |
+| `tests/*.Application.UnitTests/Persistence/` | dobles de persistencia y sus pruebas, sin base real | tests, guardado | `FakeUnitOfWorkTests.cs` (E2) |
 
 **Ejemplo de puntero** (`Application/Services/AGENTS.md`):
 

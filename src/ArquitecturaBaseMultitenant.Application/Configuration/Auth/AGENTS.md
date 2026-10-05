@@ -1,0 +1,2 @@
+Opciones del ingreso, validadas al arrancar y sin secretos: `LoginCodeOptions` (largo, vigencia, intentos y espera del código, en `Authentication:LoginCode`) y las claves de sesión del navegador (`BrowserSessionKeys`). Se registran en `Services/Auth/AuthRegistration.cs`.
+Leé [capas-y-flujo](../../../../docs/rules/capas-y-flujo.md) y [configuracion](../../../../docs/operations/configuracion.md). Copiá de `LoginCodeOptions.cs`.

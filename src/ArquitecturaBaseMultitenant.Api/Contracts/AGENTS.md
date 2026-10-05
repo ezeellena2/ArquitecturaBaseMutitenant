@@ -1,3 +1,3 @@
 Acá van los contratos HTTP: los de entrada (`*HttpRequest` y `*Query`), con propiedades nullable y `ToString()` sin datos personales, y las pocas salidas propias del Api (`*HttpResponse`), cuando la respuesta lleva value objects o es de protocolo (ADR 0002, enmienda del 2026-10-03). Toda otra salida es un `*Response` de Application. Lo verifican `ControllerInputContractTests` y `ControllerOutputContractTests`.
 Leé `docs/rules/api-http.md`, `docs/rules/telefonos.md`, `docs/rules/paginado-y-busqueda.md` y `docs/rules/concurrencia.md`.
-Copiá `../ArquitecturaBase/src/ArquitecturaBase.Api/Contracts/Users/PhoneNumberHttpRequest.cs` para el contrato telefónico común.
+Copiá `Common/PhoneInputHttpRequest.cs` para el contrato telefónico común y `Organization/RolesHttpRequests.cs` (el área de referencia) para los demás.
