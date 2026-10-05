@@ -165,9 +165,9 @@ El usuario las resolvió con Diseño (front `706cd3c`). Todas están en Decision
 ### 2. Arnés y referencias
 
 - [ ] Los «Copiá de» apuntan a referencias sanas:
-  - **back:** `RoleService`, `RoleReader` y `CompanyReader`. Va en los `AGENTS.md` de `Services/PublicSite`, `Services/OrganizationSettings` y `Persistence/Readers`, y en `paginado-y-busqueda.md`;
-  - **front:** `personal/account` para formularios y diálogos, y `UsersPage` para listados, hasta que el bloque 6 deje Roles como referencia.
-- [ ] Crear el `AGENTS.md` de `Services/OrganizationUsers`.
+  - [x] **back:** `RoleService`, `RoleReader` y `CompanyReader`. Va en los `AGENTS.md` de `Services/PublicSite`, `Services/OrganizationSettings` y `Persistence/Readers`, y en `paginado-y-busqueda.md`. Hecho en `5e08a6a`, junto con el resto de los «Copiá de» del back: ninguno manda a ArquitecturaBase y los de E1 y E2 siguen el mapa de `arnes.md` §3 (decisión 84). `HarnessTests` 10/10 y `realinear-docs --detectar --repo back` en 0;
+  - [ ] **front:** `personal/account` para formularios y diálogos, y `UsersPage` para listados, hasta que el bloque 6 deje Roles como referencia.
+- [x] Crear el `AGENTS.md` de `Services/OrganizationUsers`. Hecho en `ed9f1aa`, con su `CLAUDE.md` y el de otras cuatro carpetas que no lo tenían (decisión 85).
 - [x] Agregar un test que exija un mensaje propio en cada regla de validación: recorre `CreateDescriptor()` de cada validador del ensamblado. Hecho en `74ee2fc`: `ValidationMessageTests`, con caso de control; encontró el filtro de estado de Empresas.
 - [x] Borrar `Stage3aInventoryTests`. Hecho en `3dafde9`.
 - [ ] **Capturas de la 3b contra el lienzo vigente:** el script todavía compara contra la copia v35 e inyecta estados internos. Hay que pasarlo al lienzo vigente y sumar el test del Paquete 6 de la alineación: falla si una etapa nueva apunta a otra copia del lienzo.
@@ -309,6 +309,8 @@ Lo que faltaba del tablero Auditoria-Org (lienzo v106) después de la tanda 4f (
   Si los Inicios ya llenaron el mapa, solo se verifica. Con el mapa llega también la fila por empresa de Inicio-Miembro: su «Para resolver», con la columna Empresa.
 
   Back hecho en `2197699` (tanda 2): `/api/me` llena `effectivePermissions.companies` y `GET /api/companies/{companyId}/roles/paged` responde bajo `[HasCompanyPermission(company.members.read)]`; test `CompaniesTests.A_company_admin_without_organization_roles_gets_its_company_permissions_and_assignable_roles` (rojo: el mapa vacío). Ver la decisión 13. **Falta:** `canInCompany` y la ficha en el front, el E2E real y la fila por empresa de «Para resolver» de Inicio-Miembro (back y front), que no entró en esta tanda.
+
+  Fila por empresa de Inicio-Miembro, back hecho en `f9ac0d8` (tanda final): `PendingItem` suma `companyId` y `companyName`; quien administra una empresa sin roles de la organización ve la invitación vencida de esa empresa; y la ficha de la empresa, adonde lleva «Reenviar» en el tablero, se abre con `companies.read` o con `company.members.read` de esa empresa. Tests `HomeTests.A_company_admin_without_organization_roles_sees_the_expired_invitation_of_its_company_and_can_open_it` (rojo: no veía ninguna fila) y `PermissionAuthorizationTests.Company_permission_with_an_organization_alternative_accepts_either_grant` (rojo: el permiso de la organización no alcanzaba). Ver las decisiones 86 a 90. **Falta (front):** en el manifiesto, la ruta de la ficha con `companies.read` o el permiso de esa empresa; la columna Empresa y el enlace de «Reenviar» a `/org/empresas/{companyId}` cuando la fila trae `companyId`; los contratos regenerados (`{id}` pasa a `{companyId}` en `/api/companies`); y el E2E real.
 - [x] **F6 · Una sola cultura efectiva** (front `f7f9737`): `resolveCulture` y `useEffectiveCulture`, que usan i18n, formatos, datos de referencia y `Accept-Language`. Se borró `useLanguagePreference`.
   - Tests: `i18n.test.tsx` (`resolveCulture`), `safeStorage.test.ts` y `useFormat.account.test.tsx`.
   - El catálogo se pide dos veces solo si la cultura de la cuenta difiere de la elegida en el navegador; evitarlo obligaría a esperar `/api/me`. Queda así.
@@ -438,7 +440,7 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
   - [x] **R3b · Fichas y hojas** (front `1d8e0f1` a `4650372`; 1012/1013 tests, lint y build; falla solo `organization-audit-contract.test.ts`, de R3c). Capturas en `r3b/`.
     - Piezas: `MultiSelect`, con casilla y descripción; el campo abierto con borde y halo en los tres desplegables; `dialog`, sin la hoja a todo el alto; `app/PhoneBand.tsx`, la banda debajo de la barra (sin conexión, el 409 y el error de guardado); y `useEditPage`.
     - M-Inicio-Miembro en «billetera», las hojas de Empresa desde abajo y el nombre y el CUIT revisados al tocar Guardar.
-    - Para B4: el «Para resolver» del miembro no puede decir «· Delta Norte S.A.» porque `PendingItem` no trae la empresa. Además, «Reenviar» lleva a `/org/usuarios?state=Expired`, que quizás no puede abrir quien tiene roles solo en su empresa. Va con la fila por empresa de Inicio-Miembro.
+    - Para B4: el «Para resolver» del miembro no puede decir «· Delta Norte S.A.» porque `PendingItem` no trae la empresa. Además, «Reenviar» lleva a `/org/usuarios?state=Expired`, que quizás no puede abrir quien tiene roles solo en su empresa. Va con la fila por empresa de Inicio-Miembro. Back resuelto en `f9ac0d8` (B4).
     - Las contradicciones del lienzo quedaron en Diseño: el asterisco de «Dominio», la hoja de roles de M-Empresa, «Guardar cambios» sin cambios, los errores de servidor en M-Usuario, el 409 de M-Pagina-Org y el CUIT con guiones.
     - Lo que pedía:
     - las hojas de M-Usuario (v99) y el desplegable de roles de la compu con casillas y descripción;
@@ -833,3 +835,34 @@ Bloque 0 del back: los docs al día con el código (2026-10-04):
 83. **Lo futuro lleva su etapa entre paréntesis:** `(E7)`, `(E8)`, `(E10)`. Es lo que reconocen el detector y `HarnessTests`; «E7» suelto o «Etapa 10» no cuentan.
 
 Verificación: `dotnet build` de la solución con 0 advertencias; `HarnessTests` 10/10; `node --test` de los arneses 44/44; la integración de la baja y la auditoría (`AccountDeletion*`, `OrganizationAuditTests`, `AuditTrailTests` y `AuditTrailRlsTests`) 50/50; `realinear-docs --detectar` en 0 para el back; y `dotnet test` completo con Docker **1647/1647 (10 minutos)**.
+
+Tanda final del back (bloque 2 y la fila por empresa de B4, 2026-10-05):
+
+84. **«Copiá de» sanos:** cada uno apunta a un archivo de este repo que sigue las reglas de hoy. Se cambiaron 26 punteros y tres fichas (`5e08a6a`):
+    - los que mandaban a ArquitecturaBase (Authorization, contratos y controllers de Organización, Json, Auth, Roles y su validación, Caching, plantillas de correo, Persistence, Readers, Seed, Support y los tests de Roles) mandan al archivo de este repo; `emails.md` y `telefonos.md` dejan de decir que el value object sale de ArquitecturaBase;
+    - los que mandaban a un área que se apartó o a nada concreto (PublicSite a Configuración, Configuración a Empresas y «la caché existente», Auditoría y Plataforma) mandan a `RoleService`. Configuración suma `OrganizationDomainVerifier` para una consulta externa, y Plataforma, `PlatformActionGuard` para entrar a una organización;
+    - los de E1 y E2 que contradecían el mapa de `arnes.md` §3 siguen a Roles: `IRoleService`, `IRoleRepository` e `IRoleReader`, `Models/Roles`, `RoleConfiguration` y `RoleRepository` (`AuditLog` queda para un evento explícito). El mapa suma `CompanyReader` en Readers;
+    - `Common/Logging` decía que no había implementación: ahora nombra `OperationLog.cs`;
+    - se escriben «Copiá de:», con dos puntos, para que `HarnessTests` controle que el archivo exista;
+    - los que ya mandaban a un archivo sano de este repo quedan como estaban (por ejemplo, Plataforma copia `OrganizationSettingsController`, que es un controller fino).
+85. **Los `CLAUDE.md` que faltaban:** `Services/Auditing`, `Services/OrganizationSettings`, `Services/PublicSite` y `Validation/OrganizationSettings` tenían `AGENTS.md` sin su `CLAUDE.md`. Ni `HarnessTests` ni el detector lo veían, porque son carpetas de área sin `docs/features/<área>.md`. `Services/OrganizationUsers` tampoco es fila del mapa: es una carpeta de área dentro de `Application/Services/`.
+86. **Quién ve la fila por empresa:**
+    - solo quien no tiene permisos de la organización (Inicio-Miembro, como el tablero);
+    - en cada empresa donde tiene `company.members.manage`, que es el «administra» del tablero. «Solo lectura» no la ve, porque no puede resolver nada;
+    - las empresas son las del mapa de `/api/me` (decisión 13), y una persona invitada a dos empresas que administra da una fila por empresa;
+    - quien tiene `users.invite` la sigue viendo como fila de Usuarios, sin empresa;
+    - solo entra la invitación vencida: el tablero no muestra otra fila por empresa, como la baja pedida.
+87. **Adónde lleva «Reenviar»:**
+    - El tablero lleva a la ficha de la empresa: Inicio-Miembro a `Empresa.dc.html` y M-Inicio-Miembro a `M-Empresa.dc.html`.
+    - Antes, el Administrador de empresa no podía abrir ni Usuarios (`users.read`) ni la ficha (`companies.read`, en la ruta del front y en `GET /api/companies/{id}`).
+    - Ahora `GET /api/companies/{companyId}` acepta `companies.read`, como antes y también para una empresa inactiva, o `company.members.read` en esa empresa, que tiene que estar activa, como en «Tus empresas». Quien solo tiene `companies.read` la sigue abriendo.
+88. **Cómo se pide «uno u otro»:**
+    - `[HasCompanyPermission(permiso, organizationPermission: …)]`: la política lleva los dos permisos separados por `|`, y el handler acepta el de la organización o el de la empresa, siempre con `{companyId}` en la ruta.
+    - Por eso las tres rutas de `/api/companies/{id}` pasan a `{companyId}`, como las de miembros y roles. Cambia el nombre del parámetro en OpenAPI, no la URL.
+    - Es una convención nueva: está en `permisos.md` y en `backend.md` §14, y la prueba `PermissionAuthorizationTests`.
+89. **«Tus empresas» y la fila usan el mismo cálculo:** `HomeService` pide `GetPermissionsByCompanyAsync` una sola vez y se lo pasa a `MemberHomeCompaniesBuilder`, que deja de consultar los permisos empresa por empresa, y al contexto de «Para resolver» (`PendingItemContext.CompaniesWhere`).
+90. **Queda abierto, porque el tablero no lo muestra:**
+    - **Reenviar desde la ficha:** el Administrador de empresa llega a su ficha y no puede reenviar. Reenviar pide `users.invite`, y el tablero de Empresa no dibuja invitaciones: su filtro de estado no tiene «Invitado». La API sí lista a la persona como «Invitado» en Miembros. Hay que decidir si el Administrador de empresa reenvía las invitaciones de su empresa (una ruta bajo `company.members.manage`, dibujada en el tablero de Empresa) o si la fila dice otra cosa.
+    - **El caso mixto:** quien tiene algún permiso de la organización, pero no `users.invite`, y administra una empresa ve Inicio-Org sin la fila de su empresa.
+
+Verificación (en `f9ac0d8`): `dotnet build` de la solución con 0 advertencias y `dotnet test` completo con Docker **1649/1649** (9m 24s). Durante el trabajo, en rojo y después en verde: `PermissionAuthorizationTests` 4/4 y `HomeTests` 3/3. Además, Empresas, Inicio, el inventario de rutas, OpenAPI y el aislamiento del inicio 23/23; arquitectura 146/146 (`HarnessTests` incluido); unitarios de Application 476/476; y `realinear-docs --detectar --repo back` en 0. Con los dos repos, el detector da 263 hallazgos, todos del front, que otra conversación está cambiando; esta tanda no lo tocó.
