@@ -606,11 +606,11 @@ Lo que dejaron las tandas 6a, 6b y 6c, y lo que el usuario decide con Diseño en
   Back: la ruta de candidatos y reenviar o revocar con `company.members.manage`. Front: tanda 6d-4b.
 - [x] **«Guardar cambios», con un solo criterio en toda edición** (front `a51a27c`, con `submit-buttons.test.ts` en el arnés): se apaga sin cambios y nunca por un dato que falta. El usuario pidió el mismo criterio en todas las pantallas. Front: tanda 6d-4a, que revisa todas.
 - [x] **Los textos de espera:** «Quitando…», «Desvinculando…» y «Dando de baja…» (front `1051136`). La ficha con un solo grupo va sin barra de pestañas, en la pieza `Page` (`2c96ca7`). 1175 tests, lint y build; capturas en `b6d4a/`.
-- [ ] **Lo demás de v108** (front, tanda 6d-4b):
-  - «Quitar dominio» con su texto para 10, 1 y 0 correos (con 0, sin la cantidad junto a «Verificado»);
-  - el detalle de Auditoría en el teléfono (M-Auditoria-Org, «Detalle de un cambio»);
-  - las casillas fijas de un rol de sistema, en gris también en el teléfono;
-  - la hoja de la vista previa en el teléfono, como el tablero.
+- [x] **Lo demás de v108** (front, tanda 6d-4b; capturas en `b6d4b/`, `bfbf009`):
+  - «Quitar dominio» con su texto para 10, 1 y 0 correos (con 0, sin la cantidad junto a «Verificado») (`1b1238f`);
+  - el detalle de Auditoría en el teléfono (M-Auditoria-Org, «Detalle de un cambio») (`1071e44` y `160c096`);
+  - las casillas fijas de un rol de sistema, en gris también en el teléfono (`6ecfdf3`);
+  - la hoja de la vista previa en el teléfono, como el tablero (`dee0c38`).
 
 ### 6f. Front: las piezas que dejó el relevamiento final (tanda 6d-5)
 
@@ -621,16 +621,38 @@ La puerta pasó (back `3d8af5e`, front `3cad8b6`; informe en [2026-10-05-consoli
 - [x] las sombras de los diálogos (`45163aa`, con `--sombra-dialogo` y `--sombra-menu`);
 - [x] «Último cambio» cortado en el Inicio, Mi cuenta sin el módulo de WhatsApp («Agregar correo»), el correo tapado en «Te mandamos un código a…», «Verificado» y Google en los métodos, la ⓘ de la página despublicada en el teléfono y la cabecera pública del teléfono;
 - [x] B7 + D2 en el front: el test propio del 409 al cambiar dónde vale un rol con personas (`20ddae0`). Con 6d-5 coinciden 97 de 292 capturas contra v108 (antes, 18); 1225 tests, lint y build.
-- [ ] **6d-6, las últimas piezas comunes:**
-  - de los diálogos: el cuerpo, la ✕ y el encabezado (N6);
-  - la banda del título (N7) y el botón de la caja (N8);
-  - los ⋮ y las flechitas del teléfono (N9);
-  - el «+» flotante (N10), los separadores (N11) y las cajas con sombra (N12);
-  - las pestañas de Empresa en el teléfono (N22);
-  - la cabecera pública de la compu;
-  - el interruptor trabado que abre su aviso (Criterio · Avisos);
-  - de v108: la confirmación de revocar («El enlace deja de funcionar.»), «Venció …» en Usuarios de la compu y «Revocar invitación» con ✕;
-  - según decida el usuario, los desplegables debajo del campo y de su ancho.
+- [x] **6d-6, las últimas piezas comunes** (capturas en `b6d6/`, `fefba08`: coinciden 107 de 292 contra v109; 1237 tests, lint y build):
+  - de los diálogos: el cuerpo, la ✕ y el encabezado (N6) (`9a9f19f`);
+  - la banda del título (N7) y el botón de la caja (N8) (`b569743` y `f5eb312`);
+  - los ⋮ y las flechitas del teléfono (N9) (`18d1920`);
+  - el «+» flotante (N10), los separadores (N11) y las cajas con sombra (N12) (`42bc33e`, `1351911` y `3d562d4`);
+  - las pestañas de Empresa en el teléfono (N22) (`4822d47`);
+  - la cabecera pública de la compu (`0b1e7b6`);
+  - el interruptor trabado que abre su aviso (Criterio · Avisos) (`18e3ab1`);
+  - de v108: la confirmación de revocar («El enlace deja de funcionar.»), «Venció …» en Usuarios de la compu y «Revocar invitación» con ✕ (`2c805d4`);
+  - los desplegables, debajo del campo y de su mismo ancho, como decidió el usuario (`df14e9d`).
+- [x] **6d-7, los detalles de la app que quedaban del relevamiento** (medidos contra v109; capturas en `b6d7/`, `506a5d5` y `2209be7`):
+  - **N13** (`06d4614`):
+    - la franja de error de la ficha y la de los permisos de Rol pasan a ser el cartel de problema;
+    - el ícono de error es el del lienzo;
+    - la banda roja del teléfono usa `--peligro-banda`;
+    - ajustes al paginado, al menú de un filtro (220) y a las columnas de Auditoría y de Empresa.
+  - **N15** (`8ceceda`): los enlaces del paso del código y «No pudimos iniciar tu sesión».
+  - **N16** (`2afe8b5`): los espacios de los inicios y los íconos del menú de la cuenta.
+  - **N18** (`eed33a9`): las pantallas de error.
+  - **N19** (`0d68495`): la fila sin verificar del teléfono.
+  - **N20** (`e4eff27`): las áreas de permisos del teléfono.
+  - **N21** (`bf9f586` y `9efdfe4`): la explicación de una opción de los desplegables.
+  - **N23** (`6436546`): «Verificar dominio».
+  - **N24** (`0e08d34`): «Publicación» en la compu.
+  - **El aviso pasajero del teléfono** (`ef19d3c`): como M-Avisos.
+
+  Coinciden **127 de 292** capturas contra v109. Front: 1245 tests, lint sin errores y build en verde.
+- [ ] **Lo que queda después de 6d-7.** No frena la Etapa 5, y se hace después del reinicio del uso semanal (viernes 9/10):
+  - **del lienzo:** diez notas para Diseño, ya enviadas el 2026-10-05; la v110 (`c604c0b`) puede haber resuelto algunas;
+  - **la página pública sin dirección:** dice «Visible en .plataforma.com», que se lee raro. Diseño le muestra al usuario «Sin dirección» en gris y la app lo copia;
+  - **de la app, tres corrimientos:** la banda del título y la columna de contenido, de 4 y 2 px; la lista de candidatos de Empresa, que mide 42 por opción contra 46 del tablero; y la descripción de Rol Dueño en el teléfono, 4 px más abajo;
+  - **el resto de las diferencias es de WhatsApp,** que es de otra etapa.
 
 ### 7. Puerta
 
@@ -997,3 +1019,15 @@ Ajuste de permisos de la Guía, por menor privilegio (2026-10-05; `65d6836`). Re
 102. **«Para resolver» por empresa, con la misma política:** la fila de la invitación vencida sale para el Administrador de empresa solo si la invitación es únicamente de su empresa. Reemplaza la condición de la decisión 99. Así «Reenviar» siempre lleva a algo que puede hacer. Quien tiene `users.invite` las sigue viendo todas como filas de la organización, sin empresa.
 
 Verificación (en `65d6836`): `dotnet build` de la solución con 0 advertencias y `dotnet test` completo con Docker **1657/1657** (9m 56s). Durante el trabajo, en rojo y después en verde: `CompanyAdminTests` (prueba nueva: Miembros traía la invitación de las tres personas, y no solo la de la empresa) y `HomeTests` (el Administrador veía tres filas en vez de una), 8/8. Además, OpenAPI, el inventario de rutas, Empresas, Usuarios, Auditoría, invitaciones, el aislamiento del inicio, la paridad de estados y la carrera de claves foráneas 55/55; arquitectura 148/148; unitarios de Application 476/476; y `realinear-docs --detectar --repo back` en 0.
+
+Tanda 6d-7 del front (2026-10-05):
+
+103. **Si el tablero y su criterio no coinciden, la app sigue al criterio.**
+    - El menú de un filtro mide 220, como pide «Criterio · Menús», y no 210, como Empresa y Auditoria-Org.
+    - El menú de perfiles de Inicio-Personal queda como el de Inicio-Org.
+    - Las diferencias del tablero van a Diseño.
+104. **Dos listas en los desplegables:** el lienzo tiene `.o-lst`, con la explicación en gris claro, y `.op2`, con el dato en gris medio, como los candidatos de Empresa. Por eso `SelectItem` acepta `descriptionClassName`.
+105. **Íconos:**
+    - los avisos y los carteles dibujan su ícono con trazo 2; el resto del set sigue con 1,75;
+    - el set suma `CircleCheckIcon` y `CopyIcon`, dibujados como en el lienzo.
+106. **La banda roja del teléfono usa `--peligro-banda`,** el rosa del tablero, anotado en `tema.md`.
