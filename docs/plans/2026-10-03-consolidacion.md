@@ -49,13 +49,13 @@ Las pantallas de la Etapa 5 (T19 a T25) van después de esta consolidación, par
 ### 0. Línea de base y documentación
 
 - [ ] `main` limpio y último commit en los dos repos; Aspire apagado.
-- [ ] El ADR 0039 está aplicado en `ServiceDependencyCountTests` (se le pidió a la Etapa 5). Si no lo está, aplicarlo primero:
+- [x] El ADR 0039 está aplicado en `ServiceDependencyCountTests` (se le pidió a la Etapa 5). Si no lo está, aplicarlo primero: ya estaba, verificado el 2026-10-04. El test tiene sus casos de control (`InfrastructureOnly`, `EightBusinessDependencies` y `NineBusinessDependencies`), y la 0039 está en `capas-y-flujo.md`, `guardado.md` y `backend.md` §4.
   - el test con su caso de control;
   - `capas-y-flujo.md`, `guardado.md` y `backend.md` §4.
-- [ ] Línea de base: `realinear-docs --detectar` en los dos repos. El 2026-10-03, el back dio 372 hallazgos automáticos, 193 de modelo y 217 preguntas.
-- [ ] Aplicar lo automático con `realinear-docs --sin-modelo` en los dos repos.
-- [ ] Corregir los docs viejos (📄) y aplicar las enmiendas de la [revisión de decisiones](../reviews/2026-10-03-revision-de-decisiones.md). La lista está en su «Reparto» y el detalle con archivo y línea, en sus anexos. Incluye los docs que dicen que el CI ya compara los contratos (ADR 0016) y `backend.md:53` (ADR 0017).
-- [ ] Borrar las cuatro carpetas sobrantes de `tools/` (`LocalSetup`, `PlatformBootstrap`, `PlatformOperatorAdmin` y `Setup`), que solo tienen `bin` y `obj` y no están versionadas.
+- [ ] Línea de base: `realinear-docs --detectar` en los dos repos. El 2026-10-03, el back dio 372 hallazgos automáticos, 193 de modelo y 217 preguntas. **Back, 2026-10-04 (antes de empezar):** 293 automáticos, 129 de modelo y 157 preguntas (579). Falta el front.
+- [ ] Aplicar lo automático con `realinear-docs --sin-modelo` en los dos repos. **Back hecho** en `0fbdde4`: las 293 líneas de `arbol.md`, revisadas; las que decían algo falso o nada se corrigieron a mano en `17686e9`. Falta el front.
+- [ ] Corregir los docs viejos (📄) y aplicar las enmiendas de la [revisión de decisiones](../reviews/2026-10-03-revision-de-decisiones.md). La lista está en su «Reparto» y el detalle con archivo y línea, en sus anexos. Incluye los docs que dicen que el CI ya compara los contratos (ADR 0016) y `backend.md:53` (ADR 0017). **Back hecho:** `arbol.md` (`17686e9`), los punteros (`a5c4512`), las features (`2acb1ee`), `backend.md` y `multitenancy.md` (`29684b6`), las fichas (`abe9f58`), el nombre de la página pública (`3ee854a`) y los planes (`c27c2d7` y `57b6866`). Las enmiendas de las ADR 0002, 0012, 0016, 0017, 0034, 0038 y 0042 ya estaban en el índice. Falta el front: `frontend.md`, `responsive.md`, `formularios.md`, su `arbol.md` y su `AGENTS.md:33` (ADR 0016).
+- [x] Borrar las cuatro carpetas sobrantes de `tools/` (`LocalSetup`, `PlatformBootstrap`, `PlatformOperatorAdmin` y `Setup`), que solo tienen `bin` y `obj` y no están versionadas. Hecho el 2026-10-04, después de verificar que las cuatro tenían solo `bin` y `obj` y `git ls-files` vacío; no hay commit, porque no estaban versionadas.
 - [ ] Resolver los hallazgos de modelo y las preguntas, comparando con el código:
   - `arbol.md` de los dos repos, llevado al árbol real;
   - los códigos de error, permisos y rutas, cada uno en su ficha de `docs/features`;
@@ -64,9 +64,9 @@ Las pantallas de la Etapa 5 (T19 a T25) van después de esta consolidación, par
   - `Persistence/Interceptors/AGENTS.md` no nombra `AccessChangeTrail` ni `RoleAssignmentTrail`.
   - los `AGENTS.md` nombran los sufijos viejos: la raíz y `Services/AGENTS.md` listan cinco (`*Policy`, `*Guard`, `*Issuer`, `*Verifier`, `*Linker`). Pasan a mandar a la lista cerrada de 22 de `capas-y-flujo.md` (decisión 58). `Services/Auth/AGENTS.md` todavía dice `UserCultures`, que ahora es `UserCultureResolver`.
 
-  Al usuario va solo lo que cambia el producto.
+  Al usuario va solo lo que cambia el producto. **Back hecho:** los cinco puntos de arriba, con los commits del ítem anterior; nada cambia el producto. Además: `arnes.md` §3 suma 15 filas para las 24 carpetas que tenían puntero y no estaban en el mapa, y el detector de catálogos reconoce los permisos con dos puntos (`42bdfe9`; decisiones 80 y 81).
 - [x] Sumar la consolidación al plan maestro como paso previo de la Etapa 7. Se hizo al aprobar el plan.
-- [ ] **Hecho cuando** `--detectar` sale 0 en los dos repos.
+- [ ] **Hecho cuando** `--detectar` sale 0 en los dos repos. **Back: 0** (automáticos 0, de modelo 0 y preguntas 0, el 2026-10-04 después de `57b6866`), con cinco descartes anotados con su motivo en `ignorados.json` (`6606b5e`, decisión 82). Falta el front.
 
 ### 1. Bugs que se arreglan por su cuenta (test rojo → arreglo → verde)
 
@@ -794,7 +794,7 @@ Tanda 4g del back, la auditoría de la organización: una entrada por acción y 
     - Queda «Quitó a …», el texto que ya existía, con los «Roles de la organización» y los «Roles en la empresa» que tenía y el «después» vacío, como al quitarlo de una empresa (decisión 69). Los roles de todas sus empresas van juntos, como en la invitación. «Dónde» es «Toda la organización».
     - El estado no se muestra: Usuarios no tiene una palabra para quien fue quitado, y el resumen ya lo dice.
     - Si tenía la invitación pendiente, la entrada sigue siendo la de la invitación (decisión 69).
-    - La baja de una cuenta (`MembershipDeletionParticipant`) también quita al miembro: su «Quitó a …» ahora lleva los roles. Sigue dejando, además, la entrada `Custom` que ya dejaba (abajo, en lo abierto).
+    - La baja de una cuenta (`MembershipDeletionParticipant`) también quita al miembro: su «Quitó a …» ahora lleva los roles. Sigue dejando, además, la entrada `Custom` que ya dejaba (abajo, en lo abierto). **Cerrado** en `616c2cc` (decisión 78).
     - El tablero no dibuja esta entrada: el detalle va a Diseño.
 75. **El orden de las filas del detalle:** `Changes` es jsonb, y PostgreSQL guarda las claves ordenadas por largo. Por eso «Roles de la organización» salía después de «Roles en la empresa», al revés del diálogo de Usuarios y de lo que pide el comentario de `CompleteInvitation`. `OrganizationAuditEntryBuilder` pone primero los roles de la organización y deja el resto en el orden guardado. Cambia también la invitación con roles de la organización: «Correo», «Roles de la organización», «Empresa» y «Roles en la empresa».
 76. **«Quién» por tipo, con `actorKind`:** es un texto, como `period` y `category` de la misma ruta. Sus valores son los del `actorKind` que ya devuelven la lista y las entradas: `User`, `System` y `PlatformOperator`.
@@ -804,7 +804,26 @@ Tanda 4g del back, la auditoría de la organización: una entrada por acción y 
 77. **El orden de «Quién»:** las personas (por nombre), «Sistema» y «Plataforma», como el desplegable del tablero. Antes salía «Plataforma» antes que «Sistema», por el orden del enum.
 
 Queda abierto:
-- **La baja de una cuenta deja dos entradas:** «Quitó a …» y la `Custom` que agrega `MembershipDeletionParticipant` con `IAuditLog.Record` (motivo y cuenta). `auditoria.md` dice que un guardado deja una sola entrada por entidad y que no se suma otra a mano. No era de esta tanda.
+- **Cerrado en `616c2cc` (decisión 78). La baja de una cuenta deja dos entradas:** «Quitó a …» y la `Custom` que agrega `MembershipDeletionParticipant` con `IAuditLog.Record` (motivo y cuenta). `auditoria.md` dice que un guardado deja una sola entrada por entidad y que no se suma otra a mano. No era de esta tanda.
 - **El front:** «Quién» todavía muestra solo personas (`AuditPage` descarta las opciones sin `actorId`). Para «Sistema» y «Plataforma» tiene que mandar `actorKind` y regenerar sus tipos con `npm run contracts`.
 
 Verificación (en `d52f518`): `dotnet build` de la solución con 0 advertencias y `dotnet test` completo con Docker **1647/1647** (9 minutos); esta vez `HarnessTests` también pasó. Durante el trabajo, en rojo y después en verde, un ítem por vez: `OrganizationAuditTests` 16/16, 17/17 y 18/18 (tres tests nuevos, uno rehecho y la preparación de la aprobación pasada a un helper). Además, la integración de Empresas, Usuarios, `AuditTrailTests`, `AuditTrailRlsTests` y la baja de cuentas (31/31 y 45/45, con auditoría), `OpenApiTests`, `ExplicitRouteInventoryTests` y `SearchIndexTests` (33/33, con auditoría) y `ControllerInputContractTests` 13/13.
+
+Bloque 0 del back: los docs al día con el código (2026-10-04):
+
+78. **La baja de una cuenta, una sola entrada:** `MembershipDeletionParticipant` ya no suma la entrada `Custom` (motivo y cuenta). El motivo queda en el diff de «Quitó a …» (`RemovalReason`), y la cuenta es el miembro de la entrada. Test `AccountDeletionParticipantsTests.Current_participants_clean_only_the_account_data_and_can_run_twice`: rojo con dos entradas, verde con una. Lo dicen `auditoria.md` e `identidad.md`.
+79. **`arbol.md`, desde el árbol real:**
+    - las líneas que existen conservan su texto y su orden;
+    - salen 189 líneas viejas: nombres que nunca existieron y 36 archivos que se mudaron, que conservan su descripción en su carpeta real;
+    - lo nuevo toma la descripción de su `<summary>` o una escrita a mano; las migraciones no se listan, como antes;
+    - lo de la E5 se llevó al real aunque `HarnessStage` no la cerró, porque su back está hecho;
+    - las secciones «Piezas…» repetían el árbol con nombres viejos: quedan solo las piezas de la E7 (con las rutas de su plan) y de la E10.
+80. **Punteros fuera del mapa:** 24 carpetas tenían `AGENTS.md` y no estaban en el mapa de `arnes.md` §3. Se sumaron 15 filas: una carpeta padre, como `Infrastructure/Persistence/` o `tests/*.Api.IntegrationTests/TestFeatures/`, cubre a sus hijas. `Configuration/Auth`, `Configuration/Messaging` y `TestFeatures` recibieron su puntero, porque el mapa los exige. `Domain.UnitTests/Invitations` apunta a `identidad.md`, como una carpeta de área.
+81. **El detector de catálogos** solo reconocía permisos de un punto, así que `company.*` y `platform.*` nunca contaban como documentados. Ahora acepta uno o más puntos y también los verifica contra el catálogo (test con `company.members.reed`). El de símbolos suma siete nombres del framework (`HttpContext`, `DbContext`…).
+82. **Cinco descartes con motivo** en `ignorados.json`:
+    - la carpeta reservada `Readers/Platform`, la única lista blanca de `QueryFilterBypassTests`, hoy vacía;
+    - `IIdentityService` e `IQuery` (dos veces), nombrados a propósito: uno es el tipo de ArquitecturaBase que se reemplazó y el otro, algo prohibido;
+    - los códigos `ReferenceData.*`, que no son de una feature: los usan los value objects de E1, pero ninguna ruta los devuelve.
+83. **Lo futuro lleva su etapa entre paréntesis:** `(E7)`, `(E8)`, `(E10)`. Es lo que reconocen el detector y `HarnessTests`; «E7» suelto o «Etapa 10» no cuentan.
+
+Verificación: `dotnet build` de la solución con 0 advertencias; `HarnessTests` 10/10; `node --test` de los arneses 44/44; la integración de la baja y la auditoría (`AccountDeletion*`, `OrganizationAuditTests`, `AuditTrailTests` y `AuditTrailRlsTests`) 50/50; `realinear-docs --detectar` en 0 para el back; y `dotnet test` completo con Docker **1647/1647 (10 minutos)**.
