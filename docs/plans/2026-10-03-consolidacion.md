@@ -612,6 +612,16 @@ Lo que dejaron las tandas 6a, 6b y 6c, y lo que el usuario decide con Diseño en
   - las casillas fijas de un rol de sistema, en gris también en el teléfono;
   - la hoja de la vista previa en el teléfono, como el tablero.
 
+### 6f. Front: las piezas que dejó el relevamiento final (tanda 6d-5)
+
+La puerta pasó (back `3d8af5e`, front `3cad8b6`; informe en [2026-10-05-consolidacion.md](../reviews/2026-10-05-consolidacion.md)). Su relevamiento (292 capturas contra v107) muestra diferencias que salen casi todas de cuatro piezas comunes, más unas pocas puntuales:
+- [ ] la marca «ArquitecturaBase» más apretada en `AuthLayout` (sola mueve 54 capturas);
+- [ ] los íconos 2 a 4 px más grandes;
+- [ ] los espacios del teléfono: la bajada del encabezado y entre campos;
+- [ ] las sombras de los diálogos;
+- [ ] «Último cambio» cortado en el Inicio, Mi cuenta sin el módulo de WhatsApp («Agregar correo»), el correo tapado en «Te mandamos un código a…», «Verificado» y Google en los métodos, la ⓘ de la página despublicada en el teléfono y la cabecera pública del teléfono;
+- [ ] B7 + D2 en el front: el test propio del 409 al cambiar dónde vale un rol con personas.
+
 ### 7. Puerta
 
 Verificada el 2026-10-05 en worktrees limpios: back `3d8af5e` y front `3cad8b6` (ver el informe). Lo que otras tandas
