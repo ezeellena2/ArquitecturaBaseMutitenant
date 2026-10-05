@@ -34,7 +34,7 @@
 
 ## Lo verifica
 - `FeatureGateTests` (E5): un módulo apagado da 404 y prendido da 200; el apagado de emergencia gana sobre la organización.
-- `ModuleControllersTests` (E5): todo controller fuera del núcleo (el núcleo incluye `PublicSite/` y `Organization/PublicPageAdminController`) tiene `[FeatureGate]` con una clave del catálogo (test de arquitectura).
+- `ModuleControllersTests` (E5): todo controller fuera del núcleo (el núcleo son las carpetas `Account/`, `Auth/`, `ReferenceData/`, `Organization/`, `Platform/` y `PublicSite/` de `Api/Controllers`) tiene `[FeatureGate]` con una clave del catálogo (test de arquitectura).
 
 ## Detalle
 [backend.md §20](../architecture/backend.md#20-reglas-de-datos-que-se-aplican-solas) · front: `docs/rules/accesos-y-permisos.md`

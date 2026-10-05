@@ -262,7 +262,7 @@ Application/
 
 `NeutralLanguage=es` y `InternalsVisibleTo` para Application.UnitTests y Api.IntegrationTests. Los servicios y helpers son `internal sealed partial`: `partial` porque llevan `[LoggerMessage]`.
 
-El tope de constructores es de **8 dependencias de negocio**: excluye únicamente `ILogger<T>`, `TimeProvider`, `IRequestValidator` e `IUnitOfWork`; `IOptions<T>` y cualquier otra dependencia cuentan ([ADR 0039](../decisions/0039-tope-de-dependencias-de-negocio.md)). Si una clase se pasa, se divide por responsabilidad, sin clases que solo reenvían. La transacción la abre el método público del servicio de entrada, como `RoleService`; sus helpers trabajan dentro y no reciben `IUnitOfWork`. No se agregan excepciones de helpers a `TransactionBoundaryTests`. Los desvíos anteriores se ordenan en la consolidación previa a E7; lo que falta de E5 ya nace con esta regla.
+El tope de constructores es de **8 dependencias de negocio**: excluye únicamente `ILogger<T>`, `TimeProvider`, `IRequestValidator` e `IUnitOfWork`; `IOptions<T>` y cualquier otra dependencia cuentan ([ADR 0039](../decisions/0039-tope-de-dependencias-de-negocio.md)). Si una clase se pasa, se divide por responsabilidad, sin clases que solo reenvían. La transacción la abre el método público del servicio de entrada, como `RoleService`; sus helpers trabajan dentro y no reciben `IUnitOfWork`. No se agregan excepciones de helpers a `TransactionBoundaryTests`. La consolidación previa a la E7 llevó a esta regla todos los servicios que existían (bloque 3).
 
 ### 4.3 Infrastructure
 

@@ -1328,8 +1328,8 @@ ArquitecturaBaseMultitenant.Api/
 │   │   └── LegalController.cs                         Sirve sin sesión la versión vigente de términos y privacidad…
 │   ├── ReferenceData/                                [E1]
 │   │   └── ReferenceDataController.cs                 GET /api/reference-data y /{catálogo} [AllowAnonymous]; lista de AccessDeclarationTests [E3]
-│   ├── Organization/                                  [Access(Business)]; rutas sin prefijo de acceso (el acceso lo declara [Access]); suma
-│   │                                                  PublicPageAdminController (E6: mi página pública)
+│   ├── Organization/                                  [Access(Business)]; rutas sin prefijo de acceso (el acceso lo declara [Access]); lo de
+│   │                                                  la organización entera, bajo api/organization
 │   │   ├── RolesController.cs                         [E4] api/roles ← referencia
 │   │   ├── PermissionsController.cs                   [E4] api/permissions
 │   │   ├── CompaniesController.cs                     [E6] api/companies

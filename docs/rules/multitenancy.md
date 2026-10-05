@@ -7,7 +7,7 @@
   - `[Access(Consumer)]` para lo de las personas;
   - `[Access(Business)]` + permiso para la administración de una organización;
   - `[Access(Platform)]` para el backoffice;
-  - `[PublicSite][AllowAnonymous]` solo para lo que responde en el subdominio de una organización publicada (`PublicPageController`);
+  - `[PublicSite][AllowAnonymous]` solo para lo que responde en el subdominio de una organización publicada (`PublicSiteController` (E7));
   - solo `[AllowAnonymous]` para las rutas anónimas del dominio principal (ingreso, registro, "Registrá tu empresa", `GET /api/public-site/slug-availability`, invitación, enlace, `GET` de documentos legales, `GET /api/reference-data` y sus cinco rutas por catálogo, directorio, pedido de "Recuperar mi cuenta", cancelar la baja, webhooks), con su controller en la lista explícita de `AccessDeclarationTests`.
 - **Dato privado:** `: Entity, ITenantOwned`, esquema `tenant`, `migrationBuilder.EnableTenantRls(Schemas.Tenant, "<Tabla>")`.
 - **Dato público:** `IPublishedByBusiness` (`BusinessTenantId`, `IsPublished`), esquema `public_site`, `EnablePublicRls`. Se lee con `IPublicSiteContext` (E7), el del subdominio, y solo trae lo publicado.
