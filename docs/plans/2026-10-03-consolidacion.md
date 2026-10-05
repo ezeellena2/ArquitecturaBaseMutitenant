@@ -604,8 +604,8 @@ Lo que dejaron las tandas 6a, 6b y 6c, y lo que el usuario decide con Diseño en
   - en el teléfono, M-Empresa trae la hoja «Invitación: acciones» y, para él, la barra de abajo del miembro (Inicio y Más).
 
   Back: la ruta de candidatos y reenviar o revocar con `company.members.manage`. Front: tanda 6d-4b.
-- [ ] **«Guardar cambios», con un solo criterio en toda edición:** se apaga sin cambios y nunca por un dato que falta. El usuario pidió el mismo criterio en todas las pantallas. Front: tanda 6d-4a, que revisa todas.
-- [ ] **Los textos de espera:** «Quitando…», «Desvinculando…» y «Dando de baja…». Front: tanda 6d-4a.
+- [x] **«Guardar cambios», con un solo criterio en toda edición** (front `a51a27c`, con `submit-buttons.test.ts` en el arnés): se apaga sin cambios y nunca por un dato que falta. El usuario pidió el mismo criterio en todas las pantallas. Front: tanda 6d-4a, que revisa todas.
+- [x] **Los textos de espera:** «Quitando…», «Desvinculando…» y «Dando de baja…» (front `1051136`). La ficha con un solo grupo va sin barra de pestañas, en la pieza `Page` (`2c96ca7`). 1175 tests, lint y build; capturas en `b6d4a/`.
 - [ ] **Lo demás de v108** (front, tanda 6d-4b):
   - «Quitar dominio» con su texto para 10, 1 y 0 correos (con 0, sin la cantidad junto a «Verificado»);
   - el detalle de Auditoría en el teléfono (M-Auditoria-Org, «Detalle de un cambio»);
