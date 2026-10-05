@@ -14,7 +14,7 @@ internal sealed class PublicPageReader(ApplicationDbContext context, ITenantCont
         var tenantId = tenantContext.RequiredTenantId;
         return context.PublicPages.AsNoTracking().Where(page => page.BusinessTenantId == tenantId)
             .Select(page => new PlatformPublicSiteResponse(slug, page.Name, page.IsPublished,
-                page.PublishBlockedAtUtc, page.PublishBlockedReason, page.Version))
+                page.PublishBlockedAtUtc, page.PublishBlockedReason, page.Version, page.PublishedAtUtc))
             .SingleOrDefaultAsync(cancellationToken);
     }
 

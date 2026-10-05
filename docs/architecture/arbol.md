@@ -615,7 +615,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── PlatformPublicSiteResponse.cs             Solo metadatos de publicación
 │   │   ├── PlatformRecoveryModels.cs                 Bandeja Recuperaciones
 │   │   ├── PlatformSettingsModels.cs                 Los correos de contacto que muestran Ingreso y Registro, sin…
-│   │   ├── PlatformTenantModels.cs                   listado, conteos, alta y estado de organizaciones en Plataforma
+│   │   ├── PlatformTenantModels.cs                   listado, detalle con Dueños, historial, conteos, alta y estado de organizaciones
 │   │   └── UpdatePlatformFeatureRequest.cs           Cambio explícito de un módulo global, con concurrencia y motivo
 │   ├── Notifications/                                [E3]
 │   │   └── AccountNotice.cs                          jerarquía cerrada: LoginMethodChanged (qué pasó, método enmascarado, fecha), ReviewLoginMethods (organización), DeletionRequested (fecha), DeletionCancelled, AccountDeleted
@@ -691,6 +691,7 @@ ArquitecturaBaseMultitenant.Application/
 │   ├── Platform/                                     [E5]
 │   │   ├── UpdatePlatformSettingsRequestValidator.cs
 │   │   ├── ListPlatformAuditRequestValidator.cs      Período y tipo de la lista cerrada del tablero
+│   │   ├── ListPlatformTenantHistoryRequestValidator.cs cursor after/limit del historial por organización
 │   │   ├── PlatformAccountRequestValidators.cs       Motivo de una acción sobre una cuenta; versión y motivo en recuperaciones y operadores
 │   │   ├── PlatformOperatorRequestValidators.cs      Exige el correo
 │   │   ├── PlatformTenantRequestValidators.cs        validadores del listado, el alta y el estado de organizaciones
@@ -1400,6 +1401,7 @@ ArquitecturaBaseMultitenant.Api/
 │   ├── Platform/                                      [E5]
 │   │   ├── PlatformAccountHttpRequests.cs             filtros de Cuentas y pedidos de una acción con motivo (las de cuenta, sin versión)
 │   │   ├── PlatformAuditQuery.cs                      filtros de la auditoría de Plataforma
+│   │   ├── PlatformTenantHistoryQuery.cs              cursor after/limit del historial global de una organización
 │   │   ├── PlatformOperatorHttpRequests.cs            invitar un operador y cambiar sus permisos
 │   │   ├── PlatformRecoveryHttpRequests.cs            filtros de la bandeja Recuperaciones
 │   │   ├── PlatformSettingsHttpRequest.cs             Los dos correos son obligatorios
@@ -1787,6 +1789,7 @@ tests/
 │   │   ├── PlatformSettingsTests.cs                   tests de PlatformSettings
 │   │   ├── PlatformTenantAdministrationTests.cs       tests de PlatformTenantAdministration
 │   │   ├── PlatformTenantCountersTests.cs             tests de PlatformTenantCounters
+│   │   ├── PlatformTenantDetailTests.cs               Dueños vigentes, estado efectivo e historial global por organización
 │   │   ├── PlatformTenantProvisioningHttpTests.cs     tests de PlatformTenantProvisioningHttp
 │   │   └── PublicPageModerationTests.cs               tests de PublicPageModeration
 │   ├── Api/
@@ -1794,7 +1797,8 @@ tests/
 │   │   └── NormalizedInputTests.cs                    Comprueba la limpieza de texto en el límite HTTP y…
 │   ├── Features/
 │   │   ├── FeatureGateTests.cs                        tests de FeatureGate
-│   │   └── PlatformFeatureAdministrationTests.cs      tests de PlatformFeatureAdministration
+│   │   ├── PlatformFeatureAdministrationTests.cs      tests de PlatformFeatureAdministration
+│   │   └── PlatformFeatureCivilExpiryTests.cs         fechas civiles, DST, lectura global y vencimiento UTC histórico
 │   ├── Identity/
 │   │   ├── AccountMethodsHttpTests.cs                 Comprueba los contratos HTTP de gestión de métodos de ingreso…
 │   │   ├── AccountProfileTests.cs                     Comprueba la edición del perfil usando su versión leída

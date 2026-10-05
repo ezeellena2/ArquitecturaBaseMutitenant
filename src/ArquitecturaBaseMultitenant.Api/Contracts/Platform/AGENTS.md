@@ -1,1 +1,3 @@
 Entradas HTTP de Plataforma. Leé [api-http](../../../../docs/rules/api-http.md), [plataforma](../../../../docs/features/plataforma.md), [concurrencia](../../../../docs/rules/concurrencia.md), [paginado-y-busqueda](../../../../docs/rules/paginado-y-busqueda.md). Propiedades nullable, motivos obligatorios validados por Application, ToString sin datos. Copiá contratos de Organization.
+
+GET organización usa detalle separado del DTO paginado, con Dueños actuales y último estado efectivo. Historial sólo after/limit, sin totales. La fecha de prueba es expiresOn DateOnly; el instante técnico no pertenece al contrato.

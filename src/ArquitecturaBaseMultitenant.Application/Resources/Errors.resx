@@ -199,4 +199,5 @@
   <data name="Platform.AccountRecovery.MethodInUse" xml:space="preserve"><value>Ese correo ya es de otra cuenta.</value></data>
   <data name="Platform.AccountRecovery.MethodAlreadyOnAccount" xml:space="preserve"><value>Ese correo ya es un método de esa cuenta.</value></data>
   <data name="Platform.AccountRecovery.OperatorAccount" xml:space="preserve"><value>La cuenta es de un operador de la plataforma: no se recupera desde acá.</value></data>
+  <data name="Features.Module.InvalidExpiry" xml:space="preserve"><value>Elegí una fecha cuyo día completo pueda representarse.</value></data>
 </root>

@@ -25,6 +25,24 @@ public sealed class OpenApiTests(ApiFactory factory)
     ];
 
     [Fact]
+    public async Task Civil_feature_expirations_are_nullable_date_strings_in_the_generated_contract()
+    {
+        await using var development = factory.WithWebHostBuilder(builder => builder.UseDevelopmentTestOwner());
+        using var client = development.CreateClient();
+        using var response = await client.GetAsync("/openapi/v1.json", TestContext.Current.CancellationToken);
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        var schemas = document.RootElement.GetProperty("components").GetProperty("schemas");
+        foreach (var name in new[] { "UpdatePlatformFeatureHttpRequest", "PlatformFeatureResponse" })
+        {
+            var property = schemas.GetProperty(name).GetProperty("properties").GetProperty("expiresOn");
+            Assert.Equal("date", property.GetProperty("format").GetString());
+            var types = property.GetProperty("type").EnumerateArray().Select(type => type.GetString()).ToArray();
+            Assert.Contains("string", types);
+            Assert.Contains("null", types);
+        }
+    }
+
+    [Fact]
     public async Task Swagger_and_document_are_available_in_development()
     {
         await using var development = factory.WithWebHostBuilder(builder => builder.UseDevelopmentTestOwner());

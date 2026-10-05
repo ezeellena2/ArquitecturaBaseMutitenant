@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
+using ArquitecturaBaseMultitenant.Application.Common.Text;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
@@ -11,6 +12,8 @@ using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.Auditing;
+using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
@@ -18,7 +21,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 internal sealed class TenantAdministrationService(IPlatformReader reader, PlatformTenantStateWriter writer,
     ITenantStatusCache cache, PlatformActionGuard guard, PlatformTenantCreator creator,
     PlatformTenantActivator activator, IPersonalSpaceProvisioner defaults, IRequestValidator validator,
-    IUnitOfWork unitOfWork, TimeProvider clock, ILogger<TenantAdministrationService> logger)
+    ISecurityEventReader history, IUnitOfWork unitOfWork, TimeProvider clock, ILogger<TenantAdministrationService> logger)
     : ITenantAdministrationService
 {
     public Task<Result<CreatedPlatformTenantResponse>> CreateAsync(Guid operationId, CreatePlatformTenantRequest request, CancellationToken ct) =>
@@ -77,12 +80,47 @@ internal sealed class TenantAdministrationService(IPlatformReader reader, Platfo
             return await reader.CountTenantsAsync(request, ct);
         });
 
-    public Task<Result<PlatformTenantResponse>> FindAsync(Guid id, CancellationToken ct) =>
-        OperationLog.RunAsync<PlatformTenantResponse>(logger, clock, "FindPlatformTenant", async () =>
+    public Task<Result<PlatformTenantDetailResponse>> FindAsync(Guid id, CancellationToken ct) =>
+        OperationLog.RunAsync<PlatformTenantDetailResponse>(logger, clock, "FindPlatformTenant", async () =>
         {
-            var row = await reader.FindTenantAsync(id, ct);
-            return row is null ? TenantErrors.NotFound : row;
+            var row = await reader.FindTenantDetailAsync(id, ct);
+            if (row is null) return TenantErrors.NotFound;
+            var tenant = row.Tenant;
+            var state = row.LastStateChange;
+            var owners = row.Owners.Select(owner => owner.IdentityStatus == UserStatus.Deleted
+                ? owner with { DisplayName = ErrorTexts.Get("Legal.AccountDeletion.DeletedDisplayName"), Email = null }
+                : owner).ToArray();
+            var contact = owners.FirstOrDefault();
+            return new PlatformTenantDetailResponse(tenant.Id, tenant.Name, tenant.Slug, tenant.Status,
+                tenant.Source, tenant.CreatedAtUtc, tenant.CompanyCount, tenant.MemberCount, tenant.Version,
+                contact?.DisplayName, contact is null ? row.PendingOwnerEmail : contact.Email, owners,
+                state is null ? null : new PlatformTenantStateChangeResponse(state.AtUtc,
+                    AuditTexts.SecurityEvent(state.Type), state.Reason));
         });
+
+    public Task<Result<CursorResult<PlatformTenantHistoryResponse>>> HistoryAsync(Guid id,
+        ListPlatformTenantHistoryRequest request, CancellationToken ct) =>
+        OperationLog.RunAsync<CursorResult<PlatformTenantHistoryResponse>>(logger, clock, "ListPlatformTenantHistory", async () =>
+        {
+            ArgumentNullException.ThrowIfNull(request);
+            if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
+            if (await reader.FindTenantAsync(id, ct) is null) return TenantErrors.NotFound;
+            var page = await history.ListAsync(new ListPlatformAuditRequest
+                { TenantId = id, Period = "all", After = request.After, Limit = request.Limit }, null, null, false, ct);
+            return new CursorResult<PlatformTenantHistoryResponse>([.. page.Items.Select(row =>
+                new PlatformTenantHistoryResponse(row.Id, row.OccurredAtUtc, AuditTexts.SecurityEvent(row.EventType!.Value),
+                    row.ActorKind == AuditActorKind.System ? AuditTexts.Actor(AuditActorKind.System) : ActorName(row.Actor),
+                    AuditTexts.ActorRole(row.ActorKind), row.Reason, row.Changes))], page.NextCursor, page.HasMore);
+        });
+
+    private static string ActorName(PlatformAuditAccount? account) => account switch
+    {
+        null => AuditTexts.UnknownAccount(),
+        { IsDeleted: true } => ErrorTexts.Get("Legal.AccountDeletion.DeletedDisplayName"),
+        { DisplayName: { Length: > 0 } name } => name,
+        { PrimaryEmail: { } email } => PersonalDataMask.Email(email.Value),
+        _ => AuditTexts.UnknownAccount(),
+    };
 
     public Task<Result<VersionResponse>> ChangeStateAsync(Guid id, PlatformTenantAction action, PlatformTenantStateRequest request, CancellationToken ct) =>
         OperationLog.RunAsync<VersionResponse>(logger, clock, "ChangePlatformTenantState", async () =>

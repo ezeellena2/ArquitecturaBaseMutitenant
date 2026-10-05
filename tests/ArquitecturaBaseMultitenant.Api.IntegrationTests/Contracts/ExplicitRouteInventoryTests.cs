@@ -93,6 +93,7 @@ public sealed class ExplicitRouteInventoryTests(ApiFactory factory)
         "GET /api/platform/tenants/paged",
         "GET /api/platform/tenants/filter-counts",
         "GET /api/platform/tenants/{id:guid}",
+        "GET /api/platform/tenants/{id:guid}/history",
         "POST /api/platform/tenants",
         "POST /api/platform/tenants/{id:guid}/approve",
         "POST /api/platform/tenants/{id:guid}/retry-provisioning",

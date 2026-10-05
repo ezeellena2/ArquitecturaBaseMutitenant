@@ -199,4 +199,5 @@
   <data name="Platform.AccountRecovery.MethodInUse" xml:space="preserve"><value>That email address already belongs to another account.</value></data>
   <data name="Platform.AccountRecovery.MethodAlreadyOnAccount" xml:space="preserve"><value>That email address is already a sign-in method of that account.</value></data>
   <data name="Platform.AccountRecovery.OperatorAccount" xml:space="preserve"><value>This is a platform operator account: it cannot be recovered here.</value></data>
+  <data name="Features.Module.InvalidExpiry" xml:space="preserve"><value>Choose a date whose full day can be represented.</value></data>
 </root>

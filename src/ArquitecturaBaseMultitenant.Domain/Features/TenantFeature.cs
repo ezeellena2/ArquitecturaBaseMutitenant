@@ -13,6 +13,7 @@ public sealed class TenantFeature : Entity, IAuditable, IVersioned
     public bool Enabled { get; private set; }
     public TenantFeatureSource Source { get; private set; }
     public DateTime? ExpiresAtUtc { get; private set; }
+    public DateOnly? ExpiresOn { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public Guid? CreatedBy { get; private set; }
     public DateTime? ModifiedAtUtc { get; private set; }
@@ -20,17 +21,17 @@ public sealed class TenantFeature : Entity, IAuditable, IVersioned
     public uint Version { get; private set; }
 
     public static Result<TenantFeature> Create(Guid tenantId, string featureKey, bool enabled,
-        TenantFeatureSource source, DateTime? expiresAtUtc)
+        TenantFeatureSource source, DateTime? expiresAtUtc, DateOnly? expiresOn = null)
     {
         if (tenantId == Guid.Empty) throw new ArgumentException("The organization id cannot be empty.", nameof(tenantId));
         if (string.IsNullOrWhiteSpace(featureKey) || featureKey.Length > TextLimits.ShortName)
             return TenantFeatureErrors.InvalidKey;
         var feature = new TenantFeature { TenantId = tenantId, FeatureKey = featureKey };
-        var update = feature.Update(enabled, source, expiresAtUtc);
+        var update = feature.Update(enabled, source, expiresAtUtc, expiresOn);
         return update.IsFailure ? update.Error : feature;
     }
 
-    public Result Update(bool enabled, TenantFeatureSource source, DateTime? expiresAtUtc)
+    public Result Update(bool enabled, TenantFeatureSource source, DateTime? expiresAtUtc, DateOnly? expiresOn = null)
     {
         if (expiresAtUtc is { Kind: not DateTimeKind.Utc })
             throw new ArgumentException("The expiry instant must be UTC.", nameof(expiresAtUtc));
@@ -40,6 +41,7 @@ public sealed class TenantFeature : Entity, IAuditable, IVersioned
         Enabled = enabled;
         Source = source;
         ExpiresAtUtc = expiresAtUtc;
+        ExpiresOn = expiresOn;
         return Result.Success();
     }
 

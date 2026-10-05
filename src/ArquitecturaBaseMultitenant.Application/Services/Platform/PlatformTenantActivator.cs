@@ -11,7 +11,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
 internal sealed class PlatformTenantActivator(IPlatformTenantRepository tenants, ITenantProvisioningReader metadata,
     IMemberRepository members, ITenantSettingsRepository settings, TenantProvisioner provisioner,
-    PlatformAuditWriter audit, IUserRepository users)
+    PlatformAuditWriter audit, IUserRepository users, PlatformTenantNotifier notices)
 {
     internal async Task<Result<Tenant>> ActivateAsync(Guid id, bool retry, PlatformTenantStateRequest request,
         TenantSettings fallbackSettings, DateTime nowUtc, CancellationToken ct)
@@ -53,6 +53,8 @@ internal sealed class PlatformTenantActivator(IPlatformTenantRepository tenants,
         changes.AddEnum("status", before, tenant.Status);
         audit.Record(id, retry ? SecurityEventType.OrganizationProvisioningRetried : SecurityEventType.OrganizationApproved,
             request.Reason!, changes);
+        if (!retry && before != tenant.Status)
+            await notices.EnqueueApprovedAsync(tenant, owner.Status == MemberStatus.Active ? owner.UserId : null, ct);
         return tenant;
     }
 }

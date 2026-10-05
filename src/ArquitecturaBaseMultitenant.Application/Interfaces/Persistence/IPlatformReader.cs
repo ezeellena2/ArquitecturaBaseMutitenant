@@ -9,5 +9,6 @@ public interface IPlatformReader
     Task<PagedResult<PlatformTenantResponse>> ListTenantsAsync(ListPlatformTenantsRequest request, CancellationToken ct);
     Task<PlatformTenantFilterCounts> CountTenantsAsync(ListPlatformTenantsRequest request, CancellationToken ct);
     Task<PlatformTenantResponse?> FindTenantAsync(Guid tenantId, CancellationToken ct);
+    Task<PlatformTenantDetailRow?> FindTenantDetailAsync(Guid tenantId, CancellationToken ct);
     Task<IReadOnlyList<Guid>> ListActiveTenantOwnerIdsAsync(Guid tenantId, CancellationToken ct);
 }

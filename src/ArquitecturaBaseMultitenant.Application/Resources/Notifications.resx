@@ -115,4 +115,8 @@
   <data name="PublicPageModeration.BlockedBody" xml:space="preserve"><value>{0} La plataforma despublicó la página de {1}. Quedó en borrador y no se puede publicar hasta que la plataforma lo permita.</value></data>
   <data name="PublicPageModeration.AllowedBody" xml:space="preserve"><value>{0} La plataforma permitió volver a publicar la página de {1}. Podés revisarla y publicarla desde tu organización.</value></data>
   <data name="PublicPageModeration.Note" xml:space="preserve"><value>Tu organización y sus accesos siguen funcionando.</value></data>
+  <data name="OrganizationApproved.Subject" xml:space="preserve"><value>Aprobamos tu organización</value></data>
+  <data name="OrganizationApproved.Title" xml:space="preserve"><value>Tu organización ya está lista</value></data>
+  <data name="OrganizationApproved.Body" xml:space="preserve"><value>{0} Aprobamos {1} y terminamos el alta. Ya podés entrar como Dueño de tu organización.</value></data>
+  <data name="OrganizationApproved.Note" xml:space="preserve"><value>Ingresá con los métodos de tu cuenta y elegí tu organización.</value></data>
 </root>

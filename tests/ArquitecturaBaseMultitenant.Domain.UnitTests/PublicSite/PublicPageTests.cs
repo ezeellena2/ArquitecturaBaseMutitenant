@@ -6,6 +6,23 @@ namespace ArquitecturaBaseMultitenant.Domain.UnitTests.PublicSite;
 public sealed class PublicPageTests
 {
     [Fact]
+    public void Publication_records_utc_only_when_publishing_a_draft_and_republication_records_the_new_instant()
+    {
+        var page = PublicPage.Create();
+        page.UpdateContent("Publicación", null, null, null, null, null);
+        var firstUtc = new DateTime(2026, 10, 5, 12, 0, 0, DateTimeKind.Utc);
+        Assert.Null(page.PublishedAtUtc);
+        Assert.True(page.Publish(firstUtc).IsSuccess);
+        Assert.Equal(firstUtc, page.PublishedAtUtc);
+        Assert.True(page.Publish(firstUtc.AddHours(1)).IsSuccess);
+        Assert.Equal(firstUtc, page.PublishedAtUtc);
+        page.Unpublish();
+        Assert.True(page.Publish(firstUtc.AddDays(1)).IsSuccess);
+        Assert.Equal(firstUtc.AddDays(1), page.PublishedAtUtc);
+        Assert.Throws<ArgumentException>(() => page.Publish(DateTime.SpecifyKind(firstUtc, DateTimeKind.Unspecified)));
+    }
+
+    [Fact]
     public void New_page_is_draft_and_only_publishes_after_content_is_valid()
     {
         var page = PublicPage.Create();
@@ -13,7 +30,7 @@ public sealed class PublicPageTests
         Assert.False(page.IsPublished);
         Assert.True(page.UpdateContent("Grupo Delta", "Una descripción", Email.Create("hola@example.com").Value,
             PhoneNumber.Create("+541145678900").Value, "Buenos Aires", "https://example.com").IsSuccess);
-        Assert.True(page.Publish().IsSuccess);
+        Assert.True(page.Publish(new DateTime(2026, 10, 5, 12, 0, 0, DateTimeKind.Utc)).IsSuccess);
         Assert.True(page.IsPublished);
         Assert.True(page.Unpublish().IsSuccess);
         Assert.False(page.IsPublished);
@@ -24,7 +41,7 @@ public sealed class PublicPageTests
     {
         var page = PublicPage.Create();
         Assert.True(page.UpdateContent("Grupo Delta", null, null, null, null, null).IsSuccess);
-        Assert.True(page.Publish().IsSuccess);
+        Assert.True(page.Publish(new DateTime(2026, 10, 5, 12, 0, 0, DateTimeKind.Utc)).IsSuccess);
 
         var blockedAtUtc = new DateTime(2026, 10, 2, 12, 0, 0, DateTimeKind.Utc);
         page.ApplyModerationBlock("Datos de contacto falsos.", Guid.NewGuid(), blockedAtUtc);
@@ -32,7 +49,7 @@ public sealed class PublicPageTests
         Assert.False(page.IsPublished);
         Assert.Equal(blockedAtUtc, page.PublishBlockedAtUtc);
         Assert.Equal("Datos de contacto falsos.", page.PublishBlockedReason);
-        Assert.Equal(PublicPageErrors.PublishBlocked, page.Publish().Error);
+        Assert.Equal(PublicPageErrors.PublishBlocked, page.Publish(new DateTime(2026, 10, 5, 12, 0, 0, DateTimeKind.Utc)).Error);
     }
 
     [Fact]
@@ -40,7 +57,7 @@ public sealed class PublicPageTests
     {
         var page = PublicPage.Create();
         Assert.True(page.UpdateContent("Grupo Delta", "Contenido conservado", null, null, null, null).IsSuccess);
-        Assert.True(page.Publish().IsSuccess);
+        Assert.True(page.Publish(new DateTime(2026, 10, 5, 12, 0, 0, DateTimeKind.Utc)).IsSuccess);
         Assert.True(page.ApplyModerationBlock("Revisar contenido", Guid.NewGuid(),
             new DateTime(2026, 10, 3, 12, 0, 0, DateTimeKind.Utc)).IsSuccess);
 
@@ -50,7 +67,7 @@ public sealed class PublicPageTests
         Assert.Null(page.PublishBlockedReason);
         Assert.Null(page.PublishBlockedByUserId);
         Assert.Equal("Contenido conservado", page.Description);
-        Assert.True(page.Publish().IsSuccess);
+        Assert.True(page.Publish(new DateTime(2026, 10, 5, 12, 0, 0, DateTimeKind.Utc)).IsSuccess);
     }
 
     [Fact]

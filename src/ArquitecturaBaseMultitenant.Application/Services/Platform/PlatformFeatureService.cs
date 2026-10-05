@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
-internal sealed class PlatformFeatureService(PlatformFeatureListBuilder listing, PlatformFeatureWriter writer,
+internal sealed class PlatformFeatureService(PlatformFeatureListBuilder listing, PlatformFeatureWriter writer, PlatformActionGuard guard,
     IUnitOfWork unitOfWork, IRequestValidator validator, ITenantFeatureCache cache,
     TimeProvider clock, ILogger<PlatformFeatureService> logger) : IPlatformFeatureService
 {
@@ -24,6 +24,9 @@ internal sealed class PlatformFeatureService(PlatformFeatureListBuilder listing,
         {
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
+            var entered = await guard.EnterAsync(tenantId, request.Reason!, cancellationToken);
+            if (entered.IsFailure) return entered.Error;
+            using var lease = entered.Value;
             try
             {
                 var result = await unitOfWork.ExecuteInTransactionAsync(ct => writer.UpdateAsync(tenantId, key, request, ct),

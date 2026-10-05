@@ -83,12 +83,22 @@ public sealed class PlatformTenantsController(ITenantAdministrationService servi
 
     [HttpGet("{id:guid}")]
     [HasPlatformPermission(PlatformPermissions.Tenants.Read)]
-    [ProducesResponseType<PlatformTenantResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<PlatformTenantDetailResponse>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status401Unauthorized)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Find(Guid id, CancellationToken ct) =>
         (await service.FindAsync(id, ct)).ToActionResult(this);
+
+    [HttpGet("{id:guid}/history")]
+    [HasPlatformPermission(PlatformPermissions.Tenants.Read)]
+    [ProducesResponseType<CursorResult<PlatformTenantHistoryResponse>>(StatusCodes.Status200OK)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
+    [ProducesProblem(StatusCodes.Status401Unauthorized)]
+    [ProducesProblem(StatusCodes.Status403Forbidden)]
+    [ProducesProblem(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> History(Guid id, [FromQuery] PlatformTenantHistoryQuery query, CancellationToken ct) =>
+        (await service.HistoryAsync(id, query.ToModel(), ct)).ToActionResult(this);
 
     [HttpPost("{id:guid}/reject")]
     [Idempotent]

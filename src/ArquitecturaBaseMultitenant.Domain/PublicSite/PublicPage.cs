@@ -24,6 +24,7 @@ public sealed class PublicPage : Entity, IPublishedByBusiness, IVersioned
     public string? Address { get; private set; }
     public string? Website { get; private set; }
     public bool IsPublished { get; private set; }
+    public DateTime? PublishedAtUtc { get; private set; }
     public DateTime? PublishBlockedAtUtc { get; private set; }
     public string? PublishBlockedReason { get; private set; }
     public Guid? PublishBlockedByUserId { get; private set; }
@@ -65,10 +66,12 @@ public sealed class PublicPage : Entity, IPublishedByBusiness, IVersioned
         return Result.Success();
     }
 
-    public Result Publish()
+    public Result Publish(DateTime publishedAtUtc)
     {
+        if (publishedAtUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("The publication instant must be UTC.", nameof(publishedAtUtc));
         if (PublishBlockedAtUtc is not null) return PublicPageErrors.PublishBlocked;
         if (string.IsNullOrWhiteSpace(Name)) return PublicPageErrors.NameRequired;
+        if (!IsPublished) PublishedAtUtc = publishedAtUtc;
         IsPublished = true;
         return Result.Success();
     }

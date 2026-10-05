@@ -45,6 +45,14 @@ internal static class OpenApiExtensions
                             : JsonSchemaType.String;
                     schema.Format = "date-time";
                 }
+                if (valueType == typeof(DateOnly))
+                {
+                    schema.Type = IsNullable(context.JsonPropertyInfo)
+                        || Nullable.GetUnderlyingType(context.JsonTypeInfo.Type) is not null
+                            ? JsonSchemaType.String | JsonSchemaType.Null
+                            : JsonSchemaType.String;
+                    schema.Format = "date";
+                }
 
                 if (context.JsonTypeInfo.Kind == JsonTypeInfoKind.Object && schema.Required is not null)
                 {

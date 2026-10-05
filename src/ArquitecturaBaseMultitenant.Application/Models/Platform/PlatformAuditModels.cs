@@ -29,7 +29,7 @@ public sealed record PlatformAuditEventResponse(Guid Id, DateTime OccurredAtUtc,
 public sealed record PlatformAuditRow(Guid Id, DateTime OccurredAtUtc, SecurityEventType? EventType,
     LoginAuditMethod? SignInMethod, bool SignInSucceeded, string? FailureCode, AuditActorKind ActorKind,
     PlatformAuditAccount? Actor, PlatformAuditAccount? TargetAccount, Guid? TargetAccountId, Guid? TargetTenantId,
-    string? TargetTenantName, string? Reason, string? MaskedIpAddress)
+    string? TargetTenantName, string? Reason, string? MaskedIpAddress, string Changes = "{}")
 {
     public override string ToString() => nameof(PlatformAuditRow);
 }

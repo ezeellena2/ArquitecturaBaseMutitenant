@@ -2,6 +2,8 @@ using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
+using ArquitecturaBaseMultitenant.Domain.Auditing;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
@@ -34,6 +36,43 @@ internal sealed class PlatformReader(ApplicationDbContext context) : IPlatformRe
 
     public Task<PlatformTenantResponse?> FindTenantAsync(Guid id, CancellationToken ct) =>
         Project(context.Tenants.AsNoTracking().Where(t => t.Kind == TenantKind.Business && t.Id == id)).SingleOrDefaultAsync(ct);
+
+    public async Task<PlatformTenantDetailRow?> FindTenantDetailAsync(Guid id, CancellationToken ct)
+    {
+        var tenant = await FindTenantAsync(id, ct);
+        if (tenant is null) return null;
+        var owners = await (from access in context.UserTenantAccesses.AsNoTracking()
+            join user in context.Users.AsNoTracking() on access.UserId equals user.Id
+            where access.TenantId == id && access.Status == MemberStatus.Active && access.RoleName == SystemRoles.TenantAdmin
+            orderby access.JoinedAtUtc, access.UserId
+            select new PlatformTenantOwnerResponse(user.Id, user.DisplayName,
+                user.Email == null ? null : Email.Create(user.Email).Value, user.Status, access.Status,
+                context.LoginAudits.Where(audit => audit.UserId == user.Id && audit.Succeeded)
+                    .OrderByDescending(audit => audit.OccurredAtUtc).ThenByDescending(audit => audit.Id)
+                    .Select(audit => (DateTime?)audit.OccurredAtUtc).FirstOrDefault(),
+                context.LoginAudits.Where(audit => audit.UserId == user.Id && audit.Succeeded)
+                    .OrderByDescending(audit => audit.OccurredAtUtc).ThenByDescending(audit => audit.Id)
+                    .Select(audit => (LoginAuditMethod?)audit.Method).FirstOrDefault())).ToArrayAsync(ct);
+        // El jsonb conserva evidencia técnica. Una entrada, un cambio de módulos o un replay sin transición
+        // no reemplazan el último cambio de estado; las filas históricas sin evidencia quedan fuera.
+        var state = await context.SecurityEvents.FromSql($"""
+            SELECT * FROM platform."SecurityEvents"
+            WHERE "TargetTenantId" = {id}
+              AND "Changes" -> 'status' ->> 'after' IS NOT NULL
+              AND ("Changes" -> 'status' ->> 'before') IS DISTINCT FROM ("Changes" -> 'status' ->> 'after')
+            """).AsNoTracking()
+            .Where(item => item.Type == SecurityEventType.OrganizationCreated
+                || item.Type == SecurityEventType.OrganizationApproved || item.Type == SecurityEventType.OrganizationRejected
+                || item.Type == SecurityEventType.OrganizationSuspended || item.Type == SecurityEventType.OrganizationReactivated
+                || item.Type == SecurityEventType.OrganizationClosed || item.Type == SecurityEventType.OrganizationProvisioningRetried)
+            .OrderByDescending(item => item.OccurredAtUtc).ThenByDescending(item => item.Id)
+            .Select(item => new PlatformTenantStateChangeRow(item.OccurredAtUtc, item.Type, item.Reason)).FirstOrDefaultAsync(ct);
+        var pendingEmail = owners.Length == 0 ? await context.PendingTenantOwners.AsNoTracking()
+            .Where(owner => owner.TenantId == id).OrderBy(owner => owner.InvitationId)
+            .Select(owner => owner.Address).FirstOrDefaultAsync(ct) : null;
+        return new PlatformTenantDetailRow(tenant, owners, state,
+            pendingEmail is null ? null : Email.Create(pendingEmail).Value);
+    }
 
     public async Task<IReadOnlyList<Guid>> ListActiveTenantOwnerIdsAsync(Guid id, CancellationToken ct) =>
         await context.UserTenantAccesses.AsNoTracking().Where(a => a.TenantId == id

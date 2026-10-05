@@ -18,7 +18,7 @@ internal sealed class PlatformFeatureListBuilder(ITenantReader tenants, ITenantF
         {
             var grant = grants.SingleOrDefault(row => row.Key == definition.Key);
             return new PlatformFeatureResponse(definition.Key, grant?.Enabled ?? definition.DefaultEnabled,
-                grant?.Source ?? TenantFeatureSource.Plan, grant?.ExpiresAtUtc, grant?.Version ?? 0);
+                grant?.Source ?? TenantFeatureSource.Plan, grant?.ExpiresOn, grant?.Version ?? 0);
         }).ToArray();
     }
 }

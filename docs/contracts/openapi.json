@@ -4176,17 +4176,122 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/PlatformTenantResponse"
+                  "$ref": "#/components/schemas/PlatformTenantDetailResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PlatformTenantResponse"
+                  "$ref": "#/components/schemas/PlatformTenantDetailResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PlatformTenantResponse"
+                  "$ref": "#/components/schemas/PlatformTenantDetailResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/platform/tenants/{id}/history": {
+      "get": {
+        "tags": [
+          "Organizaciones de Plataforma"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "After",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CursorResultOfPlatformTenantHistoryResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CursorResultOfPlatformTenantHistoryResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CursorResultOfPlatformTenantHistoryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -12815,6 +12920,31 @@
         },
         "description": "Resultado por cursor, sin conteo total sobre tablas que solo crecen."
       },
+      "CursorResultOfPlatformTenantHistoryResponse": {
+        "required": [
+          "items",
+          "hasMore"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlatformTenantHistoryResponse"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "hasMore": {
+            "type": "boolean"
+          }
+        },
+        "description": "Resultado por cursor, sin conteo total sobre tablas que solo crecen."
+      },
       "DeleteRoleHttpRequest": {
         "type": "object",
         "properties": {
@@ -15019,12 +15149,12 @@
           "source": {
             "$ref": "#/components/schemas/TenantFeatureSource"
           },
-          "expiresAtUtc": {
+          "expiresOn": {
             "type": [
               "null",
               "string"
             ],
-            "format": "date-time"
+            "format": "date"
           },
           "version": {
             "type": "integer",
@@ -15199,6 +15329,13 @@
           "version": {
             "type": "integer",
             "format": "uint32"
+          },
+          "publishedAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         },
         "description": "Solo metadatos de publicación; no incluye contenido, logo ni contacto de la página."
@@ -15358,6 +15495,92 @@
           }
         }
       },
+      "PlatformTenantDetailResponse": {
+        "required": [
+          "id",
+          "name",
+          "status",
+          "source",
+          "companyCount",
+          "memberCount",
+          "version",
+          "owners"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/TenantStatus"
+          },
+          "source": {
+            "$ref": "#/components/schemas/TenantRegistrationSource"
+          },
+          "createdAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "companyCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "memberCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "ownerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerEmail": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Email"
+              }
+            ]
+          },
+          "owners": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlatformTenantOwnerResponse"
+            }
+          },
+          "lastStateChange": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PlatformTenantStateChangeResponse"
+              }
+            ]
+          }
+        },
+        "description": "Ficha global; su versión pertenece únicamente a Tenants."
+      },
       "PlatformTenantFilterCounts": {
         "required": [
           "total",
@@ -15381,6 +15604,98 @@
             "items": {
               "$ref": "#/components/schemas/PlatformTenantSourceCount"
             }
+          }
+        }
+      },
+      "PlatformTenantHistoryResponse": {
+        "required": [
+          "id",
+          "occurredAtUtc",
+          "action",
+          "actor",
+          "actorRole",
+          "summary"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "occurredAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "action": {
+            "type": "string"
+          },
+          "actor": {
+            "type": "string"
+          },
+          "actorRole": {
+            "type": "string"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "summary": {
+            "type": "string"
+          }
+        }
+      },
+      "PlatformTenantOwnerResponse": {
+        "required": [
+          "id",
+          "identityStatus",
+          "membershipStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "email": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Email"
+              }
+            ]
+          },
+          "identityStatus": {
+            "$ref": "#/components/schemas/UserStatus"
+          },
+          "membershipStatus": {
+            "$ref": "#/components/schemas/MemberStatus"
+          },
+          "lastSignInAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "lastSignInMethod": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LoginAuditMethod"
+              }
+            ]
           }
         }
       },
@@ -15474,6 +15789,28 @@
           "count": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "PlatformTenantStateChangeResponse": {
+        "required": [
+          "atUtc",
+          "action"
+        ],
+        "type": "object",
+        "properties": {
+          "atUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "action": {
+            "type": "string"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -15691,6 +16028,10 @@
             ]
           },
           "effectiveOn": {
+            "type": [
+              "null",
+              "string"
+            ],
             "format": "date"
           },
           "contents": {
@@ -16368,12 +16709,12 @@
               }
             ]
           },
-          "expiresAtUtc": {
+          "expiresOn": {
             "type": [
               "null",
               "string"
             ],
-            "format": "date-time"
+            "format": "date"
           },
           "version": {
             "type": [
@@ -16572,6 +16913,16 @@
             "format": "uint32"
           }
         }
+      },
+      "UserStatus": {
+        "enum": [
+          "Active",
+          "Suspended",
+          "PendingDeletion",
+          "Deleted"
+        ],
+        "type": "string",
+        "description": "Describe el ciclo de vida de una cuenta: activa, suspendida, con baja pendiente o eliminada. Permite\r\ndecidir si puede ingresar y qué acciones siguen disponibles."
       },
       "VerifyLoginCodeHttpRequest": {
         "type": "object",

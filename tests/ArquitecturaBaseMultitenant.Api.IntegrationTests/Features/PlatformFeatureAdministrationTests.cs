@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Features;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Time;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.TestHost;
@@ -45,20 +46,27 @@ public sealed class PlatformFeatureAdministrationTests
         Assert.Equal(2, rows!.RootElement.GetArrayLength());
         Assert.Equal(0u, rows.RootElement.EnumerateArray().Single(row => row.GetProperty("key").GetString() == "test-business").GetProperty("version").GetUInt32());
         var nowUtc = host.Services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
-        var expires = new DateTime(nowUtc.Year, nowUtc.Month, nowUtc.Day, nowUtc.Hour, nowUtc.Minute, nowUtc.Second,
-            DateTimeKind.Utc).AddMinutes(10);
+        var expiresOn = DateOnly.FromDateTime(nowUtc).AddDays(1);
+        var expires = host.Services.GetRequiredService<ITimeZoneService>()
+            .GetDayRangeUtc(expiresOn, "America/Argentina/Buenos_Aires").EndUtc;
         using var invalid = await client.PutAsJsonAsync(path + "/test-business", new
         { enabled = true, source = "Trial", version = 0u, reason = "Falta fecha" }, Ct);
         Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
+        using var unrepresentableEnd = await client.PutAsJsonAsync(path + "/test-business", new
+        { enabled = true, source = "Trial", expiresOn = DateOnly.MaxValue, version = 0u, reason = "Fecha fuera del rango" }, Ct);
+        Assert.Equal(HttpStatusCode.BadRequest, unrepresentableEnd.StatusCode);
+        using var expiryProblem = await unrepresentableEnd.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+        Assert.True(expiryProblem!.RootElement.GetProperty("errors").TryGetProperty("expiresOn", out _));
         using var saved = await client.PutAsJsonAsync(path + "/test-business", new
-        { enabled = true, source = "Trial", expiresAtUtc = expires, version = 0u, reason = "Prueba contratada" }, Ct);
+        { enabled = true, source = "Trial", expiresOn, version = 0u, reason = "Prueba contratada" }, Ct);
         var savedVersion = await SavedVersion.ReadAsync(saved, Ct);
         using var current = await client.GetFromJsonAsync<JsonDocument>(path, Ct);
         var currentRow = current!.RootElement.EnumerateArray().Single(row => row.GetProperty("key").GetString() == "test-business");
         var version = currentRow.GetProperty("version").GetUInt32();
         Assert.NotEqual(0u, version);
         Assert.Equal(savedVersion, version);
-        Assert.Equal(expires, currentRow.GetProperty("expiresAtUtc").GetDateTime());
+        Assert.Equal(expiresOn.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), currentRow.GetProperty("expiresOn").GetString());
+        Assert.False(currentRow.TryGetProperty("expiresAtUtc", out _));
         using var stale = await client.PutAsJsonAsync(path + "/test-business", new
         { enabled = false, source = "Manual", version = 0u, reason = "Versión vieja" }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
@@ -99,7 +107,7 @@ public sealed class PlatformFeatureAdministrationTests
         }
         // El siguiente guardado sale con la versión que respondió el anterior, sin releer.
         using var extended = await client.PutAsJsonAsync(path + "/test-business", new
-        { enabled = true, source = "Trial", expiresAtUtc = expires, version = savedVersion, reason = "Prueba extendida" }, Ct);
+        { enabled = true, source = "Trial", expiresOn, version = savedVersion, reason = "Prueba extendida" }, Ct);
         Assert.NotEqual(savedVersion, await SavedVersion.ReadAsync(extended, Ct));
         await GrantAsync(host.Services, account.UserId, PlatformOperators.Reduced);
         using var support = await client.PutAsJsonAsync(path + "/test-business", new

@@ -3,9 +3,11 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.PublicSite;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
@@ -18,6 +20,36 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Platform;
 public sealed class PublicPageModerationTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    [Fact]
+    public async Task A_legacy_published_page_has_no_invented_publication_date()
+    {
+        using var client = Client();
+        var account = await AccountJourney.RegisterAsync(factory, client, Ct);
+        var tenant = await CreateBusinessAsync(account.UserId);
+        await using (var setup = factory.Services.CreateAsyncScope())
+        {
+            var services = setup.ServiceProvider;
+            services.GetRequiredService<ITenantAccessInitializer>().SetFromAccess(tenant.Id, TenantKind.Business);
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+            {
+                var page = PublicPage.Create();
+                page.UpdateContent("Página histórica", null, null, null, null, null);
+                page.Publish(services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime);
+                services.GetRequiredService<IPublicPageRepository>().Add(page);
+                // Simula una fila ya publicada cuando se agrega la columna nullable, sin evidencia histórica.
+                services.GetRequiredService<ApplicationDbContext>().Entry(page).Property(item => item.PublishedAtUtc).CurrentValue = null;
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+        await GrantAsync(account.UserId, PlatformOperators.All);
+        await AccountJourney.AuthorizeAsync(client, "platform", Ct);
+        using var response = await client.GetAsync($"/api/platform/tenants/{tenant.Id:D}/public-site", Ct);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
+        Assert.True(json.RootElement.GetProperty("isPublished").GetBoolean());
+        Assert.Equal(JsonValueKind.Null, json.RootElement.GetProperty("publishedAtUtc").ValueKind);
+    }
 
     [Fact]
     public async Task Moderation_is_authorized_audited_versioned_and_notifies_owners_without_exposing_content()
@@ -59,6 +91,7 @@ public sealed class PublicPageModerationTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.OK, metadata.StatusCode);
         using var json = JsonDocument.Parse(await metadata.Content.ReadAsStringAsync(Ct));
         Assert.True(json.RootElement.GetProperty("isPublished").GetBoolean());
+        Assert.Equal(DateTimeKind.Utc, json.RootElement.GetProperty("publishedAtUtc").GetDateTime().Kind);
         Assert.False(json.RootElement.TryGetProperty("description", out _));
         Assert.False(json.RootElement.TryGetProperty("logoBytes", out _));
         Assert.False(json.RootElement.TryGetProperty("contactEmail", out _));

@@ -15,6 +15,7 @@ public abstract record AccountNotice
     public sealed record ReviewLoginMethods(string OrganizationName, string ActionUrl) : AccountNotice;
 
     public sealed record OrganizationRejected(string OrganizationName) : AccountNotice;
+    public sealed record OrganizationApproved(string OrganizationName) : AccountNotice;
 
     public sealed record PublicPageModerated(string OrganizationName, bool IsBlocked) : AccountNotice;
 

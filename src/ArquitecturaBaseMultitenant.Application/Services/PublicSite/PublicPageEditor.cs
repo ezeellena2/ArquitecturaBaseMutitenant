@@ -12,7 +12,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.PublicSite;
 
 /// <summary>Guarda contenido, slug y publicación de la página dentro de la transacción del servicio.</summary>
 internal sealed class PublicPageEditor(IPublicPageRepository pages, ITenantRepository tenants,
-    ITenantSlugAvailabilityReader slugs, ITenantContext tenantContext, IAuditLog auditLog)
+    ITenantSlugAvailabilityReader slugs, ITenantContext tenantContext, IAuditLog auditLog, TimeProvider clock)
 {
     private static readonly string[] AuditedFields = ["slug", "name", "description", "logo", "contact"];
 
@@ -62,7 +62,7 @@ internal sealed class PublicPageEditor(IPublicPageRepository pages, ITenantRepos
     {
         var page = await pages.GetCurrentAsync(request.Version!.Value, ct);
         if (page is null) return PublicPageErrors.NotFound;
-        var changed = publish ? page.Publish() : page.Unpublish();
+        var changed = publish ? page.Publish(clock.GetUtcNow().UtcDateTime) : page.Unpublish();
         if (changed.IsFailure) return changed.Error;
         pages.MarkUpdated(page);
         auditLog.Record(AuditAction.Updated, "PublicPage", page.Id,

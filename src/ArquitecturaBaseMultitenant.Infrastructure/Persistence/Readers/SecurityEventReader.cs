@@ -73,14 +73,14 @@ internal sealed class SecurityEventReader(ApplicationDbContext context) : ISecur
             select new
             {
                 item.Id, item.OccurredAtUtc, item.Type, item.ActorKind, item.ActorId, item.TargetAccountId,
-                item.TargetTenantId, item.Reason, item.MaskedIpAddress,
+                item.TargetTenantId, item.Reason, item.MaskedIpAddress, item.Changes,
                 Actor = context.Users.Where(user => user.Id == item.ActorId)
                     .Select(user => new AccountData(user.DisplayName, user.Email, user.Status, user.IsPlatformOperator)).FirstOrDefault(),
                 Target = context.Users.Where(user => user.Id == item.TargetAccountId)
                     .Select(user => new AccountData(user.DisplayName, user.Email, user.Status, user.IsPlatformOperator)).FirstOrDefault(),
                 TenantName = context.Tenants.Where(tenant => tenant.Id == item.TargetTenantId).Select(tenant => tenant.Name).FirstOrDefault(),
             }).ToArrayAsync(ct);
-        var signIns = await (
+        var signIns = signInIds.Length == 0 ? [] : await (
             from item in context.LoginAudits.AsNoTracking()
             where signInIds.Contains(item.Id)
             select new
@@ -94,7 +94,7 @@ internal sealed class SecurityEventReader(ApplicationDbContext context) : ISecur
         foreach (var item in events)
             rows[item.Id] = new PlatformAuditRow(item.Id, item.OccurredAtUtc, item.Type, null, false, null, item.ActorKind,
                 ToAccount(item.Actor), ToAccount(item.Target), item.TargetAccountId, item.TargetTenantId, item.TenantName,
-                item.Reason, item.MaskedIpAddress);
+                item.Reason, item.MaskedIpAddress, item.Changes);
         foreach (var item in signIns)
             rows[item.Id] = new PlatformAuditRow(item.Id, item.OccurredAtUtc, null, item.Method, item.Succeeded,
                 item.FailureCode, AuditActorKind.User, ToAccount(item.Account), ToAccount(item.Account), item.UserId, null,

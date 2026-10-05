@@ -284,6 +284,9 @@ public sealed class PlatformTenantProvisioningHttpTests(ApiFactory factory)
         using var missingKey = await client.PostAsJsonAsync(path, body, Ct);
         Assert.Equal(HttpStatusCode.BadRequest, missingKey.StatusCode);
         var key = Guid.NewGuid();
+        await using var beforeScope = factory.Services.CreateAsyncScope();
+        var beforeDb = beforeScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var noticesBefore = await beforeDb.OutboxMessages.CountAsync(message => message.UserId == operatorAccount.UserId, Ct);
         using var first = await SendAsync(client, path, key, body);
         Assert.Equal(HttpStatusCode.OK, first.StatusCode);
         using var replay = await SendAsync(client, path, key, body);
@@ -292,6 +295,15 @@ public sealed class PlatformTenantProvisioningHttpTests(ApiFactory factory)
         await using var check = factory.Services.CreateAsyncScope();
         Assert.Equal(1, await check.ServiceProvider.GetRequiredService<ApplicationDbContext>().SecurityEvents
             .CountAsync(e => e.TargetTenantId == tenant.Id && e.Type == Domain.Auditing.SecurityEventType.OrganizationApproved, Ct));
+        var afterDb = check.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.Equal(noticesBefore + 1, await afterDb.OutboxMessages.CountAsync(message => message.UserId == operatorAccount.UserId, Ct));
+        var notice = await afterDb.OutboxMessages.AsNoTracking().Where(message => message.UserId == operatorAccount.UserId)
+            .OrderByDescending(message => message.CreatedAtUtc).FirstAsync(Ct);
+        var payload = check.ServiceProvider.GetRequiredService<IPayloadProtector>().Unprotect(notice.EncryptedPayload);
+        var email = JsonSerializer.Deserialize<EmailMessage>(payload)!;
+        Assert.DoesNotContain("Alta comprobada", email.TextBody);
+        Assert.DoesNotContain("Alta comprobada", email.HtmlBody);
+        Assert.Contains("Aprobación repetida", email.TextBody);
     }
 
     [Fact]

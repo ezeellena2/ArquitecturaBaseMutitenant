@@ -115,4 +115,8 @@
   <data name="PublicPageModeration.BlockedBody" xml:space="preserve"><value>{0} The platform unpublished the page for {1}. It is a draft and cannot be published until the platform allows it.</value></data>
   <data name="PublicPageModeration.AllowedBody" xml:space="preserve"><value>{0} The platform allowed the page for {1} to be published again. You can review and publish it from your organization.</value></data>
   <data name="PublicPageModeration.Note" xml:space="preserve"><value>Your organization and its access remain available.</value></data>
+  <data name="OrganizationApproved.Subject" xml:space="preserve"><value>We approved your organization</value></data>
+  <data name="OrganizationApproved.Title" xml:space="preserve"><value>Your organization is ready</value></data>
+  <data name="OrganizationApproved.Body" xml:space="preserve"><value>{0} We approved {1} and completed its setup. You can now enter your organization as its Owner.</value></data>
+  <data name="OrganizationApproved.Note" xml:space="preserve"><value>Sign in with your account methods and select your organization.</value></data>
 </root>
