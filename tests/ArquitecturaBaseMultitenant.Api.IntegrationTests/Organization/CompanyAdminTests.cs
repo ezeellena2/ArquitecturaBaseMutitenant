@@ -63,6 +63,9 @@ public sealed class CompanyAdminTests(ApiFactory factory)
         // Se busca por nombre, sin acentos ni mayúsculas. El correo no se busca: así no se destapa de a una letra.
         Assert.Equal([luciaId], Ids(await JsonAsync(adminClient, path + "&search=LUCIA%20per")));
         Assert.Empty(Ids(await JsonAsync(adminClient, path + "&search=example.test")));
+        using var byEmail = await adminClient.GetAsync(path + "&sort=email", Ct);
+        Assert.Equal(HttpStatusCode.BadRequest, byEmail.StatusCode);
+        Assert.Equal("Validation.Failed", await ProblemCodeAsync(byEmail));
 
         // Otra empresa, 403; sin sesión, 401. El Dueño, que ve Usuarios, recibe la misma lista.
         using var otherCompany = await adminClient.GetAsync($"/api/companies/{staged.SouthId:D}/candidates/paged", Ct);
