@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -27,14 +28,14 @@ internal sealed class PlatformPublicSiteService(ITenantReader tenants, IPublicPa
                 ?? new PlatformPublicSiteResponse(tenant.Slug, tenant.Name, false, null, null, 0);
         });
 
-    public Task<Result> UnpublishAsync(Guid tenantId, PlatformTenantStateRequest request, CancellationToken cancellationToken) =>
+    public Task<Result<VersionResponse>> UnpublishAsync(Guid tenantId, PlatformTenantStateRequest request, CancellationToken cancellationToken) =>
         ChangeAsync(tenantId, request, true, cancellationToken);
 
-    public Task<Result> AllowPublishAsync(Guid tenantId, PlatformTenantStateRequest request, CancellationToken cancellationToken) =>
+    public Task<Result<VersionResponse>> AllowPublishAsync(Guid tenantId, PlatformTenantStateRequest request, CancellationToken cancellationToken) =>
         ChangeAsync(tenantId, request, false, cancellationToken);
 
-    private Task<Result> ChangeAsync(Guid tenantId, PlatformTenantStateRequest request, bool blocked, CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, clock, blocked ? "UnpublishPlatformPublicSite" : "AllowPlatformPublicSitePublishing", async () =>
+    private Task<Result<VersionResponse>> ChangeAsync(Guid tenantId, PlatformTenantStateRequest request, bool blocked, CancellationToken cancellationToken) =>
+        OperationLog.RunAsync<VersionResponse>(logger, clock, blocked ? "UnpublishPlatformPublicSite" : "AllowPlatformPublicSitePublishing", async () =>
         {
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
@@ -43,7 +44,8 @@ internal sealed class PlatformPublicSiteService(ITenantReader tenants, IPublicPa
             var entered = await guard.EnterAsync(tenantId, request.Reason!, cancellationToken);
             if (entered.IsFailure) return entered.Error;
             using var lease = entered.Value;
-            return await unitOfWork.ExecuteInTransactionAsync(ct => writer.ChangeAsync(tenantId,
+            var saved = await unitOfWork.ExecuteInTransactionAsync(ct => writer.ChangeAsync(tenantId,
                 lease.OperatorId, request, blocked, ct), CommitPolicy.OnSuccess, cancellationToken);
+            return VersionResponse.Of(saved);
         });
 }

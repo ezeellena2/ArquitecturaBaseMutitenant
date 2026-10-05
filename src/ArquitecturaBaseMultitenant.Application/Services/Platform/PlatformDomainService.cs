@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Application.Models.Tenancy;
 using ArquitecturaBaseMultitenant.Application.Resources;
@@ -34,15 +35,15 @@ internal sealed class PlatformDomainService(ITenantReader tenants, ITenantDomain
             return (await domains.ListCurrentAsync(cancellationToken)).Select(OrganizationDomainService.ToResponse).ToArray();
         });
 
-    public Task<Result> VerifyAsync(Guid tenantId, string domain, PlatformTenantStateRequest request, CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, clock, "VerifyPlatformDomain", () =>
-            ChangeAsync(tenantId, domain, request, verify: true, cancellationToken));
+    public Task<Result<VersionResponse>> VerifyAsync(Guid tenantId, string domain, PlatformTenantStateRequest request, CancellationToken cancellationToken) =>
+        OperationLog.RunAsync<VersionResponse>(logger, clock, "VerifyPlatformDomain", async () =>
+            VersionResponse.Of(await ChangeAsync(tenantId, domain, request, verify: true, cancellationToken)));
 
     public Task<Result> RemoveAsync(Guid tenantId, string domain, PlatformTenantStateRequest request, CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, clock, "RemovePlatformDomain", () =>
-            ChangeAsync(tenantId, domain, request, verify: false, cancellationToken));
+        OperationLog.RunAsync(logger, clock, "RemovePlatformDomain", async () =>
+            (Result)await ChangeAsync(tenantId, domain, request, verify: false, cancellationToken));
 
-    private async Task<Result> ChangeAsync(Guid tenantId, string domain, PlatformTenantStateRequest request,
+    private async Task<Result<TenantDomain>> ChangeAsync(Guid tenantId, string domain, PlatformTenantStateRequest request,
         bool verify, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -59,18 +60,18 @@ internal sealed class PlatformDomainService(ITenantReader tenants, ITenantDomain
         if (current is null) return TenantDomainErrors.NotFound;
         if (current.Version != request.Version!.Value) throw new ConcurrencyConflictException();
         if (verify && await verifier.PrepareAsync(current, cancellationToken) is { IsFailure: true } unverified)
-            return unverified;
-        return await unitOfWork.ExecuteInTransactionAsync(async ct =>
+            return unverified.Error;
+        return await unitOfWork.ExecuteInTransactionAsync<Result<TenantDomain>>(async ct =>
         {
             var changed = verify ? await verifier.StageAsync(current, ct)
                 : await remover.StageAsync(current, request.Version.Value, ct);
-            if (changed.IsFailure) return changed;
+            if (changed.IsFailure) return changed.Error;
             var changes = new SecurityEventChanges();
             changes.AddBoolean("domain.verified", current.Status == TenantDomainStatus.Verified, verify);
             if (!verify) changes.AddBoolean("domain.present", true, false);
             audit.Record(tenantId, verify ? SecurityEventType.OrganizationDomainVerified
                 : SecurityEventType.OrganizationDomainRemoved, request.Reason!, changes);
-            return Result.Success();
+            return changed.Value;
         }, CommitPolicy.OnSuccess, cancellationToken);
     }
 }

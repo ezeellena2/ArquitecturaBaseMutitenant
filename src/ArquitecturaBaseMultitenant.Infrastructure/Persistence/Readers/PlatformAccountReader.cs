@@ -96,7 +96,6 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
                    DisplayName = user.DisplayName,
                    Email = user.Email,
                    IsOperator = user.IsPlatformOperator,
-                   Version = user.Version,
                    InvitationExpiresAtUtc = user.OperatorInvitationExpiresAtUtc,
                    State = user.Status == UserStatus.Active
                        ? (user.OperatorInvitationExpiresAtUtc != null
@@ -149,7 +148,7 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
             context.LoginAudits.Where(audit => audit.UserId == account.Id && audit.Succeeded)
                 .OrderByDescending(audit => audit.OccurredAtUtc).ThenByDescending(audit => audit.Id)
                 .Select(audit => (LoginAuditMethod?)audit.Method).FirstOrDefault(),
-            account.InvitationExpiresAtUtc, account.Version);
+            account.InvitationExpiresAtUtc);
 
     private sealed class AccountProjection
     {
@@ -159,6 +158,5 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
         public bool IsOperator { get; init; }
         public PlatformAccountState State { get; init; }
         public DateTime? InvitationExpiresAtUtc { get; init; }
-        public uint Version { get; init; }
     }
 }

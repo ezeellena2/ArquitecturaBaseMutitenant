@@ -64,12 +64,12 @@ internal sealed class PlatformAccountService(IPlatformAccountReader reader, ILog
                 row.CreatedAtUtc, account.LastSignInAtUtc, account.LastSignInMethod, account.InvitationExpiresAtUtc,
                 account.HasPersonalSpace, deletion,
                 loginMethods, row.Organizations, deleted ? [] : await soleOwners.ListSoleOwnedOrganizationsAsync(accountId, ct),
-                row.OperatorPermissions, row.OperatorVersion, account.Version);
+                row.OperatorPermissions, row.OperatorVersion);
         });
 
     private static PlatformAccountResponse ToResponse(PlatformAccountRow row) =>
         new(row.Id, DisplayName(row), row.PrimaryEmail, Kind(row), row.State, row.HasPersonalSpace, row.OrganizationCount, row.LastSignInAtUtc,
-            row.LastSignInMethod, row.InvitationExpiresAtUtc, row.Version);
+            row.LastSignInMethod, row.InvitationExpiresAtUtc);
 
     // La identidad eliminada guarda el nombre en la cultura del worker; se traduce al leer.
     private static string? DisplayName(PlatformAccountRow row) => row.State == PlatformAccountState.Deleted

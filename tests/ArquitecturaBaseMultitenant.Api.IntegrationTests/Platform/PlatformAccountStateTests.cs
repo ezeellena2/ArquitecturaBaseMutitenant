@@ -299,8 +299,13 @@ public sealed class PlatformAccountStateTests(ApiFactory factory)
         return JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct)).RootElement.Clone();
     }
 
-    private static async Task<uint> VersionAsync(HttpClient client, Guid accountId) =>
-        (await DetailAsync(client, accountId)).GetProperty("version").GetUInt32();
+    private async Task<uint> VersionAsync(HttpClient client, Guid accountId)
+    {
+        Assert.False((await DetailAsync(client, accountId)).TryGetProperty("version", out _));
+        await using var scope = factory.Services.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Users.AsNoTracking()
+            .Where(user => user.Id == accountId).Select(user => user.Version).SingleAsync(Ct);
+    }
 
     private static async Task<string?> CodeAsync(HttpResponseMessage response)
     {

@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
@@ -44,8 +45,8 @@ internal sealed class TenantAdministrationService(IPlatformReader reader, Platfo
             }
         });
 
-    public Task<Result> ProvisionAsync(Guid tenantId, bool retry, PlatformTenantStateRequest request, CancellationToken ct) =>
-        OperationLog.RunAsync(logger, clock, "ProvisionPlatformTenant", async () =>
+    public Task<Result<VersionResponse>> ProvisionAsync(Guid tenantId, bool retry, PlatformTenantStateRequest request, CancellationToken ct) =>
+        OperationLog.RunAsync<VersionResponse>(logger, clock, "ProvisionPlatformTenant", async () =>
         {
             ArgumentNullException.ThrowIfNull(request);
             request = retry ? request with { Reason = AuditTexts.OrganizationRetryReason() } : request;
@@ -57,7 +58,7 @@ internal sealed class TenantAdministrationService(IPlatformReader reader, Platfo
             var result = await unitOfWork.ExecuteInTransactionAsync(tx =>
                 activator.ActivateAsync(tenantId, retry, request, settings, clock.GetUtcNow().UtcDateTime, tx), CommitPolicy.OnSuccess, ct);
             if (result.IsSuccess) await cache.InvalidateAsync(tenantId, ct);
-            return result;
+            return VersionResponse.Of(result);
         });
 
     public Task<Result<PagedResult<PlatformTenantResponse>>> ListAsync(ListPlatformTenantsRequest request, CancellationToken ct) =>
@@ -83,13 +84,13 @@ internal sealed class TenantAdministrationService(IPlatformReader reader, Platfo
             return row is null ? TenantErrors.NotFound : row;
         });
 
-    public Task<Result> ChangeStateAsync(Guid id, PlatformTenantAction action, PlatformTenantStateRequest request, CancellationToken ct) =>
-        OperationLog.RunAsync(logger, clock, "ChangePlatformTenantState", async () =>
+    public Task<Result<VersionResponse>> ChangeStateAsync(Guid id, PlatformTenantAction action, PlatformTenantStateRequest request, CancellationToken ct) =>
+        OperationLog.RunAsync<VersionResponse>(logger, clock, "ChangePlatformTenantState", async () =>
         {
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
             var result = await unitOfWork.ExecuteInTransactionAsync(tx => writer.ChangeAsync(id, action, request, tx), CommitPolicy.OnSuccess, ct);
             if (result.IsSuccess) await cache.InvalidateAsync(id, ct);
-            return result;
+            return VersionResponse.Of(result);
         });
 }

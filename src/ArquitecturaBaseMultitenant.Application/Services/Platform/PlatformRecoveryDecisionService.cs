@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
@@ -35,13 +36,13 @@ internal sealed class PlatformRecoveryDecisionService(
     TimeProvider clock,
     ILogger<PlatformRecoveryDecisionService> logger) : IPlatformRecoveryDecisionService
 {
-    public Task<Result> ApproveAsync(Guid id, PlatformAccountActionRequest request, CancellationToken ct) =>
-        OperationLog.RunAsync(logger, clock, "ApproveAccountRecovery", async () =>
+    public Task<Result<VersionResponse>> ApproveAsync(Guid id, PlatformAccountActionRequest request, CancellationToken ct) =>
+        OperationLog.RunAsync<VersionResponse>(logger, clock, "ApproveAccountRecovery", async () =>
         {
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
             var operatorId = audit.CurrentOperatorId();
-            return await unitOfWork.ExecuteInTransactionAsync<Result>(async work =>
+            var saved = await unitOfWork.ExecuteInTransactionAsync<Result<AccountRecoveryRequest>>(async work =>
             {
                 var recovery = await recoveries.GetForUpdateAsync(id, work);
                 if (recovery is null) return AccountRecoveryErrors.NotFound;
@@ -64,7 +65,7 @@ internal sealed class PlatformRecoveryDecisionService(
 
                 var nowUtc = clock.GetUtcNow().UtcDateTime;
                 var approved = recovery.Approve(operatorId, request.Reason!, nowUtc);
-                if (approved.IsFailure) return approved;
+                if (approved.IsFailure) return approved.Error;
                 var method = LoginMethod.CreateEmail(userId, email);
                 method.Verify(nowUtc);
                 await emailDomains.AssignIfVerifiedAsync(method, email, work);
@@ -76,28 +77,30 @@ internal sealed class PlatformRecoveryDecisionService(
                     StatusChange(AccountRecoveryStatus.Approved));
                 await notifier.ApprovedAsync(account, method,
                     [.. await methods.ListByUserIdAsync(userId, work), method], work);
-                return Result.Success();
+                return recovery;
             }, CommitPolicy.OnSuccess, ct);
+            return VersionResponse.Of(saved);
         });
 
-    public Task<Result> RejectAsync(Guid id, PlatformAccountActionRequest request, CancellationToken ct) =>
-        OperationLog.RunAsync(logger, clock, "RejectAccountRecovery", async () =>
+    public Task<Result<VersionResponse>> RejectAsync(Guid id, PlatformAccountActionRequest request, CancellationToken ct) =>
+        OperationLog.RunAsync<VersionResponse>(logger, clock, "RejectAccountRecovery", async () =>
         {
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
             var operatorId = audit.CurrentOperatorId();
-            return await unitOfWork.ExecuteInTransactionAsync<Result>(async work =>
+            var saved = await unitOfWork.ExecuteInTransactionAsync<Result<AccountRecoveryRequest>>(async work =>
             {
                 var recovery = await recoveries.GetForUpdateAsync(id, work);
                 if (recovery is null) return AccountRecoveryErrors.NotFound;
                 if (recovery.Version != request.Version!.Value) throw new ConcurrencyConflictException();
                 var rejected = recovery.Reject(operatorId, request.Reason!, clock.GetUtcNow().UtcDateTime);
-                if (rejected.IsFailure) return rejected;
+                if (rejected.IsFailure) return rejected.Error;
                 audit.RecordRecovery(recovery.UserId, SecurityEventType.AccountRecoveryRejected, request.Reason!,
                     StatusChange(AccountRecoveryStatus.Rejected));
                 await notifier.RejectedAsync(recovery.NewMethodValue, work);
-                return Result.Success();
+                return recovery;
             }, CommitPolicy.OnSuccess, ct);
+            return VersionResponse.Of(saved);
         });
 
     private static SecurityEventChanges StatusChange(AccountRecoveryStatus after)

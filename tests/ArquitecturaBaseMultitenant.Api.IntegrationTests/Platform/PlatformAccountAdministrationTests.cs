@@ -63,6 +63,7 @@ public sealed class PlatformAccountAdministrationTests(ApiFactory factory)
 
         var all = await GetAsync(client, "paged?page=1&pageSize=50");
         Assert.Equal(10, all.GetProperty("totalCount").GetInt32());
+        Assert.All(all.GetProperty("items").EnumerateArray(), item => Assert.False(item.TryGetProperty("version", out _)));
         Assert.Equal("Active", State(all, seeded.Active));
         Assert.Equal("Suspended", State(all, seeded.Suspended));
         Assert.Equal("PendingDeletion", State(all, seeded.PendingDeletion));
@@ -146,7 +147,7 @@ public sealed class PlatformAccountAdministrationTests(ApiFactory factory)
         Assert.True(active.GetProperty("hasPersonalSpace").GetBoolean());
         Assert.Equal(JsonValueKind.Null, active.GetProperty("operatorPermissions").ValueKind);
         Assert.Equal("Code", active.GetProperty("lastSignInMethod").GetString());
-        Assert.NotEqual(0u, active.GetProperty("version").GetUInt32());
+        Assert.False(active.TryGetProperty("version", out _));
 
         var recovery = await GetAsync(client, seeded.NeedsRecovery.ToString("D"));
         Assert.Equal("NeedsRecovery", recovery.GetProperty("state").GetString());
@@ -165,6 +166,8 @@ public sealed class PlatformAccountAdministrationTests(ApiFactory factory)
 
         var operatorAccount = await GetAsync(client, seeded.Operator.ToString("D"));
         Assert.Equal("Operator", operatorAccount.GetProperty("kind").GetString());
+        Assert.False(operatorAccount.TryGetProperty("version", out _));
+        Assert.NotEqual(0u, operatorAccount.GetProperty("operatorVersion").GetUInt32());
         Assert.Equal(PlatformOperators.Reduced, operatorAccount.GetProperty("operatorPermissions").EnumerateArray()
             .Select(item => item.GetString()!));
 

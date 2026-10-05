@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -16,7 +17,7 @@ public interface IPlatformRecoveryService
 /// <summary>Aprueba o rechaza un pedido de «Recuperar mi cuenta» con motivo y versión.</summary>
 public interface IPlatformRecoveryDecisionService
 {
-    Task<Result> ApproveAsync(Guid id, PlatformAccountActionRequest request, CancellationToken ct);
+    Task<Result<VersionResponse>> ApproveAsync(Guid id, PlatformAccountActionRequest request, CancellationToken ct);
 
-    Task<Result> RejectAsync(Guid id, PlatformAccountActionRequest request, CancellationToken ct);
+    Task<Result<VersionResponse>> RejectAsync(Guid id, PlatformAccountActionRequest request, CancellationToken ct);
 }

@@ -24,7 +24,7 @@ internal sealed class OrganizationDomainVerifier(ITenantDomainRepository domains
             ? Result.Success() : TenantDomainErrors.TxtNotFound;
     }
 
-    internal async Task<Result> StageAsync(OrganizationDomainRow pending, CancellationToken cancellationToken)
+    internal async Task<Result<TenantDomain>> StageAsync(OrganizationDomainRow pending, CancellationToken cancellationToken)
     {
         var organizationDomain = OrganizationEmailDomain.Create(pending.Domain);
         if (organizationDomain.IsFailure) throw new InvalidOperationException("A stored organization domain is invalid.");
@@ -32,12 +32,12 @@ internal sealed class OrganizationDomainVerifier(ITenantDomainRepository domains
         var domain = await domains.GetByIdAsync(pending.Id, pending.Version, cancellationToken);
         if (domain is null) return TenantDomainErrors.NotFound;
         var verified = domain.Verify(timeProvider.GetUtcNow().UtcDateTime);
-        if (verified.IsFailure) return verified;
+        if (verified.IsFailure) return verified.Error;
         domains.MarkUpdated(domain);
         var associated = await loginMethods.ListVerifiedByEmailDomainAsync(organizationDomain.Value, cancellationToken);
         foreach (var method in associated) method.AssignManagedByOrganization(domain.OrganizationId);
         auditLog.Record(AuditAction.Updated, "TenantDomain", domain.Id,
             new Dictionary<string, object?> { ["domain"] = domain.Domain, ["status"] = domain.Status.ToString() });
-        return Result.Success();
+        return domain;
     }
 }

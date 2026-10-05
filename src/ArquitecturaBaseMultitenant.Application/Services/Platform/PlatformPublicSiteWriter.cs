@@ -10,7 +10,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 internal sealed class PlatformPublicSiteWriter(IPublicPageRepository pages, ITenantRepository tenants,
     PlatformAuditWriter audit, IAuditLog auditLog, PlatformTenantNotifier notices, TimeProvider clock)
 {
-    internal async Task<Result> ChangeAsync(Guid tenantId, Guid operatorId, PlatformTenantStateRequest request,
+    internal async Task<Result<PublicPage>> ChangeAsync(Guid tenantId, Guid operatorId, PlatformTenantStateRequest request,
         bool blocked, CancellationToken ct)
     {
         var tenant = await tenants.GetByIdAsync(tenantId, ct);
@@ -22,7 +22,7 @@ internal sealed class PlatformPublicSiteWriter(IPublicPageRepository pages, ITen
         var changed = blocked
             ? page.ApplyModerationBlock(request.Reason, operatorId, clock.GetUtcNow().UtcDateTime)
             : page.AllowPublish();
-        if (changed.IsFailure) return changed;
+        if (changed.IsFailure) return changed.Error;
         pages.MarkUpdated(page);
         var changes = new SecurityEventChanges();
         changes.AddBoolean("publicPage.isPublished", wasPublished, page.IsPublished);
@@ -32,6 +32,6 @@ internal sealed class PlatformPublicSiteWriter(IPublicPageRepository pages, ITen
         auditLog.Record(AuditAction.Updated, "PublicPage", page.Id,
             new Dictionary<string, object?> { ["isPublished"] = page.IsPublished, ["publishBlocked"] = blocked });
         await notices.EnqueuePageModerationAsync(tenant, blocked, ct);
-        return Result.Success();
+        return page;
     }
 }

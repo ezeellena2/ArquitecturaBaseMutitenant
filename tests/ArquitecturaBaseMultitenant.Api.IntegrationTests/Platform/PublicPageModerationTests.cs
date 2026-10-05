@@ -70,7 +70,9 @@ public sealed class PublicPageModerationTests(ApiFactory factory)
 
         var operation = Guid.NewGuid().ToString("D");
         using var blocked = await PostAsync(platform, path + "/unpublish", new { version, reason = "Revisar contenido" }, operation);
-        Assert.Equal(HttpStatusCode.NoContent, blocked.StatusCode);
+        var blockedVersion = await SavedVersion.ReadAsync(blocked, Ct);
+        Assert.NotEqual(version, blockedVersion);
+        Assert.Equal(blockedVersion, await VersionAsync(platform, path));
         Assert.Equal(before + 1, await OutboxCountAsync());
         await using (var scope = factory.Services.CreateAsyncScope())
         {
@@ -83,19 +85,18 @@ public sealed class PublicPageModerationTests(ApiFactory factory)
                 .PublicPages.AnyAsync(p => p.BusinessTenantId == tenantId, Ct));
         }
         using var replay = await PostAsync(platform, path + "/unpublish", new { version, reason = "Revisar contenido" }, operation);
-        Assert.Equal(HttpStatusCode.NoContent, replay.StatusCode);
+        Assert.Equal(blockedVersion, await SavedVersion.ReadAsync(replay, Ct));
         Assert.Equal(before + 1, await OutboxCountAsync());
 
         using var stale = await PlatformJourney.PostAsync(platform, path + "/allow-publish", new { version, reason = "Ya revisado" }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
         Assert.Equal(before + 1, await OutboxCountAsync());
-        var blockedVersion = await VersionAsync(platform, path);
         using var organizationCannotPublish = await business.PostAsJsonAsync("/api/organization/public-page/publish", new { version = blockedVersion }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, organizationCannotPublish.StatusCode);
         using var allowed = await PlatformJourney.PostAsync(platform, path + "/allow-publish", new { version = blockedVersion, reason = "Ya revisado" }, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, allowed.StatusCode);
+        var allowedVersion = await SavedVersion.ReadAsync(allowed, Ct);
+        Assert.Equal(allowedVersion, await VersionAsync(platform, path));
         Assert.Equal(before + 2, await OutboxCountAsync());
-        var allowedVersion = await VersionAsync(platform, path);
         using var stillDraft = await platform.GetAsync(path, Ct);
         using var draftJson = JsonDocument.Parse(await stillDraft.Content.ReadAsStringAsync(Ct));
         Assert.False(draftJson.RootElement.GetProperty("isPublished").GetBoolean());

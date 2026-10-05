@@ -44,7 +44,7 @@ public sealed class VersionedContractTests
     }
 
     /// <summary>
-    /// Un <c>PUT</c> que recibe <c>version</c> responde 200 con la versión nueva (<see cref="VersionResponse"/>), no
+    /// Un <c>PUT</c> o <c>POST</c> que recibe <c>version</c> responde 200 con la versión nueva (<see cref="VersionResponse"/>), no
     /// 204: el front la toma como base del próximo guardado, sin relectura (docs/rules/concurrencia.md).
     /// </summary>
     [Fact]
@@ -68,13 +68,14 @@ public sealed class VersionedContractTests
         var actions = typeof(ProbeController).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
             .Where(IsVersionedSave).ToDictionary(method => method.Name);
 
-        Assert.Equal(["Answers", "Silent"], actions.Keys.Order(StringComparer.Ordinal));
+        Assert.Equal(["Answers", "PostSilent", "Silent"], actions.Keys.Order(StringComparer.Ordinal));
         Assert.True(AnswersTheNewVersion(actions["Answers"]));
         Assert.False(AnswersTheNewVersion(actions["Silent"]));
+        Assert.False(AnswersTheNewVersion(actions["PostSilent"]));
     }
 
     private static bool IsVersionedSave(MethodInfo method) =>
-        method.IsDefined(typeof(HttpPutAttribute))
+        (method.IsDefined(typeof(HttpPutAttribute)) || method.IsDefined(typeof(HttpPostAttribute)))
         && method.GetParameters().Any(parameter => parameter.ParameterType.Name.EndsWith("HttpRequest", StringComparison.Ordinal)
             && HasVersion(parameter.ParameterType));
 
@@ -105,6 +106,10 @@ public sealed class VersionedContractTests
         [HttpPut("silent")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         public NoContentResult Silent([FromBody] ProbeHttpRequest request) => NoContent();
+
+        [HttpPost("post-silent")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        public NoContentResult PostSilent([FromBody] ProbeHttpRequest request) => NoContent();
 
         [HttpPut("without-version")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]

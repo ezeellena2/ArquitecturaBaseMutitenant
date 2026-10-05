@@ -55,7 +55,7 @@ internal sealed class OrganizationDomainService(ITenantDomainReader reader, IReq
             if (pending is null) return TenantDomainErrors.NotFound;
             var prepared = await verifier.PrepareAsync(pending, cancellationToken);
             if (prepared.IsFailure) return prepared;
-            return await unitOfWork.ExecuteInTransactionAsync(ct => verifier.StageAsync(pending, ct),
+            return (Result)await unitOfWork.ExecuteInTransactionAsync(ct => verifier.StageAsync(pending, ct),
                 CommitPolicy.OnSuccess, cancellationToken);
         });
 
@@ -67,7 +67,7 @@ internal sealed class OrganizationDomainService(ITenantDomainReader reader, IReq
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             var current = await reader.FindCurrentByIdAsync(request.DomainId, cancellationToken);
             if (current is null) return TenantDomainErrors.NotFound;
-            return await unitOfWork.ExecuteInTransactionAsync(ct => remover.StageAsync(current,
+            return (Result)await unitOfWork.ExecuteInTransactionAsync(ct => remover.StageAsync(current,
                 request.Version!.Value, ct), CommitPolicy.OnSuccess, cancellationToken);
         });
     }

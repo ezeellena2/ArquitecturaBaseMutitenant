@@ -92,9 +92,10 @@ public sealed class PlatformDomainAdministrationTests(ApiFactory factory)
         var verifyKey = Guid.NewGuid().ToString("D");
         var verifyBody = new { version, reason = "Verificar dominio" };
         using var verified = await PostWithKeyAsync(platform, path + "/" + domain + "/verify", verifyBody, verifyKey);
-        Assert.Equal(HttpStatusCode.NoContent, verified.StatusCode);
+        var savedVersion = await SavedVersion.ReadAsync(verified, Ct);
+        Assert.NotEqual(version, savedVersion);
         using var verifiedReplay = await PostWithKeyAsync(platform, path + "/" + domain + "/verify", verifyBody, verifyKey);
-        Assert.Equal(HttpStatusCode.NoContent, verifiedReplay.StatusCode);
+        Assert.Equal(savedVersion, await SavedVersion.ReadAsync(verifiedReplay, Ct));
         Assert.Equal("true", Assert.Single(verifiedReplay.Headers.GetValues("Idempotent-Replayed")));
         Assert.Equal(tenantId, await ManagedByAsync(owner.UserId, owner.Email.Value));
 
@@ -114,8 +115,8 @@ public sealed class PlatformDomainAdministrationTests(ApiFactory factory)
         var verifiedRow = Assert.Single(currentJson.RootElement.EnumerateArray(),
             item => item.GetProperty("domain").GetString() == domain);
         Assert.Equal("Verified", verifiedRow.GetProperty("status").GetString());
-        var verifiedVersion = verifiedRow.GetProperty("version").GetUInt32();
-        using var removed = await DeleteAsync(platform, path + "/" + domain, verifiedVersion, "Retirar dominio");
+        Assert.Equal(savedVersion, verifiedRow.GetProperty("version").GetUInt32());
+        using var removed = await DeleteAsync(platform, path + "/" + domain, savedVersion, "Retirar dominio");
         Assert.Equal(HttpStatusCode.NoContent, removed.StatusCode);
         Assert.Equal(tenantId, await ManagedByAsync(owner.UserId, owner.Email.Value));
         Assert.Equal(tenantId, await ManagedByAsync(colleague.UserId, colleagueEmail.Value));

@@ -663,13 +663,13 @@ Es el segundo ítem abierto de T18b, y lo decidió la Guía el 2026-10-05. El cr
    - `POST /api/platform/recoveries/{id}/approve` y `/reject`: la versión del pedido.
 2. **`PlatformAccountResponse` y `PlatformAccountDetailResponse` sin `version`:** ya ninguna acción sobre una cuenta la usa (T18b). Los permisos de un operador (`PUT` y `DELETE /api/platform/accounts/{id}/operator`) siguen con la versión de su propia asignación, que la ficha ya expone aparte en `operatorVersion`; no cambia.
 
-- [ ] **Rojo:**
+- [x] **Rojo:** **Evidencia (2026-10-05):** `VersionedContractTests` → 1 fallo de 4 al agregar POST; `PlatformTenantAdministrationTests` → 2 fallos de 6 (esperado 200, recibido 204); `platform-contract.test.ts` → 13 fallos de 14 (11 respuestas y 2 cuentas). Logs en `.local/t18c/{architecture-red,http-red}.log`; resumen en `.local/t18c/report.md`.
   - `VersionedContractTests.Versioned_saves_answer_the_new_version` pasa de «todo `PUT` con `version`» a «todo `PUT` o `POST` con `version`» (un `DELETE` sigue con 204), y el control de la guarda suma un `POST` con versión que responde 204: el test falla con las 11 acciones;
   - cada test de integración de esas acciones espera 200 con la `version` que quedó guardada (la misma que da una lectura posterior) y que la acción siguiente con esa versión no da 409;
   - los tests de Cuentas esperan el listado y la ficha sin `version`.
-- [ ] **Implementación:** cada servicio devuelve la entidad guardada desde su trabajo transaccional y arma `VersionResponse.Of(result)` después de `ExecuteInTransactionAsync`; las entradas a la organización (`ITenantScope`) y los eventos siguen como están. `PlatformAccountReader` deja de proyectar el `xmin` de la cuenta.
-- [ ] **Docs:** la línea 9 de `docs/rules/concurrencia.md` dice «un `PUT` o `POST` con `version` responde 200 con `VersionResponse`»; `plataforma.md` dice qué devuelve cada acción.
-- [ ] **Verde:** los focales, `VersionedContractTests`, la integración de Plataforma afectada, el build sin advertencias y el `openapi.json` regenerado. En el front: `npm run contracts`, `npm run contracts:check` y `platform-contract.test.ts` con las 11 respuestas y las cuentas sin `version`.
+- [x] **Implementación:** cada servicio devuelve la entidad guardada desde su trabajo transaccional y arma `VersionResponse.Of(result)` después de `ExecuteInTransactionAsync`; las entradas a la organización (`ITenantScope`) y los eventos siguen como están. `PlatformAccountReader` deja de proyectar el `xmin` de la cuenta. **Evidencia:** las 11 acciones y los dos DTO revisados; revisiones independientes de especificación y calidad aprobadas sin hallazgos. `operatorVersion` conserva la versión de la asignación; los helpers compartidos conservan el 204 de Business.
+- [x] **Docs:** la línea 9 de `docs/rules/concurrencia.md` dice «un `PUT` o `POST` con `version` responde 200 con `VersionResponse`»; `plataforma.md` dice qué devuelve cada acción. **Evidencia:** ambas fichas actualizadas; OpenAPI regenerado por el build del Api.
+- [x] **Verde:** los focales, `VersionedContractTests`, la integración de Plataforma afectada, el build sin advertencias y el `openapi.json` regenerado. En el front: `npm run contracts`, `npm run contracts:check` y `platform-contract.test.ts` con las 11 respuestas y las cuentas sin `version`. **Evidencia:** arquitectura 148/148; Application 476/476; integración Plataforma 55/55, dominios Business 3/3 y contratos 21/21 (703 en total, 0 omitidos). Build Api → 0 advertencias y 0 errores. Front → contratos/check exit 0, focal 14/14, lint sin errores y build exit 0. `git diff --check` y arnés `realinear-docs --detectar` → exit 0, 0 hallazgos en ambos repos. Comandos y resultados completos en `.local/t18c/report.md`.
 
 Commit back `fix(plataforma): las acciones con versión responden la versión nueva`; front `chore(contratos): las acciones de Plataforma con VersionResponse`.
 
@@ -1112,6 +1112,7 @@ Y en las pantallas (T21 a T23): después de cada acción con versión, la base p
 16. **Idempotencia:** `useIdempotentMutation` en las rutas `[Idempotent]` (ver «El contrato»).
 17. **«Verificar» un dominio** manda el motivo fijo «Verificar el dominio» (el back lo exige y el tablero no lo pide), como el reintento del alta.
 18. **Un 409 de estado también relee la pantalla** al cerrar el diálogo, como el de concurrencia: sin versión en las cuentas (T18b), «No se puede cambiar la cuenta a ese estado.» es lo que avisa que otro operador cambió la cuenta. Lo resuelve `useDialogFailure` en `shared/` con los códigos que le pasa cada pantalla.
+19. **Verificación de versiones en acciones terminales (T18c):** rechazar o cerrar una organización y resolver una recuperación no habilitan otra transición. El test compara la versión respondida con la persistida y comprueba que la siguiente acción inválida conserva el error de estado, sin `General.ConcurrencyConflict`. En las secuencias permitidas, la acción siguiente con la versión respondida termina sin 409.
 
 ---
 
@@ -1218,8 +1219,8 @@ Lo que el lienzo o los docs no resolvían. Cada punto empieza con lo **decidido*
 
 | Tarea | Commit back | Commit front | Evidencia (comandos y resultados) | Capturas enviadas | Notas |
 |---|---|---|---|---|---|
-| T00 | `2ed8f13` (evidencia inicial; completada al retomar) | `d73f362` | Ambos repos limpios en `main` al retomar; `aspire ps` → sin AppHost; consolidación `2209be7` presente; arnés centralizado → 0 hallazgos en ambos; `ClosedStages` → `{0,1,2,3,4,6}`; `npm run contracts` y `contracts:check` → exit 0; API front → 29/29; lint sin errores y build exit 0 | — | HEAD al retomar: back `97c28f9`, front `e685df0`; lienzo v111 aprobado. Resueltos el trabajo pendiente de Diseño y el contrato desactualizado anotados en la comprobación inicial. |
-| T18c | | | | — | |
+| T00 | `2ed8f13`, `ebcf3b7` | `d73f362` | Ambos repos limpios en `main` al retomar; `aspire ps` → sin AppHost; consolidación `2209be7` presente; arnés centralizado → 0 hallazgos en ambos; `ClosedStages` → `{0,1,2,3,4,6}`; `npm run contracts` y `contracts:check` → exit 0; API front → 29/29; lint sin errores y build exit 0 | — | HEAD al retomar: back `97c28f9`, front `e685df0`; lienzo v111 aprobado. Resueltos el trabajo pendiente de Diseño y el contrato desactualizado anotados en la comprobación inicial. |
+| T18c | Este commit (`fix(plataforma)`) | Contrato verificado; commit tras el back | Rojo: arquitectura 1/4, HTTP 2/6, front 13/14. Verde: arquitectura 148/148, Application 476/476, integración Plataforma 55/55, dominios 3/3 y contratos 21/21; build Api 0 advertencias/errores. Front 14/14, contracts/check, lint y build exit 0. Arnés 0 en ambos. Revisiones de especificación y calidad aprobadas. | — | Las 11 respuestas dan la versión persistida; DTO de cuenta sin version; operatorVersion preservada. Evidencia detallada en `.local/t18c/report.md`. |
 | Antes de T19 | | | | | |
 | T19 | | | | | |
 | T20a–T20d | | | | | |

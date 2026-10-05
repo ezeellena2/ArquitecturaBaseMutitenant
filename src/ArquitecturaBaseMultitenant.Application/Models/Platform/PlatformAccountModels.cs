@@ -47,7 +47,7 @@ public sealed record ListPlatformAccountsRequest : PagedRequest
 /// </summary>
 public sealed record PlatformAccountResponse(Guid Id, string? DisplayName, Email? PrimaryEmail,
     PlatformAccountKind Kind, PlatformAccountState State, bool HasPersonalSpace, int OrganizationCount,
-    DateTime? LastSignInAtUtc, LoginAuditMethod? LastSignInMethod, DateTime? InvitationExpiresAtUtc, uint Version);
+    DateTime? LastSignInAtUtc, LoginAuditMethod? LastSignInMethod, DateTime? InvitationExpiresAtUtc);
 
 public sealed record PlatformAccountStateCount(PlatformAccountState State, int Count);
 public sealed record PlatformAccountKindCount(PlatformAccountKind Kind, int Count);
@@ -60,7 +60,7 @@ public sealed record PlatformAccountDetailResponse(Guid Id, string? DisplayName,
     DateTime? InvitationExpiresAtUtc, bool HasPersonalSpace, PlatformAccountDeletionResponse? Deletion,
     IReadOnlyList<PlatformAccountLoginMethodResponse> LoginMethods,
     IReadOnlyList<PlatformAccountMembershipResponse> Organizations, IReadOnlyList<string> SoleOwnerOrganizations,
-    IReadOnlyList<string>? OperatorPermissions, uint? OperatorVersion, uint Version);
+    IReadOnlyList<string>? OperatorPermissions, uint? OperatorVersion);
 
 public sealed record PlatformAccountDeletionResponse(DateTime RequestedAtUtc, DateTime ScheduledForUtc,
     bool RequestedByPlatform);
@@ -75,7 +75,7 @@ public sealed record PlatformAccountMembershipResponse(Guid TenantId, string Nam
 /// <summary>Proyección del reader global; el servicio la completa con métodos y textos.</summary>
 public sealed record PlatformAccountRow(Guid Id, string? DisplayName, Email? PrimaryEmail, bool IsOperator,
     PlatformAccountState State, bool HasPersonalSpace, int OrganizationCount, DateTime? LastSignInAtUtc,
-    LoginAuditMethod? LastSignInMethod, DateTime? InvitationExpiresAtUtc, uint Version);
+    LoginAuditMethod? LastSignInMethod, DateTime? InvitationExpiresAtUtc);
 
 public sealed record PlatformAccountDetailRow(PlatformAccountRow Account, DateTime? CreatedAtUtc,
     DateTime? DeletionRequestedAtUtc, DateTime? DeletionScheduledForUtc, bool DeletionRequestedByPlatform,

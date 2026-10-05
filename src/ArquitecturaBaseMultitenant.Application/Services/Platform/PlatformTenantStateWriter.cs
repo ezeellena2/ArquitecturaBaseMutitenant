@@ -11,7 +11,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 internal sealed class PlatformTenantStateWriter(IPlatformTenantRepository tenants, PlatformAuditWriter audit,
     PlatformTenantNotifier notices, ITokenRevoker tokens)
 {
-    internal async Task<Result> ChangeAsync(Guid id, PlatformTenantAction action, PlatformTenantStateRequest request, CancellationToken ct)
+    internal async Task<Result<Tenant>> ChangeAsync(Guid id, PlatformTenantAction action, PlatformTenantStateRequest request, CancellationToken ct)
     {
         var tenant = await tenants.GetForUpdateAsync(id, request.Version!.Value, ct);
         if (tenant is null) return TenantErrors.NotFound;
@@ -24,7 +24,7 @@ internal sealed class PlatformTenantStateWriter(IPlatformTenantRepository tenant
             PlatformTenantAction.Close => tenant.Close(),
             _ => TenantErrors.InvalidTransition,
         };
-        if (result.IsFailure) return result;
+        if (result.IsFailure) return result.Error;
         tenants.MarkUpdated(tenant);
         var type = action switch
         {
@@ -39,6 +39,6 @@ internal sealed class PlatformTenantStateWriter(IPlatformTenantRepository tenant
         audit.Record(id, type, request.Reason!, changes);
         if (action is not PlatformTenantAction.Reactivate) await tokens.RevokeTenantAsync(id, ct);
         if (action == PlatformTenantAction.Reject) await notices.EnqueueRejectedAsync(tenant, ct);
-        return Result.Success();
+        return tenant;
     }
 }

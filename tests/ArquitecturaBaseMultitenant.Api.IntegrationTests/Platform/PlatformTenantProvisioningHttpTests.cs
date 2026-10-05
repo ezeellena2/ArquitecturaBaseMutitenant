@@ -157,7 +157,17 @@ public sealed class PlatformTenantProvisioningHttpTests(ApiFactory factory)
         var version = metadata.RootElement.GetProperty("version").GetUInt32();
         object body = pendingApproval ? new { version, reason = "Alta revisada" } : new { version };
         using var result = await PlatformJourney.PostAsync(client, $"/api/platform/tenants/{tenant.Id:D}/{action}", body, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, result.StatusCode);
+        var savedVersion = await SavedVersion.ReadAsync(result, Ct);
+        Assert.NotEqual(version, savedVersion);
+        using var savedMetadata = await client.GetAsync($"/api/platform/tenants/{tenant.Id:D}", Ct);
+        using var savedJson = JsonDocument.Parse(await savedMetadata.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(savedVersion, savedJson.RootElement.GetProperty("version").GetUInt32());
+        using var next = await PlatformJourney.PostAsync(client, $"/api/platform/tenants/{tenant.Id:D}/retry-provisioning",
+            new { version = savedVersion }, Ct);
+        var nextVersion = await SavedVersion.ReadAsync(next, Ct);
+        using var nextMetadata = await client.GetAsync($"/api/platform/tenants/{tenant.Id:D}", Ct);
+        using var nextJson = JsonDocument.Parse(await nextMetadata.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(nextVersion, nextJson.RootElement.GetProperty("version").GetUInt32());
         using var stale = await PlatformJourney.PostAsync(client, $"/api/platform/tenants/{tenant.Id:D}/retry-provisioning", new { version, reason = "Repetir" }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
         await using var check = factory.Services.CreateAsyncScope();
@@ -197,7 +207,7 @@ public sealed class PlatformTenantProvisioningHttpTests(ApiFactory factory)
         using var metadata = await client.GetAsync($"/api/platform/tenants/{tenant.Id:D}", Ct);
         using var json = JsonDocument.Parse(await metadata.Content.ReadAsStringAsync(Ct));
         using var repaired = await PlatformJourney.PostAsync(client, $"/api/platform/tenants/{tenant.Id:D}/retry-provisioning", new { version = json.RootElement.GetProperty("version").GetUInt32(), reason = "Completar el alta interrumpida" }, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, repaired.StatusCode);
+        var repairedVersion = await SavedVersion.ReadAsync(repaired, Ct);
         await using var check = factory.Services.CreateAsyncScope();
         var db = check.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         using var active = check.ServiceProvider.GetRequiredService<ITenantScope>().Enter(tenant.Id);
@@ -208,8 +218,12 @@ public sealed class PlatformTenantProvisioningHttpTests(ApiFactory factory)
         Assert.Equal(TenantStatus.Active, (await db.Tenants.AsNoTracking().SingleAsync(t => t.Id == tenant.Id, Ct)).Status);
         using var refreshed = await client.GetAsync($"/api/platform/tenants/{tenant.Id:D}", Ct);
         using var refreshedJson = JsonDocument.Parse(await refreshed.Content.ReadAsStringAsync(Ct));
-        using var repeated = await PlatformJourney.PostAsync(client, $"/api/platform/tenants/{tenant.Id:D}/retry-provisioning", new { version = refreshedJson.RootElement.GetProperty("version").GetUInt32(), reason = "Comprobar reparación" }, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, repeated.StatusCode);
+        Assert.Equal(repairedVersion, refreshedJson.RootElement.GetProperty("version").GetUInt32());
+        using var repeated = await PlatformJourney.PostAsync(client, $"/api/platform/tenants/{tenant.Id:D}/retry-provisioning", new { version = repairedVersion, reason = "Comprobar reparación" }, Ct);
+        var repeatedVersion = await SavedVersion.ReadAsync(repeated, Ct);
+        using var afterRepeat = await client.GetAsync($"/api/platform/tenants/{tenant.Id:D}", Ct);
+        using var afterRepeatJson = JsonDocument.Parse(await afterRepeat.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(repeatedVersion, afterRepeatJson.RootElement.GetProperty("version").GetUInt32());
         Assert.Equal(1, await db.Members.AsNoTracking().CountAsync(Ct));
         Assert.Equal(2, await db.Roles.AsNoTracking().CountAsync(Ct));
     }
@@ -271,9 +285,9 @@ public sealed class PlatformTenantProvisioningHttpTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.BadRequest, missingKey.StatusCode);
         var key = Guid.NewGuid();
         using var first = await SendAsync(client, path, key, body);
-        Assert.Equal(HttpStatusCode.NoContent, first.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
         using var replay = await SendAsync(client, path, key, body);
-        Assert.Equal(HttpStatusCode.NoContent, replay.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, replay.StatusCode);
         Assert.Equal("true", Assert.Single(replay.Headers.GetValues("Idempotent-Replayed")));
         await using var check = factory.Services.CreateAsyncScope();
         Assert.Equal(1, await check.ServiceProvider.GetRequiredService<ApplicationDbContext>().SecurityEvents
@@ -302,7 +316,7 @@ public sealed class PlatformTenantProvisioningHttpTests(ApiFactory factory)
         var responses = await Task.WhenAll(PlatformJourney.PostAsync(client, path, body, Ct), PlatformJourney.PostAsync(client, path, body, Ct));
         try
         {
-            Assert.Single(responses, r => r.StatusCode == HttpStatusCode.NoContent);
+            Assert.Single(responses, r => r.StatusCode == HttpStatusCode.OK);
             Assert.Single(responses, r => r.StatusCode == HttpStatusCode.Conflict);
         }
         finally { foreach (var response in responses) response.Dispose(); }

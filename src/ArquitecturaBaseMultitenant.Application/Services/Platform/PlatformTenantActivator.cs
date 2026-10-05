@@ -13,7 +13,7 @@ internal sealed class PlatformTenantActivator(IPlatformTenantRepository tenants,
     IMemberRepository members, ITenantSettingsRepository settings, TenantProvisioner provisioner,
     PlatformAuditWriter audit, IUserRepository users)
 {
-    internal async Task<Result> ActivateAsync(Guid id, bool retry, PlatformTenantStateRequest request,
+    internal async Task<Result<Tenant>> ActivateAsync(Guid id, bool retry, PlatformTenantStateRequest request,
         TenantSettings fallbackSettings, DateTime nowUtc, CancellationToken ct)
     {
         var tenant = await tenants.GetForUpdateAsync(id, request.Version!.Value, ct);
@@ -22,13 +22,13 @@ internal sealed class PlatformTenantActivator(IPlatformTenantRepository tenants,
         if (!retry)
         {
             var approved = tenant.Approve();
-            if (approved.IsFailure) return approved;
+            if (approved.IsFailure) return approved.Error;
         }
         else if (tenant.Status is not (TenantStatus.Provisioning or TenantStatus.Active)) return TenantErrors.InvalidTransition;
         if (tenant.Status == TenantStatus.Provisioning)
         {
             var activated = tenant.Activate();
-            if (activated.IsFailure) return activated;
+            if (activated.IsFailure) return activated.Error;
         }
         var snapshot = await metadata.FindAsync(tenant.RegistrationSource == TenantRegistrationSource.SelfService
             ? tenant.RegisteredByUserId : null, ct);
@@ -41,18 +41,18 @@ internal sealed class PlatformTenantActivator(IPlatformTenantRepository tenants,
             if (account?.Status != UserStatus.Active) return TenantErrors.ProvisioningConflict;
             owner = Member.Invite(registeringUserId);
             var active = owner.Activate(nowUtc);
-            if (active.IsFailure) return active;
+            if (active.IsFailure) return active.Error;
             members.Add(owner);
         }
         if (owner is null) return TenantErrors.ProvisioningConflict;
         var currentSettings = await settings.GetCurrentAsync(ct) ?? fallbackSettings;
         var prepared = await provisioner.StageBusinessOwnerAsync(tenant, currentSettings, owner, ct, snapshot.PrimaryCompanyId);
-        if (prepared.IsFailure) return prepared;
+        if (prepared.IsFailure) return prepared.Error;
         tenants.MarkUpdated(tenant);
         var changes = new SecurityEventChanges();
         changes.AddEnum("status", before, tenant.Status);
         audit.Record(id, retry ? SecurityEventType.OrganizationProvisioningRetried : SecurityEventType.OrganizationApproved,
             request.Reason!, changes);
-        return Result.Success();
+        return tenant;
     }
 }

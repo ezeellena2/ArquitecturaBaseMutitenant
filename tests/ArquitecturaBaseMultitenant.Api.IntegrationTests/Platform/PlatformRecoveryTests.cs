@@ -60,14 +60,16 @@ public sealed class PlatformRecoveryTests(ApiFactory factory)
         var newOutbox = await OutboxIdsAsync();
         using var approved = await PlatformJourney.PostAsync(platform, $"/api/platform/recoveries/{id:D}/approve",
             new { version = row.GetProperty("version").GetUInt32(), reason = "Confirmó sus datos por videollamada." }, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, approved.StatusCode);
+        var approvedVersion = await SavedVersion.ReadAsync(approved, Ct);
+        Assert.NotEqual(row.GetProperty("version").GetUInt32(), approvedVersion);
         Assert.False(approved.Headers.Contains("Set-Cookie"));
         var resolved = await RowAsync(platform, newEmail);
         Assert.Equal("Approved", resolved.GetProperty("status").GetString());
+        Assert.Equal(approvedVersion, resolved.GetProperty("version").GetUInt32());
         Assert.Equal("Confirmó sus datos por videollamada.", resolved.GetProperty("reason").GetString());
         Assert.NotEqual(JsonValueKind.Null, resolved.GetProperty("decidedAtUtc").ValueKind);
         using var again = await PlatformJourney.PostAsync(platform, $"/api/platform/recoveries/{id:D}/approve",
-            new { version = resolved.GetProperty("version").GetUInt32(), reason = "Otra vez" }, Ct);
+            new { version = approvedVersion, reason = "Otra vez" }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, again.StatusCode);
         Assert.Equal(AccountRecoveryErrors.AlreadyResolvedCode, await CodeAsync(again));
 
@@ -125,12 +127,15 @@ public sealed class PlatformRecoveryTests(ApiFactory factory)
         var outbox = await OutboxIdsAsync();
         using var rejected = await PlatformJourney.PostAsync(platform, $"/api/platform/recoveries/{id:D}/reject",
             new { version, reason = "No hay ninguna cuenta con el método de antes." }, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, rejected.StatusCode);
+        var rejectedVersion = await SavedVersion.ReadAsync(rejected, Ct);
+        Assert.NotEqual(version, rejectedVersion);
         var resolved = await RowAsync(platform, newEmail);
         Assert.Equal("Rejected", resolved.GetProperty("status").GetString());
+        Assert.Equal(rejectedVersion, resolved.GetProperty("version").GetUInt32());
         using var again = await PlatformJourney.PostAsync(platform, $"/api/platform/recoveries/{id:D}/reject",
-            new { version = resolved.GetProperty("version").GetUInt32(), reason = "Otra vez" }, Ct);
+            new { version = rejectedVersion, reason = "Otra vez" }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, again.StatusCode);
+        Assert.Equal(AccountRecoveryErrors.AlreadyResolvedCode, await CodeAsync(again));
 
         await using var scope = factory.Services.CreateAsyncScope();
         var services = scope.ServiceProvider;

@@ -12,7 +12,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
 /// </summary>
 internal sealed class OrganizationDomainRemover(ITenantDomainRepository domains, IAuditLog auditLog)
 {
-    internal async Task<Result> StageAsync(OrganizationDomainRow current, uint version,
+    internal async Task<Result<TenantDomain>> StageAsync(OrganizationDomainRow current, uint version,
         CancellationToken cancellationToken)
     {
         var organizationDomain = OrganizationEmailDomain.Create(current.Domain);
@@ -21,10 +21,10 @@ internal sealed class OrganizationDomainRemover(ITenantDomainRepository domains,
         var domain = await domains.GetByIdAsync(current.Id, version, cancellationToken);
         if (domain is null) return TenantDomainErrors.NotFound;
         var removed = domain.Remove();
-        if (removed.IsFailure) return removed;
+        if (removed.IsFailure) return removed.Error;
         domains.MarkUpdated(domain);
         auditLog.Record(AuditAction.Updated, "TenantDomain", domain.Id,
             new Dictionary<string, object?> { ["domain"] = domain.Domain, ["status"] = domain.Status.ToString() });
-        return Result.Success();
+        return domain;
     }
 }

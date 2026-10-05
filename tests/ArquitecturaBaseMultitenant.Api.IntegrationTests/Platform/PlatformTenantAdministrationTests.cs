@@ -87,7 +87,9 @@ public sealed class PlatformTenantAdministrationTests(ApiFactory factory)
         using var invalid = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{id:D}/suspend", new { version = original, reason = " " }, Ct);
         Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
         using var suspended = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{id:D}/suspend", new { version = original, reason = "Revisión de actividad" }, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, suspended.StatusCode);
+        var suspendedVersion = await SavedVersion.ReadAsync(suspended, Ct);
+        Assert.NotEqual(original, suspendedVersion);
+        Assert.Equal(suspendedVersion, await VersionAsync(ownerClient, id));
         Assert.Equal(TenantStatus.Suspended, (await StoredTenantAsync(factory, id)).Status);
         using var businessAfter = await consumerClient.GetAsync("/api/me", Ct);
         Assert.Equal(HttpStatusCode.Unauthorized, businessAfter.StatusCode);
@@ -97,18 +99,28 @@ public sealed class PlatformTenantAdministrationTests(ApiFactory factory)
         using var stale = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{id:D}/reactivate", new { version = original, reason = "Versión anterior" }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
         Assert.Equal(TenantStatus.Suspended, (await StoredTenantAsync(factory, id)).Status);
-        using var reactivated = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{id:D}/reactivate", new { version = await VersionAsync(ownerClient,id), reason = "Revisión terminada" }, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, reactivated.StatusCode);
-        using var closeActive = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{id:D}/close", new { version = await VersionAsync(ownerClient,id), reason = "Transición inválida" }, Ct);
+        using var reactivated = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{id:D}/reactivate", new { version = suspendedVersion, reason = "Revisión terminada" }, Ct);
+        var reactivatedVersion = await SavedVersion.ReadAsync(reactivated, Ct);
+        Assert.Equal(reactivatedVersion, await VersionAsync(ownerClient, id));
+        using var closeActive = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{id:D}/close", new { version = reactivatedVersion, reason = "Transición inválida" }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, closeActive.StatusCode);
-        using var suspendAgain = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{id:D}/suspend", new { version = await VersionAsync(ownerClient,id), reason = "Preparar cierre" }, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, suspendAgain.StatusCode);
-        using var closed = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{id:D}/close", new { version = await VersionAsync(ownerClient,id), reason = "Cierre solicitado" }, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, closed.StatusCode);
+        using var suspendAgain = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{id:D}/suspend", new { version = reactivatedVersion, reason = "Preparar cierre" }, Ct);
+        var nextVersion = await SavedVersion.ReadAsync(suspendAgain, Ct);
+        Assert.Equal(nextVersion, await VersionAsync(ownerClient, id));
+        using var closed = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{id:D}/close", new { version = nextVersion, reason = "Cierre solicitado" }, Ct);
+        var closedVersion = await SavedVersion.ReadAsync(closed, Ct);
+        Assert.Equal(closedVersion, await VersionAsync(ownerClient, id));
+        using var afterClose = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{id:D}/reactivate",
+            new { version = closedVersion, reason = "Estado cerrado" }, Ct);
+        Assert.Equal(TenantErrors.InvalidTransitionCode, await ErrorCodeAsync(afterClose));
         Assert.Equal(TenantStatus.Closed, (await StoredTenantAsync(factory,id)).Status);
         var pending = await SeedBusinessAsync(factory, "Rechazo " + Guid.NewGuid().ToString("N")[..8], true, member.UserId);
         using var rejected = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{pending:D}/reject", new { version = await VersionAsync(ownerClient,pending), reason = "Solicitud no válida" }, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, rejected.StatusCode);
+        var rejectedVersion = await SavedVersion.ReadAsync(rejected, Ct);
+        Assert.Equal(rejectedVersion, await VersionAsync(ownerClient, pending));
+        using var afterReject = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{pending:D}/reject",
+            new { version = rejectedVersion, reason = "Estado resuelto" }, Ct);
+        Assert.Equal(TenantErrors.InvalidTransitionCode, await ErrorCodeAsync(afterReject));
         Assert.Equal(TenantStatus.Closed, (await StoredTenantAsync(factory,pending)).Status);
         await using var scope = factory.Services.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -153,7 +165,7 @@ public sealed class PlatformTenantAdministrationTests(ApiFactory factory)
 
         using var suspended = await PlatformJourney.PostAsync(client, $"/api/platform/tenants/{id:D}/suspend",
             new { version = original, reason = "Suspender luego del alta del miembro" }, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, suspended.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, suspended.StatusCode);
         using var detail = await client.GetAsync($"/api/platform/tenants/{id:D}", Ct);
         using var json = JsonDocument.Parse(await detail.Content.ReadAsStringAsync(Ct));
         Assert.Equal(1, json.RootElement.GetProperty("memberCount").GetInt32());
@@ -233,6 +245,13 @@ public sealed class PlatformTenantAdministrationTests(ApiFactory factory)
         }
         Assert.Equal(0, (await services.GetRequiredService<IPlatformReader>().FindTenantAsync(id, Ct))!.MemberCount);
         Assert.Equal(1, (await services.GetRequiredService<IPlatformReader>().FindTenantAsync(id, Ct))!.CompanyCount);
+    }
+
+    private static async Task<string?> ErrorCodeAsync(HttpResponseMessage response)
+    {
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
+        return json.RootElement.GetProperty("code").GetString();
     }
 
     private static async Task<uint> VersionAsync(HttpClient client, Guid id)
