@@ -435,7 +435,12 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
     - el relleno de `Section` (16);
     - el aviso con «Copiar código» con el botón debajo del texto, como el tablero Avisos;
     - los límites viejos de 10 y 15 s de esas suites, con su comentario o sin el límite.
-  - **R3b · Fichas y hojas:**
+  - [x] **R3b · Fichas y hojas** (front `1d8e0f1` a `4650372`; 1012/1013 tests, lint y build; falla solo `organization-audit-contract.test.ts`, de R3c). Capturas en `r3b/`.
+    - Piezas: `MultiSelect`, con casilla y descripción; el campo abierto con borde y halo en los tres desplegables; `dialog`, sin la hoja a todo el alto; `app/PhoneBand.tsx`, la banda debajo de la barra (sin conexión, el 409 y el error de guardado); y `useEditPage`.
+    - M-Inicio-Miembro en «billetera», las hojas de Empresa desde abajo y el nombre y el CUIT revisados al tocar Guardar.
+    - Para B4: el «Para resolver» del miembro no puede decir «· Delta Norte S.A.» porque `PendingItem` no trae la empresa. Además, «Reenviar» lleva a `/org/usuarios?state=Expired`, que quizás no puede abrir quien tiene roles solo en su empresa. Va con la fila por empresa de Inicio-Miembro.
+    - Las contradicciones del lienzo quedaron en Diseño: el asterisco de «Dominio», la hoja de roles de M-Empresa, «Guardar cambios» sin cambios, los errores de servidor en M-Usuario, el 409 de M-Pagina-Org y el CUIT con guiones.
+    - Lo que pedía:
     - las hojas de M-Usuario (v99) y el desplegable de roles de la compu con casillas y descripción;
     - «Todos» a la derecha en M-Usuario-Empresa;
     - el ícono y el asterisco de Configuración, y el panel de la Página pública;
