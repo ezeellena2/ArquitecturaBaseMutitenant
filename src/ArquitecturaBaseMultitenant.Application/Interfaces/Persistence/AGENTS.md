@@ -2,4 +2,4 @@ Puertos de persistencia de Application: un límite transaccional por método pú
 
 Antes de escribir, leé: [guardado](../../../../docs/rules/guardado.md) · [persistencia-ef](../../../../docs/rules/persistencia-ef.md) · [multitenancy](../../../../docs/rules/multitenancy.md).
 
-Copiá de: `IUnitOfWork.cs` y `CommitPolicy.cs`; Infrastructure implementa estos contratos. `FakeUnitOfWorkTests` verifica la política de commit.
+Copiá de: `IRoleRepository.cs` y `IRoleReader.cs`; el límite es `IUnitOfWork.cs` con `CommitPolicy.cs`, y lo implementa Infrastructure. `FakeUnitOfWorkTests` verifica la política de commit.

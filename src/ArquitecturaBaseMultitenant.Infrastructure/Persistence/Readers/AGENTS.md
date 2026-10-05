@@ -2,4 +2,4 @@ Readers de EF: consultas `AsNoTracking`, proyección a contratos de Application 
 
 Antes de editar, leé: [datos-de-referencia](../../../../docs/rules/datos-de-referencia.md) · [persistencia-ef](../../../../docs/rules/persistencia-ef.md) · [multitenancy](../../../../docs/rules/multitenancy.md).
 
-Copiá de: `ReferenceDataReader.cs` para catálogos globales; `../ArquitecturaBase/src/ArquitecturaBase.Infrastructure/Persistence/Readers/SystemSettingsReader.cs` para la lectura con caché en otro scope. Lo verifica `Api.IntegrationTests/Persistence/ReferenceDataReaderTests.cs`.
+Copiá de: `RoleReader.cs` y `CompanyReader.cs` para un listado (`SortMap`, `ApplySearch`, `ToPagedResultAsync` y desempate por Id); `ReferenceDataReader.cs` para catálogos globales con caché en otro scope. Lo verifican `PaginationTests`, `SearchTests` y `Api.IntegrationTests/Persistence/ReferenceDataReaderTests.cs`.

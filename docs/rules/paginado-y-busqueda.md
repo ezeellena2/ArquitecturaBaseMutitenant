@@ -32,7 +32,8 @@
 - Contar sobre una tabla de solo crecimiento.
 
 ## Copiá de
-- `Infrastructure/Persistence/Readers/RoleReader.cs` y `Application/Models/Roles/ListRolesRequest.cs` (E4)
+- `Infrastructure/Persistence/Readers/RoleReader.cs` y `Application/Models/Roles/ListRolesRequest.cs` (E4).
+- `Infrastructure/Persistence/Readers/CompanyReader.cs` (E6): un listado con sus conteos por filtro.
 
 ## Lo verifica
 - `PaginationTests` (E2), `CursorPaginationTests` (E2), `SearchTests` (E2); la búsqueda con acentos de Usuarios y Miembros de empresa, en `OrganizationUsersTests` (E6) y `CompaniesTests` (E6).

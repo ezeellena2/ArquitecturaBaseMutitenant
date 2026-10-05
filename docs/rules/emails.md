@@ -25,7 +25,7 @@
 - Mostrar el correo en un log (se enmascara con `PersonalDataMask.Email`: `lu•••@gmail.com`).
 
 ## Copiá de
-- `Domain/ValueObjects/Email.cs` (E1), que parte del de `../ArquitecturaBase` y le suma la normalización.
+- `Domain/ValueObjects/Email.cs` (E1), con la normalización.
 
 ## Lo verifica
 - `EmailTests` (E1): la tabla de casos de `format-cases.json` (`"  Juan@Gmail.COM "` → `juan@gmail.com`, IDN, límites por bytes y `error` para inválidos).

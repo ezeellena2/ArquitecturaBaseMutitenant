@@ -2,4 +2,4 @@ Repositorios concretos de escritura. `AuditLog` agrega eventos explícitos al Ch
 
 Antes de escribir, leé: [auditoría](../../../../docs/rules/auditoria.md) · [guardado](../../../../docs/rules/guardado.md) · [persistencia EF](../../../../docs/rules/persistencia-ef.md).
 
-Copiá de `AuditLog.cs`; lo prueba `Api.IntegrationTests/Persistence/AuditTrailTests.cs`.
+Copiá de: `RoleRepository.cs` para un agregado y `AuditLog.cs` para un evento explícito, que prueba `Api.IntegrationTests/Persistence/AuditTrailTests.cs`.
