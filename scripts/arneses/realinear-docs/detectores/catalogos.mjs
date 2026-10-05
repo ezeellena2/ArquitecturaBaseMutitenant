@@ -74,7 +74,8 @@ export async function detectar(ctx) {
           continue;
         }
 
-        if (/^[a-z][a-z0-9]*\.[a-z0-9-]+$/.test(valor) && gruposPermisos.has(primero(valor)) && !extensionesDeArchivo.has(valor.split('.')[1])) {
+        // Un permiso tiene uno o más puntos: `roles.read`, `company.members.read`, `platform.audit.read`.
+        if (/^[a-z][a-z0-9]*(?:\.[a-z0-9-]+)+$/.test(valor) && gruposPermisos.has(primero(valor)) && !extensionesDeArchivo.has(valor.split('.').at(-1))) {
           documentados.permisos.add(primero(valor));
           if (!planeada && !permisos.has(valor)) {
             out.push(ctx.crear({ ...aqui, tipo: 'permiso-desconocido', clave: valor, real: `${valor} no está en los catálogos de permisos`, candidatos: parecidos(valor, [...permisos], { tolerancia: 4 }).map((c) => c.nombre) }));

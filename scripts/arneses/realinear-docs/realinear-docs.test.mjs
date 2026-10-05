@@ -140,12 +140,15 @@ test('catalogos: permisos, códigos y rutas mencionados que no existen, y grupos
     `catalogos|codigo-desconocido|modelo|${roles}|Roles.Role.NameReqired`,
     'catalogos|codigo-sin-feature|humano|docs/features|Companies',
     `catalogos|metodo-desconocido|modelo|${roles}|DELETE /api/roles`,
+    `catalogos|permiso-desconocido|modelo|${roles}|company.members.reed`,
     `catalogos|permiso-desconocido|modelo|${roles}|roles.vew`,
     'catalogos|permiso-sin-feature|humano|docs/features|companies',
     `catalogos|ruta-desconocida|modelo|${roles}|POST /api/rolez`,
     'catalogos|ruta-sin-feature|humano|docs/features|companies',
   ].sort());
-  assert.deepEqual(hs.find((h) => h.tipo === 'permiso-desconocido').candidatos, ['roles.view']);
+  assert.deepEqual(hs.find((h) => h.id.endsWith('|roles.vew')).candidatos, ['roles.view']);
+  // Un permiso de empresa o de plataforma tiene dos puntos: también cuenta como documentado y se verifica.
+  assert.deepEqual(hs.find((h) => h.id.endsWith('|company.members.reed')).candidatos, ['company.members.read']);
 });
 
 test('front: los mismos detectores sobre TS, con el mapa `src/` y el árbol `## src/`', async () => {
