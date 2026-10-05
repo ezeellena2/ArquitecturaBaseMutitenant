@@ -26,13 +26,14 @@ ArquitecturaBaseMutitenant/
 │   │   └── format-cases.json                         [E1] casos de formato compartidos: valor + cultura + zona → texto esperado
 │   ├── decisions/
 │   │   ├── README.md                                 índice de los ADR
-│   │   └── NNNN-<titulo>.md                          uno por decisión, al implementarla
+│   │   └── NNNN-<titulo>.md                          solo las decisiones que no entran en una línea del índice
 │   ├── rules/                                        fichas del arnés: README + una ficha por tema (guardado, fechas, números…); índice en rules/README.md
 │   ├── features/                                     reglas funcionales por área
 │   │   ├── identidad.md                              [E3] registro de personas y de empresas, accesos, invitaciones
 │   │   ├── roles.md                                  [E4] cómo copiar el área de referencia
-│   │   ├── plataforma.md                             [E5]
+│   │   ├── plataforma.md                             [E5] operadores, organizaciones, cuentas, recuperaciones, legales y auditoría
 │   │   ├── organizaciones.md                         [E6] usuarios, empresas, membresías, filtros y conteos
+│   │   ├── inicio.md                                 inicio de la organización: tarjetas por área y «Para resolver» (ADR 0040)
 │   │   ├── personal.md                               [E7]
 │   │   └── whatsapp.md                               [E8]
 │   ├── operations/
@@ -43,7 +44,9 @@ ArquitecturaBaseMutitenant/
 │   ├── plans/
 │   │   ├── 2026-09-27-plan-de-desarrollo.md          plan maestro
 │   │   └── AAAA-MM-DD-etapa-N-<tema>.md              plan detallado de cada etapa
-│   └── history/                                      planes cerrados (HISTÓRICO)
+│   ├── guides/                                       recetas: agregar un área, permiso nuevo, migración, prefijo de backend, arneses
+│   ├── reviews/                                      informes de cierre de etapa y revisiones, con sus anexos
+│   └── backlog.md                                    lo que queda para más adelante
 ├── scripts/
 │   ├── datos-de-referencia/                          [E1] generación desde ISO 4217, ISO 3166, IANA y CLDR
 │   │   ├── generar.mjs                               [E1] regenera los cinco JSON de salida; nunca se editan a mano
@@ -117,6 +120,8 @@ ArquitecturaBaseMutitenant/
 │       └── verificar.ps1                             qué falta, sin mostrar valores
 ├── src/                                              ver abajo
 ├── tests/                                            ver abajo
+├── tools/                                            solo el soporte del E2E real, nunca para operar (ADR 0017, enmienda)
+│   └── ArquitecturaBaseMultitenant.RealE2ESetup/      prepara la cuenta, el espacio personal y la empresa del E2E real en su base aislada
 ├── .editorconfig                                     [E0] estilo y supresiones justificadas
 ├── .gitignore                                        [E0] VisualStudio + .local/ + *.env + appsettings.*.local.json
 ├── .gitattributes                                    [E1] snapshots sin conversión de bytes y LF fijo para JSON generados
@@ -146,7 +151,13 @@ ArquitecturaBaseMultitenant.Domain/
 │   ├── ISoftDeletable.cs                             [E2] IsDeleted, DeletedAtUtc, DeletedBy
 │   ├── ITenantOwned.cs                               [E2] dato privado: TenantId
 │   ├── ICompanyOwned.cs                              [E2] CompanyId (además de ITenantOwned)
-│   └── NotAuditedAttribute.cs                        [E2] excluye la propiedad del rastro de auditoría
+│   ├── NotAuditedAttribute.cs                        [E2] excluye la propiedad del rastro de auditoría
+│   ├── IConsumerBusinessShared.cs                    Copia de datos visible solo a una persona y una…
+│   ├── IPublishedByBusiness.cs                       Dato público perteneciente a la página de una organización
+│   ├── IVersioned.cs                                 Versión de concurrencia que Infrastructure mapea a xmin
+│   ├── Party.cs                                      Identifica a la persona o a la empresa como parte…
+│   ├── PartyPolicy.cs                                Comprueba qué parte de un dato compartido ejecuta una transición
+│   └── TextLimits.cs                                 Centraliza los límites de texto que comparten las reglas de…
 ├── Results/                                          [E1]
 │   ├── Error.cs                                      record + fábricas Failure/Validation/NotFound/Conflict…
 │   ├── ErrorType.cs
@@ -159,7 +170,11 @@ ArquitecturaBaseMultitenant.Domain/
 │   ├── CurrencyCodeErrors.cs                         [E1] ReferenceData.Currency.Invalid; texto localizado en E1 tarea 10
 │   ├── CultureCodeErrors.cs                          [E1] ReferenceData.Culture.Invalid; texto localizado en E1 tarea 10
 │   ├── Email.cs                                      [E1] normalizado (minúsculas, NFC, IDN), validado
-│   └── PhoneNumber.cs                                [E1] E.164; PhoneUsage se suma en E3
+│   ├── PhoneNumber.cs                                [E1] E.164; PhoneUsage se suma en E3
+│   ├── TaxId.cs                                      Identificación fiscal normalizada como país, tipo de catálogo y número…
+│   ├── TaxIdErrors.cs                                TaxIds.TaxId.Invalid
+│   └── TaxIdValidators/
+│       └── ArgentineCuitValidator.cs                 Comprueba formato, prefijo admitido y dígito verificador CUIT/CUIL de Argentina
 ├── ReferenceData/                                    [E2] entidades globales de platform, sin RLS
 │   ├── Currency.cs
 │   ├── CurrencyTranslation.cs
@@ -181,15 +196,21 @@ ArquitecturaBaseMultitenant.Domain/
 │   ├── MemberStatus.cs                               Invited | Active | Inactive | Removed
 │   ├── MemberErrors.cs                               Tenancy.Member.* (Inactive: por la puerta de empresas, su única membresía está deshabilitada)
 │   ├── AccessErrors.cs                               Tenancy.Access.Wrong, .NotMember, .ConsumerCannotCreateBusiness
-│   ├── Invitation.cs                                 [E3] TenantId, email/teléfono, TokenHash, ExpiresAtUtc, roles iniciales
-│   ├── InvitationChannel.cs                         [E3] valor ("email", …): cada módulo registra el suyo
-│   ├── InvitationStatus.cs                           [E3] Pending | Accepted | Revoked | Expired
 │   ├── TenantSlug.cs                                 Dirección de subdominio normalizada según el patrón de Registro-Empresa
 │   ├── TenantRegistrationSource.cs                   Origen del alta global, independiente de quién usa la organización
 │   ├── ReservedTenantSlug.cs                         Nombres de subdominio que la plataforma no entrega a organizaciones
 │   ├── OrganizationEmailDomain.cs                    Nombre DNS normalizado para identificar los correos de una organización
 │   ├── MemberRemovalReason.cs                        Identifica por qué se retiró una membresía
-│   └── InvitationErrors.cs                           [E3]
+│   ├── Company.cs                                    Name, TaxId?, TimeZoneId?, Status
+│   ├── CompanyErrors.cs                              Companies.Company.*
+│   ├── CompanyMembership.cs                          UserId, CompanyId, Status
+│   ├── CompanyMembershipErrors.cs                    Companies.Membership.* (último CompanyAdmin…)
+│   ├── CompanyMembershipStatus.cs
+│   ├── CompanyStatus.cs
+│   ├── TenantDomain.cs                               Reserva un dominio de correo global y conserva su desafío…
+│   ├── TenantDomainErrors.cs                         Settings.TenantDomain.* (dominio inválido, repetido o inexistente)
+│   ├── TenantDomainStatus.cs                         Pending | Verified | Removed
+│   └── TenantSlugErrors.cs                           Tenancy.TenantSlug.Invalid, .Reserved y .Taken
 ├── Users/                                            [E1–E3] la identidad global (la entidad EF está en Infrastructure)
 │   ├── Access.cs                                     [E3] Consumer | Business | Platform (el acceso; un usuario no-plataforma puede tener los dos primeros)
 │   ├── UserStatus.cs                                 [E3] Active | Suspended | PendingDeletion | Deleted
@@ -214,7 +235,9 @@ ArquitecturaBaseMultitenant.Domain/
 │   ├── ReauthAction.cs                              Una prueba de posesión autoriza una sola acción concreta
 │   ├── GoogleMethodErrors.cs                        Define el conflicto que impide vincular un identificador de Google…
 │   ├── ExternalLoginErrors.cs                       Centraliza los rechazos del ingreso con Google
-│   └── AccountErrors.cs                              Identity.Account.* (LockedOut, Suspended, PendingDeletion con la fecha y el cancelTicket)
+│   ├── AccountErrors.cs                              Identity.Account.* (LockedOut, Suspended, PendingDeletion con la fecha y el cancelTicket)
+│   ├── BusinessSignupErrors.cs                       alta de empresa: Tenancy.Organization.LimitReached y Auth.BusinessSignup.*
+│   └── LoginMethodErrors.cs                          Centraliza los errores al agregar, verificar, quitar o elegir un…
 ├── Authorization/                                    [E4]
 │   ├── Permissions.cs                                organización + empresa, sin prefijo (users.read, roles.manage…, company.members.manage), con All,
 │   │                                                 OrganizationScoped, CompanyScoped
@@ -222,17 +245,12 @@ ArquitecturaBaseMultitenant.Domain/
 │   ├── PlatformPermissions.cs                        platform.tenants.read/.manage, .accounts.read/.manage, .recoveries.manage, .legal.manage,
 │   │                                                 .operators.manage, .audit.read, .settings.manage; platform.whatsapp.manage recién en la E11
 │   ├── Role.cs                                       TenantId, Name, Scope, CompanyId? (SpecificCompany), IsSystem, Permissions
-│   ├── RoleScope.cs                                  Organization | AnyCompany | SpecificCompany
+│   ├── RoleScope.cs                                  Organization | AnyCompany | SpecificCompany; en pantalla, toda la organización o una
+│   │                                                 empresa; AnyCompany queda para CompanyAdmin y la API (ADR 0034, enmienda)
 │   ├── RoleAssignment.cs                             UserId, RoleId, CompanyId?
-│   ├── SystemRoles.cs                                TenantAdmin, CompanyAdmin
-│   └── RoleErrors.cs                                 Roles.Role.*
-├── Companies/                                        [E6]
-│   ├── Company.cs                                    Name, TaxId?, TimeZoneId?, Status
-│   ├── CompanyStatus.cs
-│   ├── CompanyErrors.cs                              Companies.Company.*
-│   ├── CompanyMembership.cs                          UserId, CompanyId, Status
-│   ├── CompanyMembershipStatus.cs
-│   └── CompanyMembershipErrors.cs                    Companies.Membership.* (último CompanyAdmin…)
+│   ├── SystemRoles.cs                                TenantAdmin (Dueño) y CompanyAdmin (Administrador de empresa, AnyCompany)
+│   ├── RoleErrors.cs                                 Roles.Role.*
+│   └── RoleAssignmentErrors.cs                       Roles.RoleAssignment.*: dónde vale un rol, un solo código para Usuarios y Empresas
 ├── Settings/                                         [E3]
 │   ├── TenantSettings.cs                             DefaultCulture, DefaultTimeZoneId, DefaultCurrency
 │   ├── PlatformSettings.cs                           [E3] ConsumerSignup, BusinessSignup, MaxOwnedOrganizations, AccountDeletionGraceDays (30); la E5
@@ -242,7 +260,11 @@ ArquitecturaBaseMultitenant.Domain/
 │   └── SettingsErrors.cs
 ├── Platform/                                         [E5]
 │   ├── PlatformPermissionAssignment.cs               permisos individuales por operador, sin roles
-│   └── PlatformOperatorErrors.cs                     Platform.Operator.*
+│   ├── PlatformOperatorErrors.cs                     Platform.Operator.*
+│   ├── AccountRecoveryErrors.cs                      El pedido no tiene un código verificado con su nonce,…
+│   ├── AccountRecoveryRequest.cs                     Pedido público de «Recuperar mi cuenta» (multitenancy.md §3.1)
+│   ├── AccountRecoveryStatus.cs                      Estado de un pedido de «Recuperar mi cuenta»
+│   └── PlatformAuditErrors.cs                        Platform.Audit.NotFound
 ├── Auditing/                                         [E2–E3]
 │   ├── AuditEntry.cs                                 [E2] tenant, append-only
 │   ├── AuditAction.cs                                [E2] Created | Updated | Deleted | Restored | Custom
@@ -255,6 +277,29 @@ ArquitecturaBaseMultitenant.Domain/
 │   ├── OutboxMessage.cs                              Channel, payload cifrado, Attempts, NextAttemptAtUtc
 │   ├── OutboxChannel.cs                             valor ("email", …): cada módulo suma el suyo
 │   └── OutboxStatus.cs                               Pending | Sent | Failed
+├── Features/
+│   ├── FeatureDefinition.cs                          Describe un módulo del producto
+│   ├── FeatureScope.cs                               Accesos en los que existe un módulo opcional
+│   ├── Features.cs                                   Catálogo de módulos reales del producto
+│   ├── TenantFeature.cs                              Habilitación global de un módulo para un espacio, con vencimiento…
+│   ├── TenantFeatureErrors.cs                        Errores de catálogo y habilitación global de módulos opcionales
+│   └── TenantFeatureSource.cs                        Origen de la habilitación de un módulo por Plataforma
+├── Invitations/
+│   ├── Invitation.cs                                 [E3] TenantId, email/teléfono, TokenHash, ExpiresAtUtc, roles iniciales
+│   ├── InvitationChannel.cs                          [E3] valor ("email", …): cada módulo registra el suyo
+│   ├── InvitationErrors.cs                           [E3]
+│   └── InvitationStatus.cs                           [E3] Pending | Accepted | Revoked | Expired
+├── Legal/
+│   ├── AccountDeletionErrors.cs                      Reúne los motivos que impiden pedir o cancelar una baja…
+│   ├── LegalAcceptance.cs                            Prueba qué versión legal aceptó una cuenta y cuándo
+│   ├── LegalDocument.cs                              Identifica una versión de términos o privacidad y desde cuándo…
+│   ├── LegalDocumentContent.cs                       Asocia el texto de una versión legal con la cultura…
+│   ├── LegalDocumentKind.cs                          Distingue términos y condiciones de política de privacidad
+│   ├── LegalErrors.cs                                Reúne los rechazos por documentos legales pendientes, inexistentes o cuya…
+│   └── LegalPublicationErrors.cs                     Errores de Plataforma › Documentos legales al publicar una versión…
+├── PublicSite/
+│   ├── PublicPage.cs                                 Contenido editable de una página pública empresarial y su estado…
+│   └── PublicPageErrors.cs                           PublicSite.PublicPage.* (validación, bloqueo de moderación, inexistente)
 └── WhatsApp/                                         [E8]
     ├── WhatsAppContact.cs                            wa_id ↔ identidad (esquema identity)
     ├── WhatsAppMessage.cs
@@ -302,15 +347,17 @@ ArquitecturaBaseMultitenant.Application/
 │   └── Exceptions/                                    [E2]
 │       ├── UniqueConstraintViolationException.cs     [E2] con UnitOfWork
 │       ├── ForeignKeyViolationException.cs           [E6] con UnitOfWork
-│       └── InvalidCursorException.cs                  [E2] Api la traduce sin depender de Infrastructure
+│       ├── InvalidCursorException.cs                 [E2] Api la traduce sin depender de Infrastructure
+│       └── ConcurrencyConflictException.cs           Una edición simultánea cambió la versión de la fila antes…
 ├── Configuration/                                    [E3]
 │   ├── Auth/                                         [E3]
 │   │   ├── LoginCodeOptions.cs
 │   │   ├── LoginLinkOptions.cs                       [E8]
-│   │   ├── BrowserSessionKeys.cs                     Centraliza la clave de sesión del navegador que vincula autenticación…
-│   │   └── InvitationOptions.cs
-│   └── Messaging/
-│       └── OutboxOptions.cs                         [E3] reintentos y backoff
+│   │   └── BrowserSessionKeys.cs                     Centraliza la clave de sesión del navegador que vincula autenticación…
+│   ├── Messaging/
+│   │   └── OutboxOptions.cs                          [E3] reintentos y backoff
+│   └── Invitations/
+│       └── InvitationOptions.cs
 ├── Interfaces/                                       [E1]
 │   ├── Services/                                     lo que inyectan los controllers
 │   │   ├── IAccountService.cs                        [E3] registro B2C
@@ -322,12 +369,8 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── IInvitationService.cs                     [E3] vista previa y aceptación
 │   │   ├── IProfileService.cs                        [E3] /api/me
 │   │   ├── IBusinessSignupService.cs                  [E6] "Registrá tu empresa" (alta B2B, aparte del acceso B2C)
-│   │   ├── IUserService.cs                           [E6]
 │   │   ├── IRoleService.cs                           [E4]
 │   │   ├── ICompanyService.cs                        [E6]
-│   │   ├── ICompanyMemberService.cs                  [E6]
-│   │   ├── ITenantSettingsService.cs                 [E6]
-│   │   ├── IAuditLogService.cs                       [E6]
 │   │   ├── ITenantAdministrationService.cs           [E5]
 │   │   ├── IPlatformAccountService.cs                [E5]
 │   │   ├── IPlatformOperatorService.cs               [E5]
@@ -351,7 +394,25 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── IAccountLoginMethodsService.cs            Entrega los métodos de ingreso visibles de la cuenta actual…
 │   │   ├── IAccountGoogleService.cs                  Vincula una identidad Google verificada con la cuenta que ya…
 │   │   ├── IAccountDeletionProcessingService.cs      Coordina la baja diferida
-│   │   └── IPlatformSettingsService.cs              [E5]
+│   │   ├── IPlatformSettingsService.cs               [E5]
+│   │   ├── IAccountDeletionService.cs                Permite a la cuenta solicitar o cancelar su baja según…
+│   │   ├── IAccountRecoveryService.cs                «Recuperar mi cuenta», sin sesión
+│   │   ├── ICompanyMembershipService.cs              miembros de una empresa y sus roles
+│   │   ├── IFeatureService.cs                        Habilitaciones efectivas del espacio activo para pantallas, workers y mensajes
+│   │   ├── ILastCompanyAdminGuard.cs                 protege al último Administrador activo de una empresa
+│   │   ├── IOrganizationAuditService.cs              auditoría de la organización: listado, «Quién» y detalle
+│   │   ├── IOrganizationDomainService.cs             dominios de correo de la organización: registrar, verificar y retirar
+│   │   ├── IOrganizationSettingsService.cs           configuración de la organización: nombre, cultura, zona y moneda
+│   │   ├── IOrganizationUserService.cs               Usuarios: miembros e invitaciones de la organización
+│   │   ├── IPermissionService.cs                     [E4] permisos efectivos en la organización + invalidación
+│   │   ├── IPlatformAccountDeletionService.cs        baja de una cuenta iniciada por Plataforma (ADR 0035)
+│   │   ├── IPlatformAccountStateService.cs           suspender, reactivar y cerrar las sesiones de una cuenta
+│   │   ├── IPlatformDomainService.cs                 Plataforma verifica o retira el dominio de una organización
+│   │   ├── IPlatformLegalService.cs                  Plataforma › Documentos legales
+│   │   ├── IPlatformPermissionService.cs             [E4]
+│   │   ├── IPlatformPublicSiteService.cs             moderación de la página pública desde Plataforma
+│   │   ├── IPublicPageService.cs                     página pública de la organización: borrador, publicar y retirar
+│   │   └── ITenantSlugAvailabilityService.cs         disponibilidad de una dirección pública antes del alta
 │   ├── ReferenceData/                                [E1] puertos de Application; Domain no los referencia
 │   │   ├── ICurrencyCatalog.cs                        código, IsEnabled y MinorUnits desde JSON E1 / base E2
 │   │   ├── ICountryCatalog.cs
@@ -380,7 +441,6 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── IRoleRepository.cs                        [E4]
 │   │   ├── IRoleReader.cs                            [E4]
 │   │   ├── IRoleAssignmentRepository.cs              [E4]
-│   │   ├── IPermissionReader.cs                      [E4]
 │   │   ├── IPlatformSettingsRepository.cs            [E3]
 │   │   ├── IPlatformSettingsReader.cs                [E3]
 │   │   ├── IPlatformPermissionAssignmentRepository.cs [E5]
@@ -417,7 +477,15 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── IAccountDeletionTenantReader.cs           Proyección de alcances de eliminación, sin datos privados ni perfiles…
 │   │   ├── IAccountDeletionRepository.cs             Reclamo durable y purga de credenciales globales de una cuenta…
 │   │   ├── ForeignKeys.cs                            Nombres de las claves foráneas que la base hace cumplir…
-│   │   └── IAuditEntryReader.cs                     [E6]
+│   │   ├── ILegalReader.cs                           Lee documentos legales vigentes y aceptaciones pendientes para mostrarlos sin…
+│   │   ├── ILegalRepository.cs                       Consulta y agrega versiones legales y aceptaciones dentro de la…
+│   │   ├── ILoginMethodReader.cs                     Proyecta los métodos de ingreso de una cuenta para la…
+│   │   ├── ILoginMethodRepository.cs                 Bloquea y modifica métodos de ingreso de una identidad global…
+│   │   ├── IOrganizationAuditReader.cs               lee la auditoría de la organización con cursor y filtros
+│   │   ├── IPublicPageReader.cs                      lee la página pública de la organización activa
+│   │   ├── IPublicPageRepository.cs                  escribe la página pública dentro de la transacción del servicio
+│   │   ├── ITenantDomainReader.cs                    lee los dominios de la organización con sus correos administrados
+│   │   └── ITenantDomainRepository.cs                escribe los dominios de correo globales, con lock y versión
 │   └── Integrations/
 │       ├── Request/                                  [E2–E3]
 │       │   ├── ICurrentUser.cs                       [E2 shell] UserId, Access (Consumer | Business | Platform); claims reales E3
@@ -429,8 +497,6 @@ ArquitecturaBaseMultitenant.Application/
 │       ├── Identity/                                 [E3–E4]
 │       │   ├── ISignInService.cs                     técnico: sign-in, bloqueos, revocar sesiones (≤12 miembros)
 │       │   ├── IUserLookup.cs                        búsqueda global por email o teléfono
-│       │   ├── IPermissionService.cs                 [E4] permisos efectivos en la organización + invalidación
-│       │   ├── IPlatformPermissionService.cs         [E4]
 │       │   ├── ITokenRevoker.cs
 │       │   ├── IUserStatusReader.cs                  Consulta global acotada al estado de una identidad, sin exponer…
 │       │   └── IGoogleAvailability.cs                [E3]
@@ -438,7 +504,8 @@ ArquitecturaBaseMultitenant.Application/
 │       │   ├── ISecureTokenGenerator.cs
 │       │   ├── ILoginCodeGenerator.cs
 │       │   ├── ILoginCodeHasher.cs
-│       │   └── IPayloadProtector.cs                  cifrado del payload del outbox
+│       │   ├── IPayloadProtector.cs                  cifrado del payload del outbox
+│       │   └── IInvitationTokenProtector.cs          protege el token de invitación junto con los ids de su alcance
 │       ├── Messaging/                                [E3]
 │       │   ├── IOutbox.cs                            Enqueue(canal registrado) dentro del límite
 │       │   ├── IChannelSender.cs                    emisor técnico por canal, consumido por OutboxDispatchService
@@ -456,11 +523,17 @@ ArquitecturaBaseMultitenant.Application/
 │       │   └── ITenantStatusCache.cs                 [E3] invalidar al suspender o reactivar
 │       ├── Time/
 │       │   └── ITimeZoneService.cs                   [E1] conversión y GetDayRangeUtc con TimeZoneInfo; catálogo en ReferenceData/
-│       └── Phones/
-│           ├── IPhoneNumberDisplayFormatter.cs      [E1] formato nacional/internacional de E.164 sin lista de países
-│           ├── IPhoneNumberParser.cs                [E3] Parse(country, number, PhoneUsage) → Result<PhoneNumber>
-│           ├── PhoneUsage.cs                        [E3] Any | Mobile; no nombra WhatsApp (sus países los controla el módulo)
-│           └── IPhoneLinkObserver.cs                [E3] el núcleo avisa cambios de teléfono; el módulo suelta el contacto
+│       ├── Phones/
+│       │   ├── IPhoneNumberDisplayFormatter.cs       [E1] formato nacional/internacional de E.164 sin lista de países
+│       │   ├── IPhoneNumberParser.cs                 [E3] Parse(country, number, PhoneUsage) → Result<PhoneNumber>
+│       │   ├── PhoneUsage.cs                         [E3] Any | Mobile; no nombra WhatsApp (sus países los controla el módulo)
+│       │   └── IPhoneLinkObserver.cs                 [E8] el núcleo avisa cambios de teléfono; el módulo suelta el contacto
+│       ├── Dns/
+│       │   └── IDnsTxtLookup.cs                      consulta los registros TXT de un dominio
+│       ├── Features/
+│       │   └── IFeatureCatalog.cs                    Catálogo cerrado de módulos reales
+│       └── Legal/
+│           └── IAccountDeletionParticipant.cs        Hooks de cuenta en la UoW llamadora
 ├── Models/                                           [E1] *Request (entrada), *Response (salida), ReadModels/*Row (proyección)
 │   ├── Auth/                                         [E3]
 │   │   ├── SignupRequest.cs
@@ -477,43 +550,39 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── ConnectUser.cs                            identidad + acceso y tenant elegidos, para armar el principal
 │   │   ├── AccessSelectionRequest.cs                 acceso (consumer|business) y tenant pedidos en authorize
 │   │   ├── ExternalSignInResponse.cs                 Devuelve el destino al que continúa el navegador después de…
-│   │   ├── ExternalSignInRequest.cs                  La puerta de Registro es la única que puede crear…
+│   │   ├── ExternalSignInRequest.cs                  ingreso o registro con Google; solo el registro crea una identidad
 │   │   ├── BusinessSignupResponse.cs                 Confirma el alta, su estado y el correo principal de…
-│   │   ├── AccountRecoveryModels.cs                  Pide el código para el método nuevo de «Recuperar mi…
-│   │   └── ReturnUrls.cs
+│   │   ├── AccountRecoveryModels.cs                  pedidos de código, verificación y envío de «Recuperar mi cuenta»
+│   │   ├── ReturnUrls.cs
+│   │   ├── BusinessSignupRequest.cs                  nombre, slug y CUIT de la empresa, y datos de quien la registra
+│   │   ├── TenantSlugAvailability.cs                 Available | Reserved | Taken
+│   │   └── TenantSlugAvailabilityResponse.cs         respuesta de la consulta de una dirección pública
 │   ├── Invitations/                                  [E3]
 │   │   ├── PreviewInvitationRequest.cs               el token, en el cuerpo (nunca en la URL)
 │   │   ├── AcceptInvitationRequest.cs                con y sin cuenta previa
 │   │   ├── ProvenInvitationToken.cs                  El token del pedido o de la continuación, ya probado,…
 │   │   ├── InvitationRow.cs                          Proyección interna del alcance autorizado
-│   │   ├── InvitationNotice.cs                       Los roles van como se guardaron
+│   │   ├── InvitationNotice.cs                       aviso de invitación: los roles van como se guardaron
 │   │   ├── InvitationGrantRow.cs                     Lo que ofrece una invitación
-│   │   └── InvitationPreviewResponse.cs
+│   │   ├── InvitationPreviewResponse.cs
+│   │   ├── AcceptInvitationResponse.cs               resultado de aceptar una invitación
+│   │   ├── InvitationAcceptanceContext.cs            datos y resultado de aceptar una invitación
+│   │   ├── InvitationContinuation.cs                 continuación protegida del flujo de invitación en el navegador
+│   │   ├── InvitationPreviewState.cs                 estado de la invitación que se muestra antes de aceptarla
+│   │   ├── InvitationTokenData.cs                    lo que protege el token de una invitación
+│   │   ├── IssueInvitationRequest.cs                 pedido de emitir una invitación, de la organización o de Plataforma
+│   │   └── IssuedInvitation.cs                       invitación emitida, lista para encolar su entrega
 │   ├── Profile/                                      [E3]
 │   │   ├── MeResponse.cs                             cuenta + acceso activo + espacio personal + organizaciones + permisos + preferencias efectivas (cultura, zona, moneda) + features
 │   │   ├── OrganizationSummary.cs                         id, nombre, slug y estado (para elegir organización)
 │   │   ├── EffectivePermissions.cs                   organización + por empresa
-│   │   ├── UpdateMeRequest.cs
-│   │   └── VerifyDestinationRequest.cs
-│   ├── Organizations/                                [E6]
-│   │   └── BusinessSignupRequest.cs                  nombre, slug y CUIT de la empresa, y datos de quien la registra
+│   │   └── UpdateMeRequest.cs
 │   ├── PublicSite/                                   [E6–E7]
 │   │   ├── PublicPageResponse.cs                     [E6] nombre, logo, descripción, contacto, slug y estado
 │   │   ├── UpdatePublicPageRequest.cs                [E6]
 │   │   ├── ListDirectoryRequest.cs                   [E7] paginado del directorio
 │   │   └── ReadModels/
 │   │       └── DirectoryEntryRow.cs                  [E7]
-│   ├── Users/                                        [E6]
-│   │   ├── ListUsersRequest.cs                       SortableFields
-│   │   ├── UserDetailResponse.cs
-│   │   ├── UserFilterCountsResponse.cs
-│   │   ├── InviteUserRequest.cs
-│   │   ├── UpdateUserRequest.cs
-│   │   ├── SetUserRolesRequest.cs
-│   │   ├── ChangeUserStatusRequest.cs
-│   │   ├── ResendInvitationRequest.cs
-│   │   └── ReadModels/
-│   │       └── UserRow.cs
 │   ├── Roles/                                        [E4]
 │   │   ├── ListRolesRequest.cs
 │   │   ├── RoleResponse.cs
@@ -522,54 +591,73 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── DeleteRoleRequest.cs
 │   │   ├── PermissionGroupResponse.cs
 │   │   ├── RoleScopeFilter.cs                    Ámbito visible en el filtro del listado de roles
-│   │   └── ReadModels/
-│   │       └── RoleRow.cs
+│   │   └── RoleRow.cs
 │   ├── Companies/                                    [E6]
 │   │   ├── ListCompaniesRequest.cs
 │   │   ├── CompanyResponse.cs
-│   │   ├── CreateCompanyRequest.cs
-│   │   ├── UpdateCompanyRequest.cs
-│   │   ├── ListCompanyMembersRequest.cs
-│   │   ├── AddCompanyMemberRequest.cs
-│   │   ├── UpdateCompanyMemberRolesRequest.cs
-│   │   ├── CompanyRequests.cs                    D6
-│   │   ├── CompanyMemberModels.cs                Una empresa activa donde la persona es miembro activo, con…
-│   │   └── ReadModels/
-│   │       ├── CompanyRow.cs
-│   │       └── CompanyMemberRow.cs
+│   │   ├── CompanyRequests.cs                        alta, edición y estado de una empresa; el CUIT, solo el número (D6)
+│   │   └── CompanyMemberModels.cs                    Una empresa activa donde la persona es miembro activo, con…
 │   ├── Settings/                                     [E6]
-│   │   ├── TenantSettingsResponse.cs
 │   │   ├── PlatformSettingsRow.cs                Ajustes globales publicados a los casos de uso
-│   │   └── UpdateTenantSettingsRequest.cs
+│   │   └── OrganizationSettingsModels.cs             pedido y respuesta de la configuración de la organización
 │   ├── Auditing/                                     [E6]
-│   │   ├── ListAuditEntriesRequest.cs
-│   │   ├── OrganizationAuditModels.cs            «Quién» por tipo, con el actorKind de la lista de…
-│   │   └── ReadModels/
-│   │       └── AuditEntryRow.cs
+│   │   └── OrganizationAuditModels.cs                pedido, filas, «Quién» y detalle de la auditoría de la organización
 │   ├── Time/                                         [E1]
 │   │   └── DayRangeUtc.cs
 │   ├── ReferenceData/                                [E1]
 │   │   └── ReferenceDataResponse.cs                  cinco catálogos traducidos; zona con ID IANA, CountryCodes[] y ciudad
 │   ├── Platform/                                     [E5]
-│   │   ├── ListTenantsRequest.cs
-│   │   ├── TenantDetailResponse.cs
-│   │   ├── CreateTenantRequest.cs
-│   │   ├── ChangeTenantStatusRequest.cs              con motivo
-│   │   ├── ListAccountsRequest.cs
-│   │   ├── ChangeAccountStatusRequest.cs             con motivo
-│   │   ├── AddOperatorRequest.cs
-│   │   ├── ListSecurityEventsRequest.cs
-│   │   ├── PlatformSettingsResponse.cs
-│   │   ├── UpdatePlatformSettingsRequest.cs
-│   │   └── ReadModels/
-│   │       ├── TenantRow.cs
-│   │       ├── AccountRow.cs
-│   │       ├── OperatorRow.cs
-│   │       └── SecurityEventRow.cs
+│   │   ├── PlatformAccountModels.cs                  Estado que ve Plataforma
+│   │   ├── PlatformAuditModels.cs                    Plataforma › Auditoría
+│   │   ├── PlatformFeatureResponse.cs                Habilitación administrable
+│   │   ├── PlatformLegalModels.cs                    Publicar una versión
+│   │   ├── PlatformOperatorModels.cs                 Invitar un operador
+│   │   ├── PlatformPublicSiteResponse.cs             Solo metadatos de publicación
+│   │   ├── PlatformRecoveryModels.cs                 Bandeja Recuperaciones
+│   │   ├── PlatformSettingsModels.cs                 Los correos de contacto que muestran Ingreso y Registro, sin…
+│   │   ├── PlatformTenantModels.cs                   listado, conteos, alta y estado de organizaciones en Plataforma
+│   │   └── UpdatePlatformFeatureRequest.cs           Cambio explícito de un módulo global, con concurrencia y motivo
 │   ├── Notifications/                                [E3]
 │   │   └── AccountNotice.cs                          jerarquía cerrada: LoginMethodChanged (qué pasó, método enmascarado, fecha), ReviewLoginMethods (organización), DeletionRequested (fecha), DeletionCancelled, AccountDeleted
-│   └── Messaging/                                    [E3]
-│       └── EmailMessage.cs
+│   ├── Messaging/                                    [E3]
+│   │   └── EmailMessage.cs
+│   ├── Features/
+│   │   └── TenantFeatureRow.cs                       Datos persistidos sin cachear el resultado temporal de la habilitación
+│   ├── Home/
+│   │   └── HomeModels.cs                             Inicio de la organización (ADR 0040)
+│   ├── Identity/
+│   │   ├── AccountLoginMethodsResponse.cs            Entrega métodos de ingreso y capacidades de gestión de la…
+│   │   ├── AddLoginEmailRequest.cs                   Transporta el correo que se quiere agregar a una cuenta…
+│   │   ├── ChangeLoginMethodRequest.cs               Identifica el método que se cambiará o quitará y lleva…
+│   │   ├── ExternalLogin.cs                          Claims seleccionados del proveedor externo después del callback
+│   │   ├── GoogleAccountLinkState.cs                 Propiedades del protocolo protegidas por el middleware OAuth, nunca recibidas…
+│   │   ├── GoogleChallengeResponse.cs                Entrega la URL del desafío Google al controller sin exponerla…
+│   │   ├── LinkGoogleRequest.cs                      Lleva la cuenta esperada desde el state OAuth protegido y…
+│   │   ├── LoginMethodCodeResponse.cs                Devuelve el método al que se envió un código y…
+│   │   ├── LoginMethodRow.cs                         Método de ingreso visible para los casos de uso de…
+│   │   ├── ReauthCodeResponse.cs                     Informa a qué método de respaldo se envió el código,…
+│   │   ├── ReauthResponse.cs                         Devuelve el ticket temporal para completar una acción sensible sin…
+│   │   ├── RequestReauthRequest.cs                   Indica qué acción sensible requiere demostrar la titularidad y, cuando…
+│   │   ├── UserAccountRow.cs                         Datos globales de la cuenta sin exponer ApplicationUser fuera de…
+│   │   ├── VerifyLoginMethodRequest.cs               Entrega el código para verificar un método de ingreso sin…
+│   │   └── VerifyReauthRequest.cs                    Vincula el código de respaldo con la acción y los…
+│   ├── Legal/
+│   │   ├── AcceptLegalRequest.cs                     Identifica el documento y la versión exacta que una persona…
+│   │   ├── AccountDeletionContext.cs                 Entrega a cada participante la cuenta y, cuando corresponde, el…
+│   │   ├── AccountDeletionWork.cs                    Transporta el lease de una baja reclamada y sus organizaciones…
+│   │   ├── CancelAccountDeletionRequest.cs           Lleva el comprobante temporal que cancela una baja pendiente sin…
+│   │   ├── LegalDocumentRow.cs                       Versión y texto vigente de un documento legal en una…
+│   │   ├── PendingDeletionState.cs                   Expone la fecha programada y el comprobante temporal para cancelar…
+│   │   ├── PendingLegalDocumentResponse.cs           Identifica un documento legal y su versión pendiente de aceptación
+│   │   └── RequestAccountDeletionRequest.cs          Lleva la razón de baja y su prueba de reautenticación…
+│   ├── OrganizationUsers/
+│   │   └── OrganizationUserModels.cs                 Una persona de la organización
+│   └── Tenancy/
+│       ├── MemberRow.cs                              Membresía visible solo desde el tenant activo
+│       ├── OrganizationDomainModels.cs               Un dominio de la organización con los correos verificados de…
+│       ├── TenantRow.cs
+│       ├── TenantSettingsRow.cs                      Preferencias por defecto del tenant activo
+│       └── UserTenantAccessRow.cs                    Acceso de una cuenta leído del índice global y de…
 ├── Validation/                                       [E1] un *RequestValidator (internal sealed) por request que lo necesite
 │   ├── Auth/                                         [E3]
 │   │   ├── SignupRequestValidator.cs
@@ -578,42 +666,49 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── VerifyLoginCodeRequestValidator.cs
 │   │   ├── ExternalSignInRequestValidator.cs        Exige un retorno de autorización seguro y, solo para altas…
 │   │   ├── AccountRecoveryRequestValidators.cs      Exige el correo nuevo y un nonce con forma de…
+│   │   ├── BusinessSignupRequestValidator.cs
 │   │   └── RequestLoginLinkRequestValidator.cs      [E8]
 │   ├── Invitations/                                  [E3]
 │   │   └── AcceptInvitationRequestValidator.cs
 │   ├── Profile/                                      [E3]
 │   │   └── UpdateMeRequestValidator.cs
-│   ├── Organizations/                                [E6]
-│   │   └── BusinessSignupRequestValidator.cs
 │   ├── PublicSite/                                   [E6–E7]
 │   │   ├── UpdatePublicPageRequestValidator.cs       [E6]
 │   │   └── ListDirectoryRequestValidator.cs          [E7]
-│   ├── Users/                                        [E6]
-│   │   ├── ListUsersRequestValidator.cs
-│   │   ├── InviteUserRequestValidator.cs
-│   │   ├── UpdateUserRequestValidator.cs
-│   │   └── SetUserRolesRequestValidator.cs
 │   ├── Roles/                                        [E4]
 │   │   ├── ListRolesRequestValidator.cs
 │   │   ├── CreateRoleRequestValidator.cs
-│   │   └── UpdateRoleRequestValidator.cs
+│   │   ├── UpdateRoleRequestValidator.cs
+│   │   └── DeleteRoleRequestValidator.cs             exige la versión al borrar un rol
 │   ├── Companies/                                    [E6]
 │   │   ├── ListCompaniesRequestValidator.cs
-│   │   ├── CreateCompanyRequestValidator.cs
-│   │   ├── UpdateCompanyRequestValidator.cs
-│   │   ├── AddCompanyMemberRequestValidator.cs
-│   │   └── UpdateCompanyMemberRolesRequestValidator.cs
-│   ├── Settings/
-│   │   └── UpdateTenantSettingsRequestValidator.cs   [E6]
+│   │   ├── CompanyMemberValidators.cs                validadores de los pedidos de miembros de una empresa
+│   │   └── CompanyRequestValidators.cs               validadores del alta, la edición y el estado de una empresa
 │   ├── Auditing/
-│   │   └── ListAuditEntriesRequestValidator.cs       [E6]
-│   └── Platform/                                     [E5]
-│       ├── ListTenantsRequestValidator.cs
-│       ├── CreateTenantRequestValidator.cs
-│       ├── ChangeTenantStatusRequestValidator.cs
-│       ├── ChangeAccountStatusRequestValidator.cs
-│       ├── AddOperatorRequestValidator.cs
-│       └── UpdatePlatformSettingsRequestValidator.cs
+│   │   └── ListOrganizationAuditRequestValidator.cs  período, tema, búsqueda y «Quién» (actorId o actorKind)
+│   ├── Platform/                                     [E5]
+│   │   ├── UpdatePlatformSettingsRequestValidator.cs
+│   │   ├── ListPlatformAuditRequestValidator.cs      Período y tipo de la lista cerrada del tablero
+│   │   ├── PlatformAccountRequestValidators.cs       Versión y motivo de una acción del operador
+│   │   ├── PlatformOperatorRequestValidators.cs      Exige el correo
+│   │   ├── PlatformTenantRequestValidators.cs        validadores del listado, el alta y el estado de organizaciones
+│   │   ├── PublishLegalDocumentRequestValidator.cs   Tipo, fecha y textos presentes
+│   │   └── UpdatePlatformFeatureRequestValidator.cs  origen, vencimiento, motivo y versión al cambiar un módulo
+│   ├── Identity/
+│   │   ├── AddLoginEmailRequestValidator.cs          Exige un correo antes de iniciar el alta de otro…
+│   │   ├── ChangeLoginMethodRequestValidator.cs      Exige el método objetivo y un ticket de reautenticación con…
+│   │   ├── RequestReauthRequestValidator.cs          Limita la reautenticación a acciones admitidas y exige un método…
+│   │   ├── VerifyLoginMethodRequestValidator.cs      Exige el método de correo y un código numérico antes…
+│   │   └── VerifyReauthRequestValidator.cs           Comprueba acción, métodos de origen y destino y código antes…
+│   ├── Legal/
+│   │   ├── AcceptLegalRequestValidator.cs            Exige identificadores y versiones legales válidos, sin duplicados, antes de…
+│   │   └── RequestAccountDeletionRequestValidator.cs Exige una razón de baja acotada antes de iniciar el…
+│   ├── OrganizationSettings/
+│   │   ├── RegisterOrganizationDomainRequestValidator.cs exige un dominio de correo válido
+│   │   ├── RemoveOrganizationDomainRequestValidator.cs exige el dominio y su versión al retirarlo
+│   │   └── UpdateOrganizationSettingsRequestValidator.cs nombre, cultura, zona, moneda y versión de la configuración
+│   └── OrganizationUsers/
+│       └── OrganizationUserValidators.cs             validadores del listado, invitar, editar y cambiar el estado en Usuarios
 ├── Services/                                         [E1] servicios internal sealed partial; helpers sin IUnitOfWork
 │   ├── Auth/                                         [E3]
 │   │   ├── AccountService.cs                         registro de personas (identidad + espacio personal)
@@ -647,7 +742,13 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── AuthRegistration.cs                       Registra el ingreso, el registro de personas y de empresas,…
 │   │   ├── AccountRecoveryNotifier.cs                Mensajes de «Recuperar mi cuenta», dentro de la UoW del…
 │   │   ├── AccountRecoveryNoticeService.cs           Toma los pedidos de «Recuperar mi cuenta» cuyo aviso a…
-│   │   └── ExternalLoginService.cs                   [E3]
+│   │   ├── ExternalLoginService.cs                   [E3]
+│   │   ├── AccountRecoveryService.cs                 «Recuperar mi cuenta» (multitenancy.md §3.1, ADR 0041)
+│   │   ├── BusinessSignupPolicy.cs                   modo de alta y límite por persona
+│   │   ├── BusinessSignupService.cs
+│   │   ├── GoogleAccountGuard.cs                     controla la cuenta antes de entrar con Google; un operador entra solo con código
+│   │   ├── TenantProvisioner.cs                      idempotente: settings, roles de sistema, 1ª empresa, membresía de Dueño (TenantAdmin) y página pública en Draft
+│   │   └── TenantSlugAvailabilityService.cs          consulta si una dirección pública está disponible, reservada o tomada
 │   ├── Invitations/                                  [E3]
 │   │   ├── InvitationService.cs                      vista previa y aceptación, con y sin cuenta previa (sin cuenta crea la identidad sin
 │   │   │                                             espacio personal)
@@ -659,32 +760,25 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── InvitationExpiryService.cs                «Venció la invitación a …» (tablero Auditoria-Org)
 │   │   ├── InvitationDeliveryIssuer.cs               Usa datos actuales y cultura/zona explícitas para encolar el canal…
 │   │   ├── InvitationAcceptanceResolver.cs           Prueba el token y, adentro de su organización, lee la…
-│   │   └── InvitationIssuer.cs                       emite y encola por IInvitationChannel; sin ruta propia: lo usan TenantAdministrationService
-│   │                                                 (E5) y UserService (E6)
+│   │   ├── InvitationIssuer.cs                       emite y encola por IInvitationChannel; sin ruta propia: lo usan PlatformTenantCreator
+│   │   │                                             (E5) y OrganizationUserInvitationWriter (E6)
+│   │   ├── InvitationAcceptanceGuard.cs              bloquea y controla al dueño del correo antes de aceptar
+│   │   ├── InvitationAcceptanceWriter.cs             acepta la invitación: membresía, roles y empresas
+│   │   ├── InvitationAccountRegistrar.cs             crea la cuenta de quien acepta sin tenerla, con su correo
+│   │   └── InvitationSessionRestorer.cs              después de aceptar, actualiza el estado del acceso y la continuación
 │   ├── Profile/                                      [E3]
 │   │   ├── ProfileService.cs
 │   │   ├── ProfileSnapshotBuilder.cs             Compone la cuenta y sus accesos globales con las preferencias…
 │   │   ├── ProfileRegistration.cs                Registra el perfil de la persona y sus preferencias
-│   │   ├── ProfilePreferencesResolver.cs         Resuelve la moneda visible del perfil desde preferencias autorizadas y…
-│   │   └── DestinationCodeVerifier.cs
-│   ├── Organizations/                                [E6]
-│   │   ├── BusinessSignupService.cs    
-│   │   ├── BusinessSignupPolicy.cs                   modo de alta y límite por persona
-│   │   └── TenantProvisioner.cs                      idempotente: settings, roles de sistema, 1ª empresa, membresía de Dueño (TenantAdmin) y página pública en Draft
-│   ├── Users/                                        [E6]
-│   │   ├── UserService.cs
-│   │   ├── UserGuard.cs
-│   │   ├── LastTenantAdminGuard.cs                   Dueños activos = TenantAdmin con identidad Active (la misma lectura que AccountDeletionPolicy)
-│   │   └── AccountAccessRevoker.cs
+│   │   └── ProfilePreferencesResolver.cs             Resuelve la moneda visible del perfil desde preferencias autorizadas y…
 │   ├── Roles/                                        [E4] ← ÁREA DE REFERENCIA
 │   │   ├── RoleService.cs
 │   │   ├── RolesRegistration.cs                  Registra los roles y los permisos efectivos
 │   │   ├── RoleAssignmentGuard.cs                Protege dónde vale cada rol al asignarlo, en Usuarios y…
-│   │   └── RoleGuard.cs
+│   │   ├── PermissionService.cs                      [E4] HybridCache t:{tenant}:perm:{user}
+│   │   └── PlatformPermissionService.cs              [E4]
 │   ├── Companies/                                    [E6]
 │   │   ├── CompanyService.cs
-│   │   ├── CompanyGuard.cs
-│   │   ├── CompanyMemberService.cs
 │   │   ├── CompanyReferenceDataResolver.cs       Resuelve los datos de referencia admitidos por la ficha de…
 │   │   ├── CompanyMemberStatePolicy.cs           El estado de un miembro de empresa, como especificación
 │   │   ├── CompanyMembershipWriter.cs            Escribe membresías de empresa dentro de la transacción del servicio,…
@@ -692,24 +786,120 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── CompanyCreator.cs                     Agrega una empresa nueva junto con su primera membresía y…
 │   │   ├── CompaniesRegistration.cs              Registra las empresas de la organización y sus miembros
 │   │   └── LastCompanyAdminGuard.cs
-│   ├── Settings/
-│   │   └── TenantSettingsService.cs                  [E6]
 │   ├── Auditing/
 │   │   ├── OrganizationAuditEntryBuilder.cs          Arma las entradas de la auditoría de la organización como…
 │   │   ├── AuditingRegistration.cs                   Registra la consulta de la auditoría de la organización
-│   │   └── AuditLogService.cs                        [E6]
+│   │   └── OrganizationAuditService.cs               arma la auditoría de la organización en el idioma de quien mira
 │   ├── ReferenceData/                                [E1]
 │   │   ├── ReferenceDataRegistration.cs              Registra los datos de referencia
 │   │   └── ReferenceDataService.cs                   usa los cinco catálogos, devuelve ReferenceDataResponse
 │   ├── Messaging/                                    [E3]
-│   │   └── OutboxDispatchService.cs                 único límite IUnitOfWork para seleccionar, entregar y guardar el estado
-│   └── Platform/                                     [E5]
-│       ├── TenantAdministrationService.cs
-│       ├── PlatformAccountService.cs
-│       ├── PlatformOperatorService.cs
-│       ├── PlatformAuditService.cs
-│       ├── PlatformSettingsService.cs
-│       └── PlatformActionGuard.cs                    motivo obligatorio + SecurityEvent antes de Enter
+│   │   ├── OutboxDispatchService.cs                  único límite IUnitOfWork para seleccionar, entregar y guardar el estado
+│   │   └── MessagingRegistration.cs                  Registra el despacho del outbox, con sus opciones
+│   ├── Platform/                                     [E5]
+│   │   ├── TenantAdministrationService.cs
+│   │   ├── PlatformAccountService.cs
+│   │   ├── PlatformOperatorService.cs
+│   │   ├── PlatformAuditService.cs
+│   │   ├── PlatformSettingsService.cs
+│   │   ├── PlatformActionGuard.cs                    motivo obligatorio + SecurityEvent antes de Enter
+│   │   ├── PlatformAccountDeletionService.cs         Baja iniciada por Plataforma (ADR 0035)
+│   │   ├── PlatformAccountStateService.cs            Suspende, reactiva o cierra las sesiones de una cuenta desde…
+│   │   ├── PlatformAuditCategories.cs                Los tipos del filtro de Auditoría del tablero y a…
+│   │   ├── PlatformAuditWriter.cs                    Agrega el SecurityEvent del operador con su destino, el diff…
+│   │   ├── PlatformDomainService.cs                  Verifica o retira un dominio de correo de una organización…
+│   │   ├── PlatformFeatureListBuilder.cs             lista los módulos de una organización con su habilitación
+│   │   ├── PlatformFeatureService.cs                 módulos por organización: consulta y cambio con motivo
+│   │   ├── PlatformFeatureWriter.cs                  guarda el cambio de un módulo, con versión y SecurityEvent
+│   │   ├── PlatformLegalService.cs                   Plataforma › Documentos legales
+│   │   ├── PlatformOperatorGuard.cs                  Protege al último operador activo con platform.operators.manage
+│   │   ├── PlatformOperatorInvitationNotifier.cs     Encola, dentro de la UoW del llamador, el aviso «Invitación…
+│   │   ├── PlatformOperatorInvitationService.cs      Invita operadores (ADR 0042)
+│   │   ├── PlatformOperatorProvisioner.cs            Crea, dentro de la UoW del llamador, la identidad exclusiva…
+│   │   ├── PlatformPublicSiteService.cs              moderación de la página pública: despublicar y permitir publicar
+│   │   ├── PlatformPublicSiteWriter.cs               aplica la moderación, su auditoría y los avisos a los Dueños
+│   │   ├── PlatformRecoveryDecisionService.cs        Resuelve pedidos de «Recuperar mi cuenta»
+│   │   ├── PlatformRecoveryNotifier.cs               Avisos de la decisión, dentro de la UoW
+│   │   ├── PlatformRecoveryService.cs                Bandeja Recuperaciones
+│   │   ├── PlatformRegistration.cs                   Registra los casos de uso de Plataforma
+│   │   ├── PlatformScopeAccessService.cs             autoriza y registra el SecurityEvent antes de entrar a una organización
+│   │   ├── PlatformSettingsAuditWriter.cs            Prepara el evento del operador en la transacción que modifica…
+│   │   ├── PlatformTenantActivator.cs                aprueba o reintenta la activación de una organización
+│   │   ├── PlatformTenantCreator.cs                  alta de una organización desde Plataforma, con su Dueño invitado
+│   │   ├── PlatformTenantNotifier.cs                 Encola los avisos previstos a Dueños activos, usando contactos disponibles…
+│   │   ├── PlatformTenantSlugResolver.cs             elige una dirección pública libre a partir del nombre
+│   │   └── PlatformTenantStateWriter.cs              Prepara una transición global dentro de la UoW del servicio
+│   ├── Home/
+│   │   ├── HomeRegistration.cs                       Registra los inicios de la organización y del miembro
+│   │   ├── HomeService.cs                            Arma el inicio en un solo pedido de lectura (ADR…
+│   │   ├── MemberHomeCompaniesBuilder.cs             «Tus empresas» de Inicio-Miembro
+│   │   ├── OrganizationHomeAreasBuilder.cs           Las tarjetas de Inicio-Org
+│   │   └── PendingItemOrder.cs                       Orden de «Para resolver» (ADR 0040)
+│   ├── Identity/
+│   │   ├── AccountGoogleService.cs                   Vincula Google como método de ingreso de una cuenta que…
+│   │   ├── AccountLoginMethodsService.cs             Construye la lista de métodos de ingreso de la cuenta,…
+│   │   ├── AccountNoticeIssuer.cs                    Encola dentro de la UoW del caso de uso, sin…
+│   │   ├── GoogleMethodLinkFinalizer.cs              Completa el alta Google
+│   │   ├── GoogleMethodLinker.cs                     Aplica las reglas para sumar un ingreso Google a una…
+│   │   ├── IdentityRegistration.cs                   Registra los métodos de ingreso de la cuenta, la reautenticación…
+│   │   ├── LoginMethodAvailabilityPolicy.cs          Decide qué métodos verificados pueden usarse para ingresar o respaldar…
+│   │   ├── LoginMethodEditor.cs                      Dentro de la transacción del servicio, consume la reautenticación y…
+│   │   ├── LoginMethodGuard.cs                       Bloquea la identidad global y verifica que la cuenta permita…
+│   │   ├── LoginMethodIssuer.cs                      Agrega un correo de ingreso o reenvía su código de…
+│   │   ├── LoginMethodManagementService.cs           Coordina alta, verificación, elección del principal y baja de métodos…
+│   │   ├── LoginMethodNotifier.cs                    Registra un evento de seguridad y encola el aviso de…
+│   │   ├── LoginMethodVerifier.cs                    Verifica el código de un correo nuevo y, si la…
+│   │   ├── ReauthIssuer.cs                           Elige un método de respaldo distinto del objetivo y emite…
+│   │   ├── ReauthService.cs                          Abre la transacción para pedir o verificar reautenticación
+│   │   ├── ReauthTicketVerifier.cs                   Consume un ticket de reautenticación por hash solo si su…
+│   │   └── ReauthVerifier.cs                         Comprueba el código de respaldo vinculado a la acción y…
+│   ├── Legal/
+│   │   ├── AccountDeletionCancelIssuer.cs            Emite un comprobante de cancelación para una cuenta pendiente de…
+│   │   ├── AccountDeletionCanceller.cs               Valida y consume el comprobante de cancelación de baja, reactiva…
+│   │   ├── AccountDeletionNotifier.cs                Registra eventos de seguridad y encola avisos de solicitud, cancelación…
+│   │   ├── AccountDeletionPolicy.cs                  Impide pedir la baja cuando la cuenta es operadora, ya…
+│   │   ├── AccountDeletionProcessingService.cs       Reclama bajas vencidas y procesa cada tenant en una transacción…
+│   │   ├── AccountDeletionProcessor.cs               Ejecuta la limpieza de cada organización y luego purga credenciales…
+│   │   ├── AccountDeletionRequester.cs               La baja que pide la persona
+│   │   ├── AccountDeletionScheduler.cs               Programa una baja ya autorizada, dentro de la transacción del…
+│   │   ├── AccountDeletionService.cs                 Expone solicitud y cancelación de baja con su UnitOfWork
+│   │   ├── AccountDeletionSessionRestorer.cs         Después del commit de una baja o cancelación, invalida el…
+│   │   ├── LastTenantAdminGuard.cs                   Dueños activos = TenantAdmin con identidad Active (la misma lectura que AccountDeletionPolicy)
+│   │   ├── LegalAcceptanceGuard.cs                   Consulta qué documentos legales vigentes faltan aceptar a la cuenta…
+│   │   ├── LegalAcceptanceService.cs                 Entrega documentos pendientes y registra su aceptación con validación previa…
+│   │   ├── LegalAcceptanceWriter.cs                  Bloquea la cuenta, relee las versiones legales vigentes y guarda…
+│   │   ├── LegalRegistration.cs                      Registra los documentos legales y su aceptación, la baja de…
+│   │   └── LegalService.cs                           Lee la versión pública vigente usando sólo culturas habilitadas del…
+│   ├── OrganizationSettings/
+│   │   ├── LoginMethodDomainLinker.cs                Marca solo métodos cuyo correo coincide con un dominio verificado,…
+│   │   ├── OrganizationDomainPendingItems.cs         «Para resolver» de Configuración (ADR 0040)
+│   │   ├── OrganizationDomainRegistrar.cs            Registra un dominio único y crea el token de verificación…
+│   │   ├── OrganizationDomainRemover.cs              Retira el dominio dentro de la transacción del llamador, conservando…
+│   │   ├── OrganizationDomainService.cs              Valida las solicitudes y coordina el ciclo de vida del…
+│   │   ├── OrganizationDomainVerifier.cs             Consulta el TXT fuera de la transacción y, dentro de…
+│   │   ├── OrganizationSettingsRegistration.cs       Registra la configuración de la organización y sus dominios, con…
+│   │   └── OrganizationSettingsService.cs            Lee y actualiza el nombre y los datos predeterminados de…
+│   ├── OrganizationUsers/
+│   │   ├── OrganizationAvailableLoginMethodsResolver.cs Selecciona los ingresos verificados que siguen disponibles después de salir…
+│   │   ├── OrganizationMembershipEndNoticeBuilder.cs Registra el evento de seguridad y prepara los datos de…
+│   │   ├── OrganizationMembershipEndNotifier.cs      Notifica una salida usando solo métodos de ingreso que la…
+│   │   ├── OrganizationUserAccessRemover.cs          Limpia accesos y membresías de empresa al revocar una invitación…
+│   │   ├── OrganizationUserAdministratorGuard.cs     Impide quitar al último Dueño o Administrador activo durante cambios…
+│   │   ├── OrganizationUserAssignmentWriter.cs       Valida roles por alcance y sincroniza asignaciones y membresías de…
+│   │   ├── OrganizationUserAssignments.cs            roles y empresas deseados y actuales de una persona
+│   │   ├── OrganizationUserEditor.cs                 Edita estado, roles y membresías dentro de la transacción del…
+│   │   ├── OrganizationUserInvitationWriter.cs       Invita, reenvía y revoca dentro de la transacción del servicio
+│   │   ├── OrganizationUserPendingItems.cs           «Para resolver» de Usuarios (ADR 0040)
+│   │   ├── OrganizationUserRemover.cs                Quita al miembro y revoca sus invitaciones y accesos de…
+│   │   ├── OrganizationUserService.cs                Administra miembros e invitaciones sin alterar la cuenta global ni…
+│   │   ├── OrganizationUserStatePolicy.cs            El estado de una persona de la organización, como especificación
+│   │   ├── OrganizationUserStatusEditor.cs           Activa o desactiva miembros respetando bajas pendientes y la protección…
+│   │   └── OrganizationUsersRegistration.cs          Registra los usuarios de la organización (miembros, invitaciones y roles),…
+│   └── PublicSite/
+│       ├── PublicPageEditor.cs                       Guarda contenido, slug y publicación de la página dentro de…
+│       ├── PublicPagePendingItems.cs                 «Para resolver» de la Página pública (ADR 0040)
+│       ├── PublicPageService.cs                      lee, guarda, publica y retira la página pública
+│       └── PublicSiteRegistration.cs                 Registra la página pública de la organización, con su fuente…
 ├── Modules/                                         [E8] módulos quitables: el núcleo no los referencia (test)
 │   └── WhatsApp/                                    AddWhatsAppModule() registra todo lo de esta carpeta
 │       ├── WhatsAppModule.cs                         AddWhatsAppModule(): servicios, canales y opciones
@@ -759,7 +949,9 @@ ArquitecturaBaseMultitenant.Application/
     ├── PermissionTexts.cs                           [E4]
     ├── NotificationTexts.cs                         [E3] con cultura explícita
     ├── RoleTexts.cs                                  Traduce únicamente roles de sistema
-    └── AuditTexts.cs                                [E6]
+    ├── AuditTexts.cs                                 [E6]
+    ├── RoleNames.en.resx                             nombres y descripciones de los roles de sistema (en)
+    └── RoleNames.resx                                nombres y descripciones de los roles de sistema (es)
 ```
 
 ## src/ArquitecturaBaseMultitenant.Infrastructure `[E0]`
@@ -777,7 +969,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   ├── UnitOfWork.cs                                  [E2]
 │   ├── TenantContext.cs                               [E2] implementa ITenantContext + ITenantScope
 │   ├── ConstraintViolations.cs                        [E2] índice único o clave foránea → excepción con su nombre
-│   ├── DatabaseBootstrapExtensions.cs                 [E2] solo Development: crea la base con ICU es-AR, crea mt_app, migra y hace el seed (appdb-admin)
+│   ├── DatabaseBootstrapExtensions.cs                 [E2] solo Development: crea la base con ICU es-AR, los roles mt_owner y mt_app, migra y hace el seed (appdb-admin)
 │   ├── Configurations/                                una IEntityTypeConfiguration<T> por entidad
 │   │   ├── Platform/
 │   │   │   ├── DataProtectionKeyConfiguration.cs      [E2] claves de Data Protection en platform
@@ -799,7 +991,14 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   │   ├── PlatformPermissionAssignmentConfiguration.cs [E5]
 │   │   │   ├── TenantCountersConfiguration.cs         Separa los agregados de la fila cuya versión protege las…
 │   │   │   ├── PendingTenantOwnerConfiguration.cs     Una fila por invitación pendiente del Dueño de una organización…
-│   │   │   └── SecurityEventConfiguration.cs          [E3]
+│   │   │   ├── SecurityEventConfiguration.cs          [E3]
+│   │   │   ├── AccountRecoveryRequestConfiguration.cs Pedidos globales de «Recuperar mi cuenta», sin RLS ni organización
+│   │   │   ├── IdempotencyKeyConfiguration.cs         Mapea reservas y respuestas reutilizables de peticiones idempotentes
+│   │   │   ├── LegalDocumentConfiguration.cs          Mapea las versiones publicadas de términos y privacidad
+│   │   │   ├── LegalDocumentContentConfiguration.cs   Mapea el texto de una versión legal por cultura
+│   │   │   ├── ReservedTenantSlugConfiguration.cs     direcciones públicas reservadas por la plataforma
+│   │   │   ├── TenantDomainConfiguration.cs           Guarda reservas globales de dominio con unicidad y vínculo a…
+│   │   │   └── TenantFeatureConfiguration.cs          Habilitaciones globales por espacio, únicas por clave y sin RLS
 │   │   ├── Identity/
 │   │   │   ├── ApplicationUserConfiguration.cs        [E3] Email y PhoneNumber sin índice único (copia del método principal)
 │   │   │   ├── LoginMethodConfiguration.cs            [E3] 3a: índice único (Type, Value)
@@ -810,16 +1009,19 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   │   ├── IdentityUserTokenConfiguration.cs      Ubica los tokens técnicos de ASP.NET Identity en el esquema…
 │   │   │   ├── IdentityUserLoginConfiguration.cs      Ubica los registros técnicos de proveedores externos de ASP.NET Identity…
 │   │   │   ├── IdentityUserClaimConfiguration.cs      Ubica los claims técnicos de ASP.NET Identity en el esquema…
-│   │   │   └── LoginAuditConfiguration.cs             [E3]
-│   │   └── Tenant/                                    datos privados (RLS)
-│   │       ├── AuditEntryConfiguration.cs             [E2]
-│   │       ├── MemberConfiguration.cs                 [E3]
-│   │       ├── InvitationConfiguration.cs             [E3]
-│   │       ├── TenantSettingsConfiguration.cs         [E3]
-│   │       ├── RoleConfiguration.cs                   [E4]
-│   │       ├── RoleAssignmentConfiguration.cs         [E4]
-│   │       ├── CompanyConfiguration.cs                [E6]
-│   │       └── CompanyMembershipConfiguration.cs      [E6]
+│   │   │   ├── LoginAuditConfiguration.cs             [E3]
+│   │   │   └── LegalAcceptanceConfiguration.cs        Mapea qué versión legal aceptó cada cuenta y cuándo
+│   │   ├── Tenant/                                    datos privados (RLS)
+│   │   │   ├── AuditEntryConfiguration.cs             [E2]
+│   │   │   ├── MemberConfiguration.cs                 [E3]
+│   │   │   ├── InvitationConfiguration.cs             [E3]
+│   │   │   ├── TenantSettingsConfiguration.cs         [E3]
+│   │   │   ├── RoleConfiguration.cs                   [E4]
+│   │   │   ├── RoleAssignmentConfiguration.cs         [E4]
+│   │   │   ├── CompanyConfiguration.cs                [E6]
+│   │   │   └── CompanyMembershipConfiguration.cs      [E6]
+│   │   └── PublicSite/
+│   │       └── PublicPageConfiguration.cs             página pública en public_site, una por organización
 │   ├── Interceptors/                                  [E2]
 │   │   ├── TenantConnectionInterceptor.cs             set_config('app.tenant_id') al abrir la conexión
 │   │   ├── TenantStampInterceptor.cs                  sella y protege las columnas de tenant
@@ -870,24 +1072,26 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   ├── CompanyAdminLock.cs                        Adquiere un lock transaccional por empresa antes de tocar sus…
 │   │   ├── AccountRecoveryRepository.cs               Pedidos globales de recuperación
 │   │   ├── AccountDeletionRepository.cs               Reclama cuentas vencidas con un lease durable y bloquea cada…
-│   │   └── CompanyMembershipRepository.cs           [E6]
+│   │   ├── CompanyMembershipRepository.cs             [E6]
+│   │   ├── LoginMethodRepository.cs                   Prepara los métodos de ingreso de una cuenta para altas…
+│   │   ├── PlatformTenantRepository.cs                bloquea y modifica el estado global de una organización con versión
+│   │   ├── PublicPageRepository.cs                    escribe la página pública dentro de la transacción
+│   │   └── TenantDomainRepository.cs                  Prepara altas y cambios de dominios globales dentro de la…
 │   ├── Readers/                                       AsNoTracking + proyección a *Row/*Response
 │   │   ├── ReferenceDataReader.cs                     [E2] tablas platform + HybridCache p:ref:<catálogo>
 │   │   ├── TenantReader.cs                            [E3]
 │   │   ├── MemberReader.cs                            [E3] Members ⋈ AspNetUsers (el único camino a la identidad)
 │   │   ├── TenantSettingsReader.cs                    [E3] con caché t:
 │   │   ├── RoleReader.cs                              [E4]
-│   │   ├── PermissionReader.cs                        [E4]
 │   │   ├── PlatformSettingsReader.cs                  [E3] con caché p:
 │   │   ├── CompanyReader.cs                           [E6]
 │   │   ├── CompanyMembershipReader.cs                 [E6]
-│   │   ├── AuditEntryReader.cs                        [E6]
 │   │   ├── UserTenantAccessReader.cs                  Solo proyecta el índice global de accesos
 │   │   ├── TenantFeatureReader.cs                     Lee habilitaciones globales sin seguimiento ni datos privados
 │   │   ├── PlatformPermissionAssignmentReader.cs      Proyección de la asignación global vigente
 │   │   ├── PlatformAccountReader.cs                   Lee la identidad global, sus métodos, el índice de accesos…
 │   │   ├── OrganizationUserReader.cs                  Pagina miembros e invitaciones en SQL y completa roles/empresas solo…
-│   │   ├── OrganizationAuditReader.cs                 Las acciones de Plataforma sobre la organización que muestra su…
+│   │   ├── OrganizationAuditReader.cs                 auditoría de la organización con cursor, filtros y acciones de Plataforma
 │   │   ├── MemberSearch.cs                            La búsqueda de personas que comparten Usuarios y Miembros de…
 │   │   ├── LoginMethodMembershipReader.cs             Comprueba si la cuenta conserva una membresía y una organización…
 │   │   ├── LegalReader.cs                             Proyecta la versión legal vigente por cultura y las aceptaciones…
@@ -895,9 +1099,13 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   ├── CompanyAdminReader.cs                      Cuenta solo Administradores de empresa con membresía e identidad activas
 │   │   ├── AccountRecoveryReader.cs                   Bandeja global de «Recuperar mi cuenta»
 │   │   ├── AccountDeletionTenantReader.cs             Proyecta sus espacios y todas las organizaciones para limpiar invitaciones…
-│   │   └── Platform/                                  [E5] ÚNICA lista blanca para IgnoreQueryFilters
-│   │       ├── PlatformReader.cs
-│   │       └── SecurityEventReader.cs
+│   │   ├── LoginMethodReader.cs                       Proyecta los métodos de ingreso de la cuenta solicitada para…
+│   │   ├── PlatformReader.cs
+│   │   ├── PublicPageReader.cs                        lee la página pública de la organización activa
+│   │   ├── SecurityEventReader.cs
+│   │   ├── TenantDomainReader.cs                      Expone únicamente los dominios activos de la organización técnica seleccionada,…
+│   │   ├── TenantProvisioningReader.cs                identifica al Dueño y la primera empresa al reintentar un alta
+│   │   └── TenantSlugAvailabilityReader.cs            comprueba reservas y direcciones ya tomadas
 │   ├── Migrations/                                    una sola carpeta; RLS y grants dentro de cada migración
 │   │   ├── <ts>_InitialSchema.cs                      [E2] esquemas, grants a mt_app, funciones de triggers, unaccent,
 │   │   │                                              pg_trgm, public.f_unaccent, platform.IdempotencyKeys y tablas de referencia
@@ -911,39 +1119,49 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   ├── TenantCounters.cs                              Agregados técnicos globales
 │   ├── PendingTenantOwner.cs                          Contacto del Dueño invitado al crear una organización desde Plataforma,…
 │   ├── DesignTimeApplicationDbContextFactory.cs       Permite generar migraciones sin arrancar la Api ni abrir conexiones
-│   └── Seed/                                          [E1–E2]
-│       ├── ReferenceData/                             [E1] cinco JSON de salida versionados; no se editan a mano
-│       │   ├── currencies.json                        [E1] ISO 4217, MinorUnits y traducciones con DisplaySymbol por cultura
-│       │   ├── countries.json                         [E1] ISO 3166-1, relaciones internas y traducciones
-│       │   ├── time-zones.json                        [E1] IANA/CLDR, IDs, CountryCodes[] y ciudades traducidas
-│       │   ├── cultures.json                          [E1] patrones y nombres traducidos; es-AR y en-US habilitadas inicialmente
-│       │   └── tax-id-types.json                      [E1] normativa fiscal y ValidatorKey
-│       ├── ReferenceDataSeeder.cs                    [E2] upsert idempotente; nunca borra
-│       ├── SeedExtensions.cs                          [E3] orden e idempotencia; mismo seed global en una UoW en Development y Production
-│       │                                              con el advisory lock "seed:" (sin carreras entre réplicas)
-│       ├── DatabaseSeeder.cs                          [E3] límite global y lock `seed:database`; no crea cuentas ni organizaciones de muestra
-│       ├── OpenIddictSeeder.cs                        [E3] cliente web + scope api
-│       ├── PlatformSeeder.cs                          [E3] ajustes de plataforma + operador inicial (Seed:PlatformOwner:Email y DisplayName; Phone opcional hasta E8); la E5 le asigna el rol Owner
-│       └── LegalDocumentSeeder.cs                     [E3] 3a: versión base de términos y privacidad, con contenidos es y en
+│   ├── Seed/                                          [E1–E2]
+│   │   ├── ReferenceData/                             [E1] cinco JSON de salida versionados; no se editan a mano
+│   │   │   ├── currencies.json                        [E1] ISO 4217, MinorUnits y traducciones con DisplaySymbol por cultura
+│   │   │   ├── countries.json                         [E1] ISO 3166-1, relaciones internas y traducciones
+│   │   │   ├── time-zones.json                        [E1] IANA/CLDR, IDs, CountryCodes[] y ciudades traducidas
+│   │   │   ├── cultures.json                          [E1] patrones y nombres traducidos; es-AR y en-US habilitadas inicialmente
+│   │   │   └── tax-id-types.json                      [E1] normativa fiscal y ValidatorKey
+│   │   ├── ReferenceDataSeeder.cs                     [E2] upsert idempotente; nunca borra
+│   │   ├── SeedExtensions.cs                          [E3] orden e idempotencia; mismo seed global en una UoW en Development y Production
+│   │   │                                              con el advisory lock "seed:" (sin carreras entre réplicas)
+│   │   ├── DatabaseSeeder.cs                          [E3] límite global y lock `seed:database`; no crea cuentas ni organizaciones de muestra
+│   │   ├── OpenIddictSeeder.cs                        [E3] cliente web + scope api
+│   │   ├── PlatformSeeder.cs                          [E3] ajustes de plataforma + operador inicial (Seed:PlatformOwner:Email y DisplayName; Phone opcional hasta E8), con todos los permisos de Plataforma (ADR 0042)
+│   │   └── LegalDocumentSeeder.cs                     [E3] 3a: versión base de términos y privacidad, con contenidos es y en
+│   ├── AccessIndex/
+│   │   └── UserTenantAccess.cs                        Proyección técnica global de membresías
+│   └── Conventions/
+│       ├── EmailConvention.cs                         Persiste el value object Email como su valor canónico en…
+│       ├── PhoneNumberConvention.cs                   Persiste el value object PhoneNumber como su E.164 en una…
+│       └── VersionedConvention.cs                     Vincula la versión de cada entidad editable a xmin de…
 ├── Identity/                                          [E2 shell CLR; modelo de cuenta E3]
 │   ├── ApplicationUser.cs                             [E2 shell sin mapeo; E3] IsPlatformOperator, Status, Culture, TimeZoneId, DisplayName, LastBusinessTenantId,
 │   │                                                  DeletionRequestedAtUtc, DeletionScheduledForUtc, DeletionReason, DeletedAtUtc
 │   ├── IdentityRegistration.cs                        Identity core, cookies /account y /connect, DataProtection
 │   ├── SignInService.cs
-│   ├── UserLookup.cs                                  búsqueda global (lista blanca)
-│   ├── PermissionService.cs                           [E4] HybridCache t:{tenant}:perm:{user}
-│   ├── PlatformPermissionService.cs                   [E4]
-│   ├── IdentityResultExtensions.cs
+│   ├── UserLookup.cs                                  búsqueda global por valor de método (lista blanca); Plataforma busca cuentas en PlatformAccountReader
 │   ├── GoogleAvailability.cs                          [E3] Google se enciende con Authentication:Google:ClientId
 │   ├── UserStatusReader.cs                            Lee sólo el estado de una identidad global
 │   ├── CloudflareDnsTxtLookup.cs                      Consulta registros TXT públicos mediante el endpoint DNS-over-HTTPS de Cloudflare
-│   └── OpenIddict/
-│       ├── OpenIddictRegistration.cs                  code + PKCE + refresh, endpoints, validación local
-│       ├── AuthServerDefaults.cs                      rutas, scopes, duraciones; issuer fijo (el dominio principal)
-│       ├── CertificateLoader.cs
-│       ├── WebClientOptions.cs
-│       ├── ConnectAuthorizationStore.cs               Crea la autorización OIDC que vincula una sesión con la…
-│       └── TokenRevoker.cs                            revoca por identidad, por acceso o por organización
+│   ├── OpenIddict/
+│   │   ├── OpenIddictRegistration.cs                  code + PKCE + refresh, endpoints, validación local
+│   │   ├── AuthServerDefaults.cs                      rutas, scopes, duraciones; issuer fijo (el dominio principal)
+│   │   ├── CertificateLoader.cs
+│   │   ├── WebClientOptions.cs
+│   │   ├── ConnectAuthorizationStore.cs               Crea la autorización OIDC que vincula una sesión con la…
+│   │   └── TokenRevoker.cs                            revoca por identidad, por acceso o por organización
+│   └── Deletion/
+│       ├── AccountDeletionParticipant.cs              El núcleo actual no bloquea ni cambia datos de tenant…
+│       ├── LegalAcceptanceDeletionParticipant.cs      Quita los metadatos personales de las aceptaciones legales al completar…
+│       ├── MembershipDeletionParticipant.cs           Retira una membresía de la organización durante la baja de…
+│       ├── OutboxDeletionParticipant.cs               Cancela avisos pendientes de una cuenta al pedir o ejecutar…
+│       ├── PersonalSpaceDeletionParticipant.cs        Cierra el espacio Personal y retira sus ajustes y membresías…
+│       └── RecoveryDeletionParticipant.cs             Cierra los pedidos de «Recuperar mi cuenta» de una cuenta…
 ├── Messaging/                                         [E3]
 │   ├── MessagingRegistration.cs
 │   ├── Outbox.cs                                      IOutbox
@@ -959,7 +1177,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │       ├── EmailOptions.cs
 │       ├── SmtpOptions.cs
 │       ├── SmtpOptionsValidator.cs
-│       ├── EmailTemplateRenderer.Invitation.cs        Lienzo v90, Mensajes › «Invitación como operador»
+│       ├── EmailTemplateRenderer.Invitation.cs        correos de invitación, también como operador (lienzo v90)
 │       ├── EmailRegistration.cs                       Elige y registra el transporte de correo, los renderizadores y…
 │       ├── EmailOptionsValidator.cs                   Valida la configuración general de correo al arrancar, según el…
 │       ├── EmailLoginCodeChannel.cs                   Encola el mensaje renderizado dentro de la transacción del caso…
@@ -971,7 +1189,6 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │           ├── SignupCode.html
 │           ├── Invitation.html
 │           ├── LoginMethodChanged.html                método agregado, quitado o principal cambiado; va a todos los métodos (multitenancy.md §3.1)
-│           ├── ReviewLoginMethods.html                [E6] membresía terminada: "Revisá tus métodos de ingreso"
 │           ├── AccountDeletionRequested.html
 │           ├── AccountDeletionCancelled.html
 │           ├── AccountDeleted.html                    va al método principal y se encola antes de borrar los métodos (multitenancy.md §3.2)
@@ -1021,10 +1238,11 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   ├── HybridCacheExtensions.cs                       [E2] fábrica que lee en scope propio (adaptada de ArquitecturaBase)
 │   ├── ReferenceDataCache.cs                          [E2] cinco claves p:ref: e invalidación después del seed
 │   ├── TenantSettingsCache.cs                         Invalida las preferencias y el nombre organizacional cacheados por TenantSettingsReader
-│   ├── TenantFeatureCache.cs                          Guarda filas globales
+│   ├── TenantFeatureCache.cs                          cachea las filas globales de módulos de cada espacio
 │   ├── RolePermissionCache.cs                         Cachea permisos por organización y rol
 │   ├── AccessStatusCache.cs                           Cachea estado de identidad y membresía desde el índice global…
-│   └── TenantStatusCache.cs                           [E3]
+│   ├── TenantStatusCache.cs                           [E3]
+│   └── PlatformSettingsCache.cs                       invalida la configuración global cacheada después de guardarla
 ├── Time/                                              [E1]
 │   └── TimeZoneService.cs                             [E1] TimeZoneInfo con IDs IANA
 ├── ReferenceData/                                     [E1]
@@ -1032,12 +1250,22 @@ ArquitecturaBaseMultitenant.Infrastructure/
 ├── Phones/                                            [E1–E3]
 │   ├── LibPhoneNumberDisplayFormatter.cs             [E1] libphonenumber para mostrar E.164; sin reglas por país en Application
 │   └── LibPhoneNumberParser.cs                        [E3]
-└── BackgroundJobs/                                    [E2]
-    ├── BackgroundJobsRegistration.cs
-    ├── InvitationExpiryWorker.cs                      Registra en la auditoría de cada organización activa las invitaciones…
-    ├── AccountRecoveryNoticeWorker.cs                 Encola, fuera de la respuesta de «Recuperar mi cuenta», el…
-    └── TenantJobRunner.cs                             un scope DI por tenant + Enter; en la E2 recibe los tenantId (se prueba con Widget), y desde la E3
-                                                       recorre las organizaciones activas con ITenantReader
+├── BackgroundJobs/                                    [E2]
+│   ├── BackgroundJobsRegistration.cs
+│   ├── InvitationExpiryWorker.cs                      Registra en la auditoría de cada organización activa las invitaciones…
+│   ├── AccountRecoveryNoticeWorker.cs                 Encola, fuera de la respuesta de «Recuperar mi cuenta», el…
+│   ├── TenantJobRunner.cs                             un scope DI por tenant + Enter; en la E2 recibe los tenantId (se prueba con Widget), y desde la E3
+│   │                                                  recorre las organizaciones activas con ITenantReader
+│   └── AccountDeletionWorker.cs                       Un scope por reclamo, organización y cierre
+├── Features/
+│   ├── FeatureCatalog.cs                              Expone el catálogo canónico del producto
+│   ├── FeatureService.cs                              Adapta FeatureManagement para el núcleo sin exponer la librería a…
+│   ├── FeaturesRegistration.cs                        Registra el filtro scoped y conserva el apagado de emergencia…
+│   └── TenantFeatureFilter.cs                         Filtro scoped del espacio firmado, con aislamiento de alcance y…
+└── Idempotency/
+    ├── IdempotencyCleanupWorker.cs                    Retira reservas vencidas
+    ├── IdempotencyKey.cs                              Representa la reserva técnica de una petición idempotente y la…
+    └── IdempotencyStore.cs                            Reserva y completa claves idempotentes en transacciones PostgreSQL propias, fuera…
 ```
 
 ## src/ArquitecturaBaseMultitenant.Api `[E0]`
@@ -1062,11 +1290,7 @@ ArquitecturaBaseMultitenant.Api/
 │   ├── HasPlatformPermissionAttribute.cs
 │   ├── PermissionPolicyProvider.cs                    perm: / cperm: / pperm:
 │   ├── PermissionRequirement.cs
-│   ├── CompanyPermissionRequirement.cs
-│   ├── PlatformPermissionRequirement.cs
-│   ├── PermissionAuthorizationHandler.cs
-│   ├── CompanyPermissionAuthorizationHandler.cs       lee {companyId} de la ruta
-│   └── PlatformPermissionAuthorizationHandler.cs
+│   └── PermissionAuthorizationHandler.cs
 ├── Tenancy/                                           [E3]
 │   ├── TenantResolutionMiddleware.cs
 │   ├── AccessAttribute.cs                             [Access(Consumer|Business|Platform)]
@@ -1091,33 +1315,44 @@ ArquitecturaBaseMultitenant.Api/
 │   │   ├── TenantSlugAvailabilityController.cs        Consulta una dirección pública antes de completar el alta de…
 │   │   ├── ContactController.cs                       Correos de ventas y de soporte que muestran Ingreso y…
 │   │   ├── AccountDeletionCancelController.cs         Expone sin sesión el estado de baja pendiente desde una…
-│   │   └── ExternalLoginController.cs                 [E3]
+│   │   ├── ExternalLoginController.cs                 [E3]
+│   │   ├── AccountRecoveryController.cs               «Recuperar mi cuenta», sin sesión
+│   │   └── BusinessSignupController.cs                [E6] POST /api/auth/business-signup ("Registrá tu empresa")
 │   ├── Account/
 │   │   ├── MeController.cs                            [E3] GET/PUT /api/me
 │   │   ├── ReauthController.cs                        Pide y verifica una prueba de posesión ligada a la…
 │   │   ├── LegalAcceptanceController.cs               Recibe la aceptación de documentos vigentes para desbloquear las rutas…
 │   │   ├── AccountGoogleController.cs                 Inicia el desafío de Google para vincularlo a la cuenta…
-│   │   ├── BusinessSignupController.cs                [E6] POST /api/auth/business-signup ("Registrá tu empresa")
+│   │   ├── AccountDeletionController.cs               Solicita la baja de la cuenta actual con un comprobante…
+│   │   ├── AccountLoginMethodsController.cs           Expone los métodos de la cuenta y delega su alta,…
+│   │   └── LegalController.cs                         Sirve sin sesión la versión vigente de términos y privacidad…
 │   ├── ReferenceData/                                [E1]
 │   │   └── ReferenceDataController.cs                 GET /api/reference-data y /{catálogo} [AllowAnonymous]; lista de AccessDeclarationTests [E3]
 │   ├── Organization/                                  [Access(Business)]; rutas sin prefijo de acceso (el acceso lo declara [Access]); suma
 │   │                                                  PublicPageAdminController (E6: mi página pública)
 │   │   ├── RolesController.cs                         [E4] api/roles ← referencia
 │   │   ├── PermissionsController.cs                   [E4] api/permissions
-│   │   ├── UsersController.cs                         [E6] api/users y api/users/invitations (invitar; reenviar y revocar en .../{id})
 │   │   ├── CompaniesController.cs                     [E6] api/companies
 │   │   ├── CompanyMembersController.cs                [E6] api/companies/{companyId}/members
-│   │   ├── SettingsController.cs                      [E6] api/settings
 │   │   ├── HomeController.cs                          Inicio de la organización activa (ADR 0040)
 │   │   ├── CompanyRolesController.cs                  Los roles que se pueden asignar en una empresa, para…
-│   │   └── AuditController.cs                         [E6]
+│   │   ├── OrganizationAuditController.cs             api/organization/audit: listado, «Quién» y detalle
+│   │   ├── OrganizationDomainsController.cs           api/organization/settings/domains: registrar, verificar y retirar
+│   │   ├── OrganizationSettingsController.cs          api/organization/settings: leer y guardar con versión
+│   │   ├── OrganizationUsersController.cs             api/users: miembros e invitaciones
+│   │   └── PublicPageController.cs                    api/organization/public-page: borrador, publicar y retirar
 │   ├── Personal/                                      [E7] [Access(Consumer)]: acá van los módulos B2C del producto
 │   └── Platform/                                      [E5] [Access(Platform)]
 │       ├── PlatformTenantsController.cs
 │       ├── PlatformAccountsController.cs
 │       ├── PlatformOperatorsController.cs
 │       ├── PlatformAuditController.cs
-│       └── PlatformSettingsController.cs
+│       ├── PlatformSettingsController.cs
+│       ├── PlatformDomainsController.cs               api/platform/tenants/{id}/domains
+│       ├── PlatformFeaturesController.cs              api/platform/tenants/{id}/features
+│       ├── PlatformLegalDocumentsController.cs        api/platform/legal-documents
+│       ├── PlatformPublicSiteController.cs            api/platform/tenants/{id}/public-site: moderación
+│       └── PlatformRecoveriesController.cs            api/platform/recoveries: bandeja Recuperaciones
 ├── Contracts/                                         entrada HTTP: records sealed, props nullable, ToString() sin PII
 │   ├── ReferenceData/                                [E1]
 │   │   └── ReferenceDataHttpResponse.cs               cinco catálogos traducidos; ETag
@@ -1134,48 +1369,39 @@ ArquitecturaBaseMultitenant.Api/
 │   │   ├── CancelAccountDeletionHttpRequest.cs       Recibe la prueba que permite cancelar una baja pendiente y…
 │   │   ├── AuthEmailMapping.cs                       Traduce el correo HTTP al value object sin exponerlo en…
 │   │   ├── AccountRecoveryHttpRequests.cs            Correo nuevo y nonce del navegador
-│   │   └── AcceptInvitationHttpRequest.cs
+│   │   ├── AcceptInvitationHttpRequest.cs
+│   │   └── BusinessSignupHttpRequest.cs               [E6] POST /api/auth/business-signup ("Registrá tu empresa")
 │   ├── Account/
 │   │   ├── UpdateMeHttpRequest.cs                     [E3]
-│   │   ├── VerifyDestinationHttpRequest.cs            [E3]
 │   │   ├── VerifyReauthHttpRequest.cs                 Recibe la acción, los métodos involucrados y el código que…
 │   │   ├── VerifyLoginMethodHttpRequest.cs            Recibe el código usado para verificar un método de ingreso…
 │   │   ├── RequestReauthHttpRequest.cs                Recibe la acción sensible y el método objetivo de una…
 │   │   ├── RequestAccountDeletionHttpRequest.cs       Recibe el motivo de baja y la prueba de titularidad…
 │   │   ├── ChangeLoginMethodHttpRequest.cs            Recibe la prueba de titularidad para quitar o elegir como…
 │   │   ├── AddLoginEmailHttpRequest.cs                Recibe el correo que se quiere agregar a la cuenta…
-│   │   ├── AcceptLegalHttpRequest.cs                  Recibe por HTTP la lista de documentos y versiones que…
-│   │   └── BusinessSignupHttpRequest.cs               [E6] POST /api/auth/business-signup ("Registrá tu empresa")
+│   │   └── AcceptLegalHttpRequest.cs                  Recibe por HTTP la lista de documentos y versiones que…
 │   ├── Organization/
-│   │   ├── RolesQuery.cs                              [E4]
-│   │   ├── CreateRoleHttpRequest.cs                   [E4]
-│   │   ├── UpdateRoleHttpRequest.cs                   [E4]
-│   │   ├── UsersQuery.cs                              [E6]
-│   │   ├── InviteUserHttpRequest.cs                   [E6]
-│   │   ├── UpdateUserHttpRequest.cs                   [E6]
-│   │   ├── SetUserRolesHttpRequest.cs                 [E6]
-│   │   ├── CompaniesQuery.cs                          [E6]
-│   │   ├── CreateCompanyHttpRequest.cs                [E6]
-│   │   ├── UpdateCompanyHttpRequest.cs                [E6]
-│   │   ├── CompanyMembersQuery.cs                     [E6]
-│   │   ├── AddCompanyMemberHttpRequest.cs             [E6]
-│   │   ├── UpdateCompanyMemberRolesHttpRequest.cs     [E6]
-│   │   ├── UpdateSettingsHttpRequest.cs               [E6]
-│   │   ├── UpdatePublicPageHttpRequest.cs             [E6]
-│   │   ├── RolesHttpRequests.cs                       Los roles que se pueden asignar en una empresa
-│   │   ├── CompaniesHttpRequests.cs                   Solo el número de identificación fiscal
-│   │   └── AuditQuery.cs                              [E6]
+│   │   ├── RolesHttpRequests.cs                       contratos de roles y de los roles asignables en una empresa
+│   │   ├── CompaniesHttpRequests.cs                   contratos de empresas; el CUIT, solo el número (D6)
+│   │   ├── CompanyMembersHttpRequests.cs              contratos de miembros de empresa (entrada y salida)
+│   │   ├── OrganizationAuditHttpQuery.cs              filtros y cursor de la auditoría de la organización
+│   │   ├── OrganizationDomainsHttpRequests.cs         contrato para registrar un dominio de correo
+│   │   ├── OrganizationSettingsHttpRequests.cs        contrato de la configuración de la organización
+│   │   ├── OrganizationUsersHttpRequests.cs           contratos de Usuarios e invitaciones (entrada y salida)
+│   │   └── PublicPageHttpRequests.cs                  contratos de la página pública (entrada y salida)
 │   ├── PublicSite/                                    [E7]
 │   │   └── DirectoryQuery.cs
-│   └── Platform/                                      [E5]
-│       ├── TenantsQuery.cs
-│       ├── CreateTenantHttpRequest.cs
-│       ├── ChangeTenantStatusHttpRequest.cs
-│       ├── AccountsQuery.cs
-│       ├── ChangeAccountStatusHttpRequest.cs
-│       ├── AddOperatorHttpRequest.cs
-│       ├── SecurityEventsQuery.cs
-│       └── UpdatePlatformSettingsHttpRequest.cs
+│   ├── Platform/                                      [E5]
+│   │   ├── PlatformAccountHttpRequests.cs             filtros de Cuentas y pedido de una acción con motivo
+│   │   ├── PlatformAuditQuery.cs                      filtros de la auditoría de Plataforma
+│   │   ├── PlatformOperatorHttpRequests.cs            invitar un operador y cambiar sus permisos
+│   │   ├── PlatformRecoveryHttpRequests.cs            filtros de la bandeja Recuperaciones
+│   │   ├── PlatformSettingsHttpRequest.cs             Los dos correos son obligatorios
+│   │   ├── PlatformTenantHttpRequests.cs              filtros, alta, estado y reintento de organizaciones
+│   │   ├── PublishLegalDocumentHttpRequest.cs         Una versión nueva
+│   │   └── UpdatePlatformFeatureHttpRequest.cs        cambio de un módulo con motivo y versión
+│   └── Common/
+│       └── PhoneInputHttpRequest.cs                   País elegido y número escrito
 ├── ErrorHandling/                                     [E1]
 │   ├── ApiErrorCodes.cs
 │   ├── ProblemDetailsMapper.cs
@@ -1190,7 +1416,9 @@ ArquitecturaBaseMultitenant.Api/
 │   ├── DateOnlyConverter.cs                           yyyy-MM-dd
 │   ├── TimeOnlyConverter.cs                           HH:mm:ss
 │   ├── EmailJsonConverter.cs                          Usa el value object Email al deserializar para entregar al…
-│   └── MoneyJsonConverter.cs                          { amount, currency }
+│   ├── MoneyJsonConverter.cs                          { amount, currency }
+│   ├── NormalizedStringJsonConverter.cs               Limpia todo string de entrada antes de entregarlo al contrato…
+│   └── RawTextAttribute.cs                            Preserva literalmente un token, código o texto firmado al deserializar
 ├── Localization/
 │   └── LocalizationExtensions.cs                      [E1]
 ├── OpenApi/                                           [E1]
@@ -1208,11 +1436,19 @@ ArquitecturaBaseMultitenant.Api/
 │       ├── WhatsAppWebhookController.cs              GET/POST /webhooks/whatsapp
 │       ├── ConditionalWhatsAppRouteConvention.cs
 │       └── WhatsAppRouteAttribute.cs
-└── Hosting/                                           [E1]
-    ├── ForwardedHeadersExtensions.cs
-    ├── SecurityHeadersExtensions.cs
-    └── SpaExtensions.cs                               BackendPrefixes (lista a mano), iguales en el dominio principal y en cada subdominio;
-                                                       /swagger y /openapi solo en Development (SPA y Api en el mismo origen: sin CORS)
+├── Hosting/                                           [E1]
+│   ├── ForwardedHeadersExtensions.cs
+│   ├── SecurityHeadersExtensions.cs
+│   └── SpaExtensions.cs                               BackendPrefixes (lista a mano), iguales en el dominio principal y en cada subdominio;
+│                                                      /swagger y /openapi solo en Development (SPA y Api en el mismo origen: sin CORS)
+├── Features/
+│   ├── DisabledFeatureHandler.cs                      Un módulo apagado responde como una ruta inexistente, sin exponer…
+│   └── FeatureGateMiddleware.cs                       Oculta módulos antes de evaluar permisos
+├── Idempotency/
+│   ├── IdempotencyFilter.cs                           Reserva antes del model binding y guarda el resultado solo…
+│   └── IdempotentAttribute.cs                         Aplica el filtro de reserva y replay a cada POST…
+└── Legal/
+    └── LegalAcceptanceMiddleware.cs                   Bloquea rutas autenticadas mientras falte aceptar documentos vigentes
 ```
 
 ## src/ArquitecturaBaseMultitenant.AppHost y .ServiceDefaults `[E0]`
@@ -1248,20 +1484,46 @@ tests/
 │   │   ├── EmailTests.cs                              [E1]
 │   │   ├── TenantSlugTests.cs                         tests de TenantSlug
 │   │   ├── CultureCodeTests.cs                        Comprueba el formato y la igualdad canónica de códigos de…
-│   │   └── PhoneNumberTests.cs                        [E1]
+│   │   ├── PhoneNumberTests.cs                        [E1]
+│   │   └── TaxIdTests.cs                              tests de TaxId
 │   ├── Tenancy/                                       [E2–E3]
 │   │   ├── TenantTests.cs                             [E2] transiciones de estado
 │   │   ├── MemberTests.cs                             [E3]
 │   │   ├── TenantDomainTests.cs                       tests de TenantDomain
 │   │   ├── ReservedTenantSlugTests.cs                 tests de ReservedTenantSlug
 │   │   ├── PartyPolicyTests.cs                        Comprueba que una acción de datos compartidos la ejecute la…
-│   │   └── InvitationTests.cs                         [E3]
+│   │   └── CompanyTests.cs
 │   ├── Authorization/                                 [E4]
-│   │   ├── PermissionsTests.cs                        [E4] catálogos separados y sin duplicados
 │   │   ├── RoleAssignmentTests.cs                     La matriz completa de dónde vale un rol
 │   │   └── RoleTests.cs                               [E4]
-│   └── Companies/                                     [E6]
-│       └── CompanyTests.cs
+│   ├── Auditing/
+│   │   ├── AuditEntryTests.cs                         Comprueba que una entrada de auditoría conserve actor, espacio, acción…
+│   │   └── SecurityEventTests.cs                      Comprueba que los eventos de cuenta conserven el tipo, actor…
+│   ├── Authentication/
+│   │   ├── LoginAuditTests.cs                         Comprueba que la auditoría de ingreso conserve el resultado y…
+│   │   ├── LoginCodeTests.cs                          Comprueba caducidad, intentos y uso único de los códigos
+│   │   ├── LoginMethodTests.cs                        Comprueba creación, verificación y selección del método principal
+│   │   └── ReauthTicketTests.cs                       Comprueba que la prueba de titularidad sea de uso único,…
+│   ├── Common/
+│   │   └── EntityAndValueObjectTests.cs               Comprueba la identidad y la igualdad de entidades y objetos…
+│   ├── Features/
+│   │   └── TenantFeatureTests.cs                      tests de TenantFeature
+│   ├── Invitations/
+│   │   └── InvitationTests.cs                         [E3]
+│   ├── Legal/
+│   │   └── LegalDocumentTests.cs                      Comprueba textos por cultura, versiones y aceptaciones legales exactas
+│   ├── Messaging/
+│   │   └── OutboxMessageTests.cs                      Comprueba el ciclo de un mensaje encolado, los reintentos y…
+│   ├── Platform/
+│   │   ├── AccountRecoveryRequestTests.cs             El pedido de «Recuperar mi cuenta» nace pendiente, con el…
+│   │   ├── PlatformPermissionAssignmentTests.cs       Permisos individuales de un operador
+│   │   └── PlatformTenantTests.cs                     tests de PlatformTenant
+│   ├── PublicSite/
+│   │   └── PublicPageTests.cs                         tests de PublicPage
+│   ├── ReferenceData/
+│   │   └── ReferenceEntitiesTests.cs                  Comprueba que los catálogos conserven claves naturales, traducciones y asociaciones…
+│   └── Settings/
+│       └── PlatformSettingsTests.cs                   Comprueba las reglas de registro y los valores de configuración…
 │
 ├── ArquitecturaBaseMultitenant.Application.UnitTests/ [E0]
 │   ├── ArquitecturaBaseMultitenant.Application.UnitTests.csproj
@@ -1274,7 +1536,9 @@ tests/
 │   │   ├── FormatCasesContractTests.cs                Comprueba la estructura y cobertura del catálogo común de ejemplos…
 │   │   ├── CursorRequestValidatorTests.cs             Comprueba tamaño de página y formato del cursor recibido
 │   │   ├── CultureProfilesTests.cs                    Comprueba los perfiles de presentación obtenidos del catálogo y su…
-│   │   └── DisplayFormatterTests.cs                   [E1] recorre docs/contracts/format-cases.json
+│   │   ├── DisplayFormatterTests.cs                   [E1] recorre docs/contracts/format-cases.json
+│   │   ├── LibPhoneNumberParserTests.cs               parseo de números argentinos y validación de celular
+│   │   └── TextNormalizerTests.cs                     Comprueba limpieza, espacios, normalización Unicode y caracteres invisibles
 │   ├── ReferenceData/                                 [E1]
 │   │   ├── ReferenceDataCatalogTests.cs               JSON válidos, referencias internas y traducciones
 │   │   ├── ReferenceDataServiceTests.cs               Comprueba composición, traducciones y búsqueda de los cinco catálogos
@@ -1286,8 +1550,6 @@ tests/
 │   │   └── PermissionTextsTests.cs                    [E4]
 │   ├── Services/                                      [E3]
 │   │   ├── Auth/                                      [E3]
-│   │   │   ├── AccountServiceTests.cs                 el registro crea identidad + espacio personal
-│   │   │   ├── LoginCodeServiceTests.cs
 │   │   │   ├── LoginLinkServiceTests.cs              [E8]
 │   │   │   ├── ConnectServiceTests.cs
 │   │   │   ├── ConnectLogoutServiceTests.cs          [E3]
@@ -1296,43 +1558,44 @@ tests/
 │   │   │   ├── ReturnUrlsTests.cs                     Comprueba que acceso y organización se obtengan únicamente de un…
 │   │   │   ├── LoginCodeValidationTests.cs            Comprueba los datos de solicitud y verificación del código de…
 │   │   │   ├── LoginCodeFlowTests.cs                  Comprueba orden de locks, lecturas, emisión y verificación de códigos
-│   │   │   └── AccessSwitchPolicyTests.cs  
+│   │   │   ├── AccessSwitchPolicyTests.cs
+│   │   │   └── TenantProvisionerTests.cs              idempotencia
 │   │   ├── Invitations/
 │   │   │   └── InvitationServiceTests.cs              [E3]
 │   │   ├── Profile/
 │   │   │   └── ProfileServiceTests.cs                 [E3]
-│   │   ├── Organizations/                             [E6]
-│   │   │   ├── BusinessSignupServiceTests.cs    
-│   │   │   └── TenantProvisionerTests.cs              idempotencia
 │   │   ├── Roles/                                     [E4]
 │   │   │   ├── RoleServiceTests.cs
 │   │   │   ├── PlatformPermissionServiceTests.cs tests de PlatformPermissionService
 │   │   │   └── RoleServiceWriteTests.cs
-│   │   ├── Users/
-│   │   │   └── UserServiceTests.cs                    [E6]
 │   │   ├── Companies/                                 [E6]
 │   │   │   ├── CompanyServiceTests.cs
-│   │   │   ├── LastCompanyAdminGuardTests.cs     tests de LastCompanyAdminGuard
-│   │   │   └── CompanyMemberServiceTests.cs
-│   │   ├── Settings/
-│   │   │   └── TenantSettingsServiceTests.cs          [E6]
+│   │   │   └── LastCompanyAdminGuardTests.cs          tests de LastCompanyAdminGuard
 │   │   ├── Platform/                                  [E5]
-│   │   │   ├── TenantAdministrationServiceTests.cs
-│   │   │   ├── PlatformAccountServiceTests.cs
-│   │   │   └── PlatformOperatorServiceTests.cs
+│   │   │   ├── PlatformScopeTests.cs                  tests de PlatformScope
+│   │   │   ├── PlatformSettingsServiceTests.cs        tests de PlatformSettingsService
+│   │   │   └── PlatformTenantSlugTests.cs             tests de PlatformTenantSlug
+│   │   ├── Home/
+│   │   │   └── PendingItemOrderTests.cs               orden de «Para resolver» (ADR 0040)
+│   │   ├── OrganizationUsers/
+│   │   │   └── OrganizationUserStatePolicyTests.cs    tests de OrganizationUserStatePolicy
+│   │   ├── PublicSite/
+│   │   │   └── PublicPageValidationTests.cs           Cada regla del pedido de Página pública muestra su propio…
 │   │   └── Modules/WhatsApp/                        [E8]
 │   │       ├── WhatsAppInboundServiceTests.cs
 │   │       └── BotReplyTests.cs
 │   ├── DependencyInjectionTests.cs                    AddApplication registra cada clase de Services una sola vez y…
-│   └── TestDoubles/                                   [E1–E6] cada fake nace con la interfaz que implementa
-│       ├── FakeUnitOfWork.cs                          [E2] misma CommitPolicy; cuenta commits y rollbacks
-│       ├── FakeTenantContext.cs                       [E2]
-│       ├── FakeCurrentUser.cs                         [E3]
-│       ├── FakeOutbox.cs                              [E3]
-│       ├── FakePermissionService.cs                   [E4]
-│       ├── FakeSignInService.cs                       [E3]
-│       ├── ServiceFixture.cs                          [E1] FakeTimeProvider + FakeLogger + RequestValidator real
-│       └── InMemory/                                  [E2–E6] cada InMemory<X>Repository se etiqueta al incorporarlo, en la etapa de su puerto
+│   ├── TestDoubles/                                   [E1–E6] cada fake nace con la interfaz que implementa
+│   │   ├── FakeUnitOfWork.cs                          [E2] misma CommitPolicy; cuenta commits y rollbacks
+│   │   ├── FakeTenantContext.cs                       [E2]
+│   │   └── ServiceFixture.cs                          [E1] FakeTimeProvider + FakeLogger + RequestValidator real
+│   ├── Identity/
+│   │   ├── AccountDeletionPolicyTests.cs              Comprueba solicitud, cancelación y vencimiento de la baja
+│   │   └── ApplicationUserRulesTests.cs               Comprueba las reglas puras de la cuenta Identity
+│   ├── Messaging/
+│   │   └── ChannelContractsTests.cs                   Comprueba los contratos de canales y avisos de cuenta
+│   └── Persistence/
+│       └── FakeUnitOfWorkTests.cs                     Comprueba que el doble transaccional reproduzca las políticas de commit…
 │
 ├── ArquitecturaBaseMultitenant.Api.IntegrationTests/  [E0]
 │   ├── ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj
@@ -1341,10 +1604,7 @@ tests/
 │   │   ├── ApiTestGroup.cs                            colección única, en serie
 │   │   ├── TenantFixture.cs                           [E2] en la E2, los tenantId de Empresa A, Empresa B y los espacios personales, para RLS; en la E3 suma
 │   │   │                                              los usuarios Ana, Kevin, Beto y Carla
-│   │   ├── AuthFlow.cs                                [E3] login real: código → authorize (access=, tenant=) → token
-│   │   ├── TestAuthHandler.cs                         atajo: X-Test-UserId + X-Test-TenantId
 │   │   ├── RuntimeRoleConnection.cs                   [E2] consultas crudas como mt_app para probar RLS
-│   │   ├── CapturingOutbox.cs                         [E3]
 │   │   ├── FailingCommitUnitOfWork.cs                 [E2]
 │   │   ├── SampleAccountsFixture.cs                   Datos de recorrido creados únicamente en la base Testcontainers del…
 │   │   ├── RecoveryJourney.cs                         Registra un pedido de «Recuperar mi cuenta» por la API…
@@ -1354,23 +1614,32 @@ tests/
 │   │   ├── OrganizationJourney.cs                     Arma una organización con su Dueño y le suma miembros,…
 │   │   ├── DevelopmentHostSetup.cs                    Configura un operador sintético para los tests que necesitan iniciar…
 │   │   ├── AccountJourney.cs                          Recorre el registro por correo y obtiene una sesión consumer…
-│   │   └── HttpExtensions.cs
+│   │   ├── PlatformJourney.cs                         prepara organizaciones y operadores para los tests de Plataforma
+│   │   └── TestControllerApplicationPart.cs
 │   ├── TestFeatures/                                  [E1] solo para tests, nunca en src/
 │   │   ├── TestController.cs                          [E1] devuelve cada ErrorType
-│   │   ├── TestControllerApplicationPart.cs
 │   │   ├── Access/                                   [E3] probe de ruta exclusiva Business, sólo para tests
 │   │   │   └── BusinessOnlyController.cs             [E3] demuestra 403 Consumer sin adelantar alta productiva E6
-│   │   └── Isolation/                                 [E2]
-│   │       ├── Widget.cs                              ITenantOwned, IAuditable, ISoftDeletable
-│   │       ├── Poster.cs                              IPublishedByBusiness: la referencia de un dato público
-│   │       ├── Deal.cs                                IConsumerBusinessShared + PartyPolicy: la referencia de un dato compartido
-│   │       ├── IsolationModelCustomizer.cs
-│   │       ├── IsolationSchema.cs                    [E2] tras las migraciones reales, ApplyAsync(connection) crea estas tablas con las plantillas
-│   │       │                                          de RlsSql (EnableTenantRls, EnablePublicRls, EnablePartiesRls), sin migraciones productivas
-│   │       ├── WidgetsController.cs                   [E2] el 409 de ConcurrencyTests; [Access(Business)] desde la E3
-│   │       ├── PostersController.cs                   [E7] [PublicSite]
-│   │       ├── DealsController.cs                     [E7] [Access(Consumer)] + [Access(Business)]: el flujo persona → empresa con PartyPolicy
-│   │       └── PersonalWidgetsController.cs           [E7] [Access(Consumer)]: la receta de un módulo B2C
+│   │   ├── Isolation/                                 [E2]
+│   │   │   ├── Widget.cs                              ITenantOwned, IAuditable, ISoftDeletable
+│   │   │   ├── Poster.cs                              IPublishedByBusiness: la referencia de un dato público
+│   │   │   ├── Deal.cs                                IConsumerBusinessShared + PartyPolicy: la referencia de un dato compartido
+│   │   │   ├── IsolationModelCustomizer.cs
+│   │   │   ├── IsolationSchema.cs                     [E2] tras las migraciones reales, ApplyAsync(connection) crea estas tablas con las plantillas
+│   │   │   │                                          de RlsSql (EnableTenantRls, EnablePublicRls, EnablePartiesRls), sin migraciones productivas
+│   │   │   ├── WidgetsController.cs                   [E2] el 409 de ConcurrencyTests; [Access(Business)] desde la E3
+│   │   │   ├── PostersController.cs                   [E7] [PublicSite]
+│   │   │   ├── DealsController.cs                     [E7] [Access(Consumer)] + [Access(Business)]: el flujo persona → empresa con PartyPolicy
+│   │   │   └── PersonalWidgetsController.cs           [E7] [Access(Consumer)]: la receta de un módulo B2C
+│   │   ├── Auditing/
+│   │   │   ├── AuditTestDbContext.cs                  Construye el modelo mínimo de entidades sintéticas y entradas de…
+│   │   │   ├── AuditedRecord.cs                       Define entidades sintéticas privadas, públicas y compartidas para probar auditoría
+│   │   │   ├── TestCurrentUser.cs                     Proporciona usuario y acceso controlados por cada test de auditoría
+│   │   │   └── TestTenantContext.cs                   Proporciona el espacio controlado por cada test de auditoría
+│   │   ├── Features/
+│   │   │   └── FeatureProbeController.cs              rutas de prueba para la puerta de módulos (FeatureGateTests)
+│   │   └── Idempotency/
+│   │       └── IdempotencyTestController.cs           El único efecto observable de este POST es el contador…
 │   ├── Tenancy/                                       [E2] los tests de multitenancy.md §13
 │   │   ├── CrossTenantIsolationTests.cs
 │   │   ├── RlsBarrierTests.cs
@@ -1393,11 +1662,12 @@ tests/
 │   │   ├── InvitationAcceptanceTests.cs               Reglas de aceptación con Identity, UoW, outbox y PostgreSQL reales
 │   │   ├── IdentityTenancyModelTests.cs               Comprueba que el catálogo de espacios sea global y sus…
 │   │   ├── IdentityRepositoryTests.cs                 Comprueba repositorios y readers de membresías y configuración
-│   │   ├── HomeIsolationTests.cs                      ADR 0040
+│   │   ├── HomeIsolationTests.cs                      el inicio no muestra datos de otra organización (ADR 0040)
 │   │   ├── ConnectServiceConcurrencyTests.cs          Comprueba que el primer acceso personal simultáneo cree un único…
 │   │   ├── CompanyPersistenceTests.cs                 Comprueba la persistencia versionada y el aislamiento real de Companies…
 │   │   ├── AccessStatusCacheTests.cs                  Comprueba la caché de estado de cuenta y membresía y…
-│   │   └── CacheKeyScopeTests.cs
+│   │   ├── CacheKeyScopeTests.cs
+│   │   └── InvitationsTests.cs                        puerta de la 3c: InvitationIssuer invita a alguien sin cuenta y a alguien con cuenta, y las dos se aceptan
 │   ├── ErrorHandling/                                 [E1]
 │   │   ├── ErrorHandlingTests.cs
 │   │   ├── CursorErrorMappingTests.cs                 [E2] cursor inválido → 400 con errors.after
@@ -1414,8 +1684,6 @@ tests/
 │   │   └── MoneyJsonTests.cs                          [E1] { amount, currency }; sintaxis alfa-3 inválida → 400
 │   ├── ReferenceData/                                 [E1]
 │   │   └── ReferenceDataApiTests.cs                   [AllowAnonymous], ETag, cinco catálogos y rutas por catálogo
-│   ├── Phones/                                        [E3]
-│   │   └── LibPhoneNumberParserTests.cs               parseo de números argentinos y validación de celular
 │   ├── Hosting/                                       [E0–E1]
 │   │   ├── HealthCheckTests.cs                        [E0]
 │   │   ├── SpaHostingTests.cs                         [E1]
@@ -1457,17 +1725,14 @@ tests/
 │   │   ├── AuditTrailRlsTests.cs                      Comprueba las políticas RLS del rastro de auditoría y su…
 │   │   ├── AuditAndIdempotencyModelTests.cs           Comprueba esquemas, claves y columnas del rastro de auditoría y…
 │   │   ├── AdvisoryLockKeysTests.cs                   Comprueba el formato estable de claves de locks por espacio,…
-│   │   └── MigrationsTests.cs                         falta una migración → falla
-│   ├── Configuration/                                 [E3] la Api no arranca y nombra la clave que falta
-│   │   ├── SmtpOptionsValidatorTests.cs
-│   │   └── GoogleOptionsTests.cs
+│   │   ├── MigrationsTests.cs                         falta una migración → falla
+│   │   └── ConcurrencyTests.cs                        Comprueba que xmin detecte una edición simultánea y preserve el…
 │   ├── Auth/                                          [E3]
 │   │   ├── SignupTests.cs
 │   │   ├── LoginCodeTests.cs
 │   │   ├── LoginLinkTests.cs                          [E8]
 │   │   ├── ConnectTests.cs
 │   │   ├── LogoutTests.cs                            [E3] GET/POST /connect/logout
-│   │   ├── AuthMethodsTests.cs                        qué medios de ingreso están encendidos según la configuración (GET /api/auth/methods)
 │   │   ├── LoginCodeTests.cs                           [E3/E6] LoginCodeTests.Inactive_managed_member_cannot_use_the_email_to_sign_into_personal_access bloquea el correo administrado sin membresía activa
 │   │   ├── StartupConfigurationTests.cs               Comprueba la validación de Google y correo al arrancar
 │   │   ├── RealLoginRateLimitTests.cs                 Comprueba los límites de las rutas reales de ingreso por…
@@ -1483,33 +1748,76 @@ tests/
 │   │   ├── AuthPipelineTests.cs                       Comprueba el orden de autenticación, resolución del espacio y autorización
 │   │   ├── AuthEndpointsTests.cs                      Comprueba las puertas HTTP de ingreso y registro
 │   │   ├── AccountGoogleProtocolTests.cs              Comprueba la protección del desafío para vincular Google a una…
-│   │   └── InvitationsTests.cs                        puerta de la 3c: InvitationIssuer invita a alguien sin cuenta y a alguien con cuenta, y las dos se aceptan
-│   ├── Account/                                       [E3]
-│   │   ├── MeTests.cs
-│   │   ├── LoginMethodsTests.cs                       sumar, verificar, elegir el principal y quitar (con código en otro método); aviso en todos
-│   │   └── BusinessSignupTests.cs                     [E6]
+│   │   ├── AccountRecoveryTests.cs                    «Recuperar mi cuenta» (ADR 0041)
+│   │   ├── BusinessSignupTests.cs                     [E6]
+│   │   └── MeTests.cs
 │   ├── Organization/                                  [E4]
 │   │   ├── RolesTests.cs                              [E4]
 │   │   ├── PermissionAuthorizationTests.cs            [E4]
-│   │   ├── UsersTests.cs                              [E6]
 │   │   ├── CompaniesTests.cs                          [E6]
-│   │   ├── CompanyMembersTests.cs                     [E6]
-│   │   ├── SettingsTests.cs                           [E6]
 │   │   ├── OrganizationDomainsTests.cs                 [E6] TXT, asociaciones de ManagedByTenantId, retención y aislamiento del dominio
 │   │   ├── UniqueKeyRaceTests.cs                      Dos pedidos que pasan juntos el control previo chocan con…
 │   │   ├── PublicPagesTests.cs                        tests de PublicPages
 │   │   ├── OrganizationUsersTests.cs                  Recorre Usuarios e Invitaciones sobre PostgreSQL aislado con identidades y…
 │   │   ├── OrganizationSettingsTests.cs               Verifica configuración, autorización y concurrencia con PostgreSQL y una identidad…
-│   │   ├── OrganizationAuditTests.cs                  Deja la invitación vencida hace dos días, en segundos enteros,…
+│   │   ├── OrganizationAuditTests.cs                  auditoría de la organización: una entrada por acción, «Quién» y el detalle
 │   │   ├── MemberStateParityTests.cs                  Paridad del estado de un miembro
 │   │   ├── HomeTests.cs                               Inicio de la organización (ADR 0040, tableros Inicio-Org e Inicio-Miembro)
-│   │   ├── ForeignKeyRaceTests.cs                     Asignar un rol mientras otro pedido lo borra choca con…
-│   │   └── AuditTests.cs                              [E6]
+│   │   └── ForeignKeyRaceTests.cs                     Asignar un rol mientras otro pedido lo borra choca con…
 │   ├── Platform/                                      [E5]
-│   │   ├── PlatformTenantsTests.cs
-│   │   ├── PlatformAccountsTests.cs
-│   │   ├── PlatformOperatorsTests.cs
-│   │   └── PlatformAuditTests.cs
+│   │   ├── PlatformAccountAdministrationTests.cs      Consulta global de cuentas
+│   │   ├── PlatformAccountDeletionTests.cs            Baja iniciada por Plataforma (ADR 0035)
+│   │   ├── PlatformAccountStateTests.cs               Suspender, reactivar y cerrar sesiones de una cuenta desde Plataforma,…
+│   │   ├── PlatformDomainAdministrationTests.cs       tests de PlatformDomainAdministration
+│   │   ├── PlatformLegalPublicationTests.cs           Plataforma › Documentos legales
+│   │   ├── PlatformOperatorTests.cs                   Operadores de Plataforma (ADR 0042)
+│   │   ├── PlatformOrganizationNoticeTests.cs         tests de PlatformOrganizationNotice
+│   │   ├── PlatformProvisioningTests.cs               tests de PlatformProvisioning
+│   │   ├── PlatformRecoveryTests.cs                   Plataforma › Recuperaciones
+│   │   ├── PlatformScopeTests.cs                      tests de PlatformScope
+│   │   ├── PlatformSecurityAuditTests.cs              Plataforma › Auditoría
+│   │   ├── PlatformSettingsTests.cs                   tests de PlatformSettings
+│   │   ├── PlatformTenantAdministrationTests.cs       tests de PlatformTenantAdministration
+│   │   ├── PlatformTenantCountersTests.cs             tests de PlatformTenantCounters
+│   │   ├── PlatformTenantProvisioningHttpTests.cs     tests de PlatformTenantProvisioningHttp
+│   │   └── PublicPageModerationTests.cs               tests de PublicPageModeration
+│   ├── Api/
+│   │   ├── IdempotencyTests.cs                        Comprueba que pedidos repetidos con la misma clave ejecuten una…
+│   │   └── NormalizedInputTests.cs                    Comprueba la limpieza de texto en el límite HTTP y…
+│   ├── Features/
+│   │   ├── FeatureGateTests.cs                        tests de FeatureGate
+│   │   └── PlatformFeatureAdministrationTests.cs      tests de PlatformFeatureAdministration
+│   ├── Identity/
+│   │   ├── AccountMethodsHttpTests.cs                 Comprueba los contratos HTTP de gestión de métodos de ingreso…
+│   │   ├── AccountProfileTests.cs                     Comprueba la edición del perfil usando su versión leída
+│   │   ├── ConcurrentDevelopmentSeedTests.cs          Comprueba que dos ejecuciones simultáneas del seed de muestra creen…
+│   │   ├── DevelopmentSeedTests.cs                    Comprueba que la fixture de cuentas de muestra prepare una…
+│   │   ├── IdentityModelTests.cs                      Comprueba esquemas, columnas y unicidad del modelo global de identidad
+│   │   ├── IdentityRegistrationTests.cs               Comprueba el registro técnico de Identity, cookies y Google
+│   │   ├── LoginCodeConcurrencyTests.cs               Comprueba que verificaciones simultáneas consuman un código una sola vez
+│   │   ├── LoginMethodsTests.cs                       sumar, verificar, elegir el principal y quitar (con código en otro método); aviso en todos
+│   │   ├── LoginPersistenceTests.cs                   Comprueba la persistencia de métodos, códigos, auditoría y preferencias de…
+│   │   ├── ProductionSeedTests.cs                     Comprueba el seed de configuración, cliente web y documentos legales…
+│   │   └── SignInServiceTests.cs                      Comprueba los adaptadores de sesión, usuario actual y datos de…
+│   ├── Legal/
+│   │   ├── AccountDeletionLoginTests.cs               Comprueba la prueba de ingreso de una cuenta con baja…
+│   │   ├── AccountDeletionParticipantsTests.cs        Comprueba que cada participante limpie únicamente los datos de la…
+│   │   ├── AccountDeletionProcessingTests.cs          Comprueba el reclamo durable y la reanudación de una baja…
+│   │   ├── AccountDeletionTests.cs                    Comprueba permisos, prueba de titularidad e impedimentos al solicitar una…
+│   │   └── LegalAcceptanceTests.cs                    Comprueba que nuevas versiones legales bloqueen las rutas hasta aceptarlas…
+│   ├── Messaging/
+│   │   ├── AccountNoticeTests.cs                      Comprueba que los avisos lleguen a contactos verificados sin duplicados
+│   │   ├── EmailDeliveryTests.cs                      Comprueba configuración segura de SMTP y entrega a pickup
+│   │   ├── EmailTemplateTests.cs                      Comprueba textos y estructura de las plantillas de ingreso y…
+│   │   ├── OutboxDispatcherScopeTests.cs              Comprueba que un lote pueda reutilizar el sender pero abra…
+│   │   ├── OutboxDispatcherTests.cs                   Comprueba despacho, confirmación y reintentos de mensajes pendientes
+│   │   ├── OutboxIdleLoggingTests.cs                  Comprueba que un ciclo sin mensajes no genere registros informativos
+│   │   ├── OutboxTests.cs                             Comprueba el encolado dentro de la transacción del caso de…
+│   │   └── SmtpTransportTests.cs                      Comprueba que dos mensajes del mismo lote compartan una conexión…
+│   ├── Security/
+│   │   └── LoginCodeSecurityTests.cs                  Comprueba aleatoriedad, longitud y hash ligado a destino y propósito…
+│   ├── Time/
+│   │   └── TimeZoneServiceTests.cs                    Comprueba rangos UTC de días civiles según una zona IANA
 │   └── Modules/WhatsApp/                            [E8] tests de integración del módulo
 │       ├── WhatsAppWebhookTests.cs
 │       ├── WhatsAppOptionsValidatorTests.cs
@@ -1521,7 +1829,7 @@ tests/
     ├── ArquitecturaBaseMultitenant.ArchitectureTests.csproj
     ├── SolutionRoot.cs
     ├── TransactionBoundaryTests.cs                    [E2] incluye ArchitectureIl para lectura de IL con Mono.Cecil
-    ├── HarnessStage.cs                               [E0] única constante de la última etapa cerrada
+    ├── HarnessStage.cs                                [E0] lista explícita de las etapas cerradas (ClosedStages)
     ├── HarnessTests.cs                                [E0] punteros por carpeta, enlaces vivos y fichas completas; exige tests al cerrar su etapa según HarnessStage
     ├── LayerDependencyTests.cs                        [E0]
     ├── ProjectReferencesTests.cs                      [E0]
@@ -1542,14 +1850,11 @@ tests/
     ├── ReferenceDataHardcodeTests.cs                  [E1] sin listas ISO/cultura/zona escritas en código fuera de JSON
     ├── TenantScopeUsageTests.cs                       [E2] ITenantScope solo en la lista blanca
     ├── QueryFilterBypassTests.cs                      [E2] IgnoreQueryFilters solo en Readers/Platform (salvo IgnoreQueryFilters(["SoftDelete"]))
-    ├── IdentityAccessTests.cs                         [E3] ApplicationUser solo desde Identity/, ApplicationDbContext,
-    │                                                  Configurations/Identity y Tenant/MemberConfiguration,
-    │                                                  UserRepository, MemberReader, Readers/Platform, Seed/,
-    │                                                  Migrations/ y Rls/TenantIsolationModelValidator
+    ├── IdentityAccessTests.cs                         [E3] ApplicationUser solo desde Identity/, ApplicationDbContext, Configurations/Identity,
+    │                                                  MemberConfiguration, InvitationConfiguration, PlatformPermissionAssignmentConfiguration,
+    │                                                  UserRepository, MemberReader, PlatformSeeder, Migrations/ y Rls/TenantIsolationModelValidator
     ├── AccessDeclarationTests.cs                      [E3] toda ruta declara [Access] o [PublicSite]; ReferenceDataController
     │                                                  está en la lista explícita [AllowAnonymous] del dominio principal
-    ├── PermissionAuthorizationTests.cs                [E4] permisos, nunca roles ni Policy a mano; cada [HasPermission]
-    │                                                  nombra un permiso que existe en su catálogo
     ├── ValidationMessageTests.cs                      Exige que cada regla de cada validador de Application tenga…
     ├── UniqueKeysTests.cs                             Los nombres de los índices únicos y de las claves…
     ├── SensitiveToStringLoggingTests.cs               Comprueba que los contratos con datos sensibles oculten sus valores…
@@ -1557,6 +1862,13 @@ tests/
     ├── IdentityStorageAccessTests.cs                  Comprueba que solo los adaptadores autorizados lean los conjuntos globales…
     ├── ControllerOutputContractTests.cs               La salida de un controller (ADR 0002, enmienda del 2026-10-03)
     ├── BuildConfigurationTests.cs                     Comprueba la versión del SDK, los analizadores y las acciones…
+    ├── EmailPropertyTests.cs                          Detecta correos expuestos como strings en entidades y modelos internos,…
+    ├── IdempotentActionsTests.cs                      Detecta acciones POST que crean o envían sin declarar idempotencia
+    ├── ModuleControllersTests.cs                      los controllers opcionales declaran su módulo; el núcleo no tiene
+    ├── TextLimitsTests.cs                             Detecta límites de texto repetidos o distintos entre Domain, validación…
+    ├── VersionedContractTests.cs                      Comprueba que las ediciones de entidades con versión reciban esa…
+    ├── Support/
+    │   └── CallSites.cs                               Las llamadas, los tipos nombrados y los literales de texto…
     └── ModuleIsolationTests.cs                        [E8] el núcleo no referencia ningún namespace *.Modules.*
 ```
 
@@ -1570,6 +1882,7 @@ docs/
 │   │                                                  con [Access] → tests (aislamiento incluido) → inventario
 │   ├── permiso-nuevo.md                               [E4]
 │   ├── agregar-un-arnes.md                            receta para sumar un arnés ejecutable (scripts/arneses/)
+│   ├── leer-backend.md                                cómo seguir un flujo del back, con el ejemplo de vincular Google
 │   ├── migracion.md                                   [E2] comando + EnableTenantRls + índices de SortMap
 │   ├── prefijo-de-backend.md                          [E1]
 │   └── quitar-whatsapp.md                             [E8] borrar Domain/WhatsApp, Modules/WhatsApp en las tres capas y la
@@ -1581,240 +1894,40 @@ src/**/<carpeta de un área>/AGENTS.md                  el puntero del arnés (a
 src/**/<carpeta de un área>/CLAUDE.md                  @AGENTS.md
 ```
 
-## Piezas de los estándares P1 a P10 (adoptados el 2026-09-27)
+## Piezas de etapas futuras
 
-Rutas completas, para no romper las ramas de arriba. Cada una se crea en la etapa marcada, junto con su ficha de `docs/rules/`.
-
-```
-src/ArquitecturaBaseMultitenant.Domain/
-├── Common/IVersioned.cs                                  [E2] P1  uint Version (xmin)
-├── Common/TextLimits.cs                                  [E1] P4  PersonName 100, OrganizationName 120, ShortName 60, Description 500, LongText 4000
-├── ValueObjects/Email.cs                                 [E1] P3  normalizado (minúsculas, NFC, IDN), validado
-├── ValueObjects/TaxId.cs                                 [E6] P5  país + tipo + dígitos
-├── ValueObjects/TaxIdValidators/ArgentineCuitValidator.cs [E6] P5 dígito verificador módulo 11 (CUIT y CUIL)
-├── ValueObjects/TaxIdValidators/ArgentineDniValidator.cs  [E6] P5
-├── Legal/LegalDocument.cs · LegalDocumentKind.cs · LegalAcceptance.cs · LegalErrors.cs   [E3] 3a, P7
-└── Features/Features.cs                                  [E5] P8  catálogo de módulos (clave, lado: Consumer, Business o los dos, prendido por defecto)
-
-src/ArquitecturaBaseMultitenant.Application/
-├── Common/Exceptions/ConcurrencyConflictException.cs     [E2] P1  la lanza UnitOfWork ante DbUpdateConcurrencyException; ProblemDetailsMapper → 409 General.ConcurrencyConflict
-├── Common/Text/TextNormalizer.cs                         [E1] P4  trim, NFC, sin caracteres de control ni de ancho cero
-├── Interfaces/Integrations/Features/IFeatureService.cs   [E5] P8
-├── Interfaces/Persistence/ILegalRepository.cs · ILegalReader.cs   [E3] P7
-├── Services/Legal/LegalService.cs                        [E3] P7  documentos vigentes y aceptación; exportar mis datos en E10 (la baja es AccountDeletionService, E3)
-└── Models/Legal/ · Validation/Legal/                     [E3] P7
-
-src/ArquitecturaBaseMultitenant.Infrastructure/
-├── Persistence/Configurations/Platform/IdempotencyKeyConfiguration.cs   [E2] P6
-├── Persistence/Configurations/Platform/LegalDocumentConfiguration.cs    [E3] 3a, P7
-├── Persistence/Configurations/Platform/TenantFeatureConfiguration.cs    [E5] P8
-├── Persistence/Configurations/Identity/LegalAcceptanceConfiguration.cs  [E3] 3a, P7
-├── Persistence/Conventions/VersionedConvention.cs        [E2] P1  IVersioned → xmin IsRowVersion
-├── Persistence/Conventions/EmailConvention.cs            [E2] P3  conversor de valor de Email
-├── Idempotency/IdempotencyStore.cs · IdempotencyCleanupWorker.cs        [E2] P6
-└── Features/FeaturesRegistration.cs · TenantFeatureFilter.cs · FeatureService.cs   [E5] P8
-
-src/ArquitecturaBaseMultitenant.Api/
-├── Json/NormalizedStringJsonConverter.cs · RawTextAttribute.cs          [E1] P4
-├── Idempotency/IdempotentAttribute.cs                                   [E1] P6
-├── Idempotency/IdempotencyFilter.cs                                     [E2] P6
-├── Features/DisabledFeatureHandler.cs                    [E5] P8  módulo apagado → 404 ProblemDetails
-├── Legal/LegalAcceptanceMiddleware.cs                    [E3] 3b, P7; solo para identidades autenticadas: las rutas anónimas no pasan por él
-├── Controllers/Account/LegalController.cs                [E3] P7  GET /api/legal/terms y /privacy (3a); GET /api/legal/current y POST /api/legal/accept (3b)
-├── Contracts/Common/PhoneInputHttpRequest.cs                            [E1] teléfono
-└── Contracts/Common/TaxIdHttpRequest.cs                                 [E6] P5
-
-tests/
-├── *.Domain.UnitTests/ValueObjects/EmailTests.cs (E1) · TaxIdTests.cs (E6)   P3 · P5
-├── *.Application.UnitTests/Common/TextNormalizerTests.cs                P4
-├── *.Api.IntegrationTests/Persistence/ConcurrencyTests.cs (E2) · CollationTests.cs (E2)   P1 · P2
-├── *.Api.IntegrationTests/Api/IdempotencyTests.cs (E2) · NormalizedInputTests.cs (E1)   P6 · P4
-├── *.Api.IntegrationTests/Features/FeatureGateTests.cs (E5)             P8
-├── *.Api.IntegrationTests/Legal/LegalAcceptanceTests.cs (E3)            P7  registro en 3a, nueva versión bloqueante en 3b
-└── *.ArchitectureTests/VersionedContractTests.cs (E2) · TextLimitsTests.cs (E1) · EmailPropertyTests.cs (E1) ·
-    TaxIdPropertyTests.cs (E6) · IdempotentActionsTests.cs (E1) · ModuleControllersTests.cs (E5)   P1 · P4 · P3 · P5 · P6 · P8
-```
-
-## Piezas del modelo de accesos, sitio público e interacción (ADR 0030 a 0032)
+Las piezas de los estándares P1 a P10 y de las ADR 0030 a 0035 que ya existen están en el árbol de arriba, en su carpeta real. Acá quedan solo las principales de las etapas que todavía no empezaron. La lista completa de la Etapa 7 está en los «Archivos nuevos» de cada tarea de [su plan](../plans/2026-10-04-etapa-7-publico-y-personal.md); la de la E10, en el [plan maestro](../plans/2026-09-27-plan-de-desarrollo.md). Rutas completas, para no romper las ramas de arriba.
 
 ```
 src/ArquitecturaBaseMultitenant.Domain/
-├── Common/IPublishedByBusiness.cs · IConsumerBusinessShared.cs          [E2] clases pública y compartida
-├── Common/Party.cs · PartyPolicy.cs                                     [E2] Consumer | Business; qué parte puede hacer qué
-├── Tenancy/Slug.cs · ReservedSlugs.cs                                   [E6] slug único de la organización (subdominio)
-└── PublicSite/PublicPage.cs · PublicPageStatus.cs · PublicPageErrors.cs [E6] nombre, logo, descripción, contacto; Draft | Published; bloqueo de la plataforma
-                                                                         (PublishBlockedAtUtc, PublishBlockedReason, PublishBlockedByUserId); mientras dure, publicar
-                                                                         da PublicSite.PublicPage.PublishBlocked
+└── Legal/DataExport.cs · DataExportStatus.cs                            [E10] platform.DataExports: el archivo de «Exportar mis datos», vence a las 48 h
 
 src/ArquitecturaBaseMultitenant.Application/
-├── Interfaces/Integrations/Request/IPublicSiteContext.cs                [E7] organización del subdominio (solo lo público)
-├── Services/PublicSite/PublicPageService.cs · DirectoryService.cs       [E6–E7]
-└── Services/Organizations/BusinessSignupService.cs                      [E6] "Registrá tu empresa"
+├── Interfaces/Integrations/Request/IPublicSiteContext.cs                [E7] la organización del subdominio (solo lo público)
+├── Interfaces/Integrations/Legal/IRetainedOnConsumerDeletion.cs         [E7] retención legal que declara un módulo ante la baja de una persona
+├── Interfaces/Persistence/IPublicSiteReader.cs · IDirectoryReader.cs    [E7]
+├── Interfaces/Services/IDirectoryService.cs                             [E7]
+├── Services/PublicSite/DirectoryService.cs                              [E7] el directorio de organizaciones publicadas
+├── Interfaces/Services/IDataExportService.cs                            [E10]
+├── Interfaces/Persistence/IDataExportRepository.cs                      [E10]
+└── Services/Legal/DataExportService.cs                                  [E10]
 
 src/ArquitecturaBaseMultitenant.Infrastructure/
-├── Persistence/Configurations/PublicSite/PublicPageConfiguration.cs     [E6] esquema public_site, EnablePublicRls
-├── Persistence/Readers/PublicSite/PublicPageReader.cs · DirectoryReader.cs  [E7] caché con prefijo del sitio público
-└── Identity/OpenIddict/SubdomainRedirectUriValidator.cs                 [E7] redirect URI solo para slugs publicados
+├── Persistence/Readers/PublicSiteReader.cs · DirectoryReader.cs         [E7]
+├── Identity/OpenIddict/SubdomainRedirectUriValidator.cs                 [E7] redirect URI solo para slugs publicados
+├── Persistence/Configurations/Platform/DataExportConfiguration.cs        [E10]
+├── Persistence/Repositories/DataExportRepository.cs                     [E10]
+└── BackgroundJobs/DataExportWorker.cs                                   [E10] arma el archivo y lo borra a las 48 h
 
 src/ArquitecturaBaseMultitenant.Api/
 ├── Tenancy/PublicSiteResolutionMiddleware.cs · PublicSiteAttribute.cs · PublicSiteContext.cs   [E7]
-├── Controllers/PublicSite/PublicPageController.cs                       [E7] [PublicSite][AllowAnonymous]: solo en el subdominio de una organización publicada
+├── Controllers/PublicSite/PublicSiteController.cs                       [E7] [PublicSite][AllowAnonymous]: solo en el subdominio de una organización publicada
 ├── Controllers/PublicSite/DirectoryController.cs                        [E7] [AllowAnonymous], sin [PublicSite]: responde en el dominio principal (está en la lista
 │                                                                        de AccessDeclarationTests)
-├── Controllers/Organization/PublicPageAdminController.cs               [E6] [Access(Business)] mi página pública (api/public-site)
-└── Controllers/Account/BusinessSignupController.cs                       [E6] POST /api/auth/business-signup
+└── Controllers/Account/DataExportController.cs                          [E10] POST /api/me/data-export [Idempotent] y la descarga del enlace que vence a las 48 h
 
 tests/
-├── *.Api.IntegrationTests/Tenancy/AccessTests.cs                        [E3]
 ├── *.Api.IntegrationTests/Tenancy/SubdomainTests.cs                     [E7]
-├── *.Api.IntegrationTests/Tenancy/PublicAndSharedRowsTests.cs           [E2] casos de datos y RLS; los de la página pública se suman en la E7
-├── *.Api.IntegrationTests/TestFeatures/Isolation/Poster.cs · Deal.cs    [E2]
-└── *.Api.IntegrationTests/TestFeatures/Isolation/PostersController.cs · DealsController.cs  [E7] [PublicSite] y [Access(Consumer)]/[Access(Business)] (plan E7, puntos 1b y 3)
-```
-
-## Piezas de los métodos de ingreso (ADR 0033)
-
-La entidad, su índice único (`Type`, `Value`) y el registro e ingreso con un método nacen en la 3a de la Etapa 3, junto con la aceptación legal base. La 3b suma gestionar métodos: agregar, verificar, elegir principal y quitar. `Phone` queda solo como modelo hasta que el módulo de WhatsApp registra su canal en la E8.
-
-```
-src/ArquitecturaBaseMultitenant.Domain/
-└── Authentication/LoginMethodErrors.cs                                  [E3] Auth.LoginMethod.* (valor ya tomado, no queda ningún método propio o activo, falta la reautenticación, no encontrado)
-
-src/ArquitecturaBaseMultitenant.Application/
-├── Interfaces/Services/ILoginMethodService.cs                           [E3] 3b: gestión de métodos
-├── Interfaces/Persistence/ILoginMethodRepository.cs · ILoginMethodReader.cs  [E3] 3a: registro e ingreso con un método
-├── Models/Identity/AddLoginMethodRequest.cs · SetPrimaryLoginMethodRequest.cs  [E3] 3b; la verificación reusa Models/Profile/VerifyDestinationRequest
-├── Models/Identity/RemoveLoginMethodRequest.cs                          [E3] 3b, con el ReauthTicket
-├── Models/Identity/ReadModels/LoginMethodRow.cs                         [E3] 3b: métodos de la cuenta, enmascarados (no es Models/Auth/LoginMethodsResponse)
-├── Validation/Identity/AddLoginMethodRequestValidator.cs                [E3] 3b; y los de SetPrimary y Remove, si los necesitan
-├── Services/Identity/LoginMethodService.cs                              [E3] 3b: lista, suma, verifica (DestinationCodeVerifier, LoginCodePurpose.VerifyDestination),
-│                                                                        elige el principal y quita (los dos, con ReauthVerifier); al cambiar el principal copia el valor
-│                                                                        a AspNetUsers.Email/PhoneNumber por IUserRepository; registra el SecurityEvent y avisa en todos
-│                                                                        los métodos
-└── Services/Identity/ManagedLoginMethodRevoker.cs                       [E6] helper sin IUnitOfWork: desactiva los correos administrados y avisa; lo llama quien termina la
-                                                                         membresía, dentro de su transacción (E6: UserService, AccountAccessRevoker)
-
-src/ArquitecturaBaseMultitenant.Infrastructure/
-├── Persistence/Repositories/LoginMethodRepository.cs                    [E3] 3a
-└── Persistence/Readers/LoginMethodReader.cs                             [E3] 3a
-
-src/ArquitecturaBaseMultitenant.Api/
-├── Controllers/Account/AccountLoginMethodsController.cs                 [E3] 3b: rutas bajo /api/me/login-methods (las fija el plan detallado de la Etapa 3); distinto
-│                                                                        de Auth/LoginMethodsController, el GET anónimo de los medios encendidos
-└── Contracts/Account/AddLoginMethodHttpRequest.cs · SetPrimaryLoginMethodHttpRequest.cs · RemoveLoginMethodHttpRequest.cs  [E3] 3b; la verificación reusa VerifyDestinationHttpRequest
-
-tests/
-├── *.Api.IntegrationTests/Account/LoginMethodsTests.cs                  [E3] 3b: sumar, verificar, principal, quitar con código en otro método; siempre queda al
-│                                                                        menos uno propio o activo; aviso en todos
-├── *.Api.IntegrationTests/Auth/LoginCodeTests.cs                        [E3/E6] correo administrado solo está disponible con membresía activa
-├── *.Api.IntegrationTests/Organization/OrganizationDomainsTests.cs      [E6] verificación TXT y retención de vínculos al retirar el dominio
-└── *.Application.UnitTests/Services/Identity/LoginMethodServiceTests.cs  [E3]
-```
-
-## Piezas de la baja de una cuenta (ADR 0035)
-
-```
-src/ArquitecturaBaseMultitenant.Domain/
-└── Legal/AccountDeletionErrors.cs                                       [E3] ReauthRequired, PlatformOperator, AlreadyPending, Blocked, NotPending; LastAdmin, en la E4
-
-src/ArquitecturaBaseMultitenant.Application/
-├── Interfaces/Services/IAccountDeletionService.cs                       [E3]
-├── Interfaces/Integrations/Legal/IAccountDeletionParticipant.cs         [E3] CheckAsync, OnRequestedAsync, OnCancelledAsync, ExecuteAsync
-├── Interfaces/Integrations/Legal/IRetainedOnConsumerDeletion.cs         [E7] retención legal declarada por un módulo
-├── Services/Legal/AccountDeletionService.cs                             [E3] pedir, cancelar y ejecutar
-├── Services/Legal/AccountDeletionPolicy.cs                              [E3–E4] operador, baja ya pedida y módulos (E3); único Dueño, con los Dueños
-│                                                                        activos = TenantAdmin con identidad Active (E4, Legal.AccountDeletion.LastAdmin)
-├── Services/Identity/ReauthVerifier.cs                                  [E3] ReauthTicket de 5 minutos (baja y cambios de métodos)
-└── Services/Legal/Participants/                                         [E3–E10] PersonalSpace, LegalAcceptances, Outbox y Memberships (E3), Recovery (E5), Engagement (E7), Exports (E10)
-
-src/ArquitecturaBaseMultitenant.Infrastructure/
-└── Legal/AccountDeletionWorker.cs                                       [E3] cada hora, SKIP LOCKED, una transacción por cada tenant que toca: toda cuenta con DeletionScheduledForUtc vencido,
-                                                                         esté PendingDeletion o Suspended; ejecuta IAccountDeletionService (la identidad se anonimiza por IUserRepository)
-
-src/ArquitecturaBaseMultitenant.Api/
-├── Controllers/Account/AccountDeletionController.cs                     [E3] POST /api/me/deletion
-├── Controllers/Auth/DeletionCancelController.cs                         [E3] POST /api/auth/deletion/cancel
-└── Controllers/Platform/PlatformAccountsController.cs                   [E5] + POST /api/platform/accounts/{id}/deletion
-
-tests/
-├── *.Api.IntegrationTests/Legal/AccountDeletionTests.cs                 [E3–E4] el caso del único Dueño se suma en la E4
-└── *.ArchitectureTests/AccountDeletionParticipantsTests.cs              [E3] toda entidad con datos de una identidad tiene participante
-```
-
-## Tablas que completan los flujos del lienzo
-
-```
-src/ArquitecturaBaseMultitenant.Domain/
-├── Authentication/LoginMethod.cs                                        [E3] 3a: identity.LoginMethods; Type, Value (único por tipo), IsPrimary, VerifiedAtUtc, ManagedByTenantId?
-├── Legal/LegalDocument.cs · LegalDocumentContent.cs                     [E3] 3a: versión base sembrada + una fila de texto por cultura
-├── Tenancy/TenantDomain.cs · TenantDomainStatus.cs                      [E6] platform.TenantDomains: Domain (único), TxtToken, Pending | Verified
-├── Users/AccountRecoveryRequest.cs · RecoveryRequestStatus.cs           [E5] platform.AccountRecoveryRequests: Pending | Approved | Rejected
-└── Legal/DataExport.cs · DataExportStatus.cs                            [E10] platform.DataExports: archivo, vence a las 48 h
-
-src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Configurations/
-├── Identity/LoginMethodConfiguration.cs                                 [E3] 3a: índice único (Type, Value)
-├── Platform/LegalDocumentContentConfiguration.cs                        [E3] clave (LegalDocumentId, Culture)
-├── Platform/TenantDomainConfiguration.cs                                [E6] índice único Domain
-├── Platform/AccountRecoveryRequestConfiguration.cs                      [E5]
-└── Platform/DataExportConfiguration.cs                                  [E10]
-```
-
-## Piezas que completan los flujos del lienzo
-
-Servicios, rutas y tests de las tablas de arriba: Recuperar mi cuenta, dominio verificado, Legales, la ficha de la cuenta en la plataforma, la moderación de la página pública y Exportar mis datos. Recuperaciones, legales y cuentas suman sus permisos de plataforma en `PlatformPermissions.cs`, `Permissions.resx` y `.en.resx`, y el seed.
-
-```
-src/ArquitecturaBaseMultitenant.Application/
-├── Interfaces/Services/IAccountRecoveryService.cs                       [E5]
-├── Interfaces/Services/ITenantDomainService.cs                          [E6]
-├── Interfaces/Services/IPlatformLegalService.cs                         [E5]
-├── Interfaces/Services/IDataExportService.cs                            [E10]
-├── Interfaces/Persistence/IAccountRecoveryRequestRepository.cs · IAccountRecoveryRequestReader.cs  [E5]
-├── Interfaces/Persistence/ITenantDomainRepository.cs · ITenantDomainReader.cs  [E6]
-├── Interfaces/Persistence/IDataExportRepository.cs                      [E10]
-├── Interfaces/Integrations/Dns/IDnsTxtResolver.cs                       [E6] consulta el registro TXT del dominio
-├── Services/Identity/AccountRecoveryService.cs                          [E5] el pedido público en tres pasos (método de antes → método nuevo verificado con
-│                                                                        código → pedido recibido) y la revisión del operador (aprobar o rechazar con motivo)
-├── Services/Organizations/TenantDomainService.cs · TenantDomainVerifier.cs  [E6] pedir el dominio, emitir el TxtToken, verificar y quitar; al quedar Verified,
-│                                                                        marca ManagedByTenantId en los LoginMethods de ese dominio
-├── Services/Platform/PlatformLegalService.cs                            [E5] lista versiones y publica una nueva (nunca edita una publicada); reusa ILegalRepository
-│                                                                        e ILegalReader (E3)
-├── Services/Legal/DataExportService.cs                                  [E10]
-├── Models/Identity/StartAccountRecoveryRequest.cs · VerifyAccountRecoveryRequest.cs  [E5]
-├── Models/Platform/ListAccountRecoveryRequestsRequest.cs · ReviewAccountRecoveryRequest.cs  [E5] la revisión lleva motivo
-├── Models/Platform/PublishLegalDocumentRequest.cs · ListLegalDocumentsRequest.cs  [E5] tipo, vigencia y el texto en todas las culturas soportadas
-├── Models/Platform/AccountDetailResponse.cs                             [E5] métodos enmascarados, organizaciones y estado (incluida "Baja iniciada por la
-│                                                                        plataforma"); el historial sale de ISecurityEventReader
-├── Models/Platform/PlatformAccountDeletionRequest.cs                    [E5] con motivo; lo ejecuta IAccountDeletionService (E3) con la plataforma como iniciadora
-├── Models/Platform/ReadModels/AccountRecoveryRequestRow.cs · LegalDocumentRow.cs  [E5]
-├── Models/PublicSite/UnpublishPublicPageRequest.cs                      [E5] con motivo: la plataforma despublica con PublicPageService (vuelve a Draft con el bloqueo)
-├── Models/PublicSite/AllowPublishPublicPageRequest.cs                   [E5] con motivo: "Permitir publicar" levanta el bloqueo; la página sigue en Draft
-└── Validation/Identity/ · Validation/Platform/ · Validation/PublicSite/  [E5–E6] un validador por request; el de PublishLegalDocumentRequest exige todas las culturas
-
-src/ArquitecturaBaseMultitenant.Infrastructure/
-├── Dns/DnsTxtResolver.cs                                                [E6]
-├── Persistence/Repositories/AccountRecoveryRequestRepository.cs         [E5]
-├── Persistence/Repositories/TenantDomainRepository.cs                   [E6]
-├── Persistence/Readers/AccountRecoveryRequestReader.cs                  [E5]
-├── Persistence/Readers/TenantDomainReader.cs                            [E6]
-├── Persistence/Repositories/DataExportRepository.cs                     [E10]
-└── Legal/DataExportWorker.cs                                            [E10] arma el archivo y lo borra a las 48 h
-
-src/ArquitecturaBaseMultitenant.Api/
-├── Controllers/Auth/AccountRecoveryController.cs                        [E5] [AllowAnonymous], con límite de pedidos y [Idempotent] en el POST: los tres pasos de /recuperar
-├── Controllers/Platform/PlatformRecoveriesController.cs                 [E5] listar, aprobar o rechazar con motivo (/plataforma/recuperaciones)
-├── Controllers/Platform/PlatformLegalController.cs                      [E5] listar y publicar una versión nueva (/plataforma/legales)
-├── Controllers/Platform/PlatformAccountsController.cs                   [E5] + la ficha de la cuenta (AccountDetailResponse)
-├── Controllers/Platform/PlatformTenantsController.cs                    [E5] + la pestaña Dominio verificado y la moderación de la página pública (platform.tenants.manage):
-│                                                                        GET /api/platform/tenants/{id}/public-site, POST .../public-site/unpublish y .../public-site/allow-publish;
-│                                                                        POST .../domains/{domain}/verify y quitar el dominio, con motivo (sobre TenantDomainService, E6)
-├── Controllers/Organization/TenantDomainsController.cs                  [E6] [Access(Business)]: sumar el dominio, ver el TXT y verificar (/org/configuracion)
-├── Controllers/Account/DataExportController.cs                          [E10] POST /api/me/data-export [Idempotent] y la descarga del enlace que vence a las 48 h
-└── Contracts/Auth/ · Contracts/Platform/ · Contracts/Organization/ · Contracts/Account/  [E5–E10] un *HttpRequest o *Query por cada request de arriba
-
-tests/
-├── *.Api.IntegrationTests/Auth/AccountRecoveryTests.cs                  [E5]
-├── *.Api.IntegrationTests/Platform/LegalPublishingTests.cs              [E5]
-├── *.Api.IntegrationTests/Organization/TenantDomainsTests.cs            [E6] aislamiento y dominio único en todo el sistema
+├── *.Api.IntegrationTests/PublicSite/DirectoryTests.cs                  [E7]
 └── *.Api.IntegrationTests/Account/DataExportTests.cs                    [E10]
 ```
