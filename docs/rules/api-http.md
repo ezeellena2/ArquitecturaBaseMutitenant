@@ -11,7 +11,7 @@
   - los enums viajan por su nombre en JSON; un valor numérico se rechaza con 400. Los instantes usan `DateTime` UTC con sufijo `Utc`; `DateTimeOffset` no va en propiedades ni parámetros de contratos HTTP.
 - **Salida:**
   - `POST` que crea: `ToCreatedResult(this, nameof(Get), id => new { id })` → 201 con `Location`;
-  - `PUT` y `DELETE` → 204;
+  - `PUT` con `version` (un guardado) → 200 con la versión nueva, `VersionResponse` ([concurrencia](concurrencia.md)); los demás `PUT` y `DELETE` → 204;
   - `GET` → 200;
   - un trabajo aceptado → `ToAcceptedResult`;
   - lo que devuelve es un modelo de Application (`*Response`) o, si la respuesta lleva value objects o es de protocolo, un `*HttpResponse` de `Api/Contracts` (ADR 0002, enmienda del 2026-10-03), nunca una entidad ni un tipo de Infrastructure.

@@ -464,13 +464,13 @@ Es un resumen. El árbol completo, con la etapa en que nace cada test, está en 
 - Las rutas de la organización no llevan prefijo de acceso: `api/home`, `api/roles`, `api/permissions`, `api/users`, `api/users/invitations`, `api/companies/{companyId}` y sus `members` y `roles`. Lo que es de la organización entera va bajo `api/organization`: `settings`, `settings/domains`, `public-page` y `audit` (manda el código, como dijo la revisión de alineación del 2026-10-03). El acceso lo declara `[Access]`, no la ruta, y "tenant" no aparece en ellas. Las excepciones son `/api/platform/...`, `/api/me/...`, `/api/auth/...` e `/api/invitations/...` (anónimo).
 - Cada acción declara `[Access(...)]`, o `[PublicSite][AllowAnonymous]` si responde en el subdominio de una organización publicada (`PublicSiteController` (E7)). Las rutas anónimas del dominio principal (ingreso, registro, "Registrá tu empresa", invitación, enlace, `GET` de los documentos legales, `GET /api/reference-data` y sus rutas por catálogo, directorio, pedido de "Recuperar mi cuenta", correos de contacto, cancelar la baja y webhooks) declaran solo `[AllowAnonymous]`, y `AccessDeclarationTests` las acepta únicamente si su controller está en la lista explícita del test. `ReferenceDataController` entra en esa lista al nacer el test en E3. En B2B y plataforma, cada acción declara además su permiso (`[HasPermission]`, `[HasCompanyPermission]` o `[HasPlatformPermission]`). Las rutas B2C (`[Access(Consumer)]`) no piden permiso (§14). Además lleva `[ProducesResponseType<T>]`, y los errores extra van con `[ProducesProblem]`.
 - Un `POST` que crea o envía lleva `[Idempotent]`, y una acción de un módulo lleva `[FeatureGate]`. Un `PUT` o `DELETE` de una entidad `IVersioned` recibe `version`, que es obligatoria ([concurrencia](../rules/concurrencia.md)).
-- `POST` que crea → 201 con `Location` y `GET /{id}`. `PUT` → 204. `DELETE` → 204.
+- `POST` que crea → 201 con `Location` y `GET /{id}`. `PUT` con `version` → 200 con la versión nueva (`VersionResponse`, [concurrencia](../rules/concurrencia.md)); los demás `PUT` y `DELETE` → 204.
 
 ```csharp
 [ApiController, Route("api/roles"), Tags("Roles"), Access(Access.Business)]
 public sealed class RolesController(IRoleService service) : ControllerBase
 {
-    [HttpPut("{id:guid}"), HasPermission(Permissions.Roles.Manage), ProducesResponseType(StatusCodes.Status204NoContent)]
+    [HttpPut("{id:guid}"), HasPermission(Permissions.Roles.Manage), ProducesResponseType<VersionResponse>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateRoleHttpRequest request, CancellationToken ct) =>
         (await service.UpdateAsync(new UpdateRoleRequest(id, request.Name, request.Description, request.Permissions, request.Version), ct))
             .ToActionResult(this);
@@ -484,7 +484,7 @@ public sealed class RolesController(IRoleService service) : ControllerBase
   1. **Validar afuera:** `await validator.ValidateAsync(request, ct)`. Si falla, devuelve el `ValidationError`.
   2. **Un solo límite:** `unitOfWork.ExecuteInTransactionAsync(ct => UpdateCoreAsync(request, ct), CommitPolicy.OnSuccess, ct)`.
   3. **Adentro** del límite: locks → lecturas → reglas (que devuelven `Error`) → escrituras.
-  4. **Afuera, después del commit:** invalidar el caché. El método entero va envuelto en `OperationLog.RunAsync(logger, timeProvider, "UpdateRole", …)`, que registra el inicio, el fin y el código de error: una línea por método, nunca el request.
+  4. **Afuera, después del commit:** invalidar el caché y, si es un guardado con versión, responder `VersionResponse.Of(result)` con la entidad que devolvió el trabajo ([concurrencia](../rules/concurrencia.md)). El método entero va envuelto en `OperationLog.RunAsync(logger, timeProvider, "UpdateRole", …)`, que registra el inicio, el fin y el código de error: una línea por método, nunca el request.
 - Un servicio no llama a los métodos que escriben de otro servicio. Lo compartido baja a un helper.
 - Los métodos que solo leen no abren límite: van directo al reader.
 

@@ -25,7 +25,7 @@ La reautenticación emite un secreto aleatorio de 256 bits y guarda solo su hash
 
 La gestión conserva `LoginMethods.Value` como clave global del método. En Google es el subject del proveedor; `ContactEmail` guarda el correo verificado para presentación y avisos, sin usarlo como clave OAuth. Cambiar el principal desmarca el anterior y conserva su verificación.
 
-`/cuenta` conserva el acceso actual y permite editar nombre, cultura y zona con `Version` de `/api/me`; un 409 conserva el borrador hasta que se elija «Ver lo nuevo» o «Seguir editando». El idioma cambia después de guardar. «Mi cuenta» aparece en el menú de identidad y en la navegación personal dibujada en el lienzo.
+`/cuenta` conserva el acceso actual y permite editar nombre, cultura y zona con la `version` de `/api/me`, que es la de «Tus datos» y no la de la fila de la cuenta: no cambia con el contacto principal, la última organización, las sesiones ni los intentos fallidos ([concurrencia](../rules/concurrencia.md)). El guardado responde la versión nueva; un 409 conserva el borrador hasta que se elija «Ver lo nuevo» o «Seguir editando». El idioma cambia después de guardar. «Mi cuenta» aparece en el menú de identidad y en la navegación personal dibujada en el lienzo.
 
 El `email` de `/api/me` es el del perfil activo, el que muestra el menú (el pie en la compu, «Más» en el teléfono): en una organización, el correo verificado que ella administra y, si no hay, el principal; en el perfil personal, el principal (lienzo v99, `ProfileServiceTests`).
 
