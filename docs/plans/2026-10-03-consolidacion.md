@@ -427,7 +427,19 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
     - la pantalla de Auditoría con el contrato nuevo, `organization-audit-contract.test.ts` en verde y los datos de las capturas regenerados;
     - el correo del perfil activo en tu menú y «10 correos administrados» en Configuración;
     - las cuatro líneas de docs de v93.
-  - **R3d · Ingreso y registro:**
+  - **R3e · Piezas comunes que faltan** (las encontró R3d):
+    - la franja de error en el teléfono, en 14,5 con 12/14 y radio 12, también en las páginas públicas, como dibujan M-Ingreso, M-Registro, M-Registro-Empresa y M-Invitacion (v104). `formularios.md` todavía dice 13 y se corrige;
+    - `FormError` con tono de información, para «Tu sesión venció»;
+    - `Button` con el estado «Guardando» de Criterio · Botones (aro de 14 y opacidad 0,85), usado en todos los botones que guardan;
+    - `FormField` e `Input` en el teléfono: 44 de alto, radio 10 y letra 15, como los M-* (hoy 48, 12 y 16);
+    - los íconos de las pantallas de estado que dibuja el tablero: el edificio, el candado y el reloj, en `shared/ui/icons.tsx`;
+    - los textos del paso del código, en un solo lugar (hoy están en `auth:login.*` y en `common:code.*`);
+    - 6 px entre el texto y el enlace en los renglones de enlaces.
+  - [x] **R3d · Ingreso y registro** (front `60f2507` a `3cc7f64`; 993/994 tests, lint y build). Falla solo `organization-audit-contract.test.ts`, que es de R3c.
+    - La pieza común está en `src/areas/public/auth/components/` (`AuthStatus`, `AuthCodeStep`, `AuthMessage` y `AuthLink`). La usan el ingreso, los dos registros, la invitación, `CallbackPage`, la baja pedida y `EmailCodeForm`.
+    - ADR 0041: «Ese correo ya lo usa otra cuenta» no está en la app.
+    - Capturas en `r3d/`.
+    - Lo que pedía:
     - una sola pieza para la pantalla de estado y el paso del código, que usan las tres páginas;
     - los enlaces de texto en `--marca-tx`;
     - «Te quedan N intentos» con su segunda línea;
