@@ -594,6 +594,24 @@ Lo que dejaron las tandas 6a, 6b y 6c, y lo que el usuario decide con Diseño en
   - los textos de espera de Quitar, Desvincular y Dar de baja;
 - [ ] los textos de «Quitar dominio» para 1 y 0 correos, y la hoja del detalle de Auditoría en el teléfono, cuando Diseño publique.
 
+### 6e. Las decisiones del usuario del 2026-10-05 (lienzo v108, front `3ebb939`)
+
+- [ ] **El Administrador de empresa sin roles de la organización** (opción A):
+  - sus Miembros muestran las invitaciones de su empresa, con «Invitación pendiente» o «Invitación vencida» y «Vence …»;
+  - su ⋮ trae «Reenviar invitación» y «Revocar invitación» (peligro, con «¿Revocar la invitación a …?»);
+  - «Agregar miembro» lista a las personas de la organización con el correo tapado (el desplegable se llama «Candidato»);
+  - su vista (Tweak `quien`, «Administra solo la empresa») no tiene Administración ni WhatsApp en el menú, ni barra de pestañas, ni ⋮ ni «Editar empresa» en la banda;
+  - en el teléfono, M-Empresa trae la hoja «Invitación: acciones» y, para él, la barra de abajo del miembro (Inicio y Más).
+
+  Back: la ruta de candidatos y reenviar o revocar con `company.members.manage`. Front: tanda 6d-4b.
+- [ ] **«Guardar cambios», con un solo criterio en toda edición:** se apaga sin cambios y nunca por un dato que falta. El usuario pidió el mismo criterio en todas las pantallas. Front: tanda 6d-4a, que revisa todas.
+- [ ] **Los textos de espera:** «Quitando…», «Desvinculando…» y «Dando de baja…». Front: tanda 6d-4a.
+- [ ] **Lo demás de v108** (front, tanda 6d-4b):
+  - «Quitar dominio» con su texto para 10, 1 y 0 correos (con 0, sin la cantidad junto a «Verificado»);
+  - el detalle de Auditoría en el teléfono (M-Auditoria-Org, «Detalle de un cambio»);
+  - las casillas fijas de un rol de sistema, en gris también en el teléfono;
+  - la hoja de la vista previa en el teléfono, como el tablero.
+
 ### 7. Puerta
 
 - [ ] `dotnet build` sin advertencias y `dotnet test` completo; `npm run build` y `npm test` completos.
