@@ -3,6 +3,14 @@ using ArquitecturaBaseMultitenant.Application.Models.Platform;
 
 namespace ArquitecturaBaseMultitenant.Api.Contracts.Platform;
 
+/// <summary>Suspender, reactivar, cerrar sesiones y dar de baja una cuenta: solo el motivo, sin versión.</summary>
+public sealed record PlatformAccountReasonHttpRequest(string? Reason)
+{
+    public PlatformAccountReasonRequest ToModel() => new(Reason);
+    public override string ToString() => nameof(PlatformAccountReasonHttpRequest);
+}
+
+/// <summary>Decidir un pedido de recuperación o quitar a un operador: la versión vista de esa fila y el motivo.</summary>
 public sealed record PlatformAccountActionHttpRequest(uint? Version, string? Reason)
 {
     public PlatformAccountActionRequest ToModel() => new(Version, Reason);

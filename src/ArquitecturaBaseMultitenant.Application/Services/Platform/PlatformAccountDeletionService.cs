@@ -1,4 +1,3 @@
-using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
@@ -21,7 +20,9 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 /// activa pasa a PendingDeletion y puede cancelarla ingresando; una suspendida sigue suspendida con la fecha.
 /// Bloquean el único Dueño de una organización no cerrada (lo controla el participante de membresías, con la misma
 /// regla que la baja que pide la persona) y el último operador que administra operadores.
-/// Plataforma no cancela ni acorta la gracia.
+/// Plataforma no cancela ni acorta la gracia. La acción exige motivo y no lleva versión: la fila de la cuenta cambia
+/// con cualquier escritura y daría un 409 falso. La protege el estado, bajo el lock de la cuenta: una baja ya
+/// programada recibe <c>AlreadyPending</c> y una cuenta que no está activa ni suspendida, el error de estado.
 /// </summary>
 internal sealed class PlatformAccountDeletionService(IUserRepository users, ILoginMethodRepository accounts,
     PlatformOperatorGuard operators, AccountDeletionScheduler scheduler,
@@ -29,7 +30,7 @@ internal sealed class PlatformAccountDeletionService(IUserRepository users, ILog
     IRequestValidator validator, TimeProvider clock, ILogger<PlatformAccountDeletionService> logger)
     : IPlatformAccountDeletionService
 {
-    public Task<Result> RequestDeletionAsync(Guid accountId, PlatformAccountActionRequest request, CancellationToken ct) =>
+    public Task<Result> RequestDeletionAsync(Guid accountId, PlatformAccountReasonRequest request, CancellationToken ct) =>
         OperationLog.RunAsync(logger, clock, "RequestPlatformAccountDeletion", async () =>
         {
             ArgumentNullException.ThrowIfNull(request);
@@ -42,14 +43,13 @@ internal sealed class PlatformAccountDeletionService(IUserRepository users, ILog
             return result;
         });
 
-    private async Task<Result> RequestCoreAsync(Guid accountId, Guid operatorId, PlatformAccountActionRequest request,
+    private async Task<Result> RequestCoreAsync(Guid accountId, Guid operatorId, PlatformAccountReasonRequest request,
         CancellationToken ct)
     {
         if (await operators.CheckAnotherManagerRemainsAsync(accountId, ct) is { IsFailure: true } kept) return kept;
         await accounts.LockUserAsync(accountId, ct);
         var account = await users.GetByIdAsync(accountId, ct);
         if (account is null) return UserErrors.NotFound;
-        if (account.Version != request.Version!.Value) throw new ConcurrencyConflictException();
         // ADR 0042: una invitación de operador sin aceptar solo se reenvía o se revoca.
         if (account.HasPendingOperatorInvitation) return PlatformOperatorErrors.InvitationPending;
         if (account.DeletionScheduledForUtc is not null || account.Status == UserStatus.PendingDeletion)

@@ -20,7 +20,13 @@ internal sealed class ListPlatformRecoveriesRequestValidator : PagedRequestValid
         RuleFor(r => r.Status).IsInEnum().When(r => r.Status is not null).WithMessage(_ => ValidationTexts.FilterInvalid);
 }
 
-/// <summary>Versión y motivo de una acción del operador: cuentas y pedidos de recuperación.</summary>
+/// <summary>Motivo de una acción del operador sobre una cuenta: suspender, reactivar, cerrar sesiones y la baja.</summary>
+internal sealed class PlatformAccountReasonRequestValidator : AbstractValidator<PlatformAccountReasonRequest>
+{
+    public PlatformAccountReasonRequestValidator() => RuleFor(r => r.Reason).Required().Description();
+}
+
+/// <summary>Versión y motivo de una acción del operador: pedidos de recuperación y retiro de operadores.</summary>
 internal sealed class PlatformAccountActionRequestValidator : AbstractValidator<PlatformAccountActionRequest>
 {
     public PlatformAccountActionRequestValidator()

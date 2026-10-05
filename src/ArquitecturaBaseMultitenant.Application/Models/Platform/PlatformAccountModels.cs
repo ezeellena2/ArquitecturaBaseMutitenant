@@ -14,7 +14,21 @@ public enum PlatformAccountState { Active, Suspended, NeedsRecovery, PendingDele
 
 public enum PlatformAccountKind { Person, Operator }
 
-/// <summary>Suspender, reactivar o cerrar sesiones: versión vista de la cuenta y motivo interno del operador.</summary>
+/// <summary>
+/// Suspender, reactivar, cerrar sesiones o dar de baja una cuenta: solo el motivo interno del operador. No lleva
+/// versión: la fila de la cuenta cambia con cualquier escritura (un ingreso, los intentos fallidos, el sello de
+/// seguridad, el contacto principal) y su <c>xmin</c> daría un 409 falso. La protege el estado de cada transición,
+/// dentro de la transacción y con el lock de la cuenta (docs/rules/concurrencia.md).
+/// </summary>
+public sealed record PlatformAccountReasonRequest(string? Reason)
+{
+    public override string ToString() => nameof(PlatformAccountReasonRequest);
+}
+
+/// <summary>
+/// Una acción con motivo sobre una fila que solo cambia por acciones del operador: decidir un pedido de recuperación o
+/// quitar a un operador. Lleva la versión vista de esa fila (el pedido o la asignación de permisos), no la de la cuenta.
+/// </summary>
 public sealed record PlatformAccountActionRequest(uint? Version, string? Reason)
 {
     public override string ToString() => nameof(PlatformAccountActionRequest);

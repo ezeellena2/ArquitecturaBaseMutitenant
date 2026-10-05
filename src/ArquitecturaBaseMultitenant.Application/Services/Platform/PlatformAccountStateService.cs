@@ -1,4 +1,3 @@
-using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
@@ -16,10 +15,13 @@ using Microsoft.Extensions.Logging;
 namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
 /// <summary>
-/// Suspende, reactiva o cierra las sesiones de una cuenta desde Plataforma. Cada acción exige motivo y la
-/// versión vista; dentro de la transacción toma los locks, relee la cuenta, aplica las reglas y guarda el
-/// cambio con su SecurityEvent. Suspender y cerrar sesiones revoca todos los accesos; la caché de estado se
-/// invalida después del commit. No hay avisos previstos para estas acciones.
+/// Suspende, reactiva o cierra las sesiones de una cuenta desde Plataforma. Cada acción exige motivo y no lleva
+/// versión: la fila de la cuenta cambia con cualquier escritura (un ingreso, los intentos fallidos, el sello de
+/// seguridad) y su versión daría un 409 falso. La protege el estado de cada transición: dentro de la transacción
+/// toma los locks, relee la cuenta y aplica las reglas (suspender solo una cuenta activa, reactivar solo una
+/// suspendida); una acción repetida o contradictoria recibe el error de estado. Guarda el cambio con su
+/// SecurityEvent. Suspender y cerrar sesiones revoca todos los accesos; la caché de estado se invalida después del
+/// commit. No hay avisos previstos para estas acciones.
 /// </summary>
 internal sealed class PlatformAccountStateService(IUserRepository users, ISignInService sessions,
     ILoginMethodRepository accounts, PlatformOperatorGuard operators, PlatformAuditWriter audit,
@@ -28,19 +30,19 @@ internal sealed class PlatformAccountStateService(IUserRepository users, ISignIn
 {
     private enum Change { Suspend, Reactivate, RevokeSessions }
 
-    public Task<Result> SuspendAsync(Guid accountId, PlatformAccountActionRequest request, CancellationToken ct) =>
+    public Task<Result> SuspendAsync(Guid accountId, PlatformAccountReasonRequest request, CancellationToken ct) =>
         OperationLog.RunAsync(logger, clock, "SuspendPlatformAccount", () =>
             ChangeAsync(accountId, request, Change.Suspend, ct));
 
-    public Task<Result> ReactivateAsync(Guid accountId, PlatformAccountActionRequest request, CancellationToken ct) =>
+    public Task<Result> ReactivateAsync(Guid accountId, PlatformAccountReasonRequest request, CancellationToken ct) =>
         OperationLog.RunAsync(logger, clock, "ReactivatePlatformAccount", () =>
             ChangeAsync(accountId, request, Change.Reactivate, ct));
 
-    public Task<Result> RevokeSessionsAsync(Guid accountId, PlatformAccountActionRequest request, CancellationToken ct) =>
+    public Task<Result> RevokeSessionsAsync(Guid accountId, PlatformAccountReasonRequest request, CancellationToken ct) =>
         OperationLog.RunAsync(logger, clock, "RevokePlatformAccountSessions", () =>
             ChangeAsync(accountId, request, Change.RevokeSessions, ct));
 
-    private async Task<Result> ChangeAsync(Guid accountId, PlatformAccountActionRequest request, Change change,
+    private async Task<Result> ChangeAsync(Guid accountId, PlatformAccountReasonRequest request, Change change,
         CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -53,7 +55,7 @@ internal sealed class PlatformAccountStateService(IUserRepository users, ISignIn
         return result;
     }
 
-    private async Task<Result> ChangeCoreAsync(Guid accountId, PlatformAccountActionRequest request, Change change,
+    private async Task<Result> ChangeCoreAsync(Guid accountId, PlatformAccountReasonRequest request, Change change,
         CancellationToken ct)
     {
         // Lock global de operadores antes que el de la cuenta, en el mismo orden que el resto de Plataforma.
@@ -62,7 +64,8 @@ internal sealed class PlatformAccountStateService(IUserRepository users, ISignIn
         await accounts.LockUserAsync(accountId, ct);
         var account = await users.GetByIdAsync(accountId, ct);
         if (account is null) return UserErrors.NotFound;
-        if (account.Version != request.Version!.Value) throw new ConcurrencyConflictException();
+        // Sin versión: bajo el lock manda el estado. Una cuenta eliminada no cambia, suspender exige una activa y
+        // reactivar una suspendida (ApplicationUser); cualquier otro caso es el error de estado, no un conflicto.
         if (account.Status == UserStatus.Deleted) return UserErrors.InvalidTransition;
         // ADR 0042: una invitación de operador sin aceptar solo se reenvía o se revoca.
         if (account.HasPendingOperatorInvitation) return PlatformOperatorErrors.InvitationPending;

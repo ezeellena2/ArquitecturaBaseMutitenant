@@ -56,7 +56,7 @@ public sealed class PlatformAccountsController(IPlatformAccountService service,
     [ProducesProblem(StatusCodes.Status403Forbidden)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     [ProducesProblem(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Suspend(Guid id, [FromBody] PlatformAccountActionHttpRequest request, CancellationToken ct) =>
+    public async Task<IActionResult> Suspend(Guid id, [FromBody] PlatformAccountReasonHttpRequest request, CancellationToken ct) =>
         (await states.SuspendAsync(id, request.ToModel(), ct)).ToActionResult(this);
 
     [HttpPost("{id:guid}/reactivate")]
@@ -68,7 +68,7 @@ public sealed class PlatformAccountsController(IPlatformAccountService service,
     [ProducesProblem(StatusCodes.Status403Forbidden)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     [ProducesProblem(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Reactivate(Guid id, [FromBody] PlatformAccountActionHttpRequest request, CancellationToken ct) =>
+    public async Task<IActionResult> Reactivate(Guid id, [FromBody] PlatformAccountReasonHttpRequest request, CancellationToken ct) =>
         (await states.ReactivateAsync(id, request.ToModel(), ct)).ToActionResult(this);
 
     [HttpPost("{id:guid}/revoke-sessions")]
@@ -80,7 +80,7 @@ public sealed class PlatformAccountsController(IPlatformAccountService service,
     [ProducesProblem(StatusCodes.Status403Forbidden)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     [ProducesProblem(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> RevokeSessions(Guid id, [FromBody] PlatformAccountActionHttpRequest request, CancellationToken ct) =>
+    public async Task<IActionResult> RevokeSessions(Guid id, [FromBody] PlatformAccountReasonHttpRequest request, CancellationToken ct) =>
         (await states.RevokeSessionsAsync(id, request.ToModel(), ct)).ToActionResult(this);
 
     [HttpPost("{id:guid}/deletion")]
@@ -92,6 +92,6 @@ public sealed class PlatformAccountsController(IPlatformAccountService service,
     [ProducesProblem(StatusCodes.Status403Forbidden)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     [ProducesProblem(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> RequestDeletion(Guid id, [FromBody] PlatformAccountActionHttpRequest request, CancellationToken ct) =>
+    public async Task<IActionResult> RequestDeletion(Guid id, [FromBody] PlatformAccountReasonHttpRequest request, CancellationToken ct) =>
         (await deletions.RequestDeletionAsync(id, request.ToModel(), ct)).ToActionResult(this);
 }

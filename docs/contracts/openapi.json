@@ -739,17 +739,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PlatformAccountActionHttpRequest"
+                "$ref": "#/components/schemas/PlatformAccountReasonHttpRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/PlatformAccountActionHttpRequest"
+                "$ref": "#/components/schemas/PlatformAccountReasonHttpRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/PlatformAccountActionHttpRequest"
+                "$ref": "#/components/schemas/PlatformAccountReasonHttpRequest"
               }
             }
           },
@@ -842,17 +842,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PlatformAccountActionHttpRequest"
+                "$ref": "#/components/schemas/PlatformAccountReasonHttpRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/PlatformAccountActionHttpRequest"
+                "$ref": "#/components/schemas/PlatformAccountReasonHttpRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/PlatformAccountActionHttpRequest"
+                "$ref": "#/components/schemas/PlatformAccountReasonHttpRequest"
               }
             }
           },
@@ -945,17 +945,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PlatformAccountActionHttpRequest"
+                "$ref": "#/components/schemas/PlatformAccountReasonHttpRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/PlatformAccountActionHttpRequest"
+                "$ref": "#/components/schemas/PlatformAccountReasonHttpRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/PlatformAccountActionHttpRequest"
+                "$ref": "#/components/schemas/PlatformAccountReasonHttpRequest"
               }
             }
           },
@@ -1048,17 +1048,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PlatformAccountActionHttpRequest"
+                "$ref": "#/components/schemas/PlatformAccountReasonHttpRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/PlatformAccountActionHttpRequest"
+                "$ref": "#/components/schemas/PlatformAccountReasonHttpRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/PlatformAccountActionHttpRequest"
+                "$ref": "#/components/schemas/PlatformAccountReasonHttpRequest"
               }
             }
           },
@@ -14334,7 +14334,8 @@
               "string"
             ]
           }
-        }
+        },
+        "description": "Decidir un pedido de recuperación o quitar a un operador: la versión vista de esa fila y el motivo."
       },
       "PlatformAccountDeletionResponse": {
         "required": [
@@ -14605,6 +14606,18 @@
           }
         },
         "description": "EndedAtUtc sale del último SecurityEvent de fin de membresía de esa cuenta; sin evidencia queda null."
+      },
+      "PlatformAccountReasonHttpRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "description": "Suspender, reactivar, cerrar sesiones y dar de baja una cuenta: solo el motivo, sin versión."
       },
       "PlatformAccountResponse": {
         "required": [

@@ -5,5 +5,5 @@ namespace ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 
 public interface IPlatformAccountDeletionService
 {
-    Task<Result> RequestDeletionAsync(Guid accountId, PlatformAccountActionRequest request, CancellationToken ct);
+    Task<Result> RequestDeletionAsync(Guid accountId, PlatformAccountReasonRequest request, CancellationToken ct);
 }

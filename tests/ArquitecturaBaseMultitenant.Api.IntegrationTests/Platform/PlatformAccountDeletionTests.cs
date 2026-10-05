@@ -40,10 +40,10 @@ public sealed class PlatformAccountDeletionTests(ApiFactory factory)
         var outboxBefore = await OutboxIdsAsync(account.UserId);
 
         using var withoutReason = await PlatformJourney.PostAsync(platform, path,
-            new { version = await VersionAsync(platform, account.UserId), reason = " " }, Ct);
+            new { reason = " " }, Ct);
         Assert.Equal(HttpStatusCode.BadRequest, withoutReason.StatusCode);
         using var requested = await PlatformJourney.PostAsync(platform, path,
-            new { version = await VersionAsync(platform, account.UserId), reason = "Pedido legal recibido por correo." }, Ct);
+            new { reason = "Pedido legal recibido por correo." }, Ct);
 
         Assert.Equal(HttpStatusCode.NoContent, requested.StatusCode);
         using var me = await person.GetAsync("/api/me", Ct);
@@ -55,7 +55,7 @@ public sealed class PlatformAccountDeletionTests(ApiFactory factory)
         Assert.Equal(TimeSpan.FromDays(30), deletion.GetProperty("scheduledForUtc").GetDateTime()
             - deletion.GetProperty("requestedAtUtc").GetDateTime());
         using var again = await PlatformJourney.PostAsync(platform, path,
-            new { version = await VersionAsync(platform, account.UserId), reason = "Otra vez" }, Ct);
+            new { reason = "Otra vez" }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, again.StatusCode);
         Assert.Equal("Legal.AccountDeletion.AlreadyPending", await CodeAsync(again));
 
@@ -99,13 +99,13 @@ public sealed class PlatformAccountDeletionTests(ApiFactory factory)
         var account = await AccountJourney.RegisterAsync(factory, person, Ct);
         var accounts = $"/api/platform/accounts/{account.UserId:D}";
         using var suspended = await PlatformJourney.PostAsync(platform, accounts + "/suspend",
-            new { version = await VersionAsync(platform, account.UserId), reason = "Denuncia" }, Ct);
+            new { reason = "Denuncia" }, Ct);
         Assert.Equal(HttpStatusCode.NoContent, suspended.StatusCode);
         var support = await ConfigureSupportEmailAsync(platform);
         var outboxBefore = await OutboxIdsAsync(account.UserId);
 
         using var requested = await PlatformJourney.PostAsync(platform, accounts + "/deletion",
-            new { version = await VersionAsync(platform, account.UserId), reason = "Cierre por denuncia" }, Ct);
+            new { reason = "Cierre por denuncia" }, Ct);
 
         Assert.Equal(HttpStatusCode.NoContent, requested.StatusCode);
         var detail = await DetailAsync(platform, account.UserId);
@@ -130,7 +130,7 @@ public sealed class PlatformAccountDeletionTests(ApiFactory factory)
         Assert.Equal(AccountErrors.SuspendedCode, await CodeAsync(verified));
 
         using var reactivated = await PlatformJourney.PostAsync(platform, accounts + "/reactivate",
-            new { version = await VersionAsync(platform, account.UserId), reason = "Se revisó" }, Ct);
+            new { reason = "Se revisó" }, Ct);
         Assert.Equal(HttpStatusCode.NoContent, reactivated.StatusCode);
         Assert.Equal("PendingDeletion", (await DetailAsync(platform, account.UserId)).GetProperty("state").GetString());
     }
@@ -158,23 +158,23 @@ public sealed class PlatformAccountDeletionTests(ApiFactory factory)
         await OrganizationAsync(isolated, "Cerrada", ownerAccount.UserId, TenantStatus.Closed);
 
         using var withoutPermission = await PlatformJourney.PostAsync(reader, $"/api/platform/accounts/{ownerAccount.UserId:D}/deletion",
-            new { version = await VersionAsync(reader, ownerAccount.UserId), reason = "Sin permiso" }, Ct);
+            new { reason = "Sin permiso" }, Ct);
         Assert.Equal(HttpStatusCode.Forbidden, withoutPermission.StatusCode);
         // Una organización suspendida no está cerrada: su único Dueño no se da de baja; la cerrada no cuenta.
         var ownerDetail = await DetailAsync(support, ownerAccount.UserId);
         Assert.Equal(["Suspendida"], ownerDetail.GetProperty("soleOwnerOrganizations").EnumerateArray()
             .Select(item => item.GetString()!));
         using var soleOwner = await PlatformJourney.PostAsync(support, $"/api/platform/accounts/{ownerAccount.UserId:D}/deletion",
-            new { version = await VersionAsync(support, ownerAccount.UserId), reason = "Pedido legal" }, Ct);
+            new { reason = "Pedido legal" }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, soleOwner.StatusCode);
         Assert.Equal("Legal.AccountDeletion.LastAdmin", await CodeAsync(soleOwner));
 
         using var lastManager = await PlatformJourney.PostAsync(support, $"/api/platform/accounts/{managerAccount.UserId:D}/deletion",
-            new { version = await VersionAsync(support, managerAccount.UserId), reason = "Pedido legal" }, Ct);
+            new { reason = "Pedido legal" }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, lastManager.StatusCode);
         Assert.Equal(PlatformOperatorErrors.LastManagerCode, await CodeAsync(lastManager));
         using var self = await PlatformJourney.PostAsync(support, $"/api/platform/accounts/{supportAccount.UserId:D}/deletion",
-            new { version = await VersionAsync(support, supportAccount.UserId), reason = "Prueba" }, Ct);
+            new { reason = "Prueba" }, Ct);
         Assert.Equal(HttpStatusCode.Forbidden, self.StatusCode);
         Assert.Equal(UserErrors.CannotModifySelfCode, await CodeAsync(self));
 
@@ -186,7 +186,7 @@ public sealed class PlatformAccountDeletionTests(ApiFactory factory)
             await command.ExecuteNonQueryAsync(Ct);
         }
         using var allowed = await PlatformJourney.PostAsync(support, $"/api/platform/accounts/{ownerAccount.UserId:D}/deletion",
-            new { version = await VersionAsync(support, ownerAccount.UserId), reason = "Pedido legal" }, Ct);
+            new { reason = "Pedido legal" }, Ct);
         Assert.Equal(HttpStatusCode.NoContent, allowed.StatusCode);
     }
 
@@ -199,9 +199,6 @@ public sealed class PlatformAccountDeletionTests(ApiFactory factory)
         Assert.True(response.StatusCode == HttpStatusCode.OK, await response.Content.ReadAsStringAsync(Ct));
         return JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct)).RootElement.Clone();
     }
-
-    private static async Task<uint> VersionAsync(HttpClient client, Guid accountId) =>
-        (await DetailAsync(client, accountId)).GetProperty("version").GetUInt32();
 
     /// <summary>Carga el correo de soporte en Configuración sin cambiar las demás reglas.</summary>
     private static async Task<string> ConfigureSupportEmailAsync(HttpClient platform)

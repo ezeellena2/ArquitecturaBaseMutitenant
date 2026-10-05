@@ -691,7 +691,7 @@ ArquitecturaBaseMultitenant.Application/
 │   ├── Platform/                                     [E5]
 │   │   ├── UpdatePlatformSettingsRequestValidator.cs
 │   │   ├── ListPlatformAuditRequestValidator.cs      Período y tipo de la lista cerrada del tablero
-│   │   ├── PlatformAccountRequestValidators.cs       Versión y motivo de una acción del operador
+│   │   ├── PlatformAccountRequestValidators.cs       Motivo de una acción sobre una cuenta; versión y motivo en recuperaciones y operadores
 │   │   ├── PlatformOperatorRequestValidators.cs      Exige el correo
 │   │   ├── PlatformTenantRequestValidators.cs        validadores del listado, el alta y el estado de organizaciones
 │   │   ├── PublishLegalDocumentRequestValidator.cs   Tipo, fecha y textos presentes
@@ -1397,7 +1397,7 @@ ArquitecturaBaseMultitenant.Api/
 │   ├── PublicSite/                                    [E7]
 │   │   └── DirectoryQuery.cs
 │   ├── Platform/                                      [E5]
-│   │   ├── PlatformAccountHttpRequests.cs             filtros de Cuentas y pedido de una acción con motivo
+│   │   ├── PlatformAccountHttpRequests.cs             filtros de Cuentas y pedidos de una acción con motivo (las de cuenta, sin versión)
 │   │   ├── PlatformAuditQuery.cs                      filtros de la auditoría de Plataforma
 │   │   ├── PlatformOperatorHttpRequests.cs            invitar un operador y cambiar sus permisos
 │   │   ├── PlatformRecoveryHttpRequests.cs            filtros de la bandeja Recuperaciones

@@ -252,14 +252,13 @@ public sealed class PlatformOperatorTests(ApiFactory factory)
         var (manager, _) = await OperatorAsync(PlatformOperators.All);
         var (id, _) = await InviteAsync(manager, [PlatformPermissions.Operators.Manage]);
         var detail = await DetailAsync(manager, id);
-        var version = detail.GetProperty("version").GetUInt32();
         var operatorVersion = detail.GetProperty("operatorVersion").GetUInt32();
 
         foreach (var (method, path, body) in new (HttpMethod, string, object)[]
                  {
-                     (HttpMethod.Post, $"/api/platform/accounts/{id:D}/suspend", new { version, reason = "Prueba" }),
-                     (HttpMethod.Post, $"/api/platform/accounts/{id:D}/revoke-sessions", new { version, reason = "Prueba" }),
-                     (HttpMethod.Post, $"/api/platform/accounts/{id:D}/deletion", new { version, reason = "Prueba" }),
+                     (HttpMethod.Post, $"/api/platform/accounts/{id:D}/suspend", new { reason = "Prueba" }),
+                     (HttpMethod.Post, $"/api/platform/accounts/{id:D}/revoke-sessions", new { reason = "Prueba" }),
+                     (HttpMethod.Post, $"/api/platform/accounts/{id:D}/deletion", new { reason = "Prueba" }),
                      (HttpMethod.Put, $"/api/platform/accounts/{id:D}/operator",
                          new { version = operatorVersion, reason = "Prueba", permissions = new[] { PlatformPermissions.Audit.Read } }),
                      (HttpMethod.Delete, $"/api/platform/accounts/{id:D}/operator", new { version = operatorVersion, reason = "Prueba" }),

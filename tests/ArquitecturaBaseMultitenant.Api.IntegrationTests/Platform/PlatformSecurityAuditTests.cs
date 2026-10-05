@@ -25,7 +25,7 @@ public sealed class PlatformSecurityAuditTests(ApiFactory factory)
         foreach (var (action, reason) in new[] { ("suspend", "1"), ("reactivate", "2"), ("revoke-sessions", "3") })
         {
             using var done = await PlatformJourney.PostAsync(platform, $"/api/platform/accounts/{account.UserId:D}/{action}",
-                new { version = await VersionAsync(platform, account.UserId), reason = $"{tag} {reason}" }, Ct);
+                new { reason = $"{tag} {reason}" }, Ct);
             Assert.Equal(HttpStatusCode.NoContent, done.StatusCode);
         }
 
@@ -130,12 +130,5 @@ public sealed class PlatformSecurityAuditTests(ApiFactory factory)
         using var response = await client.GetAsync("/api/platform/audit" + suffix, Ct);
         Assert.True(response.StatusCode == HttpStatusCode.OK, await response.Content.ReadAsStringAsync(Ct));
         return JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct)).RootElement.Clone();
-    }
-
-    private static async Task<uint> VersionAsync(HttpClient client, Guid accountId)
-    {
-        using var response = await client.GetAsync($"/api/platform/accounts/{accountId:D}", Ct);
-        Assert.True(response.StatusCode == HttpStatusCode.OK, await response.Content.ReadAsStringAsync(Ct));
-        return JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct)).RootElement.GetProperty("version").GetUInt32();
     }
 }

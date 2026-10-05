@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
@@ -16,7 +17,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Platform;
 
-/// <summary>Suspender, reactivar y cerrar sesiones de una cuenta desde Plataforma, con motivo, versión y evento.</summary>
+/// <summary>
+/// Suspender, reactivar y cerrar sesiones de una cuenta desde Plataforma, con motivo y evento. No llevan versión: las
+/// protege el estado de cada transición, bajo el lock de la cuenta.
+/// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class PlatformAccountStateTests(ApiFactory factory)
 {
@@ -29,7 +33,7 @@ public sealed class PlatformAccountStateTests(ApiFactory factory)
         foreach (var action in new[] { "suspend", "reactivate", "revoke-sessions" })
         {
             using var response = await PlatformJourney.PostAsync(anonymous, $"/api/platform/accounts/{Guid.NewGuid():D}/{action}",
-                new { version = 1u, reason = "Sin sesión" }, Ct);
+                new { reason = "Sin sesión" }, Ct);
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
 
@@ -45,43 +49,41 @@ public sealed class PlatformAccountStateTests(ApiFactory factory)
         var account = await AccountJourney.RegisterAsync(factory, person, Ct);
         var path = $"/api/platform/accounts/{account.UserId:D}";
 
-        var original = await VersionAsync(platform, account.UserId);
         using var withoutPermission = await PlatformJourney.PostAsync(reader, path + "/suspend",
-            new { version = original, reason = "Sin permiso" }, Ct);
+            new { reason = "Sin permiso" }, Ct);
         Assert.Equal(HttpStatusCode.Forbidden, withoutPermission.StatusCode);
-        using var withoutReason = await PlatformJourney.PostAsync(platform, path + "/suspend", new { version = original, reason = " " }, Ct);
+        using var withoutReason = await PlatformJourney.PostAsync(platform, path + "/suspend", new { reason = " " }, Ct);
         Assert.Equal(HttpStatusCode.BadRequest, withoutReason.StatusCode);
-        using var withoutVersion = await PlatformJourney.PostAsync(platform, path + "/suspend", new { reason = "Denuncia" }, Ct);
-        Assert.Equal(HttpStatusCode.BadRequest, withoutVersion.StatusCode);
         using var missing = await PlatformJourney.PostAsync(platform, $"/api/platform/accounts/{Guid.NewGuid():D}/suspend",
-            new { version = original, reason = "Denuncia" }, Ct);
+            new { reason = "Denuncia" }, Ct);
         Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
 
         using var suspended = await PlatformJourney.PostAsync(platform, path + "/suspend",
-            new { version = original, reason = "Denuncia de uso indebido." }, Ct);
+            new { reason = "Denuncia de uso indebido." }, Ct);
         Assert.Equal(HttpStatusCode.NoContent, suspended.StatusCode);
         using var personAfterSuspension = await person.GetAsync("/api/me", Ct);
         Assert.Equal(HttpStatusCode.Unauthorized, personAfterSuspension.StatusCode);
         Assert.Equal("Suspended", (await DetailAsync(platform, account.UserId)).GetProperty("state").GetString());
         using var twice = await PlatformJourney.PostAsync(platform, path + "/suspend",
-            new { version = await VersionAsync(platform, account.UserId), reason = "Otra vez" }, Ct);
+            new { reason = "Otra vez" }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, twice.StatusCode);
         Assert.Equal(UserErrors.InvalidTransitionCode, await CodeAsync(twice));
 
-        using var stale = await PlatformJourney.PostAsync(platform, path + "/reactivate",
-            new { version = original, reason = "Versión vieja" }, Ct);
-        Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
         using var reactivated = await PlatformJourney.PostAsync(platform, path + "/reactivate",
-            new { version = await VersionAsync(platform, account.UserId), reason = "Revisión terminada." }, Ct);
+            new { reason = "Revisión terminada." }, Ct);
         Assert.Equal(HttpStatusCode.NoContent, reactivated.StatusCode);
         Assert.Equal("Active", (await DetailAsync(platform, account.UserId)).GetProperty("state").GetString());
+        // Reactivar solo sirve para una cuenta suspendida: repetirlo da el error de estado, no un conflicto de versión.
+        using var reactivatedTwice = await PlatformJourney.PostAsync(platform, path + "/reactivate",
+            new { reason = "Otra vez" }, Ct);
+        Assert.Equal(HttpStatusCode.Conflict, reactivatedTwice.StatusCode);
+        Assert.Equal(UserErrors.InvalidTransitionCode, await CodeAsync(reactivatedTwice));
         await SignInAgainAsync(person, account);
         using var personAfterReactivation = await person.GetAsync("/api/me", Ct);
         Assert.Equal(HttpStatusCode.OK, personAfterReactivation.StatusCode);
 
-        var beforeRevocation = await VersionAsync(platform, account.UserId);
         var revokeKey = Guid.NewGuid().ToString("D");
-        var revokeBody = new { version = beforeRevocation, reason = "Pidió cerrar sus sesiones." };
+        var revokeBody = new { reason = "Pidió cerrar sus sesiones." };
         using var revoked = await PostWithKeyAsync(platform, path + "/revoke-sessions", revokeBody, revokeKey);
         Assert.Equal(HttpStatusCode.NoContent, revoked.StatusCode);
         using var replay = await PostWithKeyAsync(platform, path + "/revoke-sessions", revokeBody, revokeKey);
@@ -89,7 +91,6 @@ public sealed class PlatformAccountStateTests(ApiFactory factory)
         using var personAfterRevocation = await person.GetAsync("/api/me", Ct);
         Assert.Equal(HttpStatusCode.Unauthorized, personAfterRevocation.StatusCode);
         Assert.Equal("Active", (await DetailAsync(platform, account.UserId)).GetProperty("state").GetString());
-        Assert.NotEqual(beforeRevocation, await VersionAsync(platform, account.UserId));
 
         await using var scope = factory.Services.CreateAsyncScope();
         var events = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().SecurityEvents.AsNoTracking()
@@ -127,7 +128,7 @@ public sealed class PlatformAccountStateTests(ApiFactory factory)
         }
 
         using var reactivated = await PlatformJourney.PostAsync(platform, $"/api/platform/accounts/{user.Id:D}/reactivate",
-            new { version = await VersionAsync(platform, user.Id), reason = "Se levanta la suspensión." }, Ct);
+            new { reason = "Se levanta la suspensión." }, Ct);
 
         Assert.Equal(HttpStatusCode.NoContent, reactivated.StatusCode);
         var detail = await DetailAsync(platform, user.Id);
@@ -156,13 +157,13 @@ public sealed class PlatformAccountStateTests(ApiFactory factory)
         var path = $"/api/platform/accounts/{managerAccount.UserId:D}/suspend";
 
         using var lastManager = await PlatformJourney.PostAsync(support, path,
-            new { version = await VersionAsync(support, managerAccount.UserId), reason = "Revisión" }, Ct);
+            new { reason = "Revisión" }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, lastManager.StatusCode);
         Assert.Equal(PlatformOperatorErrors.LastManagerCode, await CodeAsync(lastManager));
         Assert.Equal("Active", (await DetailAsync(support, managerAccount.UserId)).GetProperty("state").GetString());
 
         using var self = await PlatformJourney.PostAsync(support, $"/api/platform/accounts/{supportAccount.UserId:D}/suspend",
-            new { version = await VersionAsync(support, supportAccount.UserId), reason = "Prueba" }, Ct);
+            new { reason = "Prueba" }, Ct);
         Assert.Equal(HttpStatusCode.Forbidden, self.StatusCode);
         Assert.Equal(UserErrors.CannotModifySelfCode, await CodeAsync(self));
 
@@ -170,12 +171,126 @@ public sealed class PlatformAccountStateTests(ApiFactory factory)
         var secondManager = await AccountJourney.RegisterAsync(isolated, second, Ct);
         await PlatformOperators.GrantAsync(isolated.Services, secondManager.UserId, [PlatformPermissions.Operators.Manage], Ct);
         using var allowed = await PlatformJourney.PostAsync(support, path,
-            new { version = await VersionAsync(support, managerAccount.UserId), reason = "Revisión" }, Ct);
+            new { reason = "Revisión" }, Ct);
         Assert.Equal(HttpStatusCode.NoContent, allowed.StatusCode);
+    }
+
+    /// <summary>
+    /// Las acciones sobre una cuenta no llevan versión: la fila de la cuenta cambia con un ingreso, con los intentos
+    /// fallidos y su reinicio, con el contacto principal y con el sello de seguridad, y su versión daría un 409 falso.
+    /// Cada acción llega con una ficha leída antes de que la fila cambiara y no choca (docs/rules/concurrencia.md).
+    /// </summary>
+    [Fact]
+    public async Task A_write_to_the_account_between_the_sheet_and_the_action_does_not_conflict()
+    {
+        using var platform = Client(factory);
+        var operatorAccount = await AccountJourney.RegisterAsync(factory, platform, Ct);
+        await PlatformOperators.GrantAsync(factory.Services, operatorAccount.UserId, PlatformOperators.All, Ct);
+        await AccountJourney.AuthorizeAsync(platform, "platform", Ct);
+        using var person = Client(factory);
+        var account = await AccountJourney.RegisterAsync(factory, person, Ct);
+        var path = $"/api/platform/accounts/{account.UserId:D}";
+
+        // Suspender: con la ficha abierta, la persona escribe mal el código y después ingresa.
+        var seen = await VersionAsync(platform, account.UserId);
+        await SignInAgainAsync(person, account, mistypeFirst: true);
+        Assert.NotEqual(seen, await VersionAsync(platform, account.UserId));
+        using var suspended = await PlatformJourney.PostAsync(platform, path + "/suspend",
+            new { reason = "Denuncia de uso indebido." }, Ct);
+        Assert.Equal(HttpStatusCode.NoContent, suspended.StatusCode);
+        Assert.Equal("Suspended", (await DetailAsync(platform, account.UserId)).GetProperty("state").GetString());
+
+        // Reactivar: la fila cambia otra vez antes de actuar.
+        seen = await VersionAsync(platform, account.UserId);
+        await WriteToTheAccountAsync(account);
+        Assert.NotEqual(seen, await VersionAsync(platform, account.UserId));
+        using var reactivated = await PlatformJourney.PostAsync(platform, path + "/reactivate",
+            new { reason = "Revisión terminada." }, Ct);
+        Assert.Equal(HttpStatusCode.NoContent, reactivated.StatusCode);
+        Assert.Equal("Active", (await DetailAsync(platform, account.UserId)).GetProperty("state").GetString());
+
+        // Cerrar sesiones.
+        seen = await VersionAsync(platform, account.UserId);
+        await WriteToTheAccountAsync(account);
+        Assert.NotEqual(seen, await VersionAsync(platform, account.UserId));
+        using var revoked = await PlatformJourney.PostAsync(platform, path + "/revoke-sessions",
+            new { reason = "Pidió cerrar sus sesiones." }, Ct);
+        Assert.Equal(HttpStatusCode.NoContent, revoked.StatusCode);
+
+        // La baja.
+        seen = await VersionAsync(platform, account.UserId);
+        await WriteToTheAccountAsync(account);
+        Assert.NotEqual(seen, await VersionAsync(platform, account.UserId));
+        using var requested = await PlatformJourney.PostAsync(platform, path + "/deletion",
+            new { reason = "Pedido legal recibido por correo." }, Ct);
+        Assert.Equal(HttpStatusCode.NoContent, requested.StatusCode);
+        Assert.Equal("PendingDeletion", (await DetailAsync(platform, account.UserId)).GetProperty("state").GetString());
+    }
+
+    /// <summary>
+    /// Sin versión, lo único que separa dos acciones a la vez es el estado, bajo el lock de la cuenta: una gana y la otra
+    /// recibe el error de estado, nunca un conflicto de versión. Cerrar sesiones no cambia el estado: repetirla no choca.
+    /// </summary>
+    [Fact]
+    public async Task Two_contradictory_actions_at_once_one_wins_and_the_other_gets_the_state_error()
+    {
+        using var platform = Client(factory);
+        var operatorAccount = await AccountJourney.RegisterAsync(factory, platform, Ct);
+        await PlatformOperators.GrantAsync(factory.Services, operatorAccount.UserId, PlatformOperators.All, Ct);
+        await AccountJourney.AuthorizeAsync(platform, "platform", Ct);
+        using var person = Client(factory);
+        var account = await AccountJourney.RegisterAsync(factory, person, Ct);
+        var path = $"/api/platform/accounts/{account.UserId:D}";
+
+        var revocations = await TwoAtOnceAsync(platform, path + "/revoke-sessions");
+        Assert.All(revocations, response => Assert.Equal(HttpStatusCode.NoContent, response.StatusCode));
+        foreach (var revocation in revocations) revocation.Dispose();
+
+        await AssertOneWinsAsync(platform, path + "/suspend", UserErrors.InvalidTransitionCode);
+        Assert.Equal("Suspended", (await DetailAsync(platform, account.UserId)).GetProperty("state").GetString());
+        await AssertOneWinsAsync(platform, path + "/reactivate", UserErrors.InvalidTransitionCode);
+        Assert.Equal("Active", (await DetailAsync(platform, account.UserId)).GetProperty("state").GetString());
+        await AssertOneWinsAsync(platform, path + "/deletion", "Legal.AccountDeletion.AlreadyPending");
+        Assert.Equal("PendingDeletion", (await DetailAsync(platform, account.UserId)).GetProperty("state").GetString());
     }
 
     private static HttpClient Client(ApiFactory api) =>
         api.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+
+    /// <summary>Dos pedidos iguales a la vez, cada uno con su clave de idempotencia.</summary>
+    private static Task<HttpResponseMessage[]> TwoAtOnceAsync(HttpClient platform, string path) =>
+        Task.WhenAll(
+            PlatformJourney.PostAsync(platform, path, new { reason = "Primer pedido." }, Ct),
+            PlatformJourney.PostAsync(platform, path, new { reason = "Segundo pedido." }, Ct));
+
+    private static async Task AssertOneWinsAsync(HttpClient platform, string path, string loserCode)
+    {
+        var both = await TwoAtOnceAsync(platform, path);
+        try
+        {
+            Assert.Equal([HttpStatusCode.NoContent, HttpStatusCode.Conflict], both.Select(response => response.StatusCode).Order());
+            Assert.Equal(loserCode, await CodeAsync(both.Single(response => response.StatusCode == HttpStatusCode.Conflict)));
+        }
+        finally
+        {
+            foreach (var response in both) response.Dispose();
+        }
+    }
+
+    /// <summary>Lo que otro ingreso le hace a la fila de la cuenta: cuenta un intento fallido, lo reinicia y fija el contacto.</summary>
+    private async Task WriteToTheAccountAsync(AccountJourney account)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+        {
+            await services.GetRequiredService<IUserRepository>().SetPrimaryContactAsync(account.UserId, account.Email, null, ct);
+            var signIn = services.GetRequiredService<ISignInService>();
+            await signIn.RegisterFailedAttemptAsync(account.UserId, ct);
+            await signIn.ResetFailedAttemptsAsync(account.UserId, ct);
+            return Result.Success();
+        }, CommitPolicy.OnSuccess, Ct);
+    }
 
     private static async Task<JsonElement> DetailAsync(HttpClient client, Guid accountId)
     {
@@ -200,8 +315,9 @@ public sealed class PlatformAccountStateTests(ApiFactory factory)
         return await client.SendAsync(request, Ct);
     }
 
-    // La suspensión renovó el sello de seguridad: hay que volver a ingresar con un código nuevo.
-    private async Task SignInAgainAsync(HttpClient client, AccountJourney account)
+    // La suspensión renovó el sello de seguridad: hay que volver a ingresar con un código nuevo. Con mistypeFirst, la
+    // persona escribe mal el código una vez antes del bueno: cuenta un intento fallido y lo reinicia al ingresar.
+    private async Task SignInAgainAsync(HttpClient client, AccountJourney account, bool mistypeFirst = false)
     {
         await using (var connection = new NpgsqlConnection(factory.AdminConnectionString))
         {
@@ -217,6 +333,13 @@ public sealed class PlatformAccountStateTests(ApiFactory factory)
         using var requested = await AccountJourney.PostAsync(client, "/api/auth/login-code", new { email = account.Email.Value }, Ct);
         Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
         var code = await PickupCodeReader.ReadAsync(factory.Services, account.Email.Value, Ct);
+        if (mistypeFirst)
+        {
+            using var mistyped = await AccountJourney.PostAsync(client, "/api/auth/login-code/verify",
+                new { email = account.Email.Value, code = code == "000000" ? "000001" : "000000", returnUrl = "/invitacion" }, Ct);
+            Assert.False(mistyped.IsSuccessStatusCode);
+        }
+
         using var verified = await AccountJourney.PostAsync(client, "/api/auth/login-code/verify",
             new { email = account.Email.Value, code, returnUrl = "/invitacion" }, Ct);
         Assert.Equal(HttpStatusCode.OK, verified.StatusCode);
