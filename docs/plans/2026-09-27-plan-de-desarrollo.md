@@ -117,7 +117,7 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
 - [x] `App.tsx` con un router mínimo: `providers.tsx` solo con `QueryClientProvider`, `routes.tsx` con una ruta vacía y `test/setup.ts` mínimo, con jest-dom. Auth, i18n, rutas por host y módulos se agregan en sus etapas. Build, lint y test limpios. Commit `chore: esqueleto del SPA`.
 
 ### Tarea 0.7: el arnés
-- [x] `HarnessTests` en ArchitectureTests y `src/test/harness.test.ts` en el front, con las verificaciones de `arnes.md` §5 (back) y §4 (front) y una constante `HarnessStage` que se sube al cerrar cada etapa.
+- [x] `HarnessTests` en ArchitectureTests y `src/test/harness.test.ts` en el front, con las verificaciones de `arnes.md` §5 (back) y §4 (front) y `HarnessStage`, que hoy es la lista explícita `ClosedStages`: cada etapa se suma al cerrarla.
 - [x] Un `AGENTS.md` + `CLAUDE.md` (`@AGENTS.md`) en cada carpeta que crea la Etapa 0, según el mapa de `arnes.md` §3 (back) y §2 (front).
 - [x] `structure.test.ts` en el front (sin imports entre features ni entre áreas) y la regla `react/jsx-no-literals` en `.oxlintrc.json`.
 - [x] **Accesibilidad (P9):** `vitest-axe` instalado, `extend-expect` en `test/setup.ts` (sin i18n todavía) y el primer `toHaveNoViolations` en `App.test.tsx`.
@@ -341,7 +341,7 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
 
 **Back:**
 1. **"Registrá tu empresa"** (`POST /api/auth/business-signup`, en `/registro/empresa`, desde la portada y la puerta de empresas; nunca desde el acceso B2C), con `TenantProvisioner` idempotente, compartido con la plataforma. El slug es obligatorio: se elige ahí (`Slug`, `ReservedSlugs`), se comprueba su disponibilidad y se validan los reservados. Respeta `BusinessSignup` y `MaxOwnedOrganizations` (estados «Espera aprobación», «Alta cerrada» y «Llegó al límite» del tablero Registro-Empresa).
-1b. **Mi página pública:** `PublicPage` (nombre, logo, descripción y contacto; el slug es de la organización y vive en `Tenants`), en borrador o publicada, editable por quien tenga `publicpage.manage`. El slug se puede cambiar después en «Página pública», con la misma comprobación de disponibilidad. Si la plataforma la despublicó, queda en borrador bloqueada, con fecha y motivo (`PublishBlockedAtUtc`, `PublishBlockedReason` y `PublishBlockedByUserId`; `PublicPageStatus` sigue `Draft | Published`), y no se puede volver a publicar (`PublicSite.PublicPage.PublishBlocked`) hasta que la plataforma lo permita (estado «Despublicada por la plataforma» del tablero Pagina-Org). Ruta: `api/public-site`.
+1b. **Mi página pública:** `PublicPage` (nombre, logo, descripción y contacto; el slug es de la organización y vive en `Tenants`), en borrador o publicada, editable por quien tenga `publicpage.manage`. El slug se puede cambiar después en «Página pública», con la misma comprobación de disponibilidad. Si la plataforma la despublicó, queda en borrador bloqueada, con fecha y motivo (`PublishBlockedAtUtc`, `PublishBlockedReason` y `PublishBlockedByUserId`; `PublicPageStatus` sigue `Draft | Published`), y no se puede volver a publicar (`PublicSite.PublicPage.PublishBlocked`) hasta que la plataforma lo permita (estado «Despublicada por la plataforma» del tablero Pagina-Org). Ruta: `api/organization/public-page`.
 2. Usuarios (`api/users`), que parten de `Members`:
    - listado con filtros y conteos, y ficha;
    - invitar (`POST /api/users/invitations`, con `InvitationIssuer` de la 3c), reenviar y revocar la invitación (bajo `api/users/invitations/{id}`), editar, deshabilitar, habilitar y quitar de la organización;
@@ -442,7 +442,7 @@ Además, `navigation/personal.ts` queda listo para sumar módulos B2C. El `Perso
   - desde el ⋮, «Hacer principal» y «Quitar», con el código a otro método;
   - sin el módulo, no aparecen ni la fila ni la opción.
 - **No hay «Cambiar número»** (decisión del usuario del 2026-10-03): se agrega el nuevo y se quita el viejo.
-- **Textos nuevos** para los resources: «Verificar tu WhatsApp», «¿Quitar este WhatsApp?» y «¿Hacer principal este WhatsApp?». Se descartó «Este número ya está asociado a una cuenta.» por la ADR 0041. Las pantallas de WhatsApp de la plataforma y de las organizaciones llegan en la Etapa 11 (ADR 0038), ya dibujadas y aprobadas en el lienzo v65.
+- **Textos nuevos** para los resources: «Verificar tu WhatsApp», «¿Quitar este WhatsApp?» y «¿Hacer principal este WhatsApp?». Se descartó «Este número ya está asociado a una cuenta.» por la ADR 0041. Las pantallas de WhatsApp de la plataforma y de las organizaciones llegan en la Etapa 11 (ADR 0038), ya dibujadas y aprobadas en el lienzo (las de las organizaciones desde la v65; las de Plataforma, en la v80).
 
 **Puerta:** la general, más un recorrido real: con el webhook de Meta apuntando al túnel del multitenant (`configuracion.md` §4), ingresar con un código por WhatsApp y escribirle al bot. Además, **la prueba de fuego**: en una copia descartable, quitar el módulo siguiendo `quitar-whatsapp.md`, y el build y los tests del núcleo tienen que quedar en verde.
 

@@ -1,6 +1,6 @@
 # Arneses ejecutables: realinear la documentación y el código
 
-> **Estado:** propuesta para revisar. Nada de esto existe todavía.
+> **Estado:** implementado ([ADR 0037](../decisions/0037-arneses-ejecutables.md)); el uso está en [`scripts/arneses/README.md`](../../scripts/arneses/README.md).
 > **Primer arnés:** `realinear-docs`. La estructura queda lista para los que vengan.
 
 ## 1. Qué es y qué no es
@@ -84,7 +84,7 @@ docs/guides/agregar-un-arnes.md     receta paso a paso para un arnés nuevo
 | `docs/architecture/arnes.md` | fila `scripts/arneses/` en el mapa (§3); en §6, "al cerrar cada etapa se corre `realinear-docs`" |
 | `docs/architecture/arbol.md` | rama `scripts/arneses/`, `.agents/skills/arnes/` y la guía |
 | `docs/decisions/README.md` | fila 0037 con D1 a D9 |
-| `.github/workflows/ci.yml` | paso `node --test scripts/arneses` (0 tokens) y paso informativo `--detectar` con `continue-on-error` |
+| `.github/workflows/ci.yml` | paso `node --test "scripts/arneses/**/*.test.mjs"` (0 tokens) y paso informativo `--detectar` con `continue-on-error` |
 
 Los informes y el estado viven en `.local/arneses/` (ya está en `.gitignore`). Los worktrees, fuera del repo: `../.arneses/<repo>-<arnés>-<AAAAMMDD-HHmm>`, para que `HarnessTests` no recorra copias.
 
@@ -114,7 +114,7 @@ Sin dependencias npm: solo módulos de Node (`node:fs`, `node:path`, `node:child
     "codex":  { "nombre": "gpt-6.1-sol", "esfuerzo": "low", "minutosMaximos": 10 }
   },
   "verificacion": {
-    "back": ["node --test scripts/arneses",
+    "back": ["node --test \"scripts/arneses/**/*.test.mjs\"",
              "dotnet test --project tests/ArquitecturaBaseMultitenant.ArchitectureTests/ArquitecturaBaseMultitenant.ArchitectureTests.csproj -- --filter-class \"ArquitecturaBaseMultitenant.ArchitectureTests.HarnessTests\""],
     "front": ["npx vitest run src/test/harness.test.ts"]
   },
@@ -262,7 +262,7 @@ Por qué gasta poco, con cualquiera de los dos:
 | cuando quieras | `node scripts/arneses/arnes.mjs realinear-docs [--motor codex]`, o `/arnes realinear-docs` en Claude Code o en Codex | solo los `modelo` |
 | al cerrar cada etapa | paso de la puerta (arnes.md §6) | solo los `modelo` |
 | programado | `pwsh scripts/arneses/programar.ps1 -Arnes realinear-docs -Motor claude -Hora 03:00 -Dias Lun,Jue` (Programador de tareas de Windows; corre con tu usuario y deja la rama) | solo los `modelo` |
-| en cada push | CI: `node --test scripts/arneses` y `--detectar` informativo | 0 |
+| en cada push | CI: `node --test "scripts/arneses/**/*.test.mjs"` y `--detectar` informativo | 0 |
 
 ## 9. Un arnés nuevo
 
@@ -272,7 +272,7 @@ Ideas que esta estructura ya soporta: `revisar-textos` (claves resx sin uso o si
 
 ## 10. Fases y aceptación
 
-Cada fase: TDD con `node --test` (rojo → verde), un commit, y `node --test scripts/arneses` en verde.
+Cada fase: TDD con `node --test` (rojo → verde), un commit, y `node --test "scripts/arneses/**/*.test.mjs"` en verde.
 
 | Fase | Alcance | Se acepta cuando |
 |---|---|---|
