@@ -1,3 +1,4 @@
+using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Legal;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -93,6 +94,7 @@ public sealed class AccountDeletionParticipantsTests(ApiFactory factory)
         {
             using (tenantScope.Enter(target.TenantId))
             {
+                var entriesBefore = await context.Set<AuditEntry>().AsNoTracking().Select(row => row.Id).ToArrayAsync(Ct);
                 for (var repeat = 0; repeat < 2; repeat++)
                     await work.ExecuteInTransactionAsync(async ct =>
                     {
@@ -112,8 +114,15 @@ public sealed class AccountDeletionParticipantsTests(ApiFactory factory)
                     Assert.Equal(MemberStatus.Removed, member.Status);
                     Assert.Equal(MemberRemovalReason.AccountDeleted, member.RemovalReason);
                     Assert.Empty(await context.RoleAssignments.AsNoTracking().Where(row => row.MemberId == member.Id).ToArrayAsync(Ct));
-                    Assert.Single(await context.Set<AuditEntry>().AsNoTracking().Where(row => row.EntityId == member.Id
-                        && row.Action == AuditAction.Custom).ToArrayAsync(Ct));
+                    // Una sola entrada, «Quitó a …», como cualquier salida de la organización: el motivo va en su diff y
+                    // nadie suma otra a mano. Repetir la limpieza no deja otra.
+                    var removal = Assert.Single(await context.Set<AuditEntry>().AsNoTracking()
+                        .Where(row => !entriesBefore.Contains(row.Id)).ToArrayAsync(Ct));
+                    Assert.Equal((AuditAction.Updated, nameof(Member), member.Id),
+                        (removal.Action, removal.EntityType, removal.EntityId));
+                    using var changes = JsonDocument.Parse(removal.Changes);
+                    Assert.Equal((int)MemberRemovalReason.AccountDeleted,
+                        changes.RootElement.GetProperty(nameof(Member.RemovalReason)).GetProperty("new").GetInt32());
                     await work.ExecuteInTransactionAsync(async ct =>
                     {
                         // Aunque el alcance sea correcto, DELETE queda prohibido para una empresa.

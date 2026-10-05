@@ -3,7 +3,6 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Application.Models.Legal;
-using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
@@ -13,10 +12,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Identity.Deletion;
 
-/// <summary>Retira una membresía de la organización durante la baja de una cuenta y deja su auditoría en la transacción ya abierta. Exige que el worker haya entrado primero al tenant correcto.</summary>
+/// <summary>Retira una membresía de la organización durante la baja de una cuenta, en la transacción ya abierta. Su auditoría es la de cualquier salida, «Quitó a …» con el motivo, y la deja el interceptor. Exige que el worker haya entrado primero al tenant correcto.</summary>
 internal sealed class MembershipDeletionParticipant(ApplicationDbContext database, ITenantContext tenantContext,
     ILoginMethodReader loginMethods, IInvitationRepository invitations, IRoleAssignmentRepository assignments,
-    ITenantAdminLock tenantAdmins, ILastTenantAdminGuard tenantAdminGuard, IAuditLog audit) : AccountDeletionParticipant
+    ITenantAdminLock tenantAdmins, ILastTenantAdminGuard tenantAdminGuard) : AccountDeletionParticipant
 {
     public override async Task<IReadOnlyList<ArquitecturaBaseMultitenant.Domain.Results.Error>> CheckAsync(
         AccountDeletionContext context, CancellationToken ct)
@@ -54,8 +53,6 @@ internal sealed class MembershipDeletionParticipant(ApplicationDbContext databas
         }
         if (member.Remove(MemberRemovalReason.AccountDeleted).IsFailure)
             throw new InvalidOperationException("The account membership could not be removed.");
-        audit.Record(AuditAction.Custom, nameof(Member), member.Id,
-            new Dictionary<string, object?> { ["reason"] = nameof(MemberRemovalReason.AccountDeleted), ["userId"] = context.UserId });
     }
 
     private static Email? VerifiedEmail(LoginMethodRow method)
