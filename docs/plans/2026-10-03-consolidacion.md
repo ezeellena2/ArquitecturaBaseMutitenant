@@ -556,7 +556,7 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
   - los diálogos se montan solo cuando están abiertos y devuelven el foco al cerrar.
 - [x] **Estados** (front `e71daa4`; quedan colores sueltos en la Página pública y en el punto del dominio de Configuración, que van al pulido final) con `StatusBadge` y `statusTones` en Usuarios, Empresas y Miembros. Cada feature registra sus tonos, tipados por los enums del contrato, con el color del lienzo para cada estado.
 - [x] Los «Copiá de» del front vuelven a apuntar a Roles (`7e60004`).
-- [ ] **6c · Los formularios como Roles:** Usuario, Configuración, la Página pública y el perfil de Mi cuenta todavía usan borradores con `useState`. Pasan a React Hook Form con zod sin cambiar lo que se ve. Además, en los diálogos de verificar de Mi cuenta, el error del código va debajo de los casilleros y el título cambia en cada paso (Cuenta-Verificar, v107).
+- [x] **6c · Los formularios como Roles** (front `708b7e1` a `585c90e`; capturas en `b6c/`). Usuario, Configuración (con `AddDomainDialog`), la Página pública, Mi cuenta, «Invitar usuario» (`InviteUserDialog`), Aceptar términos y Registrá tu empresa usan React Hook Form con zod. `formularios.md` dice que todo formulario los usa: Usuario, Configuración, la Página pública y el perfil de Mi cuenta todavía usan borradores con `useState`. Pasan a React Hook Form con zod sin cambiar lo que se ve. Además, en los diálogos de verificar de Mi cuenta, el error del código va debajo de los casilleros y el título cambia en cada paso (Cuenta-Verificar, v107).
 - [ ] **Hecho cuando:**
   - `npm test` completo pasa;
   - las capturas de Roles, Rol, Empresas y Empresa coinciden con sus tableros.
@@ -564,6 +564,13 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
 ### 6d. Front: pulido final (antes de la puerta)
 
 Lo que dejaron las tandas 6a, 6b y 6c, y lo que el usuario decide con Diseño en la tanda del lienzo que sigue a v107:
+- [ ] **Bug de concurrencia (lo encontró 6c):** las pantallas de edición mandan la versión de la última relectura de fondo, no la de los datos con los que arrancó el formulario. Si otra persona cambió algo mientras la ficha estaba quieta, el guardado pisa ese cambio sin 409. Afecta a Roles, Usuario, Configuración, la Página pública y Mi cuenta. Se arregla en un solo lugar (la versión base se toma al iniciar o reiniciar el formulario), con su test en rojo y la regla en `concurrencia.md`. Tanda 6d-2.
+- [ ] en la tanda 6d-2 también:
+  - los colores de estado sueltos de la Página pública y de Configuración;
+  - `OtpInput` con error, solo con el borde rojo;
+  - el error del código de «Confirmá que sos vos», debajo de los casilleros;
+  - «Sin dominio» en el teléfono;
+  - el paso del código del ingreso: con React Hook Form, o anotado como excepción en `formularios.md`;
 - [ ] la miga «Empresas» sin enlace cuando no hay `companies.read`, como ya hace «‹»;
 - [ ] Auditoría usa `useCursorList`, sumándole `placeholderData` y `meta`, en lugar de su propio `useInfiniteQuery`. Una sola forma de listar con cursor, y `frontend.md` y `paginado-y-listados.md` dicen solo esa;
 - [ ] los diálogos de Empresa (`CompanyDialog`, `AddMemberDialog` y `MemberRolesDialog`) pasan a React Hook Form con zod, como pide `formularios.md`. Sale la excepción de `frontend.md`;
