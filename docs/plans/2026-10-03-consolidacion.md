@@ -451,7 +451,15 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
     - la franja de error de M-Usuario (v106);
     - el nombre de la empresa con su mensaje al tocar Guardar y el CUIT revisado al guardar, como pide Criterio · Formularios;
     - «Verificar» del dominio en el teléfono (el rótulo del TXT y «Copiar»).
-  - **R3c · Contratos y auditoría:**
+  - [x] **R3c · Contratos y auditoría** (front `f871389` a `13668d9`; 1045/1045 tests, lint, build y `contracts:check` en verde). Capturas en `r3c/`, contra v107.
+    - Los contratos están regenerados: alias a los `*HttpResponse`, sin `taxIdType`, la ruta de roles de una empresa, `PendingItem` con la empresa y `ActorKind`.
+    - Auditoría muestra el detalle como el tablero y el filtro «Quién» con Sistema y Plataforma. `organization-audit-contract.test.ts` está en verde, y los datos de las capturas tienen la forma nueva.
+    - «10 correos administrados» sale de `managedEmailCount`.
+    - A Diseño: los textos de «Quitar dominio» para 1 y 0, el orden de «Quién» y el detalle de Auditoría en el teléfono.
+  - [x] **R3f · Vista previa y flecha del menú** (front `a777eb0`, `08ca58f` y `054e4c8`; 1044/1044 tests):
+    - la vista previa usa `src/shared/ui/PublicPageCard.tsx` en un diálogo de 640 (`size="preview"`, excepción del criterio aprobada en v107) y en una hoja en el teléfono. La Etapa 7 reusa la tarjeta (T14 de su plan);
+    - la flecha para achicar usa `panelEdgeButtonClass`, como `.w-plegar`, en el menú o en Administración.
+  - Lo que pedía R3c:
     - `npm run contracts`: los `*HttpResponse`, `taxIdType`, los códigos nuevos, la ruta de roles de una empresa y la descripción de `/api/me`;
     - la pantalla de Auditoría con el contrato nuevo, `organization-audit-contract.test.ts` en verde y los datos de las capturas regenerados;
     - el correo del perfil activo en tu menú y «10 correos administrados» en Configuración;
