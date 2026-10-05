@@ -12,6 +12,8 @@ using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.RealE2ESetup;
@@ -48,6 +50,22 @@ internal static class InvitationCommand
                     new IssueInvitationRequest(email.Value, inviterId, InvitationChannel.Email), token), CommitPolicy.OnSuccess, ct);
             if (issued.IsFailure) throw new InvalidOperationException("The isolated invitation could not be issued.");
             result = new { invitationId = issued.Value, tenantId };
+        }
+        else if (kind == "expire")
+        {
+            // «Vencida» sale de la fecha (la invitación sigue pendiente): alcanza con poner el vencimiento un minuto
+            // en el pasado. Va directo a la base, sin dominio ni auditoría, porque ningún camino de la aplicación acorta
+            // una vigencia; la orden solo existe para que el recorrido real encuentre la invitación vencida.
+            var invitationId = command.RootElement.GetProperty("invitationId").GetGuid();
+            var destination = email.Value;
+            using var tenantScope = provider.GetRequiredService<ITenantScope>().Enter(tenantId);
+            var expiredAtUtc = provider.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime.AddMinutes(-1);
+            var updated = await provider.GetRequiredService<ApplicationDbContext>().Invitations
+                .Where(invitation => invitation.Id == invitationId && invitation.Destination == destination
+                    && invitation.Status == InvitationStatus.Pending)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(invitation => invitation.ExpiresAtUtc, expiredAtUtc), ct);
+            if (updated != 1) throw new InvalidOperationException("The isolated invitation could not be expired.");
+            result = new { expired = true };
         }
         else if (kind == "inspect-accesses")
         {
