@@ -29,6 +29,8 @@ La gestión conserva `LoginMethods.Value` como clave global del método. En Goog
 
 El `email` de `/api/me` es el del perfil activo, el que muestra el menú (el pie en la compu, «Más» en el teléfono): en una organización, el correo verificado que ella administra y, si no hay, el principal; en el perfil personal, el principal (lienzo v99, `ProfileServiceTests`).
 
+`effectivePermissions` de `/api/me` separa `organization`, `companies` y `platform`. La última lista contiene la asignación persistida del operador únicamente con `access=platform`, sin caché; en los otros accesos queda vacía. Un operador suspendido, con invitación pendiente o sin asignación tampoco recibe permisos. La lista plana `permissions` conserva los permisos de organización. La composición de estas tres listas vive en `ProfileEffectivePermissionsBuilder`, para mantener el tope de ocho dependencias de negocio de `ProfileSnapshotBuilder` (ADR 0039).
+
 | Operación | Ruta |
 |---|---|
 | Perfil global y versión | `GET/PUT /api/me` |

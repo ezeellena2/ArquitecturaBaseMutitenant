@@ -575,7 +575,7 @@ ArquitecturaBaseMultitenant.Application/
 │   ├── Profile/                                      [E3]
 │   │   ├── MeResponse.cs                             cuenta + acceso activo + espacio personal + organizaciones + permisos + preferencias efectivas (cultura, zona, moneda) + features
 │   │   ├── OrganizationSummary.cs                         id, nombre, slug y estado (para elegir organización)
-│   │   ├── EffectivePermissions.cs                   organización + por empresa
+│   │   ├── EffectivePermissions.cs                   organización + por empresa + Plataforma
 │   │   └── UpdateMeRequest.cs
 │   ├── PublicSite/                                   [E6–E7]
 │   │   ├── PublicPageResponse.cs                     [E6] nombre, logo, descripción, contacto, slug y estado
@@ -771,6 +771,7 @@ ArquitecturaBaseMultitenant.Application/
 │   ├── Profile/                                      [E3]
 │   │   ├── ProfileService.cs
 │   │   ├── ProfileSnapshotBuilder.cs             Compone la cuenta y sus accesos globales con las preferencias…
+│   │   ├── ProfileEffectivePermissionsBuilder.cs      Compone los permisos del acceso activo desde organización, empresas o Plataforma
 │   │   ├── ProfileRegistration.cs                Registra el perfil de la persona y sus preferencias
 │   │   └── ProfilePreferencesResolver.cs             Resuelve la moneda visible del perfil desde preferencias autorizadas y…
 │   ├── Roles/                                        [E4] ← ÁREA DE REFERENCIA

@@ -12830,7 +12830,8 @@
       "EffectivePermissions": {
         "required": [
           "organization",
-          "companies"
+          "companies",
+          "platform"
         ],
         "type": "object",
         "properties": {
@@ -12848,9 +12849,15 @@
                 "type": "string"
               }
             }
+          },
+          "platform": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
-        "description": "Permisos efectivos del acceso activo; los permisos por empresa se completan en E6."
+        "description": "Permisos efectivos del acceso activo, separados entre organización, empresas y Plataforma."
       },
       "Email": {
         "type": [

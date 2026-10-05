@@ -15,7 +15,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Profile;
 internal sealed class ProfileSnapshotBuilder(IUserRepository users, IUserTenantAccessReader accesses,
     ProfilePreferencesResolver preferences,
     ILoginMethodReader loginMethods, LoginMethodAvailabilityPolicy availability, LegalAcceptanceGuard legal,
-    IPermissionService permissions, IFeatureService features)
+    ProfileEffectivePermissionsBuilder permissions, IFeatureService features)
 {
     internal async Task<MeResponse?> BuildAsync(Guid userId, Access access, Guid? activeTenantId,
         CancellationToken cancellationToken)
@@ -37,18 +37,12 @@ internal sealed class ProfileSnapshotBuilder(IUserRepository users, IUserTenantA
         var currencyCode = await preferences.FindCurrencyCodeAsync(account.Culture, mayReadSettings, cancellationToken);
         var methods = await loginMethods.ListByUserIdAsync(userId, cancellationToken);
         var hasPersonalMethod = await availability.HasPersonalBackupAsync(userId, methods, cancellationToken);
-        var readsPermissions = access == Access.Business && mayReadSettings;
-        IReadOnlyList<string> organizationPermissions = readsPermissions
-            ? await permissions.GetOrganizationPermissionsAsync(userId, cancellationToken)
-            : [];
-        var companyPermissions = readsPermissions
-            ? await permissions.GetPermissionsByCompanyAsync(userId, cancellationToken)
-            : new Dictionary<Guid, IReadOnlyList<string>>();
+        var effectivePermissions = await permissions.BuildAsync(userId, access, mayReadSettings, cancellationToken);
 
         return new MeResponse(account.Id, account.DisplayName,
             ManagedEmail(methods, access, activeTenantId) ?? account.PrimaryEmail, access,
             activeTenantId, personalSpace, organizations,
-            new EffectivePermissions(organizationPermissions, companyPermissions),
+            effectivePermissions,
             account.Culture, account.TimeZoneId, currencyCode,
             mayReadSettings ? await features.ListEnabledAsync(cancellationToken) : [])
         {

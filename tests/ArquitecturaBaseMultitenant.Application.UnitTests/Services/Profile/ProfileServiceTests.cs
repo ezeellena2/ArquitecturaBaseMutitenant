@@ -10,20 +10,23 @@ using ArquitecturaBaseMultitenant.Application.Services.Legal;
 using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Application.Services.Profile;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
+using ArquitecturaBaseMultitenant.Application.Services.Roles;
 using ArquitecturaBaseMultitenant.Application.UnitTests.TestDoubles;
 using ArquitecturaBaseMultitenant.Application.Validation.Profile;
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Services.Profile;
 
 /// <summary>
-/// Comprueba preferencias y advertencias de métodos de ingreso del perfil. Exige cultura y zona habilitadas
-/// y un método propio utilizable.
+/// Comprueba preferencias, permisos por acceso y advertencias de métodos de ingreso del perfil. Exige cultura y
+/// zona habilitadas y un método propio utilizable; los permisos de Plataforma siempre reflejan la asignación vigente.
 /// </summary>
 public sealed class ProfileServiceTests
 {
@@ -45,7 +48,8 @@ public sealed class ProfileServiceTests
         var snapshots = new ProfileSnapshotBuilder(new StubUsers(Account(id)), new StubAccesses([]),
             new ProfilePreferencesResolver(new StubSettings(null), catalog, catalog), new StubMethods([method]),
             new LoginMethodAvailabilityPolicy([], new StubGoogle(available), new StubMemberships()),
-            new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider), new StubPermissions(), new StubFeatures());
+            new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider),
+            new ProfileEffectivePermissionsBuilder(new StubPermissions(), new StubPlatformPermissions()), new StubFeatures());
 
         var profile = await snapshots.BuildAsync(id, Access.Consumer, null, Ct);
 
@@ -70,7 +74,8 @@ public sealed class ProfileServiceTests
                 new(Guid.CreateVersion7(), LoginMethodType.Email, "ana@empresa-a.test", false, verifiedAtUtc, managedId),
             ]),
             new LoginMethodAvailabilityPolicy([], new StubGoogle(), new StubMemberships()),
-            new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider), new StubPermissions(), new StubFeatures());
+            new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider),
+            new ProfileEffectivePermissionsBuilder(new StubPermissions(), new StubPlatformPermissions()), new StubFeatures());
         Guid? activeTenantId = organization switch { "managed" => managedId, "unmanaged" => unmanagedId, _ => null };
 
         var profile = await snapshots.BuildAsync(id, access, activeTenantId, Ct);
@@ -227,6 +232,93 @@ public sealed class ProfileServiceTests
     }
 
     [Fact]
+    public async Task Platform_me_has_exactly_the_persisted_permissions_and_reads_changes_without_a_cache()
+    {
+        using var fixture = new ServiceFixture<ProfileService>();
+        var userId = Guid.CreateVersion7();
+        string[] assigned = [PlatformPermissions.Tenants.Read, PlatformPermissions.Audit.Read];
+        var assignments = new StubPlatformAssignments(assigned);
+        var service = CreateService(new StubCurrentUser(userId, Access.Platform), new FakeTenantContext(),
+            new StubUsers(Account(userId) with { IsPlatformOperator = true }), new StubAccesses([]),
+            new StubSettings(null), fixture, platformAssignments: assignments);
+
+        var first = await service.GetAsync(Ct);
+
+        Assert.True(first.IsSuccess);
+        Assert.Equal(assigned, first.Value.EffectivePermissions.Platform);
+        Assert.Empty(first.Value.EffectivePermissions.Organization);
+        Assert.Empty(first.Value.EffectivePermissions.Companies);
+        Assert.Empty(first.Value.Permissions);
+
+        assignments.Permissions = [PlatformPermissions.Audit.Read];
+        var changed = await service.GetAsync(Ct);
+        Assert.Equal([PlatformPermissions.Audit.Read], changed.Value.EffectivePermissions.Platform);
+    }
+
+    [Theory]
+    [InlineData(UserStatus.Suspended, true, true, false)]
+    [InlineData(UserStatus.PendingDeletion, true, true, false)]
+    [InlineData(UserStatus.Active, true, false, false)]
+    [InlineData(UserStatus.Active, false, true, false)]
+    [InlineData(UserStatus.Active, true, true, true)]
+    public async Task Platform_me_has_no_permissions_without_an_active_accepted_operator_and_assignment(
+        UserStatus status, bool isOperator, bool hasAssignment, bool hasPendingInvitation)
+    {
+        using var fixture = new ServiceFixture<ProfileService>();
+        var userId = Guid.CreateVersion7();
+        var account = Account(userId) with
+        {
+            Status = status,
+            IsPlatformOperator = isOperator,
+            OperatorInvitationExpiresAtUtc = hasPendingInvitation
+                ? fixture.TimeProvider.GetUtcNow().UtcDateTime.AddDays(7) : null,
+        };
+        var service = CreateService(new StubCurrentUser(userId, Access.Platform), new FakeTenantContext(),
+            new StubUsers(account), new StubAccesses([]), new StubSettings(null), fixture,
+            platformAssignments: new StubPlatformAssignments(hasAssignment ? [.. PlatformPermissions.All] : null));
+
+        var result = await service.GetAsync(Ct);
+
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Value.EffectivePermissions.Platform);
+        Assert.Empty(result.Value.Permissions);
+    }
+
+    [Theory]
+    [InlineData(Access.Consumer)]
+    [InlineData(Access.Business)]
+    public async Task Person_accesses_never_read_platform_permissions_and_keep_the_organization_and_company_permissions(
+        Access access)
+    {
+        using var fixture = new ServiceFixture<ProfileService>();
+        var userId = Guid.CreateVersion7();
+        var tenantId = Guid.CreateVersion7();
+        var companyId = Guid.CreateVersion7();
+        var accesses = new StubAccesses([
+            new(tenantId, TenantKind.Business, "Empresa A", "empresa-a", TenantStatus.Active,
+                MemberStatus.Active, null),
+        ]);
+        var platform = new StubPlatformPermissions([.. PlatformPermissions.All]);
+        var service = CreateService(new StubCurrentUser(userId, access),
+            new FakeTenantContext { TenantId = access == Access.Business ? tenantId : null },
+            new StubUsers(Account(userId)), accesses, new StubSettings(null), fixture,
+            permissions: new StubPermissions([Permissions.Users.Read],
+                new Dictionary<Guid, IReadOnlyList<string>> { [companyId] = [Permissions.Company.Members.Read] }),
+            platformPermissions: platform);
+
+        var result = await service.GetAsync(Ct);
+
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Value.EffectivePermissions.Platform);
+        Assert.Equal(0, platform.Calls);
+        Assert.Equal(access == Access.Business ? [Permissions.Users.Read] : [], result.Value.EffectivePermissions.Organization);
+        Assert.Equal(result.Value.EffectivePermissions.Organization, result.Value.Permissions);
+        if (access == Access.Business)
+            Assert.Equal([Permissions.Company.Members.Read], result.Value.EffectivePermissions.Companies[companyId]);
+        else Assert.Empty(result.Value.EffectivePermissions.Companies);
+    }
+
+    [Fact]
     public async Task Update_validates_before_transaction_then_writes_once()
     {
         var catalog = new JsonReferenceDataCatalog();
@@ -263,12 +355,17 @@ public sealed class ProfileServiceTests
 
     private static ProfileService CreateService(ICurrentUser current, ITenantContext context,
         IUserRepository users, IUserTenantAccessReader accesses, ITenantSettingsReader settings,
-        ServiceFixture<ProfileService> fixture, IUnitOfWork? unitOfWork = null, IFeatureService? features = null)
+        ServiceFixture<ProfileService> fixture, IUnitOfWork? unitOfWork = null, IFeatureService? features = null,
+        IPlatformPermissionAssignmentReader? platformAssignments = null, IPermissionService? permissions = null,
+        IPlatformPermissionService? platformPermissions = null)
     {
         var catalog = new JsonReferenceDataCatalog();
         var availability = new LoginMethodAvailabilityPolicy([], new StubGoogle(), new StubMemberships());
+        var effectivePermissions = new ProfileEffectivePermissionsBuilder(permissions ?? new StubPermissions(),
+            platformPermissions ?? new PlatformPermissionService(users, platformAssignments ?? new StubPlatformAssignments(null),
+                fixture.TimeProvider, NullLogger<PlatformPermissionService>.Instance));
         var snapshots = new ProfileSnapshotBuilder(users, accesses, new ProfilePreferencesResolver(settings, catalog, catalog), new StubMethods(),
-            availability, new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider), new StubPermissions(),
+            availability, new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider), effectivePermissions,
             features ?? new StubFeatures());
         return new ProfileService(current, context, snapshots, users, fixture.Validator,
             unitOfWork ?? new FakeUnitOfWork(), fixture.TimeProvider, fixture.Logger);
@@ -351,20 +448,40 @@ public sealed class ProfileServiceTests
             CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<LoginMethodRow>>(rows ?? []);
     }
 
-    private sealed class StubPermissions : IPermissionService
+    private sealed class StubPermissions(IReadOnlyList<string>? organization = null,
+        IReadOnlyDictionary<Guid, IReadOnlyList<string>>? companies = null) : IPermissionService
     {
         public Task<IReadOnlyList<string>> GetOrganizationPermissionsAsync(Guid userId, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<string>>([]);
+            Task.FromResult<IReadOnlyList<string>>(organization ?? []);
         public Task<IReadOnlyList<string>> GetCompanyPermissionsAsync(Guid userId, Guid companyId,
             CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<string>>([]);
         public Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> GetPermissionsByCompanyAsync(Guid userId,
             CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyDictionary<Guid, IReadOnlyList<string>>>(new Dictionary<Guid, IReadOnlyList<string>>());
+            Task.FromResult<IReadOnlyDictionary<Guid, IReadOnlyList<string>>>(companies ?? new Dictionary<Guid, IReadOnlyList<string>>());
         public Task<bool> HasPermissionAsync(Guid userId, string permission, CancellationToken cancellationToken) =>
             Task.FromResult(false);
         public Task<bool> HasCompanyPermissionAsync(Guid userId, Guid companyId, string permission,
             CancellationToken cancellationToken) => Task.FromResult(false);
         public Task InvalidateRoleAsync(Guid roleId, CancellationToken cancellationToken) => Task.CompletedTask;
+    }
+
+    private sealed class StubPlatformAssignments(string[]? permissions) : IPlatformPermissionAssignmentReader
+    {
+        public string[]? Permissions { get; set; } = permissions;
+        public Task<IReadOnlyList<string>?> FindPermissionsAsync(Guid userId, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<string>?>(Permissions);
+    }
+
+    private sealed class StubPlatformPermissions(IReadOnlyList<string>? assigned = null) : IPlatformPermissionService
+    {
+        public int Calls { get; private set; }
+        public Task<IReadOnlyList<string>> GetPermissionsAsync(Guid userId, CancellationToken ct)
+        {
+            Calls++;
+            return Task.FromResult<IReadOnlyList<string>>(assigned ?? []);
+        }
+        public Task<bool> HasPermissionAsync(Guid userId, string permission, CancellationToken ct) =>
+            throw new NotSupportedException();
     }
 
     private sealed class StubGoogle(bool enabled = false) : IGoogleAvailability { public bool IsEnabled => enabled; }

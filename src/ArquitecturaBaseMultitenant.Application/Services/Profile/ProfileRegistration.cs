@@ -11,6 +11,7 @@ internal static class ProfileRegistration
         services.AddScoped<IProfileService, ProfileService>();
         services.AddScoped<ProfilePreferencesResolver>();
         services.AddScoped<ProfileSnapshotBuilder>();
+        services.AddScoped<ProfileEffectivePermissionsBuilder>();
         return services;
     }
 }
