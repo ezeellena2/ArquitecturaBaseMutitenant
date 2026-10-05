@@ -614,15 +614,18 @@ Lo que dejaron las tandas 6a, 6b y 6c, y lo que el usuario decide con Diseño en
 
 ### 7. Puerta
 
-- [ ] `dotnet build` sin advertencias y `dotnet test` completo; `npm run build` y `npm test` completos.
-- [ ] E2E real de Playwright, con front y API reales y sin mocks:
+Verificada el 2026-10-05 en worktrees limpios: back `3d8af5e` y front `3cad8b6` (ver el informe). Lo que otras tandas
+commitearon después lo verifica el coordinador con una pasada corta.
+
+- [x] `dotnet build` sin advertencias y `dotnet test` completo; `npm run build` y `npm test` completos. Back: build con 0 advertencias y `dotnet test` con Docker **1652/1652** (7 m 53 s), `HarnessTests` 10/10. Front: `npm run build` en verde, `npm run lint` sin errores (7 avisos en `src`), `npm test` **1161/1161** (193 archivos), `harness.test.ts` 7/7 y `npm run contracts:check` en verde, después de `3cad8b6` (decisión 91).
+- [x] E2E real de Playwright, con front y API reales y sin mocks (`npm run test:e2e:real`, 14 m 26 s): **13 de 14 recorridos en verde**. Los dos casos que faltaban se sumaron en `bbb1074` (decisión 93); el de Plataforma sigue rojo hasta T20 a T23 de la Etapa 5 (decisión 94):
   - ingreso;
   - alta de un rol con nombre repetido y su corrección;
   - un Administrador de empresa en la ficha de su empresa, con búsqueda y estado de los miembros;
   - salir de Configuración sin guardar.
-- [ ] Capturas de **todas** las pantallas que ya existen de las etapas 1 a 6 contra el lienzo vigente, no solo de las tocadas, en la compu y en el teléfono. Lo pidió el usuario el 2026-10-04: todo hasta la 6 alineado. Cada diferencia se corrige o se le muestra al usuario para que decida.
-- [ ] `realinear-docs --detectar` sale 0 en los dos repos.
-- [ ] Informe en `docs/reviews/<fecha>-consolidacion.md`:
+- [x] Capturas de **todas** las pantallas que ya existen de las etapas 1 a 6 contra el lienzo vigente, no solo de las tocadas, en la compu y en el teléfono. Lo pidió el usuario el 2026-10-04: todo hasta la 6 alineado. Cada diferencia se corrige o se le muestra al usuario para que decida. **292 capturas** (146 estados) contra v107, en `docs/design/capturas/consolidacion/final/` del front (`f16c537`), con su [relevamiento](../../../ArquitecturaBaseMutitenantFront/docs/design/capturas/consolidacion/final/relevamiento.md): coinciden 18; de las 274 que difieren, 268 tienen algo nuevo (casi todo de unas pocas piezas comunes), 112 algo de otra etapa y 5 lo que está en curso por la sección 6e. Las diferencias nuevas van al usuario en el informe (decisión 92).
+- [x] `realinear-docs --detectar` sale 0 en los dos repos: automáticos 0, de modelo 0 y para vos 0, con el back en `3d8af5e` y el front en `f16c537` (decisión 95).
+- [x] Informe en [`docs/reviews/2026-10-05-consolidacion.md`](../reviews/2026-10-05-consolidacion.md):
   - lo hecho;
   - lo descartado, con los hallazgos que no se sostuvieron;
   - las «Decisiones tomadas».
@@ -934,3 +937,11 @@ Tanda final del back (bloque 2 y la fila por empresa de B4, 2026-10-05):
     - **El caso mixto:** quien tiene algún permiso de la organización, pero no `users.invite`, y administra una empresa ve Inicio-Org sin la fila de su empresa.
 
 Verificación (en `f9ac0d8`): `dotnet build` de la solución con 0 advertencias y `dotnet test` completo con Docker **1649/1649** (9m 24s). Durante el trabajo, en rojo y después en verde: `PermissionAuthorizationTests` 4/4 y `HomeTests` 3/3. Además, Empresas, Inicio, el inventario de rutas, OpenAPI y el aislamiento del inicio 23/23; arquitectura 146/146 (`HarnessTests` incluido); unitarios de Application 476/476; y `realinear-docs --detectar --repo back` en 0. Con los dos repos, el detector da 263 hallazgos, todos del front, que otra conversación está cambiando; esta tanda no lo tocó.
+
+Puerta (2026-10-05, [informe](../reviews/2026-10-05-consolidacion.md)):
+
+91. **`contracts:check` compara los tipos, no los bytes:** una copia nueva de Windows (`core.autocrlf`, por ejemplo un worktree) trae `schema.d.ts` con CRLF, y el chequeo fallaba con los mismos tipos. Ahora pasa los CRLF a LF antes de comparar (front `3cad8b6`, con su test en `contracts.test.ts`).
+92. **El relevamiento final, con las clases de hoy:** las diferencias se clasifican «de otra etapa», «en curso» (lo que esperaba una decisión del usuario, que se tomó el 2026-10-05) o «nueva». Los manifiestos de las etapas siguen siendo fotos: el catálogo les completa el contrato de hoy (el guardado responde `{ version }`, front `f00664f`) y le pasa a cada tablero el estado que mira la app, si el lienzo lo dibuja (front `68a74df` y `29b70ec`), con sus tests. Dos variantes de tablero se aplican solo al montarse y el arnés no las muestra («Diálogo: Sumar empresa: otra persona cambió esto» de Usuario y «Crear empresa: ya hay una con ese CUIT» de Empresas): quedan anotadas.
+93. **E2E real, los dos casos de la puerta:** el rol con nombre repetido (409 debajo del nombre y, corregido, 201 con otra `Idempotency-Key`) y salir de Configuración sin guardar («Seguir editando» conserva lo escrito y «Salir sin guardar» no manda nada). La auditoría ya no espera «Cambió los roles de …»: lee de la API el texto de la entrada («Invitó a …» desde 4f y 4g) y busca ese texto en la pantalla (front `bbb1074`).
+94. **El recorrido E2E de Plataforma sigue rojo:** es el «rojo por pantalla E5 ausente» de la Etapa 5. Hoy falla al entrar: desde `/plataforma`, el back responde `Tenancy.Access.PlatformOnly` y la app se queda en `/auth/callback`. El ingreso de Plataforma es T20.
+95. **El detector en un worktree:** `backend.md:31` nombra `ArquitecturaBase/Directory.Packages.props`, del repo hermano. En una carpeta sin ese hermano, `--detectar` da un hallazgo falso; la puerta corrió con el hermano al lado (un junction) y dio 0. No se cambia el doc.
