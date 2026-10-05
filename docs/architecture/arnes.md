@@ -114,9 +114,9 @@ Cada fila es una carpeta que lleva `AGENTS.md` + `CLAUDE.md`. Los punteros se es
 **Ejemplo de puntero** (`Application/Services/AGENTS.md`):
 
 ```markdown
-Servicios de casos de uso. Uno por área, con sus helpers (`Policy`, `Guard`, `Issuer`, `Verifier`, `Linker`).
+Servicios de casos de uso. Uno por área, con helpers de un sufijo de la lista cerrada de capas-y-flujo.md (`Policy`, `Guard`, `Issuer`…).
 No va acá: EF, HttpContext ni tipos de Infrastructure o Api.
-Antes de escribir, leé: docs/rules/guardado.md · result-y-errores.md · validacion.md · logs.md · multitenancy.md
+Antes de escribir, leé: docs/rules/capas-y-flujo.md · guardado.md · result-y-errores.md · validacion.md · logs.md · multitenancy.md
 Copiá de: Services/Roles/RoleService.cs (E4, el área de referencia).
 ```
 
