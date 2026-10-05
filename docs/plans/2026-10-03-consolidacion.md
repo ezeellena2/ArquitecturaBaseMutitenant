@@ -266,6 +266,15 @@ Las diferencias con el tablero Auditoria-Org (lienzo v104) que no eran de la tan
 - [x] **Palabras sin escribir ni dibujar:** el tablero no tiene otra palabra para «Invitación aceptada», «Invitación revocada» ni «Habilitó a». Quedan, y van a Diseño con las demás (decisión 72).
 - [x] **Hecho cuando** la suite completa del back pasa. Cumplido en `d64d50e`: `dotnet build` de la solución con 0 advertencias y `dotnet test` completo con Docker **1643/1644** (11m 27s). La única que falla es `HarnessTests.Closed_stage_verification_tests_and_tools_exist`, por ocho tests nombrados en los docs del front sin su (E#) (`accesibilidad.md`, `errores.md`, `formularios.md` y `tests.md` del front): no es del back.
 
+### 4g. Back: la auditoría de la organización, una entrada por acción y «Quién»
+
+Lo que faltaba del tablero Auditoria-Org (lienzo v106) después de la tanda 4f (decisiones 73 a 77).
+
+- [x] **Crear una empresa, una entrada:** dejaba «Creó la empresa …» y, aparte, «Agregó a» quien la creó. Hecho en `9b6c02f` (decisión 73): queda «Creó la empresa …» con solo «Nombre», como el tablero. Test `OrganizationAuditTests.Creating_a_company_leaves_one_entry_with_its_name_like_the_board`: rojo con dos entradas. `Someone_without_a_name_or_an_invitation_appears_with_their_masked_email` usaba ese «Agregó a»: ahora agrega a una empresa a otra cuenta sin nombre ni invitación.
+- [x] **Quitar a alguien de la organización, una entrada:** dejaba «Quitó a …», sus roles de la organización y una entrada por empresa. Hecho en `20f9fa5` (decisiones 74 y 75): queda «Quitó a …» con los roles que tenía. Test `Removing_a_person_from_the_organization_leaves_one_entry_with_the_roles_they_had`: rojo con tres entradas, y después con las filas en otro orden.
+- [x] **«Quién» con «Sistema» y «Plataforma»:** la lista ya los traía, sin identificador, pero el listado no filtraba por ellos. Hecho en `d52f518` (decisiones 76 y 77): el filtro `actorKind` y el orden del tablero; `openapi.json` regenerado. Test `Who_offers_the_system_and_the_platform_without_internal_ids_and_filters_by_them`: rojo por el orden («Plataforma» antes que «Sistema»); el filtro no existía.
+- [x] **Hecho cuando** la suite completa del back pasa. Cumplido en `d52f518`: `dotnet build` de la solución con 0 advertencias y `dotnet test` completo con Docker **1647/1647** (9 minutos), `HarnessTests` incluido.
+
 ### 5. Front: piezas comunes
 
 - [x] **F1 · El 403 bloquea la vista solo si viene de la consulta principal.** Front `fcde757`.
@@ -402,7 +411,20 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
   - el error genérico al guardar en M-Usuario va en la franja debajo de la barra, con el texto del back;
   - el relevamiento final captura también los estados nuevos de v106.
 - **R3 se parte en cuatro tandas.** R3a con R3d, y R3b con R3c, pueden ir en paralelo porque tocan archivos distintos:
-  - **R3a · Marco y listas:**
+  - [x] **R3a · Marco y listas** (front `2b4aac1` a `c86396b`; 1002/1003 tests, lint y build; falla solo `organization-audit-contract.test.ts`, de R3c). Capturas en `r3a/`, 130 imágenes contra v106.
+    - Piezas:
+      - `Topbar`, sin ☰;
+      - `Avatar`, con los tamaños del teléfono;
+      - `FilterBar`, de 36 × 360 y la caja de 58;
+      - `DataTable`, con `detail` y `StatusDetail`;
+      - `Pagination` y `LoadMore`;
+      - `Page`, con las pestañas;
+      - la fecha corta en `formatters` y `DateText`;
+      - `SectionFields`;
+      - `toastErrorWithCode`.
+    - El ⋮ de «Cómo entrás» ya coincidía: quedó fijado con su test.
+    - Lo del lienzo quedó en Diseño: las pestañas, «Vence…», el pie del paginado, «Para resolver» y la flecha del menú.
+    - Lo que pedía:
     - sin ☰ con sesión y el avatar con degradé en el teléfono (v104);
     - el buscador de 36 × 360;
     - la segunda línea de las filas (v92);
@@ -435,6 +457,8 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
     - los íconos de las pantallas de estado que dibuja el tablero: el edificio, el candado y el reloj, en `shared/ui/icons.tsx`;
     - los textos del paso del código, en un solo lugar (hoy están en `auth:login.*` y en `common:code.*`);
     - 6 px entre el texto y el enlace en los renglones de enlaces.
+    - se borra `SearchInput.tsx`, que no usa nadie;
+    - los límites viejos de tiempo que quedan en `RoleEditorPage` (5), `RolesPage` (2), `UsersPage` (5) y `UserDetailCompanyAssignments` (1): se sacan o llevan su comentario.
   - [x] **R3d · Ingreso y registro** (front `60f2507` a `3cc7f64`; 993/994 tests, lint y build). Falla solo `organization-audit-contract.test.ts`, que es de R3c.
     - La pieza común está en `src/areas/public/auth/components/` (`AuthStatus`, `AuthCodeStep`, `AuthMessage` y `AuthLink`). La usan el ingreso, los dos registros, la invitación, `CallbackPage`, la baja pedida y `EmailCodeForm`.
     - ADR 0041: «Ese correo ya lo usa otra cuenta» no está en la app.
@@ -746,8 +770,8 @@ Tanda 4f del back, la auditoría de la organización como su tablero (2026-10-04
     - Quitar de una empresa (o volver a sumar) es la membresía que cambia de estado: se lleva los roles de ese lugar, con el «después» vacío, y guarda la persona y la empresa como claves técnicas. Antes salía «Cambió una membresía de empresa», sin nombre ni empresa, porque un cambio de estado no trae la persona, y aparte «Cambió los roles de …».
     - Revocar: la invitación que pasa de pendiente a revocada se lleva el miembro, las membresías y los roles de esa persona en el mismo guardado. Al reenviar no, porque la persona sigue invitada: quedan la revocada y la nueva. Quitar de la organización a alguien invitado (solo por la API: la pantalla ofrece «Revocar invitación») también queda como la invitación.
     - Los resúmenes no cambian, porque el tablero no los dibuja: «Cambió el acceso de …» y «Cambió la invitación de …» (decisión 72).
-    - Quitar a alguien de la organización sigue dejando varias entradas: «Quitó a …», sus roles de la organización y una por empresa. No era de este ítem.
-70. **Sin nombre ni invitación, por su correo:** su correo verificado, primero el principal, enmascarado, como lo muestra Usuarios. Le pasa a quien registró la organización y todavía no puso su nombre: al crear una empresa, «Agregó a ac•••@…». Sin correo (una cuenta solo con teléfono) sigue el texto genérico.
+    - Quitar a alguien de la organización sigue dejando varias entradas: «Quitó a …», sus roles de la organización y una por empresa. No era de este ítem. **Cerrado** en `20f9fa5` (decisión 74).
+70. **Sin nombre ni invitación, por su correo:** su correo verificado, primero el principal, enmascarado, como lo muestra Usuarios. Le pasa a quien registró la organización y todavía no puso su nombre: al crear una empresa, «Agregó a ac•••@…». Sin correo (una cuenta solo con teléfono) sigue el texto genérico. (Ya no al crear una empresa: decisión 73.)
 71. **El idioma, en su propio idioma:** `DisplayFormatter.FormatCultureInItsOwnLanguageAsync` toma la traducción del catálogo en esa misma cultura, con su cadena de caída, como `nativeCultureName` del selector del front. La zona y la moneda siguen en el idioma de quien mira.
 72. **Palabras para Diseño:** el tablero no tiene otra palabra para «Invitación aceptada», «Invitación revocada» ni «Habilitó a», así que quedan. Tampoco dibuja:
     - el «Qué» de revocar una invitación: queda «Cambió la invitación de …»; podría ser «Revocó la invitación a …», por «Revocar invitación»;
@@ -755,3 +779,27 @@ Tanda 4f del back, la auditoría de la organización como su tablero (2026-10-04
     - los textos nuevos en inglés: «The invitation to {0} expired», «Changed the time zone of {0}», «Changed the default language and region», «The platform approved the organization», «Invitation expired» y «Awaiting approval».
 
 Verificación (en `d64d50e`): `dotnet build` de la solución con 0 advertencias y `dotnet test` completo con Docker **1643/1644** (11m 27s): falla solo `HarnessTests`, por los docs del front (arriba). Durante el trabajo, en rojo y después en verde, un ítem por vez: `OrganizationAuditTests` 15/15 (cinco tests nuevos y uno cambiado) e `InvitationTests` 8/8 (el nuevo no compilaba). Además, dominio 286/286, unitarios de Application 476/476 (`ResourceParityTests` y `DependencyInjectionTests` incluidos), arquitectura 145/146 (la misma `HarnessTests`), la integración de Auditoría, Empresas, Usuarios, Invitaciones y la baja de cuentas 68/68, la de Inicio, `SearchIndexTests`, el alta de Plataforma y `AuditTrailTests` 25/25, y `MigrationsTests` 4/4 con la migración nueva.
+
+Tanda 4g del back, la auditoría de la organización: una entrada por acción y «Quién» (2026-10-04):
+
+73. **Crear una empresa, una sola entrada:** `AccessChangeTrail` toma las empresas nuevas del guardado. La membresía y los roles de quien la crea, en ella, no dejan entrada propia ni se muestran: el tablero (a9) muestra solo «Nombre».
+    - Vale para toda empresa nueva: también la primera de una organización, cuando se guarda junto con la membresía de su Dueño.
+    - Cambia lo que se ve: al crear una empresa ya no sale «Agregó a …». Quien la creó sigue en «Quién».
+74. **Quitar a alguien de la organización, una sola entrada:** el miembro que pasa a quitado se lleva sus membresías (que quedan inactivas) y sus roles del mismo guardado.
+    - Queda «Quitó a …», el texto que ya existía, con los «Roles de la organización» y los «Roles en la empresa» que tenía y el «después» vacío, como al quitarlo de una empresa (decisión 69). Los roles de todas sus empresas van juntos, como en la invitación. «Dónde» es «Toda la organización».
+    - El estado no se muestra: Usuarios no tiene una palabra para quien fue quitado, y el resumen ya lo dice.
+    - Si tenía la invitación pendiente, la entrada sigue siendo la de la invitación (decisión 69).
+    - La baja de una cuenta (`MembershipDeletionParticipant`) también quita al miembro: su «Quitó a …» ahora lleva los roles. Sigue dejando, además, la entrada `Custom` que ya dejaba (abajo, en lo abierto).
+    - El tablero no dibuja esta entrada: el detalle va a Diseño.
+75. **El orden de las filas del detalle:** `Changes` es jsonb, y PostgreSQL guarda las claves ordenadas por largo. Por eso «Roles de la organización» salía después de «Roles en la empresa», al revés del diálogo de Usuarios y de lo que pide el comentario de `CompleteInvitation`. `OrganizationAuditEntryBuilder` pone primero los roles de la organización y deja el resto en el orden guardado. Cambia también la invitación con roles de la organización: «Correo», «Roles de la organización», «Empresa» y «Roles en la empresa».
+76. **«Quién» por tipo, con `actorKind`:** es un texto, como `period` y `category` de la misma ruta. Sus valores son los del `actorKind` que ya devuelven la lista y las entradas: `User`, `System` y `PlatformOperator`.
+    - Se combina con los demás filtros, también con `actorId`. `PlatformOperator` incluye las acciones de Plataforma (sus `SecurityEvent`); `User` y `System` las dejan afuera.
+    - `/audit/actors` ignora `actorKind` y `actorId`, como ya ignoraba `actorId`, para que la lista no se achique a lo elegido.
+    - Un valor desconocido responde 400 `Validation.Failed` con `errors.actorKind`. `User` sin persona no está en el tablero, pero es el valor que la lista devuelve para una persona.
+77. **El orden de «Quién»:** las personas (por nombre), «Sistema» y «Plataforma», como el desplegable del tablero. Antes salía «Plataforma» antes que «Sistema», por el orden del enum.
+
+Queda abierto:
+- **La baja de una cuenta deja dos entradas:** «Quitó a …» y la `Custom` que agrega `MembershipDeletionParticipant` con `IAuditLog.Record` (motivo y cuenta). `auditoria.md` dice que un guardado deja una sola entrada por entidad y que no se suma otra a mano. No era de esta tanda.
+- **El front:** «Quién» todavía muestra solo personas (`AuditPage` descarta las opciones sin `actorId`). Para «Sistema» y «Plataforma» tiene que mandar `actorKind` y regenerar sus tipos con `npm run contracts`.
+
+Verificación (en `d52f518`): `dotnet build` de la solución con 0 advertencias y `dotnet test` completo con Docker **1647/1647** (9 minutos); esta vez `HarnessTests` también pasó. Durante el trabajo, en rojo y después en verde, un ítem por vez: `OrganizationAuditTests` 16/16, 17/17 y 18/18 (tres tests nuevos, uno rehecho y la preparación de la aprobación pasada a un helper). Además, la integración de Empresas, Usuarios, `AuditTrailTests`, `AuditTrailRlsTests` y la baja de cuentas (31/31 y 45/45, con auditoría), `OpenApiTests`, `ExplicitRouteInventoryTests` y `SearchIndexTests` (33/33, con auditoría) y `ControllerInputContractTests` 13/13.
