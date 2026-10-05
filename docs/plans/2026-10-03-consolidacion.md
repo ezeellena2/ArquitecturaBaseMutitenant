@@ -564,10 +564,16 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
 ### 6d. Front: pulido final (antes de la puerta)
 
 Lo que dejaron las tandas 6a, 6b y 6c, y lo que el usuario decide con Diseño en la tanda del lienzo que sigue a v107:
-- [ ] dos detalles que dejó 6d-1:
+- [x] dos detalles que dejó 6d-1 (front `64d6606` y `9f03359`, con `useCuitType` en `shared/referenceData`):
   - el error de la franja de «Agregar miembro» se borra al cambiar un campo, como en los otros diálogos;
   - `useCuitType` está en Empresas y en `BusinessSignupPage`: pasa a una sola pieza (`shared/referenceData`);
-- [ ] el CUIT repetido, debajo del campo o en la franja: lo decide el usuario con Diseño. El tablero lo pone en la franja y `formularios.md`, debajo del dato;
+- [x] el CUIT repetido va debajo del campo, con el texto del back. Lo decidió Diseño siguiendo `formularios.md`; front `44d2ad6`, y en el lienzo, en su próxima tanda;
+- [x] **6d-3a** (front `5aedb8e` a `7a975e8`; 1148 tests, lint y build; capturas en `b6d3/`): «Editar empresa» con `useEditForm`, `HomeCards` con `statusTones`, y el 409 falso de Mi cuenta en la misma pantalla. La causa de fondo es del back: la versión del perfil es el `xmin` de la fila del usuario y cambia con cualquier escritura. La arregla la tanda «versión al guardar», con una versión propia del perfil;
+- [ ] **6d-3b**, la última pasada del front:
+  - `useEditForm` toma la versión que devuelve cada guardado, y «Tus datos», la versión propia del perfil;
+  - los tonos de `HomePublicPageState`, en una sola definición en `shared` (hoy están en la Página pública y en el Inicio);
+  - «Dar de baja», «Quitar» y «Desvincular» del teléfono, con el botón de peligro (lo corrigió Diseño, v107);
+  - lo que decida el usuario y publique Diseño en la tanda que sigue a v107;
 - [x] **Bug de concurrencia (lo encontró 6c)** (front `ff050ae`, back `c955ecf` en `concurrencia.md`). `useEditForm` recuerda la lectura de la que partió el formulario y manda su versión. Lo usan Roles, Usuario, Configuración, la Página pública y Mi cuenta. Queda «Editar empresa» (6d-3a) y el hueco de la relectura después de guardar: lo cierra el back devolviendo la versión nueva al guardar (tanda «versión al guardar»), y el front la usa. Lo que pedía: las pantallas de edición mandan la versión de la última relectura de fondo, no la de los datos con los que arrancó el formulario. Si otra persona cambió algo mientras la ficha estaba quieta, el guardado pisa ese cambio sin 409. Afecta a Roles, Usuario, Configuración, la Página pública y Mi cuenta. Se arregla en un solo lugar (la versión base se toma al iniciar o reiniciar el formulario), con su test en rojo y la regla en `concurrencia.md`. Tanda 6d-2.
 - [x] en la tanda 6d-2 también (front `4edda4f`, `d3693bc`, `6f74c52`, `6f5c0ee` y `e065fcf`; 1141 tests, lint y build; capturas en `b6d2/`):
   - los colores de estado sueltos de la Página pública y de Configuración;
