@@ -1,5 +1,7 @@
 using System.Reflection;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Domain.Common;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
@@ -41,6 +43,49 @@ public sealed class VersionedContractTests
         Assert.True(HasVersion(typeof(WithVersion)));
     }
 
+    /// <summary>
+    /// Un <c>PUT</c> que recibe <c>version</c> responde 200 con la versión nueva (<see cref="VersionResponse"/>), no
+    /// 204: el front la toma como base del próximo guardado, sin relectura (docs/rules/concurrencia.md).
+    /// </summary>
+    [Fact]
+    public void Versioned_saves_answer_the_new_version()
+    {
+        var api = Assembly.Load("ArquitecturaBaseMultitenant.Api");
+        var offenders = api.GetTypes()
+            .Where(type => typeof(ControllerBase).IsAssignableFrom(type))
+            .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            .Where(IsVersionedSave)
+            .Where(method => !AnswersTheNewVersion(method))
+            .Select(method => $"{method.DeclaringType?.Name}.{method.Name}")
+            .ToArray();
+
+        Assert.Empty(offenders);
+    }
+
+    [Fact]
+    public void Guard_detects_a_versioned_save_without_the_new_version()
+    {
+        var actions = typeof(ProbeController).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+            .Where(IsVersionedSave).ToDictionary(method => method.Name);
+
+        Assert.Equal(["Answers", "Silent"], actions.Keys.Order(StringComparer.Ordinal));
+        Assert.True(AnswersTheNewVersion(actions["Answers"]));
+        Assert.False(AnswersTheNewVersion(actions["Silent"]));
+    }
+
+    private static bool IsVersionedSave(MethodInfo method) =>
+        method.IsDefined(typeof(HttpPutAttribute))
+        && method.GetParameters().Any(parameter => parameter.ParameterType.Name.EndsWith("HttpRequest", StringComparison.Ordinal)
+            && HasVersion(parameter.ParameterType));
+
+    private static bool AnswersTheNewVersion(MethodInfo method)
+    {
+        var declared = method.GetCustomAttributes<ProducesResponseTypeAttribute>(inherit: true).ToArray();
+        return declared.Any(attribute => attribute.StatusCode == StatusCodes.Status200OK
+                && attribute.Type == typeof(VersionResponse))
+            && declared.All(attribute => attribute.StatusCode != StatusCodes.Status204NoContent);
+    }
+
     private static bool HasVersion(Type contract) =>
         contract.GetProperty("Version") is { PropertyType: var propertyType }
         && (propertyType == typeof(uint) || propertyType == typeof(uint?));
@@ -48,4 +93,21 @@ public sealed class VersionedContractTests
     private sealed record WithoutVersion(string Name);
 
     private sealed record WithVersion(string Name, uint Version);
+
+    private sealed record ProbeHttpRequest(string Name, uint? Version);
+
+    private sealed class ProbeController : ControllerBase
+    {
+        [HttpPut("answers")]
+        [ProducesResponseType<VersionResponse>(StatusCodes.Status200OK)]
+        public OkResult Answers([FromBody] ProbeHttpRequest request) => Ok();
+
+        [HttpPut("silent")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        public NoContentResult Silent([FromBody] ProbeHttpRequest request) => NoContent();
+
+        [HttpPut("without-version")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        public NoContentResult WithoutVersion([FromBody] string request) => NoContent();
+    }
 }

@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.Companies;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
@@ -70,17 +71,17 @@ internal sealed class CompanyMembershipService(
         });
     }
 
-    public Task<Result> UpdateRolesAsync(UpdateCompanyMemberRolesRequest request,
+    public Task<Result<VersionResponse>> UpdateRolesAsync(UpdateCompanyMemberRolesRequest request,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return OperationLog.RunAsync(logger, timeProvider, "UpdateCompanyMemberRoles", async () =>
+        return OperationLog.RunAsync<VersionResponse>(logger, timeProvider, "UpdateCompanyMemberRoles", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             try
             {
-                return await unitOfWork.ExecuteInTransactionAsync(ct => writer.UpdateRolesAsync(request, ct),
-                    CommitPolicy.OnSuccess, cancellationToken);
+                return VersionResponse.Of(await unitOfWork.ExecuteInTransactionAsync(
+                    ct => writer.UpdateRolesAsync(request, ct), CommitPolicy.OnSuccess, cancellationToken));
             }
             catch (ForeignKeyViolationException exception)
                 when (exception.ConstraintName == ForeignKeys.RoleAssignmentRole)
@@ -90,15 +91,15 @@ internal sealed class CompanyMembershipService(
         });
     }
 
-    public Task<Result> ChangeStatusAsync(ChangeCompanyMemberStatusRequest request,
+    public Task<Result<VersionResponse>> ChangeStatusAsync(ChangeCompanyMemberStatusRequest request,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return OperationLog.RunAsync(logger, timeProvider, "ChangeCompanyMemberStatus", async () =>
+        return OperationLog.RunAsync<VersionResponse>(logger, timeProvider, "ChangeCompanyMemberStatus", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            return await unitOfWork.ExecuteInTransactionAsync(ct => writer.ChangeStatusAsync(request, ct),
-                CommitPolicy.OnSuccess, cancellationToken);
+            return VersionResponse.Of(await unitOfWork.ExecuteInTransactionAsync(
+                ct => writer.ChangeStatusAsync(request, ct), CommitPolicy.OnSuccess, cancellationToken));
         });
     }
 

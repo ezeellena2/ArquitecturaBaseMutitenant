@@ -18,7 +18,7 @@ internal sealed class OrganizationUserEditor(
     OrganizationUserAdministratorGuard administrators,
     OrganizationUserStatusEditor statusEditor)
 {
-    internal async Task<Result> UpdateAsync(UpdateOrganizationUserRequest request,
+    internal async Task<Result<Member>> UpdateAsync(UpdateOrganizationUserRequest request,
         DesiredOrganizationUserAssignments desired, Guid? currentUserId, CancellationToken ct)
     {
         var member = await members.GetByIdAsync(request.MemberId, request.Version!.Value, ct);
@@ -29,15 +29,15 @@ internal sealed class OrganizationUserEditor(
         if (request.IsActive is { } isActive)
         {
             var status = await statusEditor.ApplyAsync(member, isActive, currentUserId, ct);
-            if (status.IsFailure) return status;
+            if (status.IsFailure) return status.Error;
         }
         var snapshot = await assignments.GetSnapshotAsync(member.Id, ct);
         var protectedResult = await administrators.ProtectAsync(member, user?.UserStatus, snapshot,
             desired, deactivating: false, removing: false, ct);
-        if (protectedResult.IsFailure) return protectedResult;
+        if (protectedResult.IsFailure) return protectedResult.Error;
         var changed = await assignments.SetAsync(member.Id, desired, ct, snapshot);
-        if (changed.IsFailure) return changed;
+        if (changed.IsFailure) return changed.Error;
         members.MarkUpdated(member);
-        return Result.Success();
+        return member;
     }
 }

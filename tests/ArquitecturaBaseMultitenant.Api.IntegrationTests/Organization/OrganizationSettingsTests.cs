@@ -52,16 +52,15 @@ public sealed class OrganizationSettingsTests(ApiFactory factory)
         var originalVersion = initialJson.RootElement.GetProperty("version").GetUInt32();
         Assert.Equal("Configuración HTTP test", initialJson.RootElement.GetProperty("name").GetString());
 
-        using var saved = await client.PutAsJsonAsync("/api/organization/settings", new
-        {
-            name = "  Configuración actualizada  ",
-            defaultCulture = "en-US",
-            defaultTimeZoneId = "America/Argentina/Mendoza",
-            defaultCurrency = "ARS",
-            version = originalVersion,
-        }, Ct);
-        Assert.True(saved.StatusCode == HttpStatusCode.NoContent,
-            await saved.Content.ReadAsStringAsync(Ct));
+        var savedVersion = await SavedVersion.SaveTwiceAsync(version => client.PutAsJsonAsync(
+            "/api/organization/settings", new
+            {
+                name = "  Configuración actualizada  ",
+                defaultCulture = "en-US",
+                defaultTimeZoneId = "America/Argentina/Mendoza",
+                defaultCurrency = "ARS",
+                version,
+            }, Ct), originalVersion, Ct);
 
         using var updated = await client.GetAsync("/api/organization/settings", Ct);
         using var updatedJson = JsonDocument.Parse(await updated.Content.ReadAsStringAsync(Ct));
@@ -71,6 +70,7 @@ public sealed class OrganizationSettingsTests(ApiFactory factory)
         Assert.Equal("America/Argentina/Mendoza", root.GetProperty("defaultTimeZoneId").GetString());
         Assert.Equal("ARS", root.GetProperty("defaultCurrency").GetString());
         Assert.NotEqual(originalVersion, root.GetProperty("version").GetUInt32());
+        Assert.Equal(savedVersion, root.GetProperty("version").GetUInt32());
 
         using var stale = await client.PutAsJsonAsync("/api/organization/settings", new
         {
@@ -104,7 +104,7 @@ public sealed class OrganizationSettingsTests(ApiFactory factory)
             defaultCurrency = "ARS",
             version = initialJson.RootElement.GetProperty("version").GetUInt32(),
         }, Ct);
-        Assert.True(saved.StatusCode == HttpStatusCode.NoContent, await saved.Content.ReadAsStringAsync(Ct));
+        await SavedVersion.ReadAsync(saved, Ct);
 
         await using var scope = factory.Services.CreateAsyncScope();
         using var tenantScope = scope.ServiceProvider.GetRequiredService<ITenantScope>().Enter(tenantId);

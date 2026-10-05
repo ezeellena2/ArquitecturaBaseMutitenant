@@ -52,7 +52,7 @@ internal sealed class ProfileSnapshotBuilder(IUserRepository users, IUserTenantA
             account.Culture, account.TimeZoneId, currencyCode,
             mayReadSettings ? await features.ListEnabledAsync(cancellationToken) : [])
         {
-            Version = account.Version,
+            Version = account.ProfileVersion,
             PendingLegalDocuments = await legal.PendingAsync(userId, cancellationToken),
             NeedsPersonalLoginMethod = !hasPersonalMethod,
         };

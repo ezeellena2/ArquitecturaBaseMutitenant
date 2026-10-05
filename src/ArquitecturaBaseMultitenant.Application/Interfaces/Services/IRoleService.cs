@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.Roles;
 using ArquitecturaBaseMultitenant.Domain.Results;
 
@@ -21,7 +22,7 @@ public interface IRoleService
 
     Task<Result<Guid>> CreateAsync(CreateRoleRequest request, CancellationToken cancellationToken);
 
-    Task<Result> UpdateAsync(UpdateRoleRequest request, CancellationToken cancellationToken);
+    Task<Result<VersionResponse>> UpdateAsync(UpdateRoleRequest request, CancellationToken cancellationToken);
 
     Task<Result> DeleteAsync(DeleteRoleRequest request, CancellationToken cancellationToken);
 }

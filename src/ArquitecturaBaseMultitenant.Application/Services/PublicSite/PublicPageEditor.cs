@@ -16,8 +16,8 @@ internal sealed class PublicPageEditor(IPublicPageRepository pages, ITenantRepos
 {
     private static readonly string[] AuditedFields = ["slug", "name", "description", "logo", "contact"];
 
-    internal async Task<Result> UpdateAsync(UpdatePublicPageRequest request, TenantSlug slug, byte[]? logo,
-        PhoneNumber? contactPhone, CancellationToken ct)
+    internal async Task<Result<PublicPage>> UpdateAsync(UpdatePublicPageRequest request, TenantSlug slug,
+        byte[]? logo, PhoneNumber? contactPhone, CancellationToken ct)
     {
         var tenantId = tenantContext.RequiredTenantId;
         var tenant = await tenants.GetByIdAsync(tenantId, ct);
@@ -37,36 +37,36 @@ internal sealed class PublicPageEditor(IPublicPageRepository pages, ITenantRepos
         page ??= PublicPage.Create();
         var updated = page.UpdateContent(request.Name, request.Description, request.ContactEmail,
             contactPhone, request.Address, request.Website);
-        if (updated.IsFailure) return updated;
+        if (updated.IsFailure) return updated.Error;
         if (request.RemoveLogo || request.LogoBase64 is not null)
         {
             var logoSet = page.SetLogo(logo, request.RemoveLogo ? null : request.LogoContentType);
-            if (logoSet.IsFailure) return logoSet;
+            if (logoSet.IsFailure) return logoSet.Error;
         }
 
         if (slugChanged)
         {
             var slugResult = tenant.SetSlug(slug);
-            if (slugResult.IsFailure) return slugResult;
+            if (slugResult.IsFailure) return slugResult.Error;
         }
 
         if (isNew) pages.Add(page);
         else pages.MarkUpdated(page);
         auditLog.Record(isNew ? AuditAction.Created : AuditAction.Updated, "PublicPage", page.Id,
             new Dictionary<string, object?> { ["fields"] = AuditedFields });
-        return Result.Success();
+        return page;
     }
 
-    internal async Task<Result> SetPublicationAsync(SetPublicPagePublicationRequest request, bool publish,
+    internal async Task<Result<PublicPage>> SetPublicationAsync(SetPublicPagePublicationRequest request, bool publish,
         CancellationToken ct)
     {
         var page = await pages.GetCurrentAsync(request.Version!.Value, ct);
         if (page is null) return PublicPageErrors.NotFound;
         var changed = publish ? page.Publish() : page.Unpublish();
-        if (changed.IsFailure) return changed;
+        if (changed.IsFailure) return changed.Error;
         pages.MarkUpdated(page);
         auditLog.Record(AuditAction.Updated, "PublicPage", page.Id,
             new Dictionary<string, object?> { ["isPublished"] = publish });
-        return Result.Success();
+        return page;
     }
 }

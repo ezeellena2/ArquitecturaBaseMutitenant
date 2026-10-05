@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using Microsoft.Extensions.Logging;
@@ -17,8 +18,9 @@ internal sealed class PlatformFeatureService(PlatformFeatureListBuilder listing,
     public Task<Result<IReadOnlyList<PlatformFeatureResponse>>> ListAsync(Guid tenantId, CancellationToken cancellationToken) =>
         OperationLog.RunAsync(logger, clock, "ListPlatformFeatures", () => listing.ListAsync(tenantId, cancellationToken));
 
-    public Task<Result> UpdateAsync(Guid tenantId, string key, UpdatePlatformFeatureRequest request, CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, clock, "UpdatePlatformFeature", async () =>
+    public Task<Result<VersionResponse>> UpdateAsync(Guid tenantId, string key, UpdatePlatformFeatureRequest request,
+        CancellationToken cancellationToken) =>
+        OperationLog.RunAsync<VersionResponse>(logger, clock, "UpdatePlatformFeature", async () =>
         {
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
@@ -27,7 +29,7 @@ internal sealed class PlatformFeatureService(PlatformFeatureListBuilder listing,
                 var result = await unitOfWork.ExecuteInTransactionAsync(ct => writer.UpdateAsync(tenantId, key, request, ct),
                     CommitPolicy.OnSuccess, cancellationToken);
                 if (result.IsSuccess) await cache.InvalidateAsync(tenantId, cancellationToken);
-                return result;
+                return VersionResponse.Of(result);
             }
             catch (UniqueConstraintViolationException exception) when (exception.ConstraintName == UniqueKeys.TenantFeature)
             {

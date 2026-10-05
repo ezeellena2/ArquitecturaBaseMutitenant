@@ -16,6 +16,14 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Identity;
 public sealed class ApplicationUser : IdentityUser<Guid>, IVersioned
 {
     public uint Version { get; private set; }
+
+    /// <summary>
+    /// Versión de «Tus datos» (nombre, idioma y zona): sube solo al guardar el perfil. La fila de la cuenta también
+    /// cambia con el contacto principal, la última organización, las sesiones y los intentos fallidos, y su xmin
+    /// daría un 409 falso al guardar el perfil (docs/rules/concurrencia.md).
+    /// </summary>
+    public uint ProfileVersion { get; private set; }
+
     public string? DisplayName { get; private set; }
     public string Culture { get; private set; } = string.Empty;
     public string TimeZoneId { get; private set; } = string.Empty;
@@ -78,6 +86,9 @@ public sealed class ApplicationUser : IdentityUser<Guid>, IVersioned
         Culture = culture;
         TimeZoneId = timeZoneId;
     }
+
+    /// <summary>Un guardado del perfil, aunque no cambie nada: la versión sube y la fila se escribe.</summary>
+    public void MarkProfileSaved() => ProfileVersion++;
 
     public Result Suspend()
     {

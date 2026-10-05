@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.Companies;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -79,10 +80,10 @@ internal sealed class CompanyService(
         });
     }
 
-    public Task<Result> UpdateAsync(UpdateCompanyRequest request, CancellationToken cancellationToken)
+    public Task<Result<VersionResponse>> UpdateAsync(UpdateCompanyRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return OperationLog.RunAsync(logger, timeProvider, "UpdateCompany", async () =>
+        return OperationLog.RunAsync<VersionResponse>(logger, timeProvider, "UpdateCompany", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             var timeZone = await referenceData.ResolveTimeZoneAsync(request.TimeZoneId, cancellationToken);
@@ -90,7 +91,7 @@ internal sealed class CompanyService(
 
             try
             {
-                return await unitOfWork.ExecuteInTransactionAsync(async ct =>
+                return VersionResponse.Of(await unitOfWork.ExecuteInTransactionAsync<Result<Company>>(async ct =>
                 {
                     var company = await companies.GetByIdAsync(request.CompanyId, request.Version!.Value, ct);
                     if (company is null) return CompanyErrors.NotFound;
@@ -101,10 +102,10 @@ internal sealed class CompanyService(
                             requestedTaxId.Number, company.Id, ct))
                         return CompanyErrors.TaxIdAlreadyUsed;
                     var updated = company.Update(request.Name, taxId.Value, timeZone.Value);
-                    if (updated.IsFailure) return updated;
+                    if (updated.IsFailure) return updated.Error;
                     companies.MarkUpdated(company);
-                    return Result.Success();
-                }, CommitPolicy.OnSuccess, cancellationToken);
+                    return company;
+                }, CommitPolicy.OnSuccess, cancellationToken));
             }
             catch (UniqueConstraintViolationException exception)
                 when (exception.ConstraintName == UniqueKeys.CompanyTaxId)
@@ -114,20 +115,21 @@ internal sealed class CompanyService(
         });
     }
 
-    public Task<Result> ChangeStatusAsync(ChangeCompanyStatusRequest request, CancellationToken cancellationToken)
+    public Task<Result<VersionResponse>> ChangeStatusAsync(ChangeCompanyStatusRequest request,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return OperationLog.RunAsync(logger, timeProvider, "ChangeCompanyStatus", async () =>
+        return OperationLog.RunAsync<VersionResponse>(logger, timeProvider, "ChangeCompanyStatus", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            return await unitOfWork.ExecuteInTransactionAsync(async ct =>
+            return VersionResponse.Of(await unitOfWork.ExecuteInTransactionAsync<Result<Company>>(async ct =>
             {
                 var company = await companies.GetByIdAsync(request.CompanyId, request.Version!.Value, ct);
                 if (company is null) return CompanyErrors.NotFound;
                 company.SetStatus(request.Status!.Value);
                 companies.MarkUpdated(company);
-                return Result.Success();
-            }, CommitPolicy.OnSuccess, cancellationToken);
+                return company;
+            }, CommitPolicy.OnSuccess, cancellationToken));
         });
     }
 

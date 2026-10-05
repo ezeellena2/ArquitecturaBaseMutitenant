@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
@@ -103,19 +104,20 @@ internal sealed class OrganizationUserService(
                 CommitPolicy.OnSuccess, cancellationToken);
         });
 
-    public Task<Result> UpdateAsync(UpdateOrganizationUserRequest request, CancellationToken cancellationToken)
+    public Task<Result<VersionResponse>> UpdateAsync(UpdateOrganizationUserRequest request,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return OperationLog.RunAsync(logger, timeProvider, "UpdateOrganizationUser", async () =>
+        return OperationLog.RunAsync<VersionResponse>(logger, timeProvider, "UpdateOrganizationUser", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             var desired = await assignments.ValidateAsync(request.RoleIds!, request.Companies!, cancellationToken);
             if (desired.IsFailure) return desired.Error;
             try
             {
-                return await unitOfWork.ExecuteInTransactionAsync(
+                return VersionResponse.Of(await unitOfWork.ExecuteInTransactionAsync(
                     ct => editor.UpdateAsync(request, desired.Value, currentUser.UserId, ct), CommitPolicy.OnSuccess,
-                    cancellationToken);
+                    cancellationToken));
             }
             catch (ForeignKeyViolationException exception)
                 when (exception.ConstraintName == ForeignKeys.RoleAssignmentRole)
@@ -125,16 +127,16 @@ internal sealed class OrganizationUserService(
         });
     }
 
-    public Task<Result> ChangeStatusAsync(ChangeOrganizationUserStatusRequest request,
+    public Task<Result<VersionResponse>> ChangeStatusAsync(ChangeOrganizationUserStatusRequest request,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return OperationLog.RunAsync(logger, timeProvider, "ChangeOrganizationUserStatus", async () =>
+        return OperationLog.RunAsync<VersionResponse>(logger, timeProvider, "ChangeOrganizationUserStatus", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            return await unitOfWork.ExecuteInTransactionAsync(
+            return VersionResponse.Of(await unitOfWork.ExecuteInTransactionAsync(
                 ct => statusEditor.ChangeStatusAsync(request, currentUser.UserId, ct), CommitPolicy.OnSuccess,
-                cancellationToken);
+                cancellationToken));
         });
     }
 

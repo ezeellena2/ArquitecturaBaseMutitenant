@@ -127,20 +127,25 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
         EnsureSucceeded(await manager.UpdateAsync(user), "set the primary email");
     }
 
-    public async Task UpdateProfileAsync(Guid userId, string? displayName, string culture,
+    public async Task<uint> UpdateProfileAsync(Guid userId, string? displayName, string culture,
         string timeZoneId, uint expectedVersion, CancellationToken cancellationToken)
     {
         context.RequireTransaction();
         var user = await RequireUserAsync(userId, cancellationToken);
+        // «Tus datos» compara su propia versión, no el xmin de la cuenta: otras escrituras de la fila no chocan con
+        // el perfil. Dos guardados a la vez los separa el xmin, que EF compara en el mismo UPDATE.
+        if (user.ProfileVersion != expectedVersion) throw new ConcurrencyConflictException();
         if (user.Rename(displayName).IsFailure)
         {
             throw new InvalidOperationException("The display name must be validated before persistence.");
         }
 
         user.UpdatePreferences(culture, timeZoneId);
-        context.Entry(user).Property(candidate => candidate.Version).OriginalValue = expectedVersion;
+        // Siempre sube, aunque no cambie nada: la fila se escribe y el xmin se compara.
+        user.MarkProfileSaved();
         // UserStore.Update vuelve a adjuntar la entidad y restablece los valores originales.
         // Nombre y preferencias no requieren normalización de Identity; los guarda la UoW.
+        return user.ProfileVersion;
     }
 
     public async Task SetPrimaryContactAsync(Guid userId, Email? email, PhoneNumber? phoneNumber,
@@ -170,7 +175,8 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
     private static UserAccountRow ToRow(ApplicationUser user) =>
         new(user.Id, user.DisplayName, user.Culture, user.TimeZoneId, user.Status,
             user.IsPlatformOperator, user.Email is null ? null : Email.Create(user.Email).Value,
-            user.LastBusinessTenantId, user.Version, user.DeletionScheduledForUtc, user.OperatorInvitationExpiresAtUtc);
+            user.LastBusinessTenantId, user.Version, user.DeletionScheduledForUtc, user.OperatorInvitationExpiresAtUtc,
+            user.ProfileVersion);
 
     private static void EnsureSucceeded(IdentityResult result, string action)
     {

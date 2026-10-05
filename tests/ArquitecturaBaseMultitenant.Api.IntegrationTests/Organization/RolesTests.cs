@@ -95,7 +95,7 @@ public sealed class RolesTests(ApiFactory factory)
         Assert.Equal(north, assignedJson.RootElement.GetProperty("companyId").GetGuid());
 
         using var moved = await MoveRoleAsync(client, unassigned, "Lectura libre", south);
-        Assert.Equal(HttpStatusCode.NoContent, moved.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, moved.StatusCode);
         using var movedDetail = await client.GetAsync($"/api/roles/{unassigned:D}", Ct);
         using var movedJson = JsonDocument.Parse(await movedDetail.Content.ReadAsStringAsync(Ct));
         Assert.Equal(south, movedJson.RootElement.GetProperty("companyId").GetGuid());
@@ -143,7 +143,7 @@ public sealed class RolesTests(ApiFactory factory)
         using var userJson = JsonDocument.Parse(await user.Content.ReadAsStringAsync(Ct));
         using var disabled = await client.PutAsJsonAsync($"/api/users/{colleagueMemberId:D}/status",
             new { isActive = false, version = userJson.RootElement.GetProperty("version").GetUInt32() }, Ct);
-        Assert.True(disabled.StatusCode == HttpStatusCode.NoContent, await disabled.Content.ReadAsStringAsync(Ct));
+        Assert.True(disabled.StatusCode == HttpStatusCode.OK, await disabled.Content.ReadAsStringAsync(Ct));
 
         // Decisión 42: desactivarla no le quita el rol, que vuelve a valer si se la reactiva.
         await AssertRoleIsHeldByOneAsync(client, role, "Lectura Norte", south);
@@ -355,16 +355,15 @@ public sealed class RolesTests(ApiFactory factory)
         }, Ct);
         Assert.Equal(HttpStatusCode.BadRequest, missingVersion.StatusCode);
 
-        using var updated = await client.PutAsJsonAsync(rolePath, new
+        var savedVersion = await SavedVersion.SaveTwiceAsync(sent => client.PutAsJsonAsync(rolePath, new
         {
             name = roleName + " editado",
             description = "Rol para el contrato de Roles",
             scope = "Organization",
             companyId = (Guid?)null,
             permissions = new[] { Permissions.Roles.Read },
-            version,
-        }, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, updated.StatusCode);
+            version = sent,
+        }, Ct), version, Ct);
 
         using var staleUpdate = await client.PutAsJsonAsync(rolePath, new
         {
@@ -382,6 +381,7 @@ public sealed class RolesTests(ApiFactory factory)
         using var currentDetail = await client.GetAsync(rolePath, Ct);
         using var currentJson = JsonDocument.Parse(await currentDetail.Content.ReadAsStringAsync(Ct));
         var currentVersion = currentJson.RootElement.GetProperty("version").GetUInt32();
+        Assert.Equal(savedVersion, currentVersion);
         using var staleDelete = await client.SendAsync(new HttpRequestMessage(HttpMethod.Delete, rolePath)
         {
             Content = JsonContent.Create(new { version }),

@@ -15,6 +15,9 @@ internal sealed class ApplicationUserConfiguration : IEntityTypeConfiguration<Ap
         builder.Property(user => user.DisplayName).HasMaxLength(TextLimits.PersonName);
         builder.Property(user => user.Culture).HasMaxLength(TextLimits.ShortName).IsRequired();
         builder.Property(user => user.TimeZoneId).HasMaxLength(TextLimits.ShortName).IsRequired();
+        // La versión de «Tus datos» es un contador propio, no un xmin: solo el guardado del perfil la sube
+        // (docs/rules/concurrencia.md).
+        builder.Property(user => user.ProfileVersion).HasConversion<long>();
         builder.Property(user => user.Status).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.Property(user => user.DeletionReason).HasMaxLength(TextLimits.Description);
         builder.HasIndex(user => user.DeletionScheduledForUtc);

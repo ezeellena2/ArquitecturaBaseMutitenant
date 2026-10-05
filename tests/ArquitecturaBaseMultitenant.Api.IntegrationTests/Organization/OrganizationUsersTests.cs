@@ -207,22 +207,29 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
             companies = Array.Empty<object>(),
             version = await UserVersionAsync(ownerClient, memberId),
         }, Ct);
-        Assert.True(promoted.StatusCode == HttpStatusCode.NoContent, await promoted.Content.ReadAsStringAsync(Ct));
+        var promotedVersion = await SavedVersion.ReadAsync(promoted, Ct);
 
-        // Acá queda otra Dueña activa: desactivarla y quitarle el rol no mira la otra organización.
+        // Acá queda otra Dueña activa: desactivarla y quitarle el rol no mira la otra organización. Cada guardado
+        // sale con la versión que respondió el anterior, sin releer la ficha.
         using var disabled = await ownerClient.PutAsJsonAsync($"/api/users/{memberId:D}/status",
-            new { isActive = false, version = await UserVersionAsync(ownerClient, memberId) }, Ct);
-        Assert.True(disabled.StatusCode == HttpStatusCode.NoContent, await disabled.Content.ReadAsStringAsync(Ct));
+            new { isActive = false, version = promotedVersion }, Ct);
+        var disabledVersion = await SavedVersion.ReadAsync(disabled, Ct);
         using var enabled = await ownerClient.PutAsJsonAsync($"/api/users/{memberId:D}/status",
-            new { isActive = true, version = await UserVersionAsync(ownerClient, memberId) }, Ct);
-        Assert.True(enabled.StatusCode == HttpStatusCode.NoContent, await enabled.Content.ReadAsStringAsync(Ct));
+            new { isActive = true, version = disabledVersion }, Ct);
+        var enabledVersion = await SavedVersion.ReadAsync(enabled, Ct);
+        Assert.NotEqual(disabledVersion, enabledVersion);
+        // Pedir el estado que ya tiene también compara la versión: con una vieja da 409, no una versión que no vio.
+        using var staleSameStatus = await ownerClient.PutAsJsonAsync($"/api/users/{memberId:D}/status",
+            new { isActive = true, version = disabledVersion }, Ct);
+        Assert.Equal(HttpStatusCode.Conflict, staleSameStatus.StatusCode);
         using var demoted = await ownerClient.PutAsJsonAsync($"/api/users/{memberId:D}", new
         {
             roleIds = Array.Empty<Guid>(),
             companies = Array.Empty<object>(),
-            version = await UserVersionAsync(ownerClient, memberId),
+            version = enabledVersion,
         }, Ct);
-        Assert.True(demoted.StatusCode == HttpStatusCode.NoContent, await demoted.Content.ReadAsStringAsync(Ct));
+        var demotedVersion = await SavedVersion.ReadAsync(demoted, Ct);
+        Assert.Equal(demotedVersion, await UserVersionAsync(ownerClient, memberId));
     }
 
     [Fact]
@@ -306,7 +313,7 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
             companies = Array.Empty<object>(),
             version = userVersion,
         }, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, updated.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, updated.StatusCode);
 
         using var afterResponse = await ownerClient.GetAsync($"/api/users/{memberId:D}", Ct);
         Assert.Equal(HttpStatusCode.OK, afterResponse.StatusCode);
@@ -337,18 +344,21 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
             companies = Array.Empty<object>(),
             version = await UserVersionAsync(ownerClient, memberId),
         }, Ct);
-        Assert.True(disabled.StatusCode == HttpStatusCode.NoContent, await disabled.Content.ReadAsStringAsync(Ct));
+        var disabledVersion = await SavedVersion.ReadAsync(disabled, Ct);
         Assert.Equal("Inactive", await UserStateAsync(ownerClient, memberId));
 
+        // El segundo guardado sale con la versión que respondió el primero, sin releer la ficha.
         using var enabled = await ownerClient.PutAsJsonAsync($"/api/users/{memberId:D}", new
         {
             isActive = true,
             roleIds = Array.Empty<Guid>(),
             companies = Array.Empty<object>(),
-            version = await UserVersionAsync(ownerClient, memberId),
+            version = disabledVersion,
         }, Ct);
-        Assert.True(enabled.StatusCode == HttpStatusCode.NoContent, await enabled.Content.ReadAsStringAsync(Ct));
+        var enabledVersion = await SavedVersion.ReadAsync(enabled, Ct);
+        Assert.NotEqual(disabledVersion, enabledVersion);
         Assert.Equal("Active", await UserStateAsync(ownerClient, memberId));
+        Assert.Equal(enabledVersion, await UserVersionAsync(ownerClient, memberId));
 
         using var selfDisabled = await ownerClient.PutAsJsonAsync($"/api/users/{ownerMemberId:D}", new
         {

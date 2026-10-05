@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Api.ErrorHandling;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Api.Tenancy;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -28,7 +29,7 @@ public sealed class PlatformSettingsController(IPlatformSettingsService service)
         (await service.GetAsync(cancellationToken)).ToActionResult(this);
 
     [HttpPut]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<VersionResponse>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status401Unauthorized)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]

@@ -169,19 +169,33 @@ public sealed class CompaniesTests(ApiFactory factory)
         Assert.Contains(otherMember.GetProperty("roles").EnumerateArray(), role =>
             role.GetProperty("name").GetString() == "Administrador");
 
+        // Cada guardado responde la versión nueva, y el siguiente sale con esa, sin releer.
+        var otherRolesVersion = await SavedVersion.SaveTwiceAsync(sent => client.PutAsJsonAsync(
+            $"{companyMembersPath}/{otherMemberId:D}/roles",
+            new { roleIds = new[] { companyAdminRoleId }, version = sent }, Ct),
+            otherMember.GetProperty("version").GetUInt32(), Ct);
+        Assert.Equal(otherRolesVersion, Assert.Single(await MembersAsync(client, companyMembersPath + "/paged?pageSize=50"),
+            member => member.GetProperty("memberId").GetGuid() == otherMemberId).GetProperty("version").GetUInt32());
+
         using var removedOwner = await client.PutAsJsonAsync(
             $"{companyMembersPath}/{ownerMemberId:D}/status",
             new { status = CompanyMembershipStatus.Inactive.ToString(), version = ownerMembershipVersion }, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, removedOwner.StatusCode);
+        var removedOwnerVersion = await SavedVersion.ReadAsync(removedOwner, Ct);
+        Assert.NotEqual(ownerMembershipVersion, removedOwnerVersion);
+        using var readdedOwner = await client.PutAsJsonAsync(
+            $"{companyMembersPath}/{ownerMemberId:D}/status",
+            new { status = CompanyMembershipStatus.Active.ToString(), version = removedOwnerVersion }, Ct);
+        Assert.Equal(await SavedVersion.ReadAsync(readdedOwner, Ct), Assert.Single(
+            await MembersAsync(client, companyMembersPath + "/paged?pageSize=50"),
+            member => member.GetProperty("memberId").GetGuid() == ownerMemberId).GetProperty("version").GetUInt32());
 
-        using var updated = await client.PutAsJsonAsync(detailPath, new
+        var savedVersion = await SavedVersion.SaveTwiceAsync(sent => client.PutAsJsonAsync(detailPath, new
         {
             name = "Sucursal Centro II",
             taxIdNumber = (string?)null,
             timeZoneId = "America/Argentina/Buenos_Aires",
-            version = createdVersion,
-        }, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, updated.StatusCode);
+            version = sent,
+        }, Ct), createdVersion, Ct);
 
         using var staleUpdate = await client.PutAsJsonAsync(detailPath, new
         {
@@ -195,12 +209,12 @@ public sealed class CompaniesTests(ApiFactory factory)
         using var currentDetail = await client.GetAsync(detailPath, Ct);
         using var currentJson = JsonDocument.Parse(await currentDetail.Content.ReadAsStringAsync(Ct));
         var currentVersion = currentJson.RootElement.GetProperty("version").GetUInt32();
-        using var inactive = await client.PutAsJsonAsync($"/api/companies/{companyId:D}/status", new
+        Assert.Equal(savedVersion, currentVersion);
+        await SavedVersion.SaveTwiceAsync(sent => client.PutAsJsonAsync($"/api/companies/{companyId:D}/status", new
         {
             status = CompanyStatus.Inactive.ToString(),
-            version = currentVersion,
-        }, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, inactive.StatusCode);
+            version = sent,
+        }, Ct), currentVersion, Ct);
 
         using var list = await client.GetAsync("/api/companies/paged?status=Inactive&page=1&pageSize=10", Ct);
         Assert.True(list.StatusCode == HttpStatusCode.OK,
@@ -420,7 +434,7 @@ public sealed class CompaniesTests(ApiFactory factory)
             companies = Array.Empty<object>(),
             version = invitedUser.GetProperty("version").GetUInt32(),
         }, Ct);
-        Assert.True(edited.StatusCode == HttpStatusCode.NoContent, await edited.Content.ReadAsStringAsync(Ct));
+        Assert.True(edited.StatusCode == HttpStatusCode.OK, await edited.Content.ReadAsStringAsync(Ct));
 
         var membersPath = $"/api/companies/{companyId:D}/members";
         var row = Assert.Single(await MembersAsync(client, membersPath + "/paged?pageSize=50"),

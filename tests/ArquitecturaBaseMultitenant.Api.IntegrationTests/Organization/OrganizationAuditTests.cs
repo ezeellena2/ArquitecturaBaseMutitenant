@@ -178,7 +178,7 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
             companies = new[] { new { companyId = company.CompanyId, roleIds = new[] { company.ReadOnly, company.Purchases } } },
             version = invited.GetProperty("version").GetUInt32(),
         }, Ct);
-        Assert.True(saved.StatusCode == HttpStatusCode.NoContent, await saved.Content.ReadAsStringAsync(Ct));
+        Assert.True(saved.StatusCode == HttpStatusCode.OK, await saved.Content.ReadAsStringAsync(Ct));
 
         // Todavía no tiene cuenta ni nombre: se lo nombra por el correo de su invitación, enmascarado.
         var entry = Assert.Single(await NewEntriesAsync(client, before));
@@ -237,7 +237,7 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
                    companies = new[] { new { companyId = company.CompanyId, roleIds = new[] { company.Sales, company.ReadOnly } } },
                    version = member.GetProperty("version").GetUInt32(),
                }, Ct))
-            Assert.True(saved.StatusCode == HttpStatusCode.NoContent, await saved.Content.ReadAsStringAsync(Ct));
+            Assert.True(saved.StatusCode == HttpStatusCode.OK, await saved.Content.ReadAsStringAsync(Ct));
         var before = await EntryIdsAsync(client);
 
         // «Quitar de la organización» de Usuarios: sale también de sus empresas y se van todos sus roles.
@@ -450,7 +450,7 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
         var member = await JsonAsync(client, $"/api/users/{company.MemberId:D}");
         using (var disabled = await client.PutAsJsonAsync($"/api/users/{company.MemberId:D}/status",
                    new { isActive = false, version = member.GetProperty("version").GetUInt32() }, Ct))
-            Assert.True(disabled.StatusCode == HttpStatusCode.NoContent, await disabled.Content.ReadAsStringAsync(Ct));
+            Assert.True(disabled.StatusCode == HttpStatusCode.OK, await disabled.Content.ReadAsStringAsync(Ct));
         var settings = await JsonAsync(client, "/api/organization/settings");
         using (var changed = await client.PutAsJsonAsync("/api/organization/settings", new
                {
@@ -460,7 +460,7 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
                    defaultCurrency = settings.GetProperty("defaultCurrency").GetString(),
                    version = settings.GetProperty("version").GetUInt32(),
                }, Ct))
-            Assert.True(changed.StatusCode == HttpStatusCode.NoContent, await changed.Content.ReadAsStringAsync(Ct));
+            Assert.True(changed.StatusCode == HttpStatusCode.OK, await changed.Content.ReadAsStringAsync(Ct));
         // Dos campos en un guardado: el resumen general.
         settings = await JsonAsync(client, "/api/organization/settings");
         using (var both = await client.PutAsJsonAsync("/api/organization/settings", new
@@ -471,7 +471,7 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
                    defaultCurrency = settings.GetProperty("defaultCurrency").GetString(),
                    version = settings.GetProperty("version").GetUInt32(),
                }, Ct))
-            Assert.True(both.StatusCode == HttpStatusCode.NoContent, await both.Content.ReadAsStringAsync(Ct));
+            Assert.True(both.StatusCode == HttpStatusCode.OK, await both.Content.ReadAsStringAsync(Ct));
         var delta = await JsonAsync(client, $"/api/companies/{company.CompanyId:D}");
         using (var moved = await client.PutAsJsonAsync($"/api/companies/{company.CompanyId:D}", new
                {
@@ -480,7 +480,7 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
                    timeZoneId = "America/Argentina/Cordoba",
                    version = delta.GetProperty("version").GetUInt32(),
                }, Ct))
-            Assert.True(moved.StatusCode == HttpStatusCode.NoContent, await moved.Content.ReadAsStringAsync(Ct));
+            Assert.True(moved.StatusCode == HttpStatusCode.OK, await moved.Content.ReadAsStringAsync(Ct));
 
         // Tablero Auditoria-Org: cada fila con su nombre y su valor, nunca «un registro», fechas, canales ni estados
         // en inglés.
@@ -625,7 +625,7 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
             .GetProperty("version").GetUInt32();
         using var saved = await client.PutAsJsonAsync(
             $"/api/companies/{company.CompanyId:D}/members/{company.MemberId:D}/roles", new { roleIds, version }, Ct);
-        Assert.True(saved.StatusCode == HttpStatusCode.NoContent, await saved.Content.ReadAsStringAsync(Ct));
+        Assert.True(saved.StatusCode == HttpStatusCode.OK, await saved.Content.ReadAsStringAsync(Ct));
     }
 
     private static async Task ChangeCompanyMemberStatusAsync(HttpClient client, AuditedCompany company, string status)
@@ -636,7 +636,7 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
             .GetProperty("version").GetUInt32();
         using var saved = await client.PutAsJsonAsync(
             $"/api/companies/{company.CompanyId:D}/members/{company.MemberId:D}/status", new { status, version }, Ct);
-        Assert.True(saved.StatusCode == HttpStatusCode.NoContent, await saved.Content.ReadAsStringAsync(Ct));
+        Assert.True(saved.StatusCode == HttpStatusCode.OK, await saved.Content.ReadAsStringAsync(Ct));
     }
 
     private static async Task<HashSet<Guid>> EntryIdsAsync(HttpClient client)

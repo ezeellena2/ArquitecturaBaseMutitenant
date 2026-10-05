@@ -183,7 +183,7 @@ public sealed class IngressJourneyTests(ApiFactory factory)
         };
         update.Headers.Authorization = new AuthenticationHeaderValue("Bearer", consumer.AccessToken);
         using var updated = await client.SendAsync(update, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, updated.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, updated.StatusCode);
         using var englishMe = await GetMeAsync(client, consumer.AccessToken);
         Assert.Equal("en-US", englishMe.RootElement.GetProperty("culture").GetString());
 

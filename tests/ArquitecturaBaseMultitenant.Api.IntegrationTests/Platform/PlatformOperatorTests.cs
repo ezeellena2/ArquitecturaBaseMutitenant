@@ -355,8 +355,10 @@ public sealed class PlatformOperatorTests(ApiFactory factory)
             version, reason = "Suma la auditoría",
             permissions = new[] { PlatformPermissions.Tenants.Read, PlatformPermissions.Audit.Read },
         }, Guid.NewGuid().ToString("D"));
-        Assert.Equal(HttpStatusCode.NoContent, changed.StatusCode);
+        var changedVersion = await SavedVersion.ReadAsync(changed, Ct);
+        Assert.NotEqual(version, changedVersion);
         var detail = await DetailAsync(manager, id);
+        Assert.Equal(changedVersion, detail.GetProperty("operatorVersion").GetUInt32());
         Assert.Equal([PlatformPermissions.Tenants.Read, PlatformPermissions.Audit.Read],
             detail.GetProperty("operatorPermissions").EnumerateArray().Select(item => item.GetString()).ToArray());
         using var stale = await SendAsync(manager, HttpMethod.Put, path, new
@@ -372,9 +374,10 @@ public sealed class PlatformOperatorTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.Forbidden, own.StatusCode);
         Assert.Equal(UserErrors.CannotModifySelfCode, (await JsonAsync(own)).GetProperty("code").GetString());
 
+        // Quitarlo sale con la versión que respondió el cambio de permisos, sin releer.
         using var removed = await SendAsync(manager, HttpMethod.Delete, path, new
         {
-            version = detail.GetProperty("operatorVersion").GetUInt32(), reason = "Dejó el equipo",
+            version = changedVersion, reason = "Dejó el equipo",
         }, Guid.NewGuid().ToString("D"));
         Assert.Equal(HttpStatusCode.NoContent, removed.StatusCode);
         var after = await DetailAsync(manager, id);

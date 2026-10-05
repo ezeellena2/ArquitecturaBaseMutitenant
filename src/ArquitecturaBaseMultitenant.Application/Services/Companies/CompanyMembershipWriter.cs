@@ -45,10 +45,11 @@ internal sealed class CompanyMembershipWriter(
         return Result.Success();
     }
 
-    public async Task<Result> UpdateRolesAsync(UpdateCompanyMemberRolesRequest request, CancellationToken ct)
+    public async Task<Result<CompanyMembership>> UpdateRolesAsync(UpdateCompanyMemberRolesRequest request,
+        CancellationToken ct)
     {
         var active = await LockActiveCompanyAsync(request.CompanyId, ct);
-        if (active.IsFailure) return active;
+        if (active.IsFailure) return active.Error;
         var checkedRoles = await roleGuard.CheckAsync(request.RoleIds!, request.CompanyId, ct);
         if (checkedRoles.IsFailure) return checkedRoles.Error;
         var desiredIds = checkedRoles.Value.Select(role => role.Id).ToHashSet();
@@ -69,7 +70,7 @@ internal sealed class CompanyMembershipWriter(
         if (removesLastAdmin)
         {
             var canRemove = await lastCompanyAdmin.CheckAnotherActiveAdminAsync(request.CompanyId, ct);
-            if (canRemove.IsFailure) return canRemove;
+            if (canRemove.IsFailure) return canRemove.Error;
         }
 
         var desired = RoleAssignmentGuard.Assign(member.Id, checkedRoles.Value, request.CompanyId);
@@ -80,13 +81,14 @@ internal sealed class CompanyMembershipWriter(
         foreach (var assignment in desired.Value.Where(assignment => !existingIds.Contains(assignment.RoleId)))
             assignments.Add(assignment);
         memberships.MarkUpdated(membership);
-        return Result.Success();
+        return membership;
     }
 
-    public async Task<Result> ChangeStatusAsync(ChangeCompanyMemberStatusRequest request, CancellationToken ct)
+    public async Task<Result<CompanyMembership>> ChangeStatusAsync(ChangeCompanyMemberStatusRequest request,
+        CancellationToken ct)
     {
         var active = await LockActiveCompanyAsync(request.CompanyId, ct);
-        if (active.IsFailure) return active;
+        if (active.IsFailure) return active.Error;
         var membership = await memberships.GetByIdAsync(request.CompanyId, request.MemberId,
             request.Version!.Value, ct);
         if (membership is null) return CompanyMembershipErrors.NotFound;
@@ -111,7 +113,7 @@ internal sealed class CompanyMembershipWriter(
             if (companyAdmin is not null && companyAssignments.Any(assignment => assignment.RoleId == companyAdmin.Id))
             {
                 var canRemove = await lastCompanyAdmin.CheckAnotherActiveAdminAsync(request.CompanyId, ct);
-                if (canRemove.IsFailure) return canRemove;
+                if (canRemove.IsFailure) return canRemove.Error;
             }
 
             foreach (var assignment in companyAssignments) assignments.Remove(assignment);
@@ -119,7 +121,7 @@ internal sealed class CompanyMembershipWriter(
 
         membership.SetStatus(targetStatus);
         memberships.MarkUpdated(membership);
-        return Result.Success();
+        return membership;
     }
 
     // «La empresa existe y está activa» se controla una sola vez, con el lock del último Administrador tomado.

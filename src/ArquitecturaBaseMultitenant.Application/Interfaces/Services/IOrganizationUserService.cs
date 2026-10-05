@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
 using ArquitecturaBaseMultitenant.Domain.Results;
 
@@ -15,7 +16,7 @@ public interface IOrganizationUserService
         CancellationToken cancellationToken);
     Task<Result<Guid>> ResendInvitationAsync(Guid invitationId, CancellationToken cancellationToken);
     Task<Result> RevokeInvitationAsync(Guid invitationId, CancellationToken cancellationToken);
-    Task<Result> UpdateAsync(UpdateOrganizationUserRequest request, CancellationToken cancellationToken);
-    Task<Result> ChangeStatusAsync(ChangeOrganizationUserStatusRequest request, CancellationToken cancellationToken);
+    Task<Result<VersionResponse>> UpdateAsync(UpdateOrganizationUserRequest request, CancellationToken cancellationToken);
+    Task<Result<VersionResponse>> ChangeStatusAsync(ChangeOrganizationUserStatusRequest request, CancellationToken cancellationToken);
     Task<Result> RemoveAsync(Guid memberId, uint? version, CancellationToken cancellationToken);
 }

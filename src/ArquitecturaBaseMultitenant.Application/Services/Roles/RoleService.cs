@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.Roles;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
@@ -91,13 +92,13 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
         });
     }
 
-    public Task<Result> UpdateAsync(UpdateRoleRequest request, CancellationToken cancellationToken)
+    public Task<Result<VersionResponse>> UpdateAsync(UpdateRoleRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return OperationLog.RunAsync(logger, timeProvider, "UpdateRole", async () =>
+        return OperationLog.RunAsync<VersionResponse>(logger, timeProvider, "UpdateRole", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            Result result;
+            Result<Role> result;
             try
             {
                 result = await unitOfWork.ExecuteInTransactionAsync(
@@ -113,7 +114,7 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
                 await permissions.InvalidateRoleAsync(request.RoleId, cancellationToken);
             }
 
-            return result;
+            return VersionResponse.Of(result);
         });
     }
 
@@ -153,7 +154,7 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
         return role.Id;
     }
 
-    private async Task<Result> UpdateCoreAsync(UpdateRoleRequest request, CancellationToken cancellationToken)
+    private async Task<Result<Role>> UpdateCoreAsync(UpdateRoleRequest request, CancellationToken cancellationToken)
     {
         var role = await repository.GetByIdAsync(request.RoleId, request.Version!.Value, cancellationToken);
         if (role is null) return RoleErrors.NotFound;
@@ -162,11 +163,11 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
             return RoleErrors.ScopeChangeHasUsers(userCount);
         var updated = role.Update(request.Name, request.Description, request.Scope!.Value, request.CompanyId,
             NormalizePermissions(request.Permissions!));
-        if (updated.IsFailure) return updated;
+        if (updated.IsFailure) return updated.Error;
         if (await roles.ExistsByNameAsync(role.Name, role.CompanyId, role.Id, cancellationToken))
             return RoleErrors.AlreadyExists;
         repository.MarkUpdated(role);
-        return Result.Success();
+        return role;
     }
 
     private async Task<Result> DeleteCoreAsync(DeleteRoleRequest request, CancellationToken cancellationToken)

@@ -39,10 +39,10 @@ public sealed class PublicPageModerationTests(ApiFactory factory)
         {
             slug = tenant.Slug, name = "Página de prueba", description = "Contenido que no expone Plataforma", version = 0,
         }, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, saved.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
         using var firstPublish = await business.PostAsJsonAsync("/api/organization/public-page/publish",
             new { version = await VersionAsync(business, "/api/organization/public-page") }, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, firstPublish.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, firstPublish.StatusCode);
         using var businessDenied = await business.GetAsync(path, Ct);
         Assert.Equal(HttpStatusCode.Forbidden, businessDenied.StatusCode);
 
@@ -101,7 +101,7 @@ public sealed class PublicPageModerationTests(ApiFactory factory)
         Assert.False(draftJson.RootElement.GetProperty("isPublished").GetBoolean());
         Assert.Equal(JsonValueKind.Null, draftJson.RootElement.GetProperty("publishBlockedAtUtc").ValueKind);
         using var publish = await business.PostAsJsonAsync("/api/organization/public-page/publish", new { version = allowedVersion }, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, publish.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, publish.StatusCode);
         Assert.Equal(0u, await VersionAsync(platform, otherPath));
 
         await using (var scope = factory.Services.CreateAsyncScope())

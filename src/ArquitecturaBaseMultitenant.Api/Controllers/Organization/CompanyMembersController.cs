@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Api.Tenancy;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.Companies;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Users;
@@ -63,7 +64,7 @@ public sealed class CompanyMembersController(ICompanyMembershipService service) 
 
     [HttpPut("{memberId:guid}/roles")]
     [HasCompanyPermission(Permissions.Company.Members.Manage)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<VersionResponse>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status401Unauthorized)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]
@@ -76,7 +77,7 @@ public sealed class CompanyMembersController(ICompanyMembershipService service) 
 
     [HttpPut("{memberId:guid}/status")]
     [HasCompanyPermission(Permissions.Company.Members.Manage)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<VersionResponse>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status401Unauthorized)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]

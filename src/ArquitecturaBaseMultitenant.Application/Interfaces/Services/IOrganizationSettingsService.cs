@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.Settings;
 using ArquitecturaBaseMultitenant.Domain.Results;
 
@@ -7,5 +8,5 @@ public interface IOrganizationSettingsService
 {
     Task<Result<OrganizationSettingsResponse>> GetAsync(CancellationToken cancellationToken);
 
-    Task<Result> UpdateAsync(UpdateOrganizationSettingsRequest request, CancellationToken cancellationToken);
+    Task<Result<VersionResponse>> UpdateAsync(UpdateOrganizationSettingsRequest request, CancellationToken cancellationToken);
 }

@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.Profile;
 using ArquitecturaBaseMultitenant.Domain.Results;
 
@@ -8,5 +9,5 @@ public interface IProfileService
 {
     Task<Result<MeResponse>> GetAsync(CancellationToken cancellationToken);
 
-    Task<Result> UpdateAsync(UpdateMeRequest request, CancellationToken cancellationToken);
+    Task<Result<VersionResponse>> UpdateAsync(UpdateMeRequest request, CancellationToken cancellationToken);
 }

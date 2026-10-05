@@ -52,11 +52,12 @@ public sealed class PlatformFeatureAdministrationTests
         Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
         using var saved = await client.PutAsJsonAsync(path + "/test-business", new
         { enabled = true, source = "Trial", expiresAtUtc = expires, version = 0u, reason = "Prueba contratada" }, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, saved.StatusCode);
+        var savedVersion = await SavedVersion.ReadAsync(saved, Ct);
         using var current = await client.GetFromJsonAsync<JsonDocument>(path, Ct);
         var currentRow = current!.RootElement.EnumerateArray().Single(row => row.GetProperty("key").GetString() == "test-business");
         var version = currentRow.GetProperty("version").GetUInt32();
         Assert.NotEqual(0u, version);
+        Assert.Equal(savedVersion, version);
         Assert.Equal(expires, currentRow.GetProperty("expiresAtUtc").GetDateTime());
         using var stale = await client.PutAsJsonAsync(path + "/test-business", new
         { enabled = false, source = "Manual", version = 0u, reason = "Versión vieja" }, Ct);
@@ -76,7 +77,7 @@ public sealed class PlatformFeatureAdministrationTests
         { enabled = false, source = "Manual", version = 0u, reason = "Cambio concurrente del valor inicial" }, Ct)));
         try
         {
-            Assert.Equal([HttpStatusCode.NoContent, HttpStatusCode.Conflict], concurrent.Select(response => response.StatusCode).Order());
+            Assert.Equal([HttpStatusCode.OK, HttpStatusCode.Conflict], concurrent.Select(response => response.StatusCode).Order());
         }
         finally { foreach (var response in concurrent) response.Dispose(); }
         await using (var scope = host.Services.CreateAsyncScope())
@@ -96,6 +97,10 @@ public sealed class PlatformFeatureAdministrationTests
             Assert.DoesNotContain(account.Email.Value, trial.Changes);
             Assert.Null(trial.TargetAccountId);
         }
+        // El siguiente guardado sale con la versión que respondió el anterior, sin releer.
+        using var extended = await client.PutAsJsonAsync(path + "/test-business", new
+        { enabled = true, source = "Trial", expiresAtUtc = expires, version = savedVersion, reason = "Prueba extendida" }, Ct);
+        Assert.NotEqual(savedVersion, await SavedVersion.ReadAsync(extended, Ct));
         await GrantAsync(host.Services, account.UserId, PlatformOperators.Reduced);
         using var support = await client.PutAsJsonAsync(path + "/test-business", new
         { enabled = false, source = "Manual", version, reason = "Sin permiso" }, Ct);

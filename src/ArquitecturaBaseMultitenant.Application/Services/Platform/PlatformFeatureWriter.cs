@@ -11,7 +11,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 internal sealed class PlatformFeatureWriter(ITenantReader tenants, ITenantFeatureRepository features,
     IFeatureCatalog catalog, PlatformAuditWriter audit)
 {
-    internal async Task<Result> UpdateAsync(Guid tenantId, string key, UpdatePlatformFeatureRequest request, CancellationToken ct)
+    internal async Task<Result<TenantFeature>> UpdateAsync(Guid tenantId, string key, UpdatePlatformFeatureRequest request,
+        CancellationToken ct)
     {
         var tenant = await tenants.FindByIdAsync(tenantId, ct);
         if (tenant is not { Kind: TenantKind.Business }) return TenantErrors.NotFound;
@@ -29,15 +30,16 @@ internal sealed class PlatformFeatureWriter(ITenantReader tenants, ITenantFeatur
             if (request.Version.Value != 0) return TenantFeatureErrors.NotFound;
             var created = TenantFeature.Create(tenantId, key, request.Enabled!.Value, request.Source!.Value, request.ExpiresAtUtc);
             if (created.IsFailure) return created.Error;
-            features.Add(created.Value);
+            feature = created.Value;
+            features.Add(feature);
         }
         else
         {
             var update = feature.Update(request.Enabled!.Value, request.Source!.Value, request.ExpiresAtUtc);
-            if (update.IsFailure) return update;
+            if (update.IsFailure) return update.Error;
             features.MarkUpdated(feature);
         }
         audit.RecordFeatures(tenantId, request.Reason!, changes);
-        return Result.Success();
+        return feature;
     }
 }

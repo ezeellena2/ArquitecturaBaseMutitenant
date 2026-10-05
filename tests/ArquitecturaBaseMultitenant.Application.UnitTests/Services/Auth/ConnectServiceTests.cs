@@ -300,7 +300,7 @@ public sealed class ConnectServiceTests
         public Task SetPrimaryContactAsync(Guid userId, Email? email, PhoneNumber? phoneNumber,
             CancellationToken cancellationToken) => throw new NotSupportedException();
 
-        public Task UpdateProfileAsync(Guid userId, string? displayName, string culture, string timeZoneId,
+        public Task<uint> UpdateProfileAsync(Guid userId, string? displayName, string culture, string timeZoneId,
             uint expectedVersion, CancellationToken cancellationToken) => throw new NotSupportedException();
 
         public Task RememberBusinessTenantAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken)

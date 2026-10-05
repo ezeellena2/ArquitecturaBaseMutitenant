@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
@@ -31,28 +32,30 @@ internal sealed class PlatformOperatorService(
     TimeProvider clock,
     ILogger<PlatformOperatorService> logger) : IPlatformOperatorService
 {
-    public Task<Result> ChangePermissionsAsync(Guid accountId, ChangePlatformOperatorRequest request, CancellationToken ct) =>
-        OperationLog.RunAsync(logger, clock, "ChangePlatformOperatorPermissions", async () =>
+    public Task<Result<VersionResponse>> ChangePermissionsAsync(Guid accountId, ChangePlatformOperatorRequest request,
+        CancellationToken ct) =>
+        OperationLog.RunAsync<VersionResponse>(logger, clock, "ChangePlatformOperatorPermissions", async () =>
         {
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
             var permissions = PlatformPermissionAssignment.Validate(request.Permissions);
             if (permissions.IsFailure) return permissions.Error;
             if (audit.CurrentOperatorId() == accountId) return UserErrors.CannotModifySelf;
-            return await unitOfWork.ExecuteInTransactionAsync<Result>(async work =>
+            var saved = await unitOfWork.ExecuteInTransactionAsync<Result<PlatformPermissionAssignment>>(async work =>
             {
                 var assignment = await LoadAsync(accountId, request.Version!.Value, work);
                 if (assignment.IsFailure) return assignment.Error;
                 if (!request.Permissions!.Contains(PlatformPermissions.Operators.Manage, StringComparer.Ordinal)
                     && (await operators.CheckAnotherManagerRemainsAsync(accountId, work)) is { IsFailure: true } last)
-                    return last;
+                    return last.Error;
                 var before = assignment.Value.Permissions.ToArray();
                 var changed = assignment.Value.ChangePermissions(request.Permissions);
-                if (changed.IsFailure) return changed;
+                if (changed.IsFailure) return changed.Error;
                 audit.RecordOperator(accountId, SecurityEventType.PlatformOperatorPermissionsChanged, request.Reason!,
                     PlatformOperatorChanges.Between(before, request.Permissions!));
-                return Result.Success();
+                return assignment.Value;
             }, CommitPolicy.OnSuccess, ct);
+            return VersionResponse.Of(saved);
         });
 
     public Task<Result> RemoveAsync(Guid accountId, PlatformAccountActionRequest request, CancellationToken ct) =>

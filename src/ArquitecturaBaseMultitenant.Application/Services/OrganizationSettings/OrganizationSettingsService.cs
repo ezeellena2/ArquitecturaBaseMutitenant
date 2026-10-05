@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.Settings;
 using ArquitecturaBaseMultitenant.Application.Models.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -35,23 +36,23 @@ internal sealed class OrganizationSettingsService(
                 return settings is null ? SettingsErrors.TenantNotFound : ToResponse(settings);
             });
 
-    public Task<Result> UpdateAsync(UpdateOrganizationSettingsRequest request,
+    public Task<Result<VersionResponse>> UpdateAsync(UpdateOrganizationSettingsRequest request,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return OperationLog.RunAsync(logger, timeProvider, "UpdateOrganizationSettings", async () =>
+        return OperationLog.RunAsync<VersionResponse>(logger, timeProvider, "UpdateOrganizationSettings", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             var tenantId = tenantContext.RequiredTenantId;
             var result = await unitOfWork.ExecuteInTransactionAsync(ct => UpdateCoreAsync(request, tenantId, ct),
                 CommitPolicy.OnSuccess, cancellationToken);
             if (result.IsSuccess) await cache.InvalidateAsync(tenantId, cancellationToken);
-            return result;
+            return VersionResponse.Of(result);
         });
     }
 
-    private async Task<Result> UpdateCoreAsync(UpdateOrganizationSettingsRequest request, Guid tenantId,
-        CancellationToken ct)
+    private async Task<Result<TenantSettings>> UpdateCoreAsync(UpdateOrganizationSettingsRequest request,
+        Guid tenantId, CancellationToken ct)
     {
         var settings = await settingsRepository.GetCurrentAsync(request.Version!.Value, ct);
         if (settings is null) return SettingsErrors.TenantNotFound;
@@ -59,13 +60,13 @@ internal sealed class OrganizationSettingsService(
         if (tenant is null) return SettingsErrors.TenantNotFound;
 
         var renamed = tenant.Rename(request.Name);
-        if (renamed.IsFailure) return renamed;
+        if (renamed.IsFailure) return renamed.Error;
         var updated = settings.Update(request.DefaultCulture, request.DefaultTimeZoneId, request.DefaultCurrency);
-        if (updated.IsFailure) return updated;
+        if (updated.IsFailure) return updated.Error;
 
         // AuditTrailInterceptor deja la única entrada, con lo que cambió (B9).
         settingsRepository.MarkUpdated(settings);
-        return Result.Success();
+        return settings;
     }
 
     private static OrganizationSettingsResponse ToResponse(TenantSettingsRow row) =>

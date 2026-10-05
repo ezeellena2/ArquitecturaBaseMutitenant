@@ -39,13 +39,14 @@ public sealed class PlatformSettingsTests
             salesEmail = "Ventas@Example.com", supportEmail = "soporte@example.com",
             version = originalVersion, reason = "Control del alta de prueba",
         }, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, saved.StatusCode);
+        var savedVersion = await SavedVersion.ReadAsync(saved, Ct);
         using var updated = await client.GetAsync("/api/platform/settings", Ct);
         using var updatedJson = JsonDocument.Parse(await updated.Content.ReadAsStringAsync(Ct));
         Assert.Equal("Closed", updatedJson.RootElement.GetProperty("consumerSignup").GetString());
         Assert.Equal("RequiresApproval", updatedJson.RootElement.GetProperty("businessSignup").GetString());
         Assert.Equal(3, updatedJson.RootElement.GetProperty("maxOwnedOrganizations").GetInt32());
         Assert.NotEqual(originalVersion, updatedJson.RootElement.GetProperty("version").GetUInt32());
+        Assert.Equal(savedVersion, updatedJson.RootElement.GetProperty("version").GetUInt32());
         Assert.Equal("ventas@example.com", updatedJson.RootElement.GetProperty("salesEmail").GetString());
         Assert.Equal("soporte@example.com", updatedJson.RootElement.GetProperty("supportEmail").GetString());
         // Ingreso y Registro los leen sin sesión.
@@ -80,6 +81,15 @@ public sealed class PlatformSettingsTests
         Assert.Null(ev.TargetTenantId);
         Assert.Null(ev.TargetAccountId);
         Assert.Equal(Domain.Settings.ConsumerSignupMode.Closed, (await context.PlatformSettings.AsNoTracking().SingleAsync(Ct)).ConsumerSignup);
+
+        // El siguiente guardado sale con la versión que respondió el anterior, sin releer.
+        using var reopened = await client.PutAsJsonAsync("/api/platform/settings", new
+        {
+            consumerSignup = "Open", businessSignup = "RequiresApproval", maxOwnedOrganizations = 3,
+            salesEmail = "ventas@example.com", supportEmail = "soporte@example.com",
+            version = savedVersion, reason = "Reapertura del alta de prueba",
+        }, Ct);
+        Assert.NotEqual(savedVersion, await SavedVersion.ReadAsync(reopened, Ct));
     }
 
     [Fact]

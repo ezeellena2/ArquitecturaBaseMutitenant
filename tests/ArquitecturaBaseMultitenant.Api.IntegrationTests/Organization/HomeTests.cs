@@ -203,7 +203,7 @@ public sealed class HomeTests(ApiFactory factory)
     private static async Task PutAsync(HttpClient client, string path, object body)
     {
         using var response = await client.PutAsJsonAsync(path, body, Ct);
-        Assert.True(response.StatusCode == HttpStatusCode.NoContent, await response.Content.ReadAsStringAsync(Ct));
+        Assert.True(response.StatusCode == HttpStatusCode.OK, await response.Content.ReadAsStringAsync(Ct));
     }
 
     private static async Task<Guid> CompanyAdminRoleIdAsync(HttpClient client)

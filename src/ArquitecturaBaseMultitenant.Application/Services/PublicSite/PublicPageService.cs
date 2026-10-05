@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Phones;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.PublicSite;
 using ArquitecturaBaseMultitenant.Domain.PublicSite;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -32,10 +33,11 @@ internal sealed class PublicPageService(IPublicPageReader reader, ITenantReader 
                 : ToResponse(tenant.Slug, page);
         });
 
-    public Task<Result> UpdateAsync(UpdatePublicPageRequest request, CancellationToken cancellationToken)
+    public Task<Result<VersionResponse>> UpdateAsync(UpdatePublicPageRequest request,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return OperationLog.RunAsync(logger, timeProvider, "UpdateOrganizationPublicPage", async () =>
+        return OperationLog.RunAsync<VersionResponse>(logger, timeProvider, "UpdateOrganizationPublicPage", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             var slug = TenantSlug.Create(request.Slug);
@@ -46,9 +48,9 @@ internal sealed class PublicPageService(IPublicPageReader reader, ITenantReader 
             if (contactPhone.IsFailure) return contactPhone.Error;
             try
             {
-                return await unitOfWork.ExecuteInTransactionAsync(
+                return VersionResponse.Of(await unitOfWork.ExecuteInTransactionAsync(
                     ct => editor.UpdateAsync(request, slug.Value, logo.Value, contactPhone.Value, ct),
-                    CommitPolicy.OnSuccess, cancellationToken);
+                    CommitPolicy.OnSuccess, cancellationToken));
             }
             catch (UniqueConstraintViolationException exception) when (exception.ConstraintName == UniqueKeys.TenantSlug)
             {
@@ -62,22 +64,23 @@ internal sealed class PublicPageService(IPublicPageReader reader, ITenantReader 
         });
     }
 
-    public Task<Result> PublishAsync(SetPublicPagePublicationRequest request, CancellationToken cancellationToken) =>
-        SetPublicationAsync(request, publish: true, cancellationToken);
+    public Task<Result<VersionResponse>> PublishAsync(SetPublicPagePublicationRequest request,
+        CancellationToken cancellationToken) => SetPublicationAsync(request, publish: true, cancellationToken);
 
-    public Task<Result> UnpublishAsync(SetPublicPagePublicationRequest request, CancellationToken cancellationToken) =>
-        SetPublicationAsync(request, publish: false, cancellationToken);
+    public Task<Result<VersionResponse>> UnpublishAsync(SetPublicPagePublicationRequest request,
+        CancellationToken cancellationToken) => SetPublicationAsync(request, publish: false, cancellationToken);
 
-    private Task<Result> SetPublicationAsync(SetPublicPagePublicationRequest request, bool publish,
+    private Task<Result<VersionResponse>> SetPublicationAsync(SetPublicPagePublicationRequest request, bool publish,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return OperationLog.RunAsync(logger, timeProvider, publish ? "PublishOrganizationPublicPage" : "UnpublishOrganizationPublicPage",
+        return OperationLog.RunAsync<VersionResponse>(logger, timeProvider,
+            publish ? "PublishOrganizationPublicPage" : "UnpublishOrganizationPublicPage",
             async () =>
             {
                 if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-                return await unitOfWork.ExecuteInTransactionAsync(
-                    ct => editor.SetPublicationAsync(request, publish, ct), CommitPolicy.OnSuccess, cancellationToken);
+                return VersionResponse.Of(await unitOfWork.ExecuteInTransactionAsync(
+                    ct => editor.SetPublicationAsync(request, publish, ct), CommitPolicy.OnSuccess, cancellationToken));
             });
     }
 

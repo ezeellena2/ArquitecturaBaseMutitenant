@@ -133,13 +133,15 @@ public sealed class LoginPersistenceTests(ApiFactory factory)
         var email = Email.Create($"profile-{Guid.NewGuid():N}@example.test").Value;
         var tenantId = Guid.NewGuid();
         Guid userId = Guid.Empty;
+        uint profileVersion = 0;
 
         await unitOfWork.ExecuteInTransactionAsync(async ct =>
         {
             userId = (await users.CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct)).Id;
             await users.SetPrimaryEmailAsync(userId, email, ct);
-            var version = (await users.GetByIdAsync(userId, ct))!.Version;
-            await users.UpdateProfileAsync(userId, "Ana", "en-US", "America/New_York", version, ct);
+            // «Tus datos» se guarda con su propia versión, no con el xmin de la cuenta.
+            var version = (await users.GetByIdAsync(userId, ct))!.ProfileVersion;
+            profileVersion = await users.UpdateProfileAsync(userId, "Ana", "en-US", "America/New_York", version, ct);
             await users.RememberBusinessTenantAsync(userId, tenantId, ct);
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
@@ -151,5 +153,8 @@ public sealed class LoginPersistenceTests(ApiFactory factory)
         Assert.Equal("America/New_York", account.TimeZoneId);
         Assert.Equal(email, account.PrimaryEmail);
         Assert.Equal(tenantId, account.LastBusinessTenantId);
+        // Solo el guardado del perfil sube su versión; el correo principal y la última organización no.
+        Assert.Equal(1u, profileVersion);
+        Assert.Equal(profileVersion, account.ProfileVersion);
     }
 }

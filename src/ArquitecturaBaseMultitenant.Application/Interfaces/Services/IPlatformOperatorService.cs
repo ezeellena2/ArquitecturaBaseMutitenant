@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Domain.Results;
 
@@ -22,7 +23,7 @@ public interface IPlatformOperatorInvitationService
 /// <summary>Cambia o quita los permisos de un operador, sin dejar a la plataforma sin quien administre operadores.</summary>
 public interface IPlatformOperatorService
 {
-    Task<Result> ChangePermissionsAsync(Guid accountId, ChangePlatformOperatorRequest request, CancellationToken ct);
+    Task<Result<VersionResponse>> ChangePermissionsAsync(Guid accountId, ChangePlatformOperatorRequest request, CancellationToken ct);
 
     Task<Result> RemoveAsync(Guid accountId, PlatformAccountActionRequest request, CancellationToken ct);
 }

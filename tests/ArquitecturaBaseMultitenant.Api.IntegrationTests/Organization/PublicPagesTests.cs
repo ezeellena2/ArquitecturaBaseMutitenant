@@ -51,8 +51,7 @@ public sealed class PublicPagesTests(ApiFactory factory)
             removeLogo = false,
             version = 0,
         }, Ct);
-        Assert.True(updated.StatusCode == HttpStatusCode.NoContent,
-            await updated.Content.ReadAsStringAsync(Ct));
+        var createdVersion = await SavedVersion.ReadAsync(updated, Ct);
 
         using var saved = await ownerClient.GetAsync("/api/organization/public-page", Ct);
         using var savedJson = JsonDocument.Parse(await saved.Content.ReadAsStringAsync(Ct));
@@ -63,6 +62,7 @@ public sealed class PublicPagesTests(ApiFactory factory)
         // docs/rules/telefonos.md: el país y lo escrito entran; se guarda y sale E.164.
         Assert.Equal("+541145678900", page.GetProperty("contactPhone").GetString());
         var savedVersion = page.GetProperty("version").GetUInt32();
+        Assert.Equal(createdVersion, savedVersion);
 
         using var invalidPhone = await ownerClient.PutAsJsonAsync("/api/organization/public-page", new
         {
@@ -93,13 +93,22 @@ public sealed class PublicPagesTests(ApiFactory factory)
         }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
 
+        // Publicar y despublicar también responden la versión nueva: el siguiente cambio sale con esa, sin releer.
         using var publish = await ownerClient.PostAsJsonAsync("/api/organization/public-page/publish",
             new { version = savedVersion }, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, publish.StatusCode);
+        var firstPublishedVersion = await SavedVersion.ReadAsync(publish, Ct);
+        using var unpublish = await ownerClient.PostAsJsonAsync("/api/organization/public-page/unpublish",
+            new { version = firstPublishedVersion }, Ct);
+        var unpublishedVersion = await SavedVersion.ReadAsync(unpublish, Ct);
+        using var publishAgain = await ownerClient.PostAsJsonAsync("/api/organization/public-page/publish",
+            new { version = unpublishedVersion }, Ct);
+        var publishedAgainVersion = await SavedVersion.ReadAsync(publishAgain, Ct);
+        Assert.Equal(3, new[] { firstPublishedVersion, unpublishedVersion, publishedAgainVersion }.Distinct().Count());
         using var published = await ownerClient.GetAsync("/api/organization/public-page", Ct);
         using var publishedJson = JsonDocument.Parse(await published.Content.ReadAsStringAsync(Ct));
         Assert.True(publishedJson.RootElement.GetProperty("isPublished").GetBoolean());
         var publishedVersion = publishedJson.RootElement.GetProperty("version").GetUInt32();
+        Assert.Equal(publishedAgainVersion, publishedVersion);
 
         await BlockPageAsync(tenant.Id, owner.UserId, publishedVersion);
         using var moderated = await ownerClient.GetAsync("/api/organization/public-page", Ct);
@@ -152,8 +161,8 @@ public sealed class PublicPagesTests(ApiFactory factory)
         using var neverSaved = await SavePageAsync(client, version: 7);
         await AssertConcurrencyConflictAsync(neverSaved);
 
-        using var created = await SavePageAsync(client, version: 0);
-        Assert.True(created.StatusCode == HttpStatusCode.NoContent, await created.Content.ReadAsStringAsync(Ct));
+        // El primer guardado responde la versión nueva y el segundo sale con esa, sin 409.
+        await SavedVersion.SaveTwiceAsync(version => SavePageAsync(client, version), 0, Ct);
 
         using var stale = await SavePageAsync(client, version: 0);
         await AssertConcurrencyConflictAsync(stale);

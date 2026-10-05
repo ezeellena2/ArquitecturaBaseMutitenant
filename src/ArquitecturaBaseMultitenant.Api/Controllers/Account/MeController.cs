@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Api.ErrorHandling;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Api.Tenancy;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.Profile;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.AspNetCore.Mvc;
@@ -25,7 +26,7 @@ public sealed class MeController(IProfileService service) : ControllerBase
 
     [HttpPut]
     [Access(Access.Consumer, Access.Business, Access.Platform)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<VersionResponse>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status401Unauthorized)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]

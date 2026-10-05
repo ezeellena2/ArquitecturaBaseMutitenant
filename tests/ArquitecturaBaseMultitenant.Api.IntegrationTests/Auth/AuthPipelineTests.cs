@@ -117,7 +117,7 @@ public sealed class AuthPipelineTests(ApiFactory factory)
             version = beforeBody.RootElement.GetProperty("version").GetUInt32(),
         });
         using var updated = await client.SendAsync(put, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, updated.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, updated.StatusCode);
 
         using var get = AuthorizedRequest(HttpMethod.Get, "/api/me", userId, tenantId);
         using var read = await client.SendAsync(get, Ct);

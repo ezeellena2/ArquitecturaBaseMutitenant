@@ -1744,6 +1744,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean");
 
+                    b.Property<long>("ProfileVersion")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
 

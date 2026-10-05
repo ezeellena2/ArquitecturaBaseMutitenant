@@ -7,13 +7,15 @@ using FluentValidation;
 
 namespace ArquitecturaBaseMultitenant.Application.Validation.Profile;
 
-/// <summary>Exige versión para concurrencia y preferencias habilitadas en los catálogos antes de actualizar el perfil.</summary>
+/// <summary>
+/// Exige la versión de «Tus datos» para concurrencia (0 si el perfil nunca se guardó) y preferencias habilitadas en los
+/// catálogos antes de actualizar el perfil.
+/// </summary>
 internal sealed class UpdateMeRequestValidator : AbstractValidator<UpdateMeRequest>
 {
     public UpdateMeRequestValidator(ICultureCatalog cultures, ITimeZoneCatalog timeZones)
     {
-        RuleFor(request => request.Version).NotNull().WithMessage(_ => ValidationTexts.Required)
-            .GreaterThan(0U).WithMessage(_ => ValidationTexts.Required);
+        RuleFor(request => request.Version).NotNull().WithMessage(_ => ValidationTexts.Required);
         RuleFor(request => request.DisplayName).MaxLength(TextLimits.PersonName);
         RuleFor(request => request.Culture)
             .NotEmpty().WithMessage(_ => ValidationTexts.Required)

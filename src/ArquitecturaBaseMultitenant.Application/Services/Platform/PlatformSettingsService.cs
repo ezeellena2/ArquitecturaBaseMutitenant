@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
@@ -32,13 +33,14 @@ internal sealed class PlatformSettingsService(IPlatformSettingsReader reader, IP
             return settings is null ? SettingsErrors.NotFound : new PlatformContactResponse(settings.SalesEmail, settings.SupportEmail);
         });
 
-    public Task<Result> UpdateAsync(UpdatePlatformSettingsRequest request, CancellationToken cancellationToken)
+    public Task<Result<VersionResponse>> UpdateAsync(UpdatePlatformSettingsRequest request,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return OperationLog.RunAsync(logger, timeProvider, "UpdatePlatformSettings", async () =>
+        return OperationLog.RunAsync<VersionResponse>(logger, timeProvider, "UpdatePlatformSettings", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            var result = await unitOfWork.ExecuteInTransactionAsync(async ct =>
+            var result = await unitOfWork.ExecuteInTransactionAsync<Result<PlatformSettings>>(async ct =>
             {
                 var settings = await repository.GetForUpdateAsync(request.Version!.Value, ct);
                 if (settings is null) return SettingsErrors.NotFound;
@@ -51,13 +53,13 @@ internal sealed class PlatformSettingsService(IPlatformSettingsReader reader, IP
                 if (settings.SupportEmail != request.SupportEmail) changes.AddBoolean("supportEmailChanged", false, true);
                 var changed = settings.Update(request.ConsumerSignup!.Value, request.BusinessSignup!.Value,
                     request.MaxOwnedOrganizations!.Value, request.SalesEmail!, request.SupportEmail!);
-                if (changed.IsFailure) return changed;
+                if (changed.IsFailure) return changed.Error;
                 repository.MarkUpdated(settings);
                 audit.Record(request.Reason!, changes);
-                return Result.Success();
+                return settings;
             }, CommitPolicy.OnSuccess, cancellationToken);
             if (result.IsSuccess) await cache.InvalidateAsync(cancellationToken);
-            return result;
+            return VersionResponse.Of(result);
         });
     }
 }

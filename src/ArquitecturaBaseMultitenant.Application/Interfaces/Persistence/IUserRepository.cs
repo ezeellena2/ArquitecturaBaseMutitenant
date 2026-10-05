@@ -47,7 +47,11 @@ public interface IUserRepository
     Task SetPrimaryEmailAsync(Guid userId, Email email, CancellationToken cancellationToken);
     Task SetPrimaryContactAsync(Guid userId, Email? email, PhoneNumber? phoneNumber, CancellationToken cancellationToken);
 
-    Task UpdateProfileAsync(Guid userId, string? displayName, string culture, string timeZoneId,
+    /// <summary>
+    /// Deja «Tus datos» para guardar con la versión del perfil que leyó la pantalla y devuelve la nueva. Es propia del
+    /// perfil, no el xmin de la cuenta, y vale si la transacción hace commit (docs/rules/concurrencia.md).
+    /// </summary>
+    Task<uint> UpdateProfileAsync(Guid userId, string? displayName, string culture, string timeZoneId,
         uint expectedVersion, CancellationToken cancellationToken);
 
     Task RememberBusinessTenantAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken);

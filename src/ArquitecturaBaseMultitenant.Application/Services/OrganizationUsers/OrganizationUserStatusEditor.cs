@@ -17,12 +17,14 @@ internal sealed class OrganizationUserStatusEditor(
     OrganizationMembershipEndNotifier membershipEndNotifier,
     TimeProvider timeProvider)
 {
-    internal async Task<Result> ChangeStatusAsync(ChangeOrganizationUserStatusRequest request, Guid? currentUserId,
-        CancellationToken ct)
+    internal async Task<Result<Member>> ChangeStatusAsync(ChangeOrganizationUserStatusRequest request,
+        Guid? currentUserId, CancellationToken ct)
     {
         var member = await members.GetByIdAsync(request.MemberId, request.Version!.Value, ct);
         if (member is null) return MemberErrors.NotFound;
-        return await ApplyAsync(member, request.IsActive!.Value, currentUserId, ct);
+        var applied = await ApplyAsync(member, request.IsActive!.Value, currentUserId, ct);
+        if (applied.IsFailure) return applied.Error;
+        return member;
     }
 
     /// <summary>Cambia el estado de un miembro ya cargado; también lo usa «Guardar cambios» del usuario.</summary>
