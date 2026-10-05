@@ -12,12 +12,15 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Interceptors;
 /// …» con las empresas y los roles adentro: el miembro, las membresías y los roles de esa persona en el mismo guardado
 /// no dejan entrada propia. Revocar su invitación deja solo la entrada de la invitación, por lo mismo. Agregarlo a una
 /// empresa deja «Agregó a …» con «Roles en la empresa» adentro, y quitarlo de ella, la membresía con los roles que
-/// tenía ahí. Los demás cambios de roles siguen siendo una entrada por persona y lugar (<see cref="RoleAssignmentTrail"/>).
+/// tenía ahí. Crear una empresa deja solo «Creó la empresa …»: la membresía y el rol de quien la crea van adentro, sin
+/// mostrarse, como el tablero. Los demás cambios de roles siguen siendo una entrada por persona y lugar
+/// (<see cref="RoleAssignmentTrail"/>).
 /// </summary>
 internal sealed class AccessChangeTrail
 {
     private readonly HashSet<Guid> invitedMembers;
     private readonly HashSet<Guid> revokedMembers;
+    private readonly HashSet<Guid> createdCompanies;
     private readonly ILookup<Guid, Guid> invitedCompanies;
     private readonly HashSet<(Guid MemberId, Guid CompanyId)> addedMemberships;
     private readonly HashSet<(Guid MemberId, Guid CompanyId)> reopenedOrClosedMemberships;
@@ -32,10 +35,13 @@ internal sealed class AccessChangeTrail
         revokedMembers = [.. changed.Where(entry => entry.Entity is Invitation { Status: InvitationStatus.Revoked }
                 && OriginalStatus(entry) is InvitationStatus.Pending)
             .Select(entry => ((Invitation)entry.Entity).MemberId).Where(memberId => !invitedMembers.Contains(memberId))];
+        // Quien crea una empresa queda en ella: su membresía y su rol son parte del alta de la empresa.
+        createdCompanies = [.. Added<Company>(changed).Select(company => company.Id)];
         var memberships = Added<CompanyMembership>(changed).ToArray();
         invitedCompanies = memberships.Where(membership => invitedMembers.Contains(membership.MemberId))
             .ToLookup(membership => membership.MemberId, membership => membership.CompanyId);
-        addedMemberships = [.. memberships.Where(membership => !invitedMembers.Contains(membership.MemberId))
+        addedMemberships = [.. memberships.Where(membership => !invitedMembers.Contains(membership.MemberId)
+                && !createdCompanies.Contains(membership.CompanyId))
             .Select(membership => (membership.MemberId, membership.CompanyId))];
         // Quitar a alguien de una empresa (o volver a sumarlo) cambia el estado de su membresía.
         reopenedOrClosedMemberships = [.. changed
@@ -52,17 +58,19 @@ internal sealed class AccessChangeTrail
     /// <summary>Los cambios de roles que no van adentro de la entrada o la salida de una persona: una entrada cada uno.</summary>
     internal IEnumerable<RoleAssignmentTrail.RoleSetChange> StandaloneRoleChanges =>
         roleChanges.Where(change => !invitedMembers.Contains(change.Place.MemberId)
-            && !revokedMembers.Contains(change.Place.MemberId) && !ChangesMembership(change.Place));
+            && !revokedMembers.Contains(change.Place.MemberId) && !ChangesMembership(change.Place)
+            && !(change.Place.CompanyId is { } companyId && createdCompanies.Contains(companyId)));
 
     /// <summary>
     /// El miembro y las membresías de una persona invitada en este guardado, o cuya invitación se revoca en él, son
-    /// parte de la entrada de esa invitación.
+    /// parte de la entrada de esa invitación; la membresía de quien crea una empresa, parte del alta de la empresa.
     /// </summary>
-    internal bool IsPartOfInvitation(EntityEntry<IAuditable> entry) => entry.Entity switch
+    internal bool IsPartOfAnotherEntry(EntityEntry<IAuditable> entry) => entry.Entity switch
     {
         Member member => invitedMembers.Contains(member.Id) || revokedMembers.Contains(member.Id),
         CompanyMembership membership => invitedMembers.Contains(membership.MemberId)
-            || revokedMembers.Contains(membership.MemberId),
+            || revokedMembers.Contains(membership.MemberId)
+            || entry.State == EntityState.Added && createdCompanies.Contains(membership.CompanyId),
         _ => false,
     };
 

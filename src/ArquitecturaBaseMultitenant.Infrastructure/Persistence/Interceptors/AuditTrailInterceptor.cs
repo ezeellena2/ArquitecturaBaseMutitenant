@@ -91,7 +91,8 @@ internal sealed class AuditTrailInterceptor(
         var (actorKind, actorId) = AuditActorResolver.Resolve(currentUser);
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         var counterparts = new HashSet<Guid>();
-        // Invitar a alguien, revocar su invitación, o agregarlo a una empresa o quitarlo de ella deja una sola entrada.
+        // Invitar a alguien, revocar su invitación, agregarlo a una empresa o quitarlo de ella, o crear una empresa deja
+        // una sola entrada.
         var access = AccessChangeTrail.Plan(changed, roleChanges);
         foreach (var change in access.StandaloneRoleChanges)
         {
@@ -112,7 +113,7 @@ internal sealed class AuditTrailInterceptor(
                 throw new InvalidOperationException("The audited entity does not belong to the active tenant.");
             }
 
-            if (access.IsPartOfInvitation(entry))
+            if (access.IsPartOfAnotherEntry(entry))
             {
                 continue;
             }

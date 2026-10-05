@@ -126,6 +126,25 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Creating_a_company_leaves_one_entry_with_its_name_like_the_board()
+    {
+        using var client = Client();
+        var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
+        await OrganizationJourney.StageAsync(factory, owner, "Auditoría crear empresa", Ct);
+        await AccountJourney.AuthorizeAsync(client, "business", Ct);
+        var before = await EntryIdsAsync(client);
+
+        // Quien la crea queda en ella como Administrador: su membresía y su rol van adentro de la misma entrada.
+        await OrganizationJourney.CreateCompanyAsync(client, "Delta Norte S.A.", Ct);
+
+        // Tablero Auditoria-Org: «Creó la empresa Delta Norte S.A.», en ella, con solo «Nombre» adentro.
+        var entry = Assert.Single(await NewEntriesAsync(client, before));
+        Assert.Equal("Creó la empresa Delta Norte S.A.", entry.GetProperty("actionText").GetString());
+        Assert.Equal("Delta Norte S.A.", entry.GetProperty("whereText").GetString());
+        Assert.Equal(["Nombre:  → Delta Norte S.A."], Rows(entry));
+    }
+
+    [Fact]
     public async Task Inviting_a_person_leaves_one_entry_with_the_email_the_company_and_the_roles_like_the_board()
     {
         using var client = Client();
@@ -314,21 +333,22 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
     public async Task Someone_without_a_name_or_an_invitation_appears_with_their_masked_email()
     {
         using var client = Client();
-        var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
-        await OrganizationJourney.StageAsync(factory, owner, "Auditoría sin nombre", Ct);
-        await AccountJourney.AuthorizeAsync(client, "business", Ct);
+        var company = await StageCompanyAsync(client, "Auditoría sin nombre");
+        // Una cuenta que todavía no puso su nombre, en la organización sin invitación (como quien la registró).
+        using var unnamedClient = Client();
+        var unnamed = await AccountJourney.RegisterAsync(factory, unnamedClient, Ct,
+            Email.Create($"nadia-{Guid.NewGuid():N}@example.test").Value);
+        var memberId = await OrganizationJourney.AddActiveMemberAsync(factory, company.TenantId, unnamed.UserId, Ct);
         var before = await EntryIdsAsync(client);
 
-        // Quien registró la organización no puso su nombre ni tiene invitación; crear una empresa lo suma a ella.
-        await OrganizationJourney.CreateCompanyAsync(client, "Delta S.A.", Ct);
+        await AddToCompanyAsync(client, company with { MemberId = memberId }, company.Sales);
 
         // Tablero Auditoria-Org: «Agregó a …», con lo que haya: su nombre o su correo, enmascarado.
-        var added = Assert.Single(await NewEntriesAsync(client, before),
-            entry => entry.GetProperty("entityType").GetString() == "CompanyMembership");
-        Assert.Equal("Agregó a ac•••@example.test", added.GetProperty("actionText").GetString());
-        Assert.Equal("ac•••@example.test", added.GetProperty("affectedDisplayName").GetString());
+        var added = Assert.Single(await NewEntriesAsync(client, before));
+        Assert.Equal("Agregó a na•••@example.test", added.GetProperty("actionText").GetString());
+        Assert.Equal("na•••@example.test", added.GetProperty("affectedDisplayName").GetString());
         Assert.Equal("Delta S.A.", added.GetProperty("whereText").GetString());
-        Assert.Equal(["Roles en la empresa:  → Administrador"], Rows(added));
+        Assert.Equal(["Roles en la empresa:  → Ventas"], Rows(added));
     }
 
     [Fact]
