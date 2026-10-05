@@ -292,7 +292,7 @@ Lo que faltaba del tablero Auditoria-Org (lienzo v106) después de la tanda 4f (
   - Tests: `usePermissions.test.ts`, `RequirePermission.test.tsx`, `visible.test.ts` y, en `routes.test.tsx`, «la ruta %s pide el permiso de su manifiesto…».
   - `hasFeature` vive en `usePermissions` y reemplaza a `useFeature`, `<Feature>` y `FeatureRoute`, que nunca existieron. `RequirePermission` responde como un 404 con el módulo apagado, y como «No tenés permiso» sin el permiso. `visibleNavigation` filtra el menú lateral y «Más».
   - `canInCompany` usa `companies[companyId] ?? organization`: con el mapa del back (decisión 13), una empresa que no figura cae en los permisos de la organización, y eso es lo correcto.
-- [ ] **B4 · Permisos por empresa de punta a punta.** Hoy un Administrador de empresa no puede usar las pantallas de su empresa (confirmado leyendo el código):
+- [x] **B4 · Permisos por empresa de punta a punta.** Front en `b88d5f8` (la ruta de la ficha acepta el permiso de empresa) y `2577a3b` («Para resolver» con la empresa). El caso del E2E real está escrito (`88b2d71`) y lo corre la puerta, con la orden `expire` del preparador. Hoy un Administrador de empresa no puede usar las pantallas de su empresa (confirmado leyendo el código):
   - `ProfileSnapshotBuilder` manda vacío `effectivePermissions.companies` en `/api/me`;
   - `permissions` trae solo los permisos de la organización;
   - la ficha de Empresa pide `/api/roles/paged`, que exige `roles.read` de organización, y el 403 bloquea toda la pantalla.
@@ -550,16 +550,30 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
     - «Descripción» a todo el ancho;
     - «1 de 2» a la derecha, en su banda;
     - al rehacer el editor, conservar los botones de v87: «Descartar cambios» al editar (vuelve a lo guardado, sin salir) y «Cancelar» al crear. Los cambia «Paquete 0» en el Paquete 4.
-- [ ] **`CompanyDetailPage`,** partida según `arbol.md`:
+- [x] **6b · `CompanyDetailPage`,** partida según `arbol.md` (front `b02f57f`; 1083 tests, lint y build; capturas en `b6b/`):
   - `CompanyDialog` (compartido con Empresas), `AddMemberDialog`, `MemberRolesDialog`, `tabs/CompanyMembersTab` y `tabs/CompanyRolesTab`;
   - cada pieza es dueña de su borrador, su mutación y su error;
   - los diálogos se montan solo cuando están abiertos y devuelven el foco al cerrar.
-- [ ] **Estados** con `StatusBadge` y `statusTones` en Usuarios, Empresas y Miembros. Cada feature registra sus tonos, tipados por los enums del contrato, con el color del lienzo para cada estado.
+- [x] **Estados** (front `e71daa4`; quedan colores sueltos en la Página pública y en el punto del dominio de Configuración, que van al pulido final) con `StatusBadge` y `statusTones` en Usuarios, Empresas y Miembros. Cada feature registra sus tonos, tipados por los enums del contrato, con el color del lienzo para cada estado.
 - [x] Los «Copiá de» del front vuelven a apuntar a Roles (`7e60004`).
 - [ ] **6c · Los formularios como Roles:** Usuario, Configuración, la Página pública y el perfil de Mi cuenta todavía usan borradores con `useState`. Pasan a React Hook Form con zod sin cambiar lo que se ve. Además, en los diálogos de verificar de Mi cuenta, el error del código va debajo de los casilleros y el título cambia en cada paso (Cuenta-Verificar, v107).
 - [ ] **Hecho cuando:**
   - `npm test` completo pasa;
   - las capturas de Roles, Rol, Empresas y Empresa coinciden con sus tableros.
+
+### 6d. Front: pulido final (antes de la puerta)
+
+Lo que dejaron las tandas 6a, 6b y 6c, y lo que el usuario decide con Diseño en la tanda del lienzo que sigue a v107:
+- [ ] la miga «Empresas» sin enlace cuando no hay `companies.read`, como ya hace «‹»;
+- [ ] con un solo grupo, la ficha va sin la barra de pestañas (el Administrador de empresa ve solo «Miembros»);
+- [ ] los colores de estado sueltos de la Página pública y del punto del dominio de Configuración, a `statusTones`;
+- [ ] las casillas fijas de un rol de sistema, en gris también en el teléfono, cuando Diseño publique;
+- [ ] según decida el usuario:
+  - «Guardar cambios» de «Editar empresa» sin cambios;
+  - reenviar una invitación desde la ficha de Empresa (decisión 90);
+  - «Agregar miembro» para un Administrador de empresa sin `users.read`;
+  - los textos de espera de Quitar, Desvincular y Dar de baja;
+- [ ] los textos de «Quitar dominio» para 1 y 0 correos, y la hoja del detalle de Auditoría en el teléfono, cuando Diseño publique.
 
 ### 7. Puerta
 
