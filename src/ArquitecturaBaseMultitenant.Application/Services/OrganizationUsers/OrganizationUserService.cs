@@ -27,6 +27,7 @@ internal sealed class OrganizationUserService(
     OrganizationUserEditor editor,
     OrganizationUserStatusEditor statusEditor,
     OrganizationUserRemover remover,
+    IPermissionService permissions,
     IUnitOfWork unitOfWork,
     TimeProvider timeProvider,
     ILogger<OrganizationUserService> logger) : IOrganizationUserService
@@ -93,7 +94,7 @@ internal sealed class OrganizationUserService(
         {
             if (invitationId == Guid.Empty) return InvitationErrors.Invalid;
             return await unitOfWork.ExecuteInTransactionAsync(
-                ct => invitations.ResendAsync(invitationId, companyId: null, ct), CommitPolicy.OnSuccess,
+                ct => invitations.ResendAsync(invitationId, company: null, ct), CommitPolicy.OnSuccess,
                 cancellationToken);
         });
 
@@ -102,7 +103,7 @@ internal sealed class OrganizationUserService(
         {
             if (invitationId == Guid.Empty) return InvitationErrors.Invalid;
             return await unitOfWork.ExecuteInTransactionAsync(
-                ct => invitations.RevokeAsync(invitationId, companyId: null, ct), CommitPolicy.OnSuccess,
+                ct => invitations.RevokeAsync(invitationId, company: null, ct), CommitPolicy.OnSuccess,
                 cancellationToken);
         });
 
@@ -111,8 +112,9 @@ internal sealed class OrganizationUserService(
         OperationLog.RunAsync(logger, timeProvider, "ResendCompanyInvitation", async () =>
         {
             if (companyId == Guid.Empty || invitationId == Guid.Empty) return InvitationErrors.NotFound;
+            var company = await CompanyScopeAsync(companyId, cancellationToken);
             return await unitOfWork.ExecuteInTransactionAsync(
-                ct => invitations.ResendAsync(invitationId, companyId, ct), CommitPolicy.OnSuccess,
+                ct => invitations.ResendAsync(invitationId, company, ct), CommitPolicy.OnSuccess,
                 cancellationToken);
         });
 
@@ -121,10 +123,18 @@ internal sealed class OrganizationUserService(
         OperationLog.RunAsync(logger, timeProvider, "RevokeCompanyInvitation", async () =>
         {
             if (companyId == Guid.Empty || invitationId == Guid.Empty) return InvitationErrors.NotFound;
+            var company = await CompanyScopeAsync(companyId, cancellationToken);
             return await unitOfWork.ExecuteInTransactionAsync(
-                ct => invitations.RevokeAsync(invitationId, companyId, ct), CommitPolicy.OnSuccess,
+                ct => invitations.RevokeAsync(invitationId, company, ct), CommitPolicy.OnSuccess,
                 cancellationToken);
         });
+
+    // Con users.invite, desde la empresa se resuelve toda invitación que la incluye; sin él, solo las que son
+    // únicamente de ella (decisión 100). Se pregunta antes de la transacción, como la autorización de la ruta.
+    private async Task<CompanyInvitationScope> CompanyScopeAsync(Guid companyId,
+        CancellationToken cancellationToken) =>
+        new(companyId, currentUser.UserId is { } userId
+            && await permissions.HasPermissionAsync(userId, Permissions.Users.Invite, cancellationToken));
 
     public Task<Result<VersionResponse>> UpdateAsync(UpdateOrganizationUserRequest request,
         CancellationToken cancellationToken)

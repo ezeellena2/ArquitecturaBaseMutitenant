@@ -181,6 +181,54 @@ public sealed class CompanyAdminTests(ApiFactory factory)
         Assert.Equal(InvitationNotFound, await ProblemCodeAsync(resent));
     }
 
+    // Decisiones 100 y 101, por menor privilegio: revocar cancela la invitación entera. Sin users.invite, el
+    // Administrador de empresa resuelve solo las invitaciones que son únicamente de su empresa; una que además da
+    // roles de la organización, o que entra también a otra empresa, la resuelve quien tiene users.invite.
+    [Fact]
+    public async Task A_company_admin_does_not_resolve_an_invitation_that_also_gives_organization_roles_or_another_company()
+    {
+        using var ownerClient = NewClient();
+        using var adminClient = NewClient();
+        var staged = await StageAsync(ownerClient, adminClient, "Invitaciones compartidas");
+        var north = new { companyId = staged.NorthId, roleIds = new[] { staged.CompanyAdminRoleId } };
+        var south = new { companyId = staged.SouthId, roleIds = new[] { staged.CompanyAdminRoleId } };
+        var onlyNorthId = await InviteAsync(ownerClient, $"solo-norte-{Guid.NewGuid():N}@example.test", [north]);
+        var withOwnerId = await InviteAsync(ownerClient, $"con-duenio-{Guid.NewGuid():N}@example.test", [north],
+            [await OwnerRoleIdAsync(ownerClient)]);
+        var withSouthId = await InviteAsync(ownerClient, $"con-sur-{Guid.NewGuid():N}@example.test", [north, south]);
+        var invitations = $"/api/companies/{staged.NorthId:D}/invitations";
+        var members = $"/api/companies/{staged.NorthId:D}/members/paged?state=Invited&pageSize=50";
+
+        // En Miembros figuran las tres personas invitadas, pero solo la de su empresa trae la invitación para el ⋮.
+        var adminPage = await JsonAsync(adminClient, members);
+        Assert.Equal(3, adminPage.GetProperty("totalCount").GetInt32());
+        Assert.Equal([onlyNorthId], InvitationIds(adminPage));
+
+        // Reenviarlas o revocarlas desde su empresa da 404, como una invitación ajena, y siguen pendientes.
+        foreach (var sharedId in new[] { withOwnerId, withSouthId })
+        {
+            using var resent = await AccountJourney.PostAsync(adminClient, $"{invitations}/{sharedId:D}/resend",
+                new { }, Ct);
+            Assert.Equal(HttpStatusCode.NotFound, resent.StatusCode);
+            Assert.Equal(InvitationNotFound, await ProblemCodeAsync(resent));
+            using var revoked = await adminClient.DeleteAsync($"{invitations}/{sharedId:D}", Ct);
+            Assert.Equal(HttpStatusCode.NotFound, revoked.StatusCode);
+            Assert.Equal(InvitationNotFound, await ProblemCodeAsync(revoked));
+            Assert.Equal(InvitationStatus.Pending, await StatusAsync(staged.TenantId, sharedId));
+        }
+
+        // Quien tiene users.invite las ve con la invitación y las resuelve desde estas mismas rutas.
+        Assert.Equal(new[] { onlyNorthId, withOwnerId, withSouthId }.Order(),
+            InvitationIds(await JsonAsync(ownerClient, members)).Order());
+        using (var resent = await AccountJourney.PostAsync(ownerClient, $"{invitations}/{withOwnerId:D}/resend",
+                   new { }, Ct))
+            Assert.True(resent.StatusCode == HttpStatusCode.OK, await resent.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(InvitationStatus.Revoked, await StatusAsync(staged.TenantId, withOwnerId));
+        using (var revoked = await ownerClient.DeleteAsync($"{invitations}/{withSouthId:D}", Ct))
+            Assert.True(revoked.StatusCode == HttpStatusCode.NoContent, await revoked.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(InvitationStatus.Revoked, await StatusAsync(staged.TenantId, withSouthId));
+    }
+
     // Aislamiento: el Dueño de otra organización no llega a una empresa ni a una invitación de esta.
     [Fact]
     public async Task Another_organization_gets_404_for_the_candidates_and_the_invitations_of_this_one()
@@ -230,13 +278,30 @@ public sealed class CompanyAdminTests(ApiFactory factory)
         return new Staged(tenantId, adminMemberId, northId, southId, companyAdminRoleId);
     }
 
-    private static async Task<Guid> InviteAsync(HttpClient ownerClient, string email, object[] companies)
+    private static async Task<Guid> InviteAsync(HttpClient ownerClient, string email, object[] companies,
+        Guid[]? roleIds = null)
     {
         using var issued = await AccountJourney.PostAsync(ownerClient, "/api/users/invitations",
-            new { email, roleIds = Array.Empty<Guid>(), companies }, Ct);
+            new { email, roleIds = roleIds ?? [], companies }, Ct);
         Assert.True(issued.StatusCode == HttpStatusCode.Created, await issued.Content.ReadAsStringAsync(Ct));
         using var json = JsonDocument.Parse(await issued.Content.ReadAsStringAsync(Ct));
         return json.RootElement.GetProperty("invitationId").GetGuid();
+    }
+
+    // «Dueño», el único rol de sistema de la organización.
+    private static async Task<Guid> OwnerRoleIdAsync(HttpClient ownerClient) =>
+        (await JsonAsync(ownerClient, "/api/roles/paged?scope=Organization&page=1&pageSize=50")).GetProperty("items")
+        .EnumerateArray().Single(role => role.GetProperty("isSystemRole").GetBoolean()).GetProperty("id").GetGuid();
+
+    // Las invitaciones que trae una página de Miembros: una fila sin invitación tampoco trae su vencimiento.
+    private static Guid[] InvitationIds(JsonElement page)
+    {
+        var items = page.GetProperty("items").EnumerateArray().ToArray();
+        Assert.All(items, item => Assert.Equal(item.GetProperty("invitationId").ValueKind,
+            item.GetProperty("invitationExpiresAtUtc").ValueKind == JsonValueKind.Null
+                ? JsonValueKind.Null : JsonValueKind.String));
+        return [.. items.Where(item => item.GetProperty("invitationId").ValueKind != JsonValueKind.Null)
+            .Select(item => item.GetProperty("invitationId").GetGuid())];
     }
 
     private async Task<InvitationStatus> StatusAsync(Guid tenantId, Guid invitationId)

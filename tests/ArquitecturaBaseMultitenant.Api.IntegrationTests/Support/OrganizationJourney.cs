@@ -77,14 +77,17 @@ internal static class OrganizationJourney
         return await created.Content.ReadFromJsonAsync<Guid>(ct);
     }
 
-    /// <summary>Invita un correo sin roles y deja la invitación vencida hace dos días.</summary>
+    /// <summary>
+    /// Invita un correo, sin roles de la organización salvo <paramref name="roleIds"/>, y deja la invitación vencida
+    /// hace dos días.
+    /// </summary>
     internal static async Task InviteExpiredAsync(ApiFactory factory, HttpClient client, Guid tenantId, string email,
-        CancellationToken ct, object[]? companies = null)
+        CancellationToken ct, object[]? companies = null, Guid[]? roleIds = null)
     {
         using var issued = await AccountJourney.PostAsync(client, "/api/users/invitations", new
         {
             email,
-            roleIds = Array.Empty<Guid>(),
+            roleIds = roleIds ?? [],
             companies = companies ?? [],
         }, ct);
         Assert.True(issued.StatusCode == HttpStatusCode.Created, await issued.Content.ReadAsStringAsync(ct));

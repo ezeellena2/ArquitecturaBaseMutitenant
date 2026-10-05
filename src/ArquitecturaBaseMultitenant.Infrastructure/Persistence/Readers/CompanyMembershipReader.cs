@@ -83,17 +83,22 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
                 .ToArrayAsync(cancellationToken))
             .GroupBy(item => item.MemberId)
             .ToDictionary(group => group.Key, group => group.First());
+        var sharedInvitations = await SharedWithOthersAsync(tenantId, companyId, [.. pendingInvitations.Keys],
+            cancellationToken);
 
         var mapped = page.Items.Select(state => (state.State, Member: rowsById[state.MemberId],
                 Invitation: pendingInvitations.GetValueOrDefault(state.MemberId)))
+            .Select(item => (item.State, item.Member, item.Invitation,
+                // Solo la invitación que incluye a esta empresa: si se la sacaron, se reenvía desde Usuarios.
+                Includes: item.Invitation is not null && item.Member.MembershipStatus == CompanyMembershipStatus.Active))
             .Select(item => new CompanyMemberRow(item.Member.MemberId, item.Member.UserId,
                 item.Member.DisplayName.Length == 0 ? item.Invitation?.Destination.DisplayValue ?? "" : item.Member.DisplayName,
                 ToEmail(item.Member.Email ?? item.Invitation?.Destination.DisplayValue), item.State,
                 item.Member.MembershipStatus, rolesByMember.GetValueOrDefault(item.Member.MemberId, []),
                 item.Member.Version, item.Member.CreatedAtUtc,
-                // Solo la invitación que incluye a esta empresa: si se la sacaron, se reenvía desde Usuarios.
-                item.Member.MembershipStatus == CompanyMembershipStatus.Active ? item.Invitation?.Id : null,
-                item.Member.MembershipStatus == CompanyMembershipStatus.Active ? item.Invitation?.ExpiresAtUtc : null))
+                item.Includes ? item.Invitation!.Id : null,
+                item.Includes ? item.Invitation!.ExpiresAtUtc : null,
+                item.Includes && !sharedInvitations.Contains(item.Member.MemberId)))
             .ToArray();
         return new PagedResult<CompanyMemberRow>(mapped, page.Page, page.PageSize, page.TotalCount);
     }
@@ -187,6 +192,25 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
         return new PagedResult<CompanyCandidateRow>([.. page.Items.Select(row => new CompanyCandidateRow(
             row.MemberId, row.DisplayName ?? string.Empty, ToEmail(row.Email)))], page.Page, page.PageSize,
             page.TotalCount);
+    }
+
+    /// <summary>
+    /// De las personas con una invitación pendiente, las que tienen roles de la organización o una membresía activa en
+    /// otra empresa: su invitación no es únicamente de esta empresa. Sigue a <c>CompanyInvitationPolicy</c>.
+    /// </summary>
+    private async Task<HashSet<Guid>> SharedWithOthersAsync(Guid tenantId, Guid companyId,
+        Guid[] invitedMemberIds, CancellationToken cancellationToken)
+    {
+        if (invitedMemberIds.Length == 0) return [];
+        var withOrganizationRoles = context.RoleAssignments.AsNoTracking()
+            .Where(assignment => assignment.TenantId == tenantId && assignment.CompanyId == null
+                && invitedMemberIds.Contains(assignment.MemberId))
+            .Select(assignment => assignment.MemberId);
+        var inAnotherCompany = context.CompanyMemberships.AsNoTracking()
+            .Where(membership => membership.TenantId == tenantId && membership.CompanyId != companyId
+                && membership.Status == CompanyMembershipStatus.Active && invitedMemberIds.Contains(membership.MemberId))
+            .Select(membership => membership.MemberId);
+        return [.. await withOrganizationRoles.Union(inAnotherCompany).ToArrayAsync(cancellationToken)];
     }
 
     private IQueryable<StateRow> Memberships(Guid tenantId, Guid companyId, ListCompanyMembersRequest request)

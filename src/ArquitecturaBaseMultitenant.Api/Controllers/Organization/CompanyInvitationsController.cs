@@ -11,9 +11,9 @@ using Microsoft.AspNetCore.Mvc;
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Organization;
 
 /// <summary>
-/// Reenviar y revocar desde la ficha de una empresa las invitaciones que la incluyen, como en Usuarios: así lo hace un
-/// Administrador de empresa sin <c>users.invite</c> (decisión del 2026-10-05). Una invitación que no incluye a esa
-/// empresa es ajena: 404.
+/// Reenviar y revocar desde la ficha de una empresa las invitaciones que la incluyen, como en Usuarios (decisión del
+/// 2026-10-05). Un Administrador de empresa sin <c>users.invite</c> resuelve solo las que son únicamente de su empresa,
+/// sin roles de la organización ni otras empresas (<c>CompanyInvitationPolicy</c>). Cualquier otra es ajena: 404.
 /// </summary>
 [ApiController]
 [Route("api/companies/{companyId:guid}/invitations")]

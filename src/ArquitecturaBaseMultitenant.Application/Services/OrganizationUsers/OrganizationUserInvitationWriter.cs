@@ -11,11 +11,11 @@ namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
 
 /// <summary>
 /// Invita, reenvía y revoca dentro de la transacción del servicio; cada reenvío es una invitación independiente. Desde
-/// una empresa, solo las invitaciones que incluyen una membresía activa en ella: las demás son ajenas (404).
+/// una empresa, solo las invitaciones que se pueden resolver desde ella (<see cref="CompanyInvitationPolicy"/>): las
+/// demás son ajenas (404).
 /// </summary>
 internal sealed class OrganizationUserInvitationWriter(
     IInvitationRepository invitations,
-    ICompanyMembershipRepository companyMemberships,
     InvitationIssuer issuer,
     IExternalLoginLock externalLoginLock,
     ICurrentUser currentUser,
@@ -44,9 +44,10 @@ internal sealed class OrganizationUserInvitationWriter(
                 .Order(StringComparer.Ordinal))
             .Distinct(StringComparer.Ordinal)]);
 
-    internal async Task<Result<Guid>> ResendAsync(Guid invitationId, Guid? companyId, CancellationToken ct)
+    internal async Task<Result<Guid>> ResendAsync(Guid invitationId, CompanyInvitationScope? company,
+        CancellationToken ct)
     {
-        var locked = await LockInvitationAsync(invitationId, companyId, ct);
+        var locked = await LockInvitationAsync(invitationId, company, ct);
         if (locked.IsFailure) return locked.Error;
         var invitation = locked.Value;
         if (invitation.Status != InvitationStatus.Pending) return InvitationErrors.Invalid;
@@ -57,21 +58,21 @@ internal sealed class OrganizationUserInvitationWriter(
             invitation.Channel, invitation.MemberId, invitation.Id), ct);
     }
 
-    internal async Task<Result> RevokeAsync(Guid invitationId, Guid? companyId, CancellationToken ct)
+    internal async Task<Result> RevokeAsync(Guid invitationId, CompanyInvitationScope? company, CancellationToken ct)
     {
-        var locked = await LockInvitationAsync(invitationId, companyId, ct);
+        var locked = await LockInvitationAsync(invitationId, company, ct);
         if (locked.IsFailure) return locked.Error;
         var revoked = locked.Value.Revoke(timeProvider.GetUtcNow().UtcDateTime);
         if (revoked.IsFailure) return revoked;
         return await accessCleaner.RemoveUnacceptedMemberIfOrphanedAsync(invitationId, locked.Value.MemberId, ct);
     }
 
-    // Toma los locks del destino y de la invitación, y la relee. Desde una empresa, la que no incluye una membresía
-    // activa en ella responde como la que no existe; desde Usuarios, las dos siguen siendo Invalid.
-    private async Task<Result<Invitation>> LockInvitationAsync(Guid invitationId, Guid? companyId,
+    // Toma los locks del destino y de la invitación, y la relee. Desde una empresa, la que no se puede resolver desde
+    // ella responde como la que no existe; desde Usuarios, las dos siguen siendo Invalid.
+    private async Task<Result<Invitation>> LockInvitationAsync(Guid invitationId, CompanyInvitationScope? company,
         CancellationToken ct)
     {
-        var missing = companyId is null ? InvitationErrors.Invalid : InvitationErrors.NotFound;
+        var missing = company is null ? InvitationErrors.Invalid : InvitationErrors.NotFound;
         var firstRead = await invitations.GetByIdAsync(invitationId, ct);
         if (firstRead is null) return missing;
         await externalLoginLock.LockEmailAsync(firstRead.Destination, ct);
@@ -79,9 +80,16 @@ internal sealed class OrganizationUserInvitationWriter(
         await invitations.LockAsync(invitationId, ct);
         var invitation = await invitations.GetByIdAsync(invitationId, ct);
         if (invitation is null) return missing;
-        if (companyId is { } scoped && await companyMemberships.FindAsync(scoped, invitation.MemberId, ct)
-                is not { Status: CompanyMembershipStatus.Active })
-            return missing;
+        if (company is not null && !await CanResolveAsync(company, invitation.MemberId, ct)) return missing;
         return invitation;
+    }
+
+    // Lo que da la invitación son los roles y las membresías de su persona.
+    private async Task<bool> CanResolveAsync(CompanyInvitationScope company, Guid memberId, CancellationToken ct)
+    {
+        var granted = await assignmentManager.GetSnapshotAsync(memberId, ct);
+        return CompanyInvitationPolicy.CanResolve(company,
+            granted.Assignments.Any(assignment => assignment.CompanyId is null),
+            [.. granted.CompanyMemberships.Select(membership => (membership.CompanyId, membership.Status))]);
     }
 }

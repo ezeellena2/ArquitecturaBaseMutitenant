@@ -4,15 +4,15 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Home;
 using ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
-using ArquitecturaBaseMultitenant.Domain.Tenancy;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
 
 /// <summary>
 /// «Para resolver» de Usuarios (ADR 0040): las invitaciones vencidas, para quien puede invitar, y las bajas pedidas,
 /// para quien administra usuarios. Sin permisos de la organización (Inicio-Miembro), las invitaciones vencidas de cada
-/// empresa donde administra los miembros, con la empresa: las que la incluyen (membresía activa), que son las que
-/// puede reenviar desde la ficha. Usa los mismos estados que el listado de Usuarios.
+/// empresa donde administra los miembros, con la empresa: solo las que puede reenviar desde la ficha, que sin
+/// <c>users.invite</c> son las únicamente de esa empresa (<see cref="CompanyInvitationPolicy"/>). Usa los mismos estados
+/// que el listado de Usuarios.
 /// </summary>
 internal sealed class OrganizationUserPendingItems(IOrganizationUserReader users, TimeProvider timeProvider)
     : IPendingItemSource
@@ -34,9 +34,11 @@ internal sealed class OrganizationUserPendingItems(IOrganizationUserReader users
         }
         foreach (var companyId in context.CompaniesWhere(Permissions.Company.Members.Manage))
         {
+            var scope = new CompanyInvitationScope(companyId, context.Can(Permissions.Users.Invite));
             items.AddRange((await AllAsync(OrganizationUserState.Expired, companyId, nowUtc, cancellationToken))
-                .SelectMany(row => row.Companies.Where(company => company.CompanyId == companyId
-                        && company.Status == CompanyMembershipStatus.Active).Take(1)
+                .Where(row => CompanyInvitationPolicy.CanResolve(scope, row.Roles.Count > 0,
+                    [.. row.Companies.Select(company => (company.CompanyId, company.Status))]))
+                .SelectMany(row => row.Companies.Where(company => company.CompanyId == companyId).Take(1)
                     .Select(company => Expired(row, company))));
         }
         if (context.Can(Permissions.Users.Manage))

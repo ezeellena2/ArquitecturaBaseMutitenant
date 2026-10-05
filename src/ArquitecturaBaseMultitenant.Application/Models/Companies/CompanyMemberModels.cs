@@ -47,11 +47,13 @@ public sealed record UserCompanyRow(Guid CompanyId, string CompanyName, IReadOnl
 /// <summary>
 /// Un miembro de la empresa; <c>State</c> lo calcula el reader en SQL (CompanyMemberStatePolicy). La invitación
 /// pendiente viene solo si incluye a esta empresa (membresía activa): es la que se reenvía o revoca desde la ficha.
+/// <c>InvitationOnlyForCompany</c> dice si, además, es únicamente de esta empresa (CompanyInvitationPolicy): sin roles
+/// de la organización ni otra membresía activa. El servicio la muestra solo a quien puede resolverla.
 /// </summary>
 public sealed record CompanyMemberRow(Guid MemberId, Guid? UserId, string DisplayName, Email? Email,
     CompanyMemberState State, CompanyMembershipStatus MembershipStatus,
     IReadOnlyList<CompanyMemberRoleRow> Roles, uint Version, DateTime CreatedAtUtc,
-    Guid? InvitationId, DateTime? InvitationExpiresAtUtc);
+    Guid? InvitationId, DateTime? InvitationExpiresAtUtc, bool InvitationOnlyForCompany);
 
 public sealed record CompanyMemberResponse(Guid MemberId, Guid? UserId, string DisplayName, Email? Email,
     CompanyMemberState State, CompanyMembershipStatus MembershipStatus,

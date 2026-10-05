@@ -114,7 +114,8 @@ public sealed class HomeTests(ApiFactory factory)
     }
 
     // B4, tablero Inicio-Miembro: quien administra una empresa sin roles de la organización ve la invitación vencida de
-    // su empresa, con la empresa, y «Reenviar» lo lleva a la ficha de esa empresa, que puede abrir.
+    // su empresa, con la empresa, y «Reenviar» lo lleva a la ficha de esa empresa, que puede abrir. Desde la decisión
+    // 102, solo la que es únicamente de su empresa: «Reenviar» siempre lleva a algo que puede hacer.
     [Fact]
     public async Task A_company_admin_without_organization_roles_sees_the_expired_invitation_of_its_company_and_can_open_it()
     {
@@ -125,14 +126,20 @@ public sealed class HomeTests(ApiFactory factory)
         var northId = await OrganizationJourney.CreateCompanyAsync(ownerClient, "Delta Norte S.A.", Ct);
         var southId = await OrganizationJourney.CreateCompanyAsync(ownerClient, "Delta Sur S.A.", Ct);
         var companyAdminRoleId = await CompanyAdminRoleIdAsync(ownerClient);
+        var north = new { companyId = northId, roleIds = new[] { companyAdminRoleId } };
+        var south = new { companyId = southId, roleIds = new[] { companyAdminRoleId } };
         var northInvitee = $"home-{Guid.NewGuid():N}@example.test";
         var southInvitee = $"home-{Guid.NewGuid():N}@example.test";
         var organizationInvitee = $"home-{Guid.NewGuid():N}@example.test";
-        await OrganizationJourney.InviteExpiredAsync(factory, ownerClient, tenantId, northInvitee, Ct,
-            [new { companyId = northId, roleIds = new[] { companyAdminRoleId } }]);
-        await OrganizationJourney.InviteExpiredAsync(factory, ownerClient, tenantId, southInvitee, Ct,
-            [new { companyId = southId, roleIds = new[] { companyAdminRoleId } }]);
+        var withOwnerInvitee = $"home-{Guid.NewGuid():N}@example.test";
+        var withSouthInvitee = $"home-{Guid.NewGuid():N}@example.test";
+        await OrganizationJourney.InviteExpiredAsync(factory, ownerClient, tenantId, northInvitee, Ct, [north]);
+        await OrganizationJourney.InviteExpiredAsync(factory, ownerClient, tenantId, southInvitee, Ct, [south]);
         await OrganizationJourney.InviteExpiredAsync(factory, ownerClient, tenantId, organizationInvitee, Ct);
+        await OrganizationJourney.InviteExpiredAsync(factory, ownerClient, tenantId, withOwnerInvitee, Ct, [north],
+            [await OwnerRoleIdAsync(ownerClient)]);
+        await OrganizationJourney.InviteExpiredAsync(factory, ownerClient, tenantId, withSouthInvitee, Ct,
+            [north, south]);
 
         using var adminClient = NewClient();
         var admin = await AccountJourney.RegisterAsync(factory, adminClient, Ct);
@@ -144,7 +151,8 @@ public sealed class HomeTests(ApiFactory factory)
 
         var home = await OrganizationJourney.HomeAsync(adminClient, Ct);
 
-        // Solo la de su empresa, con la empresa: ni la de otra empresa ni la que no es de ninguna.
+        // Solo la de su empresa, con la empresa: ni la de otra empresa ni la que no es de ninguna, y tampoco las que
+        // además dan roles de la organización o entran a otra empresa, que no puede reenviar.
         Assert.Equal(JsonValueKind.Null, home.GetProperty("organization").ValueKind);
         Assert.Equal([("users", "invitationExpired", northInvitee)], Pending(home));
         var row = Assert.Single(home.GetProperty("pending").EnumerateArray());
@@ -165,11 +173,12 @@ public sealed class HomeTests(ApiFactory factory)
         using var otherCompany = await adminClient.GetAsync($"/api/companies/{southId:D}", Ct);
         Assert.Equal(HttpStatusCode.Forbidden, otherCompany.StatusCode);
 
-        // Quien puede reenviar desde Usuarios ve las tres como filas de la organización, sin empresa.
+        // Quien puede reenviar desde Usuarios (users.invite) ve las cinco como filas de la organización, sin empresa.
         var ownerHome = await OrganizationJourney.HomeAsync(ownerClient, Ct);
         var ownerRows = ownerHome.GetProperty("pending").EnumerateArray()
             .Where(item => item.GetProperty("kind").GetString() == "invitationExpired").ToArray();
-        Assert.Equal(new[] { northInvitee, organizationInvitee, southInvitee }.Order(StringComparer.Ordinal),
+        Assert.Equal(new[] { northInvitee, organizationInvitee, southInvitee, withOwnerInvitee, withSouthInvitee }
+                .Order(StringComparer.Ordinal),
             ownerRows.Select(item => item.GetProperty("subject").GetString()!).Order(StringComparer.Ordinal));
         Assert.All(ownerRows, item => Assert.Equal(JsonValueKind.Null, item.GetProperty("companyId").ValueKind));
     }
@@ -213,6 +222,16 @@ public sealed class HomeTests(ApiFactory factory)
         using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
         return json.RootElement.GetProperty("items").EnumerateArray()
             .Single(role => role.GetProperty("isSystemRole").GetBoolean() && role.GetProperty("name").GetString() == "Administrador")
+            .GetProperty("id").GetGuid();
+    }
+
+    private static async Task<Guid> OwnerRoleIdAsync(HttpClient client)
+    {
+        using var response = await client.GetAsync("/api/roles/paged?scope=Organization&page=1&pageSize=50", Ct);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
+        return json.RootElement.GetProperty("items").EnumerateArray()
+            .Single(role => role.GetProperty("isSystemRole").GetBoolean() && role.GetProperty("name").GetString() == "Dueño")
             .GetProperty("id").GetGuid();
     }
 }
