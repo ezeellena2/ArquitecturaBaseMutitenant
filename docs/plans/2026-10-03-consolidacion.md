@@ -569,7 +569,7 @@ Lo que dejaron las tandas 6a, 6b y 6c, y lo que el usuario decide con Diseño en
   - `useCuitType` está en Empresas y en `BusinessSignupPage`: pasa a una sola pieza (`shared/referenceData`);
 - [x] el CUIT repetido va debajo del campo, con el texto del back. Lo decidió Diseño siguiendo `formularios.md`; front `44d2ad6`, y en el lienzo, en su próxima tanda;
 - [x] **6d-3a** (front `5aedb8e` a `7a975e8`; 1148 tests, lint y build; capturas en `b6d3/`): «Editar empresa» con `useEditForm`, `HomeCards` con `statusTones`, y el 409 falso de Mi cuenta en la misma pantalla. La causa de fondo es del back: la versión del perfil es el `xmin` de la fila del usuario y cambia con cualquier escritura. La arregla la tanda «versión al guardar», con una versión propia del perfil;
-- [ ] **6d-3b**, la última pasada del front:
+- [x] **6d-3b** (front `ab6f3d3` a `29584a0`; 1160 tests, lint, build y `contracts:check`). El back devuelve la versión al guardar (`4ea3d53` y `2fc0cb9`; 1652 tests), con `ProfileVersion` para «Tus datos». `useEditForm` toma como base la versión que respondió el guardado. Lo que quedaba:
   - `useEditForm` toma la versión que devuelve cada guardado, y «Tus datos», la versión propia del perfil;
   - los tonos de `HomePublicPageState`, en una sola definición en `shared` (hoy están en la Página pública y en el Inicio);
   - «Dar de baja», «Quitar» y «Desvincular» del teléfono, con el botón de peligro (lo corrigió Diseño, v107);
