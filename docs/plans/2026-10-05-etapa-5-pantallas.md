@@ -602,11 +602,11 @@ Cada test de pantalla prueba, cuando el estado existe: carga, vacío, sin coinci
 
 ### T00 · Línea de base
 
-- [ ] **Los dos repos limpios en `main`,** sin trabajo de otra conversación a medio commitear; Aspire apagado. El último commit de cada uno, en el «Registro de resultados».
-- [ ] **El contrato del front al día con el back:** T18b ya está en el back (`6bd4ff7` y `5f4ed39`); el front regenera sus tipos desde `docs/contracts/openapi.json` de HEAD (`npm run contracts`, `npm run contracts:check`).
-- [ ] **La consolidación del front cerrada** hasta la tanda 6d-7 (`2209be7`), sin cambios pendientes en `shared/ui`, `layouts` ni `SettingsPage`.
-- [ ] **El lienzo vigente es v110 (`c604c0b`) o posterior.** Antes de «Antes de T19» tiene que ser **v111**, con los dibujos de «Para decidir» 1, 2, 6, 7 y 8. Con cada versión nueva, releé los tableros que cambiaron y corregí «Lo que dicen los tableros» antes de seguir.
-- [ ] `realinear-docs --detectar` en 0 en los dos repos; `ClosedStages` en `{0,1,2,3,4,6}`.
+- [ ] **Los dos repos limpios en `main`,** sin trabajo de otra conversación a medio commitear; Aspire apagado. El último commit de cada uno, en el «Registro de resultados». **Evidencia (2026-10-05):** `git branch --show-current` → `main` en ambos; `git status --short` → back limpio, front con 16 tableros modificados y `docs/design/lienzo/generadores/plataforma_v111_1004.py` sin seguimiento (trabajo de Diseño, no se toca). `aspire ps` → ningún AppHost. Pendiente el commit de Diseño; se consultó al usuario si autoriza avanzar T18c en el back mientras termina.
+- [ ] **El contrato del front al día con el back:** T18b ya está en el back (`6bd4ff7` y `5f4ed39`); el front regenera sus tipos desde `docs/contracts/openapi.json` de HEAD (`npm run contracts`, `npm run contracts:check`). **Evidencia (2026-10-05):** `npm run contracts:check` → exit 1, `Generated schema.d.ts is stale. Run npm run contracts.` Regeneración pendiente mientras se resuelve la condición de repos limpios.
+- [x] **La consolidación del front cerrada** hasta la tanda 6d-7 (`2209be7`), sin cambios pendientes en `shared/ui`, `layouts` ni `SettingsPage`. **Evidencia (2026-10-05):** `git log -1 --format='%h %s'` → `2209be7`; `git merge-base --is-ancestor 2209be7 HEAD` → exit 0; `git status --short` → cambios solo en `docs/design/lienzo/`.
+- [x] **El lienzo vigente es v110 (`c604c0b`) o posterior.** Antes de «Antes de T19» tiene que ser **v111**, con los dibujos de «Para decidir» 1, 2, 6, 7 y 8. Con cada versión nueva, releé los tableros que cambiaron y corregí «Lo que dicen los tableros» antes de seguir. **Evidencia (2026-10-05):** `docs/design/lienzo/README.md` declara «versión 110»; v111 sigue pendiente de Diseño y no habilita «Antes de T19».
+- [x] `realinear-docs --detectar` en 0 en los dos repos; `ClosedStages` en `{0,1,2,3,4,6}`. **Evidencia (2026-10-05):** desde el back, `node scripts/arneses/arnes.mjs realinear-docs --detectar` → exit 0, auto/modelo/humano 0 (revisa ambos repos); `node scripts/arneses/arnes.mjs realinear-docs --detectar --repo front` → exit 0, auto/modelo/humano 0. `rg -n 'ClosedStages'` en ambos `HarnessStage` → `[0, 1, 2, 3, 4, 6]`.
 - [x] **«Para decidir», resuelto por el usuario y la Guía** (2026-10-05). Cada punto dice qué hacer; los que suman back dicen en qué tarea.
 
 ### T18c · Back · Toda acción con versión responde la versión nueva (la primera tarea)
@@ -1186,7 +1186,7 @@ Lo que el lienzo o los docs no resolvían. Cada punto empieza con lo **decidido*
 
 | Tarea | Commit back | Commit front | Evidencia (comandos y resultados) | Capturas enviadas | Notas |
 |---|---|---|---|---|---|
-| T00 | | | | | |
+| T00 | — (verificación parcial) | — | `git status --short`, `git branch --show-current`, `git log -1`, `aspire ps`, `git merge-base --is-ancestor 2209be7 HEAD`, arnés centralizado → 0 hallazgos en ambos, `ClosedStages` → `{0,1,2,3,4,6}`; `npm run contracts:check` → exit 1, tipos desactualizados | — | HEAD inicial: back `8cbd98a`, front `2209be7`. Front con trabajo de Diseño sin commitear (16 tableros y un generador); README del lienzo aún v110. T00 parcial; T18c espera respuesta sobre avanzar solo en back. |
 | T18c | | | | — | |
 | Antes de T19 | | | | | |
 | T19 | | | | | |
