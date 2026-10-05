@@ -73,6 +73,10 @@ Cada navegación a otra invitación monta un flujo nuevo: aceptación, consentim
 
 `/registro/empresa` y `POST /api/auth/business-signup` permiten iniciar una organización luego de verificar un correo o autenticar una cuenta existente con Google. El formulario exige aceptar términos, elegir un slug disponible y puede crear la primera empresa con CUIT opcional. El alta respeta `BusinessSignup` y `MaxOwnedOrganizations`, y la operación puede dejar la organización pendiente de aprobación. La creación idempotente pasa por `TenantProvisioner`, asigna al creador como Dueño y Administrador de la primera empresa y no crea espacio Personal. Para administración de miembros, empresas y configuración, ver [organizaciones.md](organizaciones.md).
 
+## E5 · Recuperación pública
+
+Ambas puertas de Ingreso llevan a `/recuperar`, pública y sin exigir un acceso. La variante v111 «Sin WhatsApp» pide el correo anterior, un correo nuevo distinto y la verificación del nuevo por código; registra el pedido para revisión de Plataforma y muestra la misma confirmación exista o no la cuenta. No entrega una sesión. Las tres llamadas usan un nonce de 32 bytes por recorrido, solo en memoria, y claves de idempotencia que se conservan al reintentar por red la misma operación con los mismos datos; corregirlos o abandonar el paso renueva la clave. Contratos, límites y revisión: [Plataforma · Recuperar mi cuenta](plataforma.md#recuperar-mi-cuenta-pedido-público).
+
 ## Reglas de implementación
 
 - Seguir las fichas [datos-personales](../rules/datos-personales.md), [multitenancy](../rules/multitenancy.md), [guardado](../rules/guardado.md), [result-y-errores](../rules/result-y-errores.md), [emails](../rules/emails.md), [telefonos](../rules/telefonos.md), [api-http](../rules/api-http.md) y [tests](../rules/tests.md).

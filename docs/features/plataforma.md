@@ -84,6 +84,8 @@ El contacto del Dueño de una organización creada desde Plataforma se ve desde 
 
 ## Recuperar mi cuenta: pedido público
 
+La pantalla pública `/recuperar` usa los tableros `Recuperar` y `M-Recuperar` v111, variante «Sin WhatsApp»: pide el correo de antes, uno nuevo distinto y su código, y termina con «Recibimos tu pedido». Las dos puertas de Ingreso enlazan con «¿No podés entrar? Recuperá tu cuenta». El navegador genera un nonce aleatorio de 32 bytes una vez por recorrido y lo conserva solo en memoria; cada una de las tres mutaciones usa su propia clave de idempotencia y mantiene esa clave al reintentar por red la misma operación con los mismos datos. Si se corrigen los datos o se abandona el paso, el nuevo envío usa otra clave. Si registrar el pedido falla por red después de verificar el código, se reintenta el pedido con la prueba ya obtenida.
+
 Sin sesión y en tres pasos, todos con Idempotency-Key y los límites por IP del ingreso por código. Ninguna respuesta revela si un correo tiene cuenta (ADR 0041) y ninguna entrega una sesión.
 
 1. `POST /api/account-recovery/code` con el correo nuevo y un `nonce` que genera el navegador (43 caracteres base64url; la base guarda su hash en el código). Responde 202 con la espera para reenviar. Si el correo ya es de una cuenta, el código se emite igual (los límites por destino, compartidos con el ingreso, no cambian), no se manda y a su dueño le llega «Ya tenés una cuenta con este correo».
