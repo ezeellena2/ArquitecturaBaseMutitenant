@@ -21,6 +21,8 @@ const delFramework = new Set([
   'HybridCacheEntryOptions', 'JsonSerializerOptions', 'CultureInfo', 'IStringLocalizer', 'IStringLocalizerFactory',
   'TimeProvider', 'FakeTimeProvider', 'BackgroundService', 'TreatWarningsAsErrors', 'UseExceptionHandler',
   'RequestLocalizationOptions', 'AuthenticationOptions', 'IdentityOptions', 'CookieAuthenticationOptions',
+  // ASP.NET Core, EF Core y Microsoft.Extensions que nombran las fichas (contexto HTTP, DbContext, migraciones y opciones).
+  'HttpContext', 'DbContext', 'AddDbContext', 'CreateTable', 'IAuthenticationSchemeProvider', 'LoggerFilterOptions', 'BindConfiguration',
   // Hooks de React y de las librerías del front (TanStack, React Router, React Hook Form, i18n, oidc).
   'useState', 'useEffect', 'useMemo', 'useCallback', 'useRef', 'useContext', 'useReducer', 'useLayoutEffect', 'useId', 'useTransition',
   'useDeferredValue', 'useSyncExternalStore', 'useQuery', 'useMutation', 'useInfiniteQuery', 'useQueryClient', 'useSuspenseQuery',

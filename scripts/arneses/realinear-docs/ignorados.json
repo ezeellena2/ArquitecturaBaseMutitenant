@@ -1,1 +1,27 @@
-[]
+[
+  {
+    "id": "referencias|back|docs/architecture/arnes.md|ruta-inexistente|Infrastructure/Persistence/Readers/Platform/",
+    "motivo": "Carpeta reservada: es la única lista blanca de QueryFilterBypassTests y hoy no existe porque ningún reader quita los filtros \"Tenant\", \"Public\" ni \"Parties\". La fila del mapa queda para que nazca con sus punteros.",
+    "fecha": "2026-10-04"
+  },
+  {
+    "id": "simbolos|back|docs/architecture/backend.md|simbolo-inexistente|IIdentityService",
+    "motivo": "Nombra a propósito el tipo de ArquitecturaBase que esta plantilla reemplazó por ISignInService.",
+    "fecha": "2026-10-04"
+  },
+  {
+    "id": "simbolos|back|docs/architecture/backend.md|simbolo-inexistente|IQuery",
+    "motivo": "Está en la lista de lo prohibido (sin ICommand ni IQuery): no tiene que existir.",
+    "fecha": "2026-10-04"
+  },
+  {
+    "id": "simbolos|back|docs/rules/capas-y-flujo.md|simbolo-inexistente|IQuery",
+    "motivo": "Está en la lista de lo prohibido (sin ICommand ni IQuery): no tiene que existir.",
+    "fecha": "2026-10-04"
+  },
+  {
+    "id": "catalogos|back|docs/features|codigo-sin-feature|ReferenceData",
+    "motivo": "ReferenceData.Culture.Invalid y ReferenceData.Currency.Invalid son de los value objects de E1 (CultureCode, CurrencyCode): ninguna ruta de un área los devuelve, porque los validadores y el JSON responden antes con Validation.Failed. No son de una feature.",
+    "fecha": "2026-10-04"
+  }
+]
