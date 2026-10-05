@@ -1,6 +1,6 @@
 # Inicio de la organización
 
-Lo primero que ve un miembro al entrar a `/org`. Arriba, una tarjeta por área con un dato real; abajo, «Para resolver»: lo que pide una acción y quien mira puede resolver. Los tableros aprobados son Inicio-Org (A), Inicio-Miembro (A) y M-Inicio-Org (C, app), del lienzo v77. La decisión está en la [ADR 0040](../decisions/0040-para-resolver.md).
+Lo primero que ve un miembro al entrar a `/org`. Arriba, una tarjeta por área con un dato real; abajo, «Para resolver»: lo que pide una acción y quien mira puede resolver. Los tableros aprobados son Inicio-Org (A), Inicio-Miembro (A) y M-Inicio-Org (C, app), del lienzo v77, y M-Inicio-Miembro, del v106. La decisión está en la [ADR 0040](../decisions/0040-para-resolver.md).
 
 ## Conducta
 
@@ -27,7 +27,7 @@ Lo primero que ve un miembro al entrar a `/org`. Arriba, una tarjeta por área c
   - «Ver» de la baja va a la ficha del usuario;
   - «Verificar» va a Configuración;
   - «Ver» de la página va a Página pública.
-- **Teléfono** (menos de 768 px): con tarjetas de la organización va la pantalla de app de M-Inicio-Org, con saludo, atajos redondos con el globito de sus pendientes y filas con botón cápsula. La barra de abajo y la de arriba son del marco de app (Paquete 4). Inicio-Miembro no tiene teléfono propio: se acomoda la de la compu.
+- **Teléfono** (menos de 768 px): con tarjetas de la organización va la pantalla de app de M-Inicio-Org, con saludo, atajos redondos con el globito de sus pendientes y filas con botón cápsula. La barra de abajo y la de arriba son del marco de app (Paquete 4). Sin permisos de la organización va M-Inicio-Miembro (lienzo v106), también en «billetera»: la cabecera de color, «Hola, …», la organización y «Tus empresas» en filas; si administra su empresa, abajo va su «Para resolver».
 - **La página en borrador no tiene «Desde»:** la página no guarda cuándo dejó de estar publicada.
 
 ## Carpetas
