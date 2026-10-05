@@ -1338,6 +1338,8 @@ ArquitecturaBaseMultitenant.Api/
 │   │   ├── CompanyMembersController.cs                [E6] api/companies/{companyId}/members
 │   │   ├── HomeController.cs                          Inicio de la organización activa (ADR 0040)
 │   │   ├── CompanyRolesController.cs                  Los roles que se pueden asignar en una empresa, para…
+│   │   ├── CompanyCandidatesController.cs             api/companies/{companyId}/candidates: a quién sumar, con el correo tapado
+│   │   ├── CompanyInvitationsController.cs            api/companies/{companyId}/invitations: reenviar y revocar las de esa empresa
 │   │   ├── OrganizationAuditController.cs             api/organization/audit: listado, «Quién» y detalle
 │   │   ├── OrganizationDomainsController.cs           api/organization/settings/domains: registrar, verificar y retirar
 │   │   ├── OrganizationSettingsController.cs          api/organization/settings: leer y guardar con versión
@@ -1766,6 +1768,7 @@ tests/
 │   │   ├── OrganizationAuditTests.cs                  auditoría de la organización: una entrada por acción, «Quién» y el detalle
 │   │   ├── MemberStateParityTests.cs                  Paridad del estado de un miembro
 │   │   ├── HomeTests.cs                               Inicio de la organización (ADR 0040, tableros Inicio-Org e Inicio-Miembro)
+│   │   ├── CompanyAdminTests.cs                       Administrador de empresa: a quién sumar y las invitaciones de su empresa
 │   │   └── ForeignKeyRaceTests.cs                     Asignar un rol mientras otro pedido lo borra choca con…
 │   ├── Platform/                                      [E5]
 │   │   ├── PlatformAccountAdministrationTests.cs      Consulta global de cuentas

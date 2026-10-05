@@ -18,6 +18,7 @@
 - **Filtros y conteos:** una sola función `ApplyXFilters`, que usan el listado y `GET …/filter-counts`.
 - **Búsqueda:** siempre `ApplySearch`. No distingue acentos ni mayúsculas y escapa `%` y `_`. Cada columna buscable lleva un índice GIN trigram sobre `f_unaccent(lower(col))`, en una migración con SQL (`IX_<Tabla>_Search_<Columna>`).
   - Para buscar entre varios valores de una fila (todos los correos verificados de una persona), cada tabla filtra con `ApplySearch` y las partes se combinan con `Contains`: `MemberSearch` lo hace para Usuarios y Miembros de empresa. Una columna con conversor (un `Email`) se busca con `EF.Property<string>`.
+  - **Lo que una lista muestra tapado no se busca:** a quién sumar a una empresa (`GET /api/companies/{companyId}/candidates/paged`) muestra el correo con `PersonalDataMask` y se busca solo por nombre; buscar por correo lo destaparía de a una letra.
   - **Única excepción, la auditoría de la organización:** `OrganizationAuditReader` busca con SQL en el texto de los cambios, porque `Changes` es jsonb y `ApplySearch` no lo pasa a texto. Usa la misma expresión (`public.f_unaccent(lower("Changes"::text))`, y la del tipo) y tiene sus índices (`IX_AuditEntries_Search_Changes` y `IX_AuditEntries_Search_EntityType`). A quien actuó lo busca por nombre con `ApplySearch`. Una búsqueda nueva en SQL entra en la lista de `SearchIndexTests` con su expresión e índice.
 - **Índices:** cada campo del `SortMap` tiene `(TenantId, campo, Id)`.
 - **Orden de textos:** lo da la collation ICU `es-AR` de la base ([persistencia-ef](persistencia-ef.md)), sin `ToLower` ni `COLLATE` a mano.
@@ -37,6 +38,7 @@
 
 ## Lo verifica
 - `PaginationTests` (E2), `CursorPaginationTests` (E2), `SearchTests` (E2); la búsqueda con acentos de Usuarios y Miembros de empresa, en `OrganizationUsersTests` (E6) y `CompaniesTests` (E6).
+- `CompanyAdminTests` (E7): a quién sumar a una empresa se encuentra por nombre, sin acentos, y nunca por su correo tapado.
 - `SortIndexTests` (E2): índice por cada campo de un `SortMap`.
 - `SearchIndexTests` (E6): cada columna que un reader busca con `ApplySearch` tiene su índice trigram. Lee las columnas del código de los readers; las que se buscan dentro de una subconsulta (el Dueño en Plataforma) van en su lista a mano. Un reader que busca con `LIKE` en SQL (la auditoría) tiene que estar en su otra lista, usar la expresión de `ApplySearch` y no `ILIKE`, y tener el índice de cada columna.
 - `PagedRequestValidatorTests` (E1) y `OpenApiTests` (contrato de tamaños de página).

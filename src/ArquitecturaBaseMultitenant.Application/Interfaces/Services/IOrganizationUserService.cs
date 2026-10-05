@@ -16,6 +16,10 @@ public interface IOrganizationUserService
         CancellationToken cancellationToken);
     Task<Result<Guid>> ResendInvitationAsync(Guid invitationId, CancellationToken cancellationToken);
     Task<Result> RevokeInvitationAsync(Guid invitationId, CancellationToken cancellationToken);
+    /// <summary>Desde la ficha de una empresa: solo las invitaciones que incluyen una membresía activa en ella.</summary>
+    Task<Result<Guid>> ResendCompanyInvitationAsync(Guid companyId, Guid invitationId,
+        CancellationToken cancellationToken);
+    Task<Result> RevokeCompanyInvitationAsync(Guid companyId, Guid invitationId, CancellationToken cancellationToken);
     Task<Result<VersionResponse>> UpdateAsync(UpdateOrganizationUserRequest request, CancellationToken cancellationToken);
     Task<Result<VersionResponse>> ChangeStatusAsync(ChangeOrganizationUserStatusRequest request, CancellationToken cancellationToken);
     Task<Result> RemoveAsync(Guid memberId, uint? version, CancellationToken cancellationToken);

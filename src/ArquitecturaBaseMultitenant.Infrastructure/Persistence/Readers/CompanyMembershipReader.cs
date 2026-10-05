@@ -22,6 +22,11 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
         ["email"] = row => row.Email,
     };
 
+    private static readonly SortMap<CandidateRow> CandidateSort = new()
+    {
+        ["displayName"] = row => row.DisplayName,
+    };
+
     private static readonly SortDescriptor DefaultSort = new("displayName", Descending: false);
 
     /// <summary>
@@ -69,22 +74,27 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
             .ToArrayAsync(cancellationToken);
         var rolesByMember = roleRows.GroupBy(item => item.MemberId)
             .ToDictionary(group => group.Key, group => (IReadOnlyList<CompanyMemberRoleRow>)[.. group.Select(item => item.Role)]);
-        var invitationEmails = await context.Invitations.AsNoTracking()
-            .Where(invitation => invitation.TenantId == tenantId && memberIds.Contains(invitation.MemberId)
-                && invitation.Status == Domain.Invitations.InvitationStatus.Pending)
-            .OrderByDescending(invitation => invitation.IssuedAtUtc)
-            .Select(invitation => new { invitation.MemberId, invitation.Destination })
-            .ToArrayAsync(cancellationToken);
-        var pendingEmails = invitationEmails.GroupBy(item => item.MemberId)
-            .ToDictionary(group => group.Key, group => group.First().Destination.DisplayValue);
+        var pendingInvitations = (await context.Invitations.AsNoTracking()
+                .Where(invitation => invitation.TenantId == tenantId && memberIds.Contains(invitation.MemberId)
+                    && invitation.Status == Domain.Invitations.InvitationStatus.Pending)
+                .OrderByDescending(invitation => invitation.IssuedAtUtc)
+                .Select(invitation => new PendingInvitation(invitation.Id, invitation.MemberId,
+                    invitation.Destination, invitation.ExpiresAtUtc))
+                .ToArrayAsync(cancellationToken))
+            .GroupBy(item => item.MemberId)
+            .ToDictionary(group => group.Key, group => group.First());
 
-        var mapped = page.Items.Select(state => (state.State, Member: rowsById[state.MemberId]))
+        var mapped = page.Items.Select(state => (state.State, Member: rowsById[state.MemberId],
+                Invitation: pendingInvitations.GetValueOrDefault(state.MemberId)))
             .Select(item => new CompanyMemberRow(item.Member.MemberId, item.Member.UserId,
-            item.Member.DisplayName.Length == 0
-                ? pendingEmails.GetValueOrDefault(item.Member.MemberId, "") : item.Member.DisplayName,
-            ToEmail(item.Member.Email ?? pendingEmails.GetValueOrDefault(item.Member.MemberId)), item.State,
-            item.Member.MembershipStatus, rolesByMember.GetValueOrDefault(item.Member.MemberId, []),
-            item.Member.Version, item.Member.CreatedAtUtc)).ToArray();
+                item.Member.DisplayName.Length == 0 ? item.Invitation?.Destination.DisplayValue ?? "" : item.Member.DisplayName,
+                ToEmail(item.Member.Email ?? item.Invitation?.Destination.DisplayValue), item.State,
+                item.Member.MembershipStatus, rolesByMember.GetValueOrDefault(item.Member.MemberId, []),
+                item.Member.Version, item.Member.CreatedAtUtc,
+                // Solo la invitación que incluye a esta empresa: si se la sacaron, se reenvía desde Usuarios.
+                item.Member.MembershipStatus == CompanyMembershipStatus.Active ? item.Invitation?.Id : null,
+                item.Member.MembershipStatus == CompanyMembershipStatus.Active ? item.Invitation?.ExpiresAtUtc : null))
+            .ToArray();
         return new PagedResult<CompanyMemberRow>(mapped, page.Page, page.PageSize, page.TotalCount);
     }
 
@@ -138,6 +148,45 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
             .ToDictionary(group => group.Key, group => (IReadOnlyList<CompanyMemberRoleRow>)[.. group.Select(item => item.Role)]);
         return [.. companies.Select(item => new UserCompanyRow(item.CompanyId, item.Name,
             rolesByCompany.GetValueOrDefault(item.CompanyId, [])))];
+    }
+
+    public async Task<PagedResult<CompanyCandidateRow>> ListCandidatesAsync(Guid companyId,
+        ListCompanyCandidatesRequest request, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var tenantId = tenantContext.RequiredTenantId;
+        // Activas como en Usuarios (miembro y cuenta activos) y sin membresía en la empresa, en ningún estado: a quien
+        // quedó inactivo en ella se lo reactiva desde Miembros, y sumarlo de nuevo daría AlreadyExists.
+        var members = context.Members.AsNoTracking().Where(member => member.TenantId == tenantId
+            && member.Status == MemberStatus.Active
+            && context.Users.Any(user => user.Id == member.UserId && user.Status == UserStatus.Active)
+            && !context.CompanyMemberships.Any(membership => membership.TenantId == tenantId
+                && membership.CompanyId == companyId && membership.MemberId == member.Id));
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            // Solo por nombre: buscar por correo destaparía de a una letra el correo que la fila muestra tapado.
+            var byName = context.Users.AsNoTracking()
+                .ApplySearch(request.Search, user => user.DisplayName)
+                .Select(user => (Guid?)user.Id);
+            members = members.Where(member => byName.Contains(member.UserId));
+        }
+
+        var page = await members.Select(member => new CandidateRow
+            {
+                MemberId = member.Id,
+                DisplayName = context.Users.Where(user => user.Id == member.UserId)
+                    .Select(user => user.DisplayName ?? string.Empty).FirstOrDefault(),
+                Email = context.LoginMethods
+                    .Where(method => method.UserId == member.UserId && method.Type == LoginMethodType.Email
+                        && method.VerifiedAtUtc != null)
+                    .OrderByDescending(method => method.IsPrimary).ThenBy(method => method.Id)
+                    .Select(method => method.Value).FirstOrDefault(),
+            })
+            .ApplySort(SortDescriptor.Parse(request.Sort), CandidateSort, DefaultSort, row => row.MemberId)
+            .ToPagedResultAsync(request, cancellationToken);
+        return new PagedResult<CompanyCandidateRow>([.. page.Items.Select(row => new CompanyCandidateRow(
+            row.MemberId, row.DisplayName ?? string.Empty, ToEmail(row.Email)))], page.Page, page.PageSize,
+            page.TotalCount);
     }
 
     private IQueryable<StateRow> Memberships(Guid tenantId, Guid companyId, ListCompanyMembersRequest request)
@@ -227,6 +276,16 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
         public string? DisplayName { get; init; }
         public string? Email { get; init; }
     }
+
+    /// <summary>Una persona que se puede sumar a la empresa: lo que se ordena y se muestra.</summary>
+    internal sealed class CandidateRow
+    {
+        public Guid MemberId { get; init; }
+        public string? DisplayName { get; init; }
+        public string? Email { get; init; }
+    }
+
+    private sealed record PendingInvitation(Guid Id, Guid MemberId, Email Destination, DateTime ExpiresAtUtc);
 
     private sealed record MemberProjection(Guid MemberId, Guid? UserId, string DisplayName, string? Email,
         CompanyMembershipStatus MembershipStatus, uint Version, DateTime CreatedAtUtc);

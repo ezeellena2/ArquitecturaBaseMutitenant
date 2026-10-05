@@ -92,16 +92,38 @@ internal sealed class OrganizationUserService(
         OperationLog.RunAsync(logger, timeProvider, "ResendOrganizationInvitation", async () =>
         {
             if (invitationId == Guid.Empty) return InvitationErrors.Invalid;
-            return await unitOfWork.ExecuteInTransactionAsync(ct => invitations.ResendAsync(invitationId, ct),
-                CommitPolicy.OnSuccess, cancellationToken);
+            return await unitOfWork.ExecuteInTransactionAsync(
+                ct => invitations.ResendAsync(invitationId, companyId: null, ct), CommitPolicy.OnSuccess,
+                cancellationToken);
         });
 
     public Task<Result> RevokeInvitationAsync(Guid invitationId, CancellationToken cancellationToken) =>
         OperationLog.RunAsync(logger, timeProvider, "RevokeOrganizationInvitation", async () =>
         {
             if (invitationId == Guid.Empty) return InvitationErrors.Invalid;
-            return await unitOfWork.ExecuteInTransactionAsync(ct => invitations.RevokeAsync(invitationId, ct),
-                CommitPolicy.OnSuccess, cancellationToken);
+            return await unitOfWork.ExecuteInTransactionAsync(
+                ct => invitations.RevokeAsync(invitationId, companyId: null, ct), CommitPolicy.OnSuccess,
+                cancellationToken);
+        });
+
+    public Task<Result<Guid>> ResendCompanyInvitationAsync(Guid companyId, Guid invitationId,
+        CancellationToken cancellationToken) =>
+        OperationLog.RunAsync(logger, timeProvider, "ResendCompanyInvitation", async () =>
+        {
+            if (companyId == Guid.Empty || invitationId == Guid.Empty) return InvitationErrors.NotFound;
+            return await unitOfWork.ExecuteInTransactionAsync(
+                ct => invitations.ResendAsync(invitationId, companyId, ct), CommitPolicy.OnSuccess,
+                cancellationToken);
+        });
+
+    public Task<Result> RevokeCompanyInvitationAsync(Guid companyId, Guid invitationId,
+        CancellationToken cancellationToken) =>
+        OperationLog.RunAsync(logger, timeProvider, "RevokeCompanyInvitation", async () =>
+        {
+            if (companyId == Guid.Empty || invitationId == Guid.Empty) return InvitationErrors.NotFound;
+            return await unitOfWork.ExecuteInTransactionAsync(
+                ct => invitations.RevokeAsync(invitationId, companyId, ct), CommitPolicy.OnSuccess,
+                cancellationToken);
         });
 
     public Task<Result<VersionResponse>> UpdateAsync(UpdateOrganizationUserRequest request,

@@ -10,13 +10,13 @@ Lo primero que ve un miembro al entrar a `/org`. Arriba, una tarjeta por área c
   - sin permisos de la organización, Inicio-Miembro: «Tus empresas», las empresas donde tiene algún permiso según `IPermissionService.GetPermissionsByCompanyAsync`, con sus roles y los miembros activos si tiene `company.members.read`.
 - **Los datos de cada tarjeta** salen del reader de su área, así el número es el mismo que muestra el área: usuarios y empresas, el total de sus filtros; roles, el total del listado; la página, Publicada, Borrador o Despublicada por la plataforma; el dominio verificado o, si no hay, el que espera verificación; la fecha del último cambio de la auditoría.
 - **«Para resolver»** junta lo que aporta cada `IPendingItemSource`, con el tenant del claim y los permisos de quien mira:
-  - `OrganizationUserPendingItems`: invitación vencida con `users.invite`; baja pedida con `users.manage`; sin permisos de la organización, la invitación vencida de cada empresa donde tiene `company.members.manage`, una fila por empresa, con `companyId` y `companyName`;
+  - `OrganizationUserPendingItems`: invitación vencida con `users.invite`; baja pedida con `users.manage`; sin permisos de la organización, la invitación vencida de cada empresa donde tiene `company.members.manage` y que la incluye (membresía activa), una fila por empresa, con `companyId` y `companyName`;
   - `OrganizationDomainPendingItems`: dominio sin verificar con `settings.manage`;
   - `PublicPagePendingItems`: página en borrador, o despublicada por la plataforma (urgente), con `publicpage.manage`.
 - **Orden:** primero lo urgente, después por fecha, de la más vieja a la más nueva; lo que no tiene fecha va al final.
 - `Area` y `Kind` son claves estables: el front arma el texto, el estado, el ícono y el enlace que lo resuelve.
 - **Un módulo** registra su propia fuente en su registro, sin que el núcleo lo conozca. WhatsApp sin medio de pago llega con la Etapa 11.
-- **B4 (consolidación, reemplaza la decisión 8 del Paquete 1 de la alineación):** el Administrador de empresa sin roles de la organización ve en «Para resolver» las invitaciones vencidas de su empresa, con la empresa, y puede abrir la ficha de esa empresa: `GET /api/companies/{companyId}` pide `companies.read` o, en esa empresa, `company.members.read`.
+- **B4 (consolidación, reemplaza la decisión 8 del Paquete 1 de la alineación):** el Administrador de empresa sin roles de la organización ve en «Para resolver» las invitaciones vencidas de su empresa, con la empresa, y puede abrir la ficha de esa empresa: `GET /api/companies/{companyId}` pide `companies.read` o, en esa empresa, `company.members.read`. Desde la ficha reenvía o revoca las invitaciones de su empresa ([organizaciones](organizaciones.md#empresas-y-membresías)).
 
 ## Front
 
@@ -44,6 +44,6 @@ Lo primero que ve un miembro al entrar a `/org`. Arriba, una tarjeta por área c
 ## Lo verifica
 
 - Application: `PendingItemOrderTests`.
-- API: `HomeTests` (tarjetas iguales a cada área; sin permiso, ni la tarjeta ni la fila; el Administrador de empresa ve la fila de su empresa y abre su ficha) y `HomeIsolationTests` (lo de otra organización nunca aparece), con Docker/Testcontainers.
+- API: `HomeTests` (tarjetas iguales a cada área; sin permiso, ni la tarjeta ni la fila; el Administrador de empresa ve la fila de su empresa y abre su ficha), `CompanyAdminTests` (desde la ficha reenvía y revoca las invitaciones de su empresa; una a la que le sacaron la empresa ya no da fila) y `HomeIsolationTests` (lo de otra organización nunca aparece), con Docker/Testcontainers.
 - Front: `BusinessHomePage.test.tsx` (Inicio-Org, vacío, Inicio-Miembro y teléfono, con axe) y `formatters.test.ts` («hoy, 10:42»).
 - E2E real: el Dueño ve las áreas y la página en borrador en «Para resolver» al entrar a `/org`.

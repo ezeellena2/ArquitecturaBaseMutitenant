@@ -6,6 +6,7 @@ namespace ArquitecturaBaseMultitenant.Domain.Invitations;
 public static class InvitationErrors
 {
     public const string InvalidCode = "Invitations.Invitation.Invalid";
+    public const string NotFoundCode = "Invitations.Invitation.NotFound";
     public const string ExpiredCode = "Invitations.Invitation.Expired";
     public const string AlreadyUsedCode = "Invitations.Invitation.AlreadyUsed";
     public const string AlreadyPendingCode = "Invitations.Invitation.AlreadyPending";
@@ -15,6 +16,8 @@ public static class InvitationErrors
     public const string PlatformOperatorCode = "Invitations.Invitation.PlatformOperator";
 
     public static readonly Error Invalid = Error.Validation(InvalidCode, "The invitation is not valid.");
+    /// <summary>Desde una empresa, una invitación que no la incluye no existe: es un recurso ajeno.</summary>
+    public static readonly Error NotFound = Error.NotFound(NotFoundCode, "The invitation was not found.");
     public static readonly Error Expired = Error.Validation(ExpiredCode, "The invitation has expired.");
     public static readonly Error AlreadyUsed = Error.Conflict(AlreadyUsedCode, "The invitation was already accepted.");
     public static readonly Error AlreadyPending = Error.Conflict(AlreadyPendingCode, "A pending invitation already exists.");

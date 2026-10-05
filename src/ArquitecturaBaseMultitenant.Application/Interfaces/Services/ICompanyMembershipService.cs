@@ -11,6 +11,8 @@ public interface ICompanyMembershipService
         ListCompanyMembersRequest request, CancellationToken cancellationToken);
     Task<Result<CompanyMemberFilterCountsResponse>> GetFilterCountsAsync(Guid companyId,
         ListCompanyMembersRequest request, CancellationToken cancellationToken);
+    Task<Result<PagedResult<CompanyCandidateResponse>>> ListCandidatesAsync(Guid companyId,
+        ListCompanyCandidatesRequest request, CancellationToken cancellationToken);
     Task<Result> AddAsync(AddCompanyMemberRequest request, CancellationToken cancellationToken);
     Task<Result<VersionResponse>> UpdateRolesAsync(UpdateCompanyMemberRolesRequest request, CancellationToken cancellationToken);
     Task<Result<VersionResponse>> ChangeStatusAsync(ChangeCompanyMemberStatusRequest request, CancellationToken cancellationToken);

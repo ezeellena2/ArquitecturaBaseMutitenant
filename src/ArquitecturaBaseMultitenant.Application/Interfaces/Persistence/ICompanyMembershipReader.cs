@@ -11,4 +11,8 @@ public interface ICompanyMembershipReader
     Task<CompanyMemberFilterCountsResponse> GetFilterCountsAsync(Guid companyId,
         ListCompanyMembersRequest request, CancellationToken cancellationToken);
     Task<IReadOnlyList<UserCompanyRow>> ListActiveForUserAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>Las personas activas de la organización sin membresía (en ningún estado) en esa empresa.</summary>
+    Task<PagedResult<CompanyCandidateRow>> ListCandidatesAsync(Guid companyId, ListCompanyCandidatesRequest request,
+        CancellationToken cancellationToken);
 }

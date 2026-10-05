@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Application.Common.Text;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
@@ -48,6 +49,20 @@ internal sealed class CompanyMembershipService(
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             if (await companies.FindByIdAsync(companyId, cancellationToken) is null) return CompanyErrors.NotFound;
             return Result.Success(await reader.GetFilterCountsAsync(companyId, request, cancellationToken));
+        });
+    }
+
+    public Task<Result<PagedResult<CompanyCandidateResponse>>> ListCandidatesAsync(Guid companyId,
+        ListCompanyCandidatesRequest request, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        return OperationLog.RunAsync(logger, timeProvider, "ListCompanyCandidates", async () =>
+        {
+            if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
+            if (await companies.FindByIdAsync(companyId, cancellationToken) is null) return CompanyErrors.NotFound;
+            var page = await reader.ListCandidatesAsync(companyId, request, cancellationToken);
+            return Result.Success(new PagedResult<CompanyCandidateResponse>([.. page.Items.Select(ToResponse)],
+                page.Page, page.PageSize, page.TotalCount));
         });
     }
 
@@ -106,5 +121,14 @@ internal sealed class CompanyMembershipService(
     private static CompanyMemberResponse ToResponse(CompanyMemberRow member) => new(member.MemberId, member.UserId,
         member.DisplayName, member.Email, member.State, member.MembershipStatus,
         [.. member.Roles.Select(role => new CompanyMemberRoleResponse(role.Id, RoleTexts.Name(role.Name),
-            role.IsSystemRole, role.Scope, role.CompanyId))], member.Version, member.CreatedAtUtc);
+            role.IsSystemRole, role.Scope, role.CompanyId))], member.Version, member.CreatedAtUtc,
+        member.InvitationId, member.InvitationExpiresAtUtc);
+
+    // Quien suma a alguien a su empresa no ve Usuarios: el correo va tapado y, sin nombre, el nombre es ese correo.
+    private static CompanyCandidateResponse ToResponse(CompanyCandidateRow candidate)
+    {
+        var maskedEmail = candidate.Email is { } email ? PersonalDataMask.Email(email.Value) : null;
+        return new CompanyCandidateResponse(candidate.MemberId,
+            candidate.DisplayName.Length == 0 ? maskedEmail ?? string.Empty : candidate.DisplayName, maskedEmail);
+    }
 }

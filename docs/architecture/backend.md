@@ -368,6 +368,7 @@ Api/
 │  ├─ ReferenceData/                   ReferenceDataController ([AllowAnonymous]; GET /api/reference-data y por catálogo)
 │  ├─ Organization/                    [Access(Business)] HomeController, OrganizationUsersController (api/users), RolesController,
 │  │                                   PermissionsController, CompaniesController, CompanyMembersController, CompanyRolesController,
+│  │                                   CompanyCandidatesController, CompanyInvitationsController,
 │  │                                   OrganizationSettingsController y OrganizationDomainsController (api/organization/settings),
 │  │                                   PublicPageController (api/organization/public-page: mi página pública, publicpage.manage),
 │  │                                   OrganizationAuditController (api/organization/audit)

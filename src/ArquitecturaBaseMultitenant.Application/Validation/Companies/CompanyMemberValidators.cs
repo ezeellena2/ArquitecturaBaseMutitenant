@@ -56,3 +56,8 @@ internal sealed class ChangeCompanyMemberStatusRequestValidator : AbstractValida
         RuleFor(request => request.Version).NotNull().WithMessage(_ => ValidationTexts.Required);
     }
 }
+
+internal sealed class ListCompanyCandidatesRequestValidator : PagedRequestValidator<ListCompanyCandidatesRequest>
+{
+    public ListCompanyCandidatesRequestValidator() : base(ListCompanyCandidatesRequest.SortableFields) { }
+}
