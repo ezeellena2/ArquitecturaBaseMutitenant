@@ -14,7 +14,7 @@
 - `ValidTaxIdType()` en Application comprueba que el tipo esté habilitado en el catálogo para un dato nuevo; Domain aplica el algoritmo correspondiente. El front crea en E1 `TaxIdField` con `stdnum`; el value object y el contrato HTTP completo del back llegan en E6.
 - **En la base:** `TaxCountry char(2)`, `TaxType varchar(16)`, `TaxNumber varchar(20)` con dígitos solos. Unicidad por tenant cuando el dato lo pide (dos empresas de la misma organización no comparten CUIT).
 - **JSON de salida (E6):** `{ "country": "AR", "type": "AR-CUIT", "number": "20123456786" }`. El `country` coincide con `TaxIdTypes.CountryCode`; no cambia el significado de `type` entre entrada y salida.
-- **Mostrar:** `TaxIdText` en el front y `DisplayFormatter.TaxId` en el back → `20-12345678-6`.
+- **Mostrar:** `TaxIdText` en el front → `20-12345678-6`. En el back, el mismo formato es el tipo `taxId` de los casos compartidos de `docs/contracts/format-cases.json`, que `DisplayFormatter` cumple (lo prueba `DisplayFormatterTests`).
 - **Cargar:** `TaxIdField` (tipo + número, con opciones del catálogo), que valida mientras se escribe con `stdnum` (npm). Decide el back.
 
 ## Prohibido

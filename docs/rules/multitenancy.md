@@ -10,12 +10,12 @@
   - `[PublicSite][AllowAnonymous]` solo para lo que responde en el subdominio de una organización publicada (`PublicPageController`);
   - solo `[AllowAnonymous]` para las rutas anónimas del dominio principal (ingreso, registro, "Registrá tu empresa", `GET /api/public-site/slug-availability`, invitación, enlace, `GET` de documentos legales, `GET /api/reference-data` y sus cinco rutas por catálogo, directorio, pedido de "Recuperar mi cuenta", cancelar la baja, webhooks), con su controller en la lista explícita de `AccessDeclarationTests`.
 - **Dato privado:** `: Entity, ITenantOwned`, esquema `tenant`, `migrationBuilder.EnableTenantRls(Schemas.Tenant, "<Tabla>")`.
-- **Dato público:** `IPublishedByBusiness` (`BusinessTenantId`, `IsPublished`), esquema `public_site`, `EnablePublicRls`. Se lee con `IPublicSiteContext` (el subdominio) y solo trae lo publicado.
+- **Dato público:** `IPublishedByBusiness` (`BusinessTenantId`, `IsPublished`), esquema `public_site`, `EnablePublicRls`. Se lee con `IPublicSiteContext` (E7), el del subdominio, y solo trae lo publicado.
 - **Dato compartido:** `IConsumerBusinessShared` (`ConsumerTenantId` = espacio personal, `BusinessTenantId` = organización), esquema `engagement`, `EnablePartiesRls`.
   - Guarda una **copia** de lo que la otra parte necesita ver.
   - Cada cambio de estado pasa por `PartyPolicy.Require(entity, Party.Consumer|Party.Business)`.
 - **Trigger de columnas tenant:** `prevent_tenant_change` recibe los nombres como literales sin comillas dobles dentro (`'TenantId'`, no `'"TenantId"'`). Al corregir un helper de RLS, agregá una migración que recree los triggers ya instalados; cambiar solo el helper no actualiza bases migradas.
-- **El host del subdominio nunca da acceso a datos privados:** solo `IPublicSiteContext`, para lo público.
+- **El host del subdominio nunca da acceso a datos privados:** solo `IPublicSiteContext` (E7), para lo público.
 - **Perfiles de una identidad:** `identity.UserTenantAccesses` es la excepción global explícita para elegir acceso y mostrar `/api/me`. Un trigger copia `Member` en su misma transacción; el runtime solo puede leer la proyección por `UserId` y une `platform.Tenants` para nombre y estado. Solo `ConnectService`, `TenantResolutionMiddleware` mediante `AccessStatusCache` y `/api/me` mediante `ProfileSnapshotBuilder` consumen ese lector; no se ignoran filtros ni se lee `tenant.Members` de otro alcance. `IdentityAccessTests` fija esa lista. Para gestionar métodos administrados de la cuenta, `LoginMethodMembershipReader` devuelve únicamente si la membresía de ese UserId y su organización están activas, por `ILoginMethodMembershipReader`; no expone otros perfiles ni datos privados. Es un adaptador explícito en `IdentityStorageAccessTests` (3b). `AccountDeletionTenantReader` proyecta solamente TenantId y Kind por UserId para planificar los pasos de eliminación; usa su puerto propio y no el lector de perfiles. No lee Members fuera de RLS.
   `GET /api/me` responde también si la organización está suspendida o cerrada para permitir cambiar de perfil. Si la membresía del token ya no está activa o no existe, responde desde la proyección global sin fijar `tenant_id` ni conceder permisos de esa organización; solo fija contexto RLS cuando la membresía está activa.
 - **Plataforma, workers y altas:** `using (tenantScope.Enter(tenantId)) { … }` después de autorizar, y antes de abrir el límite. En plataforma, además, con motivo obligatorio y el `SecurityEvent` registrado antes de `Enter` (`PlatformActionGuard`).
@@ -30,10 +30,10 @@
 - Leer el tenant de un header, del body o de la query.
 - Usar el subdominio para autorizar datos privados.
 - Asignar a mano o cambiar `TenantId`, `BusinessTenantId` o `ConsumerTenantId`.
-- Quitar los filtros `"Tenant"`, `"Public"` o `"Parties"` (con `IgnoreQueryFilters()` sin nombres o con alguno de esos nombres) fuera de la lista blanca (`Readers/Platform`). `IgnoreQueryFilters(["SoftDelete"])`, para ver lo borrado, sí se permite ([persistencia-ef](persistencia-ef.md)).
+- Quitar los filtros `"Tenant"`, `"Public"` o `"Parties"` (con `IgnoreQueryFilters()` sin nombres o con alguno de esos nombres) fuera de la lista blanca de `QueryFilterBypassTests` (el namespace `Persistence.Readers.Platform`, hoy vacío). `IgnoreQueryFilters(["SoftDelete"])`, para ver lo borrado, sí se permite ([persistencia-ef](persistencia-ef.md)).
 - Que una empresa lea la cuenta o el espacio personal de una persona: solo ve lo copiado en el dato compartido.
 - Una ruta sin `[Access]` ni `[PublicSite]`, salvo las anónimas del dominio principal de la lista de `AccessDeclarationTests`.
-- `[PublicSite]` en una ruta del dominio principal (`DirectoryController` es `[AllowAnonymous]`).
+- `[PublicSite]` en una ruta del dominio principal (`DirectoryController` (E7) es `[AllowAnonymous]`).
 - "tenant" en una ruta: el acceso lo declara `[Access]`, no la ruta ([api-http](api-http.md)).
 - Responder 403 por un recurso ajeno: es 404.
 

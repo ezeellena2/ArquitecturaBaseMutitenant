@@ -19,6 +19,7 @@
   - Los correos del dominio verificado de una organización quedan administrados (`ManagedByTenantId`). Al terminar la membresía dejan de servir para ingresar y se avisa por los otros métodos (E6, junto con `TenantDomains` y «Quitar de la organización»).
   - Aviso fijo "Agregá un correo personal o tu WhatsApp para no perder tu cuenta si dejás la empresa" mientras la cuenta dependa solo de métodos de una empresa.
   - El dominio verificado (`platform.TenantDomains`) llega en E6; "Recuperar mi cuenta" (`platform.AccountRecoveryRequests`), en E5.
+- **No revelar cuentas** ([ADR 0041](../decisions/0041-no-revelar-cuentas.md)): ninguna respuesta, pantalla ni mensaje a quien hace el pedido dice si un correo o un teléfono tiene cuenta. Ingreso, registro, «Recuperar mi cuenta» y agregar un correo en Mi cuenta responden igual (mismo código HTTP, mismo cuerpo, misma espera para reenviar y mismos límites); con un destino de otra cuenta se guarda un código que no se manda ni sirve, y a su dueño le llega un aviso. Excepciones: invitar a un operador (`platform.operators.manage`) y vincular Google (`Identity.Google.AlreadyUsed`, que exige probar con OAuth que la cuenta es tuya).
 - **Exportar mis datos** (E10): `POST /api/me/data-export` (`[Idempotent]`) prepara en segundo plano un JSON con la cuenta, los datos del espacio personal y lo compartido con empresas (de su lado), y manda por correo un enlace de descarga que vence en 48 h.
 - **Dar de baja la cuenta** (E3, ADR 0035): el diseño completo está en [multitenancy.md §3.2](../architecture/multitenancy.md#32-baja-de-una-cuenta-adr-0035). En resumen:
   - `POST /api/me/deletion` (`[Idempotent]`), con motivo y `ReauthTicket` de menos de 5 minutos. `AccountDeletionPolicy` bloquea a un operador (`…PlatformOperator`), una baja ya pedida (`…AlreadyPending`) y lo que bloquee un módulo (`…Blocked`) desde la E3, y al único Dueño de una organización no cerrada (`Legal.AccountDeletion.LastAdmin`) desde la E4, cuando existen `SystemRoles` y `RoleAssignment`. El Dueño sale solo del rol de sistema `TenantAdmin`, nunca de un flag de `Member`; "Dueños activos" son los `TenantAdmin` con la identidad `Active` (una baja pedida no cuenta), la misma lectura que reusa `LastTenantAdminGuard` (E6).
@@ -37,6 +38,7 @@
 - Una entidad con datos de una identidad sin su `IAccountDeletionParticipant`.
 - Exportar datos de una organización dentro de la exportación personal.
 - Escribir `AspNetUsers.Email` o `PhoneNumber` a mano o ponerles índice único.
+- Responder distinto (otro código, otro cuerpo u otra espera) porque un correo o un teléfono ya es de una cuenta (ADR 0041).
 - Guardar un correo o teléfono de ingreso fuera de `LoginMethods`.
 - Sumar correo, vincular Google, quitar o cambiar un método sin `ReauthTicket`, usar como origen un método verificado después del inicio de sesión, o dejar la cuenta sin un método propio o activo.
 
@@ -47,6 +49,7 @@
 ## Lo verifica
 - `AuthEndpointsTests`, `SignupValidationTests` y `GoogleLoginTests` (3a): el registro sin aceptar da 400 `Validation.Failed` con `acceptedTerms` en correo y Google. `LegalAcceptanceTests` (3a) comprueba la lectura de Términos y Privacidad vigentes en ambas culturas y que el alta por correo guarde exactamente ambos documentos y sus versiones vigentes. La invitación (3c), el alta de empresa (E6) y WhatsApp (E8) suman sus casos cuando nacen; en 3b se comprueba que una versión nueva exija `Legal.AcceptanceRequired` hasta aceptarla.
 - `AccountDeletionTests` (E3) y `AccountDeletionParticipantsTests` (E3); el caso del único Dueño se suma en la E4.
+- ADR 0041: `AccountMethodsHttpTests` (E3) agrega, verifica, reenvía y quita el correo de otra cuenta con la misma respuesta que uno libre, y solo su dueño recibe el aviso; `AccountRecoveryTests` (E5) registra un pedido con la misma escritura haya cuenta o no.
 - `LoginMethodsTests` (E3) cubre la gestión. `LoginCodeTests.Inactive_managed_member_cannot_use_the_email_to_sign_into_personal_access` (E6) y `OrganizationDomainsTests` (E6) comprueban que un exmiembro no pueda entrar con ese correo y que retirar un dominio conserve la protección de los métodos ya vinculados.
 
 ## Detalle

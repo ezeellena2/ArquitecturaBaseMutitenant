@@ -11,7 +11,7 @@
 |---|---|---|
 | Regla de una entidad o value object | `Domain.UnitTests/<Área>/` | puro |
 | Servicio | `Application.UnitTests/Services/<Área>/` | `ServiceFixture`: `FakeUnitOfWork`, `FakeTimeProvider`, `FakeLogger`, repositorios `InMemory*` |
-| Ruta, reader, RLS | `Api.IntegrationTests/<Área>/` y `Tenancy/` | `ApiFactory` (Testcontainers), `AuthFlow` o `TestAuthHandler`, `TenantFixture` |
+| Ruta, reader, RLS | `Api.IntegrationTests/<Área>/` y `Tenancy/` | `ApiFactory` (Testcontainers), `AccountJourney` u `OrganizationJourney` (registro e ingreso reales), `TenantFixture` |
 | Regla de arquitectura | `ArchitectureTests/` | NetArchTest + Mono.Cecil |
 
 - **Nombres:** en inglés y como frase: `Deleted_rows_are_hidden_from_queries_and_endpoints`.
@@ -35,7 +35,7 @@
 - `Application.UnitTests/Services/Roles/RoleServiceWriteTests.cs` y `Api.IntegrationTests/Organization/RolesTests.cs` (E4)
 
 ## Lo verifica
-- CI (E0): build + test en cada push; chequeo de contratos desde la E1. `HarnessTests` (E0) exige cada clase C# `*Tests` con un método `[Fact]`/`[Theory]` y los archivos `.test.mjs`/`.test.ts[x]` de «Lo verifica» en la etapa cerrada, también en el front si está el checkout.
+- CI (E0): build + test en cada push; desde la E1 falla si `docs/contracts/openapi.json` no está al día. La comparación con los tipos del front se corre en local (`contracts:check`) hasta que el CI del front la sume en la E10 (ADR 0016, enmienda). `HarnessTests` (E0) exige cada clase C# `*Tests` con un método `[Fact]`/`[Theory]` y los archivos `.test.mjs`/`.test.ts[x]` de «Lo verifica» en la etapa cerrada, también en el front si está el checkout.
 - `ExplicitRouteInventoryTests` (E1): una ruta sin su fila falla.
 - `scripts/test-e2e-real.test.mjs` del front (E3): desde la 3a, la etapa no cierra si el recorrido real no pasa.
 
