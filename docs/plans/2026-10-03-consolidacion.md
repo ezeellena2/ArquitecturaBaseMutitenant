@@ -462,7 +462,15 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
       - abre desde «Vista previa» de la banda cuando la página no está publicada;
       - la tarjeta es una pieza común: la reusa la Etapa 7 para la página del subdominio (T14 de su plan);
     - la flecha para achicar el menú en el borde del último panel: Administración si está abierta, si no el menú (v107). Se verifica en Personal y en Organización.
-  - **R3e · Piezas comunes que faltan** (las encontró R3d):
+  - [x] **R3e · Piezas comunes que faltan** (front `e019365` a `416a392`; 1020/1021 tests, lint y build; falla solo el contrato de Auditoría, que es de R3c). Capturas en `r3e/`, contra v107.
+    - `FormError` toma las medidas del teléfono por el ancho de la pantalla, también en las páginas públicas, y suma un tono de información.
+    - `Button` suma «Guardando» y se usa en 26 botones.
+    - `FormField variant="auth"` deja el ingreso y el registro en 44/10/15. La app sigue en 48/12/16, como dibujan sus M-*.
+    - Los íconos del tablero, `AuthLinkRow` y los textos del código en `common:code`.
+    - Se borró `SearchInput`; quedan 8 límites de tiempo, cada uno con su comentario.
+    - A Diseño: los textos de espera («Verificando…», «Aceptando…», «Comprobando…» y «Enviando…») y el «mouse encima» de Criterio · Botones.
+    - R3f (vista previa y flecha del menú) sale de R3c y corre en paralelo.
+    - Lo que pedía:
     - la franja de error en el teléfono, en 14,5 con 12/14 y radio 12, también en las páginas públicas, como dibujan M-Ingreso, M-Registro, M-Registro-Empresa y M-Invitacion (v104). `formularios.md` todavía dice 13 y se corrige;
     - `FormError` con tono de información, para «Tu sesión venció»;
     - `Button` con el estado «Guardando» de Criterio · Botones (aro de 14 y opacidad 0,85), usado en todos los botones que guardan;
