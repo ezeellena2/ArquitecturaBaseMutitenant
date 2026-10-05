@@ -308,6 +308,15 @@ Archivos: PlatformLegalService/writer, LegalDocument/Content/repo/reader, contra
 - [x] `PlatformLegalService` (6 dependencias de negocio) agrega la versión y sus textos bajo el lock global del tipo (`global:legal-document:{tipo}`), con número = último + 1; nunca actualiza ni borra (el runtime solo tiene SELECT e INSERT). La vigencia es el comienzo de la fecha civil elegida en la zona del operador; si es hoy, rige desde el momento de publicar. Exige el texto una vez en cada cultura habilitada (de los datos de referencia) y una fecha de hoy en adelante. El evento `LegalDocumentPublished` lleva tipo, versión y vigencia, con un motivo fijo de los recursos; el texto no va a logs ni a la auditoría. `GET /api/platform/legal-documents` lista por tipo la vigente y todas las versiones; `GET /{id}` muestra una con sus textos; no hay edición de versiones.
 - [x] Verde: publicación **2/2**; aceptación legal de la 3b, `/api/me`, inventario, OpenAPI, auditoría, repositorios legales y locks **34/34**; dominio **270/270**; Application **443/443**; arquitectura **154/154**; build 0 advertencias. Commit `feat(plataforma): publicar versiones legales`.
 
+### T18b · Antes de las pantallas: las acciones sobre una cuenta sin 409 falsos (agregada el 2026-10-05)
+
+Lo encontró la consolidación (tanda «versión al guardar», back `4ea3d53`).
+- **El problema:** las acciones de Plataforma sobre una cuenta (suspender, reactivar, cerrar sesiones y la baja) comparan el `xmin` de la fila del usuario. Esa fila cambia con cualquier escritura: un ingreso, el reinicio de intentos fallidos, el security stamp o el contacto principal. Por eso un ingreso del usuario mientras el operador mira la ficha da un 409 falso. Es la misma causa que tenía «Tus datos», que se resolvió con `ProfileVersion`.
+- **Lo que falta decidir:** si estas acciones necesitan versión, o si alcanza con el control de estado de cada transición (suspender solo una cuenta activa, reactivar solo una suspendida), que ya protege contra el doble clic y las carreras.
+- [ ] Rojo: un ingreso del usuario entre la lectura y la acción no da 409. Dos acciones contradictorias a la vez siguen protegidas.
+- [ ] Lo mismo para las demás acciones de Plataforma con motivo que hoy responden 204: organizaciones, página pública, dominios y recuperaciones. Responden como los guardados (`VersionResponse`) si llevan versión.
+- [ ] La regla, en `concurrencia.md`.
+
 ### T19 · Contratos y recuperación pública validada
 
 Archivos: OpenAPI/generated/types, `src/areas/public/auth/{api,pages}/RecoverAccount*`, link en LoginPage, locales; tests de pantalla + `src/shared/api/platformContract.test.ts`.
