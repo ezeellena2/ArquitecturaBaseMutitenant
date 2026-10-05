@@ -90,7 +90,7 @@ public sealed class HomeTests(ApiFactory factory)
             Assert.Equal(JsonValueKind.Null, organization.GetProperty(area).ValueKind);
         Assert.Empty(Pending(readerHome));
 
-        // Alguien con roles solo en una empresa ve «Tus empresas»; decisión 8: su «Para resolver» llega con B4.
+        // Alguien con roles solo en una empresa ve «Tus empresas»; esa invitación no es de su empresa, así que no la ve.
         using var memberClient = NewClient();
         var member = await AccountJourney.RegisterAsync(factory, memberClient, Ct);
         var memberId = await OrganizationJourney.AddActiveMemberAsync(factory, tenantId, member.UserId, Ct);
@@ -111,6 +111,67 @@ public sealed class HomeTests(ApiFactory factory)
         Assert.Equal(["Administrador"], company.GetProperty("roles").EnumerateArray().Select(name => name.GetString()));
         Assert.Equal(2, company.GetProperty("memberCount").GetInt32());
         Assert.Empty(Pending(memberHome));
+    }
+
+    // B4, tablero Inicio-Miembro: quien administra una empresa sin roles de la organización ve la invitación vencida de
+    // su empresa, con la empresa, y «Reenviar» lo lleva a la ficha de esa empresa, que puede abrir.
+    [Fact]
+    public async Task A_company_admin_without_organization_roles_sees_the_expired_invitation_of_its_company_and_can_open_it()
+    {
+        using var ownerClient = NewClient();
+        var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
+        var tenantId = await OrganizationJourney.StageAsync(factory, owner, "Inicio por empresa", Ct);
+        await AccountJourney.AuthorizeAsync(ownerClient, "business", Ct);
+        var northId = await OrganizationJourney.CreateCompanyAsync(ownerClient, "Delta Norte S.A.", Ct);
+        var southId = await OrganizationJourney.CreateCompanyAsync(ownerClient, "Delta Sur S.A.", Ct);
+        var companyAdminRoleId = await CompanyAdminRoleIdAsync(ownerClient);
+        var northInvitee = $"home-{Guid.NewGuid():N}@example.test";
+        var southInvitee = $"home-{Guid.NewGuid():N}@example.test";
+        var organizationInvitee = $"home-{Guid.NewGuid():N}@example.test";
+        await OrganizationJourney.InviteExpiredAsync(factory, ownerClient, tenantId, northInvitee, Ct,
+            [new { companyId = northId, roleIds = new[] { companyAdminRoleId } }]);
+        await OrganizationJourney.InviteExpiredAsync(factory, ownerClient, tenantId, southInvitee, Ct,
+            [new { companyId = southId, roleIds = new[] { companyAdminRoleId } }]);
+        await OrganizationJourney.InviteExpiredAsync(factory, ownerClient, tenantId, organizationInvitee, Ct);
+
+        using var adminClient = NewClient();
+        var admin = await AccountJourney.RegisterAsync(factory, adminClient, Ct);
+        var adminMemberId = await OrganizationJourney.AddActiveMemberAsync(factory, tenantId, admin.UserId, Ct);
+        using var added = await AccountJourney.PostAsync(ownerClient, $"/api/companies/{northId:D}/members",
+            new { memberId = adminMemberId, roleIds = new[] { companyAdminRoleId } }, Ct);
+        Assert.True(added.StatusCode == HttpStatusCode.NoContent, await added.Content.ReadAsStringAsync(Ct));
+        await AccountJourney.AuthorizeAsync(adminClient, "business", Ct);
+
+        var home = await OrganizationJourney.HomeAsync(adminClient, Ct);
+
+        // Solo la de su empresa, con la empresa: ni la de otra empresa ni la que no es de ninguna.
+        Assert.Equal(JsonValueKind.Null, home.GetProperty("organization").ValueKind);
+        Assert.Equal([("users", "invitationExpired", northInvitee)], Pending(home));
+        var row = Assert.Single(home.GetProperty("pending").EnumerateArray());
+        Assert.Equal(northId, row.GetProperty("companyId").GetGuid());
+        Assert.Equal("Delta Norte S.A.", row.GetProperty("companyName").GetString());
+
+        // La ficha de su empresa se abre y muestra a la persona invitada; la de otra empresa, no.
+        using var company = await adminClient.GetAsync($"/api/companies/{northId:D}", Ct);
+        Assert.True(company.StatusCode == HttpStatusCode.OK, await company.Content.ReadAsStringAsync(Ct));
+        using var companyJson = JsonDocument.Parse(await company.Content.ReadAsStringAsync(Ct));
+        Assert.Equal("Delta Norte S.A.", companyJson.RootElement.GetProperty("name").GetString());
+        using var invited = await adminClient.GetAsync(
+            $"/api/companies/{northId:D}/members/paged?state=Invited&pageSize=50", Ct);
+        Assert.True(invited.StatusCode == HttpStatusCode.OK, await invited.Content.ReadAsStringAsync(Ct));
+        using var invitedJson = JsonDocument.Parse(await invited.Content.ReadAsStringAsync(Ct));
+        Assert.Contains(invitedJson.RootElement.GetProperty("items").EnumerateArray(),
+            member => member.GetProperty("memberId").GetGuid() == row.GetProperty("targetId").GetGuid());
+        using var otherCompany = await adminClient.GetAsync($"/api/companies/{southId:D}", Ct);
+        Assert.Equal(HttpStatusCode.Forbidden, otherCompany.StatusCode);
+
+        // Quien puede reenviar desde Usuarios ve las tres como filas de la organización, sin empresa.
+        var ownerHome = await OrganizationJourney.HomeAsync(ownerClient, Ct);
+        var ownerRows = ownerHome.GetProperty("pending").EnumerateArray()
+            .Where(item => item.GetProperty("kind").GetString() == "invitationExpired").ToArray();
+        Assert.Equal(new[] { northInvitee, organizationInvitee, southInvitee }.Order(StringComparer.Ordinal),
+            ownerRows.Select(item => item.GetProperty("subject").GetString()!).Order(StringComparer.Ordinal));
+        Assert.All(ownerRows, item => Assert.Equal(JsonValueKind.Null, item.GetProperty("companyId").ValueKind));
     }
 
     internal static (string? Area, string? Kind, string? Subject)[] Pending(JsonElement home) =>

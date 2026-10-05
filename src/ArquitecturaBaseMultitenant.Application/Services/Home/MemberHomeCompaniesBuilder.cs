@@ -9,17 +9,17 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Home;
 
 /// <summary>
 /// «Tus empresas» de Inicio-Miembro: las empresas donde la persona tiene permisos, según
-/// <see cref="IPermissionService.GetCompanyPermissionsAsync"/>, con sus roles y los miembros si puede verlos.
+/// <see cref="IPermissionService.GetPermissionsByCompanyAsync"/>, con sus roles y los miembros si puede verlos.
 /// </summary>
-internal sealed class MemberHomeCompaniesBuilder(ICompanyMembershipReader memberships, IPermissionService permissions)
+internal sealed class MemberHomeCompaniesBuilder(ICompanyMembershipReader memberships)
 {
-    public async Task<IReadOnlyList<HomeCompanyCard>> ListAsync(Guid userId, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<HomeCompanyCard>> ListAsync(Guid userId,
+        IReadOnlyDictionary<Guid, IReadOnlyList<string>> permissionsByCompany, CancellationToken cancellationToken)
     {
         var cards = new List<HomeCompanyCard>();
         foreach (var company in await memberships.ListActiveForUserAsync(userId, cancellationToken))
         {
-            var granted = await permissions.GetCompanyPermissionsAsync(userId, company.CompanyId, cancellationToken);
-            if (granted.Count == 0) continue;
+            if (!permissionsByCompany.TryGetValue(company.CompanyId, out var granted) || granted.Count == 0) continue;
             int? members = granted.Contains(Permissions.Company.Members.Read, StringComparer.Ordinal)
                 ? (await memberships.GetFilterCountsAsync(company.CompanyId, new ListCompanyMembersRequest(),
                     cancellationToken)).Active

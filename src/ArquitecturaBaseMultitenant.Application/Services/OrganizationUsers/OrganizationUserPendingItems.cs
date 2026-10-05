@@ -9,7 +9,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
 
 /// <summary>
 /// «Para resolver» de Usuarios (ADR 0040): las invitaciones vencidas, para quien puede invitar, y las bajas pedidas,
-/// para quien administra usuarios. Usa los mismos estados que el listado de Usuarios.
+/// para quien administra usuarios. Sin permisos de la organización (Inicio-Miembro), las invitaciones vencidas de cada
+/// empresa donde administra los miembros, con la empresa. Usa los mismos estados que el listado de Usuarios.
 /// </summary>
 internal sealed class OrganizationUserPendingItems(IOrganizationUserReader users, TimeProvider timeProvider)
     : IPendingItemSource
@@ -26,21 +27,31 @@ internal sealed class OrganizationUserPendingItems(IOrganizationUserReader users
         var items = new List<PendingItem>();
         if (context.Can(Permissions.Users.Invite))
         {
-            items.AddRange((await AllAsync(OrganizationUserState.Expired, nowUtc, cancellationToken))
-                .Select(row => new PendingItem(Area, InvitationExpired, row.Email?.DisplayValue, Urgent: false,
-                    row.InvitationExpiresAtUtc, DueAtUtc: null, row.MemberId)));
+            items.AddRange((await AllAsync(OrganizationUserState.Expired, companyId: null, nowUtc, cancellationToken))
+                .Select(row => Expired(row, company: null)));
+        }
+        foreach (var companyId in context.CompaniesWhere(Permissions.Company.Members.Manage))
+        {
+            items.AddRange((await AllAsync(OrganizationUserState.Expired, companyId, nowUtc, cancellationToken))
+                .SelectMany(row => row.Companies.Where(company => company.CompanyId == companyId).Take(1)
+                    .Select(company => Expired(row, company))));
         }
         if (context.Can(Permissions.Users.Manage))
         {
-            items.AddRange((await AllAsync(OrganizationUserState.PendingDeletion, nowUtc, cancellationToken))
+            items.AddRange((await AllAsync(OrganizationUserState.PendingDeletion, companyId: null, nowUtc,
+                    cancellationToken))
                 .Select(row => new PendingItem(Area, DeletionRequested, row.DisplayName, Urgent: false,
                     row.DeletionRequestedAtUtc, row.DeletionScheduledForUtc, row.MemberId)));
         }
         return items;
     }
 
-    private async Task<IReadOnlyList<OrganizationUserRow>> AllAsync(OrganizationUserState state, DateTime nowUtc,
-        CancellationToken cancellationToken)
+    private static PendingItem Expired(OrganizationUserRow row, OrganizationUserCompanyRow? company) =>
+        new(Area, InvitationExpired, row.Email?.DisplayValue, Urgent: false, row.InvitationExpiresAtUtc,
+            DueAtUtc: null, row.MemberId, company?.CompanyId, company?.CompanyName);
+
+    private async Task<IReadOnlyList<OrganizationUserRow>> AllAsync(OrganizationUserState state, Guid? companyId,
+        DateTime nowUtc, CancellationToken cancellationToken)
     {
         var rows = new List<OrganizationUserRow>();
         for (var page = 1; ; page++)
@@ -48,6 +59,7 @@ internal sealed class OrganizationUserPendingItems(IOrganizationUserReader users
             var result = await users.ListAsync(new ListOrganizationUsersRequest
             {
                 State = state,
+                CompanyId = companyId,
                 Page = page,
                 PageSize = PagedRequest.MaxPageSize,
             }, nowUtc, cancellationToken);

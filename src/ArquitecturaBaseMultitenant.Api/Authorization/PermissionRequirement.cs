@@ -9,4 +9,9 @@ internal enum PermissionKind
     Platform,
 }
 
-internal sealed record PermissionRequirement(PermissionKind Kind, string Permission) : IAuthorizationRequirement;
+/// <summary>
+/// Un permiso de su clase. En uno de empresa, <paramref name="OrganizationPermission"/> es el permiso de la organización
+/// que también alcanza.
+/// </summary>
+internal sealed record PermissionRequirement(PermissionKind Kind, string Permission,
+    string? OrganizationPermission = null) : IAuthorizationRequirement;

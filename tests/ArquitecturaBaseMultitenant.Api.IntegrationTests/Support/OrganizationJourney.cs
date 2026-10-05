@@ -79,13 +79,13 @@ internal static class OrganizationJourney
 
     /// <summary>Invita un correo sin roles y deja la invitación vencida hace dos días.</summary>
     internal static async Task InviteExpiredAsync(ApiFactory factory, HttpClient client, Guid tenantId, string email,
-        CancellationToken ct)
+        CancellationToken ct, object[]? companies = null)
     {
         using var issued = await AccountJourney.PostAsync(client, "/api/users/invitations", new
         {
             email,
             roleIds = Array.Empty<Guid>(),
-            companies = Array.Empty<object>(),
+            companies = companies ?? [],
         }, ct);
         Assert.True(issued.StatusCode == HttpStatusCode.Created, await issued.Content.ReadAsStringAsync(ct));
         using var json = JsonDocument.Parse(await issued.Content.ReadAsStringAsync(ct));

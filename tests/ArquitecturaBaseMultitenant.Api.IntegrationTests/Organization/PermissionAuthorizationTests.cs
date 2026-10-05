@@ -38,6 +38,24 @@ public sealed class PermissionAuthorizationTests
             Access.Consumer, tenant, TenantKind.Personal, companyGrant: true, companyId: company));
     }
 
+    // La ficha de una empresa: la abre quien ve todas las empresas y quien tiene el permiso en esa empresa (B4).
+    [Fact]
+    public async Task Company_permission_with_an_organization_alternative_accepts_either_grant()
+    {
+        var tenant = Guid.CreateVersion7();
+        var company = Guid.CreateVersion7();
+        var policy = new HasCompanyPermissionAttribute("company.members.read", organizationPermission: "companies.read")
+            .Policy!;
+        Assert.True(await AuthorizeAsync(policy, Access.Business, tenant, TenantKind.Business,
+            organizationGrant: true, companyId: company));
+        Assert.True(await AuthorizeAsync(policy, Access.Business, tenant, TenantKind.Business,
+            companyGrant: true, companyId: company));
+        Assert.False(await AuthorizeAsync(policy, Access.Business, tenant, TenantKind.Business, companyId: company));
+        Assert.False(await AuthorizeAsync(policy, Access.Business, tenant, TenantKind.Business, companyGrant: true));
+        Assert.False(await AuthorizeAsync(policy, Access.Consumer, tenant, TenantKind.Personal,
+            organizationGrant: true, companyGrant: true, companyId: company));
+    }
+
     [Fact]
     public async Task Platform_permission_requires_platform_access()
     {

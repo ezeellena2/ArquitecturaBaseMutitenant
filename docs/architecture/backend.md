@@ -725,7 +725,7 @@ Un guardado deja una sola entrada por acción: `RoleAssignmentTrail` junta los r
   - El Dueño sale **solo** del rol `TenantAdmin` (`RoleAssignment`), nunca de un dato de `Member`. "Dueños activos" son los que tienen `TenantAdmin` con la identidad `Active` (una baja pedida no cuenta); esa misma lectura la usan `AccountDeletionPolicy` y `LastTenantAdminGuard`.
 - **Atributos**, nunca roles ni `[Authorize(Policy=…)]` a mano (test):
   - `[HasPermission(Permissions.Users.Manage)]` para la organización.
-  - `[HasCompanyPermission(Permissions.Company.Members.Manage)]`: lee `{companyId}` de la ruta y verifica que la empresa sea de la organización y que el usuario tenga el permiso ahí.
+  - `[HasCompanyPermission(Permissions.Company.Members.Manage)]`: lee `{companyId}` de la ruta y verifica que la empresa sea de la organización y que el usuario tenga el permiso ahí. Con `organizationPermission`, también alcanza ese permiso de la organización (la ficha de una empresa: `companies.read` o `company.members.read` en esa empresa).
   - `[HasPlatformPermission(PlatformPermissions.Tenants.Manage)]`: además exige `access=platform`.
 - `IPermissionService` (`GetOrganizationPermissionsAsync`, `GetCompanyPermissionsAsync` y `GetPermissionsByCompanyAsync`) suma los permisos de los roles de la persona. Los de cada rol se cachean en HybridCache con la clave `t:{tenantId}:role-permissions:{roleId}` y se invalidan al cambiar el rol (`InvalidateRoleAsync`), después del commit.
 - Las rutas de organización llevan `[Access(Business)]` **y** el permiso. Con otro acceso responden 403 `Tenancy.Access.Wrong`.

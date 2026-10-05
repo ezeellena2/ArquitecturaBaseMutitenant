@@ -4704,14 +4704,14 @@
         }
       }
     },
-    "/api/companies/{id}": {
+    "/api/companies/{companyId}": {
       "get": {
         "tags": [
           "Empresas"
         ],
         "parameters": [
           {
-            "name": "id",
+            "name": "companyId",
             "in": "path",
             "required": true,
             "schema": {
@@ -4789,7 +4789,7 @@
         ],
         "parameters": [
           {
-            "name": "id",
+            "name": "companyId",
             "in": "path",
             "required": true,
             "schema": {
@@ -4987,14 +4987,14 @@
         }
       }
     },
-    "/api/companies/{id}/status": {
+    "/api/companies/{companyId}/status": {
       "put": {
         "tags": [
           "Empresas"
         ],
         "parameters": [
           {
-            "name": "id",
+            "name": "companyId",
             "in": "path",
             "required": true,
             "schema": {
@@ -13557,9 +13557,22 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "companyId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "companyName": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
-        "description": "Una fila de «Para resolver». `Area` y `Kind` son claves estables: el front arma el texto, el estado y la\r\nacción. `SinceUtc` ordena; `DueAtUtc` es la fecha del detalle (por ejemplo, cuándo se elimina)."
+        "description": "Una fila de «Para resolver». `Area` y `Kind` son claves estables: el front arma el texto, el estado y la\r\nacción. `SinceUtc` ordena; `DueAtUtc` es la fecha del detalle (por ejemplo, cuándo se elimina).\r\n`CompanyId` y `CompanyName` vienen cuando el pendiente es de una empresa (Inicio-Miembro)."
       },
       "PendingLegalDocumentResponse": {
         "required": [

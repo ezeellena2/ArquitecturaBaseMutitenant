@@ -4,7 +4,7 @@
 
 ## Cómo se hace
 - **Organización:** `[Access(Business)] [HasPermission(Permissions.Users.Manage)]`.
-- **Empresa** (con `{companyId}` en la ruta): `[HasCompanyPermission(Permissions.Company.Members.Manage)]`.
+- **Empresa** (con `{companyId}` en la ruta): `[HasCompanyPermission(Permissions.Company.Members.Manage)]`. Si un permiso de la organización también alcanza, va como segundo argumento: la ficha de una empresa lleva `[HasCompanyPermission(Permissions.Company.Members.Read, organizationPermission: Permissions.Companies.Read)]`.
 - **Plataforma:** `[HasPlatformPermission(PlatformPermissions.Tenants.Manage)]`.
 - **Persona (B2C):** `[Access(Consumer)]` sin permiso, porque la persona los tiene todos sobre su espacio personal. Sobre un dato compartido, lo que puede hacer cada parte lo decide `PartyPolicy`, no un permiso.
 - **Catálogo de la organización, sin prefijo** (como ArquitecturaBase): `users.read`, `users.invite`, `users.manage`, `roles.read`, `roles.manage`, `roles.assign`, `companies.read`, `companies.manage`, `settings.read`, `settings.manage` (incluye verificar el dominio de correo), `audit.read` y `publicpage.manage`; por empresa, `company.members.read` y `company.members.manage` ([backend.md §14](../architecture/backend.md#14-autorización)). Nunca `tenant.users.read`.
@@ -33,7 +33,7 @@
 - `Api/Controllers/Organization/RolesController.cs` (E4) · la guía [`permiso-nuevo.md`](../guides/permiso-nuevo.md) (E4)
 
 ## Lo verifica
-- `PermissionAuthorizationTests` (E4): sin `Policy` ni roles a mano, y cada `[Has*Permission]` nombra un permiso de su catálogo.
+- `PermissionAuthorizationTests` (E4): sin `Policy` ni roles a mano, y cada `[Has*Permission]` nombra un permiso de su catálogo; el permiso de empresa con la alternativa de la organización acepta cualquiera de los dos, siempre con la empresa en la ruta.
 - `PermissionTextsTests` (E4): textos en los dos idiomas.
 - Tests de integración (E4): 401 sin sesión y 403 sin el permiso.
 

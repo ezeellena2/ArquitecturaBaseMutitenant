@@ -39,14 +39,14 @@ public sealed class CompaniesController(ICompanyService service) : ControllerBas
         CancellationToken cancellationToken) =>
         (await service.GetFilterCountsAsync(query.ToModel(), cancellationToken)).ToActionResult(this);
 
-    [HttpGet("{id:guid}")]
-    [HasPermission(Permissions.Companies.Read)]
+    [HttpGet("{companyId:guid}")]
+    [HasCompanyPermission(Permissions.Company.Members.Read, organizationPermission: Permissions.Companies.Read)]
     [ProducesResponseType<CompanyResponse>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status401Unauthorized)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Get([FromRoute] Guid id, CancellationToken cancellationToken) =>
-        (await service.GetAsync(id, cancellationToken)).ToActionResult(this);
+    public async Task<IActionResult> Get([FromRoute] Guid companyId, CancellationToken cancellationToken) =>
+        (await service.GetAsync(companyId, cancellationToken)).ToActionResult(this);
 
     [HttpPost]
     [HasPermission(Permissions.Companies.Manage)]
@@ -59,9 +59,10 @@ public sealed class CompaniesController(ICompanyService service) : ControllerBas
     public async Task<IActionResult> Create([FromBody] CreateCompanyHttpRequest request,
         CancellationToken cancellationToken) =>
         (await service.CreateAsync(new CreateCompanyRequest(request.Name, request.TaxIdNumber,
-            request.TimeZoneId), cancellationToken)).ToCreatedResult(this, nameof(Get), id => new { id });
+            request.TimeZoneId), cancellationToken)).ToCreatedResult(this, nameof(Get),
+            id => new { companyId = id });
 
-    [HttpPut("{id:guid}")]
+    [HttpPut("{companyId:guid}")]
     [HasPermission(Permissions.Companies.Manage)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
@@ -69,12 +70,12 @@ public sealed class CompaniesController(ICompanyService service) : ControllerBas
     [ProducesProblem(StatusCodes.Status403Forbidden)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     [ProducesProblem(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateCompanyHttpRequest request,
+    public async Task<IActionResult> Update([FromRoute] Guid companyId, [FromBody] UpdateCompanyHttpRequest request,
         CancellationToken cancellationToken) =>
-        (await service.UpdateAsync(new UpdateCompanyRequest(id, request.Name,
+        (await service.UpdateAsync(new UpdateCompanyRequest(companyId, request.Name,
             request.TaxIdNumber, request.TimeZoneId, request.Version), cancellationToken)).ToActionResult(this);
 
-    [HttpPut("{id:guid}/status")]
+    [HttpPut("{companyId:guid}/status")]
     [HasPermission(Permissions.Companies.Manage)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
@@ -82,8 +83,8 @@ public sealed class CompaniesController(ICompanyService service) : ControllerBas
     [ProducesProblem(StatusCodes.Status403Forbidden)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     [ProducesProblem(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> ChangeStatus([FromRoute] Guid id,
+    public async Task<IActionResult> ChangeStatus([FromRoute] Guid companyId,
         [FromBody] ChangeCompanyStatusHttpRequest request, CancellationToken cancellationToken) =>
-        (await service.ChangeStatusAsync(new ChangeCompanyStatusRequest(id, request.Status, request.Version),
+        (await service.ChangeStatusAsync(new ChangeCompanyStatusRequest(companyId, request.Status, request.Version),
             cancellationToken)).ToActionResult(this);
 }
