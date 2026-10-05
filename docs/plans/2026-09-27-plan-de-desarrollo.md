@@ -26,7 +26,7 @@ El resultado tiene que servir para empezar productos reales.
 3. Desde la E1, el inventario de rutas (`ExplicitRouteInventoryTests`) actualizado, con un test por cada ruta nueva.
 4. Si la etapa toca datos de negocio: los tests de aislamiento de `Tenancy/` en verde y ampliados a las rutas nuevas.
 5. Desde la E1, si la etapa muestra datos nuevos: se usan `shared/ui/format` y `shared/ui/fields`, y cada tipo nuevo tiene sus casos en `format-cases.json`.
-6. Desde la E1, si cambia el contrato HTTP, `docs/contracts/openapi.json` y `src/shared/api/generated` se regeneran y commitean; `contracts:check` y el chequeo de CI siguen siendo obligatorios en cada puerta.
+6. Desde la E1, si cambia el contrato HTTP, `docs/contracts/openapi.json` y `src/shared/api/generated` se regeneran y commitean; `contracts:check` (local, con el repo hermano) y el chequeo del CI del back (`openapi.json` al día) siguen siendo obligatorios en cada puerta; el chequeo cruzado en el CI del front llega en la E10 (ADR 0016, enmienda).
 7. La documentación afectada por una conducta o regla cambia **en el mismo commit** que el código; el informe de la etapa se cierra en la puerta. **Arnés:**
    - toda carpeta nueva del mapa (`arnes.md` §3) tiene su `AGENTS.md` + `CLAUDE.md`;
    - toda convención transversal nueva o modificada actualiza su ficha en `docs/rules/` y usa una verificación pertinente, existente o nueva; una decisión local se registra en la feature o el informe, con test de conducta si agrega lógica;
