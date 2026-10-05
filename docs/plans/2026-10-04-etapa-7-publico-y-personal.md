@@ -703,7 +703,13 @@ Mientras alguien edita, la ventana puede verse rota un momento (por ejemplo, con
 - `src/areas/storefront/api/publicSite.ts`;
 - `src/locales/{es,en}/storefront.json`, que suma los textos de la tarjeta.
 
-**Copiá de:** `areas/business/public-page/pages/PublicPagePage.tsx` para leer la página; `shared/ui/format` (`PhoneText`) para el teléfono.
+**La tarjeta ya existe:** `src/shared/ui/PublicPageCard.tsx` nació en la consolidación para la vista previa de la Página pública (R3f).
+- Recibe `page` (los datos de la página), `links` (el teléfono, el correo y el sitio web como enlaces) y `signInHref` (a dónde lleva «Ingresá para continuar»).
+- Va sobre `publicPageBackdropClass`.
+- La página del subdominio la usa así: `<PublicPageCard page={…} links signInHref={…} />`. No se arma otra tarjeta.
+- Con sesión, el tablero no muestra «Ingresá para continuar». La tarjeta todavía no sabe esconderlo: T15 le suma esa opción.
+
+**Copiá de:** `areas/business/public-page/pages/PublicPagePage.tsx` para leer la página y abrir la vista previa; `shared/ui/format` (`PhoneText`) para el teléfono.
 
 - [ ] **Rojo** (`PublicPage.test.tsx`):
   - «publicada y sin sesión: el logo o las iniciales, el nombre, la descripción, Dirección, Teléfono, Correo y Sitio web, e "Ingresá para continuar"»;
@@ -714,6 +720,7 @@ Mientras alguien edita, la ventana puede verse rota un momento (por ejemplo, con
   - axe y 390.
 - [ ] **Implementación:**
   - `usePublicSite` decide entre «Publicada» y «No disponible»;
+  - la tarjeta es `PublicPageCard`, la misma de la vista previa;
   - «Ir a ArquitecturaBase» va a la portada del dominio principal;
   - el teléfono va con `PhoneText`, sin tipos de formato nuevos.
 - [ ] **Verde:** el test focal, `parity.test.ts`, lint y build. Commit `feat(sitio-publico): la página de cada organización en su subdominio`.
