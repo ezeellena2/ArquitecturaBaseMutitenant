@@ -164,15 +164,15 @@ El usuario las resolvió con Diseño (front `706cd3c`). Todas están en Decision
 
 ### 2. Arnés y referencias
 
-- [ ] Los «Copiá de» apuntan a referencias sanas:
+- [x] Los «Copiá de» apuntan a referencias sanas. Back en `5e08a6a` (26 `AGENTS.md`, decisión 84); front en `7e60004` (Roles para listados y editores, `personal/account` para formularios y diálogos):
   - [x] **back:** `RoleService`, `RoleReader` y `CompanyReader`. Va en los `AGENTS.md` de `Services/PublicSite`, `Services/OrganizationSettings` y `Persistence/Readers`, y en `paginado-y-busqueda.md`. Hecho en `5e08a6a`, junto con el resto de los «Copiá de» del back: ninguno manda a ArquitecturaBase y los de E1 y E2 siguen el mapa de `arnes.md` §3 (decisión 84). `HarnessTests` 10/10 y `realinear-docs --detectar --repo back` en 0;
   - [ ] **front:** `personal/account` para formularios y diálogos, y `UsersPage` para listados, hasta que el bloque 6 deje Roles como referencia.
 - [x] Crear el `AGENTS.md` de `Services/OrganizationUsers`. Hecho en `ed9f1aa`, con su `CLAUDE.md` y el de otras cuatro carpetas que no lo tenían (decisión 85).
 - [x] Agregar un test que exija un mensaje propio en cada regla de validación: recorre `CreateDescriptor()` de cada validador del ensamblado. Hecho en `74ee2fc`: `ValidationMessageTests`, con caso de control; encontró el filtro de estado de Empresas.
 - [x] Borrar `Stage3aInventoryTests`. Hecho en `3dafde9`.
-- [ ] **Capturas de la 3b contra el lienzo vigente:** el script todavía compara contra la copia v35 e inyecta estados internos. Hay que pasarlo al lienzo vigente y sumar el test del Paquete 6 de la alineación: falla si una etapa nueva apunta a otra copia del lienzo.
+- [x] **Capturas de la 3b contra el lienzo vigente** (front `f2ea27d`, con su test; las 118 capturas nuevas están en `consolidacion/b6a/etapa-3b/`, y el manifiesto de la etapa queda como foto de v35): el script todavía compara contra la copia v35 e inyecta estados internos. Hay que pasarlo al lienzo vigente y sumar el test del Paquete 6 de la alineación: falla si una etapa nueva apunta a otra copia del lienzo.
 - [x] **Salida del Api** (enmienda de la ADR 0002): lo que devuelve un controller es un `*Response` de Application o un `*HttpResponse` de `Api/Contracts`. Renombrar los tres `*Response` del Api que no siguen el sufijo, corregir `Api/Contracts/AGENTS.md` y sumar un test de salida junto a `ControllerInputContractTests`. Hecho en `f47dcd0`, con `ControllerOutputContractTests`; ver la decisión 12. Falta regenerar los contratos del front.
-- [ ] **Accesibilidad** (ADR 0029):
+- [x] **Accesibilidad** (ADR 0029; front `55f3036` y `64f6e45`: el arnés exige axe en todo `pages/*Page.test.tsx`):
   - el «Copiá de» de `accesibilidad.md` apunta a `UsersPage.test.tsx`, que corre axe;
   - un chequeo en el arnés del front exige que todo `pages/*Page.test.tsx` corra axe.
 - [x] `OrganizationUsersTests.InvitationEmailAsync`: guardar los ids del outbox antes de invitar, como hace `InvitationsTests`, en lugar del try/catch que saltea los mensajes que no se pueden descifrar. Hecho en `2cd3893`.
@@ -537,7 +537,7 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
 
 ### 6. Front: Roles como referencia de verdad
 
-- [ ] **`RoleEditorPage`:**
+- [x] **6a · `RoleEditorPage`** (front `f77f512` a `b42ab32`; 1083 tests, lint y build). Usa React Hook Form con zod, `useEditPage`, `ReadOnlyField`, `errors.ts` (el nombre repetido va a su campo), `lib/` con tests, `PermissionPicker`, `RoleScopeField` y `/org/roles/nuevo`. «Crear rol» no se apaga (Criterio · Botones); «Guardar cambios» se apaga sin cambios. Capturas en `b6a/roles/`:
   - RHF con zod y `errors.ts`;
   - `lib/` con tests, para el selector de permisos y los roles de sistema;
   - los componentes que pide `arbol.md`: `PermissionPicker` y `RoleScopeField`;
@@ -555,7 +555,8 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
   - cada pieza es dueña de su borrador, su mutación y su error;
   - los diálogos se montan solo cuando están abiertos y devuelven el foco al cerrar.
 - [ ] **Estados** con `StatusBadge` y `statusTones` en Usuarios, Empresas y Miembros. Cada feature registra sus tonos, tipados por los enums del contrato, con el color del lienzo para cada estado.
-- [ ] Los «Copiá de» del front vuelven a apuntar a Roles.
+- [x] Los «Copiá de» del front vuelven a apuntar a Roles (`7e60004`).
+- [ ] **6c · Los formularios como Roles:** Usuario, Configuración, la Página pública y el perfil de Mi cuenta todavía usan borradores con `useState`. Pasan a React Hook Form con zod sin cambiar lo que se ve. Además, en los diálogos de verificar de Mi cuenta, el error del código va debajo de los casilleros y el título cambia en cada paso (Cuenta-Verificar, v107).
 - [ ] **Hecho cuando:**
   - `npm test` completo pasa;
   - las capturas de Roles, Rol, Empresas y Empresa coinciden con sus tableros.
