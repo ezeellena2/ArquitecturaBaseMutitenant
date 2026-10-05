@@ -50,7 +50,7 @@ ArquitecturaBaseMultitenant.slnx
    └─ ArquitecturaBaseMultitenant.ArchitectureTests
 ```
 
-**No hay carpeta `tools/`.**
+**`tools/` solo tiene el soporte del E2E real** (`RealE2ESetup`, que prepara su base aislada), nunca algo para operar ([ADR 0017](../decisions/README.md), enmienda del 2026-10-03):
 - El primer operador de plataforma sale del seed (`Seed:PlatformOwner`), como el `InitialAdmin` de la base.
 - El rol de base de datos en runtime lo crea el bootstrap de desarrollo, o el DBA en producción.
 - Las migraciones fuera de Development se aplican con un migration bundle.
@@ -107,7 +107,7 @@ Prohibido:
 | Principio | Regla concreta |
 |---|---|
 | **S**, responsabilidad única | Un servicio por área funcional, con **8 dependencias de negocio como máximo** (lo verifica un test; ADR 0039). No cuentan `ILogger<T>`, `TimeProvider`, `IRequestValidator` ni `IUnitOfWork`; todo lo demás cuenta, incluido `IOptions<T>`. Lo que crece se parte por responsabilidad en helpers, con un sufijo de la lista cerrada de [capas-y-flujo](../rules/capas-y-flujo.md): `*Policy` (decide), `*Guard` (protege una regla y devuelve el error), `*Issuer` (emite códigos, tickets, invitaciones o avisos), `*Verifier` (verifica lo que entra), `*Linker` (vincula un método con algo de afuera) y los demás de esa tabla (`ApplicationServicesTests` la lee). Los helpers no guardan ni reciben `IUnitOfWork`; no crear clases que solo reenvían |
-| **O**, abierto/cerrado | Módulos quitables (`Modules/WhatsApp` en Application, Infrastructure y Api), que se enchufan al núcleo por puertos: `ILoginCodeChannel`, `IInvitationChannel`, `IAccountNoticeChannel`, `IPhoneLinkObserver`. El núcleo no cambia cuando se agrega o se quita un módulo, y no referencia ningún `*.Modules.*` (test). Los errores y permisos nuevos se suman a catálogos, sin tocar el mapper |
+| **O**, abierto/cerrado | Módulos quitables (`Modules/WhatsApp` en Application, Infrastructure y Api), que se enchufan al núcleo por puertos: `ILoginCodeChannel`, `IInvitationChannel`, `IAccountNoticeChannel` y, en la E8, `IPhoneLinkObserver`. El núcleo no cambia cuando se agrega o se quita un módulo, y no referencia ningún `*.Modules.*` (test). Los errores y permisos nuevos se suman a catálogos, sin tocar el mapper |
 | **L**, sustitución de Liskov | Las implementaciones de un puerto respetan el contrato completo, incluido el "fallo cerrado" (por ejemplo, `DisabledWhatsAppAvailability` responde "no disponible", no lanza). Los dobles de test implementan la misma semántica (`FakeUnitOfWork` usa la misma `CommitPolicy`) |
 | **I**, segregación de interfaces | Lectura y escritura separadas (`I<X>Reader` / `I<X>Repository`). `ISignInService` con 12 miembros como máximo (test). `ICurrentUser`, `ITenantContext` e `IRequestInfo` separados |
 | **D**, inversión de dependencias | Application define los puertos; Infrastructure y Api los implementan. Cada capa se registra en su `DependencyInjection.cs` y `Program.cs` solo compone |
@@ -129,39 +129,43 @@ Domain/
 │  ├─ ValueObject.cs
 │  ├─ IAuditable.cs              CreatedAtUtc, CreatedBy, ModifiedAtUtc, ModifiedBy
 │  ├─ ISoftDeletable.cs          IsDeleted, DeletedAtUtc, DeletedBy
+│  ├─ IVersioned.cs              versión de concurrencia (xmin)
 │  ├─ ITenantOwned.cs            dato privado: Guid TenantId (lo sella el interceptor, inmutable)
 │  ├─ ICompanyOwned.cs           Guid CompanyId (siempre también ITenantOwned)
 │  ├─ IPublishedByBusiness.cs    dato público: BusinessTenantId, IsPublished
-│  └─ IConsumerBusinessShared.cs dato compartido: ConsumerTenantId (espacio personal), BusinessTenantId (organización)
+│  ├─ IConsumerBusinessShared.cs dato compartido: ConsumerTenantId (espacio personal), BusinessTenantId (organización)
+│  └─ Party, PartyPolicy, NotAuditedAttribute, TextLimits
 ├─ Results/                      Error, ErrorType, Result, Result<T>, ValidationError
 ├─ ValueObjects/                 Email, PhoneNumber, TaxId (país + tipo + número; validadores en TaxIdValidators/),
 │                                Money (monto + moneda ISO 4217), CurrencyCode (sintaxis alfa-3), CultureCode (sintaxis)
-├─ Tenancy/                      Tenant, TenantKind (Personal|Business), TenantStatus, Slug, ReservedSlugs, Member, MemberStatus,
-│                                TenantErrors, MemberErrors, AccessErrors, Invitation, InvitationChannel (valor), InvitationStatus,
-│                                InvitationErrors
-├─ Companies/                    Company, CompanyStatus, CompanyErrors, CompanyMembership, CompanyMembershipStatus,
-│                                CompanyMembershipErrors
-├─ PublicSite/                   PublicPage (nombre, logo, descripción, contacto; bloqueo de la plataforma: PublishBlockedAtUtc,
-│                                PublishBlockedReason, PublishBlockedByUserId), PublicPageStatus (Draft|Published), PublicPageErrors
+├─ ReferenceData/                los cinco catálogos globales (monedas, países, zonas, culturas y tipos fiscales) y sus traducciones
+├─ Tenancy/                      Tenant, TenantKind (Personal|Business), TenantStatus, TenantSlug, ReservedTenantSlug, Member,
+│                                MemberStatus, Company, CompanyStatus, CompanyMembership, CompanyMembershipStatus, TenantDomain
+│                                (dominio de correo de la organización), TenantErrors, MemberErrors, AccessErrors y los demás *Errors
+├─ Invitations/                  Invitation, InvitationChannel (valor), InvitationStatus, InvitationErrors
+├─ PublicSite/                   PublicPage (nombre, logo, descripción, contacto e IsPublished; bloqueo de la plataforma:
+│                                PublishBlockedAtUtc, PublishBlockedReason, PublishBlockedByUserId), PublicPageErrors
 ├─ Users/                        Access (Consumer|Business|Platform), UserStatus (Active|Suspended|PendingDeletion|Deleted),
-│                                UserErrors (las invitaciones están en Tenancy/)
-├─ Authentication/               LoginCode, LoginLink, LoginAudit, LoginMethod, LoginCodeChannel, *Errors
+│                                UserErrors, EmailErrors, PhoneErrors
+├─ Authentication/               LoginCode, LoginAudit, LoginMethod, LoginCodeChannel, ReauthTicket, *Errors (LoginLink, en la E8)
 ├─ Authorization/
 │  ├─ Permissions.cs             catálogo de la organización (tenant) y de empresa, con All / OrganizationScoped / CompanyScoped
 │  ├─ PersonalPermissions.cs     catálogo personal (personal.*), implícitos de la persona en su espacio personal
 │  ├─ PlatformPermissions.cs     catálogo de plataforma (separado a propósito)
 │  ├─ Role.cs                    TenantId, Name, Description, Scope, CompanyId? (solo con SpecificCompany), IsSystem, Permissions
 │  ├─ RoleScope.cs
-│  ├─ RoleAssignment.cs          UserId, RoleId, CompanyId? (null ⇒ toda la organización)
+│  ├─ RoleAssignment.cs          UserId, RoleId, CompanyId? (null ⇒ toda la organización); Check dice dónde vale un rol
 │  ├─ SystemRoles.cs             TenantAdmin ("Dueño"), CompanyAdmin ("Administrador")
-│  └─ RoleErrors.cs
-├─ Platform/                     PlatformPermissionAssignment (permisos individuales por operador), PlatformOperatorErrors
+│  └─ RoleErrors.cs, RoleAssignmentErrors.cs
+├─ Platform/                     PlatformPermissionAssignment (permisos individuales por operador), AccountRecoveryRequest
+│                                («Recuperar mi cuenta»), AccountRecoveryStatus y sus *Errors
 ├─ Settings/                     TenantSettings (cultura, zona y moneda por defecto), PlatformSettings, SettingsErrors
 ├─ Legal/                        LegalDocument, LegalDocumentContent (una fila por cultura), LegalDocumentKind, LegalAcceptance,
-│                                LegalErrors, AccountDeletionErrors (ReauthRequired, LastAdmin, PlatformOperator, AlreadyPending,
-│                                Blocked, NotPending); DataExport y DataExportStatus llegan en E10
-├─ Features/                     Features.cs: catálogo de módulos con su clave, su lado y si viene prendido por defecto (P8)
-├─ Auditing/                     AuditEntry (tenant), SecurityEvent (plataforma), AuditAction, AuditActorKind
+│                                LegalErrors, LegalPublicationErrors, AccountDeletionErrors (ReauthRequired, LastAdmin,
+│                                PlatformOperator, AlreadyPending, Blocked, NotPending); DataExport y DataExportStatus llegan en E10
+├─ Features/                     Features.cs (catálogo de módulos: clave, lado y si viene prendido), TenantFeature (habilitación
+│                                por espacio, con origen y vencimiento) (P8)
+├─ Auditing/                     AuditEntry (tenant), SecurityEvent (plataforma), AuditAction, AuditActorKind, AuditChangeKeys
 ├─ Messaging/                    OutboxMessage, OutboxChannel (valor: "email" y los que sumen los módulos), OutboxStatus
 └─ WhatsApp/                     entidades del módulo (Etapa 8): WhatsAppContact, WhatsAppMessage, WhatsAppChannel, *Errors
 ```
@@ -183,59 +187,77 @@ Application/
 │  │                                   CursorRequestValidator<T>
 │  ├─ Logging/                         OperationLog.RunAsync(logger, timeProvider, "Operación", trabajo): inicio, fin y código de error
 │  ├─ Formatting/                      DisplayFormatter, CultureProfiles, SupportedCultures (desde el catálogo; §18)
-│  └─ Exceptions/                      UniqueConstraintViolationException, ForeignKeyViolationException, ConcurrencyConflictException
-├─ Configuration/<Área>/               opciones funcionales (LoginCodeOptions, InvitationOptions…) con SectionName
+│  ├─ Text/                            TextNormalizer, PersonalDataMask (correo y teléfono enmascarados)
+│  └─ Exceptions/                      UniqueConstraintViolationException, ForeignKeyViolationException, ConcurrencyConflictException,
+│                                      InvalidCursorException
+├─ Configuration/<Área>/               opciones funcionales (LoginCodeOptions, InvitationOptions, OutboxOptions) con SectionName
 ├─ Interfaces/
-│  ├─ Services/                        I<X>Service, uno por área (lo que inyectan los controllers), entre ellos IAccountDeletionService
+│  ├─ Services/                        I<X>Service, uno por área (lo que inyectan los controllers), entre ellos IAccountDeletionService,
+│  │                                   IPermissionService e IPlatformPermissionService; IPendingItemSource (ADR 0040)
 │  ├─ ReferenceData/                   ICurrencyCatalog, ICountryCatalog, ITimeZoneCatalog, ICultureCatalog, ITaxIdTypeCatalog
 │  ├─ Persistence/                     IUnitOfWork, CommitPolicy, I<X>Repository, I<X>Reader, ITenantScope, IAuditLog,
-│  │                                   ILegalRepository, ILegalReader
+│  │                                   ILegalRepository, ILegalReader, UniqueKeys y ForeignKeys (los nombres de la base)
 │  └─ Integrations/
-│     ├─ Request/                      ICurrentUser, ITenantContext, IRequestInfo, IPublicOrigin, IPublicSiteContext
-│     ├─ Identity/                     ISignInService, IPermissionService, IPlatformPermissionService, ITokenRevoker
-│     ├─ Security/                     ISecureTokenGenerator, ILoginCodeGenerator, ILoginCodeHasher, IPayloadProtector
-│     ├─ Messaging/                    IOutbox, IEmailTemplateRenderer
+│     ├─ Request/                      ICurrentUser, ITenantContext, ITenantAccessInitializer, IRequestInfo, IPublicOrigin,
+│     │                                IInvitationFlowContext; IPublicSiteContext llega en la E7
+│     ├─ Identity/                     ISignInService, IUserLookup, IUserStatusReader, ITokenRevoker, IGoogleAvailability
+│     ├─ Security/                     ISecureTokenGenerator, ILoginCodeGenerator, ILoginCodeHasher, IPayloadProtector,
+│     │                                IInvitationTokenProtector
+│     ├─ Messaging/                    IOutbox, IEmailTemplateRenderer, IChannelSender
+│     ├─ Caching/                      ITenantSettingsCache, IRolePermissionCache, IAccessStatusCache… (se invalidan después del commit)
 │     ├─ Time/                         ITimeZoneService
 │     ├─ Phones/                       IPhoneNumberDisplayFormatter (E1), IPhoneNumberParser (E3)
+│     ├─ Dns/                          IDnsTxtLookup (verificar el dominio de correo)
 │     ├─ Legal/                        IAccountDeletionParticipant (CheckAsync, OnRequestedAsync, OnCancelledAsync y ExecuteAsync),
 │     │                                IRetainedOnConsumerDeletion (E7)
-│     ├─ Features/                     IFeatureService
+│     ├─ Features/                     IFeatureCatalog (IFeatureService está en Services/)
 │     (en Messaging/ y Phones/ están los puertos que usan los módulos: ILoginCodeChannel, IInvitationChannel,
-│      IAccountNoticeChannel, IPhoneLinkObserver)
-├─ Models/<Área>/                      <Acción>Request, <X>Response, ReadModels/<X>Row
+│      IAccountNoticeChannel; IPhoneLinkObserver, en la E8)
+├─ Models/<Área>/                      <Acción>Request, <X>Response y <X>Row (las filas de lectura, en la misma carpeta)
 ├─ Validation/<Área>/                  <Acción>RequestValidator (internal sealed, AbstractValidator<T>)
 ├─ Services/
-│  ├─ Auth/                            AccountService (registro B2C), LoginCodeService, LoginLinkService, ExternalLoginService,
-│  │                                   ConnectService (emisión + cambio de acceso u organización), LoginCodeIssuer, LoginCodeVerifier,
-│  │                                   LoginLinkIssuer, SignupPolicy, AccessSwitchPolicy, UserCultureResolver
-│  ├─ Identity/                        ReauthVerifier: el ReauthTicket de 5 minutos que usan la baja y los cambios de métodos de ingreso
-│  ├─ Invitations/                     InvitationService, InvitationIssuer (lo usan UserService y TenantAdministrationService)
-│  ├─ Profile/                         ProfileService (cuenta, idioma, zona), DestinationCodeVerifier
-│  ├─ Legal/                           LegalService (documentos vigentes y aceptación), AccountDeletionService y AccountDeletionPolicy
-│  │                                   (pedir, cancelar y ejecutar la baja; el bloqueo del único Dueño, en E4), Participants/
-│  │                                   (espacio personal, aceptaciones, outbox y Memberships en E3; Recovery en E5, Engagement
-│  │                                   en E7); sus modelos y validadores van en Models/Legal/ y Validation/Legal/
-│  ├─ Organizations/                   BusinessSignupService ("Registrá tu empresa", alta B2B), BusinessSignupPolicy (modo de alta
-│  │                                   y límite por persona), TenantProvisioner (idempotente)
-│  ├─ PublicSite/                      PublicPageService (datos de la página pública; publicar y despublicar), DirectoryService
-│  ├─ Personal/                        acá van los servicios de los módulos B2C del producto
-│  ├─ Users/                           UserService, UserGuard, LastTenantAdminGuard, AccountAccessRevoker
-│  ├─ Roles/                           RoleService, RoleGuard           ← ÁREA DE REFERENCIA
-│  ├─ Companies/                       CompanyService, CompanyGuard, CompanyMemberService, LastCompanyAdminGuard
-│  ├─ Settings/                        TenantSettingsService
-│  ├─ Auditing/                        AuditLogService (lectura)
+│  ├─ Auth/                            ingreso, registro y alta de empresa: AccountService (registro B2C), LoginCodeService,
+│  │                                   ExternalLoginService, ConnectService (emisión + cambio de acceso u organización),
+│  │                                   BusinessSignupService, BusinessSignupPolicy y BusinessOrganizationCreator («Registrá tu
+│  │                                   empresa», alta B2B), TenantProvisioner (idempotente; lo comparte Plataforma),
+│  │                                   AccountRecoveryService («Recuperar mi cuenta»), SignupPolicy, AccessSwitchPolicy,
+│  │                                   UserCultureResolver
+│  ├─ Identity/                        métodos de ingreso de la cuenta y reautenticación: LoginMethodManagementService,
+│  │                                   AccountGoogleService, ReauthService; el ReauthTicket de 5 minutos lo verifica ReauthVerifier
+│  ├─ Invitations/                     InvitationService, InvitationIssuer (lo usan OrganizationUserInvitationWriter y
+│  │                                   PlatformTenantCreator), InvitationExpiryService
+│  ├─ Profile/                         ProfileService (cuenta, idioma, zona), ProfileSnapshotBuilder
+│  ├─ Legal/                           LegalService y LegalAcceptanceService (documentos vigentes y aceptación), AccountDeletionService,
+│  │                                   AccountDeletionPolicy y AccountDeletionProcessor (pedir, cancelar y ejecutar la baja),
+│  │                                   LastTenantAdminGuard (la única Dueña, ADR 0035); los participantes de la baja están en
+│  │                                   Infrastructure/Identity/Deletion; sus modelos y validadores van en Models/Legal/ y Validation/Legal/
+│  ├─ Home/                            HomeService (inicio de la organización, ADR 0040), PendingItemOrder
+│  ├─ OrganizationUsers/               OrganizationUserService (Usuarios: miembros e invitaciones) y sus helpers
+│  ├─ Roles/                           RoleService, RoleAssignmentGuard, PermissionService (permisos efectivos cacheados),
+│  │                                   PlatformPermissionService           ← ÁREA DE REFERENCIA
+│  ├─ Companies/                       CompanyService, CompanyMembershipService, LastCompanyAdminGuard
+│  ├─ OrganizationSettings/            OrganizationSettingsService, OrganizationDomainService (dominios de correo)
+│  ├─ PublicSite/                      PublicPageService (la página de la organización: borrador, publicar y retirar);
+│  │                                   DirectoryService, en la E7
+│  ├─ Personal/                        (E7) los servicios de los módulos B2C del producto
+│  ├─ Auditing/                        OrganizationAuditService (lectura), OrganizationAuditEntryBuilder
+│  ├─ Messaging/                       OutboxDispatchService
 │  ├─ ReferenceData/                   ReferenceDataService (catálogos traducidos para GET /api/reference-data)
-│  ├─ Platform/                        TenantAdministrationService, PlatformAccountService (buscar y suspender cuentas, lo que
-│  │                                   revoca sus sesiones; «Dar de baja» con motivo, ADR 0035), PlatformOperatorService,
-│  │                                   PlatformAuditService, PlatformSettingsService, PlatformActionGuard
-├─ Modules/WhatsApp/                   módulo quitable: Configuration, Interfaces, Models, Services, Resources y WhatsAppModule.cs
+│  ├─ Platform/                        TenantAdministrationService, PlatformAccountService, PlatformAccountStateService,
+│  │                                   PlatformAccountDeletionService (ADR 0035), PlatformOperatorService y
+│  │                                   PlatformOperatorInvitationService (ADR 0042), PlatformRecoveryService, PlatformLegalService,
+│  │                                   PlatformFeatureService, PlatformPublicSiteService, PlatformDomainService, PlatformAuditService,
+│  │                                   PlatformSettingsService, PlatformActionGuard
+├─ Modules/WhatsApp/                   (E8) módulo quitable: Configuration, Interfaces, Models, Services, Resources y WhatsAppModule.cs
 └─ Resources/
    ├─ Errors.resx / Errors.en.resx             clave = código del error + Title.<ErrorType>
    ├─ Validation.resx / .en.resx
-   ├─ Permissions.resx / .en.resx               Area.<x>, Permission.<code>, PermissionDescription.<code>, Role.<system>
+   ├─ Formatting.resx / .en.resx               relativos, unidades, booleanos y enums de los mensajes
+   ├─ Permissions.resx / .en.resx               Area.<x>, Permission.<code>, PermissionDescription.<code>
+   ├─ RoleNames.resx / .en.resx                 SystemRole.<rol>: nombre y descripción de los roles de sistema
    ├─ Notifications.resx / .en.resx             textos de correo y WhatsApp (asunto, cuerpo, bot)
-   ├─ Audit.resx / .en.resx                     AuditAction.<code>, Entity.<tipo>
-   └─ ErrorTexts.cs, ValidationTexts.cs, PermissionTexts.cs, NotificationTexts.cs, AuditTexts.cs
+   ├─ Audit.resx / .en.resx                     AuditAction.<code>, AuditSummary.<Entidad>, Entity.*, Field.*, Value.*, SecurityEvent.*
+   └─ ErrorTexts.cs, ValidationTexts.cs, FormattingTexts.cs, PermissionTexts.cs, RoleTexts.cs, NotificationTexts.cs, AuditTexts.cs
 ```
 
 `NeutralLanguage=es` y `InternalsVisibleTo` para Application.UnitTests y Api.IntegrationTests. Los servicios y helpers son `internal sealed partial`: `partial` porque llevan `[LoggerMessage]`.
@@ -252,38 +274,44 @@ Infrastructure/
 │  ├─ PersistenceRegistration.cs
 │  ├─ UnitOfWork.cs                    ExecuteInTransactionAsync + SET LOCAL app.tenant_id
 │  ├─ TenantContext.cs                 holder scoped (implementa ITenantContext y ITenantScope)
-│  ├─ ConstraintViolations.cs
+│  ├─ ConstraintViolations.cs          traduce las violaciones de UniqueKeys y ForeignKeys
 │  ├─ Configurations/
 │  │  ├─ Platform/                     TenantConfiguration, PlatformSettingsConfiguration, SecurityEventConfiguration,
 │  │  │                                OutboxMessageConfiguration, PlatformPermissionAssignmentConfiguration, IdempotencyKeyConfiguration,
-│  │  │                                LegalDocumentConfiguration, LegalDocumentContentConfiguration, TenantFeatureConfiguration;
+│  │  │                                LegalDocumentConfiguration, LegalDocumentContentConfiguration, TenantFeatureConfiguration,
+│  │  │                                TenantDomainConfiguration, AccountRecoveryRequestConfiguration…;
 │  │  │                                ReferenceData/ (una configuración por catálogo y por tabla de traducción, E2, sin RLS)
-│  │  ├─ Identity/                     ApplicationUserConfiguration, LoginMethodConfiguration (índice único Type+Value),
-│  │  │                                LegalAcceptanceConfiguration, LoginCodeConfiguration, LoginLinkConfiguration…
+│  │  ├─ Identity/                     ApplicationUserConfiguration, LoginMethodConfiguration (un método verificado es único en todo
+│  │  │                                el sistema; uno pendiente, dentro de su cuenta), LegalAcceptanceConfiguration,
+│  │  │                                LoginCodeConfiguration…
 │  │  ├─ Tenant/                       MemberConfiguration, CompanyConfiguration, CompanyMembershipConfiguration,
 │  │  │                                RoleConfiguration, RoleAssignmentConfiguration, TenantSettingsConfiguration,
-│  │  │                                AuditEntryConfiguration…
+│  │  │                                InvitationConfiguration, AuditEntryConfiguration…
 │  │  ├─ PublicSite/                   PublicPageConfiguration (esquema public_site, EnablePublicRls)
+│  ├─ Conventions/                     IVersioned → xmin, Email y PhoneNumber como su valor canónico
 │  ├─ Interceptors/
 │  │  ├─ TenantConnectionInterceptor.cs    set_config('app.tenant_id') al abrir la conexión
 │  │  ├─ TenantStampInterceptor.cs         sella la columna de tenant de su clase en los Added; rechaza cambios de TenantId,
 │  │  │                                    BusinessTenantId o ConsumerTenantId
 │  │  ├─ AuditableEntityInterceptor.cs
 │  │  ├─ SoftDeleteInterceptor.cs
-│  │  └─ AuditTrailInterceptor.cs          genera AuditEntry con el diff de las entidades IAuditable
+│  │  ├─ AuditTrailInterceptor.cs          genera AuditEntry con el diff de las entidades IAuditable
+│  │  └─ RoleAssignmentTrail.cs, AccessChangeTrail.cs   una entrada por persona y lugar, y por entrada o salida (auditoria.md)
 │  ├─ Rls/
 │  │  ├─ RlsMigrationBuilderExtensions.cs  migrationBuilder.EnableTenantRls("tenant", "<Tabla>")
 │  │  ├─ TenantIsolationModelValidator.cs  falla al arrancar si una entidad no está clasificada, o no tiene esquema o filtro
 │  │  └─ RuntimeRoleValidator.cs           al arrancar: el login de runtime no es superuser, ni BYPASSRLS, ni dueño
 │  ├─ Extensions/                      ModelBuilderExtensions (filtros con nombre "Tenant", "Public", "Parties" y "SoftDelete"),
-│  │                                   QueryableExtensions (ApplySort, ToPagedResultAsync), AdvisoryLockExtensions,
+│  │                                   QueryableExtensions (ApplySort, ApplySearch, ToPagedResultAsync), AdvisoryLockExtensions,
 │  │                                   AdvisoryLockKeys, TransactionExtensions (RequireTransaction)
+│  ├─ AccessIndex/                     UserTenantAccess: proyección global de las membresías de cada cuenta
 │  ├─ Repositories/                    <X>Repository (internal sealed)
 │  ├─ Readers/                         <X>Reader (AsNoTracking + proyección a *Row/*Response)
 │  ├─ Migrations/                      una sola carpeta; RLS y grants dentro de las migraciones
 │  ├─ Seed/                            ReferenceData/*.json (E1), ReferenceDataSeeder (E2, upsert idempotente),
-│  │                                   PlatformSeeder (operador inicial), OpenIddictSeeder
-│  └─ DatabaseBootstrapExtensions.cs   solo en Development: rol de runtime + migraciones + seed
+│  │                                   PlatformSeeder (operador inicial, con todos los permisos de Plataforma), OpenIddictSeeder,
+│  │                                   LegalDocumentSeeder, DatabaseSeeder
+│  └─ DatabaseBootstrapExtensions.cs   solo en Development: roles mt_owner y mt_app + migraciones + seed
 ├─ Identity/
 │  ├─ ApplicationUser.cs               IsPlatformOperator, Status (Active | Suspended | PendingDeletion | Deleted), Culture, TimeZoneId,
 │  │                                   DisplayName, LastBusinessTenantId (la última organización usada en el lado empresa; no se vuelve
@@ -293,8 +321,10 @@ Infrastructure/
 │  │                                   de la cuenta
 │  ├─ IdentityRegistration.cs          Identity core, cookies de /account y /connect, DataProtection, Google (se enciende con su ClientId)
 │  ├─ SignInService.cs                 (ISignInService)
-│  ├─ PermissionService.cs             permisos efectivos cacheados por tenant+usuario (+empresa)
-│  ├─ PlatformPermissionService.cs
+│  ├─ UserLookup.cs, UserStatusReader.cs   búsqueda global por valor de método y estado de una identidad
+│  ├─ CloudflareDnsTxtLookup.cs        (IDnsTxtLookup) consulta TXT por DNS sobre HTTPS
+│  ├─ Deletion/                        participantes de la baja de una cuenta (espacio personal, membresías, aceptaciones,
+│  │                                   outbox y pedidos de recuperación)
 │  └─ OpenIddict/                      OpenIddictRegistration, AuthServerDefaults, CertificateLoader, TokenRevoker, WebClientOptions
 ├─ Messaging/
 │  ├─ Outbox.cs                        IOutbox: inserta OutboxMessage dentro de la transacción del caso de uso
@@ -302,75 +332,80 @@ Infrastructure/
 │  ├─ Email/                           EmailChannelSender, IEmailTransport (SmtpEmailTransport; PickupDirectoryEmailTransport en Development),
 │  │                                   MimeMessageFactory, EmailTemplateRenderer, Templates/*.html
 │  └─ MessagingRegistration.cs
-├─ Modules/WhatsApp/                   Cloud/, Webhook/, Inbound/, Retention/, Persistence/ (sus configuraciones EF),
+├─ Modules/WhatsApp/                   (E8) Cloud/, Webhook/, Inbound/, Retention/, Persistence/ (sus configuraciones EF),
 │                                      WhatsAppInfrastructureModule, WhatsAppOptions(+Validator), Disabled/
-├─ Security/                           SecureTokenGenerator, LoginCodeGenerator, LoginCodeHasher, PayloadProtector
+├─ Security/                           SecureTokenGenerator, LoginCodeGenerator, LoginCodeHasher, PayloadProtector, InvitationTokenProtector
 ├─ Time/                               TimeZoneService (TimeZoneInfo, IANA)
 ├─ ReferenceData/                      JsonReferenceDataCatalog (E1: JSON versionados; E2: ReferenceDataReader + HybridCache)
 ├─ Phones/                             LibPhoneNumberDisplayFormatter (E1), LibPhoneNumberParser (E3)
 ├─ Caching/                            CacheKeys (siempre con prefijo de alcance: t: / s: / u: / p:), CachingRegistration
 ├─ Idempotency/                        IdempotencyStore, IdempotencyCleanupWorker (P6)
 ├─ Features/                           FeaturesRegistration, TenantFeatureFilter, FeatureService (P8)
-├─ Legal/                              AccountDeletionWorker (cada hora, SKIP LOCKED; toda cuenta con DeletionScheduledForUtc vencido,
-│                                      esté PendingDeletion o Suspended, por pasos: multitenancy.md §3.2)
-└─ BackgroundJobs/                     TenantJobRunner (recorre organizaciones activas y ejecuta en su alcance)
+└─ BackgroundJobs/                     TenantJobRunner (recorre organizaciones activas y ejecuta en su alcance), AccountDeletionWorker
+                                       (cada hora, SKIP LOCKED; toda cuenta con DeletionScheduledForUtc vencido, esté PendingDeletion
+                                       o Suspended, por pasos: multitenancy.md §3.2), AccountRecoveryNoticeWorker, InvitationExpiryWorker
 ```
 
 ### 4.4 Api
 
 ```
 Api/
-├─ Program.cs                          compone: AddServiceDefaults, AddApplication, AddInfrastructure, AddPresentation,
-│                                      AddWhatsAppModule (una línea por módulo) + pipeline
+├─ Program.cs                          compone: AddServiceDefaults, AddApplication, AddInfrastructure, AddPresentation
+│                                      (AddWhatsAppModule, una línea por módulo, en la E8) + pipeline
 ├─ DependencyInjection.cs              AddPresentation(): ProblemDetails, exception handler, auth, localización, rate limit,
 │                                      OpenAPI, controllers + JSON
 ├─ appsettings.json / appsettings.Development.json
 ├─ Controllers/
-│  ├─ Auth/                            ConnectController, SignupController (persona), LoginCodeController, LoginLinkController,
-│  │                                   ExternalLoginController, InvitationsController, LoginMethodsController,
-│  │                                   DeletionCancelController (POST /api/auth/deletion/cancel)
-│  ├─ Account/                         MeController (cuenta y accesos), BusinessSignupController ("Registrá tu empresa"),
-│  │                                   LegalController (GET /api/legal/terms y /privacy, anónimos en 3a;
-│  │                                   GET /api/legal/current y POST /api/legal/accept en 3b),
+│  ├─ Auth/                            ConnectController, SignupController (persona), LoginCodeController, ExternalLoginController,
+│  │                                   InvitationsController, LoginMethodsController, BusinessSignupController («Registrá tu
+│  │                                   empresa», POST /api/auth/business-signup), TenantSlugAvailabilityController, ContactController,
+│  │                                   AccountRecoveryController («Recuperar mi cuenta»), AccountDeletionCancelController
+│  │                                   (POST /api/auth/deletion/cancel); LoginLinkController, en la E8
+│  ├─ Account/                         MeController (cuenta y accesos), AccountLoginMethodsController, AccountGoogleController,
+│  │                                   ReauthController, LegalController (GET /api/legal/terms y /privacy, anónimos),
+│  │                                   LegalAcceptanceController (GET /api/legal/current y POST /api/legal/accept),
 │  │                                   AccountDeletionController (POST /api/me/deletion)
 │  ├─ ReferenceData/                   ReferenceDataController ([AllowAnonymous]; GET /api/reference-data y por catálogo)
-│  ├─ Organization/                    [Access(Business)] UsersController, RolesController, PermissionsController,
-│  │                                   CompaniesController, CompanyMembersController, SettingsController, AuditController,
-│  │                                   PublicPageAdminController (api/public-site: mi página pública, pantalla /org/pagina,
-│  │                                   publicpage.manage)
-│  ├─ Personal/                        [Access(Consumer)] los controllers de los módulos B2C del producto
-│  ├─ PublicSite/                      PublicPageController ([PublicSite][AllowAnonymous], página por subdominio),
+│  ├─ Organization/                    [Access(Business)] HomeController, OrganizationUsersController (api/users), RolesController,
+│  │                                   PermissionsController, CompaniesController, CompanyMembersController, CompanyRolesController,
+│  │                                   OrganizationSettingsController y OrganizationDomainsController (api/organization/settings),
+│  │                                   PublicPageController (api/organization/public-page: mi página pública, publicpage.manage),
+│  │                                   OrganizationAuditController (api/organization/audit)
+│  ├─ Personal/                        (E7) [Access(Consumer)] los controllers de los módulos B2C del producto
+│  ├─ PublicSite/                      (E7) PublicSiteController ([PublicSite][AllowAnonymous], página por subdominio),
 │  │                                   DirectoryController ([AllowAnonymous], dominio principal: lee solo lo publicado)
-│  ├─ Platform/                        PlatformTenantsController (incluye moderar la página pública: POST
-│  │                                   /api/platform/tenants/{id}/public-site/unpublish y .../allow-publish, con motivo),
-│  │                                   PlatformAccountsController (incluye la baja iniciada por la plataforma,
-│  │                                   POST /api/platform/accounts/{id}/deletion, E5), PlatformOperatorsController,
-│  │                                   PlatformAuditController, PlatformSettingsController
-├─ Contracts/<Área>/                   <Acción>HttpRequest, <X>Query (records sealed, props nullable; ToString() sin PII)
+│  ├─ Platform/                        PlatformTenantsController, PlatformPublicSiteController (moderar la página pública: POST
+│  │                                   .../public-site/unpublish y .../allow-publish, con motivo), PlatformDomainsController,
+│  │                                   PlatformFeaturesController, PlatformAccountsController (incluye la baja iniciada por la
+│  │                                   plataforma, POST /api/platform/accounts/{id}/deletion), PlatformOperatorsController,
+│  │                                   PlatformRecoveriesController, PlatformLegalDocumentsController, PlatformAuditController,
+│  │                                   PlatformSettingsController
+├─ Contracts/<Área>/                   <Acción>HttpRequest, <X>Query (records sealed, props nullable; ToString() sin PII);
+│                                      <X>HttpResponse solo con value objects o de protocolo (ADR 0002, enmienda)
 ├─ Authorization/
 │  ├─ HasPermissionAttribute.cs              permiso de organización
 │  ├─ HasCompanyPermissionAttribute.cs       permiso evaluado en la empresa {companyId} de la ruta
 │  ├─ HasPlatformPermissionAttribute.cs      solo access=platform
 │  ├─ PermissionPolicyProvider.cs            arma "perm:<p>", "cperm:<p>", "pperm:<p>"
-│  └─ *AuthorizationHandler.cs, *Requirement.cs
-├─ RequestContext/                     CurrentUser (claims), RequestInfo (IP, user agent)
+│  └─ PermissionAuthorizationHandler.cs, PermissionRequirement.cs   un solo handler para los tres catálogos
+├─ RequestContext/                     CurrentUser (claims), RequestInfo (IP, user agent), PublicOrigin, InvitationFlowContext
 ├─ Tenancy/
 │  ├─ TenantResolutionMiddleware.cs    claims access + tenant_id + tenant_kind → TenantContext; activos (caché)
-│  ├─ PublicSiteResolutionMiddleware.cs subdominio → IPublicSiteContext (solo datos públicos)
-│  ├─ AccessAttribute.cs               [Access(Consumer|Business|Platform)] → 403 Tenancy.Access.Wrong
-│  ├─ PublicSiteAttribute.cs           [PublicSite]: la ruta necesita un subdominio de empresa publicado
-│  └─ TenantClaimTypes.cs              access, tenant_id, tenant_kind
-├─ Authentication/                     OpenIdPrincipalFactory (claims y destinos)
+│  ├─ AccessAttribute.cs, AccessFilter.cs   [Access(Consumer|Business|Platform)] → 403 Tenancy.Access.Wrong
+│  ├─ TenantClaimTypes.cs              access, tenant_id, tenant_kind
+│  └─ (E7) PublicSiteResolutionMiddleware, PublicSiteAttribute y PublicSiteContext: subdominio → IPublicSiteContext
+├─ Authentication/                     OpenIdPrincipalFactory (claims y destinos), PendingDeletionCookie
 ├─ ErrorHandling/                      ApiErrorCodes, ProblemDetailsMapper, ControllerResultExtensions, GlobalExceptionHandler,
-│                                      MvcInvalidModelStateResponseFactory, EmptyJsonBodyContentTypeFilter
-├─ Json/                               UtcDateTimeConverter
+│                                      MvcInvalidModelStateResponseFactory, EmptyJsonBodyContentTypeFilter, RetryAfterHeaderFormatter
+├─ Json/                               UtcDateTimeConverter, DateOnly y TimeOnly, MoneyJsonConverter, EmailJsonConverter,
+│                                      NormalizedStringJsonConverter, RawTextAttribute
 ├─ Localization/                       LocalizationExtensions (es por defecto, en; Accept-Language)
-├─ OpenApi/                            OpenApiExtensions, ProblemResponsesConvention, ProducesProblemAttribute
-├─ RateLimiting/                       RateLimitingExtensions, RateLimitingOptions (por IP y por organización)
+├─ OpenApi/                            OpenApiExtensions, ProblemResponsesConvention, ProducesProblemAttribute, OwnProtocolAttribute
+├─ RateLimiting/                       RateLimitPolicies, RateLimitingExtensions, RateLimitingOptions (por IP y por organización)
 ├─ Idempotency/                        IdempotentAttribute, IdempotencyFilter
-├─ Features/                           DisabledFeatureHandler (módulo apagado → 404)
+├─ Features/                           FeatureGateMiddleware, DisabledFeatureHandler (módulo apagado → 404)
 ├─ Legal/                              LegalAcceptanceMiddleware
-├─ Modules/WhatsApp/                   WhatsAppApiModule, WhatsAppWebhookController, ConditionalWhatsAppRouteConvention
+├─ Modules/WhatsApp/                   (E8) WhatsAppApiModule, WhatsAppWebhookController, ConditionalWhatsAppRouteConvention
 └─ Hosting/                            ForwardedHeadersExtensions, SecurityHeadersExtensions, SpaExtensions (BackendPrefixes)
 ```
 
@@ -393,25 +428,25 @@ tests/
 ├─ *.Application.UnitTests/
 │  ├─ Services/<Área>/                    <X>ServiceTests, <X>ServiceWriteTests
 │  ├─ Resources/                          ResourceParityTests, PermissionTextsTests
-│  └─ TestDoubles/                        FakeUnitOfWork, FakeTenantContext, InMemory<X>Repository, FakeOutbox…
+│  └─ TestDoubles/                        FakeUnitOfWork, FakeTenantContext, ServiceFixture
 ├─ *.Api.IntegrationTests/
-│  ├─ Support/                            ApiFactory (WebApplicationFactory + Testcontainers), AuthFlow, TestAuthHandler,
-│  │                                      TenantFixture (Empresa A y B; Kevin como empresa y como persona; Carla),
-│  │                                      CapturingOutbox
-│  ├─ Tenancy/                            CrossTenantIsolationTests, AccessTests, SubdomainTests, PublicAndSharedRowsTests,
-│  │                                      RlsPolicyInventoryTests, RuntimeRoleTests, CacheKeyScopeTests
+│  ├─ Support/                            ApiFactory (WebApplicationFactory + Testcontainers), TenantFixture, AccountJourney y
+│  │                                      OrganizationJourney (registro e ingreso reales), PlatformJourney, PickupCodeReader
+│  ├─ TestFeatures/                       controllers y entidades solo para tests (Isolation, Access, Auditing, Features…)
+│  ├─ Tenancy/                            CrossTenantIsolationTests, AccessTests, PublicAndSharedRowsTests, RlsPolicyInventoryTests,
+│  │                                      RuntimeRoleTests, CacheKeyScopeTests; SubdomainTests, en la E7
 │  ├─ Persistence/                        UnitOfWorkTests, PaginationTests, CursorPaginationTests, SearchTests, SortIndexTests
 │  ├─ Hosting/                            HealthCheckTests, SpaHostingTests, SecurityHeadersTests
 │  ├─ Legal/                              LegalAcceptanceTests, AccountDeletionTests
 │  ├─ Contracts/                          ExplicitRouteInventoryTests, OpenApiTests, OpenApiContractTests
 │  └─ <Área>/                             un archivo por controller
 └─ *.ArchitectureTests/                   HarnessTests, LayerDependencyTests, ProjectReferencesTests, ApplicationPackagesTests,
-                                          ApplicationPublicApiTests, ControllerServiceRepositoryTests, ControllerInputContractTests,
-                                          PermissionAuthorizationTests, TransactionBoundaryTests, ErrorCodeTests,
-                                          EntityConfigurationTests, DataClassificationTests, ServiceDependencyCountTests,
-                                          MinimalApiRoutesTests, TenantScopeUsageTests, QueryFilterBypassTests, IdentityAccessTests,
-                                          AccessDeclarationTests, VersionedContractTests, DecimalPrecisionTests, TextLimitsTests,
-                                          AccountDeletionParticipantsTests, ModuleIsolationTests
+                                          ApplicationPublicApiTests, ApplicationServicesTests, ControllerServiceRepositoryTests,
+                                          ControllerInputContractTests, ControllerOutputContractTests, PermissionAuthorizationTests,
+                                          TransactionBoundaryTests, ErrorCodeTests, EntityConfigurationTests, DataClassificationTests,
+                                          ServiceDependencyCountTests, MinimalApiRoutesTests, TenantScopeUsageTests,
+                                          QueryFilterBypassTests, IdentityAccessTests, AccessDeclarationTests, VersionedContractTests,
+                                          DecimalPrecisionTests, TextLimitsTests; ModuleIsolationTests, en la E8
 ```
 
 Es un resumen. El árbol completo, con la etapa en que nace cada test, está en [`arbol.md`](arbol.md).
@@ -426,8 +461,8 @@ Es un resumen. El árbol completo, con la etapa en que nace cada test, está en 
 - **Solo inyecta interfaces de `Application/Interfaces/Services`.** Nunca EF, repositorios ni readers (test).
 - La entrada es un contrato de `Api/Contracts/<Área>`, mapeado a mano al `*Request` de Application.
 - La salida es siempre `ToActionResult(this)`, `ToCreatedResult(this, nameof(Get), id => new { id })` o `ToAcceptedResult(this)`. Nunca `IsSuccess ? … : …`.
-- Las rutas de la organización no llevan prefijo de acceso: `api/roles`, `api/permissions`, `api/users`, `api/users/invitations`, `api/companies/{companyId}` y `api/companies/{companyId}/members`, `api/settings` y `api/public-site`. El acceso lo declara `[Access]`, no la ruta, y "tenant" no aparece en ellas. Las excepciones son `/api/platform/...`, `/api/me/...`, `/api/auth/...` e `/api/invitations/...` (anónimo).
-- Cada acción declara `[Access(...)]`, o `[PublicSite][AllowAnonymous]` si responde en el subdominio de una organización publicada (`PublicPageController`). Las rutas anónimas del dominio principal (ingreso, registro, "Registrá tu empresa", invitación, enlace, `GET` de los documentos legales, `GET /api/reference-data` y sus rutas por catálogo, directorio, pedido de "Recuperar mi cuenta", correos de contacto, cancelar la baja y webhooks) declaran solo `[AllowAnonymous]`, y `AccessDeclarationTests` las acepta únicamente si su controller está en la lista explícita del test. `ReferenceDataController` entra en esa lista al nacer el test en E3. En B2B y plataforma, cada acción declara además su permiso (`[HasPermission]`, `[HasCompanyPermission]` o `[HasPlatformPermission]`). Las rutas B2C (`[Access(Consumer)]`) no piden permiso (§14). Además lleva `[ProducesResponseType<T>]`, y los errores extra van con `[ProducesProblem]`.
+- Las rutas de la organización no llevan prefijo de acceso: `api/home`, `api/roles`, `api/permissions`, `api/users`, `api/users/invitations`, `api/companies/{companyId}` y sus `members` y `roles`. Lo que es de la organización entera va bajo `api/organization`: `settings`, `settings/domains`, `public-page` y `audit` (manda el código, como dijo la revisión de alineación del 2026-10-03). El acceso lo declara `[Access]`, no la ruta, y "tenant" no aparece en ellas. Las excepciones son `/api/platform/...`, `/api/me/...`, `/api/auth/...` e `/api/invitations/...` (anónimo).
+- Cada acción declara `[Access(...)]`, o `[PublicSite][AllowAnonymous]` si responde en el subdominio de una organización publicada (`PublicSiteController` (E7)). Las rutas anónimas del dominio principal (ingreso, registro, "Registrá tu empresa", invitación, enlace, `GET` de los documentos legales, `GET /api/reference-data` y sus rutas por catálogo, directorio, pedido de "Recuperar mi cuenta", correos de contacto, cancelar la baja y webhooks) declaran solo `[AllowAnonymous]`, y `AccessDeclarationTests` las acepta únicamente si su controller está en la lista explícita del test. `ReferenceDataController` entra en esa lista al nacer el test en E3. En B2B y plataforma, cada acción declara además su permiso (`[HasPermission]`, `[HasCompanyPermission]` o `[HasPlatformPermission]`). Las rutas B2C (`[Access(Consumer)]`) no piden permiso (§14). Además lleva `[ProducesResponseType<T>]`, y los errores extra van con `[ProducesProblem]`.
 - Un `POST` que crea o envía lleva `[Idempotent]`, y una acción de un módulo lleva `[FeatureGate]`. Un `PUT` o `DELETE` de una entidad `IVersioned` recibe `version`, que es obligatoria ([concurrencia](../rules/concurrencia.md)).
 - `POST` que crea → 201 con `Location` y `GET /{id}`. `PUT` → 204. `DELETE` → 204.
 
@@ -545,7 +580,7 @@ El cuerpo es `application/problem+json` con `title` y `detail` traducidos, `code
 | Interfaz (Application) | Implementación | Fuente |
 |---|---|---|
 | `ICurrentUser` | `Api/RequestContext/CurrentUser` | claims `sub` y `access` (`consumer`, `business` o `platform`) |
-| `IPublicSiteContext` | `Api/Tenancy/PublicSiteContext` | la organización del subdominio; **solo** para leer lo público |
+| `IPublicSiteContext` (E7) | `Api/Tenancy/PublicSiteContext` | la organización del subdominio; **solo** para leer lo público |
 | `ITenantContext` | `Infrastructure/Persistence/TenantContext` | tenant del acceso activo (`TenantId` y `TenantKind`: el espacio personal en B2C, la organización en B2B). Lo carga `TenantResolutionMiddleware` desde los claims, o `ITenantScope.Enter(tenantId)` en plataforma, workers y altas |
 | `IRequestInfo` | `Api/RequestContext/RequestInfo` | IP (después de ForwardedHeaders) y user agent |
 
@@ -557,14 +592,14 @@ El cuerpo es `application/problem+json` con `title` y `detail` traducidos, `code
 ## 9. Persistencia
 
 - **Un solo `ApplicationDbContext`**, con cinco esquemas:
-  - **`platform`**: Tenants, TenantFeatures, TenantDomains (dominios de correo verificados), PlatformSettings, PlatformPermissionAssignments, SecurityEvents, LegalDocuments y LegalDocumentContents (un texto por documento y por idioma), AccountRecoveryRequests ("Recuperar mi cuenta"), DataExports ("Exportar mis datos"), IdempotencyKeys, OutboxMessages, WhatsAppChannels, OpenIddict y DataProtection. Sin RLS.
-  - **`identity`**: AspNetUsers (global, sin `TenantId`), **LoginMethods** (la única fuente de los correos y teléfonos de una cuenta, cada uno único en todo el sistema), `UserTenantAccesses` (proyección global de membresías), LegalAcceptances, UserLogins, UserTokens, LoginCodes, LoginLinks, LoginAudits, WhatsAppContacts y WhatsAppMessages (el número de la plataforma habla con la identidad, no con un acceso). Sin RLS; la leen `Infrastructure/Identity`, `Infrastructure/Modules/WhatsApp`, los readers que parten de `Members` y estos adaptadores explícitos de `Infrastructure/Persistence`: `Repositories/{User,LoginMethod,LoginCode,LoginAudit,Legal,AccountDeletion}Repository y `Identity/Deletion/LegalAcceptanceDeletionParticipant`` y `Readers/{LoginMethodReader,UserTenantAccessReader,LoginMethodMembershipReader,LegalReader,AccountDeletionTenantReader}`. `IdentityStorageAccessTests` inspecciona las llamadas IL a los DbSet globales y `Set<T>()` en todo Infrastructure, y fija una lista cerrada de adaptadores que pueden usarlos. El índice de membresías se consulta solo para `ConnectService`, `TenantResolutionMiddleware` (por `AccessStatusCache`) y `/api/me` (por `ProfileSnapshotBuilder`); la gestión de métodos administrados usa un puerto específico `ILoginMethodMembershipReader` que devuelve solo la disponibilidad de la membresía/organización por UserId y TenantId; la búsqueda global por valor de un método de ingreso sigue exclusivamente en `Infrastructure/Identity/UserLookup` ([ADR 0011](../decisions/README.md)).
+  - **`platform`**: Tenants, TenantFeatures, TenantDomains (dominios de correo verificados), PlatformSettings, PlatformPermissionAssignments, SecurityEvents, LegalDocuments y LegalDocumentContents (un texto por documento y por idioma), AccountRecoveryRequests ("Recuperar mi cuenta"), ReservedTenantSlugs, TenantCounters, PendingTenantOwners, los cinco catálogos de referencia, IdempotencyKeys, OutboxMessages, OpenIddict y DataProtection; DataExports ("Exportar mis datos") llega en la E10 y WhatsAppChannels en la E11. Sin RLS.
+  - **`identity`**: AspNetUsers (global, sin `TenantId`), **LoginMethods** (la única fuente de los correos y teléfonos de una cuenta, cada uno único en todo el sistema), `UserTenantAccesses` (proyección global de membresías), LegalAcceptances, UserLogins, UserTokens, LoginCodes, LoginAudits y ReauthTickets; LoginLinks, WhatsAppContacts y WhatsAppMessages (el número de la plataforma habla con la identidad, no con un acceso) llegan en la E8. Sin RLS; la leen `Infrastructure/Identity` y una lista cerrada de readers y repositorios de `Infrastructure/Persistence` que fija `IdentityStorageAccessTests` (inspecciona las llamadas IL a los DbSet globales y `Set<T>()` en todo Infrastructure): los de métodos de ingreso, códigos, legales y baja; los que parten de `Members` (Usuarios, empresas, invitaciones, dominios y auditoría); los de Plataforma (`PlatformReader`, `PlatformAccountReader`, `AccountRecoveryReader`, `SecurityEventReader` y `PlatformPermissionAssignmentRepository`) y `PlatformSeeder`. El índice de membresías se consulta solo para `ConnectService`, `TenantResolutionMiddleware` (por `AccessStatusCache`) y `/api/me` (por `ProfileSnapshotBuilder`); la gestión de métodos administrados usa un puerto específico `ILoginMethodMembershipReader` que devuelve solo la disponibilidad de la membresía/organización por UserId y TenantId. La búsqueda global por valor de un método de ingreso vive en `Infrastructure/Identity/UserLookup`; la única excepción es la búsqueda de cuentas de Plataforma, `PlatformAccountReader`, que busca por nombre, por el valor de los métodos y por el correo de contacto de Google ([ADR 0011](../decisions/README.md), T11 de la Etapa 5).
   - **`tenant`**, datos **privados** con **RLS forzado**: Members, Invitations, Companies, CompanyMemberships, Roles, RoleAssignments, TenantSettings, AuditEntries y lo privado que sumen los módulos B2B y B2C.
   - **`public_site`**, datos **públicos** de cada organización con RLS por publicación: PublicPages (nombre, logo, descripción, contacto y estado; el slug es el de la organización, en `platform.Tenants`) y lo que publiquen los módulos.
   - **`engagement`**, datos **compartidos** entre una persona y una organización, con RLS por partes: lo que definan los módulos (reservas, pedidos, solicitudes, mensajes).
 - **Toda entidad nueva se clasifica** como privada (`ITenantOwned`), pública (`IPublishedByBusiness`) o compartida (`IConsumerBusinessShared`) antes de escribirla. Cada clase tiene su esquema, su filtro y su política RLS (multitenancy.md §4 y §9).
 - Una configuración por entidad (test). Enums como texto (`HasConversion<string>().HasMaxLength(n)`). Las claves de las tablas de `tenant` son `(TenantId, …)`, sus índices únicos empiezan por `TenantId` y las FK a otras entidades del mismo tenant son compuestas `(TenantId, XId)`.
-- **Filtros globales con nombre (EF 10), uno por clase de dato:** `"Tenant"` (privado, sobre toda `ITenantOwned`: `e.TenantId == tenantContext.TenantId`), `"Public"` (público, sobre toda `IPublishedByBusiness`: `IsPublished || BusinessTenantId == ctx.TenantId`), `"Parties"` (compartido, sobre toda `IConsumerBusinessShared`: `ConsumerTenantId == ctx.TenantId || BusinessTenantId == ctx.TenantId`) y `"SoftDelete"` (multitenancy.md §9). `IgnoreQueryFilters(["SoftDelete"])` quita solo el de borrados. Quitar `"Tenant"`, `"Public"` o `"Parties"` está prohibido fuera de la lista blanca (`Infrastructure/Persistence/Readers/Platform/`); lo verifica `QueryFilterBypassTests`.
+- **Filtros globales con nombre (EF 10), uno por clase de dato:** `"Tenant"` (privado, sobre toda `ITenantOwned`: `e.TenantId == tenantContext.TenantId`), `"Public"` (público, sobre toda `IPublishedByBusiness`: `IsPublished || BusinessTenantId == ctx.TenantId`), `"Parties"` (compartido, sobre toda `IConsumerBusinessShared`: `ConsumerTenantId == ctx.TenantId || BusinessTenantId == ctx.TenantId`) y `"SoftDelete"` (multitenancy.md §9). `IgnoreQueryFilters(["SoftDelete"])` quita solo el de borrados. Quitar `"Tenant"`, `"Public"` o `"Parties"` está prohibido fuera de la lista blanca de `QueryFilterBypassTests`, el namespace `Persistence.Readers.Platform`: hoy está vacío, porque ningún reader los quita.
 - **Migraciones:** una carpeta, `Infrastructure/Persistence/Migrations`. Cada tabla nueva llama en su migración al helper RLS de su clase (`EnableTenantRls`, `EnablePublicRls` o `EnablePartiesRls`), y `RlsPolicyInventoryTests` falla si alguna tabla de `tenant`, `public_site` o `engagement` no tiene su política.
 
 ```
@@ -605,11 +640,11 @@ Hay tres niveles, cada uno con su propósito:
    - Las propiedades marcadas `[NotAudited]` (tokens, hashes) no se guardan.
    - Para eventos que no son un cambio de entidad (exportaciones, reenvío de invitación), el servicio llama a `IAuditLog.Record(action, entity, id, data)` dentro del límite.
    - RLS y un trigger `prevent_update_delete` hacen la tabla inmutable.
-3. **Seguridad (`platform.SecurityEvents` e `identity.LoginAudits`):** ingresos, intentos fallidos, cambios de rol de plataforma, acciones de operadores sobre una organización o una cuenta (aprobar, suspender, despublicar su página o permitir publicarla, iniciar la baja, resolver una recuperación; siempre con la organización o la cuenta afectada y el motivo), cambios de métodos de ingreso y la baja de una cuenta (`AccountDeletionRequested`, su cancelación y `AccountDeleted`). La leen solo los operadores con `platform.audit.read`.
+3. **Seguridad (`platform.SecurityEvents` e `identity.LoginAudits`):** ingresos, intentos fallidos, cambios de permisos de un operador, acciones de operadores sobre una organización o una cuenta (aprobar, suspender, despublicar su página o permitir publicarla, iniciar la baja, resolver una recuperación; siempre con la organización o la cuenta afectada y el motivo), cambios de métodos de ingreso y la baja de una cuenta (`AccountDeletionRequested`, su cancelación y `AccountDeleted`). La leen solo los operadores con `platform.audit.read`.
 
 `PlatformSettings` es global: sus cambios (incluido el seed inicial) requieren un `SecurityEvent` con motivo en la misma transacción, sin `AuditEntry` tenant. `AuditTrailInterceptor` comprueba esa presencia.
 
-La pantalla "Auditoría" de la organización lee `AuditEntries` paginadas y filtradas por entidad, actor y fecha, con los textos traducidos desde `Audit.resx`.
+Un guardado deja una sola entrada por acción: `RoleAssignmentTrail` junta los roles de una persona en un lugar y `AccessChangeTrail`, su entrada o su salida y el alta de una empresa; nadie suma otra a mano ([auditoria](../rules/auditoria.md)). La pantalla "Auditoría" de la organización lee `AuditEntries` con cursor, filtradas por período, tema, búsqueda y «Quién» (una persona, el Sistema o la Plataforma), suma las acciones de Plataforma sobre la organización desde sus `SecurityEvent` y traduce los textos desde `Audit.resx`.
 
 ---
 
@@ -643,7 +678,7 @@ La pantalla "Auditoría" de la organización lee `AuditEntries` paginadas y filt
   - Authorization Code + PKCE (obligatorio) + refresh tokens. Sin client credentials.
   - Endpoints `connect/authorize|token|logout|userinfo|revoke`.
   - Scopes `openid profile email offline_access api`.
-- **Un solo cliente público, `web`**, para el SPA. El área la decide el claim `access`: `consumer` → espacio personal y páginas públicas; `business` → la organización; `platform` → el backoffice. Las páginas públicas de cada subdominio usan el mismo cliente, con redirect URIs validadas contra los slugs publicados (`SubdomainRedirectUriValidator`).
+- **Un solo cliente público, `web`**, para el SPA. El área la decide el claim `access`: `consumer` → espacio personal y páginas públicas; `business` → la organización; `platform` → el backoffice. Las páginas públicas de cada subdominio usan el mismo cliente, con redirect URIs validadas contra los slugs publicados (`SubdomainRedirectUriValidator` (E7)).
 - **El issuer es fijo** (el dominio principal). Desde un subdominio, `authorize` y `logout` son navegaciones al dominio principal, donde vive la cookie de `/connect`; el canje del código, la renovación y `userinfo` van a `/connect/*` del propio origen del subdominio (multitenancy.md §5).
 - Duraciones: código 5 min, access token 15 min, refresh 30 días con rotación. `EnableTokenEntryValidation` permite la revocación inmediata.
 - **Claims** (`OpenIdPrincipalFactory`): `sub`, `name`, `email`, `access` (`consumer` | `business` | `platform`) y el tenant del acceso activo: `tenant_id` y `tenant_kind` (`personal` | `business`). `access`, `tenant_id` y `tenant_kind` viajan tanto en el access token como en el id token firmado: el SPA lee este último para elegir la ruta del acceso activo. **Ni los permisos ni los roles viajan en el token**: se consultan en vivo, con caché.
@@ -654,7 +689,7 @@ La pantalla "Auditoría" de la organización lee `AuditEntries` paginadas y filt
 - La autorización conserva también `access` y, si corresponde, `tenant_id`, para que `TokenRevoker` pueda revocar un acceso o una organización. `RevokeTenantAsync` aún recorre todas las autorizaciones; antes de conectarlo a la suspensión en la E9 se debe reemplazar ese recorrido por una búsqueda indexada.
 - Si la renovación del token falla, el SPA inicia una autorización con `prompt=login`: `ConnectController` presenta el formulario aunque la cookie de Identity siga viva y quita ese prompt del `returnUrl` interno. Tras verificar el código, el authorize reanudado usa la cookie nueva sin volver al formulario.
 - En cada request autenticado, `TenantResolutionMiddleware` verifica (con caché de 60 s, invalidado al cambiar de estado) que la identidad, la membresía y el tenant del acceso activo estén activos. Suspender una organización revoca los tokens emitidos para ella; suspender una identidad, todos los suyos, en los dos accesos.
-- **Operadores de plataforma:** `access=platform`, sin membresías ni espacio personal, con el mismo mecanismo de ingreso. El segundo factor (TOTP) es obligatorio para ellos desde la Etapa 9 (endurecimiento).
+- **Operadores de plataforma:** `access=platform`, sin membresías ni espacio personal, con el mismo mecanismo de ingreso. Su cuenta es exclusiva de Plataforma y se invita por correo, con permisos individuales y sin roles ([ADR 0042](../decisions/0042-operadores-de-plataforma.md)). El segundo factor (TOTP) es obligatorio para ellos desde la Etapa 9 (endurecimiento).
 - **Invitaciones a una organización (E3c):** `Member(Invited)` + `Invitation` (hash del token, vence), emitida por el helper interno `InvitationIssuer` dentro de la UoW de su llamador. En 3c solo se registra el canal Email, que encola por outbox (`IInvitationChannel`); el canal WhatsApp pertenece a E8. El issuer no tiene ruta propia. El `InvitationsController` anónimo atiende vista previa (`POST /api/invitations/preview`) y aceptación (`POST /api/invitations/accept`); el token llega en el cuerpo JSON, nunca en URL, query ni logs. Acepta una cuenta existente o crea identidad sin espacio Personal; este último nace cuando la persona entra por la puerta Consumer. La emisión administrativa, reenvío y revocación HTTP se incorporan en E5/E6.
 - **Baja de una cuenta** (multitenancy.md §3.2, [ADR 0035](../decisions/README.md)): la pide la persona (`POST /api/me/deletion`) o un operador (`POST /api/platform/accounts/{id}/deletion`), se cancela durante la gracia con `POST /api/auth/deletion/cancel` y la ejecuta `AccountDeletionWorker`; cada módulo participa con `IAccountDeletionParticipant`.
 
@@ -681,7 +716,7 @@ La pantalla "Auditoría" de la organización lee `AuditEntries` paginadas y filt
     - `platform.operators.manage`, `platform.audit.read`, `platform.settings.manage`;
     - `platform.whatsapp.manage` no entra al catálogo hasta la Etapa 11 (canales de WhatsApp por organización), porque ninguna ruta anterior lo usa.
 - **Permisos de plataforma por operador** (`PlatformPermissionAssignment`): cada operador tiene las claves elegidas de a una, al menos una y sin repetir; no hay roles de plataforma (Owner y Support se retiraron en la Etapa 5, con una migración que conservó sus permisos efectivos).
-- **Roles de la organización** (`tenant.Roles`), con **tres alcances** (en pantalla, la columna "Vale en"):
+- **Roles de la organización** (`tenant.Roles`), con **tres alcances** (en pantalla, la columna "Vale en"). Al crear un rol se elige toda la organización o una empresa; `AnyCompany` («Cada empresa») queda para el rol de sistema Administrador de empresa y para la API ([ADR 0034](../decisions/README.md), enmienda del 2026-10-03):
   - **`Organization`** ("Toda la organización"): se asigna sin empresa y vale en la organización y en todas sus empresas.
   - **`AnyCompany`** ("Cada empresa"): es un rol de empresa reutilizable; se asigna **con** una empresa y vale solo en esa. Ejemplo: el Administrador de empresa.
   - **`SpecificCompany`** ("Solo en <empresa>"): el rol pertenece a **una** empresa (`Role.CompanyId`) y solo se puede asignar en ella. Sirve para que cada empresa tenga sus propios roles.
@@ -692,7 +727,7 @@ La pantalla "Auditoría" de la organización lee `AuditEntries` paginadas y filt
   - `[HasPermission(Permissions.Users.Manage)]` para la organización.
   - `[HasCompanyPermission(Permissions.Company.Members.Manage)]`: lee `{companyId}` de la ruta y verifica que la empresa sea de la organización y que el usuario tenga el permiso ahí.
   - `[HasPlatformPermission(PlatformPermissions.Tenants.Manage)]`: además exige `access=platform`.
-- `IPermissionService.GetEffectiveAsync(userId, companyId?)` usa HybridCache con la clave `t:{tenantId}:perm:{userId}`, invalidada por usuario o por rol.
+- `IPermissionService` (`GetOrganizationPermissionsAsync`, `GetCompanyPermissionsAsync` y `GetPermissionsByCompanyAsync`) suma los permisos de los roles de la persona. Los de cada rol se cachean en HybridCache con la clave `t:{tenantId}:role-permissions:{roleId}` y se invalidan al cambiar el rol (`InvalidateRoleAsync`), después del commit.
 - Las rutas de organización llevan `[Access(Business)]` **y** el permiso. Con otro acceso responden 403 `Tenancy.Access.Wrong`.
 - `GET /api/me` devuelve la cuenta, el **acceso activo**, si tiene espacio personal y sus **organizaciones** (id, nombre y estado, para elegir en el acceso B2B), el tenant activo, sus permisos efectivos (de organización y por empresa), las preferencias efectivas de cultura, zona y moneda y, desde la Etapa 5, los módulos prendidos del acceso activo (`features`, [modulos-habilitados](../rules/modulos-habilitados.md)), para que el front arme el menú y los formatos (`useFormat`). El front decide solo la experiencia de uso; **el backend decide el acceso**.
 
@@ -700,12 +735,12 @@ La pantalla "Auditoría" de la organización lee `AuditEntries` paginadas y filt
 
 ## 15. WhatsApp: un módulo quitable
 
-La estructura sigue el diseño de la Etapa 6 del plan maestro de `../ArquitecturaBase` ([ADR 0007](../decisions/README.md)), para que las dos plantillas se armen igual.
+La estructura sigue el diseño de la Etapa 6 del plan maestro de `../ArquitecturaBase` ([ADR 0007](../decisions/README.md)), para que las dos plantillas se armen igual. El módulo nace en la Etapa 8; hoy existen los puertos del núcleo y el outbox. La atención por WhatsApp de cada organización (Etapa 11) sigue la [ADR 0038](../decisions/0038-whatsapp-de-atencion.md).
 
 - **Puertos en el núcleo, adaptadores en el módulo.** El núcleo nunca nombra a WhatsApp:
   - `ILoginCodeChannel` e `IInvitationChannel`: el núcleo trae el canal `"email"`. El módulo registra `"whatsapp"`. `LoginCodeChannel` e `InvitationChannel` son **valores**, no enums: el núcleo valida contra los canales registrados.
   - `IAccountNoticeChannel` (en `Application/Interfaces/Integrations/Messaging/`, Etapa 3), con el mismo patrón: recibe un `AccountNotice` cerrado (`LoginMethodChanged`, con qué pasó, el método enmascarado y la fecha; `ReviewLoginMethods`, con la organización; `DeletionRequested`, con la fecha; `DeletionCancelled`; `AccountDeleted`; y los de «Recuperar mi cuenta», al método nuevo: `RecoveryReceived`, `RecoveryApproved` y `RecoveryRejected`). Cada implementación atiende un tipo de método: el núcleo trae la de `Email` (canal `"email"`) y el módulo registra la de `Phone` (canal `"whatsapp"`). Sin el módulo, los teléfonos no reciben aviso, y no es un error. Siempre sale por el outbox, cifrado. "Exportación lista" sale solo por correo.
-  - `IPhoneLinkObserver`: la cuenta y la administración avisan que cambió un teléfono, y el módulo suelta el contacto e invalida los enlaces.
+  - `IPhoneLinkObserver` (E8): la cuenta y la administración avisan que cambió un teléfono, y el módulo suelta el contacto e invalida los enlaces.
   - El teléfono como dato de la cuenta e `IPhoneNumberParser` siguen en el núcleo. `PhoneUsage` queda en `Any | Mobile` y no nombra WhatsApp (`Mobile`: solo celular). En la E3 `Phone` es solo modelo; el ingreso, registro y la gestión de un teléfono se habilitan al registrar el canal del módulo en la E8.
 - **Países de WhatsApp:** los controla el módulo en sus adaptadores y flujos (código por WhatsApp, vínculo y registro por WhatsApp), con `WhatsApp:AllowedCountries`, que se lee solo dentro de `Modules/WhatsApp`, y un error propio del módulo sobre el campo `phone`. Se controla solo para un número **nuevo**: achicar la lista no invalida un número existente. `GET /api/auth/methods` (núcleo) devuelve los canales encendidos con un formato neutro, y el módulo aporta sus países (`channels: [{ key: "whatsapp", countries: [...] }]`).
 - **Carpetas:**
@@ -716,8 +751,8 @@ La estructura sigue el diseño de la Etapa 6 del plan maestro de `../Arquitectur
 
   El módulo aplica sus propias `IEntityTypeConfiguration`, con un `ApplyConfigurationsFromAssembly` filtrado por namespace.
 - **Registro:** un `AddWhatsAppModule()` por capa, llamado desde `Program.cs`. Infrastructure no registra servicios de Application.
-- **Encendido:** se enciende con `WhatsApp:PhoneNumberId`; sin él quedan las implementaciones de `Disabled/`. Las rutas del webhook se mapean solo si hay `AppSecret` y `VerifyToken`.
-- **Quitarlo:** se sigue `docs/guides/quitar-whatsapp.md`: borrar las tres carpetas `Modules/WhatsApp` y `Domain/WhatsApp`, la línea de `Program.cs` y agregar una migración que borra sus tablas. El build y los tests del núcleo tienen que quedar en verde. `ModuleIsolationTests` verifica que el núcleo no referencie `*.Modules.*`.
+- **Encendido (E8):** se enciende con `WhatsApp:PhoneNumberId`; sin él quedan las implementaciones de `Disabled/`. Las rutas del webhook se mapean solo si hay `AppSecret` y `VerifyToken`.
+- **Quitarlo (E8):** se sigue `docs/guides/quitar-whatsapp.md`: borrar las tres carpetas `Modules/WhatsApp` y `Domain/WhatsApp`, la línea de `Program.cs` y agregar una migración que borra sus tablas. El build y los tests del núcleo tienen que quedar en verde. `ModuleIsolationTests` verifica que el núcleo no referencie `*.Modules.*`.
 - **Número de la plataforma** (Etapa 8): códigos de ingreso, invitaciones, avisos de la cuenta (`WhatsAppAccountNoticeChannel`) y el bot de ingreso. Plantillas (es y en): `codigo_ingreso`, `invitacion_organizacion` y, para los avisos de la cuenta, `aviso_metodo_ingreso`, `revisa_metodos_ingreso`, `baja_cuenta_pedida`, `baja_cuenta_cancelada` y `cuenta_eliminada`. Cuándo y cómo se crea cada plantilla: [`docs/operations/whatsapp-plantillas.md`](../operations/whatsapp-plantillas.md).
 - **Envío por el outbox persistente** (`platform.OutboxMessages`), no en memoria. Esto **difiere a propósito** de ArquitecturaBase, que usa colas en memoria (`WhatsAppSendQueue`, `EmailQueue`) y documenta que un reinicio las pierde. Con varias organizaciones y réplicas, perder una invitación o un código no es aceptable (ADR 0014):
   - el caso de uso inserta el mensaje dentro de su transacción;
@@ -731,7 +766,7 @@ La estructura sigue el diseño de la Etapa 6 del plan maestro de `../Arquitectur
   - Idempotente por `wamid`.
   - El procesamiento es asíncrono (`WhatsAppInboundProcessor`, con `SKIP LOCKED`).
 - **Regla de oro:** un mensaje entrante nunca abre una sesión; solo puede producir un enlace de un solo uso.
-- **Canales por organización** (Etapa 11, opcional): `platform.WhatsAppChannels` mapea `PhoneNumberId` → `TenantId`. El procesador resuelve el tenant por el número de destino y entra con `ITenantScope`.
+- **Canales por organización** (Etapa 11, [ADR 0038](../decisions/0038-whatsapp-de-atencion.md)): `platform.WhatsAppChannels` mapea `PhoneNumberId` → `TenantId`. El procesador resuelve el tenant por el número de destino y entra con `ITenantScope`.
 - **Privacidad:** los números se enmascaran en los logs y el texto de los mensajes se borra a los 90 días.
 
 ---
@@ -740,14 +775,14 @@ La estructura sigue el diseño de la Etapa 6 del plan maestro de `../Arquitectur
 
 ```
 UseForwardedHeaders → UseSecurityHeaders → UseRequestLocalization → UseExceptionHandler → UseStatusCodePages
-→ UseRateLimiter → UseAuthentication → TenantResolutionMiddleware → PublicSiteResolutionMiddleware
-→ LegalAcceptanceMiddleware → UseAuthorization
-→ (Development: bootstrap de base de datos, OpenAPI y Swagger UI | resto: UseHsts) → UseHttpsRedirection
-→ UseStaticFiles → MapDefaultEndpoints → MapControllers → UseSpaFallback
+→ UseRateLimiter → UseAuthentication → TenantResolutionMiddleware → (E7: PublicSiteResolutionMiddleware)
+→ LegalAcceptanceMiddleware → FeatureGateMiddleware → UseAuthorization
+→ (Development: OpenAPI y Swagger UI | resto: UseHsts) → UseHttpsRedirection
+→ UseStaticFiles (si hay wwwroot) → MapDefaultEndpoints → MapControllers → UseSpaFallback
 ```
 
 Todo middleware que pueda cortar con un error va después de `UseStatusCodePages`.
-En E1 funcionan los pasos restantes en ese orden; se dejan comentados en su posición `UseAuthentication`, `TenantResolutionMiddleware`, `LegalAcceptanceMiddleware` y `UseAuthorization` (E3), `PublicSiteResolutionMiddleware` (E7) y el bootstrap de base de datos (E2). `UseRateLimiter` queda conectado en E1; las políticas de acceso e identidad se agregan al existir sus rutas.
+Antes del pipeline, `Program.cs` prepara la base: en Development, el bootstrap (roles, base ICU y migraciones); fuera de él, la validación del rol de runtime; y el seed, salvo en Testing. `PublicSiteResolutionMiddleware` llega en la E7: en `Program.cs` queda un comentario en su lugar. `FeatureGateMiddleware` (E5) oculta con 404 un módulo apagado después de validar el acceso y antes de autorizar ([modulos-habilitados](../rules/modulos-habilitados.md)).
 
 ---
 

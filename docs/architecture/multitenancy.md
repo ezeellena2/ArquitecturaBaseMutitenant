@@ -23,7 +23,7 @@ Una **plantilla estándar para cualquier tipo de negocio**. No es un producto: n
 | **Dueño de la empresa** | "Registrá tu empresa" (alta B2B aparte) | crea la organización y queda como **Dueño** (`TenantAdmin`, todos los permisos) | — |
 | **Operador de la plataforma** | acceso aparte, con segundo factor | backoffice: aprobar, rechazar, suspender y cerrar organizaciones, módulos por plan, cuentas, recuperaciones, documentos legales, auditoría | ver los datos de negocio de una empresa o de una persona |
 
-Dentro de una organización, los usuarios se diferencian **solo por rol**: el **Dueño** (`TenantAdmin`, toda la organización), el **Administrador** de cada empresa (`CompanyAdmin`) y los roles que cree la organización. El Dueño sale solo del rol de sistema `TenantAdmin` (`RoleAssignment`), nunca de un dato de la membresía. La organización puede tener varias **empresas** (razones sociales o sedes), y son **planas**: no hay empresa matriz ni herencia entre empresas (ADR 0034). Cada rol tiene un alcance, que en pantalla es la columna "Vale en": toda la organización (`Organization`, se asigna sin empresa y vale en todas), cada empresa (`AnyCompany`, la empresa se elige al asignarlo y vale solo en esa) o solo en una empresa (`SpecificCompany`, el rol pertenece a esa empresa y solo se asigna ahí). El detalle y el catálogo de permisos están en [backend.md §14](backend.md#14-autorización).
+Dentro de una organización, los usuarios se diferencian **solo por rol**: el **Dueño** (`TenantAdmin`, toda la organización), el **Administrador** de cada empresa (`CompanyAdmin`) y los roles que cree la organización. El Dueño sale solo del rol de sistema `TenantAdmin` (`RoleAssignment`), nunca de un dato de la membresía. La organización puede tener varias **empresas** (razones sociales o sedes), y son **planas**: no hay empresa matriz ni herencia entre empresas (ADR 0034). Cada rol tiene un alcance, que en pantalla es la columna "Vale en": toda la organización (`Organization`, se asigna sin empresa y vale en todas), cada empresa (`AnyCompany`, la empresa se elige al asignarlo y vale solo en esa) o solo en una empresa (`SpecificCompany`, el rol pertenece a esa empresa y solo se asigna ahí). Al crear un rol, la pantalla ofrece toda la organización o una empresa; «Cada empresa» queda para el rol de sistema Administrador de empresa y para la API (ADR 0034, enmienda del 2026-10-03). El detalle y el catálogo de permisos están en [backend.md §14](backend.md#14-autorización).
 
 ## 3. Una cuenta, dos accesos
 
@@ -168,11 +168,11 @@ Todo dato nuevo se clasifica **antes** de escribir su entidad:
 ## 5. Páginas públicas por subdominio
 
 - **Una página pública por organización** (no por empresa): cada organización tiene un `Slug` único (`empresa-a`), y su página vive en `https://empresa-a.plataforma.com`. El sitio de la plataforma (`plataforma.com`) tiene el buscador o directorio de empresas publicadas.
-- **Resolución por host, solo para lo público:** `PublicSiteResolutionMiddleware` lee el subdominio y fija `IPublicSiteContext.BusinessTenantId`. Sirve **únicamente** para leer datos **públicos** de esa empresa. **Nunca** da acceso a datos privados: para eso sigue mandando el claim `tenant_id` del token.
+- **Resolución por host, solo para lo público (E7):** `PublicSiteResolutionMiddleware` lee el subdominio y fija `IPublicSiteContext.BusinessTenantId`. Sirve **únicamente** para leer datos **públicos** de esa empresa. **Nunca** da acceso a datos privados: para eso sigue mandando el claim `tenant_id` del token.
 - **Un solo front** (el mismo SPA) atiende todos los subdominios: con un subdominio de empresa muestra la página pública; con el dominio principal, el sitio de la plataforma y los accesos.
 - **Ingreso desde un subdominio:**
   - hay un solo servidor OIDC, con el **issuer fijo** en el dominio principal (`plataforma.com`);
-  - la página de la empresa pide `authorize` con `redirect_uri = https://<slug>.plataforma.com/auth/callback`, y OpenIddict la acepta si el slug existe y está publicado (`SubdomainRedirectUriValidator`, nunca un comodín abierto);
+  - la página de la empresa pide `authorize` con `redirect_uri = https://<slug>.plataforma.com/auth/callback`, y OpenIddict la acepta si el slug existe y está publicado (`SubdomainRedirectUriValidator` (E7), nunca un comodín abierto);
   - `authorize` y `logout` son navegaciones al dominio principal, donde vive la cookie de `/connect`; el canje del código, la renovación y `userinfo` van a `/connect/*` del **propio origen del subdominio**. En el front, `oidc-client-ts` usa `authority` = issuer, con un `metadataSeed` que apunta `token_endpoint`, `userinfo_endpoint` y `revocation_endpoint` al origen propio;
   - la sesión del servidor OIDC hace que, si ya ingresó en otro subdominio, no tenga que volver a hacerlo (`prompt=none`).
 - **Infraestructura:** el SPA y la Api se sirven desde el **mismo origen en cada host** (el dominio principal y cada `<slug>.plataforma.com`), así que **no hay CORS**, tampoco en los subdominios, y `BackendPrefixes` se atiende igual en todos los hosts. En producción, desde wwwroot, con DNS comodín `*.plataforma.com` y certificado comodín. En desarrollo, con el proxy de Vite por host, sobre `*.localtest.me` (resuelve a 127.0.0.1).
@@ -187,7 +187,7 @@ Todo dato nuevo se clasifica **antes** de escribir su entidad:
 | Identidad | Global: una persona, una cuenta (correo y teléfono únicos) |
 | Accesos | `access` = `consumer` \| `business` \| `platform` en el token. B2C nunca crea empresas; el alta B2B es "Registrá tu empresa" |
 | Tenant activo | Solo del claim `tenant_id` (el espacio personal en B2C; la organización elegida en B2B). El host solo resuelve lo **público** |
-| Empresas y roles | Empresas planas dentro de la organización, sin matriz ni herencia; roles con alcance `Organization`, `AnyCompany` o `SpecificCompany`; `companyId` en la URL, nunca en el token (ADR 0012 y 0034) |
+| Empresas y roles | Empresas planas dentro de la organización, sin matriz ni herencia; roles con alcance `Organization`, `AnyCompany` o `SpecificCompany` (en pantalla, toda la organización o una empresa); `companyId` en la URL, nunca en el token (ADR 0012 y 0034) |
 | Páginas públicas | Subdominio por organización, slug único, redirect URI validada contra los slugs |
 | Interacción B2C ↔ B2B | La base trae la mecánica (públicos, compartidos, `PartyPolicy`); los módulos que la usan los pone cada producto con `[FeatureGate]`. La plantilla **no trae ningún módulo de negocio** |
 
@@ -215,10 +215,10 @@ Página pública:   Draft ──(publicar)──► Published ──(despublicar
 |---|---|---|
 | `ICurrentUser` | Application | `UserId`, `Access` (`Consumer` \| `Business` \| `Platform`) |
 | `ITenantContext` | Application | `TenantId?` y `TenantKind?` del acceso activo |
-| `IPublicSiteContext` | Application | `BusinessTenantId?` resuelto por el subdominio (solo para datos públicos) |
+| `IPublicSiteContext` (E7) | Application | `BusinessTenantId?` resuelto por el subdominio (solo para datos públicos) |
 | `ITenantScope` | Application | `Enter(tenantId)` para plataforma, workers y altas |
 | `TenantResolutionMiddleware` | Api | lee `access`, `tenant_id` y `tenant_kind` del token; verifica en caché el estado de cuenta, organización y membresía proyectada en `identity.UserTenantAccesses`; si la organización no está activa, responde el 403 de su estado (§7) |
-| `PublicSiteResolutionMiddleware` | Api | subdominio → `BusinessTenantId` de una página publicada |
+| `PublicSiteResolutionMiddleware` (E7) | Api | subdominio → `BusinessTenantId` de una página publicada |
 
 Para consultar los perfiles de una cuenta desde cualquiera de los dos accesos, `identity.UserTenantAccesses` mantiene una proyección global de `tenant.Members` (`UserId`, `TenantId`, `Status`, `JoinedAtUtc`), sin RLS. Un trigger sobre `Members` la actualiza al insertar, cambiar o borrar una membresía, en la misma transacción del `IUnitOfWork`; la migración copia las membresías previas por tenant bajo RLS. `mt_app` solo tiene `SELECT` sobre la proyección: la función del trigger escribe con el dueño de la base. El nombre y estado de la organización salen de un join con `platform.Tenants`, sin duplicarlos. Solo `ConnectService`, `TenantResolutionMiddleware` y `/api/me` pueden leer este índice para seleccionar o mostrar accesos; no da permiso para leer datos privados de otro tenant.
 
@@ -228,7 +228,7 @@ Para consultar los perfiles de una cuenta desde cualquiera de los dos accesos, `
 - `[Access(Platform)]` para el backoffice;
 - `[Access(Consumer, Business, Platform)]` para la propia cuenta, que vale con cualquier sesión: `/api/me`, `/api/me/*` y `POST /api/legal/accept`. El operador también lee `GET /api/me`; por eso `POST /api/me/deletion` le responde `Legal.AccountDeletion.PlatformOperator` y no 403;
 - `[PublicSite]` + `[AllowAnonymous]` **solo** para lo que responde en el subdominio de una organización publicada (`PublicPageController`);
-- solo `[AllowAnonymous]`, sin `[Access]`, para las rutas anónimas del dominio principal: el ingreso y el registro (`/api/auth/*` y `/connect/*`), «Registrá tu empresa» (`/api/auth/business-signup`), disponibilidad pública de slug (`GET /api/public-site/slug-availability`), cancelar la baja (`/api/auth/deletion/cancel`), la invitación (`/api/invitations/*`), el enlace, los documentos legales (`GET /api/legal/*`), `GET /api/reference-data` y sus cinco rutas por catálogo (`ReferenceDataController`), el directorio (`DirectoryController`, que no lleva `[PublicSite]`), el pedido de «Recuperar mi cuenta», los correos de contacto (`GET /api/contact`) y los webhooks. `AccessDeclarationTests` las acepta únicamente si su controller está en la lista explícita del test. Estas rutas no dan acceso a datos privados de ningún tenant; el directorio lee solo lo publicado.
+- solo `[AllowAnonymous]`, sin `[Access]`, para las rutas anónimas del dominio principal: el ingreso y el registro (`/api/auth/*` y `/connect/*`), «Registrá tu empresa» (`/api/auth/business-signup`), disponibilidad pública de slug (`GET /api/public-site/slug-availability`), cancelar la baja (`/api/auth/deletion/cancel`), la invitación (`/api/invitations/*`), el enlace, los documentos legales (`GET /api/legal/*`), `GET /api/reference-data` y sus cinco rutas por catálogo (`ReferenceDataController`), el directorio (`DirectoryController` (E7), que no lleva `[PublicSite]`), el pedido de «Recuperar mi cuenta», los correos de contacto (`GET /api/contact`) y los webhooks. `AccessDeclarationTests` las acepta únicamente si su controller está en la lista explícita del test. Estas rutas no dan acceso a datos privados de ningún tenant; el directorio lee solo lo publicado.
 
 Con el acceso equivocado responde 403 `Tenancy.Access.Wrong`. Un recurso de otra organización responde 404, nunca 403, para no revelar que existe.
 
@@ -273,9 +273,9 @@ El seed inicial de `PlatformSettings` deja `ConsumerSignup = Open`, `BusinessSig
 
 ## 11. Plataforma
 
-- **Operador:** `access=platform`, con segundo factor.
+- **Operador:** `access=platform`; el segundo factor llega en la E9. Su cuenta es exclusiva de Plataforma: no tiene perfiles de persona ni entra a una organización. Se lo invita por correo y sus permisos se eligen uno por uno, sin roles; el último operador activo con `platform.operators.manage` no se puede quitar, suspender ni dar de baja ([ADR 0042](../decisions/0042-operadores-de-plataforma.md)).
   - **Organizaciones:** aprueba o rechaza las que esperan aprobación (rechazar la deja cerrada), y las suspende, reactiva y cierra.
-  - Prende y apaga módulos por plan.
+  - Prende y apaga módulos por organización (plan, manual o prueba con vencimiento).
   - Ve el dominio de correo verificado de cada organización (§3.1), y puede verificarlo o quitarlo con motivo. Normalmente lo registra y lo verifica la propia organización, con `settings.manage`.
   - Modera páginas públicas: puede despublicarlas con motivo, lo que bloquea volver a publicarlas hasta que la plataforma lo permita («Permitir publicar», también con motivo). Las dos acciones quedan en la auditoría (§7).
   - **Cuentas:** suspende y reactiva identidades, cierra sus sesiones e inicia la baja (§3.2, punto 4).
