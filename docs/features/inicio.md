@@ -16,7 +16,7 @@ Lo primero que ve un miembro al entrar a `/org`. Arriba, una tarjeta por área c
 - **Orden:** primero lo urgente, después por fecha, de la más vieja a la más nueva; lo que no tiene fecha va al final.
 - `Area` y `Kind` son claves estables: el front arma el texto, el estado, el ícono y el enlace que lo resuelve.
 - **Un módulo** registra su propia fuente en su registro, sin que el núcleo lo conozca. WhatsApp sin medio de pago llega con la Etapa 11.
-- **Decisión 8 del usuario:** hasta B4, el Administrador de empresa ve solo «Tus empresas». Su fila por empresa se suma en la consolidación, junto con su ficha y sus permisos por empresa.
+- **Decisión 8 del Paquete 1 de la alineación:** hasta B4, el Administrador de empresa ve solo «Tus empresas». Su fila por empresa se suma en la consolidación (B4, bloque 5), junto con su ficha y sus permisos por empresa.
 
 ## Front
 

@@ -36,7 +36,7 @@
 | `tests/ArquitecturaBaseMultitenant.Application.UnitTests/Services/Roles` | casos de uso y autorización |
 | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Organization` | HTTP, aislamiento, versión y flujo real |
 
-Las pantallas de Roles y el enlace de Administración esperan la aprobación de sus tableros de Organización. Sus carpetas de front no se crean antes de ese visto bueno.
+Las pantallas de Roles y Editar rol ya están en el front, según los tableros aprobados de Organización.
 
 ## Recetas
 
@@ -47,7 +47,7 @@ Las pantallas de Roles y el enlace de Administración esperan la aprobación de 
 
 ## Lo verifica
 
-- Domain: `RoleTests`, `RoleAssignmentTests` (la matriz de dónde vale un rol) y `PermissionsTests`.
+- Domain: `RoleTests` (el Dueño tiene todo el catálogo) y `RoleAssignmentTests` (la matriz de dónde vale un rol). Que cada clave del catálogo tenga su texto en es y en lo controla `PermissionTextsTests`.
 - Application: `RoleServiceTests`, `RoleServiceWriteTests`, `PermissionTextsTests` y los tests de políticas de baja.
 - API: `RolesTests`, `PermissionAuthorizationTests`, `RolePersistenceTests` (la matriz de permisos efectivos), `UserTenantAccessReaderTests`, `AccountDeletionTests`, `OrganizationUsersTests` (la última Dueña de cada organización) y `CompaniesTests` (el mismo código de alcance desde Usuarios y Empresas) (Docker/Testcontainers).
 - Contrato cruzado: `ArquitecturaBaseMutitenantFront/src/test/roles-contract.test.ts` lee controller, contratos y OpenAPI del back, además de los tipos generados del front.
