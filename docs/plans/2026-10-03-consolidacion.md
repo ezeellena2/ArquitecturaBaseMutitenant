@@ -52,11 +52,11 @@ Las pantallas de la Etapa 5 (T19 a T25) van después de esta consolidación, par
 - [x] El ADR 0039 está aplicado en `ServiceDependencyCountTests` (se le pidió a la Etapa 5). Si no lo está, aplicarlo primero: ya estaba, verificado el 2026-10-04. El test tiene sus casos de control (`InfrastructureOnly`, `EightBusinessDependencies` y `NineBusinessDependencies`), y la 0039 está en `capas-y-flujo.md`, `guardado.md` y `backend.md` §4.
   - el test con su caso de control;
   - `capas-y-flujo.md`, `guardado.md` y `backend.md` §4.
-- [ ] Línea de base: `realinear-docs --detectar` en los dos repos. El 2026-10-03, el back dio 372 hallazgos automáticos, 193 de modelo y 217 preguntas. **Back, 2026-10-04 (antes de empezar):** 293 automáticos, 129 de modelo y 157 preguntas (579). Falta el front.
-- [ ] Aplicar lo automático con `realinear-docs --sin-modelo` en los dos repos. **Back hecho** en `0fbdde4`: las 293 líneas de `arbol.md`, revisadas; las que decían algo falso o nada se corrigieron a mano en `17686e9`. Falta el front.
-- [ ] Corregir los docs viejos (📄) y aplicar las enmiendas de la [revisión de decisiones](../reviews/2026-10-03-revision-de-decisiones.md). La lista está en su «Reparto» y el detalle con archivo y línea, en sus anexos. Incluye los docs que dicen que el CI ya compara los contratos (ADR 0016) y `backend.md:53` (ADR 0017). **Back hecho:** `arbol.md` (`17686e9`), los punteros (`a5c4512`), las features (`2acb1ee`), `backend.md` y `multitenancy.md` (`29684b6`), las fichas (`abe9f58`), el nombre de la página pública (`3ee854a`) y los planes (`c27c2d7` y `57b6866`). Las enmiendas de las ADR 0002, 0012, 0016, 0017, 0034, 0038 y 0042 ya estaban en el índice. Falta el front: `frontend.md`, `responsive.md`, `formularios.md`, su `arbol.md` y su `AGENTS.md:33` (ADR 0016).
+- [x] Línea de base: `realinear-docs --detectar` en los dos repos. El 2026-10-03, el back dio 372 hallazgos automáticos, 193 de modelo y 217 preguntas. **Back, 2026-10-04 (antes de empezar):** 293 automáticos, 129 de modelo y 157 preguntas (579). **Front, 2026-10-05:** 169 automáticos, 57 de modelo y 24 preguntas (250).
+- [x] Aplicar lo automático con `realinear-docs --sin-modelo` en los dos repos. **Back hecho** en `0fbdde4`: las 293 líneas de `arbol.md`, revisadas; las que decían algo falso o nada se corrigieron a mano en `17686e9`. **Front hecho** en `4905e9b`, con el ejemplo de `estructura-y-features.md` corregido a mano.
+- [x] Corregir los docs viejos (📄) y aplicar las enmiendas de la [revisión de decisiones](../reviews/2026-10-03-revision-de-decisiones.md). La lista está en su «Reparto» y el detalle con archivo y línea, en sus anexos. Incluye los docs que dicen que el CI ya compara los contratos (ADR 0016) y `backend.md:53` (ADR 0017). **Back hecho:** `arbol.md` (`17686e9`), los punteros (`a5c4512`), las features (`2acb1ee`), `backend.md` y `multitenancy.md` (`29684b6`), las fichas (`abe9f58`), el nombre de la página pública (`3ee854a`) y los planes (`c27c2d7` y `57b6866`). Las enmiendas de las ADR 0002, 0012, 0016, 0017, 0034, 0038 y 0042 ya estaban en el índice. **Front hecho:** `frontend.md` (`e76b689`, `79c766d` y `7b63bc0`), `AGENTS.md` y `arnes.md` (`a113890`), las fichas (`680d6c2` y `3a03f45`), 30 `AGENTS.md` (`e0073ca`, `6c580ea` y `61fb15e`), los términos (`47a5af5`) y `arbol.md` al árbol real (`9c010f8`).
 - [x] Borrar las cuatro carpetas sobrantes de `tools/` (`LocalSetup`, `PlatformBootstrap`, `PlatformOperatorAdmin` y `Setup`), que solo tienen `bin` y `obj` y no están versionadas. Hecho el 2026-10-04, después de verificar que las cuatro tenían solo `bin` y `obj` y `git ls-files` vacío; no hay commit, porque no estaban versionadas.
-- [ ] Resolver los hallazgos de modelo y las preguntas, comparando con el código:
+- [x] Resolver los hallazgos de modelo y las preguntas, comparando con el código:
   - `arbol.md` de los dos repos, llevado al árbol real;
   - los códigos de error, permisos y rutas, cada uno en su ficha de `docs/features`;
   - la fila de `capas-y-flujo.md` en AGENTS.md.
@@ -66,7 +66,7 @@ Las pantallas de la Etapa 5 (T19 a T25) van después de esta consolidación, par
 
   Al usuario va solo lo que cambia el producto. **Back hecho:** los cinco puntos de arriba, con los commits del ítem anterior; nada cambia el producto. Además: `arnes.md` §3 suma 15 filas para las 24 carpetas que tenían puntero y no estaban en el mapa, y el detector de catálogos reconoce los permisos con dos puntos (`42bdfe9`; decisiones 80 y 81).
 - [x] Sumar la consolidación al plan maestro como paso previo de la Etapa 7. Se hizo al aprobar el plan.
-- [ ] **Hecho cuando** `--detectar` sale 0 en los dos repos. **Back: 0** (automáticos 0, de modelo 0 y preguntas 0, el 2026-10-04 después de `57b6866`), con cinco descartes anotados con su motivo en `ignorados.json` (`6606b5e`, decisión 82). Falta el front.
+- [x] **Hecho cuando** `--detectar` sale 0 en los dos repos. **Back: 0** (automáticos 0, de modelo 0 y preguntas 0, el 2026-10-04 después de `57b6866`), con cinco descartes anotados con su motivo en `ignorados.json` (`6606b5e`, decisión 82). **Front: 0, y los dos repos juntos: 0** (2026-10-05), sin descartes nuevos. `harness.test.ts` 7/7 y `HarnessTests` 10/10.
 
 ### 1. Bugs que se arreglan por su cuenta (test rojo → arreglo → verde)
 
@@ -565,6 +565,8 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
 
 Lo que dejaron las tandas 6a, 6b y 6c, y lo que el usuario decide con Diseño en la tanda del lienzo que sigue a v107:
 - [ ] la miga «Empresas» sin enlace cuando no hay `companies.read`, como ya hace «‹»;
+- [ ] Auditoría usa `useCursorList`, sumándole `placeholderData` y `meta`, en lugar de su propio `useInfiniteQuery`. Una sola forma de listar con cursor, y `frontend.md` y `paginado-y-listados.md` dicen solo esa;
+- [ ] los diálogos de Empresa (`CompanyDialog`, `AddMemberDialog` y `MemberRolesDialog`) pasan a React Hook Form con zod, como pide `formularios.md`. Sale la excepción de `frontend.md`;
 - [ ] con un solo grupo, la ficha va sin la barra de pestañas (el Administrador de empresa ve solo «Miembros»);
 - [ ] los colores de estado sueltos de la Página pública y del punto del dominio de Configuración, a `statusTones`;
 - [ ] las casillas fijas de un rol de sistema, en gris también en el teléfono, cuando Diseño publique;
