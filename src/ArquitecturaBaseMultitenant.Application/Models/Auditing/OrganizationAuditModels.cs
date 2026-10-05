@@ -12,6 +12,12 @@ public sealed record ListOrganizationAuditRequest : CursorRequest
 
     public Guid? ActorId { get; init; }
 
+    /// <summary>
+    /// «Quién» por tipo, con el <c>actorKind</c> de la lista de «Quién»: <c>System</c> («Sistema»),
+    /// <c>PlatformOperator</c> («Plataforma», con sus acciones sobre la organización) o <c>User</c> (las personas).
+    /// </summary>
+    public string? ActorKind { get; init; }
+
     public string? Search { get; init; }
 }
 

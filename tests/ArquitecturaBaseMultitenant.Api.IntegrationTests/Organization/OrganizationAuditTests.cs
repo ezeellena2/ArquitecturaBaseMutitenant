@@ -298,31 +298,12 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
     public async Task The_platform_approval_appears_without_who_approved_it_or_why()
     {
         using var operatorClient = Client();
-        var operatorAccount = await AccountJourney.RegisterAsync(factory, operatorClient, Ct);
-        await PlatformOperators.GrantAsync(factory.Services, operatorAccount.UserId, PlatformOperators.All, Ct);
-        await AccountJourney.AuthorizeAsync(operatorClient, "platform", Ct);
         using var ownerClient = Client();
-        var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
-        var tenant = Tenant.CreateBusiness("Auditoría aprobación", requiresApproval: true);
-        await using (var scope = factory.Services.CreateAsyncScope())
-        {
-            var services = scope.ServiceProvider;
-            using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenant.Id);
-            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
-                services.GetRequiredService<TenantProvisioner>().StageAsync(tenant,
-                    TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"), [owner.UserId], owner.UserId,
-                    ct), CommitPolicy.OnSuccess, Ct);
-        }
-
         const string reason = "Motivo interno de la aprobación";
-        var version = (await JsonAsync(operatorClient, $"/api/platform/tenants/{tenant.Id:D}")).GetProperty("version")
-            .GetUInt32();
-        using (var approved = await PlatformJourney.PostAsync(operatorClient,
-                   $"/api/platform/tenants/{tenant.Id:D}/approve", new { version, reason }, Ct))
-            Assert.True(approved.StatusCode == HttpStatusCode.NoContent, await approved.Content.ReadAsStringAsync(Ct));
+        var (tenant, operatorAccount) = await StageApprovedOrganizationAsync(operatorClient, ownerClient,
+            "Auditoría aprobación", reason);
         // Otro cambio hecho por un operador adentro de la organización, como moderar su página pública.
         await SeedPlatformEntryAsync(tenant.Id, operatorAccount.UserId);
-        await AccountJourney.AuthorizeAsync(ownerClient, "business", Ct);
 
         // Tablero Auditoria-Org: «La plataforma aprobó la organización», en toda la organización, por Plataforma.
         using var response = await ownerClient.GetAsync("/api/organization/audit?period=all&category=organization&limit=50", Ct);
@@ -342,6 +323,86 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
         using var actors = await ownerClient.GetAsync("/api/organization/audit/actors?period=all", Ct);
         Assert.DoesNotContain(operatorAccount.UserId.ToString(), await actors.Content.ReadAsStringAsync(Ct),
             StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Who_offers_the_system_and_the_platform_without_internal_ids_and_filters_by_them()
+    {
+        using var operatorClient = Client();
+        using var ownerClient = Client();
+        var (tenant, operatorAccount) = await StageApprovedOrganizationAsync(operatorClient, ownerClient,
+            "Auditoría quién actúa", "Motivo interno");
+        await OrganizationJourney.CreateCompanyAsync(ownerClient, "Delta S.A.", Ct);
+        await OrganizationJourney.InviteExpiredAsync(factory, ownerClient, tenant.Id, "carla.bianchi@example.test", Ct);
+        await ActivatorUtilities.CreateInstance<InvitationExpiryWorker>(factory.Services).RunOnceAsync(Ct);
+
+        // Tablero Auditoria-Org: «Quién» ofrece las personas, «Sistema» y «Plataforma», en ese orden.
+        var actorsJson = await JsonAsync(ownerClient, "/api/organization/audit/actors?period=all");
+        Assert.DoesNotContain(operatorAccount.UserId.ToString(), actorsJson.GetRawText(), StringComparison.OrdinalIgnoreCase);
+        var actors = actorsJson.EnumerateArray().ToArray();
+        Assert.Equal(["User", "System", "PlatformOperator"],
+            actors.Select(actor => actor.GetProperty("actorKind").GetString()).Distinct());
+        var system = Assert.Single(actors, actor => actor.GetProperty("actorKind").GetString() == "System");
+        Assert.Equal("Sistema", system.GetProperty("actorText").GetString());
+        Assert.Null(Text(system, "actorId"));
+        var platform = Assert.Single(actors, actor => actor.GetProperty("actorKind").GetString() == "PlatformOperator");
+        Assert.Equal("Plataforma", platform.GetProperty("actorText").GetString());
+        Assert.Null(Text(platform, "actorId"));
+
+        // Elegir «Sistema» o «Plataforma» deja solo sus entradas; la aprobación, sin el operador.
+        var bySystem = await ItemsAsync(ownerClient, "System");
+        Assert.All(bySystem, item => Assert.Equal("System", item.GetProperty("actorKind").GetString()));
+        Assert.Contains(bySystem, item => item.GetProperty("actionText").GetString() == "Venció la invitación a ca•••@example.test");
+        var byPlatform = await ItemsAsync(ownerClient, "PlatformOperator");
+        Assert.All(byPlatform, item => Assert.Equal("PlatformOperator", item.GetProperty("actorKind").GetString()));
+        Assert.All(byPlatform, item => Assert.Null(Text(item, "actorId")));
+        Assert.Contains(byPlatform, item => item.GetProperty("actionText").GetString() == "La plataforma aprobó la organización");
+        var byPeople = await ItemsAsync(ownerClient, "User");
+        Assert.All(byPeople, item => Assert.Equal("User", item.GetProperty("actorKind").GetString()));
+        Assert.Contains(byPeople, item => item.GetProperty("actionText").GetString() == "Creó la empresa Delta S.A.");
+
+        using var invalid = await ownerClient.GetAsync("/api/organization/audit?period=all&actorKind=Operator", Ct);
+        Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
+        using var problem = JsonDocument.Parse(await invalid.Content.ReadAsStringAsync(Ct));
+        Assert.Equal("Validation.Failed", problem.RootElement.GetProperty("code").GetString());
+        Assert.True(problem.RootElement.GetProperty("errors").TryGetProperty("actorKind", out _));
+    }
+
+    private static async Task<JsonElement[]> ItemsAsync(HttpClient client, string actorKind) =>
+    [
+        .. (await JsonAsync(client, $"/api/organization/audit?period=all&actorKind={actorKind}&limit=50"))
+            .GetProperty("items").EnumerateArray(),
+    ];
+
+    /// <summary>
+    /// Una organización que esperaba aprobación y que aprobó un operador de Plataforma, con su motivo interno; su Dueño
+    /// queda con el acceso de empresa.
+    /// </summary>
+    private async Task<(Tenant Tenant, AccountJourney Operator)> StageApprovedOrganizationAsync(
+        HttpClient operatorClient, HttpClient ownerClient, string name, string reason)
+    {
+        var operatorAccount = await AccountJourney.RegisterAsync(factory, operatorClient, Ct);
+        await PlatformOperators.GrantAsync(factory.Services, operatorAccount.UserId, PlatformOperators.All, Ct);
+        await AccountJourney.AuthorizeAsync(operatorClient, "platform", Ct);
+        var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
+        var tenant = Tenant.CreateBusiness(name, requiresApproval: true);
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenant.Id);
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+                services.GetRequiredService<TenantProvisioner>().StageAsync(tenant,
+                    TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"), [owner.UserId], owner.UserId,
+                    ct), CommitPolicy.OnSuccess, Ct);
+        }
+
+        var version = (await JsonAsync(operatorClient, $"/api/platform/tenants/{tenant.Id:D}")).GetProperty("version")
+            .GetUInt32();
+        using (var approved = await PlatformJourney.PostAsync(operatorClient,
+                   $"/api/platform/tenants/{tenant.Id:D}/approve", new { version, reason }, Ct))
+            Assert.True(approved.StatusCode == HttpStatusCode.NoContent, await approved.Content.ReadAsStringAsync(Ct));
+        await AccountJourney.AuthorizeAsync(ownerClient, "business", Ct);
+        return (tenant, operatorAccount);
     }
 
     private async Task SeedPlatformEntryAsync(Guid tenantId, Guid operatorId)

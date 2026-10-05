@@ -3,7 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Auditing;
 namespace ArquitecturaBaseMultitenant.Api.Contracts.Organization;
 
 public sealed record OrganizationAuditHttpQuery(string? After, int Limit = 10, string? Period = "30",
-    string? Category = null, Guid? ActorId = null, string? Search = null)
+    string? Category = null, Guid? ActorId = null, string? ActorKind = null, string? Search = null)
 {
     public override string ToString() => nameof(OrganizationAuditHttpQuery);
 
@@ -14,6 +14,7 @@ public sealed record OrganizationAuditHttpQuery(string? After, int Limit = 10, s
         Period = Period,
         Category = Category,
         ActorId = ActorId,
+        ActorKind = ActorKind,
         Search = Search,
     };
 }

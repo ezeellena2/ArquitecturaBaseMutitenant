@@ -35,6 +35,10 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
     private static readonly Dictionary<SecurityEventType, (TenantStatus Before, TenantStatus After)> PlatformActions =
         new() { [SecurityEventType.OrganizationApproved] = (TenantStatus.PendingApproval, TenantStatus.Active) };
 
+    /// <summary>El orden de la lista «Quién» del tablero Auditoria-Org: las personas, «Sistema» y «Plataforma».</summary>
+    private static readonly AuditActorKind[] ActorOrder =
+        [AuditActorKind.User, AuditActorKind.System, AuditActorKind.PlatformOperator];
+
     public async Task<CursorResult<OrganizationAuditRow>> ListAsync(ListOrganizationAuditRequest request,
         DateTime? startUtc, DateTime? endUtc, CancellationToken cancellationToken)
     {
@@ -44,6 +48,13 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
         {
             // «Quién» filtra por persona: el operador de Plataforma no se muestra.
             entries = entries.Where(entry => entry.ActorId == actorId && entry.ActorKind == AuditActorKind.User);
+        }
+
+        // «Quién» por tipo: «Sistema», «Plataforma» o las personas.
+        if (request.ActorKind is { } actorKindName)
+        {
+            var actorKind = Enum.Parse<AuditActorKind>(actorKindName);
+            entries = entries.Where(entry => entry.ActorKind == actorKind);
         }
 
         // Las entradas y las acciones de Plataforma van en un mismo cursor, por fecha.
@@ -117,9 +128,10 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
     }
 
     // Sin búsqueda ni persona: la búsqueda mira los cambios y quién actuó, y una acción de Plataforma no muestra ninguno
-    // de los dos. El tema es «Organización».
+    // de los dos. «Quién» puede ser «Plataforma». El tema es «Organización».
     private static bool ShowsPlatformActions(ListOrganizationAuditRequest request) =>
         string.IsNullOrWhiteSpace(request.Search) && request.ActorId is null
+        && (request.ActorKind is null or nameof(AuditActorKind.PlatformOperator))
         && (request.Category is null || Categories[request.Category].Contains(nameof(Tenant)));
 
     private IQueryable<SecurityEvent> PlatformActionsOf(Guid tenantId, DateTime? startUtc, DateTime? endUtc)
@@ -292,7 +304,7 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
     public async Task<IReadOnlyList<OrganizationAuditActorRow>> ListActorsAsync(ListOrganizationAuditRequest request,
         DateTime? startUtc, DateTime? endUtc, CancellationToken cancellationToken)
     {
-        var unfiltered = request with { ActorId = null };
+        var unfiltered = request with { ActorId = null, ActorKind = null };
         var stored = await (await FilteredAsync(unfiltered, startUtc, endUtc, cancellationToken))
             .Select(entry => new { entry.ActorId, entry.ActorKind })
             .Distinct().ToArrayAsync(cancellationToken);
@@ -311,7 +323,7 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
                 .ToDictionaryAsync(user => user.Id, user => user.DisplayName, cancellationToken);
         return actors.Select(actor => new OrganizationAuditActorRow(actor.ActorId, actor.ActorKind,
                 actor.ActorId is { } id ? names.GetValueOrDefault(id) : null))
-            .OrderBy(actor => actor.ActorKind)
+            .OrderBy(actor => Array.IndexOf(ActorOrder, actor.ActorKind))
             .ThenBy(actor => actor.DisplayName, StringComparer.CurrentCulture)
             .ToArray();
     }

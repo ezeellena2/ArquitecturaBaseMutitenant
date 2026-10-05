@@ -5942,6 +5942,13 @@
             }
           },
           {
+            "name": "ActorKind",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "Search",
             "in": "query",
             "schema": {
@@ -6054,6 +6061,13 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "ActorKind",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {

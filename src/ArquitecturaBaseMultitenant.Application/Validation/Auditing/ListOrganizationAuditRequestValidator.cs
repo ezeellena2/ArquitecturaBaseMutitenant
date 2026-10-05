@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Models.Auditing;
 using ArquitecturaBaseMultitenant.Application.Resources;
+using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Common;
 using FluentValidation;
 
@@ -10,6 +11,7 @@ internal sealed class ListOrganizationAuditRequestValidator : CursorRequestValid
 {
     private static readonly string[] Categories = ["users", "roles", "companies", "settings", "organization"];
     private static readonly string[] Periods = ["0", "7", "30", "all"];
+    private static readonly string[] ActorKinds = Enum.GetNames<AuditActorKind>();
 
     public ListOrganizationAuditRequestValidator()
     {
@@ -21,6 +23,9 @@ internal sealed class ListOrganizationAuditRequestValidator : CursorRequestValid
             .WithMessage(_ => ValidationTexts.Required);
         RuleFor(request => request.ActorId)
             .Must(id => id is null || id != Guid.Empty)
+            .WithMessage(_ => ValidationTexts.Required);
+        RuleFor(request => request.ActorKind)
+            .Must(kind => kind is null || ActorKinds.Contains(kind, StringComparer.Ordinal))
             .WithMessage(_ => ValidationTexts.Required);
         RuleFor(request => request.Search)
             .MaximumLength(TextLimits.AuditSearch)
