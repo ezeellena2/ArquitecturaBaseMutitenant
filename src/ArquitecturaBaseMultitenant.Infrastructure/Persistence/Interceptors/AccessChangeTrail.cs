@@ -12,14 +12,16 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Interceptors;
 /// …» con las empresas y los roles adentro: el miembro, las membresías y los roles de esa persona en el mismo guardado
 /// no dejan entrada propia. Revocar su invitación deja solo la entrada de la invitación, por lo mismo. Agregarlo a una
 /// empresa deja «Agregó a …» con «Roles en la empresa» adentro, y quitarlo de ella, la membresía con los roles que
-/// tenía ahí. Crear una empresa deja solo «Creó la empresa …»: la membresía y el rol de quien la crea van adentro, sin
-/// mostrarse, como el tablero. Los demás cambios de roles siguen siendo una entrada por persona y lugar
-/// (<see cref="RoleAssignmentTrail"/>).
+/// tenía ahí. Quitarlo de la organización deja solo «Quitó a …», con los roles que tenía en ella y en sus empresas: sus
+/// membresías y sus roles no dejan entrada propia. Crear una empresa deja solo «Creó la empresa …»: la membresía y el
+/// rol de quien la crea van adentro, sin mostrarse, como el tablero. Los demás cambios de roles siguen siendo una
+/// entrada por persona y lugar (<see cref="RoleAssignmentTrail"/>).
 /// </summary>
 internal sealed class AccessChangeTrail
 {
     private readonly HashSet<Guid> invitedMembers;
     private readonly HashSet<Guid> revokedMembers;
+    private readonly HashSet<Guid> removedMembers;
     private readonly HashSet<Guid> createdCompanies;
     private readonly ILookup<Guid, Guid> invitedCompanies;
     private readonly HashSet<(Guid MemberId, Guid CompanyId)> addedMemberships;
@@ -35,6 +37,10 @@ internal sealed class AccessChangeTrail
         revokedMembers = [.. changed.Where(entry => entry.Entity is Invitation { Status: InvitationStatus.Revoked }
                 && OriginalStatus(entry) is InvitationStatus.Pending)
             .Select(entry => ((Invitation)entry.Entity).MemberId).Where(memberId => !invitedMembers.Contains(memberId))];
+        // Quitar a alguien de la organización; si tenía la invitación pendiente, su entrada es la de la invitación.
+        removedMembers = [.. changed.Where(entry => entry.Entity is Member { Status: MemberStatus.Removed }
+                && OriginalStatus(entry) is MemberStatus before && before != MemberStatus.Removed)
+            .Select(entry => ((Member)entry.Entity).Id).Where(memberId => !revokedMembers.Contains(memberId))];
         // Quien crea una empresa queda en ella: su membresía y su rol son parte del alta de la empresa.
         createdCompanies = [.. Added<Company>(changed).Select(company => company.Id)];
         var memberships = Added<CompanyMembership>(changed).ToArray();
@@ -48,7 +54,8 @@ internal sealed class AccessChangeTrail
             .Where(entry => entry.Entity is CompanyMembership membership
                 && OriginalStatus(entry) is CompanyMembershipStatus before && before != membership.Status)
             .Select(entry => (CompanyMembership)entry.Entity)
-            .Where(membership => !revokedMembers.Contains(membership.MemberId))
+            .Where(membership => !revokedMembers.Contains(membership.MemberId)
+                && !removedMembers.Contains(membership.MemberId))
             .Select(membership => (membership.MemberId, membership.CompanyId))];
     }
 
@@ -58,25 +65,27 @@ internal sealed class AccessChangeTrail
     /// <summary>Los cambios de roles que no van adentro de la entrada o la salida de una persona: una entrada cada uno.</summary>
     internal IEnumerable<RoleAssignmentTrail.RoleSetChange> StandaloneRoleChanges =>
         roleChanges.Where(change => !invitedMembers.Contains(change.Place.MemberId)
-            && !revokedMembers.Contains(change.Place.MemberId) && !ChangesMembership(change.Place)
+            && !revokedMembers.Contains(change.Place.MemberId) && !removedMembers.Contains(change.Place.MemberId)
+            && !ChangesMembership(change.Place)
             && !(change.Place.CompanyId is { } companyId && createdCompanies.Contains(companyId)));
 
     /// <summary>
     /// El miembro y las membresías de una persona invitada en este guardado, o cuya invitación se revoca en él, son
-    /// parte de la entrada de esa invitación; la membresía de quien crea una empresa, parte del alta de la empresa.
+    /// parte de la entrada de esa invitación; las membresías de quien sale de la organización, parte de su salida, y la
+    /// membresía de quien crea una empresa, parte del alta de la empresa.
     /// </summary>
     internal bool IsPartOfAnotherEntry(EntityEntry<IAuditable> entry) => entry.Entity switch
     {
         Member member => invitedMembers.Contains(member.Id) || revokedMembers.Contains(member.Id),
         CompanyMembership membership => invitedMembers.Contains(membership.MemberId)
-            || revokedMembers.Contains(membership.MemberId)
+            || revokedMembers.Contains(membership.MemberId) || removedMembers.Contains(membership.MemberId)
             || entry.State == EntityState.Added && createdCompanies.Contains(membership.CompanyId),
         _ => false,
     };
 
     /// <summary>
-    /// Suma al alta de una persona sus empresas y sus roles, y a su salida de una empresa los roles que tenía ahí, por
-    /// nombre, como los guarda el rastro de roles.
+    /// Suma al alta de una persona sus empresas y sus roles, a su salida de una empresa los roles que tenía ahí, y a su
+    /// salida de la organización los que tenía en ella y en sus empresas, por nombre, como los guarda el rastro de roles.
     /// </summary>
     internal void Complete(EntityEntry<IAuditable> entry, Dictionary<string, object?> diff,
         IReadOnlyDictionary<Guid, string> roleNames)
@@ -85,6 +94,13 @@ internal sealed class AccessChangeTrail
         {
             case Invitation invitation when entry.State == EntityState.Added:
                 CompleteInvitation(invitation.MemberId, diff, roleNames);
+                break;
+            case Member member when removedMembers.Contains(member.Id):
+                var mine = roleChanges.Where(change => change.Place.MemberId == member.Id).ToArray();
+                AddRoles(diff, AuditChangeKeys.OrganizationRoles, mine.Where(change => change.Place.CompanyId is null),
+                    roleNames);
+                AddRoles(diff, AuditChangeKeys.CompanyRoles, mine.Where(change => change.Place.CompanyId is not null),
+                    roleNames);
                 break;
             case CompanyMembership membership when ChangesMembership(membership.MemberId, membership.CompanyId):
                 // Un cambio de estado no trae la persona ni la empresa en el diff: van como claves técnicas, para que la

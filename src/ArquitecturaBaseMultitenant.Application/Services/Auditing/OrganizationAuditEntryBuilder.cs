@@ -93,7 +93,10 @@ internal sealed class OrganizationAuditEntryBuilder(DisplayFormatter formatter)
             rows.Add(new OrganizationAuditChangeResponse(AuditTexts.Field("Email"), null, email));
         if (changes.ValueKind != JsonValueKind.Object) return rows;
 
-        foreach (var property in changes.EnumerateObject())
+        // jsonb guarda las claves ordenadas por largo: los roles de la organización van primero, como en el diálogo de
+        // Usuarios, y después las empresas y sus roles.
+        foreach (var property in changes.EnumerateObject()
+                     .OrderBy(property => property.Name == AuditChangeKeys.OrganizationRoles ? 0 : 1))
         {
             if (!TryOldNew(property.Value, out var oldValue, out var newValue)) continue;
             switch (property.Name)

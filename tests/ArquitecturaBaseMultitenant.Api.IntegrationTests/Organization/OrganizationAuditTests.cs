@@ -225,6 +225,35 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Removing_a_person_from_the_organization_leaves_one_entry_with_the_roles_they_had()
+    {
+        using var client = Client();
+        var company = await StageCompanyMemberAsync(client, "Auditoría quitar de la organización");
+        var organizationRole = await CreateOrganizationRoleAsync(client, "Recursos humanos");
+        var member = await JsonAsync(client, $"/api/users/{company.MemberId:D}");
+        using (var saved = await client.PutAsJsonAsync($"/api/users/{company.MemberId:D}", new
+               {
+                   roleIds = new[] { organizationRole },
+                   companies = new[] { new { companyId = company.CompanyId, roleIds = new[] { company.Sales, company.ReadOnly } } },
+                   version = member.GetProperty("version").GetUInt32(),
+               }, Ct))
+            Assert.True(saved.StatusCode == HttpStatusCode.NoContent, await saved.Content.ReadAsStringAsync(Ct));
+        var before = await EntryIdsAsync(client);
+
+        // «Quitar de la organización» de Usuarios: sale también de sus empresas y se van todos sus roles.
+        var version = (await JsonAsync(client, $"/api/users/{company.MemberId:D}")).GetProperty("version").GetUInt32();
+        using (var removed = await client.DeleteAsync($"/api/users/{company.MemberId:D}?version={version}", Ct))
+            Assert.True(removed.StatusCode == HttpStatusCode.NoContent, await removed.Content.ReadAsStringAsync(Ct));
+
+        // Una sola entrada, «Quitó a …», con los roles que tenía, como quitarlo de una empresa.
+        var entry = Assert.Single(await NewEntriesAsync(client, before));
+        Assert.Equal("Quitó a Tomás Acosta", entry.GetProperty("actionText").GetString());
+        Assert.Equal("Toda la organización", entry.GetProperty("whereText").GetString());
+        Assert.Equal(["Roles de la organización: Recursos humanos → ", "Roles en la empresa: Solo lectura, Ventas → "],
+            Rows(entry));
+    }
+
+    [Fact]
     public async Task An_expired_invitation_is_recorded_once_by_the_system_on_its_expiry_date()
     {
         using var client = Client();
@@ -507,6 +536,20 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
             scope = nameof(RoleScope.SpecificCompany),
             companyId,
             permissions = new[] { Permissions.Company.Members.Read },
+        }, Ct);
+        Assert.True(created.StatusCode == HttpStatusCode.Created, await created.Content.ReadAsStringAsync(Ct));
+        return await created.Content.ReadFromJsonAsync<Guid>(Ct);
+    }
+
+    private static async Task<Guid> CreateOrganizationRoleAsync(HttpClient client, string name)
+    {
+        using var created = await AccountJourney.PostAsync(client, "/api/roles", new
+        {
+            name,
+            description = (string?)null,
+            scope = nameof(RoleScope.Organization),
+            companyId = (Guid?)null,
+            permissions = new[] { Permissions.Users.Read },
         }, Ct);
         Assert.True(created.StatusCode == HttpStatusCode.Created, await created.Content.ReadAsStringAsync(Ct));
         return await created.Content.ReadFromJsonAsync<Guid>(Ct);
