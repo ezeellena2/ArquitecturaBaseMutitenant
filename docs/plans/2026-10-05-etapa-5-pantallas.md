@@ -434,13 +434,13 @@ Se copian tal cual: estructura, textos, orden y estados. Los textos van entre «
 
 **Ingreso** (`Ingreso` y `M-Ingreso`): al pie de las dos puertas, «¿No podés entrar? Recuperá tu cuenta», con el enlace a `/recuperar`.
 
-**Compu** (`Recuperar`; Tweak: paso «1. El correo o teléfono de antes | 2. Un correo o WhatsApp nuevo | 3. Pedido recibido»), en el marco del ingreso (formulario y panel de la marca):
-- **Paso 1:** «Recuperar mi cuenta»; «Escribí el correo o el teléfono con el que entrabas.»; selector «Entrabas con» «Correo | WhatsApp»; «Correo electrónico» o «Número de WhatsApp» (con el país); «Seguir»; «Volver a ingresar».
-  - Errores: «Ingresá un correo electrónico válido.» o «Ingresá un número de celular válido.».
-- **Paso 2:** «‹ Atrás»; «¿Dónde te escribimos?»; «Decinos un correo o un WhatsApp nuevo donde podamos escribirte.»; selector «Escribinos a» «Correo | WhatsApp»; «Correo electrónico nuevo» o «Número de WhatsApp nuevo»; «Enviar código»; «Volver a ingresar».
-  - Errores: «Ingresá un correo electrónico válido.», «Ingresá un número de celular válido.», «Tiene que ser un correo distinto del de antes.» o «Tiene que ser un número distinto del de antes.».
-  - Ver «Para decidir» 8 por WhatsApp.
-- **Código:** «Usar otro correo» (o «Usar otro número»); «Revisá tu correo» (o «Revisá tu WhatsApp»); «Te mandamos un código a **{destino}**. Vence en 10 minutos.»; los seis casilleros; «Verificar» y «Reenviar código». Error: «Escribí los 6 números del código.». Reenviar: «Te mandamos un código nuevo.».
+**Compu** (`Recuperar`; Tweak: paso «1. El correo o teléfono de antes | 2. Un correo o WhatsApp nuevo | 3. Pedido recibido», whatsapp **«Sin WhatsApp (hasta la Etapa 8)»**, v111 releída), en el marco del ingreso (formulario y panel de la marca):
+- **Paso 1:** «Recuperar mi cuenta»; «Escribí el correo con el que entrabas.»; «Correo electrónico»; «Seguir»; «Volver a ingresar». Sin selector de canal.
+  - Error: «Ingresá un correo electrónico válido.».
+- **Paso 2:** «‹ Atrás»; «¿Dónde te escribimos?»; «Decinos un correo nuevo donde podamos escribirte.»; «Correo electrónico nuevo»; «Enviar código»; «Volver a ingresar». Sin selector de canal.
+  - Errores: «Ingresá un correo electrónico válido.» y «Tiene que ser un correo distinto del de antes.».
+  - La variante «Con WhatsApp» queda para la Etapa 8 («Para decidir» 8).
+- **Código:** «Usar otro correo»; «Revisá tu correo»; «Te mandamos un código a **{destino}**. Vence en 10 minutos.»; los seis casilleros; «Verificar» y «Reenviar código». Error: «Escribí los 6 números del código.». Reenviar: «Te mandamos un código nuevo.».
 - **Paso 3:** círculo verde; «Recibimos tu pedido»; «Un operador lo va a revisar y te va a avisar a **{destino}**.»; «Volver a ingresar».
 - Si el correo nuevo ya es de otra cuenta, la pantalla sigue igual (decisión 16 del plan de la E5).
 
@@ -1220,7 +1220,7 @@ Lo que el lienzo o los docs no resolvían. Cada punto empieza con lo **decidido*
 | Tarea | Commit back | Commit front | Evidencia (comandos y resultados) | Capturas enviadas | Notas |
 |---|---|---|---|---|---|
 | T00 | `2ed8f13`, `ebcf3b7` | `d73f362` | Ambos repos limpios en `main` al retomar; `aspire ps` → sin AppHost; consolidación `2209be7` presente; arnés centralizado → 0 hallazgos en ambos; `ClosedStages` → `{0,1,2,3,4,6}`; `npm run contracts` y `contracts:check` → exit 0; API front → 29/29; lint sin errores y build exit 0 | — | HEAD al retomar: back `97c28f9`, front `e685df0`; lienzo v111 aprobado. Resueltos el trabajo pendiente de Diseño y el contrato desactualizado anotados en la comprobación inicial. |
-| T18c | Este commit (`fix(plataforma)`) | Contrato verificado; commit tras el back | Rojo: arquitectura 1/4, HTTP 2/6, front 13/14. Verde: arquitectura 148/148, Application 476/476, integración Plataforma 55/55, dominios 3/3 y contratos 21/21; build Api 0 advertencias/errores. Front 14/14, contracts/check, lint y build exit 0. Arnés 0 en ambos. Revisiones de especificación y calidad aprobadas. | — | Las 11 respuestas dan la versión persistida; DTO de cuenta sin version; operatorVersion preservada. Evidencia detallada en `.local/t18c/report.md`. |
+| T18c | `f54bb4b` | `5ee8475` | Rojo: arquitectura 1/4, HTTP 2/6, front 13/14. Verde: arquitectura 148/148, Application 476/476, integración Plataforma 55/55, dominios 3/3 y contratos 21/21; build Api 0 advertencias/errores. Front 14/14, contracts/check, lint y build exit 0. Arnés 0 en ambos. Revisiones de especificación y calidad aprobadas. | — | Las 11 respuestas dan la versión persistida; DTO de cuenta sin version; operatorVersion preservada. Evidencia detallada en `.local/t18c/report.md`; contratos regenerados y comprobados otra vez tras el commit del back. |
 | Antes de T19 | | | | | |
 | T19 | | | | | |
 | T20a–T20d | | | | | |
