@@ -564,6 +564,10 @@ Cada tanda toma las diferencias «Nueva» de `relevamiento.md` que le tocan, las
 ### 6d. Front: pulido final (antes de la puerta)
 
 Lo que dejaron las tandas 6a, 6b y 6c, y lo que el usuario decide con Diseño en la tanda del lienzo que sigue a v107:
+- [ ] dos detalles que dejó 6d-1:
+  - el error de la franja de «Agregar miembro» se borra al cambiar un campo, como en los otros diálogos;
+  - `useCuitType` está en Empresas y en `BusinessSignupPage`: pasa a una sola pieza (`shared/referenceData`);
+- [ ] el CUIT repetido, debajo del campo o en la franja: lo decide el usuario con Diseño. El tablero lo pone en la franja y `formularios.md`, debajo del dato;
 - [ ] **Bug de concurrencia (lo encontró 6c):** las pantallas de edición mandan la versión de la última relectura de fondo, no la de los datos con los que arrancó el formulario. Si otra persona cambió algo mientras la ficha estaba quieta, el guardado pisa ese cambio sin 409. Afecta a Roles, Usuario, Configuración, la Página pública y Mi cuenta. Se arregla en un solo lugar (la versión base se toma al iniciar o reiniciar el formulario), con su test en rojo y la regla en `concurrencia.md`. Tanda 6d-2.
 - [ ] en la tanda 6d-2 también:
   - los colores de estado sueltos de la Página pública y de Configuración;
@@ -571,9 +575,9 @@ Lo que dejaron las tandas 6a, 6b y 6c, y lo que el usuario decide con Diseño en
   - el error del código de «Confirmá que sos vos», debajo de los casilleros;
   - «Sin dominio» en el teléfono;
   - el paso del código del ingreso: con React Hook Form, o anotado como excepción en `formularios.md`;
-- [ ] la miga «Empresas» sin enlace cuando no hay `companies.read`, como ya hace «‹»;
-- [ ] Auditoría usa `useCursorList`, sumándole `placeholderData` y `meta`, en lugar de su propio `useInfiniteQuery`. Una sola forma de listar con cursor, y `frontend.md` y `paginado-y-listados.md` dicen solo esa;
-- [ ] los diálogos de Empresa (`CompanyDialog`, `AddMemberDialog` y `MemberRolesDialog`) pasan a React Hook Form con zod, como pide `formularios.md`. Sale la excepción de `frontend.md`;
+- [x] la miga «Empresas» sin enlace cuando no hay `companies.read`, como ya hace «‹» (front `4dae58d`);
+- [x] Auditoría usa `useCursorList` (front `9dadbb4`, con una guardia contra `useInfiniteQuery` suelto), sumándole `placeholderData` y `meta`, en lugar de su propio `useInfiniteQuery`. Una sola forma de listar con cursor, y `frontend.md` y `paginado-y-listados.md` dicen solo esa;
+- [x] los diálogos de Empresa (`CompanyDialog`, `AddMemberDialog` y `MemberRolesDialog`) pasan a React Hook Form con zod (front `e78169a`; 1136 tests, lint y build; capturas en `b6d1/`), como pide `formularios.md`. Sale la excepción de `frontend.md`;
 - [ ] con un solo grupo, la ficha va sin la barra de pestañas (el Administrador de empresa ve solo «Miembros»);
 - [ ] los colores de estado sueltos de la Página pública y del punto del dominio de Configuración, a `statusTones`;
 - [ ] las casillas fijas de un rol de sistema, en gris también en el teléfono, cuando Diseño publique;
