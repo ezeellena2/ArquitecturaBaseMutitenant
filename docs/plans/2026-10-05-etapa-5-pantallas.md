@@ -3,7 +3,7 @@
 > **Para Codex, que programa estas pantallas:**
 > - Antes de empezar, leé el `AGENTS.md` de la raíz de cada repo. Antes de tocar una carpeta, leé su `AGENTS.md` y las fichas que nombra.
 > - Seguí las tareas en el orden de «Orden y dependencias». Cada tarea de lógica sigue el «Protocolo»: rojo, implementación, verde y commit.
-> - **La fuente de cada pantalla es su tablero** (lienzo v110, front `c604c0b`). «Lo que dicen los tableros» copia sus textos, columnas, filtros, menús, diálogos y estados; si algo de este plan no coincide con el tablero, manda el tablero y lo anotás.
+> - **La fuente de cada pantalla es su tablero** (lienzo v111, front `e685df0`). «Lo que dicen los tableros» copia sus textos, columnas, filtros, menús, diálogos y estados; si algo de este plan no coincide con el tablero, manda el tablero y lo anotás.
 > - **No inventes.** Si una pantalla necesita algo que el tablero no dibuja (un estado, un texto, una columna, una acción), frená y preguntale al usuario: lo dibuja Diseño. Lo que se sabía que faltaba está en «Para decidir», ya resuelto: cada punto dice qué hacer. Los que dibuja Diseño (1, 2, 6, 7 y 8) se programan con el lienzo v111.
 > - **Las piezas comunes de `src/shared/` se usan tal cual.** No ajustes medidas a mano en las pantallas. Si una medida o una forma del tablero no coincide con la pieza común, no toques la pieza: anotalo en «Para decidir» del «Registro de resultados» y seguí con la pieza como está.
 > - **El usuario ve cada pantalla antes y durante** (ver «La regla de pantallas del usuario»): antes de programar una pantalla, le mostrás su tablero y esperás su visto bueno; en cada avance, le mandás la captura lado a lado y el comando de la vista en vivo.
@@ -13,8 +13,7 @@
 
 **Estado:** listo para Codex. El usuario resolvió «Para decidir» el 2026-10-05.
 
-- **Lo que dibuja Diseño** (los puntos 1, 2, 6, 7 y 8): llega en el lienzo **v111**. T18c no depende del lienzo.
-- **Si el lienzo sigue en v110** cuando termines T18c, frená y avisale al usuario.
+- **Lo que dibuja Diseño** (los puntos 1, 2, 6, 7 y 8): ya está en el lienzo **v111** (front `e685df0`), aprobado por el usuario el 2026-10-05. Ver «Lo que suma la v111».
 
 **Objetivo:** las pantallas de Plataforma de la Etapa 5 (T19 a T25 del [plan de la Etapa 5](2026-10-03-etapa-5-plataforma.md), precedidas por T18c en el back), conectadas a la API real y copiadas de sus tableros, en la compu y en el teléfono:
 - el marco de Plataforma: «Gestión» y «Administración» en la compu; la barra de abajo y «Más» en el teléfono;
@@ -22,7 +21,40 @@
 - «Recuperar mi cuenta» (`/recuperar`), la pantalla pública, con su enlace desde Ingreso;
 - el E2E real de la etapa y la puerta de cierre.
 
-**Fuente visual:** lienzo **v110, front `c604c0b`** (`docs/design/lienzo/` del front). Los tableros de Plataforma no tienen «· por refinar» ni «· para aprobar»: están validados.
+**Fuente visual:** lienzo **v111, front `e685df0`** (`docs/design/lienzo/` del front). Los tableros de Plataforma no tienen «· por refinar» ni «· para aprobar»: están validados.
+
+**Lo que suma la v111** (Diseño, aprobada por el usuario). «Lo que dicen los tableros» se escribió con la v110: con estos tableros, releelos antes de programar su pantalla y manda el tablero.
+
+**Tweaks nuevos:**
+- **`Cuenta-Plat`, Tweak «cuenta»:**
+  - Persona;
+  - Operador;
+  - Operador: acciones;
+  - Operador: cambiar permisos;
+  - Operador: quitar operador;
+  - Invitación de operador pendiente;
+  - Invitación de operador vencida.
+- **`M-Cuenta-Plat`, Tweak «estado»:** las mismas variantes.
+- **`Organizacion`:**
+  - el Tweak «estado» suma «Falló el alta», con «Reintentar el alta» en la banda;
+  - el Tweak «duenos»: Con su Dueño, Sin Dueño todavía, Con el Dueño suspendido.
+- **`M-Organizacion`, Tweak «estado»:**
+  - Historial;
+  - Falló el alta, con la hoja del ⋮ y «Reintentar el alta»;
+  - Dueños;
+  - Dueños: sin Dueño todavía;
+  - Dueños: Dueño suspendido.
+- **`Recuperar` y `M-Recuperar`, Tweak «whatsapp»:** Sin WhatsApp (hasta la Etapa 8) o Con WhatsApp. **Se programa «Sin WhatsApp».**
+
+**Textos nuevos:**
+- quitar operador: «¿Quitar a {nombre} como operador?» y «Deja de entrar a la plataforma.»;
+- «Recuperar mi cuenta» sin WhatsApp, paso 1: «Escribí el correo con el que entrabas.»;
+- un Dueño suspendido: «Suspendido», tono warning;
+- la versión legal que todavía no rige: «Versión {n} desde {fecha}», tono pending, en una tercera línea de la fila de `Legales`.
+
+**Además:**
+- los tonos de `M-Organizaciones`, `M-Cuentas` y `M-Recuperaciones` siguen §12;
+- «Mi cuenta» está en tu menú de los ocho tableros de Plataforma de la compu.
 
 ---
 
@@ -76,7 +108,7 @@
 
 1. T00 (línea de base).
 2. T18c (back): la primera tarea, antes de todo el front.
-3. «Antes de T19»: los tableros, con el visto bueno del usuario. Requiere el lienzo v111; si sigue en v110, frená y avisale al usuario.
+3. «Antes de T19»: los tableros de la v111 (`e685df0`), con el visto bueno del usuario.
 4. T19 (contrato y «Recuperar mi cuenta»). No depende del marco.
 5. T20 (el marco): T20a (back) → T20b, T20c y T20d.
 6. T21 (Organizaciones): T21a (back) → T21b → T21c → T21d.
@@ -1062,7 +1094,7 @@ Y en las pantallas (T21 a T23): después de cada acción con versión, la base p
 
 ### De este plan (técnicas; el usuario las revisa con el plan)
 
-1. **Fuente:** lienzo v110, front `c604c0b`. Ningún tablero de Plataforma está «· por refinar».
+1. **Fuente:** lienzo v111, front `e685df0`. Parte de la v110 (`c604c0b`) y suma lo de «Para decidir». Ningún tablero de Plataforma está «· por refinar».
 2. **Permisos en `/api/me`:** `effectivePermissions.platform` (T20a). Sin eso, el front no puede mostrar ni ocultar nada según los permisos del operador. Sigue `accesos-y-permisos.md` (los permisos salen de `effectivePermissions`).
 3. **El editor legal es su propia ruta,** `/plataforma/legales/nueva` (con `?documento=Terms|Privacy` desde el ⋮), como `/org/roles/nuevo`.
 4. **Namespaces:** `platformTenants`, `platformAccounts`, `platformRecoveries`, `platformLegal`, `platformAudit` y `platformSettings`; los enums en `enums.json`; «Recuperar mi cuenta» en `auth.json`; el diálogo con motivo en `common.json`.
