@@ -486,4 +486,6 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 
 | T23b | Feature54/54 anterior a SPEC, refetch12/12 y Back49/49 solapados; guardas161, build/contratos/lint/diff0. SPEC y CALIDAD finalesPASS. Capturas10/5, verify acumulado220/110, decisiones46–47 | — (API existente) | `5817985` |
 
+| T23c back (UI pendiente) | Opciones por destinos globales y filtros cruzados, sóloaudit.read; 10rojos404+1setup; HTTP41/42 y retestOpenAPI1/1, arquitectura66/66, buildApi0advertencias. SPEC/CALIDADPASS; contrato3rojos→112/112/build/check/lint0 | `d6f107f` | `dfe15d5` (contrato) |
+
 No declarar cierre a partir de esta tabla sin completar T25.
