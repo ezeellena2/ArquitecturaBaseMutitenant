@@ -4,7 +4,7 @@ Fecha de inicio: **2026-10-06**. Guía: [revisión de código](../plans/2026-10-
 
 ## Cómo venimos
 
-**Revisión en curso.** Roles y Organización conservan una separación razonable: los controllers adaptan HTTP, los servicios dirigen los casos de uso y el dominio conserva las reglas. Lo que más pesa hasta ahora es usar catálogos incompletos en el front, validar siempre CUIT argentino aunque el back admite el tipo fiscal de cada país y concentrar varios flujos de edición en una misma pantalla. El código se entiende, pero esas pantallas exigen seguir mucho estado para cambiar una sola acción.
+**Revisión en curso.** Roles, Organización y Plataforma conservan una separación razonable: los controllers adaptan HTTP, los servicios dirigen los casos de uso y el dominio conserva las reglas. Lo que más pesa hasta ahora es usar catálogos incompletos en el front, validar siempre CUIT argentino aunque el back admite el tipo fiscal de cada país y concentrar varios flujos de edición en una misma pantalla. En Configuración de Plataforma, la protección de reintentos además exige conocer la caché de mutaciones desde el componente. El código se entiende, pero esas pantallas exigen seguir mucho estado para cambiar una sola acción.
 
 Este informe evalúa arquitectura, diseño y lectura. No es una auditoría exhaustiva de seguridad ni una certificación de ejecución. No se modificó código ni se ejecutaron builds que regeneren contratos en la copia compartida.
 
@@ -14,7 +14,7 @@ Este informe evalúa arquitectura, diseño y lectura. No es una auditoría exhau
 |---|---|---|
 | Roles y permisos | Revisada | Back `96167f2`; front `9c1c782`; archivos del área sin cambios locales |
 | Organización: Usuarios, Empresas, Configuración, Página pública y Auditoría | Revisada | Back y front del mismo estado base; incluye el Inicio empresarial |
-| Plataforma | Pendiente | Se incorpora después de Organización |
+| Plataforma | Revisada | Servicios, dominio, readers/controllers y features administrativas; archivos estables, posteriores al cierre de E5 |
 | Piezas comunes | Pendiente | `shared/` y `scripts/` del front; Common y Persistence del back |
 | Identidad, ingreso, registro y Mi cuenta | En espera | Se lee al final, una vez commiteados A1 a A7 |
 
@@ -78,6 +78,16 @@ Se excluyen migraciones, archivos generados, `docs/design/`, WhatsApp y la Etapa
 - **Decisiones:** conserva auditoría.md y las decisiones de consolidación sobre «Qué», «Dónde», nombres y enmascarado; el problema es la implementación repetida, no esa conducta.
 - **Esfuerzo:** mediano.
 
+### R06 · Configuración de Plataforma administra desde la pantalla los callbacks internos del diálogo
+
+- **Importancia:** Conviene.
+- **Área:** Configuración de Plataforma y su diálogo común.
+- **Dónde:** front `src/areas/platform/settings/pages/PlatformSettingsPage.tsx:182`; `protect` en `:188`, `bind` en `:200` y captura de eventos en `:226`; `src/shared/platform/ReasonDialog.tsx:75`.
+- **Qué pasa:** el diálogo común conserva su mutación y sus callbacks, pero no ofrece un contrato para expresar cuándo dejó de valer una confirmación. La pantalla lo resuelve buscando la mutación por identidad de variables, guardando callbacks en un `WeakMap`, reemplazando sus opciones, observando `observerOptionsUpdated` y reaplicando la protección en una microtarea. También observa el DOM del textarea para detectar revisiones del motivo. Es infraestructura de ciclo de vida mezclada con un formulario de cinco campos. Para cambiar el guardado hay que entender cómo se actualizan las opciones de TanStack, la identidad del envío, el formulario y el router a la vez.
+- **Propuesta:** acordar un contrato explícito y opcional de vigencia del envío en `ReasonDialog`, capturado al submit y conservado con sus callbacks originales. La pieza que crea la mutación debe proteger su ejecución y feedback sin que el caller encuentre y modifique esa mutación desde la caché. Separar después el hook de edición de Configuración de su JSX. Mantener RHF/foco, versión propia, descarte, guardas de borrador/motivo/permisos/navegación y Retry nativo; verificar la refactorización con los tests de vida existentes.
+- **Decisiones:** la implementación actual cumple las decisiones 51 y 53 del [plan de pantallas de E5](../plans/2026-10-05-etapa-5-pantallas.md), que impidieron cambiar shared durante esa etapa. No se denuncia una falla de reintentos: se propone revisar ese límite de implementación para que la responsabilidad quede explícita y se entienda mejor. Las decisiones 44 (nombre de organización no único) y 46 (comparación de vigencia legal con el reloj del navegador) se conservaron y no se cuentan como hallazgos.
+- **Esfuerzo:** mediano.
+
 ## Lo que está bien
 
 - **Roles y permisos:** `RoleService` es una referencia razonable para copiar: valida, abre una UoW, aplica reglas y traduce los choques de índices; invalida la caché después del commit. `RoleAssignment.Check` expresa dónde vale cada asignación y `RoleAssignmentGuard` permite reutilizarla. Los catálogos de permisos del dominio son intencionales. El front separa API, columnas, errores y lógica pura del selector; usa los hooks comunes de edición, concurrencia e idempotencia. No encontré una razón para reescribir esta área ni para crear más servicios intermediarios.
@@ -86,6 +96,7 @@ Se excluyen migraciones, archivos generados, `docs/design/`, WhatsApp y la Etapa
 - **Configuración:** el back distingue consulta DNS fuera de la transacción y cambio versionado dentro; nombre y preferencias se guardan juntos y la caché se limpia después del commit. El front reutiliza los selectores de referencia.
 - **Página pública:** contenido, logo y publicación tienen reglas en el dominio; el servicio/editor mantiene el guardado y la traducción de concurrencia. La vista previa reutiliza `PublicPageCard` y los formatos/telefonía comunes. No corresponde adelantar el storefront de E7.
 - **Auditoría e Inicio:** feed por cursor, traducción en Application y nombres cargados por lotes, sin una consulta por fila. `HomeService` recibe pendientes por `IPendingItemSource`; los helpers no abren transacciones propias. Los tamaños y colores de estas pantallas remiten al tablero y a tokens del tema: no se cuentan como números mágicos por el solo hecho de estar en clases de CSS.
+- **Plataforma:** las acciones globales y las que entran a una organización están diferenciadas. `PlatformActionGuard` tiene una responsabilidad concreta: autorización y SecurityEvent confirmado antes del scope y de la UoW; no sobra como simple pasamanos. Los writers y guards mantienen el caso de uso legible sin abrir transacciones propias. Organización reutiliza las verificaciones de dominios; operadores tienen permisos individuales y protección del último gestor; Legales publica versiones inmutables con culturas del catálogo y número bajo lock. Listados y conteos comparten filtros y las fichas usan evidencia persistida para fechas/estados. Las pestañas del front están separadas y las versiones propias de cada recurso no se reemplazan con un GET de fondo. No encontré motivos para cambiar las capas ni agregar CQRS.
 
 ## Verificación del informe
 
