@@ -783,7 +783,9 @@ UseForwardedHeaders → UseSecurityHeaders → UseRequestLocalization → UseExc
 ```
 
 Todo middleware que pueda cortar con un error va después de `UseStatusCodePages`.
-Antes del pipeline, `Program.cs` prepara la base: en Development, el bootstrap (roles, base ICU y migraciones); fuera de él, la validación del rol de runtime; y el seed, salvo en Testing. `PublicSiteResolutionMiddleware` llega en la E7: en `Program.cs` queda un comentario en su lugar. `FeatureGateMiddleware` (E5) oculta con 404 un módulo apagado después de validar el acceso y antes de autorizar ([modulos-habilitados](../rules/modulos-habilitados.md)).
+Antes del pipeline, `Program.cs` prepara la base: en Development, el bootstrap (roles, base ICU y migraciones); fuera de él, la validación del rol de runtime; y el seed, salvo en Testing. `FeatureGateMiddleware` (E5) oculta con 404 un módulo apagado después de validar el acceso y antes de autorizar ([modulos-habilitados](../rules/modulos-habilitados.md)).
+
+`PublicSiteResolutionMiddleware` (E7) está previsto para esa etapa; en `Program.cs` todavía hay un comentario en su lugar.
 
 ---
 

@@ -1778,6 +1778,7 @@ tests/
 │   │   ├── PlatformAccountAdministrationTests.cs      Consulta global de cuentas
 │   │   ├── PlatformAccountDeletionTests.cs            Baja iniciada por Plataforma (ADR 0035)
 │   │   ├── PlatformAccountStateTests.cs               Suspender, reactivar y cerrar sesiones de una cuenta desde Plataforma,…
+│   │   ├── PlatformAuditOrganizationsTests.cs         Opciones globales de Auditoría con sus filtros cruzados y permiso audit.read
 │   │   ├── PlatformDomainAdministrationTests.cs       tests de PlatformDomainAdministration
 │   │   ├── PlatformLegalPublicationTests.cs           Plataforma › Documentos legales
 │   │   ├── PlatformOperatorTests.cs                   Operadores de Plataforma (ADR 0042)

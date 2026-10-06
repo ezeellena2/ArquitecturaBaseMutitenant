@@ -76,13 +76,16 @@ public sealed class HarnessTests
     [Fact]
     public void Lo_verifica_requires_closed_stage_Node_and_TypeScript_tests()
     {
-        var line = "- `missing.test.mjs` (E1), `missing.test.ts` (E1), `missing.test.tsx` (E1), `future.test.tsx` (E3).";
-        var failures = MissingVerificationTests(line, 7, "docs/rules/probe.md", new HashSet<string>(StringComparer.Ordinal),
+        var line = "- `missing.test.mjs` (E1), `missing.test.ts` (E1), `missing.test.tsx` (E1), `present.lifetime.test.tsx` (E1), `missing.lifetime.test.tsx` (E1), `future.test.tsx` (E3).";
+        var testNames = new HashSet<string>(StringComparer.Ordinal) { "present.lifetime.test.tsx" };
+        var failures = MissingVerificationTests(line, 7, "docs/rules/probe.md", testNames,
             new HashSet<int> { 0, 1, 2 }).ToArray();
 
         Assert.Contains(failures, value => value.Contains("missing.test.mjs", StringComparison.Ordinal));
         Assert.Contains(failures, value => value.Contains("missing.test.ts", StringComparison.Ordinal));
         Assert.Contains(failures, value => value.Contains("missing.test.tsx", StringComparison.Ordinal));
+        Assert.Contains(failures, value => value.Contains("missing.lifetime.test.tsx", StringComparison.Ordinal));
+        Assert.DoesNotContain(failures, value => value.Contains("present.lifetime.test.tsx", StringComparison.Ordinal));
         Assert.DoesNotContain(failures, value => value.Contains("future.test.tsx", StringComparison.Ordinal));
     }
 
@@ -120,7 +123,8 @@ public sealed class HarnessTests
 
         Assert.Contains(2, closedStages);
         Assert.Contains(4, closedStages);
-        Assert.DoesNotContain(5, closedStages);
+        Assert.Contains(5, closedStages);
+        Assert.Contains(6, closedStages);
     }
 
     [Fact]
@@ -770,7 +774,7 @@ public sealed class HarnessTests
     private static IEnumerable<string> MissingVerificationTests(string line, int number, string file, HashSet<string> testNames,
         IReadOnlySet<int> closedStages, bool frontExists = true)
     {
-        const string pattern = @"\b(?:[A-Za-z][A-Za-z0-9_]*Tests|[A-Za-z][A-Za-z0-9_-]*\.test\.(?:mjs|tsx?))\b";
+        const string pattern = @"\b(?:[A-Za-z][A-Za-z0-9_]*Tests|[A-Za-z][A-Za-z0-9_.-]*\.test\.(?:mjs|tsx?))\b";
         foreach (Match match in Regex.Matches(line, pattern, RegexOptions.CultureInvariant))
         {
             var stageRange = StageRangeForReference(line, match.Index + match.Length);
