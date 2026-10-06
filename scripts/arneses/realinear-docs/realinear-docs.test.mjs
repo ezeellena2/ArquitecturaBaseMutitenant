@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { cp, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { after, test } from 'node:test';
@@ -131,6 +131,29 @@ test('simbolos: typo único (auto), inexistente y miembro que no está', async (
     'simbolos|simbolo-inexistente|modelo|docs/features/roles.md|RolFantasmaService',
   ].sort());
   assert.equal(hs.find((h) => h.accion === 'auto').parche.a, '`RoleService`');
+});
+
+test('simbolos: reconoce funciones locales TS y TSX y conserva los inexistentes', async () => {
+  const copia = await mkdtemp(join(tmpdir(), 'simbolos-front-'));
+  temporales.push(copia);
+  await cp(join(fixtures, 'front'), copia, { recursive: true });
+  await mkdir(join(copia, 'docs', 'features'), { recursive: true });
+  await writeFile(join(copia, 'src', 'shared', 'LocalDialogs.tsx'), [
+    'function OrganizationStatusDialog() { return null; }',
+    'export const ExportedRecoveryDialog = () => null;',
+  ].join('\n'));
+  await writeFile(join(copia, 'src', 'shared', 'localRecovery.ts'), 'async function useLocalRecovery() {}\n');
+  await writeFile(join(copia, 'src', 'shared', 'declarations.d.ts'), 'export declare function DeclarationOnlyDialog(): void;\n');
+  await writeFile(join(copia, 'docs', 'features', 'locales.md'), [
+    '# Símbolos locales',
+    '`OrganizationStatusDialog`, `useLocalRecovery`, `ExportedRecoveryDialog` y `useAccess` existen.',
+    '`MissingRecoveryDialog` y `DeclarationOnlyDialog` no están implementados.',
+  ].join('\n'));
+  const hs = await correr(['simbolos'], { back: raicesFixture.back, front: copia }, 'front');
+  assert.deepEqual(resumen(hs.filter((h) => h.archivo === 'docs/features/locales.md')), [
+    'simbolos|simbolo-inexistente|modelo|docs/features/locales.md|DeclarationOnlyDialog',
+    'simbolos|simbolo-inexistente|modelo|docs/features/locales.md|MissingRecoveryDialog',
+  ]);
 });
 
 test('catalogos: permisos, códigos y rutas mencionados que no existen, y grupos sin feature', async () => {

@@ -3,9 +3,10 @@ import { join } from 'node:path';
 
 const declaraCsharp = /\b(?:class|record(?:\s+struct)?|struct|interface|enum)\s+([A-Za-z_]\w*)/g;
 const declaraTs = /\bexport\s+(?:default\s+)?(?:declare\s+)?(?:abstract\s+)?(?:async\s+)?(?:function\*?|class|const|let|interface|type|enum)\s+([A-Za-z_$][\w$]*)/g;
+const declaraFuncionTs = /\bfunction\*?\s+([A-Za-z_$][\w$]*)/g;
 
 /**
- * Índice de tipos de un repo: C# por regex (class, record, struct, interface, enum) y TS por `export`.
+ * Índice de tipos de un repo: C# por regex (class, record, struct, interface, enum), TS por `export` y funciones locales.
  * Los miembros se verifican leyendo el archivo del tipo cuando se piden.
  * @returns {Promise<{ raiz: string, tipos: Map<string, string[]>, existe(n: string): boolean, archivosDe(n: string): string[], tieneMiembro(tipo: string, miembro: string): Promise<boolean> }>}
  */
@@ -26,6 +27,7 @@ export async function indexarSimbolos(archivos) {
       continue;
     }
     for (const m of texto.matchAll(esCs ? declaraCsharp : declaraTs)) agregar(m[1], archivo);
+    if (esTs) for (const m of texto.matchAll(declaraFuncionTs)) agregar(m[1], archivo);
   }
   return {
     raiz: archivos.raiz,
