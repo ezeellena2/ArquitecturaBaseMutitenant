@@ -382,6 +382,8 @@ Avance T22b (ficha): front `d4d30c0`, main sin push. Métodos tapados, roles del
 
 Archivos: `src/areas/platform/{recoveries,legal,audit,settings}/{api,pages,components}/`, locales/test.
 
+Avance T23a (Recuperaciones): lista, revisión y detalle resuelto reales, métodos tapados y existencia por accountId, motivo obligatorio, errores por código y versión/estado propios sin revivir Pending. Dueño nativo local por borrador/elección: Retry antiguo no envía ni cambia la clave actual, RHF conserva motivo/foco; guards por URL, evidencia y permisos. Page/API46/46 previo al delta final del footer; captura detectó pie indebido y rojo dirigido → delta4/4. Guardas179/179, transporte9/9, hook18/18 y pipeline47/47; contratos/build/lint/diff0, advertencias globales heredadas. SPEC y CALIDAD frescasPASS, sin hallazgos abiertos; front `76cde18`, main sin push. Capturas16PNG/8pares a1440/390 con vacío recapturado, verify acumulado210/105 y vivo entregados. Decisión45 y diferencias comunes/datos del tablero documentadas en el plan de pantallas; detector0auto/1modelo/0humano EXIT2, falso positivo heredado verificado. Las casillas generales de T23 esperan T23b–d; no se declara cierre.
+
 - [ ] Copiar todos los estados aprobados, decisión de recuperación con motivo, lectura/publicación legal/culturas, cursor y modal Audit aprobado (fecha al cuerpo; mobile hoja), settings/version/draft/409.
 - [ ] Ninguna pantalla por refinar se implementa antes de elección; todas las salidas reales vienen del contrato generado.
 - [ ] Tests dirigidos/lint/build por unidad. Commits separados por feature.
@@ -478,5 +480,6 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 
 | T22a (parcial de T22) | Back HTTP 13/13 y OpenAPI 3/3; contrato front 137/137. Lista/invitación y acciones: feature 70/70, rutas 35/35, build/contratos/lint focal 0, SPEC/ReSPEC/CALIDAD/ReCALIDAD PASS. Capturas 36 PNG / 18 pares, verify acumulado 162 / 81. Reparación de invariantes T21: consumidores 55/55 y punteros 7/7. PrimaryEmail resuelto por el usuario: back78e5377/fronta8c07cc, HTTP8/8/runtime3/3/contrato138/138; ficha T22b se verifica aparte | `5b22eee` | `94a5726`; `ed2a3c5`; `875df83` |
 | T22b | Ficha/operadores/invitaciones, Page/API52/52, lista63/63, guardas170/170, capturadores44/44, build/contratos/lint0; SPEC y CALIDAD finalPASS. Capturas32/16, verify acumulado194/97. PrimaryEmail previo HTTP8/runtime3/contrato138 | `78e5377` | contrato `a8c07cc`; ficha `d4d30c0` |
+| T23a | Page/API46/46 anterior al delta footer4/4; guardas179/179, transporte9/9, hook18/18, pipeline47/47, build/contratos/lint0. SPEC y CALIDAD frescasPASS. Capturas16/8, verify acumulado210/105; decisión45 del plan de pantallas | — (API existente) | `76cde18` |
 
 No declarar cierre a partir de esta tabla sin completar T25.
