@@ -7,10 +7,12 @@ using ArquitecturaBaseMultitenant.Application.Services.Platform;
 using ArquitecturaBaseMultitenant.Application.UnitTests.TestDoubles;
 using ArquitecturaBaseMultitenant.Application.Validation.Platform;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
+using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using System.Text.Json;
+using System.Globalization;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Services.Platform;
 
@@ -72,6 +74,74 @@ public sealed class PlatformSettingsServiceTests
         Assert.True((await service.UpdateAsync(new(ConsumerSignupMode.Open, BusinessSignupMode.Open, limit, Sales, Support, 1, reason), Ct)).IsFailure);
         Assert.Equal(0, unitOfWork.Transactions);
         Assert.Empty(audit.Items);
+    }
+
+    [Theory]
+    [InlineData(0, "es-AR", "Usá un número de 1 a 50.")]
+    [InlineData(51, "es-AR", "Usá un número de 1 a 50.")]
+    [InlineData(0, "en-US", "Use a number from 1 to 50.")]
+    [InlineData(51, "en-US", "Use a number from 1 to 50.")]
+    public async Task Owned_organization_limits_outside_the_range_are_localized_without_side_effects(
+        int limit, string culture, string message)
+    {
+        var originalCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(culture);
+            using var fixture = new ServiceFixture<PlatformSettingsService>(new UpdatePlatformSettingsRequestValidator());
+            var events = new List<string>();
+            var repository = new StubRepository();
+            var audit = new StubEvents();
+            var unitOfWork = new FakeUnitOfWork(events);
+            var service = Create(fixture, repository, audit, unitOfWork, new StubCache(events));
+
+            var result = await service.UpdateAsync(new(ConsumerSignupMode.Closed, BusinessSignupMode.Closed,
+                limit, Sales, Support, 7, "Cambio del límite"), Ct);
+
+            Assert.True(result.IsFailure);
+            var error = Assert.IsType<ValidationError>(result.Error);
+            Assert.Equal("maxOwnedOrganizations", Assert.Single(error.Errors).Key);
+            Assert.Equal(message, Assert.Single(error.Errors["maxOwnedOrganizations"]));
+            Assert.Equal(0, unitOfWork.Transactions);
+            Assert.False(repository.Marked);
+            Assert.Null(repository.ExpectedVersion);
+            Assert.Equal(ConsumerSignupMode.Open, repository.Settings!.ConsumerSignup);
+            Assert.Equal(BusinessSignupMode.Open, repository.Settings.BusinessSignup);
+            Assert.Equal(1, repository.Settings.MaxOwnedOrganizations);
+            Assert.Null(repository.Settings.SalesEmail);
+            Assert.Null(repository.Settings.SupportEmail);
+            Assert.Empty(audit.Items);
+            Assert.Empty(events);
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = originalCulture;
+        }
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(50)]
+    public async Task Inclusive_owned_organization_bounds_commit_before_invalidating_the_cache(int limit)
+    {
+        using var fixture = new ServiceFixture<PlatformSettingsService>(new UpdatePlatformSettingsRequestValidator());
+        var events = new List<string>();
+        var repository = new StubRepository();
+        var audit = new StubEvents();
+        var unitOfWork = new FakeUnitOfWork(events);
+        var service = Create(fixture, repository, audit, unitOfWork, new StubCache(events));
+
+        var result = await service.UpdateAsync(new(ConsumerSignupMode.Open, BusinessSignupMode.Open,
+            limit, Sales, Support, 7, "Cambio del límite"), Ct);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(limit, repository.Settings!.MaxOwnedOrganizations);
+        Assert.True(repository.Marked);
+        Assert.Equal(7u, repository.ExpectedVersion);
+        Assert.Equal(1, unitOfWork.Transactions);
+        Assert.Equal(1, unitOfWork.Commits);
+        Assert.Single(audit.Items);
+        Assert.Equal(new[] { "commit", "cache" }, events);
     }
 
     [Fact]

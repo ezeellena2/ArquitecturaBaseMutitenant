@@ -38,7 +38,7 @@
   <data name="InvitationEmailRequired" xml:space="preserve"><value>Add an email to use this option.</value></data>
   <data name="InvitationPhoneRequired" xml:space="preserve"><value>Add a WhatsApp number to use this option.</value></data>
   <data name="InvitationWhatsAppUnavailable" xml:space="preserve"><value>WhatsApp isn't available on this system.</value></data>
-  <data name="OwnedOrganizationsMinimum" xml:space="preserve"><value>Allow at least one organization per person.</value></data>
+  <data name="OwnedOrganizationsRange" xml:space="preserve"><value>Use a number from 1 to 50.</value></data>
   <data name="FilterInvalid" xml:space="preserve"><value>Choose a filter from the list.</value></data>
   <data name="NonceFormat" xml:space="preserve"><value>The request is incomplete. Start again.</value></data>
   <data name="RecoveryMethodRepeated" xml:space="preserve"><value>It must be a different email address from the one you used before.</value></data>

@@ -116,6 +116,118 @@ public sealed class PlatformSettingsTests
     }
 
     [Fact]
+    public async Task Inclusive_owned_organization_bounds_return_the_persisted_version()
+    {
+        await using var isolated = new ApiFactory();
+        await isolated.InitializeAsync();
+        using var client = isolated.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var account = await AccountJourney.RegisterAsync(isolated, client, Ct);
+        await GrantAsync(isolated, account.UserId, PlatformOperators.All);
+        await AccountJourney.AuthorizeAsync(client, "platform", Ct);
+        using var initial = await client.GetAsync("/api/platform/settings", Ct);
+        Assert.Equal(HttpStatusCode.OK, initial.StatusCode);
+        using var initialJson = JsonDocument.Parse(await initial.Content.ReadAsStringAsync(Ct));
+        var version = initialJson.RootElement.GetProperty("version").GetUInt32();
+
+        foreach (var limit in new[] { 1, 50 })
+        {
+            using var saved = await client.PutAsJsonAsync("/api/platform/settings", new
+            {
+                consumerSignup = "Open", businessSignup = "RequiresApproval", maxOwnedOrganizations = limit,
+                salesEmail = "ventas@example.com", supportEmail = "soporte@example.com",
+                version, reason = "Cambio del límite",
+            }, Ct);
+            var savedVersion = await SavedVersion.ReadAsync(saved, Ct);
+            Assert.NotEqual(version, savedVersion);
+            using var updated = await client.GetAsync("/api/platform/settings", Ct);
+            Assert.Equal(HttpStatusCode.OK, updated.StatusCode);
+            using var updatedJson = JsonDocument.Parse(await updated.Content.ReadAsStringAsync(Ct));
+            Assert.Equal(limit, updatedJson.RootElement.GetProperty("maxOwnedOrganizations").GetInt32());
+            Assert.Equal(savedVersion, updatedJson.RootElement.GetProperty("version").GetUInt32());
+            await using var scope = isolated.Services.CreateAsyncScope();
+            var settings = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
+                .PlatformSettings.AsNoTracking().SingleAsync(Ct);
+            Assert.Equal(limit, settings.MaxOwnedOrganizations);
+            Assert.Equal(savedVersion, settings.Version);
+            Assert.Equal(30, settings.AccountDeletionGraceDays);
+            version = savedVersion;
+        }
+
+        await using var finalScope = isolated.Services.CreateAsyncScope();
+        Assert.Equal(2, await finalScope.ServiceProvider.GetRequiredService<ApplicationDbContext>().SecurityEvents
+            .CountAsync(item => item.ActorId == account.UserId
+                && item.Type == Domain.Auditing.SecurityEventType.PlatformSettingsChanged, Ct));
+    }
+
+    [Theory]
+    [InlineData("es-AR", "Usá un número de 1 a 50.", "Este campo es obligatorio.")]
+    [InlineData("en-US", "Use a number from 1 to 50.", "This field is required.")]
+    public async Task Invalid_owned_organization_limits_are_localized_and_preserve_settings_contact_and_events(
+        string language, string rangeMessage, string requiredMessage)
+    {
+        await using var isolated = new ApiFactory();
+        await isolated.InitializeAsync();
+        using var client = isolated.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var account = await AccountJourney.RegisterAsync(isolated, client, Ct);
+        await GrantAsync(isolated, account.UserId, PlatformOperators.All);
+        await AccountJourney.AuthorizeAsync(client, "platform", Ct);
+        client.DefaultRequestHeaders.AcceptLanguage.ParseAdd(language);
+        using var initial = await client.GetAsync("/api/platform/settings", Ct);
+        Assert.Equal(HttpStatusCode.OK, initial.StatusCode);
+        using var initialJson = JsonDocument.Parse(await initial.Content.ReadAsStringAsync(Ct));
+        using var baseline = await client.PutAsJsonAsync("/api/platform/settings", new
+        {
+            consumerSignup = "Open", businessSignup = "RequiresApproval", maxOwnedOrganizations = 3,
+            salesEmail = "ventas@example.com", supportEmail = "soporte@example.com",
+            version = initialJson.RootElement.GetProperty("version").GetUInt32(), reason = "Configuración inicial",
+        }, Ct);
+        var version = await SavedVersion.ReadAsync(baseline, Ct);
+        using var current = await client.GetAsync("/api/platform/settings", Ct);
+        Assert.Equal(HttpStatusCode.OK, current.StatusCode);
+        var currentBody = await current.Content.ReadAsStringAsync(Ct);
+        using var anonymous = isolated.CreateClient(new() { BaseAddress = new Uri("https://localhost") });
+        using var contact = await anonymous.GetAsync("/api/contact", Ct);
+        Assert.Equal(HttpStatusCode.OK, contact.StatusCode);
+        var contactBody = await contact.Content.ReadAsStringAsync(Ct);
+
+        foreach (var limit in new int?[] { 0, 51, null })
+        {
+            using var invalid = await client.PutAsJsonAsync("/api/platform/settings", new
+            {
+                consumerSignup = "Closed", businessSignup = "Closed", maxOwnedOrganizations = limit,
+                salesEmail = "nuevo@example.com", supportEmail = "ayuda@example.com", version, reason = "Cambio rechazado",
+            }, Ct);
+            Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
+            Assert.Equal(language, Assert.Single(invalid.Content.Headers.ContentLanguage));
+            using var problem = JsonDocument.Parse(await invalid.Content.ReadAsStringAsync(Ct));
+            Assert.Equal("Validation.Failed", problem.RootElement.GetProperty("code").GetString());
+            var errors = problem.RootElement.GetProperty("errors");
+            Assert.Equal("maxOwnedOrganizations", Assert.Single(errors.EnumerateObject()).Name);
+            Assert.Equal(limit is null ? requiredMessage : rangeMessage,
+                Assert.Single(errors.GetProperty("maxOwnedOrganizations").EnumerateArray()).GetString());
+
+            using var unchanged = await client.GetAsync("/api/platform/settings", Ct);
+            Assert.Equal(HttpStatusCode.OK, unchanged.StatusCode);
+            Assert.Equal(currentBody, await unchanged.Content.ReadAsStringAsync(Ct));
+            using var unchangedContact = await anonymous.GetAsync("/api/contact", Ct);
+            Assert.Equal(HttpStatusCode.OK, unchangedContact.StatusCode);
+            Assert.Equal(contactBody, await unchangedContact.Content.ReadAsStringAsync(Ct));
+            await using var scope = isolated.Services.CreateAsyncScope();
+            var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var settings = await context.PlatformSettings.AsNoTracking().SingleAsync(Ct);
+            Assert.Equal(version, settings.Version);
+            Assert.Equal(3, settings.MaxOwnedOrganizations);
+            Assert.Equal(Domain.Settings.ConsumerSignupMode.Open, settings.ConsumerSignup);
+            Assert.Equal(Domain.Settings.BusinessSignupMode.RequiresApproval, settings.BusinessSignup);
+            Assert.Equal("ventas@example.com", settings.SalesEmail!.Value);
+            Assert.Equal("soporte@example.com", settings.SupportEmail!.Value);
+            Assert.Equal(30, settings.AccountDeletionGraceDays);
+            Assert.Equal(1, await context.SecurityEvents.CountAsync(item => item.ActorId == account.UserId
+                && item.Type == Domain.Auditing.SecurityEventType.PlatformSettingsChanged, Ct));
+        }
+    }
+
+    [Fact]
     public async Task Invalid_settings_or_missing_reason_do_not_write_an_event()
     {
         await using var isolated = new ApiFactory();

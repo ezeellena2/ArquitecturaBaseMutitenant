@@ -38,7 +38,7 @@
   <data name="InvitationEmailRequired" xml:space="preserve"><value>Cargá un correo para usar esta opción.</value></data>
   <data name="InvitationPhoneRequired" xml:space="preserve"><value>Cargá un número de WhatsApp para usar esta opción.</value></data>
   <data name="InvitationWhatsAppUnavailable" xml:space="preserve"><value>WhatsApp no está disponible en este sistema.</value></data>
-  <data name="OwnedOrganizationsMinimum" xml:space="preserve"><value>Permití al menos una organización por persona.</value></data>
+  <data name="OwnedOrganizationsRange" xml:space="preserve"><value>Usá un número de 1 a 50.</value></data>
   <data name="FilterInvalid" xml:space="preserve"><value>Elegí un filtro de la lista.</value></data>
   <data name="NonceFormat" xml:space="preserve"><value>El pedido está incompleto. Empezá de nuevo.</value></data>
   <data name="RecoveryMethodRepeated" xml:space="preserve"><value>Tiene que ser un correo distinto del de antes.</value></data>
