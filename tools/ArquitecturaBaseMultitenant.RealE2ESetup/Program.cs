@@ -127,6 +127,7 @@ try
     {
         await LegalVersionCommand.TryExecuteAsync(host.Services, readyFile, cancellationToken);
         await InvitationCommand.TryExecuteAsync(host.Services, readyFile, business.Id, created.Value, cancellationToken);
+        await PlatformCommand.TryExecuteAsync(host.Services, readyFile, business.Id, created.Value, cancellationToken);
     }
     return 0;
 }
@@ -143,5 +144,6 @@ catch (PostgresException exception)
 catch (Exception exception)
 {
     Console.Error.WriteLine($"E2E setup failed ({exception.GetType().Name}).");
+    Console.Error.WriteLine($"E2E platform preparation phase: {PlatformCommand.Phase}.");
     return 1;
 }
