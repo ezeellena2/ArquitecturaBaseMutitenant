@@ -112,21 +112,27 @@ Diseño la dibuja como estado de `Ingreso` y `M-Ingreso`.
 
 **Hecho cuando:** los dos botones de Google del registro llevan a Google y nunca validan el correo.
 
-## A5 · Agregar un correo o Google sin confirmar, si el ingreso es reciente (ADR 0045, decidido por el usuario el 2026-10-06)
+## A5 · Mi cuenta sin código de confirmación (ADR 0045, decidido por el usuario el 2026-10-06)
 
-**El problema:** recién ingresado, «Agregar correo» mandaba primero un código al correo de siempre y después otro al nuevo.
+**El problema:** cada acción de Mi cuenta pedía un código a un método que ya tenía la cuenta, de un solo uso y para esa sola acción:
+- agregar un correo pedía dos códigos;
+- quitar un correo pedía otro;
+- pedir dos seguidos frenaba con «Esperá un momento antes de pedir otro código».
 
-**La decisión:** la [ADR 0045](../decisions/0045-confirmar-solo-sin-ingreso-reciente.md).
-- Con la sesión de menos de 15 minutos, que es configuración, agregar un correo y vincular Google no piden confirmación.
-- Quitar un método y cambiar el principal la piden siempre.
+**La decisión:** la [ADR 0045](../decisions/0045-mi-cuenta-sin-codigo-de-confirmacion.md). Ninguna acción de Mi cuenta pide confirmación: sumar un correo, vincular Google, cambiar el principal, quitar un método ni dar de baja la cuenta. El correo nuevo sigue con su propio código.
 
-- [ ] **Rojo** (integración, con `TimeProvider`):
-  - sesión de 14 minutos: agregar un correo sin ticket responde como siempre y manda solo el código del correo nuevo;
-  - sesión de 16 minutos: pide el ticket;
-  - lo mismo al vincular Google;
-  - quitar un método y cambiar el principal piden el ticket aunque la sesión sea reciente.
-- [ ] **Implementación y front:** Mi cuenta pide el correo nuevo directo cuando la sesión es reciente. Docs: `identidad.md`.
-- [ ] **E2E real:** el recorrido de «sumar correo» de 3b, recién ingresado, recibe un solo código.
+- [ ] **Rojo** (integración):
+  - sumar un correo sin ticket manda solo el código del correo nuevo y avisa a los demás métodos;
+  - vincular Google, cambiar el principal y quitar un método andan sin ticket y avisan;
+  - la baja anda sin ticket, con su gracia y su aviso;
+  - siguen el último método y el principal obligatorio.
+- [ ] **Implementación:**
+  - salen `ReauthTicket`, `POST /api/me/reauth` y `/reauth/verify`, y todo lo que solo los usaba, en el back, el front, el contrato y los textos;
+  - los diálogos de confirmación de Mi cuenta siguen, sin el paso del código.
+- [ ] **Docs:** `identidad.md` y la ficha `datos-personales` si nombra la reautenticación.
+- [ ] **E2E real:**
+  - «quitar un método» pasa a quitarlo sin código;
+  - «sesión abierta no suma correo» se reemplaza por «sumar un correo manda solo el código del correo nuevo».
 
 ## A6 · Nombre y apellido en dos campos (ADR 0046, pedido por el usuario el 2026-10-06)
 
