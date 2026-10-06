@@ -168,6 +168,42 @@ Diseño la dibuja como estado de `Ingreso` y `M-Ingreso`.
   - si ya tienen algo, no los toca.
 - [ ] **Implementación:** donde se resuelve la cuenta de Google, sin pisar lo que escribió la persona. Docs: `identidad.md`.
 
+## Puerta: el recorrido de un usuario nuevo
+
+Los tests y el E2E pasaron en verde con todo esto roto, porque probaban las reglas escritas, no lo que hace una persona. Antes de dar por terminados los arreglos, se recorre la app a mano como un usuario nuevo:
+- **en el mismo navegador,** sin limpiar sesiones entre un paso y otro, como lo hizo el usuario;
+- **a 1440 y a 390,** en la compu y en el teléfono;
+- **con correos de prueba propios,** nunca los del usuario.
+
+Lo hace Codex al cerrar y lo repite la Guía, con una captura de cada paso. Cada paso que se pueda automatizar, sin Google, queda también en el E2E real.
+
+1. **Persona sin cuenta:**
+   - en el inicio, tocar «Ingresar» y poner un correo sin cuenta: tiene que decir que no hay cuenta y ofrecer «Crear mi cuenta»;
+   - desde ahí, registrarse con el correo ya escrito, poner el código y llegar a su inicio.
+2. **Persona con cuenta:**
+   - «Crear mi cuenta» con el mismo correo: tiene que ofrecer «Ingresar»;
+   - ingresar con código;
+   - salir y volver a ingresar.
+3. **Google:** «Registrarte con Google» y «Seguir con Google» llevan a Google, en el registro de persona y en el de empresa, y nunca validan el correo. Este paso no va al E2E.
+4. **Empresa:**
+   - «Registrá tu empresa» con un correo nuevo y entrar como empresa;
+   - «Ingresá como empresa» con una persona sin empresa: muestra «Sin empresa»;
+   - con una con empresa: entra.
+5. **Operador y usuario en el mismo navegador:**
+   - el operador entra a Plataforma;
+   - en otra pestaña, «Ingresar» muestra el ingreso, una persona entra con otro correo, y Plataforma sigue abierta;
+   - el correo del operador en la puerta de persona pide el código como cualquier cuenta y, después del código, muestra la pantalla privada.
+6. **Mi cuenta:**
+   - poner nombre y apellido y guardar;
+   - agregar un correo con un solo código, el del correo nuevo;
+   - quitar un correo sin código;
+   - cambiar el principal sin código;
+   - con un correo que ya es de otra cuenta: lo dice.
+7. **«Recuperar mi cuenta»:** con un correo sin cuenta lo dice, y con un correo nuevo que ya es de otra cuenta, también.
+8. **Errores comunes:** un correo mal escrito, un código equivocado, un código vencido y pedir otro código antes de tiempo. Cada uno tiene que decir qué pasó y qué hacer, nunca «No pudimos iniciar tu sesión» sin salida.
+
+**Hecho cuando** los ocho pasos andan en la compu y en el teléfono. Las capturas van al usuario antes de decirle que está listo.
+
 ## Orden
 
 1. **Sin dibujos:** A3, A4, A5 y A7, que no esperan nada.
