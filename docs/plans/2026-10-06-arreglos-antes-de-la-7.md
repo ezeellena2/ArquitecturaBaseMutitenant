@@ -2,6 +2,17 @@
 
 > **Para Codex:** cada arreglo va con su rojo, su verde y su commit, como en los demás planes, con commits que nombran solo tus rutas (`git commit -m "…" -- <rutas>`). Todo en `main` y sin push. Lo que se ve en pantalla sale de su tablero: si el tablero todavía no está, frená y preguntale al usuario.
 
+**Tableros:** lienzo **v112, front `9c1c782`**, aprobado por el usuario el 2026-10-06.
+
+| Arreglo | Tablero | Tweak y estado |
+|---|---|---|
+| A1 | `Ingreso` y `M-Ingreso` | «estado» = «Operador: la cuenta entra por Plataforma». Es la pantalla de «Sin empresa» con «Esta cuenta es de un operador: solo entra a Plataforma», «Ir a Plataforma» (principal) y «Salir». |
+| A2 | `Ingreso` y `M-Ingreso` | «estado» = «Correo sin cuenta». Debajo del campo va «No hay una cuenta con ese correo.» y, abajo, «Crear mi cuenta» o «Registrá tu empresa», según el Tweak «puerta». No se manda código. |
+| A2 | `Registro` y `M-Registro` | «estado» = «Correo con cuenta». Debajo del campo va «Ya tenés una cuenta con ese correo.» y, abajo, «Ingresar». |
+| A2 | `Recuperar` y `M-Recuperar` | «paso» = «1. Sin cuenta con ese correo»: «No hay una cuenta con ese correo.». «paso» = «2. El correo nuevo ya es de otra cuenta»: «Ese correo ya es de otra cuenta.». |
+| A2 | `Cuenta-Agregar` y `M-Cuenta-Agregar` | «Correo: ya es de otra cuenta»: «Ese correo ya está asociado a otra cuenta.». |
+| A6 | `Cuenta` y `M-Cuenta` | En la compu, «Tus datos» va en una fila de cuatro columnas iguales: Nombre, Apellido, Idioma y región, Zona horaria. En el teléfono, uno debajo del otro. «Criterio · Formularios» dice «Nombre» en sus ejemplos. |
+
 Junta lo que apareció después de cerrar la Etapa 5: lo que el usuario encuentra al probar y lo que el usuario elija del informe de la [revisión de código](2026-10-06-revision-de-codigo.md). La Etapa 7 arranca con esta lista resuelta.
 
 ## A1 · El operador con su sesión abierta toca «Ingresar» (encontrado por el usuario el 2026-10-06)
@@ -160,7 +171,7 @@ Diseño la dibuja como estado de `Ingreso` y `M-Ingreso`.
 ## Orden
 
 1. **Sin dibujos:** A3, A4, A5 y A7, que no esperan nada.
-2. **Con los tableros de Diseño (v112):** A1, A2 y A6.
+2. **Con los tableros de la v112** (`9c1c782`, ya publicada): A1, A2 y A6.
 3. **Después:** la [revisión de código](2026-10-06-revision-de-codigo.md).
 
 Cada arreglo pasa su E2E real antes del siguiente commit de cierre.
