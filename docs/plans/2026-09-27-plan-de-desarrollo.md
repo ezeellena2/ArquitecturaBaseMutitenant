@@ -377,8 +377,9 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
      - el back pendiente de la 5 (T10 a T18);
      - la alineación del front: Paquete 2, punto 1.11, Paquete 4 con los teléfonos de v78 y Paquete 5, que es el A00 del plan de la 5;
   2. la consolidación;
-  3. las pantallas de la 5 (T19 a T25), que ya usan las piezas comunes y cierran la etapa;
-  4. la Etapa 7, que programa Codex, recién con la 5 cerrada. El 2026-10-04 el usuario pidió que antes de seguir quede todo hasta la 6 cerrado, documentado y alineado: pantallas, lienzo y una sola forma de programar.
+  3. las pantallas de la 5 (T19 a T25), que ya usan las piezas comunes y cierran la etapa. Las programa Codex desde el 2026-10-05;
+  4. la revisión de código de las etapas 1 a 6, que hace Codex con la [guía](2026-10-06-revision-de-codigo.md) (decisión del usuario del 2026-10-06), y los arreglos que el usuario apruebe;
+  5. la Etapa 7, que programa Codex, recién con la 5 cerrada y la revisión resuelta. El 2026-10-04 el usuario pidió que antes de seguir quede todo hasta la 6 cerrado, documentado y alineado: pantallas, lienzo y una sola forma de programar.
 
 ---
 
