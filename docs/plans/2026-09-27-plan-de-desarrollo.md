@@ -380,6 +380,19 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
   3. las pantallas de la 5 (T19 a T25), que ya usan las piezas comunes y cierran la etapa. Las programa Codex desde el 2026-10-05;
   4. la revisión de código de las etapas 1 a 6, que hace Codex con la [guía](2026-10-06-revision-de-codigo.md) (decisión del usuario del 2026-10-06), y los arreglos que el usuario apruebe;
   5. la Etapa 7, que programa Codex, recién con la 5 cerrada y la revisión resuelta. El 2026-10-04 el usuario pidió que antes de seguir quede todo hasta la 6 cerrado, documentado y alineado: pantallas, lienzo y una sola forma de programar.
+- **Estado (2026-10-06):** la Etapa 5 cerró y la Guía verificó la puerta. Todo hasta la 6 queda cerrado.
+  - back: build con 0 advertencias y `dotnet test` **1709/1709**;
+  - front: `npm test` **2001/2001**, lint y build en verde, y los contratos coinciden;
+  - E2E real **18/18**, con los cuatro recorridos de Plataforma;
+  - `realinear-docs --detectar` en 0.
+- **Pendiente de herramientas: el E2E en puertos propios** (pedido del usuario del 2026-10-06; se hace después de la revisión de código).
+  - **El problema:** el E2E levanta el mismo AppHost que el desarrollo, con los mismos puertos fijos: el panel de Aspire (17202 y 15399, OTLP 21265 y servicio 22198) y el front (5174). Solo PostgreSQL cambia (5435 contra 5434). Mientras corre el E2E, el usuario no puede levantar la aplicación desde Visual Studio.
+  - **El plan:**
+    - en modo E2E aislado, el AppHost usa otra tanda de puertos: panel, OTLP, servicio de recursos, Api, front y PostgreSQL;
+    - el script del E2E se los pasa al arrancar `aspire`;
+    - la dirección del front del E2E se suma a los orígenes y a las direcciones de vuelta permitidas del ingreso (OpenIddict y CORS);
+    - un test falla si el E2E y el desarrollo comparten un puerto.
+  - **Hecho cuando:** el usuario tiene la aplicación levantada desde Visual Studio y el E2E corre completo al mismo tiempo, sin choques.
 
 ---
 
