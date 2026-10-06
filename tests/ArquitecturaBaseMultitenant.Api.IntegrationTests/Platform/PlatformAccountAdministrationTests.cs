@@ -19,7 +19,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Platform;
 
-/// <summary>Consulta global de cuentas: estados derivados, tipos, búsqueda, conteos y ficha sin datos completos.</summary>
+/// <summary>Consulta global de cuentas: estados derivados, correo principal, conteos y métodos enmascarados.</summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class PlatformAccountAdministrationTests(ApiFactory factory)
 {
@@ -133,8 +133,8 @@ public sealed class PlatformAccountAdministrationTests(ApiFactory factory)
         using var activeResponse = await client.GetAsync($"/api/platform/accounts/{seeded.Active:D}", Ct);
         Assert.Equal(HttpStatusCode.OK, activeResponse.StatusCode);
         var activeJson = await activeResponse.Content.ReadAsStringAsync(Ct);
-        Assert.DoesNotContain(seeded.ActiveEmail, activeJson);
         var active = JsonDocument.Parse(activeJson).RootElement;
+        Assert.DoesNotContain(seeded.ActiveEmail, active.GetProperty("loginMethods").GetRawText());
         Assert.Equal("Active", active.GetProperty("state").GetString());
         Assert.Equal("Álvaro " + seeded.Prefix, active.GetProperty("displayName").GetString());
         var method = Assert.Single(active.GetProperty("loginMethods").EnumerateArray());
@@ -181,6 +181,7 @@ public sealed class PlatformAccountAdministrationTests(ApiFactory factory)
         var deleted = await GetAsync(client, seeded.Deleted.ToString("D"));
         Assert.Equal("Deleted", deleted.GetProperty("state").GetString());
         Assert.Equal("Cuenta eliminada", deleted.GetProperty("displayName").GetString());
+        Assert.Equal(JsonValueKind.Null, deleted.GetProperty("primaryEmail").ValueKind);
         Assert.Empty(deleted.GetProperty("loginMethods").EnumerateArray());
         Assert.Equal(JsonValueKind.Null, deleted.GetProperty("lastStateChange").ValueKind);
         await using var scope = isolated.Services.CreateAsyncScope();
@@ -196,6 +197,91 @@ public sealed class PlatformAccountAdministrationTests(ApiFactory factory)
 
         using var missing = await client.GetAsync($"/api/platform/accounts/{Guid.NewGuid():D}", Ct);
         Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Account_detail_returns_the_list_primary_email_to_a_read_only_operator(bool invitedOperator)
+    {
+        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var viewer = await AccountJourney.RegisterAsync(factory, client, Ct);
+        await PlatformOperators.GrantAsync(factory.Services, viewer.UserId, [PlatformPermissions.Accounts.Read], Ct);
+        await AccountJourney.AuthorizeAsync(client, "platform", Ct);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        var prefix = Guid.NewGuid().ToString("N");
+        var email = "principal-" + prefix + "@example.test";
+        var googleEmail = "contacto-" + prefix + "@example.test";
+        var account = ApplicationUser.Create(invitedOperator ? null : "Persona " + prefix, "es-AR", Zone).Value;
+        account.Email = email;
+        if (invitedOperator) account.InvitePlatformOperator(nowUtc.AddDays(7));
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+        {
+            db.Users.Add(account);
+            db.LoginMethods.Add(Method(account.Id, email, true, nowUtc, null));
+            db.LoginMethods.Add(LoginMethod.CreateGoogle(account.Id, "google-" + prefix, Email.Create(googleEmail).Value));
+            if (invitedOperator)
+                db.PlatformPermissionAssignments.Add(PlatformPermissionAssignment.Create(account.Id,
+                    [PlatformPermissions.Accounts.Read]).Value);
+            return Task.FromResult(Result.Success());
+        }, CommitPolicy.OnSuccess, Ct);
+
+        var row = Row(await GetAsync(client, "paged?search=" + Uri.EscapeDataString(email)), account.Id);
+        var detail = await GetAsync(client, account.Id.ToString("D"));
+        Assert.Equal(email, row.GetProperty("primaryEmail").GetString());
+        Assert.Equal(row.GetProperty("primaryEmail").GetString(), detail.GetProperty("primaryEmail").GetString());
+        Assert.Equal(invitedOperator ? "Invited" : "Active", detail.GetProperty("state").GetString());
+        Assert.Equal(invitedOperator ? "Operator" : "Person", detail.GetProperty("kind").GetString());
+        if (invitedOperator) Assert.Equal(JsonValueKind.Null, detail.GetProperty("displayName").ValueKind);
+        var methods = detail.GetProperty("loginMethods");
+        Assert.Equal(["Email", "Google"], methods.EnumerateArray().Select(method => method.GetProperty("type").GetString()));
+        Assert.DoesNotContain(email, methods.GetRawText());
+        Assert.DoesNotContain(googleEmail, methods.GetRawText());
+        Assert.All(methods.EnumerateArray(), method =>
+        {
+            Assert.False(method.TryGetProperty("value", out _));
+            Assert.Contains("•••", method.GetProperty("maskedValue").GetString());
+        });
+        Assert.False(detail.TryGetProperty("version", out _));
+    }
+
+    [Fact]
+    public async Task Account_detail_returns_null_without_a_primary_email_and_for_a_deleted_account_with_a_legacy_copy()
+    {
+        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var viewer = await AccountJourney.RegisterAsync(factory, client, Ct);
+        await PlatformOperators.GrantAsync(factory.Services, viewer.UserId, [PlatformPermissions.Accounts.Read], Ct);
+        await AccountJourney.AuthorizeAsync(client, "platform", Ct);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        var prefix = Guid.NewGuid().ToString("N");
+        var withoutPrimary = User("Sin principal " + prefix);
+        var deleted = User("Eliminada histórica " + prefix);
+        var legacyEmail = "historico-" + prefix + "@example.test";
+        deleted.Email = legacyEmail;
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+        {
+            db.Users.AddRange(withoutPrimary, deleted);
+            db.Entry(deleted).Property(user => user.Status).CurrentValue = UserStatus.Deleted;
+            db.LoginMethods.Add(Method(withoutPrimary.Id, "secundario-" + prefix + "@example.test", false, nowUtc, null));
+            return Task.FromResult(Result.Success());
+        }, CommitPolicy.OnSuccess, Ct);
+
+        var row = Row(await GetAsync(client, "paged?search=" + prefix), withoutPrimary.Id);
+        var detail = await GetAsync(client, withoutPrimary.Id.ToString("D"));
+        Assert.Equal(JsonValueKind.Null, row.GetProperty("primaryEmail").ValueKind);
+        Assert.Equal(JsonValueKind.Null, detail.GetProperty("primaryEmail").ValueKind);
+        Assert.False(Assert.Single(detail.GetProperty("loginMethods").EnumerateArray()).GetProperty("isPrimary").GetBoolean());
+        var deletedDetail = await GetAsync(client, deleted.Id.ToString("D"));
+        Assert.Equal("Deleted", deletedDetail.GetProperty("state").GetString());
+        Assert.Equal(JsonValueKind.Null, deletedDetail.GetProperty("primaryEmail").ValueKind);
+        Assert.DoesNotContain(legacyEmail, deletedDetail.GetRawText());
+        Assert.Equal(legacyEmail, await db.Users.Where(user => user.Id == deleted.Id).Select(user => user.Email).SingleAsync(Ct));
     }
 
     [Fact]

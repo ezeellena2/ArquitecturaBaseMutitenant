@@ -14,7 +14,7 @@ using Microsoft.Extensions.Logging;
 namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
 /// <summary>
-/// Consulta global de cuentas. El listado identifica la cuenta con su correo principal; la ficha muestra los
+/// Consulta global de cuentas. El listado y la ficha identifican la cuenta con su correo principal; la ficha muestra los
 /// métodos enmascarados, sus membresías desde el índice global y los permisos si es operadora.
 /// </summary>
 internal sealed class PlatformAccountService(IPlatformAccountReader reader, ILoginMethodReader methods,
@@ -61,7 +61,8 @@ internal sealed class PlatformAccountService(IPlatformAccountReader reader, ILog
 
             var deletion = !deleted && row.DeletionRequestedAtUtc is { } requested && row.DeletionScheduledForUtc is { } scheduled
                 ? new PlatformAccountDeletionResponse(requested, scheduled, row.DeletionRequestedByPlatform) : null;
-            return new PlatformAccountDetailResponse(account.Id, DisplayName(account), Kind(account), account.State,
+            return new PlatformAccountDetailResponse(account.Id, DisplayName(account), deleted ? null : account.PrimaryEmail,
+                Kind(account), account.State,
                 row.CreatedAtUtc, row.DeletedAtUtc, account.LastSignInAtUtc, account.LastSignInMethod, account.InvitationExpiresAtUtc,
                 account.HasPersonalSpace, deletion,
                 loginMethods, row.Organizations, deleted ? [] : await soleOwners.ListSoleOwnedOrganizationsAsync(accountId, ct),

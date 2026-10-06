@@ -55,8 +55,8 @@ public sealed record PlatformAccountKindCount(PlatformAccountKind Kind, int Coun
 public sealed record PlatformAccountFilterCounts(int Total, IReadOnlyList<PlatformAccountStateCount> States,
     IReadOnlyList<PlatformAccountKindCount> Kinds);
 
-/// <summary>Ficha: métodos enmascarados, membresías desde el índice global y permisos si es operador.</summary>
-public sealed record PlatformAccountDetailResponse(Guid Id, string? DisplayName, PlatformAccountKind Kind,
+/// <summary>Ficha: correo principal, métodos enmascarados, membresías globales y permisos si es operador.</summary>
+public sealed record PlatformAccountDetailResponse(Guid Id, string? DisplayName, Email? PrimaryEmail, PlatformAccountKind Kind,
     PlatformAccountState State, DateTime? CreatedAtUtc, DateTime? DeletedAtUtc, DateTime? LastSignInAtUtc, LoginAuditMethod? LastSignInMethod,
     DateTime? InvitationExpiresAtUtc, bool HasPersonalSpace, PlatformAccountDeletionResponse? Deletion,
     IReadOnlyList<PlatformAccountLoginMethodResponse> LoginMethods,

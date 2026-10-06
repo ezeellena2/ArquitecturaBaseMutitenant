@@ -14704,6 +14704,16 @@
               "string"
             ]
           },
+          "primaryEmail": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Email"
+              }
+            ]
+          },
           "kind": {
             "$ref": "#/components/schemas/PlatformAccountKind"
           },
@@ -14806,7 +14816,7 @@
             ]
           }
         },
-        "description": "Ficha: métodos enmascarados, membresías desde el índice global y permisos si es operador."
+        "description": "Ficha: correo principal, métodos enmascarados, membresías globales y permisos si es operador."
       },
       "PlatformAccountFilterCounts": {
         "required": [
