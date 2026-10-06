@@ -15,7 +15,7 @@ Este informe evalúa arquitectura, diseño y lectura. No es una auditoría exhau
 | Roles y permisos | Revisada | Back `96167f2`; front `9c1c782`; archivos del área sin cambios locales |
 | Organización: Usuarios, Empresas, Configuración, Página pública y Auditoría | Revisada | Back y front del mismo estado base; incluye el Inicio empresarial |
 | Plataforma | Revisada | Servicios, dominio, readers/controllers y features administrativas; archivos estables, posteriores al cierre de E5 |
-| Piezas comunes | Pendiente | `shared/` y `scripts/` del front; Common y Persistence del back |
+| Piezas comunes | Revisadas | `shared/` estable y scripts del front; Common y Persistence del back. Mi cuenta y los recorridos de identidad del runner esperan A1–A7 |
 | Identidad, ingreso, registro y Mi cuenta | En espera | Se lee al final, una vez commiteados A1 a A7 |
 
 Se excluyen migraciones, archivos generados, `docs/design/`, WhatsApp y la Etapa 7. Las ADR, las fichas y las decisiones de los planes se usan como criterio; no se denuncian como defectos por ser distintas de otra arquitectura. Los cambios locales del otro chat quedan fuera de nuestros commits.
@@ -88,6 +88,30 @@ Se excluyen migraciones, archivos generados, `docs/design/`, WhatsApp y la Etapa
 - **Decisiones:** la implementación actual cumple las decisiones 51 y 53 del [plan de pantallas de E5](../plans/2026-10-05-etapa-5-pantallas.md), que impidieron cambiar shared durante esa etapa. No se denuncia una falla de reintentos: se propone revisar ese límite de implementación para que la responsabilidad quede explícita y se entienda mejor. Las decisiones 44 (nombre de organización no único) y 46 (comparación de vigencia legal con el reloj del navegador) se conservaron y no se cuentan como hallazgos.
 - **Esfuerzo:** mediano.
 
+### Fechas civiles
+
+### R07 · «Ayer» se calcula como 24 horas atrás
+
+- **Importancia:** Conviene.
+- **Área:** Formato común; tarjeta de Auditoría en el Inicio.
+- **Dónde:** front `src/shared/format/formatters.ts:174`, resta fija en `:178`.
+- **Qué pasa:** `formatCalendar` compara el día local del dato con el de `now - 24 horas`. Ayer es el día civil anterior y no siempre está a 24 horas: con horario de verano puede tener 23 o 25. Comprobación de lectura con `Intl`: en `America/New_York`, `2026-03-09T04:30:00Z` es el 9 de marzo a las 00:30; restar 24 horas da el 7 a las 23:30. Un cambio del 8, que fue ayer, se muestra como fecha completa. El helper ya distingue instantes y fechas civiles, pero esta rama vuelve a mezclarlos.
+- **Propuesta:** obtener año/mes/día de hoy en la zona efectiva y restar un día de calendario, comparando esos componentes con los del dato. Mantener la resta de tiempo en `formatRelative`, donde sí se expresa tiempo transcurrido. Cubrir la rama con los cambios de horario de 23 y 25 horas en los tests existentes del formateador.
+- **Decisiones:** preserva [formatos.md](../../../ArquitecturaBaseMutitenantFront/docs/architecture/formatos.md), que define «hoy/ayer» en la zona de la persona, y [fechas y zonas](../rules/fechas-y-zonas.md). No cambia la presentación del tablero.
+- **Esfuerzo:** chico.
+
+### Scripts y reutilización
+
+### R08 · El motor de capturas quedó repartido entre entradas de distintas etapas
+
+- **Importancia:** Conviene.
+- **Área:** Scripts del front.
+- **Dónde:** `scripts/capturar-etapa-3a.mjs:216`, `scripts/capturar-etapa-5.mjs:636`, `scripts/capturar-relevamiento.mjs:83` y `scripts/capturar-f7.mjs:124` (capturador de consolidación, no Etapa 7); `scripts/recorrido-lienzo/vista.mjs:1` importa utilidades desde E3a.
+- **Qué pasa:** `capturar-etapa-3a` funciona a la vez como comando de esa etapa y como biblioteca general de servidor, mocks, acciones, fuentes, máscaras y rutas. A la vez, abrir y preparar un tablero vuelve a implementarse en E5, relevamiento y consolidación, con diferencias de espera, acciones y máscaras. Al corregir la preparación visual hay que decidir qué copia corresponde y qué consumidor hereda el cambio. Los grandes catálogos de estados no son el problema: son datos de prueba necesarios.
+- **Propuesta:** sacar servidor, acciones, preparación de tablero/app y composición a un módulo común de capturas, con opciones explícitas para las diferencias reales de readiness y máscara. Dejar cada entrada con sus casos/fixtures y CLI; separar también los fixtures reutilizados de E6 de su comando. Conservar los manifiestos, estados aprobados y tests del pipeline; no crear otro lenguaje de escenarios.
+- **Decisiones:** mantiene la reutilización de casos/respuestas acordada en consolidación y E5, la fuente única del lienzo y los capturadores reales. Cambia la ubicación de responsabilidades, no las referencias visuales ni el modo de probarlas.
+- **Esfuerzo:** mediano.
+
 ## Lo que está bien
 
 - **Roles y permisos:** `RoleService` es una referencia razonable para copiar: valida, abre una UoW, aplica reglas y traduce los choques de índices; invalida la caché después del commit. `RoleAssignment.Check` expresa dónde vale cada asignación y `RoleAssignmentGuard` permite reutilizarla. Los catálogos de permisos del dominio son intencionales. El front separa API, columnas, errores y lógica pura del selector; usa los hooks comunes de edición, concurrencia e idempotencia. No encontré una razón para reescribir esta área ni para crear más servicios intermediarios.
@@ -97,6 +121,8 @@ Se excluyen migraciones, archivos generados, `docs/design/`, WhatsApp y la Etapa
 - **Página pública:** contenido, logo y publicación tienen reglas en el dominio; el servicio/editor mantiene el guardado y la traducción de concurrencia. La vista previa reutiliza `PublicPageCard` y los formatos/telefonía comunes. No corresponde adelantar el storefront de E7.
 - **Auditoría e Inicio:** feed por cursor, traducción en Application y nombres cargados por lotes, sin una consulta por fila. `HomeService` recibe pendientes por `IPendingItemSource`; los helpers no abren transacciones propias. Los tamaños y colores de estas pantallas remiten al tablero y a tokens del tema: no se cuentan como números mágicos por el solo hecho de estar en clases de CSS.
 - **Plataforma:** las acciones globales y las que entran a una organización están diferenciadas. `PlatformActionGuard` tiene una responsabilidad concreta: autorización y SecurityEvent confirmado antes del scope y de la UoW; no sobra como simple pasamanos. Los writers y guards mantienen el caso de uso legible sin abrir transacciones propias. Organización reutiliza las verificaciones de dominios; operadores tienen permisos individuales y protección del último gestor; Legales publica versiones inmutables con culturas del catálogo y número bajo lock. Listados y conteos comparten filtros y las fichas usan evidencia persistida para fechas/estados. Las pestañas del front están separadas y las versiones propias de cada recurso no se reemplazan con un GET de fondo. No encontré motivos para cambiar las capas ni agregar CQRS.
+- **Comunes del back:** `UnitOfWork` expresa el único guardado y limpia el tracking tras rollback; `TenantContext`, los interceptores y los helpers RLS concentran la clasificación y el sello de pertenencia. Búsqueda, orden estable y cursor están centralizados en `QueryableExtensions`. Los trails auxiliares tienen tareas reconocibles y las excepciones técnicas se traducen en el límite correspondiente. `CultureProfiles` y `DisplayFormatter` derivan patrones y monedas del catálogo, con contexto explícito y métodos tipados. No propongo repositorio genérico ni una nueva capa de wrappers.
+- **Comunes del front y scripts:** API/error por campo, paginado, cursor y edición versionada tienen una forma compartida y comentarios que explican sus límites. `DataTable` y los campos reutilizan formatos y selectores; los tonos tienen registro único. Los formatos puros y parsers están separados de React, con datos de referencia y reglas de precisión explícitas. Los scripts de contratos separan generación de comprobación; la falta del repo hermano en CI es una excepción decidida, no un fallo omitido por accidente. Los puertos locales, datos del tablero, esperas de Playwright y constantes de formato tienen un contexto técnico concreto: no se reportan como configuración faltante por ser números fijos.
 
 ## Verificación del informe
 
