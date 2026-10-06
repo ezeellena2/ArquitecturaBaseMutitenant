@@ -115,11 +115,11 @@ Diseño la dibuja como estado de `Ingreso` y `M-Ingreso`.
 
 **Por qué no lo vimos:** el E2E no puede usar Google, y los tests del front revisan el formulario oculto pero no que el clic llegue a enviarlo.
 
-- [ ] **Rojo** (`SignupPage.test.tsx` y `BusinessSignupPage.test.tsx`): tocar el botón de Google con los términos aceptados manda el formulario de Google, no ejecuta la validación del correo y no muestra «Ingresá un correo electrónico válido.».
-- [ ] **Implementación:**
+- [x] **Rojo** (`SignupPage.test.tsx` y `BusinessSignupPage.test.tsx`): tocar el botón de Google con los términos aceptados manda el formulario de Google, no ejecuta la validación del correo y no muestra «Ingresá un correo electrónico válido.». Observado el 2026-10-06: **2 fallos y 16 verdes**, EXIT 1; ambos envíos llegaban con `defaultPrevented=true`. Evidencia FRONT: `.local/pre7/a4/unit-red.log`.
+- [x] **Implementación:** **23/23** en Google y los registros, más **30/30** de Ingreso; build, lint dirigido, sintaxis del runner y diff EXIT 0. El lint dirigido conserva tres advertencias anteriores de los efectos de `BusinessSignupPage`. Evidencias FRONT: `.local/pre7/a4/unit-green.log`, `login-scope.log`, `build-front.log`, `lint-front.log` y sus `.exit`.
   - el botón de Google y su formulario quedan **fuera** del formulario de correo en el árbol de React, como hermanos, con la casilla de términos compartida desde la página;
   - sin portal, y sin cortar la propagación con `stopPropagation`.
-- [ ] **E2E real:** tocar «Registrarte con Google» con los términos aceptados lleva a `accounts.google.com`. Se comprueba la dirección, sin ingresar a Google.
+- [x] **E2E real:** `MT_E2E_ONLY_CASE=A4`, `npm run test:e2e:real`, **2/2** (padre y recorrido), sin fallos, cancelados ni omitidos; EXIT 0, 65,7 s. «Registrarte con Google» y «Seguir con Google», con términos aceptados y correo vacío, envían POST real 302 y llegan a `accounts.google.com`, sin ingresar a Google ni imprimir URL/state. El primer intento en sandbox falló antes del recorrido al arrancar Aspire; se preservó en `real-a4-startup-failed.*` y la repetición autorizada pasó. Evidencia FRONT: `.local/pre7/a4/real-a4.log` y `.exit`; Aspire apagado (`ps=[]`, EXIT 0). Capturas de ambos registros a 1440 y 390 en FRONT `docs/design/capturas/consolidacion/pre7/registro/`.
 
 **Hecho cuando:** los dos botones de Google del registro llevan a Google y nunca validan el correo.
 
@@ -219,3 +219,4 @@ Se completa al verificar cada arreglo. Los logs locales conservan la salida y el
 | Arreglo | Rojo | Verde y alcance afectado | E2E real | Commits y capturas |
 |---|---|---|---|---|
 | A3 | 18 tests: 8 fallos, 10 verdes, 0 omitidos; EXIT 2; `.local/pre7/a3/integration-red.log`. | Dirigido 18/18; alcance inicial 284/286 con dos preparaciones HTTPS corregidas; final cambiado 58/58. Arquitectura 148/148; Application 28/28; build back 0 advertencias/errores; build front, lint dirigido y sintaxis del runner EXIT 0. | Focal `A3`: 2/2, 0 fallos/cancelados/omitidos, EXIT 0, 109,7 s. Dos pestañas y ambas salidas; FRONT `.local/pre7/a3/real-a3.log`. | BACK `30aea96`; FRONT `ac6a177`. No cambia una pantalla: convivencia verificada con las pantallas reales. |
+| A4 | 2 fallos y 16 verdes; EXIT 1; `.local/pre7/a4/unit-red.log` FRONT. | Google y registros 23/23; ingreso 30/30; build y lint dirigido EXIT 0 (3 advertencias previas en efectos de BusinessSignupPage). | Focal `A4`: 2/2, 0 fallos/cancelados/omitidos, EXIT 0, 65,7 s. Ambos registros llegan a Google sin correo escrito. Primer arranque fallido en sandbox preservado; repetición autorizada verde. | FRONT implementación `1865921`; capturas y manifiesto `d905057`: `docs/design/capturas/consolidacion/pre7/registro/`, 1440 y 390. |
