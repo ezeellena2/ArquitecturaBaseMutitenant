@@ -388,6 +388,8 @@ Avance T23b (Documentos legales): lista vigente/futura, resumen y editor propio 
 
 Avance T23c (Auditoría): back `d6f107f` y contrato `dfe15d5`; opciones globales con nombres actuales y filtros cruzados, sólo audit.read. UI lazy con búsqueda/filtros URL, cursor25, cinco columnas, detalle y hoja390; conserva mensajes y máscaras del backend. Rojo de ruta/montaje/conducta → feature15/15, rutas35/35 previo y guardas125/125; build/contratos/lint/diff0. Capturador54/54 después del rojo de colisión de ids E6/E5, conservando los de E5/vivo. Capturas6PNG/3pares, verify acumulado226/113, galería y vivo entregados. SPEC y CALIDAD frescas PASS, sin hallazgos abiertos; front `e91ba8c`, main sin push. Decisiones48–49 y diferencias comunes en el plan de pantallas. Las casillas generales de T23 esperan T23d.
 
+Avance T23d back: validador del límite1–50 inclusive y recurso es/en con el texto del tablero. Rojo10casos (6 pasan/4 fallan) → servicio/paridad16/16, HTTP PostgreSQL6/6 y mensajes2/2; buildApi0advertencias/0errores y diff0. La primera integración falló por permiso del pipe Docker (6 fallos de fixture, EXIT2); el verde corresponde al reintento autorizado. SPEC y CALIDAD frescas PASS, sin hallazgos abiertos; commit back `c8c9176`. Sin cambio del contrato, dominio ni gracia; decisión50 del plan de pantallas. Front pendiente.
+
 - [ ] Copiar todos los estados aprobados, decisión de recuperación con motivo, lectura/publicación legal/culturas, cursor y modal Audit aprobado (fecha al cuerpo; mobile hoja), settings/version/draft/409.
 - [ ] Ninguna pantalla por refinar se implementa antes de elección; todas las salidas reales vienen del contrato generado.
 - [ ] Tests dirigidos/lint/build por unidad. Commits separados por feature.
@@ -487,5 +489,6 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 | T23b | Feature54/54 anterior a SPEC, refetch12/12 y Back49/49 solapados; guardas161, build/contratos/lint/diff0. SPEC y CALIDAD finalesPASS. Capturas10/5, verify acumulado220/110, decisiones46–47 | — (API existente) | `5817985` |
 | T23c back y contrato | Opciones por destinos globales y filtros cruzados, sóloaudit.read; 10rojos404+1setup; HTTP41/42 y retestOpenAPI1/1, arquitectura66/66, buildApi0advertencias. SPEC/CALIDADPASS; contrato3rojos→112/112/build/check/lint0 | `d6f107f` | `dfe15d5` (contrato) |
 | T23c front | Feature15/15, rutas35/35 previo, guardas125/125, pipeline54/54, build/contratos/lint/diff0; SPEC/CALIDAD frescasPASS. Capturas6/3, verify226/113, decisiones48–49 | — (back previo) | `e91ba8c` |
+| T23d back | Rojo10casos6pass/4fail → servicio/paridad16/16, HTTP/PG6/6, mensajes2/2; buildApi0advertencias/errores y diff0. Docker inicialEXIT2 ambiental separado; SPEC y CALIDAD frescas PASS; decisión50 | `c8c9176` | — (contrato intacto) |
 
 No declarar cierre a partir de esta tabla sin completar T25.

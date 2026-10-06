@@ -594,7 +594,7 @@ Los textos de los enums van en `enums.json` (es y en): `TenantStatus`, `TenantRe
 | Ruta | Permiso | Manda | Recibe | Errores |
 |---|---|---|---|---|
 | `GET /api/platform/settings` | `settings.manage` | — | `consumerSignup` (`Open`/`Closed`), `businessSignup` (`Open`/`RequiresApproval`/`Closed`), `maxOwnedOrganizations`, `salesEmail`, `supportEmail`, `version` | 403 |
-| `PUT /api/platform/settings` | `settings.manage` | lo mismo, `version` y `reason` | 200 `VersionResponse` | 400 en su campo («Permití al menos una organización por persona.», «Ingresá un correo válido.», «Este campo es obligatorio.»); 409 en el `ConcurrencyBanner` |
+| `PUT /api/platform/settings` | `settings.manage` | lo mismo, `version` y `reason` | 200 `VersionResponse` | 400 en su campo («Usá un número de 1 a 50.», «Ingresá un correo válido.», «Este campo es obligatorio.»); 409 en el `ConcurrencyBanner` |
 
 ### Recuperar mi cuenta (sin sesión)
 
@@ -1006,7 +1006,7 @@ Commit `feat(plataforma): la auditoría de seguridad`.
 
 **Copiá de:** §9; `SettingsPage.tsx` (`useEditForm`, `useEditPage`, `Section`, el teléfono con `FixedActions`); `Select` con la explicación de cada opción; `NumberField`; `EmailField`; `ReasonDialog`.
 
-- [ ] **Primero, el back** («Para decidir» 10): «Organizaciones propias por persona» acepta de 1 a 50.
+- [x] **Primero, el back** («Para decidir» 10): «Organizaciones propias por persona» acepta de 1 a 50. **Evidencia:** `dotnet test --no-restore --project tests/ArquitecturaBaseMultitenant.Application.UnitTests/ArquitecturaBaseMultitenant.Application.UnitTests.csproj -- --filter-class '*PlatformSettingsServiceTests'` → rojo10casos (6 pasan/4 fallan), EXIT2:51 aceptado y mensaje anterior para0 en ambos idiomas. Verde servicio y ResourceParity **16/16**, HTTP PostgreSQL clase PlatformSettingsTests **6/6**, ValidationMessage **2/2**, EXIT0. La primera integración tuvo6 fallos de setup Docker en sandbox, EXIT2; se conserva como ambiental y se repitió con Docker autorizado. BuildApi0advertencias/0errores y diff-check0. Rango inclusivo y null conserva requerido; 0/51 no cambian estado, versión, contacto ni eventos. SPEC y CALIDAD frescas PASS, sin hallazgos abiertos; commit back `c8c9176`. Seis rutas propias, sin cambio de contrato; evidencia `.local/t23d-back/`, decisión50.
   - El validador va con el texto del tablero, «Usá un número de 1 a 50.», en es y en.
   - Lleva rojo y verde.
   - Es un commit back propio.
@@ -1183,6 +1183,8 @@ Y en las pantallas (T21 a T23): después de cada acción con versión, la base p
 
     **Piezas comunes:** se conserva `Todo` en el botón de FilterBar frente a «Período: todo» de la fuente, sin alterar la opción ni su orden; DataTable reparte/trunca sus columnas como el patrón de Auditoría business (fecha162 copiada literalmente), frente al grid del tablero. El detalle usa DetailGrid y Dialog/hoja intactos, con fecha en el cuerpo y Administración en teléfono (decisiones12–13). El error de la tabla sustituye temporalmente filas con Reintentar, conserva caché y recupera filas al reintentar. Radio, padding, SVG y menú comunes quedan tal cual, según Para Codex8.
 
+50. **Rango de organizaciones propias (T23d back):** se reemplaza la regla de mínimo por `InclusiveBetween(1, 50)` y se renombra el recurso de único consumidor a `OwnedOrganizationsRange`, con «Usá un número de 1 a 50.» y «Use a number from 1 to 50.». Null sigue dando el mensaje de requerido. Es una validación del request previa a la transacción; no cambia el dominio, la gracia ni la forma del contrato. El PUT de configuración lleva versión y motivo, sin clave de idempotencia; el front copia ese transporte real. La lectura global usa HybridCache, por lo que la UI debe conservar la versión de su respuesta propia ante un GET viejo.
+
 ## Para decidir (resuelto el 2026-10-05)
 
 Lo que el lienzo o los docs no resolvían. Cada punto empieza con lo **decidido**; lo que sigue es el porqué. Si la decisión y la recomendación no coinciden, manda lo decidido. Los puntos 1, 2, 6, 7 y 8 los dibuja Diseño en la v111 y se programan con esa versión.
@@ -1307,6 +1309,7 @@ Lo que el lienzo o los docs no resolvían. Cada punto empieza con lo **decidido*
 | T23b | — (API existente) | `5817985` | Feature54/54 previo, vida19 incluida; deltas refetch12/12 y Back49/49 solapados, guardas161/161, contratos/build/lint focal/diff0; lint global0 sin advertencias propias. SPEC y CALIDAD frescas finales PASS | 10PNG/5pares1440/390; verify acumulado220/110, galería y vivo entregados | Decisión46: vigente DTO/futura por fecha, culturas habilitadas y fecha civil; publicación nativa por borrador vigente, cancelación/Retry viejos inertes. Diferencias comunes conservadas; columnas propias reparadas con TDD. |
 | T23c back y contrato | `d6f107f` | `dfe15d5` | Rojo10/11por404+1setup; HTTP41/42 y retestOpenAPI1/1, sin corrida integral42/42; arquitectura66/66, buildAPI0advertencias. Contrato3rojos→112/112, build/check/lint0; SPEC/CALIDAD backPASS. | Opciones `{ id, name }` distintas y completas con filtros cruzados, sólo audit.read. | UI y6PNG/3pares completados en la fila T23c; decisión48 y ejemplos49. |
 | T23c | — (back y contrato en la fila anterior) | `e91ba8c` | Rojo de ruta y conducta → feature15/15; rutas35/35 previo, guardas125/125; build/contratos/lint/diff0. Capturador54/54 después del rojo de colisión. SPEC y CALIDAD frescas PASS. Detector0auto/1modelo/0humano EXIT2 heredado. | 6PNG/3pares1440/390: lista, filtro y detalle/hoja; verify226/113; galería y vivo entregados. | Decisiones48–49; datos compatibles, 25filas/cursor real, shared intacto. MarcoT20 parcial hastaT24; no cierreE5. |
+| T23d back | `c8c9176` | — (contrato sin cambios) | Rojo10casos6pass/4fail → servicio+resources16/16, HTTP/PG6/6 y ValidationMessage2/2; buildApi0advertencias/errores, diff0. Fallo ambiental inicial Docker6/6 EXIT2 separado. SPEC y CALIDAD frescas PASS. | — (validador, sin UI) | Rango1–50, recursos es/en, sin efectos por0/51/null; decisión50. |
 | T23d | | | | | |
 | T24 | | | | | |
 | T25 | | | | | |
