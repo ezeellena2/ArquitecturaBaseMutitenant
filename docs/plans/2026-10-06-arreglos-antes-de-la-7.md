@@ -151,7 +151,7 @@ Diseño la dibuja como estado de `Ingreso` y `M-Ingreso`.
 
 - [ ] **Back:**
   - nombre y apellido por separado en la identidad, con su migración (la primera palabra al nombre y el resto al apellido);
-  - el nombre para mostrar se arma en un solo lugar;
+  - el nombre para mostrar se arma en un solo lugar. **Conservá `DisplayName` como ese nombre armado**, así no cambian las lecturas que hoy lo muestran: son unos 77 archivos del back y 42 del front. Solo cambian la identidad, la edición de `/api/me`, la migración, la semilla, Google y el formulario de Mi cuenta;
   - los contratos de `/api/me` y de las lecturas con nombres;
   - la semilla del operador;
   - rojo y verde de cada parte.
