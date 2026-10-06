@@ -400,11 +400,11 @@ Corrección de revisión final T19–T23: Retry viejo de Configuración adoptaba
 
 ### T24 · Documentación y capturas comparadas
 
-Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías afectadas, AGENTS/CLAUDE nuevos, `docs/reviews/2026-10-03-etapa-5-plataforma.md`; front scripts/capturar-etapa-5.mjs y docs/design/capturas/etapa-5/.
+Archivos: `docs/features/plataforma.md`, identidad/reglas/árbol y punteros afectados, `docs/reviews/2026-10-05-etapa-5-pantallas.md`; front scripts/capturar-etapa-5.mjs y docs/design/capturas/etapa-5/. Evidencia detallada en [T24 del plan de pantallas](2026-10-05-etapa-5-pantallas.md#t24--documentación-y-capturas-comparadas).
 
-- [ ] Completar ficha/rutas/permisos/roles/estados/razones/eventos/recuperación/baja; actualizar pasos módulo/permiso nuevo y punteros existentes de E5.
-- [ ] Comparar cada estado nuevo o modificado real y lienzo a 1440×900 y 390×844; filtros y listas con 1 y 50 elementos, diálogos, errores y vacíos. Usar datos propios de base aislada, no Development.
-- [ ] Corregir diferencias; registrar motivo y aceptación de toda desviación que cambie diseño. Inventarios de contratos/HTTP actualizados, sin nuevas guardas innecesarias.
+- [x] Completar ficha/rutas/permisos/estados/razones/eventos/recuperación/baja y punteros E5. Evidencia: fichas Plataforma/Identidad, árbol, cinco reglas front y punteros públicos actualizados; detector0 ambos,0tokens, Node45/45 (`b1965b9`).
+- [x] Comparar los diez grupos a1440×900 y390×844, listas/diálogos/errores/vacíos. Evidencia:238PNG fuente y238comparadas,119pares y frescura238/238; fixtures aislados, nunca Development. Marco completo. Pipeline56/56/lint0. Seis fallos iniciales y recapturas focales exitosas conservados, no verde ficticio.
+- [x] Corregir diferencias o registrar motivo/criterio aprobado. Evidencia: reporte visual2026-10-05, a88a96a y ParaCodex;85referencias base identificadas y piezas comunes intactas. Contratos/HTTP vigentes; no revisión de código nueva. T25/E5 siguen abiertos.
 
 ### T25 · E2E completo y puerta de cierre
 
@@ -496,5 +496,7 @@ Archivos: `docs/features/plataforma.md`, identidad/organizaciones/reglas/guías 
 | T23d back | Rojo10casos6pass/4fail → servicio/paridad16/16, HTTP/PG6/6, mensajes2/2; buildApi0advertencias/errores y diff0. Docker inicialEXIT2 ambiental separado; SPEC y CALIDAD frescas PASS; decisión50 | `c8c9176` | — (contrato intacto) |
 | T23d front | Feature46/46 previo; SPEC descarte rojo2→delta5/5+relacionados6/6, sin integral50; guardas57/60EXIT1 reparadas por deltas37+puntero1, build/check/lint/diff0; SPEC/ReSPEC y CALIDAD PASS. CI cruzado rojoENOENT→1pass1skip+aviso y local2/2cadaAPI, decisiones51–52. Capturas12/6 y verify238/119; detector1347EXIT2 heredado | — (back previo) | `429a95a`; puntero `01c36e4`; CIlegal `a60f833` |
 | Revisión final T19–T23 | P2 Retry rojo2failed/22skipped →vida24/24, build/lint/diff0; ReSPEC→reCALIDAD y relectura final PASS; decisión53. Dueño inmutable y época de submit, sin cambio visible ni suma de suites; T24/T25 pendientes | — (registro en plan de pantallas) | `39f8206` |
+
+| T24 | Fichas/árbol/punteros/reporte visual; fuente y comparación238/119, frescura238/238; detector0 ambos con0tokens, Node45/45, pipeline56/56/lint0. Fallos iniciales y recapturas registrados; T25 abierto | `b1965b9`; documentación en este commit | `4ce8c83` |
 
 No declarar cierre a partir de esta tabla sin completar T25.

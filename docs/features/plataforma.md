@@ -2,6 +2,26 @@
 
 Administración global operada con `access=platform`, separada de la administración Business de cada organización. El desarrollo y su puerta están en el [plan de E5](../plans/2026-10-03-etapa-5-plataforma.md); E5 permanece abierta hasta completar esa puerta.
 
+## Pantallas, rutas y estados (T19–T23)
+
+Las nueve páginas de Plataforma se montan lazy desde el manifiesto `src/layouts/navigation/platform.ts` del front. El permiso de entrada se aplica al enlace y a la ruta; las acciones y los grupos restringidos conservan su permiso propio. Los estados visuales de carga, error con reintento, vacío y sin coincidencias se usan donde corresponden; una ficha inexistente muestra la pantalla común de no encontrado y una ruta sin permiso, la de permiso denegado dentro del marco.
+
+| Pantalla | Ruta del front | Permiso de entrada | Estados y límites |
+|---|---|---|---|
+| Organizaciones | `/plataforma` | `platform.tenants.read` | Activa, Espera aprobación, Suspendida, Cerrada y Falló el alta; crear/transicionar/reintentar exige `platform.tenants.manage`. |
+| Organización | `/plataforma/organizaciones/:id` | `platform.tenants.read` | Los mismos estados; Historial, Dueños y Módulos; Dominio verificado y Página pública exigen `platform.tenants.manage`. Módulos se oculta con catálogo vacío. |
+| Cuentas | `/plataforma/cuentas` | `platform.accounts.read` | Activa, Suspendida, Necesita recuperación, Baja pedida, Eliminada e invitación de operador pendiente/vencida. Acciones con `platform.accounts.manage`; invitaciones con `platform.operators.manage`. |
+| Cuenta | `/plataforma/cuentas/:id` | `platform.accounts.read` | Métodos tapados y Organizaciones para persona; Permisos para operador/invitación. Historial de seguridad exige `platform.audit.read`; cambiar/quitar operador exige `platform.operators.manage`. |
+| Recuperaciones | `/plataforma/recuperaciones` | `platform.recoveries.manage` | Pendiente con cuenta o sin cuenta, Aprobado y Rechazado; sin cuenta sólo Rechazar. Pedidos vacíos y sin coincidencias no llevan pie de paginación. |
+| Documentos legales | `/plataforma/legales` | `platform.legal.manage` | Versión vigente y próxima futura, diferenciadas por la evidencia del contrato. |
+| Publicar versión nueva | `/plataforma/legales/nueva` | `platform.legal.manage` | Fecha civil y texto por cultura habilitada, errores de campo, cambios sin guardar y confirmación sin motivo. |
+| Auditoría | `/plataforma/auditoria` | `platform.audit.read` | Búsqueda/filtros, cursor sin total, detalle en diálogo u hoja móvil; los ingresos no inventan IP. |
+| Configuración | `/plataforma/configuracion` | `platform.settings.manage` | Cinco campos de Registro y altas/Contacto, sin cambios/con cambios, validación, motivo y conflicto 409. La gracia fija de baja queda fuera del editor. |
+| Más (teléfono) | `/plataforma/mas` | Sesión `access=platform` | Identidad, Administración según permisos, Mi cuenta y Salir. No requiere un permiso de sección. |
+| Recuperar mi cuenta | `/recuperar` | Pública, sin sesión | Correo anterior, correo nuevo/código y pedido recibido; variante v111 Sin WhatsApp hasta E8. |
+
+La fuente es el lienzo v111 aprobado en `a88a96a`; las diferencias de formas comunes, datos y referencias base están en la [comparación visual de T24](../reviews/2026-10-05-etapa-5-pantallas.md). Su autorización se conserva como quedó escrita en el plan; la aceptación de la galería final y la puerta completa se registran al completar T24/T25.
+
 ## Operadores y permisos
 
 Una cuenta operadora tiene permisos individuales, elegidos de a uno entre las nueve claves de `PlatformPermissions` (decisión del usuario del 03/10). No hay roles de Plataforma: Owner y Support se retiraron en R00. Los permisos de Plataforma son independientes de los roles privados de organización.
@@ -147,6 +167,8 @@ La lista de Plataforma conserva la versión vigente que informa el backend y pre
 La pantalla `/plataforma/auditoria` conserva búsqueda y filtros en la URL, Últimos30días por defecto, opciones sin cantidades y tandas de25 con cursor opaco y Cargar más. Las cinco columnas y el detalle presentan directamente el resumen, destino, actor, motivo e IP del contrato, sin reconstruir mensajes desde action. El detalle incluye la fecha en el cuerpo y es una hoja en teléfono; cambiar filtros abandona la selección. Organización usa las opciones de auditoría bajo el mismo permiso, sin pedir la lectura de organizaciones. Los ingresos siguen sin IP y los nombres sin evidencia usan el vacío común. Los ejemplos de captura son compatibles con los productores actuales; las diferencias de las piezas comunes están registradas en el plan de pantallas.
 
 ## Verificación de accesos y flujos
+
+En el front, `RecoverAccountPage.test.tsx` verifica los tres pasos públicos, nonce, reintento y abandono; las páginas de Organizaciones/Cuentas/Recuperaciones prueban permisos, estados, filtros, diálogos, versiones respondidas e idempotencia. `LegalDocumentsPage.test.tsx`, `PublishLegalVersionPage.test.tsx`, `LegalRefetch.test.tsx` y `LegalBack.test.tsx` cubren vigencia, publicación, caché y salida. `SecurityAuditPage.test.tsx` verifica cursor, filtros y detalle; `PlatformSettingsPage.test.tsx`, `PlatformSettingsPage.lifetime.test.tsx` y `SettingsRoutes.test.tsx`, los cinco campos, 409, descarte y vida de los Retry. Las pruebas de pantalla incluyen culturas, 390 y axe en el alcance que registra cada tarea. La evidencia por unidad vive en el [plan de pantallas](../plans/2026-10-05-etapa-5-pantallas.md#registro-de-resultados); T25 añade el recorrido real y la puerta global.
 
 Los `SecurityEvent` de configuración, módulos, cambios de estado y moderación conservan el diff técnico de claves con `before`/`after`, el destino de organización o cuenta y la IP enmascarada. El diff solo admite booleanos, cantidades, enums y UTC; omite valores iguales y no recibe nombre, correo, dominio ni contenido de la página. El motivo interno va aparte. Las entradas técnicas sin modificación conservan un diff vacío; un retry que no cambia el estado no inventa una transición.
 

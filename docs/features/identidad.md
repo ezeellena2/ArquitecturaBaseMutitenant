@@ -27,9 +27,11 @@ La gestión conserva `LoginMethods.Value` como clave global del método. En Goog
 
 `/cuenta` conserva el acceso actual y permite editar nombre, cultura y zona con la `version` de `/api/me`, que es la de «Tus datos» y no la de la fila de la cuenta: no cambia con el contacto principal, la última organización, las sesiones ni los intentos fallidos ([concurrencia](../rules/concurrencia.md)). El guardado responde la versión nueva; un 409 conserva el borrador hasta que se elija «Ver lo nuevo» o «Seguir editando». El idioma cambia después de guardar. «Mi cuenta» aparece en el menú de identidad y en la navegación personal dibujada en el lienzo.
 
-El `email` de `/api/me` es el del perfil activo, el que muestra el menú (el pie en la compu, «Más» en el teléfono): en una organización, el correo verificado que ella administra y, si no hay, el principal; en el perfil personal, el principal (lienzo v99, `ProfileServiceTests`).
+El `email` de `/api/me` es el del perfil activo, el que muestra el menú (el pie en la compu, «Más» en el teléfono): en una organización, el correo verificado que ella administra y, si no hay, el principal; en Personal y Plataforma, el principal (lienzo v99, `ProfileServiceTests`).
 
 `effectivePermissions` de `/api/me` separa `organization`, `companies` y `platform`. La última lista contiene la asignación persistida del operador únicamente con `access=platform`, sin caché; en los otros accesos queda vacía. Un operador suspendido, con invitación pendiente o sin asignación tampoco recibe permisos. La lista plana `permissions` conserva los permisos de organización. La composición de estas tres listas vive en `ProfileEffectivePermissionsBuilder`, para mantener el tope de ocho dependencias de negocio de `ProfileSnapshotBuilder` (ADR 0039).
+
+El front consume esa lista con `canPlatform`: el manifiesto único comparte permisos entre rutas lazy, paneles y barra inferior. El operador conserva Plataforma al recargar, ve Mi cuenta y Salir sin Perfiles, y su inicio abre la primera sección permitida. `MeTests`, `ProfileServiceTests` y `PlatformPermissionServiceTests` verifican la lectura persistida; el contrato generado y `usePermissions.test.ts` del front verifican `effectivePermissions.platform`, incluida la lista vacía de Consumer/Business (E5).
 
 | Operación | Ruta |
 |---|---|
@@ -78,6 +80,8 @@ Cada navegación a otra invitación monta un flujo nuevo: aceptación, consentim
 ## E5 · Recuperación pública
 
 Ambas puertas de Ingreso llevan a `/recuperar`, pública y sin exigir un acceso. La variante v111 «Sin WhatsApp» pide el correo anterior, un correo nuevo distinto y la verificación del nuevo por código; registra el pedido para revisión de Plataforma y muestra la misma confirmación exista o no la cuenta. No entrega una sesión. Las tres llamadas usan un nonce de 32 bytes por recorrido, solo en memoria, y claves de idempotencia que se conservan al reintentar por red la misma operación con los mismos datos; corregirlos o abandonar el paso renueva la clave. Contratos, límites y revisión: [Plataforma · Recuperar mi cuenta](plataforma.md#recuperar-mi-cuenta-pedido-público).
+
+`RecoverAccountPage.tsx` se carga lazy sin `AccessRoute`; el código es un paso del mismo formulario, sin ruta propia. Llama a `POST /api/account-recovery/code` (202 con espera), `POST /api/account-recovery/verify` (204) y `POST /api/account-recovery` (202). Conserva la prueba verificada si se pierde la respuesta del pedido final y reintenta sólo ese pedido. Los errores se ubican por `code` y por campo; el correo repetido vuelve al paso del correo nuevo. Incluye espera/reenvío, código incompleto o incorrecto, errores de red y confirmación «Recibimos tu pedido»; volver, cancelar o cambiar de recorrido abandona sus respuestas anteriores. El teléfono usa las piezas del ingreso a 390. `RecoverAccountPage.test.tsx`, `LoginPage.test.tsx` y `useIdempotentMutation.test.ts` del front, junto con `AccountRecoveryTests` del back, cubren esos recorridos (E5). La [comparación visual de T24](../reviews/2026-10-05-etapa-5-pantallas.md) registra las piezas comunes y la variante autorizada.
 
 ## Reglas de implementación
 

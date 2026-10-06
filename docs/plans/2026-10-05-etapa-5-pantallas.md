@@ -1023,7 +1023,7 @@ Commit `feat(plataforma): la configuración de la plataforma`.
 - back: `docs/features/plataforma.md` (las pantallas, rutas, permisos y estados), `docs/features/identidad.md` (la recuperación pública y `/api/me`), el [plan de la E5](2026-10-03-etapa-5-plataforma.md) (casillas de T19 a T25 con la referencia a este plan) y `docs/reviews/2026-10-05-etapa-5-pantallas.md` (diferencias visuales y su aceptación);
 - front: `docs/architecture/arbol.md` (las carpetas reales de `areas/platform/`, `shared/platform/`, `RecoverAccountPage.tsx` y lo que salió de su lugar en T20d; la línea de `PlatformSettingsPage` deja de decir «días de gracia»), las fichas cuyo «Lo verifica» o «Copiá de» cambian (con la marca `(E5)`), los `AGENTS.md`/`CLAUDE.md` nuevos y `docs/design/capturas/etapa-5/`.
 
-- [ ] **Las capturas finales** (`capturar-etapa-5.mjs` y `capturar-relevamiento.mjs --out docs/design/capturas/etapa-5/lado-a-lado`), a 1440 × 900 y 390 × 844, de cada caso:
+- [x] **Las capturas finales** (`capturar-etapa-5.mjs` y `capturar-relevamiento.mjs --out docs/design/capturas/etapa-5/lado-a-lado`), a 1440 × 900 y 390 × 844, de cada caso. **Evidencia:** fuente238 y comparación238, verify EXIT0; frescura238/238 ids exitosos de T24,119pares. Marco con pantallas completas. Pipeline56/56, lint0. Corrida inicialEXIT1 (seis casos); reparación focal del marco y recaptura del menú de invitación, todas las imágenes finales exitosas. Logs separados FRONT `.local/t24/`; decisiones54–55, sin sumar suites ni convertir la primera corrida en verde:
 
   | Grupo | Casos |
   |---|---|
@@ -1038,8 +1038,8 @@ Commit `feat(plataforma): la configuración de la plataforma`.
   | `plataforma-configuracion` | sin cambios; con cambios; errores; confirmación; 409 |
   | `recuperar` | paso × los tres; código; enlace en Ingreso |
 
-- [ ] Cada diferencia con el tablero se corrige o queda en la revisión con su motivo y la aceptación del usuario. Los datos, de una base aislada, nunca de Development.
-- [ ] `realinear-docs --detectar` en 0.
+- [x] Cada diferencia con el tablero se corrige o queda en la revisión con su motivo y la aceptación del usuario. **Evidencia:** `docs/reviews/2026-10-05-etapa-5-pantallas.md`, fichas Plataforma/Identidad, árbol y cinco fichas front actualizados. Fuente v111 y criterio común aprobados en a88a96a y Para Codex; referencias base explícitas. Fixtures aislados del capturador, nunca Development; el E2E sin mocks pertenece a T25.
+- [x] `realinear-docs --detectar` en 0. **Evidencia:** ambos repos EXIT0, auto/modelo/humano0/0/0,0tokens. Corrección legítima de funciones locales TS/TSX `b1965b9`: rojo1→focal1/1, Node45/45. Reportes separados BACK `.local/t24-back/detector-{back,front}-report.{md,json}`; sin ignorados nuevos.
 
 Commit back `docs(plataforma): las pantallas de la Etapa 5`; front `docs(plataforma): árbol, fichas y capturas de la Etapa 5`.
 
@@ -1291,6 +1291,9 @@ Lo que el lienzo o los docs no resolvían. Cada punto empieza con lo **decidido*
 
 ---
 
+54. **Detector de funciones locales:** `simbolos.mjs` indexa declaraciones `function` TS/TSX además de exports; no ignora nombres ni incorpora `.d.ts`. Rojo del falso positivo OrganizationStatusDialog y hook local →verde dirigido1/1 y Node45/45, conservando controles inexistentes. Commit `b1965b9`; ambos detectores0 con0tokens.
+55. **Marco final y frescura de capturas:** se monta cada ruta completa con los fixtures del capturador existente. Gestión espera Grupo Delta de la respuesta; el menú abierto espera su rol accesible, porque su capa modal oculta el heading. Rojo→pipeline56/56. Se cruzan los logs exitosos actuales con todos los ids,238/238, antes de publicar galería119pares; las recapturas focales reparan la primera corrida fallida sin inventar un EXIT0 integral. No cambia producto, shared ni lienzo.
+
 ## Registro de resultados
 
 | Tarea | Commit back | Commit front | Evidencia (comandos y resultados) | Capturas enviadas | Notas |
@@ -1318,7 +1321,7 @@ Lo que el lienzo o los docs no resolvían. Cada punto empieza con lo **decidido*
 | T23d back | `c8c9176` | — (contrato sin cambios) | Rojo10casos6pass/4fail → servicio+resources16/16, HTTP/PG6/6 y ValidationMessage2/2; buildApi0advertencias/errores, diff0. Fallo ambiental inicial Docker6/6 EXIT2 separado. SPEC y CALIDAD frescas PASS. | — (validador, sin UI) | Rango1–50, recursos es/en, sin efectos por0/51/null; decisión50. |
 | T23d | — (back `c8c9176` en fila previa) | `429a95a`; puntero `01c36e4` | Rojo campos/vida/motivo y descarte →feature46/46 previo, delta5/5 y relacionados6/6; guards57/60 EXIT1 reparado por37/37+puntero1/1, sin sumar ni inventar integral. Build/check/lint/diff0; SPEC/ReSPEC y CALIDAD PASS. Pipeline56/56+nota1/1. | 12PNG/6pares1440/390; verify238/119, galería y vivo entregados. | Decisión51, cinco campos/version/motivo, guardas nativas, GETviejo protegido y última lectura al descarte. Diferencias comunes registradas. CI cruzado corregido, decisión52; Legal aparte `a60f833`. Detector1347EXIT2 falso positivo heredado; E5 abierta hastaT24/T25. |
 | Revisión final T19–T23 | — (registro en este plan) | `39f8206` | P2 Retry nativo: rojo2failed/22skipped →vida24/24 EXIT0; build/lint/diff0. ReSPEC→reCALIDAD y relectura final PASS, sin hallazgos abiertos. Informes `.local/t23d/{spec-review,quality-review}.md` y `.local/etapa-5/final-review.md`; comandos/logs arriba y decisión53. | Sin cambio visible; permanecen los119pares verificados y los seis pares de Configuración entregados a1440/390 con vivo. | Guarda inmutable por Mutation y época de submit, sin nuevos protocolos ni shared. No sumar suites ni declarar52integral; detector heredadoEXIT2 y marcoT20 parcial se conservan. T24/T25 y E5 siguen abiertos. |
-| T24 | | | | | |
+| T24 | Detector `b1965b9`; documentación en este commit | `4ce8c83` | Docs/features/árbol/fichas/punteros actualizados; detector rojo1→verde1 y Node45/45; detectar0 ambos,0tokens. Pipeline56/56/lint0. Fuente/comparación verify238 cada una y frescura238/238,119pares; `.local/t24/` y BACK `.local/t24-back/`. | Galería final119pares de los diez grupos, marco completo a1440/390 y vivo entregados; referencias base explícitas. | Revisión visual documentada, criterio aprobado, sin revisión de código nueva. Seis fallos iniciales conservados y recapturas exitosas; T25/E5 abiertos. |
 | T25 | | | | | |
 
 **Para decidir que aparezca al programar** (medidas o formas del tablero que no coinciden con una pieza común, y estados que falten): se anota acá, con el tablero, el caso y la pieza, y se le muestra al usuario.
