@@ -52,10 +52,24 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
             .Select(user => new
             {
                 user.CreatedAtUtc,
+                user.DeletedAtUtc,
                 user.DeletionRequestedAtUtc,
                 user.DeletionScheduledForUtc,
                 RequestedByPlatform = user.DeletionRequestedByOperatorId != null,
             }).SingleAsync(ct);
+        // Sólo una transición de estado con evidencia efectiva para esta cuenta. Los ingresos, métodos,
+        // permisos, sesiones y eventos históricos o replays sin cambio no reemplazan esa evidencia.
+        var state = await context.SecurityEvents.FromSql($"""
+            SELECT * FROM platform."SecurityEvents"
+            WHERE "TargetAccountId" = {accountId}
+              AND "Changes" -> 'status' ->> 'after' IS NOT NULL
+              AND ("Changes" -> 'status' ->> 'before') IS DISTINCT FROM ("Changes" -> 'status' ->> 'after')
+            """).AsNoTracking()
+            .Where(item => item.Type == SecurityEventType.AccountSuspended || item.Type == SecurityEventType.AccountReactivated
+                || item.Type == SecurityEventType.AccountDeletionRequested || item.Type == SecurityEventType.AccountDeletionCancelled
+                || item.Type == SecurityEventType.AccountDeleted)
+            .OrderByDescending(item => item.OccurredAtUtc).ThenByDescending(item => item.Id)
+            .Select(item => new PlatformAccountStateChangeRow(item.OccurredAtUtc, item.Type, item.Reason)).FirstOrDefaultAsync(ct);
         var organizations = await (
             from access in context.UserTenantAccesses.AsNoTracking()
             join tenant in context.Tenants.AsNoTracking() on access.TenantId equals tenant.Id
@@ -71,7 +85,7 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
         var assignment = account.IsOperator
             ? await context.PlatformPermissionAssignments.AsNoTracking().SingleOrDefaultAsync(row => row.UserId == accountId, ct)
             : null;
-        return new PlatformAccountDetailRow(account, identity.CreatedAtUtc, identity.DeletionRequestedAtUtc,
+        return new PlatformAccountDetailRow(account, identity.CreatedAtUtc, identity.DeletedAtUtc, state, identity.DeletionRequestedAtUtc,
             identity.DeletionScheduledForUtc, identity.RequestedByPlatform, organizations,
             assignment is null ? null : [.. assignment.Permissions], assignment?.Version);
     }

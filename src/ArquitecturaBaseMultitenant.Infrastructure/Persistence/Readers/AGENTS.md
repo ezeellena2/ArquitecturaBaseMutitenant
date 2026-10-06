@@ -3,3 +3,4 @@ Readers de EF: consultas `AsNoTracking`, proyección a contratos de Application 
 Antes de editar, leé: [datos-de-referencia](../../../../docs/rules/datos-de-referencia.md) · [persistencia-ef](../../../../docs/rules/persistencia-ef.md) · [multitenancy](../../../../docs/rules/multitenancy.md).
 
 Copiá de: `RoleReader.cs` y `CompanyReader.cs` para un listado (`SortMap`, `ApplySearch`, `ToPagedResultAsync` y desempate por Id); `ReferenceDataReader.cs` para catálogos globales con caché en otro scope. Lo verifican `PaginationTests`, `SearchTests` y `Api.IntegrationTests/Persistence/ReferenceDataReaderTests.cs`.
+`PlatformAccountReader` lee LastStateChange de SecurityEvents globales por TargetAccountId, con lista cerrada de transiciones y status.after distinto de status.before; ordena por OccurredAtUtc e Id descendentes. DeletedAtUtc sale de la identidad. No estima evidencia ni abre ITenantScope.

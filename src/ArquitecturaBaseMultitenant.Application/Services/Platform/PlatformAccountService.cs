@@ -46,6 +46,7 @@ internal sealed class PlatformAccountService(IPlatformAccountReader reader, ILog
             var row = await reader.FindAsync(accountId, availability.SignInTypes(), clock.GetUtcNow().UtcDateTime, ct);
             if (row is null) return UserErrors.NotFound;
             var account = row.Account;
+            var state = row.LastStateChange;
             var deleted = account.State == PlatformAccountState.Deleted;
             var loginMethods = new List<PlatformAccountLoginMethodResponse>();
             foreach (var method in (await methods.ListByUserIdAsync(accountId, ct))
@@ -61,10 +62,12 @@ internal sealed class PlatformAccountService(IPlatformAccountReader reader, ILog
             var deletion = !deleted && row.DeletionRequestedAtUtc is { } requested && row.DeletionScheduledForUtc is { } scheduled
                 ? new PlatformAccountDeletionResponse(requested, scheduled, row.DeletionRequestedByPlatform) : null;
             return new PlatformAccountDetailResponse(account.Id, DisplayName(account), Kind(account), account.State,
-                row.CreatedAtUtc, account.LastSignInAtUtc, account.LastSignInMethod, account.InvitationExpiresAtUtc,
+                row.CreatedAtUtc, row.DeletedAtUtc, account.LastSignInAtUtc, account.LastSignInMethod, account.InvitationExpiresAtUtc,
                 account.HasPersonalSpace, deletion,
                 loginMethods, row.Organizations, deleted ? [] : await soleOwners.ListSoleOwnedOrganizationsAsync(accountId, ct),
-                row.OperatorPermissions, row.OperatorVersion);
+                row.OperatorPermissions, row.OperatorVersion,
+                state is null ? null : new PlatformAccountStateChangeResponse(state.AtUtc,
+                    AuditTexts.SecurityEvent(state.Type), state.Reason));
         });
 
     private static PlatformAccountResponse ToResponse(PlatformAccountRow row) =>

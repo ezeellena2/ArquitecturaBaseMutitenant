@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
@@ -56,11 +57,25 @@ public sealed record PlatformAccountFilterCounts(int Total, IReadOnlyList<Platfo
 
 /// <summary>Ficha: métodos enmascarados, membresías desde el índice global y permisos si es operador.</summary>
 public sealed record PlatformAccountDetailResponse(Guid Id, string? DisplayName, PlatformAccountKind Kind,
-    PlatformAccountState State, DateTime? CreatedAtUtc, DateTime? LastSignInAtUtc, LoginAuditMethod? LastSignInMethod,
+    PlatformAccountState State, DateTime? CreatedAtUtc, DateTime? DeletedAtUtc, DateTime? LastSignInAtUtc, LoginAuditMethod? LastSignInMethod,
     DateTime? InvitationExpiresAtUtc, bool HasPersonalSpace, PlatformAccountDeletionResponse? Deletion,
     IReadOnlyList<PlatformAccountLoginMethodResponse> LoginMethods,
     IReadOnlyList<PlatformAccountMembershipResponse> Organizations, IReadOnlyList<string> SoleOwnerOrganizations,
-    IReadOnlyList<string>? OperatorPermissions, uint? OperatorVersion);
+    IReadOnlyList<string>? OperatorPermissions, uint? OperatorVersion, PlatformAccountStateChangeResponse? LastStateChange)
+{
+    public override string ToString() => nameof(PlatformAccountDetailResponse);
+}
+
+/// <summary>Última transición efectiva registrada en SecurityEvents; el motivo desconocido queda null.</summary>
+public sealed record PlatformAccountStateChangeResponse(DateTime AtUtc, string Action, string? Reason)
+{
+    public override string ToString() => nameof(PlatformAccountStateChangeResponse);
+}
+
+public sealed record PlatformAccountStateChangeRow(DateTime AtUtc, SecurityEventType Type, string? Reason)
+{
+    public override string ToString() => nameof(PlatformAccountStateChangeRow);
+}
 
 public sealed record PlatformAccountDeletionResponse(DateTime RequestedAtUtc, DateTime ScheduledForUtc,
     bool RequestedByPlatform);
@@ -77,7 +92,11 @@ public sealed record PlatformAccountRow(Guid Id, string? DisplayName, Email? Pri
     PlatformAccountState State, bool HasPersonalSpace, int OrganizationCount, DateTime? LastSignInAtUtc,
     LoginAuditMethod? LastSignInMethod, DateTime? InvitationExpiresAtUtc);
 
-public sealed record PlatformAccountDetailRow(PlatformAccountRow Account, DateTime? CreatedAtUtc,
+public sealed record PlatformAccountDetailRow(PlatformAccountRow Account, DateTime? CreatedAtUtc, DateTime? DeletedAtUtc,
+    PlatformAccountStateChangeRow? LastStateChange,
     DateTime? DeletionRequestedAtUtc, DateTime? DeletionScheduledForUtc, bool DeletionRequestedByPlatform,
     IReadOnlyList<PlatformAccountMembershipResponse> Organizations, IReadOnlyList<string>? OperatorPermissions,
-    uint? OperatorVersion = null);
+    uint? OperatorVersion = null)
+{
+    public override string ToString() => nameof(PlatformAccountDetailRow);
+}

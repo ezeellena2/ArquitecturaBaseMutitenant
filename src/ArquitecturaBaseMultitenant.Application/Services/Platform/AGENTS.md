@@ -2,3 +2,4 @@ Casos de uso globales de Plataforma. Leé [plataforma](../../../../docs/features
 Una UoW por escritura; los helpers preparan cambios sin abrir otra. Entrar al alcance privado solo después de permiso y SecurityEvent confirmado, sin transacción abierta. Copiá de: `Services/Roles/RoleService.cs` y, para entrar a una organización, `PlatformActionGuard.cs`.
 
 La ficha y el historial leen sólo fuentes globales, sin ITenantScope: índice de Dueños vigente, identidad y SecurityEvents con evidencia efectiva de status. PUT módulos entra con PlatformActionGuard antes de la UoW y lee la zona privada dentro del writer; GET devuelve la fecha civil persistida. La aprobación encola correo sólo en la transición efectiva, incluyendo el Dueño recién preparado y deduplicando.
+La ficha de cuenta traduce la acción de LastStateChange con AuditTexts, conserva el motivo nullable y devuelve DeletedAtUtc persistido; sin evidencia no estima una fecha ni un motivo.

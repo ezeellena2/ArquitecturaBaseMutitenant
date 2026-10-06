@@ -14717,6 +14717,13 @@
             ],
             "format": "date-time"
           },
+          "deletedAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
           "lastSignInAtUtc": {
             "type": [
               "null",
@@ -14787,6 +14794,16 @@
               "integer"
             ],
             "format": "uint32"
+          },
+          "lastStateChange": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PlatformAccountStateChangeResponse"
+              }
+            ]
           }
         },
         "description": "Ficha: métodos enmascarados, membresías desde el índice global y permisos si es operador."
@@ -15020,6 +15037,29 @@
         ],
         "type": "string",
         "description": "Estado que ve Plataforma. NeedsRecovery se deriva: cuenta Active sin ningún método que sirva para ingresar;\r\nlos demás estados de la cuenta tienen prioridad. Invited e InvitationExpired son la invitación de un operador\r\nsin aceptar, vigente o vencida (ADR 0042)."
+      },
+      "PlatformAccountStateChangeResponse": {
+        "required": [
+          "atUtc",
+          "action"
+        ],
+        "type": "object",
+        "properties": {
+          "atUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "action": {
+            "type": "string"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "description": "Última transición efectiva registrada en SecurityEvents; el motivo desconocido queda null."
       },
       "PlatformAccountStateCount": {
         "required": [

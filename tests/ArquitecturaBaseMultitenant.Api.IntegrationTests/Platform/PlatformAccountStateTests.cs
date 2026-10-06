@@ -63,7 +63,9 @@ public sealed class PlatformAccountStateTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.NoContent, suspended.StatusCode);
         using var personAfterSuspension = await person.GetAsync("/api/me", Ct);
         Assert.Equal(HttpStatusCode.Unauthorized, personAfterSuspension.StatusCode);
-        Assert.Equal("Suspended", (await DetailAsync(platform, account.UserId)).GetProperty("state").GetString());
+        var suspendedDetail = await DetailAsync(platform, account.UserId);
+        Assert.Equal("Suspended", suspendedDetail.GetProperty("state").GetString());
+        Assert.Equal("Denuncia de uso indebido.", suspendedDetail.GetProperty("lastStateChange").GetProperty("reason").GetString());
         using var twice = await PlatformJourney.PostAsync(platform, path + "/suspend",
             new { reason = "Otra vez" }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, twice.StatusCode);
@@ -104,6 +106,11 @@ public sealed class PlatformAccountStateTests(ApiFactory factory)
         Assert.Contains("Suspended", events[0].Changes);
         Assert.Equal("{}", events[2].Changes);
         Assert.All(events, item => Assert.DoesNotContain(account.Email.Value, item.Changes));
+        Assert.Equal(events[0].OccurredAtUtc, suspendedDetail.GetProperty("lastStateChange").GetProperty("atUtc").GetDateTime());
+        var last = (await DetailAsync(platform, account.UserId)).GetProperty("lastStateChange");
+        Assert.Equal(events[1].OccurredAtUtc, last.GetProperty("atUtc").GetDateTime());
+        Assert.Equal("Revisión terminada.", last.GetProperty("reason").GetString());
+        Assert.Equal("Reactivó la cuenta", last.GetProperty("action").GetString());
     }
 
     [Fact]

@@ -10,9 +10,11 @@ using ArquitecturaBaseMultitenant.Domain.Platform;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Platform;
@@ -148,9 +150,14 @@ public sealed class PlatformAccountAdministrationTests(ApiFactory factory)
         Assert.Equal(JsonValueKind.Null, active.GetProperty("operatorPermissions").ValueKind);
         Assert.Equal("Code", active.GetProperty("lastSignInMethod").GetString());
         Assert.False(active.TryGetProperty("version", out _));
+        Assert.Equal(JsonValueKind.Null, active.GetProperty("lastStateChange").ValueKind);
+        Assert.Equal(JsonValueKind.Null, active.GetProperty("deletedAtUtc").ValueKind);
 
         var recovery = await GetAsync(client, seeded.NeedsRecovery.ToString("D"));
         Assert.Equal("NeedsRecovery", recovery.GetProperty("state").GetString());
+        Assert.Equal(JsonValueKind.Null, recovery.GetProperty("lastStateChange").ValueKind);
+        var suspended = await GetAsync(client, seeded.Suspended.ToString("D"));
+        Assert.Equal(JsonValueKind.Null, suspended.GetProperty("lastStateChange").ValueKind);
         var managed = Assert.Single(recovery.GetProperty("loginMethods").EnumerateArray());
         Assert.Equal("Kappa " + seeded.Prefix, managed.GetProperty("managedByOrganizationName").GetString());
         Assert.False(managed.GetProperty("canSignIn").GetBoolean());
@@ -175,6 +182,12 @@ public sealed class PlatformAccountAdministrationTests(ApiFactory factory)
         Assert.Equal("Deleted", deleted.GetProperty("state").GetString());
         Assert.Equal("Cuenta eliminada", deleted.GetProperty("displayName").GetString());
         Assert.Empty(deleted.GetProperty("loginMethods").EnumerateArray());
+        Assert.Equal(JsonValueKind.Null, deleted.GetProperty("lastStateChange").ValueKind);
+        await using var scope = isolated.Services.CreateAsyncScope();
+        var persistedDeletedAtUtc = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Users
+            .Where(user => user.Id == seeded.Deleted).Select(user => user.DeletedAtUtc).SingleAsync(Ct);
+        Assert.Equal(persistedDeletedAtUtc, deleted.GetProperty("deletedAtUtc").GetDateTime());
+        Assert.EndsWith("Z", deleted.GetProperty("deletedAtUtc").GetString());
 
         // La fecha de alta la fija el registro; las cuentas sembradas sin fecha quedan sin evidencia.
         var registered = await GetAsync(client, viewer.UserId.ToString("D"));
@@ -183,6 +196,110 @@ public sealed class PlatformAccountAdministrationTests(ApiFactory factory)
 
         using var missing = await client.GetAsync($"/api/platform/accounts/{Guid.NewGuid():D}", Ct);
         Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
+    }
+
+    [Fact]
+    public async Task Account_detail_uses_only_effective_state_events_of_its_target_with_deterministic_ties()
+    {
+        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var viewer = await AccountJourney.RegisterAsync(factory, client, Ct);
+        await PlatformOperators.GrantAsync(factory.Services, viewer.UserId, [PlatformPermissions.Accounts.Read], Ct);
+        await AccountJourney.AuthorizeAsync(client, "platform", Ct);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        nowUtc = nowUtc.AddTicks(-(nowUtc.Ticks % TimeSpan.TicksPerMicrosecond));
+        var account = User("Suspendida con evidencia");
+        Assert.True(account.Suspend().IsSuccess);
+        var other = User("Otra cuenta");
+        var effective = new SecurityEventChanges();
+        effective.AddEnum("status", UserStatus.Active, UserStatus.Suspended);
+        var noAfter = new SecurityEventChanges();
+        noAfter.AddEnum<UserStatus>("status", UserStatus.Active, null);
+        var tied = new[]
+        {
+            SecurityEvent.ForAccountAdministration(SecurityEventType.AccountSuspended, viewer.UserId, account.Id,
+                "Primera revisión", nowUtc.AddDays(-2)).WithEvidence(effective, null),
+            SecurityEvent.ForAccountAdministration(SecurityEventType.AccountSuspended, viewer.UserId, account.Id,
+                "Segunda revisión", nowUtc.AddDays(-2)).WithEvidence(effective, null),
+        };
+        var sameStatus = SecurityEvent.ForAccountAdministration(SecurityEventType.AccountReactivated,
+            viewer.UserId, account.Id, "Replay sin transición", nowUtc);
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+        {
+            db.Users.AddRange(account, other);
+            db.SecurityEvents.AddRange(tied);
+            db.SecurityEvents.AddRange(sameStatus,
+                SecurityEvent.ForAccountAdministration(SecurityEventType.AccountReactivated, viewer.UserId,
+                    account.Id, "Histórica sin evidencia", nowUtc),
+                SecurityEvent.ForAccountAdministration(SecurityEventType.AccountSuspended, viewer.UserId,
+                    account.Id, "Sin estado posterior", nowUtc).WithEvidence(noAfter, null),
+                SecurityEvent.ForAccountAdministration(SecurityEventType.AccountSessionsRevoked, viewer.UserId,
+                    account.Id, "Sesiones", nowUtc).WithEvidence(effective, null),
+                SecurityEvent.ForAccount(SecurityEventType.LoginMethodChanged, account.Id, nowUtc).WithEvidence(effective, null),
+                SecurityEvent.ForPlatformOperatorGrant("Permisos", nowUtc, account.Id).WithEvidence(effective, null),
+                SecurityEvent.ForAccount(SecurityEventType.PlatformTenantEntered, account.Id, nowUtc).WithEvidence(effective, null),
+                SecurityEvent.ForAccountAdministration(SecurityEventType.AccountSuspended, viewer.UserId,
+                    other.Id, "AJENA", nowUtc).WithEvidence(effective, null));
+            // Una fila histórica que conserva valores iguales también debe quedar fuera, aunque tenga after.
+            db.Entry(sameStatus).Property(item => item.Changes).CurrentValue =
+                """{"status":{"before":"Suspended","after":"Suspended"}}""";
+            db.LoginAudits.Add(LoginAudit.Success(account.Id, LoginAuditMethod.Code, nowUtc));
+            return Task.FromResult(Result.Success());
+        }, CommitPolicy.OnSuccess, Ct);
+
+        var expected = tied.OrderByDescending(item => item.Id).First();
+        var count = await db.SecurityEvents.CountAsync(Ct);
+        var detail = await GetAsync(client, account.Id.ToString("D"));
+        var last = detail.GetProperty("lastStateChange");
+        Assert.Equal(expected.OccurredAtUtc, last.GetProperty("atUtc").GetDateTime());
+        Assert.EndsWith("Z", last.GetProperty("atUtc").GetString());
+        Assert.Equal(expected.Reason, last.GetProperty("reason").GetString());
+        Assert.Equal("Suspendió la cuenta", last.GetProperty("action").GetString());
+        Assert.False(detail.TryGetProperty("version", out _));
+        Assert.Equal(JsonValueKind.Null, detail.GetProperty("deletedAtUtc").ValueKind);
+        Assert.Equal(count, await db.SecurityEvents.CountAsync(Ct));
+        client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-US");
+        var translated = await GetAsync(client, account.Id.ToString("D"));
+        Assert.Equal("Suspended the account", translated.GetProperty("lastStateChange").GetProperty("action").GetString());
+    }
+
+    [Fact]
+    public async Task Account_detail_keeps_unknown_deletion_dates_and_a_recorded_reason_null()
+    {
+        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var viewer = await AccountJourney.RegisterAsync(factory, client, Ct);
+        await PlatformOperators.GrantAsync(factory.Services, viewer.UserId, [PlatformPermissions.Accounts.Read], Ct);
+        await AccountJourney.AuthorizeAsync(client, "platform", Ct);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        nowUtc = nowUtc.AddTicks(-(nowUtc.Ticks % TimeSpan.TicksPerMicrosecond));
+        var legacy = User("Baja histórica sin fecha");
+        var cancelled = User("Baja cancelada sin motivo registrado");
+        var changes = new SecurityEventChanges();
+        changes.AddEnum("status", UserStatus.PendingDeletion, UserStatus.Active);
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+        {
+            db.Users.AddRange(legacy, cancelled);
+            db.Entry(legacy).Property(user => user.Status).CurrentValue = UserStatus.Deleted;
+            db.SecurityEvents.Add(SecurityEvent.ForAccount(SecurityEventType.AccountDeleted, legacy.Id, nowUtc));
+            db.SecurityEvents.Add(SecurityEvent.ForAccount(SecurityEventType.AccountDeletionCancelled,
+                cancelled.Id, nowUtc).WithEvidence(changes, null));
+            return Task.FromResult(Result.Success());
+        }, CommitPolicy.OnSuccess, Ct);
+
+        var deleted = await GetAsync(client, legacy.Id.ToString("D"));
+        Assert.Equal("Deleted", deleted.GetProperty("state").GetString());
+        Assert.Equal(JsonValueKind.Null, deleted.GetProperty("lastStateChange").ValueKind);
+        Assert.Equal(JsonValueKind.Null, deleted.GetProperty("createdAtUtc").ValueKind);
+        Assert.Equal(JsonValueKind.Null, deleted.GetProperty("deletedAtUtc").ValueKind);
+        var last = (await GetAsync(client, cancelled.Id.ToString("D"))).GetProperty("lastStateChange");
+        Assert.Equal(nowUtc, last.GetProperty("atUtc").GetDateTime());
+        Assert.Equal("Canceló la baja de la cuenta", last.GetProperty("action").GetString());
+        Assert.Equal(JsonValueKind.Null, last.GetProperty("reason").ValueKind);
     }
 
     private sealed record Seeded(string Prefix, Guid Active, string ActiveEmail, DateTime LastSignInAtUtc,

@@ -54,6 +54,8 @@ public sealed class PlatformAccountDeletionTests(ApiFactory factory)
         Assert.True(deletion.GetProperty("requestedByPlatform").GetBoolean());
         Assert.Equal(TimeSpan.FromDays(30), deletion.GetProperty("scheduledForUtc").GetDateTime()
             - deletion.GetProperty("requestedAtUtc").GetDateTime());
+        Assert.Equal("Pedido legal recibido por correo.", detail.GetProperty("lastStateChange").GetProperty("reason").GetString());
+        Assert.Equal(JsonValueKind.Null, detail.GetProperty("deletedAtUtc").ValueKind);
         using var again = await PlatformJourney.PostAsync(platform, path,
             new { reason = "Otra vez" }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, again.StatusCode);
@@ -74,6 +76,7 @@ public sealed class PlatformAccountDeletionTests(ApiFactory factory)
             Assert.Equal(AuditActorKind.PlatformOperator, platformEvent.ActorKind);
             Assert.Equal(operatorAccount.UserId, platformEvent.ActorId);
             Assert.Equal("Pedido legal recibido por correo.", platformEvent.Reason);
+            Assert.Equal(platformEvent.OccurredAtUtc, detail.GetProperty("lastStateChange").GetProperty("atUtc").GetDateTime());
             var notice = await NoticeAsync(services, account.UserId, outboxBefore);
             Assert.Equal("La plataforma inició la baja de tu cuenta", notice.Subject);
             Assert.Contains("y cerramos todas tus sesiones.", notice.TextBody);
@@ -111,6 +114,9 @@ public sealed class PlatformAccountDeletionTests(ApiFactory factory)
         var detail = await DetailAsync(platform, account.UserId);
         Assert.Equal("Suspended", detail.GetProperty("state").GetString());
         Assert.True(detail.GetProperty("deletion").GetProperty("requestedByPlatform").GetBoolean());
+        Assert.Equal("Denuncia", detail.GetProperty("lastStateChange").GetProperty("reason").GetString());
+        Assert.Equal("Suspendió la cuenta", detail.GetProperty("lastStateChange").GetProperty("action").GetString());
+        Assert.Equal(JsonValueKind.Null, detail.GetProperty("deletedAtUtc").ValueKind);
         await using (var scope = factory.Services.CreateAsyncScope())
         {
             var notice = await NoticeAsync(scope.ServiceProvider, account.UserId, outboxBefore);
