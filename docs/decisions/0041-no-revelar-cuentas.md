@@ -1,6 +1,6 @@
 # ADR 0041 · Nada revela si un correo o un teléfono tiene cuenta
 
-Estado: aceptada el 2026-10-03 por el dueño del producto. Primero salió para «Recuperar mi cuenta» (lienzo v82, tablero «Criterio · Decisiones por pantalla»). Después el dueño la extendió a Mi cuenta.
+Estado: **reemplazada el 2026-10-06 por la [0043](0043-las-pantallas-dicen-si-hay-cuenta.md)**: las pantallas dicen si un correo tiene cuenta. Se aceptó el 2026-10-03 por el dueño del producto. Primero salió para «Recuperar mi cuenta» (lienzo v82, tablero «Criterio · Decisiones por pantalla»). Después el dueño la extendió a Mi cuenta.
 
 ## Contexto
 

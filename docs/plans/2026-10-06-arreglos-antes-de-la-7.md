@@ -31,4 +31,32 @@ Diseño la dibuja como estado de `Ingreso` y `M-Ingreso`.
 - [ ] **El E2E real suma un recorrido:** el operador ingresa a Plataforma y, en el mismo navegador, toca «Ingresar» en el inicio. Ve la pantalla del operador, toca «Salir» e ingresa como persona con otro correo.
 - [ ] **Verde,** con la captura lado a lado contra el tablero, y `docs/features/identidad.md` al día.
 
-**Hecho cuando:** el operador con la sesión abierta nunca ve el error genérico y siempre tiene cómo salir.
+**El otro caso:** la misma pantalla aparece cuando el operador escribe su correo en la puerta de persona o de empresa y pone el código. Con la [ADR 0043](../decisions/0043-las-pantallas-dicen-si-hay-cuenta.md), el correo del operador se comporta como el de cualquier cuenta antes del código. Esta pantalla es privada: solo la ve quien probó que el correo es suyo.
+
+**Hecho cuando:** el operador nunca ve el error genérico y siempre tiene cómo salir. Antes del código, ninguna pantalla pública menciona al operador ni a Plataforma.
+
+## A2 · Las pantallas dicen si un correo tiene cuenta (ADR 0043, decidido por el usuario el 2026-10-06)
+
+**El problema:** con la [ADR 0041](../decisions/0041-no-revelar-cuentas.md), el ingreso con un correo sin cuenta decía «Te mandamos un código» y no mandaba nada. La persona no sabía que tenía que registrarse. El usuario lo encontró al probar: «es lógica pura».
+
+**La decisión:** la [ADR 0043](../decisions/0043-las-pantallas-dicen-si-hay-cuenta.md), que reemplaza a la 0041. Lo que se ve sale de los tableros que dibuja Diseño: Ingreso, Registro, Registro-Empresa, Recuperar y Cuenta-Agregar, con sus `M-*`.
+
+- [ ] **Back, rojo y verde:**
+  - pedir el código de ingreso con un correo sin cuenta responde un error propio y no manda código;
+  - el registro de una persona con un correo que ya tiene cuenta responde un error propio;
+  - el correo de un operador en las puertas públicas se comporta como el de cualquier cuenta: ingreso con código, y registro con «ya tenés cuenta»;
+  - «Recuperar mi cuenta» y agregar un correo en Mi cuenta dicen si el correo ya es de otra cuenta;
+  - cada error lleva su código `Area.Entidad.Motivo`, su texto en es y en, y la ficha `identidad.md` al día;
+  - siguen los topes por destino, por cuenta y por dirección;
+  - los tests de la 0041 que pedían la misma respuesta pasan a pedir la de cada caso;
+  - se quitan el código interno que no se mandaba y el aviso «Ya tenés una cuenta con este correo».
+- [ ] **Front, rojo y verde:**
+  - la pantalla de cada caso, como su tablero, con el correo ya escrito en el destino: «Crear mi cuenta», «Registrá tu empresa» o «Ingresar»;
+  - axe y 390;
+  - la captura lado a lado.
+- [ ] **El E2E real suma estos recorridos:**
+  - ingresar con un correo sin cuenta, ir a «Crear mi cuenta» y terminar el registro;
+  - registrarse con un correo que ya tiene cuenta e ir a «Ingresar»;
+  - registrar una empresa con un correo nuevo y entrar como empresa.
+
+**Hecho cuando:** ninguna pantalla dice «Te mandamos un código» si el código no sale, y desde cada caso la persona sabe qué hacer.
