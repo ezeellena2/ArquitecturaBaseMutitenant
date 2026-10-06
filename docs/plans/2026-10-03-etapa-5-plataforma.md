@@ -372,6 +372,8 @@ Archivos: `src/areas/platform/accounts/{api,pages,components}/`, locales/test.
 - [ ] Motivo obligatorio en los diálogos; la versión solo donde la acción la lleva (cambiar o quitar los permisos de un operador y las recuperaciones), no en suspender, reactivar, cerrar sesiones ni la baja (T18b). Fechas mediante format, errores/409 conservan datos. No editar identidad desde Plataforma si el tablero no lo pide.
 - [ ] 1/50 filas, tests/lint/build. Commit(s) `feat(plataforma): conectar cuentas y operadores`.
 
+Avance T22a (primero el back): `GET /api/platform/accounts/{id}` agrega `lastStateChange` y `deletedAtUtc` reales nullable, sin cambios de estado, productores ni versión de cuenta; conserva operatorVersion. Rojo HTTP 3/5 → verde 13/13 y OpenAPI 3/3; contrato front rojo 2/108 → 137/137, generación/check/build/lint focal/diff-check exit 0. SPEC y CALIDAD PASS. Back `5b22eee`, front `94a5726`. Las tres casillas de pantallas T22 siguen pendientes; evidencia completa y decisión 38 en el plan de pantallas.
+
 ### T23 · Recuperaciones, legales, auditoría y configuración reales
 
 Archivos: `src/areas/platform/{recoveries,legal,audit,settings}/{api,pages,components}/`, locales/test.
