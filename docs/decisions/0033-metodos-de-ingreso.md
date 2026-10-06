@@ -1,6 +1,6 @@
 # ADR 0033 · Varios métodos de ingreso por cuenta
 
-Estado: aceptada el 2026-09-27. La [fila 0033 del índice](README.md) y [multitenancy.md §3.1](../architecture/multitenancy.md#31-métodos-de-ingreso-la-cuenta-no-depende-de-un-solo-correo) son la especificación funcional completa.
+Estado: aceptada el 2026-09-27. La [0045](0045-confirmar-solo-sin-ingreso-reciente.md) la modifica: agregar un correo o vincular Google piden confirmación solo si el ingreso no es reciente. La [fila 0033 del índice](README.md) y [multitenancy.md §3.1](../architecture/multitenancy.md#31-métodos-de-ingreso-la-cuenta-no-depende-de-un-solo-correo) son la especificación funcional completa.
 
 ## Contexto
 

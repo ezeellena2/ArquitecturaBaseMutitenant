@@ -111,3 +111,50 @@ Diseño la dibuja como estado de `Ingreso` y `M-Ingreso`.
 - [ ] **E2E real:** tocar «Registrarte con Google» con los términos aceptados lleva a `accounts.google.com`. Se comprueba la dirección, sin ingresar a Google.
 
 **Hecho cuando:** los dos botones de Google del registro llevan a Google y nunca validan el correo.
+
+## A5 · Agregar un correo o Google sin confirmar, si el ingreso es reciente (ADR 0045, decidido por el usuario el 2026-10-06)
+
+**El problema:** recién ingresado, «Agregar correo» mandaba primero un código al correo de siempre y después otro al nuevo.
+
+**La decisión:** la [ADR 0045](../decisions/0045-confirmar-solo-sin-ingreso-reciente.md).
+- Con la sesión de menos de 15 minutos, que es configuración, agregar un correo y vincular Google no piden confirmación.
+- Quitar un método y cambiar el principal la piden siempre.
+
+- [ ] **Rojo** (integración, con `TimeProvider`):
+  - sesión de 14 minutos: agregar un correo sin ticket responde como siempre y manda solo el código del correo nuevo;
+  - sesión de 16 minutos: pide el ticket;
+  - lo mismo al vincular Google;
+  - quitar un método y cambiar el principal piden el ticket aunque la sesión sea reciente.
+- [ ] **Implementación y front:** Mi cuenta pide el correo nuevo directo cuando la sesión es reciente. Docs: `identidad.md`.
+- [ ] **E2E real:** el recorrido de «sumar correo» de 3b, recién ingresado, recibe un solo código.
+
+## A6 · Nombre y apellido en dos campos (ADR 0046, pedido por el usuario el 2026-10-06)
+
+**La decisión:** la [ADR 0046](../decisions/0046-nombre-y-apellido.md). Se programa con el tablero de Cuenta y M-Cuenta que dibuja Diseño.
+
+- [ ] **Back:**
+  - nombre y apellido por separado en la identidad, con su migración (la primera palabra al nombre y el resto al apellido);
+  - el nombre para mostrar se arma en un solo lugar;
+  - los contratos de `/api/me` y de las lecturas con nombres;
+  - la semilla del operador;
+  - rojo y verde de cada parte.
+- [ ] **Front:**
+  - Mi cuenta con «Nombre» y «Apellido», como el tablero;
+  - los tipos regenerados;
+  - las pantallas que muestran el nombre siguen usando el nombre armado, sin juntarlo por su cuenta.
+- [ ] **E2E real:** guardar nombre y apellido en Mi cuenta y verlos en el menú.
+
+## A7 · Google trae el nombre y el apellido (ADR 0046, pedido por el usuario el 2026-10-06)
+
+- [ ] **Rojo** (integración, con el Google de prueba de los tests):
+  - registrarse, ingresar o vincular Google completa el nombre y el apellido desde `given_name` y `family_name` si están vacíos;
+  - si ya tienen algo, no los toca.
+- [ ] **Implementación:** donde se resuelve la cuenta de Google, sin pisar lo que escribió la persona. Docs: `identidad.md`.
+
+## Orden
+
+1. **Sin dibujos:** A3, A4, A5 y A7, que no esperan nada.
+2. **Con los tableros de Diseño (v112):** A1, A2 y A6.
+3. **Después:** la [revisión de código](2026-10-06-revision-de-codigo.md).
+
+Cada arreglo pasa su E2E real antes del siguiente commit de cierre.
