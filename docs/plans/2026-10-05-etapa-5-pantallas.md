@@ -127,6 +127,8 @@ Las partes de back se commitean en el back y después se regenera el contrato de
 
 Es pedido del usuario (`pantallas-y-ui.md` del front) y no se saltea.
 
+**Aprobación vigente de esta ejecución:** el usuario dio visto bueno a todos los tableros v111 capturados en front `a88a96a`, ya aprobados con Diseño, y autorizó continuar T19–T23 en orden sin nuevas pausas por pantalla. La muestra previa y su visto bueno están cumplidos para esos tableros; se mantienen las capturas durante cada avance y se frena sólo ante una contradicción con la fuente o un punto de producto que el plan no resuelve.
+
 **Antes de programar cada pantalla:**
 1. Le mostrás su tablero tal como va a quedar, a 1440 y a 390, con cada estado (cada opción de cada Tweak):
    - con el recorrido del lienzo: `node scripts/recorrido-lienzo/recorrido.mjs` (desde el front; páginas «Plataforma» e «Ingreso y registro»; los `Plat-WA-*` se saltean), o
@@ -257,9 +259,9 @@ Se copian tal cual: estructura, textos, orden y estados. Los textos van entre «
   - Activa, Suspendida o Cerrada: «Alta el {fecha} por autoservicio · {n} empresas · {n} miembros»;
   - Espera aprobación: «Pidió el alta el {fecha} por autoservicio · 1 empresa · 1 miembro».
 - **Acciones de la banda:**
-  - Espera aprobación: «Rechazar» (rojo lleno) y «Aprobar» (principal);
+  - Espera aprobación: «Rechazar» (rojo con borde, como el tablero v111 y `Button variant="danger"`) y «Aprobar» (principal);
   - Activa: «Suspender» (secundario);
-  - Suspendida: «Reactivar» (secundario) y «Cerrar» (rojo lleno);
+  - Suspendida: «Reactivar» (secundario) y «Cerrar» (rojo con borde, como el tablero v111 y `Button variant="danger"`; relleno sólo en la confirmación irreversible);
   - Cerrada: ninguna.
 - **Cartel debajo de la banda:**
   - Suspendida (alerta): «**Suspendida el {fecha}.** Motivo: {motivo}»;
@@ -283,7 +285,7 @@ Se copian tal cual: estructura, textos, orden y estados. Los textos van entre «
 - Barra: ‹ «Volver»; el nombre; debajo, «{estado} · {n} empresas · {n} miembros»; ⋮ «Acciones de {nombre}» con las acciones de la banda.
 - Pestañas deslizables con la cantidad.
 - Historial en filas: 1.ª, «qué pasó» y, a la derecha, la fecha corta («20/09 11:02»); 2.ª, «{quién} · {motivo}» (sin motivo, solo quién).
-- Las demás pestañas no están dibujadas en el teléfono: van con la fila que arma `DataTable` desde los roles de cada columna (decisión 12 de este plan).
+- Dueños tiene las tres variantes dibujadas en la v111: nombre (sin nombre, «—»), último ingreso a la derecha, correo y estado debajo, sin avatar. Se declara la fila móvil con `ListRow`. Las pestañas que no tienen fila dibujada van con la que arma `DataTable` desde los roles de cada columna (decisión 12 de este plan).
 
 ### 4. Cuentas · `/plataforma/cuentas`
 
@@ -863,7 +865,7 @@ Commit `feat(plataforma): la lista de organizaciones`.
 
 **Copiá de:** §3; `CompanyDetailPage.tsx`, `CompanyMembersTab.tsx`; `useCursorList` y `LoadMore` (el historial).
 
-- [ ] **Rojo** (`OrganizationPage.test.tsx`):
+- [x] **Rojo** (`OrganizationPage.test.tsx`):
   - «la banda con el estado, el resumen y las acciones de cada estado (Espera aprobación, Activa, Suspendida, Cerrada)»;
   - «el cartel de Suspendida y de Cerrada con la fecha y el motivo de lastStateChange»;
   - «después de Suspender desde la banda, Reactivar manda la versión que respondió la suspensión, aunque la relectura de la ficha no haya llegado; una relectura con otra versión no la pisa»;
@@ -871,7 +873,8 @@ Commit `feat(plataforma): la lista de organizaciones`.
   - «las pestañas con la cantidad que tiene dato» (según «Para decidir» 3);
   - «404: "No encontramos esta página"»; «si no carga: "No pudimos abrir esta pantalla" y "Reintentar"»;
   - «en el teléfono: la barra con el estado y el resumen, el ⋮ con las acciones, las pestañas deslizables y el historial en filas»; axe.
-- [ ] **Verde** y **capturas** (grupo `plataforma-organizacion`): cada estado del Tweak «estado» con Historial y Dueños, y el teléfono.
+  **Evidencia T21c (2026-10-05):** `npm test -- src/areas/platform/tenants/pages/OrganizationPage.test.tsx --maxWorkers=1` → rojo 31/31 por ruta ausente; verde inicial 31/31. Pruebas dirigidas: `-t 'Dueños a 390'` → rojo 1/1, verde 1/1 al declarar `ListRow`; `-t 'Cerrar en la banda'` → rojo 1/1 y `-t 'en banda usa peligro'` → verde 2/2. La guarda de rutas esperaba sólo el listado: rojo 1/153, ajustada a las dos páginas lazy reales. Capturador: escenarios por par en vez de props del tablero móvil base, rojo 1/1 → verde; coincidencia exacta de «Cerrar» frente a «Cerrar Gestión», rojo HTTP real 1/1 → verde. Informe front `.local/t21c/report.md`.
+- [x] **Verde** y **capturas** (grupo `plataforma-organizacion`): cada estado del Tweak «estado» con Historial y Dueños, y el teléfono. **Evidencia T21c:** cierre de diez suites del informe → 155/155; focal pantalla/API/rutas 88/88 (45 + 8 + 35). `npm run contracts:check`, `npm run build`, lint del alcance y `git diff --check` → exit 0, sin errores ni advertencias nuevas. `node --test scripts/capturar-etapa-5.test.mjs scripts/capturar-relevamiento.test.mjs` → 30/30; lint de scripts/fixture exit 0. Captura del grupo: dos fallos detectados y corregidos (selector «Cerrar» y navegación durante recarga); delta de seis casos → 6/6, exit 0 (`.local/t21c/capture-fixes.log`). Tras corregir SPEC, captura completa con el fixture fiel al contrato → 34/34, exit 0 (`capture-real-final.log`); caso móvil de Falló el alta con el menú abierto → exit 0 (`capture-retry-menu-final.log`). Resultado único: 32 PNG / 16 pares de ficha real, más dos PNG del diálogo aislado de módulos T20d; `node scripts/capturar-relevamiento.mjs --verify --group recuperar,plataforma-marco,plataforma-organizaciones,plataforma-organizacion,plataforma-cuentas --out docs/design/capturas/etapa-5/lado-a-lado` → 100 PNG / 50 pares acumulados, exit 0 (`capture-verify.log`). Activa, Dueños pendiente y Suspendida se entregaron a 1440/390 con los comandos `vivo.mjs etapa-5/organizacion-{estado-activa,duenos-sin-dueno-todavia,estado-suspendida}-{escritorio,movil} --vite http://127.0.0.1:5191`; galería con todos los estados y confirmaciones. **Diferencias comunes conservadas:** `Page.moreActions` abre el menú común en teléfono; `Banner`, `Surface`, fechas relativas, altura de pestañas e íconos mantienen sus piezas. Historial sin cantidad por decisión 3; las tres pestañas siguientes quedan para T21d. Las referencias móviles base se identifican en el manifiesto y la galería; no se inventa un tablero. Decisiones 34–35. SPEC detectó dos desvíos: Historial debía mostrar `action` traducida (no `summary` técnico) y Reintentar debía ser principal. Rojo dirigido 4/4 → verde 4/4 y ficha 45/45; build y lint focal exit 0 después del delta (`spec-fix-{red,green-focal,green-page,build}.log`). Fixture técnico: rojo 1/1 → verde, sin cambios `{}` según DTO/Domain. Menú de Falló el alta móvil: rojo por no abrirlo y por esperar el título del fondo oculto → verde 30/30. ReSPEC PASS. CALIDAD detectó que navegar a otra ficha ya cacheada podía conservar la confirmación anterior y cruzar su callback de versión/estado; rojo de navegación 3/3 → verde 3/3; cierre de ficha y rutas 83/83 (48 + 35), build/lint/diff-check exit 0 (`navigation-{red,green-focal,green-final,build}.log`). El contenido local se desmonta por id. Activa 1440/390 recapturada sin cambios visuales (`capture-navigation-final.log`), verify 100/50 vigente. ReSPEC y ReCALIDAD finales PASS, sin hallazgos abiertos. Front `ee0a665`, main, sin push. Detector central `realinear-docs --detectar` → auto 0 / modelo 1 / humano 0, exit 1 (`20261005-2113.md`, «Para vos: Nada»); revisión del detector pendiente para la puerta de etapa, no se declara cierre.
 
 Commit `feat(plataforma): la ficha de una organización`.
 
@@ -1143,6 +1146,10 @@ Y en las pantallas (T21 a T23): después de cada acción con versión, la base p
 
 33. **Vida del formulario y vista en vivo (T21b):** la confirmación monta un adaptador idempotente propio, con la misma vida que su formulario, como el alta y `useIdempotentMutation`. Reintentar mientras sigue montado conserva la clave del cuerpo completo; corregirlo o abrir otro diálogo inicia otra operación. Cancelar aborta el recorrido: un aviso viejo no vuelve a enviar ni acepta una respuesta ni cierra otro formulario. No hay mapas de claves ni formularios ocultos. La vista en vivo respeta `action.waitFor` y `app.now`, igual que las capturas: el segundo «Cargar más» espera la primera tanda y las fechas relativas usan la hora del caso.
 
+34. **Dueños y último estado en la ficha (T21c):** `owners` sigue siendo la lista de asignaciones actuales del backend. Si está vacía y existe `ownerEmail` de un alta pendiente, el front representa ese contacto en una fila sin nombre, con Nunca e Invitación pendiente, sin inventar identidad ni membresía. El conteo corresponde a las filas disponibles. Después de una acción se conserva sólo su versión/estado propios y se descarta el evento anterior; hasta recibir la evidencia del nuevo estado se muestra sin dato en fecha/motivo. La vida del contenido local se delimita por id de organización: al cambiar de ficha se desmontan sus consultas, coordinación y confirmaciones, y se abandona la operación anterior.
+
+35. **Referencia y acciones de captura (T21c):** los props del tablero conservan la fuente visual; el estado, la pestaña y la variante de la app salen del par del caso, porque un tablero móvil base puede representar otro estado. Las confirmaciones usan `action.exact` para esperar «Cerrar» sin activar «Cerrar Gestión» durante la carga. El resto de los recorridos conserva su coincidencia anterior.
+
 ## Para decidir (resuelto el 2026-10-05)
 
 Lo que el lienzo o los docs no resolvían. Cada punto empieza con lo **decidido**; lo que sigue es el porqué. Si la decisión y la recomendación no coinciden, manda lo decidido. Los puntos 1, 2, 6, 7 y 8 los dibuja Diseño en la v111 y se programan con esa versión.
@@ -1256,7 +1263,7 @@ Lo que el lienzo o los docs no resolvían. Cada punto empieza con lo **decidido*
 | T20d | — (piezas del front; documentación en este plan) | `cc9d95c` | Rojo diálogo 15 y fecha 2; extracciones 3 módulos ausentes/1 ícono, guarda 1. Verde 271/271 en 17 suites; diálogo final 19/19; capturadores 22/22; build, lint focal y diff-check exit 0. CALIDAD detectó Hasta sin obligatoriedad accesible: rojo 1 → verde 22/22, build y lint del delta exit 0. SPEC, ReSPEC y CALIDAD aprobadas; arnés 0. Lint global exit 0 con advertencias heredadas fuera del diff. | 12 PNG / 6 pares tablero-app a 1440 y 390: motivo vacío/escrito, aprobación, Hasta, baja bloqueada y 409. Galería y vivo entregados; verify 48 PNG de grupos implementados. | ReasonDialog, extracciones, host y calendario; decisiones 28–29. Fondo de las capturas pendiente T21–T23 y referencias base móviles declaradas. Foco/medidas de piezas comunes conservados; el delta required no cambia la imagen. |
 | T21a | `0425176` | `9712d33` | Rojo HTTP 5/13, fecha nullable 1/1 y fecha máxima 1/1; verdes 45/45 integración, 53/53 seguridad, 3/3 auditoría, 56/56 arquitectura, 22/22 Application, 9/9 Domain. SPEC correo secundario: rojo 2/2 → verde 40/40. API build 0 advertencias/errores; front 130/130, contracts/check/build/lint focal/diff-check 0. SPEC, ReSPEC y CALIDAD PASS; arnés 0. | — (backend y contratos, sin cambios visuales) | Detalle separado de fila; fuentes globales y cursor sin LoginAudits; publicación UTC; aprobación por correo; fecha civil de módulos, decisión 30. Migration nullable sin inventar datos históricos. Lint global exit 0 con 752 advertencias previas fuera del diff. Conexión visual pendiente T21b–T21d. |
 | T21b | — (documentación en este plan) | `2f37c00` | Rojo pantalla/acción, botón literal, clave al reabrir, respuesta tardía y GET retenido. Verde 194/194 (52 focales); capturadores 24/24; vivo rojo 1/1 → 3/3. Build, contracts:check, lint focal y diff-check exit 0; lint global exit 0 con 752 advertencias heredadas. SPEC y CALIDAD PASS. | 28 PNG / 14 pares a 1440 y 390: 7 y 50 filas, sin coincidencias, menús por estado, alta vacía/errores/correo inválido, motivo/validación/409; galería y vivo entregados. Verify acumulado 70 PNG / 35 pares. | Lista real; franja global, filtros cruzados, defaults del operador y cinco transiciones con versiones propias. Decisiones 31–33; cancelar termina el recorrido idempotente. Lectura sola conserva Ver ficha según fuente. Diferencias comunes registradas en Capturas; no se cambió lienzo ni UI compartida. Ficha pendiente T21c–d. |
-| T21c | | | | | |
+| T21c | — (documentación en este plan) | `ee0a665` | Rojo inicial 31/31; SPEC rojo 4/4 → verde 4/4 y ficha 45/45; CALIDAD navegación rojo 3/3 → verde 3/3, ficha/rutas 83/83 (48 + 35). Base afectada 155/155 en diez suites; contratos/build/lint focal/diff-check exit 0. Capturadores 30/30. SPEC/ReSPEC y CALIDAD/ReCALIDAD finales PASS. | 32 PNG / 16 pares reales a 1440/390: cinco estados, Historial, Dueños en tres variantes y cinco confirmaciones/error. Grupo 34 PNG con dos aisladas T20d; recaptura completa exit 0, menú Falló390 y Activa finales exit 0. Verify acumulado 100 PNG / 50 pares; galería y vivo entregados. | Ficha lazy; cursor sin total, Dueños actuales/contacto pendiente y estado/versiones propios. Decisiones 34–35; vida local por id abandona operaciones viejas. Action traducida visible, Summary técnico excluido. Diferencias comunes registradas; lienzo intacto. Módulos/Dominio/Página pública pendientes T21d. Detector 0 auto / 1 modelo / 0 humano, sin Para vos; revisión pendiente para puerta de etapa. |
 | T21d | | | | | |
 | T22a–T22b | | | | | |
 | T23a–T23d | | | | | |
