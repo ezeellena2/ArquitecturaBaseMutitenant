@@ -22,7 +22,8 @@ Las pantallas dicen claramente qué pasa con el correo, **antes** de mandar un c
 - **Registro de una persona** con un correo que ya tiene cuenta: dice «Ya tenés una cuenta con ese correo.» y ofrece «Ingresar», con el correo ya escrito.
 - **El correo de un operador** en las puertas públicas (el ingreso y el registro de una persona o de una empresa) se comporta como el de cualquier cuenta ([0042](0042-operadores-de-plataforma.md)):
   - el ingreso manda el código;
-  - el registro dice «Ya tenés una cuenta con ese correo.».
+  - el registro de una persona dice «Ya tenés una cuenta con ese correo.»;
+  - el registro de una empresa pide el código, como con cualquier cuenta que ya existe.
 
   Nada menciona al operador ni a Plataforma antes del código. Recién cuando prueba que el correo es suyo, con el código o con su sesión ya abierta, el operador ve una pantalla privada: le dice que esa cuenta entra por Plataforma, con «Ir a Plataforma» y «Salir» (A1 de los arreglos). Lo pidió el dueño del producto: «es algo íntimo mío… esa prueba solo yo tengo que saberla y solo yo puedo ingresar».
 - **«Recuperar mi cuenta»:**

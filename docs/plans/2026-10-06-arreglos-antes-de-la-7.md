@@ -44,7 +44,10 @@ Diseño la dibuja como estado de `Ingreso` y `M-Ingreso`.
 - [ ] **Back, rojo y verde:**
   - pedir el código de ingreso con un correo sin cuenta responde un error propio y no manda código;
   - el registro de una persona con un correo que ya tiene cuenta responde un error propio;
-  - el correo de un operador en las puertas públicas se comporta como el de cualquier cuenta: ingreso con código, y registro con «ya tenés cuenta»;
+  - el correo de un operador en las puertas públicas se comporta como el de cualquier cuenta:
+    - el ingreso y el registro de una empresa piden el código;
+    - el registro de una persona responde «ya tenés cuenta»;
+    - recién después del código aparece la pantalla privada de A1;
   - «Recuperar mi cuenta» y agregar un correo en Mi cuenta dicen si el correo ya es de otra cuenta;
   - cada error lleva su código `Area.Entidad.Motivo`, su texto en es y en, y la ficha `identidad.md` al día;
   - siguen los topes por destino, por cuenta y por dirección;
