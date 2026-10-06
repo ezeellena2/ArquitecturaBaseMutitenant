@@ -400,7 +400,7 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
             .GetUInt32();
         using (var approved = await PlatformJourney.PostAsync(operatorClient,
                    $"/api/platform/tenants/{tenant.Id:D}/approve", new { version, reason }, Ct))
-            Assert.True(approved.StatusCode == HttpStatusCode.NoContent, await approved.Content.ReadAsStringAsync(Ct));
+            Assert.True(approved.StatusCode == HttpStatusCode.OK, await approved.Content.ReadAsStringAsync(Ct));
         await AccountJourney.AuthorizeAsync(ownerClient, "business", Ct);
         return (tenant, operatorAccount);
     }
