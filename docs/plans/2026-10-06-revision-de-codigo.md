@@ -7,6 +7,9 @@
 > - **Pocos hallazgos y que valgan.** No más de 30. Lo que se repite va en un solo hallazgo, con la lista de lugares. Nada de detalles de estilo que no cambian cuánto se entiende el código.
 > - **Lo ya decidido no es un hallazgo:** las ADR, las fichas de `docs/rules/` y las «Decisiones tomadas» de los planes. Sí lo es si el código las contradice, o si una decisión deja el código difícil de entender: en ese caso proponé el cambio y decí qué decisión toca.
 > - **Commits:** solo el informe, en español, con `git commit -m "…" -- <ruta>`. Todo en `main`, sin push. No arranques la Etapa 7.
+> - **En paralelo con los arreglos.** Otro chat de Codex hace los [arreglos antes de la Etapa 7](2026-10-06-arreglos-antes-de-la-7.md) en la misma copia, así que vas a ver archivos modificados que no son tuyos.
+>   - No los toques, no los commitees y no esperes a que la copia esté limpia.
+>   - Identidad e ingreso, junto con Mi cuenta y el registro, va al final, recién cuando los arreglos A1 a A7 estén commiteados. Antes, ese código está cambiando.
 
 ## Alcance
 
@@ -23,11 +26,11 @@
 1. **Antes de empezar,** leé `docs/architecture/backend.md` y `docs/rules/capas-y-flujo.md` del back, y `docs/rules/estructura-y-features.md` del front. Son la forma acordada: una cosa que la sigue no es un hallazgo.
 2. **Usá Roles como vara.** Roles es el área de referencia, en `areas/business/roles/` del front y en los servicios de Roles del back. Lo que está escrito muy distinto de Roles sin un motivo es una pista.
 3. **Por área del producto,** en este orden:
-   1. Identidad e ingreso;
-   2. Roles y permisos;
-   3. Organización: Usuarios, Empresas, Configuración, Página pública y Auditoría;
-   4. Plataforma;
-   5. las piezas comunes: `shared/` del front, y `Common` y `Persistence` del back.
+   1. Roles y permisos;
+   2. Organización: Usuarios, Empresas, Configuración, Página pública y Auditoría;
+   3. Plataforma;
+   4. las piezas comunes: `shared/` del front, y `Common` y `Persistence` del back;
+   5. Identidad e ingreso, con Mi cuenta y el registro, cuando los arreglos estén commiteados.
 4. **El informe crece por área:** al terminar cada una, sumala y commitealo.
 
 ## Qué buscar
