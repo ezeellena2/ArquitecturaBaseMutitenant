@@ -46,7 +46,9 @@ internal sealed class ExternalLoginService(
                 ct => SignInCoreAsync(request, login, draft, ct), CommitPolicy.OnAnyResult, cancellationToken);
             if (result.IsFailure) return result.Error;
 
-            await signIn.SignInAsync(result.Value, cancellationToken);
+            var access = ReturnUrls.TryReadAccessSelection(request.ReturnUrl, out var selection)
+                ? selection.Access : Access.Business;
+            await signIn.SignInAsync(result.Value, access, cancellationToken);
             return new ExternalSignInResponse(request.ReturnUrl!);
         });
 

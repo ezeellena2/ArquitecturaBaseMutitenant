@@ -45,7 +45,7 @@ internal sealed class SignInService(
         await tokenRevoker.RevokeUserAsync(userId, cancellationToken);
     }
 
-    public async Task SignInAsync(Guid userId, CancellationToken cancellationToken)
+    public async Task SignInAsync(Guid userId, Access access, CancellationToken cancellationToken)
     {
         context.RequireNoTransaction();
         var properties = new AuthenticationProperties { IsPersistent = true };
@@ -53,6 +53,8 @@ internal sealed class SignInService(
             Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
         properties.Items[BrowserSessionKeys.StartedAtUtc] =
             BrowserSessionKeys.FormatStartedAtUtc(timeProvider.GetUtcNow().UtcDateTime);
+        signInManager.AuthenticationScheme = access == Access.Platform
+            ? BrowserSessionKeys.PlatformScheme : IdentityConstants.ApplicationScheme;
         await signInManager.SignInAsync(await RequireUserAsync(userId, cancellationToken), properties);
     }
 

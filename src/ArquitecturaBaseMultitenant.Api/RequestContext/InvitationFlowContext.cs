@@ -83,7 +83,7 @@ public sealed class InvitationFlowContext(IHttpContextAccessor accessor, IDataPr
     {
         if (await users.GetStatusAsync(userId, cancellationToken) != UserStatus.Active
             || await signIn.IsLockedOutAsync(userId, cancellationToken)) return false;
-        await signIn.SignInAsync(userId, cancellationToken);
+        await signIn.SignInAsync(userId, Access.Business, cancellationToken);
         return true;
     }
 }

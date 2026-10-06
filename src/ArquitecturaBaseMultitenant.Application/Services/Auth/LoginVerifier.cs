@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Application.Services.Legal;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
@@ -48,6 +49,9 @@ internal sealed class LoginVerifier(
         var account = await accounts.ReadAsync(userId.Value, cancellationToken);
         if (account is null || account.Status is UserStatus.Suspended or UserStatus.Deleted)
             return Fail(userId, AccountErrors.Suspended);
+        if (account.IsPlatformOperator && (!ReturnUrls.TryReadAccessSelection(request.ReturnUrl, out var requested)
+            || requested.Access != Access.Platform))
+            return Fail(userId, AccessErrors.PlatformOnly);
         if (account.Status == UserStatus.PendingDeletion)
             return Fail(userId, cancellation.Issue(account, null, request.ReturnUrl!));
 

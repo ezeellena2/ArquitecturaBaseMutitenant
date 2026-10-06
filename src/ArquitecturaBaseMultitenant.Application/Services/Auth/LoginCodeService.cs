@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
@@ -39,7 +40,9 @@ internal sealed class LoginCodeService(
                 ct => verification.VerifyAsync(request, ct), CommitPolicy.OnAnyResult, cancellationToken);
             if (verified.IsFailure) return verified.Error;
 
-            await signIn.SignInAsync(verified.Value, cancellationToken);
+            var access = ReturnUrls.TryReadAccessSelection(request.ReturnUrl, out var selection)
+                ? selection.Access : Access.Business;
+            await signIn.SignInAsync(verified.Value, access, cancellationToken);
             return new VerifyLoginCodeResponse(request.ReturnUrl!);
         });
 }

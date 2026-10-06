@@ -138,7 +138,7 @@ public sealed class SignInServiceTests(ApiFactory factory)
 
         await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
         {
-            await Assert.ThrowsAsync<InvalidOperationException>(() => service.SignInAsync(userId, ct));
+            await Assert.ThrowsAsync<InvalidOperationException>(() => service.SignInAsync(userId, Access.Consumer, ct));
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
     }

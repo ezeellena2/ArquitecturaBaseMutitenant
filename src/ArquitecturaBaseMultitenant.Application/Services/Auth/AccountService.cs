@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
@@ -37,7 +38,7 @@ internal sealed class AccountService(SignupCodeRequester requester, IPersonalSpa
                 ct => verification.VerifyAsync(request, draft, ct), CommitPolicy.OnAnyResult, cancellationToken);
             if (verified.IsFailure) return verified.Error;
 
-            await signIn.SignInAsync(verified.Value, cancellationToken);
+            await signIn.SignInAsync(verified.Value, Access.Consumer, cancellationToken);
             return Result.Success();
         });
 }

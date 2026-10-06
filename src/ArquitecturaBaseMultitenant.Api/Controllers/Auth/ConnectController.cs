@@ -42,7 +42,7 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
         }
 
         var forceLogin = request.HasPromptValue(PromptValues.Login);
-        var session = await HttpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
+        var session = await HttpContext.AuthenticateAsync(BrowserScheme(access));
         var browserSessionId = session.Properties?.Items.TryGetValue(BrowserSessionKeys.CookieSessionId,
             out var activeSessionId) == true ? activeSessionId : null;
         if (!forceLogin && session.Succeeded && !string.IsNullOrEmpty(browserSessionId) && Guid.TryParse(
@@ -128,7 +128,9 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
 
         var hint = await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         var authorizationId = hint.Principal?.GetAuthorizationId();
-        var session = await HttpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
+        var access = hint.Principal?.GetClaim(TenantClaimTypes.Access) == "platform" ? Access.Platform : Access.Consumer;
+        var scheme = BrowserScheme(access);
+        var session = await HttpContext.AuthenticateAsync(scheme);
         var browserSessionId = session.Properties?.Items.TryGetValue(BrowserSessionKeys.CookieSessionId,
             out var activeSessionId) == true ? activeSessionId : null;
         var cookieUserId = Guid.TryParse(session.Principal?.FindFirstValue(ClaimTypes.NameIdentifier),
@@ -136,10 +138,13 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
         await logoutService.RevokeAsync(cookieUserId, browserSessionId, authorizationId,
             preserveInvitation, cancellationToken);
 
-        await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+        await HttpContext.SignOutAsync(scheme);
         return SignOut(new AuthenticationProperties { RedirectUri = "/" },
             OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
+
+    private static string BrowserScheme(Access access) => access == Access.Platform
+        ? BrowserSessionKeys.PlatformScheme : IdentityConstants.ApplicationScheme;
 
     private static bool ShouldPreserveInvitation(OpenIddictRequest? request, IConfiguration configuration,
         string preserveInvitation)

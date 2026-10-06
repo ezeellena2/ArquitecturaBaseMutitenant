@@ -32,7 +32,7 @@ internal sealed class AccountDeletionService(ICurrentUser currentUser, AccountDe
         {
             var result = await unitOfWork.ExecuteInTransactionAsync(
                 innerCt => canceller.CancelAsync(request, innerCt), CommitPolicy.OnSuccess, ct);
-            if (result.IsSuccess) await sessions.RestoreAsync(result.Value.UserId, ct);
+            if (result.IsSuccess) await sessions.RestoreAsync(result.Value.UserId, result.Value.ReturnUrl, ct);
             return result;
         });
 }

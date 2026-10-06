@@ -134,9 +134,8 @@ public sealed class PlatformOperatorTests(ApiFactory factory)
         {
             using var denied = await invitedClient.GetAsync(AuthorizePath(access), Ct);
             Assert.Equal(HttpStatusCode.Redirect, denied.StatusCode);
-            var location = Uri.UnescapeDataString(denied.Headers.Location!.ToString());
-            Assert.Contains("error=access_denied", location, StringComparison.Ordinal);
-            Assert.Contains(AccessErrors.PlatformOnlyCode, location, StringComparison.Ordinal);
+            var door = access == "business" ? "/login/empresa" : "/login";
+            Assert.StartsWith(door + "?returnUrl=", denied.Headers.Location!.OriginalString, StringComparison.Ordinal);
         }
         await using (var scope = factory.Services.CreateAsyncScope())
             Assert.False(await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().UserTenantAccesses

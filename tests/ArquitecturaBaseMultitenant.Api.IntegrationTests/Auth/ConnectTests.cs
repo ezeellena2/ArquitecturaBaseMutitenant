@@ -179,9 +179,10 @@ public sealed class ConnectTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.OK, verified.StatusCode);
 
         var foreignTenant = Guid.CreateVersion7();
+        using (var platformDoor = await client.GetAsync(AuthorizePath("platform"), Ct))
+            Assert.StartsWith("/login?returnUrl=", platformDoor.Headers.Location!.OriginalString, StringComparison.Ordinal);
         foreach (var path in new[]
         {
-            AuthorizePath("platform"),
             AuthorizePath("business") + "&tenant=" + foreignTenant.ToString("D"),
             AuthorizePath("consumer") + "&tenant=" + foreignTenant.ToString("D"),
         })

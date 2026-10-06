@@ -7,6 +7,8 @@ using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +27,28 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 public sealed class GoogleLoginTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    [Theory]
+    [InlineData("consumer")]
+    [InlineData("business")]
+    public async Task An_accepted_operator_cannot_create_a_public_session_through_Google(string access)
+    {
+        using var setup = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var account = await AccountJourney.RegisterAsync(factory, setup, Ct);
+        await PlatformOperators.GrantAsync(factory.Services, account.UserId, PlatformOperators.All, Ct);
+        var subject = Guid.NewGuid().ToString("N");
+        var google = new GoogleSignInDouble(new ExternalLogin("Google", subject, account.Email, true, null));
+        await using var host = HostWith(google);
+        await using var scope = host.Services.CreateAsyncScope();
+
+        var result = await scope.ServiceProvider.GetRequiredService<IExternalLoginService>()
+            .SignInAsync(new ExternalSignInRequest("/connect/authorize?client_id=web&access=" + access, false, false), Ct);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(AccessErrors.PlatformOnlyCode, result.Error.Code);
+        Assert.Null(google.SignedInUserId);
+        Assert.Equal(0, await CountMethodsAsync(subject));
+    }
 
     [Fact]
     public async Task Pending_Google_proof_returns_cancel_ticket_without_signing_in()
@@ -404,7 +428,7 @@ public sealed class GoogleLoginTests(ApiFactory factory)
 
         public Task RevokeSessionsAsync(Guid userId, CancellationToken cancellationToken) => Task.CompletedTask;
 
-        public Task SignInAsync(Guid userId, CancellationToken cancellationToken)
+        public Task SignInAsync(Guid userId, Access access, CancellationToken cancellationToken)
         {
             SignedInUserId = userId;
             return Task.CompletedTask;

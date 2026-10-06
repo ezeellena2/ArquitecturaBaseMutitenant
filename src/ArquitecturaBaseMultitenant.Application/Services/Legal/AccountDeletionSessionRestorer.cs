@@ -1,5 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
+using ArquitecturaBaseMultitenant.Application.Models.Auth;
+using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
 
@@ -8,9 +10,11 @@ internal sealed class AccountDeletionSessionRestorer(IAccessStatusCache statuses
 {
     internal ValueTask InvalidateAsync(Guid userId, CancellationToken ct) => statuses.InvalidateUserAsync(userId, ct);
 
-    internal async Task RestoreAsync(Guid userId, CancellationToken ct)
+    internal async Task RestoreAsync(Guid userId, string returnUrl, CancellationToken ct)
     {
         await statuses.InvalidateUserAsync(userId, ct);
-        await signIn.SignInAsync(userId, ct);
+        var access = ReturnUrls.TryReadAccessSelection(returnUrl, out var selection)
+            ? selection.Access : Access.Business;
+        await signIn.SignInAsync(userId, access, ct);
     }
 }

@@ -90,11 +90,14 @@ public sealed class AccountDeletionLoginTests(ApiFactory factory)
     [InlineData("consumer")]
     [InlineData("business")]
     [InlineData("invitation")]
+    [InlineData("platform")]
     public async Task Cancellation_uses_the_proved_account_and_return_door_and_rejects_replay(string access)
     {
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
             { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
+        if (access == "platform")
+            await PlatformOperators.GrantAsync(factory.Services, account.UserId, PlatformOperators.All, Ct);
         var oldToken = client.DefaultRequestHeaders.Authorization;
         var returnUrl = access == "invitation" ? "/invitacion" : "/connect/authorize?client_id=web&access=" + access;
         string secret;
@@ -119,8 +122,8 @@ public sealed class AccountDeletionLoginTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.OK, cancelled.StatusCode);
         using var body = await cancelled.Content.ReadFromJsonAsync<JsonDocument>(Ct);
         Assert.Equal(returnUrl, body!.RootElement.GetProperty("returnUrl").GetString());
-        Assert.Contains(cancelled.Headers.GetValues("Set-Cookie"), value =>
-            value.StartsWith(".AspNetCore.Identity.Application=", StringComparison.Ordinal));
+        var cookie = access == "platform" ? ".AspNetCore.Identity.Platform=" : ".AspNetCore.Identity.Application=";
+        Assert.Contains(cancelled.Headers.GetValues("Set-Cookie"), value => value.StartsWith(cookie, StringComparison.Ordinal));
         using var replay = await AccountJourney.PostAsync(client, "/api/auth/deletion/cancel", new { cancelTicket = secret }, Ct);
         Assert.Equal(HttpStatusCode.Forbidden, replay.StatusCode);
         client.DefaultRequestHeaders.Authorization = oldToken;

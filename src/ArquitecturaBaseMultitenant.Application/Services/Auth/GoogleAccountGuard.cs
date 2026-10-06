@@ -5,6 +5,8 @@ using ArquitecturaBaseMultitenant.Application.Services.Legal;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Application.Models.Auth;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
@@ -20,6 +22,8 @@ internal sealed class GoogleAccountGuard(IUserRepository users, ISignInService s
             return AccountErrors.Suspended;
         // ADR 0042: una invitación de operador se acepta solo con código; con Google no entra ni se vincula.
         if (account.HasPendingOperatorInvitation) return ExternalLoginErrors.Failed;
+        if (account.IsPlatformOperator && (!ReturnUrls.TryReadAccessSelection(returnUrl, out var selection)
+            || selection.Access != Access.Platform)) return AccessErrors.PlatformOnly;
         if (await signIn.IsLockedOutAsync(userId, cancellationToken)) return AccountErrors.LockedOut;
         if (account.Status == UserStatus.PendingDeletion) return cancellation.Issue(account, methodId, returnUrl);
         return account;

@@ -58,6 +58,25 @@ public sealed class IdentityRegistrationTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Platform_cookie_has_the_same_security_and_stamp_validation_with_an_independent_scheme()
+    {
+        using var client = factory.CreateClient();
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        Assert.NotNull(await services.GetRequiredService<IAuthenticationSchemeProvider>().GetSchemeAsync("Identity.Platform"));
+        var cookies = services.GetRequiredService<IOptionsMonitor<CookieAuthenticationOptions>>();
+        var publicCookie = cookies.Get(IdentityConstants.ApplicationScheme);
+        var platformCookie = cookies.Get("Identity.Platform");
+        Assert.NotEqual(publicCookie.Cookie.Name, platformCookie.Cookie.Name);
+        Assert.Equal(publicCookie.Cookie.HttpOnly, platformCookie.Cookie.HttpOnly);
+        Assert.Equal(publicCookie.Cookie.SecurePolicy, platformCookie.Cookie.SecurePolicy);
+        Assert.Equal(publicCookie.Cookie.SameSite, platformCookie.Cookie.SameSite);
+        Assert.Equal(publicCookie.ExpireTimeSpan, platformCookie.ExpireTimeSpan);
+        Assert.Equal(publicCookie.SlidingExpiration, platformCookie.SlidingExpiration);
+        Assert.NotNull(platformCookie.Events.OnValidatePrincipal);
+    }
+
+    [Fact]
     public async Task Google_is_only_registered_when_client_id_is_configured()
     {
         var absent = BuildProvider(new ConfigurationBuilder().Build());

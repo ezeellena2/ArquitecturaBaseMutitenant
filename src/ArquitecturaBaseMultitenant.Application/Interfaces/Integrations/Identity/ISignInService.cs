@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
+using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 
@@ -13,7 +14,7 @@ public interface ISignInService
 
     Task RevokeSessionsAsync(Guid userId, CancellationToken cancellationToken);
 
-    Task SignInAsync(Guid userId, CancellationToken cancellationToken);
+    Task SignInAsync(Guid userId, Access access, CancellationToken cancellationToken);
 
     Task<ExternalLogin?> GetExternalLoginAsync(CancellationToken cancellationToken);
 

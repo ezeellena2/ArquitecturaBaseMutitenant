@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
@@ -36,26 +37,30 @@ internal static class IdentityRegistration
         // AddIdentityCore evita que la cookie autentique las rutas /api: allí se valida el bearer de OpenIddict.
         var authentication = services.AddAuthentication(OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme);
         authentication.AddIdentityCookies();
-        AddGoogle(services, authentication, configuration);
-
-        services.ConfigureApplicationCookie(options =>
+        authentication.AddCookie(BrowserSessionKeys.PlatformScheme, options =>
         {
-            options.Cookie.HttpOnly = true;
-            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-            options.Cookie.SameSite = SameSiteMode.Lax;
-            options.ExpireTimeSpan = TimeSpan.FromDays(30);
-            options.SlidingExpiration = true;
-            options.Events.OnRedirectToLogin = context =>
+            options.Cookie.Name = ".AspNetCore.Identity.Platform";
+            ConfigureBrowserCookie(options);
+            options.Events.OnValidatePrincipal = async context =>
             {
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                return Task.CompletedTask;
-            };
-            options.Events.OnRedirectToAccessDenied = context =>
-            {
-                context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                return Task.CompletedTask;
+                // El validador de Identity renueva o cierra el esquema que está validando. Una cookie
+                // de Plataforma revocada nunca debe borrar la cookie pública de otra cuenta.
+                var manager = context.HttpContext.RequestServices.GetRequiredService<SignInManager<ApplicationUser>>();
+                var previousScheme = manager.AuthenticationScheme;
+                manager.AuthenticationScheme = context.Scheme.Name;
+                try
+                {
+                    await SecurityStampValidator.ValidatePrincipalAsync(context);
+                }
+                finally
+                {
+                    manager.AuthenticationScheme = previousScheme;
+                }
             };
         });
+        AddGoogle(services, authentication, configuration);
+
+        services.ConfigureApplicationCookie(ConfigureBrowserCookie);
 
         services.AddIdentityCore<ApplicationUser>(options =>
             {
@@ -94,6 +99,25 @@ internal static class IdentityRegistration
         services.AddScoped<IUserLookup, UserLookup>();
         services.AddScoped<IUserStatusReader, UserStatusReader>();
         return services;
+    }
+
+    private static void ConfigureBrowserCookie(CookieAuthenticationOptions options)
+    {
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.ExpireTimeSpan = TimeSpan.FromDays(30);
+        options.SlidingExpiration = true;
+        options.Events.OnRedirectToLogin = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        };
+        options.Events.OnRedirectToAccessDenied = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
+        };
     }
 
     private static X509Certificate2 LoadDataProtectionCertificate(IConfiguration configuration)

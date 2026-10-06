@@ -12,6 +12,7 @@ using ArquitecturaBaseMultitenant.Domain.ReferenceData;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
@@ -47,7 +48,7 @@ internal sealed class BusinessSignupService(SignupCodeRequester codes, SignupCod
                 cancellationToken);
             if (verified.IsFailure) return verified.Error;
 
-            await signIn.SignInAsync(verified.Value, cancellationToken);
+            await signIn.SignInAsync(verified.Value, Access.Business, cancellationToken);
             return Result.Success();
         });
 
