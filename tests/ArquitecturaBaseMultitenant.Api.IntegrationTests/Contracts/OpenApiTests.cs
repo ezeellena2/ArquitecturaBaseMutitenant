@@ -25,6 +25,34 @@ public sealed class OpenApiTests(ApiFactory factory)
     ];
 
     [Fact]
+    public async Task Platform_audit_organization_options_have_the_runtime_array_contract_and_query_errors()
+    {
+        await using var development = factory.WithWebHostBuilder(builder => builder.UseDevelopmentTestOwner());
+        using var client = development.CreateClient();
+        using var response = await client.GetAsync("/openapi/v1.json", TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        var root = document.RootElement;
+        var operation = root.GetProperty("paths").GetProperty("/api/platform/audit/organizations").GetProperty("get");
+        var parameters = operation.GetProperty("parameters").EnumerateArray()
+            .Select(parameter => parameter.GetProperty("name").GetString()).ToArray();
+        Assert.Equal(root.GetProperty("paths").GetProperty("/api/platform/audit").GetProperty("get")
+            .GetProperty("parameters").EnumerateArray().Select(parameter => parameter.GetProperty("name").GetString()), parameters);
+        var responses = operation.GetProperty("responses");
+        var success = responses.GetProperty("200").GetProperty("content").GetProperty("application/json").GetProperty("schema");
+        Assert.Equal("array", success.GetProperty("type").GetString());
+        Assert.Equal("#/components/schemas/PlatformAuditOrganizationResponse", success.GetProperty("items").GetProperty("$ref").GetString());
+        var schema = root.GetProperty("components").GetProperty("schemas").GetProperty("PlatformAuditOrganizationResponse");
+        var properties = schema.GetProperty("properties");
+        Assert.Equal(["id", "name"], properties.EnumerateObject().Select(property => property.Name).ToArray());
+        Assert.Equal("uuid", properties.GetProperty("id").GetProperty("format").GetString());
+        Assert.Equal("string", properties.GetProperty("name").GetProperty("type").GetString());
+        Assert.Equal(["id", "name"], schema.GetProperty("required").EnumerateArray().Select(item => item.GetString()).ToArray());
+        foreach (var status in new[] { "400", "401", "403", "500" })
+            Assert.True(IsProblemDetails(responses.GetProperty(status)), status);
+    }
+
+    [Fact]
     public async Task Civil_feature_expirations_are_nullable_date_strings_in_the_generated_contract()
     {
         await using var development = factory.WithWebHostBuilder(builder => builder.UseDevelopmentTestOwner());

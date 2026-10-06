@@ -18,4 +18,8 @@ public interface ISecurityEventReader
         IReadOnlyCollection<SecurityEventType>? eventTypes, bool includeSignIns, CancellationToken ct);
 
     Task<PlatformAuditRow?> FindAsync(Guid id, CancellationToken ct);
+
+    /// <summary>Organizaciones distintas de los eventos filtrados, sin aplicar TenantId ni la página del pedido.</summary>
+    Task<IReadOnlyList<PlatformAuditOrganizationResponse>> ListOrganizationsAsync(ListPlatformAuditRequest request,
+        DateTime? sinceUtc, IReadOnlyCollection<SecurityEventType>? eventTypes, CancellationToken ct);
 }

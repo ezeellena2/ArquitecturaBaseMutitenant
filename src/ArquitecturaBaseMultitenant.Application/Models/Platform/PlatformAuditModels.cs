@@ -25,6 +25,9 @@ public sealed record PlatformAuditEventResponse(Guid Id, DateTime OccurredAtUtc,
     string Summary, string Target, Guid? TargetTenantId, Guid? TargetAccountId, string Actor, string ActorRole,
     string? Reason, string? IpAddress);
 
+/// <summary>Una organización presente en los eventos filtrados, con su nombre global actual.</summary>
+public sealed record PlatformAuditOrganizationResponse(Guid Id, string Name);
+
 /// <summary>Proyección del reader: un SecurityEvent o un ingreso de identity.LoginAudits, con los nombres actuales.</summary>
 public sealed record PlatformAuditRow(Guid Id, DateTime OccurredAtUtc, SecurityEventType? EventType,
     LoginAuditMethod? SignInMethod, bool SignInSucceeded, string? FailureCode, AuditActorKind ActorKind,

@@ -32,8 +32,35 @@ internal sealed class SecurityEventReader(ApplicationDbContext context) : ISecur
         return rows.GetValueOrDefault(id);
     }
 
+    public async Task<IReadOnlyList<PlatformAuditOrganizationResponse>> ListOrganizationsAsync(
+        ListPlatformAuditRequest request, DateTime? sinceUtc, IReadOnlyCollection<SecurityEventType>? eventTypes,
+        CancellationToken ct)
+    {
+        var ids = FilteredEvents(request with { TenantId = null }, sinceUtc, eventTypes)
+            .Where(item => item.TargetTenantId != null).Select(item => item.TargetTenantId!.Value).Distinct();
+        return await context.Tenants.AsNoTracking().Where(tenant => ids.Contains(tenant.Id))
+            .OrderBy(tenant => tenant.Name).ThenBy(tenant => tenant.Id)
+            .Select(tenant => new PlatformAuditOrganizationResponse(tenant.Id, tenant.Name)).ToArrayAsync(ct);
+    }
+
     private IQueryable<AuditKey> Keys(ListPlatformAuditRequest request, DateTime? sinceUtc,
         IReadOnlyCollection<SecurityEventType>? eventTypes, bool includeSignIns)
+    {
+        var keys = FilteredEvents(request, sinceUtc, eventTypes)
+            .Select(item => new AuditKey { Id = item.Id, OccurredAtUtc = item.OccurredAtUtc, IsSignIn = false });
+        if (!includeSignIns) return keys;
+
+        var byName = string.IsNullOrWhiteSpace(request.Search) ? null
+            : context.Users.AsNoTracking().ApplySearch(request.Search, user => user.DisplayName).Select(user => user.Id);
+        var signIns = context.LoginAudits.AsNoTracking();
+        if (sinceUtc is { } from) signIns = signIns.Where(item => item.OccurredAtUtc >= from);
+        if (request.AccountId is { } account) signIns = signIns.Where(item => item.UserId == account);
+        if (byName is not null) signIns = signIns.Where(item => item.UserId != null && byName.Contains(item.UserId.Value));
+        return keys.Concat(signIns.Select(item => new AuditKey { Id = item.Id, OccurredAtUtc = item.OccurredAtUtc, IsSignIn = true }));
+    }
+
+    private IQueryable<SecurityEvent> FilteredEvents(ListPlatformAuditRequest request, DateTime? sinceUtc,
+        IReadOnlyCollection<SecurityEventType>? eventTypes)
     {
         var byName = string.IsNullOrWhiteSpace(request.Search) ? null
             : context.Users.AsNoTracking().ApplySearch(request.Search, user => user.DisplayName).Select(user => user.Id);
@@ -55,14 +82,7 @@ internal sealed class SecurityEventReader(ApplicationDbContext context) : ISecur
                 || item.TargetTenantId != null && byTenant.Contains(item.TargetTenantId.Value));
         }
 
-        var keys = events.Select(item => new AuditKey { Id = item.Id, OccurredAtUtc = item.OccurredAtUtc, IsSignIn = false });
-        if (!includeSignIns) return keys;
-
-        var signIns = context.LoginAudits.AsNoTracking();
-        if (sinceUtc is { } from) signIns = signIns.Where(item => item.OccurredAtUtc >= from);
-        if (request.AccountId is { } account) signIns = signIns.Where(item => item.UserId == account);
-        if (byName is not null) signIns = signIns.Where(item => item.UserId != null && byName.Contains(item.UserId.Value));
-        return keys.Concat(signIns.Select(item => new AuditKey { Id = item.Id, OccurredAtUtc = item.OccurredAtUtc, IsSignIn = true }));
+        return events;
     }
 
     private async Task<Dictionary<Guid, PlatformAuditRow>> LoadAsync(Guid[] eventIds, Guid[] signInIds, CancellationToken ct)

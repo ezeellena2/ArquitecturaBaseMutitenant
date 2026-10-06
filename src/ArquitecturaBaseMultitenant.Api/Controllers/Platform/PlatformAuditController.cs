@@ -27,6 +27,14 @@ public sealed class PlatformAuditController(IPlatformAuditService service) : Con
     public async Task<IActionResult> List([FromQuery] PlatformAuditQuery query, CancellationToken ct) =>
         (await service.ListAsync(query.ToModel(), ct)).ToActionResult(this);
 
+    [HttpGet("organizations")]
+    [ProducesResponseType<IReadOnlyList<PlatformAuditOrganizationResponse>>(StatusCodes.Status200OK)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
+    [ProducesProblem(StatusCodes.Status401Unauthorized)]
+    [ProducesProblem(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> ListOrganizations([FromQuery] PlatformAuditQuery query, CancellationToken ct) =>
+        (await service.ListOrganizationsAsync(query.ToModel(), ct)).ToActionResult(this);
+
     [HttpGet("{id:guid}")]
     [ProducesResponseType<PlatformAuditEventResponse>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status401Unauthorized)]

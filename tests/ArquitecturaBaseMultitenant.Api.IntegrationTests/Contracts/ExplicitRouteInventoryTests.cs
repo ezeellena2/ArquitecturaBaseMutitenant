@@ -120,6 +120,7 @@ public sealed class ExplicitRouteInventoryTests(ApiFactory factory)
         "POST /api/platform/operators/{id:guid}/invitation/resend",
         "DELETE /api/platform/operators/{id:guid}/invitation",
         "GET /api/platform/audit",
+        "GET /api/platform/audit/organizations",
         "GET /api/platform/legal-documents",
         "GET /api/platform/legal-documents/{id:guid}",
         "POST /api/platform/legal-documents",

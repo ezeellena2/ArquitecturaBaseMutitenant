@@ -11,4 +11,7 @@ public interface IPlatformAuditService
         CancellationToken ct);
 
     Task<Result<PlatformAuditEventResponse>> FindAsync(Guid id, CancellationToken ct);
+
+    Task<Result<IReadOnlyList<PlatformAuditOrganizationResponse>>> ListOrganizationsAsync(
+        ListPlatformAuditRequest request, CancellationToken ct);
 }

@@ -31,12 +31,7 @@ internal sealed class PlatformAuditService(ISecurityEventReader reader, IUserRep
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
             var since = await SinceAsync(request.Period, ct);
-            IReadOnlyCollection<SecurityEventType>? types = request.Type switch
-            {
-                null => null,
-                PlatformAuditCategories.SignIns => [],
-                var category => PlatformAuditCategories.TypesOf(category),
-            };
+            var types = EventTypes(request.Type);
             // Los ingresos no tienen organización: con ese filtro no se suman.
             var signIns = request.Type is null or PlatformAuditCategories.SignIns && request.TenantId is null;
             var page = await reader.ListAsync(request, since, types, signIns, ct);
@@ -47,6 +42,24 @@ internal sealed class PlatformAuditService(ISecurityEventReader reader, IUserRep
     public Task<Result<PlatformAuditEventResponse>> FindAsync(Guid id, CancellationToken ct) =>
         OperationLog.RunAsync<PlatformAuditEventResponse>(logger, clock, "FindPlatformAudit", async () =>
             await reader.FindAsync(id, ct) is { } row ? ToResponse(row) : PlatformAuditErrors.NotFound);
+
+    public Task<Result<IReadOnlyList<PlatformAuditOrganizationResponse>>> ListOrganizationsAsync(
+        ListPlatformAuditRequest request, CancellationToken ct) =>
+        OperationLog.RunAsync<IReadOnlyList<PlatformAuditOrganizationResponse>>(logger, clock,
+            "ListPlatformAuditOrganizations", async () =>
+            {
+                ArgumentNullException.ThrowIfNull(request);
+                if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
+                var since = await SinceAsync(request.Period, ct);
+                return Result.Success(await reader.ListOrganizationsAsync(request, since, EventTypes(request.Type), ct));
+            });
+
+    private static IReadOnlyCollection<SecurityEventType>? EventTypes(string? category) => category switch
+    {
+        null => null,
+        PlatformAuditCategories.SignIns => [],
+        var type => PlatformAuditCategories.TypesOf(type),
+    };
 
     private async Task<DateTime?> SinceAsync(string? period, CancellationToken ct)
     {
