@@ -63,3 +63,51 @@ Diseño la dibuja como estado de `Ingreso` y `M-Ingreso`.
   - registrar una empresa con un correo nuevo y entrar como empresa.
 
 **Hecho cuando:** ninguna pantalla dice «Te mandamos un código» si el código no sale, y desde cada caso la persona sabe qué hacer.
+
+## A3 · La sesión de Plataforma va aparte (ADR 0044, decidido por el usuario el 2026-10-06)
+
+**El problema:**
+- Hay una sola sesión por navegador para persona, empresa y plataforma.
+- Con la sesión del operador guardada, «Ingresar» y «Ingresá como empresa» no muestran el ingreso: `/connect/authorize` intenta entrar con el operador y falla con `Tenancy.Access.PlatformOnly` (`ConnectController.cs`, líneas 48 a 56).
+- El usuario lo encontró al probar como un usuario común.
+
+**La decisión:** la [ADR 0044](../decisions/0044-sesion-de-plataforma-aparte.md). Plataforma tiene su propia sesión, en su cookie; persona y empresa comparten la pública.
+
+- [ ] **Rojo** (integración):
+  - con solo la sesión de Plataforma, el authorize de persona y el de empresa redirigen al ingreso de esa puerta;
+  - con las dos sesiones, cada authorize usa la suya;
+  - salir de Plataforma no cierra la pública, y salir de la pública no cierra Plataforma;
+  - cerrar sesiones y la baja cierran las dos;
+  - un operador nunca recibe la sesión pública.
+- [ ] **Implementación:**
+  - un esquema de cookie para Plataforma, con la misma configuración segura que la pública;
+  - el ingreso con código guarda la sesión según el acceso del pedido;
+  - `Authorize` lee solo la del acceso pedido;
+  - la salida y el cierre de sesiones cubren las dos.
+
+  Copiá cómo se arma hoy la cookie de Identity. No agregues capas: si hace falta una pieza nueva, que lleve un sufijo de la lista de `capas-y-flujo`.
+- [ ] **E2E real:** el operador entra a Plataforma y, en el mismo navegador, una persona ingresa con otro correo. Después vuelve a Plataforma y sigue adentro.
+- [ ] **Docs:** `identidad.md` y `plataforma.md`.
+
+**Hecho cuando:** con Plataforma abierta, «Ingresar» y «Ingresá como empresa» muestran siempre el ingreso, y las dos sesiones conviven.
+
+## A4 · «Registrarte con Google» no va a Google (encontrado por el usuario el 2026-10-06)
+
+**El problema:** en el registro de una persona, con los términos aceptados, tocar «Registrarte con Google» no lleva a Google. Marca el campo de correo con «Ingresá un correo electrónico válido.». La Guía lo reprodujo en el navegador.
+
+**La causa:**
+- `GoogleButton` (modo registro) arma su formulario oculto con `createPortal` dentro de `document.body`, pero lo renderiza **adentro del formulario de correo** de `SignupPage`.
+- En React, el evento `submit` de un portal sube por el árbol de React, no por el del DOM.
+- Así, el envío del formulario de Google llega al `onSubmit` del formulario de correo. React Hook Form cancela el envío (`preventDefault`) y valida el correo vacío.
+- El back anda bien: el POST de `/api/auth/external/google` responde 302 a Google.
+- Pasa lo mismo en «Registrá tu empresa» («Seguir con Google»), que usa la misma pieza.
+
+**Por qué no lo vimos:** el E2E no puede usar Google, y los tests del front revisan el formulario oculto pero no que el clic llegue a enviarlo.
+
+- [ ] **Rojo** (`SignupPage.test.tsx` y `BusinessSignupPage.test.tsx`): tocar el botón de Google con los términos aceptados manda el formulario de Google, no ejecuta la validación del correo y no muestra «Ingresá un correo electrónico válido.».
+- [ ] **Implementación:**
+  - el botón de Google y su formulario quedan **fuera** del formulario de correo en el árbol de React, como hermanos, con la casilla de términos compartida desde la página;
+  - sin portal, y sin cortar la propagación con `stopPropagation`.
+- [ ] **E2E real:** tocar «Registrarte con Google» con los términos aceptados lleva a `accounts.google.com`. Se comprueba la dirección, sin ingresar a Google.
+
+**Hecho cuando:** los dos botones de Google del registro llevan a Google y nunca validan el correo.
