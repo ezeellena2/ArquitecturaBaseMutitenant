@@ -84,21 +84,21 @@ Diseño la dibuja como estado de `Ingreso` y `M-Ingreso`.
 
 **La decisión:** la [ADR 0044](../decisions/0044-sesion-de-plataforma-aparte.md). Plataforma tiene su propia sesión, en su cookie; persona y empresa comparten la pública.
 
-- [ ] **Rojo** (integración):
+- [x] **Rojo** (integración): observado el 2026-10-06, **18 tests: 8 fallos y 10 verdes**, sin omitidos (EXIT 2, 53,9 s). Evidencia: `.local/pre7/a3/integration-red.log`.
   - con solo la sesión de Plataforma, el authorize de persona y el de empresa redirigen al ingreso de esa puerta;
   - con las dos sesiones, cada authorize usa la suya;
   - salir de Plataforma no cierra la pública, y salir de la pública no cierra Plataforma;
   - cerrar sesiones y la baja cierran las dos;
   - un operador nunca recibe la sesión pública.
-- [ ] **Implementación:**
+- [x] **Implementación:** verde dirigido **18/18** y final de las clases cambiadas **58/58**, sin omitidos (EXIT 0). El alcance inicial ejecutó 286 tests: 284 verdes y dos fallos de preparación HTTPS de los tests nuevos de Google, corregidos y repetidos en el final de 58. Arquitectura **148/148**, Application afectada **28/28**, build de solución **sin advertencias ni errores**. Evidencias: `.local/pre7/a3/integration-green.log`, `integration-scope.log`, `integration-final.log`, `build-back.log` y sus `.exit`.
   - un esquema de cookie para Plataforma, con la misma configuración segura que la pública;
   - el ingreso con código guarda la sesión según el acceso del pedido;
   - `Authorize` lee solo la del acceso pedido;
   - la salida y el cierre de sesiones cubren las dos.
 
   Copiá cómo se arma hoy la cookie de Identity. No agregues capas: si hace falta una pieza nueva, que lleve un sufijo de la lista de `capas-y-flujo`.
-- [ ] **E2E real:** el operador entra a Plataforma y, en el mismo navegador, una persona ingresa con otro correo. Después vuelve a Plataforma y sigue adentro.
-- [ ] **Docs:** `identidad.md` y `plataforma.md`.
+- [x] **E2E real:** `MT_E2E_ONLY_CASE=A3`, `npm run test:e2e:real`, **2/2** (padre y recorrido), sin fallos, cancelados ni omitidos; EXIT 0, 109,7 s. Dos pestañas del mismo `BrowserContext`: operador en Plataforma, persona con otro correo, F5 y reapertura conservan al operador; salir de la pública conserva Plataforma y luego se sale de Plataforma. Front, API, PostgreSQL y pickup reales, sin mocks; se respetó el cooldown HTTP 429. Aspire apagado al finalizar. Evidencia FRONT: `.local/pre7/a3/real-a3.log` y `real-a3.exit`.
+- [x] **Docs:** `identidad.md` y `plataforma.md` describen las dos cookies y su revocación por cuenta.
 
 **Hecho cuando:** con Plataforma abierta, «Ingresar» y «Ingresá como empresa» muestran siempre el ingreso, y las dos sesiones conviven.
 
@@ -211,3 +211,11 @@ Lo hace Codex al cerrar y lo repite la Guía, con una captura de cada paso. Cada
 3. **Después:** la [revisión de código](2026-10-06-revision-de-codigo.md).
 
 Cada arreglo pasa su E2E real antes del siguiente commit de cierre.
+
+## Registro de resultados
+
+Se completa al verificar cada arreglo. Los logs locales conservan la salida y el código de cada comando; las capturas comparan el tablero v112 (`9c1c782`) con la app a 1440 y 390. Se trabaja en `main`, sin push, sin tocar `docs/design/lienzo/` y sin iniciar la revisión de código ni la Etapa 7.
+
+| Arreglo | Rojo | Verde y alcance afectado | E2E real | Commits y capturas |
+|---|---|---|---|---|
+| A3 | 18 tests: 8 fallos, 10 verdes, 0 omitidos; EXIT 2; `.local/pre7/a3/integration-red.log`. | Dirigido 18/18; alcance inicial 284/286 con dos preparaciones HTTPS corregidas; final cambiado 58/58. Arquitectura 148/148; Application 28/28; build back 0 advertencias/errores; build front, lint dirigido y sintaxis del runner EXIT 0. | Focal `A3`: 2/2, 0 fallos/cancelados/omitidos, EXIT 0, 109,7 s. Dos pestañas y ambas salidas; FRONT `.local/pre7/a3/real-a3.log`. | BACK `30aea96`; FRONT `ac6a177`. No cambia una pantalla: convivencia verificada con las pantallas reales. |
