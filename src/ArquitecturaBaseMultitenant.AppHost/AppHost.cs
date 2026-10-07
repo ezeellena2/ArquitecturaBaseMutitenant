@@ -67,6 +67,7 @@ if (isolatedE2e)
 
 builder.AddViteApp("front", "../../../ArquitecturaBaseMutitenantFront")
     .WithNpm()
+    .WithEnvironment("MT_E2E_ISOLATED", isolatedE2e ? "1" : "0")
     .WithEnvironment("VITE_AUTH_ISSUER", issuer)
     .WithReference(api)
     .WaitFor(api)
