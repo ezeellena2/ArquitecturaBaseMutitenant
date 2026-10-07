@@ -129,6 +129,7 @@ ArquitecturaBaseMutitenant/
 │       ├── PublicSiteSetup.cs                         Publicaciones activa y suspendida propias del recorrido público E7
 │       ├── LegalVersionCommand.cs                     Publica términos de prueba por orden del runner
 │       ├── LegacyBrowserSessionCommand.cs             Reproduce cookies anteriores a ADR 0044 en aislamiento
+│       ├── LoginCodeCommand.cs                        Vence un desafío Login real exclusivamente en la base E2E
 │       ├── InvitationCommand.cs                       Prepara escenarios de invitación por orden del runner
 │       └── AccountEmailCaptures.cs                    Capturas HTML de correos reales en español e inglés
 ├── .editorconfig                                     [E0] estilo y supresiones justificadas
