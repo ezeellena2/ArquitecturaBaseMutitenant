@@ -1,88 +1,288 @@
-# Propuesta: el asistente (un LLM en el inicio) — borrador para decidir
+# El asistente: un LLM en el inicio de Plataforma, de la empresa y de la persona
 
-Estado: borrador del 2026-10-07, para pensar con el usuario. Todavía no es un plan ejecutable ni una ADR. Lo pidió el usuario: un chat como Claude o Codex en el inicio de Plataforma, de la empresa (B2B) y de la persona (B2C), que responda solo cosas del sistema. La plataforma lo provee, y cada organización puede usar el de la plataforma o configurar el suyo.
+Estado: **propuesta para decidir** (2026-10-07). Cuando el usuario cierre las decisiones de §2, pasa a una ADR y a un plan ejecutable en tres partes ([etapa-en-paralelo](../guides/etapa-en-paralelo.md)).
 
-## 1. Qué es, en una frase
+**El pedido del usuario:**
+- un chat como Claude o Codex en el inicio de los tres lados, que responda solo cosas del sistema;
+- la plataforma lo provee: la persona usa siempre el de la plataforma, y cada organización puede usar el de la plataforma o configurar el suyo;
+- consultas fijas, topes, uso, historial y borrado;
+- pensado como un módulo central, revisando cómo lo afectan las demás etapas.
 
-Un **módulo quitable** (como WhatsApp, [modulos](../rules/modulos.md)) que pone en el inicio de cada lado un chat. El chat responde preguntas sobre los datos que esa persona ya puede ver, usando **herramientas de solo lectura** que llaman a los mismos servicios de la aplicación, con sus permisos y su aislamiento. Nunca toca la base de forma directa ni escribe nada.
+---
 
-## 2. Quién lo usa y con qué modelo
+## 1. La idea en una línea
 
-| Lado | Quién paga y configura | Qué puede consultar |
+Un **módulo quitable** («Asistente», con el mismo patrón que WhatsApp en la E8).
+- Un modelo de lenguaje responde **solo con herramientas de solo lectura**, que llaman a los servicios que ya existen **en nombre de quien pregunta**: con su organización, sus permisos y su aislamiento.
+- El modelo nunca ve un dato que esa persona no podría ver en pantalla, y nunca escribe nada.
+
+```
+Pantalla (assistant-ui)
+   │  POST /…/assistant/conversations/{id}/messages
+   ▼  (respuesta en streaming: SSE)
+Controller ──► IAssistantService ──► AssistantTurnRunner (helper)
+                                      │  IChatClient (Microsoft.Extensions.AI)
+                                      │    └─ SDK oficial de Anthropic
+                                      ├─ AssistantToolCatalog → herramientas (AIFunction)
+                                      │     └─ IUserService, IRoleService, IPlatform… (los de siempre)
+                                      ├─ AssistantLimitGuard (topes)
+                                      └─ repositorios: conversaciones, mensajes, uso
+```
+
+---
+
+## 2. Decisiones (con mi recomendación)
+
+| # | Decisión | Recomiendo | Por qué |
+|---|---|---|---|
+| D1 | ¿El chat **es** el inicio? | **En la compu, sí:** con el módulo prendido, el inicio es el asistente, y lo de hoy («Para resolver», tarjetas) pasa a ser la bienvenida del chat. **En el teléfono, no:** el inicio sigue siendo la billetera y el asistente es una pestaña de la barra de abajo. | En la compu entra todo. En el teléfono, la billetera ya está decidida (lienzo v77) y un chat no convive bien con ella. |
+| D2 | ¿Quién trae su propia clave? | **La plataforma lo habilita por organización** (Plataforma › Organización › Módulos): «con la clave de la plataforma» o «puede usar la suya». Por defecto, la de la plataforma. | Vos controlás el costo y la calidad. Una empresa grande puede pagar la suya. |
+| D3 | ¿Incluido o módulo habilitable? | **Módulo habilitable,** apagado por defecto. Por organización, desde Módulos; para las personas, un interruptor en Configuración de Plataforma. | Cuesta plata real por cada pregunta, y ya existe la pieza (`hasFeature`, [modulos-habilitados](../rules/modulos-habilitados.md)). |
+| D4 | ¿Las conversaciones vencen? | **Sí: se borran solas a los 90 días sin actividad** (configurable en Plataforma). Además, borrado a mano y borrado total con la baja de la cuenta. | Privacidad y menos datos guardados. Nadie vuelve a una charla de hace tres meses. |
+| D5 | ¿Quién ve una conversación? | **Solo quien la creó.** Ni el Dueño ni el operador leen el contenido; ven el **uso**, no el texto. | Es una charla privada, como un chat con Claude. |
+| D6 | ¿Qué proveedor en la primera versión? | **Anthropic,** con el SDK oficial de C#, detrás de `IChatClient`. OpenAI u otro se suma después con un paquete, sin tocar el núcleo. | Una sola integración bien probada. |
+| D7 | ¿Qué modelo por defecto? | **Claude Opus 5.5 con esfuerzo `low`** (lo recomendado para chat), configurable por la plataforma y por la organización con su clave: Sonnet 5.5 o Haiku 5.5 para gastar menos. La decisión de bajar de modelo es tuya: §8 tiene los números. | Calidad primero; el precio queda a la vista para elegir. |
+| D8 | ¿Solo responde o también hace cosas? | **Solo responde en la v1.** En la v2, «acciones con confirmación»: propone una tarjeta («¿Invito a ana@…?») y la acción la ejecuta la pantalla, con la API de siempre. | Lo seguro primero. La v2 no necesita rehacer nada. |
+| D9 | ¿Qué son las «consultas fijas»? | **Atajos que no gastan el modelo.** Son botones («¿Cuántos usuarios activos hay?») que llaman directo a una herramienta y muestran el resultado con un texto armado. Si la persona escribe, ahí sí responde el modelo. Fijos por lado en la v1, desde los recursos; configurables en la v2. | Lo más preguntado sale gratis e instantáneo. |
+| D10 | ¿Topes? | Por persona: **50 mensajes por día.** Por organización: **un tope mensual en dólares** (los tokens por el precio). Al llegar, un aviso claro y no un error. Los fija la plataforma; la organización con su clave fija los suyos. | Sin tope, una sola persona puede gastar el mes. |
+
+---
+
+## 3. Qué se reutiliza en vez de hacerlo a mano
+
+### Front: el chat
+
+| Opción | Qué trae | Veredicto |
 |---|---|---|
-| **Plataforma** | La plataforma (el operador), con su clave | Organizaciones, cuentas, recuperaciones y auditoría, según los permisos del operador |
-| **Empresa (B2B)** | Por defecto, la plataforma. La organización puede **traer su propia clave** (su proveedor y su modelo) | Lo de su organización, según los permisos de quien pregunta: usuarios, roles, empresas y auditoría |
-| **Persona (B2C)** | Siempre la plataforma | Lo suyo: su cuenta, sus métodos de ingreso y, desde la Etapa 7, sus interacciones con empresas |
+| **assistant-ui** (`@assistant-ui/react` + `@assistant-ui/react-markdown`, MIT) | Chat completo: hilo, lista de conversaciones, caja de texto, streaming, «Detener», copiar, sugerencias y markdown. Las piezas no traen estilo (estilo Radix), así que se pintan con nuestros tokens del tema. Se conecta a cualquier backend con `useExternalStoreRuntime`, y el estado lo llevamos nosotros con TanStack Query. | **Recomendado.** Es justo «un chat estándar» y encaja con nuestro front (Radix y Tailwind). |
+| AI Elements (los componentes de chat sobre shadcn de Vercel, copiados al repo) | Las piezas visuales (conversación, mensaje, caja, sugerencias), pensadas para el `useChat` de AI SDK | Alternativa. Hay que escribir más estado a mano y se acopla al protocolo de AI SDK. |
+| CopilotKit | Agente completo, con su runtime en Node | No: nuestro back es .NET. |
+| chatscope | Mensajería genérica | No: no está hecho para LLM (streaming y herramientas). |
 
-**Para decidir:** ¿la organización elige entre «usar el de la plataforma» y «el mío», o la plataforma decide quién puede traer su clave, por plan o por módulo habilitado?
+El markdown de las respuestas se muestra **sin HTML crudo**, el modo por defecto de react-markdown, así que no hay XSS.
 
-## 3. Cómo se conecta al LLM
+### Back: el modelo y el streaming
 
-- **Un puerto propio:** `IAssistantModel` en `Application/Interfaces/Integrations/Assistant/`, con un adaptador por proveedor en Infrastructure: Anthropic primero, y OpenAI o compatible después. El núcleo no conoce al proveedor.
-- **Configuración por alcance:** proveedor, modelo, clave y topes.
-  - La de la plataforma va en user-secrets o variables de entorno, nunca en la base sin cifrar.
-  - La de una organización se guarda cifrada (Data Protection) y nunca vuelve a mostrarse completa.
-- **Respuesta en streaming** al front (SSE), con «Detener».
-- **Herramientas («tools») de solo lectura,** declaradas en un catálogo y cada una con su permiso. Por ejemplo: `contar_usuarios`, `listar_roles` y `permisos_de_un_rol`. Cada una llama a un servicio de la aplicación **en nombre de quien pregunta**, con su tenant y sus permisos. El modelo nunca recibe datos que esa persona no podría ver en pantalla.
-- **Las «consultas fijas»** del ejemplo («¿Cuántos usuarios activos hay?») son sugerencias por lado y por permiso, de un catálogo. Cada una puede usar una herramienta concreta.
+| Pieza | Qué es | Para qué |
+|---|---|---|
+| **Microsoft.Extensions.AI** (`IChatClient`) | La abstracción estándar de .NET para modelos de lenguaje | Es el **puerto**: el núcleo no conoce al proveedor. Trae `UseFunctionInvocation()` (el ciclo de herramientas, con tope de vueltas) y `UseOpenTelemetry()` (cada llamada, con tokens y tiempos, en el panel de Aspire). |
+| **SDK oficial de Anthropic para C#** (paquete `Anthropic`) | Cliente oficial de Claude | Tiene su integración con `IChatClient` y la invocación de funciones. Es el adaptador de Infrastructure. |
+| **SSE de .NET 10** (`TypedResults.ServerSentEvents`) | Respuesta en streaming estándar | Manda el texto a medida que llega, sin WebSockets. Se devuelve desde un controller (`IResult`), sin Minimal APIs. |
+| **Data Protection** de ASP.NET Core | Cifrado | Guarda cifrada la clave de la organización. Nunca se vuelve a mostrar completa. |
+| **Rate limiter** de ASP.NET Core | Tope de pedidos | Un freno por persona contra ráfagas, además de los topes de negocio de D10. |
 
-## 4. Qué responde y qué no
+En T00 se confirman las versiones vigentes de los paquetes en `Directory.Packages.props`.
 
-- **Solo cosas del sistema:** un prompt de sistema por lado, más las herramientas. Lo demás se rechaza con un texto fijo.
-- **Nunca escribe ni ejecuta acciones** en esta primera versión. A lo sumo, un enlace a la pantalla donde se hace.
-- **Contra la inyección de instrucciones:** los datos que devuelven las herramientas van marcados como datos, y el modelo no recibe secretos.
-- **Datos personales:** los correos y los teléfonos salen tapados como en pantalla, según [datos-personales](../rules/datos-personales.md).
+---
 
-## 5. Dónde se guardan las conversaciones
+## 4. Datos: qué se guarda y dónde
 
-- **Una conversación y sus mensajes,** dueños de quien la creó:
-  - en Plataforma, del operador;
-  - en B2B, `ITenantOwned` y además de esa persona; ni el Dueño las ve;
-  - en B2C, de la persona (`Personal`).
-- **Historial a la izquierda,** como en el ejemplo: «Nueva conversación», renombrar y borrar.
-- **Borrado:**
-  - quien la creó la borra y se borra de verdad;
-  - la baja de la cuenta borra todo;
-  - **para decidir:** ¿un vencimiento automático, por ejemplo a los 90 días?
-- **Lo que se guarda aparte, para medir el uso y no el contenido:** tokens de entrada y de salida, modelo, costo estimado, herramientas usadas y duración. Nunca el texto en los logs.
+Todo en un esquema nuevo, `assistant`, con RLS según la clase de dato ([multitenancy](../rules/multitenancy.md)):
 
-## 6. Topes y uso
+| Tabla | Campos clave | Clase y aislamiento |
+|---|---|---|
+| `Conversations` | Id, lado (Platform/Business/Personal), TenantId (si corresponde), OwnerUserId, Title, CreatedAtUtc, LastActivityAtUtc, xmin | **B2B y Personal:** `ITenantOwned` (la organización o el espacio personal), y además **solo el dueño**, controlado en el reader y el servicio. **Plataforma:** global, del operador. |
+| `Messages` | Id, ConversationId, Role (User/Assistant), Text, ToolCalls (json: herramienta, duración y ok/error, **sin datos**), Status (Complete/Stopped/Failed), InputTokens, OutputTokens, Model, CreatedAtUtc | La de su conversación. |
+| `Settings` | Alcance (Platform o TenantId), Mode (PlatformKey/OwnKey/Off), Provider, Model, Effort, EncryptedApiKey, topes, RetentionDays, xmin | La de Plataforma es global; la de una organización, `ITenantOwned`. |
+| `UsageDaily` | Día, alcance, UserId, mensajes, tokens de entrada y salida, costo estimado | Para el uso y los topes. Sin texto. |
+| `ModelPrices` | Proveedor, modelo, precio de entrada y de salida por millón | **Dato de referencia,** nunca una lista en el código ([datos-de-referencia](../rules/datos-de-referencia.md)). |
 
-- **Topes configurables:** mensajes por persona por día y tokens por organización por mes. Los fija la plataforma y, con su propia clave, la organización. Al llegar al tope, un aviso claro, no un error.
-- **«Uso del asistente»:**
-  - en Plataforma: por organización, por mes y su costo;
-  - en la organización: su consumo, con los topes.
-- **Para decidir:** ¿el asistente es un módulo que se vende, como habilitado o no por plan ([modulos-habilitados](../rules/modulos-habilitados.md)), o viene incluido para todos?
+- **Nunca se loguea** el texto de una pregunta ni de una respuesta ([logs](../rules/logs.md)).
+- **La baja de la cuenta** borra sus conversaciones.
+- **La exportación de datos personales (E10)** las incluye.
+- **Cambiar la configuración** del asistente deja su `SecurityEvent` o su entrada de auditoría, sin la clave.
 
-## 7. Pantallas (las dibuja Diseño)
+---
 
-- **El inicio de cada lado,** con el chat como el ejemplo:
-  - historial a la izquierda;
-  - «¿Qué querés consultar?», las sugerencias y «Detener»;
-  - si no está configurado, «El asistente todavía no está configurado» y «Revisar configuración», solo para quien puede configurarlo.
-- **Configuración del asistente:**
-  - en Plataforma: proveedor, modelo, clave, topes y sugerencias;
-  - en la organización: «Usar el de la plataforma» o «El nuestro», con su clave y sus topes.
-- **El uso:** en Plataforma y en la organización.
-- **El teléfono:** el chat a pantalla completa, con el historial en una hoja.
-- **Para decidir:** ¿el chat **es** el inicio, como en el ejemplo, o una pestaña o un botón dentro del inicio actual? Hoy cada inicio tiene su contenido: «Para resolver», tarjetas y la billetera del teléfono.
+## 5. El contrato (parte 1 del plan)
 
-## 8. Cómo entra en el plan
+| Ruta | Acceso y permiso | Qué hace |
+|---|---|---|
+| `GET /api/{lado}/assistant` | el del lado + `assistant.use` | Estado: habilitado o no, configurado o no, topes y uso de hoy, y las consultas fijas |
+| `GET /api/{lado}/assistant/conversations?cursor=` | ídem | Historial propio, por cursor ([paginado](../rules/paginado-y-busqueda.md)) |
+| `POST /api/{lado}/assistant/conversations` | ídem, `[Idempotent]` | Crea una conversación |
+| `GET /api/{lado}/assistant/conversations/{id}` | ídem; ajena → 404 | Los mensajes |
+| `PUT /api/{lado}/assistant/conversations/{id}` | ídem, con `version` | Renombrar → `VersionResponse` |
+| `DELETE /api/{lado}/assistant/conversations/{id}` | ídem | Borrar → 204 |
+| `POST /api/{lado}/assistant/conversations/{id}/messages` | ídem, `[Idempotent]` | Pregunta y **responde por SSE**. Eventos: `delta` (texto), `tool` (herramienta y estado, por ejemplo «Consultando usuarios…»), `done` (id, tokens y uso), `error` (`code`). Si la persona corta, el mensaje queda `Stopped`. Un reintento con la misma clave devuelve el mensaje guardado, sin streaming. |
+| `POST /api/{lado}/assistant/quick/{clave}` | ídem | Una consulta fija, sin modelo |
+| `GET` y `PUT /api/organization/assistant/settings` | `assistant.configure` | Modo, modelo y clave (solo escribir, nunca se devuelve), topes |
+| `GET` y `PUT /api/platform/assistant/settings` | `platform.assistant.configure` | Lo mismo para la plataforma, más las personas y la retención |
+| `GET /api/organization/assistant/usage` · `GET /api/platform/assistant/usage` | `assistant.configure` · `platform.assistant.read` | Uso por día y por persona (organización) o por organización (plataforma) |
 
-- **Una etapa nueva, «Asistente»,** **después de la Etapa 8** (WhatsApp como módulo). La 8 deja armado el patrón de módulo quitable con puertos, y el asistente lo reutiliza tal cual.
-- **Las etapas existentes casi no se tocan.** Las herramientas reusan los servicios de lectura que ya hay. Solo hace falta que cada área exponga sus lecturas por servicio, lo que ya cumplen gracias a las capas.
-- **Choca con:**
-  - el inicio de cada lado (Etapas 4, 6 y 7) y la billetera del teléfono, según lo que se decida en el punto 7;
-  - Plataforma (E5), que suma Configuración y Uso.
-- **Se programa con la guía [etapa-en-paralelo](../guides/etapa-en-paralelo.md):** el contrato (conversaciones, mensajes en streaming, configuración y uso), después el back y el front en paralelo, y la integración al final.
-- **Una ADR** con todo lo decidido: el módulo, el puerto, las herramientas de solo lectura, el dueño de cada conversación y el borrado.
+- `{lado}` es `me` (persona), `organization` (empresa) o `platform`, como el resto de la API.
+- Permisos nuevos (catálogo, `Permissions.resx` y `.en.resx`, semilla):
+  - `assistant.use`: todos los roles de sistema;
+  - `assistant.configure`: el Dueño;
+  - `platform.assistant.use`, `platform.assistant.configure` y `platform.assistant.read`.
+- Errores: `Assistant.Module.Disabled`, `Assistant.Settings.NotConfigured`, `Assistant.Limit.DailyReached`, `Assistant.Limit.MonthlyReached`, `Assistant.Provider.Unavailable` (con reintento), `Assistant.Conversation.NotFound`, y la validación de siempre.
 
-## 9. Lo que hay que decidir con el usuario
+---
 
-1. ¿El chat es el inicio o una parte del inicio? (punto 7)
-2. ¿Quién puede traer su propia clave? ¿Todas las organizaciones, o según el plan o el módulo? (punto 2)
-3. ¿Viene incluido o es un módulo que se habilita? (punto 6)
-4. ¿Las conversaciones vencen solas o quedan hasta que se borran? (punto 5)
-5. ¿Qué proveedores en la primera versión? Recomendación: uno solo, Anthropic, con el puerto listo para sumar otros.
-6. ¿Solo responde, o más adelante también ejecuta acciones con confirmación? Recomendación: solo responde en la primera versión.
-7. ¿Las preguntas sugeridas son fijas por lado o las configura la plataforma y la organización?
+## 6. Las herramientas (lo que el asistente puede consultar)
+
+Cada herramienta es una clase que implementa `IAssistantTool` y declara:
+- nombre;
+- descripción (en los recursos);
+- esquema de parámetros;
+- **lado**;
+- **permiso requerido**.
+
+El catálogo le da al modelo **solo las herramientas que esa persona puede usar**. Cada herramienta llama a un servicio existente y devuelve datos chicos, ya tapados como en pantalla.
+
+| Lado | Herramientas de la v1 (cada una con su permiso) |
+|---|---|
+| Empresa | usuarios por estado; buscar una persona; roles y sus permisos; quién tiene un rol; empresas y sus miembros; invitaciones pendientes y vencidas; últimos cambios (auditoría); «Para resolver» |
+| Plataforma | organizaciones por estado; buscar una organización; cuentas por estado; recuperaciones pendientes; últimos eventos de seguridad; uso del asistente |
+| Persona | mi cuenta y mis métodos (tapados); mis organizaciones y perfiles; mis interacciones con empresas (E7) |
+
+**Límites de cada respuesta:**
+- hasta 5 vueltas de herramientas;
+- salida máxima configurada;
+- el prompt de sistema de cada lado, en los recursos (es y en, con voseo), dice: «respondé solo sobre este sistema; si no hay herramienta para algo, decilo»;
+- lo que devuelven las herramientas se trata como datos, nunca como instrucciones;
+- el prompt de sistema y las herramientas van primero y fijos, para aprovechar el **caché de prompts** (lo más caro del input queda cacheado).
+
+**Agregar una herramienta** es una receta corta (`docs/guides/agregar-una-herramienta-al-asistente.md`):
+1. la clase;
+2. su permiso;
+3. su texto;
+4. su test de aislamiento.
+
+Cada área nueva suma las suyas.
+
+---
+
+## 7. Pantallas (las dibuja Diseño antes de programar)
+
+1. **El asistente en el inicio (compu),** para los tres lados:
+   - historial a la izquierda: «Nueva conversación», renombrar y borrar;
+   - «¿Qué querés consultar?» con la caja;
+   - las **consultas fijas** como botones;
+   - las tarjetas de «Para resolver» como bienvenida;
+   - streaming con «Detener»;
+   - «Consultando usuarios…» mientras corre una herramienta;
+   - copiar y 👍/👎;
+   - si no está configurado: «El asistente todavía no está configurado» y «Revisar configuración» (solo para quien puede);
+   - al llegar al tope: el aviso.
+2. **El teléfono:** la pestaña «Asistente» en la barra de abajo, con el chat a pantalla completa y el historial en una hoja.
+3. **Configuración del asistente:**
+   - en Plataforma: proveedor, modelo, esfuerzo, clave, topes, personas sí o no, retención;
+   - en la organización: «Usar el de la plataforma» o «El nuestro» (si la plataforma lo habilitó), la clave, el modelo y los topes.
+4. **Uso:**
+   - en Plataforma, por organización y por mes, con el costo;
+   - en la organización, por día y por persona, con los topes.
+5. **Plataforma › Organización › Módulos:** «Asistente», con «puede usar su clave».
+
+---
+
+## 8. Cuánto cuesta (para decidir el modelo)
+
+Una pregunta típica con herramientas: unos 3.000 tokens de entrada y 300 de salida. Con 2 o 3 vueltas de herramientas se multiplica la entrada, y el caché de prompts baja mucho ese costo.
+
+| Modelo | Entrada / salida por millón | Una pregunta (aprox.) | 1.000 preguntas por día |
+|---|---|---|---|
+| Claude Opus 5.5 | USD 4 / 20 | ~USD 0,018 | ~USD 18 |
+| Claude Sonnet 5.5 | USD 2 / 10 | ~USD 0,009 | ~USD 9 |
+| Claude Haiku 5.5 | USD 0,10 / 0,50 | ~USD 0,0005 | ~USD 0,45 |
+
+Las consultas fijas cuestan 0. Los precios van en la tabla `ModelPrices`, así el uso muestra el costo real.
+
+---
+
+## 9. Árbol de archivos
+
+**Back** (módulo quitable, como WhatsApp):
+
+```
+src/ArquitecturaBaseMultitenant.Domain/Assistant/
+  AssistantConversation.cs · AssistantMessage.cs · AssistantSettings.cs
+  AssistantUsageDaily.cs · AssistantErrors.cs · AssistantSide.cs · AssistantMode.cs
+src/ArquitecturaBaseMultitenant.Application/Modules/Assistant/
+  Interfaces/ IAssistantService.cs · IAssistantConversationRepository.cs
+              IAssistantConversationReader.cs · IAssistantSettingsRepository.cs
+              IAssistantUsageRepository.cs · IAssistantChatClientFactory.cs
+  Services/   AssistantService.cs · AssistantSettingsService.cs · AssistantUsageService.cs
+              AssistantTurnRunner.cs · AssistantLimitGuard.cs · AssistantPromptBuilder.cs
+              (los sufijos de helpers, de la lista cerrada de capas-y-flujo)
+  Tools/      IAssistantTool.cs · AssistantToolCatalog.cs
+              Business/ · Platform/ · Personal/   (una clase por herramienta)
+  Models/ · Validation/ · Configuration/AssistantOptions.cs
+  Resources/  Assistant.resx · Assistant.en.resx   (prompts, consultas fijas, textos)
+src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/
+  AnthropicChatClientFactory.cs   (SDK oficial → IChatClient + función + OpenTelemetry)
+  FakeChatClient.cs               (Testing/E2E: respuestas y herramientas guionadas)
+  AssistantKeyProtector.cs        (Data Protection)
+  Persistence/ Configurations/ · Repositories/ · Readers/   (esquema assistant, RLS)
+  AssistantRetentionWorker.cs     (borra lo vencido)
+  AssistantRegistration.cs
+src/ArquitecturaBaseMultitenant.Api/Modules/Assistant/
+  Controllers/ PersonalAssistantController.cs · OrganizationAssistantController.cs
+               PlatformAssistantController.cs · OrganizationAssistantSettingsController.cs
+               PlatformAssistantSettingsController.cs
+  Contracts/ · AssistantStreamResult.cs   (eventos SSE)
+tests/…/Assistant/   (unitarios: guardas, prompts, catálogo · integración: aislamiento,
+                      permisos, topes, SSE, idempotencia, retención, baja)
+docs/features/asistente.md · docs/decisions/0048-asistente.md
+docs/guides/agregar-una-herramienta-al-asistente.md
+```
+
+**Front:**
+
+```
+src/modules/assistant/
+  api/        assistant.ts (consultas TanStack) · stream.ts (SSE sobre fetch, con AbortController)
+  runtime/    useAssistantRuntime.ts   (assistant-ui ExternalStoreRuntime ↔ TanStack Query)
+  components/ AssistantThread.tsx · ConversationList.tsx · QuickQueries.tsx
+              ToolStatus.tsx · NotConfigured.tsx · LimitReached.tsx · UsageMeter.tsx
+  pages/      AssistantHome.tsx (lo usan los tres inicios) · AssistantPhonePage.tsx
+  settings/   PlatformAssistantSettingsPage.tsx · OrganizationAssistantSettingsPage.tsx
+  usage/      PlatformAssistantUsagePage.tsx · OrganizationAssistantUsagePage.tsx
+src/locales/{es,en}/assistant.json
+```
+
+---
+
+## 10. El plan (según [etapa-en-paralelo](../guides/etapa-en-paralelo.md))
+
+**Antes:**
+- la ADR 0048, con §2 decidido;
+- Diseño dibuja §7 y el usuario lo aprueba;
+- la clave de Anthropic de la plataforma en user-secrets (`Assistant:Platform:ApiKey`).
+
+| Parte | Tareas | Estimado (Codex) |
+|---|---|---|
+| **1. Contrato** | §5 en `openapi.json` y los eventos SSE en `docs/features/asistente.md` | 1 a 2 h |
+| **2a. Back** | **B1:** módulo, entidades, esquema y RLS. **B2:** configuración, clave cifrada, fábrica de `IChatClient` y `FakeChatClient`. **B3:** catálogo y herramientas de la v1. **B4:** `AssistantTurnRunner` (prompt, herramientas, topes, uso, caché). **B5:** controllers, SSE, idempotencia y consultas fijas. **B6:** retención, baja y auditoría. | 1,5 días |
+| **2b. Front** | **F1:** assistant-ui con nuestros tokens, runtime y SSE. **F2:** el inicio de los tres lados y el teléfono. **F3:** configuración. **F4:** uso. **F5:** Plataforma › Módulos. | 1 día |
+| **3. Integración y puerta** | Conectar, el E2E real con `FakeChatClient` (determinista y sin costo) y **una prueba a mano con la clave real** | 0,5 día |
+
+**Tests clave:**
+- la conversación de A no la ve B, ni en la misma organización;
+- una herramienta no devuelve nada fuera de los permisos de quien pregunta;
+- un tenant no ve datos de otro;
+- topes;
+- streaming cortado → `Stopped`;
+- reintento idempotente;
+- la retención borra;
+- la baja borra;
+- nunca hay texto en los logs.
+
+---
+
+## 11. Cómo entra en las demás etapas
+
+- **E8 (WhatsApp, módulo quitable):** va **antes**, porque deja el patrón de módulo, puertos y registro. El asistente lo copia.
+- **El asistente, como etapa nueva, va justo después de la E8.** Así la E9 (endurecimiento) también lo cubre.
+- **E5, E6 y E7:** solo se toca el **inicio** de cada lado (D1) y se suman Configuración, Uso y Módulos en Plataforma. Las herramientas reusan los servicios de lectura que ya existen.
+- **E9 (endurecimiento):** pruebas de inyección de instrucciones, alertas de costo y topes por dirección.
+- **E10 (despliegue):** la clave en el gestor de secretos, la exportación de datos personales con las conversaciones y los backups.
+- **E11 (WhatsApp de atención):** el mismo asistente podría responder chats de WhatsApp de la organización, con las mismas herramientas. Es una sinergia para más adelante.
+
+**Ideas para después:**
+- las acciones con confirmación (D8);
+- las consultas fijas configurables (D9);
+- gráficos en las respuestas;
+- enlaces a la pantalla filtrada («Ver los 3 inactivos en Usuarios»);
+- un resumen diario;
+- un servidor MCP con las mismas herramientas, para usarlas desde Claude o Codex.
