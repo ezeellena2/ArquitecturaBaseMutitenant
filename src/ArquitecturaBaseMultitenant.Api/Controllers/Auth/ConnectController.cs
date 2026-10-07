@@ -7,6 +7,7 @@ using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
@@ -51,26 +52,37 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
             var selected = await service.SelectAccessAsync(userId, access, requestedTenantId, cancellationToken);
             if (selected.IsFailure)
             {
-                return Forbid(ErrorProperties(Errors.AccessDenied, AccessErrorDescription(selected.Error)),
-                    OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
-            }
-
-            var sessionStartedAtUtc = session.Properties?.Items.TryGetValue(BrowserSessionKeys.StartedAtUtc,
-                out var startedAtUtc) == true ? BrowserSessionKeys.ReadStartedAtUtc(startedAtUtc) : null;
-            var principal = await principalFactory.CreateAsync(userId, access, selected.Value.TenantId,
-                request.GetScopes(), cancellationToken,
-                sessionStartedAtUtc);
-            if (principal is not null)
-            {
-                var authorization = await authorizationService.CreateAsync(userId, access,
-                    selected.Value.TenantId, browserSessionId, request.ClientId!,
-                    request.GetScopes(), cancellationToken);
-                if (authorization.IsFailure)
+                if (access is Access.Consumer or Access.Business && selected.Error.Code == AccessErrors.PlatformOnlyCode)
                 {
-                    throw new InvalidOperationException("The OpenID Connect authorization could not be created.");
+                    // Antes de ADR 0044 el operador también se guardaba en la cookie pública.
+                    // Descartarla permite ingresar con otra cuenta, sin cerrar Plataforma.
+                    await HttpContext.SignOutAsync(BrowserScheme(access));
                 }
-                principal.SetAuthorizationId(authorization.Value);
-                return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+                else
+                {
+                    return Forbid(ErrorProperties(Errors.AccessDenied, AccessErrorDescription(selected.Error)),
+                        OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+                }
+            }
+            else
+            {
+                var sessionStartedAtUtc = session.Properties?.Items.TryGetValue(BrowserSessionKeys.StartedAtUtc,
+                    out var startedAtUtc) == true ? BrowserSessionKeys.ReadStartedAtUtc(startedAtUtc) : null;
+                var principal = await principalFactory.CreateAsync(userId, access, selected.Value.TenantId,
+                    request.GetScopes(), cancellationToken,
+                    sessionStartedAtUtc);
+                if (principal is not null)
+                {
+                    var authorization = await authorizationService.CreateAsync(userId, access,
+                        selected.Value.TenantId, browserSessionId, request.ClientId!,
+                        request.GetScopes(), cancellationToken);
+                    if (authorization.IsFailure)
+                    {
+                        throw new InvalidOperationException("The OpenID Connect authorization could not be created.");
+                    }
+                    principal.SetAuthorizationId(authorization.Value);
+                    return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+                }
             }
         }
 

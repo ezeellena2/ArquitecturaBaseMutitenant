@@ -128,6 +128,7 @@ try
         await LegalVersionCommand.TryExecuteAsync(host.Services, readyFile, cancellationToken);
         await InvitationCommand.TryExecuteAsync(host.Services, readyFile, business.Id, created.Value, cancellationToken);
         await PlatformCommand.TryExecuteAsync(host.Services, readyFile, business.Id, created.Value, cancellationToken);
+        await LegacyBrowserSessionCommand.TryExecuteAsync(host.Services, readyFile, cancellationToken);
     }
     return 0;
 }

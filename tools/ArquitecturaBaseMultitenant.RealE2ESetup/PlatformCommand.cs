@@ -34,7 +34,7 @@ internal static class PlatformCommand
         var unitOfWork = provider.GetRequiredService<IUnitOfWork>();
         // Cada recorrido tiene su cuenta real: la cuota por destino no debe depender
         // de los códigos consumidos por otro caso del mismo E2E completo.
-        foreach (var key in new[] { "reduced", "a2", "5a", "a1", "a3", "5b", "5c", "5d" })
+        foreach (var key in new[] { "reduced", "a2", "5a", "a1", "a3", "a8", "5b", "5c", "5d" })
         {
             Phase = $"operator-{key}";
             await unitOfWork.ExecuteInTransactionAsync(async token =>
