@@ -231,6 +231,40 @@ Diseño la dibuja como estado de `Ingreso` y `M-Ingreso`.
 
 **Hecho cuando:** en el navegador del usuario, tal como está hoy, «Ingresar» e «Ingresá como empresa» muestran el ingreso.
 
+## A9 · El invitado entra con el código y acepta la invitación (ADR 0047, decidido por el usuario el 2026-10-07)
+
+**El problema:** el Dueño invitado de una organización creada desde Plataforma ingresaba con su correo y veía «No hay una cuenta con ese correo».
+
+**La decisión:** la [ADR 0047](../decisions/0047-el-ingreso-acepta-la-invitacion.md). Con una invitación vigente, el ingreso manda el código y, al verificarlo, crea la cuenta, acepta la invitación y la persona entra.
+
+- [ ] **Rojo** (integración):
+  - por la puerta de empresa, con invitación vigente: el código crea la cuenta, acepta y entra a esa organización;
+  - por la puerta de persona: entra a Personal y la invitación queda aceptada;
+  - vencida o revocada: «No hay una cuenta»;
+  - con términos pendientes: los pide antes de entrar.
+- [ ] **E2E real:** Plataforma crea una organización y el Dueño entra por «Ingresá como empresa» con el código, sin tocar el enlace.
+- [ ] **Docs:** `identidad.md` e `invitaciones` en la ficha que corresponda.
+
+## A10 · El mensaje del CUIT (encontrado por el usuario el 2026-10-07)
+
+**El problema:** con `33333333333`, «Editar empresa» y el registro de una empresa («CUIT de la empresa») dicen «Revisá el CUIT: son 11 números.», aunque tiene 11. El error real es el dígito verificador: para `33-33333333-?` tendría que ser 9. `33333333339` es válido.
+
+- [ ] Hay un mensaje por cada causa: el largo («son 11 números») y el verificador («Ese CUIT no es válido: revisá los números.»). Va en es y en, con su test.
+- [ ] Va junto con R03 del [informe de la revisión](../reviews/2026-10-06-revision-de-codigo.md), que saca el CUIT argentino fijo del front: el mensaje sale del tipo fiscal, no de un texto fijo.
+
+## A11 · Solo lectura con los campos grisados (decidido por el usuario el 2026-10-07)
+
+**El pedido:** «Datos del rol» de un rol de sistema muestra rótulos y texto suelto. El usuario quiere los mismos campos que al editar, pero grisados.
+
+**La decisión:** el mismo criterio en todo el sistema. Toda pantalla que muestra datos sin poder editarlos usa los campos del formulario deshabilitados, no texto suelto.
+- Diseño lo suma a «Criterio · Formularios» y a los tableros de solo lectura, y se lo muestra al usuario.
+- Se programa con esos tableros.
+
+- [ ] **Front:**
+  - una sola pieza o variante de `FormField` para solo lectura, en `shared/`;
+  - aplicada en cada pantalla de solo lectura (el rol de sistema, y las demás que liste Diseño);
+  - axe y 390.
+
 ## Puerta: el recorrido de un usuario nuevo
 
 Los tests y el E2E pasaron en verde con todo esto roto, porque probaban las reglas escritas, no lo que hace una persona. Antes de dar por terminados los arreglos, se recorre la app a mano como un usuario nuevo:
