@@ -32,29 +32,38 @@ internal static class PlatformCommand
         var provider = scope.ServiceProvider;
         var nowUtc = provider.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
         var unitOfWork = provider.GetRequiredService<IUnitOfWork>();
-        Phase = "reduced-operator";
-        await unitOfWork.ExecuteInTransactionAsync(async token =>
+        // Cada recorrido tiene su cuenta real: la cuota por destino no debe depender
+        // de los códigos consumidos por otro caso del mismo E2E completo.
+        foreach (var key in new[] { "reduced", "a2", "5a", "a1", "a3", "5b", "5c", "5d" })
         {
-            var users = provider.GetRequiredService<IUserRepository>();
-            var reduced = await users.CreateAsync("Operador reducido E2E", "es-AR", "America/Argentina/Buenos_Aires", token);
-            var email = Email.Create("e2e-reduced@example.test").Value;
-            var method = LoginMethod.CreateEmail(reduced.Id, email);
-            method.Verify(nowUtc);
-            method.MakePrimary();
-            provider.GetRequiredService<ILoginMethodRepository>().Add(method);
-            await users.SetPrimaryEmailAsync(reduced.Id, email, token);
-            await users.SetPlatformOperatorAsync(reduced.Id, true, token);
-            provider.GetRequiredService<IPlatformPermissionAssignmentRepository>().Add(
-                PlatformPermissionAssignment.Create(reduced.Id, [PlatformPermissions.Tenants.Read]).Value);
-            var legal = provider.GetRequiredService<ILegalRepository>();
-            foreach (var kind in Enum.GetValues<LegalDocumentKind>())
+            Phase = $"operator-{key}";
+            await unitOfWork.ExecuteInTransactionAsync(async token =>
             {
-                var current = await legal.GetCurrentDocumentAsync(kind, nowUtc, token)
-                    ?? throw new InvalidOperationException("Current legal documents are required.");
-                legal.AddAcceptance(LegalAcceptance.Create(reduced.Id, current, nowUtc, null, null));
-            }
-            return Result.Success();
-        }, CommitPolicy.OnSuccess, ct);
+                var limited = key is "reduced" or "a2";
+                var users = provider.GetRequiredService<IUserRepository>();
+                var user = await users.CreateAsync(limited ? "Operador reducido E2E" : $"Operador E2E {key}",
+                    "es-AR", "America/Argentina/Buenos_Aires", token);
+                var email = Email.Create(key == "reduced" ? "e2e-reduced@example.test"
+                    : $"e2e-{key}-operator@example.test").Value;
+                var method = LoginMethod.CreateEmail(user.Id, email);
+                method.Verify(nowUtc);
+                method.MakePrimary();
+                provider.GetRequiredService<ILoginMethodRepository>().Add(method);
+                await users.SetPrimaryEmailAsync(user.Id, email, token);
+                await users.SetPlatformOperatorAsync(user.Id, true, token);
+                provider.GetRequiredService<IPlatformPermissionAssignmentRepository>().Add(
+                    PlatformPermissionAssignment.Create(user.Id,
+                        limited ? [PlatformPermissions.Tenants.Read] : PlatformPermissions.All).Value);
+                var legal = provider.GetRequiredService<ILegalRepository>();
+                foreach (var kind in Enum.GetValues<LegalDocumentKind>())
+                {
+                    var current = await legal.GetCurrentDocumentAsync(kind, nowUtc, token)
+                        ?? throw new InvalidOperationException("Current legal documents are required.");
+                    legal.AddAcceptance(LegalAcceptance.Create(user.Id, current, nowUtc, null, null));
+                }
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, ct);
+        }
         var tenantScope = provider.GetRequiredService<ITenantScope>();
         foreach (var pending in new[] { true, false })
         {
