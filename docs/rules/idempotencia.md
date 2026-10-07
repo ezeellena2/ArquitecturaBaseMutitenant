@@ -10,6 +10,7 @@
   3. **Clave terminada:** devuelve la respuesta guardada, con el encabezado `Idempotent-Replayed: true`, sin ejecutar nada.
   4. **Clave en curso:** 409 `Request.InProgress`.
   5. **Misma clave con otro cuerpo u otra ruta:** 422 `Request.IdempotencyKeyReused`.
+     En una ruta `[PublicSite]`, la organización resuelta por `IPublicSiteContext` forma parte de la ruta lógica: repetir la clave en otro sitio da 422. Nunca se usa el `Host` sin resolver ni se cambia el tenant firmado. Los filtros de publicación, acceso y módulo se evalúan antes del replay.
   6. **Sin encabezado** en una acción `[Idempotent]`: 400 `Request.IdempotencyKeyRequired`.
 - La clave es un UUID, válido 24 h. Las vencidas las borra un worker.
 - **Front:** `useIdempotentMutation(fn)`. Crea la clave al montar el formulario o el diálogo y la manda en cada intento (también en el reintento automático del `httpClient`). Conserva la clave ante red o 5xx; la renueva después de un éxito o un 4xx definitivo para permitir corregir el formulario. Un 409 `Request.InProgress` conserva la clave, espera y reintenta hasta 30 veces; al desmontar cancela la espera y no vuelve a enviar.
@@ -26,6 +27,7 @@
 ## Lo verifica
 - `IdempotencyTests` (E2): dos pedidos iguales en paralelo crean uno solo; el reintento devuelve la misma respuesta incluso si `RequestAborted` se cancela después de la acción; otro cuerpo da 422; un 5xx libera la clave.
 - `IdempotentActionsTests` (E1): todo `POST` que declara 201/202 o llama a `ToCreatedResult`/`ToAcceptedResult` (también desde una acción async) tiene `[Idempotent]` (test de arquitectura).
+- `EngagementTests` (E7): el reintento en el mismo sitio crea un solo pedido; cambiar de sitio con la misma clave y cuerpo da 422, y retirar la publicación o apagar el módulo impide el replay.
 
 ## Detalle
 [backend.md §20](../architecture/backend.md#20-reglas-de-datos-que-se-aplican-solas)

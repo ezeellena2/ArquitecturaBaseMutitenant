@@ -32,6 +32,7 @@ public sealed class FeatureGateTests
         {
             builder.UseSetting("FeatureManagement:test-business:EnabledFor:0:Name", "Tenant");
             builder.UseSetting("FeatureManagement:test-consumer:EnabledFor:0:Name", "Tenant");
+            builder.UseSetting("FeatureManagement:test-emergency:EnabledFor:0:Name", "Tenant");
             builder.UseSetting("FeatureManagement:test-emergency", "false");
             builder.ConfigureTestServices(services =>
             {

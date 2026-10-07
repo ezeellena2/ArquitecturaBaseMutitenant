@@ -202,4 +202,5 @@
   <data name="Auth.Signup.EmailTaken" xml:space="preserve"><value>You already have an account with that email address.</value></data>
   <data name="Platform.AccountRecovery.AccountNotFound" xml:space="preserve"><value>There is no account with that email address.</value></data>
   <data name="Identity.LoginMethod.AlreadyUsed" xml:space="preserve"><value>That email address is already associated with another account.</value></data>
+  <data name="Tenancy.Party.NotAllowed" xml:space="preserve"><value>You cannot perform this action from the selected access.</value></data>
 </root>

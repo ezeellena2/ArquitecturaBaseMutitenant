@@ -14,7 +14,8 @@ namespace ArquitecturaBaseMultitenant.Api.Idempotency;
 public sealed class IdempotencyFilter(
     IIdempotencyStore store,
     ICurrentUser currentUser,
-    ITenantContext tenantContext) : IAsyncResourceFilter
+    ITenantContext tenantContext,
+    IPublicSiteContext publicSiteContext) : IAsyncResourceFilter
 {
     public async Task OnResourceExecutionAsync(ResourceExecutingContext context, ResourceExecutionDelegate next)
     {
@@ -36,6 +37,9 @@ public sealed class IdempotencyFilter(
             request.Body, httpContext.RequestAborted));
         request.Body.Position = 0;
         var route = string.Concat(request.PathBase, request.Path, request.QueryString);
+        // La organización resuelta es parte de la ruta lógica; el Host arbitrario nunca da pertenencia.
+        if (publicSiteContext.BusinessTenantId is { } businessTenantId)
+            route = string.Concat(route, "|public-site:", businessTenantId.ToString("D"));
 
         var reservation = await store.ReserveAsync(
             tenantContext.TenantId,

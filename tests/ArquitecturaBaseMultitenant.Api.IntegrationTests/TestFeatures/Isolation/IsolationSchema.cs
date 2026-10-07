@@ -1,4 +1,5 @@
 using System.Data;
+using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Rls;
 using Npgsql;
@@ -68,7 +69,13 @@ internal static class IsolationSchema
             "ConsumerTenantId" uuid NOT NULL,
             "BusinessTenantId" uuid NOT NULL,
             "Id" uuid NOT NULL,
-            "SharedSummary" text NOT NULL DEFAULT '',
+            "SharedSummary" character varying({TextLimits.Description}) NOT NULL DEFAULT '',
+            "ConsumerName" character varying({TextLimits.PersonDisplayName}),
+            "Status" character varying({TextLimits.ShortCode}) NOT NULL DEFAULT 'Requested',
+            "CreatedAtUtc" timestamp with time zone NOT NULL DEFAULT '1970-01-01T00:00:00Z',
+            "CreatedBy" uuid,
+            "ModifiedAtUtc" timestamp with time zone,
+            "ModifiedBy" uuid,
             CONSTRAINT "PK_Deals" PRIMARY KEY ("ConsumerTenantId", "BusinessTenantId", "Id")
         );
         CREATE INDEX "IX_Deals_BusinessTenantId_Id" ON "{Schemas.Engagement}"."Deals" ("BusinessTenantId", "Id");

@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Api.Controllers.Auth;
 using ArquitecturaBaseMultitenant.Api.Controllers.PublicSite;
 using ArquitecturaBaseMultitenant.Api.Controllers.ReferenceData;
 using ArquitecturaBaseMultitenant.Api.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
@@ -65,6 +66,16 @@ public sealed class AccessDeclarationTests
             actual.OrderBy(type => type.FullName));
     }
 
+    [Fact]
+    public void Authenticated_public_site_requires_only_consumer_after_all_access_filters()
+    {
+        var type = typeof(SharedPublicSiteProbe);
+        Assert.Null(Violation(type, type.GetMethod(nameof(SharedPublicSiteProbe.Consumer))!));
+        foreach (var name in new[] { nameof(SharedPublicSiteProbe.Business), nameof(SharedPublicSiteProbe.Mixed), nameof(SharedPublicSiteProbe.EmptyIntersection) })
+            Assert.NotNull(Violation(type, type.GetMethod(name)!));
+        Assert.NotNull(Violation(typeof(PlatformPublicSiteProbe), typeof(PlatformPublicSiteProbe).GetMethod(nameof(PlatformPublicSiteProbe.Platform))!));
+    }
+
     private static string? Violation(Type controller, MethodInfo action)
     {
         var anonymous = Has<AllowAnonymousAttribute>(controller, action);
@@ -72,8 +83,16 @@ public sealed class AccessDeclarationTests
         var publicSite = HasNamedAttribute(controller, action, "PublicSiteAttribute");
         if (publicSite)
         {
-            return anonymous && !access ? null
-                : $"{controller.Name}.{action.Name}: public site requires anonymous without access";
+            if (anonymous)
+                return !access ? null : $"{controller.Name}.{action.Name}: anonymous public site cannot declare access";
+            var declarations = controller.GetCustomAttributes<AccessAttribute>(inherit: true)
+                .Concat(action.GetCustomAttributes<AccessAttribute>(inherit: true)).ToArray();
+            if (declarations.Length == 0)
+                return $"{controller.Name}.{action.Name}: authenticated public site requires consumer";
+            var allowed = declarations[0].Allowed.ToHashSet();
+            foreach (var declaration in declarations.Skip(1)) allowed.IntersectWith(declaration.Allowed);
+            return allowed.SetEquals([Access.Consumer]) ? null
+                : $"{controller.Name}.{action.Name}: authenticated public site requires only consumer";
         }
 
         if (anonymous)
@@ -92,4 +111,19 @@ public sealed class AccessDeclarationTests
     private static bool HasNamedAttribute(Type controller, MethodInfo action, string name) =>
         controller.GetCustomAttributes(inherit: true).Any(attribute => attribute.GetType().Name == name)
         || action.GetCustomAttributes(inherit: true).Any(attribute => attribute.GetType().Name == name);
+
+    [PublicSite, Access(Access.Consumer, Access.Business)]
+    private sealed class SharedPublicSiteProbe : ControllerBase
+    {
+        [HttpPost, Access(Access.Consumer)] public OkResult Consumer() => Ok();
+        [HttpPost, Access(Access.Business)] public OkResult Business() => Ok();
+        [HttpPost, Access(Access.Platform)] public OkResult EmptyIntersection() => Ok();
+        [HttpPost] public OkResult Mixed() => Ok();
+    }
+
+    [PublicSite, Access(Access.Platform)]
+    private sealed class PlatformPublicSiteProbe : ControllerBase
+    {
+        [HttpPost] public OkResult Platform() => Ok();
+    }
 }

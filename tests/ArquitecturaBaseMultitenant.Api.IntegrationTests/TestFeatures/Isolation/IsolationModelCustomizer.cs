@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
+using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -13,6 +14,9 @@ internal sealed class IsolationModelCustomizer(ModelCustomizerDependencies depen
 {
     public override void Customize(ModelBuilder modelBuilder, DbContext context)
     {
+        // Reemplazar IModelCustomizer también reemplaza el de OpenIddict: conservá sus entidades reales.
+        modelBuilder.UseOpenIddict<Guid>();
+
         var widget = modelBuilder.Entity<Widget>().ToTable("Widgets", Schemas.Tenant);
         widget.HasKey(entity => new { entity.TenantId, entity.Id });
         widget.HasIndex(entity => new { entity.TenantId, entity.Name, entity.Id });
@@ -24,6 +28,11 @@ internal sealed class IsolationModelCustomizer(ModelCustomizerDependencies depen
         var deal = modelBuilder.Entity<Deal>().ToTable("Deals", Schemas.Engagement);
         deal.HasKey(entity => new { entity.ConsumerTenantId, entity.BusinessTenantId, entity.Id });
         deal.HasIndex(entity => new { entity.BusinessTenantId, entity.Id });
+        deal.Ignore(entity => entity.SharedSummary);
+        deal.Property(entity => entity.Summary).HasColumnName("SharedSummary")
+            .HasMaxLength(TextLimits.Description);
+        deal.Property(entity => entity.ConsumerName).HasMaxLength(TextLimits.PersonDisplayName);
+        deal.Property(entity => entity.Status).HasConversion<string>().HasMaxLength(TextLimits.ShortCode);
         base.Customize(modelBuilder, context);
     }
 }

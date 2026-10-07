@@ -112,9 +112,9 @@ public sealed class PublicAndSharedRowsTests(ApiFactory factory)
         }
 
         var deal = new Deal(tenants.KevinPersonalTenantId, tenants.BusinessATenantId, "Shared order summary");
-        Assert.True(PartyPolicy.Require(deal, Party.Business, tenants.BusinessATenantId, Party.Business));
-        Assert.False(PartyPolicy.Require(deal, Party.Consumer, tenants.KevinPersonalTenantId, Party.Business));
-        Assert.False(PartyPolicy.Require(deal, Party.Business, tenants.BusinessBTenantId, Party.Business));
+        Assert.True(PartyPolicy.Require(deal, Party.Business, tenants.BusinessATenantId, Party.Business).IsSuccess);
+        Assert.False(PartyPolicy.Require(deal, Party.Consumer, tenants.KevinPersonalTenantId, Party.Business).IsSuccess);
+        Assert.False(PartyPolicy.Require(deal, Party.Business, tenants.BusinessBTenantId, Party.Business).IsSuccess);
     }
 
     [Fact]
