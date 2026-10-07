@@ -205,6 +205,32 @@ Diseño la dibuja como estado de `Ingreso` y `M-Ingreso`.
 
 **Base preparada para A6:** `FirstName` y `LastName` opcionales, máximo 100 por parte; `DisplayName` sigue persistido y se arma en la identidad, con capacidad para el combinado de 201. Migración `20261007003838_SplitUserNames`, tres archivos: divide datos existentes y conserva vacíos los campos personales de las cuentas eliminadas. El guardado legado del mismo combinado preserva los nombres compuestos de Google; una edición legado con partición inválida devuelve su error propio. Google avanza `ProfileVersion` solo cuando completa algún campo. A6 completó después los contratos/editor de `/api/me`, semilla y formulario, reutilizando esta base. BACK de A7 `b3ffa40`, 31 rutas propias; FRONT sin cambios en A7.
 
+## A8 · «Ingresar» sigue fallando con una sesión vieja del operador (encontrado por el usuario el 2026-10-07)
+
+**El problema:** después de A3, tocar «Ingresar» en el inicio sigue dando `access_denied` con `Tenancy.Access.PlatformOnly` y «No pudimos iniciar tu sesión».
+
+**La causa:**
+- El navegador del usuario guarda una sesión del operador **de antes de A3**, cuando había una sola cookie. Quedó en la cookie que ahora es la pública.
+- `ConnectController.Authorize` (líneas 51 a 55) sigue devolviendo `Forbid` cuando la sesión guardada no puede usar la puerta pedida.
+- Las pruebas de A3 arrancan con el navegador limpio y nunca tienen esa sesión vieja.
+
+**La regla (vale para cualquier caso, no solo el operador):** una sesión guardada que no puede usar la puerta pedida nunca termina en un error sin salida.
+- **Si el caso tiene su pantalla diseñada, se muestra:**
+  - «Sin empresa», para `Tenancy.Access.NotMember`;
+  - la organización inactiva, para `Tenancy.Member.Inactive`.
+- **Si la sesión no debería existir,** como un operador en la cookie pública (ADR 0044), se descarta: `SignOutAsync` del esquema de esa puerta. Después se muestra el ingreso de esa puerta, como si no hubiera sesión.
+- **«Volver a ingresar»** del error genérico tiene que llevar al ingreso de verdad, nunca de vuelta al mismo error.
+
+- [ ] **Rojo** (integración):
+  - con una cookie pública que tiene a un operador (armada en el test como la dejaba la versión anterior), `GET /connect/authorize` de persona y de empresa redirige a `/login` y a `/login/empresa`, y borra la cookie pública;
+  - después, el ingreso con otro correo anda;
+  - con una persona sin empresa en la puerta de empresa, se sigue viendo «Sin empresa».
+- [ ] **Implementación:** en `Authorize`, cuando `SelectAccessAsync` falla con `PlatformOnly` en una puerta pública, se descarta la sesión de esa puerta y se sigue al redireccionamiento del ingreso. Lo demás queda igual.
+- [ ] **E2E real:** un recorrido que arranca con esa cookie vieja ya guardada en el navegador, toca «Ingresar» y ve el ingreso.
+- [ ] **El recorrido de usuario de la puerta se hace en un navegador con sesiones de antes,** no solo en uno limpio.
+
+**Hecho cuando:** en el navegador del usuario, tal como está hoy, «Ingresar» e «Ingresá como empresa» muestran el ingreso.
+
 ## Puerta: el recorrido de un usuario nuevo
 
 Los tests y el E2E pasaron en verde con todo esto roto, porque probaban las reglas escritas, no lo que hace una persona. Antes de dar por terminados los arreglos, se recorre la app a mano como un usuario nuevo:
