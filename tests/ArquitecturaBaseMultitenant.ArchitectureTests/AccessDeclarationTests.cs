@@ -1,6 +1,7 @@
 using System.Reflection;
 using ArquitecturaBaseMultitenant.Api.Controllers.Account;
 using ArquitecturaBaseMultitenant.Api.Controllers.Auth;
+using ArquitecturaBaseMultitenant.Api.Controllers.PublicSite;
 using ArquitecturaBaseMultitenant.Api.Controllers.ReferenceData;
 using ArquitecturaBaseMultitenant.Api.Tenancy;
 using Microsoft.AspNetCore.Authorization;
@@ -30,6 +31,7 @@ public sealed class AccessDeclarationTests
         typeof(AccountDeletionCancelController),
         typeof(LegalController),
         typeof(ConnectController),
+        typeof(DirectoryController),
     ];
 
     [Fact]

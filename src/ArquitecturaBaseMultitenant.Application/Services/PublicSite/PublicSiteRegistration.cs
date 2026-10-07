@@ -11,6 +11,7 @@ internal static class PublicSiteRegistration
         services.AddScoped<IPendingItemSource, PublicPagePendingItems>();
         services.AddScoped<IPublicPageService, PublicPageService>();
         services.AddScoped<IPublicSiteService, PublicSiteService>();
+        services.AddScoped<IDirectoryService, DirectoryService>();
         services.AddScoped<PublicPageEditor>();
         return services;
     }

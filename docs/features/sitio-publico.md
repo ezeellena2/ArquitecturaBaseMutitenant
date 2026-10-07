@@ -16,15 +16,28 @@ El dominio principal, un slug reservado o desconocido, una página inexistente, 
 
 Una sesión Business de B en el subdominio de A ve solo la publicación de A en estas rutas. Las rutas privadas siguen leyendo B desde el claim; el host nunca sustituye ese acceso. Los servicios de lectura usan `Result` y `OperationLog.RunAsync` sin registrar los datos de contacto.
 
+## El directorio de empresas
+
+`GET /api/directory` alimenta la portada y `/empresas` del dominio principal. `DirectoryController` lleva solo `[AllowAnonymous]` y está en la lista cerrada de `AccessDeclarationTests`. La ruta no requiere resolver un sitio por subdominio ni cambia el acceso de una sesión.
+
+El pedido HTTP `DirectoryQuery` se mapea a `ListDirectoryRequest : PagedRequest`: `page`, `pageSize`, `sort` y `search`. La respuesta es `PagedResult<DirectoryEntryRow>`, con exactamente `slug`, `name`, `description` y `logoUrl` por tarjeta; los opcionales van en `null`. No incluye ids, contacto, versiones, estados ni datos de moderación.
+
+El directorio exige página publicada y sin bloqueo, organización Business activa, slug presente y ausencia en `ReservedTenantSlugs`. Quedan afuera los borradores, las páginas inexistentes o bloqueadas y las organizaciones suspendidas, cerradas, en espera de aprobación o en provisioning. También queda afuera el borrador de la propia organización cuando una sesión Business permite verlo privadamente. El reader usa `AsNoTracking`, conserva el filtro `Public` y RLS y une `PublicPages` con `Tenants`; nunca entra a otro espacio ni usa `IgnoreQueryFilters`.
+
+La búsqueda alcanza solo `PublicPages.Name`, con `ApplySearch`: no distingue acentos ni mayúsculas y trata `%` y `_` como texto. El único orden permitido es `name` o `-name`, por la collation ICU `es-AR`, con desempate por Id. El tamaño por defecto es 10 y admite también 20, 50 y 100. Una página fuera de rango vuelve vacía y conserva el total real. El validador hereda todos los mensajes propios de `PagedRequestValidator`; un orden o paginado inválido responde 400 `Validation.Failed`. El orden cuenta con el índice `(Name, Id)` de `public_site.PublicPages`, y la búsqueda con el GIN trigram sobre `public.f_unaccent(lower("Name"))` y `public.gin_trgm_ops`.
+
+`logoUrl` se arma después de consultar y es relativo al dominio principal: `/api/directory/<slug>/logo?v=<version>`. `GET /api/directory/{slug}/logo` vuelve a exigir los mismos filtros del listado y la existencia de una imagen; responde 404 `PublicSite.PublicPage.NotFound` si no se puede listar la organización o no tiene logo. Devuelve PNG, JPEG o WebP con el mismo `ETag` versionado y revalidación de la página del subdominio. Un logo retirado o de una organización suspendida vuelve a dar 404 aun con `If-None-Match`. No hay caché de servidor en esta etapa.
+
 ## Carpetas
 
 | Carpeta | Responsabilidad |
 |---|---|
 | `src/ArquitecturaBaseMultitenant.Domain/PublicSite` | contenido, publicación, logo y errores de dominio |
-| `src/ArquitecturaBaseMultitenant.Application/Models/PublicSite` | borrador privado, proyecciones públicas y respuesta del sitio |
-| `src/ArquitecturaBaseMultitenant.Application/Services/PublicSite` | edición privada y lectura del sitio resuelto |
-| `src/ArquitecturaBaseMultitenant.Api/Contracts/PublicSite` | salida HTTP con correo legible y teléfono E.164 |
-| `src/ArquitecturaBaseMultitenant.Api/Controllers/PublicSite` | página y logo del subdominio |
+| `src/ArquitecturaBaseMultitenant.Application/Models/PublicSite` | borrador privado, proyecciones públicas, pedido paginado y tarjetas del directorio |
+| `src/ArquitecturaBaseMultitenant.Application/Services/PublicSite` | edición privada y lectura del sitio resuelto y del directorio |
+| `src/ArquitecturaBaseMultitenant.Application/Validation/PublicSite` | edición de la página y paginado del directorio |
+| `src/ArquitecturaBaseMultitenant.Api/Contracts/PublicSite` | salida HTTP con correo legible y teléfono E.164 y query del directorio |
+| `src/ArquitecturaBaseMultitenant.Api/Controllers/PublicSite` | página y logo del subdominio; directorio y logo por slug en el dominio principal |
 | `src/ArquitecturaBaseMultitenant.Api/Tenancy` | resolución del host, contexto y filtro `[PublicSite]` |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Readers` | consultas EF explícitas de publicación y estado activo |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Configurations/PublicSite` | contenido persistido en `public_site` y clasificación pública |
@@ -34,6 +47,8 @@ Una sesión Business de B en el subdominio de A ve solo la publicación de A en 
 ## Lo verifica
 
 - `PublicSiteTests` (E7): ocho campos públicos exactos, opcionales en null, PNG/JPEG/WebP, ETag y 304, versión nueva del logo, retiro de un logo cacheado, 404 uniforme, borrador del propio miembro y token de B en el sitio de A. También consulta directamente el reader público como dueño, para que el filtro privado nunca convierta el borrador en una publicación.
+- `DirectoryTests` (E7): estados excluidos y slugs reservados o ausentes, búsqueda por nombre con acentos y comodines literales, tamaños permitidos y página fuera de rango con 1 y 50 organizaciones, orden `es-AR` y desempate, cuatro campos exactos, logos y 304, retiro o suspensión con un logo cacheado y borrador de la propia sesión Business. Cada caso busca un prefijo único de nombre para que la base compartida con otras clases no altere sus totales.
 - `SubdomainTests` (E7): una sola etiqueta sobre el issuer, dominio y puerto correctos, slugs reservados, estados de la organización, resolución única por pedido e independencia del claim.
 - `PublicPagesTests` (E6) y `PublicPageModerationTests` (E5): edición privada, publicación versionada y moderación.
 - `ExplicitRouteInventoryTests`, `AccessDeclarationTests`, `ControllerOutputContractTests` y `OpenApiContractTests`: rutas, acceso y contratos.
+- `SearchIndexTests` verifica el índice de búsqueda del nombre del directorio; `ValidationMessageTests` verifica los mensajes de cada regla del validador.

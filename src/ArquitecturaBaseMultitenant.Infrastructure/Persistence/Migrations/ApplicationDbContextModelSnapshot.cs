@@ -860,6 +860,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_PublicPages_BusinessTenantId");
 
+                    b.HasIndex("Name", "Id");
+
                     b.ToTable("PublicPages", "public_site");
                 });
 

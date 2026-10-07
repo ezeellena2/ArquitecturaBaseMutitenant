@@ -41,6 +41,8 @@ public sealed class ExplicitRouteInventoryTests(ApiFactory factory)
         "GET /api/public-site/slug-availability",
         "GET /api/public-site",
         "GET /api/public-site/logo",
+        "GET /api/directory",
+        "GET /api/directory/{slug}/logo",
         "POST /api/invitations/preview",
         "POST /api/invitations/accept",
         "GET /api/home",

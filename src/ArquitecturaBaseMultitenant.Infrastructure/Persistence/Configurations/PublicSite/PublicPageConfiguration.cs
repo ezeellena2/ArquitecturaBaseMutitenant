@@ -23,6 +23,7 @@ internal sealed class PublicPageConfiguration : IEntityTypeConfiguration<PublicP
         builder.Property(page => page.Website).HasMaxLength(TextLimits.WebAddress);
         builder.Property(page => page.PublishBlockedReason).HasMaxLength(TextLimits.Description);
         builder.HasIndex(page => page.BusinessTenantId).IsUnique().HasDatabaseName(UniqueKeys.PublicPage);
+        builder.HasIndex(page => new { page.Name, page.Id });
         builder.HasOne<TenantEntity>().WithMany()
             .HasForeignKey(page => page.BusinessTenantId).OnDelete(DeleteBehavior.Restrict);
     }
