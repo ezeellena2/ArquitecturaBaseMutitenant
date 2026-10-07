@@ -37,6 +37,7 @@ Las decisiones están en [`docs/decisions/README.md`](docs/decisions/README.md) 
 | escribir tests | [tests](docs/rules/tests.md) |
 | crear un servicio, un helper, un puerto o un controller | [capas-y-flujo](docs/rules/capas-y-flujo.md) (la lista cerrada de sufijos de los helpers) |
 | agregar un área completa | [agregar-un-area](docs/guides/agregar-un-area.md) |
+| planificar o programar una etapa (back y front en paralelo, desde la E8) | [etapa-en-paralelo](docs/guides/etapa-en-paralelo.md) |
 | correr o crear un arnés ejecutable (realinear docs, programar una rutina) | [scripts/arneses/README.md](scripts/arneses/README.md), [agregar-un-arnes](docs/guides/agregar-un-arnes.md) |
 
 El inventario de todos los estándares transversales (los definidos y los propuestos) está en [`docs/architecture/estandares.md`](docs/architecture/estandares.md). Si una regla no está escrita: **copiá cómo lo resuelve ArquitecturaBase** (`../ArquitecturaBase`, `../ArquitecturaBaseFront`); si tampoco está ahí, **decidí vos lo más simple y coherente con estos docs, anotalo en la sección «Decisiones tomadas» del informe de la etapa y seguí**. Frená y preguntá **solo** si la decisión cambia el producto (qué ve o puede hacer un usuario, una pantalla del lienzo, el modelo de accesos) o contradice una regla escrita. Una duda técnica menor nunca frena una etapa. Una convención transversal nueva se agrega a la ficha y se verifica con un test pertinente, existente o nuevo; una decisión local queda en la feature o el informe, con test de conducta si agrega lógica.
