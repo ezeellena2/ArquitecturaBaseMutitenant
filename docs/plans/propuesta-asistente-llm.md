@@ -30,6 +30,10 @@ Estado: **propuesta para decidir** (2026-10-07). Cuando el usuario cierre las de
 | 2026-10-07 | D18 · Cuándo | **Justo después de la Etapa 8,** copiando su patrón de módulo quitable. |
 | 2026-10-07 | D19 · Modelos con la clave de la plataforma | **La plataforma fija qué modelos se pueden elegir con su clave,** y la organización elige entre esos. Con su propia clave, elige cualquiera del catálogo. |
 | 2026-10-07 | D20 · Contador | **Solo cerca del tope:** al quedar 10 mensajes, «Te quedan 10 consultas hoy». |
+| 2026-10-07 | D21 · Ayuda | **También explica cómo usar la app.** Una herramienta lee artículos de ayuda que escribe la plataforma (uno por tema, en es y en) y responde con los pasos y el enlace a la pantalla. Los artículos son contenido configurable, no texto en el código. Cada área nueva suma los suyos. |
+| 2026-10-07 | D22 · Aviso legal | **Aviso la primera vez** que alguien usa el asistente («Tus consultas las procesa un proveedor de IA; no subas datos sensibles», con «Entendido», que queda registrado) **y una versión nueva de Términos y Privacidad** que lo menciona. |
+| 2026-10-07 | D23 · Alertas | **Correo al 80 % y al 100 % del tope mensual:** al Dueño si la organización usa su propia clave, y a la plataforma si usa la de la plataforma. Por el outbox, en es y en. |
+| 2026-10-07 | D24 · Títulos | **Automáticos con IA:** después de la primera respuesta, el modelo más barato del catálogo le pone un título corto. Se puede renombrar, y el costo cuenta en el uso. |
 | 2026-10-07 | D10 · Topes | **Por persona y por organización:** 50 mensajes por persona por día y un tope mensual en dólares por organización, con un aviso claro al llegar. Los cambia la plataforma; una organización con su clave fija los suyos. |
 
 ---

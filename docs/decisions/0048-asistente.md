@@ -29,6 +29,10 @@ El dueño del producto quiere un chat como Claude o Codex en el inicio de Plataf
   - topes de 50 mensajes por persona por día y un tope mensual en dólares por organización, con aviso solo cerca del tope;
   - 👍/👎, enlaces a la pantalla, exportar en Markdown y PDF, y adjuntar imágenes y PDF (10 MB, 5 por mensaje).
 - **Los adjuntos** van por un puerto de archivos del núcleo, `IFileStore`.
+- **También explica cómo usar la app,** con artículos de ayuda que escribe la plataforma.
+- **Aviso la primera vez,** con una versión nueva de Términos y Privacidad que nombra al proveedor de IA.
+- **Correos al 80 % y al 100 %** del tope mensual.
+- **Títulos automáticos** con el modelo más barato.
 - **Dónde se ve:** en la compu, el asistente es el inicio; en el teléfono, una pestaña de la barra de abajo.
 
 ## Consecuencias
