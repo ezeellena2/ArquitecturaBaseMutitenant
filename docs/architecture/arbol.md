@@ -126,6 +126,7 @@ ArquitecturaBaseMutitenant/
 │       ├── ArquitecturaBaseMultitenant.RealE2ESetup.csproj Proyecto de soporte del E2E real aislado
 │       ├── Program.cs                                 Preparador aislado y despacho de órdenes del runner
 │       ├── PlatformCommand.cs                         Estados iniciales de Plataforma para el E2E aislado
+│       ├── PublicSiteSetup.cs                         Publicaciones activa y suspendida propias del recorrido público E7
 │       ├── LegalVersionCommand.cs                     Publica términos de prueba por orden del runner
 │       ├── LegacyBrowserSessionCommand.cs             Reproduce cookies anteriores a ADR 0044 en aislamiento
 │       ├── InvitationCommand.cs                       Prepara escenarios de invitación por orden del runner

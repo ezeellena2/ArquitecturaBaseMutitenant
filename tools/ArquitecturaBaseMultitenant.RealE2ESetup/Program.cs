@@ -117,6 +117,7 @@ try
         }, CommitPolicy.OnSuccess, cancellationToken);
     }
 
+    await PublicSiteSetup.PrepareAsync(host.Services, cancellationToken);
     await using (var marker = new FileStream(readyFile, FileMode.CreateNew, FileAccess.Write, FileShare.None))
         await marker.FlushAsync(cancellationToken);
     // El proceso conserva únicamente la conexión de la base efímera para la publicación legal del recorrido.
