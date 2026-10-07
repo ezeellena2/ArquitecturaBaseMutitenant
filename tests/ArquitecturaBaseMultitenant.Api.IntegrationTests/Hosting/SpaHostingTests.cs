@@ -17,6 +17,26 @@ public sealed class SpaHostingTests(ApiFactory factory)
     private const string SpaMarker = "<!doctype html><title>spa test</title>";
     private const string AssetMarker = "export const marker = 'asset';";
 
+    [Fact]
+    public async Task Subdomain_api_answers_on_its_own_origin_without_cors_headers()
+    {
+        using var client = CreateClient(factory, "empresa.localtest.me");
+        var ct = TestContext.Current.CancellationToken;
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/public-site");
+        request.Headers.Add("Origin", "https://otra.localtest.me");
+        using var response = await client.SendAsync(request, ct);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        Assert.DoesNotContain(response.Headers, header => header.Key.StartsWith("Access-Control-Allow-", StringComparison.OrdinalIgnoreCase));
+
+        using var preflight = new HttpRequestMessage(HttpMethod.Options, "/api/public-site");
+        preflight.Headers.Add("Origin", "https://otra.localtest.me");
+        preflight.Headers.Add("Access-Control-Request-Method", "GET");
+        using var options = await client.SendAsync(preflight, ct);
+        Assert.DoesNotContain(options.Headers, header => header.Key.StartsWith("Access-Control-Allow-", StringComparison.OrdinalIgnoreCase));
+        Assert.NotEqual(HttpStatusCode.NoContent, options.StatusCode);
+    }
+
     [Theory]
     [InlineData("app.localtest.me", "/")]
     [InlineData("app.localtest.me", "/login")]

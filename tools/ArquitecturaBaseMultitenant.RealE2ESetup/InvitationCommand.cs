@@ -14,6 +14,7 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.RealE2ESetup;
@@ -144,7 +145,8 @@ internal static class InvitationCommand
         }, CommitPolicy.OnSuccess, ct);
 }
 
-internal sealed class E2EPublicOrigin : IPublicOrigin
+internal sealed class E2EPublicOrigin(IConfiguration configuration) : IPublicOrigin
 {
-    public Uri Value { get; } = new("https://localhost:5174/");
+    public Uri Value { get; } = new(configuration["Authentication:Issuer"]
+        ?? throw new InvalidOperationException("The isolated E2E issuer is required."));
 }

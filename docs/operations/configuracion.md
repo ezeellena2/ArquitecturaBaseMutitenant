@@ -83,7 +83,11 @@ Mismos valores que `../ArquitecturaBase/src/ArquitecturaBase.Api/appsettings.Dev
 - `https://localhost:7280/signin-google` (la Api directa)
 - en producción, `https://<dominio>/signin-google`
 
-El cliente OIDC público `web` usa `https://localhost:5174/auth/callback` para volver al front después de `/connect/authorize`. Esa URI se registra en `Authentication:Clients:Web:RedirectUris`; es distinta de `/signin-google`, que pertenece al callback de Google. El front la fija en `src/auth/authConfig.ts` y la ruta está en `src/app/routes.tsx`.
+Desde la Etapa 7, el dominio principal de desarrollo es `https://localtest.me:5174`. Sumá **`https://localtest.me:5174/signin-google`** a las URI de redirección autorizadas del cliente de Google en su consola. Esa configuración la hace el usuario; hasta que esté registrada, falla el ingreso con Google en este host, pero el código por correo sigue funcionando.
+
+El cliente OIDC público `web` usa `https://localtest.me:5174/auth/callback` para volver al front después de `/connect/authorize` y `https://localtest.me:5174/silent-renew.html` para renovar en silencio. Esas URI se registran en `Authentication:Clients:Web:RedirectUris`; son distintas de `/signin-google`, que pertenece al callback de Google. AppHost entrega el mismo issuer fijo a la API y al front (`VITE_AUTH_ISSUER`). El front conserva el origen de cada pestaña para callback, canje, userinfo y revocación; `authorize` y `logout` navegan al dominio principal. Los subdominios publicados y activos se validan individualmente, sin registrar un comodín OIDC.
+
+La SPA y la API comparten el origen de cada host: `https://<slug>.localtest.me:5174` conserva el `Host` hasta la API y usa `/api` y `/connect`, sin CORS. El certificado de desarrollo de .NET cubre `localhost`, **no `localtest.me` ni sus subdominios**: el navegador puede mostrar una advertencia. Para uso local sin esa advertencia, configurá un certificado de desarrollo que cubra `localtest.me` y `*.localtest.me` y sea confiable en esta máquina. Esto no cambia certificados ni configuración de producción.
 
 **Meta (webhook).** Una app de Meta tiene **una sola** URL de webhook. Hay dos caminos:
 - **Mientras se desarrolla:** cuando pruebes el multitenant, cambiá la URL de devolución de llamada a `https://<túnel del multitenant>/webhooks/whatsapp`, con la misma palabra de verificación. Al volver a ArquitecturaBase, la volvés a cambiar. Como la URL del túnel de cada AppHost es fija, siempre son las mismas dos direcciones.

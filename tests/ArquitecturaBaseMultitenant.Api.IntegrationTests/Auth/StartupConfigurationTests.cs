@@ -17,6 +17,20 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 public sealed class StartupConfigurationTests
 {
     [Fact]
+    public void Development_uses_localtest_me_for_the_main_domain_and_its_subdomains()
+    {
+        var apiDirectory = Path.Combine(FindRepositoryRoot(), "src", "ArquitecturaBaseMultitenant.Api");
+        var configuration = new ConfigurationBuilder().SetBasePath(apiDirectory)
+            .AddJsonFile("appsettings.json").AddJsonFile("appsettings.Development.json").Build();
+
+        Assert.Equal("https://localtest.me:5174/", configuration["Authentication:Issuer"]);
+        Assert.Equal(["https://localtest.me:5174/auth/callback", "https://localtest.me:5174/silent-renew.html"],
+            configuration.GetSection("Authentication:Clients:Web:RedirectUris").Get<string[]>() ?? []);
+        Assert.Equal(["https://localtest.me:5174/", "https://localtest.me:5174/invitacion"],
+            configuration.GetSection("Authentication:Clients:Web:PostLogoutRedirectUris").Get<string[]>() ?? []);
+    }
+
+    [Fact]
     public void Development_settings_enable_Google_and_Gmail_without_committing_credentials()
     {
         var apiDirectory = Path.Combine(FindRepositoryRoot(), "src", "ArquitecturaBaseMultitenant.Api");

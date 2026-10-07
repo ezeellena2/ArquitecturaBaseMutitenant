@@ -54,8 +54,7 @@ try
     });
     builder.Logging.ClearProviders();
     builder.Services.AddApplication().AddInfrastructure(builder.Configuration, builder.Environment);
-    builder.Services.AddSingleton<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request.IPublicOrigin>(
-        new E2EPublicOrigin());
+    builder.Services.AddSingleton<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request.IPublicOrigin, E2EPublicOrigin>();
     using var host = builder.Build();
     await using var scope = host.Services.CreateAsyncScope();
     var services = scope.ServiceProvider;

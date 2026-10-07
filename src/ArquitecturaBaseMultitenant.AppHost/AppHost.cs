@@ -5,6 +5,7 @@ var postgresPassword = builder.AddParameter("postgres-password", secret: true);
 var ownerPassword = builder.AddParameter("mt-owner-password", secret: true);
 var runtimePassword = builder.AddParameter("mt-app-password", secret: true);
 var isolatedE2e = Environment.GetEnvironmentVariable("MT_E2E_ISOLATED") == "1";
+var issuer = "https://localtest.me:5174/";
 
 var postgres = builder.AddPostgres("postgres", password: postgresPassword, port: isolatedE2e ? 5435 : 5434);
 if (!isolatedE2e)
@@ -24,6 +25,7 @@ var appDb = builder.AddConnectionString("appdb",
     ReferenceExpression.Create($"Host={host};Port={port};Database=appdb;Username=mt_app;Password={runtimePassword}"));
 
 var api = builder.AddProject<Projects.ArquitecturaBaseMultitenant_Api>("api")
+    .WithEnvironment("Authentication__Issuer", issuer)
     .WithReference(appDb)
     .WithReference(appDbAdmin)
     .WithReference(postgresBootstrap)
@@ -56,6 +58,7 @@ if (isolatedE2e)
     builder.AddExecutable("e2e-setup", "dotnet", builder.AppHostDirectory,
             "run", "--project", setupProject, "--no-build", "--no-launch-profile")
         .WithReference(appDb)
+        .WithEnvironment("Authentication__Issuer", issuer)
         .WithEnvironment("MT_E2E_ISOLATED", "1")
         .WithEnvironment("MT_E2E_BUSINESS_EMAIL", businessEmail)
         .WithEnvironment("MT_E2E_READY_FILE", readyFile)
@@ -64,6 +67,7 @@ if (isolatedE2e)
 
 builder.AddViteApp("front", "../../../ArquitecturaBaseMutitenantFront")
     .WithNpm()
+    .WithEnvironment("VITE_AUTH_ISSUER", issuer)
     .WithReference(api)
     .WaitFor(api)
     .WithHttpsEndpoint(port: 5174, env: "PORT", isProxied: false)
