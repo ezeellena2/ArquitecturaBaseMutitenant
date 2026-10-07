@@ -1744,10 +1744,12 @@ tests/
 │   │   ├── GoogleNamesTests.cs                        Claims GivenName/Surname reales, vacíos, versión y guardas (A7)
 │   │   ├── GoogleEndpointJourneyTests.cs              Recorre desafío, callback, cookie y emisión de tokens del ingreso…
 │   │   ├── BrowserSessionAuthorizationTests.cs        Comprueba el aislamiento de revocaciones entre sesiones, accesos y organizaciones
+│   │   ├── PlatformSessionTests.cs                    Cookies separadas y convivencia pública con Plataforma (A3)
 │   │   ├── AuthPipelineTests.cs                       Comprueba el orden de autenticación, resolución del espacio y autorización
 │   │   ├── AuthEndpointsTests.cs                      Comprueba las puertas HTTP de ingreso y registro
+│   │   ├── EmailAccountStatesTests.cs                 Estados de correo, campos, no emisión y límites (A2)
 │   │   ├── AccountGoogleProtocolTests.cs              Comprueba la protección del desafío para vincular Google a una…
-│   │   ├── AccountRecoveryTests.cs                    «Recuperar mi cuenta» (ADR 0041)
+│   │   ├── AccountRecoveryTests.cs                    «Recuperar mi cuenta» (ADR 0043)
 │   │   ├── BusinessSignupTests.cs                     [E6]
 │   │   └── MeTests.cs
 │   ├── Organization/                                  [E4]
