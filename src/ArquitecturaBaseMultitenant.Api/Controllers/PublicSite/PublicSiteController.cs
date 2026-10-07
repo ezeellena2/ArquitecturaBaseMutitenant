@@ -1,4 +1,4 @@
-using System.Globalization;
+using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Api.Contracts.PublicSite;
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
@@ -41,7 +41,7 @@ public sealed class PublicSiteController(IPublicSiteService service) : Controlle
         return new FileContentResult(logo.Bytes, logo.ContentType)
         {
             EntityTag = new EntityTagHeaderValue("\"public-page-"
-                + logo.Version.ToString(CultureInfo.InvariantCulture) + "\""),
+                + VersionWireFormatter.Format(logo.Version) + "\""),
         };
     }
 }

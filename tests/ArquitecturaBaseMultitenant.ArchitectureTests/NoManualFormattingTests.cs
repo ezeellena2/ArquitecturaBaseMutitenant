@@ -29,6 +29,7 @@ public sealed class NoManualFormattingTests
         "ArquitecturaBaseMultitenant.Api.Json.TimeOnlyConverter",
         "ArquitecturaBaseMultitenant.Api.Json.UtcDateTimeConverter",
         "ArquitecturaBaseMultitenant.Api.ErrorHandling.RetryAfterHeaderFormatter",
+        "ArquitecturaBaseMultitenant.Application.Common.Formatting.VersionWireFormatter",
     };
 
     [Fact]

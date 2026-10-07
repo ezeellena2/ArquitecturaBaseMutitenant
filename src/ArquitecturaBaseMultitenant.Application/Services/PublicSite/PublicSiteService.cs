@@ -1,4 +1,4 @@
-using System.Globalization;
+using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -23,7 +23,7 @@ internal sealed class PublicSiteService(IPublicPageReader pages, IPublicSiteCont
             if (page is null) return PublicPageErrors.NotFound;
 
             var logoUrl = page.HasLogo
-                ? "/api/public-site/logo?v=" + page.Version.ToString(CultureInfo.InvariantCulture)
+                ? "/api/public-site/logo?v=" + VersionWireFormatter.Format(page.Version)
                 : null;
             return new PublicSiteResponse(slug, page.Name, page.Description, logoUrl,
                 page.Address, page.Phone, page.Email, page.Website);
