@@ -1,5 +1,31 @@
 # Etapa 7: área B2C, sitio público e interacción — plan ejecutable
 
+> **Forma de trabajo de esta etapa (pedido del usuario, 2026-10-07). Manda sobre lo que diga más abajo.** El usuario lo pidió así: «solo quiero que programe, ya tenemos una base sólida… no se puede demorar tanto por cada etapa». La arquitectura, las fichas de `docs/rules/` y el arnés automático (los tests de arquitectura y las guardas) son los que cuidan la calidad, y siguen igual. Se saca la ceremonia:
+> - **Programá directo,** tarea por tarea y en el orden del plan. Copiá Roles y la E6, como dice cada tarea.
+> - **Tests solo donde importan,** escritos junto con el código y sin el rojo previo ceremonial:
+>   - la lógica de negocio;
+>   - el aislamiento entre organizaciones y personas (`public_site`, `engagement`, el 404 de lo ajeno);
+>   - los permisos;
+>   - cada recorrido nuevo del E2E real.
+>
+>   No hace falta un test por cada estado visual de una pantalla. Los tests y guardas que ya existen tienen que seguir en verde.
+> - **Sin visto bueno previo por pantalla ni capturas en cada avance:** los tableros ya están aprobados. Las capturas lado a lado se sacan **una sola vez, al final**, en una galería.
+> - **Sin registrar evidencia por tarea en este plan:** alcanza con el commit. Al final, un registro corto.
+> - **Commits por tarea,** en español, solo con tus rutas: `git commit -m "…" -- <rutas>`. Todo en `main`, sin push.
+> - **Una sola puerta, al final:**
+>   - `dotnet build` y `dotnet test`;
+>   - `npm run build`, `lint`, `test` y `contracts:check`;
+>   - el E2E real con los recorridos de la 7;
+>   - `realinear-docs --detectar` en 0;
+>   - la galería;
+>   - el recorrido de usuario de la puerta de los [arreglos](2026-10-06-arreglos-antes-de-la-7.md#puerta-el-recorrido-de-un-usuario-nuevo), más el de la 7.
+> - **Lo que cambió desde que se escribió este plan:**
+>   - las ADR [0043](../decisions/0043-las-pantallas-dicen-si-hay-cuenta.md) (las pantallas dicen si hay cuenta), [0044](../decisions/0044-sesion-de-plataforma-aparte.md) (la sesión de Plataforma va aparte), [0045](../decisions/0045-mi-cuenta-sin-codigo-de-confirmacion.md) (Mi cuenta sin código de confirmación) y [0046](../decisions/0046-nombre-y-apellido.md) (nombre y apellido);
+>   - el lienzo, ahora en la v112.
+>
+>   Si una tarea choca con eso, mandan las ADR y el lienzo vigente, y lo anotás en «Decisiones tomadas».
+> - **Frená y preguntá solo** si algo cambia lo que ve o puede hacer un usuario y no está ni en el plan ni en el tablero.
+
 > **Para Codex, que programa esta etapa:**
 > - Antes de empezar, leé el `AGENTS.md` de la raíz de cada repo. Antes de tocar una carpeta, leé su `AGENTS.md` y las fichas que nombra.
 > - Seguí las tareas en el orden de «Orden y dependencias». Cada tarea de lógica sigue el «Protocolo»: rojo, implementación, verde y commit.
