@@ -19,6 +19,48 @@ public sealed class MeTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
+    [Fact]
+    public async Task Business_me_exposes_organization_country_without_settings_permission_and_keeps_personal_culture()
+    {
+        using var ownerClient = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        using var memberClient = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
+        var member = await AccountJourney.RegisterAsync(factory, memberClient, Ct);
+        Assert.Equal(JsonValueKind.Null, (await ReadMeAsync(memberClient)).GetProperty("organizationCountryCode").ValueKind);
+        var tenantId = await OrganizationJourney.StageAsync(factory, owner, "País del perfil de empresa", Ct);
+        await OrganizationJourney.AddActiveMemberAsync(factory, tenantId, member.UserId, Ct);
+        await AccountJourney.AuthorizeAsync(memberClient, "business", Ct, tenantId);
+
+        var initial = await ReadMeAsync(memberClient);
+        Assert.Equal("AR", initial.GetProperty("organizationCountryCode").GetString());
+        Assert.Empty(initial.GetProperty("permissions").EnumerateArray());
+        using (var forbidden = await memberClient.GetAsync("/api/organization/settings", Ct))
+            Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
+
+        await AccountJourney.AuthorizeAsync(ownerClient, "business", Ct, tenantId);
+        using var settingsRead = await ownerClient.GetAsync("/api/organization/settings", Ct);
+        Assert.Equal(HttpStatusCode.OK, settingsRead.StatusCode);
+        using var settingsBody = (await settingsRead.Content.ReadFromJsonAsync<JsonDocument>(Ct))!;
+        var settings = settingsBody.RootElement;
+        using var changed = await ownerClient.PutAsJsonAsync("/api/organization/settings", new
+        {
+            name = settings.GetProperty("name").GetString(),
+            defaultCulture = "en-US",
+            defaultTimeZoneId = settings.GetProperty("defaultTimeZoneId").GetString(),
+            defaultCurrency = settings.GetProperty("defaultCurrency").GetString(),
+            version = settings.GetProperty("version").GetUInt32(),
+        }, Ct);
+        Assert.Equal(HttpStatusCode.OK, changed.StatusCode);
+
+        var updated = await ReadMeAsync(memberClient);
+        Assert.Equal("US", updated.GetProperty("organizationCountryCode").GetString());
+        Assert.Equal("es-AR", updated.GetProperty("culture").GetString());
+        Assert.Equal(tenantId, updated.GetProperty("activeTenantId").GetGuid());
+        Assert.Empty(updated.GetProperty("permissions").EnumerateArray());
+        await AccountJourney.AuthorizeAsync(memberClient, "consumer", Ct);
+        Assert.Equal(JsonValueKind.Null, (await ReadMeAsync(memberClient)).GetProperty("organizationCountryCode").ValueKind);
+    }
+
     [Theory]
     [InlineData("terms", "es-AR", "DOCUMENTO DE DEMOSTRACIÓN.")]
     [InlineData("privacy", "en-US", "DEMONSTRATION DOCUMENT.")]
@@ -64,6 +106,7 @@ public sealed class MeTests(ApiFactory factory)
 
         var initial = await ReadMeAsync(client);
 
+        Assert.Equal(JsonValueKind.Null, initial.GetProperty("organizationCountryCode").ValueKind);
         Assert.Equal(assigned, PlatformPermissionsOf(initial));
         Assert.Empty(initial.GetProperty("effectivePermissions").GetProperty("organization").EnumerateArray());
         Assert.Empty(initial.GetProperty("effectivePermissions").GetProperty("companies").EnumerateObject());

@@ -32,6 +32,65 @@ public sealed class ProfileServiceTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
+    [Fact]
+    public async Task Consumer_currency_keeps_active_space_preferences_without_exposing_organization_country()
+    {
+        using var fixture = new ServiceFixture<ProfileService>();
+        var userId = Guid.CreateVersion7();
+        var tenantId = Guid.CreateVersion7();
+        var memberships = new StubAccesses([
+            new(tenantId, TenantKind.Personal, "Personal", null, TenantStatus.Active, MemberStatus.Active, null),
+        ]);
+        var settings = new StubSettings(new(tenantId, "es-AR", "America/Argentina/Buenos_Aires", "ARS"));
+        var service = CreateService(new StubCurrentUser(userId, Access.Consumer),
+            new FakeTenantContext { TenantId = tenantId, TenantKind = TenantKind.Personal },
+            new StubUsers(Account(userId) with { Culture = "en-US" }), memberships, settings, fixture);
+
+        var result = await service.GetAsync(Ct);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("ARS", result.Value.CurrencyCode);
+        Assert.Null(result.Value.OrganizationCountryCode);
+        Assert.Equal(1, settings.Reads);
+    }
+
+    [Theory]
+    [InlineData(Access.Business, TenantKind.Business, TenantStatus.Active, MemberStatus.Active, "es-AR", "en-US", "AR", 1)]
+    [InlineData(Access.Business, TenantKind.Business, TenantStatus.Active, MemberStatus.Active, "en-US", "es-AR", "US", 1)]
+    [InlineData(Access.Consumer, TenantKind.Personal, TenantStatus.Active, MemberStatus.Active, "es-AR", "en-US", null, 1)]
+    [InlineData(Access.Platform, TenantKind.Business, TenantStatus.Active, MemberStatus.Active, "es-AR", "en-US", null, 1)]
+    [InlineData(Access.Business, TenantKind.Personal, TenantStatus.Active, MemberStatus.Active, "es-AR", "en-US", null, 1)]
+    [InlineData(Access.Business, TenantKind.Business, TenantStatus.Suspended, MemberStatus.Active, "es-AR", "en-US", null, 0)]
+    [InlineData(Access.Business, TenantKind.Business, TenantStatus.Closed, MemberStatus.Active, "es-AR", "en-US", null, 0)]
+    [InlineData(Access.Business, TenantKind.Business, TenantStatus.Active, MemberStatus.Inactive, "es-AR", "en-US", null, 0)]
+    [InlineData(Access.Business, TenantKind.Business, TenantStatus.Active, MemberStatus.Active, null, "en-US", null, 1)]
+    [InlineData(Access.Business, TenantKind.Business, TenantStatus.Active, MemberStatus.Active, "zz-ZZ", "es-AR", null, 1)]
+    public async Task Me_country_comes_from_the_available_business_organization_and_reuses_the_settings_read(
+        Access access, TenantKind kind, TenantStatus tenantStatus, MemberStatus memberStatus,
+        string? organizationCulture, string personalCulture, string? expectedCountry, int expectedReads)
+    {
+        using var fixture = new ServiceFixture<ProfileService>();
+        var userId = Guid.CreateVersion7();
+        var tenantId = Guid.CreateVersion7();
+        var memberships = new StubAccesses([
+            new(tenantId, kind, "Perfil", "perfil", tenantStatus, memberStatus, null),
+        ]);
+        var settings = new StubSettings(organizationCulture is null ? null
+            : new(tenantId, organizationCulture, "America/Argentina/Buenos_Aires", "ARS"));
+        // Sin permisos de Configuración: el perfil debe seguir resolviendo el país para Empresas.
+        var service = CreateService(new StubCurrentUser(userId, access),
+            new FakeTenantContext { TenantId = tenantId, TenantKind = kind },
+            new StubUsers(Account(userId) with { Culture = personalCulture }), memberships, settings, fixture);
+
+        var result = await service.GetAsync(Ct);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(personalCulture, result.Value.Culture);
+        Assert.Equal(expectedCountry, result.Value.OrganizationCountryCode);
+        Assert.Equal(expectedReads, settings.Reads);
+        Assert.Empty(result.Value.Permissions);
+    }
+
     [Theory]
     [InlineData(false, true, false, true)]
     [InlineData(true, false, false, true)]

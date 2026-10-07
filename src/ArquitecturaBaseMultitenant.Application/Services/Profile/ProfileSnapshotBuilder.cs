@@ -34,7 +34,10 @@ internal sealed class ProfileSnapshotBuilder(IUserRepository users, IUserTenantA
             TenantStatus: TenantStatus.Active,
             MemberStatus: MemberStatus.Active,
         };
-        var currencyCode = await preferences.FindCurrencyCodeAsync(account.Culture, mayReadSettings, cancellationToken);
+        var mayReadOrganizationCountry = mayReadSettings && access == Access.Business
+            && activeMembership?.Kind == TenantKind.Business;
+        var profilePreferences = await preferences.ResolveAsync(account.Culture, mayReadSettings,
+            mayReadOrganizationCountry, cancellationToken);
         var methods = await loginMethods.ListByUserIdAsync(userId, cancellationToken);
         var hasPersonalMethod = await availability.HasPersonalBackupAsync(userId, methods, cancellationToken);
         var effectivePermissions = await permissions.BuildAsync(userId, access, mayReadSettings, cancellationToken);
@@ -43,11 +46,12 @@ internal sealed class ProfileSnapshotBuilder(IUserRepository users, IUserTenantA
             ManagedEmail(methods, access, activeTenantId) ?? account.PrimaryEmail, access,
             activeTenantId, personalSpace, organizations,
             effectivePermissions,
-            account.Culture, account.TimeZoneId, currencyCode,
+            account.Culture, account.TimeZoneId, profilePreferences.CurrencyCode,
             mayReadSettings ? await features.ListEnabledAsync(cancellationToken) : [])
         {
             FirstName = account.FirstName,
             LastName = account.LastName,
+            OrganizationCountryCode = profilePreferences.OrganizationCountryCode,
             Version = account.ProfileVersion,
             PendingLegalDocuments = await legal.PendingAsync(userId, cancellationToken),
             NeedsPersonalLoginMethod = !hasPersonalMethod,

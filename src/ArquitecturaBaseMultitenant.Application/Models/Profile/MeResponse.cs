@@ -15,6 +15,8 @@ public sealed record MeResponse(Guid Id, string? DisplayName, Email? Email, Acce
 {
     public string? FirstName { get; init; }
     public string? LastName { get; init; }
+    /// <summary>País de la organización empresarial activa, desde su cultura del catálogo; no es la región personal.</summary>
+    public string? OrganizationCountryCode { get; init; }
     public uint Version { get; init; }
     public bool NeedsPersonalLoginMethod { get; init; }
     public IReadOnlyList<PendingLegalDocumentResponse> PendingLegalDocuments { get; init; } = [];

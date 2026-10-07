@@ -13857,6 +13857,13 @@
               "string"
             ]
           },
+          "organizationCountryCode": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "País de la organización empresarial activa, desde su cultura del catálogo; no es la región personal."
+          },
           "version": {
             "type": "integer",
             "format": "uint32"
