@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Application.Services.Identity;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
@@ -15,7 +16,8 @@ internal sealed class GoogleAccountResolver(
     IExternalLoginLock loginLock,
     GoogleAccountRegistrar registrar,
     GoogleAccountGuard guard,
-    GoogleAccountMethodFinalizer methodFinalizer)
+    GoogleAccountMethodFinalizer methodFinalizer,
+    GoogleProfileWriter profile)
 {
     internal Task<PersonalSpaceDraft> PrepareAsync(string? culture, string? timeZoneId,
         CancellationToken cancellationToken) => registrar.PrepareAsync(culture, timeZoneId, cancellationToken);
@@ -83,6 +85,7 @@ internal sealed class GoogleAccountResolver(
             }
         }
 
+        await profile.FillMissingNamesAsync(userId, login, cancellationToken);
         return userId;
     }
 }

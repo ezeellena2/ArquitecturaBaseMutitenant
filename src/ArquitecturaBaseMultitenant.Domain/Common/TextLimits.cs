@@ -4,6 +4,9 @@ namespace ArquitecturaBaseMultitenant.Domain.Common;
 public static class TextLimits
 {
     public const int PersonName = 100;
+    public const int FirstName = PersonName;
+    public const int LastName = PersonName;
+    public const int PersonDisplayName = FirstName + 1 + LastName;
     public const int OrganizationName = 120;
     public const int ShortName = 60;
     public const int Description = 500;

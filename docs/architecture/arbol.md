@@ -834,6 +834,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── AccountGoogleService.cs                   Vincula Google como método de ingreso de una cuenta que…
 │   │   ├── AccountLoginMethodsService.cs             Construye la lista de métodos de ingreso de la cuenta,…
 │   │   ├── AccountNoticeIssuer.cs                    Encola dentro de la UoW del caso de uso, sin…
+│   │   ├── GoogleProfileWriter.cs                    Normaliza e importa las dos claims de nombres Google en partes vacías (A7/ADR 0046)
 │   │   ├── GoogleMethodLinkFinalizer.cs              Completa el alta Google
 │   │   ├── GoogleMethodLinker.cs                     Aplica las reglas para sumar un ingreso Google a una…
 │   │   ├── IdentityRegistration.cs                   Registra la gestión de métodos de ingreso y Google
@@ -1134,7 +1135,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │       ├── PhoneNumberConvention.cs                   Persiste el value object PhoneNumber como su E.164 en una…
 │       └── VersionedConvention.cs                     Vincula la versión de cada entidad editable a xmin de…
 ├── Identity/                                          [E2 shell CLR; modelo de cuenta E3]
-│   ├── ApplicationUser.cs                             [E2 shell sin mapeo; E3] IsPlatformOperator, Status, Culture, TimeZoneId, DisplayName, LastBusinessTenantId,
+│   ├── ApplicationUser.cs                             [E2 shell sin mapeo; E3] IsPlatformOperator, Status, Culture, TimeZoneId, FirstName, LastName, DisplayName persistido derivado, LastBusinessTenantId,
 │   │                                                  DeletionRequestedAtUtc, DeletionScheduledForUtc, DeletionReason, DeletedAtUtc
 │   ├── IdentityRegistration.cs                        Identity core, cookies /account y /connect, DataProtection
 │   ├── SignInService.cs
@@ -1584,6 +1585,7 @@ tests/
 │   │   └── ServiceFixture.cs                          [E1] FakeTimeProvider + FakeLogger + RequestValidator real
 │   ├── Identity/
 │   │   ├── AccountDeletionPolicyTests.cs              Comprueba solicitud, cancelación y vencimiento de la baja
+│   │   ├── GoogleNameRulesTests.cs                    Compatibilidad de nombres Google, límites y anonimización (A7)
 │   │   └── ApplicationUserRulesTests.cs               Comprueba las reglas puras de la cuenta Identity
 │   ├── Messaging/
 │   │   └── ChannelContractsTests.cs                   Comprueba los contratos de canales y avisos de cuenta
@@ -1715,6 +1717,7 @@ tests/
 │   │   ├── IsolationSchemaTests.cs                    Comprueba el esquema sintético usado para probar las tres clases…
 │   │   ├── IdentitySupportModelTests.cs               Comprueba el modelo global de configuración, eventos, outbox y legales
 │   │   ├── AccountSessionMigrationTests.cs            Migra datos previos, limpia códigos y conserva cancelación
+│   │   ├── UserNamesMigrationTests.cs                 Partición de datos anteriores sin rellenar cuentas eliminadas (A7)
 │   │   ├── IdentityMigrationTests.cs                  Comprueba el SQL de las migraciones de identidad, legales y…
 │   │   ├── BootstrapTests.cs                          Comprueba creación de base, esquemas y collation ICU es-AR
 │   │   ├── AuditTrailRlsTests.cs                      Comprueba las políticas RLS del rastro de auditoría y su…
@@ -1738,6 +1741,7 @@ tests/
 │   │   ├── IngressJourneyTests.cs                     Recorre registro e ingreso reales, cambio entre empresa y espacio…
 │   │   ├── GoogleSignupConsentTests.cs                Comprueba que el desafío Google del registro requiera POST con…
 │   │   ├── GoogleLoginTests.cs                        Comprueba ingreso y vinculación de Google con persistencia
+│   │   ├── GoogleNamesTests.cs                        Claims GivenName/Surname reales, vacíos, versión y guardas (A7)
 │   │   ├── GoogleEndpointJourneyTests.cs              Recorre desafío, callback, cookie y emisión de tokens del ingreso…
 │   │   ├── BrowserSessionAuthorizationTests.cs        Comprueba el aislamiento de revocaciones entre sesiones, accesos y organizaciones
 │   │   ├── AuthPipelineTests.cs                       Comprueba el orden de autenticación, resolución del espacio y autorización

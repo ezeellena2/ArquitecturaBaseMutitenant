@@ -8,4 +8,6 @@ public sealed record ExternalLogin(
     string ProviderKey,
     Email? Email,
     bool EmailVerified,
-    string? DisplayName);
+    string? DisplayName,
+    string? FirstName = null,
+    string? LastName = null);

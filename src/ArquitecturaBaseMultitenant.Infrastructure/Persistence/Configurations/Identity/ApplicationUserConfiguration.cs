@@ -12,7 +12,9 @@ internal sealed class ApplicationUserConfiguration : IEntityTypeConfiguration<Ap
     {
         builder.ToTable("AspNetUsers", Schemas.Identity);
         builder.HasKey(user => user.Id);
-        builder.Property(user => user.DisplayName).HasMaxLength(TextLimits.PersonName);
+        builder.Property(user => user.FirstName).HasMaxLength(TextLimits.FirstName);
+        builder.Property(user => user.LastName).HasMaxLength(TextLimits.LastName);
+        builder.Property(user => user.DisplayName).HasMaxLength(TextLimits.PersonDisplayName);
         builder.Property(user => user.Culture).HasMaxLength(TextLimits.ShortName).IsRequired();
         builder.Property(user => user.TimeZoneId).HasMaxLength(TextLimits.ShortName).IsRequired();
         // La versión de «Tus datos» es un contador propio, no un xmin: solo el guardado del perfil la sube

@@ -18,13 +18,15 @@ public sealed class ApplicationUser : IdentityUser<Guid>, IVersioned
     public uint Version { get; private set; }
 
     /// <summary>
-    /// Versión de «Tus datos» (nombre, idioma y zona): sube solo al guardar el perfil. La fila de la cuenta también
+    /// Versión de «Tus datos»: sube al guardar el perfil o completar un nombre vacío desde Google. La fila también
     /// cambia con el contacto principal, la última organización, las sesiones y los intentos fallidos, y su xmin
     /// daría un 409 falso al guardar el perfil (docs/rules/concurrencia.md).
     /// </summary>
     public uint ProfileVersion { get; private set; }
 
     public string? DisplayName { get; private set; }
+    public string? FirstName { get; private set; }
+    public string? LastName { get; private set; }
     public string Culture { get; private set; } = string.Empty;
     public string TimeZoneId { get; private set; } = string.Empty;
     public UserStatus Status { get; private set; } = UserStatus.Active;
@@ -59,25 +61,60 @@ public sealed class ApplicationUser : IdentityUser<Guid>, IVersioned
         var user = new ApplicationUser
         {
             Id = Guid.CreateVersion7(),
-            DisplayName = displayName,
             Culture = culture,
             TimeZoneId = timeZoneId,
             CreatedAtUtc = createdAtUtc,
         };
+        user.SetLegacyName(displayName);
         user.UserName = user.Id.ToString("D", CultureInfo.InvariantCulture);
         return user;
     }
 
     public Result Rename(string? displayName)
     {
+        // Hasta A6 el editor manda el combinado incluso al guardar sólo preferencias.
+        if (string.Equals(DisplayName, displayName, StringComparison.Ordinal)) return Result.Success();
         if (!IsValidDisplayName(displayName))
         {
             return UserErrors.InvalidDisplayName;
         }
 
-        DisplayName = displayName;
+        SetLegacyName(displayName);
         return Result.Success();
     }
+
+    /// <summary>Completa sólo las partes vacías desde una identidad externa ya autorizada.</summary>
+    public void FillMissingNames(string? firstName, string? lastName)
+    {
+        if (firstName?.Length > TextLimits.FirstName || lastName?.Length > TextLimits.LastName)
+            throw new ArgumentException("External name parts must fit their individual limits.");
+        var changed = false;
+        if (FirstName is null && !string.IsNullOrWhiteSpace(firstName))
+        {
+            FirstName = firstName;
+            changed = true;
+        }
+        if (LastName is null && !string.IsNullOrWhiteSpace(lastName))
+        {
+            LastName = lastName;
+            changed = true;
+        }
+        if (!changed) return;
+        DeriveDisplayName();
+        MarkProfileSaved();
+    }
+
+    private void SetLegacyName(string? displayName)
+    {
+        if (string.IsNullOrWhiteSpace(displayName)) displayName = null;
+        var separator = displayName?.IndexOf(' ') ?? -1;
+        FirstName = separator < 0 ? displayName : displayName![..separator];
+        LastName = separator < 0 ? null : displayName![(separator + 1)..];
+        DeriveDisplayName();
+    }
+
+    private void DeriveDisplayName() =>
+        DisplayName = FirstName is null ? LastName : LastName is null ? FirstName : FirstName + " " + LastName;
 
     public void UpdatePreferences(string culture, string timeZoneId)
     {
@@ -217,6 +254,7 @@ public sealed class ApplicationUser : IdentityUser<Guid>, IVersioned
         Status = UserStatus.Deleted;
         DeletedAtUtc = deletedAtUtc;
         DisplayName = deletedDisplayName;
+        FirstName = LastName = null;
         Email = NormalizedEmail = PhoneNumber = PasswordHash = null;
         EmailConfirmed = PhoneNumberConfirmed = TwoFactorEnabled = IsPlatformOperator = false;
         Culture = TimeZoneId = string.Empty;
@@ -234,6 +272,11 @@ public sealed class ApplicationUser : IdentityUser<Guid>, IVersioned
         if (instantUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("The instant must be UTC.", nameof(instantUtc));
     }
 
-    private static bool IsValidDisplayName(string? displayName) =>
-        displayName is null || displayName.Length <= TextLimits.PersonName;
+    private static bool IsValidDisplayName(string? displayName)
+    {
+        if (displayName is null) return true;
+        var separator = displayName.IndexOf(' ');
+        return separator < 0 ? displayName.Length <= TextLimits.FirstName
+            : separator <= TextLimits.FirstName && displayName.Length - separator - 1 <= TextLimits.LastName;
+    }
 }

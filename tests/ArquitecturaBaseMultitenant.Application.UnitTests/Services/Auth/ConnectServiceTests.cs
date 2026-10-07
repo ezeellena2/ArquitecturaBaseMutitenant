@@ -300,7 +300,9 @@ public sealed class ConnectServiceTests
         public Task SetPrimaryContactAsync(Guid userId, Email? email, PhoneNumber? phoneNumber,
             CancellationToken cancellationToken) => throw new NotSupportedException();
 
-        public Task<uint> UpdateProfileAsync(Guid userId, string? displayName, string culture, string timeZoneId,
+        public Task FillMissingProfileNamesAsync(Guid userId, string? firstName, string? lastName, CancellationToken ct) => throw new NotSupportedException();
+
+        public Task<ArquitecturaBaseMultitenant.Domain.Results.Result<uint>> UpdateProfileAsync(Guid userId, string? displayName, string culture, string timeZoneId,
             uint expectedVersion, CancellationToken cancellationToken) => throw new NotSupportedException();
 
         public Task RememberBusinessTenantAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken)

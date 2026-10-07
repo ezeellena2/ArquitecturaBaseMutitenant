@@ -27,7 +27,11 @@ internal sealed class GoogleMethodLinker(LoginMethodGuard guard, IExternalLoginL
         var existing = await lookup.FindMethodAsync(LoginMethodType.Google, login.ProviderKey, ct);
         if (existing is not null)
         {
-            if (existing.UserId == userId) return Result.Success();
+            if (existing.UserId == userId)
+            {
+                if (existing.VerifiedAtUtc is not null) await finalizer.FillMissingNamesAsync(userId, login, ct);
+                return Result.Success();
+            }
             if (existing.VerifiedAtUtc is not null) return GoogleMethodErrors.AlreadyUsed;
             var pending = await methods.GetByIdAsync(existing.MethodId, ct);
             if (pending is not null && pending.VerifiedAtUtc is null) methods.Remove(pending);
@@ -45,6 +49,7 @@ internal sealed class GoogleMethodLinker(LoginMethodGuard guard, IExternalLoginL
         await emailDomains.AssignIfVerifiedAsync(method, login.Email, ct);
         await finalizer.SetPrimaryIfNeededAsync(userId, login, all, method, ct);
         methods.Add(method);
+        await finalizer.FillMissingNamesAsync(userId, login, ct);
         await finalizer.NotifyAddedAsync(account.Value, all, method, ct);
         return Result.Success();
     }

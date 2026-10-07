@@ -127,7 +127,7 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
         EnsureSucceeded(await manager.UpdateAsync(user), "set the primary email");
     }
 
-    public async Task<uint> UpdateProfileAsync(Guid userId, string? displayName, string culture,
+    public async Task<Result<uint>> UpdateProfileAsync(Guid userId, string? displayName, string culture,
         string timeZoneId, uint expectedVersion, CancellationToken cancellationToken)
     {
         context.RequireTransaction();
@@ -135,10 +135,8 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
         // «Tus datos» compara su propia versión, no el xmin de la cuenta: otras escrituras de la fila no chocan con
         // el perfil. Dos guardados a la vez los separa el xmin, que EF compara en el mismo UPDATE.
         if (user.ProfileVersion != expectedVersion) throw new ConcurrencyConflictException();
-        if (user.Rename(displayName).IsFailure)
-        {
-            throw new InvalidOperationException("The display name must be validated before persistence.");
-        }
+        var renamed = user.Rename(displayName);
+        if (renamed.IsFailure) return renamed.Error;
 
         user.UpdatePreferences(culture, timeZoneId);
         // Siempre sube, aunque no cambie nada: la fila se escribe y el xmin se compara.
@@ -146,6 +144,13 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
         // UserStore.Update vuelve a adjuntar la entidad y restablece los valores originales.
         // Nombre y preferencias no requieren normalización de Identity; los guarda la UoW.
         return user.ProfileVersion;
+    }
+
+    public async Task FillMissingProfileNamesAsync(Guid userId, string? firstName, string? lastName,
+        CancellationToken cancellationToken)
+    {
+        context.RequireTransaction();
+        (await RequireUserAsync(userId, cancellationToken)).FillMissingNames(firstName, lastName);
     }
 
     public async Task SetPrimaryContactAsync(Guid userId, Email? email, PhoneNumber? phoneNumber,

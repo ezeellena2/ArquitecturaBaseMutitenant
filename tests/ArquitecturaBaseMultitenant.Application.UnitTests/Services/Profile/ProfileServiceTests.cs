@@ -103,7 +103,7 @@ public sealed class ProfileServiceTests
         var validator = new UpdateMeRequestValidator(catalog, catalog);
 
         var invalid = await validator.ValidateAsync(new UpdateMeRequest(
-            new string('A', TextLimits.PersonName + 1), "es-AR", "America/Argentina/Buenos_Aires", 5), Ct);
+            new string('A', TextLimits.PersonDisplayName + 1), "es-AR", "America/Argentina/Buenos_Aires", 5), Ct);
 
         Assert.Equal("DisplayName", Assert.Single(invalid.Errors).PropertyName);
     }
@@ -431,11 +431,13 @@ public sealed class ProfileServiceTests
         public Task SetPrimaryContactAsync(Guid userId, Email? email, PhoneNumber? phoneNumber,
             CancellationToken cancellationToken) => throw new NotSupportedException();
 
-        public Task<uint> UpdateProfileAsync(Guid userId, string? displayName, string culture, string timeZoneId,
+        public Task FillMissingProfileNamesAsync(Guid userId, string? firstName, string? lastName, CancellationToken ct) => throw new NotSupportedException();
+
+        public Task<ArquitecturaBaseMultitenant.Domain.Results.Result<uint>> UpdateProfileAsync(Guid userId, string? displayName, string culture, string timeZoneId,
             uint expectedVersion, CancellationToken cancellationToken)
         {
             LastUpdate = (userId, displayName, culture, timeZoneId);
-            return Task.FromResult(expectedVersion + 1);
+            return Task.FromResult(ArquitecturaBaseMultitenant.Domain.Results.Result.Success(expectedVersion + 1));
         }
 
         public Task RememberBusinessTenantAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken) =>

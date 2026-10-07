@@ -1,9 +1,6 @@
-using System.Text;
-using ArquitecturaBaseMultitenant.Application.Common.Text;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
-using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.Results;
 
@@ -33,7 +30,7 @@ internal sealed class GoogleAccountRegistrar(
             ?? throw new InvalidOperationException("The current Terms document has not been seeded.");
         var privacy = await legal.GetCurrentDocumentAsync(LegalDocumentKind.Privacy, nowUtc, cancellationToken)
             ?? throw new InvalidOperationException("The current Privacy document has not been seeded.");
-        var userId = (await users.CreateAsync(FitExternalDisplayName(login.DisplayName),
+        var userId = (await users.CreateAsync(null,
             draft.Culture, draft.TimeZoneId, cancellationToken)).Id;
         personalSpaces.Stage(draft, userId);
         legal.AddAcceptance(LegalAcceptance.Create(userId, terms, nowUtc,
@@ -54,7 +51,7 @@ internal sealed class GoogleAccountRegistrar(
             ?? throw new InvalidOperationException("The current Terms document has not been seeded.");
         var privacy = await legal.GetCurrentDocumentAsync(LegalDocumentKind.Privacy, nowUtc, cancellationToken)
             ?? throw new InvalidOperationException("The current Privacy document has not been seeded.");
-        var userId = (await users.CreateAsync(FitExternalDisplayName(login.DisplayName),
+        var userId = (await users.CreateAsync(null,
             defaults.Culture, defaults.TimeZoneId, cancellationToken)).Id;
         legal.AddAcceptance(LegalAcceptance.Create(userId, terms, nowUtc,
             requestInfo.IpAddress, requestInfo.UserAgent));
@@ -63,17 +60,4 @@ internal sealed class GoogleAccountRegistrar(
         return userId;
     }
 
-    private static string? FitExternalDisplayName(string? externalName)
-    {
-        var clean = TextNormalizer.CleanName(externalName);
-        if (clean is null || clean.Length <= TextLimits.PersonName) return clean;
-
-        var result = new StringBuilder(TextLimits.PersonName);
-        foreach (var rune in clean.EnumerateRunes())
-        {
-            if (result.Length + rune.Utf16SequenceLength > TextLimits.PersonName) break;
-            result.Append(rune);
-        }
-        return result.ToString().TrimEnd();
-    }
 }

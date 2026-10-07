@@ -51,8 +51,11 @@ public interface IUserRepository
     /// Deja «Tus datos» para guardar con la versión del perfil que leyó la pantalla y devuelve la nueva. Es propia del
     /// perfil, no el xmin de la cuenta, y vale si la transacción hace commit (docs/rules/concurrencia.md).
     /// </summary>
-    Task<uint> UpdateProfileAsync(Guid userId, string? displayName, string culture, string timeZoneId,
+    Task<Result<uint>> UpdateProfileAsync(Guid userId, string? displayName, string culture, string timeZoneId,
         uint expectedVersion, CancellationToken cancellationToken);
+
+    /// <summary>Importa partes Google ya normalizadas bajo el lock de la cuenta y la UoW del llamador.</summary>
+    Task FillMissingProfileNamesAsync(Guid userId, string? firstName, string? lastName, CancellationToken cancellationToken);
 
     Task RememberBusinessTenantAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken);
 }

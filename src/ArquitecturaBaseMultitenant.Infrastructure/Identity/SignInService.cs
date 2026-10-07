@@ -66,7 +66,9 @@ internal sealed class SignInService(
             info.ProviderKey,
             ParseEmail(info.Principal.FindFirstValue(ClaimTypes.Email)),
             string.Equals(info.Principal.FindFirstValue("email_verified"), "true", StringComparison.OrdinalIgnoreCase),
-            info.Principal.FindFirstValue(ClaimTypes.Name));
+            info.Principal.FindFirstValue(ClaimTypes.Name),
+            info.Principal.FindFirstValue(ClaimTypes.GivenName),
+            info.Principal.FindFirstValue(ClaimTypes.Surname));
     }
 
     private static Email? ParseEmail(string? value)

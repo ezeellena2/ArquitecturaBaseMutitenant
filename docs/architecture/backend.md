@@ -223,7 +223,7 @@ Application/
 │  │                                   AccountRecoveryService («Recuperar mi cuenta»), SignupPolicy, AccessSwitchPolicy,
 │  │                                   UserCultureResolver
 │  ├─ Identity/                        métodos de ingreso de la cuenta: LoginMethodManagementService,
-│  │                                   AccountGoogleService; sesión iniciada y posesión del método nuevo (ADR 0045)
+│  │                                   AccountGoogleService, GoogleProfileWriter (claims GivenName/Surname, sólo partes vacías); sesión iniciada y posesión del método nuevo (ADR 0045)
 │  ├─ Invitations/                     InvitationService, InvitationIssuer (lo usan OrganizationUserInvitationWriter y
 │  │                                   PlatformTenantCreator), InvitationExpiryService
 │  ├─ Profile/                         ProfileService (cuenta, idioma, zona), ProfileSnapshotBuilder
@@ -314,7 +314,7 @@ Infrastructure/
 │  └─ DatabaseBootstrapExtensions.cs   solo en Development: roles mt_owner y mt_app + migraciones + seed
 ├─ Identity/
 │  ├─ ApplicationUser.cs               IsPlatformOperator, Status (Active | Suspended | PendingDeletion | Deleted), Culture, TimeZoneId,
-│  │                                   DisplayName, LastBusinessTenantId (la última organización usada en el lado empresa; no se vuelve
+│  │                                   FirstName y LastName opcionales, DisplayName persistido derivado (ADR 0046), LastBusinessTenantId (la última organización usada en el lado empresa; no se vuelve
 │  │                                   al último lado), DeletionRequestedAtUtc, DeletionScheduledForUtc, DeletionReason, DeletedAtUtc.
 │  │                                   Email y PhoneNumber son solo una copia del método principal, sin índice único (la unicidad está
 │  │                                   en LoginMethods). Sin setters públicos: los cambios pasan por métodos que aplican las reglas

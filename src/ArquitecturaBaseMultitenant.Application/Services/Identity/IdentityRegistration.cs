@@ -15,6 +15,7 @@ internal static class IdentityRegistration
         services.AddScoped<LoginMethodVerifier>();
         services.AddScoped<LoginMethodNotifier>();
         services.AddScoped<GoogleMethodLinkFinalizer>();
+        services.AddScoped<GoogleProfileWriter>();
         services.AddScoped<LoginMethodAvailabilityPolicy>();
         services.AddScoped<LoginMethodEditor>();
         services.AddScoped<IAccountGoogleService, AccountGoogleService>();

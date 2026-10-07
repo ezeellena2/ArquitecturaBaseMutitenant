@@ -22,7 +22,8 @@
   | Descripción | `Description()` | 500 | se mantienen los saltos de línea |
   | Nota o comentario largo | `LongText()` | 4000 | se mantienen |
 
-- **Configuración EF:** `HasMaxLength(TextLimits.PersonName)`, la misma constante.
+- **Identidad (ADR 0046):** nombre y apellido opcionales de 100 cada uno (`TextLimits.FirstName` y `LastName`); `ApplicationUser` deriva y persiste el combinado `DisplayName`, de hasta 201 (`PersonDisplayName`). Las pantallas lo leen sin unir partes. Google sólo rellena vacíos desde sus dos claims verificadas; ajusta Unicode a cada límite sin cortar un rune. El nombre manual se valida sin recortarlo.
+- **Configuración EF:** `HasMaxLength(TextLimits.PersonName)` o la constante específica de cada parte/combinado, la misma que valida la identidad.
 - **Nombres:** después de `Clean`, el helper tipado de nombre colapsa espacios internos solo para `PersonName`, `OrganizationName` y `ShortName`. `Description` y `LongText` conservan los internos y sus saltos de línea.
 - **Front:** los largos llegan por OpenAPI (`maxLength`) y los usan los `zod` generados; no se escriben a mano.
 - **Unicidad de nombres:** el índice único compara el texto ya limpio, con la collation española (ver [persistencia-ef](persistencia-ef.md)).
@@ -39,6 +40,7 @@
 ## Lo verifica
 - `TextNormalizerTests` (E1): `Clean` iguala "José" con acento separado a "José", elimina los invisibles de la lista cerrada, conserva ZWNJ/ZWJ y transforma "Grupo  La Cosecha " en "Grupo  La Cosecha" (solo trim); el helper tipado de nombre produce "Grupo La Cosecha" sin alterar una descripción.
 - `NormalizedInputTests` (E1): un POST de `TestFeatures/TestController` devuelve el cuerpo ya normalizado; no hay persistencia antes de E2.
+- `GoogleNameRulesTests` y `GoogleNamesTests` (E3, ajuste A7): límites por parte, conservación del combinado completo, guardado legacy de preferencias e importación sin sobrescribir.
 - `TextLimitsTests` (E1): ningún `HasMaxLength`, `MaxLength`, `MaximumLength`, `Length` ni `StringLength` con un número literal (arquitectura).
 
 ## Detalle
