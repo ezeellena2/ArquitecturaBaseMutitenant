@@ -21,6 +21,7 @@ internal sealed class TestControllerApplicationPart : ApplicationPart, IApplicat
     [
         typeof(TestController).GetTypeInfo(),
         typeof(BusinessOnlyController).GetTypeInfo(),
+        typeof(PublicSiteProbeController).GetTypeInfo(),
         typeof(WidgetsController).GetTypeInfo(),
         typeof(IdempotencyTestController).GetTypeInfo(),
         typeof(AuthPipelineProbeController).GetTypeInfo(),

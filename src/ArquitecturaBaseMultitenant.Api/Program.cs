@@ -70,7 +70,7 @@ app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseMiddleware<TenantResolutionMiddleware>();
-// E7: PublicSiteResolutionMiddleware.
+app.UseMiddleware<PublicSiteResolutionMiddleware>();
 app.UseMiddleware<LegalAcceptanceMiddleware>();
 app.UseMiddleware<FeatureGateMiddleware>();
 app.UseAuthorization();

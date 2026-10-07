@@ -2,4 +2,4 @@ Contratos de contexto de la petición disponibles para Application. El tenant ac
 
 Antes de escribir, leé: [multitenancy](../../../../../docs/rules/multitenancy.md) · [capas-y-flujo](../../../../../docs/rules/capas-y-flujo.md).
 
-Copiá de: `ITenantContext.cs` y `ICurrentUser.cs`; Infrastructure conserva el contexto scoped y Api resuelve claims en E3. En E2, `ICurrentUser` usa un actor System por defecto para auditoría.
+Copiá de: `ITenantContext.cs` y `ICurrentUser.cs`; Infrastructure conserva el contexto privado scoped y Api resuelve claims. `IPublicSiteContext.cs` expone solo `BusinessTenantId?` y `Slug?` de un sitio publicado y activo; Api lo resuelve por host solo para rutas `[PublicSite]`, sin modificar el contexto privado. En E2, `ICurrentUser` usa un actor System por defecto para auditoría.

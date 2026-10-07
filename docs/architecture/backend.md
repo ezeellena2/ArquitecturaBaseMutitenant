@@ -581,11 +581,12 @@ El cuerpo es `application/problem+json` con `title` y `detail` traducidos, `code
 | Interfaz (Application) | Implementación | Fuente |
 |---|---|---|
 | `ICurrentUser` | `Api/RequestContext/CurrentUser` | claims `sub` y `access` (`consumer`, `business` o `platform`) |
-| `IPublicSiteContext` (E7) | `Api/Tenancy/PublicSiteContext` | la organización del subdominio; **solo** para leer lo público |
+| `IPublicSiteContext` | `Api/Tenancy/PublicSiteContext` | `BusinessTenantId?` y `Slug?` de la organización publicada y activa del subdominio; **solo** para leer lo público |
 | `ITenantContext` | `Infrastructure/Persistence/TenantContext` | tenant del acceso activo (`TenantId` y `TenantKind`: el espacio personal en B2C, la organización en B2B). Lo carga `TenantResolutionMiddleware` desde los claims, o `ITenantScope.Enter(tenantId)` en plataforma, workers y altas |
 | `IRequestInfo` | `Api/RequestContext/RequestInfo` | IP (después de ForwardedHeaders) y user agent |
 
 - `ITenantContext.TenantId` **nunca** sale de un header, del body ni de la query.
+- `PublicSiteResolutionMiddleware` consulta `IPublicSiteReader` una vez por pedido y solo para rutas `[PublicSite]`. El host debe ser exactamente `<slug>.<host del issuer>`, sin distinguir mayúsculas y con el mismo puerto; `TenantSlug.Create` valida la etiqueta y el reader descarta los nombres reservados. Sin sitio, `[PublicSite]` devuelve 404 `PublicSite.PublicPage.NotFound` con `traceId`. El contexto público nunca modifica `ITenantContext` y todavía no usa caché (Etapa 9).
 - Las rutas de plataforma reciben el `tenantId` en la URL como **objetivo**; el servicio de plataforma, después de autorizar, entra con `ITenantScope.Enter(tenantId)`.
 
 ---
@@ -776,7 +777,7 @@ La estructura sigue el diseño de la Etapa 6 del plan maestro de `../Arquitectur
 
 ```
 UseForwardedHeaders → UseSecurityHeaders → UseRequestLocalization → UseExceptionHandler → UseStatusCodePages
-→ UseRateLimiter → UseAuthentication → TenantResolutionMiddleware → (E7: PublicSiteResolutionMiddleware)
+→ UseRateLimiter → UseAuthentication → TenantResolutionMiddleware → PublicSiteResolutionMiddleware
 → LegalAcceptanceMiddleware → FeatureGateMiddleware → UseAuthorization
 → (Development: OpenAPI y Swagger UI | resto: UseHsts) → UseHttpsRedirection
 → UseStaticFiles (si hay wwwroot) → MapDefaultEndpoints → MapControllers → UseSpaFallback
@@ -785,7 +786,7 @@ UseForwardedHeaders → UseSecurityHeaders → UseRequestLocalization → UseExc
 Todo middleware que pueda cortar con un error va después de `UseStatusCodePages`.
 Antes del pipeline, `Program.cs` prepara la base: en Development, el bootstrap (roles, base ICU y migraciones); fuera de él, la validación del rol de runtime; y el seed, salvo en Testing. `FeatureGateMiddleware` (E5) oculta con 404 un módulo apagado después de validar el acceso y antes de autorizar ([modulos-habilitados](../rules/modulos-habilitados.md)).
 
-`PublicSiteResolutionMiddleware` (E7) está previsto para esa etapa; en `Program.cs` todavía hay un comentario en su lugar.
+`PublicSiteResolutionMiddleware` resuelve el host solo si el endpoint declara `[PublicSite]`. `PublicSiteReader` une la página pública con la organización, sin ignorar filtros ni cambiar el contexto privado: exige página publicada, sin bloqueo de moderación, organización Business activa y slug no reservado. Las rutas privadas no consultan ese reader.
 
 ---
 

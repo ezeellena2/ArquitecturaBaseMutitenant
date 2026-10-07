@@ -215,10 +215,12 @@ Página pública:   Draft ──(publicar)──► Published ──(despublicar
 |---|---|---|
 | `ICurrentUser` | Application | `UserId`, `Access` (`Consumer` \| `Business` \| `Platform`) |
 | `ITenantContext` | Application | `TenantId?` y `TenantKind?` del acceso activo |
-| `IPublicSiteContext` (E7) | Application | `BusinessTenantId?` resuelto por el subdominio (solo para datos públicos) |
+| `IPublicSiteContext` | Application | `BusinessTenantId?` y `Slug?` resueltos por el subdominio (solo para datos públicos) |
 | `ITenantScope` | Application | `Enter(tenantId)` para plataforma, workers y altas |
 | `TenantResolutionMiddleware` | Api | lee `access`, `tenant_id` y `tenant_kind` del token; verifica en caché el estado de cuenta, organización y membresía proyectada en `identity.UserTenantAccesses`; si la organización no está activa, responde el 403 de su estado (§7) |
-| `PublicSiteResolutionMiddleware` (E7) | Api | subdominio → `BusinessTenantId` de una página publicada |
+| `PublicSiteResolutionMiddleware` | Api | un slug sobre el host y puerto del issuer → página publicada, sin bloqueo, de una organización Business activa |
+
+El host público es exactamente `<slug>.<host de Authentication:Issuer>`, con el mismo puerto y sin distinguir mayúsculas. No admite el dominio principal, IP, dos etiquetas, otro dominio ni slugs inválidos o reservados. Solo las rutas `[PublicSite]` consultan `IPublicSiteReader`, una vez por pedido y sin caché en esta etapa. Si no resuelven sitio, `PublicSiteFilter` responde 404 `PublicSite.PublicPage.NotFound` con `traceId`; nunca modifica `ITenantContext`, que conserva exclusivamente el acceso del claim.
 
 Para consultar los perfiles de una cuenta desde cualquiera de los dos accesos, `identity.UserTenantAccesses` mantiene una proyección global de `tenant.Members` (`UserId`, `TenantId`, `Status`, `JoinedAtUtc`), sin RLS. Un trigger sobre `Members` la actualiza al insertar, cambiar o borrar una membresía, en la misma transacción del `IUnitOfWork`; la migración copia las membresías previas por tenant bajo RLS. `mt_app` solo tiene `SELECT` sobre la proyección: la función del trigger escribe con el dueño de la base. El nombre y estado de la organización salen de un join con `platform.Tenants`, sin duplicarlos. Solo `ConnectService`, `TenantResolutionMiddleware` y `/api/me` pueden leer este índice para seleccionar o mostrar accesos; no da permiso para leer datos privados de otro tenant.
 

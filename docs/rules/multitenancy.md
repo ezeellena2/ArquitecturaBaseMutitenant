@@ -10,12 +10,12 @@
   - `[PublicSite][AllowAnonymous]` solo para lo que responde en el subdominio de una organización publicada (`PublicSiteController` (E7));
   - solo `[AllowAnonymous]` para las rutas anónimas del dominio principal (ingreso, registro, "Registrá tu empresa", `GET /api/public-site/slug-availability`, invitación, enlace, `GET` de documentos legales, `GET /api/reference-data` y sus cinco rutas por catálogo, directorio, pedido de "Recuperar mi cuenta", cancelar la baja, webhooks), con su controller en la lista explícita de `AccessDeclarationTests`.
 - **Dato privado:** `: Entity, ITenantOwned`, esquema `tenant`, `migrationBuilder.EnableTenantRls(Schemas.Tenant, "<Tabla>")`.
-- **Dato público:** `IPublishedByBusiness` (`BusinessTenantId`, `IsPublished`), esquema `public_site`, `EnablePublicRls`. Se lee con `IPublicSiteContext` (E7), el del subdominio, y solo trae lo publicado.
+- **Dato público:** `IPublishedByBusiness` (`BusinessTenantId`, `IsPublished`), esquema `public_site`, `EnablePublicRls`. Se lee con `IPublicSiteContext`, el del subdominio, y solo trae lo publicado.
 - **Dato compartido:** `IConsumerBusinessShared` (`ConsumerTenantId` = espacio personal, `BusinessTenantId` = organización), esquema `engagement`, `EnablePartiesRls`.
   - Guarda una **copia** de lo que la otra parte necesita ver.
   - Cada cambio de estado pasa por `PartyPolicy.Require(entity, Party.Consumer|Party.Business)`.
 - **Trigger de columnas tenant:** `prevent_tenant_change` recibe los nombres como literales sin comillas dobles dentro (`'TenantId'`, no `'"TenantId"'`). Al corregir un helper de RLS, agregá una migración que recree los triggers ya instalados; cambiar solo el helper no actualiza bases migradas.
-- **El host del subdominio nunca da acceso a datos privados:** solo `IPublicSiteContext` (E7), para lo público.
+- **El host del subdominio nunca da acceso a datos privados:** solo `IPublicSiteContext` (`BusinessTenantId?`, `Slug?`), para lo público. `PublicSiteResolutionMiddleware` resuelve exactamente una etiqueta válida sobre el host y puerto del issuer, sin distinguir mayúsculas. Consulta `IPublicSiteReader` una vez y solo cuando la ruta declara `[PublicSite]`, sin caché: página publicada, sin bloqueo, organización Business activa y slug no reservado. Los demás hosts y sitios no disponibles responden el mismo 404 `PublicSite.PublicPage.NotFound` con `traceId`; el tenant de una ruta privada sigue saliendo del claim.
 - **Perfiles de una identidad:** `identity.UserTenantAccesses` es la excepción global explícita para elegir acceso y mostrar `/api/me`. Un trigger copia `Member` en su misma transacción; el runtime solo puede leer la proyección por `UserId` y une `platform.Tenants` para nombre y estado. Solo `ConnectService`, `TenantResolutionMiddleware` mediante `AccessStatusCache` y `/api/me` mediante `ProfileSnapshotBuilder` consumen ese lector; no se ignoran filtros ni se lee `tenant.Members` de otro alcance. `IdentityAccessTests` fija esa lista. Para gestionar métodos administrados de la cuenta, `LoginMethodMembershipReader` devuelve únicamente si la membresía de ese UserId y su organización están activas, por `ILoginMethodMembershipReader`; no expone otros perfiles ni datos privados. Es un adaptador explícito en `IdentityStorageAccessTests` (3b). `AccountDeletionTenantReader` proyecta solamente TenantId y Kind por UserId para planificar los pasos de eliminación; usa su puerto propio y no el lector de perfiles. No lee Members fuera de RLS.
   `GET /api/me` responde también si la organización está suspendida o cerrada para permitir cambiar de perfil. Si la membresía del token ya no está activa o no existe, responde desde la proyección global sin fijar `tenant_id` ni conceder permisos de esa organización; solo fija contexto RLS cuando la membresía está activa.
 - **Plataforma, workers y altas:** `using (tenantScope.Enter(tenantId)) { … }` después de autorizar, y antes de abrir el límite. En plataforma, además, con motivo obligatorio y el `SecurityEvent` registrado antes de `Enter` (`PlatformActionGuard`).
@@ -41,13 +41,14 @@
 - Dato privado: `Domain/Authorization/Role.cs` (E4).
 - Reserva privada de invitación: `Domain/Invitations/Invitation.cs`, `Domain/Tenancy/Member.cs` y `Infrastructure/Persistence/Configurations/Tenant/InvitationConfiguration.cs` (E3c).
 - Datos público y compartido: `TestFeatures/Isolation/Poster.cs` y `Deal.cs` (E2). La plantilla no trae módulos de negocio, así que estos son la referencia.
+- Resolución pública: `Api/Tenancy/PublicSiteResolutionMiddleware.cs`, `PublicSiteAttribute.cs` y `PublicSiteFilter.cs`; la consulta es `Infrastructure/Persistence/Readers/PublicSiteReader.cs`.
 
 ## Lo verifica
 - `TenantIsolationModelValidator` (E2) al arrancar: toda entidad está clasificada, con su esquema y su filtro.
 - `RlsPolicyInventoryTests` (E2), `RlsBarrierTests` (E2), `RuntimeRoleTests` (E2).
 - `CrossTenantIsolationTests` (E2) y `PublicAndSharedRowsTests` (E2) prueban el aislamiento de filas; `AccessTests` (E3) prueba el atributo y su filtro. `IngressJourneyTests` (E3) cubre el 403 del acceso equivocado, la separación B2C/B2B y que B2C no expone el alta de empresa; `SuspensionTests` (E3) cubre los estados suspendidos.
 - `InvitationsTests` y `InvitationAcceptanceTests` (E3) verifican RLS, la reserva `Member(Invited)` sin identidad y la activación/vinculación transaccional tras aceptar.
-- `SubdomainTests` (E7): el host resuelve solo lo público; redirect URI solo para slugs publicados.
+- `SubdomainTests` (E7): el host resuelve solo lo público, exige el puerto del issuer y una página publicada y activa, no consulta la base para rutas privadas y conserva el tenant del token ante otro subdominio.
 - `DataClassificationTests` (E2), `TenantScopeUsageTests` (E2), `QueryFilterBypassTests` (E2), `IdentityAccessTests` (E3), `AccessDeclarationTests` (E3) con la lista explícita de controllers anónimos del dominio principal, `CacheKeyScopeTests` (E2).
 
 ## Detalle

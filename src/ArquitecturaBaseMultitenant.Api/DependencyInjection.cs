@@ -9,6 +9,7 @@ using ArquitecturaBaseMultitenant.Api.Json;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Api.RateLimiting;
 using ArquitecturaBaseMultitenant.Api.RequestContext;
+using ArquitecturaBaseMultitenant.Api.Tenancy;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -43,6 +44,8 @@ public static class DependencyInjection
         services.AddScoped<PendingDeletionCookie>();
         services.AddScoped<IRequestInfo, RequestInfo>();
         services.AddSingleton<IPublicOrigin, PublicOrigin>();
+        services.AddScoped<PublicSiteContext>();
+        services.AddScoped<IPublicSiteContext>(provider => provider.GetRequiredService<PublicSiteContext>());
         services.AddScoped<IInvitationFlowContext, InvitationFlowContext>();
 
         services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>

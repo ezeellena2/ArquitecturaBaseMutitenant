@@ -101,6 +101,7 @@ internal static class PersistenceRegistration
         services.AddScoped<ITenantDomainReader, TenantDomainReader>();
         services.AddScoped<IPublicPageRepository, PublicPageRepository>();
         services.AddScoped<IPublicPageReader, PublicPageReader>();
+        services.AddScoped<IPublicSiteReader, PublicSiteReader>();
         services.AddScoped<IOrganizationAuditReader, OrganizationAuditReader>();
         services.AddScoped<TenantSettingsLoader>();
         services.AddScoped<IPlatformSettingsRepository, PlatformSettingsRepository>();
