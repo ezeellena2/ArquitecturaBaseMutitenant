@@ -58,4 +58,6 @@ internal sealed class AuditedSharedRecord(Guid consumerTenantId, Guid businessTe
     public Guid? CreatedBy { get; private set; }
     public DateTime? ModifiedAtUtc { get; private set; }
     public Guid? ModifiedBy { get; private set; }
+
+    public void ReplaceConsumerCopy() { }
 }

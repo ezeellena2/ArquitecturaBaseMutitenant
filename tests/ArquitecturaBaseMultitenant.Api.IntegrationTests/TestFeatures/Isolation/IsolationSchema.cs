@@ -71,6 +71,7 @@ internal static class IsolationSchema
             "Id" uuid NOT NULL,
             "SharedSummary" character varying({TextLimits.Description}) NOT NULL DEFAULT '',
             "ConsumerName" character varying({TextLimits.PersonDisplayName}),
+            "ConsumerCopyDeleted" boolean NOT NULL DEFAULT false,
             "Status" character varying({TextLimits.ShortCode}) NOT NULL DEFAULT 'Requested',
             "CreatedAtUtc" timestamp with time zone NOT NULL DEFAULT '1970-01-01T00:00:00Z',
             "CreatedBy" uuid,
@@ -80,12 +81,33 @@ internal static class IsolationSchema
         );
         CREATE INDEX "IX_Deals_BusinessTenantId_Id" ON "{Schemas.Engagement}"."Deals" ("BusinessTenantId", "Id");
 
+        CREATE TABLE "{Schemas.Engagement}"."RetainedSharedRecords" (
+            "ConsumerTenantId" uuid NOT NULL,
+            "BusinessTenantId" uuid NOT NULL,
+            "Id" uuid NOT NULL,
+            "Summary" character varying({TextLimits.Description}) NOT NULL,
+            "ConsumerName" character varying({TextLimits.PersonDisplayName}),
+            "ConsumerNote" character varying({TextLimits.Description}),
+            "ConsumerCopyDeleted" boolean NOT NULL DEFAULT false,
+            "CreatedAtUtc" timestamp with time zone NOT NULL,
+            "CreatedBy" uuid,
+            "ModifiedAtUtc" timestamp with time zone,
+            "ModifiedBy" uuid,
+            "IsDeleted" boolean NOT NULL DEFAULT false,
+            "DeletedAtUtc" timestamp with time zone,
+            "DeletedBy" uuid,
+            CONSTRAINT "PK_RetainedSharedRecords" PRIMARY KEY ("ConsumerTenantId", "BusinessTenantId", "Id")
+        );
+        CREATE INDEX "IX_RetainedSharedRecords_BusinessTenantId_Id" ON "{Schemas.Engagement}"."RetainedSharedRecords" ("BusinessTenantId", "Id");
+
         {RlsSql.EnableTenantRls(Schemas.Tenant, "Widgets")}
         {RlsSql.EnablePublicRls(Schemas.PublicSite, "Posters")}
         {RlsSql.EnablePartiesRls(Schemas.Engagement, "Deals")}
+        {RlsSql.EnablePartiesRls(Schemas.Engagement, "RetainedSharedRecords")}
 
         GRANT SELECT, INSERT, UPDATE, DELETE ON "{Schemas.Tenant}"."Widgets" TO mt_app;
         GRANT SELECT, INSERT, UPDATE, DELETE ON "{Schemas.PublicSite}"."Posters" TO mt_app;
         GRANT SELECT, INSERT, UPDATE, DELETE ON "{Schemas.Engagement}"."Deals" TO mt_app;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON "{Schemas.Engagement}"."RetainedSharedRecords" TO mt_app;
         """;
 }

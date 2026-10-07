@@ -20,6 +20,9 @@ public sealed partial class IdentityStorageAccessTests
         Infrastructure + "Persistence.Readers.LoginMethodReader",
         Infrastructure + "Persistence.Readers.LegalReader",
         Infrastructure + "Persistence.Readers.AccountDeletionTenantReader",
+        Infrastructure + "Persistence.Readers.ConsumerDataRetentionReader",
+        Infrastructure + "Persistence.Repositories.ConsumerDataRetentionRepository",
+        Infrastructure + "Identity.Deletion.EngagementDeletionParticipant",
         Infrastructure + "Identity.Deletion.LegalAcceptanceDeletionParticipant",
         Infrastructure + "Persistence.Readers.LoginMethodMembershipReader",
         Infrastructure + "Persistence.Readers.MemberReader",
@@ -52,6 +55,7 @@ public sealed partial class IdentityStorageAccessTests
         "get_Users", "get_LoginMethods", "get_LoginCodes", "get_LoginAudits",
         "get_LegalAcceptances", "get_UserTenantAccesses",
         "get_LoginInvitations",
+        "get_ConsumerDataRetentions",
     };
 
     private static readonly HashSet<string> IdentityEntityTypes = new(StringComparer.Ordinal)
@@ -64,6 +68,7 @@ public sealed partial class IdentityStorageAccessTests
         "ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.UserTenantAccess",
         "ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.LoginInvitation",
         "ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.MemberAccessRole",
+        "ArquitecturaBaseMultitenant.Domain.Legal.ConsumerDataRetention",
     };
 
     [Fact]

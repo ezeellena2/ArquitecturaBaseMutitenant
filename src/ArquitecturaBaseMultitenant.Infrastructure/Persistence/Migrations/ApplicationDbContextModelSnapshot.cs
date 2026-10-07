@@ -565,6 +565,54 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.ToTable("AccountDeletionCancelTickets", "identity");
                 });
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Legal.ConsumerDataRetention", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BusinessTenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ConsumerTenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CopyReplacedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EntityTypeKey")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("RetainUntilUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessTenantId");
+
+                    b.HasIndex("ConsumerTenantId");
+
+                    b.HasIndex("RetainUntilUtc", "Id")
+                        .HasDatabaseName("IX_ConsumerDataRetentions_Pending")
+                        .HasFilter("\"CopyReplacedAtUtc\" IS NULL");
+
+                    b.HasIndex("EntityTypeKey", "ConsumerTenantId", "BusinessTenantId", "EntityId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ConsumerDataRetentions_SharedRow");
+
+                    b.ToTable("ConsumerDataRetentions", "identity");
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Legal.LegalAcceptance", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2291,6 +2339,21 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasOne("ArquitecturaBaseMultitenant.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Legal.ConsumerDataRetention", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("BusinessTenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("ConsumerTenantId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

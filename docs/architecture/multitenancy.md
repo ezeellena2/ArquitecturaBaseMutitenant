@@ -130,6 +130,12 @@ Campos: `DeletionRequestedAtUtc`, `DeletionScheduledForUtc`, `DeletionReason`, `
 
 El aviso final, "Tu cuenta fue eliminada", va al método principal. Se encola **antes** de borrar los métodos, con la dirección cifrada en el payload. Se registra el `SecurityEvent` `AccountDeleted`.
 
+**La copia compartida y su retención.** `IConsumerBusinessShared.ReplaceConsumerCopy()` borra todos los campos personales copiados y conserva el registro empresarial, su resumen y su estado. El lector traduce `Legal.AccountDeletion.DeletedDisplayName` sólo cuando el marcador técnico indica que la copia se borró: un nombre ausente desde el origen sigue siendo `null`. Ni la copia ni su auditoría guardan el texto traducido; datos copiados y marcador llevan `[NotAudited]`.
+
+`EngagementDeletionParticipant`, el sexto participante del núcleo, actúa sólo en el paso Personal, con el alcance y la UoW abiertos por el llamador. Infrastructure enumera los tipos compartidos del modelo y conserva `Parties`; omite exclusivamente `SoftDelete` para incluir todas las copias. Una política `IRetainedOnConsumerDeletion` de Application identifica el tipo, un motivo técnico y un plazo positivo. La entidad de Domain no implementa ese puerto.
+
+Para lo retenido, `identity.ConsumerDataRetentions` guarda sólo la clave estable `engagement.<tabla>`, los IDs de fila/persona/organización, el motivo, el vencimiento y la fecha de reemplazo. La combinación tipo + partes + fila es única. El vencimiento se fija una sola vez y los registros completados se conservan: repetir, cambiar o retirar una política no reprograma la retención. Cada corrida del worker toma hasta 100 pendientes vencidos. Por cada una abre un scope nuevo y entra al Personal antes de la UoW, incluso cerrado; el lock `FOR UPDATE SKIP LOCKED`, el reemplazo y la marca `CopyReplacedAtUtc` se confirman juntos. No necesita una membresía ni vuelve a leer la cuenta para encontrar el alcance.
+
 **4. Desde la plataforma:**
 - Un operador puede **iniciar la baja** de una cuenta activa o suspendida, por ejemplo ante un pedido legal que llega por fuera de la plataforma.
 - Una cuenta **suspendida** sigue `Suspended`, con la fecha de eliminación. Como no puede ingresar (el ingreso responde cuenta suspendida), **no puede cancelar**. Si la plataforma la reactiva antes de la fecha, pasa a `PendingDeletion` (no a `Active`), y ahí sí puede ingresar y cancelar.

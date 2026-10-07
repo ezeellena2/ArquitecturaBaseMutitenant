@@ -34,6 +34,28 @@ internal sealed partial class AccountDeletionWorker(IServiceScopeFactory scopes,
             catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
             catch (Exception exception) { LogFailed(logger, exception.GetType().Name); }
         }
+        await ProcessRetentionsAsync(ct);
+    }
+
+    private async Task ProcessRetentionsAsync(CancellationToken ct)
+    {
+        await using var readScope = scopes.CreateAsyncScope();
+        var pending = await readScope.ServiceProvider.GetRequiredService<IAccountDeletionProcessingService>()
+            .ListExpiredRetentionsAsync(ct);
+        if (pending.IsFailure) { LogFailed(logger, pending.Error.Code); return; }
+        foreach (var work in pending.Value)
+        {
+            ct.ThrowIfCancellationRequested();
+            try
+            {
+                await using var processingScope = scopes.CreateAsyncScope();
+                var result = await processingScope.ServiceProvider.GetRequiredService<IAccountDeletionProcessingService>()
+                    .ProcessRetentionAsync(work, ct);
+                if (result.IsFailure) LogFailed(logger, result.Error.Code);
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
+            catch (Exception exception) { LogFailed(logger, exception.GetType().Name); }
+        }
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

@@ -288,6 +288,7 @@ ArquitecturaBaseMultitenant.Domain/
 │   └── InvitationStatus.cs                           [E3] Pending | Accepted | Revoked | Expired
 ├── Legal/
 │   ├── AccountDeletionCancelTicket.cs                Prueba de ingreso para cancelar baja: cuenta, retorno y un uso en cinco minutos
+│   ├── ConsumerDataRetention.cs                      Ledger técnico de copia retenida: clave de tabla, fila/partes, motivo, vencimiento y finalización
 │   ├── AccountDeletionErrors.cs                      Reúne los motivos que impiden pedir o cancelar una baja…
 │   ├── LegalAcceptance.cs                            Prueba qué versión legal aceptó una cuenta y cuándo
 │   ├── LegalDocument.cs                              Identifica una versión de términos o privacidad y desde cuándo…
@@ -473,6 +474,8 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── IAccountDeletionTenantReader.cs           Proyección de alcances de eliminación, sin datos privados ni perfiles…
 │   │   ├── IAccountDeletionCancelTicketRepository.cs  Busca y guarda la prueba específica de cancelar baja
 │   │   ├── IAccountDeletionRepository.cs             Reclamo durable y purga de credenciales globales de una cuenta…
+│   │   ├── IConsumerDataRetentionReader.cs           Lote acotado de retenciones vencidas, sin copia personal
+│   │   ├── IConsumerDataRetentionRepository.cs       Lock y relectura de metadatos en alcance Consumer y UoW del servicio
 │   │   ├── ForeignKeys.cs                            Nombres de las claves foráneas que la base hace cumplir…
 │   │   ├── ILegalReader.cs                           Lee documentos legales vigentes y aceptaciones pendientes para mostrarlos sin…
 │   │   ├── ILegalRepository.cs                       Consulta y agrega versiones legales y aceptaciones dentro de la…
@@ -530,6 +533,8 @@ ArquitecturaBaseMultitenant.Application/
 │       ├── Features/
 │       │   └── IFeatureCatalog.cs                    Catálogo cerrado de módulos reales
 │       └── Legal/
+│           ├── IConsumerCopyDeletion.cs              Reemplazo de una copia por clave estable de tabla y fila, dentro del alcance y UoW llamadores
+│           ├── IRetainedOnConsumerDeletion.cs        Política por tipo compartido, motivo técnico y plazo
 │           └── IAccountDeletionParticipant.cs        Hooks de cuenta en la UoW llamadora
 ├── Models/                                           [E1] *Request (entrada), *Response (salida), ReadModels/*Row (proyección)
 │   ├── Auth/                                         [E3]
@@ -638,6 +643,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── AcceptLegalRequest.cs                     Identifica el documento y la versión exacta que una persona…
 │   │   ├── AccountDeletionContext.cs                 Entrega a cada participante la cuenta y, cuando corresponde, el…
 │   │   ├── AccountDeletionWork.cs                    Transporta el lease de una baja reclamada y sus organizaciones…
+│   │   ├── ConsumerDataRetentionWork.cs              Retención y Consumer que se abre antes de la transacción
 │   │   ├── CancelAccountDeletionRequest.cs           Lleva el comprobante temporal que cancela una baja pendiente sin…
 │   │   ├── LegalDocumentRow.cs                       Versión y texto vigente de un documento legal en una…
 │   │   ├── PendingDeletionState.cs                   Expone la fecha programada y el comprobante temporal para cancelar…
@@ -996,6 +1002,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   │   ├── ApplicationUserConfiguration.cs        [E3] Email y PhoneNumber sin índice único (copia del método principal)
 │   │   │   ├── LoginMethodConfiguration.cs            [E3] 3a: índice único (Type, Value)
 │   │   │   ├── AccountDeletionCancelTicketConfiguration.cs Mapea la prueba de cancelar baja y sus índices globales
+│   │   │   ├── ConsumerDataRetentionConfiguration.cs  Ledger global sin copia personal, único por fila/partes y con índice de pendientes
 │   │   │   ├── LoginCodeConfiguration.cs              [E3]
 │   │   │   ├── LoginLinkConfiguration.cs              [E8]
 │   │   │   ├── UserTenantAccessConfiguration.cs       Mapea el índice global de perfiles de una cuenta
@@ -1065,6 +1072,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   ├── AccountRecoveryRepository.cs               Pedidos globales de recuperación
 │   │   ├── AccountDeletionCancelTicketRepository.cs  Persiste la prueba específica por hash en la UoW
 │   │   ├── AccountDeletionRepository.cs               Reclama cuentas vencidas con un lease durable y bloquea cada…
+│   │   ├── ConsumerDataRetentionRepository.cs          Bloquea una retención con SKIP LOCKED y revalida su vencimiento
 │   │   ├── CompanyMembershipRepository.cs             [E6]
 │   │   ├── LoginMethodRepository.cs                   Prepara los métodos de ingreso de una cuenta para altas…
 │   │   ├── PlatformTenantRepository.cs                bloquea y modifica el estado global de una organización con versión
@@ -1092,6 +1100,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   ├── CompanyAdminReader.cs                      Cuenta solo Administradores de empresa con membresía e identidad activas
 │   │   ├── AccountRecoveryReader.cs                   Bandeja global de «Recuperar mi cuenta»
 │   │   ├── AccountDeletionTenantReader.cs             Proyecta sus espacios y todas las organizaciones para limpiar invitaciones…
+│   │   ├── ConsumerDataRetentionReader.cs             Proyecta hasta 100 pendientes vencidos ordenados por fecha e Id
 │   │   ├── LoginMethodReader.cs                       Proyecta los métodos de ingreso de la cuenta solicitada para…
 │   │   ├── PlatformReader.cs
 │   │   ├── PublicPageReader.cs                        lee la página pública de la organización activa
@@ -1152,6 +1161,8 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   └── TokenRevoker.cs                            revoca por identidad, por acceso o por organización
 │   └── Deletion/
 │       ├── AccountDeletionParticipant.cs              El núcleo actual no bloquea ni cambia datos de tenant…
+│       ├── EngagementCopyDeletion.cs                  Resuelve tablas compartidas y reemplaza copias manteniendo Parties, incluso SoftDelete
+│       ├── EngagementDeletionParticipant.cs           Sexto participante: reemplazo o retención durante el paso Personal
 │       ├── LegalAcceptanceDeletionParticipant.cs      Quita los metadatos personales de las aceptaciones legales al completar…
 │       ├── MembershipDeletionParticipant.cs           Retira una membresía de la organización durante la baja de…
 │       ├── OutboxDeletionParticipant.cs               Cancela avisos pendientes de una cuenta al pedir o ejecutar…
@@ -1505,6 +1516,7 @@ tests/
 │   │   └── InvitationTests.cs                         [E3]
 │   ├── Legal/
 │   │   ├── AccountDeletionCancelTicketTests.cs        Cuenta, retorno, uso único y vencimiento de la prueba
+│   │   ├── ConsumerDataRetentionTests.cs              Vencimiento UTC y marca de reemplazo idempotente
 │   │   └── LegalDocumentTests.cs                      Comprueba textos por cultura, versiones y aceptaciones legales exactas
 │   ├── Messaging/
 │   │   └── OutboxMessageTests.cs                      Comprueba el ciclo de un mensaje encolado, los reintentos y…
@@ -1620,6 +1632,7 @@ tests/
 │   │   │   ├── Widget.cs                              ITenantOwned, IAuditable, ISoftDeletable
 │   │   │   ├── Poster.cs                              IPublishedByBusiness: la referencia de un dato público
 │   │   │   ├── Deal.cs                                IConsumerBusinessShared + PartyPolicy: la referencia de un dato compartido
+│   │   │   ├── RetainedSharedRecord.cs                 Copia personal sintética con borrado lógico para probar la purga
 │   │   │   ├── IsolationModelCustomizer.cs
 │   │   │   ├── IsolationSchema.cs                     [E2] tras las migraciones reales, ApplyAsync(connection) crea estas tablas con las plantillas
 │   │   │   │                                          de RlsSql (EnableTenantRls, EnablePublicRls, EnablePartiesRls), sin migraciones productivas
@@ -1811,6 +1824,7 @@ tests/
 │   │   ├── AccountDeletionParticipantsTests.cs        Comprueba que cada participante limpie únicamente los datos de la…
 │   │   ├── AccountDeletionProcessingTests.cs          Comprueba el reclamo durable y la reanudación de una baja…
 │   │   ├── AccountDeletionTests.cs                    Comprueba sesión, motivo e impedimentos al solicitar una baja
+│   │   ├── AccountDeletionSharedTests.cs              Worker real: copia borrada, retención, otro Consumer, soft-delete, lock y lote acotado
 │   │   └── LegalAcceptanceTests.cs                    Comprueba que nuevas versiones legales bloqueen las rutas hasta aceptarlas…
 │   ├── Messaging/
 │   │   ├── AccountNoticeTests.cs                      Comprueba que los avisos lleguen a contactos verificados sin duplicados
@@ -1911,7 +1925,6 @@ src/ArquitecturaBaseMultitenant.Domain/
 
 src/ArquitecturaBaseMultitenant.Application/
 ├── Interfaces/Integrations/Request/IPublicSiteContext.cs                [E7] la organización del subdominio (solo lo público)
-├── Interfaces/Integrations/Legal/IRetainedOnConsumerDeletion.cs         [E7] retención legal que declara un módulo ante la baja de una persona
 ├── Interfaces/Persistence/IPublicSiteReader.cs · IDirectoryReader.cs    [E7]
 ├── Interfaces/Services/IDirectoryService.cs                             [E7]
 ├── Services/PublicSite/DirectoryService.cs                              [E7] el directorio de organizaciones publicadas

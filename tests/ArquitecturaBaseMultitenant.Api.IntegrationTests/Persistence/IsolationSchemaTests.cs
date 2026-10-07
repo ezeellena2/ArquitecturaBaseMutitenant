@@ -26,6 +26,7 @@ public sealed class IsolationSchemaTests
         AssertKey<Widget>(context, "tenant", "Widgets", "TenantId", "Id");
         AssertKey<Poster>(context, "public_site", "Posters", "BusinessTenantId", "Id");
         AssertKey<Deal>(context, "engagement", "Deals", "ConsumerTenantId", "BusinessTenantId", "Id");
+        AssertKey<RetainedSharedRecord>(context, "engagement", "RetainedSharedRecords", "ConsumerTenantId", "BusinessTenantId", "Id");
     }
 
     private static void AssertKey<TEntity>(DbContext context, string schema, string table, params string[] properties)
@@ -59,7 +60,8 @@ public sealed class IsolationSchemaDatabaseTests(ApiFactory factory)
                     WHERE p.schemaname = n.nspname AND p.tablename = c.relname)
             FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
             WHERE (n.nspname, c.relname) IN
-                  (('tenant', 'Widgets'), ('public_site', 'Posters'), ('engagement', 'Deals'))
+                  (('tenant', 'Widgets'), ('public_site', 'Posters'), ('engagement', 'Deals'),
+                   ('engagement', 'RetainedSharedRecords'))
             """, connection);
         await using var reader = await command.ExecuteReaderAsync(TestContext.Current.CancellationToken);
         var tables = new Dictionary<string, (bool Enabled, bool Forced, long PolicyCount)>();
@@ -68,27 +70,30 @@ public sealed class IsolationSchemaDatabaseTests(ApiFactory factory)
             tables.Add(reader.GetString(0), (reader.GetBoolean(1), reader.GetBoolean(2), reader.GetInt64(3)));
         }
 
-        Assert.Equal(3, tables.Count);
+        Assert.Equal(4, tables.Count);
         Assert.Equal((true, true, 1L), tables["tenant.Widgets"]);
         Assert.Equal((true, true, 4L), tables["public_site.Posters"]);
         Assert.Equal((true, true, 1L), tables["engagement.Deals"]);
+        Assert.Equal((true, true, 1L), tables["engagement.RetainedSharedRecords"]);
     }
 
     [Fact]
-    public async Task Runtime_role_can_read_all_three_test_tables()
+    public async Task Runtime_role_can_read_all_test_tables()
     {
         await using var connection = await RuntimeRoleConnection.OpenAsync(
             factory.RuntimeConnectionString, Guid.NewGuid(), TestContext.Current.CancellationToken);
         await using var command = new NpgsqlCommand("""
             SELECT (SELECT count(*) FROM tenant."Widgets"),
                    (SELECT count(*) FROM public_site."Posters"),
-                   (SELECT count(*) FROM engagement."Deals")
+                   (SELECT count(*) FROM engagement."Deals"),
+                   (SELECT count(*) FROM engagement."RetainedSharedRecords")
             """, connection);
         await using var reader = await command.ExecuteReaderAsync(TestContext.Current.CancellationToken);
 
         Assert.True(await reader.ReadAsync(TestContext.Current.CancellationToken));
-        Assert.Equal(3, reader.FieldCount);
+        Assert.Equal(4, reader.FieldCount);
         Assert.Equal(0, reader.GetInt64(0));
         Assert.Equal(0, reader.GetInt64(2));
+        Assert.Equal(0, reader.GetInt64(3));
     }
 }

@@ -34,6 +34,10 @@ Tareas en orden, commits por rutas propias, sin push. Tests de negocio, permisos
 
 25. El apagado de emergencia explícito `FeatureManagement:<módulo>=false` prevalece sobre cualquier `EnabledFor` heredado. El adaptador común lee ese valor antes de consultar FeatureManagement, de modo que rutas, workers y `/api/me` aplican el mismo apagado. Las pruebas HTTP conservan a propósito el filtro heredado y una habilitación vigente para verificar el 404 y la ausencia del módulo en la sesión.
 
+26. La migración real `20261007173301_ConsumerDataRetention` crea solo el ledger global técnico, con claves a las dos organizaciones, índice de pendientes y unicidad de la fila compartida. Agrega el grant de `mt_app` explícito, como las migraciones de identidad existentes: los permisos de la migración inicial no se heredan por tablas futuras. Se revisó el SQL y EF no detecta cambios de modelo pendientes.
+27. La programación de retención considera también las filas `Added` del contexto. Repetir el participante dos veces antes del primer commit conserva una sola fecha, además de los reintentos posteriores con ledger persistido. El test verifica la copia antes del vencimiento y su reemplazo en el instante exacto.
+28. El reloj de la fixture de retención parte del `TimeProvider` de la base compartida para conservar la vigencia de sus documentos legales. Su precisión se ajusta al microsegundo de PostgreSQL; los tests siguen avanzando hasta un tick antes del vencimiento y hasta el vencimiento exacto.
+
 ## Cierre
 
 Pendiente: resultado de comandos, commits, decisiones técnicas adicionales, galería y recorrido manual con sesiones anteriores.

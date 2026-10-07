@@ -27,6 +27,8 @@ internal sealed class Deal : Entity, IConsumerBusinessShared, IAuditable, IVersi
     public string SharedSummary => Summary;
     [NotAudited]
     public string? ConsumerName { get; private set; }
+    [NotAudited]
+    public bool ConsumerCopyDeleted { get; private set; }
     public DealStatus Status { get; private set; } = DealStatus.Requested;
     public DateTime CreatedAtUtc { get; private set; }
     public Guid? CreatedBy { get; private set; }
@@ -47,6 +49,12 @@ internal sealed class Deal : Entity, IConsumerBusinessShared, IAuditable, IVersi
             return Error.Conflict("General.ConcurrencyConflict", "The request state already changed.");
         Status = status;
         return Result.Success();
+    }
+
+    public void ReplaceConsumerCopy()
+    {
+        ConsumerName = null;
+        ConsumerCopyDeleted = true;
     }
 }
 

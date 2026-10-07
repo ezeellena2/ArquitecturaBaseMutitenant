@@ -6,4 +6,7 @@ public interface IConsumerBusinessShared
     Guid ConsumerTenantId { get; }
 
     Guid BusinessTenantId { get; }
+
+    /// <summary>Borra todos los datos personales copiados; conserva el registro y puede repetirse.</summary>
+    void ReplaceConsumerCopy();
 }

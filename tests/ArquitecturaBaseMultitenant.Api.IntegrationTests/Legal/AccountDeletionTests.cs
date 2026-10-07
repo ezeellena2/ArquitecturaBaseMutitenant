@@ -28,7 +28,7 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Legal;
 /// Comprueba permisos e impedimentos al solicitar una baja con sesión iniciada. Un bloqueo preserva la cuenta.
 /// </summary>
 [Collection(ApiTestGroup.Name)]
-public sealed class AccountDeletionTests(ApiFactory factory)
+public sealed partial class AccountDeletionTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 

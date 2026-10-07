@@ -9,4 +9,6 @@ public interface IAccountDeletionProcessingService
     Task<Result<AccountDeletionWork?>> ClaimNextAsync(CancellationToken ct);
     Task<Result> ProcessTenantAsync(AccountDeletionWork work, AccountDeletionTenant tenant, CancellationToken ct);
     Task<Result> CompleteAsync(AccountDeletionWork work, CancellationToken ct);
+    Task<Result<IReadOnlyList<ConsumerDataRetentionWork>>> ListExpiredRetentionsAsync(CancellationToken ct);
+    Task<Result> ProcessRetentionAsync(ConsumerDataRetentionWork work, CancellationToken ct);
 }

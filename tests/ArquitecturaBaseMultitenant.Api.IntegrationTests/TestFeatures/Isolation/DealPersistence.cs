@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -30,8 +31,12 @@ internal sealed class DealReader(ApplicationDbContext context) : IDealReader
     // No se une con la cuenta ni el espacio personal: la empresa recibe exclusivamente la copia.
     private IQueryable<Deal> Query() => context.Set<Deal>().AsNoTracking();
 
-    private static IQueryable<DealResponse> Project(IQueryable<Deal> query) => query
-        .Select(deal => new DealResponse(deal.Id, deal.Summary, deal.ConsumerName, deal.Status, deal.Version));
+    private static IQueryable<DealResponse> Project(IQueryable<Deal> query)
+    {
+        var deletedDisplayName = ErrorTexts.Get("Legal.AccountDeletion.DeletedDisplayName");
+        return query.Select(deal => new DealResponse(deal.Id, deal.Summary,
+            deal.ConsumerCopyDeleted ? deletedDisplayName : deal.ConsumerName, deal.Status, deal.Version));
+    }
 }
 
 internal sealed class DealRepository(ApplicationDbContext context, ITenantContext tenant) : IDealRepository

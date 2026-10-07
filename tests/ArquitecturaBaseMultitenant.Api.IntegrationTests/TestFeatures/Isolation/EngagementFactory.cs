@@ -20,14 +20,27 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Isolatio
 /// <summary>Host y modelo propios sobre los roles, migraciones, UoW e interceptores reales de ApiFactory.</summary>
 public sealed class EngagementFactory : IAsyncLifetime
 {
-    private readonly ApiFactory _database = new();
+    private readonly ApiFactory _database;
+    private readonly bool _ownsDatabase;
     private WebApplicationFactory<Program>? _host;
     internal WebApplicationFactory<Program> Host => _host ?? throw new InvalidOperationException("Initialize the fixture first.");
     internal IServiceProvider Services => Host.Services;
+    internal Action<IServiceCollection>? ConfigureServices { get; init; }
+
+    public EngagementFactory()
+    {
+        _database = new ApiFactory();
+        _ownsDatabase = true;
+    }
+
+    internal EngagementFactory(ApiFactory database)
+    {
+        _database = database;
+    }
 
     public async ValueTask InitializeAsync()
     {
-        await _database.InitializeAsync();
+        if (_ownsDatabase) await _database.InitializeAsync();
         _host = _database.WithWebHostBuilder(builder =>
         {
             builder.UseSetting("FeatureManagement:test-deals:EnabledFor:0:Name", "Tenant");
@@ -49,6 +62,7 @@ public sealed class EngagementFactory : IAsyncLifetime
                 services.AddScoped<IValidator<IsolationListRequest>, IsolationListRequestValidator>();
                 services.AddControllers().ConfigureApplicationPartManager(parts =>
                     parts.ApplicationParts.Add(new EngagementControllerPart()));
+                ConfigureServices?.Invoke(services);
             });
         });
     }
@@ -61,7 +75,7 @@ public sealed class EngagementFactory : IAsyncLifetime
     public async ValueTask DisposeAsync()
     {
         if (_host is not null) await _host.DisposeAsync();
-        await _database.DisposeAsync();
+        if (_ownsDatabase) await _database.DisposeAsync();
     }
 
     private sealed class EngagementControllerPart : ApplicationPart, IApplicationPartTypeProvider

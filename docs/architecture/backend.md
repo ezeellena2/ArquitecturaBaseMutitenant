@@ -133,7 +133,7 @@ Domain/
 │  ├─ ITenantOwned.cs            dato privado: Guid TenantId (lo sella el interceptor, inmutable)
 │  ├─ ICompanyOwned.cs           Guid CompanyId (siempre también ITenantOwned)
 │  ├─ IPublishedByBusiness.cs    dato público: BusinessTenantId, IsPublished
-│  ├─ IConsumerBusinessShared.cs dato compartido: ConsumerTenantId (espacio personal), BusinessTenantId (organización)
+│  ├─ IConsumerBusinessShared.cs dato compartido: ConsumerTenantId (espacio personal), BusinessTenantId (organización), ReplaceConsumerCopy()
 │  └─ Party, PartyPolicy, NotAuditedAttribute, TextLimits
 ├─ Results/                      Error, ErrorType, Result, Result<T>, ValidationError
 ├─ ValueObjects/                 Email, PhoneNumber, TaxId (país + tipo + número; validadores en TaxIdValidators/),
@@ -161,7 +161,7 @@ Domain/
 │                                («Recuperar mi cuenta»), AccountRecoveryStatus y sus *Errors
 ├─ Settings/                     TenantSettings (cultura, zona y moneda por defecto), PlatformSettings, SettingsErrors
 ├─ Legal/                        LegalDocument, LegalDocumentContent (una fila por cultura), LegalDocumentKind, LegalAcceptance,
-│                                LegalErrors, LegalPublicationErrors, AccountDeletionCancelTicket, AccountDeletionErrors (CancelProofInvalid, LeaseInvalid, LastAdmin,
+│                                LegalErrors, LegalPublicationErrors, AccountDeletionCancelTicket, ConsumerDataRetention (ledger técnico de copia retenida), AccountDeletionErrors (CancelProofInvalid, LeaseInvalid, LastAdmin,
 │                                PlatformOperator, AlreadyPending, Blocked, NotPending); DataExport y DataExportStatus llegan en E10
 ├─ Features/                     Features.cs (catálogo de módulos: clave, lado y si viene prendido), TenantFeature (habilitación
 │                                por espacio, con origen y vencimiento) (P8)
@@ -209,7 +209,7 @@ Application/
 │     ├─ Phones/                       IPhoneNumberDisplayFormatter (E1), IPhoneNumberParser (E3)
 │     ├─ Dns/                          IDnsTxtLookup (verificar el dominio de correo)
 │     ├─ Legal/                        IAccountDeletionParticipant (CheckAsync, OnRequestedAsync, OnCancelledAsync y ExecuteAsync),
-│     │                                IRetainedOnConsumerDeletion (E7)
+│     │                                IRetainedOnConsumerDeletion (política por tipo/motivo/plazo), IConsumerCopyDeletion (reemplazo en alcance y UoW del llamador)
 │     ├─ Features/                     IFeatureCatalog (IFeatureService está en Services/)
 │     (en Messaging/ y Phones/ están los puertos que usan los módulos: ILoginCodeChannel, IInvitationChannel,
 │      IAccountNoticeChannel; IPhoneLinkObserver, en la E8)
@@ -228,7 +228,7 @@ Application/
 │  │                                   PlatformTenantCreator), InvitationExpiryService
 │  ├─ Profile/                         ProfileService (nombre y apellido opcionales, idioma, zona), ProfileSnapshotBuilder
 │  ├─ Legal/                           LegalService y LegalAcceptanceService (documentos vigentes y aceptación), AccountDeletionService,
-│  │                                   AccountDeletionPolicy y AccountDeletionProcessor (pedir, cancelar y ejecutar la baja),
+│  │                                   AccountDeletionPolicy, AccountDeletionProcessor y AccountDeletionProcessingService (pedir, cancelar, ejecutar la baja y procesar copias retenidas),
 │  │                                   LastTenantAdminGuard (la única Dueña, ADR 0035); los participantes de la baja están en
 │  │                                   Infrastructure/Identity/Deletion; sus modelos y validadores van en Models/Legal/ y Validation/Legal/
 │  ├─ Home/                            HomeService (inicio de la organización, ADR 0040), PendingItemOrder
@@ -343,7 +343,7 @@ Infrastructure/
 ├─ Features/                           FeaturesRegistration, TenantFeatureFilter, FeatureService (P8)
 └─ BackgroundJobs/                     TenantJobRunner (recorre organizaciones activas y ejecuta en su alcance), AccountDeletionWorker
                                        (cada hora, SKIP LOCKED; toda cuenta con DeletionScheduledForUtc vencido, esté PendingDeletion
-                                       o Suspended, por pasos: multitenancy.md §3.2), AccountRecoveryNoticeWorker, InvitationExpiryWorker
+                                       o Suspended, por pasos; además, hasta 100 copias retenidas vencidas, con scope nuevo y Enter antes de UoW: multitenancy.md §3.2), AccountRecoveryNoticeWorker, InvitationExpiryWorker
 ```
 
 ### 4.4 Api
@@ -595,13 +595,15 @@ El cuerpo es `application/problem+json` con `title` y `detail` traducidos, `code
 
 - **Un solo `ApplicationDbContext`**, con cinco esquemas:
   - **`platform`**: Tenants, TenantFeatures, TenantDomains (dominios de correo verificados), PlatformSettings, PlatformPermissionAssignments, SecurityEvents, LegalDocuments y LegalDocumentContents (un texto por documento y por idioma), AccountRecoveryRequests ("Recuperar mi cuenta"), ReservedTenantSlugs, TenantCounters, PendingTenantOwners, los cinco catálogos de referencia, IdempotencyKeys, OutboxMessages, OpenIddict y DataProtection; DataExports ("Exportar mis datos") llega en la E10 y WhatsAppChannels en la E11. Sin RLS.
-  - **`identity`**: AspNetUsers (global, sin `TenantId`), **LoginMethods** (la única fuente de los correos y teléfonos de una cuenta, cada uno único en todo el sistema), `UserTenantAccesses` (proyección global de membresías), LegalAcceptances, UserLogins, UserTokens, LoginCodes, LoginAudits y AccountDeletionCancelTickets; LoginLinks, WhatsAppContacts y WhatsAppMessages (el número de la plataforma habla con la identidad, no con un acceso) llegan en la E8. Sin RLS; la leen `Infrastructure/Identity` y una lista cerrada de readers y repositorios de `Infrastructure/Persistence` que fija `IdentityStorageAccessTests` (inspecciona las llamadas IL a los DbSet globales y `Set<T>()` en todo Infrastructure): los de métodos de ingreso, códigos, legales y baja; los que parten de `Members` (Usuarios, empresas, invitaciones, dominios y auditoría); los de Plataforma (`PlatformReader`, `PlatformAccountReader`, `AccountRecoveryReader`, `SecurityEventReader` y `PlatformPermissionAssignmentRepository`) y `PlatformSeeder`. El índice de membresías se consulta solo para `ConnectService`, `TenantResolutionMiddleware` (por `AccessStatusCache`) y `/api/me` (por `ProfileSnapshotBuilder`); la gestión de métodos administrados usa un puerto específico `ILoginMethodMembershipReader` que devuelve solo la disponibilidad de la membresía/organización por UserId y TenantId. La búsqueda global por valor de un método de ingreso vive en `Infrastructure/Identity/UserLookup`; la única excepción es la búsqueda de cuentas de Plataforma, `PlatformAccountReader`, que busca por nombre, por el valor de los métodos y por el correo de contacto de Google ([ADR 0011](../decisions/README.md), T11 de la Etapa 5).
+  - **`identity`**: AspNetUsers (global, sin `TenantId`), **LoginMethods** (la única fuente de los correos y teléfonos de una cuenta, cada uno único en todo el sistema), `UserTenantAccesses` (proyección global de membresías), LegalAcceptances, UserLogins, UserTokens, LoginCodes, LoginAudits, AccountDeletionCancelTickets y ConsumerDataRetentions (ledger técnico sin copia personal); LoginLinks, WhatsAppContacts y WhatsAppMessages (el número de la plataforma habla con la identidad, no con un acceso) llegan en la E8. Sin RLS; la leen `Infrastructure/Identity` y una lista cerrada de readers y repositorios de `Infrastructure/Persistence` que fija `IdentityStorageAccessTests` (inspecciona las llamadas IL a los DbSet globales y `Set<T>()` en todo Infrastructure): los de métodos de ingreso, códigos, legales y baja; los que parten de `Members` (Usuarios, empresas, invitaciones, dominios y auditoría); los de Plataforma (`PlatformReader`, `PlatformAccountReader`, `AccountRecoveryReader`, `SecurityEventReader` y `PlatformPermissionAssignmentRepository`) y `PlatformSeeder`. El índice de membresías se consulta solo para `ConnectService`, `TenantResolutionMiddleware` (por `AccessStatusCache`) y `/api/me` (por `ProfileSnapshotBuilder`); la gestión de métodos administrados usa un puerto específico `ILoginMethodMembershipReader` que devuelve solo la disponibilidad de la membresía/organización por UserId y TenantId. La búsqueda global por valor de un método de ingreso vive en `Infrastructure/Identity/UserLookup`; la única excepción es la búsqueda de cuentas de Plataforma, `PlatformAccountReader`, que busca por nombre, por el valor de los métodos y por el correo de contacto de Google ([ADR 0011](../decisions/README.md), T11 de la Etapa 5).
   - **`tenant`**, datos **privados** con **RLS forzado**: Members, Invitations, Companies, CompanyMemberships, Roles, RoleAssignments, TenantSettings, AuditEntries y lo privado que sumen los módulos B2B y B2C.
   - **`public_site`**, datos **públicos** de cada organización con RLS por publicación: PublicPages (nombre, logo, descripción, contacto y estado; el slug es el de la organización, en `platform.Tenants`) y lo que publiquen los módulos.
   - **`engagement`**, datos **compartidos** entre una persona y una organización, con RLS por partes: lo que definan los módulos (reservas, pedidos, solicitudes, mensajes).
 - **Toda entidad nueva se clasifica** como privada (`ITenantOwned`), pública (`IPublishedByBusiness`) o compartida (`IConsumerBusinessShared`) antes de escribirla. Cada clase tiene su esquema, su filtro y su política RLS (multitenancy.md §4 y §9).
 - Una configuración por entidad (test). Enums como texto (`HasConversion<string>().HasMaxLength(n)`). Las claves de las tablas de `tenant` son `(TenantId, …)`, sus índices únicos empiezan por `TenantId` y las FK a otras entidades del mismo tenant son compuestas `(TenantId, XId)`.
 - **Filtros globales con nombre (EF 10), uno por clase de dato:** `"Tenant"` (privado, sobre toda `ITenantOwned`: `e.TenantId == tenantContext.TenantId`), `"Public"` (público, sobre toda `IPublishedByBusiness`: `IsPublished || BusinessTenantId == ctx.TenantId`), `"Parties"` (compartido, sobre toda `IConsumerBusinessShared`: `ConsumerTenantId == ctx.TenantId || BusinessTenantId == ctx.TenantId`) y `"SoftDelete"` (multitenancy.md §9). `IgnoreQueryFilters(["SoftDelete"])` quita solo el de borrados. Quitar `"Tenant"`, `"Public"` o `"Parties"` está prohibido fuera de la lista blanca de `QueryFilterBypassTests`, el namespace `Persistence.Readers.Platform`: hoy está vacío, porque ningún reader los quita.
+- **Baja de la copia compartida:** `Infrastructure/Identity/Deletion/EngagementDeletionParticipant` trabaja en la UoW y el alcance Personal del llamador. Enumera los tipos compartidos del modelo y reemplaza todos los campos personales con `IConsumerBusinessShared.ReplaceConsumerCopy()`, conservando resumen y estado. La purga incluye filas con borrado lógico: omite sólo `SoftDelete`, nunca `Parties`. El marcador de copia borrada y los campos copiados llevan `[NotAudited]`; el lector traduce el nombre borrado sin inferirlo de un `null` ni persistir traducciones.
+- **Retención legal de una copia:** `IRetainedOnConsumerDeletion` es una política de Application por tipo, código de motivo y plazo positivo; Infrastructure valida su mapeo y resuelve la clave estable `engagement.<tabla>`. `identity.ConsumerDataRetentions`, global y sin copia personal, guarda claves de fila/partes, motivo, `RetainUntilUtc` y `CopyReplacedAtUtc`. Una combinación tipo + partes + fila tiene un único registro y el vencimiento se fija una vez; se conserva al completarlo. `AccountDeletionProcessingService` lista hasta 100 vencidos y entra a cada Personal antes de abrir su UoW, aunque esté cerrado. El lock de metadatos `SKIP LOCKED`, el reemplazo tracked y la marca durable se confirman juntos, sin otro lease.
 - **Migraciones:** una carpeta, `Infrastructure/Persistence/Migrations`. Cada tabla nueva llama en su migración al helper RLS de su clase (`EnableTenantRls`, `EnablePublicRls` o `EnablePartiesRls`), y `RlsPolicyInventoryTests` falla si alguna tabla de `tenant`, `public_site` o `engagement` no tiene su política.
 
 ```

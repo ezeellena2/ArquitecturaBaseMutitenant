@@ -33,6 +33,12 @@ internal sealed class IsolationModelCustomizer(ModelCustomizerDependencies depen
             .HasMaxLength(TextLimits.Description);
         deal.Property(entity => entity.ConsumerName).HasMaxLength(TextLimits.PersonDisplayName);
         deal.Property(entity => entity.Status).HasConversion<string>().HasMaxLength(TextLimits.ShortCode);
+        var retained = modelBuilder.Entity<RetainedSharedRecord>().ToTable("RetainedSharedRecords", Schemas.Engagement);
+        retained.HasKey(entity => new { entity.ConsumerTenantId, entity.BusinessTenantId, entity.Id });
+        retained.HasIndex(entity => new { entity.BusinessTenantId, entity.Id });
+        retained.Property(entity => entity.Summary).HasMaxLength(TextLimits.Description);
+        retained.Property(entity => entity.ConsumerName).HasMaxLength(TextLimits.PersonDisplayName);
+        retained.Property(entity => entity.ConsumerNote).HasMaxLength(TextLimits.Description);
         base.Customize(modelBuilder, context);
     }
 }

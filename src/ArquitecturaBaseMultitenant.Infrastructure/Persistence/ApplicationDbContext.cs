@@ -45,6 +45,7 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
     public DbSet<LoginMethod> LoginMethods => Set<LoginMethod>();
     public DbSet<LoginCode> LoginCodes => Set<LoginCode>();
     public DbSet<AccountDeletionCancelTicket> AccountDeletionCancelTickets => Set<AccountDeletionCancelTicket>();
+    public DbSet<ConsumerDataRetention> ConsumerDataRetentions => Set<ConsumerDataRetention>();
     public DbSet<LoginAudit> LoginAudits => Set<LoginAudit>();
     internal DbSet<UserTenantAccess> UserTenantAccesses => Set<UserTenantAccess>();
     internal DbSet<LoginInvitation> LoginInvitations => Set<LoginInvitation>();

@@ -57,5 +57,8 @@ public sealed class PartyPolicyTests
         }
     }
 
-    private sealed record SharedRow(Guid ConsumerTenantId, Guid BusinessTenantId) : IConsumerBusinessShared;
+    private sealed record SharedRow(Guid ConsumerTenantId, Guid BusinessTenantId) : IConsumerBusinessShared
+    {
+        public void ReplaceConsumerCopy() { }
+    }
 }

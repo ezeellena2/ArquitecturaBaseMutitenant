@@ -1,3 +1,4 @@
-Participantes de baja actual: membresías, espacio Personal, aceptaciones, outbox y pedidos de recuperación. Leé datos-personales.md, multitenancy.md y auditoria.md.
+Participantes de baja actual: membresías, espacio Personal, aceptaciones, outbox, pedidos de recuperación y copia compartida. Leé datos-personales.md, multitenancy.md y auditoria.md.
 Execute recibe alcance ya autorizado y UoW abierta; nunca Enter ni SaveChanges acá. Reejecutar es seguro. No tablas futuras.
 Copiá MembershipDeletionParticipant y verificá AccountDeletionParticipantsTests en runtime mt_app.
+EngagementDeletionParticipant procesa sólo Consumer en Personal y conserva Parties; omite únicamente SoftDelete para retirar también las copias archivadas. EngagementCopyDeletion resuelve claves engagement.<tabla> desde EF y valida políticas por tipo/motivo técnico/plazo positivo. La copia se reemplaza con el método Domain; nunca se guarda «Cuenta eliminada». El ledger global conserva vencimiento y finalización para impedir prórrogas al repetir. El servicio entra al Personal cerrado antes de la UoW; este adaptador no entra ni guarda por su cuenta.

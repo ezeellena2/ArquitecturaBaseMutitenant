@@ -61,6 +61,9 @@ public static class DependencyInjection
         services.AddScoped<IAccountDeletionParticipant, LegalAcceptanceDeletionParticipant>();
         services.AddScoped<IAccountDeletionParticipant, OutboxDeletionParticipant>();
         services.AddScoped<IAccountDeletionParticipant, RecoveryDeletionParticipant>();
+        services.AddScoped<EngagementCopyDeletion>();
+        services.AddScoped<IConsumerCopyDeletion>(provider => provider.GetRequiredService<EngagementCopyDeletion>());
+        services.AddScoped<IAccountDeletionParticipant, EngagementDeletionParticipant>();
         // La exportación OpenAPI no atiende requests ni tiene claves de firma o base de datos.
         if (System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name is not "GetDocument.Insider")
         {
