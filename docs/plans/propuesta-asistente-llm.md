@@ -8,6 +8,30 @@ Estado: **propuesta para decidir** (2026-10-07). Cuando el usuario cierre las de
 - consultas fijas, topes, uso, historial y borrado;
 - pensado como un módulo central, revisando cómo lo afectan las demás etapas.
 
+## Decidido con el usuario
+
+| Fecha | Decisión | Respuesta |
+|---|---|---|
+| 2026-10-07 | D1 · Lugar | **En la compu, el asistente es el inicio.** Lo de hoy («Para resolver», tarjetas) pasa a ser su bienvenida. En el teléfono, una pestaña aparte. |
+| 2026-10-07 | D3 · Habilitar | **Módulo habilitable, apagado por defecto:** por organización desde Plataforma › Organización › Módulos, y para las personas desde Configuración de Plataforma. |
+| 2026-10-07 | D2 · Clave propia | **Solo si la plataforma la habilita** por organización («puede usar su clave»). Por defecto, la de la plataforma. |
+| 2026-10-07 | D5 · Privacidad | **Solo quien creó la conversación la lee.** El Dueño y la plataforma ven el uso, nunca el texto. |
+| 2026-10-07 | D7 · Modelo | **Totalmente configurable en Plataforma,** con un desplegable de modelos. El catálogo de modelos y precios es dato de referencia (`ModelPrices`), no una lista en el código. Una organización con su clave elige del mismo desplegable. |
+| 2026-10-07 | D4 · Retención | **Se borran solas a los 30 días sin actividad,** salvo las que la persona **guarda** (fijar o archivar): esas no vencen nunca. Se borran a mano, y todas, guardadas incluidas, con la baja de la cuenta. |
+| 2026-10-07 | D9 · Consultas fijas | **Atajos sin modelo:** botones que llaman directo a una herramienta y muestran el resultado con un texto armado, gratis e instantáneos. Fijos por lado en la v1. |
+| 2026-10-07 | D8 · Acciones | **Solo responde en la v1,** con enlaces a la pantalla donde se hace cada cosa. Las acciones con confirmación quedan para la v2. |
+| 2026-10-07 | D11 · Quién lo usa | **Todos, por permiso:** `assistant.use` viene en todos los roles de sistema y el Dueño se lo puede quitar a un rol. Cada uno consulta solo lo que ya puede ver. |
+| 2026-10-07 | D12 · Personas | **Sí en la v1,** con pocas herramientas (mi cuenta, mis organizaciones, mis interacciones). Se prende desde Configuración de Plataforma, con la clave de la plataforma. |
+| 2026-10-07 | D13 · Extras | **Todo en la v1:** 👍/👎 por respuesta, enlaces a la pantalla ya filtrada, **exportar la conversación** y **adjuntar archivos o imágenes**. |
+| 2026-10-07 | D14 · Adjuntos | **Imágenes y PDF** (PNG, JPEG, WebP y PDF), hasta **10 MB** y **5 por mensaje**. Se borran con su conversación. |
+| 2026-10-07 | D15 · Archivos | **Un puerto de archivos del núcleo, `IFileStore`:** disco en desarrollo y nube en producción (S3 o Azure Blob, se elige en la E10). Lo reutiliza cualquier módulo que suba archivos. |
+| 2026-10-07 | D16 · Exportar | **Markdown y PDF,** a elección de la persona. El PDF suma una librería en el back, que se elige en el plan. |
+| 2026-10-07 | D17 · Teléfono | **Una pestaña «Asistente» en la barra de abajo,** con el chat a pantalla completa y el historial en una hoja. El inicio sigue siendo la billetera. |
+| 2026-10-07 | D18 · Cuándo | **Justo después de la Etapa 8,** copiando su patrón de módulo quitable. |
+| 2026-10-07 | D19 · Modelos con la clave de la plataforma | **La plataforma fija qué modelos se pueden elegir con su clave,** y la organización elige entre esos. Con su propia clave, elige cualquiera del catálogo. |
+| 2026-10-07 | D20 · Contador | **Solo cerca del tope:** al quedar 10 mensajes, «Te quedan 10 consultas hoy». |
+| 2026-10-07 | D10 · Topes | **Por persona y por organización:** 50 mensajes por persona por día y un tope mensual en dólares por organización, con un aviso claro al llegar. Los cambia la plataforma; una organización con su clave fija los suyos. |
+
 ---
 
 ## 1. La idea en una línea
@@ -32,6 +56,8 @@ Controller ──► IAssistantService ──► AssistantTurnRunner (helper)
 ---
 
 ## 2. Decisiones (con mi recomendación)
+
+> Las respuestas del usuario están en «Decidido con el usuario», arriba, y **mandan sobre esta tabla**. Por ejemplo, la retención es de 30 días con conversaciones guardadas, y el modelo se elige con un desplegable.
 
 | # | Decisión | Recomiendo | Por qué |
 |---|---|---|---|

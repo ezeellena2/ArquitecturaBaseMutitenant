@@ -462,6 +462,21 @@ Además, `navigation/personal.ts` queda listo para sumar módulos B2C. El `Perso
 
 ---
 
+## Etapa 8b: el asistente (un LLM en el inicio)
+
+Agregada el 2026-10-07 a pedido del usuario. Va **justo después de la Etapa 8** y copia su patrón de módulo quitable.
+- **Decisión:** [ADR 0048](../decisions/0048-asistente.md).
+- **Propuesta,** con las 20 decisiones del usuario, el contrato, los datos, las herramientas, el árbol de archivos y el estimado: [propuesta-asistente-llm.md](propuesta-asistente-llm.md).
+
+**Qué deja:**
+- un chat en el inicio de Plataforma, de la empresa y de la persona, que responde solo sobre el sistema con herramientas de solo lectura;
+- configuración, uso y topes en Plataforma y en la organización;
+- el módulo habilitable por organización.
+
+**Antes del plan ejecutable:** Diseño dibuja las pantallas y el usuario las aprueba. Después, el plan en tres partes ([etapa-en-paralelo](../guides/etapa-en-paralelo.md)).
+
+---
+
 ## Etapa 9: endurecimiento
 
 - TOTP obligatorio para operadores, con reautenticación reciente en las operaciones sensibles. Hasta esta etapa, el operador del seed entra sin segundo factor. En el front, los cinco estados «Operador: …» del tablero Ingreso (segundo factor, código del autenticador incorrecto, código de recuperación, configurar el autenticador y guardar los códigos).
