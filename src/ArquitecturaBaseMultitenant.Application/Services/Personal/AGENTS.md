@@ -4,5 +4,5 @@ Módulo opcional: clave en `Domain/Features/Features.cs`, alcance Consumer/Both 
 Publicado: `IPublishedByBusiness` en `public_site`, leído con `[PublicSite]`; compartido: `IConsumerBusinessShared` en `engagement`, copia mínima para la empresa y campos personales `[NotAudited]`.
 Las transiciones pasan por `PartyPolicy`; una bandeja Business real exige `[HasPermission]` y su catálogo/resources/seed. No inventes permisos para tests.
 Baja: método Domain de `IConsumerBusinessShared` reemplaza la copia; retención por tipo, motivo y plazo con `IRetainedOnConsumerDeletion` en Application/Interfaces/Integrations/Legal, nunca en Domain.
-Front: `areas/personal/modules/<módulo>/`, enlace `navigation/personal.ts`; publicación en `areas/storefront/<módulo>/`. Cada listado pagina; cada escritura usa una UoW y cada método OperationLog.
+Front: `areas/personal/<módulo>/`, enlace `navigation/personal.ts`; publicación en `areas/storefront/<módulo>/`. Cada listado pagina; cada escritura usa una UoW y cada método OperationLog.
 Copiá de: `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/TestFeatures/Isolation/PersonalWidgetService.cs`; verifican `PersonalIsolationTests` y `EngagementTests`.

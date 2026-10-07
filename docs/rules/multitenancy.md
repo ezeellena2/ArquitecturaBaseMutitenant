@@ -55,7 +55,7 @@
 - `SubdomainTests` (E7): el host resuelve solo lo público, exige el puerto del issuer y una página publicada y activa, no consulta la base para rutas privadas y conserva el tenant del token ante otro subdominio.
 - `PublicSiteTests` y `DirectoryTests` (E7): contratos mínimos, filtros públicos aun para el propio dueño, búsqueda/paginado y revalidación de logos.
 - `PersonalIsolationTests`, `EngagementTests` y `PartyPolicyTests` (E7): CRUD personal, separación entre accesos, dos partes/terceros, transiciones, gates, versiones y replay.
-- `AccountDeletionTests` y `AccountDeletionParticipantsTests`: reemplazo de copias compartidas, retención, vencimiento y repetición con RLS.
+- `AccountDeletionTests` y `AccountDeletionParticipantsTests` (E7): reemplazo de copias compartidas, retención, vencimiento y repetición con RLS.
 - `DataClassificationTests` (E2), `TenantScopeUsageTests` (E2), `QueryFilterBypassTests` (E2), `IdentityAccessTests` (E3), `AccessDeclarationTests` (E3) con la lista explícita de controllers anónimos del dominio principal, `CacheKeyScopeTests` (E2).
 
 ## Detalle
