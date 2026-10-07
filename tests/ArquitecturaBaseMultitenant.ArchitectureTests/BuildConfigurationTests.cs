@@ -80,8 +80,13 @@ public sealed partial class BuildConfigurationTests
         var redirectUris = document.RootElement.GetProperty("Authentication").GetProperty("Clients")
             .GetProperty("Web").GetProperty("RedirectUris").EnumerateArray()
             .Select(uri => uri.GetString()).ToArray();
-        Assert.Contains($"https://localhost:5174{callbackPath}", redirectUris);
-        Assert.DoesNotContain("https://localhost:5174/callback", redirectUris);
+        var issuer = Assert.IsType<string>(document.RootElement.GetProperty("Authentication").GetProperty("Issuer").GetString());
+        Assert.Equal("https://localtest.me:5174/", issuer);
+        var origin = new Uri(issuer).GetLeftPart(UriPartial.Authority);
+        Assert.Contains($"{origin}{callbackPath}", redirectUris);
+        Assert.DoesNotContain($"{origin}/callback", redirectUris);
+        var frontIssuerPath = Path.Combine(front, "src", "auth", "issuer.ts");
+        Assert.Contains(issuer, File.ReadAllText(frontIssuerPath), StringComparison.Ordinal);
     }
 
     private static void AssertActionPins(string workflow, IReadOnlyCollection<string> expectedActions)
