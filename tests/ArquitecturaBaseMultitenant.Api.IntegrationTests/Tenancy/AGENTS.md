@@ -3,3 +3,4 @@ Pruebas de aislamiento entre organizaciones, scope activo, RLS y acceso. Lo que 
 Antes de escribir, leé: [tests](../../../docs/rules/tests.md) · [multitenancy](../../../docs/rules/multitenancy.md).
 
 Copiá de: `TenantContextTests.cs` para el scope; `CrossTenantIsolationTests.cs` (E2) para aislamiento real.
+Personal: leé [la receta B2C](../../../docs/features/personal.md); `PersonalIsolationTests` verifica CRUD entre personas y Consumer/Business de la misma cuenta; `EngagementTests`, las dos partes y la copia compartida.

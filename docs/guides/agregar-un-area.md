@@ -2,6 +2,8 @@
 
 Receta breve para un CRUD nuevo que pertenece a una organización. Antes de empezar, leé [AGENTS.md](../../AGENTS.md), [backend.md](../architecture/backend.md), [multitenancy.md](../architecture/multitenancy.md) y las fichas de cada pieza. La referencia implementada es [Roles](../features/roles.md). Trabajá en `main`, con TDD y commits chicos; no agregues una capa nueva si el área no la necesita.
 
+Para un módulo B2C, seguí [Personal](../features/personal.md): el dato privado vive en el espacio personal, las rutas Consumer no piden permisos explícitos y la receta cubre publicación, interacción y baja de la copia. Copiá su CRUD de `TestFeatures` y las pruebas de aislamiento entre personas y accesos. Una bandeja Business real conserva sus permisos del catálogo.
+
 ## Pasos
 
 1. **Clasificá el dato y la puerta.** Decidí si es privado del tenant (`ITenantOwned` + esquema `tenant` + RLS), público (`IPublishedByBusiness` + `public_site`) o compartido (`IConsumerBusinessShared` + `engagement`). La ruta B2B declara `[Access(Access.Business)]`; la B2C declara Consumer. Un subdominio solo resuelve contenido público publicado.

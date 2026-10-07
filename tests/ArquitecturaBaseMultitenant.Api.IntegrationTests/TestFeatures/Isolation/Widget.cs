@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Domain.Common;
+using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Isolation;
@@ -19,6 +20,12 @@ internal sealed class Widget : Entity, ITenantOwned, IAuditable, ISoftDeletable,
         Name = name;
     }
 
+    public Widget(string name)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        Name = name;
+    }
+
     public Guid TenantId { get; private set; }
     public string Name { get; private set; } = string.Empty;
     public Email? Email { get; private set; }
@@ -30,4 +37,11 @@ internal sealed class Widget : Entity, ITenantOwned, IAuditable, ISoftDeletable,
     public DateTime? DeletedAtUtc { get; private set; }
     public Guid? DeletedBy { get; private set; }
     public uint Version { get; private set; }
+
+    public Result Rename(string name)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        Name = name;
+        return Result.Success();
+    }
 }
