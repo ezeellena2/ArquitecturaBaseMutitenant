@@ -34,7 +34,8 @@ ArquitecturaBaseMutitenant/
 │   │   ├── plataforma.md                             [E5] operadores, organizaciones, cuentas, recuperaciones, legales y auditoría
 │   │   ├── organizaciones.md                         [E6] usuarios, empresas, membresías, filtros y conteos
 │   │   ├── inicio.md                                 inicio de la organización: tarjetas por área y «Para resolver» (ADR 0040)
-│   │   ├── personal.md                               [E7]
+│   │   ├── sitio-publico.md                           [E7] publicación por subdominio y directorio
+│   │   ├── personal.md                               [E7] receta de módulos B2C e interacción
 │   │   └── whatsapp.md                               [E8]
 │   ├── operations/
 │   │   ├── configuracion.md                          Google, Gmail y WhatsApp: claves, secretos y pasos en Google y Meta
@@ -122,6 +123,13 @@ ArquitecturaBaseMutitenant/
 ├── tests/                                            ver abajo
 ├── tools/                                            solo el soporte del E2E real, nunca para operar (ADR 0017, enmienda)
 │   └── ArquitecturaBaseMultitenant.RealE2ESetup/      prepara la cuenta, el espacio personal y la empresa del E2E real en su base aislada
+│       ├── ArquitecturaBaseMultitenant.RealE2ESetup.csproj Proyecto de soporte del E2E real aislado
+│       ├── Program.cs                                 Preparador aislado y despacho de órdenes del runner
+│       ├── PlatformCommand.cs                         Estados iniciales de Plataforma para el E2E aislado
+│       ├── LegalVersionCommand.cs                     Publica términos de prueba por orden del runner
+│       ├── LegacyBrowserSessionCommand.cs             Reproduce cookies anteriores a ADR 0044 en aislamiento
+│       ├── InvitationCommand.cs                       Prepara escenarios de invitación por orden del runner
+│       └── AccountEmailCaptures.cs                    Capturas HTML de correos reales en español e inglés
 ├── .editorconfig                                     [E0] estilo y supresiones justificadas
 ├── .gitignore                                        [E0] VisualStudio + .local/ + *.env + appsettings.*.local.json
 ├── .gitattributes                                    [E1] snapshots sin conversión de bytes y LF fijo para JSON generados
@@ -156,7 +164,8 @@ ArquitecturaBaseMultitenant.Domain/
 │   ├── IPublishedByBusiness.cs                       Dato público perteneciente a la página de una organización
 │   ├── IVersioned.cs                                 Versión de concurrencia que Infrastructure mapea a xmin
 │   ├── Party.cs                                      Identifica a la persona o a la empresa como parte…
-│   ├── PartyPolicy.cs                                Comprueba qué parte de un dato compartido ejecuta una transición
+│   ├── PartyPolicy.cs                                Result por parte Consumer o Business; tercero404 y parte equivocada403
+│   ├── PartyErrors.cs                                Tenancy.Party.NotAllowed
 │   └── TextLimits.cs                                 Centraliza los límites de texto que comparten las reglas de…
 ├── Results/                                          [E1]
 │   ├── Error.cs                                      record + fábricas Failure/Validation/NotFound/Conflict…
@@ -342,6 +351,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── DisplayFormatter.cs                       [E1] todos los tipos de formatos.md, con cultura y zona explícitas
 │   │   ├── CultureProfiles.cs                        [E1] adapta patrones de ICultureCatalog (JSON E1, tabla E2), sin lista fija
 │   │   ├── DisplayFormatContext.cs                   Perfil resuelto una vez para componer varios textos de una…
+│   │   ├── VersionWireFormatter.cs                    Versiones invariantes para URLs y validadores HTTP
 │   │   └── SupportedCultures.cs                      [E1] lee ICultureCatalog; es-AR y en-US habilitadas inicialmente
 │   └── Exceptions/                                    [E2]
 │       ├── UniqueConstraintViolationException.cs     [E2] con UnitOfWork
@@ -369,6 +379,8 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── IProfileService.cs                        [E3] /api/me
 │   │   ├── IBusinessSignupService.cs                  [E6] "Registrá tu empresa" (alta B2B, aparte del acceso B2C)
 │   │   ├── IRoleService.cs                           [E4]
+│   │   ├── IPublicSiteService.cs                     [E7] página publicada del sitio resuelto
+│   │   ├── IDirectoryService.cs                      [E7] directorio paginado y logo público por slug
 │   │   ├── ICompanyService.cs                        [E6]
 │   │   ├── ITenantAdministrationService.cs           [E5]
 │   │   ├── IPlatformAccountService.cs                [E5]
@@ -464,6 +476,8 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── IPendingTenantOwnerRepository.cs          Guarda, dentro de la UoW del alta, el contacto del…
 │   │   ├── IOrganizationUserReader.cs                Lee integrantes y sus relaciones dentro de la organización activa
 │   │   ├── ILoginMethodMembershipReader.cs           Comprueba solo el acceso activo de una cuenta al dueño…
+│   │   ├── ILoginInvitationReader.cs                  Invitaciones vigentes por correo, sin leer filas privadas
+│   │   ├── ILoginInvitationRepository.cs              Aceptación por correo probado bajo RLS y UoW
 │   │   ├── IInvitationReader.cs                      Empresas y roles de la persona invitada, primero los de…
 │   │   ├── IExternalLoginLock.cs                     Serializa callbacks del mismo Google subject o correo verificado
 │   │   ├── IConnectAuthorizationStore.cs             Persiste la autorización OpenID Connect que vincula sesión, cuenta, acceso,…
@@ -483,6 +497,8 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── ILoginMethodRepository.cs                 Bloquea y modifica métodos de ingreso de una identidad global…
 │   │   ├── IOrganizationAuditReader.cs               lee la auditoría de la organización con cursor y filtros
 │   │   ├── IPublicPageReader.cs                      lee la página pública de la organización activa
+│   │   ├── IPublicSiteReader.cs                      [E7] resolución y contenido publicado, sin contexto privado
+│   │   ├── IDirectoryReader.cs                       [E7] listado y logo con filtros públicos explícitos
 │   │   ├── IPublicPageRepository.cs                  escribe la página pública dentro de la transacción del servicio
 │   │   ├── ITenantDomainReader.cs                    lee los dominios de la organización con sus correos administrados
 │   │   └── ITenantDomainRepository.cs                escribe los dominios de correo globales, con lock y versión
@@ -491,6 +507,7 @@ ArquitecturaBaseMultitenant.Application/
 │       │   ├── ICurrentUser.cs                       [E2 shell] UserId, Access (Consumer | Business | Platform); claims reales E3
 │       │   ├── ITenantContext.cs                     [E2] TenantId, TenantKind, RequiredTenantId (del acceso activo)
 │       │   ├── IRequestInfo.cs                       [E3] IP, user agent
+│       │   ├── IPublicSiteContext.cs                 [E7] BusinessTenantId? y Slug? del sitio publicado
 │       │   ├── ITenantAccessInitializer.cs           Fija el tenant de un acceso ya autenticado, antes de…
 │       │   ├── IInvitationFlowContext.cs             Identidad válida y continuación protegida del navegador, sin seleccionar un…
 │       │   └── IPublicOrigin.cs                      [E3] origen público para armar enlaces
@@ -573,6 +590,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── InvitationPreviewState.cs                 estado de la invitación que se muestra antes de aceptarla
 │   │   ├── InvitationTokenData.cs                    lo que protege el token de una invitación
 │   │   ├── IssueInvitationRequest.cs                 pedido de emitir una invitación, de la organización o de Plataforma
+│   │   ├── LoginInvitationContext.cs                  Alcances y proyecciones de invitaciones por correo demostrado
 │   │   └── IssuedInvitation.cs                       invitación emitida, lista para encolar su entrega
 │   ├── Profile/                                      [E3]
 │   │   ├── MeResponse.cs                             cuenta + acceso activo + espacio personal + organizaciones + permisos + preferencias efectivas (cultura, zona, moneda) + features
@@ -580,11 +598,11 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── EffectivePermissions.cs                   organización + por empresa + Plataforma
 │   │   └── UpdateMeRequest.cs
 │   ├── PublicSite/                                   [E6–E7]
-│   │   ├── PublicPageResponse.cs                     [E6] nombre, logo, descripción, contacto, slug y estado
-│   │   ├── UpdatePublicPageRequest.cs                [E6]
-│   │   ├── ListDirectoryRequest.cs                   [E7] paginado del directorio
-│   │   └── ReadModels/
-│   │       └── DirectoryEntryRow.cs                  [E7]
+│   │   ├── PublicPageModels.cs                       [E6] borrador privado, guardado, publicación y logo
+│   │   ├── PublicSiteResponse.cs                     [E7] ocho datos públicos, sin estado ni ids
+│   │   ├── PublicSiteRow.cs                          [E7] proyecciones de resolución, contenido y logo
+│   │   ├── ListDirectoryRequest.cs                   [E7] pedido paginado de búsqueda y orden
+│   │   └── DirectoryEntryRow.cs                      [E7] slug, nombre, descripción y URL de logo
 │   ├── Roles/                                        [E4]
 │   │   ├── ListRolesRequest.cs
 │   │   ├── RoleResponse.cs
@@ -732,6 +750,8 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── SignupCodeRequester.cs                    Aplica la política de alta y encola el código en…
 │   │   ├── SignupAccountRegistrar.cs                 Crea identidades por correo y sus consentimientos
 │   │   ├── LoginMethodsService.cs                    Informa al front qué canales de código y proveedores externos…
+│   │   ├── LoginCodeDeliveryIssuer.cs                 Encola códigos respetando estado y disponibilidad del método
+│   │   ├── LoginInvitationResolver.cs                 Resuelve invitaciones antes de la transacción de ingreso
 │   │   ├── LoginCodeAttemptGuard.cs                  Coordina lock, intentos fallidos y auditoría del código de ingreso
 │   │   ├── LoginAccountGuard.cs                      Ordena cuenta antes de destino y revalida el ingreso
 │   │   ├── GoogleAccountResolver.cs                  Resuelve el subject global bajo lock, vincula correo verificado o…
@@ -763,6 +783,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── InvitationIssuer.cs                       emite y encola por IInvitationChannel; sin ruta propia: lo usan PlatformTenantCreator
 │   │   │                                             (E5) y OrganizationUserInvitationWriter (E6)
 │   │   ├── InvitationAcceptanceGuard.cs              bloquea y controla al dueño del correo antes de aceptar
+│   │   ├── LoginInvitationAcceptanceWriter.cs         Acepta todas las invitaciones vigentes del correo demostrado
 │   │   ├── InvitationAcceptanceWriter.cs             acepta la invitación: membresía, roles y empresas
 │   │   ├── InvitationAccountRegistrar.cs             crea la cuenta de quien acepta sin tenerla, con su correo
 │   │   └── InvitationSessionRestorer.cs              después de aceptar, actualiza el estado del acceso y la continuación
@@ -898,6 +919,8 @@ ArquitecturaBaseMultitenant.Application/
 │       ├── PublicPageEditor.cs                       Guarda contenido, slug y publicación de la página dentro de…
 │       ├── PublicPagePendingItems.cs                 «Para resolver» de la Página pública (ADR 0040)
 │       ├── PublicPageService.cs                      lee, guarda, publica y retira la página pública
+│       ├── PublicSiteService.cs                      [E7] lectura anónima del sitio publicado resuelto
+│       ├── DirectoryService.cs                       [E7] listado paginado y logo público por slug
 │       └── PublicSiteRegistration.cs                 Registra la página pública de la organización, con su fuente…
 ├── Modules/                                         [E8] módulos quitables: el núcleo no los referencia (test)
 │   └── WhatsApp/                                    AddWhatsAppModule() registra todo lo de esta carpeta
@@ -966,6 +989,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   ├── Schemas.cs                                     [E2] nombres únicos de platform, identity, tenant, public_site y engagement
 │   ├── PersistenceRegistration.cs                     [E2] DbContext (appdb), interceptores, UoW, repositorios, readers
 │   ├── UnitOfWork.cs                                  [E2]
+│   ├── LoginInvitationScope.cs                         Capacidad nominal del OTP para invitaciones y miembros exactos
 │   ├── TenantContext.cs                               [E2] implementa ITenantContext + ITenantScope
 │   ├── ConstraintViolations.cs                        [E2] índice único o clave foránea → excepción con su nombre
 │   ├── DatabaseBootstrapExtensions.cs                 [E2] solo Development: crea la base con ICU es-AR, los roles mt_owner y mt_app, migra y hace el seed (appdb-admin)
@@ -1005,6 +1029,8 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   │   ├── ConsumerDataRetentionConfiguration.cs  Ledger global sin copia personal, único por fila/partes y con índice de pendientes
 │   │   │   ├── LoginCodeConfiguration.cs              [E3]
 │   │   │   ├── LoginLinkConfiguration.cs              [E8]
+│   │   │   ├── LoginInvitationConfiguration.cs         Índice global de invitaciones por destino y vencimiento
+│   │   │   ├── MemberAccessRoleConfiguration.cs        Rol reservado por miembro con clave y FK compuestas
 │   │   │   ├── UserTenantAccessConfiguration.cs       Mapea el índice global de perfiles de una cuenta
 │   │   │   ├── IdentityUserTokenConfiguration.cs      Ubica los tokens técnicos de ASP.NET Identity en el esquema…
 │   │   │   ├── IdentityUserLoginConfiguration.cs      Ubica los registros técnicos de proveedores externos de ASP.NET Identity…
@@ -1074,6 +1100,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   ├── AccountDeletionRepository.cs               Reclama cuentas vencidas con un lease durable y bloquea cada…
 │   │   ├── ConsumerDataRetentionRepository.cs          Bloquea una retención con SKIP LOCKED y revalida su vencimiento
 │   │   ├── CompanyMembershipRepository.cs             [E6]
+│   │   ├── LoginInvitationRepository.cs                Locks y aceptación por OTP conservando RLS forzado
 │   │   ├── LoginMethodRepository.cs                   Prepara los métodos de ingreso de una cuenta para altas…
 │   │   ├── PlatformTenantRepository.cs                bloquea y modifica el estado global de una organización con versión
 │   │   ├── PublicPageRepository.cs                    escribe la página pública dentro de la transacción
@@ -1094,6 +1121,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   ├── OrganizationUserReader.cs                  Pagina miembros e invitaciones en SQL y completa roles/empresas solo…
 │   │   ├── OrganizationAuditReader.cs                 auditoría de la organización con cursor, filtros y acciones de Plataforma
 │   │   ├── MemberSearch.cs                            La búsqueda de personas que comparten Usuarios y Miembros de…
+│   │   ├── LoginInvitationReader.cs                    Proyección de invitaciones vigentes para el destino solicitado
 │   │   ├── LoginMethodMembershipReader.cs             Comprueba si la cuenta conserva una membresía y una organización…
 │   │   ├── LegalReader.cs                             Proyecta la versión legal vigente por cultura y las aceptaciones…
 │   │   ├── InvitationReader.cs                        Proyecta la invitación y sus datos actuales únicamente dentro del…
@@ -1104,6 +1132,8 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   ├── LoginMethodReader.cs                       Proyecta los métodos de ingreso de la cuenta solicitada para…
 │   │   ├── PlatformReader.cs
 │   │   ├── PublicPageReader.cs                        lee la página pública de la organización activa
+│   │   ├── PublicSiteReader.cs                        [E7] consulta publicada/activa sin bypass ni caché
+│   │   ├── DirectoryReader.cs                         [E7] filtros públicos, búsqueda e índices del directorio
 │   │   ├── SecurityEventReader.cs
 │   │   ├── TenantDomainReader.cs                      Expone únicamente los dominios activos de la organización técnica seleccionada,…
 │   │   ├── TenantProvisioningReader.cs                identifica al Dueño y la primera empresa al reintentar un alta
@@ -1138,6 +1168,8 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   ├── PlatformSeeder.cs                          [E3] ajustes de plataforma + operador inicial (Seed:PlatformOwner:Email y DisplayName; Phone opcional hasta E8), con todos los permisos de Plataforma (ADR 0042)
 │   │   └── LegalDocumentSeeder.cs                     [E3] 3a: versión base de términos y privacidad, con contenidos es y en
 │   ├── AccessIndex/
+│   │   ├── LoginInvitation.cs                          Proyección global mínima mantenida por triggers de invitaciones
+│   │   ├── MemberAccessRole.cs                         Rol sistémico reservado por miembro, mantenido por triggers
 │   │   └── UserTenantAccess.cs                        Proyección técnica global de membresías
 │   └── Conventions/
 │       ├── EmailConvention.cs                         Persiste el value object Email como su valor canónico en…
@@ -1154,6 +1186,8 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   ├── CloudflareDnsTxtLookup.cs                      Consulta registros TXT públicos mediante el endpoint DNS-over-HTTPS de Cloudflare
 │   ├── OpenIddict/
 │   │   ├── OpenIddictRegistration.cs                  code + PKCE + refresh, endpoints, validación local
+│   │   ├── SubdomainApplicationManager.cs              [E7] preserva clientes/URI fijos y amplía sólo web
+│   │   ├── SubdomainRedirectUriValidator.cs            [E7] retorno del propio subdominio publicado, mismo issuer
 │   │   ├── AuthServerDefaults.cs                      rutas, scopes, duraciones; issuer fijo (el dominio principal)
 │   │   ├── CertificateLoader.cs
 │   │   ├── WebClientOptions.cs
@@ -1303,7 +1337,8 @@ ArquitecturaBaseMultitenant.Api/
 │   ├── AccessFilter.cs                                403 Tenancy.Access.Wrong
 │   ├── PublicSiteResolutionMiddleware.cs              [E7] subdominio → IPublicSiteContext (solo datos públicos)
 │   ├── PublicSiteAttribute.cs                         [E7] [PublicSite]: la ruta necesita un subdominio de empresa publicado
-│   ├── PublicSiteContext.cs                           [E7]
+│   ├── PublicSiteContext.cs                           [E7] contexto público nullable, sin modificar tenant privado
+│   ├── PublicSiteFilter.cs                            [E7] 404 uniforme si el sitio no está disponible
 │   └── TenantClaimTypes.cs
 ├── RequestContext/                                    [E3]
 │   ├── CurrentUser.cs
@@ -1348,7 +1383,10 @@ ArquitecturaBaseMultitenant.Api/
 │   │   ├── OrganizationSettingsController.cs          api/organization/settings: leer y guardar con versión
 │   │   ├── OrganizationUsersController.cs             api/users: miembros e invitaciones
 │   │   └── PublicPageController.cs                    api/organization/public-page: borrador, publicar y retirar
-│   ├── Personal/                                      [E7] [Access(Consumer)]: acá van los módulos B2C del producto
+│   ├── PublicSite/                                    [E7]
+│   │   ├── PublicSiteController.cs                    [PublicSite][AllowAnonymous]: página y logo del subdominio
+│   │   └── DirectoryController.cs                     [AllowAnonymous]: directorio y logo por slug
+│   ├── Personal/                                      [E7] punteros; módulos B2C añadidos por cada producto
 │   └── Platform/                                      [E5] [Access(Platform)]
 │       ├── PlatformTenantsController.cs
 │       ├── PlatformAccountsController.cs
@@ -1394,7 +1432,8 @@ ArquitecturaBaseMultitenant.Api/
 │   │   ├── OrganizationUsersHttpRequests.cs           contratos de Usuarios e invitaciones (entrada y salida)
 │   │   └── PublicPageHttpRequests.cs                  contratos de la página pública (entrada y salida)
 │   ├── PublicSite/                                    [E7]
-│   │   └── DirectoryQuery.cs
+│   │   ├── PublicSiteHttpResponse.cs                  correo legible y teléfono E.164, sin ids ni estado
+│   │   └── DirectoryQuery.cs                          page, pageSize, sort y search
 │   ├── Platform/                                      [E5]
 │   │   ├── PlatformAccountHttpRequests.cs             filtros de Cuentas y pedidos de una acción con motivo (las de cuenta, sin versión)
 │   │   ├── PlatformAuditQuery.cs                      filtros de la auditoría de Plataforma
@@ -1590,6 +1629,8 @@ tests/
 │   │   └── Modules/WhatsApp/                        [E8]
 │   │       ├── WhatsAppInboundServiceTests.cs
 │   │       └── BotReplyTests.cs
+│   ├── Formatting/                                    Versiones para URLs y validadores HTTP
+│   │   └── VersionWireFormatterTests.cs               Dígitos ASCII invariantes para versiones en distintas culturas
 │   ├── DependencyInjectionTests.cs                    AddApplication registra cada clase de Services una sola vez y…
 │   ├── TestDoubles/                                   [E1–E6] cada fake nace con la interfaz que implementa
 │   │   ├── FakeUnitOfWork.cs                          [E2] misma CommitPolicy; cuenta commits y rollbacks
@@ -1627,9 +1668,10 @@ tests/
 │   ├── TestFeatures/                                  [E1] solo para tests, nunca en src/
 │   │   ├── TestController.cs                          [E1] devuelve cada ErrorType
 │   │   ├── Access/                                   [E3] probe de ruta exclusiva Business, sólo para tests
+│   │   │   ├── PublicSiteProbeController.cs           Demuestra independencia entre el sitio público y el acceso privado
 │   │   │   └── BusinessOnlyController.cs             [E3] demuestra 403 Consumer sin adelantar alta productiva E6
 │   │   ├── Isolation/                                 [E2]
-│   │   │   ├── Widget.cs                              ITenantOwned, IAuditable, ISoftDeletable
+│   │   │   ├── Widget.cs                              ITenantOwned, IAuditable, ISoftDeletable e IVersioned
 │   │   │   ├── Poster.cs                              IPublishedByBusiness: la referencia de un dato público
 │   │   │   ├── Deal.cs                                IConsumerBusinessShared + PartyPolicy: la referencia de un dato compartido
 │   │   │   ├── RetainedSharedRecord.cs                 Copia personal sintética con borrado lógico para probar la purga
@@ -1638,8 +1680,18 @@ tests/
 │   │   │   │                                          de RlsSql (EnableTenantRls, EnablePublicRls, EnablePartiesRls), sin migraciones productivas
 │   │   │   ├── WidgetsController.cs                   [E2] el 409 de ConcurrencyTests; [Access(Business)] desde la E3
 │   │   │   ├── PostersController.cs                   [E7] [PublicSite]
-│   │   │   ├── DealsController.cs                     [E7] [Access(Consumer)] + [Access(Business)]: el flujo persona → empresa con PartyPolicy
-│   │   │   └── PersonalWidgetsController.cs           [E7] [Access(Consumer)]: la receta de un módulo B2C
+│   │   │   ├── DealsController.cs                     [E7] creación pública Consumer y transiciones por PartyPolicy
+│   │   │   ├── DealContracts.cs                       [E7] copia mínima, pedidos versionados y listado
+│   │   │   ├── DealService.cs                         [E7] UoW real, partes, gates e idempotencia
+│   │   │   ├── DealPersistence.cs                     [E7] reader/repositorio compartidos sin leer la cuenta
+│   │   │   ├── EngagementFactory.cs                   [E7] API con modelo sintético, RLS e interceptores reales
+│   │   │   ├── EngagementJourney.cs                   [E7] sesiones y fixture de publicación/interacción
+│   │   │   ├── PersonalWidgetsController.cs           [E7] CRUD Consumer y probe Business
+│   │   │   ├── PersonalWidgetContracts.cs             [E7] pedidos paginados y versionados
+│   │   │   ├── PersonalWidgetService.cs               [E7] CRUD con la arquitectura de Roles
+│   │   │   ├── PersonalWidgetPersistence.cs           [E7] reader/repositorio del espacio personal
+│   │   │   ├── PersonalIsolationFactory.cs            [E7] API/modelo propios e infraestructura real
+│   │   │   └── PersonalIsolationJourney.cs            [E7] personas y accesos separados de una identidad
 │   │   ├── Auditing/
 │   │   │   ├── AuditTestDbContext.cs                  Construye el modelo mínimo de entidades sintéticas y entradas de…
 │   │   │   ├── AuditedRecord.cs                       Define entidades sintéticas privadas, públicas y compartidas para probar auditoría
@@ -1655,12 +1707,13 @@ tests/
 │   │   ├── RlsPolicyInventoryTests.cs
 │   │   ├── RuntimeRoleTests.cs
 │   │   ├── TenantColumnsImmutabilityTests.cs
-│   │   ├── PublicAndSharedRowsTests.cs                datos públicos y compartidos, con RLS; los casos por la página pública se suman en la E7
+│   │   ├── PublicAndSharedRowsTests.cs                datos públicos y compartidos con filtros y RLS
+│   │   ├── EngagementTests.cs                         [E7] dos partes, tercero404, transición403 y gates
+│   │   ├── PersonalIsolationTests.cs                  [E7] CRUD cruzado, accesos, versión, replay y paginado
 │   │   ├── TenantJobRunnerTests.cs                    [E2] un scope DI y un ITenantScope por tenant, sin herencia entre trabajos
 │   │   ├── AccessTests.cs                             [E3] acceso equivocado, cambio de acceso con membresía, B2C no crea empresas
-│   │   ├── SuspensionTests.cs                         [E3–E7] identidad y organización suspendidas (E3); suspender desde la plataforma y B2C intacto (E5);
-│   │   │                                              la página pública de una organización suspendida, "no disponible" (E7)
-│   │   ├── SubdomainTests.cs                          [E7]
+│   │   ├── SuspensionTests.cs                         [E3–E5] identidad y organización suspendidas; B2C intacto
+│   │   ├── SubdomainTests.cs                          [E7] host/tenant separados, No disponible y protocolo OIDC
 │   │   ├── UserTenantAccessReaderTests.cs             Comprueba que el reader liste únicamente las membresías de la…
 │   │   ├── UserTenantAccessIndexTests.cs              Comprueba que la proyección global siga los cambios de membresía…
 │   │   ├── TenantJobRunnerIdentityTests.cs            Comprueba que los workers recorran empresas activas y entren al…
@@ -1745,6 +1798,8 @@ tests/
 │   │   ├── ConnectTests.cs
 │   │   ├── LogoutTests.cs                            [E3] GET/POST /connect/logout
 │   │   ├── LoginCodeTests.cs                           [E3/E6] LoginCodeTests.Inactive_managed_member_cannot_use_the_email_to_sign_into_personal_access bloquea el correo administrado sin membresía activa
+│   │   ├── InvitedLoginCodeTests.cs                    Ingreso por código y aceptación de invitaciones vigentes
+│   │   ├── LegacyBrowserSessionTests.cs                Recuperación de cookies antiguas conservando la sesión de Plataforma
 │   │   ├── StartupConfigurationTests.cs               Comprueba la validación de Google y correo al arrancar
 │   │   ├── RealLoginRateLimitTests.cs                 Comprueba los límites de las rutas reales de ingreso por…
 │   │   ├── PrincipalFactoryTests.cs                   Comprueba los claims emitidos y reconstruidos durante el refresh
@@ -1779,6 +1834,9 @@ tests/
 │   │   ├── HomeTests.cs                               Inicio de la organización (ADR 0040, tableros Inicio-Org e Inicio-Miembro)
 │   │   ├── CompanyAdminTests.cs                       Administrador de empresa: a quién sumar y las invitaciones de su empresa
 │   │   └── ForeignKeyRaceTests.cs                     Asignar un rol mientras otro pedido lo borra choca con…
+│   ├── PublicSite/                                    [E7]
+│   │   ├── PublicSiteTests.cs                         contrato, logo/ETag y 404 uniforme sin borrador privado
+│   │   └── DirectoryTests.cs                          filtros, búsqueda, orden, paginado y logos revalidados
 │   ├── Platform/                                      [E5]
 │   │   ├── PlatformAccountAdministrationTests.cs      Consulta global de cuentas
 │   │   ├── PlatformAccountDeletionTests.cs            Baja iniciada por Plataforma (ADR 0035)
@@ -1917,37 +1975,25 @@ src/**/<carpeta de un área>/CLAUDE.md                  @AGENTS.md
 
 ## Piezas de etapas futuras
 
-Las piezas de los estándares P1 a P10 y de las ADR 0030 a 0035 que ya existen están en el árbol de arriba, en su carpeta real. Acá quedan solo las principales de las etapas que todavía no empezaron. La lista completa de la Etapa 7 está en los «Archivos nuevos» de cada tarea de [su plan](../plans/2026-10-04-etapa-7-publico-y-personal.md); la de la E10, en el [plan maestro](../plans/2026-09-27-plan-de-desarrollo.md). Rutas completas, para no romper las ramas de arriba.
+Las piezas de los estándares P1 a P10 y de las ADR 0030 a 0035 que ya existen están en el árbol de arriba, en su carpeta real. Acá quedan solo las principales de las etapas que todavía no empezaron. Las piezas de la E7 están en sus carpetas reales arriba; el alcance de la E10 está en el [plan maestro](../plans/2026-09-27-plan-de-desarrollo.md). Rutas completas, para no romper las ramas de arriba.
 
 ```
 src/ArquitecturaBaseMultitenant.Domain/
 └── Legal/DataExport.cs · DataExportStatus.cs                            [E10] platform.DataExports: el archivo de «Exportar mis datos», vence a las 48 h
 
 src/ArquitecturaBaseMultitenant.Application/
-├── Interfaces/Integrations/Request/IPublicSiteContext.cs                [E7] la organización del subdominio (solo lo público)
-├── Interfaces/Persistence/IPublicSiteReader.cs · IDirectoryReader.cs    [E7]
-├── Interfaces/Services/IDirectoryService.cs                             [E7]
-├── Services/PublicSite/DirectoryService.cs                              [E7] el directorio de organizaciones publicadas
 ├── Interfaces/Services/IDataExportService.cs                            [E10]
 ├── Interfaces/Persistence/IDataExportRepository.cs                      [E10]
 └── Services/Legal/DataExportService.cs                                  [E10]
 
 src/ArquitecturaBaseMultitenant.Infrastructure/
-├── Persistence/Readers/PublicSiteReader.cs · DirectoryReader.cs         [E7]
-├── Identity/OpenIddict/SubdomainRedirectUriValidator.cs                 [E7] redirect URI solo para slugs publicados
 ├── Persistence/Configurations/Platform/DataExportConfiguration.cs        [E10]
 ├── Persistence/Repositories/DataExportRepository.cs                     [E10]
 └── BackgroundJobs/DataExportWorker.cs                                   [E10] arma el archivo y lo borra a las 48 h
 
 src/ArquitecturaBaseMultitenant.Api/
-├── Tenancy/PublicSiteResolutionMiddleware.cs · PublicSiteAttribute.cs · PublicSiteContext.cs   [E7]
-├── Controllers/PublicSite/PublicSiteController.cs                       [E7] [PublicSite][AllowAnonymous]: solo en el subdominio de una organización publicada
-├── Controllers/PublicSite/DirectoryController.cs                        [E7] [AllowAnonymous], sin [PublicSite]: responde en el dominio principal (está en la lista
-│                                                                        de AccessDeclarationTests)
 └── Controllers/Account/DataExportController.cs                          [E10] POST /api/me/data-export [Idempotent] y la descarga del enlace que vence a las 48 h
 
 tests/
-├── *.Api.IntegrationTests/Tenancy/SubdomainTests.cs                     [E7]
-├── *.Api.IntegrationTests/PublicSite/DirectoryTests.cs                  [E7]
 └── *.Api.IntegrationTests/Account/DataExportTests.cs                    [E10]
 ```

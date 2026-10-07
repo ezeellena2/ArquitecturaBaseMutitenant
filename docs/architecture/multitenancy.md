@@ -183,7 +183,7 @@ Todo dato nuevo se clasifica **antes** de escribir su entidad:
   - `prompt=none&access=consumer` recupera sólo un espacio personal existente: `ConnectController` usa `GetActiveUserAsync` y devuelve `login_required` si falta. El espacio nace al elegir Personal de forma interactiva. Business conserva `SelectAccessAsync`, incluso en silencio, para recordar la organización elegida;
   - la CSP permite enmarcar sólo `/connect/authorize` desde `<esquema>://*.<host del issuer>[:puerto]`. Un documento HTML del subdominio puede enmarcar el origen fijo del issuer; las demás respuestas conservan la política anterior. No se abre `connect-src` ni CORS.
 - **Infraestructura:** el SPA y la Api se sirven desde el **mismo origen en cada host** (el dominio principal y cada `<slug>.plataforma.com`), así que **no hay CORS**, tampoco en los subdominios, y `BackendPrefixes` se atiende igual en todos los hosts. En producción, desde wwwroot, con DNS comodín `*.plataforma.com` y certificado comodín. En desarrollo, con el proxy de Vite por host, sobre `*.localtest.me` (resuelve a 127.0.0.1).
-- **Reservados:** `www`, `app`, `api`, `auth`, `admin`, `empresas`, `plataforma`… no pueden ser el slug de una empresa (`ReservedSlugs`).
+- **Reservados:** `www`, `app`, `api`, `auth`, `admin`, `empresas`, `plataforma`… no pueden ser el slug de una empresa (`ReservedTenantSlugs`).
 - **Después, opcional:** dominio propio de una empresa (`www.empresa-a.com.ar`), que es la misma resolución por host, con una tabla de dominios verificados.
 
 ## 6. Decisiones
@@ -238,7 +238,7 @@ El rol de sistema organizacional se reserva en la proyección interna `identity.
 - `[Access(Business)]` + permiso para la administración de la empresa;
 - `[Access(Platform)]` para el backoffice;
 - `[Access(Consumer, Business, Platform)]` para la propia cuenta, que vale con cualquier sesión: `/api/me`, `/api/me/*` y `POST /api/legal/accept`. El operador también lee `GET /api/me`; por eso `POST /api/me/deletion` le responde `Legal.AccountDeletion.PlatformOperator` y no 403;
-- `[PublicSite]` + `[AllowAnonymous]` **solo** para lo que responde en el subdominio de una organización publicada (`PublicSiteController` (E7));
+- `[PublicSite]` + `[AllowAnonymous]` **solo** para leer lo publicado (`PublicSiteController`); `[PublicSite]` + `[Access(Consumer)]` permite iniciar una interacción. El espacio personal sale del token y la contraparte de `IPublicSiteContext`; los accesos efectivos de controller/acción se intersectan y deben ser exclusivamente Consumer;
 - solo `[AllowAnonymous]`, sin `[Access]`, para las rutas anónimas del dominio principal: el ingreso y el registro (`/api/auth/*` y `/connect/*`), «Registrá tu empresa» (`/api/auth/business-signup`), disponibilidad pública de slug (`GET /api/public-site/slug-availability`), cancelar la baja (`/api/auth/deletion/cancel`), la invitación (`/api/invitations/*`), el enlace, los documentos legales (`GET /api/legal/*`), `GET /api/reference-data` y sus cinco rutas por catálogo (`ReferenceDataController`), el directorio (`DirectoryController` (E7), que no lleva `[PublicSite]`), el pedido de «Recuperar mi cuenta», los correos de contacto (`GET /api/contact`) y los webhooks. `AccessDeclarationTests` las acepta únicamente si su controller está en la lista explícita del test. Estas rutas no dan acceso a datos privados de ningún tenant; el directorio lee solo lo publicado.
 
 Con el acceso equivocado responde 403 `Tenancy.Access.Wrong`. Un recurso de otra organización responde 404, nunca 403, para no revelar que existe.
@@ -266,7 +266,7 @@ El seed inicial de `PlatformSettings` deja `ConsumerSignup = Open`, `BusinessSig
 3. Tokens con `access=consumer`.
 
 **Registro de una empresa (B2B), "Registrá tu empresa":**
-1. Quien la registra ingresa o crea su identidad (código por correo o WhatsApp, o Google, con la aceptación de términos) y después carga los datos de la organización: nombre, slug obligatorio con comprobación de disponibilidad y `ReservedSlugs`, su primera empresa y, si quiere, el CUIT de esa empresa. Si ya tiene cuenta, entra con ella; si no, se crea la identidad. El slug se puede cambiar después en «Página pública» (`/org/pagina`, «Dirección de la página»).
+1. Quien la registra ingresa o crea su identidad (código por correo o WhatsApp, o Google, con la aceptación de términos) y después carga los datos de la organización: nombre, slug obligatorio con comprobación de disponibilidad y `ReservedTenantSlugs`, su primera empresa y, si quiere, el CUIT de esa empresa. Si ya tiene cuenta, entra con ella; si no, se crea la identidad. El slug se puede cambiar después en «Página pública» (`/org/pagina`, «Dirección de la página»).
 2. `BusinessSignupPolicy` aplica `PlatformSettings`: con `BusinessSignup` en `Closed` no se puede registrar («Alta cerrada»), y si la persona ya llegó a su límite de organizaciones propias (`MaxOwnedOrganizations`) tampoco («Llegó al límite»). Si pasa, `Tenant(Business)` queda en `PendingApproval` (modo `RequiresApproval`) o en `Provisioning` (modo `Open`).
 3. `TenantProvisioner` crea la configuración, los roles de sistema, la primera empresa, la membresía con el rol `TenantAdmin` (Dueño) y la página pública en `Draft`.
 4. Tokens con `access=business`.
@@ -323,7 +323,9 @@ Los tests usan las entidades de `TestFeatures` (`Widget` privado, `Poster` públ
 | `Business_sees_only_what_was_shared` | la Empresa A ve lo copiado en el `Deal`, no la cuenta de Kevin |
 | `Public_rows_visible_only_when_published` | un `Poster` en borrador no aparece en la página pública, ni para visitantes ni para otra empresa |
 | `Subdomain_resolves_public_data_only` | `empresa-a.plataforma.com` con un token de la Empresa B no ve datos privados de la Empresa A |
-| `Redirect_uri_only_for_published_slugs` | `authorize` con un subdominio inexistente es rechazado |
+| `SubdomainTests` | retorno dinámico de web sólo al subdominio publicado; PKCE, issuer, token/userinfo/refresh/revocación del propio origen, salida y recuperación sin crear Personal |
+| `PublicSiteTests`, `DirectoryTests` | contrato mínimo, 404 público uniforme, filtros de publicación/estado, logo revalidado y paginado/búsqueda reales |
+| `PersonalIsolationTests`, `EngagementTests`, `PartyPolicyTests` | persona/persona y accesos separados, dos partes con copia mínima, tercero404, transición403, versiones, replay y gates |
 | `Wrong_access_is_forbidden`, `Access_switch_requires_membership` | accesos y membresías |
 | `AccountDeletionTests` | la baja requiere sesión y motivo, sin código adicional; el único Dueño no puede darse de baja; revoca las sesiones; durante la gracia el ingreso ofrece cancelar; la eliminación anonimiza, libera el correo, quita las membresías y anonimiza la copia en los datos compartidos; la auditoría queda |
 | RLS, rol de runtime, inventario de políticas, columnas inmutables, caché con prefijo | igual que antes, ahora para las tres clases |

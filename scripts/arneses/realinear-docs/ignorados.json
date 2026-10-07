@@ -23,5 +23,25 @@
     "id": "catalogos|back|docs/features|codigo-sin-feature|ReferenceData",
     "motivo": "ReferenceData.Culture.Invalid y ReferenceData.Currency.Invalid son de los value objects de E1 (CultureCode, CurrencyCode): ninguna ruta de un área los devuelve, porque los validadores y el JSON responden antes con Validation.Failed. No son de una feature.",
     "fecha": "2026-10-04"
+  },
+  {
+    "id": "punteros|back|src/ArquitecturaBaseMultitenant.Api/Controllers/Personal/AGENTS.md|puntero-huerfano|src/ArquitecturaBaseMultitenant.Api/Controllers/Personal/AGENTS.md",
+    "motivo": "Carpeta Personal reservada expresamente por T08 para módulos del producto: la plantilla conserva la receta y los punteros, sin código de negocio. Mapa docs/architecture/arnes.md §3 y docs/features/personal.md.",
+    "fecha": "2026-10-07"
+  },
+  {
+    "id": "punteros|back|src/ArquitecturaBaseMultitenant.Api/Controllers/Personal/CLAUDE.md|puntero-huerfano|src/ArquitecturaBaseMultitenant.Api/Controllers/Personal/CLAUDE.md",
+    "motivo": "Carpeta Personal reservada expresamente por T08 para módulos del producto: la plantilla conserva la receta y los punteros, sin código de negocio. Mapa docs/architecture/arnes.md §3 y docs/features/personal.md.",
+    "fecha": "2026-10-07"
+  },
+  {
+    "id": "punteros|back|src/ArquitecturaBaseMultitenant.Application/Services/Personal/AGENTS.md|puntero-huerfano|src/ArquitecturaBaseMultitenant.Application/Services/Personal/AGENTS.md",
+    "motivo": "Carpeta Personal reservada expresamente por T08 para módulos del producto: la plantilla conserva la receta y los punteros, sin código de negocio. Mapa docs/architecture/arnes.md §3 y docs/features/personal.md.",
+    "fecha": "2026-10-07"
+  },
+  {
+    "id": "punteros|back|src/ArquitecturaBaseMultitenant.Application/Services/Personal/CLAUDE.md|puntero-huerfano|src/ArquitecturaBaseMultitenant.Application/Services/Personal/CLAUDE.md",
+    "motivo": "Carpeta Personal reservada expresamente por T08 para módulos del producto: la plantilla conserva la receta y los punteros, sin código de negocio. Mapa docs/architecture/arnes.md §3 y docs/features/personal.md.",
+    "fecha": "2026-10-07"
   }
 ]

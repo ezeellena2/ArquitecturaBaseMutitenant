@@ -199,7 +199,7 @@ Application/
 │  │                                   ILegalRepository, ILegalReader, UniqueKeys y ForeignKeys (los nombres de la base)
 │  └─ Integrations/
 │     ├─ Request/                      ICurrentUser, ITenantContext, ITenantAccessInitializer, IRequestInfo, IPublicOrigin,
-│     │                                IInvitationFlowContext; IPublicSiteContext llega en la E7
+│     │                                IInvitationFlowContext; IPublicSiteContext (BusinessTenantId? y Slug? públicos)
 │     ├─ Identity/                     ISignInService, IUserLookup, IUserStatusReader, ITokenRevoker, IGoogleAvailability
 │     ├─ Security/                     ISecureTokenGenerator, ILoginCodeGenerator, ILoginCodeHasher, IPayloadProtector,
 │     │                                IInvitationTokenProtector
@@ -238,7 +238,7 @@ Application/
 │  ├─ Companies/                       CompanyService, CompanyMembershipService, LastCompanyAdminGuard
 │  ├─ OrganizationSettings/            OrganizationSettingsService, OrganizationDomainService (dominios de correo)
 │  ├─ PublicSite/                      PublicPageService (la página de la organización: borrador, publicar y retirar);
-│  │                                   DirectoryService, en la E7
+│  │                                   PublicSiteService y DirectoryService (lectura pública y listado)
 │  ├─ Personal/                        (E7) los servicios de los módulos B2C del producto
 │  ├─ Auditing/                        OrganizationAuditService (lectura), OrganizationAuditEntryBuilder
 │  ├─ Messaging/                       OutboxDispatchService
@@ -435,7 +435,7 @@ tests/
 │  │                                      OrganizationJourney (registro e ingreso reales), PlatformJourney, PickupCodeReader
 │  ├─ TestFeatures/                       controllers y entidades solo para tests (Isolation, Access, Auditing, Features…)
 │  ├─ Tenancy/                            CrossTenantIsolationTests, AccessTests, PublicAndSharedRowsTests, RlsPolicyInventoryTests,
-│  │                                      RuntimeRoleTests, CacheKeyScopeTests; SubdomainTests, en la E7
+│  │                                      RuntimeRoleTests, CacheKeyScopeTests, SubdomainTests, EngagementTests y PersonalIsolationTests
 │  ├─ Persistence/                        UnitOfWorkTests, PaginationTests, CursorPaginationTests, SearchTests, SortIndexTests
 │  ├─ Hosting/                            HealthCheckTests, SpaHostingTests, SecurityHeadersTests
 │  ├─ Legal/                              LegalAcceptanceTests, AccountDeletionTests
@@ -849,6 +849,7 @@ Nadie formatea a mano. El catálogo visual completo (cómo se ve cada tipo) est�
 
 - El SPA vive en `../ArquitecturaBaseMutitenantFront`. El SPA y la Api se sirven desde el **mismo origen en cada host**, el dominio principal y cada `<slug>.plataforma.com`: en producción desde wwwroot, con DNS y certificado comodín; en desarrollo, con el proxy de Vite por host (`*.localtest.me`). **No hay CORS**, tampoco en los subdominios.
 - `BackendPrefixes` es una lista a mano, y se atiende igual en todos los hosts: `/api`, `/account`, `/connect`, `/signin-google`, `/.well-known`, `/webhooks`, `/health` y `/alive`. También reserva `/swagger` y `/openapi` para que fuera de Development devuelvan 404 en vez del SPA; sus endpoints y el proxy de Vite solo existen en Development. Un prefijo nuevo se suma ahí, al `SpaHostingTests` y al `server.proxy` de `vite.config.ts`.
+- En desarrollo, el issuer es `https://localtest.me:5174/`: AppHost pasa el mismo valor a Api, Vite y RealE2ESetup. Los callbacks fijos son del dominio principal; los dinámicos conservan origen y puerto del subdominio publicado. Google registra `https://localtest.me:5174/signin-google`. No se siembran sitios de ejemplo en Development.
 - La arquitectura del front está en `../ArquitecturaBaseMutitenantFront/docs/architecture/frontend.md`.
 
 ---

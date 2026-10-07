@@ -104,12 +104,17 @@ Cada fila es una carpeta que lleva `AGENTS.md` + `CLAUDE.md`. Los punteros se es
 | `Api/Idempotency/` | `[Idempotent]` y su filtro; nada más va acá | idempotencia | `IdempotencyFilter.cs` (E2) |
 | `Api/Json/` | conversores globales (UTC, `Money`, texto normalizado) | textos-libres, fechas-y-zonas, numeros-y-moneda | `NormalizedStringJsonConverter.cs` (E1) |
 | `Api/Features/` | puerta de los módulos opcionales: `FeatureGateMiddleware` oculta con 404 un módulo apagado; no reemplaza `[Access]` ni el permiso | modulos-habilitados, api-http, permisos | `FeatureGateMiddleware.cs` (E5) |
+| `Api/Tenancy/` | acceso firmado y contexto público por host, sin mezclar organizaciones | multitenancy, permisos, api-http | `PublicSiteResolutionMiddleware.cs` (E7) |
 | `Api/Legal/` | `LegalAcceptanceMiddleware`: 403 `Legal.AcceptanceRequired` hasta aceptar los documentos vigentes; no escribe ni accede a EF | datos-personales, api-http | `LegalAcceptanceMiddleware.cs` (E3) |
 | `Api/RateLimiting/` | políticas de ingreso por IP (`RateLimitPolicies`), con 429 ProblemDetails y `Retry-After` | api-http | `RateLimitPolicies.cs` (E3) |
 | `tests/*.Application.UnitTests/Services/` | tests del servicio con dobles a mano | tests | `Services/Roles/RoleServiceWriteTests.cs` (E4) |
 | `tests/*.Api.IntegrationTests/` | rutas + aislamiento entre tenants | tests, multitenancy | `Organization/RolesTests.cs` (E4) |
 | `tests/*.Api.IntegrationTests/TestFeatures/` | controllers y entidades solo para tests, expuestos por `TestControllerApplicationPart`; nunca en `src/` ni en una migración productiva | tests, multitenancy | `TestFeatures/Isolation/WidgetsController.cs` (E2) |
 | `tests/*.Application.UnitTests/Persistence/` | dobles de persistencia y sus pruebas, sin base real | tests, guardado | `FakeUnitOfWorkTests.cs` (E2) |
+| `tests/*.Application.UnitTests/Formatting/` | protocolo de versiones y formatos del backend bajo distintas culturas | numeros-y-moneda, tests | `VersionWireFormatterTests.cs` (E7) |
+| `tests/*.Domain.UnitTests/Tenancy/` | reglas puras de organizaciones y partes de datos compartidos | multitenancy, result-y-errores, tests | `PartyPolicyTests.cs` (E7) |
+
+`Application/Services/Personal/` y `Api/Controllers/Personal/` son carpetas reservadas del producto con sus punteros y la receta `docs/features/personal.md` (E7). Permanecen sin código de negocio en la plantilla. Sus cuatro punteros están declarados nominalmente en `scripts/arneses/realinear-docs/ignorados.json` para que el detector no los retire como carpetas abandonadas.
 
 **Ejemplo de puntero** (`Application/Services/AGENTS.md`):
 

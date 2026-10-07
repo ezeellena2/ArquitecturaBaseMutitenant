@@ -38,6 +38,8 @@ Tareas en orden, commits por rutas propias, sin push. Tests de negocio, permisos
 27. La programación de retención considera también las filas `Added` del contexto. Repetir el participante dos veces antes del primer commit conserva una sola fecha, además de los reintentos posteriores con ledger persistido. El test verifica la copia antes del vencimiento y su reemplazo en el instante exacto.
 28. El reloj de la fixture de retención parte del `TimeProvider` de la base compartida para conservar la vigencia de sus documentos legales. Su precisión se ajusta al microsegundo de PostgreSQL; los tests siguen avanzando hasta un tick antes del vencimiento y hasta el vencimiento exacto.
 
+29. Los cuatro punteros de las carpetas Personal reservadas por T08 se conservan mediante la lista nominal existente de `realinear-docs/ignorados.json`. Se documenta el motivo en el mapa del arnés: la plantilla trae la receta y no incorpora código de negocio para llenar esas carpetas. Los demás punteros siguen bajo el detector y `HarnessTests`; se agregan al mapa Tenancy HTTP y los tests de formato y partes que ya existen.
+
 ## Cierre
 
 Pendiente: resultado de comandos, commits, decisiones técnicas adicionales, galería y recorrido manual con sesiones anteriores.
