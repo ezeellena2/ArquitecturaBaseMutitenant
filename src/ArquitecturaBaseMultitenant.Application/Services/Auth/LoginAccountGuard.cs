@@ -9,7 +9,7 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
-/// <summary>Ordena cuenta antes de destino, igual que reauth/gestión, y revalida su dueño.</summary>
+/// <summary>Ordena cuenta antes de destino, igual que la gestión de Cuenta, y revalida su dueño.</summary>
 internal sealed class LoginAccountGuard(IUserLookup lookup, IUserRepository users, ILoginMethodRepository methods,
     TimeProvider clock)
 {

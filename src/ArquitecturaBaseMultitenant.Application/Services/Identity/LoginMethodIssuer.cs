@@ -17,15 +17,13 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 /// </summary>
 internal sealed class LoginMethodIssuer(LoginMethodGuard guard, ILoginMethodRepository methods,
     IUserLookup lookup, LoginCodeIssuer codes,
-    IEnumerable<ILoginCodeChannel> channels, UserCultureResolver cultures, ReauthTicketVerifier tickets,
+    IEnumerable<ILoginCodeChannel> channels, UserCultureResolver cultures,
     AccountNoticeIssuer notices, TimeProvider timeProvider)
 {
     public async Task<Result<LoginMethodCodeResponse>> AddAsync(Guid userId, AddLoginEmailRequest request, CancellationToken ct)
     {
         var account = await guard.LockAccountAsync(userId, ct);
         if (account.IsFailure) return account.Error;
-        var consumed = await tickets.ConsumeAsync(userId, ReauthAction.AddEmail, null, request.ReauthTicket ?? string.Empty, ct);
-        if (consumed.IsFailure) return consumed.Error;
         var email = request.Email!;
         var destination = LoginCodeDestination.ForEmail(email);
         await codes.LockDestinationAsync(destination, ct);

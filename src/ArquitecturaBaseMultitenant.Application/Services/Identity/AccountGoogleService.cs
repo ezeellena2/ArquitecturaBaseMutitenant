@@ -18,9 +18,9 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 /// </summary>
 internal sealed class AccountGoogleService(ISignInService signIn, GoogleMethodLinker linker,
     IUnitOfWork unitOfWork, TimeProvider timeProvider, ILogger<AccountGoogleService> logger,
-    ICurrentUser currentUser, LoginMethodGuard guard, ReauthTicketVerifier tickets) : IAccountGoogleService
+    ICurrentUser currentUser, LoginMethodGuard guard) : IAccountGoogleService
 {
-    public Task<Result<Guid>> GetLinkUserIdAsync(string? reauthTicket, CancellationToken cancellationToken) =>
+    public Task<Result<Guid>> GetLinkUserIdAsync(CancellationToken cancellationToken) =>
         OperationLog.RunAsync<Guid>(logger, timeProvider, "PrepareAccountGoogleLink", async () =>
         {
             if (currentUser.UserId is not { } userId) return UserErrors.NotFound;
@@ -28,9 +28,7 @@ internal sealed class AccountGoogleService(ISignInService signIn, GoogleMethodLi
             {
                 var account = await guard.LockAccountAsync(userId, ct);
                 if (account.IsFailure) return Result.Failure<Guid>(account.Error);
-                var consumed = await tickets.ConsumeAsync(userId, ReauthAction.LinkGoogle, null,
-                    reauthTicket ?? string.Empty, ct);
-                return consumed.IsSuccess ? Result.Success(userId) : Result.Failure<Guid>(consumed.Error);
+                return Result.Success(userId);
             }, CommitPolicy.OnSuccess, cancellationToken);
         });
 

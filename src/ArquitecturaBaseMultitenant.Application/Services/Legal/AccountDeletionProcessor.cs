@@ -16,7 +16,7 @@ internal sealed class AccountDeletionProcessor(IAccountDeletionRepository reposi
     internal async Task<Result> ProcessTenantAsync(AccountDeletionWork work, AccountDeletionTenant tenant, DateTime nowUtc, CancellationToken ct)
     {
         await methods.LockUserAsync(work.UserId, ct);
-        if (!await repository.HasValidLeaseAsync(work.UserId, work.LeaseId, nowUtc, ct)) return AccountDeletionErrors.ReauthRequired;
+        if (!await repository.HasValidLeaseAsync(work.UserId, work.LeaseId, nowUtc, ct)) return AccountDeletionErrors.LeaseInvalid;
         var context = new AccountDeletionContext(work.UserId, nowUtc, tenant.TenantId, tenant.Kind);
         foreach (var participant in participants) await participant.ExecuteAsync(context, ct);
         return Result.Success();
@@ -25,9 +25,9 @@ internal sealed class AccountDeletionProcessor(IAccountDeletionRepository reposi
     internal async Task<Result> CompleteAsync(AccountDeletionWork work, DateTime nowUtc, CancellationToken ct)
     {
         await methods.LockUserAsync(work.UserId, ct);
-        if (!await repository.HasValidLeaseAsync(work.UserId, work.LeaseId, nowUtc, ct)) return AccountDeletionErrors.ReauthRequired;
+        if (!await repository.HasValidLeaseAsync(work.UserId, work.LeaseId, nowUtc, ct)) return AccountDeletionErrors.LeaseInvalid;
         var account = await users.GetByIdAsync(work.UserId, ct);
-        if (account is null) return AccountDeletionErrors.ReauthRequired;
+        if (account is null) return AccountDeletionErrors.LeaseInvalid;
         var context = new AccountDeletionContext(work.UserId, nowUtc);
         foreach (var participant in participants) await participant.ExecuteAsync(context, ct);
         await notifier.DeletedAsync(account, await methods.ListByUserIdAsync(work.UserId, ct), nowUtc, ct);

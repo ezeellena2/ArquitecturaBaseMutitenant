@@ -46,7 +46,7 @@ internal sealed class AccountDeletionRepository(ApplicationDbContext context) : 
             && (row.Type == LoginMethodType.Email || row.Type == LoginMethodType.Phone))
             .Select(row => row.Value).ToArrayAsync(ct);
         context.LoginCodes.RemoveRange(await context.LoginCodes.Where(row => row.RequestedByUserId == userId || destinations.Contains(row.Destination)).ToArrayAsync(ct));
-        context.ReauthTickets.RemoveRange(await context.ReauthTickets.Where(row => row.UserId == userId).ToArrayAsync(ct));
+        context.AccountDeletionCancelTickets.RemoveRange(await context.AccountDeletionCancelTickets.Where(row => row.UserId == userId).ToArrayAsync(ct));
         context.LoginMethods.RemoveRange(await context.LoginMethods.Where(row => row.UserId == userId).ToArrayAsync(ct));
         context.UserClaims.RemoveRange(await context.UserClaims.Where(row => row.UserId == userId).ToArrayAsync(ct));
         context.UserLogins.RemoveRange(await context.UserLogins.Where(row => row.UserId == userId).ToArrayAsync(ct));

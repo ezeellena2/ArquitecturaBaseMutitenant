@@ -132,9 +132,6 @@
   <data name="Tenancy.Access.NotMember" xml:space="preserve"><value>You are not a member of this organization.</value></data>
   <data name="Tenancy.Access.ConsumerCannotCreateBusiness" xml:space="preserve"><value>Use Register your business to create an organization.</value></data>
   <data name="Tenancy.Access.PlatformOnly" xml:space="preserve"><value>This is a platform operator account: it can only enter the platform.</value></data>
-  <data name="Identity.Reauth.Invalid" xml:space="preserve"><value>The confirmation is invalid. Request a new code.</value></data>
-  <data name="Identity.Reauth.Expired" xml:space="preserve"><value>The confirmation has expired. Request a new code.</value></data>
-  <data name="Identity.Reauth.OtherMethodRequired" xml:space="preserve"><value>Confirm using another verified login method.</value></data>
   <data name="Identity.LoginMethod.NotFound" xml:space="preserve"><value>We could not find this sign-in method.</value></data>
   <data name="Identity.LoginMethod.AlreadyVerified" xml:space="preserve"><value>This sign-in method is already verified.</value></data>
   <data name="Identity.LoginMethod.LastMethod" xml:space="preserve"><value>You cannot remove your only sign-in method. Add and verify another one first.</value></data>
@@ -148,7 +145,7 @@
   <data name="Legal.AccountDeletion.InvalidReason" xml:space="preserve"><value>Enter a reason up to 500 characters.</value></data>
   <data name="Legal.AccountDeletion.LastAdmin" xml:space="preserve"><value>Before requesting deletion, each active organization must have another person with the Owner role.</value></data>
   <data name="Legal.AccountDeletion.PlatformOperator" xml:space="preserve"><value>Your operator account cannot be deleted from here.</value></data>
-  <data name="Legal.AccountDeletion.ReauthRequired" xml:space="preserve"><value>Confirm the code we sent to request account deletion.</value></data>
+  <data name="Legal.AccountDeletion.CancelProofInvalid" xml:space="preserve"><value>The cancellation proof is invalid or expired.</value></data>
   <data name="Tenancy.Member.IdentityRequired" xml:space="preserve"><value>The membership needs an account before activation.</value></data>
   <data name="Invitations.Invitation.Invalid" xml:space="preserve"><value>This invitation is no longer valid.</value></data>
   <data name="Invitations.Invitation.NotFound" xml:space="preserve"><value>We couldn't find this invitation.</value></data>
@@ -200,4 +197,5 @@
   <data name="Platform.AccountRecovery.MethodAlreadyOnAccount" xml:space="preserve"><value>That email address is already a sign-in method of that account.</value></data>
   <data name="Platform.AccountRecovery.OperatorAccount" xml:space="preserve"><value>This is a platform operator account: it cannot be recovered here.</value></data>
   <data name="Features.Module.InvalidExpiry" xml:space="preserve"><value>Choose a date whose full day can be represented.</value></data>
+  <data name="Legal.AccountDeletion.LeaseInvalid" xml:space="preserve"><value>The deletion processing lease is no longer valid.</value></data>
 </root>

@@ -10,6 +10,8 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
+using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Time.Testing;
@@ -34,6 +36,44 @@ public sealed class GoogleEndpointJourneyTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
     private const string Verifier = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~";
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Account_link_callback_needs_no_extra_proof_but_keeps_the_expected_public_session(bool samePublicSession)
+    {
+        var identity = new FakeGoogleIdentity(Guid.NewGuid().ToString("N"), $"google-linked-{Guid.NewGuid():N}@example.test");
+        using var host = HostWith(identity);
+        using var client = Client(host);
+        var account = await AccountJourney.RegisterAsync(host, client, Ct);
+        var bearer = client.DefaultRequestHeaders.Authorization;
+        Guid[] before;
+        await using (var scope = host.Services.CreateAsyncScope())
+            before = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().OutboxMessages.Select(row => row.Id).ToArrayAsync(Ct);
+        using var csrf = await client.GetAsync("/api/auth/external/google/antiforgery", Ct);
+        using var token = await csrf.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/me/external/google");
+        request.Headers.Add("RequestVerificationToken", token!.RootElement.GetProperty("requestToken").GetString());
+        using var challenged = await client.SendAsync(request, Ct);
+        Assert.Equal(HttpStatusCode.Redirect, challenged.StatusCode);
+        if (!samePublicSession)
+        {
+            await AccountJourney.RegisterAsync(host, client, Ct);
+            client.DefaultRequestHeaders.Authorization = bearer;
+        }
+        using var callback = await client.GetAsync("/api/auth/external/callback", Ct);
+        Assert.Equal(samePublicSession ? "/cuenta?google=linked" : "/cuenta?error=Auth.ExternalLogin.Failed", callback.Headers.Location?.ToString());
+        await using var checkedScope = host.Services.CreateAsyncScope();
+        var services = checkedScope.ServiceProvider;
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        Assert.Equal(samePublicSession, await db.LoginMethods.AnyAsync(row => row.UserId == account.UserId && row.Value == identity.Subject, Ct));
+        var protector = services.GetRequiredService<IPayloadProtector>();
+        var payloads = await db.OutboxMessages.Where(row => row.Channel == "email" && !before.Contains(row.Id)).Select(row => row.EncryptedPayload).ToArrayAsync(Ct);
+        var notices = payloads.Select(payload => JsonSerializer.Deserialize<EmailMessage>(protector.Unprotect(payload))!)
+            .Where(message => message.To == account.Email.Value).ToArray();
+        if (samePublicSession) Assert.Contains("Google", Assert.Single(notices).TextBody, StringComparison.Ordinal);
+        else Assert.Empty(notices);
+    }
 
     [Fact]
     public async Task Invitation_Google_login_returns_without_provisioning_personal_space()

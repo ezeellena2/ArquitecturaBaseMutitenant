@@ -78,17 +78,17 @@ public sealed class LoginCodeTests
     }
 
     [Fact]
-    public void Reauthentication_code_needs_its_account_and_exact_purpose()
+    public void Destination_code_needs_its_account_and_exact_purpose()
     {
         var userId = Guid.CreateVersion7();
         var code = LoginCode.Issue(LoginCodeDestination.ForEmail(Email.Create("ana@example.com").Value),
-            LoginCodePurpose.Reauthenticate, userId, "hash", IssuedAtUtc, TimeSpan.FromMinutes(5), 3);
+            LoginCodePurpose.VerifyDestination, userId, "hash", IssuedAtUtc, TimeSpan.FromMinutes(5), 3);
         code.MarkSent(IssuedAtUtc);
 
         Assert.Equal(LoginCodeErrors.InvalidCode,
-            code.VerifyFor(userId, LoginCodePurpose.VerifyDestination, "hash", IssuedAtUtc).Error.Code);
+            code.VerifyFor(userId, LoginCodePurpose.Login, "hash", IssuedAtUtc).Error.Code);
         Assert.Equal(3, code.AttemptsLeft);
-        Assert.True(code.VerifyFor(userId, LoginCodePurpose.Reauthenticate, "hash", IssuedAtUtc).IsSuccess);
+        Assert.True(code.VerifyFor(userId, LoginCodePurpose.VerifyDestination, "hash", IssuedAtUtc).IsSuccess);
     }
 
     // D4b (ADR 0041): agregar en Mi cuenta un correo de otra cuenta deja un código sin mandar, que nunca sirve.

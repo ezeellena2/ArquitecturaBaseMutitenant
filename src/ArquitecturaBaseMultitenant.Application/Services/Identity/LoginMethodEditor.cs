@@ -6,9 +6,9 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
-/// <summary>Dentro de la transacción del servicio, consume la reautenticación y cambia o quita un método sin dejar la cuenta sin alternativa válida.</summary>
+/// <summary>Dentro de la transacción del servicio, cambia o quita un método sin dejar la cuenta sin alternativa válida.</summary>
 internal sealed class LoginMethodEditor(LoginMethodGuard guard, ILoginMethodRepository methods,
-    LoginMethodAvailabilityPolicy availability, ReauthTicketVerifier tickets, IUserRepository users, LoginMethodNotifier notifier)
+    LoginMethodAvailabilityPolicy availability, IUserRepository users, LoginMethodNotifier notifier)
 {
     public async Task<Result> ChangeAsync(Guid userId, ChangeLoginMethodRequest request, bool remove, CancellationToken ct)
     {
@@ -20,9 +20,6 @@ internal sealed class LoginMethodEditor(LoginMethodGuard guard, ILoginMethodRepo
         var available = await availability.AvailableAsync(all, ct);
         if (remove && LoginMethodAvailabilityPolicy.CheckRemoval(target, available) is { } blocked) return blocked;
         if (!remove && !available.Any(method => method.Id == target.Id)) return LoginMethodErrors.NotVerified;
-        var consumed = await tickets.ConsumeAsync(userId, remove ? ReauthAction.RemoveMethod : ReauthAction.MakePrimary,
-            target.Id, request.ReauthTicket!, ct);
-        if (consumed.IsFailure) return consumed.Error;
         var nextPrimary = !remove ? target : target.IsPrimary
             ? available.Where(method => method.Id != target.Id).OrderBy(method => method.ManagedByTenantId is not null)
                 .ThenBy(method => method.Id).First() : null;

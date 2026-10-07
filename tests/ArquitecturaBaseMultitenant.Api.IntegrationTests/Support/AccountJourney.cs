@@ -6,9 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Runtime.CompilerServices;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
-using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -107,23 +105,6 @@ internal sealed record AccountJourney(Guid UserId, Email Email)
         var request = new HttpRequestMessage(HttpMethod.Post, path) { Content = JsonContent.Create(body) };
         request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("D"));
         return SendAsync(client, request, ct);
-    }
-
-    internal static async Task<string> IssueReauthTicketAsync(IServiceProvider services, Guid userId,
-        ReauthAction action, CancellationToken ct, Guid? targetMethodId = null)
-    {
-        var context = services.GetRequiredService<ApplicationDbContext>();
-        var source = await context.LoginMethods.AsNoTracking().FirstAsync(method =>
-            method.UserId == userId && method.VerifiedAtUtc != null, ct);
-        var secrets = services.GetRequiredService<ISecureTokenGenerator>();
-        var secret = secrets.Generate();
-        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(token =>
-        {
-            context.ReauthTickets.Add(ReauthTicket.Issue(userId, action, source.Id, targetMethodId, secrets.Hash(secret),
-                services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime).Value);
-            return Task.FromResult(Result.Success());
-        }, CommitPolicy.OnSuccess, ct);
-        return secret;
     }
 
     private static async Task<HttpResponseMessage> SendAsync(HttpClient client, HttpRequestMessage request, CancellationToken ct)

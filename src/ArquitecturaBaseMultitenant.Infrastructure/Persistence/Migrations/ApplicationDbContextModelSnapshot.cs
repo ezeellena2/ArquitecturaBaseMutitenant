@@ -202,21 +202,11 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
 
-                    b.Property<string>("ReauthAction")
-                        .HasMaxLength(60)
-                        .HasColumnType("character varying(60)");
-
                     b.Property<Guid?>("RequestedByUserId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime?>("SentAtUtc")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("SourceMethodId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("TargetMethodId")
-                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -278,54 +268,6 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .HasFilter("\"IsPrimary\" = TRUE");
 
                     b.ToTable("LoginMethods", "identity");
-                });
-
-            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Authentication.ReauthTicket", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Action")
-                        .IsRequired()
-                        .HasMaxLength(60)
-                        .HasColumnType("character varying(60)");
-
-                    b.Property<DateTime?>("ConsumedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("ExpiresAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("IssuedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ReturnUrl")
-                        .HasMaxLength(4000)
-                        .HasColumnType("character varying(4000)");
-
-                    b.Property<Guid?>("SourceMethodId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("TargetMethodId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("TokenHash")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TokenHash")
-                        .IsUnique();
-
-                    b.HasIndex("UserId", "ExpiresAtUtc");
-
-                    b.ToTable("ReauthTickets", "identity");
                 });
 
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Authorization.Role", b =>
@@ -583,6 +525,44 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Invitations", "tenant");
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Legal.AccountDeletionCancelTicket", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ConsumedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("IssuedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReturnUrl")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "ExpiresAtUtc");
+
+                    b.ToTable("AccountDeletionCancelTickets", "identity");
                 });
 
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Legal.LegalAcceptance", b =>
@@ -2179,15 +2159,6 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Authentication.ReauthTicket", b =>
-                {
-                    b.HasOne("ArquitecturaBaseMultitenant.Infrastructure.Identity.ApplicationUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Authorization.Role", b =>
                 {
                     b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant", null)
@@ -2254,6 +2225,15 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Member", null)
                         .WithMany()
                         .HasForeignKey("TenantId", "MemberId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Legal.AccountDeletionCancelTicket", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

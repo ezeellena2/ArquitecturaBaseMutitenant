@@ -190,10 +190,8 @@ public sealed class PlatformDomainAdministrationTests(ApiFactory factory)
     private async Task AddAndVerifyEmailAsync(HttpClient client, AccountJourney account, Email email)
     {
         await using var scope = factory.Services.CreateAsyncScope();
-        var reauthTicket = await AccountJourney.IssueReauthTicketAsync(scope.ServiceProvider, account.UserId,
-            Domain.Authentication.ReauthAction.AddEmail, Ct);
         using var addedMethod = await AccountJourney.PostAsync(client, "/api/me/login-methods",
-            new { email = email.Value, reauthTicket }, Ct);
+            new { email = email.Value }, Ct);
         Assert.Equal(HttpStatusCode.Accepted, addedMethod.StatusCode);
         using var addedMethodJson = JsonDocument.Parse(await addedMethod.Content.ReadAsStringAsync(Ct));
         var methodId = addedMethodJson.RootElement.GetProperty("methodId").GetGuid();

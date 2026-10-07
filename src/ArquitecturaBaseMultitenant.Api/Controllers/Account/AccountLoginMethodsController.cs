@@ -33,7 +33,7 @@ public sealed class AccountLoginMethodsController(ILoginMethodManagementService 
     {
         var email = AuthEmailMapping.Parse(request.Email);
         if (email.IsFailure) return Result.Failure(email.Error).ToActionResult(this);
-        return (await service.AddEmailAsync(new AddLoginEmailRequest(email.Value, request.ReauthTicket), ct)).ToAcceptedResult(this);
+        return (await service.AddEmailAsync(new AddLoginEmailRequest(email.Value), ct)).ToAcceptedResult(this);
     }
 
     [HttpPost("{methodId:guid}/code")]
@@ -56,14 +56,14 @@ public sealed class AccountLoginMethodsController(ILoginMethodManagementService 
     [ProducesProblem(StatusCodes.Status403Forbidden)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     [ProducesProblem(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Primary(Guid methodId, [FromBody] ChangeLoginMethodHttpRequest request, CancellationToken ct) =>
-        (await service.MakePrimaryAsync(new ChangeLoginMethodRequest(methodId, request.ReauthTicket), ct)).ToActionResult(this);
+    public async Task<IActionResult> Primary(Guid methodId, CancellationToken ct) =>
+        (await service.MakePrimaryAsync(new ChangeLoginMethodRequest(methodId), ct)).ToActionResult(this);
 
     [HttpDelete("{methodId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     [ProducesProblem(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Remove(Guid methodId, [FromBody] ChangeLoginMethodHttpRequest request, CancellationToken ct) =>
-        (await service.RemoveAsync(new ChangeLoginMethodRequest(methodId, request.ReauthTicket), ct)).ToActionResult(this);
+    public async Task<IActionResult> Remove(Guid methodId, CancellationToken ct) =>
+        (await service.RemoveAsync(new ChangeLoginMethodRequest(methodId), ct)).ToActionResult(this);
 }

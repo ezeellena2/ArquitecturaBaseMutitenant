@@ -166,7 +166,7 @@ public sealed class AccountDeletionProcessingTests
         Assert.Null(deleted.DeletionLeaseId);
         Assert.Null(deleted.DeletionLeaseExpiresAtUtc);
         Assert.False(await checkedDb.LoginMethods.AnyAsync(row => row.UserId == account.UserId, Ct));
-        Assert.False(await checkedDb.ReauthTickets.AnyAsync(row => row.UserId == account.UserId, Ct));
+        Assert.False(await checkedDb.AccountDeletionCancelTickets.AnyAsync(row => row.UserId == account.UserId, Ct));
         Assert.False(await checkedDb.LoginCodes.AnyAsync(row => row.Destination == account.Email.Value, Ct));
         Assert.False(await checkedDb.Set<OpenIddictEntityFrameworkCoreToken<Guid>>().AnyAsync(row => row.Subject == account.UserId.ToString("D"), Ct));
         Assert.False(await checkedDb.UserClaims.AnyAsync(row => row.UserId == account.UserId, Ct));

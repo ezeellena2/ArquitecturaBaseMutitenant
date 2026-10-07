@@ -1,5 +1,4 @@
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
-using ArquitecturaBaseMultitenant.Api.Contracts.Account;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Api.Tenancy;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
@@ -29,12 +28,12 @@ public sealed class AccountGoogleController(IAccountGoogleService service, IAuth
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> LinkGoogle([FromBody] ChangeLoginMethodHttpRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> LinkGoogle(CancellationToken cancellationToken)
     {
         if (!await antiforgery.IsRequestValidAsync(HttpContext))
             return Result.Failure(new ValidationError(new Dictionary<string, string[]>
                 { ["requestVerificationToken"] = [ValidationTexts.Required] })).ToActionResult(this);
-        var identity = await service.GetLinkUserIdAsync(request.ReauthTicket, cancellationToken);
+        var identity = await service.GetLinkUserIdAsync(cancellationToken);
         if (identity.IsFailure) return Result.Failure(identity.Error).ToActionResult(this);
         if (await schemes.GetSchemeAsync(GoogleDefaults.AuthenticationScheme) is null) return NotFound();
         var properties = new AuthenticationProperties { RedirectUri = GoogleAccountLinkState.CallbackPath };

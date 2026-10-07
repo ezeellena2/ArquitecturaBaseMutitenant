@@ -29,7 +29,7 @@
 | `Remover` | Quita un agregado o los accesos que dependen de él. |
 | `Registrar` | Da de alta una cuenta o un dominio. |
 | `Provisioner` | Prepara un espacio completo con sus valores iniciales: una organización, un espacio personal o un operador. |
-| `Requester` | Controla un pedido (estado, límites o reautenticación) y dispara lo que pide. |
+| `Requester` | Controla un pedido (estado o límites) y dispara lo que pide. |
 | `Restorer` | Vuelve a armar la sesión después de un cambio de la cuenta. |
 | `Finalizer` | Termina el vínculo con Google cuando vuelve el desafío. |
 | `Scheduler` | Programa la baja de una cuenta ya autorizada. |

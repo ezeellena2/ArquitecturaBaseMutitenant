@@ -53,7 +53,7 @@ internal sealed class LoginVerifier(
             || requested.Access != Access.Platform))
             return Fail(userId, AccessErrors.PlatformOnly);
         if (account.Status == UserStatus.PendingDeletion)
-            return Fail(userId, cancellation.Issue(account, null, request.ReturnUrl!));
+            return Fail(userId, cancellation.Issue(account, request.ReturnUrl!));
 
         var emailMethod = (await loginMethods.ListByUserIdAsync(userId.Value, cancellationToken))
             .SingleOrDefault(method => method.Type == LoginMethodType.Email && method.Value == destination.Value);

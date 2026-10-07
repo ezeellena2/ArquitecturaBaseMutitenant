@@ -8,10 +8,8 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Legal;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Models.Legal;
 using ArquitecturaBaseMultitenant.Application.Services.Legal;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
-using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -27,8 +25,7 @@ using OpenIddict.EntityFrameworkCore.Models;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Legal;
 
 /// <summary>
-/// Comprueba permisos, prueba de titularidad e impedimentos al solicitar una baja. Un bloqueo debe
-/// preservar la cuenta y el ticket sin consumirlo.
+/// Comprueba permisos e impedimentos al solicitar una baja con sesión iniciada. Un bloqueo preserva la cuenta.
 /// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class AccountDeletionTests(ApiFactory factory)
@@ -36,36 +33,25 @@ public sealed class AccountDeletionTests(ApiFactory factory)
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
-    public async Task Module_block_preserves_the_account_and_does_not_consume_ownership_ticket()
+    public async Task Module_block_preserves_the_account_without_a_confirmation_code()
     {
         using var client = CreateClient();
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
         await using var scope = factory.Services.CreateAsyncScope();
         var services = scope.ServiceProvider;
         var context = services.GetRequiredService<ApplicationDbContext>();
-        var secrets = services.GetRequiredService<ISecureTokenGenerator>();
-        var secret = secrets.Generate();
-        var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
-        var source = await context.LoginMethods.SingleAsync(row => row.UserId == account.UserId && row.IsPrimary, Ct);
-        var ticket = ReauthTicket.Issue(account.UserId, ReauthAction.DeleteAccount, source.Id, null, secrets.Hash(secret), nowUtc).Value;
-        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
-        {
-            context.ReauthTickets.Add(ticket);
-            return Task.FromResult(Result.Success());
-        }, CommitPolicy.OnSuccess, Ct);
         var participants = services.GetServices<IAccountDeletionParticipant>().Append(new BlockingModule());
         var scheduler = ActivatorUtilities.CreateInstance<AccountDeletionScheduler>(services, participants);
         var requester = ActivatorUtilities.CreateInstance<AccountDeletionRequester>(services, scheduler);
         var service = ActivatorUtilities.CreateInstance<AccountDeletionService>(services, new TestUser(account.UserId), requester);
-        var result = await service.RequestAsync(new RequestAccountDeletionRequest("Ya no la uso", secret), Ct);
+        var result = await service.RequestAsync(new RequestAccountDeletionRequest("Ya no la uso"), Ct);
 
         Assert.Equal("Legal.AccountDeletion.Blocked", result.Error.Code);
         Assert.Equal(UserStatus.Active, (await services.GetRequiredService<IUserRepository>().GetByIdAsync(account.UserId, Ct))!.Status);
-        Assert.Null((await context.ReauthTickets.AsNoTracking().SingleAsync(row => row.Id == ticket.Id, Ct)).ConsumedAtUtc);
     }
 
     [Fact]
-    public async Task Sole_business_owner_cannot_request_deletion_or_consume_ownership_ticket()
+    public async Task Sole_business_owner_cannot_request_deletion()
     {
         using var client = CreateClient();
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
@@ -84,18 +70,15 @@ public sealed class AccountDeletionTests(ApiFactory factory)
             }, CommitPolicy.OnSuccess, Ct);
         // Tablero Cuenta, «Es la única Dueña»: Mi cuenta sabe de antemano por qué no puede darse de baja.
         Assert.Equal(["Organización con única Dueña"], await SoleOwnerOrganizationsAsync(client));
-        var secret = await IssueDeletionTicketAsync(services, context, work, account.UserId);
 
         using var response = await AccountJourney.PostAsync(client, "/api/me/deletion",
-            new { reason = "Ya no la uso", reauthTicket = secret }, Ct);
+            new { reason = "Ya no la uso" }, Ct);
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
         using var problem = await response.Content.ReadFromJsonAsync<JsonDocument>(Ct);
         Assert.Equal("Legal.AccountDeletion.LastAdmin", problem!.RootElement.GetProperty("code").GetString());
         Assert.Equal(UserStatus.Active, (await services.GetRequiredService<IUserRepository>()
             .GetByIdAsync(account.UserId, Ct))!.Status);
-        Assert.Null(await context.ReauthTickets.AsNoTracking().Where(row => row.UserId == account.UserId)
-            .Select(row => row.ConsumedAtUtc).SingleAsync(Ct));
     }
 
     [Fact]
@@ -121,9 +104,8 @@ public sealed class AccountDeletionTests(ApiFactory factory)
         // ADR 0035 (D5): bloquean todas las organizaciones no cerradas, como en la baja que inicia Plataforma. Al
         // reactivarla, nadie podría administrarla.
         Assert.Equal(["Organización suspendida con única Dueña"], await SoleOwnerOrganizationsAsync(client));
-        var secret = await IssueDeletionTicketAsync(services, context, work, account.UserId);
         using var response = await AccountJourney.PostAsync(client, "/api/me/deletion",
-            new { reason = "Ya no la uso", reauthTicket = secret }, Ct);
+            new { reason = "Ya no la uso" }, Ct);
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
         using var problem = await response.Content.ReadFromJsonAsync<JsonDocument>(Ct);
@@ -165,10 +147,9 @@ public sealed class AccountDeletionTests(ApiFactory factory)
             }, CommitPolicy.OnSuccess, Ct);
         }
         Assert.Empty(await SoleOwnerOrganizationsAsync(client));
-        var secret = await IssueDeletionTicketAsync(services, context, work, account.UserId);
 
         using var response = await AccountJourney.PostAsync(client, "/api/me/deletion",
-            new { reason = "Ya no la uso", reauthTicket = secret }, Ct);
+            new { reason = "Ya no la uso" }, Ct);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(UserStatus.PendingDeletion, (await services.GetRequiredService<IUserRepository>()
@@ -178,7 +159,7 @@ public sealed class AccountDeletionTests(ApiFactory factory)
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task Deletion_requires_recent_ownership_and_operators_cannot_request_it(bool platformOperator)
+    public async Task Deletion_needs_only_the_session_but_operators_cannot_request_it(bool platformOperator)
     {
         using var client = CreateClient();
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
@@ -195,12 +176,14 @@ public sealed class AccountDeletionTests(ApiFactory factory)
             }, CommitPolicy.OnSuccess, Ct);
         }
         using var rejected = await AccountJourney.PostAsync(client, "/api/me/deletion", new { reason = "Ya no la uso" }, Ct);
-        Assert.Equal(HttpStatusCode.Forbidden, rejected.StatusCode);
-        using var problem = await rejected.Content.ReadFromJsonAsync<JsonDocument>(Ct);
-        Assert.Equal(platformOperator ? "Legal.AccountDeletion.PlatformOperator" : "Legal.AccountDeletion.ReauthRequired",
-            problem!.RootElement.GetProperty("code").GetString());
+        Assert.Equal(platformOperator ? HttpStatusCode.Forbidden : HttpStatusCode.OK, rejected.StatusCode);
+        if (platformOperator)
+        {
+            using var problem = await rejected.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+            Assert.Equal("Legal.AccountDeletion.PlatformOperator", problem!.RootElement.GetProperty("code").GetString());
+        }
         await using var checkedScope = factory.Services.CreateAsyncScope();
-        Assert.Equal(UserStatus.Active, (await checkedScope.ServiceProvider.GetRequiredService<IUserRepository>()
+        Assert.Equal(platformOperator ? UserStatus.Active : UserStatus.PendingDeletion, (await checkedScope.ServiceProvider.GetRequiredService<IUserRepository>()
             .GetByIdAsync(account.UserId, Ct))!.Status);
     }
 
@@ -238,18 +221,9 @@ public sealed class AccountDeletionTests(ApiFactory factory)
         }
         await AccountJourney.AuthorizeAsync(client, "business", Ct);
         var businessToken = client.DefaultRequestHeaders.Authorization!.Parameter;
-        var secrets = services.GetRequiredService<ISecureTokenGenerator>();
-        var secret = secrets.Generate();
         var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
-        var primary = await context.LoginMethods.AsNoTracking().SingleAsync(row => row.UserId == account.UserId && row.IsPrimary, Ct);
-        await work.ExecuteInTransactionAsync(ct =>
-        {
-            context.ReauthTickets.Add(ReauthTicket.Issue(account.UserId, ReauthAction.DeleteAccount,
-                primary.Id, null, secrets.Hash(secret), nowUtc).Value);
-            return Task.FromResult(Result.Success());
-        }, CommitPolicy.OnSuccess, Ct);
         using var requested = await AccountJourney.PostAsync(client, "/api/me/deletion",
-            new { reason = "Ya no la uso", reauthTicket = secret }, Ct);
+            new { reason = "Ya no la uso" }, Ct);
         Assert.Equal(HttpStatusCode.OK, requested.StatusCode);
         using var result = await requested.Content.ReadFromJsonAsync<JsonDocument>(Ct);
         Assert.True(result!.RootElement.GetProperty("scheduledForUtc").GetDateTime() >= nowUtc.AddDays(30));
@@ -279,22 +253,6 @@ public sealed class AccountDeletionTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
         return [.. json.RootElement.GetProperty("soleOwnerOrganizations").EnumerateArray().Select(name => name.GetString()!)];
-    }
-
-    private static async Task<string> IssueDeletionTicketAsync(IServiceProvider services, ApplicationDbContext context,
-        IUnitOfWork work, Guid userId)
-    {
-        var secrets = services.GetRequiredService<ISecureTokenGenerator>();
-        var secret = secrets.Generate();
-        var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
-        var primary = await context.LoginMethods.AsNoTracking().SingleAsync(row => row.UserId == userId && row.IsPrimary, Ct);
-        await work.ExecuteInTransactionAsync(ct =>
-        {
-            context.ReauthTickets.Add(ReauthTicket.Issue(userId, ReauthAction.DeleteAccount, primary.Id,
-                null, secrets.Hash(secret), nowUtc).Value);
-            return Task.FromResult(Result.Success());
-        }, CommitPolicy.OnSuccess, Ct);
-        return secret;
     }
 
     private sealed class TestUser(Guid id) : ICurrentUser

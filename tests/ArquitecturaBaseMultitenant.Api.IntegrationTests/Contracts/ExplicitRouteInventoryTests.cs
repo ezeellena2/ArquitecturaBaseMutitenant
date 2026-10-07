@@ -138,8 +138,6 @@ public sealed class ExplicitRouteInventoryTests(ApiFactory factory)
         "POST /api/me/login-methods/{methodid:guid}/verify",
         "PUT /api/me/login-methods/{methodid:guid}/primary",
         "DELETE /api/me/login-methods/{methodid:guid}",
-        "POST /api/me/reauth",
-        "POST /api/me/reauth/verify",
         "POST /api/me/deletion",
         "GET /connect/authorize",
         "POST /connect/authorize",

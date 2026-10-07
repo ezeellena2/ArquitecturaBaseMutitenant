@@ -10964,21 +10964,6 @@
         "tags": [
           "Account"
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ChangeLoginMethodHttpRequest"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/ChangeLoginMethodHttpRequest"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "description": "OK",
@@ -11298,26 +11283,6 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ChangeLoginMethodHttpRequest"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ChangeLoginMethodHttpRequest"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/ChangeLoginMethodHttpRequest"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "204": {
             "description": "No Content"
@@ -11344,16 +11309,6 @@
           },
           "409": {
             "description": "Conflict",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -11391,26 +11346,6 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ChangeLoginMethodHttpRequest"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ChangeLoginMethodHttpRequest"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/ChangeLoginMethodHttpRequest"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "204": {
             "description": "No Content"
@@ -11437,16 +11372,6 @@
           },
           "409": {
             "description": "Conflict",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -11783,174 +11708,6 @@
           }
         }
       }
-    },
-    "/api/me/reauth": {
-      "post": {
-        "tags": [
-          "Account"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestReauthHttpRequest"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestReauthHttpRequest"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestReauthHttpRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "202": {
-            "description": "Accepted",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ReauthCodeResponse"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ReauthCodeResponse"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ReauthCodeResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/me/reauth/verify": {
-      "post": {
-        "tags": [
-          "Account"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VerifyReauthHttpRequest"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VerifyReauthHttpRequest"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/VerifyReauthHttpRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ReauthResponse"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ReauthResponse"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ReauthResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
@@ -12161,12 +11918,6 @@
               "null",
               "string"
             ]
-          },
-          "reauthTicket": {
-            "type": [
-              "null",
-              "string"
-            ]
           }
         },
         "description": "Recibe el correo que se quiere agregar a la cuenta y lo entrega al flujo de validación. ToString oculta\r\nlos datos sensibles para que no se impriman al registrar la solicitud."
@@ -12348,18 +12099,6 @@
             "format": "uint32"
           }
         }
-      },
-      "ChangeLoginMethodHttpRequest": {
-        "type": "object",
-        "properties": {
-          "reauthTicket": {
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        },
-        "description": "Recibe la prueba de titularidad para quitar o elegir como principal un método de ingreso. El método\r\nobjetivo llega en la ruta; el ticket se conserva sin normalizar y se oculta en ToString."
       },
       "ChangeOrganizationUserStatusHttpRequest": {
         "type": "object",
@@ -16245,55 +15984,6 @@
         },
         "description": "Una versión nueva: tipo, fecha civil de vigencia (aaaa-mm-dd) y el texto en cada cultura habilitada."
       },
-      "ReauthAction": {
-        "enum": [
-          "RemoveMethod",
-          "MakePrimary",
-          "DeleteAccount",
-          "CancelDeletion",
-          "AddEmail",
-          "LinkGoogle",
-          null
-        ],
-        "type": [
-          "null",
-          "string"
-        ]
-      },
-      "ReauthCodeResponse": {
-        "required": [
-          "sourceMethodId",
-          "destination",
-          "resendAfterSeconds"
-        ],
-        "type": "object",
-        "properties": {
-          "sourceMethodId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "destination": {
-            "type": "string"
-          },
-          "resendAfterSeconds": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "description": "Informa a qué método de respaldo se envió el código, con el destino enmascarado y el tiempo hasta un nuevo pedido."
-      },
-      "ReauthResponse": {
-        "required": [
-          "reauthTicket"
-        ],
-        "type": "object",
-        "properties": {
-          "reauthTicket": {
-            "type": "string"
-          }
-        },
-        "description": "Devuelve el ticket temporal para completar una acción sensible sin mostrarlo en diagnósticos del objeto."
-      },
       "ReferenceDataHttpResponse": {
         "required": [
           "culture",
@@ -16360,15 +16050,9 @@
               "null",
               "string"
             ]
-          },
-          "reauthTicket": {
-            "type": [
-              "null",
-              "string"
-            ]
           }
         },
-        "description": "Recibe el motivo de baja y la prueba de titularidad necesaria para solicitarla. ToString oculta ambos\r\nvalores para evitar que se registren en logs."
+        "description": "Recibe el motivo de baja desde una sesión iniciada. ToString oculta el texto para evitar que se registre en logs."
       },
       "RequestLoginCodeHttpRequest": {
         "type": "object",
@@ -16394,29 +16078,6 @@
           }
         },
         "description": "La misma forma exista o no la cuenta: no revela si el correo está registrado."
-      },
-      "RequestReauthHttpRequest": {
-        "type": "object",
-        "properties": {
-          "action": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/ReauthAction"
-              }
-            ]
-          },
-          "targetMethodId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          }
-        },
-        "description": "Recibe la acción sensible y el método objetivo de una prueba de titularidad. Los campos nullable\r\npermiten que la validación informe entradas faltantes o inválidas."
       },
       "RequestRecoveryCodeHttpRequest": {
         "type": "object",
@@ -17170,42 +16831,6 @@
           }
         },
         "description": "Recibe el código usado para verificar un método de ingreso pendiente. Conserva el texto original para\r\nvalidarlo y oculta su valor en ToString."
-      },
-      "VerifyReauthHttpRequest": {
-        "type": "object",
-        "properties": {
-          "action": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/ReauthAction"
-              }
-            ]
-          },
-          "targetMethodId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          },
-          "sourceMethodId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          },
-          "code": {
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        },
-        "description": "Recibe la acción, los métodos involucrados y el código que demuestra titularidad. RawText conserva el\r\ncódigo recibido y ToString evita exponerlo en logs."
       },
       "VerifyRecoveryCodeHttpRequest": {
         "type": "object",

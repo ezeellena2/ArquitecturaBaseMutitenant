@@ -147,7 +147,7 @@ Domain/
 │                                PublishBlockedAtUtc, PublishBlockedReason, PublishBlockedByUserId), PublicPageErrors
 ├─ Users/                        Access (Consumer|Business|Platform), UserStatus (Active|Suspended|PendingDeletion|Deleted),
 │                                UserErrors, EmailErrors, PhoneErrors
-├─ Authentication/               LoginCode, LoginAudit, LoginMethod, LoginCodeChannel, ReauthTicket, *Errors (LoginLink, en la E8)
+├─ Authentication/               LoginCode, LoginAudit, LoginMethod, LoginCodeChannel, *Errors (LoginLink, en la E8)
 ├─ Authorization/
 │  ├─ Permissions.cs             catálogo de la organización (tenant) y de empresa, con All / OrganizationScoped / CompanyScoped
 │  ├─ PersonalPermissions.cs     catálogo personal (personal.*), implícitos de la persona en su espacio personal
@@ -161,7 +161,7 @@ Domain/
 │                                («Recuperar mi cuenta»), AccountRecoveryStatus y sus *Errors
 ├─ Settings/                     TenantSettings (cultura, zona y moneda por defecto), PlatformSettings, SettingsErrors
 ├─ Legal/                        LegalDocument, LegalDocumentContent (una fila por cultura), LegalDocumentKind, LegalAcceptance,
-│                                LegalErrors, LegalPublicationErrors, AccountDeletionErrors (ReauthRequired, LastAdmin,
+│                                LegalErrors, LegalPublicationErrors, AccountDeletionCancelTicket, AccountDeletionErrors (CancelProofInvalid, LeaseInvalid, LastAdmin,
 │                                PlatformOperator, AlreadyPending, Blocked, NotPending); DataExport y DataExportStatus llegan en E10
 ├─ Features/                     Features.cs (catálogo de módulos: clave, lado y si viene prendido), TenantFeature (habilitación
 │                                por espacio, con origen y vencimiento) (P8)
@@ -222,8 +222,8 @@ Application/
 │  │                                   empresa», alta B2B), TenantProvisioner (idempotente; lo comparte Plataforma),
 │  │                                   AccountRecoveryService («Recuperar mi cuenta»), SignupPolicy, AccessSwitchPolicy,
 │  │                                   UserCultureResolver
-│  ├─ Identity/                        métodos de ingreso de la cuenta y reautenticación: LoginMethodManagementService,
-│  │                                   AccountGoogleService, ReauthService; el ReauthTicket de 5 minutos lo verifica ReauthVerifier
+│  ├─ Identity/                        métodos de ingreso de la cuenta: LoginMethodManagementService,
+│  │                                   AccountGoogleService; sesión iniciada y posesión del método nuevo (ADR 0045)
 │  ├─ Invitations/                     InvitationService, InvitationIssuer (lo usan OrganizationUserInvitationWriter y
 │  │                                   PlatformTenantCreator), InvitationExpiryService
 │  ├─ Profile/                         ProfileService (cuenta, idioma, zona), ProfileSnapshotBuilder
@@ -362,7 +362,7 @@ Api/
 │  │                                   AccountRecoveryController («Recuperar mi cuenta»), AccountDeletionCancelController
 │  │                                   (POST /api/auth/deletion/cancel); LoginLinkController, en la E8
 │  ├─ Account/                         MeController (cuenta y accesos), AccountLoginMethodsController, AccountGoogleController,
-│  │                                   ReauthController, LegalController (GET /api/legal/terms y /privacy, anónimos),
+│  │                                   LegalController (GET /api/legal/terms y /privacy, anónimos),
 │  │                                   LegalAcceptanceController (GET /api/legal/current y POST /api/legal/accept),
 │  │                                   AccountDeletionController (POST /api/me/deletion)
 │  ├─ ReferenceData/                   ReferenceDataController ([AllowAnonymous]; GET /api/reference-data y por catálogo)
@@ -594,7 +594,7 @@ El cuerpo es `application/problem+json` con `title` y `detail` traducidos, `code
 
 - **Un solo `ApplicationDbContext`**, con cinco esquemas:
   - **`platform`**: Tenants, TenantFeatures, TenantDomains (dominios de correo verificados), PlatformSettings, PlatformPermissionAssignments, SecurityEvents, LegalDocuments y LegalDocumentContents (un texto por documento y por idioma), AccountRecoveryRequests ("Recuperar mi cuenta"), ReservedTenantSlugs, TenantCounters, PendingTenantOwners, los cinco catálogos de referencia, IdempotencyKeys, OutboxMessages, OpenIddict y DataProtection; DataExports ("Exportar mis datos") llega en la E10 y WhatsAppChannels en la E11. Sin RLS.
-  - **`identity`**: AspNetUsers (global, sin `TenantId`), **LoginMethods** (la única fuente de los correos y teléfonos de una cuenta, cada uno único en todo el sistema), `UserTenantAccesses` (proyección global de membresías), LegalAcceptances, UserLogins, UserTokens, LoginCodes, LoginAudits y ReauthTickets; LoginLinks, WhatsAppContacts y WhatsAppMessages (el número de la plataforma habla con la identidad, no con un acceso) llegan en la E8. Sin RLS; la leen `Infrastructure/Identity` y una lista cerrada de readers y repositorios de `Infrastructure/Persistence` que fija `IdentityStorageAccessTests` (inspecciona las llamadas IL a los DbSet globales y `Set<T>()` en todo Infrastructure): los de métodos de ingreso, códigos, legales y baja; los que parten de `Members` (Usuarios, empresas, invitaciones, dominios y auditoría); los de Plataforma (`PlatformReader`, `PlatformAccountReader`, `AccountRecoveryReader`, `SecurityEventReader` y `PlatformPermissionAssignmentRepository`) y `PlatformSeeder`. El índice de membresías se consulta solo para `ConnectService`, `TenantResolutionMiddleware` (por `AccessStatusCache`) y `/api/me` (por `ProfileSnapshotBuilder`); la gestión de métodos administrados usa un puerto específico `ILoginMethodMembershipReader` que devuelve solo la disponibilidad de la membresía/organización por UserId y TenantId. La búsqueda global por valor de un método de ingreso vive en `Infrastructure/Identity/UserLookup`; la única excepción es la búsqueda de cuentas de Plataforma, `PlatformAccountReader`, que busca por nombre, por el valor de los métodos y por el correo de contacto de Google ([ADR 0011](../decisions/README.md), T11 de la Etapa 5).
+  - **`identity`**: AspNetUsers (global, sin `TenantId`), **LoginMethods** (la única fuente de los correos y teléfonos de una cuenta, cada uno único en todo el sistema), `UserTenantAccesses` (proyección global de membresías), LegalAcceptances, UserLogins, UserTokens, LoginCodes, LoginAudits y AccountDeletionCancelTickets; LoginLinks, WhatsAppContacts y WhatsAppMessages (el número de la plataforma habla con la identidad, no con un acceso) llegan en la E8. Sin RLS; la leen `Infrastructure/Identity` y una lista cerrada de readers y repositorios de `Infrastructure/Persistence` que fija `IdentityStorageAccessTests` (inspecciona las llamadas IL a los DbSet globales y `Set<T>()` en todo Infrastructure): los de métodos de ingreso, códigos, legales y baja; los que parten de `Members` (Usuarios, empresas, invitaciones, dominios y auditoría); los de Plataforma (`PlatformReader`, `PlatformAccountReader`, `AccountRecoveryReader`, `SecurityEventReader` y `PlatformPermissionAssignmentRepository`) y `PlatformSeeder`. El índice de membresías se consulta solo para `ConnectService`, `TenantResolutionMiddleware` (por `AccessStatusCache`) y `/api/me` (por `ProfileSnapshotBuilder`); la gestión de métodos administrados usa un puerto específico `ILoginMethodMembershipReader` que devuelve solo la disponibilidad de la membresía/organización por UserId y TenantId. La búsqueda global por valor de un método de ingreso vive en `Infrastructure/Identity/UserLookup`; la única excepción es la búsqueda de cuentas de Plataforma, `PlatformAccountReader`, que busca por nombre, por el valor de los métodos y por el correo de contacto de Google ([ADR 0011](../decisions/README.md), T11 de la Etapa 5).
   - **`tenant`**, datos **privados** con **RLS forzado**: Members, Invitations, Companies, CompanyMemberships, Roles, RoleAssignments, TenantSettings, AuditEntries y lo privado que sumen los módulos B2B y B2C.
   - **`public_site`**, datos **públicos** de cada organización con RLS por publicación: PublicPages (nombre, logo, descripción, contacto y estado; el slug es el de la organización, en `platform.Tenants`) y lo que publiquen los módulos.
   - **`engagement`**, datos **compartidos** entre una persona y una organización, con RLS por partes: lo que definan los módulos (reservas, pedidos, solicitudes, mensajes).

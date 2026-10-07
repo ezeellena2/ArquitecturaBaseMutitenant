@@ -25,7 +25,7 @@ internal sealed class GoogleAccountGuard(IUserRepository users, ISignInService s
         if (account.IsPlatformOperator && (!ReturnUrls.TryReadAccessSelection(returnUrl, out var selection)
             || selection.Access != Access.Platform)) return AccessErrors.PlatformOnly;
         if (await signIn.IsLockedOutAsync(userId, cancellationToken)) return AccountErrors.LockedOut;
-        if (account.Status == UserStatus.PendingDeletion) return cancellation.Issue(account, methodId, returnUrl);
+        if (account.Status == UserStatus.PendingDeletion) return cancellation.Issue(account, returnUrl);
         return account;
     }
 }

@@ -10,10 +10,10 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
 
 /// <summary>Emite un comprobante de cancelación para una cuenta pendiente de baja tras validar su estado; permite volver al acceso elegido sin sesión activa.</summary>
-internal sealed class AccountDeletionCancelIssuer(IReauthTicketRepository tickets, ISecureTokenGenerator secrets,
+internal sealed class AccountDeletionCancelIssuer(IAccountDeletionCancelTicketRepository tickets, ISecureTokenGenerator secrets,
     TimeProvider timeProvider)
 {
-    internal Error Issue(UserAccountRow account, Guid? sourceMethodId, string returnUrl)
+    internal Error Issue(UserAccountRow account, string returnUrl)
     {
         if (account.Status == UserStatus.Suspended) return AccountErrors.Suspended;
         if (account.Status != UserStatus.PendingDeletion || account.DeletionScheduledForUtc is not { } date)
@@ -23,8 +23,7 @@ internal sealed class AccountDeletionCancelIssuer(IReauthTicketRepository ticket
         if (!ReturnUrls.IsLoginReturn(returnUrl))
             throw new InvalidOperationException("The cancellation return URL must be validated.");
         var secret = secrets.Generate();
-        var ticket = ReauthTicket.Issue(account.Id, ReauthAction.CancelDeletion, sourceMethodId,
-            null, secrets.Hash(secret), nowUtc, returnUrl).Value;
+        var ticket = AccountDeletionCancelTicket.Issue(account.Id, secrets.Hash(secret), nowUtc, returnUrl);
         tickets.Add(ticket);
         return AccountErrors.PendingDeletion with
         {

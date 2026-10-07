@@ -7,6 +7,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Domain.Users;
@@ -27,17 +28,14 @@ public sealed class LoginMethodsTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task Removing_the_primary_moves_its_copy_atomically_and_expired_tickets_change_nothing(bool expired)
+    [Fact]
+    public async Task Removing_the_primary_moves_its_copy_atomically_without_a_confirmation_code()
     {
         using var client = factory.CreateClient();
         await using var scope = factory.Services.CreateAsyncScope();
         var services = scope.ServiceProvider;
         var context = services.GetRequiredService<ApplicationDbContext>();
         var work = services.GetRequiredService<IUnitOfWork>();
-        var secrets = services.GetRequiredService<ISecureTokenGenerator>();
         var user = ApplicationUser.Create(null, "es-AR", "America/Argentina/Buenos_Aires").Value;
         var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
         var first = LoginMethod.CreateEmail(user.Id, Email.Create(user.Id.ToString("N") + "@example.test").Value);
@@ -45,79 +43,22 @@ public sealed class LoginMethodsTests(ApiFactory factory)
         first.Verify(nowUtc);
         first.MakePrimary();
         backup.Verify(nowUtc);
-        var secret = secrets.Generate();
-        var ticket = ReauthTicket.Issue(user.Id, ReauthAction.RemoveMethod, backup.Id, first.Id,
-            secrets.Hash(secret), expired ? nowUtc.AddMinutes(-6) : nowUtc).Value;
         await work.ExecuteInTransactionAsync(async ct =>
         {
             Assert.True((await services.GetRequiredService<UserManager<ApplicationUser>>().CreateAsync(user)).Succeeded);
             context.LoginMethods.AddRange(first, backup);
-            context.ReauthTickets.Add(ticket);
             await services.GetRequiredService<IUserRepository>().SetPrimaryEmailAsync(user.Id, Email.Create(first.Value).Value, ct);
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
         var service = ActivatorUtilities.CreateInstance<LoginMethodManagementService>(services, new TestCurrentUser(user.Id, services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime));
-        var result = await service.RemoveAsync(new ChangeLoginMethodRequest(first.Id, secret), Ct);
-        Assert.Equal(!expired, result.IsSuccess);
-        if (expired) Assert.Equal(ReauthErrors.Expired.Code, result.Error.Code);
+        var result = await service.RemoveAsync(new ChangeLoginMethodRequest(first.Id), Ct);
+        Assert.True(result.IsSuccess);
         context.ChangeTracker.Clear();
         var methods = await context.LoginMethods.AsNoTracking().Where(row => row.UserId == user.Id).ToArrayAsync(Ct);
-        Assert.Equal(expired ? 2 : 1, methods.Length);
-        Assert.Equal(expired ? first.Id : backup.Id, methods.Single(row => row.IsPrimary).Id);
-        Assert.Equal(expired ? first.Value : backup.Value,
+        Assert.Single(methods);
+        Assert.Equal(backup.Id, methods.Single(row => row.IsPrimary).Id);
+        Assert.Equal(backup.Value,
             (await context.Users.AsNoTracking().SingleAsync(row => row.Id == user.Id, Ct)).Email);
-    }
-
-    [Fact]
-    public async Task Primary_and_removal_require_another_method_and_a_one_use_context_bound_ticket()
-    {
-        using var client = factory.CreateClient();
-        await using var scope = factory.Services.CreateAsyncScope();
-        var services = scope.ServiceProvider;
-        var context = services.GetRequiredService<ApplicationDbContext>();
-        var work = services.GetRequiredService<IUnitOfWork>();
-        var user = ApplicationUser.Create(null, "es-AR", "America/Argentina/Buenos_Aires").Value;
-        var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
-        var first = LoginMethod.CreateEmail(user.Id, Email.Create(user.Id.ToString("N") + "@example.test").Value);
-        var second = LoginMethod.CreateEmail(user.Id, Email.Create("second-" + user.Id.ToString("N") + "@example.test").Value);
-        first.Verify(nowUtc);
-        first.MakePrimary();
-        second.Verify(nowUtc);
-        await work.ExecuteInTransactionAsync(async ct =>
-        {
-            Assert.True((await services.GetRequiredService<UserManager<ApplicationUser>>().CreateAsync(user)).Succeeded);
-            context.LoginMethods.AddRange(first, second);
-            await services.GetRequiredService<IUserRepository>().SetPrimaryEmailAsync(user.Id, Email.Create(first.Value).Value, ct);
-            return Result.Success();
-        }, CommitPolicy.OnSuccess, Ct);
-        var current = new TestCurrentUser(user.Id, services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime);
-        var reauth = ActivatorUtilities.CreateInstance<ReauthService>(services, current);
-        var management = ActivatorUtilities.CreateInstance<LoginMethodManagementService>(services, current);
-
-        var challenge = await reauth.RequestAsync(new RequestReauthRequest(ReauthAction.MakePrimary, second.Id), Ct);
-        Assert.True(challenge.IsSuccess);
-        Assert.Equal(first.Id, challenge.Value.SourceMethodId);
-        var code = await PickupCodeReader.ReadAsync(services, first.Value, Ct);
-        Assert.Equal(ReauthErrors.Invalid.Code, (await reauth.VerifyAsync(new VerifyReauthRequest(
-            ReauthAction.RemoveMethod, second.Id, first.Id, code), Ct)).Error.Code);
-        var verified = await reauth.VerifyAsync(new VerifyReauthRequest(ReauthAction.MakePrimary, second.Id, first.Id, code), Ct);
-        Assert.True(verified.IsSuccess);
-        var primary = new ChangeLoginMethodRequest(second.Id, verified.Value.ReauthTicket);
-        Assert.True((await management.MakePrimaryAsync(primary, Ct)).IsSuccess);
-        Assert.True((await management.MakePrimaryAsync(primary, Ct)).IsFailure);
-
-        challenge = await reauth.RequestAsync(new RequestReauthRequest(ReauthAction.RemoveMethod, first.Id), Ct);
-        Assert.Equal(second.Id, challenge.Value.SourceMethodId);
-        code = await PickupCodeReader.ReadAsync(services, second.Value, Ct);
-        verified = await reauth.VerifyAsync(new VerifyReauthRequest(ReauthAction.RemoveMethod, first.Id, second.Id, code), Ct);
-        Assert.True((await management.RemoveAsync(new ChangeLoginMethodRequest(first.Id, verified.Value.ReauthTicket), Ct)).IsSuccess);
-        context.ChangeTracker.Clear();
-        var remaining = await context.LoginMethods.AsNoTracking().SingleAsync(row => row.UserId == user.Id, Ct);
-        Assert.Equal(second.Id, remaining.Id);
-        Assert.True(remaining.IsPrimary);
-        Assert.Equal(second.Value, (await context.Users.AsNoTracking().SingleAsync(row => row.Id == user.Id, Ct)).Email);
-        Assert.Equal(LoginMethodErrors.LastMethod.Code,
-            (await reauth.RequestAsync(new RequestReauthRequest(ReauthAction.RemoveMethod, second.Id), Ct)).Error.Code);
     }
 
     [Fact]
@@ -139,8 +80,8 @@ public sealed class LoginMethodsTests(ApiFactory factory)
         var email = Email.Create("added-" + user.Id.ToString("N") + "@example.test").Value;
         var lookup = services.GetRequiredService<IUserLookup>();
 
-        var ticket = await IssueAddTicketAsync(services, user.Id);
-        var added = await service.AddEmailAsync(new AddLoginEmailRequest(email, ticket), Ct);
+        await AddSourceMethodAsync(services, user.Id);
+        var added = await service.AddEmailAsync(new AddLoginEmailRequest(email), Ct);
         Assert.True(added.IsSuccess);
         Assert.Null(await lookup.FindVerifiedUserIdAsync(LoginMethodType.Email, email.Value, Ct));
         var code = await PickupCodeReader.ReadAsync(services, email.Value, Ct);
@@ -185,8 +126,8 @@ public sealed class LoginMethodsTests(ApiFactory factory)
         var service = ActivatorUtilities.CreateInstance<LoginMethodManagementService>(services,
             new TestCurrentUser(other.Id, services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime));
 
-        var ticket = await IssueAddTicketAsync(services, other.Id);
-        var added = await service.AddEmailAsync(new AddLoginEmailRequest(email, ticket), Ct);
+        await AddSourceMethodAsync(services, other.Id);
+        var added = await service.AddEmailAsync(new AddLoginEmailRequest(email), Ct);
         Assert.True(added.IsSuccess);
         var methods = services.GetRequiredService<ILoginMethodReader>();
         Assert.Empty(await methods.ListByUserIdAsync(owner.Id, Ct));
@@ -235,7 +176,7 @@ public sealed class LoginMethodsTests(ApiFactory factory)
         Assert.Empty(await services.GetRequiredService<ILoginMethodReader>().ListByUserIdAsync(user.Id, Ct));
     }
 
-    private static async Task<string> IssueAddTicketAsync(IServiceProvider services, Guid userId)
+    private static async Task AddSourceMethodAsync(IServiceProvider services, Guid userId)
     {
         var method = LoginMethod.CreateEmail(userId, Email.Create("source-" + userId.ToString("N") + "@example.test").Value);
         method.Verify(services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime.AddSeconds(-1));
@@ -245,7 +186,6 @@ public sealed class LoginMethodsTests(ApiFactory factory)
             services.GetRequiredService<ILoginMethodRepository>().Add(method);
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, Ct);
-        return await AccountJourney.IssueReauthTicketAsync(services, userId, ReauthAction.AddEmail, Ct);
     }
 
     private sealed record TestCurrentUser(Guid Id, DateTime StartedAtUtc) : ICurrentUser
@@ -256,7 +196,7 @@ public sealed class LoginMethodsTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task Provider_contact_and_one_use_ticket_round_trip_in_the_runtime_database()
+    public async Task Provider_contact_and_cancellation_proof_round_trip_in_the_runtime_database()
     {
         using var client = factory.CreateClient();
         await using var scope = factory.Services.CreateAsyncScope();
@@ -264,7 +204,7 @@ public sealed class LoginMethodsTests(ApiFactory factory)
         var context = services.GetRequiredService<ApplicationDbContext>();
         var work = services.GetRequiredService<IUnitOfWork>();
         var methods = services.GetRequiredService<ILoginMethodRepository>();
-        var tickets = services.GetRequiredService<IReauthTicketRepository>();
+        var tickets = services.GetRequiredService<IAccountDeletionCancelTicketRepository>();
         var user = ApplicationUser.Create(null, "es-AR", "America/Argentina/Buenos_Aires").Value;
         var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
         var google = LoginMethod.CreateGoogle(user.Id, Guid.NewGuid().ToString("N"),
@@ -272,8 +212,7 @@ public sealed class LoginMethodsTests(ApiFactory factory)
         google.Verify(nowUtc);
         google.MakePrimary();
         var tokenHash = Guid.NewGuid().ToString("N");
-        var ticket = ReauthTicket.Issue(user.Id, ReauthAction.DeleteAccount, google.Id, null,
-            tokenHash, nowUtc).Value;
+        var ticket = AccountDeletionCancelTicket.Issue(user.Id, tokenHash, nowUtc, "/connect/authorize?access=consumer");
         await work.ExecuteInTransactionAsync(ct =>
         {
             context.Users.Add(user);
@@ -290,11 +229,11 @@ public sealed class LoginMethodsTests(ApiFactory factory)
             Assert.Equal(google.ContactEmail, loaded!.ContactEmail);
             var saved = await tickets.GetByHashAsync(tokenHash, ct);
             Assert.NotNull(saved);
-            Assert.True(saved.Consume(user.Id, ReauthAction.DeleteAccount, null, nowUtc).IsSuccess);
+            Assert.True(saved.Consume(user.Id, nowUtc).IsSuccess);
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
         context.ChangeTracker.Clear();
-        Assert.NotNull((await context.ReauthTickets.AsNoTracking().SingleAsync(row => row.Id == ticket.Id, Ct)).ConsumedAtUtc);
+        Assert.NotNull((await context.AccountDeletionCancelTickets.AsNoTracking().SingleAsync(row => row.Id == ticket.Id, Ct)).ConsumedAtUtc);
     }
 
     [Fact]

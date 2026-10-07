@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
-/// <summary>Registra los métodos de ingreso de la cuenta, la reautenticación y los avisos a la cuenta.</summary>
+/// <summary>Registra los métodos de ingreso de la cuenta y los avisos a la cuenta.</summary>
 internal static class IdentityRegistration
 {
     internal static IServiceCollection AddIdentity(this IServiceCollection services)
@@ -17,10 +17,6 @@ internal static class IdentityRegistration
         services.AddScoped<GoogleMethodLinkFinalizer>();
         services.AddScoped<LoginMethodAvailabilityPolicy>();
         services.AddScoped<LoginMethodEditor>();
-        services.AddScoped<IReauthService, ReauthService>();
-        services.AddScoped<ReauthIssuer>();
-        services.AddScoped<ReauthVerifier>();
-        services.AddScoped<ReauthTicketVerifier>();
         services.AddScoped<IAccountGoogleService, AccountGoogleService>();
         services.AddScoped<GoogleMethodLinker>();
         services.AddScoped<IAccountLoginMethodsService, AccountLoginMethodsService>();

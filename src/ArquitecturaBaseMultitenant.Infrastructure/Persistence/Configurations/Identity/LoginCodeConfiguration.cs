@@ -17,7 +17,6 @@ internal sealed class LoginCodeConfiguration : IEntityTypeConfiguration<LoginCod
         builder.Property(code => code.Channel).HasMaxLength(TextLimits.ShortName).IsRequired();
         builder.Property(code => code.CodeHash).HasMaxLength(TextLimits.Description).IsRequired();
         builder.Property(code => code.Purpose).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
-        builder.Property(code => code.ReauthAction).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.Property(code => code.NonceHash).HasMaxLength(TextLimits.Description);
         builder.HasIndex(code => new { code.Destination, code.Channel, code.Purpose, code.ExpiresAtUtc });
         builder.HasOne<Infrastructure.Identity.ApplicationUser>().WithMany()

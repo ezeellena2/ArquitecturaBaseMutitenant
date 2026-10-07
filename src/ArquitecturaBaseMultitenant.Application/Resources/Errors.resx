@@ -131,9 +131,6 @@
   <data name="Tenancy.Access.Wrong" xml:space="preserve"><value>Este acceso no permite realizar la acción.</value></data>
   <data name="Tenancy.Access.NotMember" xml:space="preserve"><value>No sos miembro de esta organización.</value></data>
   <data name="Tenancy.Access.ConsumerCannotCreateBusiness" xml:space="preserve"><value>Para crear una organización, usá «Registrá tu empresa».</value></data>
-  <data name="Identity.Reauth.Invalid" xml:space="preserve"><value>La confirmación no es válida. Pedí un código nuevo.</value></data>
-  <data name="Identity.Reauth.Expired" xml:space="preserve"><value>La confirmación venció. Pedí un código nuevo.</value></data>
-  <data name="Identity.Reauth.OtherMethodRequired" xml:space="preserve"><value>Confirmá con otro método de ingreso verificado.</value></data>
   <data name="Identity.LoginMethod.NotFound" xml:space="preserve"><value>No encontramos este método de ingreso.</value></data>
   <data name="Identity.LoginMethod.AlreadyVerified" xml:space="preserve"><value>Este método de ingreso ya está verificado.</value></data>
   <data name="Identity.LoginMethod.LastMethod" xml:space="preserve"><value>No podés quitar tu único método de ingreso. Agregá y verificá otro antes.</value></data>
@@ -147,7 +144,7 @@
   <data name="Legal.AccountDeletion.InvalidReason" xml:space="preserve"><value>Escribí un motivo de hasta 500 caracteres.</value></data>
   <data name="Legal.AccountDeletion.LastAdmin" xml:space="preserve"><value>Antes de pedir la baja, cada Organización activa debe tener otra persona con el rol Dueño.</value></data>
   <data name="Legal.AccountDeletion.PlatformOperator" xml:space="preserve"><value>Tu cuenta de operador no puede darse de baja desde acá.</value></data>
-  <data name="Legal.AccountDeletion.ReauthRequired" xml:space="preserve"><value>Confirmá el código que te mandamos para pedir la baja.</value></data>
+  <data name="Legal.AccountDeletion.CancelProofInvalid" xml:space="preserve"><value>El comprobante para cancelar la baja no es válido o venció.</value></data>
   <data name="Tenancy.Member.IdentityRequired" xml:space="preserve"><value>La membresía necesita una cuenta antes de activarse.</value></data>
   <data name="Invitations.Invitation.Invalid" xml:space="preserve"><value>Esta invitación ya no sirve.</value></data>
   <data name="Invitations.Invitation.NotFound" xml:space="preserve"><value>No encontramos esta invitación.</value></data>
@@ -200,4 +197,5 @@
   <data name="Platform.AccountRecovery.MethodAlreadyOnAccount" xml:space="preserve"><value>Ese correo ya es un método de esa cuenta.</value></data>
   <data name="Platform.AccountRecovery.OperatorAccount" xml:space="preserve"><value>La cuenta es de un operador de la plataforma: no se recupera desde acá.</value></data>
   <data name="Features.Module.InvalidExpiry" xml:space="preserve"><value>Elegí una fecha cuyo día completo pueda representarse.</value></data>
+  <data name="Legal.AccountDeletion.LeaseInvalid" xml:space="preserve"><value>La autorización para procesar la baja ya no es válida.</value></data>
 </root>

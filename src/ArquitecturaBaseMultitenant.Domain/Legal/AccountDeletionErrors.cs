@@ -16,8 +16,10 @@ public static class AccountDeletionErrors
         "The account deletion was already requested.");
     public static readonly Error Blocked = Error.Conflict("Legal.AccountDeletion.Blocked",
         "A module blocks the account deletion.");
-    public static readonly Error ReauthRequired = Error.Forbidden("Legal.AccountDeletion.ReauthRequired",
-        "A recent proof of account ownership is required.");
+    public static readonly Error CancelProofInvalid = Error.Forbidden("Legal.AccountDeletion.CancelProofInvalid",
+        "The account deletion cancellation proof is invalid or expired.");
+    public static readonly Error LeaseInvalid = Error.Forbidden("Legal.AccountDeletion.LeaseInvalid",
+        "The account deletion processing lease is invalid.");
     public static readonly Error GraceExpired = Error.Conflict("Legal.AccountDeletion.GraceExpired",
         "The account deletion grace period has expired.");
     public static readonly Error InvalidReason = Error.Validation("Legal.AccountDeletion.InvalidReason",

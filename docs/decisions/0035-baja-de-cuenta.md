@@ -1,6 +1,6 @@
 # ADR 0035 · Baja de una cuenta
 
-Estado: aceptada el 2026-09-27; precisada el 2026-10-03 por el dueño del producto. Este archivo resume la decisión. El detalle de la conducta está en [`multitenancy.md` §3.2](../architecture/multitenancy.md) y en la ficha [`identidad.md`](../features/identidad.md).
+Estado: aceptada el 2026-09-27; precisada el 2026-10-03 por el dueño del producto. La [0045](0045-mi-cuenta-sin-codigo-de-confirmacion.md) modifica el requisito para pedir la baja: alcanza con la sesión iniciada. El cuerpo conserva la decisión original. El detalle de la conducta vigente está en [`multitenancy.md` §3.2](../architecture/multitenancy.md) y en la ficha [`identidad.md`](../features/identidad.md).
 
 ## Contexto
 

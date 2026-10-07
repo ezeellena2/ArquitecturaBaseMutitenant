@@ -4,7 +4,7 @@ using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
-using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
@@ -26,6 +26,41 @@ public sealed class AccountDeletionLoginTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
+    [Fact]
+    public async Task A_proof_from_another_account_cannot_cancel_the_requested_account_or_change_its_return()
+    {
+        using var provedClient = factory.CreateClient(new WebApplicationFactoryClientOptions
+            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        using var otherClient = factory.CreateClient(new WebApplicationFactoryClientOptions
+            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var proved = await AccountJourney.RegisterAsync(factory, provedClient, Ct);
+        var other = await AccountJourney.RegisterAsync(factory, otherClient, Ct);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var tokens = services.GetRequiredService<ISecureTokenGenerator>();
+        var secret = tokens.Generate();
+        var now = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+        {
+            var users = services.GetRequiredService<IUserRepository>();
+            await users.RequestDeletionAsync(proved.UserId, "Prueba", now, 30, ct);
+            await users.RequestDeletionAsync(other.UserId, "Prueba", now, 30, ct);
+            services.GetRequiredService<IAccountDeletionCancelTicketRepository>().Add(
+                AccountDeletionCancelTicket.Issue(proved.UserId, tokens.Hash(secret), now, "/invitacion"));
+            return Result.Success();
+        }, CommitPolicy.OnSuccess, Ct);
+        using var cancelled = await AccountJourney.PostAsync(otherClient, "/api/auth/deletion/cancel",
+            new { cancelTicket = secret, userId = other.UserId, returnUrl = "//other.test" }, Ct);
+        Assert.Equal(HttpStatusCode.OK, cancelled.StatusCode);
+        using var body = await cancelled.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+        Assert.Equal("/invitacion", body!.RootElement.GetProperty("returnUrl").GetString());
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        Assert.Equal(ArquitecturaBaseMultitenant.Domain.Users.UserStatus.Active,
+            (await db.Users.AsNoTracking().SingleAsync(user => user.Id == proved.UserId, Ct)).Status);
+        Assert.Equal(ArquitecturaBaseMultitenant.Domain.Users.UserStatus.PendingDeletion,
+            (await db.Users.AsNoTracking().SingleAsync(user => user.Id == other.UserId, Ct)).Status);
+    }
+
     [Theory]
     [InlineData("consumer")]
     [InlineData("business")]
@@ -43,23 +78,8 @@ public sealed class AccountDeletionLoginTests(ApiFactory factory)
             { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
         clock.Advance(TimeSpan.FromMinutes(2));
-        await using (var scope = host.Services.CreateAsyncScope())
-        {
-            var services = scope.ServiceProvider;
-            var database = services.GetRequiredService<ApplicationDbContext>();
-            var secrets = services.GetRequiredService<ISecureTokenGenerator>();
-            var secret = secrets.Generate();
-            var method = await database.LoginMethods.SingleAsync(row => row.UserId == account.UserId && row.IsPrimary, Ct);
-            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
-            {
-                database.ReauthTickets.Add(ReauthTicket.Issue(account.UserId, ReauthAction.DeleteAccount,
-                    method.Id, null, secrets.Hash(secret), clock.GetUtcNow().UtcDateTime).Value);
-                return Task.FromResult(Result.Success());
-            }, CommitPolicy.OnSuccess, Ct);
-            using var deletion = await AccountJourney.PostAsync(client, "/api/me/deletion",
-                new { reason = "Prueba de gracia", reauthTicket = secret }, Ct);
+        using (var deletion = await AccountJourney.PostAsync(client, "/api/me/deletion", new { reason = "Prueba de gracia" }, Ct))
             Assert.Equal(HttpStatusCode.OK, deletion.StatusCode);
-        }
         client.DefaultRequestHeaders.Authorization = null;
         using var requested = await AccountJourney.PostAsync(client, "/api/auth/login-code", new { email = account.Email.Value }, Ct);
         Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
@@ -78,10 +98,9 @@ public sealed class AccountDeletionLoginTests(ApiFactory factory)
         Assert.False(verified.Headers.Contains("Set-Cookie"));
         await using var checkedScope = host.Services.CreateAsyncScope();
         var checkedServices = checkedScope.ServiceProvider;
-        var ticket = await checkedServices.GetRequiredService<ApplicationDbContext>().ReauthTickets.AsNoTracking()
+        var ticket = await checkedServices.GetRequiredService<ApplicationDbContext>().AccountDeletionCancelTickets.AsNoTracking()
             .SingleAsync(row => row.TokenHash == checkedServices.GetRequiredService<ISecureTokenGenerator>().Hash(cancelTicket!), Ct);
         Assert.Equal(account.UserId, ticket.UserId);
-        Assert.Equal(ReauthAction.CancelDeletion, ticket.Action);
         Assert.Equal(returnUrl, ticket.ReturnUrl);
         Assert.Equal(TimeSpan.FromMinutes(5), ticket.ExpiresAtUtc - ticket.IssuedAtUtc);
     }
@@ -112,8 +131,7 @@ public sealed class AccountDeletionLoginTests(ApiFactory factory)
                 await services.GetRequiredService<IUserRepository>().RequestDeletionAsync(account.UserId, "Prueba", nowUtc, 30, ct);
                 await services.GetRequiredService<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity.ISignInService>()
                     .RevokeSessionsAsync(account.UserId, ct);
-                services.GetRequiredService<IReauthTicketRepository>().Add(ReauthTicket.Issue(account.UserId,
-                    ReauthAction.CancelDeletion, null, null, secrets.Hash(secret), nowUtc, returnUrl).Value);
+                services.GetRequiredService<IAccountDeletionCancelTicketRepository>().Add(AccountDeletionCancelTicket.Issue(account.UserId, secrets.Hash(secret), nowUtc, returnUrl));
                 return Result.Success();
             }, CommitPolicy.OnSuccess, Ct);
         }
@@ -154,9 +172,8 @@ public sealed class AccountDeletionLoginTests(ApiFactory factory)
         {
             await services.GetRequiredService<IUserRepository>().RequestDeletionAsync(account.UserId, "Prueba",
                 expiredTicket ? nowUtc : nowUtc.AddDays(-31), 30, ct);
-            services.GetRequiredService<IReauthTicketRepository>().Add(ReauthTicket.Issue(account.UserId,
-                ReauthAction.CancelDeletion, null, null, secrets.Hash(secret), expiredTicket ? nowUtc.AddMinutes(-6) : nowUtc,
-                "/connect/authorize?client_id=web&access=consumer").Value);
+            services.GetRequiredService<IAccountDeletionCancelTicketRepository>().Add(AccountDeletionCancelTicket.Issue(account.UserId, secrets.Hash(secret), expiredTicket ? nowUtc.AddMinutes(-6) : nowUtc,
+                "/connect/authorize?client_id=web&access=consumer"));
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
         client.DefaultRequestHeaders.Authorization = null;
@@ -165,7 +182,7 @@ public sealed class AccountDeletionLoginTests(ApiFactory factory)
         Assert.Equal(ArquitecturaBaseMultitenant.Domain.Users.UserStatus.PendingDeletion,
             (await services.GetRequiredService<IUserRepository>().GetByIdAsync(account.UserId, Ct))!.Status);
         var hash = secrets.Hash(secret);
-        Assert.Null((await services.GetRequiredService<ApplicationDbContext>().ReauthTickets.AsNoTracking()
+        Assert.Null((await services.GetRequiredService<ApplicationDbContext>().AccountDeletionCancelTickets.AsNoTracking()
             .SingleAsync(ticket => ticket.TokenHash == hash, Ct)).ConsumedAtUtc);
     }
 }

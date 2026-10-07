@@ -45,12 +45,9 @@ public sealed class LoginCode : Entity
     public LoginCodePurpose Purpose { get; private set; }
 
     /// <summary>
-    /// La cuenta que pidió verificar un destino o reautenticarse; null en ingreso y registro.
+    /// La cuenta que pidió verificar un destino; null en ingreso y registro.
     /// </summary>
     public Guid? RequestedByUserId { get; private set; }
-    public ReauthAction? ReauthAction { get; private set; }
-    public Guid? SourceMethodId { get; private set; }
-    public Guid? TargetMethodId { get; private set; }
 
     /// <summary>
     /// El hash del nonce del navegador que pidió un código de «Recuperar mi cuenta». Solo ese navegador puede
@@ -82,7 +79,7 @@ public sealed class LoginCode : Entity
     public int AttemptsLeft => Math.Max(0, MaxAttempts - FailedAttempts);
 
     /// <summary>
-    /// Emite un código. Verificar un destino o reautenticarse requiere cuenta;
+    /// Emite un código. Verificar un destino requiere cuenta;
     /// ingresar o registrarse todavía no la tiene.
     /// </summary>
     public static LoginCode Issue(
@@ -111,13 +108,13 @@ public sealed class LoginCode : Entity
                 when requestedByUserId is not null:
                 throw new ArgumentException("A login, signup or recovery code cannot be requested by an account.", nameof(requestedByUserId));
 
-            case LoginCodePurpose.VerifyDestination or LoginCodePurpose.Reauthenticate
+            case LoginCodePurpose.VerifyDestination
                 when requestedByUserId is null || requestedByUserId == Guid.Empty:
                 throw new ArgumentException(
                     "The code needs the account that requested it.", nameof(requestedByUserId));
 
             case LoginCodePurpose.Login or LoginCodePurpose.Signup or LoginCodePurpose.BusinessSignup
-                or LoginCodePurpose.VerifyDestination or LoginCodePurpose.Reauthenticate or LoginCodePurpose.AccountRecovery:
+                or LoginCodePurpose.VerifyDestination or LoginCodePurpose.AccountRecovery:
                 break;
 
             default:
@@ -167,24 +164,11 @@ public sealed class LoginCode : Entity
     {
         ArgumentNullException.ThrowIfNull(codeHash);
 
-        return expectedPurpose is LoginCodePurpose.VerifyDestination or LoginCodePurpose.Reauthenticate
+        return expectedPurpose is LoginCodePurpose.VerifyDestination
             && Purpose == expectedPurpose && RequestedByUserId == userId
             ? Check(codeHash, nowUtc, usable: usable && SentAtUtc is not null)
             : LoginCodeErrors.Invalid(attemptsLeft: null);
     }
-
-    public void BindReauthentication(ReauthAction action, Guid sourceMethodId, Guid? targetMethodId)
-    {
-        if (Purpose != LoginCodePurpose.Reauthenticate || ReauthAction is not null || !Enum.IsDefined(action)
-            || sourceMethodId == Guid.Empty)
-            throw new InvalidOperationException("Only a new reauthentication code can be bound to an action.");
-        ReauthAction = action;
-        SourceMethodId = sourceMethodId;
-        TargetMethodId = targetMethodId;
-    }
-
-    public bool MatchesReauthentication(ReauthAction action, Guid sourceMethodId, Guid? targetMethodId) =>
-        ReauthAction == action && SourceMethodId == sourceMethodId && TargetMethodId == targetMethodId;
 
     public void BindRecoveryNonce(string nonceHash)
     {

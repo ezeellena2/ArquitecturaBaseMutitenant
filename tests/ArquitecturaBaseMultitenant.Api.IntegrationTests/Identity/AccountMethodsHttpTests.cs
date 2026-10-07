@@ -26,70 +26,6 @@ public sealed class AccountMethodsHttpTests(ApiFactory factory)
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
-    public async Task An_open_session_cannot_add_email_without_reauthentication()
-    {
-        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
-        await AccountJourney.RegisterAsync(factory, client, Ct);
-        using var added = await AccountJourney.PostAsync(client, "/api/me/login-methods",
-            new { email = "unproved-" + Guid.NewGuid().ToString("N") + "@example.test" }, Ct);
-        Assert.Equal(HttpStatusCode.Forbidden, added.StatusCode);
-        using var listed = await client.GetAsync("/api/me/login-methods", Ct);
-        using var body = await listed.Content.ReadFromJsonAsync<JsonDocument>(Ct);
-        Assert.Single(body!.RootElement.GetProperty("methods").EnumerateArray());
-    }
-
-    [Fact]
-    public async Task A_method_verified_after_sign_in_cannot_authorize_removing_the_original()
-    {
-        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
-        var account = await AccountJourney.RegisterAsync(factory, client, Ct);
-        Guid originalId;
-        LoginMethod laterMethod;
-        await using (var scope = factory.Services.CreateAsyncScope())
-        {
-            var services = scope.ServiceProvider;
-            originalId = (await services.GetRequiredService<ILoginMethodReader>().ListByUserIdAsync(account.UserId, Ct)).Single().Id;
-            laterMethod = LoginMethod.CreateEmail(account.UserId,
-                Email.Create("later-" + Guid.NewGuid().ToString("N") + "@example.test").Value);
-            laterMethod.Verify(services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime.AddSeconds(1));
-            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
-            {
-                services.GetRequiredService<ILoginMethodRepository>().Add(laterMethod);
-                return Task.FromResult(Result.Success());
-            }, CommitPolicy.OnSuccess, Ct);
-        }
-        using var challenge = await AccountJourney.PostAsync(client, "/api/me/reauth",
-            new { action = "RemoveMethod", targetMethodId = originalId }, Ct);
-        Assert.Equal(HttpStatusCode.Conflict, challenge.StatusCode);
-        using var problem = await challenge.Content.ReadFromJsonAsync<JsonDocument>(Ct);
-        Assert.Equal(ReauthErrors.OtherMethodRequired.Code, problem!.RootElement.GetProperty("code").GetString());
-
-        await using var codeScope = factory.Services.CreateAsyncScope();
-        var codeServices = codeScope.ServiceProvider;
-        var context = codeServices.GetRequiredService<ApplicationDbContext>();
-        var work = codeServices.GetRequiredService<IUnitOfWork>();
-        var hasher = codeServices.GetRequiredService<ILoginCodeHasher>();
-        var nowUtc = codeServices.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
-        var destination = LoginCodeDestination.ForEmail(Email.Create(laterMethod.Value).Value);
-        await work.ExecuteInTransactionAsync(ct =>
-        {
-            var code = LoginCode.Issue(destination, LoginCodePurpose.Reauthenticate, account.UserId,
-                hasher.Hash(destination, LoginCodePurpose.Reauthenticate, "123456"), nowUtc,
-                TimeSpan.FromMinutes(10), 5);
-            code.BindReauthentication(ReauthAction.RemoveMethod, laterMethod.Id, originalId);
-            context.LoginCodes.Add(code);
-            return Task.FromResult(Result.Success());
-        }, CommitPolicy.OnSuccess, Ct);
-        using var forged = await AccountJourney.PostAsync(client, "/api/me/reauth/verify",
-            new { action = "RemoveMethod", targetMethodId = originalId, sourceMethodId = laterMethod.Id, code = "123456" }, Ct);
-        Assert.Equal(HttpStatusCode.Forbidden, forged.StatusCode);
-        using var forgedProblem = await forged.Content.ReadFromJsonAsync<JsonDocument>(Ct);
-        Assert.Equal(ReauthErrors.Invalid.Code, forgedProblem!.RootElement.GetProperty("code").GetString());
-    }
-
-    [Fact]
     public async Task Adding_an_email_of_another_account_answers_like_a_free_one_and_only_its_owner_hears()
     {
         using var ownerClient = factory.CreateClient(new WebApplicationFactoryClientOptions
@@ -235,7 +171,7 @@ public sealed class AccountMethodsHttpTests(ApiFactory factory)
         return (owner, client, await AccountJourney.RegisterAsync(factory, client, Ct));
     }
 
-    private async Task<Guid> AddedMethodIdAsync(HttpClient client, AccountJourney account, string email)
+    private static async Task<Guid> AddedMethodIdAsync(HttpClient client, AccountJourney account, string email)
     {
         using var added = await AddEmailAsync(client, account, email);
         Assert.True(added.StatusCode == HttpStatusCode.Accepted, await added.Content.ReadAsStringAsync(Ct));
@@ -246,14 +182,9 @@ public sealed class AccountMethodsHttpTests(ApiFactory factory)
     private static Task<HttpResponseMessage> VerifyAsync(HttpClient client, Guid methodId, string code) =>
         AccountJourney.PostAsync(client, $"/api/me/login-methods/{methodId:D}/verify", new { code }, Ct);
 
-    private async Task<HttpResponseMessage> RemoveAsync(HttpClient client, AccountJourney account, Guid methodId)
+    private static async Task<HttpResponseMessage> RemoveAsync(HttpClient client, AccountJourney account, Guid methodId)
     {
-        string ticket;
-        await using (var scope = factory.Services.CreateAsyncScope())
-            ticket = await AccountJourney.IssueReauthTicketAsync(scope.ServiceProvider, account.UserId,
-                ReauthAction.RemoveMethod, Ct, methodId);
-        using var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/me/login-methods/{methodId:D}")
-            { Content = JsonContent.Create(new { reauthTicket = ticket }) };
+        using var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/me/login-methods/{methodId:D}");
         return await client.SendAsync(request, Ct);
     }
 
@@ -337,15 +268,9 @@ public sealed class AccountMethodsHttpTests(ApiFactory factory)
                 && method.Value == contact && method.VerifiedAtUtc == null, Ct));
     }
 
-    /// <summary>Agrega un correo en Mi cuenta con un comprobante de reautenticación nuevo, como la pantalla.</summary>
-    private async Task<HttpResponseMessage> AddEmailAsync(HttpClient client, AccountJourney account, string email)
-    {
-        string ticket;
-        await using (var scope = factory.Services.CreateAsyncScope())
-            ticket = await AccountJourney.IssueReauthTicketAsync(scope.ServiceProvider, account.UserId,
-                ReauthAction.AddEmail, Ct);
-        return await AccountJourney.PostAsync(client, "/api/me/login-methods", new { email, reauthTicket = ticket }, Ct);
-    }
+    /// <summary>Agrega un correo desde la sesión; sólo el destino nuevo requiere código.</summary>
+    private static Task<HttpResponseMessage> AddEmailAsync(HttpClient client, AccountJourney account, string email) =>
+        AccountJourney.PostAsync(client, "/api/me/login-methods", new { email }, Ct);
 
     private async Task AgeCodesAsync(string destination) =>
         await RecoveryJourney.AgeCodesAsync(factory, destination, Ct);
@@ -404,14 +329,13 @@ public sealed class AccountMethodsHttpTests(ApiFactory factory)
             { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
         await using var scope = factory.Services.CreateAsyncScope();
-        var reauthTicket = await AccountJourney.IssueReauthTicketAsync(scope.ServiceProvider, account.UserId, ReauthAction.AddEmail, Ct);
         var email = "http-added-" + Guid.NewGuid().ToString("N") + "@example.test";
         var key = Guid.NewGuid().ToString("D");
         var methodId = Guid.Empty;
         for (var replay = 0; replay < 2; replay++)
         {
             using var request = new HttpRequestMessage(HttpMethod.Post, "/api/me/login-methods")
-                { Content = JsonContent.Create(new { email, reauthTicket }) };
+                { Content = JsonContent.Create(new { email }) };
             request.Headers.Add("Idempotency-Key", key);
             using var added = await client.SendAsync(request, Ct);
             Assert.Equal(HttpStatusCode.Accepted, added.StatusCode);
@@ -420,9 +344,8 @@ public sealed class AccountMethodsHttpTests(ApiFactory factory)
             if (replay == 0) methodId = returnedId;
             Assert.Equal(methodId, returnedId);
         }
-        var freshTicket = await AccountJourney.IssueReauthTicketAsync(scope.ServiceProvider, account.UserId, ReauthAction.AddEmail, Ct);
         // Volver a agregar el mismo correo pendiente es pedir otro código: respeta la espera para reenviar.
-        using var duplicate = await AccountJourney.PostAsync(client, "/api/me/login-methods", new { email, reauthTicket = freshTicket }, Ct);
+        using var duplicate = await AccountJourney.PostAsync(client, "/api/me/login-methods", new { email }, Ct);
         Assert.Equal(HttpStatusCode.TooManyRequests, duplicate.StatusCode);
         using var duplicateProblem = await duplicate.Content.ReadFromJsonAsync<JsonDocument>(Ct);
         Assert.Equal(LoginCodeErrors.ResendTooSoonCode, duplicateProblem!.RootElement.GetProperty("code").GetString());

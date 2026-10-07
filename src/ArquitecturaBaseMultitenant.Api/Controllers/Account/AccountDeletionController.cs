@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Account;
 
-/// <summary>Solicita la baja de la cuenta actual con un comprobante de reautenticación y cierra su cookie al aceptarla.</summary>
+/// <summary>Solicita la baja de la cuenta actual con motivo y cierra su cookie al aceptarla.</summary>
 [ApiController]
 [Route("api/me/deletion")]
 [Access(Access.Consumer, Access.Business, Access.Platform)]
@@ -27,7 +27,7 @@ public sealed class AccountDeletionController(IAccountDeletionService service) :
     [ProducesProblem(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> RequestDeletion([FromBody] RequestAccountDeletionHttpRequest request, CancellationToken ct)
     {
-        var result = await service.RequestAsync(new RequestAccountDeletionRequest(request.Reason, request.ReauthTicket), ct);
+        var result = await service.RequestAsync(new RequestAccountDeletionRequest(request.Reason), ct);
         if (result.IsSuccess) await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
         return result.ToActionResult(this);
     }

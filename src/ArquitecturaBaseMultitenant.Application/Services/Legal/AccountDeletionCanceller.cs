@@ -10,29 +10,29 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
 
 /// <summary>Valida y consume el comprobante de cancelación de baja, reactiva la cuenta y avisa a los módulos participantes dentro de la transacción.</summary>
-internal sealed class AccountDeletionCanceller(IReauthTicketRepository tickets, ISecureTokenGenerator secrets,
+internal sealed class AccountDeletionCanceller(IAccountDeletionCancelTicketRepository tickets, ISecureTokenGenerator secrets,
     ILoginMethodRepository methods, IUserRepository users, IEnumerable<IAccountDeletionParticipant> participants,
     AccountDeletionNotifier notifier, TimeProvider timeProvider)
 {
     internal async Task<Result<CancelAccountDeletionResponse>> CancelAsync(CancelAccountDeletionRequest request, CancellationToken ct)
     {
-        if (!ISecureTokenGenerator.HasTokenFormat(request.CancelTicket)) return AccountDeletionErrors.ReauthRequired;
+        if (!ISecureTokenGenerator.HasTokenFormat(request.CancelTicket)) return AccountDeletionErrors.CancelProofInvalid;
         var hash = secrets.Hash(request.CancelTicket!);
         var userId = await tickets.GetUserIdByHashAsync(hash, ct);
-        if (userId is null) return AccountDeletionErrors.ReauthRequired;
+        if (userId is null) return AccountDeletionErrors.CancelProofInvalid;
         await methods.LockUserAsync(userId.Value, ct);
         var ticket = await tickets.GetByHashAsync(hash, ct);
         if (ticket is null || ticket.UserId != userId || ticket.ConsumedAtUtc is not null)
-            return AccountDeletionErrors.ReauthRequired;
-        if (!ReturnUrls.IsLoginReturn(ticket.ReturnUrl)) return AccountDeletionErrors.ReauthRequired;
+            return AccountDeletionErrors.CancelProofInvalid;
+        if (!ReturnUrls.IsLoginReturn(ticket.ReturnUrl)) return AccountDeletionErrors.CancelProofInvalid;
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         var account = await users.GetByIdAsync(userId.Value, ct);
-        if (account is null) return AccountDeletionErrors.ReauthRequired;
+        if (account is null) return AccountDeletionErrors.CancelProofInvalid;
         if (account.Status == Domain.Users.UserStatus.Suspended) return AccountErrors.Suspended;
-        if (account.Status != Domain.Users.UserStatus.PendingDeletion) return AccountDeletionErrors.ReauthRequired;
+        if (account.Status != Domain.Users.UserStatus.PendingDeletion) return AccountDeletionErrors.CancelProofInvalid;
         if (account.DeletionScheduledForUtc is not { } date || nowUtc >= date) return AccountDeletionErrors.GraceExpired;
-        if (ticket.Consume(userId.Value, ReauthAction.CancelDeletion, null, nowUtc).IsFailure)
-            return AccountDeletionErrors.ReauthRequired;
+        if (ticket.Consume(userId.Value, nowUtc).IsFailure)
+            return AccountDeletionErrors.CancelProofInvalid;
         var cancelled = await users.CancelDeletionAsync(userId.Value, nowUtc, ct);
         if (cancelled.IsFailure) return cancelled.Error;
         foreach (var participant in participants)

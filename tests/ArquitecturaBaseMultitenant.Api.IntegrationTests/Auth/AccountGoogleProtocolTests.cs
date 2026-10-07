@@ -3,7 +3,6 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
-using ArquitecturaBaseMultitenant.Domain.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.WebUtilities;
@@ -14,7 +13,7 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
 /// <summary>
 /// Comprueba la protección del desafío para vincular Google a una cuenta existente. Exige antiforgery,
-/// prueba de titularidad y estado OAuth ligado a la cuenta.
+/// sesión iniciada y estado OAuth ligado a la cuenta.
 /// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class AccountGoogleProtocolTests(ApiFactory factory)
@@ -22,7 +21,7 @@ public sealed class AccountGoogleProtocolTests(ApiFactory factory)
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
-    public async Task An_open_session_and_antiforgery_cannot_link_Google_without_reauthentication()
+    public async Task An_open_session_and_antiforgery_start_Google_without_a_confirmation_code()
     {
         await using var host = factory.WithWebHostBuilder(builder =>
         {
@@ -37,8 +36,8 @@ public sealed class AccountGoogleProtocolTests(ApiFactory factory)
         using var request = new HttpRequestMessage(HttpMethod.Post, "/api/me/external/google") { Content = JsonContent.Create(new { }) };
         request.Headers.Add("RequestVerificationToken", token!.RootElement.GetProperty("requestToken").GetString());
         using var started = await client.SendAsync(request, Ct);
-        Assert.Equal(HttpStatusCode.Forbidden, started.StatusCode);
-        Assert.False(started.Headers.Contains("Set-Cookie"));
+        Assert.Equal(HttpStatusCode.OK, started.StatusCode);
+        Assert.Contains(started.Headers.GetValues("Set-Cookie"), cookie => cookie.Contains("Correlation", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -57,9 +56,8 @@ public sealed class AccountGoogleProtocolTests(ApiFactory factory)
         using var antiforgery = await client.GetAsync("/api/auth/external/google/antiforgery", Ct);
         using var token = await antiforgery.Content.ReadFromJsonAsync<JsonDocument>(Ct);
         await using var scope = host.Services.CreateAsyncScope();
-        var reauthTicket = await AccountJourney.IssueReauthTicketAsync(scope.ServiceProvider, account.UserId, ReauthAction.LinkGoogle, Ct);
         using var request = new HttpRequestMessage(HttpMethod.Post, "/api/me/external/google")
-            { Content = JsonContent.Create(new { reauthTicket, userId = Guid.NewGuid() }) };
+            { Content = JsonContent.Create(new { userId = Guid.NewGuid() }) };
         request.Headers.Add("RequestVerificationToken", token!.RootElement.GetProperty("requestToken").GetString());
         using var started = await client.SendAsync(request, Ct);
         Assert.Equal(HttpStatusCode.OK, started.StatusCode);

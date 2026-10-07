@@ -77,7 +77,7 @@ Suspended + fecha ──(reactiva, con la baja pedida)──► PendingDeletion
 Campos: `DeletionRequestedAtUtc`, `DeletionScheduledForUtc`, `DeletionReason`, `DeletionRequestedByOperatorId?` (null si la pidió la persona; si no, el operador que la inició) y `DeletedAtUtc`. El estado y la baja se guardan por separado (`Status` y `DeletionScheduledForUtc`): una cuenta suspendida con la baja iniciada sigue `Suspended`, con la fecha.
 
 **1. Pedir la baja** (`POST /api/me/deletion`, `[Idempotent]`, desde "Mi cuenta" en cualquiera de los dos accesos):
-- **Reautenticación:** un código enviado a un método verificado, validado hace menos de 5 minutos (`ReauthTicket`, el mismo que piden quitar o cambiar un método). Sin eso da `Legal.AccountDeletion.ReauthRequired`.
+- **Sesión iniciada:** la persona confirma el diálogo con motivo, sin código adicional (ADR 0045).
 - **Motivo** obligatorio (texto libre, `TextLimits`).
 - **`AccountDeletionPolicy` bloquea cuando:**
   - es el **único Dueño** de una organización que no está cerrada (cualquier estado menos `Closed`: `PendingApproval`, `Provisioning`, `Active` o `Suspended`). Da `Legal.AccountDeletion.LastAdmin`, con la lista de organizaciones. La salida es sumar otro Dueño, o pedirle a la plataforma que cierre la organización;
@@ -314,5 +314,5 @@ Los tests usan las entidades de `TestFeatures` (`Widget` privado, `Poster` públ
 | `Subdomain_resolves_public_data_only` | `empresa-a.plataforma.com` con un token de la Empresa B no ve datos privados de la Empresa A |
 | `Redirect_uri_only_for_published_slugs` | `authorize` con un subdominio inexistente es rechazado |
 | `Wrong_access_is_forbidden`, `Access_switch_requires_membership` | accesos y membresías |
-| `AccountDeletionTests` | la baja pide reautenticación; el único Dueño no puede darse de baja; revoca las sesiones; durante la gracia el ingreso ofrece cancelar; la eliminación anonimiza, libera el correo, quita las membresías y anonimiza la copia en los datos compartidos; la auditoría queda |
+| `AccountDeletionTests` | la baja requiere sesión y motivo, sin código adicional; el único Dueño no puede darse de baja; revoca las sesiones; durante la gracia el ingreso ofrece cancelar; la eliminación anonimiza, libera el correo, quita las membresías y anonimiza la copia en los datos compartidos; la auditoría queda |
 | RLS, rol de runtime, inventario de políticas, columnas inmutables, caché con prefijo | igual que antes, ahora para las tres clases |

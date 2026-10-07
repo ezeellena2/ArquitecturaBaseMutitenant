@@ -3,7 +3,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 
-/// <summary>Gestiona correos de ingreso de la cuenta: alta, verificación, elección del principal y baja con reautenticación.</summary>
+/// <summary>Gestiona correos de la sesión iniciada: alta, verificación propia, principal y baja.</summary>
 public interface ILoginMethodManagementService
 {
     Task<Result<LoginMethodCodeResponse>> AddEmailAsync(AddLoginEmailRequest request, CancellationToken cancellationToken);
