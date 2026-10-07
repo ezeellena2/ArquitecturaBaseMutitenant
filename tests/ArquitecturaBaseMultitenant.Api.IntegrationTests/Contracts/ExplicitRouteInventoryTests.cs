@@ -39,6 +39,8 @@ public sealed class ExplicitRouteInventoryTests(ApiFactory factory)
         "POST /api/auth/business-signup/verify",
         "POST /api/auth/business-signup",
         "GET /api/public-site/slug-availability",
+        "GET /api/public-site",
+        "GET /api/public-site/logo",
         "POST /api/invitations/preview",
         "POST /api/invitations/accept",
         "GET /api/home",
