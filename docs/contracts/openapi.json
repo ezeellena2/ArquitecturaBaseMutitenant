@@ -9562,6 +9562,68 @@
         }
       }
     },
+    "/api/account-recovery/preview": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewAccountRecoveryHttpRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewAccountRecoveryHttpRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewAccountRecoveryHttpRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/account-recovery/code": {
       "post": {
         "tags": [
@@ -15786,6 +15848,18 @@
           }
         }
       },
+      "PreviewAccountRecoveryHttpRequest": {
+        "type": "object",
+        "properties": {
+          "previousEmail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "description": "Correo con el que se entraba, enviado sólo en el cuerpo."
+      },
       "PreviewInvitationHttpRequest": {
         "type": "object",
         "properties": {
@@ -16077,7 +16151,7 @@
             "format": "int32"
           }
         },
-        "description": "La misma forma exista o no la cuenta: no revela si el correo está registrado."
+        "description": "La espera de un pedido de código aceptado, compartida por ingreso y registro."
       },
       "RequestRecoveryCodeHttpRequest": {
         "type": "object",

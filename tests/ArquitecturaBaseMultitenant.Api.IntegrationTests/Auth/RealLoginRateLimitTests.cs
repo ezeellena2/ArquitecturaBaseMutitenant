@@ -19,7 +19,7 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
 /// <summary>
 /// Comprueba los límites de las rutas reales de ingreso por IP y por intentos inválidos. Exige respuestas
-/// equivalentes para correos conocidos y desconocidos.
+/// propias para correos conocidos y desconocidos, conservando el tope por IP (ADR 0043).
 /// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class RealLoginRateLimitTests(ApiFactory factory)
@@ -31,6 +31,7 @@ public sealed class RealLoginRateLimitTests(ApiFactory factory)
     [InlineData("api/auth/login-code/verify", "login-verify")]
     [InlineData("api/auth/signup", "login-code")]
     [InlineData("api/auth/signup/verify", "login-verify")]
+    [InlineData("api/account-recovery/preview", "login-code")]
     public void Real_login_routes_declare_rate_limit_policies(string path, string policy)
     {
         using var client = factory.CreateClient();
@@ -42,8 +43,10 @@ public sealed class RealLoginRateLimitTests(ApiFactory factory)
         Assert.Equal(policy, endpoint.Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName);
     }
 
-    [Fact]
-    public async Task Real_login_route_limits_each_ip_separately()
+    [Theory]
+    [InlineData("/api/auth/login-code", false)]
+    [InlineData("/api/account-recovery/preview", true)]
+    public async Task Real_login_route_limits_each_ip_separately(string path, bool preview)
     {
         await using var limited = factory.WithWebHostBuilder(builder =>
         {
@@ -52,12 +55,18 @@ public sealed class RealLoginRateLimitTests(ApiFactory factory)
         });
         using var client = limited.CreateClient();
 
-        using var first = await PostCodeAsync(client, "/api/auth/login-code", "127.0.0.1");
-        using var second = await PostCodeAsync(client, "/api/auth/login-code", "127.0.0.2");
-        using var rejected = await PostCodeAsync(client, "/api/auth/login-code", "127.0.0.1");
+        using var first = await PostCodeAsync(client, path, "127.0.0.1", preview);
+        using var second = await PostCodeAsync(client, path, "127.0.0.2", preview);
+        using var rejected = await PostCodeAsync(client, path, "127.0.0.1", preview);
 
-        Assert.Equal(HttpStatusCode.Accepted, first.StatusCode);
-        Assert.Equal(HttpStatusCode.Accepted, second.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, first.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, second.StatusCode);
+        foreach (var response in new[] { first, second })
+        {
+            var problem = await response.Content.ReadFromJsonAsync<JsonElement>(Ct);
+            Assert.Equal(preview ? "Platform.AccountRecovery.AccountNotFound" : LoginCodeErrors.AccountNotFoundCode, problem.GetProperty("code").GetString());
+            Assert.True(problem.GetProperty("errors").TryGetProperty(preview ? "previousEmail" : "email", out _));
+        }
         Assert.Equal(HttpStatusCode.TooManyRequests, rejected.StatusCode);
         using var body = JsonDocument.Parse(await rejected.Content.ReadAsStringAsync(Ct));
         Assert.Equal("Http.TooManyRequests", body.RootElement.GetProperty("code").GetString());
@@ -66,7 +75,7 @@ public sealed class RealLoginRateLimitTests(ApiFactory factory)
     [Theory]
     [InlineData("/api/auth/login-code", false)]
     [InlineData("/api/auth/signup", true)]
-    public async Task Known_and_unknown_email_get_the_same_real_request_response(string path, bool signup)
+    public async Task Known_and_unknown_email_get_their_own_real_field_response(string path, bool signup)
     {
         if (signup)
         {
@@ -80,10 +89,13 @@ public sealed class RealLoginRateLimitTests(ApiFactory factory)
         using var knownResponse = await PostAsync(client, path, known, signup);
         using var unknownResponse = await PostAsync(client, path, unknown, signup);
 
-        Assert.Equal(HttpStatusCode.Accepted, knownResponse.StatusCode);
-        Assert.Equal(knownResponse.StatusCode, unknownResponse.StatusCode);
-        Assert.Equal(await knownResponse.Content.ReadAsStringAsync(Ct),
-            await unknownResponse.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(signup ? HttpStatusCode.BadRequest : HttpStatusCode.Accepted, knownResponse.StatusCode);
+        Assert.Equal(signup ? HttpStatusCode.Accepted : HttpStatusCode.BadRequest, unknownResponse.StatusCode);
+        var rejected = signup ? knownResponse : unknownResponse;
+        var problem = await rejected.Content.ReadFromJsonAsync<JsonElement>(Ct);
+        Assert.Equal(signup ? SignupErrors.EmailTakenCode : LoginCodeErrors.AccountNotFoundCode, problem.GetProperty("code").GetString());
+        Assert.True(problem.GetProperty("errors").TryGetProperty("email", out _));
+        Assert.False(rejected.Headers.Contains("Set-Cookie"));
     }
 
     [Fact]
@@ -102,11 +114,12 @@ public sealed class RealLoginRateLimitTests(ApiFactory factory)
         }
     }
 
-    private static async Task<HttpResponseMessage> PostCodeAsync(HttpClient client, string path, string ip)
+    private static async Task<HttpResponseMessage> PostCodeAsync(HttpClient client, string path, string ip, bool preview)
     {
+        var email = $"rate-{Guid.NewGuid():N}@example.test";
         using var request = new HttpRequestMessage(HttpMethod.Post, path)
         {
-            Content = JsonContent.Create(new { email = $"rate-{Guid.NewGuid():N}@example.test" }),
+            Content = JsonContent.Create(preview ? (object)new { previousEmail = email } : new { email }),
         };
         request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("D"));
         request.Headers.Add("X-Test-Remote-IP", ip);

@@ -26,59 +26,40 @@ public sealed class AccountMethodsHttpTests(ApiFactory factory)
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
-    public async Task Adding_an_email_of_another_account_answers_like_a_free_one_and_only_its_owner_hears()
-    {
-        using var ownerClient = factory.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
-        var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
-        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
-        var account = await AccountJourney.RegisterAsync(factory, client, Ct);
-        await AgeCodesAsync(owner.Email.Value);
-        var free = "free-" + Guid.NewGuid().ToString("N") + "@example.test";
-        var before = await OutboxIdsAsync();
-
-        using var freeAdded = await AddEmailAsync(client, account, free);
-        using var takenAdded = await AddEmailAsync(client, account, owner.Email.Value);
-
-        // ADR 0041: la misma respuesta y la misma espera para reenviar.
-        Assert.Equal(HttpStatusCode.Accepted, freeAdded.StatusCode);
-        Assert.Equal(freeAdded.StatusCode, takenAdded.StatusCode);
-        using var freeBody = await freeAdded.Content.ReadFromJsonAsync<JsonDocument>(Ct);
-        using var takenBody = await takenAdded.Content.ReadFromJsonAsync<JsonDocument>(Ct);
-        Assert.Equal(freeBody!.RootElement.EnumerateObject().Select(property => property.Name),
-            takenBody!.RootElement.EnumerateObject().Select(property => property.Name));
-        Assert.Equal(freeBody.RootElement.GetProperty("resendAfterSeconds").GetInt32(),
-            takenBody.RootElement.GetProperty("resendAfterSeconds").GetInt32());
-        using var freeAgain = await AddEmailAsync(client, account, free);
-        using var takenAgain = await AddEmailAsync(client, account, owner.Email.Value);
-        Assert.Equal(HttpStatusCode.TooManyRequests, takenAgain.StatusCode);
-        Assert.Equal(freeAgain.StatusCode, takenAgain.StatusCode);
-
-        await using var scope = factory.Services.CreateAsyncScope();
-        var services = scope.ServiceProvider;
-        var db = services.GetRequiredService<ApplicationDbContext>();
-        // Al dueño no le llega ningún código, solo el aviso; en la otra cuenta el correo queda pendiente, sin verificar.
-        var notice = Assert.Single(await EmailsToAsync(services, owner.Email.Value, before));
-        Assert.Equal("Ya tenés una cuenta con este correo", notice.Subject);
-        Assert.Contains("Alguien quiso agregar este correo para entrar a otra cuenta de", notice.TextBody);
-        Assert.Contains("Si fuiste vos, entrá con este correo: ya tenés una cuenta.", notice.TextBody);
-        Assert.Contains("Si no fuiste vos, ignorá este mensaje.", notice.TextBody);
-        Assert.DoesNotMatch(new System.Text.RegularExpressions.Regex(@"(?<!\d)\d{6}(?!\d)"), notice.TextBody);
-        Assert.False(await db.LoginCodes.AnyAsync(code => code.Destination == owner.Email.Value
-            && code.Purpose == LoginCodePurpose.VerifyDestination && code.SentAtUtc != null, Ct));
-        Assert.False(await db.LoginMethods.AnyAsync(method => method.UserId == account.UserId
-            && method.Value == owner.Email.Value && method.VerifiedAtUtc != null, Ct));
-        Assert.Single(await EmailsToAsync(services, free, before));
-    }
-
-    // D4b (ADR 0041): el correo de otra cuenta queda pendiente como uno libre, y cada paso responde lo mismo.
-    [Fact]
-    public async Task The_email_of_another_account_stays_pending_and_each_step_answers_like_a_free_one()
+    public async Task Adding_a_verified_email_of_another_account_rejects_without_a_pending_method_code_or_notice()
     {
         var (owner, client, account) = await TwoAccountsAsync();
         var free = "free-" + Guid.NewGuid().ToString("N") + "@example.test";
-        var taken = owner.Email.Value;
+        var before = await OutboxIdsAsync();
+        using var freeAdded = await AddEmailAsync(client, account, free);
+        Assert.Equal(HttpStatusCode.Accepted, freeAdded.StatusCode);
+        for (var attempt = 0; attempt < 2; attempt++)
+        {
+            using var takenAdded = await AddEmailAsync(client, account, owner.Email.Value);
+            Assert.Equal(HttpStatusCode.BadRequest, takenAdded.StatusCode);
+            var problem = await takenAdded.Content.ReadFromJsonAsync<JsonElement>(Ct);
+            Assert.Equal(LoginMethodErrors.AlreadyUsedCode, problem.GetProperty("code").GetString());
+            Assert.Equal("Ese correo ya está asociado a otra cuenta.", problem.GetProperty("errors").GetProperty("email")[0].GetString());
+        }
+        using var freeAgain = await AddEmailAsync(client, account, free);
+        Assert.Equal(HttpStatusCode.TooManyRequests, freeAgain.StatusCode);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        Assert.Empty(await EmailsToAsync(services, owner.Email.Value, before));
+        Assert.False(await db.LoginCodes.AnyAsync(code => code.Destination == owner.Email.Value && code.Purpose == LoginCodePurpose.VerifyDestination, Ct));
+        Assert.False(await db.LoginMethods.AnyAsync(method => method.UserId == account.UserId && method.Value == owner.Email.Value, Ct));
+        Assert.Single(await EmailsToAsync(services, free, before));
+    }
+
+    // La reserva pendiente ajena sigue siendo recuperable; sus códigos conservan intentos, reenvío y vencimiento.
+    [Fact]
+    public async Task An_unverified_reservation_is_reclaimed_and_its_code_keeps_attempts_and_resends()
+    {
+        var (owner, client, account) = await TwoAccountsAsync();
+        var free = "free-" + Guid.NewGuid().ToString("N") + "@example.test";
+        var taken = "reserved-" + Guid.NewGuid().ToString("N") + "@example.test";
+        await SeedPendingAsync(owner.UserId, taken);
         var before = await OutboxIdsAsync();
         var freeId = await AddedMethodIdAsync(client, account, free);
         var takenId = await AddedMethodIdAsync(client, account, taken);
@@ -91,7 +72,9 @@ public sealed class AccountMethodsHttpTests(ApiFactory factory)
         AssertSameRow(freeRow, takenRow);
 
         // Verificar con un código equivocado: la misma respuesta, y los dos cuentan el intento.
-        var wrong = await PickupCodeReader.ReadAsync(factory.Services, free, Ct) == "000000" ? "111111" : "000000";
+        var freeCode = await PickupCodeReader.ReadAsync(factory.Services, free, Ct);
+        var takenCode = await PickupCodeReader.ReadAsync(factory.Services, taken, Ct);
+        var wrong = new[] { "000000", "111111", "222222" }.First(value => value != freeCode && value != takenCode);
         for (var attempt = 0; attempt < 2; attempt++)
         {
             using var freeWrong = await VerifyAsync(client, freeId, wrong);
@@ -100,7 +83,7 @@ public sealed class AccountMethodsHttpTests(ApiFactory factory)
             await AssertSameProblemAsync(freeWrong, takenWrong);
         }
 
-        // Reenviar: la misma respuesta; al libre le llega otro código, al dueño del ocupado otro aviso y ningún código.
+        // Reenviar conserva la respuesta, el método y la espera de ambos códigos reales.
         await AgeCodesAsync(free);
         await AgeCodesAsync(taken);
         using var freeResent = await AccountJourney.PostAsync(client, $"/api/me/login-methods/{freeId:D}/code", new { }, Ct);
@@ -117,26 +100,23 @@ public sealed class AccountMethodsHttpTests(ApiFactory factory)
         await using var scope = factory.Services.CreateAsyncScope();
         var services = scope.ServiceProvider;
         Assert.Equal(2, (await EmailsToAsync(services, free, before)).Length);
-        var notices = await EmailsToAsync(services, taken, before);
-        Assert.Equal(2, notices.Length);
-        Assert.All(notices, notice => Assert.Equal("Ya tenés una cuenta con este correo", notice.Subject));
+        Assert.Equal(2, (await EmailsToAsync(services, taken, before)).Length);
         var db = services.GetRequiredService<ApplicationDbContext>();
-        Assert.False(await db.LoginCodes.AnyAsync(code => code.Destination == taken
+        Assert.True(await db.LoginCodes.AnyAsync(code => code.Destination == taken
             && code.Purpose == LoginCodePurpose.VerifyDestination && code.SentAtUtc != null, Ct));
-        // El dueño conserva su correo verificado; la otra cuenta solo tiene el pendiente.
-        Assert.True(await db.LoginMethods.AnyAsync(method => method.UserId == owner.UserId && method.Value == taken
-            && method.VerifiedAtUtc != null, Ct));
+        Assert.False(await db.LoginMethods.AnyAsync(method => method.UserId == owner.UserId && method.Value == taken, Ct));
         Assert.Equal(1, await db.LoginMethods.CountAsync(method => method.UserId == account.UserId
             && method.Value == taken && method.VerifiedAtUtc == null, Ct));
     }
 
-    // D4b: el pendiente de otra cuenta se quita y vence como cualquier otro.
+    // El pendiente recuperado se quita y vence como cualquier otro.
     [Fact]
-    public async Task The_pending_email_of_another_account_is_removed_and_expires_like_a_free_one()
+    public async Task A_reclaimed_pending_email_is_removed_and_expires_like_a_free_one()
     {
         var (owner, client, account) = await TwoAccountsAsync();
         var free = "free-" + Guid.NewGuid().ToString("N") + "@example.test";
-        var taken = owner.Email.Value;
+        var taken = "reserved-" + Guid.NewGuid().ToString("N") + "@example.test";
+        await SeedPendingAsync(owner.UserId, taken);
         var freeId = await AddedMethodIdAsync(client, account, free);
         var takenId = await AddedMethodIdAsync(client, account, taken);
 
@@ -158,6 +138,17 @@ public sealed class AccountMethodsHttpTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.BadRequest, freeExpired.StatusCode);
         await AssertSameProblemAsync(freeExpired, takenExpired);
         Assert.DoesNotContain(await MethodIdsAsync(client), id => id == freeId || id == takenId);
+    }
+
+    private async Task SeedPendingAsync(Guid userId, string email)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+        {
+            services.GetRequiredService<ILoginMethodRepository>().Add(LoginMethod.CreateEmail(userId, Email.Create(email).Value));
+            return Task.FromResult(Result.Success());
+        }, CommitPolicy.OnSuccess, Ct);
     }
 
     private async Task<(AccountJourney Owner, HttpClient Client, AccountJourney Account)> TwoAccountsAsync()

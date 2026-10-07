@@ -14,8 +14,8 @@ using Microsoft.Extensions.Logging;
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
 /// <summary>
-/// «Recuperar mi cuenta» (multitenancy.md §3.1, ADR 0041). Cada paso abre su UoW: el código se emite igual exista o
-/// no la cuenta, la verificación guarda los intentos fallidos y el pedido se registra una sola vez por código.
+/// «Recuperar mi cuenta» (ADR 0043). Consulta la cuenta anterior sin escribir; cada paso que escribe abre su UoW.
+/// Sólo emite para un correo nuevo libre y registra el pedido una vez por código, revalidando la propiedad.
 /// </summary>
 internal sealed class AccountRecoveryService(
     LoginCodeIssuer issuer,
@@ -30,6 +30,17 @@ internal sealed class AccountRecoveryService(
     TimeProvider timeProvider,
     ILogger<AccountRecoveryService> logger) : IAccountRecoveryService
 {
+    public Task<Result> PreviewAsync(PreviewAccountRecoveryRequest request, CancellationToken cancellationToken) =>
+        OperationLog.RunAsync(logger, timeProvider, "PreviewAccountRecovery", async () =>
+        {
+            ArgumentNullException.ThrowIfNull(request);
+            if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
+            return await userLookup.FindVerifiedUserIdAsync(LoginMethodType.Email, request.PreviousEmail!.Value,
+                cancellationToken) is null
+                ? FieldErrors.On(AccountRecoveryErrors.AccountNotFound, "previousEmail")
+                : Result.Success();
+        });
+
     public Task<Result<RequestLoginCodeResponse>> RequestCodeAsync(RequestRecoveryCodeRequest request,
         CancellationToken cancellationToken) =>
         OperationLog.RunAsync<RequestLoginCodeResponse>(logger, timeProvider, "RequestRecoveryCode", async () =>
@@ -40,16 +51,12 @@ internal sealed class AccountRecoveryService(
             var nonceHash = secrets.Hash(request.Nonce!);
             return await unitOfWork.ExecuteInTransactionAsync<Result<RequestLoginCodeResponse>>(async ct =>
             {
+                await issuer.LockDestinationAsync(destination, ct);
+                var owners = await userLookup.FindVerifiedUsersByEmailAsync(request.Email!, ct);
+                if (owners.Count > 0) return FieldErrors.On(AccountRecoveryErrors.MethodInUse, "email");
                 var issued = await issuer.IssueRecoveryCodeAsync(destination, nonceHash, ct);
                 if (issued.IsFailure) return issued.Error;
-                // Si el correo ya es de una cuenta (un método de correo o el contacto de Google, verificados), a su
-                // dueño le llega un aviso en lugar del código. El código se emite igual, sin mandarlo: los límites, los
-                // intentos y la respuesta no cambian.
-                var owners = await userLookup.FindVerifiedUsersByEmailAsync(request.Email!, ct);
-                if (owners.Count > 0)
-                    await messenger.NotifyMethodInUseAsync(owners[0], destination.Value, ct);
-                else
-                    await messenger.SendCodeAsync(destination, issued.Value, ct);
+                await messenger.SendCodeAsync(destination, issued.Value, ct);
                 return new RequestLoginCodeResponse(issued.Value.ResendCooldownSeconds);
             }, CommitPolicy.OnSuccess, cancellationToken);
         });
@@ -84,10 +91,13 @@ internal sealed class AccountRecoveryService(
                     return AccountRecoveryErrors.VerificationRequired;
                 var (type, value) = previous.Value;
                 var userId = await userLookup.FindVerifiedUserIdAsync(type, value, ct);
+                if (type == LoginMethodType.Email && userId is null)
+                    return FieldErrors.On(AccountRecoveryErrors.AccountNotFound, "previousEmail");
+                if ((await userLookup.FindVerifiedUsersByEmailAsync(newEmail, ct)).Count > 0)
+                    return FieldErrors.On(AccountRecoveryErrors.MethodInUse, "email");
                 recoveries.Add(AccountRecoveryRequest.Submit(code.Id, type, value, newEmail, userId,
                     timeProvider.GetUtcNow().UtcDateTime));
-                // El aviso a la cuenta encontrada sale después, con AccountRecoveryNoticeService: así el pedido
-                // escribe lo mismo y tarda lo mismo exista o no la cuenta (ADR 0041).
+                // El aviso a la cuenta encontrada sale después, con AccountRecoveryNoticeService.
                 await messenger.NotifyReceivedAsync(destination.Value, ct);
                 return Result.Success();
             }, CommitPolicy.OnSuccess, cancellationToken);

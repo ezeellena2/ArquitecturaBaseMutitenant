@@ -2,6 +2,12 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Models.Auth;
 
+/// <summary>Consulta el correo anterior sin emitir un código ni conceder una sesión.</summary>
+public sealed record PreviewAccountRecoveryRequest(Email? PreviousEmail)
+{
+    public override string ToString() => nameof(PreviewAccountRecoveryRequest);
+}
+
 /// <summary>
 /// Pide el código para el método nuevo de «Recuperar mi cuenta». El nonce lo genera el navegador y solo viaja en el
 /// cuerpo: ata el código a ese pedido.

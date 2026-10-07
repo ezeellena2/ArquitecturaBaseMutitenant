@@ -40,17 +40,6 @@ public abstract record AccountNotice
     public sealed record RecoveryReceived : AccountNotice;
 
     /// <summary>
-    /// Al dueño de un correo que alguien dio como método nuevo de «Recuperar mi cuenta», en lugar del código (ADR 0041).
-    /// </summary>
-    public sealed record RecoveryMethodInUse : AccountNotice;
-
-    /// <summary>
-    /// Al dueño de un correo que alguien quiso agregar en Mi cuenta, en lugar del código (ADR 0041, lienzo v83,
-    /// «Método de ingreso: ya es de una cuenta»).
-    /// </summary>
-    public sealed record LoginMethodInUse : AccountNotice;
-
-    /// <summary>
     /// Al correo del operador invitado (lienzo v90, Mensajes › «Invitación como operador»): quién invita, las claves
     /// de los permisos, que se muestran por nombre, el vencimiento en la zona dada y el enlace para entrar a
     /// Plataforma. Sale solo por correo.

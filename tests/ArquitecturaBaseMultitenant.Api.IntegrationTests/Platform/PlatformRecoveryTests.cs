@@ -2,10 +2,14 @@ using System.Net;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Platform;
+using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -109,11 +113,30 @@ public sealed class PlatformRecoveryTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task A_request_without_an_account_can_only_be_rejected()
+    public async Task A_legacy_request_without_an_account_can_only_be_rejected()
     {
         using var anonymous = Client();
         var newEmail = $"sin-cuenta-{Guid.NewGuid():N}@example.test";
-        await RecoveryJourney.SubmitAsync(factory, anonymous, newEmail, $"nadie-{Guid.NewGuid():N}@example.test", Ct);
+        // Los pedidos previos a ADR 0043 siguen en la bandeja, aunque el Submit actual rechace un correo sin cuenta.
+        var nonce = new string('C', 43);
+        using var requested = await AccountJourney.PostAsync(anonymous, "/api/account-recovery/code", new { email = newEmail, nonce }, Ct);
+        Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
+        var code = await PickupCodeReader.ReadAsync(factory.Services, newEmail, Ct);
+        using var verified = await AccountJourney.PostAsync(anonymous, "/api/account-recovery/verify", new { email = newEmail, nonce, code }, Ct);
+        Assert.Equal(HttpStatusCode.NoContent, verified.StatusCode);
+        await using (var setup = factory.Services.CreateAsyncScope())
+        {
+            var setupServices = setup.ServiceProvider;
+            await setupServices.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                var setupDb = setupServices.GetRequiredService<ApplicationDbContext>();
+                var loginCode = await setupDb.LoginCodes.SingleAsync(item => item.Destination == newEmail && item.Purpose == LoginCodePurpose.AccountRecovery, ct);
+                setupServices.GetRequiredService<IAccountRecoveryRepository>().Add(AccountRecoveryRequest.Submit(loginCode.Id,
+                    LoginMethodType.Email, $"nadie-{Guid.NewGuid():N}@example.test", Email.Create(newEmail).Value, null,
+                    setupServices.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime));
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+        }
         using var platform = await OperatorAsync([PlatformPermissions.Recoveries.Manage]);
         var row = await RowAsync(platform, newEmail);
         Assert.Equal(JsonValueKind.Null, row.GetProperty("accountId").ValueKind);

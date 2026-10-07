@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Auth;
 
 /// <summary>
-/// «Recuperar mi cuenta», sin sesión. Las respuestas son las mismas exista o no la cuenta y ninguna entrega una sesión;
+/// «Recuperar mi cuenta», sin sesión. Valida la cuenta anterior y el nuevo correo sin entregar una sesión;
 /// los límites por IP son los del ingreso por código.
 /// </summary>
 [ApiController]
@@ -23,6 +23,20 @@ namespace ArquitecturaBaseMultitenant.Api.Controllers.Auth;
 [Tags("Auth")]
 public sealed class AccountRecoveryController(IAccountRecoveryService service) : ControllerBase
 {
+    [HttpPost("preview")]
+    [EnableRateLimiting(RateLimitPolicies.LoginCode)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
+    [ProducesProblem(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> Preview([FromBody] PreviewAccountRecoveryHttpRequest request,
+        CancellationToken cancellationToken)
+    {
+        var email = AuthEmailMapping.Parse(request.PreviousEmail, "previousEmail");
+        if (email.IsFailure) return Result.Failure(email.Error).ToActionResult(this);
+        return (await service.PreviewAsync(new PreviewAccountRecoveryRequest(email.Value), cancellationToken))
+            .ToActionResult(this);
+    }
+
     [HttpPost("code")]
     [Idempotent]
     [EnableRateLimiting(RateLimitPolicies.LoginCode)]

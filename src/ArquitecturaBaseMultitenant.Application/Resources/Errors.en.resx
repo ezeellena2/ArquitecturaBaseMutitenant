@@ -198,4 +198,8 @@
   <data name="Platform.AccountRecovery.OperatorAccount" xml:space="preserve"><value>This is a platform operator account: it cannot be recovered here.</value></data>
   <data name="Features.Module.InvalidExpiry" xml:space="preserve"><value>Choose a date whose full day can be represented.</value></data>
   <data name="Legal.AccountDeletion.LeaseInvalid" xml:space="preserve"><value>The deletion processing lease is no longer valid.</value></data>
+  <data name="Auth.LoginCode.AccountNotFound" xml:space="preserve"><value>There is no account with that email address.</value></data>
+  <data name="Auth.Signup.EmailTaken" xml:space="preserve"><value>You already have an account with that email address.</value></data>
+  <data name="Platform.AccountRecovery.AccountNotFound" xml:space="preserve"><value>There is no account with that email address.</value></data>
+  <data name="Identity.LoginMethod.AlreadyUsed" xml:space="preserve"><value>That email address is already associated with another account.</value></data>
 </root>

@@ -198,4 +198,8 @@
   <data name="Platform.AccountRecovery.OperatorAccount" xml:space="preserve"><value>La cuenta es de un operador de la plataforma: no se recupera desde acá.</value></data>
   <data name="Features.Module.InvalidExpiry" xml:space="preserve"><value>Elegí una fecha cuyo día completo pueda representarse.</value></data>
   <data name="Legal.AccountDeletion.LeaseInvalid" xml:space="preserve"><value>La autorización para procesar la baja ya no es válida.</value></data>
+  <data name="Auth.LoginCode.AccountNotFound" xml:space="preserve"><value>No hay una cuenta con ese correo.</value></data>
+  <data name="Auth.Signup.EmailTaken" xml:space="preserve"><value>Ya tenés una cuenta con ese correo.</value></data>
+  <data name="Platform.AccountRecovery.AccountNotFound" xml:space="preserve"><value>No hay una cuenta con ese correo.</value></data>
+  <data name="Identity.LoginMethod.AlreadyUsed" xml:space="preserve"><value>Ese correo ya está asociado a otra cuenta.</value></data>
 </root>

@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
+using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
@@ -25,11 +26,13 @@ internal sealed class LoginCodeRequester(
         RequestLoginCodeRequest request, CancellationToken cancellationToken)
     {
         var destination = LoginCodeDestination.ForEmail(request.Email!);
-        var issued = await issuer.IssueLoginCodeAsync(destination, cancellationToken);
-        if (issued.IsFailure) return issued.Error;
-
+        await issuer.LockDestinationAsync(destination, cancellationToken);
         var userId = await userLookup.FindVerifiedUserIdAsync(
             LoginMethodType.Email, destination.Value, cancellationToken);
+        if (userId is null) return FieldErrors.On(LoginCodeErrors.AccountNotFound, "email");
+
+        var issued = await issuer.IssueLoginCodeAsync(destination, cancellationToken);
+        if (issued.IsFailure) return issued.Error;
         UserAccountRow? account = null;
         if (userId is { } id)
         {
@@ -41,7 +44,7 @@ internal sealed class LoginCodeRequester(
             ?? throw new InvalidOperationException("The email login channel is not registered.");
         var payload = channel.RenderLoginCode(destination.Value, issued.Value.Code,
             issued.Value.LifetimeMinutes, culture);
-        // ADR 0042: con una invitación de operador vencida no se entra; no sale el código, como sin cuenta.
+        // ADR 0042: una invitación de operador vencida conserva la guarda y no envía el código.
         var expiredInvitation = account?.OperatorInvitationExpiresAtUtc is { } expiresAtUtc
             && expiresAtUtc <= issued.Value.IssuedAtUtc;
         if (userId is { } knownUserId && !expiredInvitation

@@ -9,12 +9,14 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
 /// <summary>
-/// Comprueba que también se prepare el mensaje para una cuenta desconocida. Protege el comportamiento que
-/// evita revelar la existencia de un correo.
+/// Comprueba el error de campo para una cuenta desconocida sin preparar, emitir ni enviar un código (ADR 0043).
 /// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class LoginCodeEnumerationTests(ApiFactory factory)
@@ -22,7 +24,7 @@ public sealed class LoginCodeEnumerationTests(ApiFactory factory)
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
-    public async Task Unknown_account_still_renders_the_login_message()
+    public async Task Unknown_account_returns_a_field_error_without_rendering_issuing_or_sending_a_code()
     {
         var renderer = new RecordingRenderer();
         using var host = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
@@ -35,16 +37,26 @@ public sealed class LoginCodeEnumerationTests(ApiFactory factory)
             BaseAddress = new Uri("https://localhost"),
             AllowAutoRedirect = false,
         });
+        var email = $"unknown-{Guid.NewGuid():N}@example.test";
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var outboxBefore = await db.OutboxMessages.CountAsync(Ct);
         using var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login-code")
         {
-            Content = JsonContent.Create(new { email = $"unknown-{Guid.NewGuid():N}@example.test" }),
+            Content = JsonContent.Create(new { email }),
         };
         request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("N"));
 
         using var response = await client.SendAsync(request, Ct);
 
-        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
-        Assert.Equal(1, renderer.LoginRenders);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>(Ct);
+        Assert.Equal("Auth.LoginCode.AccountNotFound", problem.GetProperty("code").GetString());
+        Assert.Equal("No hay una cuenta con ese correo.", problem.GetProperty("errors").GetProperty("email")[0].GetString());
+        Assert.True(problem.TryGetProperty("traceId", out _));
+        Assert.Equal(0, renderer.LoginRenders);
+        Assert.False(await db.LoginCodes.AnyAsync(code => code.Destination == email, Ct));
+        Assert.Equal(outboxBefore, await db.OutboxMessages.CountAsync(Ct));
     }
 
     private sealed class RecordingRenderer : IEmailTemplateRenderer

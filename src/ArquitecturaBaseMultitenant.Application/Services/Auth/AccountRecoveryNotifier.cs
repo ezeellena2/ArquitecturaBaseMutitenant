@@ -26,9 +26,6 @@ internal sealed class AccountRecoveryNotifier(IEnumerable<ILoginCodeChannel> cod
         issued.LoginCode.MarkSent(issued.IssuedAtUtc);
     }
 
-    public Task NotifyMethodInUseAsync(Guid ownerId, string email, CancellationToken cancellationToken) =>
-        notices.EnqueueToOwnerAsync(ownerId, email, new AccountNotice.RecoveryMethodInUse(), cancellationToken);
-
     public async Task NotifyReceivedAsync(string email, CancellationToken cancellationToken) =>
         await EmailChannel().EnqueueAsync(null, email, new AccountNotice.RecoveryReceived(),
             await cultures.ResolveAsync(null, null, cancellationToken), cancellationToken);

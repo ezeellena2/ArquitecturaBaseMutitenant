@@ -2,6 +2,12 @@ using ArquitecturaBaseMultitenant.Api.Contracts.Common;
 
 namespace ArquitecturaBaseMultitenant.Api.Contracts.Auth;
 
+/// <summary>Correo con el que se entraba, enviado sólo en el cuerpo.</summary>
+public sealed record PreviewAccountRecoveryHttpRequest(string? PreviousEmail)
+{
+    public override string ToString() => nameof(PreviewAccountRecoveryHttpRequest);
+}
+
 /// <summary>Correo nuevo y nonce del navegador; el nonce no vuelve en ninguna respuesta.</summary>
 public sealed record RequestRecoveryCodeHttpRequest(string? Email, string? Nonce)
 {

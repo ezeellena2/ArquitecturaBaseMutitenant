@@ -1,4 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
+using ArquitecturaBaseMultitenant.Application.Common.Validation;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
@@ -8,7 +10,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
 /// <summary>Aplica la política de alta y encola el código en la transacción del llamador.</summary>
 internal sealed class SignupCodeRequester(SignupPolicy policy, LoginCodeIssuer issuer,
-    ILoginCodeRepository codes, UserCultureResolver userCultures, IEnumerable<ILoginCodeChannel> channels)
+    ILoginCodeRepository codes, UserCultureResolver userCultures, IEnumerable<ILoginCodeChannel> channels,
+    IUserLookup users)
 {
     internal async Task<Result<RequestLoginCodeResponse>> RequestAsync(SignupRequest request,
         CancellationToken cancellationToken)
@@ -17,6 +20,8 @@ internal sealed class SignupCodeRequester(SignupPolicy policy, LoginCodeIssuer i
         await codes.LockDestinationAsync(destination, cancellationToken);
         var allowed = await policy.CanRegisterAsync(cancellationToken);
         if (allowed.IsFailure) return allowed.Error;
+        if ((await users.FindVerifiedUsersByEmailAsync(request.Email!, cancellationToken)).Count > 0)
+            return FieldErrors.On(SignupErrors.EmailTaken, "email");
 
         var issued = await issuer.IssueSignupCodeAsync(destination, cancellationToken);
         if (issued.IsFailure) return issued.Error;

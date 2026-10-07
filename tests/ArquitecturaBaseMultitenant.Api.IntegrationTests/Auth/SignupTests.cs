@@ -133,7 +133,7 @@ public sealed class SignupTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task Existing_email_with_different_case_enters_without_creating_second_account()
+    public async Task Existing_email_with_different_case_is_rejected_without_creating_second_account()
     {
         await factory.Services.SeedDatabaseAsync(Ct);
         using var client = factory.CreateClient();
@@ -162,11 +162,11 @@ public sealed class SignupTests(ApiFactory factory)
         var upperCaseAddress = address.ToUpperInvariant();
         var again = await client.PostAsJsonAsync("/test/auth/signup",
             new { email = upperCaseAddress, acceptedTerms = true }, Ct);
-        Assert.Equal(HttpStatusCode.Accepted, again.StatusCode);
-        var secondCode = await ReadPickupCodeAsync(address);
-        var second = await client.PostAsJsonAsync("/test/auth/signup/verify",
-            new { email = upperCaseAddress, code = secondCode, acceptedTerms = true }, Ct);
-        Assert.Equal(HttpStatusCode.NoContent, second.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, again.StatusCode);
+        var problem = await again.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>(Ct);
+        Assert.Equal("Auth.Signup.EmailTaken", problem.GetProperty("code").GetString());
+        Assert.True(problem.GetProperty("errors").TryGetProperty("email", out _));
+        Assert.False(again.Headers.Contains("Set-Cookie"));
 
         await using var connection = new NpgsqlConnection(factory.AdminConnectionString);
         await connection.OpenAsync(Ct);
@@ -186,7 +186,7 @@ public sealed class SignupTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task Existing_email_signup_failures_lock_the_account_and_block_a_correct_code()
+    public async Task Existing_email_business_signup_failures_lock_the_account_and_block_a_correct_code()
     {
         await factory.Services.SeedDatabaseAsync(Ct);
         using var client = factory.CreateClient();
@@ -196,14 +196,14 @@ public sealed class SignupTests(ApiFactory factory)
         for (var batch = 0; batch < 2; batch++)
         {
             if (batch > 0) await AgeLoginCodesAsync(address);
-            var requested = await client.PostAsJsonAsync("/test/auth/signup",
+            var requested = await AccountJourney.PostAsync(client, "/api/auth/business-signup/code",
                 new { email = address, acceptedTerms = true }, Ct);
             Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
             var correctCode = await ReadPickupCodeAsync(address);
             var wrongCode = correctCode == "000000" ? "999999" : "000000";
             for (var attempt = 0; attempt < 5; attempt++)
             {
-                var failed = await client.PostAsJsonAsync("/test/auth/signup/verify",
+                var failed = await AccountJourney.PostAsync(client, "/api/auth/business-signup/verify",
                     new { email = address, code = wrongCode, acceptedTerms = true }, Ct);
                 Assert.False(failed.Headers.Contains("Set-Cookie"));
                 Assert.NotEqual(HttpStatusCode.NoContent, failed.StatusCode);
@@ -215,11 +215,11 @@ public sealed class SignupTests(ApiFactory factory)
                 .IsLockedOutAsync(userId, Ct));
 
         await AgeLoginCodesAsync(address);
-        var finalRequest = await client.PostAsJsonAsync("/test/auth/signup",
+        var finalRequest = await AccountJourney.PostAsync(client, "/api/auth/business-signup/code",
             new { email = address, acceptedTerms = true }, Ct);
         Assert.Equal(HttpStatusCode.Accepted, finalRequest.StatusCode);
         var finalCode = await ReadPickupCodeAsync(address);
-        var blocked = await client.PostAsJsonAsync("/test/auth/signup/verify",
+        var blocked = await AccountJourney.PostAsync(client, "/api/auth/business-signup/verify",
             new { email = address, code = finalCode, acceptedTerms = true }, Ct);
         Assert.Equal(HttpStatusCode.TooManyRequests, blocked.StatusCode);
         var problem = await blocked.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>(Ct);
@@ -228,13 +228,13 @@ public sealed class SignupTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task Existing_email_locked_by_login_cannot_enter_through_signup()
+    public async Task Existing_email_locked_by_login_cannot_enter_through_business_signup()
     {
         await factory.Services.SeedDatabaseAsync(Ct);
         using var client = factory.CreateClient();
         var address = $"signup-bypass-{Guid.NewGuid():N}@example.test";
         var userId = await CreateVerifiedEmailAccountAsync(address);
-        var requested = await client.PostAsJsonAsync("/test/auth/signup",
+        var requested = await AccountJourney.PostAsync(client, "/api/auth/business-signup/code",
             new { email = address, acceptedTerms = true }, Ct);
         Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
         var code = await ReadPickupCodeAsync(address);
@@ -251,7 +251,7 @@ public sealed class SignupTests(ApiFactory factory)
             }, CommitPolicy.OnSuccess, Ct);
         }
 
-        var blocked = await client.PostAsJsonAsync("/test/auth/signup/verify",
+        var blocked = await AccountJourney.PostAsync(client, "/api/auth/business-signup/verify",
             new { email = address, code, acceptedTerms = true }, Ct);
         Assert.Equal(HttpStatusCode.TooManyRequests, blocked.StatusCode);
         Assert.False(blocked.Headers.Contains("Set-Cookie"));

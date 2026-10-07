@@ -77,16 +77,6 @@
   <data name="RecoveryReceived.Title" xml:space="preserve"><value>Recibimos tu pedido</value></data>
   <data name="RecoveryReceived.Body" xml:space="preserve"><value>Recibimos tu pedido para recuperar tu cuenta de {0}. Lo revisa una persona de la plataforma y te avisamos a este correo.</value></data>
   <data name="RecoveryReceived.Note" xml:space="preserve"><value>Si no pediste esto, ignorá este mensaje.</value></data>
-  <data name="RecoveryMethodInUse.Subject" xml:space="preserve"><value>Ya tenés una cuenta con este correo</value></data>
-  <data name="RecoveryMethodInUse.Title" xml:space="preserve"><value>Ya tenés una cuenta con este correo</value></data>
-  <data name="RecoveryMethodInUse.Body" xml:space="preserve"><value>Alguien pidió recuperar una cuenta de {0} y nos dio este correo para escribirle. Este correo ya es de una cuenta, así que no mandamos ningún código.</value></data>
-  <data name="RecoveryMethodInUse.After" xml:space="preserve"><value>Si fuiste vos, entrá con este correo: no hace falta recuperar nada.</value></data>
-  <data name="RecoveryMethodInUse.Note" xml:space="preserve"><value>Si no fuiste vos, ignorá este mensaje.</value></data>
-  <data name="LoginMethodInUse.Subject" xml:space="preserve"><value>Ya tenés una cuenta con este correo</value></data>
-  <data name="LoginMethodInUse.Title" xml:space="preserve"><value>Ya tenés una cuenta con este correo</value></data>
-  <data name="LoginMethodInUse.Body" xml:space="preserve"><value>Alguien quiso agregar este correo para entrar a otra cuenta de {0}. Este correo ya es de una cuenta, así que no lo agregamos y no mandamos ningún código.</value></data>
-  <data name="LoginMethodInUse.After" xml:space="preserve"><value>Si fuiste vos, entrá con este correo: ya tenés una cuenta.</value></data>
-  <data name="LoginMethodInUse.Note" xml:space="preserve"><value>Si no fuiste vos, ignorá este mensaje.</value></data>
   <data name="OperatorInvited.Subject" xml:space="preserve"><value>{0} te invitó como operador de {1}</value></data>
   <data name="OperatorInvited.Title" xml:space="preserve"><value>Te invitaron como operador</value></data>
   <data name="OperatorInvited.Body" xml:space="preserve"><value>{0} {1} te invitó a sumarte como operador de la plataforma {2}.</value></data>

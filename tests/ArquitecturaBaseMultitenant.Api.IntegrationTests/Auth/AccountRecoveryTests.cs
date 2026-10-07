@@ -2,7 +2,6 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
@@ -21,8 +20,8 @@ using Npgsql;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
 /// <summary>
-/// «Recuperar mi cuenta» (ADR 0041): la respuesta no revela si un correo tiene cuenta, el código queda atado al
-/// nonce del navegador, solo un método nuevo verificado registra el pedido y nunca se entrega una sesión.
+/// «Recuperar mi cuenta» (ADR 0043): valida la cuenta anterior y propiedad del nuevo correo, conserva el nonce,
+/// la verificación y el uso único del código, y nunca entrega una sesión.
 /// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class AccountRecoveryTests(ApiFactory factory)
@@ -90,68 +89,47 @@ public sealed class AccountRecoveryTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task A_new_email_that_already_has_an_account_gets_a_notice_instead_of_a_code_with_the_same_response()
+    public async Task A_new_email_that_already_has_an_account_is_rejected_without_a_code_or_notice()
     {
         using var person = Client();
         var owner = await AccountJourney.RegisterAsync(factory, person, Ct);
-        // Los límites por destino se comparten con el código del registro recién pedido.
         await AgeLoginCodesAsync(owner.Email.Value);
         using var anonymous = Client();
         var before = await OutboxIdsAsync();
         var takenNonce = Nonce();
         var freeEmail = $"recover-{Guid.NewGuid():N}@example.test";
         var freeNonce = Nonce();
-
         using var taken = await AccountJourney.PostAsync(anonymous, "/api/account-recovery/code",
             new { email = owner.Email.Value, nonce = takenNonce }, Ct);
+        Assert.Equal(HttpStatusCode.BadRequest, taken.StatusCode);
+        var rejected = await JsonAsync(taken);
+        Assert.Equal(AccountRecoveryErrors.MethodInUseCode, rejected.GetProperty("code").GetString());
+        Assert.Equal("Ese correo ya es de otra cuenta.", rejected.GetProperty("errors").GetProperty("email")[0].GetString());
         using var free = await AccountJourney.PostAsync(anonymous, "/api/account-recovery/code",
             new { email = freeEmail, nonce = freeNonce }, Ct);
-
-        Assert.Equal(free.StatusCode, taken.StatusCode);
-        Assert.Equal(await free.Content.ReadAsStringAsync(Ct), await taken.Content.ReadAsStringAsync(Ct));
-        // Pedir otro enseguida da la misma espera en los dos casos.
-        using var takenAgain = await AccountJourney.PostAsync(anonymous, "/api/account-recovery/code",
-            new { email = owner.Email.Value, nonce = takenNonce }, Ct);
+        Assert.Equal(HttpStatusCode.Accepted, free.StatusCode);
         using var freeAgain = await AccountJourney.PostAsync(anonymous, "/api/account-recovery/code",
             new { email = freeEmail, nonce = freeNonce }, Ct);
-        Assert.Equal(HttpStatusCode.TooManyRequests, takenAgain.StatusCode);
-        Assert.Equal(freeAgain.StatusCode, takenAgain.StatusCode);
-        var takenWait = await JsonAsync(takenAgain);
-        var freeWait = await JsonAsync(freeAgain);
-        Assert.Equal(freeWait.GetProperty("code").GetString(), takenWait.GetProperty("code").GetString());
-        Assert.InRange(freeWait.GetProperty(LoginCodeErrors.RetryAfterKey).GetInt32()
-            - takenWait.GetProperty(LoginCodeErrors.RetryAfterKey).GetInt32(), -1, 1);
-        await using (var scope = factory.Services.CreateAsyncScope())
-        {
-            var services = scope.ServiceProvider;
-            var notice = Assert.Single(await EmailsToAsync(services, owner.Email.Value, before));
-            Assert.Equal("Ya tenés una cuenta con este correo", notice.Subject);
-            Assert.Contains("no mandamos ningún código", notice.TextBody);
-            Assert.DoesNotMatch(new Regex(@"(?<!\d)\d{6}(?!\d)"), notice.TextBody);
-            var db = services.GetRequiredService<ApplicationDbContext>();
-            var row = await db.LoginCodes.AsNoTracking().SingleAsync(item =>
-                item.Destination == owner.Email.Value && item.Purpose == LoginCodePurpose.AccountRecovery, Ct);
-            Assert.Null(row.SentAtUtc);
-            Assert.NotNull(row.NonceHash);
-            Assert.True(await db.OutboxMessages.AnyAsync(message => message.UserId == owner.UserId && !before.Contains(message.Id), Ct));
-        }
-
+        Assert.Equal(HttpStatusCode.TooManyRequests, freeAgain.StatusCode);
+        Assert.True((await JsonAsync(freeAgain)).GetProperty(LoginCodeErrors.RetryAfterKey).GetInt32() > 0);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        Assert.Empty(await EmailsToAsync(services, owner.Email.Value, before));
+        Assert.False(await services.GetRequiredService<ApplicationDbContext>().LoginCodes.AnyAsync(item =>
+            item.Destination == owner.Email.Value && item.Purpose == LoginCodePurpose.AccountRecovery, Ct));
         using var guessed = await AccountJourney.PostAsync(anonymous, "/api/account-recovery/verify",
             new { email = owner.Email.Value, nonce = takenNonce, code = "123456" }, Ct);
         Assert.Equal(HttpStatusCode.BadRequest, guessed.StatusCode);
-        var problem = await JsonAsync(guessed);
-        Assert.Equal(LoginCodeErrors.InvalidCode, problem.GetProperty("code").GetString());
-        // Igual que un código mandado y mal escrito: los intentos restantes no delatan que no hubo código.
-        Assert.Equal(4, problem.GetProperty(LoginCodeErrors.AttemptsLeftKey).GetInt32());
+        Assert.Equal(LoginCodeErrors.InvalidCode, await CodeAsync(guessed));
         var freeCode = await PickupCodeReader.ReadAsync(factory.Services, freeEmail, Ct);
         using var mistyped = await AccountJourney.PostAsync(anonymous, "/api/account-recovery/verify",
             new { email = freeEmail, nonce = freeNonce, code = OtherCode(freeCode) }, Ct);
-        Assert.Equal(mistyped.StatusCode, guessed.StatusCode);
-        Assert.Equal(WithoutTrace(await JsonAsync(mistyped)), WithoutTrace(problem));
+        Assert.Equal(HttpStatusCode.BadRequest, mistyped.StatusCode);
+        Assert.Equal(4, (await JsonAsync(mistyped)).GetProperty(LoginCodeErrors.AttemptsLeftKey).GetInt32());
     }
 
     [Fact]
-    public async Task A_google_contact_email_counts_as_an_account_and_gets_the_notice()
+    public async Task A_google_contact_email_is_owned_for_recovery_and_personal_signup()
     {
         using var person = Client();
         var owner = await AccountJourney.RegisterAsync(factory, person, Ct);
@@ -175,15 +153,21 @@ public sealed class AccountRecoveryTests(ApiFactory factory)
         using var requested = await AccountJourney.PostAsync(anonymous, "/api/account-recovery/code",
             new { email = contact, nonce = Nonce() }, Ct);
 
-        Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, requested.StatusCode);
+        Assert.Equal(AccountRecoveryErrors.MethodInUseCode, await CodeAsync(requested));
+        using var signup = await AccountJourney.PostAsync(anonymous, "/api/auth/signup", new { email = contact, acceptedTerms = true }, Ct);
+        Assert.Equal(HttpStatusCode.BadRequest, signup.StatusCode);
+        Assert.Equal("Auth.Signup.EmailTaken", await CodeAsync(signup));
         await using var check = factory.Services.CreateAsyncScope();
-        var notice = Assert.Single(await EmailsToAsync(check.ServiceProvider, contact, before));
-        Assert.Equal("Ya tenés una cuenta con este correo", notice.Subject);
+        Assert.Empty(await EmailsToAsync(check.ServiceProvider, contact, before));
+        Assert.False(await check.ServiceProvider.GetRequiredService<ApplicationDbContext>().LoginCodes.AnyAsync(code => code.Destination == contact, Ct));
     }
 
     [Fact]
     public async Task Two_simultaneous_submissions_with_the_same_code_register_a_single_request()
     {
+        using var person = Client();
+        var account = await AccountJourney.RegisterAsync(factory, person, Ct);
         using var anonymous = Client();
         var newEmail = $"recover-{Guid.NewGuid():N}@example.test";
         var nonce = Nonce();
@@ -195,7 +179,7 @@ public sealed class AccountRecoveryTests(ApiFactory factory)
             new { email = newEmail, nonce, code }, Ct);
         Assert.Equal(HttpStatusCode.NoContent, verified.StatusCode);
 
-        var body = new { email = newEmail, nonce, previousEmail = "antes-" + newEmail };
+        var body = new { email = newEmail, nonce, previousEmail = account.Email.Value };
         var responses = await Task.WhenAll(
             SendAsync(anonymous, "/api/account-recovery", body, Guid.NewGuid().ToString("D")),
             SendAsync(anonymous, "/api/account-recovery", body, Guid.NewGuid().ToString("D")));
@@ -267,7 +251,7 @@ public sealed class AccountRecoveryTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task Registering_a_request_writes_the_same_with_or_without_an_account_and_the_account_hears_afterwards()
+    public async Task Submitting_revalidates_the_previous_account_and_only_the_existing_account_hears_afterwards()
     {
         using var person = Client();
         var account = await AccountJourney.RegisterAsync(factory, person, Ct);
@@ -276,12 +260,11 @@ public sealed class AccountRecoveryTests(ApiFactory factory)
         var forNobody = $"recover-{Guid.NewGuid():N}@example.test";
 
         var withAccount = await SubmitCountingWritesAsync(anonymous, forAccount, account.Email.Value);
-        var withoutAccount = await SubmitCountingWritesAsync(anonymous, forNobody, $"nadie-{Guid.NewGuid():N}@example.test");
+        var withoutAccount = await SubmitCountingWritesAsync(anonymous, forNobody, $"nadie-{Guid.NewGuid():N}@example.test", accountExists: false);
 
-        // ADR 0041: el pedido escribe lo mismo exista o no la cuenta (el pedido y el acuse al correo nuevo); el aviso
-        // a la cuenta no se decide ni se encola durante la respuesta.
+        // El Submit no permite saltear Preview; el aviso legítimo a la cuenta se encola después.
         Assert.Equal((Requests: 1, Messages: 1), withAccount);
-        Assert.Equal(withoutAccount, withAccount);
+        Assert.Equal((Requests: 0, Messages: 0), withoutAccount);
         var before = await OutboxIdsAsync();
         await ActivatorUtilities.CreateInstance<AccountRecoveryNoticeWorker>(factory.Services).RunOnceAsync(Ct);
 
@@ -303,7 +286,7 @@ public sealed class AccountRecoveryTests(ApiFactory factory)
 
     /// <summary>Pide, verifica y registra un pedido; cuenta los pedidos y los mensajes que escribió el registro.</summary>
     private async Task<(int Requests, int Messages)> SubmitCountingWritesAsync(HttpClient client, string newEmail,
-        string previousEmail)
+        string previousEmail, bool accountExists = true)
     {
         var nonce = Nonce();
         using var requested = await AccountJourney.PostAsync(client, "/api/account-recovery/code",
@@ -316,7 +299,8 @@ public sealed class AccountRecoveryTests(ApiFactory factory)
         var (requestsBefore, messagesBefore) = await CountWritesAsync();
         using var submitted = await AccountJourney.PostAsync(client, "/api/account-recovery",
             new { email = newEmail, nonce, previousEmail }, Ct);
-        Assert.Equal(HttpStatusCode.Accepted, submitted.StatusCode);
+        Assert.Equal(accountExists ? HttpStatusCode.Accepted : HttpStatusCode.BadRequest, submitted.StatusCode);
+        if (!accountExists) Assert.Equal(AccountRecoveryErrors.AccountNotFoundCode, await CodeAsync(submitted));
         var (requestsAfter, messagesAfter) = await CountWritesAsync();
         return (requestsAfter - requestsBefore, messagesAfter - messagesBefore);
     }
@@ -344,11 +328,6 @@ public sealed class AccountRecoveryTests(ApiFactory factory)
         factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
 
     private static string OtherCode(string code) => code == "000000" ? "111111" : "000000";
-
-    /// <summary>El problema sin el traceId, que cambia en cada pedido.</summary>
-    private static string WithoutTrace(JsonElement problem) =>
-        JsonSerializer.Serialize(problem.EnumerateObject().Where(property => property.Name != "traceId")
-            .ToDictionary(property => property.Name, property => property.Value.ToString()));
 
     private static string Nonce() => WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(32));
 

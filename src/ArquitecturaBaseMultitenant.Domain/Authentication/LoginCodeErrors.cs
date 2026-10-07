@@ -14,6 +14,8 @@ public static class LoginCodeErrors
     public const string TooManyAttemptsCode = "Auth.LoginCode.TooManyAttempts";
     public const string ResendTooSoonCode = "Auth.LoginCode.ResendTooSoon";
     public const string TooManyRequestsCode = "Auth.LoginCode.TooManyRequests";
+    public const string AccountNotFoundCode = "Auth.LoginCode.AccountNotFound";
+    public static readonly Error AccountNotFound = Error.NotFound(AccountNotFoundCode, "No account has that email address.");
 
     public const string AttemptsLeftKey = "attemptsLeft";
     public const string RetryAfterKey = "retryAfter";

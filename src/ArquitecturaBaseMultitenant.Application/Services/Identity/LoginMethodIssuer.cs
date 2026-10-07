@@ -1,8 +1,8 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
+using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
-using ArquitecturaBaseMultitenant.Application.Models.Notifications;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -12,13 +12,12 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
 /// <summary>
 /// Agrega un correo de ingreso o reenvía su código de verificación; trabaja dentro de la transacción abierta por el
-/// servicio. Un correo que ya es de otra cuenta responde igual que uno libre en cada paso (ADR 0041): queda pendiente,
-/// el código se emite sin mandarse ni servir y a su dueño le llega el aviso.
+/// servicio. Rechaza la propiedad verificada antes de emitir; una reserva pendiente ajena se recupera por posesión.
 /// </summary>
 internal sealed class LoginMethodIssuer(LoginMethodGuard guard, ILoginMethodRepository methods,
     IUserLookup lookup, LoginCodeIssuer codes,
     IEnumerable<ILoginCodeChannel> channels, UserCultureResolver cultures,
-    AccountNoticeIssuer notices, TimeProvider timeProvider)
+    TimeProvider timeProvider)
 {
     public async Task<Result<LoginMethodCodeResponse>> AddAsync(Guid userId, AddLoginEmailRequest request, CancellationToken ct)
     {
@@ -27,24 +26,15 @@ internal sealed class LoginMethodIssuer(LoginMethodGuard guard, ILoginMethodRepo
         var email = request.Email!;
         var destination = LoginCodeDestination.ForEmail(email);
         await codes.LockDestinationAsync(destination, ct);
-        // Si ya es de otra cuenta (un correo o el contacto de Google, verificados), o ya es un correo verificado de esta,
-        // la respuesta es la de uno libre: el código se emite para los límites y la espera, pero no se manda ni sirve,
-        // y a su dueño le llega el aviso. El contacto del propio Google sí se puede sumar como correo.
+        // La propiedad verificada, incluido el contacto de Google, bloquea el alta. El contacto del propio Google
+        // sí se puede sumar como correo; un método de correo propio ya verificado no se repite.
         var owners = await lookup.FindVerifiedUsersByEmailAsync(email, ct);
         var existing = await lookup.FindMethodAsync(LoginMethodType.Email, email.Value, ct);
         var owner = owners.Where(id => id != userId).Select(id => (Guid?)id).FirstOrDefault()
             ?? (existing is { VerifiedAtUtc: not null } ? existing.UserId : null);
         if (owner is { } ownerId)
         {
-            var hidden = await NotifyOwnerAsync(userId, ownerId, email, ct);
-            if (hidden.IsFailure) return hidden.Error;
-            // Un correo ya verificado en esta misma cuenta no se repite. El de otra cuenta queda pendiente, como uno
-            // libre (D4b): el índice único vale solo para los verificados.
-            if (ownerId == userId) return new LoginMethodCodeResponse(Guid.CreateVersion7(), hidden.Value);
-            await RemoveOwnPendingAsync(userId, email.Value, ct);
-            var hiddenMethod = LoginMethod.CreateEmail(userId, email);
-            methods.Add(hiddenMethod);
-            return new LoginMethodCodeResponse(hiddenMethod.Id, hidden.Value);
+            return FieldErrors.On(ownerId == userId ? LoginMethodErrors.AlreadyVerified : LoginMethodErrors.AlreadyUsed, "email");
         }
 
         // Un correo agregado y sin verificar, de esta cuenta o de otra, se reemplaza: es pedir otro código.
@@ -80,26 +70,15 @@ internal sealed class LoginMethodIssuer(LoginMethodGuard guard, ILoginMethodRepo
                     ? LoginCodeErrors.AlreadyUsed
                     : LoginCodeErrors.Expired;
         }
-        // Si el correo es de otra cuenta, el reenvío responde igual que con uno libre y vuelve a avisarle al dueño.
+        // Una verificación concurrente de otra cuenta también bloquea el reenvío.
         var email = Email.Create(method.Value).Value;
         var owner = (await lookup.FindVerifiedUsersByEmailAsync(email, ct)).Where(id => id != userId)
             .Select(id => (Guid?)id).FirstOrDefault();
-        if (owner is { } ownerId)
+        if (owner is not null)
         {
-            var hidden = await NotifyOwnerAsync(userId, ownerId, email, ct);
-            return hidden.IsFailure ? hidden.Error : new LoginMethodCodeResponse(method.Id, hidden.Value);
+            return FieldErrors.On(LoginMethodErrors.AlreadyUsed, "email");
         }
         return await SendAsync(userId, method, account.Value.Culture, ct);
-    }
-
-    // El código se emite para los límites y la espera, pero no se manda ni sirve; al dueño le llega el aviso.
-    private async Task<Result<int>> NotifyOwnerAsync(Guid userId, Guid ownerId, Email email, CancellationToken ct)
-    {
-        var hidden = await codes.IssueAccountCodeAsync(LoginCodeDestination.ForEmail(email),
-            LoginCodePurpose.VerifyDestination, userId, ct);
-        if (hidden.IsFailure) return hidden.Error;
-        await notices.EnqueueToOwnerAsync(ownerId, email.Value, new AccountNotice.LoginMethodInUse(), ct);
-        return hidden.Value.ResendCooldownSeconds;
     }
 
     private async Task RemoveOwnPendingAsync(Guid userId, string value, CancellationToken ct)

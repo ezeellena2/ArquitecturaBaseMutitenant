@@ -7,6 +7,12 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Application.Validation.Auth;
 
+internal sealed class PreviewAccountRecoveryRequestValidator : AbstractValidator<PreviewAccountRecoveryRequest>
+{
+    public PreviewAccountRecoveryRequestValidator() =>
+        RuleFor(request => request.PreviousEmail).NotNull().WithMessage(_ => ValidationTexts.Required);
+}
+
 /// <summary>Exige el correo nuevo y un nonce con forma de token antes de emitir el código de recuperación.</summary>
 internal sealed class RequestRecoveryCodeRequestValidator : AbstractValidator<RequestRecoveryCodeRequest>
 {

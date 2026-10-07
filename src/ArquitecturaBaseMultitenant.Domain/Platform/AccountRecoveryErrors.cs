@@ -4,6 +4,8 @@ namespace ArquitecturaBaseMultitenant.Domain.Platform;
 
 public static class AccountRecoveryErrors
 {
+    public const string AccountNotFoundCode = "Platform.AccountRecovery.AccountNotFound";
+    public static readonly Error AccountNotFound = Error.NotFound(AccountNotFoundCode, "No account has that previous email address.");
     public const string VerificationRequiredCode = "Platform.AccountRecovery.VerificationRequired";
     public const string NotFoundCode = "Platform.AccountRecovery.NotFound";
     public const string AlreadyResolvedCode = "Platform.AccountRecovery.AlreadyResolved";

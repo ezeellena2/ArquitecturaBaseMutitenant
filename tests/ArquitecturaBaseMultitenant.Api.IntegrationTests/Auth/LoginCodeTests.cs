@@ -53,7 +53,7 @@ public sealed class LoginCodeTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task Known_and_unknown_email_get_the_same_request_response()
+    public async Task Known_email_emits_a_code_and_unknown_email_returns_its_field_error()
     {
         using var client = factory.CreateClient();
         var known = $"login-{Guid.NewGuid():N}@example.test";
@@ -64,9 +64,10 @@ public sealed class LoginCodeTests(ApiFactory factory)
         var unknownResponse = await client.PostAsJsonAsync("/test/auth/request-code", new { email = unknown }, Ct);
 
         Assert.Equal(HttpStatusCode.OK, knownResponse.StatusCode);
-        Assert.Equal(knownResponse.StatusCode, unknownResponse.StatusCode);
-        Assert.Equal(await knownResponse.Content.ReadAsStringAsync(Ct),
-            await unknownResponse.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(HttpStatusCode.BadRequest, unknownResponse.StatusCode);
+        var problem = await unknownResponse.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>(Ct);
+        Assert.Equal("Auth.LoginCode.AccountNotFound", problem.GetProperty("code").GetString());
+        Assert.Equal("No hay una cuenta con ese correo.", problem.GetProperty("errors").GetProperty("email")[0].GetString());
     }
 
     [Fact]
