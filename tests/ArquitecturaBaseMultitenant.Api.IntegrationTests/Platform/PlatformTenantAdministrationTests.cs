@@ -60,9 +60,11 @@ public sealed class PlatformTenantAdministrationTests(ApiFactory factory)
         using var beyondJson = JsonDocument.Parse(await beyond.Content.ReadAsStringAsync(Ct));
         Assert.Equal(0, beyondJson.RootElement.GetProperty("items").GetArrayLength());
         Assert.Equal(2, beyondJson.RootElement.GetProperty("totalCount").GetInt32());
-        using var escaped = await client.GetAsync("/api/platform/tenants/paged?search=%25", Ct);
+        // La base de la colección también tiene nombres con % de otros recorridos: usar datos propios.
+        await SeedBusinessAsync(factory, prefix + " %", false, account.UserId);
+        using var escaped = await client.GetAsync("/api/platform/tenants/paged?search=" + Uri.EscapeDataString(prefix + " %"), Ct);
         using var escapedJson = JsonDocument.Parse(await escaped.Content.ReadAsStringAsync(Ct));
-        Assert.Equal(0, escapedJson.RootElement.GetProperty("totalCount").GetInt32());
+        Assert.Equal(1, escapedJson.RootElement.GetProperty("totalCount").GetInt32());
         using var personal = await client.GetAsync($"/api/platform/tenants/{await PersonalIdAsync(account.UserId):D}", Ct);
         Assert.Equal(HttpStatusCode.NotFound, personal.StatusCode);
     }
