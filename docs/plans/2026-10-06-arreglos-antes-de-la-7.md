@@ -132,18 +132,22 @@ Diseño la dibuja como estado de `Ingreso` y `M-Ingreso`.
 
 **La decisión:** la [ADR 0045](../decisions/0045-mi-cuenta-sin-codigo-de-confirmacion.md). Ninguna acción de Mi cuenta pide confirmación: sumar un correo, vincular Google, cambiar el principal, quitar un método ni dar de baja la cuenta. El correo nuevo sigue con su propio código.
 
-- [ ] **Rojo** (integración):
+- [x] **Rojo** (integración): observado el 2026-10-06, **5 tests: 4 fallos y 1 verde**, sin omitidos; EXIT 2, 32,369 s. En el front, `AccountSessionActions.test.tsx`: **5 fallos de 5**, EXIT 1. Evidencias BACK `.local/pre7/a5/integration-red.log` y FRONT `.local/pre7/a5/unit-red.log`, con sus `.exit`.
   - sumar un correo sin ticket manda solo el código del correo nuevo y avisa a los demás métodos;
   - vincular Google, cambiar el principal y quitar un método andan sin ticket y avisan;
   - la baja anda sin ticket, con su gracia y su aviso;
   - siguen el último método y el principal obligatorio.
-- [ ] **Implementación:**
-  - salen `ReauthTicket`, `POST /api/me/reauth` y `/reauth/verify`, y todo lo que solo los usaba, en el back, el front, el contrato y los textos;
+- [x] **Implementación:** integración dirigida **73/73**, seguridad y persistencia afectadas **34/34**, arquitectura **148/148** y dominio **12/12**, sin omitidos; EXIT 0. Front **39/39** en siete archivos, más API **3/3**; build de API sin advertencias ni errores, build front, lint dirigido, contrato generado y comprobado, sintaxis del runner y catálogo de capturas **10/10**, EXIT 0. Evidencias `.local/pre7/a5/` de ambos repos. El primer verde de integración falló 17/71 por faltar el grant `mt_app` de la nueva tabla de cancelación: la migración se corrigió y el alcance se repitió en verde.
+  - salen `ReauthTicket`, `POST /api/me/reauth` y `/reauth/verify`, y todo lo que solo los usaba, en el back, el front, el contrato y los textos; la repetición final de `AccountSessionMigrationTests` confirma **1/1**, EXIT 0, 24,044 s, con el propósito histórico `AddEmail`;
   - los diálogos de confirmación de Mi cuenta siguen, sin el paso del código.
-- [ ] **Docs:** `identidad.md` y la ficha `datos-personales` si nombra la reautenticación.
-- [ ] **E2E real:**
+- [x] **Docs:** `identidad.md`, `datos-personales`, arquitectura, árboles y reglas describen acciones con sesión vigente y la prueba específica de cancelación de baja; el contrato y los textos ya no ofrecen reautenticación.
+- [x] **E2E real:** `MT_E2E_ONLY_CASE=A5`, `npm run test:e2e:real`, **3/3** (padre y dos recorridos), sin fallos, cancelados ni omitidos; EXIT 0, **137,947 s**. Correo nuevo con su único código, principal y quitar sin código, baja con gracia de 30 días y cancelación al probar posesión; Google inicia OAuth real a 390 sin código adicional. FRONT `.local/pre7/a5/real-a5-third.log` y `.exit`; BACK `aspire-final.json` = `[]`, EXIT 0. El primer intento falló por el helper que aún buscaba términos dentro del formulario después de A4. En el segundo pasó la cadena principal y falló la preparación móvil por un helper de perfil de escritorio. Se corrigió cada preparación y se repitió el alcance; ambos logs fallidos se conservan, sin dar esos intentos por buenos.
   - «quitar un método» pasa a quitarlo sin código;
   - «sesión abierta no suma correo» se reemplaza por «sumar un correo manda solo el código del correo nuevo».
+
+**Aclaraciones de implementación:**
+- `ReauthTicket` también transportaba la prueba para cancelar una baja después del ingreso con código o Google. Esa autorización se conserva en una pieza específica de cancelación, con cuenta, retorno permitido, uso único y cinco minutos; la migración conserva solo esas pruebas y elimina la reautenticación de Mi cuenta.
+- `Cuenta-Baja` y `Cuenta-Metodo` de la v112 todavía dibujan el código. El mandato explícito de A5 y la ADR 0045 retiran ese bloque y su instrucción; se conservan los diálogos y los demás textos. La diferencia se registra en las comparaciones, sin modificar el lienzo de Diseño. La fila de nombre y apellido del fondo corresponde a A6 y se verifica al llegar a ese arreglo.
 
 ## A6 · Nombre y apellido en dos campos (ADR 0046, pedido por el usuario el 2026-10-06)
 
@@ -220,3 +224,4 @@ Se completa al verificar cada arreglo. Los logs locales conservan la salida y el
 |---|---|---|---|---|
 | A3 | 18 tests: 8 fallos, 10 verdes, 0 omitidos; EXIT 2; `.local/pre7/a3/integration-red.log`. | Dirigido 18/18; alcance inicial 284/286 con dos preparaciones HTTPS corregidas; final cambiado 58/58. Arquitectura 148/148; Application 28/28; build back 0 advertencias/errores; build front, lint dirigido y sintaxis del runner EXIT 0. | Focal `A3`: 2/2, 0 fallos/cancelados/omitidos, EXIT 0, 109,7 s. Dos pestañas y ambas salidas; FRONT `.local/pre7/a3/real-a3.log`. | BACK `30aea96`; FRONT `ac6a177`. No cambia una pantalla: convivencia verificada con las pantallas reales. |
 | A4 | 2 fallos y 16 verdes; EXIT 1; `.local/pre7/a4/unit-red.log` FRONT. | Google y registros 23/23; ingreso 30/30; build y lint dirigido EXIT 0 (3 advertencias previas en efectos de BusinessSignupPage). | Focal `A4`: 2/2, 0 fallos/cancelados/omitidos, EXIT 0, 65,7 s. Ambos registros llegan a Google sin correo escrito. Primer arranque fallido en sandbox preservado; repetición autorizada verde. | FRONT implementación `1865921`; capturas y manifiesto `d905057`: `docs/design/capturas/consolidacion/pre7/registro/`, 1440 y 390. |
+| A5 | Back 4 fallos y 1 verde, EXIT 2; front 5/5 fallan, EXIT 1; `.local/pre7/a5/*red.log`. | Integración 73/73; seguridad/persistencia 34/34; arquitectura 148/148; dominio 12/12; migración final 1/1. Front 39/39 más API 3/3; catálogo 10/10. API build 0 advertencias/errores; front build, lint dirigido, contrato y sintaxis EXIT 0. Primer fallo de grants corregido en la migración y repetido. | Focal `A5`: tercer intento **3/3**, 0 fallos/cancelados/omitidos, EXIT 0, 137,947 s; `real-a5-third.log`. Dos preparaciones fallidas corregidas y preservadas; cadena de Mi cuenta y OAuth Google a 390. Aspire `ps=[]`, EXIT 0. | BACK `6b07c3e`; FRONT `544bfe6`. Diez comparaciones en `docs/design/capturas/consolidacion/pre7/cuenta/`, a 1440 y 390. El OTP antiguo del tablero se conserva como referencia y la diferencia explícita A5/ADR0045 se documenta. |
