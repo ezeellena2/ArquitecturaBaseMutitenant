@@ -33,11 +33,15 @@ internal static class OpenIddictRegistration
             webClient.ValidateOnStart();
         }
 
+        services.AddScoped<SubdomainRedirectUriValidator>();
         services.AddOpenIddict()
-            .AddCore(options => options
-                .UseEntityFrameworkCore()
-                .UseDbContext<ApplicationDbContext>()
-                .ReplaceDefaultEntities<Guid>())
+            .AddCore(options =>
+            {
+                options.UseEntityFrameworkCore()
+                    .UseDbContext<ApplicationDbContext>()
+                    .ReplaceDefaultEntities<Guid>();
+                options.ReplaceApplicationManager(typeof(SubdomainApplicationManager<>));
+            })
             .AddServer(options =>
             {
                 options

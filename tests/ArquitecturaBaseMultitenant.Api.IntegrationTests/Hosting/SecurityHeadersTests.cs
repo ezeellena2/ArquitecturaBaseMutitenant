@@ -40,6 +40,98 @@ public sealed class SecurityHeadersTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Only_organization_subdomains_can_frame_the_authorize_endpoint()
+    {
+        await using var api = factory.WithWebHostBuilder(builder =>
+            builder.UseSetting("Authentication:Issuer", "https://example.test:8443/"));
+        using var client = CreateClient(api, "https://other.test");
+        using var response = await client.GetAsync("/connect/authorize", TestContext.Current.CancellationToken);
+        var policy = Assert.Single(response.Headers.GetValues("Content-Security-Policy"));
+        Assert.Contains("frame-ancestors 'self' https://*.example.test:8443;", policy, StringComparison.Ordinal);
+        Assert.Contains("frame-src 'self';", policy, StringComparison.Ordinal);
+        Assert.DoesNotContain("other.test", policy, StringComparison.Ordinal);
+        Assert.DoesNotContain("http://", policy, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("https://empresa.localhost:5174", true)]
+    [InlineData("https://EMPRESA.LOCALHOST:5174", true)]
+    [InlineData("https://localhost:5174", false)]
+    [InlineData("https://empresa.localhost:5175", false)]
+    [InlineData("https://one.empresa.localhost:5174", false)]
+    [InlineData("https://empresa.other.test:5174", false)]
+    [InlineData("https://empresa.localhost.evil.test:5174", false)]
+    [InlineData("http://empresa.localhost:5174", false)]
+    public async Task Subdomain_documents_can_frame_only_the_fixed_main_domain_authorize(string origin, bool allowed)
+    {
+        using var webRoot = new SecurityTestWebRoot();
+        await using var api = factory.WithWebHostBuilder(builder => builder.UseWebRoot(webRoot.Path));
+        using var client = CreateClient(api, origin);
+        using var response = await client.GetAsync("/", TestContext.Current.CancellationToken);
+        var policy = Assert.Single(response.Headers.GetValues("Content-Security-Policy"));
+        Assert.Equal(allowed, policy.Contains("frame-src 'self' https://localhost:5174;", StringComparison.Ordinal));
+        Assert.Contains("frame-ancestors 'self';", policy, StringComparison.Ordinal);
+        Assert.Contains("connect-src 'self';", policy, StringComparison.Ordinal);
+        Assert.DoesNotContain("https://*.", policy, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("/silent-renew.html")]
+    [InlineData("/auth/callback")]
+    public async Task Subdomain_callback_documents_can_frame_the_issuer(string path)
+    {
+        using var webRoot = new SecurityTestWebRoot();
+        await using var api = factory.WithWebHostBuilder(builder => builder.UseWebRoot(webRoot.Path));
+        using var client = CreateClient(api, "https://empresa.localhost:5174");
+        using var response = await client.GetAsync(path, TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("text/html", response.Content.Headers.ContentType?.MediaType);
+        var policy = Assert.Single(response.Headers.GetValues("Content-Security-Policy"));
+        Assert.Contains("frame-src 'self' https://localhost:5174;", policy, StringComparison.Ordinal);
+        Assert.Contains("frame-ancestors 'self';", policy, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("/alive")]
+    [InlineData("/api/no-existe")]
+    [InlineData("/test/throw")]
+    [InlineData("/connect/token")]
+    [InlineData("/connect/logout")]
+    [InlineData("/connect/authorize/extra")]
+    [InlineData("/assets/main.js")]
+    public async Task Other_subdomain_responses_keep_the_original_frame_restrictions(string path)
+    {
+        using var webRoot = new SecurityTestWebRoot();
+        await using var api = factory.WithWebHostBuilder(builder => builder.UseWebRoot(webRoot.Path));
+        using var client = CreateClient(api, "https://empresa.localhost:5174");
+        using var response = await client.GetAsync(path, TestContext.Current.CancellationToken);
+        var policy = Assert.Single(response.Headers.GetValues("Content-Security-Policy"));
+        Assert.Contains("frame-src 'self';", policy, StringComparison.Ordinal);
+        Assert.Contains("frame-ancestors 'self';", policy, StringComparison.Ordinal);
+        Assert.DoesNotContain("https://localhost:5174", policy, StringComparison.Ordinal);
+        Assert.DoesNotContain("https://*.", policy, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task The_default_https_port_is_not_replaced_with_a_wildcard_port()
+    {
+        using var webRoot = new SecurityTestWebRoot();
+        await using var api = factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseWebRoot(webRoot.Path);
+            builder.UseSetting("Authentication:Issuer", "https://example.test/");
+        });
+        using var client = CreateClient(api, "https://empresa.example.test");
+        using var document = await client.GetAsync("/", TestContext.Current.CancellationToken);
+        Assert.Contains("frame-src 'self' https://example.test;",
+            Assert.Single(document.Headers.GetValues("Content-Security-Policy")), StringComparison.Ordinal);
+        using var authorize = await client.GetAsync("https://example.test/connect/authorize", TestContext.Current.CancellationToken);
+        var policy = Assert.Single(authorize.Headers.GetValues("Content-Security-Policy"));
+        Assert.Contains("frame-ancestors 'self' https://*.example.test;", policy, StringComparison.Ordinal);
+        Assert.DoesNotContain(":*", policy, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Trusted_proxy_sets_scheme_and_client_ip_but_never_forwards_host()
     {
         await using var api = CreateApi("10.0.0.4", ("ForwardedHeaders:TrustAll", "true"));
@@ -147,6 +239,21 @@ public sealed class SecurityHeadersTests(ApiFactory factory)
         services.AddTrustedForwardedHeaders(configuration);
 
         return services.BuildServiceProvider();
+    }
+
+    private sealed class SecurityTestWebRoot : IDisposable
+    {
+        public string Path { get; } = Directory.CreateTempSubdirectory("multitenant-csp-").FullName;
+
+        public SecurityTestWebRoot()
+        {
+            File.WriteAllText(System.IO.Path.Combine(Path, "index.html"), "<!doctype html><title>CSP test</title>");
+            File.WriteAllText(System.IO.Path.Combine(Path, "silent-renew.html"), "<!doctype html><title>Renew test</title>");
+            Directory.CreateDirectory(System.IO.Path.Combine(Path, "assets"));
+            File.WriteAllText(System.IO.Path.Combine(Path, "assets", "main.js"), "export const marker = 'asset';");
+        }
+
+        public void Dispose() => Directory.Delete(Path, recursive: true);
     }
 
     private sealed class RemoteIpStartupFilter(IPAddress remoteIpAddress) : IStartupFilter

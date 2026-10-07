@@ -49,9 +49,19 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
         if (!forceLogin && session.Succeeded && !string.IsNullOrEmpty(browserSessionId) && Guid.TryParse(
             session.Principal?.FindFirstValue(ClaimTypes.NameIdentifier), CultureInfo.InvariantCulture, out var userId))
         {
-            var selected = await service.SelectAccessAsync(userId, access, requestedTenantId, cancellationToken);
+            // Recuperar la sesión pública no es una elección de Personal: nunca crea ese espacio.
+            var silentConsumer = access == Access.Consumer && request.HasPromptValue(PromptValues.None);
+            var selected = silentConsumer
+                ? await service.GetActiveUserAsync(userId, access, requestedTenantId, cancellationToken)
+                : await service.SelectAccessAsync(userId, access, requestedTenantId, cancellationToken);
             if (selected.IsFailure)
             {
+                if (silentConsumer && selected.Error.Code == AccessErrors.NotMemberCode)
+                {
+                    return Forbid(ErrorProperties(Errors.LoginRequired, "The user is not signed in."),
+                        OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+                }
+
                 if (access is Access.Consumer or Access.Business && selected.Error.Code == AccessErrors.PlatformOnlyCode)
                 {
                     // Antes de ADR 0044 el operador también se guardaba en la cookie pública.

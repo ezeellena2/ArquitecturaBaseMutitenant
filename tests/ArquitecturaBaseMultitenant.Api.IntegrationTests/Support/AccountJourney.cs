@@ -47,21 +47,24 @@ internal sealed record AccountJourney(Guid UserId, Email Email)
         return account;
     }
 
-    internal static async Task AuthorizeAsync(HttpClient client, string access, CancellationToken ct, Guid? tenantId = null)
+    internal static async Task AuthorizeAsync(HttpClient client, string access, CancellationToken ct,
+        Guid? tenantId = null, Uri? redirectUri = null)
     {
+        var redirect = redirectUri?.AbsoluteUri ?? "https://localhost:5174/auth/callback";
         var challenge = WebEncoders.Base64UrlEncode(SHA256.HashData(Encoding.ASCII.GetBytes(Verifier)));
         var authorizePath = "/connect/authorize?client_id=web&response_type=code"
-            + "&redirect_uri=https%3A%2F%2Flocalhost%3A5174%2Fauth%2Fcallback&scope=openid%20profile%20email%20api"
+            + "&redirect_uri=" + Uri.EscapeDataString(redirect) + "&scope=openid%20profile%20email%20api"
             + "&code_challenge=" + challenge + "&code_challenge_method=S256&access=" + access
-            + (tenantId is { } id ? "&tenant_id=" + id.ToString("D") : string.Empty);
+            + (tenantId is { } id ? "&tenant=" + id.ToString("D") : string.Empty);
         using var authorized = await AuthorizeResponseAsync(client, authorizePath, access, ct);
         Assert.True(authorized.StatusCode == HttpStatusCode.Redirect,
             $"Expected an authorization redirect, got {(int)authorized.StatusCode}: {await authorized.Content.ReadAsStringAsync(ct)}");
         var authorizationCode = QueryHelpers.ParseQuery(authorized.Headers.Location!.Query)["code"].ToString();
-        using var exchanged = await client.PostAsync("/connect/token", new FormUrlEncodedContent(new Dictionary<string, string>
+        var tokenEndpoint = redirectUri is null ? "/connect/token" : new Uri(redirectUri, "/connect/token").AbsoluteUri;
+        using var exchanged = await client.PostAsync(tokenEndpoint, new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["grant_type"] = "authorization_code", ["code"] = authorizationCode, ["client_id"] = "web",
-            ["redirect_uri"] = "https://localhost:5174/auth/callback", ["code_verifier"] = Verifier,
+            ["redirect_uri"] = redirect, ["code_verifier"] = Verifier,
         }), ct);
         Assert.Equal(HttpStatusCode.OK, exchanged.StatusCode);
         using var tokens = await exchanged.Content.ReadFromJsonAsync<JsonDocument>(ct);
