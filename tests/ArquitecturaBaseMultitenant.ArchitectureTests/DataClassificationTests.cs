@@ -27,6 +27,8 @@ public sealed class DataClassificationTests
         typeof(DataProtectionKey).FullName!,
         typeof(ApplicationUser).FullName!,
         "ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.UserTenantAccess",
+        "ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.LoginInvitation", // Índice técnico mínimo para OTP de invitación; sólo triggers escriben.
+        "ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.MemberAccessRole", // Rol sistémico reservado; sólo triggers tienen acceso, no el runtime.
         typeof(LoginMethod).FullName!,
         typeof(LoginCode).FullName!,
         typeof(AccountDeletionCancelTicket).FullName!, // Comprobante global de cuenta, ligado a usuario y acción.
@@ -127,6 +129,8 @@ public sealed class DataClassificationTests
 
     private static bool IsIdentityGlobal(Type type) => type == typeof(ApplicationUser)
         || type.FullName == "ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.UserTenantAccess"
+        || type.FullName == "ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.LoginInvitation"
+        || type.FullName == "ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.MemberAccessRole"
         || type == typeof(LoginMethod) || type == typeof(LoginCode) || type == typeof(LoginAudit) || type == typeof(AccountDeletionCancelTicket)
         || type == typeof(IdentityUserClaim<Guid>) || type == typeof(IdentityUserLogin<Guid>)
         || type == typeof(IdentityUserToken<Guid>) || type == typeof(LegalAcceptance);

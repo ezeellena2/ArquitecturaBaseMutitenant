@@ -7,6 +7,8 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Application.Services.Legal;
+using ArquitecturaBaseMultitenant.Application.Models.Invitations;
+using ArquitecturaBaseMultitenant.Application.Services.Invitations;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
@@ -18,15 +20,17 @@ internal sealed class LoginVerifier(
     ILoginMethodReader loginMethods,
     LoginMethodAvailabilityPolicy availability,
     AccountDeletionCancelIssuer cancellation,
-    IConnectService connect)
+    IConnectService connect,
+    LoginInvitationAcceptanceWriter invitations)
 {
     internal async Task<Result<Guid>> VerifyAsync(
-        VerifyLoginCodeRequest request, CancellationToken cancellationToken)
+        VerifyLoginCodeRequest request, LoginInvitationsContext? invitation, CancellationToken cancellationToken)
     {
         var destination = LoginCodeDestination.ForEmail(request.Email!);
-        var userId = await accounts.LockAsync(destination, cancellationToken);
+        if (invitation is not null) await invitations.LockEmailAsync(invitation, cancellationToken);
+        var userId = invitation is not null ? invitation.ExpectedOwnerId : await accounts.LockAsync(destination, cancellationToken);
         await attempts.LockDestinationAsync(destination, cancellationToken);
-        if (!await accounts.StillOwnsAsync(userId, destination, cancellationToken))
+        if (invitation is null && !await accounts.StillOwnsAsync(userId, destination, cancellationToken))
             return Fail(userId, LoginCodeErrors.Invalid(attemptsLeft: null));
         var hadActiveCode = await attempts.HasActiveCodeAsync(destination, cancellationToken);
         var verified = await verifier.VerifyAsync(destination, LoginCodePurpose.Login,
@@ -42,6 +46,14 @@ internal sealed class LoginVerifier(
             return Fail(userId, verified.Error);
         }
 
+        if (invitation is not null)
+        {
+            var accepted = await invitations.AcceptAsync(invitation, cancellationToken);
+            if (accepted.IsFailure) return Fail(userId, accepted.Error);
+            await attempts.ResetFailedAttemptsAsync(accepted.Value, cancellationToken);
+            attempts.RecordSuccess(accepted.Value);
+            return accepted.Value;
+        }
         if (userId is null) return Fail(null, LoginCodeErrors.Invalid(attemptsLeft: null));
         if (await attempts.IsLockedOutAsync(userId.Value, cancellationToken))
             return Fail(userId, AccountErrors.LockedOut);
@@ -72,8 +84,8 @@ internal sealed class LoginVerifier(
             }
         }
 
-        var invitation = await accounts.AcceptOperatorInvitationAsync(account, request.ReturnUrl!, cancellationToken);
-        if (invitation.IsFailure) return Fail(userId, invitation.Error);
+        var operatorInvitation = await accounts.AcceptOperatorInvitationAsync(account, request.ReturnUrl!, cancellationToken);
+        if (operatorInvitation.IsFailure) return Fail(userId, operatorInvitation.Error);
 
         await attempts.ResetFailedAttemptsAsync(userId.Value, cancellationToken);
         attempts.RecordSuccess(userId.Value);

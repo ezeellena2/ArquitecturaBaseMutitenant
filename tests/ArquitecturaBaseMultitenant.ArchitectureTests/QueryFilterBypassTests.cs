@@ -45,6 +45,9 @@ public sealed class QueryFilterBypassTests
     private static string[] BypassViolations(IEnumerable<ArchitectureIl.Call> calls) =>
         [.. calls.Where(IsIgnoreQueryFilters)
             .Where(call => !call.Owner.StartsWith(PlatformReaders + ".", StringComparison.Ordinal))
+            .Where(call => call.Owner != "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories.LoginInvitationRepository"
+                || call.ParameterCount != 2 || !call.Literals.Contains("Tenant", StringComparer.Ordinal)
+                || call.Literals.Any(value => value is "Public" or "Parties"))
             .Where(call => call.ParameterCount == 1 || call.ParameterCount != 2
                 || !call.Literals.Contains("SoftDelete", StringComparer.Ordinal)
                 || call.Literals.Any(value => value is "Tenant" or "Public" or "Parties"))

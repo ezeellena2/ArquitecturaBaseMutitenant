@@ -19,7 +19,8 @@ internal sealed class AuditTrailInterceptor(
     ICurrentUser currentUser,
     ITenantContext tenantContext,
     TimeProvider timeProvider,
-    IRequestInfo requestInfo) : SaveChangesInterceptor
+    IRequestInfo requestInfo,
+    LoginInvitationScope? loginInvitations = null) : SaveChangesInterceptor
 {
     private const string CounterpartSql =
         "SELECT set_config('app.audit_counterpart_tenant_ids', @tenant_ids, true)";
@@ -108,7 +109,7 @@ internal sealed class AuditTrailInterceptor(
         foreach (var entry in changed)
         {
             var tenants = TenantIds(entry.Entity);
-            if (!tenants.Contains(activeTenantId))
+            if (!tenants.Contains(activeTenantId) && loginInvitations?.Allows(entry.Entity) != true)
             {
                 throw new InvalidOperationException("The audited entity does not belong to the active tenant.");
             }

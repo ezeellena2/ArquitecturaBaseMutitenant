@@ -1,13 +1,9 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
-using ArquitecturaBaseMultitenant.Application.Models.Identity;
-using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
-using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
@@ -15,12 +11,9 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 internal sealed class LoginCodeRequester(
     LoginCodeIssuer issuer,
     IUserLookup userLookup,
-    IUserRepository users,
-    ILoginMethodReader loginMethods,
-    LoginMethodAvailabilityPolicy availability,
-    IEnumerable<ILoginCodeChannel> channels,
-    UserCultureResolver userCultures,
-    ISignInService signIn)
+    ILoginInvitationReader invitations,
+    LoginCodeDeliveryIssuer delivery,
+    TimeProvider clock)
 {
     internal async Task<Result<RequestLoginCodeResponse>> RequestAsync(
         RequestLoginCodeRequest request, CancellationToken cancellationToken)
@@ -29,36 +22,18 @@ internal sealed class LoginCodeRequester(
         await issuer.LockDestinationAsync(destination, cancellationToken);
         var userId = await userLookup.FindVerifiedUserIdAsync(
             LoginMethodType.Email, destination.Value, cancellationToken);
-        if (userId is null) return FieldErrors.On(LoginCodeErrors.AccountNotFound, "email");
+        var pending = await invitations.ListPendingAsync(request.Email!, clock.GetUtcNow().UtcDateTime, cancellationToken);
+        if (userId is null && pending.Count == 0)
+            return FieldErrors.On(LoginCodeErrors.AccountNotFound, "email");
+        if (userId is null)
+        {
+            var owners = await userLookup.FindVerifiedUsersByEmailAsync(request.Email!, cancellationToken);
+            if (owners.Count == 1) userId = owners[0];
+        }
 
         var issued = await issuer.IssueLoginCodeAsync(destination, cancellationToken);
         if (issued.IsFailure) return issued.Error;
-        UserAccountRow? account = null;
-        if (userId is { } id)
-        {
-            account = await users.GetByIdAsync(id, cancellationToken);
-        }
-
-        var culture = await userCultures.ResolveAsync(account?.Culture, null, cancellationToken);
-        var channel = channels.SingleOrDefault(value => value.Key == destination.Channel)
-            ?? throw new InvalidOperationException("The email login channel is not registered.");
-        var payload = channel.RenderLoginCode(destination.Value, issued.Value.Code,
-            issued.Value.LifetimeMinutes, culture);
-        // ADR 0042: una invitación de operador vencida conserva la guarda y no envía el código.
-        var expiredInvitation = account?.OperatorInvitationExpiresAtUtc is { } expiresAtUtc
-            && expiresAtUtc <= issued.Value.IssuedAtUtc;
-        if (userId is { } knownUserId && !expiredInvitation
-            && account is { Status: UserStatus.Active or UserStatus.Suspended or UserStatus.PendingDeletion }
-            && !await signIn.IsLockedOutAsync(knownUserId, cancellationToken))
-        {
-            var method = (await loginMethods.ListByUserIdAsync(knownUserId, cancellationToken))
-                .SingleOrDefault(value => value.Type == LoginMethodType.Email && value.Value == destination.Value);
-            if (method is not null && await availability.IsAvailableAsync(knownUserId, method, cancellationToken))
-            {
-                channel.EnqueueRenderedLoginCode(payload, knownUserId);
-                issued.Value.LoginCode.MarkSent(issued.Value.IssuedAtUtc);
-            }
-        }
+        await delivery.EnqueueAsync(destination, issued.Value, userId, pending.Select(row => row.TenantId).ToArray(), cancellationToken);
 
         return new RequestLoginCodeResponse(issued.Value.ResendCooldownSeconds);
     }

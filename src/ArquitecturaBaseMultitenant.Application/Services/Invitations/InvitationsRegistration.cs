@@ -24,6 +24,7 @@ internal static class InvitationsRegistration
         services.AddScoped<InvitationIdentityDefaultsResolver>();
         services.AddScoped<InvitationAccountRegistrar>();
         services.AddScoped<InvitationAcceptanceWriter>();
+        services.AddScoped<LoginInvitationAcceptanceWriter>();
         services.AddScoped<InvitationSessionRestorer>();
         services.AddScoped<IInvitationExpiryService, InvitationExpiryService>();
         return services;

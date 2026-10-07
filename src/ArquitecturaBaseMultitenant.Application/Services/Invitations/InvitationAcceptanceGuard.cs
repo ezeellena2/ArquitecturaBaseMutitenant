@@ -13,29 +13,46 @@ internal sealed class InvitationAcceptanceGuard(IExternalLoginLock externalLock,
     ISignInService signIn)
 {
     internal async Task LockAsync(InvitationAcceptanceContext context, CancellationToken ct)
+        => await LockAsync(new LoginInvitationContext(context.Proof.InvitationId, context.Proof.TenantId,
+            context.Destination, context.ExpectedOwnerId), ct);
+
+    internal async Task LockAsync(LoginInvitationContext context, CancellationToken ct)
     {
-        await externalLock.LockEmailAsync(context.Destination, ct);
-        if (context.ExpectedOwnerId is { } owner) await methods.LockUserAsync(owner, ct);
-        await invitations.LockDestinationAsync(context.Destination, ct);
-        await invitations.LockAsync(context.Proof.InvitationId, ct);
+        await LockEmailAsync(context.Destination, context.ExpectedOwnerId, ct);
+        await invitations.LockAsync(context.InvitationId, ct);
         if (context.ExpectedOwnerId is { } existing) await members.LockUserAsync(existing, ct);
     }
 
-    internal async Task<Result<Guid?>> CheckOwnerAsync(InvitationAcceptanceContext context, CancellationToken ct)
+    internal async Task LockEmailAsync(ArquitecturaBaseMultitenant.Domain.ValueObjects.Email destination,
+        Guid? expectedOwnerId, CancellationToken ct)
     {
-        var owners = await lookup.FindVerifiedUsersByEmailAsync(context.Destination, ct);
+        await externalLock.LockEmailAsync(destination, ct);
+        if (expectedOwnerId is { } owner) await methods.LockUserAsync(owner, ct);
+        await invitations.LockDestinationAsync(destination, ct);
+    }
+
+    internal async Task<Result<Guid?>> CheckOwnerAsync(InvitationAcceptanceContext context, CancellationToken ct)
+        => await CheckOwnerAsync(context.Destination, context.ExpectedOwnerId, context.CurrentUserId, ct);
+
+    internal Task<Result<Guid?>> CheckVerifiedOwnerAsync(LoginInvitationContext context, CancellationToken ct) =>
+        CheckOwnerAsync(context.Destination, context.ExpectedOwnerId, context.ExpectedOwnerId, ct);
+
+    private async Task<Result<Guid?>> CheckOwnerAsync(ArquitecturaBaseMultitenant.Domain.ValueObjects.Email destination,
+        Guid? expectedOwnerId, Guid? currentUserId, CancellationToken ct)
+    {
+        var owners = await lookup.FindVerifiedUsersByEmailAsync(destination, ct);
         if (owners.Count > 1) return InvitationErrors.WrongAccount;
         Guid? owner = owners.Count == 0 ? null : owners[0];
-        if (owner != context.ExpectedOwnerId)
-            return context.CurrentUserId is null ? InvitationErrors.SignInRequired : InvitationErrors.WrongAccount;
-        if (context.CurrentUserId is not null && context.CurrentUserId != owner) return InvitationErrors.WrongAccount;
+        if (owner != expectedOwnerId)
+            return currentUserId is null ? InvitationErrors.SignInRequired : InvitationErrors.WrongAccount;
+        if (currentUserId is not null && currentUserId != owner) return InvitationErrors.WrongAccount;
         if (owner is { } existing)
         {
             var user = await users.GetByIdAsync(existing, ct);
             if (user is null || user.Status is UserStatus.Suspended or UserStatus.Deleted) return AccountErrors.Suspended;
             if (user.IsPlatformOperator) return InvitationErrors.PlatformOperator;
             if (user.Status == UserStatus.PendingDeletion) return AccountErrors.PendingDeletion;
-            if (context.CurrentUserId is null) return InvitationErrors.SignInRequired;
+            if (currentUserId is null) return InvitationErrors.SignInRequired;
             if (await signIn.IsLockedOutAsync(existing, ct)) return AccountErrors.LockedOut;
         }
         return Result.Success(owner);

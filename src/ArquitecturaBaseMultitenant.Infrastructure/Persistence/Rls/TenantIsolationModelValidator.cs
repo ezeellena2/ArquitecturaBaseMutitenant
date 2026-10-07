@@ -65,6 +65,8 @@ internal static class TenantIsolationModelValidator
         type == typeof(AccountDeletionCancelTicket) ||
         type == typeof(LoginAudit) ||
         type == typeof(UserTenantAccess) ||
+        type == typeof(LoginInvitation) ||
+        type == typeof(MemberAccessRole) ||
         type == typeof(Tenant) ||
         type == typeof(TenantCounters) ||
         type == typeof(PendingTenantOwner) ||

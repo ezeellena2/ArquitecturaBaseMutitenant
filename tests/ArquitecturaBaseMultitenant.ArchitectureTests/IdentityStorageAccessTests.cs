@@ -25,6 +25,7 @@ public sealed partial class IdentityStorageAccessTests
         Infrastructure + "Persistence.Readers.MemberReader",
         Infrastructure + "Persistence.Readers.InvitationReader",
         Infrastructure + "Persistence.Readers.UserTenantAccessReader",
+        Infrastructure + "Persistence.Readers.LoginInvitationReader",
         Infrastructure + "Persistence.Readers.PlatformReader",
         Infrastructure + "Persistence.Readers.PlatformAccountReader",
         Infrastructure + "Persistence.Readers.AccountRecoveryReader",
@@ -50,6 +51,7 @@ public sealed partial class IdentityStorageAccessTests
     {
         "get_Users", "get_LoginMethods", "get_LoginCodes", "get_LoginAudits",
         "get_LegalAcceptances", "get_UserTenantAccesses",
+        "get_LoginInvitations",
     };
 
     private static readonly HashSet<string> IdentityEntityTypes = new(StringComparer.Ordinal)
@@ -60,6 +62,8 @@ public sealed partial class IdentityStorageAccessTests
         "ArquitecturaBaseMultitenant.Domain.Authentication.LoginAudit",
         "ArquitecturaBaseMultitenant.Domain.Legal.LegalAcceptance",
         "ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.UserTenantAccess",
+        "ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.LoginInvitation",
+        "ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.MemberAccessRole",
     };
 
     [Fact]

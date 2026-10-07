@@ -51,6 +51,7 @@ internal static class PersistenceRegistration
         services.AddScoped<SoftDeleteInterceptor>();
         services.AddScoped<AuditableEntityInterceptor>();
         services.AddScoped<AuditTrailInterceptor>();
+        services.AddScoped<LoginInvitationScope>();
         services.AddScoped<IAuditLog, AuditLog>();
 
         services.AddDbContext<ApplicationDbContext>((provider, options) =>
@@ -86,6 +87,8 @@ internal static class PersistenceRegistration
         services.AddScoped<IMemberReader, MemberReader>();
         services.AddScoped<IInvitationRepository, InvitationRepository>();
         services.AddScoped<IInvitationReader, InvitationReader>();
+        services.AddScoped<ILoginInvitationReader, LoginInvitationReader>();
+        services.AddScoped<ILoginInvitationRepository, LoginInvitationRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IRoleAssignmentRepository, RoleAssignmentRepository>();
         services.AddScoped<IRoleReader, RoleReader>();

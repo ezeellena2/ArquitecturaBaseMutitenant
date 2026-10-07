@@ -14,17 +14,24 @@ internal sealed class InvitationAccountRegistrar(IUserRepository users, ILoginMe
 {
     internal async Task<Guid> RegisterAsync(Guid organizationId, Email email, DateTime nowUtc, CancellationToken ct)
     {
-        var defaults = await preferences.ReadAsync(ct);
         var terms = await legal.GetCurrentDocumentAsync(LegalDocumentKind.Terms, nowUtc, ct)
             ?? throw new InvalidOperationException("Current Terms are required.");
         var privacy = await legal.GetCurrentDocumentAsync(LegalDocumentKind.Privacy, nowUtc, ct)
             ?? throw new InvalidOperationException("Current Privacy is required.");
+        var userId = await RegisterVerifiedEmailAsync(organizationId, email, nowUtc, ct);
+        legal.AddAcceptance(LegalAcceptance.Create(userId, terms, nowUtc, requestInfo.IpAddress, requestInfo.UserAgent));
+        legal.AddAcceptance(LegalAcceptance.Create(userId, privacy, nowUtc, requestInfo.IpAddress, requestInfo.UserAgent));
+        return userId;
+    }
+
+    /// <summary>El OTP prueba el correo, pero no trae consentimiento legal: queda pendiente para el gate existente.</summary>
+    internal async Task<Guid> RegisterVerifiedEmailAsync(Guid organizationId, Email email, DateTime nowUtc, CancellationToken ct)
+    {
+        var defaults = await preferences.ReadAsync(ct);
         var pending = await FindPendingAsync(email, ct);
         if (pending is not null) methods.Remove(pending);
         var user = await users.CreateAsync(null, defaults.Culture, defaults.TimeZoneId, ct);
         await AddEmailAsync(user.Id, email, organizationId, nowUtc, makePrimary: true, ct);
-        legal.AddAcceptance(LegalAcceptance.Create(user.Id, terms, nowUtc, requestInfo.IpAddress, requestInfo.UserAgent));
-        legal.AddAcceptance(LegalAcceptance.Create(user.Id, privacy, nowUtc, requestInfo.IpAddress, requestInfo.UserAgent));
         return user.Id;
     }
 

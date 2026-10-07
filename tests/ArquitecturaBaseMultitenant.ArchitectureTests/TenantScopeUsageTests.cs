@@ -18,6 +18,7 @@ public sealed class TenantScopeUsageTests
     private const string ExternalLoginService = "ArquitecturaBaseMultitenant.Application.Services.Auth.ExternalLoginService";
     private const string AccountDeletionProcessingService = "ArquitecturaBaseMultitenant.Application.Services.Legal.AccountDeletionProcessingService";
     private const string InvitationService = "ArquitecturaBaseMultitenant.Application.Services.Invitations.InvitationService";
+    private const string LoginCodeService = "ArquitecturaBaseMultitenant.Application.Services.Auth.LoginCodeService";
     private const string BusinessSignupService = "ArquitecturaBaseMultitenant.Application.Services.Auth.BusinessSignupService";
     private const string PlatformActionGuard = "ArquitecturaBaseMultitenant.Application.Services.Platform.PlatformActionGuard";
 
@@ -27,7 +28,7 @@ public sealed class TenantScopeUsageTests
     private static readonly HashSet<string> Declared = new(StringComparer.Ordinal)
     {
         TenantJobRunner, TenantSettingsLoader, AccountService, ConnectService, ExternalLoginService,
-        AccountDeletionProcessingService, BusinessSignupService, InvitationService, PlatformActionGuard,
+        AccountDeletionProcessingService, BusinessSignupService, InvitationService, LoginCodeService, PlatformActionGuard,
     };
 
     [Fact]

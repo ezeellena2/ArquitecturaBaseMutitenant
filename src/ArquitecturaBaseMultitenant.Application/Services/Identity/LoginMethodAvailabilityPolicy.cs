@@ -46,6 +46,13 @@ internal sealed class LoginMethodAvailabilityPolicy(IEnumerable<ILoginCodeChanne
         || (method.Type == LoginMethodType.Google && method.ContactEmail is not null))
         && channels.Any(channel => channel.Key == LoginCodeChannel.Email);
 
+    /// <summary>El OTP usa el canal de correo; una reserva vigente sólo rehabilita su organización administradora.</summary>
+    public async Task<bool> CanReceiveCodeAsync(Guid userId, LoginMethodRow method,
+        IReadOnlyCollection<Guid> invitedTenantIds, CancellationToken ct) =>
+        method.VerifiedAtUtc is not null && CanReceiveCode(method)
+        && (method.ManagedByTenantId is not { } manager || invitedTenantIds.Contains(manager)
+            || await memberships.IsActiveAsync(userId, manager, ct));
+
     public async Task<bool> IsAvailableAsync(Guid userId, LoginMethodRow method, CancellationToken ct)
     {
         var channelAvailable = HasChannel(method.Type);

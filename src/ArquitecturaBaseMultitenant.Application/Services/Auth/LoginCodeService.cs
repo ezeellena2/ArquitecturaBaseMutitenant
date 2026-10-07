@@ -15,6 +15,8 @@ internal sealed class LoginCodeService(
     LoginCodeRequester requester,
     LoginVerifier verification,
     ISignInService signIn,
+    LoginInvitationResolver invitations,
+    ITenantScope tenantScope,
     IRequestValidator validator,
     IUnitOfWork unitOfWork,
     TimeProvider timeProvider,
@@ -36,8 +38,10 @@ internal sealed class LoginCodeService(
         {
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
+            var invitation = await invitations.PrepareAsync(request.Email!, request.ReturnUrl!, cancellationToken);
+            using var scope = invitation is null ? null : tenantScope.Enter(invitation.DefaultsTenantId);
             var verified = await unitOfWork.ExecuteInTransactionAsync(
-                ct => verification.VerifyAsync(request, ct), CommitPolicy.OnAnyResult, cancellationToken);
+                ct => verification.VerifyAsync(request, invitation, ct), CommitPolicy.OnAnyResult, cancellationToken);
             if (verified.IsFailure) return verified.Error;
 
             var access = ReturnUrls.TryReadAccessSelection(request.ReturnUrl, out var selection)

@@ -122,4 +122,29 @@ public sealed class InvitationTests
 
     private static Invitation Issue() => Invitation.Issue(Guid.CreateVersion7(), Guid.CreateVersion7(),
         Email.Create("ANA@example.test").Value, InvitationChannel.Email, "hash", IssuedAtUtc, TimeSpan.FromDays(7));
+
+    [Fact]
+    public void Verified_email_acceptance_requires_the_destination_and_does_not_grant_link_bootstrap()
+    {
+        var invitation = Issue();
+        var userId = Guid.CreateVersion7();
+        Assert.Equal(InvitationErrors.WrongAccount, invitation.AcceptVerifiedEmail(userId,
+            Email.Create("other@example.test").Value, IssuedAtUtc).Error);
+        Assert.Equal(InvitationStatus.Pending, invitation.Status);
+        Assert.True(invitation.AcceptVerifiedEmail(userId, invitation.Destination, IssuedAtUtc).IsSuccess);
+        Assert.Equal(userId, invitation.AcceptedByUserId);
+        Assert.Null(invitation.BootstrapNonceHash);
+        Assert.Equal(InvitationErrors.AlreadyUsed, invitation.AcceptVerifiedEmail(userId, invitation.Destination, IssuedAtUtc).Error);
+    }
+
+    [Fact]
+    public void Verified_email_does_not_accept_an_expired_or_revoked_invitation()
+    {
+        var expired = Issue();
+        Assert.Equal(InvitationErrors.Expired, expired.AcceptVerifiedEmail(Guid.CreateVersion7(),
+            expired.Destination, expired.ExpiresAtUtc).Error);
+        var revoked = Issue();
+        Assert.True(revoked.Revoke(IssuedAtUtc).IsSuccess);
+        Assert.Equal(InvitationErrors.Invalid, revoked.AcceptVerifiedEmail(Guid.CreateVersion7(), revoked.Destination, IssuedAtUtc).Error);
+    }
 }

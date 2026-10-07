@@ -19,6 +19,8 @@ internal static class AuthRegistration
         services.AddScoped<IAccountRecoveryNoticeService, AccountRecoveryNoticeService>();
         services.AddScoped<AccountRecoveryNotifier>();
         services.AddScoped<LoginCodeRequester>();
+        services.AddScoped<LoginCodeDeliveryIssuer>();
+        services.AddScoped<LoginInvitationResolver>();
         services.AddScoped<LoginVerifier>();
         services.AddScoped<LoginCodeAttemptGuard>();
         services.AddScoped<ILoginMethodsService, LoginMethodsService>();

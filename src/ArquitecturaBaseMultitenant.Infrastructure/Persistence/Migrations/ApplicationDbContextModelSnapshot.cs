@@ -1783,6 +1783,53 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.ToTable("AspNetUsers", "identity");
                 });
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.LoginInvitation", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("InvitationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Destination")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("IssuedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("MemberId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("TenantId", "InvitationId");
+
+                    b.HasIndex("Destination", "ExpiresAtUtc");
+
+                    b.ToTable("LoginInvitations", "identity");
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.MemberAccessRole", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("MemberId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.HasKey("TenantId", "MemberId");
+
+                    b.ToTable("MemberAccessRoles", "identity");
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.UserTenantAccess", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -2507,6 +2554,24 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.LoginInvitation", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.MemberAccessRole", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Member", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 

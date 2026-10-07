@@ -69,9 +69,7 @@ public sealed class Invitation : Entity, ITenantOwned, IAuditable
         ArgumentNullException.ThrowIfNull(tokenHash);
         RequireUtc(nowUtc);
         if (!HashEquals(TokenHash, tokenHash)) return InvitationErrors.Invalid;
-        if (Status == InvitationStatus.Accepted) return InvitationErrors.AlreadyUsed;
-        if (Status == InvitationStatus.Revoked) return InvitationErrors.Invalid;
-        return nowUtc >= ExpiresAtUtc ? InvitationErrors.Expired : Result.Success();
+        return CheckPending(nowUtc);
     }
 
     public Result Accept(Guid userId, string tokenHash, DateTime nowUtc, string? bootstrapNonceHash = null)
@@ -84,6 +82,27 @@ public sealed class Invitation : Entity, ITenantOwned, IAuditable
         AcceptedAtUtc = nowUtc;
         AcceptedByUserId = userId;
         BootstrapNonceHash = bootstrapNonceHash;
+        return Result.Success();
+    }
+
+    public Result CheckPending(DateTime nowUtc)
+    {
+        RequireUtc(nowUtc);
+        if (Status == InvitationStatus.Accepted) return InvitationErrors.AlreadyUsed;
+        if (Status == InvitationStatus.Revoked) return InvitationErrors.Invalid;
+        return nowUtc >= ExpiresAtUtc ? InvitationErrors.Expired : Result.Success();
+    }
+
+    /// <summary>El caso de uso llama sólo después de consumir el código del mismo correo.</summary>
+    public Result AcceptVerifiedEmail(Guid userId, Email verifiedEmail, DateTime nowUtc)
+    {
+        if (userId == Guid.Empty) throw new ArgumentException("A user ID is required.", nameof(userId));
+        if (Destination != verifiedEmail) return InvitationErrors.WrongAccount;
+        var pending = CheckPending(nowUtc);
+        if (pending.IsFailure) return pending;
+        Status = InvitationStatus.Accepted;
+        AcceptedAtUtc = nowUtc;
+        AcceptedByUserId = userId;
         return Result.Success();
     }
 

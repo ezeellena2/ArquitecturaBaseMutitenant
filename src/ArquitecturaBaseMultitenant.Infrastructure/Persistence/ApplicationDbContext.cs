@@ -47,6 +47,7 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
     public DbSet<AccountDeletionCancelTicket> AccountDeletionCancelTickets => Set<AccountDeletionCancelTicket>();
     public DbSet<LoginAudit> LoginAudits => Set<LoginAudit>();
     internal DbSet<UserTenantAccess> UserTenantAccesses => Set<UserTenantAccess>();
+    internal DbSet<LoginInvitation> LoginInvitations => Set<LoginInvitation>();
     public DbSet<Tenant> Tenants => Set<Tenant>();
     internal DbSet<TenantCounters> TenantCounters => Set<TenantCounters>();
     internal DbSet<PendingTenantOwner> PendingTenantOwners => Set<PendingTenantOwner>();
