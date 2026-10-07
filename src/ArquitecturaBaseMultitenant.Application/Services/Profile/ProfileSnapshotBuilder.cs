@@ -46,6 +46,8 @@ internal sealed class ProfileSnapshotBuilder(IUserRepository users, IUserTenantA
             account.Culture, account.TimeZoneId, currencyCode,
             mayReadSettings ? await features.ListEnabledAsync(cancellationToken) : [])
         {
+            FirstName = account.FirstName,
+            LastName = account.LastName,
             Version = account.ProfileVersion,
             PendingLegalDocuments = await legal.PendingAsync(userId, cancellationToken),
             NeedsPersonalLoginMethod = !hasPersonalMethod,

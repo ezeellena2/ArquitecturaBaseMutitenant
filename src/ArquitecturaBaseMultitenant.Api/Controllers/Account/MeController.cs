@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Api.Tenancy;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.Profile;
+using ArquitecturaBaseMultitenant.Application.Common.Text;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.AspNetCore.Mvc;
 
@@ -33,6 +34,7 @@ public sealed class MeController(IProfileService service) : ControllerBase
     [ProducesProblem(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Update([FromBody] UpdateMeHttpRequest request,
         CancellationToken cancellationToken) =>
-        (await service.UpdateAsync(new UpdateMeRequest(request.DisplayName, request.Culture,
+        (await service.UpdateAsync(new UpdateMeRequest(TextNormalizer.CleanName(request.FirstName),
+            TextNormalizer.CleanName(request.LastName), request.Culture,
             request.TimeZoneId, request.Version), cancellationToken)).ToActionResult(this);
 }

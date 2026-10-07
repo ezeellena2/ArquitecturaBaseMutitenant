@@ -135,7 +135,7 @@ public sealed class GoogleNamesTests(ApiFactory factory)
         if (expectedVersion > 0)
         {
             using var stale = await client.PutAsJsonAsync("/api/me", new
-                { displayName = "Viejo", culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires", version = 0 }, Ct);
+                { firstName = "Viejo", lastName = (string?)null, culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires", version = 0 }, Ct);
             Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
         }
     }
@@ -159,14 +159,14 @@ public sealed class GoogleNamesTests(ApiFactory factory)
         var user = await ReadUserAsync(host, account.UserId);
         AssertNames(user, identity.GivenName, identity.FamilyName, 1);
         using var saved = await client.PutAsJsonAsync("/api/me", new
-            { displayName = user.DisplayName, culture = "en-US", timeZoneId = "America/Argentina/Buenos_Aires", version = user.ProfileVersion }, Ct);
+            { firstName = user.FirstName, lastName = user.LastName, culture = "en-US", timeZoneId = "America/Argentina/Buenos_Aires", version = user.ProfileVersion }, Ct);
         Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
         AssertNames(await ReadUserAsync(host, account.UserId), identity.GivenName, identity.FamilyName, 2);
         using var invalid = await client.PutAsJsonAsync("/api/me", new
-            { displayName = new string('N', 101), culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires", version = 2 }, Ct);
+            { firstName = new string('N', 101), lastName = user.LastName, culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires", version = 2 }, Ct);
         Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
         using var problem = await invalid.Content.ReadFromJsonAsync<JsonDocument>(Ct);
-        Assert.Equal("Users.User.InvalidDisplayName", problem!.RootElement.GetProperty("code").GetString());
+        Assert.Equal("Validation.Failed", problem!.RootElement.GetProperty("code").GetString());
         AssertNames(await ReadUserAsync(host, account.UserId), identity.GivenName, identity.FamilyName, 2);
     }
 

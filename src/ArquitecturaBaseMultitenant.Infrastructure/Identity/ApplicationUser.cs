@@ -72,7 +72,7 @@ public sealed class ApplicationUser : IdentityUser<Guid>, IVersioned
 
     public Result Rename(string? displayName)
     {
-        // Hasta A6 el editor manda el combinado incluso al guardar sólo preferencias.
+        // Los llamadores legacy conservan partes compuestas al repetir el mismo combinado.
         if (string.Equals(DisplayName, displayName, StringComparison.Ordinal)) return Result.Success();
         if (!IsValidDisplayName(displayName))
         {
@@ -80,6 +80,17 @@ public sealed class ApplicationUser : IdentityUser<Guid>, IVersioned
         }
 
         SetLegacyName(displayName);
+        return Result.Success();
+    }
+
+    /// <summary>Reemplaza las dos partes manuales y deriva el único nombre que leen menús, listas y avisos.</summary>
+    public Result UpdateNames(string? firstName, string? lastName)
+    {
+        if (firstName?.Length > TextLimits.FirstName || lastName?.Length > TextLimits.LastName)
+            return UserErrors.InvalidDisplayName;
+        FirstName = string.IsNullOrWhiteSpace(firstName) ? null : firstName;
+        LastName = string.IsNullOrWhiteSpace(lastName) ? null : lastName;
+        DeriveDisplayName();
         return Result.Success();
     }
 

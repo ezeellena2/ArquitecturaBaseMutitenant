@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Configuration;
 using OpenIddict.Abstractions;
 using Npgsql;
 using Testcontainers.PostgreSql;
@@ -30,8 +31,35 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Identity;
 [Collection(ApiTestGroup.Name)]
 public sealed class ProductionSeedTests
 {
-    [Fact]
-    public async Task Empty_migrated_database_in_production_seeds_web_settings_and_legal_texts_once()
+    [Theory]
+    [InlineData(null, null, "Operator Example Name", "Operator", "Example Name")]
+    [InlineData("María José", "de la Cruz", "Legacy Wrong", "María José", "de la Cruz")]
+    [InlineData("Ana", null, "Legacy Wrong", "Ana", null)]
+    [InlineData(null, "Pérez", "Legacy Wrong", null, "Pérez")]
+    [InlineData("", "", "Legacy Wrong", null, null)]
+    public void Owner_seed_prefers_explicit_parts_and_only_uses_legacy_when_neither_key_is_present(
+        string? firstName, string? lastName, string legacy, string? expectedFirst, string? expectedLast)
+    {
+        var values = new Dictionary<string, string?>
+        {
+            ["Seed:PlatformOwner:Email"] = "owner@example.test",
+            ["Seed:PlatformOwner:DisplayName"] = legacy,
+        };
+        if (firstName is not null) values["Seed:PlatformOwner:FirstName"] = firstName;
+        if (lastName is not null) values["Seed:PlatformOwner:LastName"] = lastName;
+        var configuration = new Microsoft.Extensions.Configuration.ConfigurationBuilder().AddInMemoryCollection(values).Build();
+        var seeder = new PlatformSeeder(null!, null!, null!, null!, configuration, null!, TimeProvider.System);
+        var json = System.Text.Json.JsonSerializer.SerializeToElement(seeder.ReadOwner());
+        Assert.True(json.TryGetProperty("FirstName", out var first), "The seed must retain FirstName independently.");
+        Assert.True(json.TryGetProperty("LastName", out var last), "The seed must retain LastName independently.");
+        Assert.Equal(expectedFirst, first.GetString());
+        Assert.Equal(expectedLast, last.GetString());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Empty_migrated_database_in_production_seeds_web_settings_and_legal_texts_once(bool separateNames)
     {
         await using var postgres = new PostgreSqlBuilder("postgres:18.3")
             .WithDatabase("postgres")
@@ -95,7 +123,9 @@ public sealed class ProductionSeedTests
         var operatorPermissions = await context.PlatformPermissionAssignments.SingleAsync(TestContext.Current.CancellationToken);
         Assert.Equal(operatorUser.Id, operatorPermissions.UserId);
         Assert.Equal(ArquitecturaBaseMultitenant.Domain.Authorization.PlatformPermissions.All, operatorPermissions.Permissions);
-        Assert.Equal("Operator Example", operatorUser.DisplayName);
+        Assert.Equal(separateNames ? "Operator Middle Example Name" : "Operator Example", operatorUser.DisplayName);
+        Assert.Equal(separateNames ? "Operator Middle" : "Operator", operatorUser.FirstName);
+        Assert.Equal(separateNames ? "Example Name" : "Example", operatorUser.LastName);
         Assert.Equal("platform-owner@example.test", operatorUser.Email);
         Assert.False(await context.Tenants.AnyAsync(TestContext.Current.CancellationToken));
         var loginMethod = await context.LoginMethods.SingleAsync(TestContext.Current.CancellationToken);
@@ -181,6 +211,11 @@ public sealed class ProductionSeedTests
             builder.UseSetting("Email:Smtp:FromAddress", "sender@example.test");
             builder.UseSetting("Seed:PlatformOwner:Email", ownerEmail);
             builder.UseSetting("Seed:PlatformOwner:DisplayName", "Operator Example");
+            if (separateNames)
+            {
+                builder.UseSetting("Seed:PlatformOwner:FirstName", "Operator Middle");
+                builder.UseSetting("Seed:PlatformOwner:LastName", "Example Name");
+            }
             builder.ConfigureTestServices(services =>
             {
                 services.RemoveAll<IEmailTransport>();

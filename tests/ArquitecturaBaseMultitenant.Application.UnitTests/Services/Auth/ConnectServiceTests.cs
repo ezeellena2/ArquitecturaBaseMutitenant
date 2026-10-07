@@ -302,7 +302,7 @@ public sealed class ConnectServiceTests
 
         public Task FillMissingProfileNamesAsync(Guid userId, string? firstName, string? lastName, CancellationToken ct) => throw new NotSupportedException();
 
-        public Task<ArquitecturaBaseMultitenant.Domain.Results.Result<uint>> UpdateProfileAsync(Guid userId, string? displayName, string culture, string timeZoneId,
+        public Task<ArquitecturaBaseMultitenant.Domain.Results.Result<uint>> UpdateProfileAsync(Guid userId, string? firstName, string? lastName, string culture, string timeZoneId,
             uint expectedVersion, CancellationToken cancellationToken) => throw new NotSupportedException();
 
         public Task RememberBusinessTenantAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken)

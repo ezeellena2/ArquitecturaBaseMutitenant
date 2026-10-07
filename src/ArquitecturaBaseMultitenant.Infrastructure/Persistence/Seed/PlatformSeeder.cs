@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Common.Text;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
@@ -39,18 +40,25 @@ internal sealed class PlatformSeeder(
             throw new InvalidOperationException("Seed:PlatformOwner:Email is required and must be a valid email address.");
         }
 
-        var displayName = configuration["Seed:PlatformOwner:DisplayName"]?.Trim();
-        if (displayName?.Length == 0)
+        var configuredFirstName = configuration["Seed:PlatformOwner:FirstName"];
+        var configuredLastName = configuration["Seed:PlatformOwner:LastName"];
+        var firstName = TextNormalizer.CleanName(configuredFirstName);
+        var lastName = TextNormalizer.CleanName(configuredLastName);
+        // Una clave nueva presente (también vacía) elige el contrato nuevo completo: el legado no rellena la otra parte.
+        if (configuredFirstName is null && configuredLastName is null)
         {
-            displayName = null;
+            var legacy = TextNormalizer.CleanName(configuration["Seed:PlatformOwner:DisplayName"]);
+            var separator = legacy?.IndexOf(' ') ?? -1;
+            firstName = separator < 0 ? legacy : legacy![..separator];
+            lastName = separator < 0 ? null : legacy![(separator + 1)..];
         }
 
-        if (displayName?.Length > TextLimits.PersonName)
+        if (firstName?.Length > TextLimits.FirstName || lastName?.Length > TextLimits.LastName)
         {
-            throw new InvalidOperationException("Seed:PlatformOwner:DisplayName exceeds the allowed length.");
+            throw new InvalidOperationException("Seed:PlatformOwner name parts exceed the allowed length.");
         }
 
-        return new PlatformOwnerSeed(email.Value, displayName);
+        return new PlatformOwnerSeed(email.Value, firstName, lastName);
     }
 
     public async Task SeedAsync(PlatformOwnerSeed? owner, ReferenceDataSeedSnapshot references,
@@ -116,14 +124,16 @@ internal sealed class PlatformSeeder(
             throw new InvalidOperationException("The default culture country has no time zone in reference data.");
         }
 
-        var created = ApplicationUser.Create(owner.DisplayName, defaultCulture.Code, timeZone,
+        var created = ApplicationUser.Create(null, defaultCulture.Code, timeZone,
             timeProvider.GetUtcNow().UtcDateTime);
         if (created.IsFailure)
         {
-            throw new InvalidOperationException("Seed:PlatformOwner:DisplayName is invalid.");
+            throw new InvalidOperationException("Seed:PlatformOwner preferences are invalid.");
         }
 
         var user = created.Value;
+        if (user.UpdateNames(owner.FirstName, owner.LastName).IsFailure)
+            throw new InvalidOperationException("Seed:PlatformOwner name parts are invalid.");
         user.GrantPlatformOperator();
         user.Email = owner.Email.Value;
         user.EmailConfirmed = true;
@@ -163,4 +173,4 @@ internal sealed class PlatformSeeder(
     }
 }
 
-internal sealed record PlatformOwnerSeed(Email Email, string? DisplayName);
+internal sealed record PlatformOwnerSeed(Email Email, string? FirstName, string? LastName);

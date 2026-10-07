@@ -31,24 +31,24 @@ public sealed class AccountProfileTests(ApiFactory factory)
         var version = before!.RootElement.GetProperty("version").GetUInt32();
         Assert.False(before.RootElement.GetProperty("needsPersonalLoginMethod").GetBoolean());
         using var missing = await client.PutAsJsonAsync("/api/me", new
-            { displayName = "Persona", culture = "en-US", timeZoneId = "America/Argentina/Buenos_Aires" }, Ct);
+            { firstName = "Persona", lastName = (string?)null, culture = "en-US", timeZoneId = "America/Argentina/Buenos_Aires" }, Ct);
         Assert.Equal(HttpStatusCode.BadRequest, missing.StatusCode);
         using var first = await client.PutAsJsonAsync("/api/me", new
-            { displayName = "Persona", culture = "en-US", timeZoneId = "America/Argentina/Buenos_Aires", version }, Ct);
+            { firstName = "Persona", lastName = (string?)null, culture = "en-US", timeZoneId = "America/Argentina/Buenos_Aires", version }, Ct);
         var firstVersion = await SavedVersion.ReadAsync(first, Ct);
         Assert.NotEqual(version, firstVersion);
         using var stale = await client.PutAsJsonAsync("/api/me", new
-            { displayName = "Otra persona", culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires", version }, Ct);
+            { firstName = "Otra", lastName = "persona", culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires", version }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
         using var problem = await stale.Content.ReadFromJsonAsync<JsonDocument>(Ct);
         Assert.Equal("General.ConcurrencyConflict", problem!.RootElement.GetProperty("code").GetString());
         // Sin cambios también se compara la versión: si no, la respuesta daría una versión que la pantalla no vio.
         using var staleWithoutChanges = await client.PutAsJsonAsync("/api/me", new
-            { displayName = "Persona", culture = "en-US", timeZoneId = "America/Argentina/Buenos_Aires", version }, Ct);
+            { firstName = "Persona", lastName = (string?)null, culture = "en-US", timeZoneId = "America/Argentina/Buenos_Aires", version }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, staleWithoutChanges.StatusCode);
         // El segundo guardado sale con la versión que respondió el primero, sin releer.
         using var second = await client.PutAsJsonAsync("/api/me", new
-            { displayName = "Persona", culture = "en-US", timeZoneId = "America/Argentina/Buenos_Aires", version = firstVersion }, Ct);
+            { firstName = "Persona", lastName = (string?)null, culture = "en-US", timeZoneId = "America/Argentina/Buenos_Aires", version = firstVersion }, Ct);
         var secondVersion = await SavedVersion.ReadAsync(second, Ct);
         using var loaded = await client.GetAsync("/api/me", Ct);
         using var after = await loaded.Content.ReadFromJsonAsync<JsonDocument>(Ct);
@@ -92,14 +92,14 @@ public sealed class AccountProfileTests(ApiFactory factory)
         await SignInAgainAsync(client, account.Email.Value);
         await AccountJourney.AuthorizeAsync(client, "consumer", Ct);
         using var saved = await client.PutAsJsonAsync("/api/me", new
-            { displayName = "Persona", culture = "en-US", timeZoneId = "America/Argentina/Buenos_Aires", version }, Ct);
+            { firstName = "Persona", lastName = (string?)null, culture = "en-US", timeZoneId = "America/Argentina/Buenos_Aires", version }, Ct);
         var savedVersion = await SavedVersion.ReadAsync(saved, Ct);
         Assert.NotEqual(version, savedVersion);
         Assert.Equal(savedVersion, await ProfileVersionAsync(client));
 
         // Otro guardado del perfil con la versión vieja sí choca.
         using var stale = await client.PutAsJsonAsync("/api/me", new
-            { displayName = "Otra persona", culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires", version }, Ct);
+            { firstName = "Otra", lastName = "persona", culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires", version }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
     }
 

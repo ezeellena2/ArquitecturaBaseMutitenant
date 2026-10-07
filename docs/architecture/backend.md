@@ -226,7 +226,7 @@ Application/
 │  │                                   AccountGoogleService, GoogleProfileWriter (claims GivenName/Surname, sólo partes vacías); sesión iniciada y posesión del método nuevo (ADR 0045)
 │  ├─ Invitations/                     InvitationService, InvitationIssuer (lo usan OrganizationUserInvitationWriter y
 │  │                                   PlatformTenantCreator), InvitationExpiryService
-│  ├─ Profile/                         ProfileService (cuenta, idioma, zona), ProfileSnapshotBuilder
+│  ├─ Profile/                         ProfileService (nombre y apellido opcionales, idioma, zona), ProfileSnapshotBuilder
 │  ├─ Legal/                           LegalService y LegalAcceptanceService (documentos vigentes y aceptación), AccountDeletionService,
 │  │                                   AccountDeletionPolicy y AccountDeletionProcessor (pedir, cancelar y ejecutar la baja),
 │  │                                   LastTenantAdminGuard (la única Dueña, ADR 0035); los participantes de la baja están en

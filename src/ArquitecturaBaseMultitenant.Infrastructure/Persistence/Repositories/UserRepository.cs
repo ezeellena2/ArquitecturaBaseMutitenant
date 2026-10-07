@@ -127,7 +127,7 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
         EnsureSucceeded(await manager.UpdateAsync(user), "set the primary email");
     }
 
-    public async Task<Result<uint>> UpdateProfileAsync(Guid userId, string? displayName, string culture,
+    public async Task<Result<uint>> UpdateProfileAsync(Guid userId, string? firstName, string? lastName, string culture,
         string timeZoneId, uint expectedVersion, CancellationToken cancellationToken)
     {
         context.RequireTransaction();
@@ -135,7 +135,7 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
         // «Tus datos» compara su propia versión, no el xmin de la cuenta: otras escrituras de la fila no chocan con
         // el perfil. Dos guardados a la vez los separa el xmin, que EF compara en el mismo UPDATE.
         if (user.ProfileVersion != expectedVersion) throw new ConcurrencyConflictException();
-        var renamed = user.Rename(displayName);
+        var renamed = user.UpdateNames(firstName, lastName);
         if (renamed.IsFailure) return renamed.Error;
 
         user.UpdatePreferences(culture, timeZoneId);
@@ -181,7 +181,7 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
         new(user.Id, user.DisplayName, user.Culture, user.TimeZoneId, user.Status,
             user.IsPlatformOperator, user.Email is null ? null : Email.Create(user.Email).Value,
             user.LastBusinessTenantId, user.Version, user.DeletionScheduledForUtc, user.OperatorInvitationExpiresAtUtc,
-            user.ProfileVersion);
+            user.ProfileVersion) { FirstName = user.FirstName, LastName = user.LastName };
 
     private static void EnsureSucceeded(IdentityResult result, string action)
     {

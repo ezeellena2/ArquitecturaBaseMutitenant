@@ -89,23 +89,23 @@ public sealed class ProfileServiceTests
         var catalog = new JsonReferenceDataCatalog();
         var validator = new UpdateMeRequestValidator(catalog, catalog);
 
-        Assert.True((await validator.ValidateAsync(new UpdateMeRequest(null, "es-AR",
+        Assert.True((await validator.ValidateAsync(new UpdateMeRequest(null, null, "es-AR",
             "America/Argentina/Buenos_Aires", 5), Ct)).IsValid);
 
-        var invalid = await validator.ValidateAsync(new UpdateMeRequest(null, "zz-ZZ", "Unknown/Zone", 5), Ct);
+        var invalid = await validator.ValidateAsync(new UpdateMeRequest(null, null, "zz-ZZ", "Unknown/Zone", 5), Ct);
         Assert.Equal(["Culture", "TimeZoneId"], invalid.Errors.Select(error => error.PropertyName));
     }
 
     [Fact]
-    public async Task Optional_display_name_has_person_name_limit()
+    public async Task Optional_name_parts_have_their_individual_limits()
     {
         var catalog = new JsonReferenceDataCatalog();
         var validator = new UpdateMeRequestValidator(catalog, catalog);
 
         var invalid = await validator.ValidateAsync(new UpdateMeRequest(
-            new string('A', TextLimits.PersonDisplayName + 1), "es-AR", "America/Argentina/Buenos_Aires", 5), Ct);
+            new string('A', TextLimits.FirstName + 1), new string('B', TextLimits.LastName + 1), "es-AR", "America/Argentina/Buenos_Aires", 5), Ct);
 
-        Assert.Equal("DisplayName", Assert.Single(invalid.Errors).PropertyName);
+        Assert.Equal(["FirstName", "LastName"], invalid.Errors.Select(error => error.PropertyName));
     }
 
     [Theory]
@@ -329,16 +329,16 @@ public sealed class ProfileServiceTests
         var service = CreateService(new StubCurrentUser(userId, Access.Consumer), new FakeTenantContext(),
             users, new StubAccesses([]), new StubSettings(null), fixture, unitOfWork);
 
-        var invalid = await service.UpdateAsync(new UpdateMeRequest("Ana", "zz-ZZ", "Unknown/Zone", 5), Ct);
+        var invalid = await service.UpdateAsync(new UpdateMeRequest("Ana", null, "zz-ZZ", "Unknown/Zone", 5), Ct);
         Assert.True(invalid.IsFailure);
         Assert.Equal(0, unitOfWork.Transactions);
 
-        var updated = await service.UpdateAsync(new UpdateMeRequest("Ana", "en-US",
+        var updated = await service.UpdateAsync(new UpdateMeRequest("Ana María", "Pérez", "en-US",
             "America/Argentina/Buenos_Aires", 5), Ct);
         Assert.True(updated.IsSuccess);
         Assert.Equal(1, unitOfWork.Transactions);
         Assert.Equal(CommitPolicy.OnSuccess, unitOfWork.LastPolicy);
-        Assert.Equal((userId, "Ana", "en-US", "America/Argentina/Buenos_Aires"), users.LastUpdate);
+        Assert.Equal((userId, "Ana María", "Pérez", "en-US", "America/Argentina/Buenos_Aires"), users.LastUpdate);
         // La respuesta lleva la versión del perfil que dejó el guardado, no la que mandó la pantalla.
         Assert.Equal(6u, updated.Value.Version);
     }
@@ -397,7 +397,7 @@ public sealed class ProfileServiceTests
 
     private sealed class StubUsers(UserAccountRow? account) : IUserRepository
     {
-        public (Guid UserId, string? DisplayName, string Culture, string TimeZoneId)? LastUpdate { get; private set; }
+        public (Guid UserId, string? FirstName, string? LastName, string Culture, string TimeZoneId)? LastUpdate { get; private set; }
 
         public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> RequestDeletionAsync(Guid userId, string reason,
             DateTime requestedAtUtc, int graceDays, CancellationToken ct) => throw new NotSupportedException();
@@ -433,10 +433,10 @@ public sealed class ProfileServiceTests
 
         public Task FillMissingProfileNamesAsync(Guid userId, string? firstName, string? lastName, CancellationToken ct) => throw new NotSupportedException();
 
-        public Task<ArquitecturaBaseMultitenant.Domain.Results.Result<uint>> UpdateProfileAsync(Guid userId, string? displayName, string culture, string timeZoneId,
+        public Task<ArquitecturaBaseMultitenant.Domain.Results.Result<uint>> UpdateProfileAsync(Guid userId, string? firstName, string? lastName, string culture, string timeZoneId,
             uint expectedVersion, CancellationToken cancellationToken)
         {
-            LastUpdate = (userId, displayName, culture, timeZoneId);
+            LastUpdate = (userId, firstName, lastName, culture, timeZoneId);
             return Task.FromResult(ArquitecturaBaseMultitenant.Domain.Results.Result.Success(expectedVersion + 1));
         }
 

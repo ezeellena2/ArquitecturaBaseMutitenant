@@ -141,7 +141,7 @@ public sealed class LoginPersistenceTests(ApiFactory factory)
             await users.SetPrimaryEmailAsync(userId, email, ct);
             // «Tus datos» se guarda con su propia versión, no con el xmin de la cuenta.
             var version = (await users.GetByIdAsync(userId, ct))!.ProfileVersion;
-            profileVersion = (await users.UpdateProfileAsync(userId, "Ana", "en-US", "America/New_York", version, ct)).Value;
+            profileVersion = (await users.UpdateProfileAsync(userId, "Ana", null, "en-US", "America/New_York", version, ct)).Value;
             await users.RememberBusinessTenantAsync(userId, tenantId, ct);
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);

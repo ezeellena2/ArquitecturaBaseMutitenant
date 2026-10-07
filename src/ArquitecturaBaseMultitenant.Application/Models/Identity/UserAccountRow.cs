@@ -13,6 +13,8 @@ public sealed record UserAccountRow(Guid Id, string? DisplayName, string Culture
     uint Version = 0, DateTime? DeletionScheduledForUtc = null, DateTime? OperatorInvitationExpiresAtUtc = null,
     uint ProfileVersion = 0)
 {
+    public string? FirstName { get; init; }
+    public string? LastName { get; init; }
     /// <summary>Invitación de operador sin aceptar, vigente o vencida: solo se reenvía o se revoca.</summary>
     public bool HasPendingOperatorInvitation => Status == UserStatus.Active && OperatorInvitationExpiresAtUtc is not null;
 }

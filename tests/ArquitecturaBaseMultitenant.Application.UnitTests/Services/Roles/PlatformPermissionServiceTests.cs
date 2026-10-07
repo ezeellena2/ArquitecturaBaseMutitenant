@@ -102,7 +102,7 @@ public sealed class PlatformPermissionServiceTests
         public Task SetPrimaryContactAsync(Guid id, Email? email, PhoneNumber? phone, CancellationToken ct) => throw new NotSupportedException();
         public Task FillMissingProfileNamesAsync(Guid userId, string? firstName, string? lastName, CancellationToken ct) => throw new NotSupportedException();
 
-        public Task<ArquitecturaBaseMultitenant.Domain.Results.Result<uint>> UpdateProfileAsync(Guid id, string? name, string culture, string zone, uint version, CancellationToken ct) => throw new NotSupportedException();
+        public Task<ArquitecturaBaseMultitenant.Domain.Results.Result<uint>> UpdateProfileAsync(Guid id, string? firstName, string? lastName, string culture, string zone, uint version, CancellationToken ct) => throw new NotSupportedException();
         public Task RememberBusinessTenantAsync(Guid id, Guid tenantId, CancellationToken ct) => throw new NotSupportedException();
     }
 }

@@ -54,7 +54,7 @@ internal sealed class ProfileService(ICurrentUser currentUser, ITenantContext te
             return UserErrors.NotFound;
         }
 
-        return await users.UpdateProfileAsync(userId, request.DisplayName, request.Culture!,
+        return await users.UpdateProfileAsync(userId, request.FirstName, request.LastName, request.Culture!,
             request.TimeZoneId!, request.Version!.Value, cancellationToken);
     }
 }

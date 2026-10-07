@@ -13561,6 +13561,18 @@
               "type": "string"
             }
           },
+          "firstName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lastName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
           "version": {
             "type": "integer",
             "format": "uint32"
@@ -16523,7 +16535,13 @@
       "UpdateMeHttpRequest": {
         "type": "object",
         "properties": {
-          "displayName": {
+          "firstName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lastName": {
             "type": [
               "null",
               "string"
