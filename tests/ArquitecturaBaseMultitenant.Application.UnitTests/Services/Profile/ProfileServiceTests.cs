@@ -1,3 +1,4 @@
+using System.Globalization;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -31,6 +32,42 @@ namespace ArquitecturaBaseMultitenant.Application.UnitTests.Services.Profile;
 public sealed class ProfileServiceTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    [Theory]
+    [InlineData("es-AR", SystemRoles.TenantAdmin, "Dueño")]
+    [InlineData("en-US", SystemRoles.TenantAdmin, "Owner")]
+    [InlineData("es-AR", "Operaciones", "Operaciones")]
+    [InlineData("en-US", "Operaciones", "Operaciones")]
+    [InlineData("es-AR", null, null)]
+    [InlineData("en-US", null, null)]
+    public async Task Organization_profile_translates_system_role_in_request_language_and_preserves_custom_or_absent_role(
+        string cultureName, string? roleName, string? expectedName)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(cultureName);
+            using var fixture = new ServiceFixture<ProfileService>();
+            var userId = Guid.CreateVersion7();
+            var tenantId = Guid.CreateVersion7();
+            var memberships = new StubAccesses([
+                new(tenantId, TenantKind.Business, "Empresa", "empresa", TenantStatus.Active, MemberStatus.Active,
+                    null, roleName),
+            ]);
+            var service = CreateService(new StubCurrentUser(userId, Access.Business),
+                new FakeTenantContext { TenantId = tenantId, TenantKind = TenantKind.Business },
+                new StubUsers(Account(userId)), memberships, new StubSettings(null), fixture);
+
+            var result = await service.GetAsync(Ct);
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(expectedName, Assert.Single(result.Value.Organizations).RoleName);
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
 
     [Fact]
     public async Task Consumer_currency_keeps_active_space_preferences_without_exposing_organization_country()
@@ -191,7 +228,7 @@ public sealed class ProfileServiceTests
         var personalId = Guid.CreateVersion7();
         var accesses = new StubAccesses([
             new(tenantId, TenantKind.Business, "Empresa A", "empresa-a", TenantStatus.Active,
-                MemberStatus.Active, null, "TenantAdmin"),
+                MemberStatus.Active, null, "Operaciones"),
             new(suspendedId, TenantKind.Business, "Empresa B", "empresa-b", TenantStatus.Suspended,
                 MemberStatus.Active, null),
             new(personalId, TenantKind.Personal, "Personal", null, TenantStatus.Active,
@@ -212,7 +249,7 @@ public sealed class ProfileServiceTests
         Assert.True(result.Value.HasPersonalSpace);
         Assert.Equal(2, result.Value.Organizations.Count);
         Assert.True(result.Value.Organizations[0].IsSelectable);
-        Assert.Equal("TenantAdmin", result.Value.Organizations[0].RoleName);
+        Assert.Equal("Operaciones", result.Value.Organizations[0].RoleName);
         Assert.False(result.Value.Organizations[1].IsSelectable);
         Assert.Equal(MemberStatus.Active, result.Value.Organizations[1].MemberStatus);
         Assert.Equal("en-US", result.Value.Culture);

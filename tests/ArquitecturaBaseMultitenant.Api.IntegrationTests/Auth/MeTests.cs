@@ -19,6 +19,25 @@ public sealed class MeTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
+    [Theory]
+    [InlineData("es-AR", "Dueño")]
+    [InlineData("en-US", "Owner")]
+    public async Task Business_profile_translates_the_persisted_system_owner_role_in_request_language(
+        string culture, string expectedRole)
+    {
+        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
+        var tenantId = await OrganizationJourney.StageAsync(factory, owner, "Rol del perfil", Ct);
+        await AccountJourney.AuthorizeAsync(client, "business", Ct, tenantId);
+        client.DefaultRequestHeaders.AcceptLanguage.ParseAdd(culture);
+
+        var profile = await ReadMeAsync(client);
+
+        var organization = Assert.Single(profile.GetProperty("organizations").EnumerateArray());
+        Assert.Equal(tenantId, organization.GetProperty("id").GetGuid());
+        Assert.Equal(expectedRole, organization.GetProperty("roleName").GetString());
+    }
+
     [Fact]
     public async Task Business_me_exposes_organization_country_without_settings_permission_and_keeps_personal_culture()
     {
