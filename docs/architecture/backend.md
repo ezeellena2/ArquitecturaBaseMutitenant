@@ -333,7 +333,7 @@ Infrastructure/
 │  ├─ Email/                           EmailChannelSender, IEmailTransport (SmtpEmailTransport; PickupDirectoryEmailTransport en Development),
 │  │                                   MimeMessageFactory, EmailTemplateRenderer, Templates/*.html
 │  └─ MessagingRegistration.cs
-├─ Modules/WhatsApp/                   (E8) Cloud/, Webhook/, Inbound/, Retention/, Persistence/ (sus configuraciones EF),
+├─ Modules/WhatsApp/                   (E8) cliente/renderers/opciones en la raíz; Webhook/, Inbound/, Retention/, Persistence/ (sus configuraciones EF),
 │                                      WhatsAppInfrastructureModule, WhatsAppOptions(+Validator), Disabled/
 ├─ Security/                           SecureTokenGenerator, LoginCodeGenerator, LoginCodeHasher, PayloadProtector, InvitationTokenProtector
 ├─ Time/                               TimeZoneService (TimeZoneInfo, IANA)
@@ -741,18 +741,18 @@ Un guardado deja una sola entrada por acción: `RoleAssignmentTrail` junta los r
 
 ## 15. WhatsApp: un módulo quitable
 
-La estructura sigue el diseño de la Etapa 6 del plan maestro de `../ArquitecturaBase` ([ADR 0007](../decisions/README.md)), para que las dos plantillas se armen igual. El módulo nace en la Etapa 8; hoy existen los puertos del núcleo y el outbox. La atención por organización (Etapa 11) sigue la [ADR 0038](../decisions/0038-whatsapp-de-atencion.md). Las precisiones de ingreso/avisos y la relación con el asistente están en [0049](../decisions/0049-precisiones-whatsapp-y-asistente.md) y el [plan E8](../plans/2026-10-07-etapa-8-whatsapp.md).
+La estructura sigue el diseño de la Etapa 6 del plan maestro de `../ArquitecturaBase` ([ADR 0007](../decisions/README.md)), para que las dos plantillas se armen igual. El módulo nace en la Etapa 8: composición/persistencia/adaptadores y Phone en identidad/recuperación están implementados; webhook, bot y privacidad se completan en T06–T08. La atención por organización (Etapa 11) sigue la [ADR 0038](../decisions/0038-whatsapp-de-atencion.md). Las precisiones de ingreso/avisos y la relación con el asistente están en [0049](../decisions/0049-precisiones-whatsapp-y-asistente.md) y el [plan E8](../plans/2026-10-07-etapa-8-whatsapp.md).
 
 - **Puertos en el núcleo, adaptadores en el módulo.** El núcleo nunca nombra a WhatsApp:
   - `ILoginCodeChannel` e `IInvitationChannel`: el núcleo trae el canal `"email"`. El módulo registra `"whatsapp"`. `LoginCodeChannel` e `InvitationChannel` son **valores**, no enums: el núcleo valida contra los canales registrados.
   - `IAccountNoticeChannel` (en `Application/Interfaces/Integrations/Messaging/`, Etapa 3), con el mismo patrón: recibe un `AccountNotice` cerrado (`LoginMethodChanged`, con qué pasó, el método enmascarado y la fecha; `ReviewLoginMethods`, con la organización; `DeletionRequested`, con la fecha; `DeletionCancelled`; `AccountDeleted`; y los de «Recuperar mi cuenta», al método nuevo: `RecoveryReceived`, `RecoveryApproved` y `RecoveryRejected`). Cada implementación atiende un tipo de método: el núcleo trae la de `Email` (canal `"email"`) y el módulo registra la de `Phone` (canal `"whatsapp"`). Sin el módulo, los teléfonos no reciben aviso, y no es un error. Siempre sale por el outbox, cifrado. "Exportación lista" sale solo por correo.
-  - `IPhoneLinkObserver` (E8): la cuenta y la administración avisan que cambió un teléfono, y el módulo suelta el contacto e invalida los enlaces.
+  - `IPhoneLinkObserver` e `ILoginLinkIssuer` (en `Application/Interfaces/Integrations/Identity/`, E8): hooks Phone dentro de la UoW del núcleo y emisión de enlaces dentro de la UoW del bot; ninguno abre otra transacción.
   - El teléfono como dato de la cuenta e `IPhoneNumberParser` siguen en el núcleo. `PhoneUsage` queda en `Any | Mobile` y no nombra WhatsApp (`Mobile`: solo celular). En la E3 `Phone` es solo modelo; el ingreso, registro y la gestión de un teléfono se habilitan al registrar el canal del módulo en la E8.
-- **Países de WhatsApp:** los controla el módulo en sus adaptadores y flujos (código por WhatsApp, vínculo y registro por WhatsApp), con `WhatsApp:AllowedCountries`, que se lee solo dentro de `Modules/WhatsApp`, y un error propio del módulo sobre el campo `phone`. Se controla solo para un número **nuevo**: achicar la lista no invalida un número existente. `GET /api/auth/methods` (núcleo) devuelve los canales encendidos con un formato neutro, y el módulo aporta sus países (`channels: [{ key: "whatsapp", countries: [...] }]`).
+- **Países de WhatsApp:** los controla el módulo en sus adaptadores y flujos (código por WhatsApp, vínculo y registro por WhatsApp), con `WhatsApp:AllowedCountries`, que se lee solo dentro de `Modules/WhatsApp`, y un error propio del módulo sobre el campo `phone`. Se controla para un número **nuevo o pendiente**: achicar la lista no invalida uno ya verificado; un pendiente debe cumplir la lista vigente al reenviar/verificar. `GET /api/auth/methods` (núcleo) devuelve los canales encendidos con un formato neutro, y el módulo aporta sus países (`channels: [{ key: "whatsapp", countries: [...] }]`).
 - **Carpetas:**
   - `Domain/WhatsApp`;
   - `Application/Modules/WhatsApp/{Configuration,Interfaces,Models,Services,Resources}`;
-  - `Infrastructure/Modules/WhatsApp/{Cloud,Webhook,Inbound,Retention,Persistence}`;
+  - `Infrastructure/Modules/WhatsApp/` con cliente, catálogo/renderers y opciones en la raíz; subcarpetas `Webhook`, `Inbound`, `Retention` y `Persistence`;
   - `Api/Modules/WhatsApp`.
 
   `WhatsAppModelContributor` aplica sus propias `IEntityTypeConfiguration`, con un `ApplyConfigurationsFromAssembly` filtrado por namespace, y declara explícitamente los tipos globales del módulo en `identity`. `ApplicationDbContext` recibe contribuidores neutrales; DesignTime/bootstrap los descubren sin secretos ni red. La clave de caché del modelo incluye el conjunto de contribuidores. Apagar el canal no cambia el esquema.
