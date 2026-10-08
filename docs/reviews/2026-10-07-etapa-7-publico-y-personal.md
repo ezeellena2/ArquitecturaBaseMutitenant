@@ -1,10 +1,10 @@
 # Etapa 7 · Personal, sitio público e interacción
 
-Inicio: 2026-10-07. Plan: [público y personal](../plans/2026-10-04-etapa-7-publico-y-personal.md). Estado: implementación y puerta automática aprobadas; recorrido funcional 60/60, en repetición para entregar las capturas finales.
+Inicio: 2026-10-07. Cierre: 2026-10-08. Plan: [público y personal](../plans/2026-10-04-etapa-7-publico-y-personal.md). Estado: cerrada, con puerta automática y recorrido reutilizable final 60/60 aprobados; evidencia versionada a 1440 y 390.
 
 ## Alcance y base
 
-Back en `main`, base `2d5f87f`; front en `main`, base `fec2a86`. Ambos arneses declaran cerradas las etapas 0 a 6. La consolidación y las piezas comunes de edición, permisos y navegación ya existen. Los tableros de esta etapa se aprobaron en la v113 del lienzo; la v114 posterior corresponde a la documentación del Asistente de otra conversación.
+Back en `main`, base `2d5f87f`; front en `main`, base `fec2a86`. Ambos arneses partieron de las etapas 0 a 6 cerradas y cierran con `ClosedStages` de 0 a 7. La consolidación y las piezas comunes de edición, permisos y navegación ya existen. Los tableros de esta etapa se aprobaron en la v113 del lienzo; la v114 posterior corresponde a la documentación del Asistente de otra conversación.
 
 La copia se comparte con los arreglos A8–A11 y R01/R03. Sus cambios en ingreso, sesiones, invitaciones, Empresas, datos fiscales y runner quedan fuera de los commits de esta etapa. Se integra el ingreso después de los commits A8/A9. No se detiene el entorno de la otra conversación.
 
@@ -64,7 +64,7 @@ Tareas en orden, commits por rutas propias, sin push. Tests de negocio, permisos
 
 ## Cierre
 
-La implementación T01–T19 está commiteada y la puerta automática T20 pasó. El E2E completo sin filtros terminó 36/36. El recorrido reutilizable también terminó 60/60 con el entorno apagado; se repite después de mejorar la legibilidad de las capturas. `ClosedStages` conserva 0–6 hasta aprobar esa evidencia final. No se inició la Etapa 8.
+La implementación T01–T19 está commiteada y la puerta automática T20 pasó. El E2E completo sin filtros terminó 36/36. La repetición final del recorrido reutilizable terminó 60/60, EXIT 0, en 38 min 41,859 s, con su entorno apagado. Su JSON y HTML coinciden; se verificaron las 62 imágenes, sus referencias y anchos reales, y se revisaron visualmente los accesos y las capturas afectadas de Mi cuenta, errores y publicación/directorio/retorno de ambos tamaños. Ambos `ClosedStages` incluyen 0–7. No se inició la Etapa 8.
 
 ### Comandos y evidencias
 
@@ -93,18 +93,24 @@ La siguiente tabla conserva la puerta automática inicial. La repetición pedida
 
 ### Repetición para el recorrido de usuario
 
-Logs y resultados en `.local/etapa7/recorrido-gate/` del back. Los intentos fallidos se conservan en `recorrido-intento-*`; la primera corrida funcional 60/60 y las capturas que motivaron el ajuste están en `.local/etapa7/recorrido-funcional/`. Las imágenes del 7 de octubre se archivaron en `.local/etapa7/recorrido-2026-10-07-archivo/`; la evidencia final se genera el 8 de octubre.
+Logs y resultados en `.local/etapa7/recorrido-gate/` del back. Los intentos fallidos se conservan en `recorrido-intento-*`; la primera corrida funcional 60/60 y las capturas que motivaron el ajuste están en `.local/etapa7/recorrido-funcional/`. Las imágenes del 7 de octubre se archivaron en `.local/etapa7/recorrido-2026-10-07-archivo/`; la evidencia final del 8 de octubre está versionada en el front. El conflicto de publicación previo se conserva en `.local/etapa7/recorrido-publicacion-fallido-2026-10-08/`.
 
 | Comando / verificación | Resultado | Evidencia |
 |---|---|---|
 | Suite completa back con Docker, `dotnet test --no-build --no-restore` | EXIT 0, 1989/1989, 0 fallos y omitidos; 18 min 47,217 s de MTP y 1128,419 s del comando | `back-test.log`, `back-test-result.txt` |
-| Suite completa front, `npm test -- --run` | EXIT 0, 2200/2200 en 247 archivos; 126,76 s de Vitest y 127,926 s del comando. Primer intento con build/lint en paralelo: import de CompanyDetail agotó 10 s, 2167 verdes y 33 omitidos; focal y completo repetidos en exclusivo, sin cambiar ese test | `front-test.log`, `front-test-result.txt`; anterior en `front-test-contador-primer-intento.log` |
-| `npm run build` y `npm run contracts:check` | EXIT 0; build final y contrato coincidente | `front-build-final.log`; salida del comprobador |
-| `npm run lint` después de los ajustes del script | EXIT 0, 0 errores y 751 advertencias heredadas; sin avisos nuevos del recorrido | `front-lint-final.log` |
-| `node --test scripts/recorrido-usuario.test.mjs` | EXIT 0, 8/8; 1,879 s. Fecha, índice, fallo, limpieza, diagnósticos, alert compuesto, salida móvil y avisos transitorios | salida del test liviano |
+| Suite completa front, `npm test -- --run` | EXIT 0, 2202/2202 en 247 archivos; 131,08 s de Vitest y 132,315 s del comando. La repetición previa al ajuste de publicación pasó 2200/2200; se conservan los intentos fallidos de sandbox y arranque descritos en la decisión 46, y el import de CompanyDetail bajo carga, sin cambiar ese test | `front-test-publication-verified.log`, `front-test-publication-verified-result.txt`; anteriores en `front-test*.log` |
+| `npm run build` y `npm run contracts:check` | EXIT 0; build después de corregir el editor y los tests de arranque; contrato coincidente, sin cambios de API posteriores | `front-build-publication-final.log`; salida del comprobador |
+| `npm run lint` después de todas las correcciones | EXIT 0, 0 errores y 751 advertencias heredadas; sin avisos nuevos del recorrido | `front-lint-publication-final.log` |
+| `node --test scripts/recorrido-usuario.test.mjs` | EXIT 0, 8/8; 1,908 s. Fecha, índice, fallo, limpieza, diagnósticos, alert compuesto, salida móvil y avisos transitorios | `node-test-final.log` |
 | Contador y consumidores, más CompanyDetail en exclusivo | EXIT 0, 141/141 en ocho archivos; 27,34 s. Pruebas dirigidas: rojo 4/4 con el contador anterior | salida focal de Vitest |
 | Primera corrida funcional del recorrido | EXIT 0, 60/60; entorno apagado. La revisión visual pidió esperar los avisos antes de capturar | `../recorrido-funcional/recorrido.log`, `../recorrido-funcional/resultados.json` |
-| Repetición completa con capturas legibles y contador corregido | El 8 de octubre pasó 24 comprobaciones de escritorio y falló al publicar con una versión anterior al guardado propio. Corregido el editor con pruebas dirigidas; pendiente la repetición completa. No se cuentan pendientes como aprobados | `../recorrido-publicacion-fallido-2026-10-08/`; próximo `recorrido.log`, `recorrido-result.txt` e índice del front |
+| Editor y arranque después del conflicto de publicación | EXIT 0, 22/22 en dos archivos; 18,05 s. Lectura demorada: rojo 2/2; editor completo verde 19/19. La espera de App conserva las consultas al DOM actual | `publication-red.log`, `publication-green.log`, `publication-app-final.log` |
+| Recorrido final completo | EXIT 0, 60/60, 0 pendientes/fallos, 38 min 41,859 s; del 2026-10-08T11:06:48.273Z al 2026-10-08T11:45:30.132Z. Un contexto para ambos tamaños; entorno apagado | `recorrido.log`, `recorrido-result.txt`; `resultados.json` e índice del front |
+| Verificación independiente de la evidencia | EXIT 0; 62 PNG únicos, 60 capturas de pasos y dos de Plataforma, anchos 1440/390, referencias exactas y HTML idéntico al generado del JSON | `evidencia-verificada.json`; `.local/etapa7/verificar-recorrido.mjs 2026-10-08` |
+| Entorno al terminar el recorrido | `aspire ps --format Json --non-interactive`: EXIT 0, `[]` | salida del comando después del verificador |
+| Builds con `ClosedStages` 0–7, Aspire apagado | Back EXIT 0, 0 advertencias y errores, 38,02 s; front EXIT 0. Contratos EXIT 0, schema coincidente con el OpenAPI del build final | `back-build-close.log`, `front-build-close.log`, `front-contracts-close.log` |
+| Guardas del arnés con `ClosedStages` 0–7 | Back EXIT 0, 10/10, 0 omitidos, 7,431 s; front EXIT 0, 7/7, 2,48 s | `back-harness-close.log`, `front-harness-close.log` |
+| Detectores finales back y front | Ambos EXIT 0, auto 0 / modelo 0 / humano 0, `main`, 0 tokens; «Para vos»: nada | `docs-back-close.log`, `docs-back-close-report.md` (20261008-0851); `docs-front-close.log`, `docs-front-close-report.md` (20261008-0852) |
 
 ### Commits propios
 
@@ -141,6 +147,7 @@ Los commits de A8–A10/R03 y las actualizaciones ajenas del lienzo y las guías
 | Recorrido · Contador al retomar la pestaña | — | `26315ced` |
 | Recorrido · Escrituras propias de Página pública | — | `490be402` |
 | Recorrido · Espera del arranque en tests | — | `1726e7bd` |
+| Recorrido · Evidencia final 60/60 | — | `0fa8e6c` |
 
 ### Galería y recorrido de usuario
 
@@ -150,4 +157,4 @@ El pedido posterior del usuario reemplaza el recorrido pendiente en Chrome Eze p
 
 Google se limita expresamente al destino: los dos botones navegan a `accounts.google.com` sin completar correo. El proveedor muestra `redirect_uri_mismatch` para este callback aislado; las capturas lo conservan. Este resultado verifica el destino pedido y no acredita un ingreso con Google ni la configuración del callback en Google Cloud.
 
-Pendiente: terminar la repetición completa del capturador corregido, revisar las imágenes y agregar 7 a `ClosedStages` en ambos repos con sus guardas y documentación en cero.
+La puerta del recorrido quedó aprobada y sus capturas se entregan en el índice. `ClosedStages` 0–7 de ambos repos pasó las guardas afectadas (back 10/10 y front 7/7), los builds y el contrato; los dos detectores terminaron en cero. Se cierra la Etapa 7 en `main`, por rutas propias y sin push. No quedan pasos de usuario pendientes.
