@@ -58,6 +58,10 @@ Tareas en orden, commits por rutas propias, sin push. Tests de negocio, permisos
 43. Las capturas esperan que se retiren todos los avisos transitorios y desactivan las animaciones solo al tomar la imagen. El puntero se mueve fuera de Sonner, que pausa el vencimiento cuando queda encima de la franja; los errores persistentes y los estados de carga se conservan. La revisión de una corrida funcional 60/60 detectó avisos anteriores tapando el diálogo móvil del correo ajeno. El test reprodujo dos avisos pendientes y pasó 8/8 tras la corrección; la evidencia se vuelve a generar con una corrida completa.
 44. La suspensión de la máquina expuso un defecto del contador compartido: restaba una unidad por callback y mantenía el botón bloqueado después de vencer la espera real. `useCountdown` conserva el vencimiento en su estado inicializado de forma perezosa y recalcula por reloj, foco y visibilidad; `restart` fija un plazo nuevo. Las cuatro pruebas dirigidas fallaron con el hook anterior y pasaron tras el cambio. Los 141 casos focales y la suite completa de 2200 pruebas verifican sus consumidores, sin modificar límites ni reenviar solicitudes automáticamente. La invocación de la corrida final mantiene una solicitud temporal de actividad del sistema y la libera en `finally`.
 
+45. La repetición del 8 de octubre encontró un conflicto propio en el paso 25: guardar respondió 200, pero el interruptor permitió publicar antes de que la relectura actualizara la versión y recibió 409. El `onSuccess` del hook devuelve la promesa de guardado, relectura y actualización de la base; ambas acciones esperan las dos mutaciones propias. Dos pruebas con una lectura demorada reprodujeron el fallo, una por cada orden, y las 19 del editor pasaron tras el cambio. El intento fallido y sus capturas se conservan en `.local/etapa7/recorrido-publicacion-fallido-2026-10-08/`; no se acepta ni se reintenta automáticamente un 409.
+
+46. La suite posterior encontró dos esperas incompletas de `App.test.tsx`: retirar «Reintentar» no acredita que se montó la ruta asíncrona, y el caso inicial buscaba `main` sin esperar. La comprobación conjunta consulta el DOM actual hasta que desaparece el error y aparece la vista; el caso inicial y axe también esperan la vista. App y Página pública pasaron 22/22, sin aumentar tiempos ni modificar la aplicación. Se conserva además un intento que falló al recolectar 246 suites por un temporal desaparecido del sandbox; la repetición completa se ejecuta fuera de ese sandbox.
+
 ## Cierre
 
 La implementación T01–T19 está commiteada y la puerta automática T20 pasó. El E2E completo sin filtros terminó 36/36. El recorrido reutilizable también terminó 60/60 con el entorno apagado; se repite después de mejorar la legibilidad de las capturas. `ClosedStages` conserva 0–6 hasta aprobar esa evidencia final. No se inició la Etapa 8.
@@ -100,7 +104,7 @@ Logs y resultados en `.local/etapa7/recorrido-gate/` del back. Los intentos fall
 | `node --test scripts/recorrido-usuario.test.mjs` | EXIT 0, 8/8; 1,879 s. Fecha, índice, fallo, limpieza, diagnósticos, alert compuesto, salida móvil y avisos transitorios | salida del test liviano |
 | Contador y consumidores, más CompanyDetail en exclusivo | EXIT 0, 141/141 en ocho archivos; 27,34 s. Pruebas dirigidas: rojo 4/4 con el contador anterior | salida focal de Vitest |
 | Primera corrida funcional del recorrido | EXIT 0, 60/60; entorno apagado. La revisión visual pidió esperar los avisos antes de capturar | `../recorrido-funcional/recorrido.log`, `../recorrido-funcional/resultados.json` |
-| Repetición completa con capturas legibles y contador corregido | En curso, el 8 de octubre; no se cuentan pendientes como aprobados | `recorrido.log`, `recorrido-result.txt`; índice del front |
+| Repetición completa con capturas legibles y contador corregido | El 8 de octubre pasó 24 comprobaciones de escritorio y falló al publicar con una versión anterior al guardado propio. Corregido el editor con pruebas dirigidas; pendiente la repetición completa. No se cuentan pendientes como aprobados | `../recorrido-publicacion-fallido-2026-10-08/`; próximo `recorrido.log`, `recorrido-result.txt` e índice del front |
 
 ### Commits propios
 
@@ -135,6 +139,8 @@ Los commits de A8–A10/R03 y las actualizaciones ajenas del lienzo y las guías
 | Recorrido · Salida móvil y diagnóstico | — | `06e49d23`, `e41b9861` |
 | Recorrido · Capturas sin avisos superpuestos | — | `75d04adf` |
 | Recorrido · Contador al retomar la pestaña | — | `26315ced` |
+| Recorrido · Escrituras propias de Página pública | — | `490be402` |
+| Recorrido · Espera del arranque en tests | — | `1726e7bd` |
 
 ### Galería y recorrido de usuario
 
