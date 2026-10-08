@@ -41,9 +41,9 @@ internal static class AccountEmailCaptures
         const string accountUrl = "https://ejemplo.com/cuenta";
         var notices = new Dictionary<string, AccountNotice>
         {
-            ["metodo-agregado"] = new AccountNotice.LoginMethodChanged("Added", LoginMethodType.Email, "l***@gmail.com", occurred, zone, accountUrl) { RecipientName = "Lucía" },
-            ["metodo-quitado"] = new AccountNotice.LoginMethodChanged("Removed", LoginMethodType.Email, "l***@delta.ejemplo.com", occurred, zone, accountUrl) { RecipientName = "Lucía" },
-            ["principal-cambiado"] = new AccountNotice.LoginMethodChanged("Primary", LoginMethodType.Email, "l***@gmail.com", occurred, zone, accountUrl) { RecipientName = "Lucía" },
+            ["metodo-agregado"] = new AccountNotice.LoginMethodChanged(LoginMethodChange.Added, LoginMethodType.Email, "l***@gmail.com", occurred, zone, accountUrl) { RecipientName = "Lucía" },
+            ["metodo-quitado"] = new AccountNotice.LoginMethodChanged(LoginMethodChange.Removed, LoginMethodType.Email, "l***@delta.ejemplo.com", occurred, zone, accountUrl) { RecipientName = "Lucía" },
+            ["principal-cambiado"] = new AccountNotice.LoginMethodChanged(LoginMethodChange.Primary, LoginMethodType.Email, "l***@gmail.com", occurred, zone, accountUrl) { RecipientName = "Lucía" },
             ["baja-pedida"] = new AccountNotice.DeletionRequested(occurred, scheduled, zone, "https://ejemplo.com/login") { RecipientName = "Diego" },
             ["baja-cancelada"] = new AccountNotice.DeletionCancelled(occurred, zone, accountUrl) { RecipientName = "Diego" },
             ["cuenta-eliminada"] = new AccountNotice.AccountDeleted { RecipientName = "Diego" },

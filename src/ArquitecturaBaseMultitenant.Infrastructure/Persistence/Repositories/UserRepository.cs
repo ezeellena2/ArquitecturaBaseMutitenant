@@ -112,6 +112,9 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
 
     public async Task<UserAccountRow?> GetByIdAsync(Guid userId, CancellationToken cancellationToken)
     {
+        // Las altas y cambios preparados en esta UoW todavía no están en la base.
+        if (context.Users.Local.SingleOrDefault(candidate => candidate.Id == userId) is { } staged)
+            return ToRow(staged);
         var user = await context.Users.AsNoTracking()
             .SingleOrDefaultAsync(candidate => candidate.Id == userId, cancellationToken);
         return user is null ? null : ToRow(user);

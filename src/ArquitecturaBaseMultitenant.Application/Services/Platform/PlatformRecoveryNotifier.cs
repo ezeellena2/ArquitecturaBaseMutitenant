@@ -22,7 +22,7 @@ internal sealed class PlatformRecoveryNotifier(IEnumerable<IAccountNoticeChannel
         var url = origin.Value is { } value ? new Uri(value, "/login").AbsoluteUri : "/login";
         await EmailChannel().EnqueueAsync(account.Id, added.Value, new AccountNotice.RecoveryApproved(url),
             await cultures.ResolveAsync(account.Culture, null, ct), ct);
-        await loginMethods.ChangedAsync(account, [.. methods.Where(method => method.Id != added.Id)], added, "Added", ct);
+        await loginMethods.ChangedAsync(account, [.. methods.Where(method => method.Id != added.Id)], added, LoginMethodChange.Added, ct);
     }
 
     public async Task RejectedAsync(string email, CancellationToken ct) =>

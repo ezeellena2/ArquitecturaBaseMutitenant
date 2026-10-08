@@ -14,7 +14,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
 /// <summary>Verifica código y cuenta, conserva intentos y auditoría dentro del límite del llamador.</summary>
 internal sealed class LoginVerifier(
-    LoginCodeVerifier verifier,
+    LoginCodeAttemptVerifier verifier,
     LoginCodeAttemptGuard attempts,
     LoginAccountGuard accounts,
     ILoginMethodReader loginMethods,
@@ -32,19 +32,9 @@ internal sealed class LoginVerifier(
         await attempts.LockDestinationAsync(destination, cancellationToken);
         if (invitation is null && !await accounts.StillOwnsAsync(userId, destination, cancellationToken))
             return Fail(userId, LoginCodeErrors.Invalid(attemptsLeft: null));
-        var hadActiveCode = await attempts.HasActiveCodeAsync(destination, cancellationToken);
         var verified = await verifier.VerifyAsync(destination, LoginCodePurpose.Login,
-            requestedByUserId: null, request.Code!, cancellationToken);
-        if (verified.IsFailure)
-        {
-            if (userId is { } existingUserId && hadActiveCode && IsFailedCodeAttempt(verified.Error))
-            {
-                await attempts.RegisterFailedAttemptAsync(existingUserId, cancellationToken);
-                if (await attempts.IsLockedOutAsync(existingUserId, cancellationToken))
-                    return Fail(userId, AccountErrors.LockedOut);
-            }
-            return Fail(userId, verified.Error);
-        }
+            requestedByUserId: null, request.Code!, userId, cancellationToken);
+        if (verified.IsFailure) return Fail(userId, verified.Error);
 
         if (invitation is not null)
         {
@@ -91,11 +81,6 @@ internal sealed class LoginVerifier(
         attempts.RecordSuccess(userId.Value);
         return userId.Value;
     }
-
-    private static bool IsFailedCodeAttempt(Error error) =>
-        error.Code == LoginCodeErrors.TooManyAttemptsCode
-        || (error.Code == LoginCodeErrors.InvalidCode
-            && error.Metadata?.ContainsKey(LoginCodeErrors.AttemptsLeftKey) == true);
 
     private Error Fail(Guid? userId, Error error)
     {

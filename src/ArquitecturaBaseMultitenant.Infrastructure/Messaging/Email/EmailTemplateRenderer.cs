@@ -133,13 +133,13 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
         var time = formatter.FormatTime(notice.OccurredAtUtc, context);
         var key = (notice.Change, notice.MethodType) switch
         {
-            ("Added", LoginMethodType.Phone) => "LoginMethodAddedPhone",
-            ("Added", LoginMethodType.Email) => "LoginMethodAddedEmail",
-            ("Added", LoginMethodType.Google) => "LoginMethodAddedGoogle",
-            ("Removed", LoginMethodType.Email) => "LoginMethodRemovedEmail",
-            ("Removed", LoginMethodType.Google) => "LoginMethodRemovedGoogle",
-            ("Primary", LoginMethodType.Email) => "LoginMethodPrimaryEmail",
-            ("Primary", LoginMethodType.Google) => "LoginMethodPrimaryEmail",
+            (LoginMethodChange.Added, LoginMethodType.Phone) => "LoginMethodAddedPhone",
+            (LoginMethodChange.Added, LoginMethodType.Email) => "LoginMethodAddedEmail",
+            (LoginMethodChange.Added, LoginMethodType.Google) => "LoginMethodAddedGoogle",
+            (LoginMethodChange.Removed, LoginMethodType.Email) => "LoginMethodRemovedEmail",
+            (LoginMethodChange.Removed, LoginMethodType.Google) => "LoginMethodRemovedGoogle",
+            (LoginMethodChange.Primary, LoginMethodType.Email) => "LoginMethodPrimaryEmail",
+            (LoginMethodChange.Primary, LoginMethodType.Google) => "LoginMethodPrimaryEmail",
             _ => throw new NotSupportedException("This login method notice has no approved copy."),
         };
         return (key, "LoginMethodChanged.html",

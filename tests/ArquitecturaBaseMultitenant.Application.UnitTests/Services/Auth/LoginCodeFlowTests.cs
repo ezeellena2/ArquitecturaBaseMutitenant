@@ -127,13 +127,13 @@ public sealed class LoginCodeFlowTests
         public string Generate() => "123456";
     }
 
-    private sealed class Hasher : ILoginCodeHasher
+    internal sealed class Hasher : ILoginCodeHasher
     {
         public string Hash(LoginCodeDestination destination, LoginCodePurpose purpose, string code) =>
             $"{destination.Channel}|{destination.Value}|{purpose}|{code}";
     }
 
-    private sealed class FakeCodes : ILoginCodeRepository
+    internal sealed class FakeCodes : ILoginCodeRepository
     {
         public List<LoginCode> Codes { get; } = [];
         public List<string> Operations { get; } = [];

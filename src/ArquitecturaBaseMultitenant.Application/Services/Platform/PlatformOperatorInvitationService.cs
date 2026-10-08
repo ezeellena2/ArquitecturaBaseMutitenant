@@ -12,6 +12,8 @@ using ArquitecturaBaseMultitenant.Domain.Platform;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using Microsoft.Extensions.Logging;
 
+using ArquitecturaBaseMultitenant.Application.Services.Identity;
+
 namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
 /// <summary>
@@ -25,7 +27,7 @@ internal sealed class PlatformOperatorInvitationService(
     PlatformOperatorProvisioner provisioner,
     PlatformOperatorInvitationNotifier notifier,
     IUserLookup lookup,
-    LoginCodeIssuer codes,
+    LoginCodeIssuer codes, LoginMethodLinker linker,
     PlatformAuditWriter audit,
     IRequestValidator validator,
     IUnitOfWork unitOfWork,
@@ -44,6 +46,7 @@ internal sealed class PlatformOperatorInvitationService(
             return await unitOfWork.ExecuteInTransactionAsync<Result<PlatformOperatorInvitationResponse>>(async work =>
             {
                 // El mismo lock que el ingreso y el registro con ese correo: nadie crea la cuenta en el medio.
+                await linker.LockEmailAsync(email, work);
                 await codes.LockDestinationAsync(LoginCodeDestination.ForEmail(email), work);
                 if (await lookup.FindMethodAsync(LoginMethodType.Email, email.Value, work) is { } existing)
                     return await provisioner.IsPendingAsync(existing.UserId, work)

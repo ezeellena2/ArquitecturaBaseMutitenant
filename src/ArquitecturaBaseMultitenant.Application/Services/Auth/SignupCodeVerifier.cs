@@ -8,8 +8,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
 /// <summary>Bloquea, relee y verifica el código antes de registrar o confirmar una cuenta.</summary>
-internal sealed class SignupCodeVerifier(ILoginCodeRepository codes,
-    LoginCodeVerifier verifier, SignupPolicy policy, SignupAccountRegistrar registrar,
+internal sealed class SignupCodeVerifier(LoginCodeAttemptVerifier verifier, SignupPolicy policy, SignupAccountRegistrar registrar,
     SignupExistingMethodVerifier existingMethods, ILoginAuditRepository audits,
     ISignInService signIn, TimeProvider timeProvider)
 {
@@ -17,25 +16,11 @@ internal sealed class SignupCodeVerifier(ILoginCodeRepository codes,
         CancellationToken cancellationToken)
     {
         var destination = LoginCodeDestination.ForEmail(request.Email!);
-        await codes.LockDestinationAsync(destination, cancellationToken);
+        var attemptedMethod = await existingMethods.LockAsync(destination, cancellationToken);
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
-        var currentCode = await codes.GetLatestAsync(destination, LoginCodePurpose.Signup,
-            requestedByUserId: null, cancellationToken);
-        var hadActiveCode = currentCode?.IsActive(nowUtc) == true;
         var verified = await verifier.VerifyAsync(destination, LoginCodePurpose.Signup,
-            requestedByUserId: null, request.Code!, cancellationToken);
-        if (verified.IsFailure)
-        {
-            var failedMethod = await existingMethods.FindAsync(destination, cancellationToken);
-            if (failedMethod is not null && hadActiveCode && IsFailedCodeAttempt(verified.Error))
-            {
-                await signIn.RegisterFailedAttemptAsync(failedMethod.UserId, cancellationToken);
-                if (await signIn.IsLockedOutAsync(failedMethod.UserId, cancellationToken))
-                    return Fail(failedMethod.UserId, AccountErrors.LockedOut);
-            }
-
-            return Fail(failedMethod?.UserId, verified.Error);
-        }
+            requestedByUserId: null, request.Code!, attemptedMethod?.UserId, cancellationToken);
+        if (verified.IsFailure) return Fail(attemptedMethod?.UserId, verified.Error);
 
         var method = await existingMethods.FindAsync(destination, cancellationToken);
         Guid userId;
@@ -68,27 +53,14 @@ internal sealed class SignupCodeVerifier(ILoginCodeRepository codes,
         CancellationToken cancellationToken)
     {
         var destination = LoginCodeDestination.ForEmail(request.Email!);
-        await codes.LockDestinationAsync(destination, cancellationToken);
+        var attemptedMethod = await existingMethods.LockAsync(destination, cancellationToken);
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         var allowed = await policy.CanRegisterBusinessAsync(cancellationToken);
         if (allowed.IsFailure) return Fail(null, allowed.Error);
 
-        var currentCode = await codes.GetLatestAsync(destination, LoginCodePurpose.BusinessSignup,
-            requestedByUserId: null, cancellationToken);
-        var hadActiveCode = currentCode?.IsActive(nowUtc) == true;
         var verified = await verifier.VerifyAsync(destination, LoginCodePurpose.BusinessSignup,
-            requestedByUserId: null, request.Code!, cancellationToken);
-        if (verified.IsFailure)
-        {
-            var failedMethod = await existingMethods.FindAsync(destination, cancellationToken);
-            if (failedMethod is not null && hadActiveCode && IsFailedCodeAttempt(verified.Error))
-            {
-                await signIn.RegisterFailedAttemptAsync(failedMethod.UserId, cancellationToken);
-                if (await signIn.IsLockedOutAsync(failedMethod.UserId, cancellationToken))
-                    return Fail(failedMethod.UserId, AccountErrors.LockedOut);
-            }
-            return Fail(failedMethod?.UserId, verified.Error);
-        }
+            requestedByUserId: null, request.Code!, attemptedMethod?.UserId, cancellationToken);
+        if (verified.IsFailure) return Fail(attemptedMethod?.UserId, verified.Error);
 
         var method = await existingMethods.FindAsync(destination, cancellationToken);
         Guid userId;
@@ -115,11 +87,6 @@ internal sealed class SignupCodeVerifier(ILoginCodeRepository codes,
         audits.Add(LoginAudit.Success(userId, LoginAuditMethod.Code, nowUtc));
         return userId;
     }
-
-    private static bool IsFailedCodeAttempt(Error error) =>
-        error.Code == LoginCodeErrors.TooManyAttemptsCode
-        || (error.Code == LoginCodeErrors.InvalidCode
-            && error.Metadata?.ContainsKey(LoginCodeErrors.AttemptsLeftKey) == true);
 
     private Error Fail(Guid? userId, Error error)
     {

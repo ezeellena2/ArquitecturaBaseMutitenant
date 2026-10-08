@@ -17,10 +17,11 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 internal sealed class LoginMethodIssuer(LoginMethodGuard guard, ILoginMethodRepository methods,
     IUserLookup lookup, LoginCodeIssuer codes,
     IEnumerable<ILoginCodeChannel> channels, UserCultureResolver cultures,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider, LoginMethodLinker linker)
 {
     public async Task<Result<LoginMethodCodeResponse>> AddAsync(Guid userId, AddLoginEmailRequest request, CancellationToken ct)
     {
+        await linker.LockEmailAsync(request.Email!, ct);
         var account = await guard.LockAccountAsync(userId, ct);
         if (account.IsFailure) return account.Error;
         var email = request.Email!;
@@ -50,6 +51,9 @@ internal sealed class LoginMethodIssuer(LoginMethodGuard guard, ILoginMethodRepo
 
     public async Task<Result<LoginMethodCodeResponse>> SendAsync(Guid userId, Guid methodId, CancellationToken ct)
     {
+        var hint = await methods.GetByIdForUserAsync(userId, methodId, ct);
+        if (hint is null) return LoginMethodErrors.NotFound;
+        await linker.LockEmailAsync(Email.Create(hint.Value).Value, ct);
         var account = await guard.LockAccountAsync(userId, ct);
         if (account.IsFailure) return account.Error;
         var method = await methods.GetByIdForUserAsync(userId, methodId, ct);

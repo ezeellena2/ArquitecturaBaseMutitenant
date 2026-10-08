@@ -2,7 +2,6 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
-using ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 
@@ -14,7 +13,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 /// </summary>
 internal sealed class GoogleMethodLinker(LoginMethodGuard guard, IExternalLoginLock loginLock,
     IUserLookup lookup, ILoginMethodRepository methods, LoginCodeIssuer codes,
-    TimeProvider timeProvider, LoginMethodDomainLinker emailDomains, GoogleMethodLinkFinalizer finalizer)
+    TimeProvider timeProvider, LoginMethodLinker linker, GoogleMethodLinkFinalizer finalizer)
 {
     public async Task<Result> LinkAsync(Guid userId, ExternalLogin login, CancellationToken ct)
     {
@@ -45,9 +44,8 @@ internal sealed class GoogleMethodLinker(LoginMethodGuard guard, IExternalLoginL
         }
         var all = await methods.ListByUserIdAsync(userId, ct);
         var method = LoginMethod.CreateGoogle(userId, login.ProviderKey, login.Email);
-        method.Verify(timeProvider.GetUtcNow().UtcDateTime);
-        await emailDomains.AssignIfVerifiedAsync(method, login.Email, ct);
-        await finalizer.SetPrimaryIfNeededAsync(userId, login, all, method, ct);
+        var linked = await linker.VerifyAsync(method, timeProvider.GetUtcNow().UtcDateTime, ct);
+        if (linked.IsFailure) return linked.Error;
         methods.Add(method);
         await finalizer.FillMissingNamesAsync(userId, login, ct);
         await finalizer.NotifyAddedAsync(account.Value, all, method, ct);

@@ -27,6 +27,7 @@
 | `Creator` | Crea un agregado nuevo con sus partes. |
 | `Editor` | Cambia un agregado que ya existe. |
 | `Remover` | Quita un agregado o los accesos que dependen de él. |
+| `Recorder` | Registra el consentimiento explícito dentro de la UoW del llamador, sin abrir otra transacción. |
 | `Registrar` | Da de alta una cuenta o un dominio. |
 | `Provisioner` | Prepara un espacio completo con sus valores iniciales: una organización, un espacio personal o un operador. |
 | `Requester` | Controla un pedido (estado o límites) y dispara lo que pide. |

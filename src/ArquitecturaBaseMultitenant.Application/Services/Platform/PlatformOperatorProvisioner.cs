@@ -11,6 +11,8 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using Microsoft.Extensions.Options;
 
+using ArquitecturaBaseMultitenant.Application.Services.Identity;
+
 namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
 /// <summary>
@@ -20,7 +22,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 /// acepta la invitación, que vence como la de una organización (ADR 0042). Cultura y zona horaria salen de los datos
 /// de referencia, como en el seed del primer operador. También renueva y revoca la invitación sin aceptar.
 /// </summary>
-internal sealed class PlatformOperatorProvisioner(IUserRepository users, ILoginMethodRepository methods,
+internal sealed class PlatformOperatorProvisioner(IUserRepository users, AccountRegistrar accounts, LoginMethodLinker linker, ILoginMethodRepository methods,
     IPlatformPermissionAssignmentRepository assignments, UserCultureResolver cultures, ICountryCatalog countries,
     IOptions<InvitationOptions> invitations)
 {
@@ -30,17 +32,14 @@ internal sealed class PlatformOperatorProvisioner(IUserRepository users, ILoginM
         var culture = await cultures.ResolveAsync(null, null, ct);
         var timeZone = (await countries.FindAsync(culture.Entry.CountryCode, ct))?.DefaultTimeZoneId
             ?? throw new InvalidOperationException("The default culture country has no time zone in reference data.");
-        var account = await users.CreateAsync(null, culture.Entry.Code, timeZone, ct);
+        var expiresAtUtc = ExpiresAt(nowUtc);
+        var account = await accounts.CreateAsync(culture.Entry.Code, timeZone, ct, expiresAtUtc);
         var assignment = PlatformPermissionAssignment.Create(account.Id, permissions);
         if (assignment.IsFailure) return assignment.Error;
-        var expiresAtUtc = ExpiresAt(nowUtc);
-        await users.InvitePlatformOperatorAsync(account.Id, expiresAtUtc, ct);
         var method = LoginMethod.CreateEmail(account.Id, email);
-        method.Verify(nowUtc);
-        if (method.MakePrimary().IsFailure)
-            throw new InvalidOperationException("A verified operator email could not become primary.");
+        var linked = await linker.VerifyAsync(method, nowUtc, ct, assignDomain: false);
+        if (linked.IsFailure) return linked.Error;
         methods.Add(method);
-        await users.SetPrimaryEmailAsync(account.Id, email, ct);
         assignments.Add(assignment.Value);
         return new PlatformOperatorInvitee(account.Id, email, [.. assignment.Value.Permissions], expiresAtUtc, null,
             account.Culture, account.TimeZoneId);

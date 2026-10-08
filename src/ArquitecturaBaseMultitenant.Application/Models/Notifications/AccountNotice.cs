@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 namespace ArquitecturaBaseMultitenant.Application.Models.Notifications;
 
 /// <summary>Catálogo cerrado de avisos de una cuenta; cada variante recibe sólo los datos necesarios.</summary>
@@ -7,7 +8,7 @@ public abstract record AccountNotice
 
     public string? RecipientName { get; init; }
 
-    public sealed record LoginMethodChanged(string Change,
+    public sealed record LoginMethodChanged(LoginMethodChange Change,
         ArquitecturaBaseMultitenant.Domain.Authentication.LoginMethodType MethodType,
         string MaskedMethod, DateTime OccurredAtUtc, string TimeZoneId, string ActionUrl)
         : AccountNotice;

@@ -9,6 +9,9 @@ internal static class IdentityRegistration
     internal static IServiceCollection AddIdentity(this IServiceCollection services)
     {
         services.AddScoped<AccountNoticeIssuer>();
+        services.AddScoped<AccountRegistrar>();
+        services.AddScoped<LegalConsentRecorder>();
+        services.AddScoped<LoginMethodLinker>();
         services.AddScoped<ILoginMethodManagementService, LoginMethodManagementService>();
         services.AddScoped<LoginMethodGuard>();
         services.AddScoped<LoginMethodIssuer>();

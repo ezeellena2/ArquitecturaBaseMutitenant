@@ -7,7 +7,6 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
-using ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Platform;
@@ -15,6 +14,8 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
+
+using ArquitecturaBaseMultitenant.Application.Services.Identity;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
@@ -28,7 +29,7 @@ internal sealed class PlatformRecoveryDecisionService(
     IUserRepository users,
     IUserLookup lookup,
     LoginCodeIssuer codes,
-    LoginMethodDomainLinker emailDomains,
+    LoginMethodLinker linker,
     PlatformAuditWriter audit,
     PlatformRecoveryNotifier notifier,
     IRequestValidator validator,
@@ -49,11 +50,12 @@ internal sealed class PlatformRecoveryDecisionService(
                 if (recovery.Version != request.Version!.Value) throw new ConcurrencyConflictException();
                 if (recovery.Status != AccountRecoveryStatus.Pending) return AccountRecoveryErrors.AlreadyResolved;
                 if (recovery.UserId is not { } userId) return AccountRecoveryErrors.NoAccount;
+                var email = Email.Create(recovery.NewMethodValue).Value;
+                await linker.LockEmailAsync(email, work);
                 await methods.LockUserAsync(userId, work);
                 var account = await users.GetByIdAsync(userId, work);
                 if (account is null || account.Status == UserStatus.Deleted) return AccountRecoveryErrors.NoAccount;
                 if (account.IsPlatformOperator) return AccountRecoveryErrors.OperatorAccount;
-                var email = Email.Create(recovery.NewMethodValue).Value;
                 await codes.LockDestinationAsync(LoginCodeDestination.ForEmail(email), work);
                 var owners = await lookup.FindVerifiedUsersByEmailAsync(email, work);
                 if (owners.Contains(userId)) return AccountRecoveryErrors.MethodAlreadyOnAccount;
@@ -67,12 +69,9 @@ internal sealed class PlatformRecoveryDecisionService(
                 var approved = recovery.Approve(operatorId, request.Reason!, nowUtc);
                 if (approved.IsFailure) return approved.Error;
                 var method = LoginMethod.CreateEmail(userId, email);
-                method.Verify(nowUtc);
-                await emailDomains.AssignIfVerifiedAsync(method, email, work);
-                await methods.ClearPrimaryAsync(userId, work);
-                method.MakePrimary();
+                var linked = await linker.VerifyAsync(method, nowUtc, work, replacePrimary: true);
+                if (linked.IsFailure) return linked.Error;
                 methods.Add(method);
-                await users.SetPrimaryEmailAsync(userId, email, work);
                 audit.RecordRecovery(userId, SecurityEventType.AccountRecoveryApproved, request.Reason!,
                     StatusChange(AccountRecoveryStatus.Approved));
                 await notifier.ApprovedAsync(account, method,

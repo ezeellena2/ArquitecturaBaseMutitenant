@@ -50,7 +50,7 @@ public sealed class ChannelContractsTests
     {
         var occurred = new DateTime(2026, 9, 27, 17, 35, 0, DateTimeKind.Utc);
         var scheduled = occurred.AddDays(30);
-        var changed = new AccountNotice.LoginMethodChanged("Added", LoginMethodType.Phone,
+        var changed = new AccountNotice.LoginMethodChanged(LoginMethodChange.Added, LoginMethodType.Phone,
             "+54 9 11 •••• 4521", occurred, "America/Argentina/Buenos_Aires", "https://example.test/cuenta")
         { RecipientName = "Lucía" };
         var requested = new AccountNotice.DeletionRequested(occurred, scheduled,

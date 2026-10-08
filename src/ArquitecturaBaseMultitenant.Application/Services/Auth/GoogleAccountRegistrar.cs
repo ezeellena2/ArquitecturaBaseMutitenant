@@ -1,63 +1,32 @@
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
-using ArquitecturaBaseMultitenant.Domain.Legal;
+using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
-/// <summary>Prepara el registro Google personal o empresarial con ambos consentimientos vigentes.</summary>
-internal sealed class GoogleAccountRegistrar(
-    SignupPolicy policy,
-    IPersonalSpaceProvisioner personalSpaces,
-    IUserRepository users,
-    ILegalRepository legal,
-    IRequestInfo requestInfo,
-    TimeProvider timeProvider)
+/// <summary>Prepara las preferencias y el registro Google, sin dar consentimiento implícito al ingreso.</summary>
+internal sealed class GoogleAccountRegistrar(SignupPolicy policy, IPersonalSpaceProvisioner personalSpaces,
+    AccountRegistrar accounts, LegalConsentRecorder consent, TimeProvider clock)
 {
-    internal Task<PersonalSpaceDraft> PrepareAsync(string? culture, string? timeZoneId,
-        CancellationToken cancellationToken) =>
-        personalSpaces.PrepareAsync(culture, timeZoneId, cancellationToken);
+    internal Task<PersonalSpaceDraft> PrepareAsync(string? culture, string? timeZoneId, CancellationToken ct) =>
+        personalSpaces.PrepareAsync(culture, timeZoneId, ct);
 
-    internal async Task<Result<Guid>> RegisterAsync(ExternalLogin login, PersonalSpaceDraft draft,
-        CancellationToken cancellationToken)
+    internal async Task<Result<Guid>> RegisterAsync(ExternalLogin login, PersonalSpaceDraft draft, CancellationToken ct)
     {
-        var allowed = await policy.CanRegisterAsync(cancellationToken);
+        var allowed = await policy.CanRegisterAsync(ct);
         if (allowed.IsFailure) return allowed.Error;
-
-        var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
-        var terms = await legal.GetCurrentDocumentAsync(LegalDocumentKind.Terms, nowUtc, cancellationToken)
-            ?? throw new InvalidOperationException("The current Terms document has not been seeded.");
-        var privacy = await legal.GetCurrentDocumentAsync(LegalDocumentKind.Privacy, nowUtc, cancellationToken)
-            ?? throw new InvalidOperationException("The current Privacy document has not been seeded.");
-        var userId = (await users.CreateAsync(null,
-            draft.Culture, draft.TimeZoneId, cancellationToken)).Id;
-        personalSpaces.Stage(draft, userId);
-        legal.AddAcceptance(LegalAcceptance.Create(userId, terms, nowUtc,
-            requestInfo.IpAddress, requestInfo.UserAgent));
-        legal.AddAcceptance(LegalAcceptance.Create(userId, privacy, nowUtc,
-            requestInfo.IpAddress, requestInfo.UserAgent));
-        return userId;
+        var account = await accounts.CreateAsync(draft.Culture, draft.TimeZoneId, ct);
+        await accounts.StagePersonalAsync(account.Id, draft, ct);
+        await consent.RecordCurrentAsync(account.Id, clock.GetUtcNow().UtcDateTime, ct);
+        return account.Id;
     }
 
-    internal async Task<Result<Guid>> RegisterBusinessAsync(ExternalLogin login, PersonalSpaceDraft defaults,
-        CancellationToken cancellationToken)
+    internal async Task<Result<Guid>> RegisterBusinessAsync(ExternalLogin login, PersonalSpaceDraft defaults, CancellationToken ct)
     {
-        var allowed = await policy.CanRegisterBusinessAsync(cancellationToken);
+        var allowed = await policy.CanRegisterBusinessAsync(ct);
         if (allowed.IsFailure) return allowed.Error;
-
-        var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
-        var terms = await legal.GetCurrentDocumentAsync(LegalDocumentKind.Terms, nowUtc, cancellationToken)
-            ?? throw new InvalidOperationException("The current Terms document has not been seeded.");
-        var privacy = await legal.GetCurrentDocumentAsync(LegalDocumentKind.Privacy, nowUtc, cancellationToken)
-            ?? throw new InvalidOperationException("The current Privacy document has not been seeded.");
-        var userId = (await users.CreateAsync(null,
-            defaults.Culture, defaults.TimeZoneId, cancellationToken)).Id;
-        legal.AddAcceptance(LegalAcceptance.Create(userId, terms, nowUtc,
-            requestInfo.IpAddress, requestInfo.UserAgent));
-        legal.AddAcceptance(LegalAcceptance.Create(userId, privacy, nowUtc,
-            requestInfo.IpAddress, requestInfo.UserAgent));
-        return userId;
+        var account = await accounts.CreateAsync(defaults.Culture, defaults.TimeZoneId, ct);
+        await consent.RecordCurrentAsync(account.Id, clock.GetUtcNow().UtcDateTime, ct);
+        return account.Id;
     }
-
 }

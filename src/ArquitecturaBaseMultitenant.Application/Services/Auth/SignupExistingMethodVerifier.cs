@@ -1,19 +1,28 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
-using ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
+using ArquitecturaBaseMultitenant.Application.Services.Identity;
+
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
 /// <summary>Valida la cuenta existente y confirma su método de correo sin duplicar identidad.</summary>
 internal sealed class SignupExistingMethodVerifier(IUserRepository users,
-    ILoginMethodRepository methods, ILoginMethodReader methodReader, IUserLookup userLookup,
-    LoginMethodDomainLinker emailDomains)
+    ILoginMethodRepository methods, IUserLookup userLookup,
+    LoginMethodLinker linker)
 {
+    internal async Task<LoginMethodLookup?> LockAsync(LoginCodeDestination destination, CancellationToken ct)
+    {
+        await linker.LockEmailAsync(Email.Create(destination.Value).Value, ct);
+        var method = await FindAsync(destination, ct);
+        if (method is not null) await methods.LockUserAsync(method.UserId, ct);
+        return method;
+    }
+
     internal Task<LoginMethodLookup?> FindAsync(LoginCodeDestination destination,
         CancellationToken cancellationToken) =>
         userLookup.FindMethodAsync(LoginMethodType.Email, destination.Value, cancellationToken);
@@ -43,15 +52,8 @@ internal sealed class SignupExistingMethodVerifier(IUserRepository users,
         {
             var tracked = await methods.GetByIdAsync(method.MethodId, cancellationToken)
                 ?? throw new InvalidOperationException("The login method disappeared during signup.");
-            tracked.Verify(nowUtc);
-            await emailDomains.AssignIfVerifiedAsync(tracked, email, cancellationToken);
-            var existingMethods = await methodReader.ListByUserIdAsync(userId, cancellationToken);
-            if (!existingMethods.Any(value => value.IsPrimary))
-            {
-                if (tracked.MakePrimary().IsFailure)
-                    throw new InvalidOperationException("A verified method could not become primary.");
-                await users.SetPrimaryEmailAsync(userId, email, cancellationToken);
-            }
+            var linked = await linker.VerifyAsync(tracked, nowUtc, cancellationToken);
+            if (linked.IsFailure) throw new InvalidOperationException("Signup ownership changed under the identity lock.");
         }
 
         return userId;

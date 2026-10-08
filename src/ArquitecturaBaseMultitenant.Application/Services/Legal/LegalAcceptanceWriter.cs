@@ -1,14 +1,15 @@
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Legal;
 using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.Results;
 
+using ArquitecturaBaseMultitenant.Application.Services.Identity;
+
 namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
 
 /// <summary>Bloquea la cuenta, relee las versiones legales vigentes y guarda solo aceptaciones de esas versiones para evitar consentimientos obsoletos.</summary>
 internal sealed class LegalAcceptanceWriter(ILegalRepository legal, ILoginMethodRepository methods,
-    IRequestInfo requestInfo, TimeProvider timeProvider)
+    LegalConsentRecorder consent, TimeProvider timeProvider)
 {
     internal async Task<Result> AcceptAsync(Guid userId, AcceptLegalRequest request, CancellationToken innerCt)
     {
@@ -28,8 +29,7 @@ internal sealed class LegalAcceptanceWriter(ILegalRepository legal, ILoginMethod
             if (await legal.HasAcceptedAsync(userId, document.Id, innerCt)) continue;
             if (!request.Documents!.Any(item => item.Id == document.Id && item.Version == document.Version))
                 return LegalErrors.VersionChanged;
-            legal.AddAcceptance(LegalAcceptance.Create(userId, document, nowUtc,
-                requestInfo.IpAddress, requestInfo.UserAgent));
+            await consent.RecordAsync(userId, document, nowUtc, innerCt);
         }
         return Result.Success();
     }

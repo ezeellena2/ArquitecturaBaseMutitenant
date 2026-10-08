@@ -1,7 +1,5 @@
 using System.Globalization;
 using ArquitecturaBaseMultitenant.Domain.Common;
-using ArquitecturaBaseMultitenant.Domain.Authentication;
-using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.Platform;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
@@ -138,27 +136,9 @@ public sealed class ApplicationUser : IdentityUser<Guid>, IVersioned
     /// <summary>Un guardado del perfil, aunque no cambie nada: la versión sube y la fila se escribe.</summary>
     public void MarkProfileSaved() => ProfileVersion++;
 
-    public Result Suspend()
-    {
-        if (Status != UserStatus.Active)
-        {
-            return UserErrors.InvalidTransition;
-        }
+    public Result Suspend() => ApplyLifecycle(Lifecycle.Suspend());
 
-        Status = UserStatus.Suspended;
-        return Result.Success();
-    }
-
-    public Result Reactivate()
-    {
-        if (Status != UserStatus.Suspended)
-        {
-            return UserErrors.InvalidTransition;
-        }
-
-        Status = DeletionScheduledForUtc is null ? UserStatus.Active : UserStatus.PendingDeletion;
-        return Result.Success();
-    }
+    public Result Reactivate() => ApplyLifecycle(Lifecycle.Reactivate());
 
     public void RememberBusinessTenant(Guid tenantId)
     {
@@ -218,46 +198,35 @@ public sealed class ApplicationUser : IdentityUser<Guid>, IVersioned
         return Result.Success();
     }
 
-    public Result RequestDeletion(string reason, DateTime requestedAtUtc, int graceDays, Guid? operatorId = null)
+    private AccountLifecycle Lifecycle => new(Status, DeletionRequestedAtUtc, DeletionScheduledForUtc,
+        DeletionReason, DeletionRequestedByOperatorId, DeletedAtUtc);
+
+    private Result ApplyLifecycle(Result<AccountLifecycle> result)
     {
-        RequireUtc(requestedAtUtc);
-        ArgumentOutOfRangeException.ThrowIfLessThan(graceDays, 1);
-        if (DeletionScheduledForUtc is not null) return AccountDeletionErrors.AlreadyPending;
-        if (Status != UserStatus.Active && !(Status == UserStatus.Suspended && operatorId is not null))
-            return UserErrors.InvalidTransition;
-        if (string.IsNullOrWhiteSpace(reason) || reason.Length > TextLimits.Description)
-            return AccountDeletionErrors.InvalidReason;
-        DeletionRequestedAtUtc = requestedAtUtc;
-        DeletionScheduledForUtc = requestedAtUtc.AddDays(graceDays);
-        DeletionReason = reason;
-        DeletionRequestedByOperatorId = operatorId;
-        if (Status == UserStatus.Active) Status = UserStatus.PendingDeletion;
+        if (result.IsFailure) return result.Error;
+        var lifecycle = result.Value;
+        Status = lifecycle.Status;
+        DeletionRequestedAtUtc = lifecycle.DeletionRequestedAtUtc;
+        DeletionScheduledForUtc = lifecycle.DeletionScheduledForUtc;
+        DeletionReason = lifecycle.DeletionReason;
+        DeletionRequestedByOperatorId = lifecycle.DeletionRequestedByOperatorId;
+        DeletedAtUtc = lifecycle.DeletedAtUtc;
         return Result.Success();
     }
 
-    public Result CancelDeletion(DateTime cancelledAtUtc)
-    {
-        RequireUtc(cancelledAtUtc);
-        if (Status == UserStatus.Suspended) return AccountErrors.Suspended;
-        if (Status != UserStatus.PendingDeletion || DeletionScheduledForUtc is null) return UserErrors.InvalidTransition;
-        if (cancelledAtUtc >= DeletionScheduledForUtc) return AccountDeletionErrors.GraceExpired;
-        Status = UserStatus.Active;
-        DeletionRequestedAtUtc = null;
-        DeletionScheduledForUtc = null;
-        DeletionReason = null;
-        DeletionRequestedByOperatorId = null;
-        return Result.Success();
-    }
+    public Result RequestDeletion(string reason, DateTime requestedAtUtc, int graceDays, Guid? operatorId = null) =>
+        ApplyLifecycle(Lifecycle.RequestDeletion(reason, requestedAtUtc, graceDays, operatorId));
+
+    public Result CancelDeletion(DateTime cancelledAtUtc) => ApplyLifecycle(Lifecycle.CancelDeletion(cancelledAtUtc));
 
     public Result CompleteDeletion(DateTime deletedAtUtc, string deletedDisplayName)
     {
         RequireUtc(deletedAtUtc);
         ArgumentException.ThrowIfNullOrWhiteSpace(deletedDisplayName);
         if (Status == UserStatus.Deleted) return Result.Success();
-        if (Status is not (UserStatus.PendingDeletion or UserStatus.Suspended)
-            || DeletionScheduledForUtc is null || deletedAtUtc < DeletionScheduledForUtc) return UserErrors.InvalidTransition;
-        Anonymize(deletedAtUtc, deletedDisplayName);
-        return Result.Success();
+        var completed = ApplyLifecycle(Lifecycle.CompleteDeletion(deletedAtUtc));
+        if (completed.IsSuccess) Anonymize(deletedAtUtc, deletedDisplayName);
+        return completed;
     }
 
     private void Anonymize(DateTime deletedAtUtc, string deletedDisplayName)

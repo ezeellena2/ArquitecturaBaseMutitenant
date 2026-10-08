@@ -2,7 +2,6 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
-using ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
@@ -12,10 +11,13 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 /// <summary>Verifica el código de un correo nuevo y, si la cuenta no tiene principal, lo promueve antes de avisar el cambio.</summary>
 internal sealed class LoginMethodVerifier(LoginMethodGuard guard, ILoginMethodRepository methods,
     ILoginCodeRepository codeRepository, LoginCodeVerifier codes, LoginMethodNotifier notifier,
-    IUserRepository users, TimeProvider timeProvider, LoginMethodDomainLinker emailDomains, IUserLookup lookup)
+    TimeProvider timeProvider, LoginMethodLinker linker, IUserLookup lookup)
 {
     public async Task<Result> VerifyAsync(Guid userId, VerifyLoginMethodRequest request, CancellationToken ct)
     {
+        var hint = await methods.GetByIdForUserAsync(userId, request.MethodId, ct);
+        if (hint is null || hint.Type != LoginMethodType.Email) return LoginMethodErrors.NotFound;
+        await linker.LockEmailAsync(Email.Create(hint.Value).Value, ct);
         var account = await guard.LockAccountAsync(userId, ct);
         if (account.IsFailure) return account.Error;
         var method = await methods.GetByIdForUserAsync(userId, request.MethodId, ct);
@@ -42,15 +44,10 @@ internal sealed class LoginMethodVerifier(LoginMethodGuard guard, ILoginMethodRe
         var verified = await codes.VerifyAsync(destination,
             LoginCodePurpose.VerifyDestination, userId, request.Code!, ct, usable);
         if (verified.IsFailure) return verified.Error;
-        method.Verify(timeProvider.GetUtcNow().UtcDateTime);
-        await emailDomains.AssignIfVerifiedAsync(method, Email.Create(method.Value).Value, ct);
+        var linked = await linker.VerifyAsync(method, nowUtc, ct);
+        if (linked.IsFailure) return linked.Error;
         var all = await methods.ListByUserIdAsync(userId, ct);
-        if (!all.Any(value => value.IsPrimary))
-        {
-            method.MakePrimary();
-            await users.SetPrimaryEmailAsync(userId, Email.Create(method.Value).Value, ct);
-        }
-        await notifier.ChangedAsync(account.Value, all, method, "Added", ct);
+        await notifier.ChangedAsync(account.Value, all, method, LoginMethodChange.Added, ct);
         return Result.Success();
     }
 }

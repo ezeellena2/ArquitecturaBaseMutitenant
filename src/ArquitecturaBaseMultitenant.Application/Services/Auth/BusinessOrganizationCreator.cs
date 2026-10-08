@@ -1,11 +1,11 @@
 using System.Security.Cryptography;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
-using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+
+using ArquitecturaBaseMultitenant.Application.Services.Identity;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
@@ -20,8 +20,7 @@ internal sealed class BusinessOrganizationCreator(
     ITenantSettingsRepository tenantSettings,
     TenantProvisioner provisioner,
     IPersonalSpaceProvisioner defaults,
-    ILegalRepository legal,
-    IRequestInfo requestInfo,
+    LegalConsentRecorder consent,
     TimeProvider timeProvider)
 {
     internal async Task<Result<BusinessSignupResponse>> CreateAsync(Guid userId, Guid tenantId,
@@ -83,24 +82,8 @@ internal sealed class BusinessOrganizationCreator(
         return Response(existing, company.Id, requiresApproval, notificationEmail);
     }
 
-    // Registra la aceptación vigente de términos y privacidad, si la cuenta todavía no la tiene.
-    private async Task AcceptCurrentLegalAsync(Guid userId, DateTime nowUtc, CancellationToken cancellationToken)
-    {
-        var terms = await legal.GetCurrentDocumentAsync(LegalDocumentKind.Terms, nowUtc, cancellationToken)
-            ?? throw new InvalidOperationException("The current Terms document has not been seeded.");
-        var privacy = await legal.GetCurrentDocumentAsync(LegalDocumentKind.Privacy, nowUtc, cancellationToken)
-            ?? throw new InvalidOperationException("The current Privacy document has not been seeded.");
-        await AcceptIfNeededAsync(userId, terms, nowUtc, cancellationToken);
-        await AcceptIfNeededAsync(userId, privacy, nowUtc, cancellationToken);
-    }
-
-    private async Task AcceptIfNeededAsync(Guid userId, LegalDocument document, DateTime nowUtc,
-        CancellationToken cancellationToken)
-    {
-        if (await legal.HasAcceptedAsync(userId, document.Id, cancellationToken)) return;
-        legal.AddAcceptance(LegalAcceptance.Create(userId, document, nowUtc,
-            requestInfo.IpAddress, requestInfo.UserAgent));
-    }
+    private Task AcceptCurrentLegalAsync(Guid userId, DateTime nowUtc, CancellationToken ct) =>
+        consent.RecordCurrentAsync(userId, nowUtc, ct);
 
     private static BusinessSignupResponse Response(Tenant tenant, Guid firstCompanyId, bool requiresApproval,
         Email? notificationEmail) =>

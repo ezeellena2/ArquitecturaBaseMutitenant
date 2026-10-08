@@ -210,7 +210,7 @@ public sealed class EmailTemplateTests
         const string url = "https://example.test/login";
 
         var changed = await renderer.RenderAccountNoticeAsync("user@example.test",
-            new AccountNotice.LoginMethodChanged("Added", LoginMethodType.Phone, "+54 9 11 •••• 4521",
+            new AccountNotice.LoginMethodChanged(LoginMethodChange.Added, LoginMethodType.Phone, "+54 9 11 •••• 4521",
                 occurred, zone, url) { RecipientName = "Lucía" }, profile, Ct);
         var requested = await renderer.RenderAccountNoticeAsync("user@example.test",
             new AccountNotice.DeletionRequested(occurred, scheduled, zone, url)
@@ -271,10 +271,10 @@ public sealed class EmailTemplateTests
         const string url = "https://example.test/me?x=1&y=2";
 
         var removed = await renderer.RenderAccountNoticeAsync("user@example.test",
-            new AccountNotice.LoginMethodChanged("Removed", LoginMethodType.Email, "l***@delta.ejemplo.com",
+            new AccountNotice.LoginMethodChanged(LoginMethodChange.Removed, LoginMethodType.Email, "l***@delta.ejemplo.com",
                 occurred, zone, url) { RecipientName = "Lucía" }, profile, Ct);
         var primary = await renderer.RenderAccountNoticeAsync("user@example.test",
-            new AccountNotice.LoginMethodChanged("Primary", LoginMethodType.Email, "l***@gmail.com",
+            new AccountNotice.LoginMethodChanged(LoginMethodChange.Primary, LoginMethodType.Email, "l***@gmail.com",
                 occurred, zone, url) { RecipientName = "Lucía" }, profile, Ct);
 
         Assert.Equal("Quitaste un correo de tu cuenta", removed.Subject);

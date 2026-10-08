@@ -13,7 +13,7 @@ internal sealed class LoginMethodNotifier(AccountNoticeIssuer notices, ISecurity
     IPublicOrigin origin, TimeProvider timeProvider)
 {
     public Task ChangedAsync(UserAccountRow account, IReadOnlyList<LoginMethod> destinations,
-        LoginMethod changed, string change, CancellationToken ct)
+        LoginMethod changed, LoginMethodChange change, CancellationToken ct)
     {
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         events.Add(SecurityEvent.ForAccount(SecurityEventType.LoginMethodChanged, account.Id, nowUtc));

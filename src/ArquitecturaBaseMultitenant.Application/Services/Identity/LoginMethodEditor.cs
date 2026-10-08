@@ -2,13 +2,12 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
-using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
 /// <summary>Dentro de la transacción del servicio, cambia o quita un método sin dejar la cuenta sin alternativa válida.</summary>
 internal sealed class LoginMethodEditor(LoginMethodGuard guard, ILoginMethodRepository methods,
-    LoginMethodAvailabilityPolicy availability, IUserRepository users, LoginMethodNotifier notifier)
+    LoginMethodAvailabilityPolicy availability, LoginMethodLinker linker, LoginMethodNotifier notifier)
 {
     public async Task<Result> ChangeAsync(Guid userId, ChangeLoginMethodRequest request, bool remove, CancellationToken ct)
     {
@@ -27,12 +26,9 @@ internal sealed class LoginMethodEditor(LoginMethodGuard guard, ILoginMethodRepo
         {
             await methods.ClearPrimaryAsync(userId, ct);
             nextPrimary.MakePrimary();
-            var contact = LoginMethodNotifier.Contact(nextPrimary);
-            await users.SetPrimaryContactAsync(userId, nextPrimary.Type == LoginMethodType.Phone || contact is null
-                    ? null : Email.Create(contact).Value,
-                nextPrimary.Type == LoginMethodType.Phone ? PhoneNumber.Create(nextPrimary.Value).Value : null, ct);
+            await linker.SynchronizePrimaryAsync(nextPrimary, ct);
         }
-        await notifier.ChangedAsync(account.Value, all, target, remove ? "Removed" : "Primary", ct);
+        await notifier.ChangedAsync(account.Value, all, target, remove ? LoginMethodChange.Removed : LoginMethodChange.Primary, ct);
         if (remove) methods.Remove(target);
         return Result.Success();
     }

@@ -23,6 +23,7 @@ internal static class AuthRegistration
         services.AddScoped<LoginInvitationResolver>();
         services.AddScoped<LoginVerifier>();
         services.AddScoped<LoginCodeAttemptGuard>();
+        services.AddScoped<LoginCodeAttemptVerifier>();
         services.AddScoped<ILoginMethodsService, LoginMethodsService>();
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IBusinessSignupService, BusinessSignupService>();

@@ -42,6 +42,10 @@ public sealed class LoginCodeConcurrencyTests(ApiFactory factory)
             services.Remove(lookup);
             services.AddScoped<IUserLookup>(provider => new ObservedUserLookup(
                 (IUserLookup)ActivatorUtilities.CreateInstance(provider, lookup.ImplementationType!), gate));
+            var identities = Assert.Single(services, item => item.ServiceType == typeof(IExternalLoginLock));
+            services.Remove(identities);
+            services.AddScoped<IExternalLoginLock>(provider => new ObservedIdentityLock(
+                (IExternalLoginLock)ActivatorUtilities.CreateInstance(provider, identities.ImplementationType!), gate));
         }));
         using var firstClient = host.CreateClient();
         using var secondClient = host.CreateClient();
@@ -124,6 +128,13 @@ public sealed class LoginCodeConcurrencyTests(ApiFactory factory)
 
         public void Arm() => _armed = true;
 
+        public void BeforeIdentityLock(Email email)
+        {
+            // Signup ahora se serializa antes, con el mismo lock de correo que Google.
+            if (_armed && email.Value == address && FirstRead.Task.IsCompleted)
+                SecondVerificationStarted.TrySetResult();
+        }
+
         public void BeforeLock(object repository, LoginCodeDestination destination)
         {
             if (_armed && destination.Value == address && FirstRead.Task.IsCompleted &&
@@ -151,6 +162,18 @@ public sealed class LoginCodeConcurrencyTests(ApiFactory factory)
                 SecondRead.TrySetResult();
             }
         }
+    }
+
+    private sealed class ObservedIdentityLock(IExternalLoginLock inner, LoginCodeReadGate gate) : IExternalLoginLock
+    {
+        public Task LockEmailAsync(Email email, CancellationToken ct)
+        {
+            gate.BeforeIdentityLock(email);
+            return inner.LockEmailAsync(email, ct);
+        }
+
+        public Task AcquireAsync(string providerSubject, Email? email, CancellationToken ct) =>
+            inner.AcquireAsync(providerSubject, email, ct);
     }
 
     private sealed class ObservedUserLookup(IUserLookup inner, LoginCodeReadGate gate) : IUserLookup

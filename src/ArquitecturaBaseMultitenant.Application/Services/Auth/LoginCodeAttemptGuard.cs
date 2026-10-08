@@ -12,17 +12,6 @@ internal sealed class LoginCodeAttemptGuard(ILoginCodeRepository codes, ISignInS
     internal Task LockDestinationAsync(LoginCodeDestination destination, CancellationToken cancellationToken) =>
         codes.LockDestinationAsync(destination, cancellationToken);
 
-    internal async Task<bool> HasActiveCodeAsync(LoginCodeDestination destination,
-        CancellationToken cancellationToken)
-    {
-        var currentCode = await codes.GetLatestAsync(destination, LoginCodePurpose.Login,
-            requestedByUserId: null, cancellationToken);
-        return currentCode?.IsActive(timeProvider.GetUtcNow().UtcDateTime) == true;
-    }
-
-    internal Task RegisterFailedAttemptAsync(Guid userId, CancellationToken cancellationToken) =>
-        signIn.RegisterFailedAttemptAsync(userId, cancellationToken);
-
     internal Task<bool> IsLockedOutAsync(Guid userId, CancellationToken cancellationToken) =>
         signIn.IsLockedOutAsync(userId, cancellationToken);
 
