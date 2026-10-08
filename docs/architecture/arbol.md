@@ -320,6 +320,7 @@ ArquitecturaBaseMultitenant.Domain/
     ├── WhatsAppMessageDirection.cs
     ├── WhatsAppMessageKind.cs
     ├── WhatsAppMessageStatus.cs
+    ├── WhatsAppCodeQuota.cs                          Ledger técnico por número de plataforma/día UTC, sin destino ni usuario
     ├── WhatsAppText.cs
     ├── WhatsAppErrors.cs                             incluye el país fuera de WhatsApp:AllowedCountries, sobre el campo phone (solo para un número nuevo)
     └── WhatsAppChannel.cs                            [E11] PhoneNumberId → TenantId
@@ -437,7 +438,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   └── ITaxIdTypeCatalog.cs
 │   ├── Persistence/                                  implementados en Infrastructure/Persistence
 │   │   ├── IUnitOfWork.cs                            [E2]
-│   │   ├── IOutboxDispatchStore.cs                   [E3] SKIP LOCKED y estados dentro del límite del servicio
+│   │   ├── IOutboxDispatchStore.cs                   [E3/E8] Claim/Complete dentro de UoW; lease durable, sin transporte
 │   │   ├── CommitPolicy.cs                           [E2] OnSuccess | OnAnyResult
 │   │   ├── CommitPolicyExtensions.cs                 [E2]
 │   │   ├── ITenantScope.cs                           [E2] Enter(tenantId)
@@ -532,12 +533,17 @@ ArquitecturaBaseMultitenant.Application/
 │       │   └── IInvitationTokenProtector.cs          protege el token de invitación junto con los ids de su alcance
 │       ├── Messaging/                                [E3]
 │       │   ├── IOutbox.cs                            Enqueue(canal registrado) dentro del límite
-│       │   ├── IChannelSender.cs                    emisor técnico por canal, consumido por OutboxDispatchService
+│       │   ├── IChannelSender.cs                    emisor técnico por canal, consumido fuera de UoW por OutboxDeliveryProcessor
+│       │   ├── IChannelReceiptSender.cs             [E8] transporte con recibo técnico neutral y seguro
+│       │   ├── IOutboxDeliveryObserver.cs           [E8] metadatos de aceptación vigente dentro de Complete
+│       │   ├── ILoginCodeAdmission.cs               [E8] reserva técnica previa al código dentro de la UoW del emisor
 │       │   ├── ILoginCodeChannel.cs                 [E3] envía un código por un canal; el núcleo trae "email"
 │       │   ├── IInvitationChannel.cs                [E3] envía una invitación; el núcleo trae "email"
 │       │   ├── IAccountNoticeChannel.cs              [E3] envía un AccountNotice a un método de ingreso; el núcleo trae "email" (Email) y el
 │       │   │                                         módulo de WhatsApp registra "whatsapp" (Phone)
 │       │   └── IEmailTemplateRenderer.cs
+│       ├── Localization/
+│       │   └── IErrorTextSource.cs                  [E8] traducción neutral de errores aportados por módulos
 │       ├── Caching/
 │       │   ├── ITenantSettingsCache.cs               Invalida las preferencias de la organización después de guardar cambios…
 │       │   ├── ITenantFeatureCache.cs                Cachea las habilitaciones crudas de cada espacio y se invalida…
@@ -1003,6 +1009,8 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   ├── ApplicationDbContext.cs                        [E2] IdentityUserContext<ApplicationUser,Guid> + IDataProtectionKeyContext
 │   ├── Schemas.cs                                     [E2] nombres únicos de platform, identity, tenant, public_site y engagement
 │   ├── PersistenceRegistration.cs                     [E2] DbContext (appdb), interceptores, UoW, repositorios, readers
+│   ├── IPersistenceModelContributor.cs                [E8] configuraciones y tipos globales explícitos de un módulo
+│   ├── PersistenceModelContributors.cs                [E8] descubrimiento sin secretos/red y PersistenceModelCacheKeyFactory por conjunto de contribuidores
 │   ├── UnitOfWork.cs                                  [E2]
 │   ├── LoginInvitationScope.cs                         Capacidad nominal del OTP para invitaciones y miembros exactos
 │   ├── TenantContext.cs                               [E2] implementa ITenantContext + ITenantScope
