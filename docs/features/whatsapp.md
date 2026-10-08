@@ -8,7 +8,7 @@ Módulo quitable del número de la plataforma, Etapa 8. El alcance y las tareas 
 
 `GET/POST /webhooks/whatsapp` son rutas técnicas globales, anónimas y condicionadas por `InstalledModuleRoute` y un contribuidor disponible, sin FeatureGate de organización. El contrato [OpenAPI](../contracts/openapi.json) las exporta sin secretos. Sin número de plataforma o sin el par de secretos de webhook devuelve 404 común. GET comprueba token y challenge sin sesión; POST autentica y persiste. Cada capa registra sus propios servicios y Program tiene una sentencia de composición removible. La metadata 501 de T01 permanece congelada: su limpieza está propuesta en «Cambios al contrato», sin alterar unilateralmente el exportado.
 
-El POST declara máximo 5 MiB, firma `X-Hub-Signature-256` sobre bytes originales y deduplicación por IDs Meta/tipo de evento, sin Idempotency-Key. Un mensaje entrante nunca crea sesión. Los enlaces de cuenta común entran como Persona después de Continuar; el núcleo rechaza operadores bajo lock y el bot debe contestar solo «Para entrar, usá la web.», sin enlace ni revelar su tipo. Bot y enlaces reales se completan en T07; el contrato y la prueba de exclusión ya están en T01.
+El POST declara máximo 5 MiB, firma `X-Hub-Signature-256` sobre bytes originales y deduplicación por IDs Meta/tipo de evento, sin Idempotency-Key. Un mensaje entrante nunca crea sesión. Los enlaces de cuenta común entran como Persona después de Continuar; el núcleo rechaza operadores bajo lock y el bot contesta solo «Para entrar, usá la web.», sin enlace ni revelar su tipo.
 
 El núcleo conoce capacidades de canales, Phone y puertos neutrales; no compara una clave WhatsApp ni lee sus opciones. La invitación conserva identidad/proof Email y puede entregarse a un Phone verificado de esa misma cuenta. La [ficha de identidad](identidad.md) y el [informe de Contrato](../reviews/2026-10-08-etapa-8-contrato.md) distinguen la conducta existente de los pendientes 501.
 
@@ -20,7 +20,15 @@ El ACK 200 sale después del commit. El índice único `(PhoneNumberId, Wamid, E
 
 La entrada conserva `OriginalUserId`/`OriginalMethodId` al insertarse. Un mensaje anónimo conserva esos campos nulos aunque después se vincule el número. Solo el texto humano permitido se cifra con DataProtection: OTP contiguo/agrupado, enlaces y tokens quedan como metadatos y no alimentan el bot. Nunca se transfiere historia por el dueño actual del contacto.
 
-`WhatsAppInboundService` reclama con SKIP LOCKED y lease durable; procesa efectos y reply dentro de una UoW. Revalida el lease con reloj fresco tras esperar locks y después del consumer: su vencimiento revierte los efectos y aplica backoff. El worker usa scopes nuevos, la señal solo despierta y la base conserva la cola. Sin consumer registrado no reclama ni descarta mensajes; T07 aporta el consumidor de bot.
+`WhatsAppInboundService` reclama con SKIP LOCKED y lease durable; procesa efectos y reply dentro de una UoW. Revalida el lease con reloj fresco tras esperar locks y después del consumer: su vencimiento revierte los efectos y aplica backoff. El worker usa scopes nuevos, la señal solo despierta y la base conserva la cola. Sin consumer registrado no reclama ni descarta mensajes; `WhatsAppBotWriter` aporta el consumidor de bot.
+
+## Bot y enlaces
+
+El bot decide con la cuenta y el método originales de la entrada preparados bajo lock; no busca al dueño posterior para apropiarse de una fila anónima o de historia A→B. Cuenta común disponible recibe un enlace de un solo uso del núcleo; suspendida o sin método disponible no lo recibe. El operador recibe exclusivamente la frase neutra es/en, sin nombre, marca, botón ni enlace. Las demás respuestas usan resources y el nombre configurado de plataforma `Email:AppName`, mediante el adaptador del módulo.
+
+Desconocido con registro abierto recibe un CTA a `/registro`, sin teléfono en query y sin crear identidad. El formulario conserva términos y OTP. La selección de WhatsApp al abrir ese CTA externo necesita el encaje Front registrado en «Cambios al contrato». Con registro cerrado recibe dos botones de respuesta con IDs públicos fijos `bot.sign-in`/`bot.recover`; al elegir uno, el siguiente reply aporta el CTA URL único a ingreso o recuperación. El reader admite esos IDs, no tokens arbitrarios. Es el formato de Cloud API copiado de ArquitecturaBase, sin nuevas plantillas ni pantallas.
+
+Los replies libres conservan en su payload cifrado el cierre de ventana `LastInboundAtUtc + 24 h`. Cloud client vuelve a verificarlo con el reloj actual antes de POST: un reply vencido termina sin llamar a Meta y se limpia el payload. Las plantillas no usan esa ventana. El detalle de preview/canje/replay está en [Identidad](identidad.md#e8--enlaces-de-ingreso).
 
 ## Operación y puerta pendientes
 

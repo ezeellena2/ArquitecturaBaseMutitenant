@@ -379,6 +379,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── IAccountService.cs                        [E3] registro B2C
 │   │   ├── ILoginCodeService.cs                      [E3]
 │   │   ├── ILoginLinkService.cs                      [E8] enlace de un solo uso del bot
+│   │   ├── ILoginLinkReplayService.cs                [E8] revalida resultado cacheado sin cookie ni ticket nuevo
 │   │   ├── IExternalLoginService.cs                  [E3]
 │   │   ├── IConnectService.cs                        [E3] emisión de tokens y cambio de acceso u organización
 │   │   ├── IConnectLogoutService.cs                  [E3] cierre de la sesión Identity y revocación OpenIddict
@@ -754,6 +755,9 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── LoginCodeVerifier.cs
 │   │   ├── LoginLinkService.cs                       [E8]
 │   │   ├── LoginLinkIssuer.cs                        [E8]
+│   │   ├── LoginLinkGuard.cs                         [E8] snapshot de propietario/método/cuenta y locks de canje
+│   │   ├── LoginLinkVerifier.cs                      [E8] consume prueba y conserva gate de baja/estado
+│   │   ├── LoginLinkReplayService.cs                 [E8] lectura fresca de éxito o baja pendiente
 │   │   ├── ConnectService.cs
 │   │   ├── ConnectLogoutService.cs                   [E3]
 │   │   ├── AccessSwitchPolicy.cs                     acceso pedido válido: membresía activa (B2B) o identidad activa (B2C)
@@ -980,7 +984,8 @@ ArquitecturaBaseMultitenant.Application/
 │       │   ├── WhatsAppInvitationChannel.cs          implementa IInvitationChannel ("whatsapp")
 │       │   ├── WhatsAppAccountNoticeChannel.cs       implementa IAccountNoticeChannel ("whatsapp", métodos Phone)
 │       │   ├── WhatsAppPhoneLinkObserver.cs          [T08 pendiente] implementa IPhoneLinkObserver
-│       │   └── BotReply.cs                          [T07 pendiente]
+│       │   ├── WhatsAppBotWriter.cs                  [E8] consumer dentro de la UoW inbound
+│       │   └── WhatsAppBotReplyBuilder.cs            [E8] resources/perfil/marca y ventana cifrada
 │       └── Resources/
 │           ├── WhatsAppTexts.resx / .en.resx         textos del bot y de las plantillas
 │           └── WhatsAppTexts.cs

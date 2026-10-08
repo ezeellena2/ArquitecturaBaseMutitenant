@@ -8,6 +8,7 @@
   2. **Clave nueva:** ejecuta la acción. Si la respuesta es 2xx o 4xx, **después del commit del caso de uso** guarda status + cuerpo en la misma fila. Si es 5xx, libera la reserva para permitir el reintento.
      La escritura de la respuesta usa un token independiente del pedido: si el cliente corta después del commit, la clave igual queda completada para el replay.
   3. **Clave terminada:** devuelve la respuesta guardada, con el encabezado `Idempotent-Replayed: true`, sin ejecutar nada.
+     Una acción que necesita revalidar una prueba sensible declara `[IdempotencyReplay(typeof(...))]`. Su verificador recibe estado/cuerpo originales y comprueba la autorización vigente antes de devolver cualquier resultado cacheado, también 4xx. No se decide por nombre de controller o URL. El canje de enlaces (E8) usa ese hook para no repetir una cookie ni revelar un `cancelTicket` después de retirar el método o convertir la cuenta en operadora; conserva el mismo ticket sólo mientras la baja sigue pendiente.
   4. **Clave en curso:** 409 `Request.InProgress`.
   5. **Misma clave con otro cuerpo u otra ruta:** 422 `Request.IdempotencyKeyReused`.
      En una ruta `[PublicSite]`, la organización resuelta por `IPublicSiteContext` forma parte de la ruta lógica: repetir la clave en otro sitio da 422. Nunca se usa el `Host` sin resolver ni se cambia el tenant firmado. Los filtros de publicación, acceso y módulo se evalúan antes del replay.
@@ -28,6 +29,7 @@
 - `IdempotencyTests` (E2): dos pedidos iguales en paralelo crean uno solo; el reintento devuelve la misma respuesta incluso si `RequestAborted` se cancela después de la acción; otro cuerpo da 422; un 5xx libera la clave.
 - `IdempotentActionsTests` (E1): todo `POST` que declara 201/202 o llama a `ToCreatedResult`/`ToAcceptedResult` (también desde una acción async) tiene `[Idempotent]` (test de arquitectura).
 - `EngagementTests` (E7): el reintento en el mismo sitio crea un solo pedido; cambiar de sitio con la misma clave y cuerpo da 422, y retirar la publicación o apagar el módulo impide el replay.
+- `LoginLinkTests` de integración (E8): replay revalida cuenta, método y canal para éxito y baja pendiente; no repite cookie/ticket y rechaza al operador sin datos.
 
 ## Detalle
 [backend.md §20](../architecture/backend.md#20-reglas-de-datos-que-se-aplican-solas)
