@@ -299,10 +299,10 @@ Los botones adicionales y sus sufijos se copian de Mensajes y del paquete de ope
 
 **Copiar de:** recuperación Email vigente y sus reglas, el linker común, `PlatformAuditWriter`, `IT/Auth/AccountRecoveryTests.cs`, `IT/Platform/PlatformRecoveryTests.cs`. No crear un segundo workflow de aprobación dentro del módulo.
 
-- [ ] Admitir teléfono anterior y destino nuevo Phone, exactamente uno de cada lado; preview claro por 0043. Destino ocupado no emite código ni aviso. El anterior puede estar inactivo/perdido; no exigir OTP del método perdido.
-- [ ] Mantener nonce, propósito, vencimiento, topes e idempotencia; submit revalida posesión y unicidad, no emite sesión. Encolar RecoveryReceived y RecoveryRequested correctos.
-- [ ] Aprobar agrega/verifica Phone, lo hace principal, conserva otros métodos, registra SecurityEvent y envía avisos; rechazar no modifica identidad. No recuperar operador por esta vía. Carreras con agregado/registro de mismo Phone dan error propio y no doble titular.
-- [ ] Las lecturas de Plataforma reconocen el tipo nuevo con PhoneText/formato vigente sin una pantalla nueva; aprobación/rechazo conservan version y permiso. Recargar si otra decisión ganó.
+- [x] Admitir teléfono anterior y destino nuevo Phone, exactamente uno de cada lado; preview claro por 0043. Destino ocupado no emite código ni aviso. El anterior puede estar inactivo/perdido; no exigir OTP del método perdido.
+- [x] Mantener nonce, propósito, vencimiento, topes e idempotencia; submit revalida posesión y unicidad, no emite sesión. Encolar RecoveryReceived y RecoveryRequested correctos.
+- [x] Aprobar agrega/verifica Phone, lo hace principal, conserva otros métodos, registra SecurityEvent y envía avisos; rechazar no modifica identidad. No recuperar operador por esta vía. Carreras con agregado/registro de mismo Phone dan error propio y no doble titular.
+- [x] Las lecturas de Plataforma reconocen el tipo nuevo con PhoneText/formato vigente sin una pantalla nueva; aprobación/rechazo conservan version y permiso. Recargar si otra decisión ganó.
 
 **Tests:** los dos anteriores, más `IT/Modules/WhatsApp/WhatsAppRecoveryTests.cs`: libre/ocupado/propio, cuenta inexistente, nonce cruzado, método previo inactivo, carrera al aprobar, operador, reintento, aceptación/rechazo, sin sesión y sin aviso falso al dueño de número ocupado.
 
@@ -326,7 +326,7 @@ Los botones adicionales y sus sufijos se copian de Mensajes y del paquete de ope
 
 ### T07 · Bot y enlaces de un solo uso
 
-**Archivos:** `D/Authentication/{LoginLink,LoginLinkErrors}.cs`, `A/Configuration/Auth/LoginLinkOptions.cs`, `A/Interfaces/{Services/ILoginLinkService.cs,Integrations/Messaging/ILoginLinkIssuer.cs,Persistence/ILoginLinkRepository.cs}`, `A/Services/Auth/{LoginLinkService,LoginLinkIssuer}.cs`, modelos de T01 `A/Models/Auth/{PreviewLoginLinkRequest,RedeemLoginLinkRequest,LoginLinkPreviewResponse,LoginLinkRedeemResponse}.cs` y sus validadores; `I/Persistence/{Configurations/Identity/LoginLinkConfiguration,Repositories/LoginLinkRepository,Rls/TenantIsolationModelValidator}.cs`, `AR/DataClassificationTests.cs` y migración nueva `<timestamp>_LoginLinks.cs`; `A/Modules/WhatsApp/Services/{WhatsAppInboundService,WhatsAppContactLinker,BotReply}.cs`, modelos BotButtons y textos; completar `P/Controllers/Auth/LoginLinkController.cs`.
+**Archivos:** `D/Authentication/{LoginLink,LoginLinkErrors}.cs`, `A/Configuration/Auth/LoginLinkOptions.cs`, `A/Interfaces/{Services/ILoginLinkService.cs,Integrations/Identity/ILoginLinkIssuer.cs,Persistence/ILoginLinkRepository.cs}`, `A/Services/Auth/{LoginLinkService,LoginLinkIssuer}.cs`, modelos de T01 `A/Models/Auth/{PreviewLoginLinkRequest,RedeemLoginLinkRequest,LoginLinkPreviewResponse,LoginLinkRedeemResponse}.cs` y sus validadores; `I/Persistence/{Configurations/Identity/LoginLinkConfiguration,Repositories/LoginLinkRepository,Rls/TenantIsolationModelValidator}.cs`, `AR/DataClassificationTests.cs` y migración nueva `<timestamp>_LoginLinks.cs`; `A/Modules/WhatsApp/Services/{WhatsAppInboundService,WhatsAppContactLinker,BotReply}.cs`, modelos BotButtons y textos; completar `P/Controllers/Auth/LoginLinkController.cs`.
 
 **Copiar de:** `../ArquitecturaBase/src/ArquitecturaBase.Application/Services/Auth/{LoginLinkIssuer,LoginLinkService}.cs`, `Domain/Authentication/LoginLink.cs`, `Infrastructure/Persistence/Repositories/LoginLinkRepository.cs`, `Application/Modules/WhatsApp/Services/{BotReply,WhatsAppReplyPolicy,WhatsAppInboundService}.cs`; adaptar flujo de acceso/cookies del multitenant en LoginCodeService. La respuesta bot «Hola… Entrar… una vez… 10 minutos» y preview con **Continuar** salen de Mensajes/Enlace.
 

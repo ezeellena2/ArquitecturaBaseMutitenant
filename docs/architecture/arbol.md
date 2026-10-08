@@ -648,7 +648,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── PlatformLegalModels.cs                    Publicar una versión
 │   │   ├── PlatformOperatorModels.cs                 Invitar un operador
 │   │   ├── PlatformPublicSiteResponse.cs             Solo metadatos de publicación
-│   │   ├── PlatformRecoveryModels.cs                 Bandeja Recuperaciones
+│   │   ├── PlatformRecoveryModels.cs                 Bandeja Recuperaciones e hint de identidad proyectado para locks de aprobación
 │   │   ├── PlatformSettingsModels.cs                 Los correos de contacto que muestran Ingreso y Registro, sin…
 │   │   ├── PlatformTenantModels.cs                   listado, detalle con Dueños, historial, conteos, alta y estado de organizaciones
 │   │   └── UpdatePlatformFeatureRequest.cs           Cambio explícito de un módulo global, con concurrencia y motivo
@@ -701,7 +701,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── RequestLoginCodeRequestValidator.cs
 │   │   ├── VerifyLoginCodeRequestValidator.cs
 │   │   ├── ExternalSignInRequestValidator.cs        Exige un retorno de autorización seguro y, solo para altas…
-│   │   ├── AccountRecoveryRequestValidators.cs      Exige el correo nuevo y un nonce con forma de…
+│   │   ├── AccountRecoveryRequestValidators.cs      Método anterior y nuevo exclusivos Email/Phone, nonce y código
 │   │   ├── BusinessSignupRequestValidator.cs
 │   │   └── RequestLoginLinkRequestValidator.cs      [E8]
 │   ├── Invitations/                                  [E3]
@@ -778,10 +778,11 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── ConnectAuthorizationService.cs            Guarda una autorización OpenID Connect para la cuenta, acceso y…
 │   │   ├── BusinessOrganizationCreator.cs            Crea la organización con su primera empresa, o reproduce un…
 │   │   ├── AuthRegistration.cs                       Registra el ingreso, el registro de personas y de empresas,…
+│   │   ├── AccountRecoveryGuard.cs                   Lecturas/política y locks de identidad→cuenta→código, sin UoW ni escrituras propias
 │   │   ├── AccountRecoveryNotifier.cs                Mensajes de «Recuperar mi cuenta», dentro de la UoW del…
 │   │   ├── AccountRecoveryNoticeService.cs           Toma los pedidos de «Recuperar mi cuenta» cuyo aviso a…
 │   │   ├── ExternalLoginService.cs                   [E3]
-│   │   ├── AccountRecoveryService.cs                 «Recuperar mi cuenta» (multitenancy.md §3.1, ADR 0041)
+│   │   ├── AccountRecoveryService.cs                 Recuperación Email/Phone sin sesión (ADR 0043), prueba con nonce y revalidación
 │   │   ├── BusinessSignupPolicy.cs                   modo de alta y límite por persona
 │   │   ├── BusinessSignupService.cs
 │   │   ├── GoogleAccountGuard.cs                     controla la cuenta antes de entrar con Google; un operador entra solo con código
@@ -1119,7 +1120,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   ├── LegalRepository.cs                         Prepara documentos legales vigentes y aceptaciones de una cuenta dentro…
 │   │   ├── ExternalLoginLock.cs                       Serializa el vínculo de una cuenta con un subject de…
 │   │   ├── CompanyAdminLock.cs                        Adquiere un lock transaccional por empresa antes de tocar sus…
-│   │   ├── AccountRecoveryRepository.cs               Pedidos globales de recuperación
+│   │   ├── AccountRecoveryRepository.cs               Pedidos globales; hint sin tracking y lectura fresca FOR NO KEY UPDATE
 │   │   ├── AccountDeletionCancelTicketRepository.cs  Persiste la prueba específica por hash en la UoW
 │   │   ├── AccountDeletionRepository.cs               Reclama cuentas vencidas con un lease durable y bloquea cada…
 │   │   ├── ConsumerDataRetentionRepository.cs          Bloquea una retención con SKIP LOCKED y revalida su vencimiento
@@ -1437,7 +1438,7 @@ ArquitecturaBaseMultitenant.Api/
 │   │   ├── ExternalLoginQuery.cs                     Opciones del inicio del desafío
 │   │   ├── CancelAccountDeletionHttpRequest.cs       Recibe la prueba que permite cancelar una baja pendiente y…
 │   │   ├── AuthEmailMapping.cs                       Traduce el correo HTTP al value object sin exponerlo en…
-│   │   ├── AccountRecoveryHttpRequests.cs            Correo nuevo y nonce del navegador
+│   │   ├── AccountRecoveryHttpRequests.cs            Email/Phone anterior y nuevo, canal y nonce del navegador
 │   │   ├── AcceptInvitationHttpRequest.cs
 │   │   ├── AuthContactMapping.cs                     Puente temporal de T01
 │   │   └── BusinessSignupHttpRequest.cs               [E6] POST /api/auth/business-signup ("Registrá tu empresa")
