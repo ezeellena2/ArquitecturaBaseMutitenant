@@ -22,6 +22,7 @@ public sealed class LoginLinkController(ILoginLinkService service) : ControllerB
         (await service.PreviewAsync(new PreviewLoginLinkRequest(request.Token), ct)).ToActionResult(this);
 
     [HttpPost("redeem"), Idempotent, EnableRateLimiting(RateLimitPolicies.LoginVerify)]
+    [IdempotencyReplay(typeof(LoginLinkReplayVerifier))]
     [ProducesResponseType<LoginLinkRedeemResponse>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]

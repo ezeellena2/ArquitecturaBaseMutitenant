@@ -24,7 +24,7 @@ internal sealed class AccountDeletionCanceller(IAccountDeletionCancelTicketRepos
         var ticket = await tickets.GetByHashAsync(hash, ct);
         if (ticket is null || ticket.UserId != userId || ticket.ConsumedAtUtc is not null)
             return AccountDeletionErrors.CancelProofInvalid;
-        if (!ReturnUrls.IsLoginReturn(ticket.ReturnUrl)) return AccountDeletionErrors.CancelProofInvalid;
+        if (!ReturnUrls.IsDeletionReturn(ticket.ReturnUrl)) return AccountDeletionErrors.CancelProofInvalid;
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         var account = await users.GetByIdAsync(userId.Value, ct);
         if (account is null) return AccountDeletionErrors.CancelProofInvalid;

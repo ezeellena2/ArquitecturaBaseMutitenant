@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
+using Microsoft.Extensions.Time.Testing;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 public sealed class WhatsAppCloudClientTests
 {
@@ -21,6 +22,7 @@ public sealed class WhatsAppCloudClientTests
         { options.Retry.MaxRetryAttempts = 1; options.Retry.Delay = TimeSpan.Zero; }));
         services.AddWhatsAppModule(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         { ["WhatsApp:PhoneNumberId"] = "fixture-number", ["WhatsApp:AccessToken"] = "fixture-token" }).Build());
+        services.AddSingleton(TimeProvider.System);
         services.AddHttpClient<WhatsAppCloudClient>().ConfigurePrimaryHttpMessageHandler(() => handler);
         await using var provider = services.BuildServiceProvider();
         var receipt = await provider.GetRequiredService<WhatsAppCloudClient>().SendAsync(new WhatsAppOutboundMessage("number", "+5491134567890", "codigo_ingreso", "es", ["123456"], "123456", true), Ct);
@@ -44,7 +46,7 @@ public sealed class WhatsAppCloudClientTests
     {
         using var handler = new Handler(status, response);
         using var http = new HttpClient(handler) { BaseAddress = new Uri("https://graph.example.test/") };
-        var client = new WhatsAppCloudClient(http, Options.Create(new WhatsAppOptions { PhoneNumberId = "default-not-used", AccessToken = "fixture-token" }));
+        var client = new WhatsAppCloudClient(http, Options.Create(new WhatsAppOptions { PhoneNumberId = "default-not-used", AccessToken = "fixture-token" }), TimeProvider.System);
         var message = new WhatsAppOutboundMessage("explicit-number", "+5491134567890", "codigo_ingreso", "es", ["483920"], "483920", true);
         var receipt = await client.SendAsync(message, Ct);
         Assert.Equal(1, handler.Calls);
@@ -56,6 +58,22 @@ public sealed class WhatsAppCloudClientTests
         Assert.DoesNotContain("secret", receipt.ToString());
         Assert.DoesNotContain("483920", receipt.ToString());
         if (accepted) Assert.Equal("explicit-number", receipt.ProviderScope);
+    }
+    [Fact]
+    public async Task Delayed_free_reply_expires_before_HTTP_while_templates_remain_sendable()
+    {
+        var clock = new FakeTimeProvider(new DateTimeOffset(2026, 10, 8, 12, 0, 0, TimeSpan.Zero));
+        using var handler = new Handler(200, "{}");
+        using var http = new HttpClient(handler) { BaseAddress = new Uri("https://graph.example.test/") };
+        var client = new WhatsAppCloudClient(http, Options.Create(new WhatsAppOptions { AccessToken = "fixture-token" }), clock);
+        var reply = new WhatsAppOutboundMessage("number", "+5491134567890", "", "es", [], null, false,
+            Body: "Hola", ReplyExpiresAtUtc: clock.GetUtcNow().UtcDateTime.AddHours(24));
+        clock.Advance(TimeSpan.FromHours(25));
+        var expired = await client.SendAsync(reply, Ct);
+        Assert.False(expired.IsAccepted); Assert.False(expired.IsRetryable);
+        Assert.Equal("WhatsApp.Send.WindowExpired", expired.SafeCode); Assert.Equal(0, handler.Calls);
+        var template = new WhatsAppOutboundMessage("number", "+5491134567890", "codigo_ingreso", "es", ["123456"], "123456", true);
+        Assert.True((await client.SendAsync(template, Ct)).IsAccepted); Assert.Equal(1, handler.Calls);
     }
     [Fact]
     public void Argentine_provider_compatibility_never_changes_the_stored_phone()

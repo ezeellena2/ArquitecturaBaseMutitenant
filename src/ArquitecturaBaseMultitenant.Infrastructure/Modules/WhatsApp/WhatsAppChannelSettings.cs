@@ -3,9 +3,11 @@ using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using Microsoft.Extensions.Options;
 using PhoneNumbers;
+using ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
-internal sealed class WhatsAppChannelSettings(IOptions<WhatsAppOptions> options) : IWhatsAppChannelSettings
+internal sealed class WhatsAppChannelSettings(IOptions<WhatsAppOptions> options, IOptions<EmailOptions> email) : IWhatsAppChannelSettings
 {
+    public string AppName => email.Value.AppName;
     public bool IsEnabled => !string.IsNullOrWhiteSpace(options.Value.PhoneNumberId);
     public string? PhoneNumberId => options.Value.PhoneNumberId;
     public string? ContactPhone

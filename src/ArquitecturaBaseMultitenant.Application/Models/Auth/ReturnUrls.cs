@@ -9,6 +9,11 @@ public static class ReturnUrls
     public const string AuthorizePath = "/connect/authorize";
     public const string LoginPath = "/login";
     public const string InvitationPath = "/invitacion";
+    public const string LoginLinkPath = "/login/enlace";
+
+    /// <summary>La baja conserva los retornos probados y admite la continuación fija de un enlace personal.</summary>
+    public static bool IsDeletionReturn([NotNullWhen(true)] string? returnUrl) =>
+        returnUrl == LoginLinkPath || IsLoginReturn(returnUrl);
 
     public static bool IsLoginReturn([NotNullWhen(true)] string? returnUrl) =>
         returnUrl == InvitationPath || TryReadAccessSelection(returnUrl, out _);

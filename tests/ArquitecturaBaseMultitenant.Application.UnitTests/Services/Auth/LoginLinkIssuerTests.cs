@@ -20,7 +20,7 @@ public sealed class LoginLinkIssuerTests
         var phone = LoginMethod.CreatePhone(id, PhoneNumber.Create("+5491123456789").Value);
         phone.Verify(new DateTime(2026, 10, 8, 12, 0, 0, DateTimeKind.Utc));
         store.Methods.Add(phone);
-        var issuer = new LoginLinkIssuer(store, store);
+        var issuer = new LoginLinkIssuer(store, store, null!, null!, null!, null!, TimeProvider.System);
         var result = await issuer.IssueAsync(id, phone.Id, TestContext.Current.CancellationToken);
         Assert.True(result.IsFailure);
         Assert.Equal("Auth.LoginLink.Invalid", result.Error.Code);

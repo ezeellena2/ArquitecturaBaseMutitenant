@@ -16,6 +16,11 @@ internal static class AuthRegistration
         services.AddScoped<ITenantSlugAvailabilityService, TenantSlugAvailabilityService>();
         services.AddScoped<ILoginCodeService, LoginCodeService>();
         services.AddScoped<ILoginLinkService, LoginLinkService>();
+        services.AddScoped<ILoginLinkReplayService, LoginLinkReplayService>();
+        services.AddScoped<LoginLinkGuard>();
+        services.AddScoped<LoginLinkVerifier>();
+        services.AddOptions<LoginLinkOptions>().BindConfiguration(LoginLinkOptions.SectionName)
+            .ValidateDataAnnotations().ValidateOnStart();
         services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity.ILoginLinkIssuer, LoginLinkIssuer>();
         services.AddScoped<IAccountRecoveryService, AccountRecoveryService>();
         services.AddScoped<IAccountRecoveryNoticeService, AccountRecoveryNoticeService>();

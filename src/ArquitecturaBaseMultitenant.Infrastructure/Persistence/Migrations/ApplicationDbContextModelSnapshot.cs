@@ -217,6 +217,45 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.ToTable("LoginCodes", "identity");
                 });
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Authentication.LoginLink", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ConsumedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("InvalidatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("MethodId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "CreatedAtUtc");
+
+                    b.ToTable("LoginLinks", "identity");
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Authentication.LoginMethod", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1723,7 +1762,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId");
 
                     b.HasIndex("WaId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("IX_WhatsAppContacts_WaId");
 
                     b.ToTable("WhatsAppContacts", "identity");
                 });
@@ -1819,7 +1859,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasIndex("ReceivedAtUtc");
 
                     b.HasIndex("PhoneNumberId", "Wamid", "EventType")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("IX_WhatsAppMessages_PhoneNumberId_Wamid_EventType");
 
                     b.HasIndex("ProcessedAtUtc", "LeaseUntilUtc", "ReceivedAtUtc");
 

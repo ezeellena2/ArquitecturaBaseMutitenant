@@ -13,6 +13,8 @@ public static class WhatsAppModule
     public static IServiceCollection AddWhatsAppModule(this IServiceCollection services)
     {
         services.AddScoped<IWhatsAppWebhookService, WhatsAppWebhookService>();
+        services.AddScoped<Interfaces.Integrations.IWhatsAppInboundConsumer, WhatsAppBotWriter>();
+        services.AddScoped<WhatsAppBotReplyBuilder>();
         services.AddScoped<WhatsAppWebhookWriter>();
         services.AddScoped<IWhatsAppInboundService, WhatsAppInboundService>();
         services.AddScoped<WhatsAppInboundGuard>();

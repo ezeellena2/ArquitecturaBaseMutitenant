@@ -13,8 +13,9 @@ internal sealed class AccountDeletionSessionRestorer(IAccessStatusCache statuses
     internal async Task RestoreAsync(Guid userId, string returnUrl, CancellationToken ct)
     {
         await statuses.InvalidateUserAsync(userId, ct);
-        var access = ReturnUrls.TryReadAccessSelection(returnUrl, out var selection)
-            ? selection.Access : Access.Business;
+        if (!ReturnUrls.IsDeletionReturn(returnUrl)) throw new InvalidOperationException("Invalid cancellation return.");
+        var access = returnUrl == ReturnUrls.LoginLinkPath ? Access.Consumer
+            : ReturnUrls.TryReadAccessSelection(returnUrl, out var selection) ? selection.Access : Access.Business;
         await signIn.SignInAsync(userId, access, ct);
     }
 }

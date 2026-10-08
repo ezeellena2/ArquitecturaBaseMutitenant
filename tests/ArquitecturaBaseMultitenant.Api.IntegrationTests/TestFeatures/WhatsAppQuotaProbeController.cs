@@ -31,6 +31,7 @@ public sealed class WhatsAppQuotaProbeController(IUnitOfWork unit, IWhatsAppCode
     }
     private sealed class Settings(string numberId) : IWhatsAppChannelSettings
     {
+        public string AppName => "Fixture";
         public bool IsEnabled => true;
         public string PhoneNumberId => numberId;
         public string? ContactPhone => null;

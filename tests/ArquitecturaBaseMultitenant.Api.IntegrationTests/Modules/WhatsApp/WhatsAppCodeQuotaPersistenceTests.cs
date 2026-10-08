@@ -94,6 +94,7 @@ public sealed class WhatsAppCodeQuotaPersistenceTests(ApiFactory factory)
     }
     private sealed class Settings : IWhatsAppChannelSettings
     {
+        public string AppName => "Fixture";
         public bool IsEnabled => true;
         public string PhoneNumberId { get; } = Guid.NewGuid().ToString("N");
         public string? ContactPhone => null;

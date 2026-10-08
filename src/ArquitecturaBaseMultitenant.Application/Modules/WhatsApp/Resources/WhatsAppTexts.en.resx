@@ -31,7 +31,7 @@
     <value>Too many webhook requests.</value>
   </data>
   <data name="Bot.OperatorNeutralReply" xml:space="preserve">
-    <value>To sign in, use the web.</value>
+    <value>To sign in, use the website.</value>
   </data>
   <data name="MethodChange.Added" xml:space="preserve">
     <value>added</value>
@@ -99,6 +99,46 @@
   <data name="Template.DeletionRequestedSuspended.Body" xml:space="preserve">
     <value>The platform started deletion of your ArquitecturaBase account. It will be deleted on {{1}}. Your account is suspended, so you cannot cancel deletion. If you believe this is a mistake, contact {{2}}.</value>
   </data>
-  <data name="Notice.OccurredAt" xml:space="preserve"><value>{0} at {1}</value></data>
-  <data name="WhatsApp.Inbound.LeaseExpired" xml:space="preserve"><value>The inbound message lease expired.</value></data>
+  <data name="Notice.OccurredAt" xml:space="preserve">
+    <value>{0} at {1}</value>
+  </data>
+  <data name="WhatsApp.Inbound.LeaseExpired" xml:space="preserve">
+    <value>The inbound message lease expired.</value>
+  </data>
+  <data name="Bot.LinkWithoutName" xml:space="preserve">
+    <value>Hi. To sign in to {0}, tap Sign in. The link works once and expires in 10 minutes.</value>
+  </data>
+  <data name="Bot.Unknown" xml:space="preserve">
+    <value>Hi. This number does not have a {0} account. To create yours, tap Create my account: you will accept the terms and confirm the number with a code.</value>
+  </data>
+  <data name="Bot.Web" xml:space="preserve">
+    <value>Continue on the website.</value>
+  </data>
+  <data name="Bot.Create" xml:space="preserve">
+    <value>Create my account</value>
+  </data>
+  <data name="Bot.Disabled" xml:space="preserve">
+    <value>We cannot give you a sign-in link. Use the website to check your account.</value>
+  </data>
+  <data name="Bot.SignIn" xml:space="preserve">
+    <value>Sign in</value>
+  </data>
+  <data name="Bot.Recover" xml:space="preserve">
+    <value>Recover my account</value>
+  </data>
+  <data name="Bot.Link" xml:space="preserve">
+    <value>Hi, {0}. To sign in to {1}, tap Sign in. The link works once and expires in 10 minutes.</value>
+  </data>
+  <data name="Bot.Limit" xml:space="preserve">
+    <value>Wait a moment before requesting another sign-in link.</value>
+  </data>
+  <data name="Bot.Enter" xml:space="preserve">
+    <value>Sign in</value>
+  </data>
+  <data name="Bot.Footer" xml:space="preserve">
+    <value>For now, this chat is only for signing in.</value>
+  </data>
+  <data name="Bot.Closed" xml:space="preserve">
+    <value>Hi. This number does not have a {0} account and new accounts cannot be created right now. If you have an account with another email or number, sign in with that method or recover your account.</value>
+  </data>
 </root>

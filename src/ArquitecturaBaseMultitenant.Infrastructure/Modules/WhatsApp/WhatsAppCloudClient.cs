@@ -8,11 +8,13 @@ using Microsoft.Extensions.Options;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
 
 /// <summary>Un único POST por intento durable; conserva sólo códigos estáticos y el identificador aceptado.</summary>
-internal sealed class WhatsAppCloudClient(HttpClient client, IOptions<WhatsAppOptions> options)
+internal sealed class WhatsAppCloudClient(HttpClient client, IOptions<WhatsAppOptions> options, TimeProvider clock)
 {
     public async Task<OutboxDeliveryReceipt> SendAsync(WhatsAppOutboundMessage message, CancellationToken ct)
     {
         message.Validate();
+        if (message.Body is not null && message.ReplyExpiresAtUtc <= clock.GetUtcNow().UtcDateTime)
+            return OutboxDeliveryReceipt.Rejected("WhatsApp.Send.WindowExpired", retryable: false);
         using var request = new HttpRequestMessage(HttpMethod.Post,
             options.Value.GraphApiVersion + "/" + Uri.EscapeDataString(message.PhoneNumberId) + "/messages");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", options.Value.AccessToken);
@@ -61,6 +63,24 @@ internal sealed class WhatsAppCloudClient(HttpClient client, IOptions<WhatsAppOp
         message.Validate();
         var to = message.To.TrimStart('+');
         if (argentinaWithoutNine && to.StartsWith("549", StringComparison.Ordinal)) to = "54" + to[3..];
+        if (message.Body is not null)
+        {
+            if (message.Kind == ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppMessageKind.Text)
+                return new { messaging_product = "whatsapp", recipient_type = "individual", to, type = "text", text = new { body = message.Body } };
+            var interactive = new System.Text.Json.Nodes.JsonObject
+            {
+                ["type"] = message.LinkUrl is not null ? "cta_url" : "button",
+                ["body"] = new System.Text.Json.Nodes.JsonObject { ["text"] = message.Body },
+            };
+            if (message.Footer is not null) interactive["footer"] = new System.Text.Json.Nodes.JsonObject { ["text"] = message.Footer };
+            interactive["action"] = message.LinkUrl is not null
+                ? new System.Text.Json.Nodes.JsonObject { ["name"] = "cta_url", ["parameters"] = new System.Text.Json.Nodes.JsonObject
+                    { ["display_text"] = message.LinkLabel, ["url"] = message.LinkUrl } }
+                : new System.Text.Json.Nodes.JsonObject { ["buttons"] = new System.Text.Json.Nodes.JsonArray(
+                    [.. (message.ReplyButtons ?? []).Select(button => (System.Text.Json.Nodes.JsonNode)new System.Text.Json.Nodes.JsonObject
+                        { ["type"] = "reply", ["reply"] = new System.Text.Json.Nodes.JsonObject { ["id"] = button.Id, ["title"] = button.Title } })]) };
+            return new { messaging_product = "whatsapp", recipient_type = "individual", to, type = "interactive", interactive };
+        }
         var components = new List<object>();
         if (message.BodyParameters.Count > 0)
             components.Add(new { type = "body", parameters = message.BodyParameters.Select(value => new { type = "text", text = value }).ToArray() });

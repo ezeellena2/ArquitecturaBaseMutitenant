@@ -5,6 +5,7 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.In
 public interface IWhatsAppChannelSettings
 {
     bool IsEnabled { get; }
+    string AppName { get; }
     string? PhoneNumberId { get; }
     string? ContactPhone { get; }
     IReadOnlyList<string> Countries { get; }

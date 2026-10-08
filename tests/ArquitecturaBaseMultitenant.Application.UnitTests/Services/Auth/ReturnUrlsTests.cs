@@ -9,6 +9,16 @@ namespace ArquitecturaBaseMultitenant.Application.UnitTests.Services.Auth;
 /// </summary>
 public sealed class ReturnUrlsTests
 {
+    [Fact]
+    public void Link_is_a_fixed_deletion_return_but_not_an_OTP_authorization()
+    { Assert.True(ReturnUrls.IsDeletionReturn("/login/enlace")); Assert.False(ReturnUrls.IsLoginReturn("/login/enlace")); }
+    [Theory]
+    [InlineData("/login/enlace?access=platform")]
+    [InlineData("/login/enlace#token")]
+    [InlineData("//example.test/login/enlace")]
+    [InlineData("https://example.test/login/enlace")]
+    public void Deletion_link_continuation_rejects_queries_fragments_and_external_destinations(string path) =>
+        Assert.False(ReturnUrls.IsDeletionReturn(path));
     [Theory]
     [InlineData("/connect/authorize?client_id=web", Access.Consumer, null)]
     [InlineData("/connect/authorize?access=business", Access.Business, null)]

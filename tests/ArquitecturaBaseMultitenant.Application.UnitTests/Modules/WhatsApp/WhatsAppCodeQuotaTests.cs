@@ -45,6 +45,7 @@ public sealed class WhatsAppCodeQuotaTests
     }
     internal sealed class Settings : IWhatsAppChannelSettings
     {
+        public string AppName => "Fixture";
         public bool IsEnabled { get; set; } = true;
         public string? PhoneNumberId { get; set; } = "quota-fixture";
         public string? ContactPhone => null;

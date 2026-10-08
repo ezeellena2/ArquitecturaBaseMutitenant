@@ -43,6 +43,7 @@ public sealed partial class IdentityStorageAccessTests
         Infrastructure + "Persistence.Repositories.LegalRepository",
         Infrastructure + "Persistence.Repositories.LoginAuditRepository",
         Infrastructure + "Persistence.Repositories.LoginCodeRepository",
+        Infrastructure + "Persistence.Repositories.LoginLinkRepository", // Coherent link/method/account proof snapshot, no tenant data.
         Infrastructure + "Persistence.Repositories.LoginMethodRepository",
         Infrastructure + "Persistence.Repositories.PlatformPermissionAssignmentRepository",
         Infrastructure + "Persistence.Repositories.UserRepository",
@@ -63,6 +64,7 @@ public sealed partial class IdentityStorageAccessTests
         "ArquitecturaBaseMultitenant.Infrastructure.Identity.ApplicationUser",
         "ArquitecturaBaseMultitenant.Domain.Authentication.LoginMethod",
         "ArquitecturaBaseMultitenant.Domain.Authentication.LoginCode",
+        "ArquitecturaBaseMultitenant.Domain.Authentication.LoginLink",
         "ArquitecturaBaseMultitenant.Domain.Authentication.LoginAudit",
         "ArquitecturaBaseMultitenant.Domain.Legal.LegalAcceptance",
         "ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.UserTenantAccess",
@@ -94,6 +96,8 @@ public sealed partial class IdentityStorageAccessTests
         Assert.Contains(calls, call => call.OwnerMethod == nameof(IdentityStorageProbe.ReadUsers)
             && call.Method == "get_Users");
         Assert.Contains(calls, call => call.OwnerMethod == nameof(IdentityStorageProbe.ReadLoginMethods)
+            && call.Method == "Set");
+        Assert.Contains(calls, call => call.OwnerMethod == nameof(IdentityStorageProbe.ReadLoginLinks)
             && call.Method == "Set");
         Assert.DoesNotContain(calls, call => call.OwnerMethod == nameof(IdentityStorageProbe.ReadTenants));
     }
@@ -140,6 +144,7 @@ internal sealed class IdentityStorageProbe(ApplicationDbContext context)
     public IQueryable<ApplicationUser> ReadUsers() => context.Users;
 
     public IQueryable<LoginMethod> ReadLoginMethods() => context.Set<LoginMethod>();
+    public IQueryable<LoginLink> ReadLoginLinks() => context.Set<LoginLink>();
 
     public IQueryable<ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant> ReadTenants() => context.Tenants;
 }

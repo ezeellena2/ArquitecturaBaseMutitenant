@@ -60,6 +60,16 @@ public sealed class IdempotencyFilter(
                     ApiErrorCodes.InProgress, StatusCodes.Status409Conflict);
                 return;
             case IdempotencyReservationState.Replay:
+                if (context.ActionDescriptor.EndpointMetadata.OfType<IdempotencyReplayAttribute>().SingleOrDefault() is { } metadata)
+                {
+                    var verifier = (IIdempotencyReplayVerifier)httpContext.RequestServices.GetRequiredService(metadata.VerifierType);
+                    var checkedReplay = await verifier.ValidateAsync(request, reservation.ResponseStatusCode!.Value, reservation.ResponseBody, httpContext.RequestAborted);
+                    if (checkedReplay.IsFailure)
+                    {
+                        context.Result = Problem(httpContext, checkedReplay.Error.Type, checkedReplay.Error.Code, StatusCodes.Status400BadRequest);
+                        return;
+                    }
+                }
                 httpContext.Response.Headers["Idempotent-Replayed"] = "true";
                 context.Result = new ContentResult
                 {

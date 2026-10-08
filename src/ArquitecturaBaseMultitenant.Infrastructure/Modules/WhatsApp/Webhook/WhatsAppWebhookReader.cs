@@ -41,7 +41,7 @@ internal sealed class WhatsAppWebhookReader(IOptions<WhatsAppOptions> options, I
                             if (type == "interactive" && Property(message, "interactive", out var interactive)
                                 && Property(interactive, "button_reply", out var buttonReply)) reply = Text(buttonReply, "id");
                             // Solo identificadores de acciones públicas del bot; nunca un token recibido.
-                            reply = reply is "CREATE_ACCOUNT" or "HAVE_ACCOUNT" or "WANT_TO_ENTER" or "DID_NOT_REQUEST_CODE" ? reply : null;
+                            reply = reply is BotButtons.SignIn or BotButtons.Recover ? reply : null;
                             messages.Add(new(number, id, sender.Value.Value, kind, text, reply, time));
                         }
                     if (Array(value, "statuses", out var delivery))

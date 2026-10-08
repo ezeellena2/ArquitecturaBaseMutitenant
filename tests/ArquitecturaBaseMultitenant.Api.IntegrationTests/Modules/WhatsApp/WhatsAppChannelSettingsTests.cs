@@ -24,7 +24,7 @@ public sealed class WhatsAppChannelSettingsTests
     [InlineData("invalid", null)]
     public void Contact_phone_is_canonical_and_never_technical_id(string? display, string? expected)
     {
-        var settings = new WhatsAppChannelSettings(Options.Create(new WhatsAppOptions { PhoneNumberId = "technical-id", DisplayPhoneNumber = display }));
+        var settings = new WhatsAppChannelSettings(Options.Create(new WhatsAppOptions { PhoneNumberId = "technical-id", DisplayPhoneNumber = display }), Options.Create(new ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email.EmailOptions()));
         Assert.Equal(expected, settings.ContactPhone);
     }
     [Theory]
@@ -32,7 +32,7 @@ public sealed class WhatsAppChannelSettingsTests
     [InlineData("US", "+5491134567890", true)]
     public void Policy_uses_actual_region_of_E164_and_ignores_declared_country(string declaredCountry, string phone, bool allowed)
     {
-        var settings = new WhatsAppChannelSettings(Options.Create(new WhatsAppOptions { PhoneNumberId = "technical-id", AllowedCountries = ["AR"] }));
+        var settings = new WhatsAppChannelSettings(Options.Create(new WhatsAppOptions { PhoneNumberId = "technical-id", AllowedCountries = ["AR"] }), Options.Create(new ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email.EmailOptions()));
         var channel = new WhatsAppLoginCodeChannel(settings, null!, null!);
         var result = channel.ValidateNewDestination(LoginCodeDestination.ForPhone(PhoneNumber.Create(phone).Value, "whatsapp"), declaredCountry);
         Assert.Equal(allowed, result.IsSuccess);

@@ -55,6 +55,7 @@ public static class DependencyInjection
         });
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddScoped<IdempotencyFilter>();
+        services.AddScoped<LoginLinkReplayVerifier>();
         services.AddOpenApiDocumentation();
         services.AddRateLimiter(options =>
         {

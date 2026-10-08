@@ -50,7 +50,7 @@ public sealed class Etapa8ContractTests(ApiFactory factory)
     [Theory]
     [InlineData("preview")]
     [InlineData("redeem")]
-    public async Task Login_link_stub_never_creates_a_session(string action)
+    public async Task Unknown_login_link_never_creates_a_session(string action)
     {
         using var client = factory.CreateClient(new() { AllowAutoRedirect = false });
         using var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login-link/" + action)
@@ -59,7 +59,7 @@ public sealed class Etapa8ContractTests(ApiFactory factory)
         };
         request.Headers.Add("Idempotency-Key", Guid.CreateVersion7().ToString());
         using var response = await client.SendAsync(request, Ct);
-        Assert.Equal(HttpStatusCode.NotImplemented, response.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.False(response.Headers.Contains("Set-Cookie"));
     }
 

@@ -36,6 +36,7 @@ public sealed class DataClassificationTests
         typeof(LoginMethod).FullName!,
         typeof(LoginCode).FullName!,
         typeof(AccountDeletionCancelTicket).FullName!, // Comprobante global de cuenta, ligado a usuario y acción.
+        typeof(LoginLink).FullName!, // Prueba global de posesión de un método de identidad.
         typeof(ConsumerDataRetention).FullName!, // Sólo claves de fila/partes, motivo técnico, vencimiento y finalización; sin copia personal.
         typeof(LoginAudit).FullName!,
         typeof(Tenant).FullName!,
@@ -142,7 +143,7 @@ public sealed class DataClassificationTests
         || type.FullName == "ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.UserTenantAccess"
         || type.FullName == "ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.LoginInvitation"
         || type.FullName == "ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.MemberAccessRole"
-        || type == typeof(LoginMethod) || type == typeof(LoginCode) || type == typeof(LoginAudit) || type == typeof(AccountDeletionCancelTicket)
+        || type == typeof(LoginMethod) || type == typeof(LoginCode) || type == typeof(LoginLink) || type == typeof(LoginAudit) || type == typeof(AccountDeletionCancelTicket)
         || type == typeof(ConsumerDataRetention)
         || type == typeof(IdentityUserClaim<Guid>) || type == typeof(IdentityUserLogin<Guid>)
         || type == typeof(IdentityUserToken<Guid>) || type == typeof(LegalAcceptance);
