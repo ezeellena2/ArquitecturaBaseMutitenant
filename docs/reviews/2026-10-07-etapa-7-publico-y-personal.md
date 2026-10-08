@@ -56,6 +56,7 @@ Tareas en orden, commits por rutas propias, sin push. Tests de negocio, permisos
 41. La orden local `LoginCodeCommand` vence exactamente un desafío activo de un correo `@example.test`, exclusivamente con `MT_E2E_ISOLATED=1`. No agrega una ruta ni lee el código de la base: el navegador recibe los códigos de los `.eml`. Los casos de código usan la cuenta empresarial creada durante el recorrido para comprobar `ResendTooSoon` sin que la cuota de quince minutos tape ese error. El script espera los límites reales; no modifica ni borra su historial. La verificación de ingreso espera el contrato HTTP 200; el registro conserva 204.
 42. El mensaje de código incorrecto comparte el alert con el contador de intentos, por lo que se comprueba la primera línea y los cuatro intentos restantes. Mi cuenta móvil oculta la barra inferior por sus acciones: para salir se usa «Volver a Más», y después «Salir». Ambos errores del runner tienen test DOM local rojo y verde, además de la repetición real; no requirieron cambiar el producto.
 43. Las capturas esperan que se retiren todos los avisos transitorios y desactivan las animaciones solo al tomar la imagen. El puntero se mueve fuera de Sonner, que pausa el vencimiento cuando queda encima de la franja; los errores persistentes y los estados de carga se conservan. La revisión de una corrida funcional 60/60 detectó avisos anteriores tapando el diálogo móvil del correo ajeno. El test reprodujo dos avisos pendientes y pasó 8/8 tras la corrección; la evidencia se vuelve a generar con una corrida completa.
+44. La suspensión de la máquina expuso un defecto del contador compartido: restaba una unidad por callback y mantenía el botón bloqueado después de vencer la espera real. `useCountdown` conserva el vencimiento en su estado inicializado de forma perezosa y recalcula por reloj, foco y visibilidad; `restart` fija un plazo nuevo. Las cuatro pruebas dirigidas fallaron con el hook anterior y pasaron tras el cambio. Los 141 casos focales y la suite completa de 2200 pruebas verifican sus consumidores, sin modificar límites ni reenviar solicitudes automáticamente. La invocación de la corrida final mantiene una solicitud temporal de actividad del sistema y la libera en `finally`.
 
 ## Cierre
 
@@ -88,17 +89,18 @@ La siguiente tabla conserva la puerta automática inicial. La repetición pedida
 
 ### Repetición para el recorrido de usuario
 
-Logs y resultados en `.local/etapa7/recorrido-gate/` del back. Los intentos fallidos se conservan en `recorrido-intento-*`; la primera corrida funcional 60/60 y las capturas que motivaron el ajuste están en `.local/etapa7/recorrido-funcional/`.
+Logs y resultados en `.local/etapa7/recorrido-gate/` del back. Los intentos fallidos se conservan en `recorrido-intento-*`; la primera corrida funcional 60/60 y las capturas que motivaron el ajuste están en `.local/etapa7/recorrido-funcional/`. Las imágenes del 7 de octubre se archivaron en `.local/etapa7/recorrido-2026-10-07-archivo/`; la evidencia final se genera el 8 de octubre.
 
 | Comando / verificación | Resultado | Evidencia |
 |---|---|---|
 | Suite completa back con Docker, `dotnet test --no-build --no-restore` | EXIT 0, 1989/1989, 0 fallos y omitidos; 18 min 47,217 s de MTP y 1128,419 s del comando | `back-test.log`, `back-test-result.txt` |
-| Suite completa front, `npm test -- --run` | EXIT 0, 2196/2196 en 246 archivos; 170,39 s de Vitest y 171,993 s del comando | `front-test.log`, `front-test-result.txt` |
-| `npm run build` y `npm run contracts:check` | EXIT 0; build y contrato coincidente | `front-build.log`; salida del comprobador |
+| Suite completa front, `npm test -- --run` | EXIT 0, 2200/2200 en 247 archivos; 126,76 s de Vitest y 127,926 s del comando. Primer intento con build/lint en paralelo: import de CompanyDetail agotó 10 s, 2167 verdes y 33 omitidos; focal y completo repetidos en exclusivo, sin cambiar ese test | `front-test.log`, `front-test-result.txt`; anterior en `front-test-contador-primer-intento.log` |
+| `npm run build` y `npm run contracts:check` | EXIT 0; build final y contrato coincidente | `front-build-final.log`; salida del comprobador |
 | `npm run lint` después de los ajustes del script | EXIT 0, 0 errores y 751 advertencias heredadas; sin avisos nuevos del recorrido | `front-lint-final.log` |
 | `node --test scripts/recorrido-usuario.test.mjs` | EXIT 0, 8/8; 1,879 s. Fecha, índice, fallo, limpieza, diagnósticos, alert compuesto, salida móvil y avisos transitorios | salida del test liviano |
+| Contador y consumidores, más CompanyDetail en exclusivo | EXIT 0, 141/141 en ocho archivos; 27,34 s. Pruebas dirigidas: rojo 4/4 con el contador anterior | salida focal de Vitest |
 | Primera corrida funcional del recorrido | EXIT 0, 60/60; entorno apagado. La revisión visual pidió esperar los avisos antes de capturar | `../recorrido-funcional/recorrido.log`, `../recorrido-funcional/resultados.json` |
-| Repetición completa con capturas legibles | En curso; no se cuentan pendientes como aprobados | `recorrido.log`, `recorrido-result.txt`; índice del front |
+| Repetición completa con capturas legibles y contador corregido | En curso, el 8 de octubre; no se cuentan pendientes como aprobados | `recorrido.log`, `recorrido-result.txt`; índice del front |
 
 ### Commits propios
 
@@ -132,12 +134,13 @@ Los commits de A8–A10/R03 y las actualizaciones ajenas del lienzo y las guías
 | Recorrido · Script y test liviano | — | `0e6d3730` |
 | Recorrido · Salida móvil y diagnóstico | — | `06e49d23`, `e41b9861` |
 | Recorrido · Capturas sin avisos superpuestos | — | `75d04adf` |
+| Recorrido · Contador al retomar la pestaña | — | `26315ced` |
 
 ### Galería y recorrido de usuario
 
 [Galería final](../../../ArquitecturaBaseMutitenantFront/docs/design/capturas/etapa-7/galeria.html) y [comparación con el lienzo](../../../ArquitecturaBaseMutitenantFront/docs/design/capturas/etapa-7/comparacion.md), con las diferencias concretas y su motivo. Se mostraron al usuario antes del cierre. No hay cortes ni estados ausentes. Persisten diferencias de composición heredada en la Landing, tamaño del vacío móvil del directorio y foco del menú común; hosts locales e iniciales Sigma conservan el comportamiento canónico.
 
-El pedido posterior del usuario reemplaza el recorrido pendiente en Chrome Eze por el script Playwright reutilizable con su propio perfil persistente y certificado de desarrollo autorizado. No se usan sesiones ni correos personales. El [índice del recorrido](../../../ArquitecturaBaseMutitenantFront/docs/design/capturas/recorrido/2026-10-07/index.html) muestra cada comprobación en orden, con esperado, resultado real y capturas lado a lado; [el script](../../../ArquitecturaBaseMutitenantFront/scripts/recorrido-usuario.mjs) se repite desde el front con `node scripts/recorrido-usuario.mjs` y su test con `node --test scripts/recorrido-usuario.test.mjs`.
+El pedido posterior del usuario reemplaza el recorrido pendiente en Chrome Eze por el script Playwright reutilizable con su propio perfil persistente y certificado de desarrollo autorizado. No se usan sesiones ni correos personales. El [índice del recorrido](../../../ArquitecturaBaseMutitenantFront/docs/design/capturas/recorrido/2026-10-08/index.html) muestra cada comprobación en orden, con esperado, resultado real y capturas lado a lado; [el script](../../../ArquitecturaBaseMutitenantFront/scripts/recorrido-usuario.mjs) se repite desde el front con `node scripts/recorrido-usuario.mjs` y su test con `node --test scripts/recorrido-usuario.test.mjs`.
 
 Google se limita expresamente al destino: los dos botones navegan a `accounts.google.com` sin completar correo. El proveedor muestra `redirect_uri_mismatch` para este callback aislado; las capturas lo conservan. Este resultado verifica el destino pedido y no acredita un ingreso con Google ni la configuración del callback en Google Cloud.
 
