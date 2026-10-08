@@ -1,10 +1,10 @@
 # Etapa 7 · Personal, sitio público e interacción
 
-Inicio: 2026-10-07. Plan: [público y personal](../plans/2026-10-04-etapa-7-publico-y-personal.md). Estado: implementación commiteada y puerta automática aprobada; cierre pendiente del recorrido manual.
+Inicio: 2026-10-07. Plan: [público y personal](../plans/2026-10-04-etapa-7-publico-y-personal.md). Estado: implementación y puerta automática aprobadas; recorrido funcional 60/60, en repetición para entregar las capturas finales.
 
 ## Alcance y base
 
-Back en `main`, base `2d5f87f`; front en `main`, base `fec2a86`. Ambos arneses declaran cerradas las etapas 0 a 6. La consolidación y las piezas comunes de edición, permisos y navegación ya existen. El lienzo vigente es v113 y sus tableros de esta etapa están aprobados.
+Back en `main`, base `2d5f87f`; front en `main`, base `fec2a86`. Ambos arneses declaran cerradas las etapas 0 a 6. La consolidación y las piezas comunes de edición, permisos y navegación ya existen. Los tableros de esta etapa se aprobaron en la v113 del lienzo; la v114 posterior corresponde a la documentación del Asistente de otra conversación.
 
 La copia se comparte con los arreglos A8–A11 y R01/R03. Sus cambios en ingreso, sesiones, invitaciones, Empresas, datos fiscales y runner quedan fuera de los commits de esta etapa. Se integra el ingreso después de los commits A8/A9. No se detiene el entorno de la otra conversación.
 
@@ -51,15 +51,23 @@ Tareas en orden, commits por rutas propias, sin push. Tests de negocio, permisos
 
 38. El helper `openPlatformOrganization` busca por nombre desde la pantalla antes de abrir la ficha, igual que el helper de Cuentas. Las organizaciones creadas por los otros recorridos y las publicaciones nuevas pueden llevar el destino fuera de la primera página. Se conserva el paginado productivo y se elimina ese supuesto del E2E; no se borra la preparación ni se aumenta el tamaño de página para ocultarlo.
 
+39. El pedido posterior del usuario convierte la puerta en `scripts/recorrido-usuario.mjs`: los ocho grupos de arreglos y los seis controles públicos de E7, desglosados en 30 comprobaciones a 1440 y 390. Un único contexto Chromium persistente recorre ambos tamaños, arranca con una sesión antigua real firmada por la fixture y sale por UI; no limpia cookies entre pasos. Reutiliza el AppHost del E2E, PostgreSQL efímero sin volumen Development, pickup propio y certificado de desarrollo con `ignoreHTTPSErrors: true`. El perfil temporal y los correos se eliminan al terminar, también cuando falla el recorrido.
+40. Vite recargaba la pestaña por HMR mientras el recorrido escribía HTML o se optimizaban dependencias. AppHost propaga `MT_E2E_ISOLATED` y Vite desactiva HMR exclusivamente con ese valor. El test de configuración reprodujo el fallo y pasó tras el cambio; la navegación, el ingreso y la salida reales volvieron a funcionar.
+41. La orden local `LoginCodeCommand` vence exactamente un desafío activo de un correo `@example.test`, exclusivamente con `MT_E2E_ISOLATED=1`. No agrega una ruta ni lee el código de la base: el navegador recibe los códigos de los `.eml`. Los casos de código usan la cuenta empresarial creada durante el recorrido para comprobar `ResendTooSoon` sin que la cuota de quince minutos tape ese error. El script espera los límites reales; no modifica ni borra su historial. La verificación de ingreso espera el contrato HTTP 200; el registro conserva 204.
+42. El mensaje de código incorrecto comparte el alert con el contador de intentos, por lo que se comprueba la primera línea y los cuatro intentos restantes. Mi cuenta móvil oculta la barra inferior por sus acciones: para salir se usa «Volver a Más», y después «Salir». Ambos errores del runner tienen test DOM local rojo y verde, además de la repetición real; no requirieron cambiar el producto.
+43. Las capturas esperan que se retiren todos los avisos transitorios y desactivan las animaciones solo al tomar la imagen. El puntero se mueve fuera de Sonner, que pausa el vencimiento cuando queda encima de la franja; los errores persistentes y los estados de carga se conservan. La revisión de una corrida funcional 60/60 detectó avisos anteriores tapando el diálogo móvil del correo ajeno. El test reprodujo dos avisos pendientes y pasó 8/8 tras la corrección; la evidencia se vuelve a generar con una corrida completa.
+
 ## Cierre
 
-La implementación T01–T19 está commiteada y la puerta automática T20 pasó. El E2E completo sin filtros terminó 36/36. `ClosedStages` conserva 0–6 hasta completar el recorrido manual pendiente. No se inició la Etapa 8.
+La implementación T01–T19 está commiteada y la puerta automática T20 pasó. El E2E completo sin filtros terminó 36/36. El recorrido reutilizable también terminó 60/60 con el entorno apagado; se repite después de mejorar la legibilidad de las capturas. `ClosedStages` conserva 0–6 hasta aprobar esa evidencia final. No se inició la Etapa 8.
 
 ### Comandos y evidencias
 
 Las evidencias completas de esta sesión están en `.local/etapa7/gate/` del back; las capturas y la comparación están versionadas en el front. Las primeras ejecuciones fallidas se conservan y no se cuentan como aceptación.
 
-| Comando / verificación | Resultado actual | Evidencia |
+La siguiente tabla conserva la puerta automática inicial. La repetición pedida para el recorrido está registrada por separado debajo.
+
+| Comando / verificación | Resultado de la puerta inicial | Evidencia |
 |---|---|---|
 | `dotnet build ArquitecturaBaseMultitenant.slnx` | EXIT 0, 0 advertencias, 0 errores; 8,19 s | `build-back-final.log` |
 | `dotnet test --no-build --no-restore` con Docker | EXIT 0, 1989/1989, 0 fallos y 0 omitidos, 17 min 55,268 s. Primera ejecución: 1987/1989; se corrigieron la guarda del callback y el aislamiento de la búsqueda de Plataforma | `test-back-final.log`; anteriores en `test-back.log` |
@@ -77,6 +85,20 @@ Las evidencias completas de esta sesión están en `.local/etapa7/gate/` del bac
 | Galería T18 y `--verify` | EXIT 0, 21 comparaciones y 63 PNG; 21/21 revisadas visualmente | galería y `comparacion.md` del front |
 | Revisión independiente final T01–T19 | Aprobación estática sin hallazgos accionables en aislamiento, autorización, retorno OIDC, baja/retención y regresiones. Solo lectura; no sustituye las ejecuciones de la puerta ni la revisión visual | `.local/etapa7/final-code-review.md` |
 | Limpieza del entorno propio | `aspire ps` EXIT 0, `[]`: el E2E apagó su AppHost. Vite de capturas 5192 apagado después de comprobar PID, ruta y puerto propios | `aspire-final.log`, `runtime-cleanup.log` |
+
+### Repetición para el recorrido de usuario
+
+Logs y resultados en `.local/etapa7/recorrido-gate/` del back. Los intentos fallidos se conservan en `recorrido-intento-*`; la primera corrida funcional 60/60 y las capturas que motivaron el ajuste están en `.local/etapa7/recorrido-funcional/`.
+
+| Comando / verificación | Resultado | Evidencia |
+|---|---|---|
+| Suite completa back con Docker, `dotnet test --no-build --no-restore` | EXIT 0, 1989/1989, 0 fallos y omitidos; 18 min 47,217 s de MTP y 1128,419 s del comando | `back-test.log`, `back-test-result.txt` |
+| Suite completa front, `npm test -- --run` | EXIT 0, 2196/2196 en 246 archivos; 170,39 s de Vitest y 171,993 s del comando | `front-test.log`, `front-test-result.txt` |
+| `npm run build` y `npm run contracts:check` | EXIT 0; build y contrato coincidente | `front-build.log`; salida del comprobador |
+| `npm run lint` después de los ajustes del script | EXIT 0, 0 errores y 751 advertencias heredadas; sin avisos nuevos del recorrido | `front-lint-final.log` |
+| `node --test scripts/recorrido-usuario.test.mjs` | EXIT 0, 8/8; 1,879 s. Fecha, índice, fallo, limpieza, diagnósticos, alert compuesto, salida móvil y avisos transitorios | salida del test liviano |
+| Primera corrida funcional del recorrido | EXIT 0, 60/60; entorno apagado. La revisión visual pidió esperar los avisos antes de capturar | `../recorrido-funcional/recorrido.log`, `../recorrido-funcional/resultados.json` |
+| Repetición completa con capturas legibles | En curso; no se cuentan pendientes como aprobados | `recorrido.log`, `recorrido-result.txt`; índice del front |
 
 ### Commits propios
 
@@ -105,13 +127,18 @@ Los commits de A8–A10/R03 y las actualizaciones ajenas del lienzo y las guías
 | T18 · Galería | — | `407d5b2d`, corrección visual `c8cb7967` |
 | T19 · E2E | `fd6114d` | `5b7ea863`, `369af3c9` |
 | T20 · Guardas y documentación ciega | `c1a5123`, `fe235d8`, `e02f33e` | `8e2ba709` |
+| Recorrido · HMR aislado | `bbc6cd0` | `097d172e` |
+| Recorrido · Vencimiento del desafío propio | `82cf9bb` | — |
+| Recorrido · Script y test liviano | — | `0e6d3730` |
+| Recorrido · Salida móvil y diagnóstico | — | `06e49d23`, `e41b9861` |
+| Recorrido · Capturas sin avisos superpuestos | — | `75d04adf` |
 
-### Galería y recorrido manual
+### Galería y recorrido de usuario
 
 [Galería final](../../../ArquitecturaBaseMutitenantFront/docs/design/capturas/etapa-7/galeria.html) y [comparación con el lienzo](../../../ArquitecturaBaseMutitenantFront/docs/design/capturas/etapa-7/comparacion.md), con las diferencias concretas y su motivo. Se mostraron al usuario antes del cierre. No hay cortes ni estados ausentes. Persisten diferencias de composición heredada en la Landing, tamaño del vacío móvil del directorio y foco del menú común; hosts locales e iniciales Sigma conservan el comportamiento canónico.
 
-El recorrido manual de esta sesión todavía no se realizó. Se eligió Chrome, perfil persistente Eze, sin limpiar cookies ni almacenamiento ni tocar sus pestañas personales. El navegador bloqueó el sitio con `ERR_CERT_COMMON_NAME_INVALID` y conserva la pestaña «Privacy error». Está pendiente la intervención humana solicitada para habilitar el dominio principal y el subdominio de prueba. El [SKILL.md de computer-use](C:/Users/ezequ/.codex/plugins/cache/openai-bundled/computer-use/26.930.61225/skills/computer-use/SKILL.md) remite a su [política de confirmaciones](C:/Users/ezequ/.codex/plugins/cache/openai-bundled/computer-use/26.930.61225/docs/confirmations.md), que exige `Hand-Off Required` para «“site not secure” HTTPS interstitial bypass». Por esa instrucción explícita, Codex no atraviesa el aviso. Los E2E aislados no reemplazan el recorrido manual solicitado ni se presentan como tal.
+El pedido posterior del usuario reemplaza el recorrido pendiente en Chrome Eze por el script Playwright reutilizable con su propio perfil persistente y certificado de desarrollo autorizado. No se usan sesiones ni correos personales. El [índice del recorrido](../../../ArquitecturaBaseMutitenantFront/docs/design/capturas/recorrido/2026-10-07/index.html) muestra cada comprobación en orden, con esperado, resultado real y capturas lado a lado; [el script](../../../ArquitecturaBaseMutitenantFront/scripts/recorrido-usuario.mjs) se repite desde el front con `node scripts/recorrido-usuario.mjs` y su test con `node --test scripts/recorrido-usuario.test.mjs`.
 
-Al intentar volver a vincular esa pestaña, la revisión automática rechazó el acceso a `https://localtest.me:5174/`: consideró que acceder mientras persiste el intersticial podría eludir la protección y que el usuario todavía no realizó el desbloqueo manual. No fue un rechazo manual del usuario. Se reiteró el pedido de intervención humana con ese motivo; no se intenta atravesar el bloqueo por otra superficie.
+Google se limita expresamente al destino: los dos botones navegan a `accounts.google.com` sin completar correo. El proveedor muestra `redirect_uri_mismatch` para este callback aislado; las capturas lo conservan. Este resultado verifica el destino pedido y no acredita un ingreso con Google ni la configuración del callback en Google Cloud.
 
-Pendiente: completar el recorrido de la «Puerta» de arreglos y el de la 7 en ese perfil, después de la intervención humana sobre el certificado, y registrar sus evidencias. Para continuarlo se vuelve a levantar el entorno propio; la corrida automática y el capturador ya están apagados. Solo entonces se evalúa agregar 7 a `ClosedStages`.
+Pendiente: terminar la repetición completa del capturador corregido, revisar las imágenes y agregar 7 a `ClosedStages` en ambos repos con sus guardas y documentación en cero.
