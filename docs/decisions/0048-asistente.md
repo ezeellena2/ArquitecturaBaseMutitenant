@@ -1,6 +1,6 @@
 # ADR 0048 · El asistente: un LLM en el inicio, como módulo quitable
 
-Estado: aceptada el 2026-10-07 por el dueño del producto. El detalle y las 20 decisiones están en la [propuesta](../plans/propuesta-asistente-llm.md).
+Estado: aceptada el 2026-10-07 por el dueño del producto. El detalle de D1 a D26 está en «Decidido con el usuario» de la [propuesta](../plans/propuesta-asistente-llm.md); D6 se resuelve en esta ADR. La [0049](0049-precisiones-whatsapp-y-asistente.md) precisa mensajes personales, destinatarios de alertas y alcance diario el 2026-10-08.
 
 ## Contexto
 

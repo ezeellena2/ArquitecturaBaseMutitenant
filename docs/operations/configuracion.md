@@ -74,7 +74,7 @@ Mismos valores que `../ArquitecturaBase/src/ArquitecturaBase.Api/appsettings.Dev
 | `WhatsApp:PhoneNumberId` | el mismo de ArquitecturaBase. **Es el interruptor**: sin él, WhatsApp queda apagado y la app arranca igual |
 | `WhatsApp:BusinessAccountId`, `DisplayPhoneNumber`, `SendArgentineMobilesWithoutNine` | los mismos de ArquitecturaBase (el último, solo con el número de prueba) |
 | `WhatsApp:GraphApiVersion`, `Templates:LoginCode`, `AllowedCountries`, `DailyAuthCodeLimit`, `MessageRetentionDays` | los mismos de `appsettings.json` de ArquitecturaBase (`v25.0`, `codigo_ingreso`, `["AR"]`, `100`, `90`) |
-| `WhatsApp:Templates:Invitation` y las demás `WhatsApp:Templates:<Nombre>` | **no se copian** de ArquitecturaBase: `Invitation` es `invitacion_organizacion`, que reemplaza a `invitacion_acceso` (no nombra la organización) y se crea en Meta en la Etapa 8, igual que los avisos de la cuenta. Cada clave se agrega al crear su plantilla: [whatsapp-plantillas.md](whatsapp-plantillas.md) |
+| `WhatsApp:Templates:Invitation` y las demás `WhatsApp:Templates:<Nombre>` | **no se copian** de ArquitecturaBase: Invitation es invitacion_organizacion. E8 incorpora el catálogo de **16 nombres es/en** (Authentication + 15 Utility), incluidas recuperación/baja por Plataforma y organización; no están todas las claves creadas hoy. Dos «en uso» quedan derogadas, y no hay OTP de confirmación de cambios en Mi cuenta. Claves/paquete según [plantillas](whatsapp-plantillas.md) y ADR 0049. |
 
 ## 4. Lo que tenés que hacer vos, una sola vez, fuera del código
 
@@ -121,3 +121,7 @@ Lo verifican `StartupConfigurationTests`, `EmailDeliveryTests` y `ProductionSeed
 ## 6. Producción
 
 Las mismas claves, como variables de entorno con doble guion bajo (`Email__Smtp__Password`, `DataProtection__Certificate__Base64`, `WhatsApp__AccessToken`…), en el gestor de secretos del proveedor. Nunca en `appsettings.Production.json`. `DataProtection:Certificate:Base64` es un PFX RSA distinto de los certificados OIDC: el proceso necesita su clave privada para leer el anillo persistido en `platform.DataProtectionKeys`; conservá el mismo certificado en todas las réplicas y en los reinicios. Perderlo impide leer cookies y payloads cifrados con esas claves. `ProtectKeysWithCertificate` cifra las claves **nuevas**; una instalación que ya haya escrito claves sin cifrar necesita tratar ese anillo antes de exponer sus backups. La lista completa de lo obligatorio fuera de Development estará en `runbook.md` (E10).
+
+## Preparación del asistente (E8b, todavía planificada)
+
+El [plan E8b T03](../plans/2026-10-08-etapa-8b-asistente.md#t03--configuración-modelos-y-claves) define clave inicial por user-secrets/entorno, luego edición write-only cifrada en la base. Estas opciones y scripts de carga todavía se crean en E8b; no presentar una clave/nombre de configuración como instalado hoy ni imprimir secretos. FakeChatClient solo Testing/E2E aislado, rechazado fuera de esos entornos. Prueba manual con clave real al cerrar; correo de soporte de Config-Plat y SMTP/outbox existentes para alertas de costo. No plantillas Meta para el asistente ni cambio de URL del túnel/webhook E8.

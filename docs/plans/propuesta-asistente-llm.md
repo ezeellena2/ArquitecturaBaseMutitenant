@@ -1,6 +1,8 @@
 # El asistente: un LLM en el inicio de Plataforma, de la empresa y de la persona
 
-Estado: **propuesta para decidir** (2026-10-07). Cuando el usuario cierre las decisiones de §2, pasa a una ADR y a un plan ejecutable en tres partes ([etapa-en-paralelo](../guides/etapa-en-paralelo.md)).
+Estado: **decisiones aceptadas**, recogidas en [ADR 0048](../decisions/0048-asistente.md) y [0049](../decisions/0049-precisiones-whatsapp-y-asistente.md). Ejecución en el [plan E8b](2026-10-08-etapa-8b-asistente.md), después de E8 cerrada. No implementado todavía. La tabla D1–D26 manda sobre las recomendaciones históricas de §2; D6 (Anthropic oficial) está resuelta por 0048. Los esquemas, contratos y árbol preliminares de abajo se interpretan con las adaptaciones al código existente del plan y la [revisión previa](../reviews/2026-10-08-alineamiento-etapas-8-y-8b.md).
+
+Precisiones aceptadas el 2026-10-08 (0049): «Mis mensajes con empresas» permanece visible con puerto neutral y vacío explícito hasta tener fuente productiva, sin consultar TestFeatures ni adelantar E11. OwnKey requiere al menos un Dueño activo con método Email verificado utilizable; alertas email a todos los que lo tengan, con acción Mi cuenta si falta. PlatformKey comparte cuota global UserId/día UTC entre accesos/organizaciones; OwnKey usa UserId/organización/día UTC, con topes propios. Cambiar zona no reinicia contador; títulos suman costo pero no preguntas.
 
 **El pedido del usuario:**
 - un chat como Claude o Codex en el inicio de los tres lados, que responda solo cosas del sistema;
@@ -50,7 +52,8 @@ Un **módulo quitable** («Asistente», con el mismo patrón que WhatsApp en la 
 Pantalla (assistant-ui)
    │  POST /…/assistant/conversations/{id}/messages
    ▼  (respuesta en streaming: SSE)
-Controller ──► IAssistantService ──► AssistantTurnRunner (helper)
+Controller ──► IAssistantService ──► AssistantTurnRequester (admite/reserva dentro de UoW)
+                                      │  commit; worker ejecuta después, fuera de UoW
                                       │  IChatClient (Microsoft.Extensions.AI)
                                       │    └─ SDK oficial de Anthropic
                                       ├─ AssistantToolCatalog → herramientas (AIFunction)
@@ -109,7 +112,7 @@ En T00 se confirman las versiones vigentes de los paquetes en `Directory.Package
 
 ## 4. Datos: qué se guarda y dónde
 
-Todo en un esquema nuevo, `assistant`, con RLS según la clase de dato ([multitenancy](../rules/multitenancy.md)):
+Modelo preliminar de responsabilidades de la tabla siguiente. **No crear un esquema assistant:** el plan adapta estas entidades a `tenant.Assistant*` (Business y Personal, ITenantOwned/RLS y OwnerUserId) y `platform.PlatformAssistant*` (operador/configuración/referencias globales), con tipos separados y declaración global explícita del contribuidor E8. No tenant nullable mixto. Cuota PlatformKey técnica global y OwnKey tenant separadas según 0049; UsageDaily no sustituye esa unicidad. Ver plan T02/T06 y [multitenancy](../rules/multitenancy.md).
 
 | Tabla | Campos clave | Clase y aislamiento |
 |---|---|---|
@@ -235,7 +238,7 @@ src/ArquitecturaBaseMultitenant.Application/Modules/Assistant/
               IAssistantConversationReader.cs · IAssistantSettingsRepository.cs
               IAssistantUsageRepository.cs · IAssistantChatClientFactory.cs
   Services/   AssistantService.cs · AssistantSettingsService.cs · AssistantUsageService.cs
-              AssistantTurnRunner.cs · AssistantLimitGuard.cs · AssistantPromptBuilder.cs
+              AssistantTurnRequester.cs · AssistantLimitGuard.cs · AssistantPromptBuilder.cs
               (los sufijos de helpers, de la lista cerrada de capas-y-flujo)
   Tools/      IAssistantTool.cs · AssistantToolCatalog.cs
               Business/ · Platform/ · Personal/   (una clase por herramienta)
@@ -285,7 +288,7 @@ src/locales/{es,en}/assistant.json
 | Parte | Tareas | Estimado (Codex) |
 |---|---|---|
 | **1. Contrato** | §5 en `openapi.json` y los eventos SSE en `docs/features/asistente.md` | 1 a 2 h |
-| **2a. Back** | **B1:** módulo, entidades, esquema y RLS. **B2:** configuración, clave cifrada, fábrica de `IChatClient` y `FakeChatClient`. **B3:** catálogo y herramientas de la v1. **B4:** `AssistantTurnRunner` (prompt, herramientas, topes, uso, caché). **B5:** controllers, SSE, idempotencia y consultas fijas. **B6:** retención, baja y auditoría. | 1,5 días |
+| **2a. Back** | **B1:** módulo, entidades, esquema y RLS. **B2:** configuración, clave cifrada, fábrica de `IChatClient` y `FakeChatClient`. **B3:** catálogo y herramientas de la v1. **B4:** `AssistantTurnRequester` (prompt, herramientas, topes, uso, caché). **B5:** controllers, SSE, idempotencia y consultas fijas. **B6:** retención, baja y auditoría. | 1,5 días |
 | **2b. Front** | **F1:** assistant-ui con nuestros tokens, runtime y SSE. **F2:** el inicio de los tres lados y el teléfono. **F3:** configuración. **F4:** uso. **F5:** Plataforma › Módulos. | 1 día |
 | **3. Integración y puerta** | Conectar, el E2E real con `FakeChatClient` (determinista y sin costo) y **una prueba a mano con la clave real** | 0,5 día |
 

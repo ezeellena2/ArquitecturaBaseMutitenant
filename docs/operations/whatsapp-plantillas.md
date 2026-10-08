@@ -1,57 +1,66 @@
 # Plantillas de WhatsApp: cuándo y cómo crearlas
 
-## Qué son y por qué hacen falta
-- **Plantilla:** WhatsApp (Meta) solo deja que una empresa **le escriba primero** a alguien con una plantilla **aprobada**: un texto fijo con variables (`{{1}}`, `{{2}}`…).
-- **Mensaje libre:** solo se puede mandar dentro de las **24 horas** posteriores a que la persona nos escribió. Por eso la respuesta del bot de ingreso (el enlace para entrar) no necesita plantilla: la persona acaba de escribir.
-- **Aprobación:** cada plantilla la aprueba Meta. Tarda de minutos a 48 horas, y puede rechazarla.
-- **Consecuencia:** una plantilla se crea **antes de programar** el envío que la usa, no al final.
+## Alcance vigente
 
-## Cuándo se crea cada una
-**Regla:** una plantilla nace en la etapa que implementa su mensaje. Es el primer paso de esa tarea, antes de escribir el código, así la aprobación de Meta corre mientras se programa.
+La E8 usa **16 nombres: una Authentication y quince Utility**, en español e inglés. Esto es inventario funcional, no una afirmación de que estén creadas o aprobadas en Meta. `codigo_ingreso` existe en la configuración de ArquitecturaBase; comprobar su estado e idiomas en la WABA de prueba antes de reutilizarlo. [ADR 0043](../decisions/0043-las-pantallas-dicen-si-hay-cuenta.md), [0045](../decisions/0045-mi-cuenta-sin-codigo-de-confirmacion.md) y [0049](../decisions/0049-precisiones-whatsapp-y-asistente.md) mandan sobre ejemplos viejos del lienzo.
 
-| Plantilla | Categoría | Variables | Para qué | Etapa |
-|---|---|---|---|---|
-| `codigo_ingreso` | Authentication | el código | ingresar, registrarse, verificar un método nuevo o confirmar un cambio | E8 (ya existe en la cuenta de ArquitecturaBase) |
-| `invitacion_organizacion` | Utility | quien invita, la organización y el vencimiento; botón con el enlace | invitación a una organización. **Reemplaza a** `invitacion_acceso` de ArquitecturaBase, que no nombra la organización | E8 |
-| `aviso_metodo_ingreso` | Utility | qué pasó (agregado, quitado o principal), el método enmascarado y la fecha | aviso en todos los métodos cuando cambia uno (multitenancy §3.1) | E8 |
-| `revisa_metodos_ingreso` | Utility | la organización | terminó una membresía y sus correos administrados dejaron de servir | E8 |
-| `baja_cuenta_pedida` | Utility | la fecha de eliminación | se pidió la baja (§3.2) | E8 |
-| `baja_cuenta_cancelada` | Utility | — | se canceló la baja | E8 |
-| `cuenta_eliminada` | Utility | — | se completó la baja | E8 |
-| `baja_cuenta_plataforma` | Utility | la fecha de eliminación | la plataforma inició la baja de una cuenta activa: se cerraron sus sesiones y puede cancelarla ingresando antes de la fecha (ADR 0035, lienzo v85, Mensajes) | E8 |
-| `baja_cuenta_plataforma_suspendida` | Utility | la fecha de eliminación y el correo de soporte (Config-Plat › Contacto) | la plataforma inició la baja de una cuenta suspendida, que no puede cancelarla (ADR 0035, lienzo v85, Mensajes) | E8 |
-| `recuperacion_recibida` | Utility | — | recibimos el pedido de «Recuperar mi cuenta»; va al método nuevo | E8 |
-| `recuperacion_aprobada` | Utility | — | se aprobó: el método nuevo ya sirve para ingresar | E8 |
-| `recuperacion_rechazada` | Utility | — | se rechazó, sin revelar datos de la cuenta | E8 |
-| `metodo_ingreso_en_uso` | Utility | — | alguien quiso agregar este número para entrar a otra cuenta, pero ya es de una cuenta. No se agrega ni se manda código, y la pantalla de quien lo pidió no cambia (ADR 0041, lienzo v83, Mensajes) | E8 |
-| `recuperacion_aviso_cuenta` | Utility | el correo de soporte (Config-Plat › Contacto) | alguien registró un pedido de «Recuperar mi cuenta». Va a los métodos de la cuenta que siguen andando, nunca a quien lo pidió, y no muestra el método nuevo (ADR 0041, lienzo v89, Mensajes) | E8 |
-| `recuperacion_metodo_en_uso` | Utility | — | alguien pidió recuperar una cuenta con este número, que ya es de otra cuenta. No se manda código, y la pantalla de quien lo pidió no cambia (lienzo v82, Mensajes) | E8 |
+Meta exige plantilla aprobada para iniciar una conversación. Un mensaje libre solo se envía dentro de las 24 horas posteriores a una entrada real de la persona. El bot de ingreso responde en esa ventana: no necesita plantilla para el enlace, el registro ni la respuesta neutra al operador.
 
-- **Cómo salen los avisos de la cuenta** (las ocho plantillas Utility desde `aviso_metodo_ingreso`): el núcleo los manda por el puerto `IAccountNoticeChannel` con un `AccountNotice` cerrado, uno por plantilla y en el orden de la tabla: `LoginMethodChanged`, `ReviewLoginMethods`, `DeletionRequested`, `DeletionCancelled`, `AccountDeleted`, `RecoveryReceived`, `RecoveryApproved` y `RecoveryRejected`. Cada implementación atiende un tipo de método: la del núcleo, los correos (canal `"email"`); la del módulo, `WhatsAppAccountNoticeChannel`, los teléfonos (canal `"whatsapp"`), con estas plantillas. Sin el módulo, los teléfonos no reciben aviso y no es un error. Siempre por el outbox, cifrado.
-- **Lo que va solo por correo:** la exportación de datos, porque el enlace de descarga no va por WhatsApp.
-- **Un mensaje nuevo que un producto quiera mandar por WhatsApp:** se agrega a esta tabla con su etapa, y después se crea la plantilla.
+## Inventario de E8
 
-## Cómo se crea
-1. **Abrir el administrador:** en [Meta Business Suite](https://business.facebook.com/), andá a **WhatsApp Manager → Administrar plantillas → Crear plantilla**, con la cuenta de WhatsApp Business del número que corresponde. En desarrollo es el número de prueba que comparte ArquitecturaBase; en producción, el del multitenant ([configuracion.md](configuracion.md) §4).
-2. **Categoría:**
-   - **Authentication** solo para códigos: Meta arma el texto y agrega el botón "Copiar código";
-   - **Utility** para avisos de la cuenta;
-   - **nunca Marketing**.
-3. **Nombre:** en minúsculas y `snake_case`, igual al de la tabla. Es el mismo nombre en los dos idiomas.
-4. **Idiomas:** español (`es`) e inglés (`en`), los mismos que usa la plataforma. Cada idioma se aprueba por separado.
-5. **Texto:**
-   - **Contenido:** corto, en el tono de los correos (`Notifications.resx`), con voseo y sin datos sensibles: ni correos ni teléfonos completos. El único dato sensible permitido es el código, y solo en Authentication.
-   - **Variables:** cada una con un **ejemplo**, porque Meta lo pide para aprobar.
-   - **Enlace:** si lleva uno, va como **botón de URL con variable**: la parte fija es `https://plataforma.com/` y la variable es el resto.
-6. **Aprobación:** enviar a revisión y esperar el estado **Activa**. Si Meta la rechaza, se corrige el texto; lo habitual es que falte un ejemplo o que el texto parezca promoción.
-7. **Registro en la configuración:**
-   - en `appsettings.json`, bajo `WhatsApp:Templates:<Nombre>`, como hace ArquitecturaBase (`LoginCode`, `Invitation`);
-   - en el catálogo de plantillas del módulo, con el orden de sus variables;
-   - un test verifica que cada plantilla del catálogo esté configurada y que el orden de las variables coincida.
-8. **Prueba:** mandarla al número de prueba desde el flujo real y verificar en el webhook que llegue el estado `delivered`.
+| Nombre Meta | Categoría | Uso y variables funcionales |
+|---|---|---|
+| `codigo_ingreso` | Authentication | Código para ingresar, registro y probar método nuevo (también recuperación). **No** confirma principal/quitar/baja en Mi cuenta. |
+| `invitacion_organizacion` | Utility | Quien invita, organización y vencimiento; botón del enlace Email de invitación existente. Reemplaza invitacion_acceso. |
+| `aviso_metodo_ingreso` | Utility | Cambio localizado, método enmascarado, fecha; LoginMethodChanged. |
+| `revisa_metodos_ingreso` | Utility | Organización; ReviewLoginMethods. |
+| `baja_cuenta_pedida` | Utility | Fecha de eliminación; DeletionRequested por la persona. |
+| `baja_cuenta_cancelada` | Utility | Sin variables; DeletionCancelled. |
+| `cuenta_eliminada` | Utility | Sin variables; AccountDeleted. |
+| `baja_cuenta_plataforma` | Utility | Fecha de eliminación; DeletionRequested por Plataforma, cuenta activa y cancelable. |
+| `baja_cuenta_plataforma_suspendida` | Utility | Fecha de eliminación y soporte; DeletionRequested por Plataforma, suspendida y no cancelable. |
+| `recuperacion_recibida` | Utility | RecoveryReceived al método nuevo, pedido efectivamente registrado. |
+| `recuperacion_aprobada` | Utility | RecoveryApproved al método nuevo; botón del ActionUrl vigente. |
+| `recuperacion_rechazada` | Utility | RecoveryRejected al método nuevo; no revela datos de la cuenta. |
+| `recuperacion_aviso_cuenta` | Utility | Soporte; RecoveryRequested a los métodos activos de la cuenta anterior; nunca muestra el método nuevo. |
+| `organizacion_aprobada` | Utility | Organización; OrganizationApproved. |
+| `organizacion_rechazada` | Utility | Organización; OrganizationRejected. |
+| `pagina_publica_moderada` | Utility | Organización y estado localizado; PublicPageModerated bloqueada/permitido volver a publicar. |
+
+El núcleo emite el `AccountNotice` cerrado existente por `IAccountNoticeChannel`. El adaptador Email sigue en el núcleo y WhatsApp atiende Phone dentro de su módulo, con outbox cifrado. DeletionRequested se mapea a tres plantillas según RequestedByPlatform/CanCancel. No inventar una variante de AccountNotice por cada nombre Meta. OrganizationApproved/Rejected y PublicPageModerated **no tienen ActionUrl**: sus plantillas no añaden botones ni enlaces.
+
+**Derogadas:** `metodo_ingreso_en_uso` y `recuperacion_metodo_en_uso`. No crearlas ni emitirlas: 0043 informa número ocupado en la pantalla sin código ni aviso al dueño. RecoveryRequested sigue vigente para un pedido registrado. Exportación de datos e invitación de operador van solo por correo. Los cuatro correos de costo del asistente también van solo por email; no aumentan este inventario.
+
+## Textos de los tres avisos incorporados por 0049
+
+Paquete de carga definido para estos tres nombres. Categoría Utility, cuerpo sin encabezado ni footer y **sin botones**, es/en. Las muestras son ficticias; el adaptador pasa variables localizadas y formateadas desde resources, sin teléfonos/correos completos.
+
+| Nombre / idioma | Cuerpo | Variables y muestra |
+|---|---|---|
+| organizacion_aprobada / es | Aprobamos {{1}} y terminamos el alta. Ya podés entrar como Dueño de tu organización. Ingresá con los métodos de tu cuenta y elegí tu organización. | {{1}}: Taller del Sur |
+| organizacion_aprobada / en | We approved {{1}} and completed its setup. You can now sign in as the owner of your organization. Use your account's sign-in methods and select your organization. | {{1}}: South Workshop |
+| organizacion_rechazada / es | No aprobamos la solicitud de alta de {{1}}. Tu cuenta y tu espacio personal siguen funcionando. | {{1}}: Taller del Sur |
+| organizacion_rechazada / en | We did not approve the application to create {{1}}. Your account and personal space continue to work. | {{1}}: South Workshop |
+| pagina_publica_moderada / es | La página pública de {{1}}: {{2}}. Tu organización y sus accesos siguen funcionando. | {{1}}: Taller del Sur; {{2}}: la plataforma la despublicó; quedó en borrador y no se puede publicar hasta que la plataforma lo permita |
+| pagina_publica_moderada / en | The public page of {{1}}: {{2}}. Your organization and its access continue to work. | {{1}}: South Workshop; {{2}}: the platform unpublished it; it is a draft and cannot be published until the platform allows it |
+
+Para IsBlocked=false, {{2}} es «la plataforma permitió volver a publicarla; podés revisarla y publicarla desde tu organización» / “the platform allowed publishing it again; you can review and publish it from your organization”. Esto permite la acción; **no republica automáticamente**. Dos estados, una plantilla por idioma; no dos nombres Meta. Usar el mismo contenido funcional que el correo: no sumar una decisión de negocio, motivo interno ni acción inexistente. Diseño incorpora los ejemplos WhatsApp de bloqueo y permiso para volver a publicar en Mensajes antes de implementar T03.
+
+**Todavía falta:** el paquete definitivo es/en de los trece nombres originales (variables numeradas, muestras, footer y botones según sus DTO) se prepara en [E8 T03](../plans/2026-10-07-etapa-8-whatsapp.md#t03--plantillas-cloud-api-y-outbox), antes de programar cada envío. Los ejemplos españoles de Mensajes no sustituyen ese paquete ni aprobación/entrega Meta.
+
+## Cómo crearlas y comprobarlas
+
+1. En [Meta Business Suite](https://business.facebook.com/), WhatsApp Manager → Administrar plantillas, seleccionar la WABA correcta: desarrollo comparte la de ArquitecturaBase; producción tiene la propia. Ver [configuración §4](configuracion.md#4-lo-que-tenés-que-hacer-vos-una-sola-vez-fuera-del-código).
+2. Crear el nombre snake_case de la tabla, Authentication solo para código (texto/botón Copiar código de Meta); Utility para los demás. Nunca Marketing.
+3. Cargar es y en por separado, con cuerpo, orden de variables y muestras del paquete T03. Enlaces existentes mediante botón URL con base pública configurada y sufijo variable; nunca inventar ActionUrl donde no existe.
+4. Enviar a revisión **antes de programar el envío**, para que la aprobación avance en paralelo. Comprobar que ambas variantes estén activas en la WABA usada. Dibujada, configurada, aprobada y delivered son estados distintos.
+5. En E8 registrar `WhatsApp:Templates:<Clave>` no secreta y catálogo/orden del módulo, como LoginCode/Invitation de ArquitecturaBase. Son claves a crear en esa etapa, no configuración ya entregada en este repo.
+6. Tests del catálogo verifican 16 nombres, ambas culturas, variante seleccionada y orden del payload. Una prueba del flujo real al celular de prueba debe recibir el mensaje y su evento delivered por el túnel, según la puerta E8.
 
 ## Reglas
-- **Una plantilla aprobada no se edita:** se crea otra con sufijo (`aviso_metodo_ingreso_v2`), se cambia la configuración y se borra la vieja cuando ya nadie la usa. Editarla la vuelve a revisión y puede cortar los envíos.
-- **Mismas plantillas en los dos ambientes:** las de desarrollo y las de producción tienen el mismo nombre y el mismo texto. Al pasar a producción se vuelven a crear en la cuenta nueva.
-- **Nunca un mensaje libre fuera de la ventana de 24 horas:** Meta lo rechaza.
-- **El envío pasa por el outbox**, cifrado, como el correo ([backend.md §15](../architecture/backend.md#15-whatsapp-un-módulo-quitable)).
+
+- Nunca mensaje libre fuera de las 24 horas ni usar delivered para iniciar esa ventana.
+- Envío siempre por outbox cifrado y llamadas externas fuera de UoW; nunca OTP o enlace en logs/WhatsAppMessage.
+- No modificar una plantilla activa sin revisar el impacto de la nueva aprobación; para cambio incompatible usar nombre versionado y mantener ambas mientras se migra.
+- Desarrollo y producción usan el mismo paquete funcional, pero sus aprobaciones son independientes.
+- Mensaje nuevo de un producto: agregar inventario/etapa y preparar su plantilla antes del envío.

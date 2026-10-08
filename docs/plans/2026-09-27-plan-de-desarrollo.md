@@ -216,7 +216,7 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
 
 **Se hace en tres partes, cada una con su puerta**, porque es la etapa más grande y la prioridad es que el ingreso funcione de punta a punta cuanto antes:
 - **3a · Ingreso:** los puntos 1 a 6c, la base de 6c-bis y 6d, y los puntos 8, 9 y 10 del back; en el front, los puntos 1 y 4, los layouts y el inicio personal, las páginas de error del punto 3, el ingreso (con el paso del código), el registro con casilla de términos y el callback del punto 2, y la portada y las páginas legales del punto 5. Puerta: el recorrido manual de abajo (registro e ingreso como persona, F5 y logout); la puerta empresa se cubre con el E2E aislado hasta la Etapa 6.
-- **3b · La cuenta:** gestión de 6c-bis, versión nueva bloqueante de 6d y 6e (baja). En el front: la aceptación bloqueante, el estado de ingreso con la baja pedida y `areas/personal/account` (métodos de ingreso, Privacidad y la baja). Puerta: sumar un correo personal, quitar un método con código en otro, aceptar términos nuevos, pedir la baja y cancelarla ingresando.
+- **3b · La cuenta:** gestión de 6c-bis, versión nueva bloqueante de 6d y 6e (baja). En el front: la aceptación bloqueante, el estado de ingreso con la baja pedida y `areas/personal/account` (métodos de ingreso, Privacidad y la baja). Puerta: sumar un correo personal, quitar un método desde la sesión, sin código adicional (0045), aceptar términos nuevos, pedir la baja y cancelarla ingresando.
 - **3c · Invitaciones:** el punto 7. En el front: la pantalla `/invitacion` con todos los estados del tablero Invitacion. Puerta automática: `InvitationsTests` emite con `InvitationIssuer` una invitación a alguien sin cuenta y otra a alguien con cuenta, y las acepta. El recorrido manual (invitar desde Usuarios, que llegue de verdad por Gmail y aceptar las dos) pasa a la puerta de la Etapa 6, porque la 3c no tiene una ruta para invitar.
 
 **Back:**
@@ -238,7 +238,7 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
 6c. **Configuración lista para pegar** ([`docs/operations/configuracion.md`](../operations/configuracion.md)): las mismas claves que ArquitecturaBase; `appsettings.Development.json` con los valores no secretos; los scripts de `scripts/secretos/` probados (importar de ArquitecturaBase, cargar desde un archivo, verificar); validación al arrancar con el nombre de la clave que falta.
 6c-bis. **Métodos de ingreso (ADR 0033):**
    - 3a: entidad `identity.LoginMethods`, índice único `(Type, Value)`, registro e ingreso con un método verificado (correo o Google). `Phone` nace solo como modelo; sumar y verificar teléfonos se habilita cuando WhatsApp registra su canal en la E8;
-   - 3b: sumar, verificar, elegir el principal y quitar métodos, con código en otro método, aviso en todos y su `SecurityEvent`; aviso "Agregá un correo personal…" cuando la cuenta depende solo de métodos de una empresa; `LoginMethodsTests`;
+   - 3b: sumar, verificar, elegir el principal y quitar métodos, desde la sesión, sin código de confirmación (0045), aviso en todos y su `SecurityEvent`; aviso "Agregá un correo personal…" cuando la cuenta depende solo de métodos de una empresa; `LoginMethodsTests`;
    - E6: con `TenantDomains` y «Quitar de la organización», al terminar una membresía se desactivan los correos administrados y se avisa; `LoginCodeTests.Inactive_managed_member_cannot_use_the_email_to_sign_into_personal_access` y `OrganizationDomainsTests` verifican el bloqueo del exmiembro y la retención de los vínculos al retirar el dominio.
 
    El **dominio verificado** de la organización (registro TXT) va en la Etapa 6 (Configuración), y "Recuperar mi cuenta" asistida por la plataforma en la Etapa 5. En la E3, la cuenta ofrece correo y Google; WhatsApp aparece solo si `GET /api/auth/methods` trae ese canal (E8).
@@ -428,6 +428,8 @@ Además, `navigation/personal.ts` queda listo para sumar módulos B2C. El `Perso
 
 ## Etapa 8: WhatsApp como módulo quitable (número de la plataforma)
 
+**Plan ejecutable vigente:** [2026-10-07-etapa-8-whatsapp.md](2026-10-07-etapa-8-whatsapp.md), revisado el 2026-10-08 contra código E7 y lienzo v114. Las ADR 0043/0045 y las precisiones aceptadas de [0049](../decisions/0049-precisiones-whatsapp-y-asistente.md) mandan sobre los estados viejos del lienzo. Es alcance planificado, todavía no implementado.
+
 **Objetivo:** que WhatsApp nazca como módulo y un proyecto sin WhatsApp lo quite borrando carpetas y una línea. Es el mismo diseño que la Etapa 6 de ArquitecturaBase (backend.md §15).
 
 **Back:**
@@ -438,10 +440,10 @@ Además, `navigation/personal.ts` queda listo para sumar módulos B2C. El `Perso
    - `AccountLifecycle` en `Domain/Users`;
    - `enum LoginMethodChange`.
 1. Las carpetas `Domain/WhatsApp` y `Modules/WhatsApp` en Application, Infrastructure y Api, con un `AddWhatsAppModule()` por capa llamado desde `Program.cs`. Las configuraciones EF del módulo las aplica el propio módulo.
-2. Adaptadores de los puertos del núcleo: `WhatsAppLoginCodeChannel`, `WhatsAppInvitationChannel`, `WhatsAppAccountNoticeChannel` (los avisos de la cuenta a los métodos `Phone`, con las plantillas `aviso_metodo_ingreso`, `revisa_metodos_ingreso`, `baja_cuenta_pedida`, `baja_cuenta_cancelada` y `cuenta_eliminada`; "Exportación lista" sigue solo por correo) y `WhatsAppPhoneLinkObserver`. También nacen acá `LoginLinkService`, `LoginLinkIssuer`, su controller, contratos y tests del enlace de un solo uso del bot.
+2. Adaptadores de los puertos del núcleo: `WhatsAppLoginCodeChannel`, `WhatsAppInvitationChannel`, `WhatsAppAccountNoticeChannel` y `WhatsAppPhoneLinkObserver`. El catálogo vigente tiene 16 plantillas es/en: códigos, invitación y los avisos de cuenta, recuperación, baja y organización/página pública de [operaciones](../operations/whatsapp-plantillas.md) (0049). Exportación e invitación de operador siguen solo correo. También nacen acá `LoginLinkService`, `LoginLinkIssuer`, su controller, contratos y tests del enlace de un solo uso del bot.
 3. Cliente de Cloud API y opciones validadas, con **las mismas claves `WhatsApp:*` que ArquitecturaBase** y los valores no secretos copiados de allá (`configuracion.md` §3), salvo las plantillas: `WhatsApp:Templates:Invitation` pasa a `invitacion_organizacion` (reemplaza a `invitacion_acceso`) y cada plantilla nueva de [`whatsapp-plantillas.md`](../operations/whatsapp-plantillas.md) suma su clave `WhatsApp:Templates:<Nombre>`. Envío por el outbox (canal `"whatsapp"`, cifrado), con esas plantillas, creadas en Meta al empezar la etapa (la aprobación tarda). Registro B2C por WhatsApp.
-4. Webhook con firma e idempotencia, procesador de entrada, bot de ingreso con enlace de un solo uso, retención de 90 días y health check.
-5. **Teléfonos como métodos de ingreso (ADR 0033).** Con el canal `"whatsapp"` registrado, el flujo de métodos de ingreso del núcleo (Etapa 3, 6c-bis) permite sumar a `LoginMethods` un método de tipo `Phone` y verificarlo con un código por WhatsApp. Ese teléfono sirve para ingresar y como el "otro método" que recibe el código para quitar o cambiar un método. Cuando un teléfono se quita o cambia, `WhatsAppPhoneLinkObserver` suelta el contacto e invalida los enlaces. Sin el módulo no se puede verificar un teléfono.
+4. Webhook con firma e idempotencia, procesador de entrada, bot de ingreso con enlace de un solo uso, retención de 90 días y health check. El enlace entra como Persona; el bot **no emite enlaces para operadores**, responde neutro «Para entrar, usá la web.» sin mencionar Plataforma. El operador usa `/plataforma` con su código. Un número sin cuenta recibe registro personal web, sin alta automática; si ConsumerSignup está cerrado, ingreso/recuperación y aviso de registro cerrado (0049).
+5. **Teléfonos como métodos de ingreso (ADR 0033).** Con el canal `"whatsapp"` registrado, el flujo del núcleo permite sumar `Phone` y verificarlo con su código. Sirve para ingresar y probar un método nuevo. Mi cuenta no usa código a otro método para principal/quitar ni vuelve a pedir ReauthTicket (0045). Al quitar un teléfono, `WhatsAppPhoneLinkObserver` suelta el contacto e invalida sus enlaces; hacer principal no lo desasocia. Sin módulo no se puede verificar un teléfono.
 5b. **Países de WhatsApp:** los controla el módulo en sus adaptadores y flujos (código por WhatsApp, vínculo y registro por WhatsApp), leyendo `WhatsApp:AllowedCountries` solo dentro de `Modules/WhatsApp`, con su propio error sobre el campo `phone`, y solo para un número **nuevo** (achicar la lista no invalida uno existente). `PhoneUsage` del núcleo sigue en `Any | Mobile`. El módulo aporta sus países a `GET /api/auth/methods` (`channels: [{ key: "whatsapp", countries: [...] }]`), de donde los lee `PhoneField usage="whatsapp"` en el front.
 6. `ModuleIsolationTests`: el núcleo no referencia `*.Modules.*`.
 7. `docs/features/whatsapp.md` y `docs/guides/quitar-whatsapp.md`.
@@ -452,11 +454,11 @@ Además, `navigation/personal.ts` queda listo para sumar módulos B2C. El `Perso
   - sumar el número con `PhoneField usage="whatsapp"`, que ofrece solo los países de `WhatsApp:AllowedCountries`. La lista de países lleva buscador solo con más de 10 opciones (Criterio · Formularios; lienzo v101);
   - verificarlo con un código por WhatsApp;
   - errores: país no habilitado, solo para un número nuevo; código incorrecto y vencido;
-  - si el número es de otra cuenta, la pantalla sigue igual, no se manda código y a su dueño le llega por WhatsApp la plantilla `metodo_ingreso_en_uso` ([ADR 0041](../decisions/0041-no-revelar-cuentas.md); Cuenta-Agregar y Mensajes del lienzo v83);
-  - desde el ⋮, «Hacer principal» y «Quitar», con el código a otro método;
+  - si el número es de otra cuenta, dice «Ese número ya está asociado a otra cuenta.» bajo el campo y no manda código ni aviso al dueño (0043/0049); las plantillas de «en uso» están derogadas;
+  - desde el ⋮, «Hacer principal» y «Quitar», con sesión y confirmación visual, sin código adicional (0045);
   - sin el módulo, no aparecen ni la fila ni la opción.
 - **No hay «Cambiar número»** (decisión del usuario del 2026-10-03): se agrega el nuevo y se quita el viejo.
-- **Textos nuevos** para los resources: «Verificar tu WhatsApp», «¿Quitar este WhatsApp?» y «¿Hacer principal este WhatsApp?». Se descartó «Este número ya está asociado a una cuenta.» por la ADR 0041. Las pantallas de WhatsApp de la plataforma y de las organizaciones llegan en la Etapa 11 (ADR 0038), ya dibujadas y aprobadas en el lienzo (las de las organizaciones desde la v65; las de Plataforma, en la v80).
+- **Textos nuevos** para los resources: «Verificar tu WhatsApp», «¿Quitar este WhatsApp?» y «¿Hacer principal este WhatsApp?», junto al error de número ocupado. La 0041 está reemplazada. Las pantallas de atención WhatsApp de plataforma y organizaciones llegan en E11 (0038); no se adelantan aquí.
 
 **Puerta:** la general, más un recorrido real: con el webhook de Meta apuntando al túnel del multitenant (`configuracion.md` §4), ingresar con un código por WhatsApp y escribirle al bot. Además, **la prueba de fuego**: en una copia descartable, quitar el módulo siguiendo `quitar-whatsapp.md`, y el build y los tests del núcleo tienen que quedar en verde.
 
@@ -466,14 +468,14 @@ Además, `navigation/personal.ts` queda listo para sumar módulos B2C. El `Perso
 
 Agregada el 2026-10-07 a pedido del usuario. Va **justo después de la Etapa 8** y copia su patrón de módulo quitable.
 - **Decisión:** [ADR 0048](../decisions/0048-asistente.md).
-- **Propuesta,** con las 20 decisiones del usuario, el contrato, los datos, las herramientas, el árbol de archivos y el estimado: [propuesta-asistente-llm.md](propuesta-asistente-llm.md).
+- **Propuesta,** con D1 a D26 (D6 resuelto por la ADR), el contrato, los datos, las herramientas, el árbol de archivos y el estimado: [propuesta-asistente-llm.md](propuesta-asistente-llm.md).
 
 **Qué deja:**
 - un chat en el inicio de Plataforma, de la empresa y de la persona, que responde solo sobre el sistema con herramientas de solo lectura;
 - configuración, uso y topes en Plataforma y en la organización;
 - el módulo habilitable por organización.
 
-**Antes del plan ejecutable:** Diseño dibuja las pantallas y el usuario las aprueba. Después, el plan en tres partes ([etapa-en-paralelo](../guides/etapa-en-paralelo.md)).
+**Plan ejecutable vigente:** [2026-10-08-etapa-8b-asistente.md](2026-10-08-etapa-8b-asistente.md), en tres partes según [etapa-en-paralelo](../guides/etapa-en-paralelo.md), con los tableros v114. La [0049](../decisions/0049-precisiones-whatsapp-y-asistente.md) fija el resultado vacío de mensajes personales hasta tener fuente productiva, el requisito de Dueño con Email para OwnKey y cuotas diarias UTC por persona (global platform-key, por organización own-key). Los complementos visuales faltantes se dibujan antes de sus tareas; modo rápido y una sola puerta final. E8b todavía no está implementada.
 
 ---
 

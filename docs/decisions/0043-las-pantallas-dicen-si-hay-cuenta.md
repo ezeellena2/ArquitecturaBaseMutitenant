@@ -2,6 +2,8 @@
 
 Estado: aceptada el 2026-10-06 por el dueño del producto. Reemplaza la [0041](0041-no-revelar-cuentas.md).
 
+**Precisión E8, 2026-10-08:** se aplica igual a teléfonos, con errores bajo `phone`/`previousPhone`, número conservado y las acciones de registro/ingreso correspondientes. No se emiten códigos ficticios ni las plantillas de «método en uso». Ver [0049](0049-precisiones-whatsapp-y-asistente.md).
+
 ## Contexto
 
 La 0041 hacía que ninguna pantalla dijera si un correo o un teléfono tiene cuenta, para que nadie pudiera averiguar quién está registrado probando correos. Al probar la aplicación de punta a punta, el dueño del producto se encontró con esto:

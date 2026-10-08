@@ -53,7 +53,7 @@ Dentro de una organización, los usuarios se diferencian **solo por rol**: el **
 - **Sin dominio verificado** (la regla por defecto): se aplica igual el aviso cuando el correo con el que llegó por invitación **no** es el mismo con el que ya tenía cuenta. Además, al terminar una membresía, la persona recibe el aviso "Revisá tus métodos de ingreso" en sus otros métodos.
 - **Reglas:**
   - la persona puede sumar, verificar, elegir el principal y quitar métodos, siempre que le **quede al menos uno propio o activo**;
-  - quitar o cambiar un método pide un código en **otro** método ya verificado;
+  - Mi cuenta usa la sesión iniciada para agregar/vincular, hacer principal, quitar y dar de baja, **sin** código de confirmación ni ReauthTicket (ADR 0045); solo el método nuevo prueba su propia posesión;
   - todo cambio queda en `SecurityEvents` y se avisa en **todos** los métodos, por `IAccountNoticeChannel` (sin el módulo de WhatsApp, los teléfonos no reciben aviso).
 
 ### 3.2 Baja de una cuenta (ADR 0035)
