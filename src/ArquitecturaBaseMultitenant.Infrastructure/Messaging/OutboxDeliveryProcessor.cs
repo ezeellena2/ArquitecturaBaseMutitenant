@@ -22,15 +22,17 @@ internal sealed partial class OutboxDeliveryProcessor(IServiceScopeFactory scope
         if (claim is null) return 0;
         ct.ThrowIfCancellationRequested();
         OutboxDeliveryReceipt receipt;
+        // Stop frena el siguiente claim; no cancela un transporte iniciado que pudo ser aceptado.
+        using var delivery = new CancellationTokenSource(TimeSpan.FromSeconds(options.Value.DeliveryTimeoutSeconds), clock);
         try
         {
             var payload = protector.Unprotect(claim.EncryptedPayload);
             var sender = senders.Single(value => value.Key == claim.Channel);
             if (sender is IChannelReceiptSender receiptSender)
-                receipt = await receiptSender.SendWithReceiptAsync(payload, ct);
+                receipt = await receiptSender.SendWithReceiptAsync(payload, delivery.Token);
             else
             {
-                await sender.SendAsync(payload, ct);
+                await sender.SendAsync(payload, delivery.Token);
                 receipt = OutboxDeliveryReceipt.Accepted();
             }
         }

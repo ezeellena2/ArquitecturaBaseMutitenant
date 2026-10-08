@@ -25,4 +25,7 @@ public sealed class OutboxOptions
 
     [Range(5, 60)]
     public int CompletionTimeoutSeconds { get; init; } = 30;
+
+    [Range(5, 60)]
+    public int DeliveryTimeoutSeconds { get; init; } = 60;
 }

@@ -28,6 +28,31 @@ public sealed class OutboxDispatcherTests(ApiFactory factory)
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
+    public async Task Stop_during_inflight_transport_does_not_cancel_delivery_and_still_confirms_sent()
+    {
+        using var client = factory.CreateClient();
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var clock = CreateClock(); var protector = CreateProtector();
+        const string channel = "email-stop-inflight";
+        var id = await SeedAsync(context, services.GetRequiredService<IUnitOfWork>(), protector, "inflight", clock, Ct, channel);
+        using var stop = new CancellationTokenSource();
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var sender = new TestSender { Key = channel, DuringSend = async token =>
+        { entered.TrySetResult(); await release.Task.WaitAsync(token); Assert.False(token.IsCancellationRequested); } };
+        var dispatcher = CreateDispatcher(services, protector, clock);
+        var sending = dispatcher.DispatchOnceAsync([sender], stop.Token);
+        await entered.Task.WaitAsync(Ct);
+        stop.Cancel(); release.TrySetResult();
+        Assert.Equal(1, (await sending).Value);
+        Assert.Equal(OutboxStatus.Sent, (await context.OutboxMessages.AsNoTracking().SingleAsync(value => value.Id == id, Ct)).Status);
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => dispatcher.DispatchOnceAsync([sender], stop.Token));
+        Assert.Single(sender.Payloads);
+    }
+
+    [Fact]
     public async Task Due_message_is_sent_once_and_marked_sent()
     {
         using var client = factory.CreateClient();
@@ -237,6 +262,7 @@ public sealed class OutboxDispatcherTests(ApiFactory factory)
         public string Key { get; init; } = OutboxChannel.Email;
 
         public bool Fail { get; init; }
+        public Func<CancellationToken, Task>? DuringSend { get; init; }
 
         public List<string> Payloads { get; } = [];
 
@@ -244,6 +270,7 @@ public sealed class OutboxDispatcherTests(ApiFactory factory)
         {
             cancellationToken.ThrowIfCancellationRequested();
             Payloads.Add(payload);
+            if (DuringSend is not null) await DuringSend(cancellationToken);
             if (beforeSend is not null)
             {
                 await beforeSend();
