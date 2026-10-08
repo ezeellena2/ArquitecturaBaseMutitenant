@@ -167,7 +167,8 @@ Domain/
 │                                por espacio, con origen y vencimiento) (P8)
 ├─ Auditing/                     AuditEntry (tenant), SecurityEvent (plataforma), AuditAction, AuditActorKind, AuditChangeKeys
 ├─ Messaging/                    OutboxMessage, OutboxChannel (valor: "email" y los que sumen los módulos), OutboxStatus
-└─ WhatsApp/                     entidades del módulo (Etapa 8): WhatsAppContact, WhatsAppMessage, WhatsAppChannel, *Errors
+└─ WhatsApp/                     entidades del módulo (Etapa 8): WhatsAppContact, WhatsAppMessage, WhatsAppCodeQuota, *Errors;
+                                 WhatsAppChannel pertenece a E11
 ```
 
 Reglas de Domain:

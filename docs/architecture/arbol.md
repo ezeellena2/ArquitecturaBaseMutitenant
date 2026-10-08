@@ -237,7 +237,7 @@ ArquitecturaBaseMultitenant.Domain/
 │   ├── LoginCodeDestination.cs
 │   ├── LoginLink.cs                                 [E8]
 │   ├── LoginMethod.cs                                entidad de identity.LoginMethods (ADR 0033, parte 3a): Type, Value único por tipo, IsPrimary, VerifiedAtUtc, ManagedByTenantId?
-│   ├── LoginMethodType.cs                            Email | Phone | Google; Phone es solo modelo hasta que WhatsApp registra su canal en la E8
+│   ├── LoginMethodType.cs                            Email | Phone | Google; Phone requiere un canal disponible registrado por el módulo
 │   ├── LoginAudit.cs
 │   ├── LoginAuditMethod.cs                           Code | Google | WhatsAppCode | WhatsAppLink: con qué se entró; lo usa LoginAudit (en ArquitecturaBase se llama LoginMethod)
 │   ├── LoginCodeErrors.cs                            Auth.LoginCode.*
@@ -321,7 +321,7 @@ ArquitecturaBaseMultitenant.Domain/
     ├── WhatsAppMessageKind.cs
     ├── WhatsAppMessageStatus.cs
     ├── WhatsAppCodeQuota.cs                          Ledger técnico por número de plataforma/día UTC, sin destino ni usuario
-    ├── WhatsAppText.cs
+    ├── WhatsAppCodeErrors.cs                         errores de cuota global de códigos
     ├── WhatsAppErrors.cs                             incluye el país fuera de WhatsApp:AllowedCountries, sobre el campo phone (solo para un número nuevo)
     └── WhatsAppChannel.cs                            [E11] PhoneNumberId → TenantId
 ```
@@ -524,6 +524,7 @@ ArquitecturaBaseMultitenant.Application/
 │       │   ├── ITokenRevoker.cs
 │       │   ├── IUserStatusReader.cs                  Consulta global acotada al estado de una identidad, sin exponer…
 │       │   ├── ILoginLinkIssuer.cs                   Emite dentro de la UoW del llamador, ligado al método…
+│       │   ├── IPhoneLinkObserver.cs                 [E8] cambios de Phone dentro de la UoW del núcleo, sin referencia al módulo
 │       │   └── IGoogleAvailability.cs                [E3]
 │       ├── Security/                                 [E3]
 │       │   ├── ISecureTokenGenerator.cs
@@ -556,8 +557,7 @@ ArquitecturaBaseMultitenant.Application/
 │       ├── Phones/
 │       │   ├── IPhoneNumberDisplayFormatter.cs       [E1] formato nacional/internacional de E.164 sin lista de países
 │       │   ├── IPhoneNumberParser.cs                 [E3] Parse(country, number, PhoneUsage) → Result<PhoneNumber>
-│       │   ├── PhoneUsage.cs                         [E3] Any | Mobile; no nombra WhatsApp (sus países los controla el módulo)
-│       │   └── IPhoneLinkObserver.cs                 [E8] el núcleo avisa cambios de teléfono; el módulo suelta el contacto
+│       │   └── PhoneUsage.cs                         [E3] Any | Mobile; no nombra WhatsApp (sus países los controla el módulo)
 │       ├── Dns/
 │       │   └── IDnsTxtLookup.cs                      consulta los registros TXT de un dominio
 │       ├── Features/
