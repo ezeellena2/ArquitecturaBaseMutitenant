@@ -1262,15 +1262,11 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │       ├── WhatsAppInfrastructureModule.cs          AddWhatsAppModule(cfg): cliente, workers, health, persistencia
 │       ├── WhatsAppOptions.cs
 │       ├── WhatsAppOptionsValidator.cs
-│       ├── WhatsAppTemplateCatalog.cs                las 7 plantillas de whatsapp-plantillas.md (codigo_ingreso, invitacion_organizacion, aviso_metodo_ingreso,
-│       │                                             revisa_metodos_ingreso, baja_cuenta_pedida, baja_cuenta_cancelada, cuenta_eliminada): su clave
-│       │                                             WhatsApp:Templates:<Nombre> y el orden de sus variables; lo usa Cloud/WhatsAppMessagePayload
-│       ├── Cloud/
-│       │   ├── IWhatsAppCloudClient.cs               internal
-│       │   ├── WhatsAppCloudClient.cs                Graph v25.0, POST sin reintentos
-│       │   ├── WhatsAppMessagePayload.cs
-│       │   ├── WhatsAppSendResult.cs
-│       │   └── WhatsAppChannelSender.cs              emisor del outbox para el canal "whatsapp"
+│       ├── WhatsAppTemplateCatalog.cs                16 nombres/32 variantes es/en; clave WhatsApp:Templates:<Nombre>, cantidad/orden y botón
+│       ├── WhatsAppTemplateRenderer.cs               variables con DisplayFormatter y perfil explícito; sin persistir contenido
+│       ├── WhatsAppChannelSettings.cs                disponibilidad, país real E.164 de altas y ContactPhone público canonicalizado
+│       ├── WhatsAppCloudClient.cs                    BCL HttpClient, Graph v25.0, un POST por intento, receipt seguro sin cuerpo del proveedor
+│       ├── WhatsAppChannelSender.cs                  emisor del outbox "whatsapp", sin resiliencia ni logs HTTP heredados
 │       ├── Webhook/
 │       │   ├── WhatsAppSignatureValidator.cs
 │       │   └── WhatsAppWebhookReader.cs
@@ -1280,8 +1276,11 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │       ├── Retention/
 │       │   └── WhatsAppMessageRetentionService.cs    borra el texto a los 90 días
 │       ├── Persistence/
+│       │   ├── WhatsAppModelContributor.cs           configura y declara tipos globales identity explícitos, sin depender del interruptor
 │       │   ├── WhatsAppContactConfiguration.cs       esquema identity; las configuraciones las aplica el módulo
 │       │   ├── WhatsAppMessageConfiguration.cs
+│       │   ├── WhatsAppCodeQuotaConfiguration.cs     ledger técnico sin destinatario, UserId ni OTP
+│       │   ├── WhatsAppCodeQuotaRepository.cs        lock por número/día, reserva UTC estable dentro de UoW
 │       │   ├── WhatsAppChannelConfiguration.cs       [E11] esquema platform
 │       │   ├── WhatsAppContactRepository.cs
 │       │   └── WhatsAppMessageRepository.cs
