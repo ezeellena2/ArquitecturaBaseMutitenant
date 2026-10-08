@@ -16,7 +16,14 @@ internal sealed class WhatsAppCodeQuotaIssuer(IWhatsAppCodeQuotaRepository quota
         var nowUtc = clock.GetUtcNow().UtcDateTime;
         var dayUtc = DateOnly.FromDateTime(nowUtc);
         var phoneNumberId = settings.PhoneNumberId!;
-        await quotas.LockAsync(phoneNumberId, dayUtc, ct);
+        while (true)
+        {
+            await quotas.LockAsync(phoneNumberId, dayUtc, ct);
+            nowUtc = clock.GetUtcNow().UtcDateTime;
+            var currentDay = DateOnly.FromDateTime(nowUtc);
+            if (currentDay == dayUtc) break;
+            dayUtc = currentDay;
+        }
         var quota = await quotas.GetAsync(phoneNumberId, dayUtc, ct);
         if (quota is null) { quota = WhatsAppCodeQuota.Create(phoneNumberId, dayUtc); quotas.Add(quota); }
         return quota.Reserve(settings.DailyAuthCodeLimit, nowUtc);

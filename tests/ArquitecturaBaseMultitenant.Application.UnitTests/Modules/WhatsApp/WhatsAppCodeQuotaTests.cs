@@ -10,6 +10,21 @@ namespace ArquitecturaBaseMultitenant.Application.UnitTests.Modules.WhatsApp;
 public sealed class WhatsAppCodeQuotaTests
 {
     [Fact]
+    public async Task Waiting_for_lock_across_midnight_reserves_the_new_day_even_when_yesterday_is_full()
+    {
+        var clock = new FakeTimeProvider(new DateTimeOffset(2026, 10, 8, 23, 59, 58, TimeSpan.Zero));
+        var repository = new Quotas(); var settings = new Settings();
+        var old = WhatsAppCodeQuota.Create(settings.PhoneNumberId!, new DateOnly(2026, 10, 8));
+        Assert.True(old.Reserve(1, clock.GetUtcNow().UtcDateTime).IsSuccess);
+        repository.Add(old);
+        repository.OnLock = () => clock.Advance(TimeSpan.FromSeconds(2));
+        var issuer = new WhatsAppCodeQuotaIssuer(repository, settings, clock);
+        var destination = LoginCodeDestination.ForPhone(PhoneNumber.Create("+5491134567890").Value, "whatsapp");
+        Assert.True((await issuer.ReserveAsync(destination, TestContext.Current.CancellationToken)).IsSuccess);
+        Assert.Equal(2, repository.Rows.Count);
+        Assert.Equal(1, repository.Rows[(settings.PhoneNumberId!, new DateOnly(2026, 10, 9))].ReservedCount);
+    }
+    [Fact]
     public async Task Quota_uses_UTC_midnight_for_renewal_and_new_day_and_disabled_channel_never_reserves()
     {
         var clock = new FakeTimeProvider(new DateTimeOffset(2026, 10, 8, 23, 59, 58, TimeSpan.Zero));
@@ -39,8 +54,9 @@ public sealed class WhatsAppCodeQuotaTests
     }
     private sealed class Quotas : IWhatsAppCodeQuotaRepository
     {
+        public Action? OnLock { get; set; }
         public Dictionary<(string, DateOnly), WhatsAppCodeQuota> Rows { get; } = [];
-        public Task LockAsync(string id, DateOnly day, CancellationToken ct) => Task.CompletedTask;
+        public Task LockAsync(string id, DateOnly day, CancellationToken ct) { OnLock?.Invoke(); OnLock = null; return Task.CompletedTask; }
         public Task<WhatsAppCodeQuota?> GetAsync(string id, DateOnly day, CancellationToken ct) => Task.FromResult(Rows.GetValueOrDefault((id, day)));
         public void Add(WhatsAppCodeQuota value) => Rows.Add((value.PhoneNumberId, value.DayUtc), value);
     }

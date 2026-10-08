@@ -79,8 +79,7 @@ public sealed partial class ErrorCodeTests
     public void Module_error_inventory_requires_English_translations_and_detects_a_missing_key()
     {
         var root = Path.Combine(SolutionRoot.FullPath, "src", "ArquitecturaBaseMultitenant.Application", "Modules");
-        foreach (var neutral in Directory.EnumerateFiles(root, "*.resx", SearchOption.AllDirectories)
-            .Where(path => !path.EndsWith(".en.resx", StringComparison.Ordinal)))
+        foreach (var neutral in ModuleResources(root))
         {
             var english = Path.ChangeExtension(neutral, "en.resx");
             var keys = XDocument.Load(neutral).Root!.Elements("data").Select(value => value.Attribute("name")!.Value);
@@ -148,10 +147,18 @@ public sealed partial class ErrorCodeTests
     }
 
     private static string[] ReadErrorKeys() =>
-        ReadCoreErrorKeys().Concat(Directory.EnumerateFiles(Path.Combine(SolutionRoot.FullPath, "src", "ArquitecturaBaseMultitenant.Application", "Modules"),
-            "*.resx", SearchOption.AllDirectories).Where(path => !path.EndsWith(".en.resx", StringComparison.Ordinal))
+        ReadCoreErrorKeys().Concat(ModuleResources(Path.Combine(SolutionRoot.FullPath, "src", "ArquitecturaBaseMultitenant.Application", "Modules"))
             .SelectMany(path => XDocument.Load(path).Root!.Elements("data").Select(data => data.Attribute("name")!.Value))
             .Where(key => ErrorCodeFormat().IsMatch(key))).Distinct(StringComparer.Ordinal).ToArray();
+
+    private static IEnumerable<string> ModuleResources(string root) => Directory.Exists(root)
+        ? Directory.EnumerateFiles(root, "*.resx", SearchOption.AllDirectories).Where(path => !path.EndsWith(".en.resx", StringComparison.Ordinal)) : [];
+    [Fact]
+    public void Missing_last_module_directory_keeps_core_inventory_valid()
+    {
+        Assert.Empty(ModuleResources(Path.Combine(SolutionRoot.FullPath, "absent-module-fixture")));
+        Assert.NotEmpty(ReadCoreErrorKeys());
+    }
 
     private static string[] ReadCoreErrorKeys() =>
         XDocument.Load(Path.Combine(SolutionRoot.FullPath, "src", "ArquitecturaBaseMultitenant.Application", "Resources", "Errors.resx"))
