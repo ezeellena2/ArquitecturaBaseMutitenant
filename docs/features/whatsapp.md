@@ -4,6 +4,8 @@ Módulo quitable del número de la plataforma, Etapa 8. El alcance y las tareas 
 
 ## Contrato publicado en T01
 
+`WhatsAppWebhookController` es el controller del módulo y delega en `IWhatsAppWebhookService`; `WhatsAppApiModule` y `WhatsAppModule` registran cada capa. Esta ficha documenta el área HTTP `whatsapp`, incluso mientras sus rutas permanecen apagadas.
+
 `GET/POST /webhooks/whatsapp` son rutas técnicas globales, anónimas y condicionadas por `InstalledModuleRoute` y un contribuidor disponible, sin FeatureGate de organización. El contrato [OpenAPI](../contracts/openapi.json) las exporta sin secretos. En T01 la disponibilidad siempre es falsa y runtime devuelve 404 común; una disponibilidad de prueba llega solo al stub 501, sin sesión ni procesamiento. T02 aporta opciones reales y T05 firma, entrada persistente, ACK y workers. Cada capa registra sus propios servicios y Program tiene una sentencia de composición removible.
 
 El POST declara máximo 5 MiB, firma `X-Hub-Signature-256` sobre bytes originales y deduplicación por IDs Meta/tipo de evento, sin Idempotency-Key. Un mensaje entrante nunca crea sesión. Los enlaces de cuenta común entran como Persona después de Continuar; el núcleo rechaza operadores bajo lock y el bot debe contestar solo «Para entrar, usá la web.», sin enlace ni revelar su tipo. Bot y enlaces reales se completan en T07; el contrato y la prueba de exclusión ya están en T01.

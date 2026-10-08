@@ -239,6 +239,7 @@ ArquitecturaBaseMultitenant.Domain/
 │   ├── LoginAudit.cs
 │   ├── LoginAuditMethod.cs                           Code | Google | WhatsAppCode | WhatsAppLink: con qué se entró; lo usa LoginAudit (en ArquitecturaBase se llama LoginMethod)
 │   ├── LoginCodeErrors.cs                            Auth.LoginCode.*
+│   ├── LoginChannelErrors.cs                         [E8] canal de ingreso registrado no disponible
 │   ├── LoginLinkErrors.cs                            [E8] Auth.LoginLink.*
 │   ├── SignupErrors.cs                               Auth.Signup.* (cerrado, email tomado…)
 │   ├── GoogleMethodErrors.cs                        Define el conflicto que impide vincular un identificador de Google…
@@ -1408,8 +1409,8 @@ ArquitecturaBaseMultitenant.Api/
 │   │   ├── VerifySignupHttpRequest.cs
 │   │   ├── RequestLoginCodeHttpRequest.cs
 │   │   ├── VerifyLoginCodeHttpRequest.cs
-│   │   ├── RequestLoginLinkHttpRequest.cs            [E8]
-│   │   ├── ConsumeLoginLinkHttpRequest.cs            [E8]
+│   │   ├── PreviewLoginLinkHttpRequest.cs            [E8] token opaco, sin consumo ni sesión
+│   │   ├── RedeemLoginLinkHttpRequest.cs             [E8] token y access consumer explícito
 │   │   ├── PreviewInvitationHttpRequest.cs
 │   │   ├── GoogleSignupAntiforgeryHttpResponse.cs    Token de formulario de un solo origen para iniciar Registro…
 │   │   ├── ExternalLoginQuery.cs                     Opciones del inicio del desafío
@@ -1636,6 +1637,7 @@ tests/
 │   ├── DependencyInjectionTests.cs                    AddApplication registra cada clase de Services una sola vez y…
 │   ├── TestDoubles/                                   [E1–E6] cada fake nace con la interfaz que implementa
 │   │   ├── FakeUnitOfWork.cs                          [E2] misma CommitPolicy; cuenta commits y rollbacks
+│   │   ├── IdentityTestStore.cs                       [E8] doble de identidad global y locks para la consolidación y el contrato
 │   │   ├── FakeTenantContext.cs                       [E2]
 │   │   └── ServiceFixture.cs                          [E1] FakeTimeProvider + FakeLogger + RequestValidator real
 │   ├── Identity/
