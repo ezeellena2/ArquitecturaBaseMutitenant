@@ -32,7 +32,15 @@ Los replies libres conservan en su payload cifrado el cierre de ventana `LastInb
 
 ## Operación y puerta pendientes
 
-El outbox cifra destino/payload, reclama con lease en una transacción, envía a Cloud API fuera de ella y confirma por token en otra; `Sent` significa aceptación, no delivered. Las plantillas y adaptadores de códigos, invitaciones y avisos usan perfil explícito, resources es/en y DisplayFormatter. Retención, observer, limpieza y prueba de retirada se completan con T08/Integración. El catálogo tiene 16 nombres (1 Authentication, 15 Utility), 32 variantes es/en; el lienzo no implica aprobación en Meta. Usar [plantillas](../operations/whatsapp-plantillas.md) y [configuración/túnel](../operations/configuracion.md) antes de la puerta real. T01 no instaló paquetes ni usó claves reales ni levantó Aspire.
+El outbox cifra destino/payload, reclama con lease en una transacción, envía a Cloud API fuera de ella y confirma por token en otra; `Sent` significa aceptación, no delivered. Las plantillas y adaptadores de códigos, invitaciones y avisos usan perfil explícito, resources es/en y DisplayFormatter. El catálogo tiene 16 nombres (1 Authentication, 15 Utility), 32 variantes es/en; el lienzo no implica aprobación en Meta. Usar [plantillas](../operations/whatsapp-plantillas.md) y [configuración/túnel](../operations/configuracion.md) antes de la puerta real. La prueba de retirada completa pertenece a Integración; la receta y los tests de modelo no la sustituyen.
+
+## Vínculos y privacidad
+
+`WhatsAppPhoneLinkObserver` recibe la posesión ya verificada por el núcleo dentro de su UoW, también durante un alta antes de agregar el método a EF. Relee el contacto bajo su lock: sólo vincula uno libre o el vínculo propio compatible; no toma el de otra cuenta ni cambia snapshots históricos. Quitar Phone revoca sus enlaces, limpia texto/`ContactId` por propietario y método originales y elimina físicamente el contacto si todavía pertenece a ese vínculo. Un contacto reasignado a B se conserva.
+
+`WhatsAppAccountDeletionParticipant` limpia sólo el paso global de baja, por `OriginalUserId`; no afecta historia de B ni filas anónimas. Retira contactos aún propios y enlaces pendientes. Conserva `OriginalUserId`/`OriginalMethodId` como IDs técnicos pseudónimos e inmutables y los metadatos de dedupe/entrega; la cuenta se anonimiza y los métodos se purgan. El outbox del núcleo bloquea y relee antes de cancelar pendientes, preserva `Sent` y termina esa limpieza antes de encolar el aviso final de eliminación, que sigue cifrado.
+
+El servicio Application de retención borra texto a los **90 días fijos desde `ReceivedAtUtc`** del servidor, con TimeProvider, UoW única y lotes de 100 filas `FOR UPDATE SKIP LOCKED`. El worker de Infrastructure abre un scope por lote al arrancar y una vez por día. Sigue aunque el canal esté apagado; no depende de secretos ni transporte y no corta el outbox para aparentar retención. El inventario para exportación E10 está en [datos personales](../rules/datos-personales.md); E8 no adelanta su endpoint ni participante.
 
 ## Errores del módulo
 

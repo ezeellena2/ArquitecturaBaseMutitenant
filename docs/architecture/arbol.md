@@ -952,7 +952,8 @@ ArquitecturaBaseMultitenant.Application/
 │       ├── Interfaces/
 │       │   ├── Services/
 │       │   │   ├── IWhatsAppWebhookService.cs
-│       │   │   └── IWhatsAppInboundService.cs
+│       │   │   ├── IWhatsAppInboundService.cs
+│       │   │   └── IWhatsAppMessageRetentionService.cs [E8] mantenimiento independiente del canal
 │       │   ├── Persistence/
 │       │   │   ├── IWhatsAppContactRepository.cs
 │       │   │   ├── IWhatsAppMessageRepository.cs
@@ -985,7 +986,10 @@ ArquitecturaBaseMultitenant.Application/
 │       │   ├── WhatsAppLoginCodeChannel.cs           implementa ILoginCodeChannel ("whatsapp")
 │       │   ├── WhatsAppInvitationChannel.cs          implementa IInvitationChannel ("whatsapp")
 │       │   ├── WhatsAppAccountNoticeChannel.cs       implementa IAccountNoticeChannel ("whatsapp", métodos Phone)
-│       │   ├── WhatsAppPhoneLinkObserver.cs          [T08 pendiente] implementa IPhoneLinkObserver
+│       │   ├── WhatsAppPhoneLinkObserver.cs          [E8] hooks dentro de UoW, vínculo propio sin robar contacto
+│       │   ├── WhatsAppContactRemover.cs             [E8] revoca enlaces y limpia por snapshot original; retiro físico propio
+│       │   ├── WhatsAppAccountDeletionParticipant.cs [E8] limpieza del tramo global, no de tenant
+│       │   ├── WhatsAppMessageRetentionService.cs    [E8] UoW/lote de 100, plazo fijo por ReceivedAtUtc
 │       │   ├── WhatsAppBotWriter.cs                  [E8] consumer dentro de la UoW inbound
 │       │   └── WhatsAppBotReplyBuilder.cs            [E8] resources/perfil/marca y ventana cifrada
 │       └── Resources/
@@ -1294,7 +1298,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │       │   ├── WhatsAppInboundSettings.cs
 │       │   └── WhatsAppInboundProcessor.cs           BackgroundService, SKIP LOCKED
 │       ├── Retention/
-│       │   └── WhatsAppMessageRetentionService.cs    borra el texto a los 90 días
+│       │   └── WhatsAppMessageRetentionService.cs    worker: scopes al inicio/diario, sigue con canal OFF
 │       ├── Persistence/
 │       │   ├── WhatsAppModelContributor.cs           configura y declara tipos globales identity explícitos, sin depender del interruptor
 │       │   ├── WhatsAppContactConfiguration.cs       esquema identity; las configuraciones las aplica el módulo
