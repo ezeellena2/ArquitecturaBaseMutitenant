@@ -28,7 +28,7 @@ Parte 1 del [plan ejecutable](../plans/2026-10-07-etapa-8-whatsapp.md), sobre li
 
 ## T01
 
-Contrato verificado, en registro de commits. OpenAPI sale del exportador MSBuild y los tipos de `npm run contracts`, sin edición manual. T00 está en `f612a51`; los planes v115 se actualizaron primero y solos en `db0444f` (E8) y `2c0fb3a` (E8b).
+Contrato verificado y commiteado: back `592b964`, front `2c2c7e53`. OpenAPI sale del exportador MSBuild y los tipos de `npm run contracts`, sin edición manual. T00 está en `f612a51`; los planes v115 se actualizaron primero y solos en `db0444f` (E8) y `2c0fb3a` (E8b).
 
 ### Rutas y esquemas
 
@@ -63,6 +63,7 @@ La prueba de operador usa un Phone ya verificado, exige fallo del issuer sin enl
 - Application focal: 19/19 verdes (operador, capabilities genéricas, destino de invitación, recursos/DI y flujo de correo).
 - Integración: 50/50 verdes (rutas/contrato/cuenta/registro/recuperación/invitaciones); última comprobación de los 14 casos de OpenAPI y esqueletos en verde tras los metadatos finales. Stub sin cookie, destinos excluyentes, disponibilidad apagada/retirada/activa de prueba y paridad versión/runtime.
 - Front: generación y `contracts:check` verdes, build verde y 30/30 tests focales. El test tipado comprueba cuerpos reales Phone y anterior Phone. Lint global termina sin errores y conserva advertencias de archivos ajenos a esta parte; lint de los archivos propios sin avisos. Vitest se corrió fuera del sandbox después de su fallo de archivos temporales, no de conducta.
+- Documentación: detector conjunto en 0 y 45/45 tests del arnés verdes; para los tests se habilitó la creación de repositorios Git temporales que el sandbox bloqueaba.
 - No hay pantallas, migraciones, Meta, asistente ni puerta E8 completa en esta parte.
 
 ### Decisiones técnicas tomadas en T01
@@ -74,4 +75,13 @@ La prueba de operador usa un Phone ya verificado, exige fallo del issuer sin enl
 
 ### Commits y comprobación entre repos
 
-Se agregan los dos hashes al completar los commits, junto con SHA-256 del OpenAPI normalizado a LF. No abrir los chats paralelos hasta esa anotación.
+- Back `592b964`: contrato HTTP, modelos, puertos neutrales, esqueletos y verificaciones T01.
+- Front `2c2c7e53`: tipos generados, alias compatibles, rutas/errores y test tipado del contrato; no modifica pantallas.
+- SHA-256 de `docs/contracts/openapi.json`, normalizado a LF: `9bb3828bcb0ebe4e3217b8b70e3e153bd618e857cbb4223234c5c70967fc4078`.
+- SHA-256 de `src/shared/api/generated/schema.d.ts`, normalizado a LF: `fa516abe965ded09a8ffad6041f3a3183dcbe3e1bf31495f2391991f81a0c22d`.
+
+El arnés llevó a main sus ajustes mecánicos verificados: back `5d7f200` (rama `arnes/realinear-docs/20261008-1515`, auto 25 → 0, modelo 0, humano 1) y front `83eede09` (rama `arnes/realinear-docs/20261008-1509`, auto 1 → 0, modelo/humano 0). Se resolvió el único humano como falso positivo preciso en `ignorados.json`: la ficha WhatsApp documenta `/webhooks/whatsapp`, pero el detector de fichas reconoce solo el prefijo `/api/`. No se agrega una ruta ficticia ni se ocultan otros hallazgos. La detección final conjunta `20261008-1522` da auto/modelo/humano **0/0/0**, sin pendientes para el usuario y con 0 tokens; estas corridas mecánicas no usan modelo.
+
+La primera corrida del back con Codex falló sin resultado final; sus cambios quedaron aislados y no se integraron. La revisión automática rechazó el intento de usar Claude por posible exportación privada a un destino no verificado. El cierre se hizo localmente con `--sin-modelo`, sin esa exportación.
+
+**Pase a Parte 2:** ya pueden abrirse los chats Back y Front con sus textos del plan. El contrato queda congelado en los commits y SHA-256 anteriores; los cambios documentales posteriores no lo modifican. T02–T12 implementan los pendientes descritos y T13–T14 hacen la integración y la única puerta. No se declara E8 cerrada.
