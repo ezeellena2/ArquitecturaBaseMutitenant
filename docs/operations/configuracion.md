@@ -74,7 +74,7 @@ Mismos valores que `../ArquitecturaBase/src/ArquitecturaBase.Api/appsettings.Dev
 | `WhatsApp:PhoneNumberId` | el mismo de ArquitecturaBase. **Es el interruptor**: sin él, WhatsApp queda apagado y la app arranca igual |
 | `WhatsApp:BusinessAccountId`, `DisplayPhoneNumber`, `SendArgentineMobilesWithoutNine` | los mismos de ArquitecturaBase (el último, solo con el número de prueba) |
 | `WhatsApp:GraphApiVersion`, `Templates:LoginCode`, `AllowedCountries`, `DailyAuthCodeLimit`, `MessageRetentionDays` | los mismos de `appsettings.json` de ArquitecturaBase (`v25.0`, `codigo_ingreso`, `["AR"]`, `100`, `90`) |
-| `WhatsApp:Templates:Invitation` y las demás `WhatsApp:Templates:<Nombre>` | **no se copian** de ArquitecturaBase: Invitation es invitacion_organizacion. E8 incorpora el catálogo de **16 nombres es/en** (Authentication + 15 Utility), incluidas recuperación/baja por Plataforma y organización; no están todas las claves creadas hoy. Dos «en uso» quedan derogadas, y no hay OTP de confirmación de cambios en Mi cuenta. Claves/paquete según [plantillas](whatsapp-plantillas.md) y ADR 0049. |
+| `WhatsApp:Templates:Invitation` y las demás `WhatsApp:Templates:<Nombre>` | **no se copian** de ArquitecturaBase: Invitation es invitacion_organizacion. El módulo configura **16 nombres es/en** (Authentication + 15 Utility), incluidas recuperación/baja por Plataforma y organización. Configurar una clave no acredita aprobación en Meta. Dos «en uso» quedan derogadas, y no hay OTP de confirmación de cambios en Mi cuenta. Claves/paquete según [plantillas](whatsapp-plantillas.md) y ADR 0049. |
 
 ## 4. Lo que tenés que hacer vos, una sola vez, fuera del código
 
@@ -113,10 +113,13 @@ Las opciones se validan **al arrancar**, como en ArquitecturaBase:
 | Fuera de Development y Testing sin `DataProtection:Certificate:Base64`, o con PFX inválido o sin clave privada | la Api no arranca y nombra la clave del certificado |
 | `Authentication:Google:ClientId` sin `ClientSecret` | la Api no arranca. Sin `ClientId`, el botón de Google no aparece (`GET /api/auth/methods`) |
 | `WhatsApp:PhoneNumberId` sin `AccessToken` | la Api no arranca |
+| WhatsApp encendido con `Authentication:LoginCode:LifetimeMinutes` distinto de `10` | la Api no arranca: debe coincidir con los diez minutos de la plantilla Authentication aprobada. Con el canal apagado no se aplica esta restricción |
 | `AppSecret` sin `VerifyToken`, o al revés | la Api no arranca. Sin ninguno, el webhook queda apagado, con un Warning, y el envío funciona igual |
 | Sin `WhatsApp:PhoneNumberId` | WhatsApp apagado: el login y el registro muestran solo correo y Google |
 
-Lo verifican `StartupConfigurationTests`, `EmailDeliveryTests` y `ProductionSeedTests` (WhatsApp se verifica en E8).
+Lo verifican `StartupConfigurationTests`, `EmailDeliveryTests`, `ProductionSeedTests`, `WhatsAppStartupTests` y `WhatsAppTemplateTests`.
+
+El transporte WhatsApp hace un único POST por intento del outbox durable: su cliente excluye los handlers de resiliencia global de ServiceDefaults y los loggers HTTP. Los reintentos corresponden al outbox. Una respuesta aceptada marca Sent; delivered/read se comprueban con eventos del webhook. La cuota técnica de códigos se reserva por número de plataforma y día UTC dentro de la transacción del emisor; borrar una cuenta no devuelve ese cupo.
 
 ## 6. Producción
 
