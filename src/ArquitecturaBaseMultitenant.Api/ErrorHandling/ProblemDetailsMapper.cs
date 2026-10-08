@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Globalization;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Localization;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using Microsoft.AspNetCore.Mvc;
@@ -47,11 +49,11 @@ internal static class ProblemDetailsMapper
             httpContext,
             statusCode: ToStatusCode(error.Type),
             title: ErrorTexts.Title(error.Type),
-            detail: Describe(error));
+            detail: FindText(error.Code, httpContext) ?? error.Description);
 
         // CustomizeProblemDetails ya le puso el code genérico de su status: el del error lo reemplaza.
         problem.Extensions[CodeExtension] = error.Code;
-        AddErrorExtensions(problem, error);
+        AddErrorExtensions(problem, error, httpContext);
         AddTraceId(problem, httpContext);
 
         return problem;
@@ -100,14 +102,16 @@ internal static class ProblemDetailsMapper
     };
 
     // La descripción traducida se busca por código; si no hay traducción, queda la del error.
-    private static string Describe(Error error) => ErrorTexts.Find(error.Code) ?? error.Description;
+    private static string? FindText(string code, HttpContext context) => ErrorTexts.Find(code)
+        ?? context.RequestServices?.GetServices<IErrorTextSource>().Select(source => source.Find(code, CultureInfo.CurrentUICulture)).FirstOrDefault(value => value is not null);
 
-    private static void AddErrorExtensions(ProblemDetails problem, Error error)
+    private static void AddErrorExtensions(ProblemDetails problem, Error error, HttpContext context)
     {
         if (error is ValidationError validationError)
         {
             problem.Extensions[ErrorsExtension] = validationError.Errors.ToDictionary(pair => pair.Key,
-                pair => pair.Value.Select(message => ErrorTexts.Find(message) ?? message).ToArray(), StringComparer.Ordinal);
+                pair => pair.Value.Select(message => FindText(message, context)
+                    ?? (message == error.Code ? error.Description : message)).ToArray(), StringComparer.Ordinal);
         }
 
         if (error.Metadata is null)

@@ -17,6 +17,8 @@ public static class WhatsAppInfrastructureModule
         services.AddSingleton<IPersistenceModelContributor, WhatsAppModelContributor>();
         services.AddScoped<IWhatsAppContactRepository, WhatsAppContactRepository>();
         services.AddScoped<IWhatsAppMessageRepository, WhatsAppMessageRepository>();
+        services.AddScoped<IWhatsAppCodeQuotaRepository, WhatsAppCodeQuotaRepository>();
+        services.AddSingleton<IWhatsAppChannelSettings, WhatsAppChannelSettings>();
         var section = configuration.GetSection(WhatsAppOptions.SectionName);
         var enabled = !string.IsNullOrWhiteSpace(section[nameof(WhatsAppOptions.PhoneNumberId)]);
         var webhook = enabled && !string.IsNullOrWhiteSpace(section[nameof(WhatsAppOptions.AppSecret)])

@@ -16,7 +16,7 @@ internal static class FieldErrors
             error.Description,
             new Dictionary<string, string[]>(StringComparer.Ordinal)
             {
-                [RequestValidator.ToFieldName(field)] = [ErrorTexts.Find(error.Code) ?? error.Description],
+                [RequestValidator.ToFieldName(field)] = [ErrorTexts.Find(error.Code) ?? error.Code],
             });
     }
 

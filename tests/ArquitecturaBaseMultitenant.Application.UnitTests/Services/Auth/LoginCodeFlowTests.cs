@@ -1,5 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
+using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
@@ -17,6 +19,37 @@ public sealed class LoginCodeFlowTests
 {
     private static readonly DateTimeOffset Now = new(2026, 9, 29, 12, 0, 0, TimeSpan.Zero);
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    [Fact]
+    public async Task Admission_rejection_never_invalidates_or_generates_and_destination_limits_run_first()
+    {
+        var repository = new FakeCodes();
+        var destination = Destination("ana@example.test");
+        var old = LoginCode.Issue(destination, LoginCodePurpose.Login, null, "old", Now.UtcDateTime.AddMinutes(-2),
+            TimeSpan.FromMinutes(10), 5);
+        repository.Add(old);
+        var admission = new DeniedAdmission();
+        var issuer = new LoginCodeIssuer(repository, new Generator(), new Hasher(), Options.Create(new LoginCodeOptions()),
+            new FakeTimeProvider(Now), [admission]);
+        var result = await issuer.IssueLoginCodeAsync(destination, Ct);
+        Assert.True(result.IsFailure);
+        Assert.Equal("Test.Capacity.Denied", result.Error.Code);
+        Assert.Null(old.InvalidatedAtUtc);
+        Assert.Single(repository.Codes);
+        Assert.Equal(1, admission.Calls);
+        var limited = new LoginCodeIssuer(repository, new Generator(), new Hasher(),
+            Options.Create(new LoginCodeOptions { MaxRequestsPerWindow = 1 }), new FakeTimeProvider(Now), [admission]);
+        Assert.Equal(LoginCodeErrors.TooManyRequestsCode, (await limited.IssueLoginCodeAsync(destination, Ct)).Error.Code);
+        Assert.Equal(1, admission.Calls);
+    }
+
+    private sealed class DeniedAdmission : ILoginCodeAdmission
+    {
+        public string Channel => "email";
+        public int Calls { get; private set; }
+        public Task<Result> ReserveAsync(LoginCodeDestination destination, CancellationToken ct)
+        { Calls++; return Task.FromResult(Result.Failure(Error.TooManyRequests("Test.Capacity.Denied", "Fixture capacity limit."))); }
+    }
 
     [Fact]
     public async Task Issuer_locks_before_reading_and_invalidates_only_the_same_purpose()

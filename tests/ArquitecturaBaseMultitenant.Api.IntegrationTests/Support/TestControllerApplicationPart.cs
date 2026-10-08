@@ -20,6 +20,8 @@ internal sealed class TestControllerApplicationPart : ApplicationPart, IApplicat
     public IEnumerable<TypeInfo> Types =>
     [
         typeof(TestController).GetTypeInfo(),
+        typeof(WhatsAppErrorProbeController).GetTypeInfo(),
+        typeof(WhatsAppQuotaProbeController).GetTypeInfo(),
         typeof(BusinessOnlyController).GetTypeInfo(),
         typeof(PublicSiteProbeController).GetTypeInfo(),
         typeof(WidgetsController).GetTypeInfo(),

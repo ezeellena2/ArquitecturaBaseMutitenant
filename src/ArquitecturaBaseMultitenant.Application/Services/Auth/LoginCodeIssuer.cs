@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
@@ -16,7 +17,8 @@ internal sealed class LoginCodeIssuer(
     ILoginCodeGenerator codeGenerator,
     ILoginCodeHasher codeHasher,
     IOptions<LoginCodeOptions> options,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    IEnumerable<ILoginCodeAdmission>? admissions = null)
 {
     public Task<Result<IssuedLoginCode>> IssueLoginCodeAsync(LoginCodeDestination destination,
         CancellationToken cancellationToken) =>
@@ -68,6 +70,12 @@ internal sealed class LoginCodeIssuer(
         if (limitError is not null)
         {
             return limitError;
+        }
+
+        foreach (var admission in admissions?.Where(value => value.Channel == destination.Channel) ?? [])
+        {
+            var reserved = await admission.ReserveAsync(destination, cancellationToken);
+            if (reserved.IsFailure) return reserved.Error;
         }
 
         foreach (var active in await loginCodes.ListActiveAsync(destination, purpose, requestedByUserId,

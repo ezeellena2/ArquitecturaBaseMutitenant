@@ -9,6 +9,7 @@ internal sealed class WhatsAppModelContributor : IPersistenceModelContributor
     public IReadOnlyDictionary<Type, string> GlobalEntities { get; } = new Dictionary<Type, string>
     {
         [typeof(WhatsAppContact)] = Schemas.Identity, [typeof(WhatsAppMessage)] = Schemas.Identity,
+        [typeof(WhatsAppCodeQuota)] = Schemas.Identity,
     };
     public void Configure(ModelBuilder builder) => builder.ApplyConfigurationsFromAssembly(GetType().Assembly,
         type => type.Namespace == ConfigurationNamespace);
