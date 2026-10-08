@@ -490,7 +490,9 @@ Ejecutá SOLO la Parte 3 (T13–T14) del plan C:\Users\ezequ\source\repos\Arquit
 
 ## Cambios al contrato
 
-Vacío al escribir el plan. Durante la parte 2, registrar aquí propuesta, motivo, cuerpos/códigos afectados, decisión comunicada al otro chat y hashes de sincronización de B/F. No usar esta sección para cambiarlo unilateralmente.
+Durante la parte 2, registrar aquí propuesta, motivo, cuerpos/códigos afectados, decisión comunicada al otro chat y hashes de sincronización de B/F. No usar esta sección para cambiarlo unilateralmente.
+
+- **2026-10-08, propuesta Back para Integración (pendiente de coordinación por el usuario):** al completar T02–T08, retirar de OpenAPI las descripciones de stub T01 y las respuestas 501 temporales de Phone, enlaces y webhook. El runtime se puede implementar conservando esa metadata congelada; su limpieza altera el SHA-256 aunque no cambien los cuerpos, los códigos funcionales ni los puertos T01. No se aplica unilateralmente: Back mantiene `docs/contracts/openapi.json` y registra la limitación en el informe. Integración coordina la regeneración en B/F antes de la puerta y anota aquí la decisión y hashes sincronizados. No hay cambio de cuerpos propuesto ni comunicación automática al chat Front desde Back.
 
 ## Decisiones aceptadas
 
