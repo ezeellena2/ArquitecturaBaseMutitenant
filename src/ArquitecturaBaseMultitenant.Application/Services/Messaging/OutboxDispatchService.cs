@@ -2,33 +2,32 @@ using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using Microsoft.Extensions.Logging;
-
 namespace ArquitecturaBaseMultitenant.Application.Services.Messaging;
 
-/// <summary>Entrega una tanda del outbox bajo lock y confirma su estado en una UnitOfWork aunque el worker reciba cancelación después de iniciarla.</summary>
-internal sealed class OutboxDispatchService(
-    IUnitOfWork unitOfWork,
-    IOutboxDispatchStore store,
-    TimeProvider timeProvider,
-    ILogger<OutboxDispatchService> logger) : IOutboxDispatchService
+/// <summary>Un límite por fase durable; nunca envía ni descifra payloads.</summary>
+internal sealed class OutboxDispatchService(IUnitOfWork unitOfWork, IOutboxDispatchStore store,
+    IEnumerable<IOutboxDeliveryObserver> observers, TimeProvider clock, ILogger<OutboxDispatchService> logger) : IOutboxDispatchService
 {
-    public Task<Result<int>> DispatchOnceAsync(IReadOnlyCollection<IChannelSender> senders,
-        CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, timeProvider, "DispatchOutbox", async () =>
+    public Task<Result<OutboxDispatchClaim?>> ClaimNextAsync(IReadOnlyCollection<string> channels, CancellationToken ct) =>
+        OperationLog.RunAsync(logger, clock, "ClaimOutbox", async () =>
         {
-            ArgumentNullException.ThrowIfNull(senders);
-            if (senders.Count == 0)
-            {
-                return Result.Success(0);
-            }
-
-            cancellationToken.ThrowIfCancellationRequested();
-            // Una entrega iniciada debe confirmar su estado aunque el worker reciba stop.
-            // El worker comprueba la cancelación antes de empezar el siguiente mensaje.
-            return await unitOfWork.ExecuteInTransactionAsync(async ct =>
-                Result.Success(await store.DispatchDueAsync(senders, ct)),
-                CommitPolicy.OnSuccess, CancellationToken.None);
+            ArgumentNullException.ThrowIfNull(channels);
+            return await unitOfWork.ExecuteInTransactionAsync(async c =>
+                Result.Success(await store.ClaimNextAsync(channels, c)), CommitPolicy.OnSuccess, ct);
         });
+
+    public Task<Result> CompleteAsync(Guid messageId, Guid leaseId, OutboxDeliveryReceipt receipt, CancellationToken ct) =>
+        OperationLog.RunAsync(logger, clock, "CompleteOutbox", () =>
+            unitOfWork.ExecuteInTransactionAsync(async c =>
+            {
+                ArgumentNullException.ThrowIfNull(receipt);
+                var channel = await store.CompleteAsync(messageId, leaseId, receipt, c);
+                if (channel is not null && receipt.IsAccepted)
+                    foreach (var observer in observers.Where(value => value.Key == channel))
+                        await observer.RecordAcceptedAsync(messageId, receipt, clock.GetUtcNow().UtcDateTime, c);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, ct));
 }

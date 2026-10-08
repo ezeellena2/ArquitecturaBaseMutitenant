@@ -1,6 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Configuration.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -27,12 +26,11 @@ internal sealed partial class OutboxDispatcher(
                 // El transporte SMTP vive durante el lote; cada mensaje conserva su propia UoW.
                 await using var senderScope = scopeFactory.CreateAsyncScope();
                 var senders = senderScope.ServiceProvider.GetServices<IChannelSender>().ToArray();
+                var processor = senderScope.ServiceProvider.GetRequiredService<OutboxDeliveryProcessor>();
                 for (var count = 0; count < options.Value.BatchSize && senders.Length > 0 &&
                     !stoppingToken.IsCancellationRequested; count++)
                 {
-                    await using var messageScope = scopeFactory.CreateAsyncScope();
-                    if ((await messageScope.ServiceProvider.GetRequiredService<IOutboxDispatchService>()
-                            .DispatchOnceAsync(senders, stoppingToken)).Value == 0)
+                    if (await processor.ProcessOnceAsync(senders, stoppingToken) == 0)
                     {
                         break;
                     }

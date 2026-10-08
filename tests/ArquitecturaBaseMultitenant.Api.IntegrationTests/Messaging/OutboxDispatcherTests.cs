@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Configuration.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Services.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -181,14 +182,33 @@ public sealed class OutboxDispatcherTests(ApiFactory factory)
             await dispatcher.DispatchOnceAsync([sender], stop.Token));
     }
 
-    private static OutboxDispatchService CreateDispatcher(IServiceProvider services, PayloadProtector protector,
+    private static TestDispatcher CreateDispatcher(IServiceProvider services, PayloadProtector protector,
         FakeTimeProvider clock,
         int maxAttempts = 5) =>
-        new(services.GetRequiredService<IUnitOfWork>(),
-            new OutboxDispatchStore(services.GetRequiredService<ApplicationDbContext>(), protector, clock,
-                Options.Create(new OutboxOptions { MaxAttempts = maxAttempts }),
-                NullLogger<OutboxDispatchStore>.Instance),
-            clock, NullLogger<OutboxDispatchService>.Instance);
+        new(services, protector, clock, maxAttempts);
+
+    private sealed class TestDispatcher(IServiceProvider services, PayloadProtector protector, FakeTimeProvider clock, int maxAttempts)
+    {
+        public async Task<Result<int>> DispatchOnceAsync(IReadOnlyCollection<IChannelSender> senders, CancellationToken ct) =>
+            Result.Success(await new OutboxDeliveryProcessor(new DispatchScopeFactory(services, clock, maxAttempts),
+                protector, clock, Options.Create(new OutboxOptions { MaxAttempts = maxAttempts }),
+                NullLogger<OutboxDeliveryProcessor>.Instance).ProcessOnceAsync(senders, ct));
+    }
+
+    private sealed class DispatchScopeFactory(IServiceProvider services, FakeTimeProvider clock, int maxAttempts) : IServiceScopeFactory
+    {
+        public IServiceScope CreateScope() => new DispatchScope(services.CreateScope(), clock, maxAttempts);
+    }
+    private sealed class DispatchScope(IServiceScope inner, FakeTimeProvider clock, int maxAttempts) : IServiceScope, IServiceProvider
+    {
+        public IServiceProvider ServiceProvider => this;
+        public object? GetService(Type type) => type == typeof(IOutboxDispatchService)
+            ? new OutboxDispatchService(inner.ServiceProvider.GetRequiredService<IUnitOfWork>(),
+                new OutboxDispatchStore(inner.ServiceProvider.GetRequiredService<ApplicationDbContext>(), clock,
+                    Options.Create(new OutboxOptions { MaxAttempts = maxAttempts })), [], clock, NullLogger<OutboxDispatchService>.Instance)
+            : inner.ServiceProvider.GetService(type);
+        public void Dispose() => inner.Dispose();
+    }
 
     private static PayloadProtector CreateProtector() =>
         new PayloadProtector(new EphemeralDataProtectionProvider());

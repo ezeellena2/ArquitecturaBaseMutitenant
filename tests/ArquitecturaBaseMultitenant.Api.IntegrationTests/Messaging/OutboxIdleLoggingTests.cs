@@ -26,11 +26,11 @@ public sealed class OutboxIdleLoggingTests(ApiFactory factory)
         await using var scope = host.Services.CreateAsyncScope();
         var dispatch = scope.ServiceProvider.GetRequiredService<IOutboxDispatchService>();
 
-        var result = await dispatch.DispatchOnceAsync([new UnusedSender()],
+        var result = await dispatch.ClaimNextAsync(["outbox-idle-test"],
             TestContext.Current.CancellationToken);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(0, result.Value);
+        Assert.Null(result.Value);
         Assert.DoesNotContain(logs.Entries, entry =>
             entry.Category == typeof(OutboxDispatchService).FullName
             && entry.Level == LogLevel.Information);

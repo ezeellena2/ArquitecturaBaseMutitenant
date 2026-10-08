@@ -14,6 +14,7 @@ internal static class MessagingRegistration
     {
         services.AddScoped<IOutbox, Outbox>();
         services.AddScoped<IOutboxDispatchStore, OutboxDispatchStore>();
+        services.AddScoped<OutboxDeliveryProcessor>();
         // El host de pruebas despacha explícitamente para verificar locks y reintentos sin carreras.
         if (!environment.IsEnvironment("Testing") && configuration.GetConnectionString("appdb") is not null)
         {

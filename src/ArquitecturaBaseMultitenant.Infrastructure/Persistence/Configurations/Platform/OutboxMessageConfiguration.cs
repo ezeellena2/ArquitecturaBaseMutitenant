@@ -17,5 +17,7 @@ internal sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Outb
         builder.Property(message => message.Status).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.HasIndex(message => new { message.Status, message.NextAttemptAtUtc, message.Id });
         builder.HasIndex(message => message.UserId);
+        builder.Property(message => message.ProviderMessageId).HasMaxLength(TextLimits.Description);
+        builder.Property(message => message.LastErrorCode).HasMaxLength(TextLimits.ShortName);
     }
 }

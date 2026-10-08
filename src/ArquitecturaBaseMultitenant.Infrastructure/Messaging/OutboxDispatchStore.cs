@@ -1,104 +1,74 @@
 using System.Data.Common;
 using ArquitecturaBaseMultitenant.Application.Configuration.Messaging;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-
 namespace ArquitecturaBaseMultitenant.Infrastructure.Messaging;
 
-/// <summary>Reclama un aviso vencido con SKIP LOCKED y marca el resultado en la transacción del despachador. Un fallo programa otro intento sin exponer el payload cifrado en logs.</summary>
-internal sealed partial class OutboxDispatchStore(
-    ApplicationDbContext context,
-    IPayloadProtector protector,
-    TimeProvider timeProvider,
-    IOptions<OutboxOptions> options,
-    ILogger<OutboxDispatchStore> logger) : IOutboxDispatchStore
+/// <summary>SKIP LOCKED protege el claim; el lease protege el envío entre transacciones.</summary>
+internal sealed class OutboxDispatchStore(ApplicationDbContext context, TimeProvider clock,
+    IOptions<OutboxOptions> options) : IOutboxDispatchStore
 {
-    public async Task<int> DispatchDueAsync(IReadOnlyCollection<IChannelSender> senders,
-        CancellationToken cancellationToken)
+    public async Task<OutboxDispatchClaim?> ClaimNextAsync(IReadOnlyCollection<string> channels, CancellationToken ct)
     {
-        ArgumentNullException.ThrowIfNull(senders);
-        if (senders.Count == 0)
+        context.RequireTransaction();
+        if (channels.Count == 0) return null;
+        var nowUtc = clock.GetUtcNow().UtcDateTime;
+        var exhausted = new List<Guid>();
+        for (var scan = 0; scan < options.Value.BatchSize; scan++)
         {
-            return 0;
+            var ids = await LockIdsAsync(channels.ToArray(), exhausted.ToArray(), nowUtc, ct);
+            if (ids.Count == 0) return null;
+            var message = await context.OutboxMessages.SingleAsync(value => value.Id == ids[0], ct);
+            await context.Entry(message).ReloadAsync(ct);
+            if (!message.TryClaim(Guid.CreateVersion7(), nowUtc, TimeSpan.FromSeconds(options.Value.LeaseSeconds), options.Value.MaxAttempts))
+            { exhausted.Add(message.Id); continue; }
+            return new OutboxDispatchClaim(message.Id, message.LeaseId!.Value, message.Channel, message.EncryptedPayload);
         }
-
-        var byChannel = senders.ToDictionary(sender => sender.Key, StringComparer.Ordinal);
-        var settings = options.Value;
-        var ids = await LockDueIdsAsync(byChannel.Keys.ToArray(), timeProvider.GetUtcNow().UtcDateTime,
-            1, cancellationToken);
-        if (ids.Count == 0)
-        {
-            return 0;
-        }
-
-        var messages = await context.OutboxMessages
-            .Where(message => ids.Contains(message.Id))
-            .ToDictionaryAsync(message => message.Id, cancellationToken);
-        foreach (var id in ids)
-        {
-            var message = messages[id];
-            try
-            {
-                var payload = protector.Unprotect(message.EncryptedPayload);
-                await byChannel[message.Channel].SendAsync(payload, cancellationToken);
-                message.MarkSent(timeProvider.GetUtcNow().UtcDateTime);
-            }
-            catch (Exception exception) when (exception is not OperationCanceledException ||
-                !cancellationToken.IsCancellationRequested)
-            {
-                message.RecordFailure(timeProvider.GetUtcNow().UtcDateTime,
-                    TimeSpan.FromSeconds(settings.RetryBaseDelaySeconds), settings.MaxAttempts);
-                LogDeliveryFailed(logger, message.Id, exception.GetType().Name);
-            }
-        }
-
-        return ids.Count;
+        return null;
     }
 
-    private async Task<List<Guid>> LockDueIdsAsync(string[] channels, DateTime nowUtc,
-        int batchSize, CancellationToken cancellationToken)
+    public async Task<string?> CompleteAsync(Guid messageId, Guid leaseId, OutboxDeliveryReceipt receipt, CancellationToken ct)
     {
-        var transaction = context.Database.CurrentTransaction
-            ?? throw new InvalidOperationException("The dispatcher needs a UnitOfWork transaction.");
+        context.RequireTransaction();
+        var rows = await context.OutboxMessages.FromSqlInterpolated($"""
+            SELECT * FROM platform."OutboxMessages" WHERE "Id" = {messageId} FOR UPDATE
+            """).ToArrayAsync(ct);
+        var message = rows.SingleOrDefault();
+        if (message is not null) await context.Entry(message).ReloadAsync(ct);
+        if (message is null || !message.TryComplete(leaseId, receipt.IsAccepted, receipt.IsRetryable,
+                receipt.ProviderMessageId, receipt.SafeCode, clock.GetUtcNow().UtcDateTime,
+                TimeSpan.FromSeconds(options.Value.RetryBaseDelaySeconds), options.Value.MaxAttempts)) return null;
+        return message.Channel;
+    }
+
+    private async Task<List<Guid>> LockIdsAsync(string[] channels, Guid[] exhausted, DateTime nowUtc, CancellationToken ct)
+    {
+        var transaction = context.Database.CurrentTransaction!;
         await using var command = context.Database.GetDbConnection().CreateCommand();
         command.Transaction = transaction.GetDbTransaction();
         command.CommandText = """
             SELECT "Id" FROM platform."OutboxMessages"
-            WHERE "Status" IN ('Pending', 'Failed')
-              AND "NextAttemptAtUtc" <= @nowUtc
+            WHERE "Status" IN ('Pending', 'Failed') AND "NextAttemptAtUtc" <= @nowUtc
+              AND ("LeaseExpiresAtUtc" IS NULL OR "LeaseExpiresAtUtc" <= @nowUtc)
               AND "Channel" = ANY(@channels)
-            ORDER BY "NextAttemptAtUtc", "Id"
-            LIMIT @batchSize FOR UPDATE SKIP LOCKED
+              AND NOT ("Id" = ANY(@exhausted))
+            ORDER BY "NextAttemptAtUtc", "Id" LIMIT 1 FOR UPDATE SKIP LOCKED
             """;
-        AddParameter(command, "nowUtc", nowUtc);
-        AddParameter(command, "channels", channels);
-        AddParameter(command, "batchSize", batchSize);
-
-        var ids = new List<Guid>(batchSize);
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        while (await reader.ReadAsync(cancellationToken))
-        {
-            ids.Add(reader.GetGuid(0));
-        }
-
+        AddParameter(command, "nowUtc", nowUtc); AddParameter(command, "channels", channels);
+        AddParameter(command, "exhausted", exhausted);
+        var ids = new List<Guid>(1);
+        await using var reader = await command.ExecuteReaderAsync(ct);
+        while (await reader.ReadAsync(ct)) ids.Add(reader.GetGuid(0));
         return ids;
     }
-
     private static void AddParameter(DbCommand command, string name, object value)
     {
-        var parameter = command.CreateParameter();
-        parameter.ParameterName = name;
-        parameter.Value = value;
+        var parameter = command.CreateParameter(); parameter.ParameterName = name; parameter.Value = value;
         command.Parameters.Add(parameter);
     }
-
-    [LoggerMessage(Level = LogLevel.Warning,
-        Message = "Outbox message {MessageId} failed with {ExceptionType}")]
-    private static partial void LogDeliveryFailed(ILogger logger, Guid messageId, string exceptionType);
 }

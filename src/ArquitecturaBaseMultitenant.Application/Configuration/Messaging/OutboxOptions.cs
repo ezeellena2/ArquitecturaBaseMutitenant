@@ -18,4 +18,11 @@ public sealed class OutboxOptions
 
     [Range(1, 3600)]
     public int RetryBaseDelaySeconds { get; init; } = 30;
+
+    // El timeout HTTP del proveedor es 60 s; quedan márgenes para el envío y el commit final.
+    [Range(180, 3600)]
+    public int LeaseSeconds { get; init; } = 300;
+
+    [Range(5, 60)]
+    public int CompletionTimeoutSeconds { get; init; } = 30;
 }

@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Infrastructure.Messaging;
 using ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -24,7 +24,7 @@ internal static class PickupCodeReader
         // Cada despacho reclama un mensaje; otros tests de la fixture pueden dejar más de veinte.
         for (var attempt = 0; attempt < 100; attempt++)
         {
-            var dispatched = await services.GetRequiredService<IOutboxDispatchService>().DispatchOnceAsync(
+            var dispatched = await services.GetRequiredService<OutboxDeliveryProcessor>().ProcessOnceAsync(
                 services.GetServices<IChannelSender>().ToArray(), cancellationToken);
             foreach (var path in Directory.Exists(directory) ? Directory.GetFiles(directory, "*.eml") : [])
             {
@@ -41,7 +41,7 @@ internal static class PickupCodeReader
                 File.Delete(path);
                 return code;
             }
-            if (dispatched.IsFailure || dispatched.Value == 0) await Task.Delay(100, cancellationToken);
+            if (dispatched == 0) await Task.Delay(100, cancellationToken);
         }
         throw new Xunit.Sdk.XunitException("No se encontró el correo pickup del destinatario.");
     }

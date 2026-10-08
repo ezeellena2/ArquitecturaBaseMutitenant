@@ -1,11 +1,11 @@
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
+using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 
-/// <summary>Despacha una tanda de mensajes pendientes por sus canales y confirma su estado dentro de la transacción.</summary>
+/// <summary>Reclama y confirma un mensaje en transacciones distintas; el transporte ocurre entre ambos pasos.</summary>
 public interface IOutboxDispatchService
 {
-    Task<Result<int>> DispatchOnceAsync(IReadOnlyCollection<IChannelSender> senders,
-        CancellationToken cancellationToken);
+    Task<Result<OutboxDispatchClaim?>> ClaimNextAsync(IReadOnlyCollection<string> channels, CancellationToken cancellationToken);
+    Task<Result> CompleteAsync(Guid messageId, Guid leaseId, OutboxDeliveryReceipt receipt, CancellationToken cancellationToken);
 }
