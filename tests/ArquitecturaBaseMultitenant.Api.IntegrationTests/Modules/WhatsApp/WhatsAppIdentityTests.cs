@@ -33,6 +33,50 @@ public sealed class WhatsAppIdentityTests(ApiFactory factory) : IClassFixture<Ap
     private const string Phone = "+5491134567890";
 
     [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task Phone_code_does_not_authenticate_a_new_owner_after_transfer(bool business, bool initiallyFree)
+    {
+        var phone = NewPhone();
+        await using var application = Host();
+        using var ownerClient = application.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        using var nextClient = application.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        using var anonymous = application.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false, HandleCookies = false });
+        var owner = await AccountJourney.RegisterAsync(application, ownerClient, Ct);
+        Guid? methodId = initiallyFree ? null : await LinkPhoneAsync(application.Services, ownerClient, phone);
+        using var requested = await PostAsync(anonymous, business ? "/api/auth/business-signup/code" : "/api/auth/login-code", business ? SignupBody(phone) : Contact(phone), Ct);
+        Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
+        var oldCode = await CodeAsync(application.Services, phone);
+        methodId ??= await LinkPhoneAsync(application.Services, ownerClient, phone);
+        using var removed = await ownerClient.DeleteAsync($"/api/me/login-methods/{methodId}", Ct);
+        Assert.Equal(HttpStatusCode.NoContent, removed.StatusCode);
+        object oldProof = business ? SignupBody(phone, oldCode)
+            : new { phone = new { country = "AR", number = phone }, channel = "whatsapp", code = oldCode, returnUrl = AuthorizePath("consumer") };
+        if (!initiallyFree)
+        {
+            using var lost = await PostAsync(anonymous, business ? "/api/auth/business-signup/verify" : "/api/auth/login-code/verify", oldProof, Ct);
+            Assert.Equal(HttpStatusCode.BadRequest, lost.StatusCode);
+            Assert.False(lost.Headers.Contains("Set-Cookie"));
+        }
+        var next = await AccountJourney.RegisterAsync(application, nextClient, Ct);
+        await LinkPhoneAsync(application.Services, nextClient, phone);
+
+        using var attempted = await PostAsync(anonymous, business ? "/api/auth/business-signup/verify" : "/api/auth/login-code/verify",
+            oldProof, Ct);
+        Assert.Equal(HttpStatusCode.BadRequest, attempted.StatusCode);
+        Assert.False(attempted.Headers.Contains("Set-Cookie"));
+        await using var scope = application.Services.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var challenge = await context.LoginCodes.AsNoTracking().SingleAsync(value => value.Destination == phone
+            && value.Purpose == (business ? LoginCodePurpose.BusinessSignup : LoginCodePurpose.Login), Ct);
+        Assert.Equal(initiallyFree ? null : (Guid?)owner.UserId, challenge.RequestedByUserId);
+        Assert.Null(challenge.ConsumedAtUtc);
+        Assert.Equal(0, challenge.FailedAttempts);
+        Assert.Equal(next.UserId, await scope.ServiceProvider.GetRequiredService<IUserLookup>().FindVerifiedUserIdAsync(LoginMethodType.Phone, phone, Ct));
+    }
+
+    [Theory]
     [InlineData("verify")]
     [InlineData("resend")]
     [InlineData("remove")]
@@ -414,6 +458,18 @@ public sealed class WhatsAppIdentityTests(ApiFactory factory) : IClassFixture<Ap
     }
 
     private static object Body(string? code = null) => new { phone = new { country = "AR", number = "011 15 3456 7890" }, channel = "whatsapp", acceptedTerms = true, code };
+
+    private static async Task<Guid> LinkPhoneAsync(IServiceProvider services, HttpClient client, string phone)
+    {
+        using var added = await PostAsync(client, "/api/me/login-methods", Contact(phone), Ct);
+        Assert.Equal(HttpStatusCode.Accepted, added.StatusCode);
+        using var body = await added.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+        var methodId = body!.RootElement.GetProperty("methodId").GetGuid();
+        var code = await CodeAsync(services, phone);
+        using var verified = await PostAsync(client, $"/api/me/login-methods/{methodId}/verify", new { code }, Ct);
+        Assert.Equal(HttpStatusCode.NoContent, verified.StatusCode);
+        return methodId;
+    }
 
     private static async Task<HttpResponseMessage> CreateBusinessAsync(HttpClient client)
     {

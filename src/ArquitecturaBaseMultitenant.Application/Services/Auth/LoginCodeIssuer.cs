@@ -22,15 +22,19 @@ internal sealed class LoginCodeIssuer(
 {
     public Task<Result<IssuedLoginCode>> IssueLoginCodeAsync(LoginCodeDestination destination,
         CancellationToken cancellationToken) =>
-        IssueAsync(destination, LoginCodePurpose.Login, requestedByUserId: null, cancellationToken);
+        IssueLoginCodeAsync(destination, ownerId: null, cancellationToken);
+
+    public Task<Result<IssuedLoginCode>> IssueLoginCodeAsync(LoginCodeDestination destination,
+        Guid? ownerId, CancellationToken cancellationToken) =>
+        IssueAsync(destination, LoginCodePurpose.Login, ownerId, cancellationToken);
 
     public Task<Result<IssuedLoginCode>> IssueSignupCodeAsync(LoginCodeDestination destination,
         CancellationToken cancellationToken) =>
         IssueAsync(destination, LoginCodePurpose.Signup, requestedByUserId: null, cancellationToken);
 
     public Task<Result<IssuedLoginCode>> IssueBusinessSignupCodeAsync(LoginCodeDestination destination,
-        CancellationToken cancellationToken) =>
-        IssueAsync(destination, LoginCodePurpose.BusinessSignup, requestedByUserId: null, cancellationToken);
+        Guid? ownerId, CancellationToken cancellationToken) =>
+        IssueAsync(destination, LoginCodePurpose.BusinessSignup, ownerId, cancellationToken);
 
     public Task<Result<IssuedLoginCode>> IssueAccountCodeAsync(LoginCodeDestination destination,
         LoginCodePurpose purpose, Guid userId, CancellationToken cancellationToken)

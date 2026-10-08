@@ -37,7 +37,8 @@ internal sealed class LoginCodeRequester(
                 return FieldErrors.On(request.Email is null ? LoginCodeErrors.PhoneAccountNotFound : LoginCodeErrors.AccountNotFound, LoginDestinationResolver.Field(destination));
         }
 
-        var issued = await issuer.IssueLoginCodeAsync(destination, cancellationToken);
+        var ownerId = LoginDestinationResolver.Type(destination) == LoginMethodType.Phone ? userId : null;
+        var issued = await issuer.IssueLoginCodeAsync(destination, ownerId, cancellationToken);
         if (issued.IsFailure) return issued.Error;
         await delivery.EnqueueAsync(destination, issued.Value, userId, pending.Select(row => row.TenantId).ToArray(), cancellationToken);
 

@@ -54,7 +54,9 @@ internal sealed class SignupCodeRequester(SignupPolicy policy, LoginCodeIssuer i
             var validNew = destinations.ValidateNew(destination);
             if (validNew.IsFailure) return validNew.Error;
         }
-        var issued = await issuer.IssueBusinessSignupCodeAsync(destination, cancellationToken);
+        var ownerId = LoginDestinationResolver.Type(destination) == LoginMethodType.Phone && owner is { VerifiedAtUtc: not null }
+            ? (Guid?)owner.UserId : null;
+        var issued = await issuer.IssueBusinessSignupCodeAsync(destination, ownerId, cancellationToken);
         if (issued.IsFailure) return issued.Error;
 
         var culture = await userCultures.ResolveAsync(null, request.Culture, cancellationToken);

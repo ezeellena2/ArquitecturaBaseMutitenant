@@ -66,8 +66,10 @@ internal sealed class SignupCodeVerifier(LoginCodeAttemptVerifier verifier, Sign
         var allowed = await policy.CanRegisterBusinessAsync(cancellationToken);
         if (allowed.IsFailure) return Fail(null, allowed.Error);
 
+        var ownerId = LoginDestinationResolver.Type(destination) == LoginMethodType.Phone && attemptedMethod is { VerifiedAtUtc: not null }
+            ? (Guid?)attemptedMethod.UserId : null;
         var verified = await verifier.VerifyAsync(destination, LoginCodePurpose.BusinessSignup,
-            requestedByUserId: null, request.Code!, attemptedMethod?.UserId, cancellationToken);
+            ownerId, request.Code!, attemptedMethod?.UserId, cancellationToken);
         if (verified.IsFailure) return Fail(attemptedMethod?.UserId, verified.Error);
 
         var method = await existingMethods.FindAsync(destination, cancellationToken);

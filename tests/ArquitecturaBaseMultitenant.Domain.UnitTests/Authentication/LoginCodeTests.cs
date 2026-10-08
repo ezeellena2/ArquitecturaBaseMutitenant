@@ -11,6 +11,28 @@ public sealed class LoginCodeTests
 {
     private static readonly DateTime IssuedAtUtc = new(2026, 9, 29, 12, 0, 0, DateTimeKind.Utc);
 
+    [Theory]
+    [InlineData(LoginCodePurpose.Login)]
+    [InlineData(LoginCodePurpose.BusinessSignup)]
+    public void Owner_bound_code_requires_its_account_and_cannot_use_unbound_verification(LoginCodePurpose purpose)
+    {
+        var owner = Guid.CreateVersion7();
+        var destination = LoginCodeDestination.ForPhone(PhoneNumber.Create("+5491134567890").Value, "whatsapp");
+        Assert.Throws<ArgumentException>(() => LoginCode.Issue(destination, purpose, Guid.Empty, "hash", IssuedAtUtc, TimeSpan.FromMinutes(10), 3));
+        var unsent = LoginCode.Issue(destination, purpose, owner, "hash", IssuedAtUtc, TimeSpan.FromMinutes(10), 3);
+        Assert.Equal(LoginCodeErrors.InvalidCode, unsent.VerifyFor(owner, purpose, "hash", IssuedAtUtc).Error.Code);
+        Assert.Null(unsent.ConsumedAtUtc);
+        var code = LoginCode.Issue(destination, purpose, owner, "hash", IssuedAtUtc, TimeSpan.FromMinutes(10), 3);
+        code.MarkSent(IssuedAtUtc);
+        Assert.Equal(LoginCodeErrors.InvalidCode, code.Verify(purpose, "hash", IssuedAtUtc).Error.Code);
+        Assert.Equal(LoginCodeErrors.InvalidCode, code.VerifyFor(Guid.CreateVersion7(), purpose, "hash", IssuedAtUtc).Error.Code);
+        Assert.Equal(LoginCodeErrors.InvalidCode, code.VerifyFor(owner, LoginCodePurpose.Signup, "hash", IssuedAtUtc).Error.Code);
+        Assert.Equal(3, code.AttemptsLeft);
+        Assert.Null(code.ConsumedAtUtc);
+        Assert.True(code.VerifyFor(owner, purpose, "hash", IssuedAtUtc).IsSuccess);
+        Assert.Equal(LoginCodeErrors.AlreadyUsed, code.VerifyFor(owner, purpose, "hash", IssuedAtUtc).Error);
+    }
+
     [Fact]
     public void Signup_code_can_be_issued_and_used_once()
     {

@@ -36,8 +36,9 @@ internal sealed class LoginVerifier(
         await attempts.LockDestinationAsync(destination, cancellationToken);
         if (invitation is null && !await accounts.StillOwnsAsync(userId, destination, cancellationToken))
             return Fail(userId, LoginCodeErrors.Invalid(attemptsLeft: null));
+        var ownerId = LoginDestinationResolver.Type(destination) == LoginMethodType.Phone ? userId : null;
         var verified = await verifier.VerifyAsync(destination, LoginCodePurpose.Login,
-            requestedByUserId: null, request.Code!, userId, cancellationToken);
+            ownerId, request.Code!, userId, cancellationToken);
         if (verified.IsFailure) return Fail(userId, verified.Error);
 
         if (invitation is not null)

@@ -45,7 +45,8 @@ public sealed class LoginCode : Entity
     public LoginCodePurpose Purpose { get; private set; }
 
     /// <summary>
-    /// La cuenta que pidió verificar un destino; null en ingreso y registro.
+    /// La cuenta ligada a la prueba: destino nuevo de una cuenta, o dueño conocido en ingreso/alta empresarial.
+    /// Null cuando todavía no hay dueño y en los flujos de correo compatibles con invitación.
     /// </summary>
     public Guid? RequestedByUserId { get; private set; }
 
@@ -79,8 +80,8 @@ public sealed class LoginCode : Entity
     public int AttemptsLeft => Math.Max(0, MaxAttempts - FailedAttempts);
 
     /// <summary>
-    /// Emite un código. Verificar un destino requiere cuenta;
-    /// ingresar o registrarse todavía no la tiene.
+    /// Emite un código. Verificar un destino requiere cuenta; ingreso/alta empresarial pueden ligarse a un dueño
+    /// conocido. Registro personal y recuperación no usan este vínculo.
     /// </summary>
     public static LoginCode Issue(
         LoginCodeDestination destination,
@@ -103,10 +104,13 @@ public sealed class LoginCode : Entity
 
         switch (purpose)
         {
-            case LoginCodePurpose.Login or LoginCodePurpose.Signup or LoginCodePurpose.BusinessSignup
-                or LoginCodePurpose.AccountRecovery
+            case LoginCodePurpose.Signup or LoginCodePurpose.AccountRecovery
                 when requestedByUserId is not null:
-                throw new ArgumentException("A login, signup or recovery code cannot be requested by an account.", nameof(requestedByUserId));
+                throw new ArgumentException("A signup or recovery code cannot be requested by an account.", nameof(requestedByUserId));
+
+            case LoginCodePurpose.Login or LoginCodePurpose.BusinessSignup
+                when requestedByUserId == Guid.Empty:
+                throw new ArgumentException("A known owner cannot be empty.", nameof(requestedByUserId));
 
             case LoginCodePurpose.VerifyDestination
                 when requestedByUserId is null || requestedByUserId == Guid.Empty:
@@ -146,7 +150,8 @@ public sealed class LoginCode : Entity
     {
         ArgumentNullException.ThrowIfNull(codeHash);
 
-        return expectedPurpose is LoginCodePurpose.Login or LoginCodePurpose.Signup or LoginCodePurpose.BusinessSignup
+        return RequestedByUserId is null
+            && expectedPurpose is LoginCodePurpose.Login or LoginCodePurpose.Signup or LoginCodePurpose.BusinessSignup
             && Purpose == expectedPurpose
             ? Check(codeHash, nowUtc)
             : LoginCodeErrors.Invalid(attemptsLeft: null);
@@ -154,8 +159,8 @@ public sealed class LoginCode : Entity
 
     /// <summary>
     /// Verifica un código de una cuenta para la cuenta <paramref name="userId"/>.
-    /// Si el código es de ingreso o lo pidió otra cuenta, la respuesta es la misma que cuando no hay código y no se
-    /// toca ningún contador: así no se sabe que otra cuenta está vinculando ese destino, ni se le gastan los intentos.
+    /// Si el propósito difiere o lo pidió otra cuenta, responde como cuando no hay código sin tocar contadores:
+    /// así una prueba de posesión nunca se transfiere al nuevo dueño del mismo destino.
     /// Un código que no se mandó, o cuyo destino ya es de otra cuenta (<paramref name="usable"/> en falso), falla como
     /// uno mal escrito y gasta el intento (ADR 0041).
     /// </summary>
@@ -164,7 +169,7 @@ public sealed class LoginCode : Entity
     {
         ArgumentNullException.ThrowIfNull(codeHash);
 
-        return expectedPurpose is LoginCodePurpose.VerifyDestination
+        return expectedPurpose is LoginCodePurpose.VerifyDestination or LoginCodePurpose.Login or LoginCodePurpose.BusinessSignup
             && Purpose == expectedPurpose && RequestedByUserId == userId
             ? Check(codeHash, nowUtc, usable: usable && SentAtUtc is not null)
             : LoginCodeErrors.Invalid(attemptsLeft: null);
