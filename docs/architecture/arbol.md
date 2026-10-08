@@ -322,7 +322,7 @@ ArquitecturaBaseMultitenant.Domain/
     ├── WhatsAppMessageStatus.cs
     ├── WhatsAppCodeQuota.cs                          Ledger técnico por número de plataforma/día UTC, sin destino ni usuario
     ├── WhatsAppCodeErrors.cs                         errores de cuota global de códigos
-    ├── WhatsAppErrors.cs                             incluye el país fuera de WhatsApp:AllowedCountries, sobre el campo phone (solo para un número nuevo)
+    ├── WhatsAppErrors.cs                             errores de firma y payload del webhook; la política de países la implementa WhatsAppChannelSettings
     └── WhatsAppChannel.cs                            [E11] PhoneNumberId → TenantId
 ```
 

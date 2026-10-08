@@ -16,6 +16,10 @@ El núcleo conoce capacidades de canales, Phone y puertos neutrales; no compara 
 
 El outbox cifra destino/payload, reclama con lease en una transacción, envía a Cloud API fuera de ella y confirma por token en otra; `Sent` significa aceptación, no delivered. Las plantillas y adaptadores de códigos, invitaciones y avisos usan perfil explícito, resources es/en y DisplayFormatter. Retención, observer, limpieza y prueba de retirada se completan con T08/Integración. El catálogo tiene 16 nombres (1 Authentication, 15 Utility), 32 variantes es/en; el lienzo no implica aprobación en Meta. Usar [plantillas](../operations/whatsapp-plantillas.md) y [configuración/túnel](../operations/configuracion.md) antes de la puerta real. T01 no instaló paquetes ni usó claves reales ni levantó Aspire.
 
+## Errores del módulo
+
+`WhatsApp.Phone.CountryNotAllowed` (400, campo `phone`) corresponde a altas/pending de un país no habilitado, según el E.164 real. `WhatsApp.LoginCode.DailyLimit` (429) devuelve `retryAfter` hasta el próximo día UTC; la reserva de cuota y el código pertenecen a la misma UoW. El contrato del webhook declara `WhatsApp.Webhook.InvalidSignature` (401), `WhatsApp.Webhook.InvalidPayload` (400) y `WhatsApp.Webhook.TooManyRequests` (429); T06 completa su comportamiento. Los textos es/en los aporta el módulo mediante `IErrorTextSource`, sin referencias del mapper del núcleo al módulo. Las respuestas de error conservan ProblemDetails con `code` y `traceId`.
+
 ## Verificación
 
 `Etapa8ContractTests`, `OpenApiContractTests`, `AccessDeclarationTests`, `ModuleControllersTests`, `LoginLinkIssuerTests`, `LoginMethodsCapabilitiesTests` e `InvitationDeliveryDestinationTests` verifican la parte publicada. Las suites y el recorrido Meta completo del plan siguen pendientes; E8 no está cerrada.
