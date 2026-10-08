@@ -1,6 +1,6 @@
 # WhatsApp
 
-Módulo quitable del número de la plataforma, Etapa 8. El alcance y las tareas están en el [plan ejecutable](../plans/2026-10-07-etapa-8-whatsapp.md); T02–T06 aportan composición, persistencia, adaptadores/outbox cifrado, Phone en identidad/recuperación y webhook durable. T07–T08 completan bot/enlaces y privacidad. El asistente corresponde a E8b y la atención de organizaciones, a E11.
+Módulo quitable del número de la plataforma, Etapa 8. El alcance y las tareas están en el [plan ejecutable](../plans/2026-10-07-etapa-8-whatsapp.md); T02–T07 aportan composición, persistencia, adaptadores/outbox cifrado, Phone en identidad/recuperación, webhook durable y bot/enlaces. T08 completa privacidad. El asistente corresponde a E8b y la atención de organizaciones, a E11.
 
 ## Contrato publicado en T01
 
@@ -40,4 +40,4 @@ El outbox cifra destino/payload, reclama con lease en una transacción, envía a
 
 ## Verificación
 
-`Etapa8ContractTests`, `OpenApiContractTests`, `AccessDeclarationTests`, `ModuleControllersTests`, `LoginLinkIssuerTests`, `LoginMethodsCapabilitiesTests` e `InvitationDeliveryDestinationTests` verifican la parte publicada. `WhatsAppWebhookTests` prueba firma, tamaño, commit, dedupe, callbacks y propietario original; `WhatsAppInboundProcessorTests`, cola, leases, rollback y backoff en PostgreSQL real. Las suites y el recorrido Meta completo del plan siguen pendientes; E8 no está cerrada.
+`Etapa8ContractTests`, `OpenApiContractTests`, `AccessDeclarationTests`, `ModuleControllersTests`, `LoginLinkIssuerTests`, `LoginMethodsCapabilitiesTests` e `InvitationDeliveryDestinationTests` verifican la parte publicada. `WhatsAppWebhookTests` prueba firma, tamaño, commit, dedupe, callbacks y propietario original; `WhatsAppInboundProcessorTests`, cola, leases, rollback y backoff en PostgreSQL real. `WhatsAppBotTests` de integración recorre webhook firmado→cola→bot, incluidos IDs públicos, operador, propietario original y bloqueo vencido por el reloj inyectado. `LoginLinkTests` verifica canje, cookies/gates y replay; `WhatsAppCloudClientTests`/`WhatsAppOutboxTests` cubren la ventana vencida al despachar. Las suites completas y el recorrido Meta del plan siguen pendientes; E8 no está cerrada.
