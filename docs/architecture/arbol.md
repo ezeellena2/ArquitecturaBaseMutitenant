@@ -1679,11 +1679,11 @@ tests/
 │   │   │   └── PendingItemOrderTests.cs               orden de «Para resolver» (ADR 0040)
 │   │   ├── OrganizationUsers/
 │   │   │   └── OrganizationUserStatePolicyTests.cs    tests de OrganizationUserStatePolicy
-│   │   ├── PublicSite/
+│   │   └── PublicSite/
 │   │   │   └── PublicPageValidationTests.cs           Cada regla del pedido de Página pública muestra su propio…
-│   │   └── Modules/WhatsApp/                        [E8]
-│   │       ├── WhatsAppInboundServiceTests.cs
-│   │       └── BotReplyTests.cs
+│   ├── Modules/WhatsApp/                             [E8]
+│   │   ├── WhatsAppChannelsTests.cs                  capacidades, avisos y selección de destino
+│   │   └── WhatsAppCodeQuotaTests.cs                 admisión diaria dentro de UoW del emisor
 │   ├── Formatting/                                    Versiones para URLs y validadores HTTP
 │   │   └── VersionWireFormatterTests.cs               Dígitos ASCII invariantes para versiones en distintas culturas
 │   ├── DependencyInjectionTests.cs                    AddApplication registra cada clase de Services una sola vez y…
@@ -1956,11 +1956,19 @@ tests/
 │   ├── Time/
 │   │   └── TimeZoneServiceTests.cs                    Comprueba rangos UTC de días civiles según una zona IANA
 │   └── Modules/WhatsApp/                            [E8] tests de integración del módulo
-│       ├── WhatsAppWebhookTests.cs
-│       ├── WhatsAppOptionsValidatorTests.cs
-│       ├── WhatsAppTemplateCatalogTests.cs            cada plantilla del catálogo tiene su WhatsApp:Templates:<Nombre> en appsettings.json y el orden de sus
-│       │                                              variables coincide con el payload que se envía
-│       └── WhatsAppInboundProcessorTests.cs
+│       ├── WhatsAppWebhookTests.cs                   firma, tamaño, ACK/dedupe, estados y snapshots
+│       ├── WhatsAppInboundProcessorTests.cs          leases, crash, clock postlocks y rollback/backoff
+│       ├── WhatsAppStartupTests.cs                   opciones y encendido/apagado
+│       ├── WhatsAppTemplateTests.cs                  catálogo, variables y avisos
+│       ├── WhatsAppCloudClientTests.cs               payload Meta, receipt y un POST por intento
+│       ├── WhatsAppOutboxTests.cs                    outbox cifrado y observación de aceptación
+│       ├── WhatsAppPersistenceTests.cs               modelo/grants e igualdad de vías
+│       ├── WhatsAppChannelSettingsTests.cs           países reales/cambios y número público
+│       ├── WhatsAppCodeQuotaPersistenceTests.cs       día UTC, concurrencia y cuota durable
+│       ├── WhatsAppErrorLocalizationTests.cs
+│       ├── WhatsAppOwnerSeedTests.cs                 Phone del operador sin apropiación
+│       ├── WhatsAppIdentityTests.cs                  ingreso/registro y gestión de Phone
+│       └── WhatsAppRecoveryTests.cs                  recuperación común y decisión asistida
 │
 └── ArquitecturaBaseMultitenant.ArchitectureTests/     [E0]
     ├── ArquitecturaBaseMultitenant.ArchitectureTests.csproj

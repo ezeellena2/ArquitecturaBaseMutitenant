@@ -29,7 +29,7 @@
 - `ModuleControllersTests`, `WhatsAppStartupTests` y `Etapa8ContractTests` (E8): ruta técnica con contribuidor, apagado/retirada, configuración y ausencia de sesión en webhook.
 - La prueba de fuego de la Etapa 8: quitar el módulo y que el núcleo siga en verde.
 - `WhatsAppWebhookTests` (E8): firma, idempotencia, 413, 401.
-- `WhatsAppTemplateCatalogTests` (E8): cada plantilla configurada y el orden de sus variables.
+- `WhatsAppTemplateTests` (E8): cada plantilla configurada y el orden de sus variables.
 
 ## Detalle
 [backend.md §15](../architecture/backend.md#15-whatsapp-un-módulo-quitable) · ADR 0007
