@@ -517,6 +517,11 @@ Vacío al escribir. Durante parte 2 anotar propuesta/motivo/rutas/cuerpos/evento
 
 ## Para decidir
 
+**Resuelto por el usuario el 2026-10-08.** Manda sobre las recomendaciones de abajo:
+- **P1:** «Mis mensajes con empresas» existe con **estado vacío** («Todavía no tenés mensajes con empresas») detrás del puerto neutral. La Etapa 11 conecta la fuente real.
+- **P2:** las alertas van **por correo** a los Dueños que lo tengan. Para activar la clave propia, al menos un Dueño tiene que tener un correo verificado; si no, la pantalla lo pide y lleva a Mi cuenta.
+- **P3:** el tope diario con la clave de la plataforma es **uno solo por persona** (50 por día sumando todos los lados y organizaciones). Con la clave propia de una organización cuenta aparte, con sus propios topes.
+
 Solo huecos de producto no resueltos por maestro, ADR, D1–D26 o v114. No se pregunta librería PDF, proveedor, retención de 30 días, adjuntos v1, ayuda en repo ni modelos configurables: ya están resueltos.
 
 1. **P1 · ¿Qué consulta hoy «Mis mensajes con empresas»?** D12 exige interacciones E7 y el lienzo personal dibuja el atajo, pero E7 sólo dejó mecánica en TestFeatures; «Mensajes» productivo llega con WhatsApp E11. **Recomendación:** implementar el puerto neutral `IConsumerInteractionSource` y el atajo con estado vacío explícito «Todavía no tenés mensajes con empresas» mientras no haya fuente productiva; E11 registra su fuente después. No adelantar bandeja ni consultar tablas sintéticas. Diseño agrega el resultado vacío usando la pieza de respuesta existente antes de T04/T10. Alternativa de ocultar el atajo cambia la bienvenida aprobada y requiere decisión.

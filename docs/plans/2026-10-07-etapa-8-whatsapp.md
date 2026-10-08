@@ -472,6 +472,11 @@ Vacío al escribir el plan. Durante la parte 2, registrar aquí propuesta, motiv
 
 ## Para decidir
 
+**Resuelto por el usuario el 2026-10-08.** Manda sobre las recomendaciones de abajo:
+- **D1:** el enlace del bot entra **como persona**; desde ahí cambia a su empresa con Perfiles. Un operador nunca entra por este enlace.
+- **D2:** a un número sin cuenta, el bot le responde con **un enlace al registro por WhatsApp** en la web, donde acepta los términos y verifica el código. El bot no crea nada.
+- **D3:** los avisos de la organización (aprobada, rechazada, página despublicada) llegan **también por WhatsApp,** con sus plantillas, por el canal que tenga la persona.
+
 Solo estos puntos de producto no quedan resueltos por maestro, ADR ni lienzo. No son decisiones de librerías, nombres de helpers, locks ni diseño ya aprobado.
 
 1. **D1 · ¿A qué acceso entra el enlace del bot?** Enlace dice «Continuar» y Mensajes solo «Entrar», sin elegir persona/empresa. El href de ejemplo a Inicio-Org no define la conducta para una cuenta sin organizaciones ni para un operador. **Recomendación:** el enlace del número de plataforma entra como **persona**; desde allí puede ir a empresa mediante el cambio existente. Si la cuenta probada es operador, continuar por Plataforma con su cookie exclusiva. No añadir selector ni recordar el acceso del último navegador en un mensaje del bot. Resolver antes de congelar la semántica de acceso/continuación de T01 y ejecutar T07/T11.
