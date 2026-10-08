@@ -752,6 +752,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── SignupPolicy.cs                           ¿el registro está abierto? ¿el email está libre?
 │   │   ├── LoginCodeService.cs
 │   │   ├── LoginCodeRequester.cs                     [E3] emisión y mensaje dentro de la UoW de LoginCodeService
+│   │   ├── LoginDestinationResolver.cs               [E8] normaliza Email/Phone Mobile y delega disponibilidad/política de alta al canal
 │   │   ├── LoginVerifier.cs                          [E3] verificación, intentos y auditoría dentro de esa UoW
 │   │   ├── LoginCodeIssuer.cs
 │   │   ├── LoginCodeVerifier.cs
@@ -834,7 +835,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── ReferenceDataRegistration.cs              Registra los datos de referencia
 │   │   └── ReferenceDataService.cs                   usa los cinco catálogos, devuelve ReferenceDataResponse
 │   ├── Messaging/                                    [E3]
-│   │   ├── OutboxDispatchService.cs                  único límite IUnitOfWork para seleccionar, entregar y guardar el estado
+│   │   ├── OutboxDispatchService.cs                  [E8] ClaimNext/Complete, una UoW por operación; transporte fuera en el processor
 │   │   └── MessagingRegistration.cs                  Registra el despacho del outbox, con sus opciones
 │   ├── Platform/                                     [E5]
 │   │   ├── TenantAdministrationService.cs
@@ -892,7 +893,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── LoginMethodLinker.cs                      Vínculo verificado y copia del principal en la UoW del…
 │   │   ├── LegalConsentRecorder.cs                   Registra únicamente consentimiento explícito, dentro de la UoW del llamador
 │   │   ├── AccountRegistrar.cs                       Crea la identidad global
-│   │   ├── LoginMethodVerifier.cs                    Verifica el código de un correo nuevo y, si la…
+│   │   ├── LoginMethodVerifier.cs                    Verifica Email/Phone nuevo con hint proyectado y entidad fresca tras locks
 │   ├── Legal/
 │   │   ├── AccountDeletionCancelIssuer.cs            Emite un comprobante de cancelación para una cuenta pendiente de…
 │   │   ├── AccountDeletionCanceller.cs               Valida y consume el comprobante de cancelación de baja, reactiva…
@@ -1188,7 +1189,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   │                                              con el advisory lock "seed:" (sin carreras entre réplicas)
 │   │   ├── DatabaseSeeder.cs                          [E3] límite global y lock `seed:database`; no crea cuentas ni organizaciones de muestra
 │   │   ├── OpenIddictSeeder.cs                        [E3] cliente web + scope api
-│   │   ├── PlatformSeeder.cs                          [E3] ajustes de plataforma + operador inicial (Seed:PlatformOwner:Email y DisplayName; Phone opcional hasta E8), con todos los permisos de Plataforma (ADR 0042)
+│   │   ├── PlatformSeeder.cs                          [E3/E8] ajustes + operador inicial (Email, FirstName/LastName; Phone secundario opcional exclusivo), permisos individuales (ADR 0042)
 │   │   └── LegalDocumentSeeder.cs                     [E3] 3a: versión base de términos y privacidad, con contenidos es y en
 │   ├── AccessIndex/
 │   │   ├── LoginInvitation.cs                          Proyección global mínima mantenida por triggers de invitaciones
