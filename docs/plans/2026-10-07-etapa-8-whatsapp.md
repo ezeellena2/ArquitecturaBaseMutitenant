@@ -1,0 +1,455 @@
+# Etapa 8: WhatsApp como módulo quitable — plan ejecutable
+
+**Estado:** plan para ejecutar; ninguna tarea está implementada por este documento. Los puntos de «Para decidir» necesitan respuesta antes de ejecutar sus tareas dependientes.
+
+**Objetivo:** habilitar el número de la plataforma para códigos, registro personal, invitaciones, avisos y bot de ingreso, con teléfonos como métodos de una identidad global. Quitar WhatsApp debe dejar el núcleo compilando y funcionando con correo y Google.
+
+**Arquitectura:** Domain ← Application ← Infrastructure; Api compone. `Domain/WhatsApp` y `Modules/WhatsApp` en las otras tres capas contienen el módulo; el núcleo solo conoce puertos neutrales, métodos `Phone` y enlaces de ingreso. Los envíos y la entrada pendiente son persistentes; los payloads sensibles se cifran y ninguna llamada a Meta se hace dentro de una transacción de negocio.
+
+**Tecnologías:** .NET 10, Aspire 13.5, EF Core/Npgsql, PostgreSQL, Identity/OpenIddict, Data Protection, React, TanStack Query, i18next, Vitest y Playwright. Versiones de paquetes del back solo en `Directory.Packages.props`.
+
+## Forma de trabajo
+
+Esta sección manda sobre protocolos antiguos que pidan rojo ceremonial, aprobación por pantalla o evidencia por tarea. Copia el bloque inicial «Forma de trabajo» de la [Etapa 7](2026-10-04-etapa-7-publico-y-personal.md) y la [guía de etapa en paralelo](../guides/etapa-en-paralelo.md).
+
+- Programar directo, en el orden de las dependencias, copiando las referencias indicadas. Tests junto al código donde importan: reglas, posesión de métodos, carreras, autenticación, permisos, aislamiento y recorridos reales. No un test por cada estado visual.
+- Leer los `AGENTS.md` de raíz y de las carpetas afectadas y sus fichas. Mantener verdes las guardas existentes; no ampliar listas blancas para eludirlas.
+- Tres partes: **1. Contrato**, con la consolidación de identidad como primer paso; **2. Back y Front en paralelo**, un chat por repo; **3. Integración y puerta**, un solo chat sobre ambos repos. El chat de Contrato es el único que toca ambos repos antes de la integración.
+- Cada chat de la parte 2 toca solo su repo. Contrato congelado al terminar la parte 1. Si hay que cambiarlo, registrar «Cambios al contrato» y esperar que el usuario pase el cambio al otro chat; sincronizarlo en ambos repos antes de seguir.
+- Sin aprobación previa por pantalla ni capturas por avance. Copiar los tableros vigentes, con las correcciones expresamente ordenadas por las ADR. Si falta una pantalla nueva que las fuentes no resuelven, pedirla a Diseño. Galería una sola vez al final.
+- Commits por cambio coherente y verificado, en español, en `main`, sin push: `git add -- <rutas>` y `git commit -m "…" -- <rutas>`. No incluir cambios ajenos. El commit es el seguimiento de cada tarea; al final, un informe corto con resultados, decisiones y pendientes.
+- Durante el trabajo: tests focales y build del proyecto afectado; integración y seguridad cuando se tocan identidad, rutas o persistencia. Las suites completas se corren al final y en CI, sin repetirlas por cada tarea.
+- **Una sola puerta final:** suites completas, E2E real, Meta y túnel reales, documentación en 0, galería lado a lado, recorrido con sesiones anteriores y prueba de quitar el módulo. No cerrar la etapa si falta alguna parte. Apagar solo el Aspire levantado para esta etapa con `aspire stop`.
+- Una duda técnica menor se resuelve con lo más simple y coherente y se registra en «Decisiones tomadas» del informe. Una decisión de producto sin fuente se consulta. Para ejecutar tarea por tarea, usar la skill `executing-plans`, subordinada a esta forma de trabajo.
+
+## Fuentes y alcance
+
+Rutas de este documento: `B/` = `C:/Users/ezequ/source/repos/ArquitecturaBaseMutitenant`; `F/` = `C:/Users/ezequ/source/repos/ArquitecturaBaseMutitenantFront`. En las tareas, `D/`, `A/`, `I/` y `P/` abrevían `B/src/ArquitecturaBaseMultitenant.Domain/`, `.Application/`, `.Infrastructure/` y `.Api/`; `U/`, `AU/`, `IT/` y `AR/` abrevian los proyectos `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/`, `.Application.UnitTests/`, `.Api.IntegrationTests/` y `.ArchitectureTests/`. Los nombres de archivos nuevos son la propuesta concreta de este plan.
+
+Fuentes, en orden de precedencia funcional:
+
+1. Pedido del usuario y ADR [0033](../decisions/0033-metodos-de-ingreso.md), [0041 reemplazada](../decisions/0041-no-revelar-cuentas.md), [0042](../decisions/0042-operadores-de-plataforma.md), [0043](../decisions/0043-las-pantallas-dicen-si-hay-cuenta.md), [0044](../decisions/0044-sesion-de-plataforma-aparte.md), [0045](../decisions/0045-mi-cuenta-sin-codigo-de-confirmacion.md), [0046](../decisions/0046-nombre-y-apellido.md), [0047](../decisions/0047-el-ingreso-acepta-la-invitacion.md) y su [índice](../decisions/README.md). Por pedido expreso, la 0043 se aplica también a números.
+2. [Etapa 8 del maestro](2026-09-27-plan-de-desarrollo.md#etapa-8-whatsapp-como-módulo-quitable-número-de-la-plataforma), como alcance; [revisión de calidad, primer paso de la E8](../reviews/2026-10-03-calidad-de-diseno.md#primer-paso-de-la-etapa-8-antes-de-sumar-teléfonos).
+3. `F/docs/design/lienzo/README.md`: versión 114 al escribir el plan. Leer `Ingreso`, `Registro`, `Enlace`, `Recuperar`, `Cuenta`, `Cuenta-Agregar`, `Cuenta-Verificar`, `Cuenta-Metodo`, sus `M-*`, y `Mensajes` con canal WhatsApp. Usar la versión vigente al ejecutar; no copiar Archivo ni generadores como fuente de conducta.
+4. [Etapa 11](2026-10-03-etapa-11-whatsapp.md), [configuración](../operations/configuracion.md) y [plantillas](../operations/whatsapp-plantillas.md), interpretadas con las ADR nuevas.
+5. [backend §15](../architecture/backend.md#15-whatsapp-un-módulo-quitable), [multitenancy §3](../architecture/multitenancy.md), `docs/features/identidad.md`, `docs/architecture/arbol.md` y fichas `capas-y-flujo`, `guardado`, `modulos`, `telefonos`, `datos-personales`, `api-http`, `permisos`, `idempotencia`, `concurrencia`, `result-y-errores`, `validacion`, `fechas-y-zonas`, `textos-y-traducciones`, `logs`, `persistencia-ef`, `multitenancy` y `tests`.
+
+La E8 no implementa atención humana, números de organizaciones, alta embebida, equipos, contactos comerciales, difusiones ni la sección personal de conversaciones de la E11. **`Mensajes.dc.html` es aquí el catálogo visual de códigos, invitaciones y avisos**, no una nueva bandeja personal. Tampoco implementa TOTP de E9 ni el asistente de E8b.
+
+Punto de partida observado: back `82cf9bb`, front `0e6d3730`; ya existen puertos de correo, outbox cifrado, métodos globales, dos cookies, gestión sin ReauthTicket, nombre/apellido y aceptación de invitaciones por código. HTTP de ingreso/alta/métodos y el nuevo destino de recuperación siguen orientados a correo; `IInvitationChannel.EnqueueAsync` recibe `Email`; `PhoneField` aún no tiene `usage="whatsapp"`. Verificar el estado vigente y el cierre de E7 al ejecutar, sin rehacer lo ya resuelto.
+
+## Lo que cambió desde el plan maestro
+
+| Punto de E8 | Texto o supuesto anterior | Cómo queda |
+|---|---|---|
+| Back 0, consolidación | Altas, consentimientos, intentos y vínculos duplicados | Sigue siendo el primer paso. Conserva lo entregado por 0043–0047: nombres separados, cookies separadas, sin ReauthTicket y consentimiento explícito distinto de probar posesión. No fusionar la identidad de un operador con una persona. |
+| Back 2–3, avisos | Se listaban principalmente los cinco avisos iniciales de cuenta | Incluir también recuperación y las dos variantes de baja iniciada por Plataforma ya especificadas en operaciones/Mensajes. 0043 elimina `metodo_ingreso_en_uso` y `recuperacion_metodo_en_uso`: no crear código ficticio, envío ni aviso al dueño ante destino ocupado. `recuperacion_aviso_cuenta` sigue: informa un pedido efectivamente registrado. |
+| Back 3, registro B2C | Añadir registro por WhatsApp sobre el flujo anterior | Si el número ya tiene cuenta, informar y ofrecer Ingresar antes de emitir OTP (0043). Crear cuenta con `Phone` verificado y consentimiento en la misma transacción. Nombre/apellido opcionales; nada de volver a un campo combinado (0046). |
+| Back 4, bot/enlace e ingreso | Enlace de un solo uso sin aclarar las nuevas sesiones | Después de demostrar posesión, aplicar 0042/0044: cookie pública para persona/empresa, cookie exclusiva para Plataforma. Antes de posesión no revelar condición de operador. Estado de baja, suspensión, legal y acceso reutilizan el flujo vigente. El webhook nunca crea una sesión. |
+| Back 5, teléfono como «otro método» | Teléfono recibe un código para quitar/cambiar otro método | Se suprime ese uso por 0045. Solo hay OTP para ingreso, registro y probar el **método nuevo**, incluido recuperación. Principal, quitar, Google y baja se resuelven con sesión, reglas y avisos. No restaurar `/api/me/reauth` ni un ticket equivalente. |
+| Back 5, vínculos | Soltar contacto e invalidar enlaces al quitar/cambiar | Se conserva. «Cambiar número» sigue sin existir: agregar nuevo y quitar viejo. No desasociar el contacto al cambiar únicamente cuál método es principal. |
+| Front, número ocupado | Seguir como libre y avisar al dueño (0041) | Error bajo `phone`: «Ese número ya está asociado a otra cuenta.»; no pasar al código ni encolar nada. Ingreso sin cuenta y registro con cuenta ofrecen la acción correspondiente con el número conservado (0043). Recuperación explica teléfono anterior inexistente/nuevo ocupado. |
+| Front, ⋮ y textos | Principal/Quitar con código a otro método; texto de número ocupado descartado | Confirmación visual del tablero, sesión y aviso posterior, **sin OTP adicional** (0045). Recuperar el error de número ocupado. El estado «Quitar un correo: el código llega por WhatsApp» de Cuenta-Metodo/M-Cuenta-Metodo ya no se ejecuta. |
+| Flujos de invitación que toca la consolidación | Solo enlace para aceptar | Conservar 0047: el código acepta todas las invitaciones vigentes del destino probado, también entrando como persona; última organización usada o más antigua para empresa. No registrar aceptación legal implícita. Invitación de operador sigue solo por correo y por Plataforma (0042). No ampliar de forma tácita la 0047 a invitaciones telefónicas inexistentes: la E11 añadirá su alta pública. |
+| Mi cuenta y mensajes | Campo DisplayName y estados viejos del lienzo | Nombre y apellido separados y DisplayName derivado; Google solo rellena partes vacías (0046). Copiar disposición vigente y excluir los mensajes/confirmaciones reemplazados por 0043/0045 aunque aún figuren en Tweak o comentarios del HTML. |
+
+## Orden y dependencias
+
+`T00 → T01 → contrato commiteado en B y F → (T02…T08 Back ∥ T09…T12 Front) → T13 → T14`.
+
+T00 no agrega teléfonos ni módulo: consolida el núcleo **antes** de definir las nuevas implementaciones. T01 publica solo contrato, modelos, puertos y esqueletos necesarios; las rutas nuevas pueden responder 501 temporalmente. En la parte 2 desaparece todo 501. Las decisiones de D1/D2 afectan bot y enlace (T07/T11), D3 a la matriz de avisos (T03); pueden avanzar las tareas independientes mientras llegan las respuestas.
+
+## Parte 1 · Contrato
+
+### T00 · Consolidar identidad antes de sumar teléfonos
+
+**Archivos:** crear `A/Services/Identity/AccountRegistrar.cs`, `LegalConsentRecorder.cs`, `LoginMethodLinker.cs`, `A/Services/Auth/LoginCodeAttemptVerifier.cs`, `D/Users/AccountLifecycle.cs` y `D/Authentication/LoginMethodChange.cs`. Modificar los llamadores reales: `A/Services/Auth/{SignupAccountRegistrar,GoogleAccountRegistrar,GoogleAccountMethodFinalizer,SignupCodeVerifier,SignupExistingMethodVerifier,LoginCodeService,LoginCodeAttemptGuard}.cs`, `A/Services/Invitations/{InvitationAccountRegistrar,LoginInvitationAcceptanceWriter}.cs`, `A/Services/Identity/{LoginMethodIssuer,LoginMethodVerifier,LoginMethodNotifier,GoogleProfileWriter}.cs`, `A/Services/Platform/{PlatformOperatorProvisioner,PlatformRecoveryDecisionService}.cs`, `A/Models/Notifications/AccountNotice.cs`, `I/Identity/ApplicationUser.cs`, `I/Persistence/Repositories/UserRepository.cs` y los registros `AuthRegistration.cs`, `IdentityRegistration.cs`, `InvitationsRegistration.cs`, `PlatformRegistration.cs` de esas áreas. Inventariar también los restantes llamadores de creación, consentimiento y transición mediante `rg`, y sustituirlos dentro del mismo cambio coherente.
+
+**Copiar de:** `SignupAccountRegistrar` para alta legal; `InvitationAccountRegistrar.RegisterVerifiedEmailAsync` para alta por posesión **sin** consentimiento; `LoginCodeVerifier`/`LoginCodeAttemptGuard` para intentos; `GoogleAccountGuard` para lock de Google; `LoginMethodVerifier`/`GoogleAccountMethodFinalizer` para vínculo; transiciones actuales de `ApplicationUser` para `AccountLifecycle`. `RoleService` mantiene el modelo de servicio/UoW. No crear coordinadores que solo reenvíen ni helpers con IUnitOfWork.
+
+- [ ] Separar creación de cuenta, creación/activación de su método, creación del espacio personal y consentimiento. El registrar común admite altas personales y de operador sin darle espacio personal a este. Quien posee un correo invitado no acepta legales por ese solo hecho.
+- [ ] Extraer la verificación de intentos y bloqueo sin cambiar los propósitos de OTP, sus límites, auditoría ni `CommitPolicy`: un fallo debe persistir intentos/lockout cuando corresponda, sin confirmar un alta fallida.
+- [ ] Unificar el vínculo verificado, unicidad y copias del principal. Tomar todos los locks de identidad que hoy exige Google también desde Mi cuenta, invitación de operador y recuperación. Escribir el orden común de locks; probar carreras entre rutas, sin inversión de orden ni métodos duplicados. El linker trabaja dentro de la UoW del servicio llamador.
+- [ ] Llevar a Domain las reglas de Active/Suspended/PendingDeletion/Deleted, cancelación y fechas; Infrastructure solo las aplica. Conservar suspensión con baja programada y protección del último operador/único Dueño.
+- [ ] Cambiar `AccountNotice.LoginMethodChanged.Change` y sus emisores/renderizadores de strings `Added/Removed/Primary` a `LoginMethodChange`, con mapeo de texto localizado único.
+- [ ] El maestro exige `LegalConsentRecorder`, pero `Recorder` todavía no figura en la lista cerrada de helpers: agregar su responsabilidad («registra el consentimiento explícito en la UoW del llamador») a `B/docs/rules/capas-y-flujo.md` y verificarla con `AR/ApplicationServicesTests.cs`. Es la convención necesaria para ese nombre, no una excepción por clase.
+- [ ] Correr los tests focales y build; commitear la consolidación antes de T01. No agregar aún filas Phone ni rutas de WhatsApp.
+
+**Tests que importan:** nuevos `AU/Services/Identity/AccountRegistrarTests.cs`, `LoginMethodLinkerTests.cs`, `AU/Services/Auth/LoginCodeAttemptVerifierTests.cs`, `U/Users/AccountLifecycleTests.cs`; existentes `IT/Auth/{SignupTests,GoogleSignupConsentTests,InvitedLoginCodeTests,PlatformSessionTests}.cs`, `IT/Identity/{LoginCodeConcurrencyTests,LoginMethodsTests,AccountMethodsHttpTests}.cs`, `IT/Platform/PlatformRecoveryTests.cs` y `IT/Legal/AccountDeletionTests.cs`. Añadir carrera Google ↔ correo en las tres rutas omitidas, rollback de alta/consentimiento y prueba de invitación por código sin aceptación legal.
+
+**Hecho cuando:** existe una implementación común de cada regla, los llamadores conservan conducta y rutas, no hay ReauthTicket, las guardas no requieren nuevas excepciones y los tests focales pasan.
+
+### T01 · Fijar HTTP, capacidades y puertos neutrales
+
+**Archivos:** `B/docs/contracts/openapi.json`; contratos existentes `P/Contracts/Auth/{RequestLoginCodeHttpRequest,VerifyLoginCodeHttpRequest,SignupHttpRequest,VerifySignupHttpRequest,AccountRecoveryHttpRequests}.cs`, `P/Contracts/Account/AddLoginEmailHttpRequest.cs` (reemplazar por `AddLoginMethodHttpRequest.cs`), `P/Contracts/Common/PhoneInputHttpRequest.cs`; nuevos `P/Contracts/Auth/{PreviewLoginLinkHttpRequest,RedeemLoginLinkHttpRequest}.cs`; modelos e interfaces homónimos en `A/Models/{Auth,Identity,Invitations}` y `A/Interfaces/{Services,Integrations/Messaging,Persistence}`. Nuevo `P/Controllers/Auth/LoginLinkController.cs`; esqueleto `P/Modules/WhatsApp/{WhatsAppApiModule.cs,Controllers/WhatsAppWebhookController.cs}`. Tipos del front `F/src/shared/api/generated/schema.d.ts`, `types.ts` y `accountContract.ts`.
+
+**Copiar de:** los contratos actuales y `LoginCodeController`, `AccountRecoveryController`, `AccountLoginMethodsController`; `../ArquitecturaBase/src/ArquitecturaBase.Api/Controllers/LoginLinkController.cs` para preview/redeem; `IT/Contracts/OpenApiContractTests.cs` y `AR/AccessDeclarationTests.cs` para las guardas. Exportar con el mecanismo MSBuild vigente de `P/ArquitecturaBaseMultitenant.Api.csproj`, no escribir tipos generados a mano.
+
+- [ ] Materializar la tabla HTTP y los esquemas siguientes, incluyendo seguridad, ejemplos y códigos/textos es/en. Mantener compatibles los cuerpos de correo actuales mediante campos aditivos; el nombre del nuevo contrato de alta no cambia su ruta.
+- [ ] Aportar capacidades neutrales al puerto de código: tipo de método, disponibilidad, países, `ContactPhone` público opcional y validación de destino nuevo mediante Result. El núcleo enumera canales registrados; nunca compara con `"whatsapp"` ni lee `WhatsApp:*`. La implementación del módulo aporta su clave, países y número público canónico desde DisplayPhoneNumber normalizado, distinto del PhoneNumberId. Definir las firmas en esta parte, antes de dividir chats.
+- [ ] Extender `IInvitationChannel` con un destino de **entrega** tipado `InvitationDeliveryDestination` (Email o Phone, construido desde value objects) y tipo de método soportado, conservando el adaptador de correo. No cambiar `Invitation.Destination`, su token ni la prueba de Email: para entregar una invitación Email por WhatsApp, el destino pertenece a una cuenta ya identificada por ese correo y se selecciona un Phone verificado/utilizable de **esa misma cuenta** (principal si es Phone; en otro caso, el verificado más antiguo). Sin Phone de esa cuenta, error de canal no disponible, sin fallback ni contacto arbitrario. Actualizar `InvitationDeliveryIssuer`/su guard para decidir antes de guardar. Alta/aceptación de invitaciones cuyo destino sea un teléfono y carga de empleados quedan E11.
+- [ ] Crear `IPhoneLinkObserver` neutral para agregado/verificado, retirado y eliminación de cuenta, y un puerto de emisión de enlaces `ILoginLinkIssuer` para que el módulo invoque el issuer interno del núcleo sin acceder a su clase concreta. Ninguno depende del módulo.
+- [ ] Declarar controllers anónimos en la lista explícita de AccessDeclarationTests; autenticar Mi cuenta con `[Access(Consumer, Business, Platform)]`, sin permisos de organización para una identidad propia. El contrato distingue sesión/token del lado solicitado; `access` nunca viene de un número ni de un host. `ModuleControllersTests` hoy exige FeatureGate a todo controller del namespace de módulo: distinguir explícitamente el webhook global condicionado por configuración y comprobar su apagado; no aplicarle un FeatureGate por tenant ni abrir una excepción a todos los controllers del módulo. El número de organizaciones y sus gates siguen para E11.
+- [ ] Esqueletos compilan y guardas de rutas pasan. Para rutas condicionales, el exportador de contrato incluye el webhook aunque la configuración normal no lo habilite; runtime sin claves lo deja en 404. Documentar 501 solo como estado de trabajo, retirarlo antes de congelar el resultado final de la etapa.
+- [ ] Commitear contrato en B, ejecutar `npm run contracts` y `npm run contracts:check` en F y commitear tipos/alias. Registrar los dos hashes en el informe de Contrato, para comprobar igualdad durante la parte 2.
+
+**Hecho cuando:** tablas, ejemplos, permisos, errores y capacidades están en OpenAPI; ambos repos tienen commits compatibles; el front puede programar con respuestas simuladas sin inferir ningún cuerpo ni código.
+
+### Contrato HTTP completo de E8
+
+Convenciones: JSON camelCase; fechas UTC con `Z`; `phone` usa el contrato existente `{ country: "AR", number: "11 2345 6789" }`, con país ISO leído de referencias. El back normaliza con `IPhoneNumberParser` y `PhoneUsage.Mobile`, guarda E.164 canónico `+549…`; la excepción del 9 de Meta solo altera el envío del módulo. No aceptar el país, tenant, usuario o propietario de un método como prueba de posesión.
+
+**Destino de código:** cuerpos existentes mantienen `email`. Se agregan `channel?: string` y `phone?: PhoneInputHttpRequest`; sin channel se interpreta correo por compatibilidad. Con email se exige canal email y phone ausente; con phone se exige un canal registrado que atienda Phone y email ausente. Ambos o ninguno: 400 Validation.General sobre el campo. No agregar un enum WhatsApp al núcleo. `code` es string de dígitos ASCII con longitud de Authentication:LoginCode (6 por defecto, como el lienzo); `nonce` y token de enlace tienen 43 caracteres base64url sin padding (`A-Z`, `a-z`, `0-9`, `-`, `_`), generados con 32 bytes aleatorios; no se intercambian entre propósitos. Ninguno se imprime en ToString.
+
+| Método y ruta | Acceso / límite / idempotencia | Recibe | Éxito y efecto |
+|---|---|---|---|
+| GET `/api/auth/methods` | Anónima | — | 200 `{ channels: [{ key: "email", countries: [] }, { key: "google", countries: [] }, { key: "whatsapp", countries: ["AR"], contactPhone: "+5491123456789" }] }`, solo los disponibles. `contactPhone?: string|null` es aditivo, público y canónico E.164; otros canales pueden omitirlo. Sin módulo no devuelve whatsapp. Es capacidad global del número de plataforma, independiente del módulo de una organización. |
+| POST `/api/auth/login-code` | Anónima; LoginCode; Idempotency-Key | Destino | 202 `{ resendAfterSeconds }`, solo para método verificado utilizable; conservar el camino de invitaciones por correo de 0047. Número inexistente: error antes del envío. |
+| POST `/api/auth/login-code/verify` | Anónima; LoginVerify; Idempotency-Key | Destino + `code`, `returnUrl` | 200 `{ returnUrl }`, sesión del lado de la autorización validada; no tokens en el body. El returnUrl local/OIDC conserva acceso, PKCE y callback autorizados. |
+| POST `/api/auth/signup` | Anónima; LoginCode; Idempotency-Key | Destino + `acceptedTerms`, `culture?`, `timeZoneId?` | 202 `{ resendAfterSeconds }`; valida registro B2C abierto, consentimiento y referencias. No crea una empresa. |
+| POST `/api/auth/signup/verify` | Anónima; LoginVerify; Idempotency-Key | Lo anterior + `code` | 204; cuenta, Phone verificado/principal, espacio personal y aceptación vigente atómicos. Mantener la continuación OIDC vigente del registro. |
+| GET `/api/me/login-methods` | Consumer/Business/Platform | — | 200 `AccountLoginMethodsResponse` vigente: `methods`, `canLinkGoogle`, `needsPersonalLoginMethod`, `accountDeletionGraceDays`, `soleOwnerOrganizations`. Phone aparece solo con canal disponible y conserva la forma actual de `AccountLoginMethodResponse`; no añadir una segunda fuente de capacidades. |
+| POST `/api/me/login-methods` | Consumer/Business/Platform; Idempotency-Key; topes de cuenta/destino | `email` o `phone` + `channel` según Destino | 202 `{ methodId, resendAfterSeconds }`; pendiente propio y OTP al número nuevo. No ReauthTicket. Otro dueño verificado: 400 y ningún OTP, pendiente nuevo ni aviso. |
+| POST `/api/me/login-methods/{methodId}/code` | Mismos accesos; Idempotency-Key; topes | Sin body | 202 `{ methodId, resendAfterSeconds }`; reenvía solo para pendiente propio; recarga propiedad y disponibilidad. |
+| POST `/api/me/login-methods/{methodId}/verify` | Mismos accesos; Idempotency-Key | `{ code }` | 204; método pasa a verificado bajo lock, actualiza principal si corresponde y encola avisos a los demás métodos. |
+| PUT `/api/me/login-methods/{methodId}/primary` | Mismos accesos; sin OTP | Sin body, igual al contrato actual | 204; reglas de principal/método activo bajo lock, avisos. Conservar concurrencia actual de esta operación; no inventar version de Tus datos para los métodos. |
+| DELETE `/api/me/login-methods/{methodId}` | Mismos accesos; sin OTP | Sin body, igual al contrato actual | 204; no quitar último método utilizable/personal, transferir principal según regla vigente, avisar y ejecutar observer en la UoW. |
+| POST `/api/account-recovery/preview` | Anónima; LoginCode | `previousEmail` o `previousPhone` (exactamente uno) | 204 si se encuentra cuenta recuperable por ese método anterior; 400 propio si no existe. No requiere controlar el método perdido. |
+| POST `/api/account-recovery/code` | Anónima; LoginCode; Idempotency-Key | Destino nuevo + `nonce` | 202 `{ resendAfterSeconds }`; no verifica ni agrega método todavía. Destino ocupado: 400 sin mensaje. |
+| POST `/api/account-recovery/verify` | Anónima; LoginVerify; Idempotency-Key | Destino nuevo + `nonce`, `code` | 204; verifica posesión vinculada a ese pedido, sin sesión. |
+| POST `/api/account-recovery` | Anónima; LoginVerify; Idempotency-Key | Destino nuevo + `nonce`, `previousEmail` o `previousPhone` | 202 sin body; pedido asistido, aviso al destino nuevo y a los métodos activos de la cuenta anterior. Revalida ocupación; aprobación/rechazo siguen en Plataforma con permiso, motivo y version actuales. |
+| POST `/api/auth/login-link/preview` | Anónima; LoginVerify; sin consumo | `{ token }` | 200 `{ displayName: string|null, maskedPhone: string|null }`; lectura sin cookie nueva ni consumo. Solo quien posee el token ve esa cuenta. |
+| POST `/api/auth/login-link/redeem` | Anónima; LoginVerify; Idempotency-Key | `{ token, access: "consumer"|"business"|"platform" }` | 200 `LoginLinkRedeemResponse { access: "consumer"|"business"|"platform" }`, acceso autorizado efectivo y cookie de ese lado; sin tokens OIDC en body. D1 define el acceso pedido desde Enlace. El front crea **después** la transacción OIDC con signinRedirect, usando este acceso. Solo Continuar consume. |
+| GET `/webhooks/whatsapp` | Anónima, ruta condicional | Queries Meta `hub.mode`, `hub.verify_token`, `hub.challenge` | 200 text/plain con challenge cuando mode=subscribe y token correcto; 401 si falla. No emitir sesión. |
+| POST `/webhooks/whatsapp` | Anónima; rate limit del webhook; máximo 5 MiB | JSON Meta y `X-Hub-Signature-256` | 200 después de persistir lote; firma sobre bytes originales. Duplicados también 200, sin duplicar entrada/respuesta. Sin Idempotency-Key: la deduplicación usa IDs de Meta. |
+
+Las rutas existentes de Google, baja, legales, invitaciones y Plataforma conservan su forma. El cambio funcional E8 ahí es soportar Phone en los puertos, avisos, aprobación de recuperación y limpieza; no sumar permisos WhatsApp a roles todavía. La identidad de una invitación sigue siendo su Email; el adaptador puede entregarla al Phone verificado de la misma cuenta. El enlace exige la prueba/identidad que ya exigía, no verifica un correo nuevo por controlar un número. Las invitaciones de operadores nunca usan el adaptador WhatsApp.
+
+**Esquemas y seguridad que también quedan congelados:**
+
+- `LoginMethodCodeResponse`: `methodId: uuid`, `resendAfterSeconds: int`; `RequestLoginCodeResponse`: `resendAfterSeconds: int`. No devuelven OTP ni token. `AccountLoginMethodResponse`: `id: uuid`, `type: "Email"|"Phone"|"Google"`, `value: string|null` (Phone canónico, la UI enmascara al mostrar), `isPrimary: bool`, `isVerified: bool`, `managedByTenantId: uuid|null`, `managedByOrganizationName: string|null`, `canRemove: bool`, `canMakePrimary: bool`, `backupDestination: string|null` ya enmascarado. Mantener `backupDestination` por compatibilidad, sin mostrar un supuesto código de confirmación. No sustituir DTO por entidad Domain ni basar canRemove/canMakePrimary en poder recibir un código adicional: alcanza conservar los métodos utilizables/personal que exige la regla.
+- La recuperación guarda tipo/valor del método nuevo y anterior. Extender `AccountRecoveryRequest` y su lectura para Phone sin convertirlo a Email. Las respuestas de Plataforma conservan rutas, reason/version y SecurityEvent; su esquema muestra el tipo existente de método.
+- Enlace opaco aleatorio de 256 bits, hash en `identity.LoginLinks`, válido 10 minutos y de un solo uso. URL `https://<issuer>/login/enlace#t=<token>`; quitar el fragmento con history.replaceState al cargar y mantener el secreto solo en memoria. No query, localStorage, Referer ni logs; no guardar la URL en el historial de mensajes. Preview no consume; segundo redeem con otra key falla. Repetición con la misma key no crea una segunda sesión ni consume de nuevo.
+- El enlace se liga al **MethodId Phone verificado**, no solo al UserId. Emitir uno nuevo invalida los anteriores del mismo destino. Revalidar método, dueño, disponibilidad y estado en preview/redeem para que quitarlo/reasignarlo/apagar módulo impida usarlo.
+- El enlace abierto desde el chat no trae una autorización OIDC anterior. Preview/redeem usan el secreto en memoria; **no** exigir un returnUrl de `/connect/authorize` que aún no existe ni navegar antes de consumir. Tras redeem exitoso, limpiar usuario/token OIDC anterior en memoria y caché de queries sin hacer logout de la cookie recién creada; ejecutar `auth.signinRedirect({ extraQueryParams: { access: result.access }, state: { returnTo: homeOf(result.access) } })`. oidc-client-ts crea state y PKCE, vuelve por el callback autorizado actual y no transporta el token del enlace. Nunca construir tokens/OIDC a mano. El cambio de acceso conserva las cookies separadas; una cuenta común no puede obtener acceso platform.
+- Topes OTP actuales por IP, destino y cuenta; cuota diaria del módulo `DailyAuthCodeLimit=100`. Enlaces copian `Authentication:LoginLink` de ArquitecturaBase: 60 segundos entre emisiones, 5 cada 15 minutos; límites persistentes, también con dos réplicas. Webhook conserva rate limit propio de ArquitecturaBase. Respuestas 429 incluyen `Retry-After` y `retryAfter` en segundos.
+- `Idempotency-Key` en POST que crea, envía o consume: mismo pedido/key no duplica outbox, intento ni invitación. Conservar reserva y TTL vigentes; no cachear Set-Cookie como respuesta compartida entre cuentas. Preview no necesita Idempotency-Key porque no escribe.
+- Errores siempre ProblemDetails `type/title/status/detail/instance`, `code`, `traceId`; `errors` para campos y `attemptsLeft`/`retryAfter` donde corresponde. Sin PII de otra cuenta. Las rutas anónimas jamás publican si una cuenta es operador antes de probar posesión.
+
+### Errores del contrato y textos
+
+Publicar en las responses de OpenAPI, no solo en este plan. Los nuevos códigos neutrales viven en los *Errors del núcleo; los propios de WhatsApp, en `D/WhatsApp/WhatsAppErrors.cs`, con textos del módulo. `FieldErrors.On` convierte ausencia/ocupación en 400 de campo como hoy con correo; los 404 quedan para recursos propios inexistentes/ajenos. Conservar el catálogo completo de errores preexistentes de las rutas y añadir estas variantes:
+
+| HTTP / código | Campo o ámbito | Español / inglés |
+|---|---|---|
+| 400 `Validation.General` | destino/code/acceptedTerms/nonce | Mensajes propios de cada regla; «Elegí un solo método de contacto.» / “Choose one contact method.”; no un texto genérico para todas las validaciones. |
+| 400 `Users.Phone.Invalid` | phone / previousPhone | «Ingresá un número de teléfono válido.» / “Enter a valid phone number.” |
+| 400 `Users.Phone.NotMobile` | phone, para destino nuevo/de código | «Ingresá un número de celular.» / “Enter a mobile number.” |
+| 400 `Auth.LoginCode.PhoneAccountNotFound` (nuevo) | phone | «No hay una cuenta con ese número.» / “There is no account with that number.” |
+| 400 `Auth.Signup.PhoneTaken` (nuevo) | phone | «Ya tenés una cuenta con ese número.» / “You already have an account with that number.” |
+| 400 `Identity.LoginMethod.PhoneAlreadyUsed` (nuevo) | phone | «Ese número ya está asociado a otra cuenta.» / “That number is already linked to another account.” |
+| 400 `Platform.AccountRecovery.PhoneAccountNotFound` (nuevo) | previousPhone | «No hay una cuenta con ese número.» / “There is no account with that number.” |
+| 400 `Platform.AccountRecovery.PhoneMethodInUse` (nuevo) | phone | «Ese número ya está asociado a otra cuenta.» / “That number is already linked to another account.” |
+| 400 `WhatsApp.Phone.CountryNotAllowed` (nuevo) | phone, solo alta nueva | «WhatsApp no está habilitado para ese país.» / “WhatsApp is not enabled for that country.” |
+| 400 `Auth.LoginMethod.ChannelUnavailable` (nuevo, neutral) | channel | «Ese método de ingreso no está disponible.» / “That sign-in method is unavailable.” |
+| 400 `Auth.LoginCode.Invalid` | code; attemptsLeft opcional | «El código no es válido.» / “The code is not valid.” |
+| 400 `Auth.LoginCode.Expired` | code | «El código venció. Pedí uno nuevo.» / “The code expired. Request a new one.” |
+| 400 `Auth.LoginCode.AlreadyUsed` | code | «El código ya fue usado. Pedí uno nuevo.» / “The code has already been used. Request a new one.” |
+| 400 `Auth.LoginCode.TooManyAttempts` | code | «Superaste los intentos para este código.» / “You exceeded the attempts for this code.” |
+| 429 `Auth.LoginCode.ResendTooSoon` | retryAfter | «Esperá un momento antes de pedir otro código.» / “Wait a moment before requesting another code.” |
+| 429 `Auth.LoginCode.TooManyRequests` | retryAfter | «Pediste demasiados códigos. Probá de nuevo más tarde.» / “You requested too many codes. Try again later.” |
+| 429 `WhatsApp.LoginCode.DailyLimit` (nuevo) | retryAfter hasta renovación UTC | «No podemos mandar más códigos por WhatsApp por ahora. Probá más tarde.» / “We cannot send more WhatsApp codes right now. Try again later.” |
+| 400 `Auth.LoginLink.Invalid`, `Auth.LoginLink.Expired`, `Auth.LoginLink.AlreadyUsed` (nuevos) | enlace | «Este enlace ya no sirve.» / “This link no longer works.” (misma pantalla, códigos distintos). |
+| 429 `Auth.LoginLink.TooManyRequests` (nuevo) | retryAfter | «Esperá un momento antes de pedir otro enlace.» / “Wait a moment before requesting another link.” |
+| 403 errores actuales de cuenta suspendida/bloqueo/acceso/legales/baja | cuenta, tras posesión | Reutilizar **códigos y traducciones actuales** del código por correo. `Tenancy.Access.PlatformOnly` muestra Ir a Plataforma/Salir solo después de posesión. No crear sinónimos para estados existentes. |
+| 403 `Auth.Signup.Closed` | registro | Texto actual de registro cerrado, sin nuevo código por canal. |
+| 404 `Identity.LoginMethod.NotFound` | método | Texto actual; también para methodId ajeno. |
+| 409 `Identity.LoginMethod.AlreadyVerified`, `LastMethod`, `LastPersonalMethod`, `Auth.LoginMethod.NotVerified` | método | Textos actuales de reglas; sesión basta, pero no saltea reglas. |
+| 400 `Platform.AccountRecovery.VerificationRequired` | pedido | Texto actual para destino no probado/nonce inválido; sin sesión ni aprobación automática. |
+| 409 `General.ConcurrencyConflict` | edición concurrente vigente | Texto actual y recarga; no descartar la versión de las decisiones de Plataforma. |
+| 400 `WhatsApp.Webhook.InvalidPayload`; 401 `WhatsApp.Webhook.InvalidSignature`; 413 `WhatsApp.Webhook.PayloadTooLarge`; 429 `WhatsApp.Webhook.TooManyRequests` (nuevos) | webhook | “Invalid webhook payload/signature”, “Webhook payload is too large”, “Too many webhook requests”, con equivalentes es en resources. No repetir el cuerpo ni el token de verificación. |
+
+401 de falta de autenticación, errores de idempotencia y 500 de infraestructura conservan ProblemDetails y catálogo comunes. Rutas apagadas: 404 General.NotFound del pipeline, sin filtrar claves ni configuración. Error transitorio de Meta después de 202 se administra en el outbox; no se transforma en «código inválido» ni en éxito de entrega.
+
+### Texto listo para el chat de Contrato
+
+```text
+Ejecutá SOLO la Parte 1 (T00 y T01) de C:\Users\ezequ\source\repos\ArquitecturaBaseMutitenant\docs\plans\2026-10-07-etapa-8-whatsapp.md. Leé su Forma de trabajo y las fuentes. Primero consolidá identidad sin agregar teléfonos: AccountRegistrar/LegalConsentRecorder, LoginCodeAttemptVerifier, LoginMethodLinker con locks de Google, AccountLifecycle y LoginMethodChange. Conservá ADR0042–47. Después fijá los contratos HTTP y puertos neutrales de T01 en OpenAPI; podés dejar rutas nuevas con 501 temporal. Las guardas deben pasar. Regenerá y commiteá tipos en el front hermano. No implementes el módulo ni las pantallas y no arranques otros chats. Si siguen sin respuesta D1/D2/D3, avanzá T00 y los contratos independientes; no congeles las partes dependientes inventando producto. Commits en main, sin push, solo rutas propias con git commit -m "…" -- <rutas>. Al terminar devolvé hashes de ambos repos, rutas/esquemas y tests focales, y confirmá que el contrato quedó listo para los dos chats paralelos. No cierres E8.
+```
+
+## Parte 2a · Back
+
+El chat del back usa el contrato commiteado por T01. No modifica F ni el contrato unilateralmente.
+
+### T02 · Estructura, registro, configuración y persistencia del módulo
+
+**Archivos:** crear `D/WhatsApp/{WhatsAppContact,WhatsAppMessage,WhatsAppMessageDirection,WhatsAppMessageKind,WhatsAppMessageStatus,WhatsAppErrors}.cs`; `A/Modules/WhatsApp/WhatsAppModule.cs` y subcarpetas Configuration/Interfaces/Models/Services/Resources; `I/Modules/WhatsApp/{WhatsAppInfrastructureModule,WhatsAppOptions,WhatsAppOptionsValidator,WhatsAppAvailability,WhatsAppHealthCheck}.cs`, `Disabled/DisabledWhatsAppAvailability.cs` y `Persistence/{WhatsAppModelContributor,WhatsAppContactConfiguration,WhatsAppMessageConfiguration,WhatsAppContactRepository,WhatsAppMessageRepository}.cs`; completar `P/Modules/WhatsApp/WhatsAppApiModule.cs`. Modificar composición `P/Program.cs`, `I/Persistence/{ApplicationDbContext,DesignTimeApplicationDbContextFactory,DatabaseBootstrapExtensions}.cs` por un punto neutro de configuración, con nuevos `IPersistenceModelContributor.cs` y `PersistenceModelContributors.cs` en esa carpeta; migración nueva `I/Persistence/Migrations/<timestamp>_WhatsAppIdentity.cs` y snapshot. No editar migraciones históricas.
+
+**Copiar de:** `../ArquitecturaBase/src/ArquitecturaBase.Infrastructure/Modules/WhatsApp/{WhatsAppOptions,WhatsAppOptionsValidator,WhatsAppInfrastructureRegistration,WhatsAppAvailability,WhatsAppHealthCheck}.cs`; estructura prevista en `B/docs/architecture/arbol.md`; persistencia de `LoginCodeConfiguration` y Outbox; clasificación identity global de `LoginMethods`.
+
+- [ ] Un AddWhatsAppModule por capa, cada cual registra sus servicios. Una única sentencia de composición removible en Program llama los tres registros con tipos plenamente calificados; evitar usings huérfanos al quitarla.
+- [ ] Configuraciones EF del módulo aplicadas por el propio `WhatsAppModelContributor` mediante `IPersistenceModelContributor`, filtradas por namespace; el DbContext del núcleo no referencia clases del módulo ni aplica dos veces sus configuraciones. El punto neutro separa las configuraciones aportadas de las del núcleo. El contribuidor se registra en runtime y se descubre de forma neutral en DesignTime/DatabaseBootstrap para que sus `new ApplicationDbContext(...)` construyan el mismo modelo sin secretos. Prueba de igualdad de modelo de las tres vías. El modelo incluye las tablas aunque PhoneNumberId esté vacío; ese interruptor apaga el canal, no altera el esquema. No hacer una relación necesaria desde ApplicationUser hacia WhatsAppContact.
+- [ ] Completar el punto neutral con la lista **explícita** de tipos/esquemas globales que declara cada contribuidor (`WhatsAppContact`/`WhatsAppMessage` → identity), no una exención a todo su namespace. Modificar `I/Persistence/Rls/TenantIsolationModelValidator.cs` para validar esas declaraciones junto al catálogo global del núcleo sin `typeof(WhatsApp…)` allí; seguir rechazando toda entidad desconocida, esquema incorrecto o clasificación múltiple. Actualizar `AR/DataClassificationTests.cs` con la misma fuente neutral y caso de control. `LoginLink`, que sí es del núcleo, se agrega explícitamente a su catálogo identity en T07.
+- [ ] Actualizar `AR/EntityConfigurationTests.cs`: inventariar también configuraciones declaradas por contribuidores y conservar «exactamente una por entidad», incluyendo su helper `ArchitectureModel` que hoy crea el DbContext sin DI. Revisar las restantes fábricas de contexto en tests con `rg "new ApplicationDbContext"` y usar el mismo modelo completo; probar configuración faltante, duplicada y entidad global no declarada. Añadir esta convención neutral a `docs/rules/persistencia-ef.md`/`modulos.md`, con los tests citados, sin ampliar listas blancas por clase.
+- [ ] Contacto técnico de identidad: wa_id normalizado, vínculo con MethodId/UserId verificables, fechas/versión y lock; mensaje: destino PhoneNumberId, IDs de Meta, dirección/tipo, estado, fecha de recepción y procesamiento, intento/lease, texto cifrado cuando corresponda. Identidad global en `identity`, sin atribuirle un tenant de negocio. La E11 incorporará WhatsAppChannels y datos privados/compartidos con su RLS.
+- [ ] Índices: contacto por wa_id; mensaje entrante por `(phoneNumberId, wamid, tipoEvento)`; eventos de entrega distinguen estado para no perder delivered/read por deduplicar solo wamid. WhatsAppMessage no guarda OTP, URL/token ni contenido de Authentication; solo metadatos. El outbox es el lugar del payload cifrado transitorio.
+- [ ] Leer WhatsApp:* solo dentro del módulo. Copiar valores no secretos de ArquitecturaBase y operaciones: Graph v25.0, AR, cuota 100, retención 90; Invitation cambia a invitacion_organizacion. Sin PhoneNumberId: apagado, sin workers/canal/countries. Con PhoneNumberId sin AccessToken: fallo claro al arrancar. AppSecret/VerifyToken de a pares; sin ambos, envío habilitado y webhook 404 con Warning enmascarado.
+- [ ] Health check de disponibilidad/cola sin enviar mensajes para sondear. Exportador OpenAPI no requiere secretos ni abre red. Semilla Phone del operador opcional sigue exclusiva de Plataforma; no se registra por confianza un teléfono nuevo de usuario común.
+
+**Tests:** `AR/ModuleIsolationTests.cs` nuevo con caso de control que detecte dependencia prohibida; existentes `ModuleControllersTests`, `LayerDependencyTests`, `ServiceDependencyCountTests`, `ResourceParityTests`, `DataClassificationTests`, `EntityConfigurationTests` y sus controles; nuevos `IT/Modules/WhatsApp/WhatsAppPersistenceTests.cs` y `WhatsAppStartupTests.cs`; ampliar `IT/Auth/StartupConfigurationTests.cs`. Probar reinicio, esquema global, igualdad runtime/DesignTime/ArchitectureModel, EF sin módulo y cada combinación de claves de operaciones.
+
+**Hecho cuando:** prender/apagar funciona, las opciones fallan por claves concretas, la persistencia migra y el núcleo no referencia `*.Modules.*` ni Domain.WhatsApp fuera de la configuración propia del módulo/composición permitida.
+
+### T03 · Plantillas, Cloud API y outbox
+
+**Archivos:** `I/Modules/WhatsApp/WhatsAppTemplateCatalog.cs`, `Cloud/{IWhatsAppCloudClient,WhatsAppCloudClient,WhatsAppMessagePayload,WhatsAppSendResult,WhatsAppChannelSender}.cs`; `A/Modules/WhatsApp/Models/WhatsAppOutboundMessage.cs`; `A/Modules/WhatsApp/Services/{WhatsAppLoginCodeChannel,WhatsAppInvitationChannel,WhatsAppAccountNoticeChannel}.cs`; resources `WhatsAppTexts.resx`, `.en.resx`, `WhatsAppTexts.cs`; configuración `P/appsettings.json` (solo no secretos). Puertos/consumidores neutrales de T01 y `I/Messaging/Email/EmailInvitationChannel.cs` se adaptan sin cambiar el contrato congelado.
+
+**Copiar de:** Cloud client/payload de ArquitecturaBase; `I/Messaging/Email/{EmailLoginCodeChannel,EmailInvitationChannel,EmailAccountNoticeChannel}.cs`; `I/Messaging/{Outbox,OutboxDispatcher}.cs`, `A/Services/Messaging/OutboxDispatchService.cs` y `IOutbox`. No copiar WhatsAppSendQueue/EmailQueue en memoria ni doble reintento del HttpClient sobre POST a Meta.
+
+- [ ] **Antes de programar cada envío**, crear o verificar las plantillas en Meta, es y en, con ejemplos, categoría y orden de variables. Usuario carga secretos por scripts/user-secrets; nunca leerlos para imprimirlos. Las aprobaciones corren mientras se programa. Anotar estado operativo en el informe, sin IDs sensibles.
+- [ ] Catálogo mínimo a continuación; cada clave `WhatsApp:Templates:<Clave>` y variante tiene test de paridad/configuración/orden. No crear ni usar las dos plantillas derogadas de «en uso».
+- [ ] Cada adaptador renderiza con cultura/zona explícitas y DisplayFormatter; encola channel whatsapp cifrado en la UoW de negocio. `WhatsAppChannelSender` usa el outbox existente, persistiendo aceptación/error/MetaMessageId; delivered/read llegan del webhook. Confirmado Sent no se reenvía. Documentar duplicación posible si Meta aceptó y el proceso cayó antes de confirmar; no prometer exactly-once externo.
+- [ ] Resolver cuota diaria con reserva persistente, concurrente y reloj UTC antes de emitir código; una replay idempotente no vuelve a gastar cuota. No invalidar países de teléfonos ya verificados. Transformación sin 9 solo en el cliente de prueba; jamás guardar ese formato.
+- [ ] Invitación por transporte Phone usa organización, quien invita, vencimiento y enlace **Email** existente conforme a T01; probar payload y entrega al número verificado de la cuenta destinataria, y que la aceptación conserva su prueba de correo. Destino desconocido/sin Phone: canal no disponible, cero outbox. No agregar identidad telefónica de invitación, carga de empleados ni tablas/rutas de atención E11. Correo actual y operador conservan su canal.
+
+| Clave Templates | Plantilla Meta | Aviso / variables en orden |
+|---|---|---|
+| LoginCode | codigo_ingreso | Authentication: código; mismo valor en body y botón Copiar código. Para ingreso/alta/verificación nueva, no confirmación de Mi cuenta. |
+| Invitation | invitacion_organizacion | Utility: quien invita, organización, vencimiento formateado; botón URL con sufijo del enlace. |
+| LoginMethodChanged | aviso_metodo_ingreso | Cambio localizado, método enmascarado, fecha formateada. |
+| ReviewLoginMethods | revisa_metodos_ingreso | Organización. |
+| DeletionRequested | baja_cuenta_pedida | Fecha de eliminación. |
+| DeletionRequestedByPlatform | baja_cuenta_plataforma | Fecha de eliminación; seleccionar RequestedByPlatform=true y CanCancel=true. |
+| DeletionRequestedSuspended | baja_cuenta_plataforma_suspendida | Fecha de eliminación, correo de soporte; RequestedByPlatform=true y CanCancel=false. |
+| DeletionCancelled | baja_cuenta_cancelada | Sin variables. |
+| AccountDeleted | cuenta_eliminada | Sin variables. |
+| RecoveryReceived | recuperacion_recibida | Sin variables; al método nuevo. |
+| RecoveryApproved | recuperacion_aprobada | Sin variables; al nuevo principal. |
+| RecoveryRejected | recuperacion_rechazada | Sin variables; al destino del pedido. |
+| RecoveryRequested | recuperacion_aviso_cuenta | Correo de soporte; solo métodos actuales, sin revelar el método nuevo. |
+
+Los botones adicionales y sus sufijos se copian de la variante WhatsApp de Mensajes, sin inventar URLs dinámicas en el cuerpo. `OperatorInvited` y Exportación lista siguen solo email. D3 resuelve `OrganizationApproved`, `OrganizationRejected` y `PublicPageModerated`: no silenciarlos ni crear plantillas improvisadas. Una variante de AccountNotice admitida debe tener envío definido o exclusión explícita y testeada, nunca default que lanza con una cuenta Phone.
+
+**Tests:** nuevos `AU/Modules/WhatsApp/{WhatsAppChannelsTests,WhatsAppCodeQuotaTests}.cs`, `IT/Modules/WhatsApp/{WhatsAppTemplateCatalogTests,WhatsAppOutboxTests}.cs`; ampliar `IT/Messaging/{OutboxTests,OutboxDispatcherTests,AccountNoticeTests}.cs`. Verificar aborto de UoW sin outbox, cifrado real/no OTP claro, reinicio, dos emisores sin doble reserva, estructura exacta del JSON de Meta, correo intacto y exportación fuera de WhatsApp.
+
+**Hecho cuando:** catálogo es/en aprobado para los mensajes que se probarán, contratos de adaptadores completos y entrega persistente sin colas en memoria ni llamadas externas dentro de UoW.
+
+### T04 · Teléfonos: ingreso, registro y gestión de métodos
+
+**Archivos:** `A/Services/Auth/{LoginCodeRequester,LoginCodeDeliveryIssuer,LoginCodeService,SignupCodeRequester,SignupCodeVerifier,SignupExistingMethodVerifier,SignupPolicy,LoginMethodsService}.cs`; `A/Services/Identity/{LoginMethodManagementService,LoginMethodIssuer,LoginMethodVerifier,LoginMethodAvailabilityPolicy,LoginMethodEditor,LoginMethodNotifier,AccountLoginMethodsService,LoginMethodLinker}.cs`; contratos/controladores/modelos/validadores de T01; `A/Modules/WhatsApp/Configuration/WhatsAppLoginOptions.cs` y validación/política del canal; `I/Identity/UserLookup.cs`, `D/Authentication/{LoginMethod,LoginCodeErrors,SignupErrors,LoginMethodErrors}.cs`; resources Errors/Validation es/en.
+
+**Copiar de:** flujo actual por Email y sus tests; `LoginCodeDestination.ForPhone` ya existe; `IPhoneNumberParser`, `PhoneInputHttpRequest`, `LoginMethod.CreatePhone` y linker consolidado. Usar puertos para tipo/canal/countries, sin ramas WhatsApp en el núcleo.
+
+- [ ] Parsear número, buscar por `(Phone, E164)` verificado, nunca por AspNetUsers.PhoneNumber. OTP ligado a destino, propósito y cuenta; registro y vinculación no consumen un OTP de ingreso ni viceversa.
+- [ ] Ingreso por ambas puertas y registro B2C con casos de 0043: inexistente/tomado, sin envío; operador indistinguible antes de probar posesión y pantalla privada después, nunca sesión pública. Dos cookies de 0044 y last-tenant vigentes.
+- [ ] Registro Phone reutiliza registrar/consentimiento común; sin DisplayName manual nuevo. Comprobar términos de nuevo al verificar. Una cuenta Phone como principal puede tener Email=null. No crear empresa desde consumer.
+- [ ] Método pendiente y verificación bajo locks; recuperar pendiente según política vigente sin apropiarse de un verificado ajeno. Revisar ocupación también al reenviar/verificar para cerrar la carrera. Índice único verificado y traducción de violación consistente con error phone.
+- [ ] País permitido solo para Phone **nuevo**: registro, agregado y recuperación nueva. Número verificado ya existente sigue ingresando/recibiendo avisos aunque se achique AllowedCountries; no puede desaparecer del selector cuando se representa un método existente. Nuevo pending no es excepción a la política de alta.
+- [ ] Principal, quitar y Google sin OTP adicional; conservar último método activo/personal y principal. El cambio del principal actualiza copias Identity con `SetPrimaryContactAsync`; los avisos van a los otros métodos disponibles, deduplicados, en la misma transacción. Sin módulo no ofrecer Phone ni tratarlo como canal activo.
+
+**Tests:** ampliar `IT/Auth/{LoginCodeTests,LoginCodeEnumerationTests,SignupTests,InvitedLoginCodeTests,PlatformSessionTests}.cs`, `IT/Identity/{LoginMethodsTests,AccountMethodsHttpTests,LoginCodeConcurrencyTests}.cs`, `IT/Security/LoginCodeSecurityTests.cs`; nuevos `IT/Modules/WhatsApp/WhatsAppIdentityTests.cs`. Casos centrales: normalización 0/15/9 argentino, fijo rechazado, país nuevo/existente, dos cuentas con mismo Phone, replay, límite, OTP cruzado, último método, session cookie correcta, privacidad del operador y 0047 del correo sin regresiones.
+
+**Hecho cuando:** rutas de T01 implementadas sin 501, una cuenta puede nacer/entrar con Phone y operar Mi cuenta sin reautenticación; email/Google mantienen su comportamiento.
+
+### T05 · Recuperación asistida por WhatsApp
+
+**Archivos:** `A/Services/Auth/{AccountRecoveryService,AccountRecoveryNotifier,AccountRecoveryNoticeService}.cs`, modelos/validadores y controller de recuperación de T01; `D/Platform/AccountRecoveryRequest.cs`, `AccountRecoveryErrors.cs`; `A/Services/Platform/{PlatformRecoveryService,PlatformRecoveryDecisionService,PlatformRecoveryNotifier}.cs`; `I/Persistence/{Configurations/Platform/AccountRecoveryRequestConfiguration,Readers/AccountRecoveryReader,Repositories/AccountRecoveryRepository}.cs`; migración nueva `<timestamp>_PhoneAccountRecovery.cs` si la forma existente no basta.
+
+**Copiar de:** recuperación Email vigente y sus reglas, el linker común, `PlatformAuditWriter`, `IT/Auth/AccountRecoveryTests.cs`, `IT/Platform/PlatformRecoveryTests.cs`. No crear un segundo workflow de aprobación dentro del módulo.
+
+- [ ] Admitir teléfono anterior y destino nuevo Phone, exactamente uno de cada lado; preview claro por 0043. Destino ocupado no emite código ni aviso. El anterior puede estar inactivo/perdido; no exigir OTP del método perdido.
+- [ ] Mantener nonce, propósito, vencimiento, topes e idempotencia; submit revalida posesión y unicidad, no emite sesión. Encolar RecoveryReceived y RecoveryRequested correctos.
+- [ ] Aprobar agrega/verifica Phone, lo hace principal, conserva otros métodos, registra SecurityEvent y envía avisos; rechazar no modifica identidad. No recuperar operador por esta vía. Carreras con agregado/registro de mismo Phone dan error propio y no doble titular.
+- [ ] Las lecturas de Plataforma reconocen el tipo nuevo con PhoneText/formato vigente sin una pantalla nueva; aprobación/rechazo conservan version y permiso. Recargar si otra decisión ganó.
+
+**Tests:** los dos anteriores, más `IT/Modules/WhatsApp/WhatsAppRecoveryTests.cs`: libre/ocupado/propio, cuenta inexistente, nonce cruzado, método previo inactivo, carrera al aprobar, operador, reintento, aceptación/rechazo, sin sesión y sin aviso falso al dueño de número ocupado.
+
+**Hecho cuando:** el recorrido completo hasta decisión asistida funciona con Phone como destino nuevo, sin ocultar ocupación ni automatizar la decisión humana.
+
+### T06 · Webhook persistente, firma y estados de entrega
+
+**Archivos:** completar `P/Modules/WhatsApp/Controllers/WhatsAppWebhookController.cs`; `A/Modules/WhatsApp/{Interfaces/IWhatsAppWebhookService.cs,Interfaces/IWhatsAppInboundService.cs,Models/WhatsAppWebhookBatch.cs,Services/WhatsAppWebhookService.cs}`; `I/Modules/WhatsApp/Webhook/{WhatsAppSignatureValidator,WhatsAppWebhookReader}.cs`, `Inbound/{WhatsAppInboundSignal,WhatsAppInboundProcessor}.cs`, repositorios de T02 y modelos de envío T03.
+
+**Copiar de:** webhook, firma, reader y processor de ArquitecturaBase; lease/SKIP LOCKED del OutboxDispatchStore multitenant. Read/parse de Meta en Infrastructure; controller y servicio no dependen del cliente concreto.
+
+- [ ] GET verifica challenge; POST limita bytes **antes** de parsear, verifica HMAC SHA256 sobre cuerpo intacto en comparación constante y rechaza 401/413/400 conforme al contrato. Signature/token/payload nunca en logs.
+- [ ] Recibir lotes con múltiples mensajes/estados y PhoneNumberId. E8 solo procesa el número de plataforma configurado; un destino desconocido no se atribuye a un usuario/tenant. ACK solo después del commit; caída previa permite redelivery sin pérdida.
+- [ ] Dedupe con índices y tratar unique violation como replay exitoso. Distinguir entrada de estados para no emitir un enlace con un delivered/read. Estado no retrocede si Meta entrega eventos fuera de orden.
+- [ ] Entrada asíncrona persistente y reclamo con SKIP LOCKED/lease; señal en memoria solo despierta, nunca es la fuente de trabajo. Procesamiento deja efectos locales + reply en outbox atómicos. Dos réplicas, crash, reinicio y poison message no bloquean la cola completa.
+- [ ] Mantener PhoneNumberId en modelo de lote, repositorio y emisor para E11; resolución futura por WhatsAppChannel será del módulo. Nunca resolver un tenant del remitente, host o cuerpo no autorizado ni usar ITenantScope con transacción ya abierta.
+
+**Tests:** nuevos `IT/Modules/WhatsApp/{WhatsAppWebhookTests,WhatsAppInboundProcessorTests}.cs`: firma alterada/ausente, 413 antes de parseo, challenge incorrecto, lotes, wamid repetido, estados distintos/desordenados, destino extraño, dos workers/reinicio y ACK sin sesión. No exigir Idempotency-Key a Meta.
+
+**Hecho cuando:** webhook autentica el origen y deduplica; callbacks y trabajo pendiente sobreviven reinicios y estados de entrega no disparan el bot.
+
+### T07 · Bot y enlaces de un solo uso
+
+**Archivos:** `D/Authentication/{LoginLink,LoginLinkErrors}.cs`, `A/Configuration/Auth/LoginLinkOptions.cs`, `A/Interfaces/{Services/ILoginLinkService.cs,Integrations/Messaging/ILoginLinkIssuer.cs,Persistence/ILoginLinkRepository.cs}`, `A/Services/Auth/{LoginLinkService,LoginLinkIssuer}.cs`, modelos de T01 `A/Models/Auth/{PreviewLoginLinkRequest,RedeemLoginLinkRequest,LoginLinkPreviewResponse,LoginLinkRedeemResponse}.cs` y sus validadores; `I/Persistence/{Configurations/Identity/LoginLinkConfiguration,Repositories/LoginLinkRepository,Rls/TenantIsolationModelValidator}.cs`, `AR/DataClassificationTests.cs` y migración nueva `<timestamp>_LoginLinks.cs`; `A/Modules/WhatsApp/Services/{WhatsAppInboundService,WhatsAppContactLinker,BotReply}.cs`, modelos BotButtons y textos; completar `P/Controllers/Auth/LoginLinkController.cs`.
+
+**Copiar de:** `../ArquitecturaBase/src/ArquitecturaBase.Application/Services/Auth/{LoginLinkIssuer,LoginLinkService}.cs`, `Domain/Authentication/LoginLink.cs`, `Infrastructure/Persistence/Repositories/LoginLinkRepository.cs`, `Application/Modules/WhatsApp/Services/{BotReply,WhatsAppReplyPolicy,WhatsAppInboundService}.cs`; adaptar flujo de acceso/cookies del multitenant en LoginCodeService. La respuesta bot «Hola… Entrar… una vez… 10 minutos» y preview con **Continuar** salen de Mensajes/Enlace.
+
+- [ ] Aplicar D1/D2 resueltos. Número verificado: enlace ligado al método, con límites y reply libre solo dentro de 24 h; ventana comienza con entrada real, no con delivered. No emitir en bucle por mensajes de estado ni por OTP recibido.
+- [ ] Emitir hash/token y outbox en una UoW del servicio del bot; issuer interno no abre otra. No guardar enlace/OTP en WhatsAppMessage ni loguear textos. Unknown, bloqueado, suspendido y límites responden con resources conforme al flujo decidido, sin crear cuenta en chat.
+- [ ] Preview no firma ni consume. Redeem recarga método/cuenta, consume bajo lock una sola vez, audita y crea cookie adecuada después del commit, devolviendo el acceso efectivo autorizado. No requiere OIDC previo: el SPA lo inicia después con state/PKCE. No aceptar access=platform de una cuenta común ni elegir acceso por datos del webhook.
+- [ ] Cuenta con baja pendiente sigue la cancelación explícita existente; suspendida no entra; legales nuevos bloquean hasta aceptar. La prueba de Phone no acepta automáticamente invitaciones enviadas a correos distintos. Operador probado va al flujo exclusivo de Plataforma.
+
+**Tests:** nuevos `U/Authentication/LoginLinkTests.cs`, `AU/Services/Auth/LoginLinkServiceTests.cs`, `AU/Modules/WhatsApp/WhatsAppBotTests.cs`, `IT/Auth/LoginLinkTests.cs`; casos dos redeem concurrentes, preview reiterado sin consumo, expiración, superseded, Phone eliminado/reasignado, país reducido, módulo apagado, access ilegítimo, cookie pública/Plataforma, baja/legales, bloqueo y bot sin sesión. E2E abre el enlace desde cero, sin transacción OIDC previa, y comprueba state/PKCE/callback reales.
+
+**Hecho cuando:** escribir nunca abre sesión; abrir el enlace solo muestra preview; Continuar prueba posesión, consume una vez y llega al acceso acordado con todas las guardas vigentes.
+
+### T08 · Observer, privacidad, documentación y preparación de E11
+
+**Archivos:** `A/Modules/WhatsApp/Services/WhatsAppPhoneLinkObserver.cs`, `I/Modules/WhatsApp/Retention/WhatsAppMessageRetentionService.cs`; participante nuevo `A/Modules/WhatsApp/Services/WhatsAppAccountDeletionParticipant.cs` por `A/Interfaces/Integrations/Legal/IAccountDeletionParticipant.cs`; `A/Services/Identity/LoginMethodEditor.cs`, procesos de eliminación del núcleo por sus puertos; `B/docs/features/whatsapp.md`, `docs/guides/quitar-whatsapp.md`, `docs/operations/{configuracion,whatsapp-plantillas}.md`, fichas modulos/identidad, árbol y arquitectura afectados. Mismas actualizaciones de intención sobre E8, sin marcar E11 hecha.
+
+**Copiar de:** IAccountDeletionParticipant y participantes vigentes en `I/Identity/Deletion/`; retención de ArquitecturaBase y su manejo de clock; eventos de LoginMethodLinker/Editor. No introducir referencias núcleo → módulo para limpiar una cuenta. La exportación productiva y su puerto aún no existen: son E10; dejar documentado el inventario que deberán incluir y cómo leerlo por usuario, sin adelantarlos.
+
+- [ ] Al quitar un Phone, desvincular contacto y revocar todos sus enlaces en la misma UoW. Al verificar otro, no apropiarse de un contacto de otro dueño. Al borrar cuenta, limpiar vínculos/entrada sensible y enlaces; conservar solo metadatos necesarios según política y outbox de aviso de eliminación cifrado vigente.
+- [ ] Retención 90 días del texto de mensajes con TimeProvider y lotes; borrar también payloads crudos equivalentes y no conservar códigos/enlaces en mensajes. No cortar pendientes del outbox para aparentar retención. Documentar para E10 los datos de contacto/vínculo/mensajes propios que deberá exportar, su clasificación y enmascarado; la notificación Exportación lista sigue por correo. No crear ahora su endpoint ni un participante que no tiene consumidor.
+- [ ] Guía de quitar, en **copia descartable**: (1) conservar temporalmente fuentes del módulo y migraciones históricas; (2) retirar su contribución del modelo en runtime **y** DesignTime/bootstrap, de modo que el modelo actual ya no contenga sus tablas (una exclusión temporal solo en la copia, nunca un switch productivo); (3) generar la migración nueva Drop desde el snapshot anterior hacia ese modelo sin WhatsApp, con el comando de `docs/guides/migracion.md`; revisar SQL para que borre solo tablas del módulo y no identity.LoginMethods/LoginLinks ni datos del núcleo; (4) quitar Domain/WhatsApp, las tres Modules/WhatsApp, tests exclusivos, sentencia de composición y assets/configuración propios; (5) quitar la exclusión temporal, volver a construir y comprobar que el modelo sigue igual al snapshot nuevo; (6) probar tanto base migrada como base vacía recorriendo toda la historia. Preservar las migraciones/.Designer históricas, sin reescribirlas. Si una referencia CLR del módulo quedó en una migración histórica, la guarda de removibilidad debe detectarla en T02 antes de aceptarla. Phone/LoginLink y puertos neutrales permanecen, con cero adaptadores y disponibilidad falsa.
+- [ ] WhatsApp no es requisito de arranque ni de seed. Probar build/tests del núcleo en la copia, email/Google/registro/legales y ausencia de rutas/capacidades WhatsApp. Los Phone guardados dejan de servir para ingreso sin canal, según 0033; migrar cuentas de solo teléfono a un método alternativo antes de retirar el módulo de una instalación con usuarios.
+- [ ] Dejar para E11 cliente con destino PhoneNumberId explícito, webhook multi-destino sin inferir tenant, catálogo del sistema, entrada/outbox fiables y observer reutilizable. No crear tablas WA de atención ni permisos/menu WA de organización como adelanto.
+- [ ] Actualizar fuentes que todavía describen 0041 y reauth en WhatsApp; operaciones conserva plantillas históricas como derogadas, sin usarlas. Informe final distingue configurado/aprobado/entregado, estado real y decisiones técnicas.
+
+**Tests:** nuevos `IT/Modules/WhatsApp/{WhatsAppPhoneLinkObserverTests,WhatsAppRetentionTests,WhatsAppAccountLifecycleTests}.cs`; ampliar `IT/Legal/AccountDeletionParticipantsTests.cs`. Retención con FakeTimeProvider, desvínculo atómico/rollback y eliminación sin referencias huérfanas.
+
+**Hecho cuando:** revocar un Phone revoca su capacidad de enlace, eliminación/retención respetan privacidad, receta removible completa y la E11 puede extender el módulo sin reemplazar transporte, webhook ni identidad.
+
+### Texto listo para el chat del Back
+
+```text
+Ejecutá SOLO la Parte 2a (T02–T08) del plan C:\Users\ezequ\source\repos\ArquitecturaBaseMutitenant\docs\plans\2026-10-07-etapa-8-whatsapp.md, después de T00/T01 commiteados y las decisiones dependientes resueltas. Tu repo es el back; no edites el front. Leé Forma de trabajo, ADR y fichas. Implementá el módulo quitable para el número de plataforma, adaptadores/outbox cifrado, Phone en identidad y recuperación, webhook persistente, bot/enlaces, observer, retención y documentación. El contrato de Parte 1 manda: no lo cambies unilateralmente; registrá la necesidad en Cambios al contrato para coordinarla por el usuario. Tests donde importan y build focal durante el trabajo, sin ceremonias por tarea. Commits en main, sin push, solo tus rutas. No programes atención E11, TOTP E9 ni asistente E8b. Al terminar corré build y test completos con Docker, verificá igualdad del contrato y devolvé hashes/resultados y lo que necesita Integración. No cierres E8 ni reemplaces el recorrido Meta real por mocks.
+```
+
+## Parte 2b · Front
+
+El chat del front usa los tipos regenerados en T01 y respuestas API simuladas en tests. Sus tareas no dependen de que el back ya esté implementado.
+
+### T09 · Capacidades, teléfono y API tipada
+
+**Archivos:** `F/src/shared/account/{useLoginChannels.ts,api/loginChannels.ts,api/loginMethods.ts}`, `F/src/shared/ui/fields/{PhoneField.tsx,CountrySelect.tsx}`, `F/src/shared/phone/countries.ts`, `F/src/shared/api/{types.ts,accountContract.ts}`; APIs de `F/src/areas/public/auth/api/` y sus llamadas actuales desde LoginPage; nuevos `loginLink.ts` y helpers `lib/loginDestination.ts` en esa feature. No editar `generated/schema.d.ts` a mano.
+
+**Copiar de:** useLoginChannels, PhoneField/CountrySelect, useRetryAfterCountdown, useIdempotentMutation, httpClient, APIs signup/recovery y AddLoginMethodDialog; tests de país/contrato existentes.
+
+- [ ] Implementar `PhoneField usage="whatsapp"` como modo UI que obtiene países de `/api/auth/methods`, cruzados con nombres/prefijos de reference-data. No array AR hardcodeado. Más de 10 opciones: buscador; 10 o menos: lista sin buscador. Mientras capacidad carga/apagada no ofrecer WhatsApp.
+- [ ] Entrada/salida Phone tipada; representar métodos existentes aunque su país haya dejado de admitirse para altas. Normalización definitiva del back; evitar duplicar parser/formatter.
+- [ ] En APIs, elegir destino/canal según tipo, no inferir propiedad del número; reutilizar Retry-After y errors por code/campo phone. Idempotency-Key estable por intento/reintento; una acción nueva tiene nueva key.
+
+**Tests:** existentes PhoneField.test.tsx, AddLoginMethodDialog.test.tsx y tests de API; nuevo `lib/loginDestination.test.ts`. Casos apagado, carga, países de API, 10/11 opciones, retorno de error field=phone y cuerpo correcto sin OTP/nonce en URLs.
+
+**Hecho cuando:** login, registro, recuperación y cuenta comparten campo/capacidades y consumen exactamente el contrato.
+
+### T10 · Ingreso y registro WhatsApp
+
+**Archivos:** `F/src/areas/public/auth/pages/{LoginPage,SignupPage}.tsx`, sus `.test.tsx`; componentes de código/destino existentes, `api/signup.ts`, helpers `lib/{loginCodeState,loginRedirectError,returnUrl}.ts`; `F/src/locales/{es,en}/{auth,errors}.json`. Conservar BusinessSignupPage y su continuación; no agregar registro de empresas dentro de consumer.
+
+**Tableros:** Ingreso/M-Ingreso (ambas puertas), Registro/M-Registro y Mensajes «Código de ingreso» por WhatsApp. Copiar segmento Correo/WhatsApp, campos, paso de seis dígitos, reenvío y Usar otro número. Los errores de código reutilizan los estados ya dibujados.
+
+- [ ] WhatsApp activo muestra el canal; sin módulo desaparece. Ingreso número inexistente ofrece Crear mi cuenta/Registrá tu empresa según puerta con número conservado; registro ocupado ofrece Ingresar. Errores ocupación antes de pantalla de código, sin éxito ficticio.
+- [ ] Registro conserva casilla de términos, cultura/zona y registro cerrado. Phone ya no obliga correo ni nombre inventado. Mensajes/código y sus intentos/espera se toman de contrato y locales.
+- [ ] Después de posesión, operador usa la pantalla privada vigente; sesiones separadas, estados de acceso empresarial, baja y legales vigentes. No implementar los cinco estados TOTP de E9 aunque figuren en Ingreso.
+
+**Tests:** LoginPage/SignupPage focales con MSW tipado: envío correcto, sin cuenta/tomado/país, reenvío/OTP errado-vencido, módulo apagado, privacy del operador, returnUrl y condiciones de acceso. Reutilizar axe en pantallas afectadas; no añadir test de cada Tweak.
+
+**Hecho cuando:** las dos puertas y alta B2C Phone funcionan contra contrato, con las ADR nuevas y sin cambios al modelo de accesos.
+
+### T11 · Enlace del bot y recuperación
+
+**Archivos:** nuevo `F/src/areas/public/auth/pages/LoginLinkPage.tsx` y `.test.tsx`, `api/loginLink.ts`, `lib/loginLinkState.ts` y `.test.ts`; `F/src/app/routes.tsx`/manifiesto de rutas vigente; `pages/RecoverAccountPage.tsx` y `.test.tsx`, `api/recovery.ts`, `F/src/locales/{es,en}/auth.json`. Lecturas de tipo de recuperación en `F/src/areas/platform/recoveries/` según archivos vigentes, sin cambiar flujo de permisos/edición.
+
+**Tableros:** Enlace/M-Enlace: Vista previa, Iniciando sesión, Demasiadas solicitudes, Ya no sirve, Cuenta suspendida; Recuperar/M-Recuperar: teléfono anterior y WhatsApp nuevo. Mantener disposición de correo para errores nuevos análogos de phone por 0043. D1/D2 se incorporan antes de ejecutar.
+
+- [ ] `/login/enlace` lee token del fragmento, lo retira inmediatamente y llama preview por POST; no redeem en mount ni navegación automática que consuma. Continuar dispara `{ token, access }` acordado en D1 y después de 200 limpia solo usuario OIDC en memoria/query cache e inicia signinRedirect con `result.access`, state y PKCE nuevos como especifica T01. No pasar el token del enlace a signinRedirect ni hacer logout de la cookie recién creada. Pantalla 429 con cuenta regresiva; inválido/usado/vencido misma vista, Volver a WhatsApp con número público de plataforma e Ir al ingreso.
+- [ ] Obtener el número público para Volver a WhatsApp de `channels[].contactPhone` congelado en T01 y construir `https://wa.me/<dígitos E.164 sin +>`. No tomar PhoneNumberId como teléfono. Sin capacidad/número público, conservar Ir al ingreso y ocultar la acción de WhatsApp, como exige el estado sin módulo.
+- [ ] Recuperar conserva sus pasos. Phone viejo no encontrado y Phone nuevo ocupado se explican bajo campo, sin código falso. Nuevo Phone válido usa código de posesión y nonce; recibido no abre sesión. Plataforma representa método nuevo/previo con formato de teléfono y conserva aprobación humana.
+
+**Tests:** preview sin redeem, click único, replay/expiración/429/suspensión, orden redeem→limpieza en memoria→signinRedirect, fragmento fuera de URL y storage; RecoverAccountPage libre/ocupado/propio, módulo apagado y nonce. Añadir al MSW solo las rutas congeladas. Reusar patrón errors.ts de la feature y formato central.
+
+**Hecho cuando:** abrir enlace no ingresa, Continuar sí; recuperación Phone llega al pedido recibido y mantiene decisión asistida.
+
+### T12 · Mi cuenta WhatsApp y textos de mensajes
+
+**Archivos:** `F/src/shared/account/{AddLoginMethodDialog,ChangeLoginMethodDialog}.tsx`, sus tests y API; `F/src/areas/personal/account/components/{LoginMethodsTable,VerifyLoginMethodDialog}.tsx`, AccountPage y tests focales; uso compartido en Mi cuenta de Business/Platform; `F/src/locales/{es,en}/{account,errors,auth}.json`.
+
+**Tableros:** Cuenta/M-Cuenta, Cuenta-Agregar/M-Cuenta-Agregar, Cuenta-Verificar/M-Cuenta-Verificar, Cuenta-Metodo/M-Cuenta-Metodo, Mensajes WhatsApp. Los diálogos desktop son hojas móviles, sin diálogo sobre diálogo ni un flujo duplicado por acceso.
+
+- [ ] Agregar Correo/WhatsApp, elegir país y verificar Phone nuevo con OTP; país no habilitado/ocupado bajo campo; código errado/vencido en verificación. El dato mostrado queda enmascarado según formato compartido.
+- [ ] ⋮ Principal/Quitar: confirmación y operación directa con sesión, sin reauth ni code de otro método. Mantener avisos, regla del último método, transferencia de principal y error concurrente vigente. «Cambiar número» no aparece.
+- [ ] Sin módulo desaparece fila/opción WhatsApp, no rompe Email/Google. Nombre/apellido y Google permanecen como 0046. Copiar avisos actuales y añadir textos es/en de WhatsApp; no crear bandeja personal Mensajes de E11.
+- [ ] No reproducir estados/mensajes derogadas: el código para quitar correo y los avisos «ya es de una cuenta» enviados al dueño. En la comparación final anotarlos como sustituidos por ADR, sin cambiar lienzo por cuenta propia.
+
+**Tests:** AddLoginMethodDialog/ChangeLoginMethodDialog/LoginMethodsTable y AccountPage: Phone libre/ocupado, enmascarado/OTP inválido, últimos métodos, principal/quitar sin pedir código y capacidad apagada; verificar semántica/foco/axe de la extensión. Reutilizar pruebas compartidas de cuenta de operadores para no crear perfil personal.
+
+**Hecho cuando:** cuenta Phone opera en los tres accesos con el componente compartido, un solo código para verificar el método nuevo y ninguno para las demás acciones.
+
+### Texto listo para el chat del Front
+
+```text
+Ejecutá SOLO la Parte 2b (T09–T12) de C:\Users\ezequ\source\repos\ArquitecturaBaseMutitenant\docs\plans\2026-10-07-etapa-8-whatsapp.md. Tu repo es C:\Users\ezequ\source\repos\ArquitecturaBaseMutitenantFront; no edites el back. T01 debe estar commiteada y las decisiones dependientes resueltas. Implementá contra los tipos generados y MSW en tests, sin cambiar contrato. Copiá los estados vigentes de Ingreso/Registro/Enlace/Recuperar/Cuenta y sus M-* y Mensajes. ADR0043 también manda para teléfonos ocupados; ADR0045 elimina confirmación adicional en Mi cuenta aunque un Tweak viejo conserve el código. PhoneField usage=whatsapp toma países de la API. No programes bandeja Mensajes, atención E11 ni TOTP. Tests donde importan, sin aprobación ni capturas por avance; galería al final. Commits en main sin push con git commit -m "…" -- <tus rutas>. Al terminar corré build, lint, test y contracts:check completos y devolvé hashes/resultados para Integración. No cierres E8.
+```
+
+## Parte 3 · Integración y puerta
+
+### T13 · Conectar los dos repos y preparar el recorrido real
+
+**Archivos:** `F/scripts/test-e2e-real.test.mjs`, `test-e2e-real-case.mjs`, `test-e2e-real-ui.mjs`, nuevo `test-e2e-real-whatsapp.mjs`; `F/scripts/recorrido-usuario.mjs` y su entorno; soporte de `B/tools/RealE2ESetup/` y `B/tests/.../TestFeatures/` exclusivamente para fixture E2E. Captura nueva `F/scripts/capturar-etapa-8.mjs`, galería `F/docs/design/implementacion/etapa-8/`; informe `B/docs/reviews/<fecha>-etapa-8-whatsapp.md`.
+
+**Copiar de:** E2E real y recorrido reutilizable E7, `F/scripts/capturar-etapa-7.mjs`, galería existente y fixture de LoginCode del E2E. Fixtures/lectura de códigos de pruebas solo en entorno aislado de Testing, nunca una ruta productiva o un bypass de Auth.
+
+- [ ] Verificar el hash de OpenAPI/tipos del freeze y resolver encajes entre implementaciones. Un cambio necesario atraviesa «Cambios al contrato» con coordinación de ambos repos, no solo un arreglo en F.
+- [ ] E2E automatizado con front/API/PostgreSQL reales, 1440 y 390, y usuario/cookies persistentes: registro Phone, ingreso dos puertas, agregado/OTP, principal/quitar sin reauth, recuperación asistida con Phone, enlace preview/redeem y errores del contrato. Para carreras/expiración, fixture limitado a la base E2E como en E7; no degradar límites productivos.
+- [ ] Separar prueba automatizable de transporte controlado y recorrido **Meta real** siguiente. Si un receptor de outbox del arnés permite leer OTP, sirve para lógica E2E aislada, no como evidencia de Cloud API, túnel ni delivered. No llamar Meta a números ficticios. No marcar omitidos como verdes.
+- [ ] Galería una vez: tablero y app lado a lado, los estados afectados de T10–T12 a 1440/390, revisión a 768, es y muestras en. Registrar excepciones explícitas de 0043/0045 sobre tableros viejos. No capturar OTP, token, enlace completo ni teléfono real sin máscara.
+
+**Hecho cuando:** los recorridos nuevos funcionan con ambos repos reales, los dos contratos coinciden y están listos la galería y el entorno Meta para la puerta.
+
+### T14 · Única puerta final
+
+Ejecutar sobre los commits finales. Si una corrección posterior cambia lógica, repetir el alcance afectado y las verificaciones de cierre que deje invalidadas.
+
+| Verificación | Comando / evidencia esperada |
+|---|---|
+| Back completo | En B: `dotnet build ArquitecturaBaseMultitenant.slnx` sin errores/advertencias; `dotnet test` completo con Docker, sin fallos ni omitidos relevantes. |
+| Front completo | En F: `npm run build`, `npm run lint`, `npm test`, `npm run contracts:check`, todos exit 0. |
+| E2E real | En F: `npm run test:e2e:real` sin filtro, nuevos recorridos E8 y regresiones; front/API/BD reales. Añadir ejecución Meta siguiente con tiempos/estados, sin secretos. |
+| Documentación | En B: `node scripts/arneses/arnes.mjs realinear-docs --detectar --repo back` y `... --repo front`, cada contador automático/modelo/humano en 0. Si no da 0, ejecutar realinear-docs conforme a la skill arnes y sus límites, reconciliar y repetir. |
+| Galería | Índice completo lado a lado, revisado en escritorio/móvil, con diferencias autorizadas por ADR explicadas. |
+| Recorrido de usuario | Navegador con sesiones anteriores, misma puerta de [arreglos](2026-10-06-arreglos-antes-de-la-7.md#puerta-el-recorrido-de-un-usuario-nuevo), más flujo E8 real; no limpiar cookies para ocultar fallos. Puede automatizarse el recorrido reutilizable real de E7; no sustituye los toques en WhatsApp ni las comprobaciones de Meta. |
+| Prueba de fuego | Copia descartable, quitar según T08; build y tests del núcleo verdes, login Email/Google disponible y Phone/WhatsApp no ofrecidos, webhook 404. No realizar el borrado en B/F compartidos. |
+
+Para focales durante el trabajo: `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class "*WhatsAppIdentityTests"` (cambiar clase/proyecto por la tarea), `dotnet build src/ArquitecturaBaseMultitenant.Api/ArquitecturaBaseMultitenant.Api.csproj`, y en F `npm test -- <archivo.test.tsx>`. Resultado esperado: clase/archivo completo en verde; no usar el focal como sustituto de las suites finales.
+
+### Recorrido por WhatsApp real a través del túnel
+
+Seguir [configuracion.md §4](../operations/configuracion.md#4-lo-que-tenés-que-hacer-vos-una-sola-vez-fuera-del-código). La app de Meta y el número de prueba se comparten con ArquitecturaBase y tienen **una sola URL de webhook**.
+
+1. Confirmar que las plantillas de este catálogo estén Activas en es/en para la WABA de prueba, que el celular de prueba pueda recibir y que claves no secretas/secretos correspondan a esta app. No crear otra app/número para desarrollo por defecto. Guardar la URL anterior de callback para devolverla al terminar las pruebas si se vuelve a ArquitecturaBase.
+2. En B, habilitar túnel: `dotnet user-secrets set "DevTunnel:Enabled" "true" --project src/ArquitecturaBaseMultitenant.AppHost`; `aspire run`. Obtener la **URL fija del túnel de este AppHost** y cambiar en Meta callback a `https://<túnel del multitenant>/webhooks/whatsapp`, misma palabra VerifyToken y suscripción de mensajes/estados. Verificación GET exitosa; no apuntar a localhost ni al AppHost hermano.
+3. Abrir front principal con sesión anterior. Comprobar que operador en Plataforma no impide mostrar login Persona/Empresa. No resolver advertencias de certificado deshabilitando validaciones productivas; usar el certificado local previsto por configuración.
+4. Cuenta de prueba Phone ya verificado: pedir código WhatsApp en Ingreso, recibir `codigo_ingreso`, copiarlo en la web y entrar. Comprobar canal anunciado, cuenta/acceso correcto y estado Meta `delivered`; texto/OTP fuera de logs y mensajes persistidos.
+5. Con un número libre de prueba, Registro personal por WhatsApp: términos, código real y cuenta creada; no empresa ni email obligatorio. Con número tomado: pantalla clara y **ningún** código/aviso. Probar ambos casos sin desperdiciar cuota con suites repetitivas.
+6. Desde Mi cuenta de otra cuenta propia de prueba: agregar/verificar Phone real, principal y quitar. Solo se manda OTP de posesión al nuevo; principal/quitar no piden código. Comprobar aviso por WhatsApp/correo al otro método y enlace previo invalidado al quitar. Probar que el número ocupado por la primera cuenta no se agrega ni recibe aviso de «en uso».
+7. Recuperar: teléfono anterior propio, método nuevo real; recibir OTP, registrar pedido, operador autorizado aprobar o rechazar, recibir avisos correspondientes. No ingresar antes de decisión. Probar número nuevo ocupado y verificar cero envío. Usar identidades que no sean operadores para el pedido.
+8. Escribir «Hola» al número de plataforma desde Phone vinculado. Meta entra por el túnel; bot responde «Entrar» mediante outbox. Abrir: preview, sin sesión nueva ni consumo. Tocar Continuar: ingresar al acceso elegido en D1. Reabrir con otro intento/key: «Este enlace ya no sirve». Probar enlace vencido e invalidado sin imprimirlo ni guardarlo como evidencia pública.
+9. Número sin cuenta sigue D2 aprobado, sin alta automática ni acceso. Cuenta suspendida no entra; operador probado usa solo su lado. Validar dos cookies, salida de un lado y cierre de sesiones, junto al recorrido reusable de regresión E7.
+10. Verificar delivered del código, invitación Email entregada al Phone verificado de su destinatario y al menos un aviso de cuenta, sin confundir Sent con delivered. La emisión por el canal WhatsApp usa el caso de uso real de invitación con la cuenta propia de prueba y el soporte E2E si no hay selector público todavía; no fabricar payloads ajenos al caso de uso ni adelantar carga de empleados E11. Los demás templates se cubren con tests de catálogo/payload y flujos realistas según disponibilidad; cualquier plantilla no aprobada impide declarar completo su envío. Retención se prueba con reloj controlado, no esperando 90 días.
+11. Registrar resultados y límites externos. Si Meta/túnel/aprobación no están disponibles, dejar puerta pendiente con causa concreta; la suite local no los reemplaza. Restaurar callback anterior cuando corresponda y `aspire stop` del entorno propio.
+
+**Hecho cuando de la etapa:** T00–T13 implementadas, contrato compartido idéntico, ninguna ruta 501, módulos removibles, tests/seguridad/aislamiento en verde, detectores en 0, galería revisada y todo el recorrido Meta real y con sesiones anteriores aprobado. Solo entonces registrar cierre de E8 en el mecanismo vigente y el informe final.
+
+### Texto listo para el chat de Integración y puerta
+
+```text
+Ejecutá SOLO la Parte 3 (T13–T14) del plan C:\Users\ezequ\source\repos\ArquitecturaBaseMutitenant\docs\plans\2026-10-07-etapa-8-whatsapp.md. Back y front ya implementaron sus partes del contrato commiteado. Trabajá en ambos repos en main, sin push y commits solo por tus rutas; preservá cambios/procesos ajenos. Conectá front y API reales, corré suites completas y E2E sin filtros, detectores de docs en 0 y armá una única galería lado a lado. Hacé el recorrido con sesiones anteriores y el recorrido real en WhatsApp/Meta por el túnel del AppHost multitenant, según configuracion.md §4; no reemplaces Meta/delivered con mocks. Probá quitar el módulo exclusivamente en una copia descartable y que núcleo/build/tests/login sigan verdes. Si el contrato requiere un cambio, coordiná ambos repos por Cambios al contrato. Dejá informe corto con hashes, resultados, decisiones y pendientes reales; no declares cierre si falta Meta, galería o recorrido. Al finalizar apagá solo tu Aspire y devolvé la URL de webhook a la anterior si corresponde.
+```
+
+## Cambios al contrato
+
+Vacío al escribir el plan. Durante la parte 2, registrar aquí propuesta, motivo, cuerpos/códigos afectados, decisión comunicada al otro chat y hashes de sincronización de B/F. No usar esta sección para cambiarlo unilateralmente.
+
+## Para decidir
+
+Solo estos puntos de producto no quedan resueltos por maestro, ADR ni lienzo. No son decisiones de librerías, nombres de helpers, locks ni diseño ya aprobado.
+
+1. **D1 · ¿A qué acceso entra el enlace del bot?** Enlace dice «Continuar» y Mensajes solo «Entrar», sin elegir persona/empresa. El href de ejemplo a Inicio-Org no define la conducta para una cuenta sin organizaciones ni para un operador. **Recomendación:** el enlace del número de plataforma entra como **persona**; desde allí puede ir a empresa mediante el cambio existente. Si la cuenta probada es operador, continuar por Plataforma con su cookie exclusiva. No añadir selector ni recordar el acceso del último navegador en un mensaje del bot. Resolver antes de congelar la semántica de acceso/continuación de T01 y ejecutar T07/T11.
+2. **D2 · ¿Qué contesta el bot a un número sin cuenta?** La fuente solo dibuja el mensaje de una cuenta vinculada. **Recomendación:** no crear identidad ni contacto vinculado con «Hola»; contestar con enlace al registro personal por WhatsApp y exigir términos/OTP en la web, sin incluir el número en query o en el historial del enlace. Si ConsumerSignup está cerrado, usar el aviso de registro cerrado y enlace al ingreso/recuperación. Diseño debe dibujar ese mensaje y sus variantes antes de implementarlos; no frena los flujos ya definidos. Resolver antes de T07 y su recorrido real.
+3. **D3 · ¿Por dónde recibe los avisos de organización una cuenta que solo tiene Phone?** El núcleo ya emite `OrganizationApproved`, `OrganizationRejected` y `PublicPageModerated` por IAccountNoticeChannel, pero el catálogo E8 y Mensajes WhatsApp no definen sus plantillas. Registrar con Phone y después entrar/registrarse como empresa hace alcanzable ese caso. **Recomendación:** sumar esos tres avisos Utility por WhatsApp, con el mismo contenido funcional y privacidad del correo, y dejar «Exportación lista» e invitación de operador solo por correo como está decidido. Requiere definir textos/variables y aprobarlos en Diseño/Meta antes de T03; es una extensión explícita del catálogo, no silenciar avisos ni improvisarlos en el adaptador.
