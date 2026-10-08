@@ -17,9 +17,6 @@ public sealed class Etapa8ContractTests(ApiFactory factory)
     private static readonly object PhoneBody = new { phone = new { country = "AR", number = "11 2345 6789" }, channel = "whatsapp", acceptedTerms = true, nonce = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" };
 
     [Theory]
-    [InlineData("/api/auth/login-code")]
-    [InlineData("/api/auth/signup")]
-    [InlineData("/api/auth/business-signup/code")]
     [InlineData("/api/account-recovery/code")]
     public async Task Phone_contract_is_explicitly_pending_without_a_cookie(string path)
     {
@@ -32,6 +29,22 @@ public sealed class Etapa8ContractTests(ApiFactory factory)
         var problem = await response.Content.ReadFromJsonAsync<JsonObject>(Ct);
         Assert.Equal("General.Contract.NotImplemented", problem?["code"]?.GetValue<string>());
         Assert.NotNull(problem?["traceId"]);
+    }
+
+    [Theory]
+    [InlineData("/api/auth/login-code")]
+    [InlineData("/api/auth/signup")]
+    [InlineData("/api/auth/business-signup/code")]
+    public async Task Phone_auth_without_an_available_channel_never_creates_a_cookie(string path)
+    {
+        using var client = factory.CreateClient(new() { AllowAutoRedirect = false });
+        using var request = new HttpRequestMessage(HttpMethod.Post, path) { Content = JsonContent.Create(PhoneBody) };
+        request.Headers.Add("Idempotency-Key", Guid.CreateVersion7().ToString());
+        using var response = await client.SendAsync(request, Ct);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.False(response.Headers.Contains("Set-Cookie"));
+        var problem = await response.Content.ReadFromJsonAsync<JsonObject>(Ct);
+        Assert.Equal("Auth.LoginMethod.ChannelUnavailable", problem?["code"]?.GetValue<string>());
     }
 
     [Theory]

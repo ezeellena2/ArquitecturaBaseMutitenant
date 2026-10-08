@@ -1,3 +1,5 @@
+using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
@@ -6,7 +8,6 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
-using ArquitecturaBaseMultitenant.Domain.Authentication;
 using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
@@ -23,9 +24,11 @@ internal sealed class LoginMethodManagementService(ICurrentUser currentUser, Log
         OperationLog.RunAsync<LoginMethodCodeResponse>(logger, timeProvider, "AddLoginMethod", async () =>
         {
             ArgumentNullException.ThrowIfNull(request);
-            if (request.Phone is not null) return ContractErrors.NotImplemented;
-            if (request.Channel is not null && request.Channel != LoginCodeChannel.Email) return LoginChannelErrors.Unavailable;
-            return await AddEmailCoreAsync(new AddLoginEmailRequest(request.Email), ct);
+            if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
+            var destination = issuer.Resolve(request);
+            if (destination.IsFailure) return destination.Error;
+            if (currentUser.UserId is not { } userId) return UserErrors.NotFound;
+            return await unitOfWork.ExecuteInTransactionAsync(token => issuer.AddAsync(userId, destination.Value, token), CommitPolicy.OnSuccess, ct);
         });
 
     private async Task<Result<LoginMethodCodeResponse>> AddEmailCoreAsync(AddLoginEmailRequest request, CancellationToken ct)
@@ -33,7 +36,9 @@ internal sealed class LoginMethodManagementService(ICurrentUser currentUser, Log
         ArgumentNullException.ThrowIfNull(request);
         if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
         if (currentUser.UserId is not { } userId) return UserErrors.NotFound;
-        return await unitOfWork.ExecuteInTransactionAsync(token => issuer.AddAsync(userId, request, token),
+        var destination = issuer.Resolve(new AddLoginMethodRequest(request.Email));
+        if (destination.IsFailure) return destination.Error;
+        return await unitOfWork.ExecuteInTransactionAsync(token => issuer.AddAsync(userId, destination.Value, token),
             CommitPolicy.OnSuccess, ct);
     }
 
@@ -51,8 +56,20 @@ internal sealed class LoginMethodManagementService(ICurrentUser currentUser, Log
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
             if (currentUser.UserId is not { } userId) return UserErrors.NotFound;
-            return await unitOfWork.ExecuteInTransactionAsync(token => verifier.VerifyAsync(userId, request, token),
-                CommitPolicy.OnAnyResult, ct);
+            var isPhone = false;
+            try
+            {
+                return await unitOfWork.ExecuteInTransactionAsync(async token =>
+                {
+                    isPhone = await verifier.IsPhoneAsync(userId, request.MethodId, token);
+                    return await verifier.VerifyAsync(userId, request, token);
+                }, CommitPolicy.OnAnyResult, ct);
+            }
+            catch (UniqueConstraintViolationException exception)
+                when (exception.ConstraintName == UniqueKeys.VerifiedLoginMethod)
+            {
+                return FieldErrors.On(isPhone ? LoginMethodErrors.PhoneAlreadyUsed : LoginMethodErrors.AlreadyUsed, isPhone ? "phone" : "email");
+            }
         });
 
     public Task<Result> MakePrimaryAsync(ChangeLoginMethodRequest request, CancellationToken ct) =>

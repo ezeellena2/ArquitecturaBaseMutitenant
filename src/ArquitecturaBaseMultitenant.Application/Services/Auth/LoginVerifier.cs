@@ -1,3 +1,5 @@
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
@@ -23,10 +25,12 @@ internal sealed class LoginVerifier(
     IConnectService connect,
     LoginInvitationAcceptanceWriter invitations)
 {
+    internal Result<LoginCodeDestination> Resolve(Email? email,
+        PhoneInputRequest? phone, string? channel) => accounts.Resolve(email, phone, channel);
+
     internal async Task<Result<Guid>> VerifyAsync(
-        VerifyLoginCodeRequest request, LoginInvitationsContext? invitation, CancellationToken cancellationToken)
+        VerifyLoginCodeRequest request, LoginCodeDestination destination, LoginInvitationsContext? invitation, CancellationToken cancellationToken)
     {
-        var destination = LoginCodeDestination.ForEmail(request.Email!);
         if (invitation is not null) await invitations.LockEmailAsync(invitation, cancellationToken);
         var userId = invitation is not null ? invitation.ExpectedOwnerId : await accounts.LockAsync(destination, cancellationToken);
         await attempts.LockDestinationAsync(destination, cancellationToken);
@@ -57,9 +61,9 @@ internal sealed class LoginVerifier(
         if (account.Status == UserStatus.PendingDeletion)
             return Fail(userId, cancellation.Issue(account, request.ReturnUrl!));
 
-        var emailMethod = (await loginMethods.ListByUserIdAsync(userId.Value, cancellationToken))
-            .SingleOrDefault(method => method.Type == LoginMethodType.Email && method.Value == destination.Value);
-        if (emailMethod is null || !await availability.IsAvailableAsync(userId.Value, emailMethod, cancellationToken))
+        var method = (await loginMethods.ListByUserIdAsync(userId.Value, cancellationToken))
+            .SingleOrDefault(method => method.Type == LoginDestinationResolver.Type(destination) && method.Value == destination.Value);
+        if (method is null || !await availability.IsAvailableAsync(userId.Value, method, cancellationToken))
             return Fail(userId, LoginCodeErrors.Invalid(attemptsLeft: null));
 
         if (request.ReturnUrl != ReturnUrls.InvitationPath)

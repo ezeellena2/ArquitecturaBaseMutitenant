@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Api.Contracts.Auth;
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
 using ArquitecturaBaseMultitenant.Api.Idempotency;
@@ -27,9 +28,9 @@ public sealed class LoginCodeController(ILoginCodeService service) : ControllerB
     public async Task<IActionResult> RequestLoginCode([FromBody] RequestLoginCodeHttpRequest request,
         CancellationToken cancellationToken)
     {
-        var email = AuthContactMapping.ParseEmail(request.Email, request.Phone, request.Channel);
+        var email = AuthContactMapping.Map(request.Email, request.Phone, request.Channel);
         if (email.IsFailure) return Result.Failure(email.Error).ToActionResult(this);
-        return (await service.RequestLoginCodeAsync(new RequestLoginCodeRequest(email.Value), cancellationToken))
+        return (await service.RequestLoginCodeAsync(new RequestLoginCodeRequest(email.Value, request.Phone is null ? null : new PhoneInputRequest(request.Phone.Country, request.Phone.Number), request.Channel), cancellationToken))
             .ToAcceptedResult(this);
     }
 
@@ -42,10 +43,10 @@ public sealed class LoginCodeController(ILoginCodeService service) : ControllerB
     public async Task<IActionResult> VerifyLoginCode([FromBody] VerifyLoginCodeHttpRequest request,
         CancellationToken cancellationToken)
     {
-        var email = AuthContactMapping.ParseEmail(request.Email, request.Phone, request.Channel);
+        var email = AuthContactMapping.Map(request.Email, request.Phone, request.Channel);
         if (email.IsFailure) return Result.Failure(email.Error).ToActionResult(this);
         return (await service.VerifyLoginCodeAsync(
-            new VerifyLoginCodeRequest(email.Value, request.Code, request.ReturnUrl), cancellationToken))
+            new VerifyLoginCodeRequest(email.Value, request.Code, request.ReturnUrl, request.Phone is null ? null : new PhoneInputRequest(request.Phone.Country, request.Phone.Number), request.Channel), cancellationToken))
             .ToActionResult(this);
     }
 }

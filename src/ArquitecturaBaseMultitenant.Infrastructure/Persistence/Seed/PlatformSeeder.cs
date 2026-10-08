@@ -1,3 +1,5 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Phones;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Common.Text;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
@@ -24,7 +26,9 @@ internal sealed class PlatformSeeder(
     UserManager<ApplicationUser> users,
     IConfiguration configuration,
     IHostEnvironment environment,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    IPhoneNumberParser? phoneParser = null,
+    IEnumerable<IPhoneLinkObserver>? phoneObservers = null)
 {
     internal PlatformOwnerSeed? ReadOwner()
     {
@@ -58,7 +62,15 @@ internal sealed class PlatformSeeder(
             throw new InvalidOperationException("Seed:PlatformOwner name parts exceed the allowed length.");
         }
 
-        return new PlatformOwnerSeed(email.Value, firstName, lastName);
+        PhoneNumber? phone = null;
+        if (configuration["Seed:PlatformOwner:Phone"] is { Length: > 0 } configuredPhone)
+        {
+            var parsed = phoneParser?.Parse(null, configuredPhone, PhoneUsage.Mobile);
+            if (parsed is null || parsed.IsFailure)
+                throw new InvalidOperationException("Seed:PlatformOwner:Phone must be an international mobile number.");
+            phone = parsed.Value;
+        }
+        return new PlatformOwnerSeed(email.Value, firstName, lastName, phone);
     }
 
     public async Task SeedAsync(PlatformOwnerSeed? owner, ReferenceDataSeedSnapshot references,
@@ -80,6 +92,14 @@ internal sealed class PlatformSeeder(
         {
             foreach (var userId in operatorIds)
                 await EnsureAssignmentAsync(userId, cancellationToken);
+            if (owner?.Phone is not null)
+            {
+                var ownerId = await context.LoginMethods.Where(login => login.Type == LoginMethodType.Email
+                    && login.Value == owner.Email.Value && login.VerifiedAtUtc != null).Select(login => (Guid?)login.UserId).SingleOrDefaultAsync(cancellationToken);
+                if (ownerId is null || !operatorIds.Contains(ownerId.Value))
+                    throw new InvalidOperationException("Seed:PlatformOwner:Phone requires the configured platform operator.");
+                await EnsurePhoneAsync(ownerId.Value, owner.Phone, cancellationToken);
+            }
             return;
         }
 
@@ -104,6 +124,8 @@ internal sealed class PlatformSeeder(
                     "Seed:PlatformOwner:Email must reference a verified, unmanaged email method.");
             var existing = await users.Users.SingleAsync(user => user.Id == method.UserId,
                 cancellationToken);
+            if (!existing.IsPlatformOperator && owner.Phone is not null)
+                throw new InvalidOperationException("Seed:PlatformOwner:Phone cannot verify an ordinary account.");
             if (!existing.IsPlatformOperator)
             {
                 existing.GrantPlatformOperator();
@@ -112,6 +134,7 @@ internal sealed class PlatformSeeder(
                     "Initial platform owner seed", timeProvider.GetUtcNow().UtcDateTime, existing.Id));
             }
             await EnsureAssignmentAsync(existing.Id, cancellationToken);
+            if (owner.Phone is not null) await EnsurePhoneAsync(existing.Id, owner.Phone, cancellationToken);
 
             return;
         }
@@ -147,9 +170,33 @@ internal sealed class PlatformSeeder(
         }
 
         context.LoginMethods.Add(loginMethod);
+        if (owner.Phone is not null) await EnsurePhoneAsync(user.Id, owner.Phone, cancellationToken);
         context.PlatformPermissionAssignments.Add(CompleteCatalog(user.Id));
         securityEvents.Add(SecurityEvent.ForPlatformOperatorGrant(
             "Initial platform owner seed", timeProvider.GetUtcNow().UtcDateTime, user.Id));
+    }
+
+    private async Task EnsurePhoneAsync(Guid userId, PhoneNumber phone, CancellationToken ct)
+    {
+        context.RequireTransaction();
+        await context.AcquireAdvisoryLocksAsync([AdvisoryLockKeys.ExternalPhone(phone.Value)], ct);
+        await context.AcquireAdvisoryLocksAsync([AdvisoryLockKeys.Account(userId)], ct);
+        var current = await context.LoginMethods.SingleOrDefaultAsync(method => method.Type == LoginMethodType.Phone
+            && method.Value == phone.Value && method.VerifiedAtUtc != null, ct);
+        if (current is not null)
+        {
+            if (current.UserId != userId) throw new InvalidOperationException("Seed:PlatformOwner:Phone belongs to another account.");
+            return;
+        }
+        var method = await context.LoginMethods.SingleOrDefaultAsync(method => method.UserId == userId
+            && method.Type == LoginMethodType.Phone && method.Value == phone.Value, ct);
+        if (method is null)
+        {
+            method = LoginMethod.CreatePhone(userId, phone);
+            context.LoginMethods.Add(method);
+        }
+        method.Verify(timeProvider.GetUtcNow().UtcDateTime);
+        foreach (var observer in phoneObservers ?? []) await observer.VerifiedAsync(userId, method.Id, phone, ct);
     }
 
     // Un operador sin asignación (el primero o un indicador anterior a E5) recibe el catálogo completo;
@@ -173,4 +220,4 @@ internal sealed class PlatformSeeder(
     }
 }
 
-internal sealed record PlatformOwnerSeed(Email Email, string? FirstName, string? LastName);
+internal sealed record PlatformOwnerSeed(Email Email, string? FirstName, string? LastName, PhoneNumber? Phone = null);

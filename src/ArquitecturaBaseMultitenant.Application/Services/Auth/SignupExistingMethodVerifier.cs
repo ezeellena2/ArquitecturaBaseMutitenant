@@ -4,20 +4,19 @@ using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
-using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
-/// <summary>Valida la cuenta existente y confirma su método de correo sin duplicar identidad.</summary>
+/// <summary>Valida la cuenta existente y confirma su método sin duplicar identidad.</summary>
 internal sealed class SignupExistingMethodVerifier(IUserRepository users,
     ILoginMethodRepository methods, IUserLookup userLookup,
     LoginMethodLinker linker)
 {
     internal async Task<LoginMethodLookup?> LockAsync(LoginCodeDestination destination, CancellationToken ct)
     {
-        await linker.LockEmailAsync(Email.Create(destination.Value).Value, ct);
+        await linker.LockDestinationAsync(destination, ct);
         var method = await FindAsync(destination, ct);
         if (method is not null) await methods.LockUserAsync(method.UserId, ct);
         return method;
@@ -25,7 +24,7 @@ internal sealed class SignupExistingMethodVerifier(IUserRepository users,
 
     internal Task<LoginMethodLookup?> FindAsync(LoginCodeDestination destination,
         CancellationToken cancellationToken) =>
-        userLookup.FindMethodAsync(LoginMethodType.Email, destination.Value, cancellationToken);
+        userLookup.FindMethodAsync(LoginDestinationResolver.Type(destination), destination.Value, cancellationToken);
 
     internal async Task RemovePendingAsync(LoginMethodLookup method, CancellationToken cancellationToken)
     {
@@ -44,7 +43,7 @@ internal sealed class SignupExistingMethodVerifier(IUserRepository users,
         return account.Status == UserStatus.PendingDeletion ? AccountErrors.PendingDeletion : null;
     }
 
-    internal async Task<Guid> ConfirmAsync(LoginMethodLookup method, Email email, DateTime nowUtc,
+    internal async Task<Guid> ConfirmAsync(LoginMethodLookup method, DateTime nowUtc,
         CancellationToken cancellationToken)
     {
         var userId = method.UserId;

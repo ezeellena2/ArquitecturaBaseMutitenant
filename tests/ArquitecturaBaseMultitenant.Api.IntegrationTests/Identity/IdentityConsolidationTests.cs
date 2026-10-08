@@ -110,7 +110,7 @@ public sealed class IdentityConsolidationTests(ApiFactory factory)
             var registrar = services.GetRequiredService<SignupAccountRegistrar>();
             var documents = await registrar.GetCurrentLegalAsync(services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime, ct);
             await services.GetRequiredService<LoginMethodLinker>().LockEmailAsync(email, ct);
-            createdId = await registrar.RegisterAsync(email, draft, services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime,
+            createdId = await registrar.RegisterAsync(LoginCodeDestination.ForEmail(email), draft, services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime,
                 documents.Terms, documents.Privacy, ct);
             return Result.Failure(UserErrors.InvalidTransition);
         }, CommitPolicy.OnSuccess, Ct);
@@ -147,6 +147,8 @@ public sealed class IdentityConsolidationTests(ApiFactory factory)
 
     private sealed class PausedIdentityLock(IExternalLoginLock inner, IdentityGate gate) : IExternalLoginLock
     {
+        public Task LockPhoneAsync(PhoneNumber phone, CancellationToken ct) => inner.LockPhoneAsync(phone, ct);
+
         public Task LockEmailAsync(Email email, CancellationToken ct)
         {
             if (email == gate.Destination && gate.GoogleLocked.Task.IsCompleted) gate.EmailStarted.TrySetResult();

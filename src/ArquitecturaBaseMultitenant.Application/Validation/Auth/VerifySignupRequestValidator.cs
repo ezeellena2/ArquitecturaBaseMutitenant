@@ -14,7 +14,7 @@ internal sealed class VerifySignupRequestValidator : AbstractValidator<VerifySig
         ArgumentNullException.ThrowIfNull(options);
         var length = options.Value.Length;
 
-        RuleFor(request => request.Email).NotNull().WithMessage(_ => ValidationTexts.Required);
+        RuleFor(request => request.Email).NotNull().When(request => request.Phone is null).WithMessage(_ => ValidationTexts.Required);
         RuleFor(request => request.Code)
             .Cascade(CascadeMode.Stop)
             .NotEmpty().WithMessage(_ => ValidationTexts.Required)

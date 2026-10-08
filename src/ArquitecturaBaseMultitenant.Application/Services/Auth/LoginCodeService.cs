@@ -28,8 +28,10 @@ internal sealed class LoginCodeService(
         {
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
+            var destination = requester.Resolve(request.Email, request.Phone, request.Channel);
+            if (destination.IsFailure) return destination.Error;
             return await unitOfWork.ExecuteInTransactionAsync(
-                ct => requester.RequestAsync(request, ct), CommitPolicy.OnSuccess, cancellationToken);
+                ct => requester.RequestAsync(request, destination.Value, ct), CommitPolicy.OnSuccess, cancellationToken);
         });
 
     public Task<Result<VerifyLoginCodeResponse>> VerifyLoginCodeAsync(
@@ -38,10 +40,12 @@ internal sealed class LoginCodeService(
         {
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            var invitation = await invitations.PrepareAsync(request.Email!, request.ReturnUrl!, cancellationToken);
+            var destination = verification.Resolve(request.Email, request.Phone, request.Channel);
+            if (destination.IsFailure) return destination.Error;
+            var invitation = request.Email is null ? null : await invitations.PrepareAsync(request.Email, request.ReturnUrl!, cancellationToken);
             using var scope = invitation is null ? null : tenantScope.Enter(invitation.DefaultsTenantId);
             var verified = await unitOfWork.ExecuteInTransactionAsync(
-                ct => verification.VerifyAsync(request, invitation, ct), CommitPolicy.OnAnyResult, cancellationToken);
+                ct => verification.VerifyAsync(request, destination.Value, invitation, ct), CommitPolicy.OnAnyResult, cancellationToken);
             if (verified.IsFailure) return verified.Error;
 
             var access = ReturnUrls.TryReadAccessSelection(request.ReturnUrl, out var selection)

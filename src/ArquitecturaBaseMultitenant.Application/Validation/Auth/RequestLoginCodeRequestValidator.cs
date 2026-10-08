@@ -8,5 +8,5 @@ namespace ArquitecturaBaseMultitenant.Application.Validation.Auth;
 internal sealed class RequestLoginCodeRequestValidator : AbstractValidator<RequestLoginCodeRequest>
 {
     public RequestLoginCodeRequestValidator() =>
-        RuleFor(request => request.Email).NotNull().WithMessage(_ => ValidationTexts.Required);
+        RuleFor(request => request.Email).NotNull().When(request => request.Phone is null).WithMessage(_ => ValidationTexts.Required);
 }

@@ -197,8 +197,6 @@ public sealed class InvitedLoginCodeTests(ApiFactory factory)
         await using var ownerContext = new ApplicationDbContext(options.Options,
             migrationScope.ServiceProvider.GetRequiredService<ITenantContext>());
         var migrator = ownerContext.Database.GetService<IMigrator>();
-        await migrator.MigrateAsync("20261007123554_LoginInvitations", Ct);
-
         var first = await journey.IssueAsync(name: "A · Dueña previa");
         var second = await journey.IssueAsync(first.Email, "Z · Dueña previa");
         var pending = await journey.IssueAsync(name: "Dueña reservada");
@@ -210,6 +208,10 @@ public sealed class InvitedLoginCodeTests(ApiFactory factory)
         var lookup = migrationScope.ServiceProvider.GetRequiredService<IUserLookup>();
         var userId = Assert.Single(await lookup.FindVerifiedUsersByEmailAsync(first.Email, Ct));
         var accesses = migrationScope.ServiceProvider.GetRequiredService<IUserTenantAccessReader>();
+        // Create through the current API before downgrading; its EF model cannot write the historical outbox.
+        await migrator.MigrateAsync("20261007123554_LoginInvitations", Ct);
+        // Reproduce the old projection missing the second owner's role, without writing through a newer EF model.
+        await ownerContext.Database.ExecuteSqlInterpolatedAsync($"UPDATE identity.\"UserTenantAccesses\" SET \"RoleName\" = NULL WHERE \"UserId\" = {userId} AND \"TenantId\" = {second.TenantId}", Ct);
         var before = await accesses.ListForUserAsync(userId, Ct);
         Assert.Null(Assert.Single(before, row => row.TenantId == second.TenantId).RoleName);
         await journey.AssertNoAccountAsync(pending.Email);

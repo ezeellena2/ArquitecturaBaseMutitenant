@@ -52,6 +52,7 @@ internal sealed class IdentityTestStore : IUserRepository, ILoginMethodRepositor
     Task<Guid?> ITenantDomainRepository.FindVerifiedOrganizationIdAsync(OrganizationEmailDomain domain, CancellationToken cancellationToken) => Task.FromResult<Guid?>(null);
     void ITenantDomainRepository.Add(TenantDomain domain) => throw new NotSupportedException();
     void ITenantDomainRepository.MarkUpdated(TenantDomain domain) => throw new NotSupportedException();
+    Task IExternalLoginLock.LockPhoneAsync(PhoneNumber phone, CancellationToken cancellationToken) { Locks.Add("identity"); return Task.CompletedTask; }
     Task IExternalLoginLock.LockEmailAsync(Email email, CancellationToken cancellationToken) { Locks.Add("identity"); return Task.CompletedTask; }
     Task IExternalLoginLock.AcquireAsync(string providerSubject, Email? email, CancellationToken cancellationToken) => throw new NotSupportedException();
 }

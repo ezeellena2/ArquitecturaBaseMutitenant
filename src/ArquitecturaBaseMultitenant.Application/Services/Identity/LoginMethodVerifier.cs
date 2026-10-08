@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
@@ -8,22 +9,29 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
-/// <summary>Verifica el código de un correo nuevo y, si la cuenta no tiene principal, lo promueve antes de avisar el cambio.</summary>
+/// <summary>Verifica el código de un destino nuevo y, si la cuenta no tiene principal, lo promueve antes de avisar el cambio.</summary>
 internal sealed class LoginMethodVerifier(LoginMethodGuard guard, ILoginMethodRepository methods,
     ILoginCodeRepository codeRepository, LoginCodeVerifier codes, LoginMethodNotifier notifier,
-    TimeProvider timeProvider, LoginMethodLinker linker, IUserLookup lookup)
+    TimeProvider timeProvider, LoginMethodLinker linker, IUserLookup lookup, LoginDestinationResolver destinations)
 {
+    internal async Task<bool> IsPhoneAsync(Guid userId, Guid methodId, CancellationToken ct) =>
+        (await methods.GetByIdForUserAsync(userId, methodId, ct))?.Type == LoginMethodType.Phone;
+
     public async Task<Result> VerifyAsync(Guid userId, VerifyLoginMethodRequest request, CancellationToken ct)
     {
         var hint = await methods.GetByIdForUserAsync(userId, request.MethodId, ct);
-        if (hint is null || hint.Type != LoginMethodType.Email) return LoginMethodErrors.NotFound;
-        await linker.LockEmailAsync(Email.Create(hint.Value).Value, ct);
+        if (hint is null || hint.Type is not (LoginMethodType.Email or LoginMethodType.Phone)) return LoginMethodErrors.NotFound;
+        await linker.LockMethodAsync(hint, ct);
         var account = await guard.LockAccountAsync(userId, ct);
         if (account.IsFailure) return account.Error;
         var method = await methods.GetByIdForUserAsync(userId, request.MethodId, ct);
-        if (method is null || method.Type != LoginMethodType.Email) return LoginMethodErrors.NotFound;
+        if (method is null || method.Type is not (LoginMethodType.Email or LoginMethodType.Phone)) return LoginMethodErrors.NotFound;
         if (method.VerifiedAtUtc is not null) return LoginMethodErrors.AlreadyVerified;
-        var destination = LoginCodeDestination.ForEmail(Email.Create(method.Value).Value);
+        var resolved = destinations.FromMethod(method);
+        if (resolved.IsFailure) return resolved.Error;
+        var destination = resolved.Value;
+        var validNew = destinations.ValidateNew(destination);
+        if (validNew.IsFailure) return validNew.Error;
         await codeRepository.LockDestinationAsync(destination, ct);
         var currentCode = await codeRepository.GetLatestAsync(destination,
             LoginCodePurpose.VerifyDestination, userId, ct);
@@ -39,8 +47,10 @@ internal sealed class LoginMethodVerifier(LoginMethodGuard guard, ILoginMethodRe
                     : LoginCodeErrors.Expired;
         }
         // Si el correo ya es de otra cuenta, el código no sirve: falla como uno mal escrito (ADR 0041, D4b).
-        var usable = !(await lookup.FindVerifiedUsersByEmailAsync(Email.Create(method.Value).Value, ct))
-            .Any(id => id != userId);
+        var usable = method.Type == LoginMethodType.Email
+            ? !(await lookup.FindVerifiedUsersByEmailAsync(Email.Create(method.Value).Value, ct)).Any(id => id != userId)
+            : await lookup.FindVerifiedUserIdAsync(method.Type, method.Value, ct) is not { } ownerId || ownerId == userId;
+        if (!usable && method.Type == LoginMethodType.Phone) return FieldErrors.On(LoginMethodErrors.PhoneAlreadyUsed, "phone");
         var verified = await codes.VerifyAsync(destination,
             LoginCodePurpose.VerifyDestination, userId, request.Code!, ct, usable);
         if (verified.IsFailure) return verified.Error;

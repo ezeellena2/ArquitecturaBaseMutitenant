@@ -1,3 +1,6 @@
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
+using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
@@ -11,16 +14,20 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
 /// <summary>Ordena cuenta antes de destino, igual que la gestión de Cuenta, y revalida su dueño.</summary>
 internal sealed class LoginAccountGuard(IUserLookup lookup, IUserRepository users, ILoginMethodRepository methods,
-    TimeProvider clock)
+    TimeProvider clock, LoginMethodLinker linker, LoginDestinationResolver destinations)
 {
+    internal Result<LoginCodeDestination> Resolve(Email? email,
+        PhoneInputRequest? phone, string? channel) => destinations.Resolve(email, phone, channel);
+
     internal async Task<Guid?> LockAsync(LoginCodeDestination destination, CancellationToken ct)
     {
-        var id = await lookup.FindVerifiedUserIdAsync(LoginMethodType.Email, destination.Value, ct);
+        await linker.LockDestinationAsync(destination, ct);
+        var id = await lookup.FindVerifiedUserIdAsync(LoginDestinationResolver.Type(destination), destination.Value, ct);
         if (id is { } userId) await methods.LockUserAsync(userId, ct);
         return id;
     }
     internal async Task<bool> StillOwnsAsync(Guid? id, LoginCodeDestination destination, CancellationToken ct) =>
-        id == await lookup.FindVerifiedUserIdAsync(LoginMethodType.Email, destination.Value, ct);
+        id == await lookup.FindVerifiedUserIdAsync(LoginDestinationResolver.Type(destination), destination.Value, ct);
     internal Task<UserAccountRow?> ReadAsync(Guid id, CancellationToken ct) => users.GetByIdAsync(id, ct);
 
     /// <summary>

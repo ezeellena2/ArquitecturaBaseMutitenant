@@ -2,30 +2,29 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Legal;
-using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
-/// <summary>Alta por correo con consentimiento explícito; solo el registro personal crea Personal.</summary>
+/// <summary>Alta por destino con consentimiento explícito; solo el registro personal crea Personal.</summary>
 internal sealed class SignupAccountRegistrar(AccountRegistrar accounts, LoginMethodLinker linker,
     ILoginMethodRepository methods, LegalConsentRecorder consent)
 {
     internal Task<(LegalDocument Terms, LegalDocument Privacy)> GetCurrentLegalAsync(DateTime nowUtc, CancellationToken ct) =>
         consent.GetCurrentAsync(nowUtc, ct);
 
-    internal async Task<Guid> RegisterAsync(Email email, PersonalSpaceDraft draft, DateTime nowUtc,
+    internal async Task<Guid> RegisterAsync(LoginCodeDestination destination, PersonalSpaceDraft draft, DateTime nowUtc,
         LegalDocument terms, LegalDocument privacy, CancellationToken ct)
     {
-        var userId = await RegisterBusinessAsync(email, draft, nowUtc, terms, privacy, ct);
+        var userId = await RegisterBusinessAsync(destination, draft, nowUtc, terms, privacy, ct);
         await accounts.StagePersonalAsync(userId, draft, ct);
         return userId;
     }
 
-    internal async Task<Guid> RegisterBusinessAsync(Email email, PersonalSpaceDraft defaults, DateTime nowUtc,
+    internal async Task<Guid> RegisterBusinessAsync(LoginCodeDestination destination, PersonalSpaceDraft defaults, DateTime nowUtc,
         LegalDocument terms, LegalDocument privacy, CancellationToken ct)
     {
         var account = await accounts.CreateAsync(defaults.Culture, defaults.TimeZoneId, ct);
-        var method = LoginMethod.CreateEmail(account.Id, email);
+        var method = LoginDestinationResolver.Create(account.Id, destination);
         var linked = await linker.VerifyAsync(method, nowUtc, ct);
         if (linked.IsFailure) throw new InvalidOperationException("Signup ownership changed under the identity lock.");
         methods.Add(method);

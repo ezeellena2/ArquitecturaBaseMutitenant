@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Common;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +20,7 @@ internal sealed class LoginMethodConfiguration : IEntityTypeConfiguration<LoginM
         builder.Property(method => method.Type).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.Property(method => method.Value).HasMaxLength(TextLimits.Description).IsRequired();
         builder.Property(method => method.InvitationOriginTenantId);
-        builder.HasIndex(method => new { method.Type, method.Value }).IsUnique()
+        builder.HasIndex(method => new { method.Type, method.Value }).IsUnique().HasDatabaseName(UniqueKeys.VerifiedLoginMethod)
             .HasFilter("\"VerifiedAtUtc\" IS NOT NULL");
         builder.HasIndex(method => new { method.UserId, method.Type, method.Value }).IsUnique();
         builder.HasIndex(method => method.UserId);

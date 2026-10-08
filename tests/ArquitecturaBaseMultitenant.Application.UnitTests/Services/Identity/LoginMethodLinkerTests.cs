@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
@@ -46,6 +47,42 @@ public sealed class LoginMethodLinkerTests
         Assert.False(first.IsPrimary);
         Assert.True(next.IsPrimary);
         Assert.Equal(next.Value, store.Users[userId].PrimaryEmail!.Value);
+    }
+
+    [Fact]
+    public async Task Phone_observer_sees_verified_proof_once_and_primary_changes_do_not_repeat_it()
+    {
+        var store = new IdentityTestStore();
+        var id = Guid.CreateVersion7();
+        store.Users.Add(id, new UserAccountRow(id, null, "es-AR", "America/Argentina/Buenos_Aires", UserStatus.Active, false, null, null));
+        var phone = LoginMethod.CreatePhone(id, PhoneNumber.Create("+5491134567890").Value);
+        var observer = new PhoneObserver(phone);
+        var linker = new LoginMethodLinker(store, store, store, store, new LoginMethodDomainLinker(store), [observer]);
+        Assert.True((await linker.VerifyAsync(phone, NowUtc, Ct)).IsSuccess);
+        store.Methods.Add(phone);
+        Assert.True((await linker.VerifyAsync(phone, NowUtc, Ct)).IsSuccess);
+        await linker.SynchronizePrimaryAsync(phone, Ct);
+        Assert.Equal(1, observer.Verifications);
+        await linker.RemovedAsync(phone, Ct);
+        Assert.Equal(1, observer.Removals);
+        Assert.Null(store.Users[id].PrimaryEmail);
+    }
+
+    private sealed class PhoneObserver(LoginMethod method) : IPhoneLinkObserver
+    {
+        internal int Verifications { get; private set; }
+        internal int Removals { get; private set; }
+        public Task VerifiedAsync(Guid userId, Guid methodId, PhoneNumber phone, CancellationToken ct)
+        {
+            Assert.NotNull(method.VerifiedAtUtc);
+            Assert.Equal(method.UserId, userId);
+            Assert.Equal(method.Id, methodId);
+            Assert.Equal(method.Value, phone.Value);
+            Verifications++;
+            return Task.CompletedTask;
+        }
+        public Task RemovedAsync(Guid userId, Guid methodId, PhoneNumber phone, CancellationToken ct) { Removals++; return Task.CompletedTask; }
+        public Task AccountDeletedAsync(Guid userId, CancellationToken ct) => throw new NotSupportedException();
     }
 
     private static LoginMethodLinker Linker(IdentityTestStore store) =>

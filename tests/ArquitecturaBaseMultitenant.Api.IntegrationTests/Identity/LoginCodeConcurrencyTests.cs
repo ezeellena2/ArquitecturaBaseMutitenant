@@ -166,6 +166,8 @@ public sealed class LoginCodeConcurrencyTests(ApiFactory factory)
 
     private sealed class ObservedIdentityLock(IExternalLoginLock inner, LoginCodeReadGate gate) : IExternalLoginLock
     {
+        public Task LockPhoneAsync(PhoneNumber phone, CancellationToken ct) => inner.LockPhoneAsync(phone, ct);
+
         public Task LockEmailAsync(Email email, CancellationToken ct)
         {
             gate.BeforeIdentityLock(email);

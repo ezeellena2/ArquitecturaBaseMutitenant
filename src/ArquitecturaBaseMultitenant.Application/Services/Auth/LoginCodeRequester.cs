@@ -1,3 +1,6 @@
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
+using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -13,22 +16,25 @@ internal sealed class LoginCodeRequester(
     IUserLookup userLookup,
     ILoginInvitationReader invitations,
     LoginCodeDeliveryIssuer delivery,
-    TimeProvider clock)
+    TimeProvider clock, LoginDestinationResolver destinations, LoginMethodLinker linker,
+    ILoginMethodRepository methods)
 {
+    internal Result<LoginCodeDestination> Resolve(Email? email,
+        PhoneInputRequest? phone, string? channel) => destinations.Resolve(email, phone, channel);
+
     internal async Task<Result<RequestLoginCodeResponse>> RequestAsync(
-        RequestLoginCodeRequest request, CancellationToken cancellationToken)
+        RequestLoginCodeRequest request, LoginCodeDestination destination, CancellationToken cancellationToken)
     {
-        var destination = LoginCodeDestination.ForEmail(request.Email!);
-        await issuer.LockDestinationAsync(destination, cancellationToken);
-        var userId = await userLookup.FindVerifiedUserIdAsync(
-            LoginMethodType.Email, destination.Value, cancellationToken);
-        var pending = await invitations.ListPendingAsync(request.Email!, clock.GetUtcNow().UtcDateTime, cancellationToken);
+        await linker.LockDestinationAsync(destination, cancellationToken);
+        var pending = request.Email is null ? [] : await invitations.ListPendingAsync(request.Email, clock.GetUtcNow().UtcDateTime, cancellationToken);
+        var userId = await FindOwnerAsync(destination, request.Email, pending.Count > 0, cancellationToken);
         if (userId is null && pending.Count == 0)
-            return FieldErrors.On(LoginCodeErrors.AccountNotFound, "email");
-        if (userId is null)
+            return FieldErrors.On(request.Email is null ? LoginCodeErrors.PhoneAccountNotFound : LoginCodeErrors.AccountNotFound, LoginDestinationResolver.Field(destination));
+        if (userId is { } knownUserId)
         {
-            var owners = await userLookup.FindVerifiedUsersByEmailAsync(request.Email!, cancellationToken);
-            if (owners.Count == 1) userId = owners[0];
+            await methods.LockUserAsync(knownUserId, cancellationToken);
+            if (await FindOwnerAsync(destination, request.Email, pending.Count > 0, cancellationToken) != knownUserId)
+                return FieldErrors.On(request.Email is null ? LoginCodeErrors.PhoneAccountNotFound : LoginCodeErrors.AccountNotFound, LoginDestinationResolver.Field(destination));
         }
 
         var issued = await issuer.IssueLoginCodeAsync(destination, cancellationToken);
@@ -36,5 +42,13 @@ internal sealed class LoginCodeRequester(
         await delivery.EnqueueAsync(destination, issued.Value, userId, pending.Select(row => row.TenantId).ToArray(), cancellationToken);
 
         return new RequestLoginCodeResponse(issued.Value.ResendCooldownSeconds);
+    }
+
+    private async Task<Guid?> FindOwnerAsync(LoginCodeDestination destination, Email? email, bool invited, CancellationToken ct)
+    {
+        var userId = await userLookup.FindVerifiedUserIdAsync(LoginDestinationResolver.Type(destination), destination.Value, ct);
+        if (userId is not null || !invited || email is null) return userId;
+        var owners = await userLookup.FindVerifiedUsersByEmailAsync(email, ct);
+        return owners.Count == 1 ? owners[0] : null;
     }
 }

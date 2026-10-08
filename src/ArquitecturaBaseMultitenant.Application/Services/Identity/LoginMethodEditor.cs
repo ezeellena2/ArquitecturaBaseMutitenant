@@ -11,6 +11,11 @@ internal sealed class LoginMethodEditor(LoginMethodGuard guard, ILoginMethodRepo
 {
     public async Task<Result> ChangeAsync(Guid userId, ChangeLoginMethodRequest request, bool remove, CancellationToken ct)
     {
+        if (remove)
+        {
+            var hint = await methods.GetByIdForUserAsync(userId, request.MethodId, ct);
+            if (hint is not null && hint.Type is LoginMethodType.Phone or LoginMethodType.Email) await linker.LockMethodAsync(hint, ct);
+        }
         var account = await guard.LockAccountAsync(userId, ct);
         if (account.IsFailure) return account.Error;
         var all = await methods.ListByUserIdAsync(userId, ct);
@@ -29,7 +34,11 @@ internal sealed class LoginMethodEditor(LoginMethodGuard guard, ILoginMethodRepo
             await linker.SynchronizePrimaryAsync(nextPrimary, ct);
         }
         await notifier.ChangedAsync(account.Value, all, target, remove ? LoginMethodChange.Removed : LoginMethodChange.Primary, ct);
-        if (remove) methods.Remove(target);
+        if (remove)
+        {
+            await linker.RemovedAsync(target, ct);
+            methods.Remove(target);
+        }
         return Result.Success();
     }
 }

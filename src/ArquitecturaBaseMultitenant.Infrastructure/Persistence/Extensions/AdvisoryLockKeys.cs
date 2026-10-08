@@ -24,6 +24,8 @@ internal static class AdvisoryLockKeys
 
     public static string ExternalGoogleSubject(string subject) => "google:subject:" + subject;
 
+    public static string ExternalPhone(string phone) => "phone:identity:" + phone;
+
     public static string ExternalGoogleEmail(string email) => "google:email:" + email;
 
     public static string TenantDomain(string domain)

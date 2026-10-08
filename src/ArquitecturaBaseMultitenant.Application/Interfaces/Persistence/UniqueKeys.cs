@@ -8,6 +8,9 @@ namespace ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 /// </summary>
 public static class UniqueKeys
 {
+    /// <summary>Un destino verificado pertenece a una sola cuenta por tipo de método.</summary>
+    public const string VerifiedLoginMethod = "IX_LoginMethods_Type_Value";
+
     /// <summary>
     /// El nombre de un rol es único dentro de su empresa; los roles sin empresa (los de toda la organización y los
     /// que valen en cada empresa) comparten un solo espacio de nombres (<c>NULLS NOT DISTINCT</c>).

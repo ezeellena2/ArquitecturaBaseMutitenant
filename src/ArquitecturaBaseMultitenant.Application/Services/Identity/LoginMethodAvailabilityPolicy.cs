@@ -32,19 +32,14 @@ internal sealed class LoginMethodAvailabilityPolicy(IEnumerable<ILoginCodeChanne
     public IReadOnlyCollection<LoginMethodType> SignInTypes() =>
         [.. Enum.GetValues<LoginMethodType>().Where(HasChannel)];
 
-    private bool HasChannel(LoginMethodType type) => type switch
-    {
-        LoginMethodType.Email => channels.Any(channel => channel.Key == LoginCodeChannel.Email),
-        LoginMethodType.Google => google.IsEnabled,
-        _ => false,
-    };
+    private bool HasChannel(LoginMethodType type) => type == LoginMethodType.Google ? google.IsEnabled
+        : channels.Any(channel => channel.SupportedMethodType == type && channel.IsAvailable);
 
-    public bool CanReceiveCode(LoginMethod method) => method.Type is LoginMethodType.Email or LoginMethodType.Google
-        && LoginMethodNotifier.Contact(method) is not null && channels.Any(channel => channel.Key == LoginCodeChannel.Email);
+    public bool CanReceiveCode(LoginMethod method) => LoginMethodNotifier.Contact(method) is not null
+        && channels.Any(channel => channel.IsAvailable && channel.SupportedMethodType == (method.Type == LoginMethodType.Google ? LoginMethodType.Email : method.Type));
 
-    public bool CanReceiveCode(LoginMethodRow method) => (method.Type == LoginMethodType.Email
-        || (method.Type == LoginMethodType.Google && method.ContactEmail is not null))
-        && channels.Any(channel => channel.Key == LoginCodeChannel.Email);
+    public bool CanReceiveCode(LoginMethodRow method) => (method.Type != LoginMethodType.Google || method.ContactEmail is not null)
+        && channels.Any(channel => channel.IsAvailable && channel.SupportedMethodType == (method.Type == LoginMethodType.Google ? LoginMethodType.Email : method.Type));
 
     /// <summary>El OTP usa el canal de correo; una reserva vigente sólo rehabilita su organización administradora.</summary>
     public async Task<bool> CanReceiveCodeAsync(Guid userId, LoginMethodRow method,

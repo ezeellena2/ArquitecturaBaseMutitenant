@@ -24,6 +24,7 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Identity;
 public sealed class AccountMethodsHttpTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
+    private readonly Dictionary<Guid, EmailMessage> observedPayloads = [];
 
     [Fact]
     public async Task Adding_a_verified_email_of_another_account_rejects_without_a_pending_method_code_or_notice()
@@ -70,6 +71,9 @@ public sealed class AccountMethodsHttpTests(ApiFactory factory)
         Assert.Equal(taken, takenRow.GetProperty("value").GetString());
         Assert.False(takenRow.GetProperty("isVerified").GetBoolean());
         AssertSameRow(freeRow, takenRow);
+
+        await EmailsToAsync(factory.Services, free, before);
+        await EmailsToAsync(factory.Services, taken, before);
 
         // Verificar con un código equivocado: la misma respuesta, y los dos cuentan el intento.
         var freeCode = await PickupCodeReader.ReadAsync(factory.Services, free, Ct);
@@ -273,13 +277,15 @@ public sealed class AccountMethodsHttpTests(ApiFactory factory)
             .Select(message => message.Id).ToArrayAsync(Ct);
     }
 
-    private static async Task<EmailMessage[]> EmailsToAsync(IServiceProvider services, string to, Guid[] before)
+    private async Task<EmailMessage[]> EmailsToAsync(IServiceProvider services, string to, Guid[] before)
     {
         var protector = services.GetRequiredService<IPayloadProtector>();
         var payloads = await services.GetRequiredService<ApplicationDbContext>().OutboxMessages.AsNoTracking()
             .Where(message => message.Channel == "email" && !before.Contains(message.Id))
-            .Select(message => message.EncryptedPayload).ToArrayAsync(Ct);
-        return [.. payloads.Select(payload => JsonSerializer.Deserialize<EmailMessage>(protector.Unprotect(payload))!)
+            .Select(message => new { message.Id, message.EncryptedPayload }).ToArrayAsync(Ct);
+        foreach (var payload in payloads.Where(value => value.EncryptedPayload.Length > 0))
+            observedPayloads[payload.Id] = JsonSerializer.Deserialize<EmailMessage>(protector.Unprotect(payload.EncryptedPayload))!;
+        return [.. observedPayloads.Where(value => !before.Contains(value.Key)).Select(value => value.Value)
             .Where(message => string.Equals(message.To, to, StringComparison.OrdinalIgnoreCase))];
     }
 

@@ -1,4 +1,5 @@
 Casos de uso de ingreso, registro de personas y de empresas (`BusinessSignupService`, alta de empresa) y «Recuperar mi cuenta», con sus helpers. `UserCultureResolver` resuelve sólo culturas habilitadas del catálogo; no mantiene una lista fija.
+`LoginDestinationResolver` normaliza Email/Phone y delega disponibilidad y países al canal; un Phone verificado se busca sólo en LoginMethods. Orden de locks: identidad externa → cuenta → destino del código. Signup y BusinessSignup no comparten propósito ni modo de apertura; Phone permite registrar con Email nulo.
 Leé: [identidad](../../../../docs/features/identidad.md) · [organizaciones](../../../../docs/features/organizaciones.md) · [datos-personales](../../../../docs/rules/datos-personales.md) · [textos-y-traducciones](../../../../docs/rules/textos-y-traducciones.md) · [guardado](../../../../docs/rules/guardado.md) · [logs](../../../../docs/rules/logs.md).
 Copiá de: `LoginCodeIssuer.cs`, `LoginCodeVerifier.cs` y `AccessSwitchPolicy.cs`.
 Probá los casos con `Api.IntegrationTests/Auth/`.

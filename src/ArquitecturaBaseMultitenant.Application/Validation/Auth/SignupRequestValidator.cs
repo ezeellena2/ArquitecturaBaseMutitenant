@@ -9,7 +9,7 @@ internal sealed class SignupRequestValidator : AbstractValidator<SignupRequest>
 {
     public SignupRequestValidator()
     {
-        RuleFor(request => request.Email).NotNull().WithMessage(_ => ValidationTexts.Required);
+        RuleFor(request => request.Email).NotNull().When(request => request.Phone is null).WithMessage(_ => ValidationTexts.Required);
         RuleFor(request => request.AcceptedTerms).Equal(true).WithMessage(_ => ValidationTexts.Required);
     }
 }

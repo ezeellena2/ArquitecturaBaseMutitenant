@@ -30,7 +30,7 @@ internal sealed class AccountLoginMethodsService(ICurrentUser currentUser, ILogi
             foreach (var method in all.OrderByDescending(method => method.IsPrimary).ThenBy(method => method.Id))
             {
                 var remaining = available.Where(value => value.Id != method.Id).ToArray();
-                var backup = remaining.Where(availability.CanReceiveCode).OrderByDescending(value => value.IsPrimary)
+                var backup = remaining.OrderByDescending(value => value.IsPrimary)
                     .ThenBy(value => value.ManagedByTenantId is not null).ThenBy(value => value.Id).FirstOrDefault();
                 var isAvailable = available.Any(value => value.Id == method.Id);
                 var canRemove = backup is not null && !(isAvailable && method.IsPersonalBackup
@@ -39,7 +39,7 @@ internal sealed class AccountLoginMethodsService(ICurrentUser currentUser, ILogi
                 rows.Add(new AccountLoginMethodResponse(method.Id, method.Type,
                     method.Type == LoginMethodType.Google ? method.ContactEmail?.Value : method.Value,
                     method.IsPrimary, method.VerifiedAtUtc is not null, method.ManagedByTenantId, organization?.Name,
-                    canRemove, !method.IsPrimary && isAvailable && backup is not null,
+                    canRemove, !method.IsPrimary && isAvailable,
                     backup is null ? null
                         : PersonalDataMask.LoginMethod(backup.Type, backup.Value, backup.ContactEmail?.Value)));
             }

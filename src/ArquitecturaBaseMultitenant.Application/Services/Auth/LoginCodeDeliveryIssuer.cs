@@ -17,8 +17,8 @@ internal sealed class LoginCodeDeliveryIssuer(IUserRepository users, ILoginMetho
     {
         var account = userId is { } id ? await users.GetByIdAsync(id, ct) : null;
         var culture = await cultures.ResolveAsync(account?.Culture, null, ct);
-        var channel = channels.SingleOrDefault(value => value.Key == destination.Channel)
-            ?? throw new InvalidOperationException("The email login channel is not registered.");
+        var channel = channels.SingleOrDefault(value => value.Key == destination.Channel && value.IsAvailable)
+            ?? throw new InvalidOperationException("The login channel is not registered.");
         var payload = channel.RenderLoginCode(destination.Value, issued.Code, issued.LifetimeMinutes, culture);
         if (userId is { } knownUserId)
         {
@@ -26,7 +26,7 @@ internal sealed class LoginCodeDeliveryIssuer(IUserRepository users, ILoginMetho
             if (expired || account is not { Status: UserStatus.Active or UserStatus.Suspended or UserStatus.PendingDeletion }
                 || await signIn.IsLockedOutAsync(knownUserId, ct)) return;
             var ownMethods = await methods.ListByUserIdAsync(knownUserId, ct);
-            var method = ownMethods.SingleOrDefault(value => value.Type == LoginMethodType.Email && value.Value == destination.Value)
+            var method = ownMethods.SingleOrDefault(value => value.Type == LoginDestinationResolver.Type(destination) && value.Value == destination.Value)
                 ?? ownMethods.FirstOrDefault(value => value.Type == LoginMethodType.Google && value.VerifiedAtUtc is not null
                     && value.ContactEmail?.Value == destination.Value);
             if (method is null || !await availability.CanReceiveCodeAsync(knownUserId, method, invitedTenantIds, ct)) return;

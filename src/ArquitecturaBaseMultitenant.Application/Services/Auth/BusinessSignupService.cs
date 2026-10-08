@@ -18,7 +18,7 @@ using Microsoft.Extensions.Logging;
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
 /// <summary>
-/// Alta de empresa: verifica el correo sin crear un espacio Personal y crea la organización con su primera empresa.
+/// Alta de empresa: verifica el destino sin crear un espacio Personal y crea la organización con su primera empresa.
 /// Cada método abre su única transacción.
 /// </summary>
 internal sealed class BusinessSignupService(SignupCodeRequester codes, SignupCodeVerifier verification,
@@ -33,8 +33,10 @@ internal sealed class BusinessSignupService(SignupCodeRequester codes, SignupCod
         {
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
+            var destination = codes.Resolve(request.Email, request.Phone, request.Channel);
+            if (destination.IsFailure) return destination.Error;
             return await unitOfWork.ExecuteInTransactionAsync(
-                ct => codes.RequestBusinessSignupAsync(request, ct), CommitPolicy.OnSuccess, cancellationToken);
+                ct => codes.RequestBusinessSignupAsync(request, destination.Value, ct), CommitPolicy.OnSuccess, cancellationToken);
         });
 
     public Task<Result> VerifyEmailCodeAsync(VerifySignupRequest request, CancellationToken cancellationToken) =>
@@ -42,10 +44,21 @@ internal sealed class BusinessSignupService(SignupCodeRequester codes, SignupCod
         {
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
+            var destination = verification.Resolve(request.Email, request.Phone, request.Channel);
+            if (destination.IsFailure) return destination.Error;
             var draft = await defaults.PrepareAsync(request.Culture, request.TimeZoneId, cancellationToken);
-            var verified = await unitOfWork.ExecuteInTransactionAsync(
-                ct => verification.VerifyBusinessAsync(request, draft, ct), CommitPolicy.OnAnyResult,
-                cancellationToken);
+            Result<Guid> verified;
+            try
+            {
+                verified = await unitOfWork.ExecuteInTransactionAsync(
+                    ct => verification.VerifyBusinessAsync(request, destination.Value, draft, ct), CommitPolicy.OnAnyResult,
+                    cancellationToken);
+            }
+            catch (UniqueConstraintViolationException exception)
+                when (request.Phone is not null && exception.ConstraintName == UniqueKeys.VerifiedLoginMethod)
+            {
+                return FieldErrors.On(SignupErrors.PhoneTaken, "phone");
+            }
             if (verified.IsFailure) return verified.Error;
 
             await signIn.SignInAsync(verified.Value, Access.Business, cancellationToken);

@@ -10,9 +10,9 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
 
 /// <summary>Registra un evento de seguridad y encola el aviso de un cambio de método sin incluir el contacto completo en el mensaje.</summary>
 internal sealed class LoginMethodNotifier(AccountNoticeIssuer notices, ISecurityEventRepository events,
-    IPublicOrigin origin, TimeProvider timeProvider)
+    IPublicOrigin origin, TimeProvider timeProvider, LoginMethodAvailabilityPolicy availability)
 {
-    public Task ChangedAsync(UserAccountRow account, IReadOnlyList<LoginMethod> destinations,
+    public async Task ChangedAsync(UserAccountRow account, IReadOnlyList<LoginMethod> destinations,
         LoginMethod changed, LoginMethodChange change, CancellationToken ct)
     {
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
@@ -21,7 +21,9 @@ internal sealed class LoginMethodNotifier(AccountNoticeIssuer notices, ISecurity
         var notice = new AccountNotice.LoginMethodChanged(change, changed.Type,
             PersonalDataMask.LoginMethod(changed.Type, changed.Value, changed.ContactEmail?.Value), nowUtc,
             account.TimeZoneId, url) { RecipientName = account.DisplayName };
-        return notices.EnqueueAsync(account.Id, destinations, notice, account.Culture, false, ct);
+        var available = await availability.AvailableAsync(destinations, ct);
+        var others = available.Where(method => method.Id != changed.Id && Contact(method) != Contact(changed)).ToArray();
+        await notices.EnqueueAsync(account.Id, others, notice, account.Culture, false, ct);
     }
 
     internal static string? Contact(LoginMethod method) =>

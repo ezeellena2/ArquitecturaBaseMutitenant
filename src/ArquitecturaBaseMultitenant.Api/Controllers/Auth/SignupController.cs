@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Api.Contracts.Auth;
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
 using ArquitecturaBaseMultitenant.Api.Idempotency;
@@ -28,10 +29,10 @@ public sealed class SignupController(IAccountService service) : ControllerBase
     public async Task<IActionResult> RequestCode([FromBody] SignupHttpRequest request,
         CancellationToken cancellationToken)
     {
-        var email = AuthContactMapping.ParseEmail(request.Email, request.Phone, request.Channel);
+        var email = AuthContactMapping.Map(request.Email, request.Phone, request.Channel);
         if (email.IsFailure) return Result.Failure(email.Error).ToActionResult(this);
         return (await service.RequestSignupCodeAsync(new SignupRequest(email.Value, request.AcceptedTerms,
-            request.Culture, request.TimeZoneId), cancellationToken)).ToAcceptedResult(this);
+            request.Culture, request.TimeZoneId, request.Phone is null ? null : new PhoneInputRequest(request.Phone.Country, request.Phone.Number), request.Channel), cancellationToken)).ToAcceptedResult(this);
     }
 
     [HttpPost("verify")]
@@ -43,9 +44,9 @@ public sealed class SignupController(IAccountService service) : ControllerBase
     public async Task<IActionResult> Verify([FromBody] VerifySignupHttpRequest request,
         CancellationToken cancellationToken)
     {
-        var email = AuthContactMapping.ParseEmail(request.Email, request.Phone, request.Channel);
+        var email = AuthContactMapping.Map(request.Email, request.Phone, request.Channel);
         if (email.IsFailure) return Result.Failure(email.Error).ToActionResult(this);
         return (await service.VerifySignupAsync(new VerifySignupRequest(email.Value, request.Code,
-            request.AcceptedTerms, request.Culture, request.TimeZoneId), cancellationToken)).ToActionResult(this);
+            request.AcceptedTerms, request.Culture, request.TimeZoneId, request.Phone is null ? null : new PhoneInputRequest(request.Phone.Country, request.Phone.Number), request.Channel), cancellationToken)).ToActionResult(this);
     }
 }
