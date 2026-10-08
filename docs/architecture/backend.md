@@ -763,11 +763,12 @@ La estructura sigue el diseño de la Etapa 6 del plan maestro de `../Arquitectur
 - **Bot de ingreso:** enlace solo para cuenta común, entra como persona y después cambia a empresa con Perfiles. Número de operador recibe solo «Para entrar, usá la web.», sin enlace ni mención de Plataforma; entra exclusivamente por `/plataforma` con código. Preview/redeem revalidan que no sea operadora. Desconocido va al registro personal WhatsApp en web con términos/OTP; alta cerrada ofrece ingreso/recuperación. Nunca crea identidad ni sesión al recibir el mensaje.
 - **Envío por el outbox persistente** (`platform.OutboxMessages`), no en memoria. Esto **difiere a propósito** de ArquitecturaBase, que usa colas en memoria (`WhatsAppSendQueue`, `EmailQueue`) y documenta que un reinicio las pierde. Con varias organizaciones y réplicas, perder una invitación o un código no es aceptable (ADR 0014):
   - el caso de uso inserta el mensaje dentro de su transacción;
-  - `OutboxDispatcher` lo envía;
-  - cada entrega toma una fila con `SKIP LOCKED` y confirma su estado en una UoW propia; un pedido de parada impide iniciar la siguiente entrega, pero no cancela la confirmación de la ya iniciada;
-  - el payload con códigos o enlaces va cifrado con DataProtection;
-  - un reinicio no pierde mensajes.
-  SMTP y PostgreSQL no comparten transacción: si el proceso cae después de que SMTP acepta el mensaje y antes de confirmar `Sent`, un reintento puede duplicarlo. La garantía es que un mensaje **confirmado** como `Sent` no se vuelve a despachar.
+  - `OutboxDispatchService.ClaimNextAsync` reclama una fila con `SKIP LOCKED`, incrementa su intento y confirma un lease durable en una UoW;
+  - `OutboxDeliveryProcessor` descifra y llama al transporte fuera de esa transacción; SMTP conserva su scope de lote y Meta no agrega reintentos propios al POST;
+  - `OutboxDispatchService.CompleteAsync` bloquea y relee la fila en otra UoW, comprueba el token del lease y aplica el receipt neutral. Una confirmación vieja no revive una fila Sent/Cancelled ni modifica el lease de otra réplica. `IOutboxDeliveryObserver` registra metadatos de una aceptación vigente en esa misma UoW;
+  - el payload con códigos o enlaces va cifrado con DataProtection y se elimina al confirmar Sent, cancelar o agotar los intentos. La migración limpia también payloads terminales anteriores;
+  - un lease vencido puede retomarse después de una caída, y los reclamos abandonados también consumen intentos. La parada impide comenzar la siguiente entrega; la actual termina y confirma con timeouts propios acotados.
+  El proveedor y PostgreSQL no comparten transacción: si el proceso cae después de que SMTP o Meta acepta el mensaje y antes de confirmar `Sent`, un reintento puede duplicarlo. La garantía es que un mensaje **confirmado** como `Sent` no se vuelve a despachar. Sent de Meta significa aceptado; delivered/read requieren sus callbacks reales.
 - **Webhook** `GET/POST /webhooks/whatsapp`: anónimo, con rate limit y cuerpo de 5 MB como máximo.
   - Firma HMAC `X-Hub-Signature-256` sobre los bytes exactos del cuerpo.
   - Idempotente por `wamid`.

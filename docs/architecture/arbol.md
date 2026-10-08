@@ -1220,8 +1220,9 @@ ArquitecturaBaseMultitenant.Infrastructure/
 ├── Messaging/                                         [E3]
 │   ├── MessagingRegistration.cs
 │   ├── Outbox.cs                                      IOutbox
-│   ├── OutboxDispatcher.cs                            BackgroundService: sondea y llama al servicio de Application
-│   ├── OutboxDispatchStore.cs                         SKIP LOCKED, entrega y backoff dentro de la transacción del servicio
+│   ├── OutboxDispatcher.cs                            BackgroundService: sondea y mantiene el scope SMTP del lote
+│   ├── OutboxDeliveryProcessor.cs                     Claim confirmado → transporte fuera de UoW → Complete confirmado
+│   ├── OutboxDispatchStore.cs                         SKIP LOCKED/lease durable; confirmación con lock y token, sin transporte
 │   └── Email/
 │       ├── EmailChannelSender.cs
 │       ├── IEmailTransport.cs
