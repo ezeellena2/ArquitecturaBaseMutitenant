@@ -1,16 +1,26 @@
 # WhatsApp
 
-Módulo quitable del número de la plataforma, Etapa 8. El alcance y las tareas están en el [plan ejecutable](../plans/2026-10-07-etapa-8-whatsapp.md); T02–T05 aportan composición, persistencia, adaptadores/outbox cifrado y Phone en identidad/recuperación. T06–T08 completan webhook, bot/enlaces y privacidad. El asistente corresponde a E8b y la atención de organizaciones, a E11.
+Módulo quitable del número de la plataforma, Etapa 8. El alcance y las tareas están en el [plan ejecutable](../plans/2026-10-07-etapa-8-whatsapp.md); T02–T06 aportan composición, persistencia, adaptadores/outbox cifrado, Phone en identidad/recuperación y webhook durable. T07–T08 completan bot/enlaces y privacidad. El asistente corresponde a E8b y la atención de organizaciones, a E11.
 
 ## Contrato publicado en T01
 
 `WhatsAppWebhookController` es el controller del módulo y delega en `IWhatsAppWebhookService`; `WhatsAppApiModule` y `WhatsAppModule` registran cada capa. Esta ficha documenta el área HTTP `whatsapp`, incluso mientras sus rutas permanecen apagadas.
 
-`GET/POST /webhooks/whatsapp` son rutas técnicas globales, anónimas y condicionadas por `InstalledModuleRoute` y un contribuidor disponible, sin FeatureGate de organización. El contrato [OpenAPI](../contracts/openapi.json) las exporta sin secretos. T02 reemplaza la disponibilidad falsa de T01 por opciones reales: sin número de plataforma disponible devuelve 404 común. Mientras T06 está pendiente, el webhook disponible conserva el stub 501, sin sesión ni procesamiento. T06 aporta firma, entrada persistente, ACK y workers. Cada capa registra sus propios servicios y Program tiene una sentencia de composición removible.
+`GET/POST /webhooks/whatsapp` son rutas técnicas globales, anónimas y condicionadas por `InstalledModuleRoute` y un contribuidor disponible, sin FeatureGate de organización. El contrato [OpenAPI](../contracts/openapi.json) las exporta sin secretos. Sin número de plataforma o sin el par de secretos de webhook devuelve 404 común. GET comprueba token y challenge sin sesión; POST autentica y persiste. Cada capa registra sus propios servicios y Program tiene una sentencia de composición removible. La metadata 501 de T01 permanece congelada: su limpieza está propuesta en «Cambios al contrato», sin alterar unilateralmente el exportado.
 
 El POST declara máximo 5 MiB, firma `X-Hub-Signature-256` sobre bytes originales y deduplicación por IDs Meta/tipo de evento, sin Idempotency-Key. Un mensaje entrante nunca crea sesión. Los enlaces de cuenta común entran como Persona después de Continuar; el núcleo rechaza operadores bajo lock y el bot debe contestar solo «Para entrar, usá la web.», sin enlace ni revelar su tipo. Bot y enlaces reales se completan en T07; el contrato y la prueba de exclusión ya están en T01.
 
 El núcleo conoce capacidades de canales, Phone y puertos neutrales; no compara una clave WhatsApp ni lee sus opciones. La invitación conserva identidad/proof Email y puede entregarse a un Phone verificado de esa misma cuenta. La [ficha de identidad](identidad.md) y el [informe de Contrato](../reviews/2026-10-08-etapa-8-contrato.md) distinguen la conducta existente de los pendientes 501.
+
+## Entrada durable y entrega
+
+`WhatsAppWebhookFilter` limita bytes reales a 5 MiB y verifica HMAC antes del binder, incluso si Content-Length miente. Firma inválida produce 401; JSON firmado inválido, 400; cuerpo excesivo, 413. No persiste ni registra el cuerpo original. El reader procesa lotes del PhoneNumberId configurado y omite otros destinos; no resuelve organizaciones del remitente, host o payload.
+
+El ACK 200 sale después del commit. El índice único `(PhoneNumberId, Wamid, EventType)` y los locks de stream evitan duplicados; una colisión de índice revierte y repite en un scope fresco antes de responder. Los callbacks no abren contactos, ventanas de conversación ni tareas de bot. Delivered/read no retroceden por eventos desordenados; una aceptación tardía se reconcilia con callbacks tempranos.
+
+La entrada conserva `OriginalUserId`/`OriginalMethodId` al insertarse. Un mensaje anónimo conserva esos campos nulos aunque después se vincule el número. Solo el texto humano permitido se cifra con DataProtection: OTP contiguo/agrupado, enlaces y tokens quedan como metadatos y no alimentan el bot. Nunca se transfiere historia por el dueño actual del contacto.
+
+`WhatsAppInboundService` reclama con SKIP LOCKED y lease durable; procesa efectos y reply dentro de una UoW. Revalida el lease con reloj fresco tras esperar locks y después del consumer: su vencimiento revierte los efectos y aplica backoff. El worker usa scopes nuevos, la señal solo despierta y la base conserva la cola. Sin consumer registrado no reclama ni descarta mensajes; T07 aporta el consumidor de bot.
 
 ## Operación y puerta pendientes
 
@@ -18,8 +28,8 @@ El outbox cifra destino/payload, reclama con lease en una transacción, envía a
 
 ## Errores del módulo
 
-`WhatsApp.Phone.CountryNotAllowed` (400, campo `phone`) corresponde a altas/pending de un país no habilitado, según el E.164 real. `WhatsApp.LoginCode.DailyLimit` (429) devuelve `retryAfter` hasta el próximo día UTC; la reserva de cuota y el código pertenecen a la misma UoW. El contrato del webhook declara `WhatsApp.Webhook.InvalidSignature` (401), `WhatsApp.Webhook.InvalidPayload` (400) y `WhatsApp.Webhook.TooManyRequests` (429); T06 completa su comportamiento. Los textos es/en los aporta el módulo mediante `IErrorTextSource`, sin referencias del mapper del núcleo al módulo. Las respuestas de error conservan ProblemDetails con `code` y `traceId`.
+`WhatsApp.Phone.CountryNotAllowed` (400, campo `phone`) corresponde a altas/pending de un país no habilitado, según el E.164 real. `WhatsApp.LoginCode.DailyLimit` (429) devuelve `retryAfter` hasta el próximo día UTC; la reserva de cuota y el código pertenecen a la misma UoW. El webhook devuelve `WhatsApp.Webhook.InvalidSignature` (401), `WhatsApp.Webhook.InvalidPayload` (400) y `WhatsApp.Webhook.TooManyRequests` (429). `WhatsApp.Inbound.LeaseExpired` es un resultado interno de la cola, sin ruta HTTP nueva. Los textos es/en los aporta el módulo mediante `IErrorTextSource`, sin referencias del mapper del núcleo al módulo. Las respuestas de error conservan ProblemDetails con `code` y `traceId`.
 
 ## Verificación
 
-`Etapa8ContractTests`, `OpenApiContractTests`, `AccessDeclarationTests`, `ModuleControllersTests`, `LoginLinkIssuerTests`, `LoginMethodsCapabilitiesTests` e `InvitationDeliveryDestinationTests` verifican la parte publicada. Las suites y el recorrido Meta completo del plan siguen pendientes; E8 no está cerrada.
+`Etapa8ContractTests`, `OpenApiContractTests`, `AccessDeclarationTests`, `ModuleControllersTests`, `LoginLinkIssuerTests`, `LoginMethodsCapabilitiesTests` e `InvitationDeliveryDestinationTests` verifican la parte publicada. `WhatsAppWebhookTests` prueba firma, tamaño, commit, dedupe, callbacks y propietario original; `WhatsAppInboundProcessorTests`, cola, leases, rollback y backoff en PostgreSQL real. Las suites y el recorrido Meta completo del plan siguen pendientes; E8 no está cerrada.

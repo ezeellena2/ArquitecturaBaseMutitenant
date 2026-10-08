@@ -948,30 +948,43 @@ ArquitecturaBaseMultitenant.Application/
 ├── Modules/                                         [E8] módulos quitables: el núcleo no los referencia (test)
 │   └── WhatsApp/                                    AddWhatsAppModule() registra todo lo de esta carpeta
 │       ├── WhatsAppModule.cs                         AddWhatsAppModule(): servicios, canales y opciones
-│       ├── Configuration/
-│       │   └── WhatsAppLoginOptions.cs               WhatsApp:AllowedCountries: solo el módulo lo lee (código, vínculo y registro por WhatsApp)
 │       ├── Interfaces/
-│       │   ├── IWhatsAppWebhookService.cs
-│       │   ├── IWhatsAppInboundService.cs
-│       │   ├── IWhatsAppContactRepository.cs
-│       │   ├── IWhatsAppMessageRepository.cs
-│       │   ├── IWhatsAppAvailability.cs
-│       │   ├── IWhatsAppSignatureValidator.cs
-│       │   ├── IWhatsAppWebhookReader.cs
-│       │   └── IWhatsAppInboundSignal.cs
+│       │   ├── Services/
+│       │   │   ├── IWhatsAppWebhookService.cs
+│       │   │   └── IWhatsAppInboundService.cs
+│       │   ├── Persistence/
+│       │   │   ├── IWhatsAppContactRepository.cs
+│       │   │   ├── IWhatsAppMessageRepository.cs
+│       │   │   ├── IWhatsAppCodeQuotaRepository.cs
+│       │   │   └── UniqueKeys.cs                    índices que traducen dedupe/contacto
+│       │   └── Integrations/
+│       │       ├── IWhatsAppAvailability.cs
+│       │       ├── IWhatsAppChannelSettings.cs
+│       │       ├── IWhatsAppTemplateRenderer.cs
+│       │       ├── IWhatsAppSignatureValidator.cs
+│       │       ├── IWhatsAppWebhookReader.cs
+│       │       ├── IWhatsAppWebhookReplay.cs         repetición técnica en scope fresco tras colisión
+│       │       ├── IWhatsAppInboundConsumer.cs       efectos/reply dentro de UoW del procesador
+│       │       ├── IWhatsAppInboundSettings.cs
+│       │       └── IWhatsAppInboundSignal.cs
 │       ├── Models/
 │       │   ├── WhatsAppOutboundMessage.cs            jerarquía cerrada: texto, botones, código, invitación, aviso de la cuenta
+│       │   ├── WhatsAppWebhookRequest.cs
 │       │   ├── WhatsAppWebhookBatch.cs
-│       │   └── BotButtons.cs
+│       │   └── WhatsAppInboundContext.cs             claim/hint/context original nullable, sin apropiación posterior
 │       ├── Services/
 │       │   ├── WhatsAppWebhookService.cs
+│       │   ├── WhatsAppWebhookWriter.cs              locks ordenados, dedupe, contactos y snapshots
 │       │   ├── WhatsAppInboundService.cs
-│       │   ├── WhatsAppContactLinker.cs
+│       │   ├── WhatsAppInboundGuard.cs               hints sin tracking → locks → lectura fresca/lease
+│       │   ├── WhatsAppSafeTextPolicy.cs             OTP agrupado/enlaces/tokens metadata-only
+│       │   ├── WhatsAppDeliveryObserver.cs           aceptación vigente y callbacks tempranos
+│       │   ├── WhatsAppCodeQuotaIssuer.cs            admisión neutral en UoW del emisor
 │       │   ├── WhatsAppLoginCodeChannel.cs           implementa ILoginCodeChannel ("whatsapp")
 │       │   ├── WhatsAppInvitationChannel.cs          implementa IInvitationChannel ("whatsapp")
 │       │   ├── WhatsAppAccountNoticeChannel.cs       implementa IAccountNoticeChannel ("whatsapp", métodos Phone)
-│       │   ├── WhatsAppPhoneLinkObserver.cs          implementa IPhoneLinkObserver
-│       │   └── BotReply.cs
+│       │   ├── WhatsAppPhoneLinkObserver.cs          [T08 pendiente] implementa IPhoneLinkObserver
+│       │   └── BotReply.cs                          [T07 pendiente]
 │       └── Resources/
 │           ├── WhatsAppTexts.resx / .en.resx         textos del bot y de las plantillas
 │           └── WhatsAppTexts.cs
@@ -1271,9 +1284,11 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │       ├── WhatsAppChannelSender.cs                  emisor del outbox "whatsapp", sin resiliencia ni logs HTTP heredados
 │       ├── Webhook/
 │       │   ├── WhatsAppSignatureValidator.cs
-│       │   └── WhatsAppWebhookReader.cs
+│       │   ├── WhatsAppWebhookReader.cs
+│       │   └── WhatsAppWebhookReplay.cs
 │       ├── Inbound/
 │       │   ├── WhatsAppInboundSignal.cs
+│       │   ├── WhatsAppInboundSettings.cs
 │       │   └── WhatsAppInboundProcessor.cs           BackgroundService, SKIP LOCKED
 │       ├── Retention/
 │       │   └── WhatsAppMessageRetentionService.cs    borra el texto a los 90 días
@@ -1506,7 +1521,11 @@ ArquitecturaBaseMultitenant.Api/
 ├── Modules/                                         [E8]
 │   └── WhatsApp/
 │       ├── WhatsAppApiModule.cs                      AddWhatsAppModule(): convención de rutas y rate limit del webhook
-│       ├── WhatsAppWebhookController.cs              GET/POST /webhooks/whatsapp
+│       ├── WhatsAppContractContributor.cs             exporta capacidad instalada sin secretos
+│       ├── Controllers/WhatsAppWebhookController.cs   GET/POST /webhooks/whatsapp
+│       ├── Contracts/                                request/query T01
+│       ├── Filters/WhatsAppWebhookFilter.cs           firma/bytes reales antes del binder
+│       └── RateLimiting/WhatsAppWebhookRateLimitPolicy.cs  429 modular con RetryAfterHeaderFormatter
 │       ├── ConditionalWhatsAppRouteConvention.cs
 │       └── WhatsAppRouteAttribute.cs
 ├── Hosting/                                           [E1]

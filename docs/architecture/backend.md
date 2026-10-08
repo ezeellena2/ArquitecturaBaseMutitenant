@@ -770,10 +770,11 @@ La estructura sigue el diseño de la Etapa 6 del plan maestro de `../Arquitectur
   - el payload con códigos o enlaces va cifrado con DataProtection y se elimina al confirmar Sent, cancelar o agotar los intentos. La migración limpia también payloads terminales anteriores;
   - un lease vencido puede retomarse después de una caída, y los reclamos abandonados también consumen intentos. La parada impide comenzar la siguiente entrega; la actual termina y confirma con timeouts propios acotados.
   El proveedor y PostgreSQL no comparten transacción: si el proceso cae después de que SMTP o Meta acepta el mensaje y antes de confirmar `Sent`, un reintento puede duplicarlo. La garantía es que un mensaje **confirmado** como `Sent` no se vuelve a despachar. Sent de Meta significa aceptado; delivered/read requieren sus callbacks reales.
-- **Webhook** `GET/POST /webhooks/whatsapp`: anónimo, con rate limit y cuerpo de 5 MB como máximo.
-  - Firma HMAC `X-Hub-Signature-256` sobre los bytes exactos del cuerpo.
-  - Idempotente por `wamid`.
-  - El procesamiento es asíncrono (`WhatsAppInboundProcessor`, con `SKIP LOCKED`).
+- **Webhook** `GET/POST /webhooks/whatsapp`: anónimo, con rate limit y cuerpo de 5 MiB como máximo, medido antes del binder.
+  - Firma HMAC `X-Hub-Signature-256` sobre los bytes exactos del cuerpo, comparación constante antes de parsear.
+  - Deduplica `(PhoneNumberId, Wamid, EventType)`. ACK después del commit; callbacks fuera de orden no retroceden delivered/read ni disparan el bot.
+  - E8 procesa únicamente el destino configurado, sin resolver organizaciones. Guarda propietario/método original al insertar; anonimato y propiedad no se recalculan con el vínculo actual.
+  - El procesamiento es asíncrono (`WhatsAppInboundProcessor`, con `SKIP LOCKED`, lease durable, backoff y scopes frescos). El consumer y reply en outbox comparten la UoW; el lease se verifica después de esperar locks y al completar. Sin consumer no se reclama trabajo.
 - **Regla de oro:** un mensaje entrante nunca abre una sesión; solo puede producir un enlace de un solo uso.
 - **Canales por organización** (Etapa 11, [ADR 0038](../decisions/0038-whatsapp-de-atencion.md)): `platform.WhatsAppChannels` mapea `PhoneNumberId` → `TenantId`. El procesador resuelve el tenant por el número de destino y entra con `ITenantScope`.
 - **Privacidad:** los números se enmascaran en los logs y el texto de los mensajes se borra a los 90 días.
