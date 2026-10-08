@@ -10,6 +10,7 @@
 - Registro en DI: cada capa en su `DependencyInjection.cs`, que llama a un `*Registration.cs` por área. En Application es `Services/<Área>/<Área>Registration.cs` y registra también las opciones del área (`BindConfiguration`, `ValidateDataAnnotations` y `ValidateOnStart`). Cada clase se registra una sola vez, uno por uno y explícito. `Program.cs` solo compone.
 - Lo que crece se parte por responsabilidad en helpers. El sufijo dice qué hace cada uno y sale de la lista cerrada de abajo; un sufijo nuevo se suma a la tabla, con lo que hace. **Máximo 8 dependencias de negocio** por clase de servicios. No cuentan `ILogger<T>`, `TimeProvider`, `IRequestValidator` ni `IUnitOfWork`; todo lo demás cuenta, incluido `IOptions<T>` ([ADR 0039](../decisions/0039-tope-de-dependencias-de-negocio.md)). No crear clases que solo reenvían para cumplir el tope.
 - El método público del servicio abre la transacción. Los helpers trabajan dentro de ella y no reciben `IUnitOfWork`.
+- Las implementaciones de puertos neutrales de `Application.Interfaces.Integrations` registradas por un módulo (canales, observers y participantes) son adaptadores, no helpers: su contrato define el nombre. Conservan el máximo de dependencias y registro único; no reciben UoW ni abren otra transacción. `ApplicationServicesTests` las distingue por contrato, nunca por nombre de clase.
 
 **Sufijos de los helpers** (lista cerrada; la lee `ApplicationServicesTests`). Un helper es una clase de `Services` que arma el contenedor y no termina en `Service`.
 

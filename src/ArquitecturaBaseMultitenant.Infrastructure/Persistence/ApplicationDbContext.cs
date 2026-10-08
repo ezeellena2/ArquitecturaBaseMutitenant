@@ -19,27 +19,40 @@ using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 
 /// <summary>Reúne las tablas globales y privadas en un único modelo EF. Aplica convenciones, filtros del tenant activo y validación de clasificación antes de que la Api consulte datos.</summary>
 public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, IDataProtectionKeyContext
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ITenantContext tenantContext)
+    private readonly IReadOnlyList<IPersistenceModelContributor> contributors;
+
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ITenantContext tenantContext,
+        IEnumerable<IPersistenceModelContributor>? modelContributors = null)
         : base(options)
     {
         TenantContext = tenantContext;
+        contributors = modelContributors?.ToArray() ?? PersistenceModelContributors.Discover();
     }
 
     protected ApplicationDbContext(DbContextOptions options, ITenantContext tenantContext)
         : base(options)
     {
         TenantContext = tenantContext;
+        contributors = PersistenceModelContributors.Discover();
     }
 
     protected ITenantContext TenantContext { get; }
 
     internal Guid? ActiveTenantId => TenantContext.TenantId;
+    internal string ContributorCacheKey => string.Join("|", contributors.Select(value => value.GetType().FullName).Order(StringComparer.Ordinal));
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        base.OnConfiguring(optionsBuilder);
+        optionsBuilder.ReplaceService<IModelCacheKeyFactory, PersistenceModelCacheKeyFactory>();
+    }
 
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
     public DbSet<LoginMethod> LoginMethods => Set<LoginMethod>();
@@ -89,9 +102,11 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
 
         builder.HasDefaultSchema(Schemas.Platform);
         builder.HasDbFunction(() => SearchFunctions.Unaccent(default!));
-        builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+        builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly,
+            type => type.Namespace?.StartsWith("ArquitecturaBaseMultitenant.Infrastructure.Modules.", StringComparison.Ordinal) != true);
+        foreach (var contributor in contributors) contributor.Configure(builder);
         VersionedConvention.Apply(builder);
         builder.ApplyIsolationQueryFilters(this);
-        TenantIsolationModelValidator.Validate(builder.Model);
+        TenantIsolationModelValidator.Validate(builder.Model, PersistenceModelContributors.GlobalEntities(contributors));
     }
 }

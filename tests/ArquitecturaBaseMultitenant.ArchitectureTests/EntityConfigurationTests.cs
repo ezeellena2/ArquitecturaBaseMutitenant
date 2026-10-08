@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using OpenIddict.EntityFrameworkCore.Models;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
@@ -30,13 +31,16 @@ public sealed class EntityConfigurationTests
             .Select(entity => entity.ClrType)
             .ToArray();
         var infrastructure = Assembly.Load("ArquitecturaBaseMultitenant.Infrastructure");
+        var contributedNamespaces = PersistenceModelContributors.Discover().Select(value => value.ConfigurationNamespace).ToArray();
         var configured = infrastructure.GetTypes()
             .Where(type => type is { IsClass: true, IsAbstract: false }
-                && type.Namespace?.StartsWith(ConfigurationsNamespace + ".", StringComparison.Ordinal) == true)
+                && (type.Namespace?.StartsWith(ConfigurationsNamespace + ".", StringComparison.Ordinal) == true
+                    || contributedNamespaces.Contains(type.Namespace)))
             .SelectMany(type => type.GetInterfaces()
                 .Where(contract => contract.IsGenericType
                     && contract.GetGenericTypeDefinition() == typeof(IEntityTypeConfiguration<>))
                 .Select(contract => contract.GenericTypeArguments[0]))
+            .Concat(FrameworkConfiguredEntities())
             .ToArray();
         var deferred = new[]
         {
@@ -77,8 +81,43 @@ public sealed class EntityConfigurationTests
         Assert.Empty(Missing([typeof(UnconfiguredEntity)], [typeof(UnconfiguredEntity)]));
     }
 
+    [Fact]
+    public void Detector_rejects_duplicate_configurations() =>
+        Assert.Single(new[] { typeof(UnconfiguredEntity), typeof(UnconfiguredEntity) }
+            .GroupBy(type => type), group => group.Count() != 1);
+
     private static Type[] Missing(IEnumerable<Type> mapped, IEnumerable<Type> configured) =>
         [.. mapped.Except(configured)];
+
+    private static IEnumerable<Type> FrameworkConfiguredEntities()
+    {
+        var arguments = new Dictionary<string, Type>
+        {
+            ["TKey"] = typeof(Guid),
+            ["TApplication"] = typeof(OpenIddictEntityFrameworkCoreApplication<Guid>),
+            ["TAuthorization"] = typeof(OpenIddictEntityFrameworkCoreAuthorization<Guid>),
+            ["TScope"] = typeof(OpenIddictEntityFrameworkCoreScope<Guid>),
+            ["TToken"] = typeof(OpenIddictEntityFrameworkCoreToken<Guid>),
+        };
+        return Assembly.Load("OpenIddict.EntityFrameworkCore").GetTypes()
+            .Where(type => type.IsGenericTypeDefinition && type.GetInterfaces().Any(contract =>
+                contract.IsGenericType && contract.GetGenericTypeDefinition() == typeof(IEntityTypeConfiguration<>)))
+            .Select(type => type.MakeGenericType(type.GetGenericArguments().Select(argument => arguments[argument.Name]).ToArray()))
+            .SelectMany(type => type.GetInterfaces().Where(contract => contract.IsGenericType
+                && contract.GetGenericTypeDefinition() == typeof(IEntityTypeConfiguration<>)))
+            .Select(contract => contract.GenericTypeArguments[0]);
+    }
+
+    [Fact]
+    public void Architecture_and_design_time_have_the_same_complete_model()
+    {
+        using var designTime = new DesignTimeApplicationDbContextFactory().CreateDbContext([]);
+        static string[] Describe(IEnumerable<IEntityType> entities) => [.. entities
+            .Select(value => value.ClrType.FullName + ":" + value.GetSchema() + "." + value.GetTableName()
+                + ":" + string.Join(",", value.GetProperties().Select(property => property.Name + "=" + property.GetColumnType()).Order()))
+            .Order(StringComparer.Ordinal)];
+        Assert.Equal(Describe(designTime.Model.GetEntityTypes()), Describe(ArchitectureModel.EntityTypes()));
+    }
 
 #pragma warning disable CA1812 // Caso de control de la regla, solo se inspecciona.
     private sealed class UnconfiguredEntity;
@@ -90,9 +129,9 @@ internal static class ArchitectureModel
     public static IReadOnlyList<IEntityType> EntityTypes()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseNpgsql("Host=localhost;Database=architecture_guard")
-            .Options;
-        using var context = new ApplicationDbContext(options, new NoTenantContext());
+            .UseNpgsql("Host=localhost;Database=architecture_guard");
+        options.UseOpenIddict<Guid>();
+        using var context = new ApplicationDbContext(options.Options, new NoTenantContext());
         return [.. context.Model.GetEntityTypes()];
     }
 

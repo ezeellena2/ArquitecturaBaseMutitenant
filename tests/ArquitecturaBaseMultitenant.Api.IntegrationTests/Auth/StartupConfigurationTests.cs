@@ -53,6 +53,9 @@ public sealed class StartupConfigurationTests
             Assert.Null(node["Authentication"]?["Google"]?["ClientSecret"]);
             Assert.Null(node["Authentication"]?["LoginCode"]?["HashKey"]);
             Assert.Null(node["Email"]?["Smtp"]?["Password"]);
+            Assert.Null(node["WhatsApp"]?["AccessToken"]);
+            Assert.Null(node["WhatsApp"]?["AppSecret"]);
+            Assert.Null(node["WhatsApp"]?["VerifyToken"]);
         }
     }
 

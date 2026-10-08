@@ -27,7 +27,7 @@ public sealed partial class ApplicationServicesTests
         // terminan en Service (UserGuard, LoginCodeIssuer, PhoneNumberLinker) no entran en esta regla.
         var services = ApplicationAssembly.GetTypes()
             .Where(type => type is { IsClass: true, IsAbstract: false }
-                && IsInNamespace(type, ServicesNamespace)
+                && ApplicationNamespaceShape.IsServices(type)
                 && type.Name.EndsWith("Service", StringComparison.Ordinal)
                 && !type.IsDefined(typeof(CompilerGeneratedAttribute), inherit: false))
             .ToArray();
@@ -74,6 +74,15 @@ public sealed partial class ApplicationServicesTests
     public void Detector_rejects_a_helper_whose_suffix_is_not_in_the_list() =>
         Assert.False(HasClosedSuffix(typeof(PaymentCoordinator), ["Guard", "Policy"]));
 
+    [Fact]
+    public void Neutral_integration_implementations_are_adapters_and_helpers_are_not()
+    {
+        Assert.True(ApplicationNamespaceShape.IsIntegrationAdapter(typeof(
+            ArquitecturaBaseMultitenant.Application.Modules.Control.Services.ControlPhoneObserver)));
+        Assert.False(ApplicationNamespaceShape.IsIntegrationAdapter(typeof(
+            ArquitecturaBaseMultitenant.Application.Modules.Control.Services.InvalidHelperGuard)));
+    }
+
     /// <summary>
     /// Un helper es una clase de Services que arma el contenedor y no termina en Service. Así no entran los modelos
     /// internos (<c>IssuedLoginCode</c>), los records, las clases estáticas ni los <c>*Registration</c>.
@@ -82,6 +91,7 @@ public sealed partial class ApplicationServicesTests
     {
         var registrations = new ServiceCollection();
         registrations.AddApplication();
+        ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.WhatsAppModule.AddWhatsAppModule(registrations);
 
         return
         [
@@ -89,8 +99,9 @@ public sealed partial class ApplicationServicesTests
                 .Where(descriptor => !descriptor.IsKeyedService)
                 .Select(descriptor => descriptor.ImplementationType)
                 .OfType<Type>()
-                .Where(type => IsInNamespace(type, ServicesNamespace)
-                    && !type.Name.EndsWith("Service", StringComparison.Ordinal))
+                .Where(type => ApplicationNamespaceShape.IsServices(type)
+                    && !type.Name.EndsWith("Service", StringComparison.Ordinal)
+                    && !ApplicationNamespaceShape.IsIntegrationAdapter(type))
                 .Distinct(),
         ];
     }
@@ -117,7 +128,7 @@ public sealed partial class ApplicationServicesTests
         suffixes.Any(suffix => helper.Name.EndsWith(suffix, StringComparison.Ordinal));
 
     private static bool HasServiceContract(Type service) =>
-        service.GetInterfaces().Any(contract => IsInNamespace(contract, ServiceInterfacesNamespace));
+        service.GetInterfaces().Any(ApplicationNamespaceShape.IsServiceContract);
 
     private static bool IsInNamespace(Type type, string @namespace) =>
         type.Namespace == @namespace

@@ -9,9 +9,11 @@ using ArquitecturaBaseMultitenant.Domain.ReferenceData;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using OpenIddict.EntityFrameworkCore.Models;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
@@ -21,6 +23,8 @@ namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 /// </summary>
 public sealed class DataClassificationTests
 {
+    private static readonly IReadOnlyDictionary<Type, string> ContributedGlobals =
+        PersistenceModelContributors.GlobalEntities(PersistenceModelContributors.Discover());
     // Excepciones globales explícitas de E2. Cada tipo nuevo se clasifica o se agrega con su motivo.
     private static readonly HashSet<string> GlobalTypes =
     [
@@ -51,6 +55,10 @@ public sealed class DataClassificationTests
         typeof(IdentityUserClaim<Guid>).FullName!,
         typeof(IdentityUserLogin<Guid>).FullName!,
         typeof(IdentityUserToken<Guid>).FullName!,
+        typeof(OpenIddictEntityFrameworkCoreApplication<Guid>).FullName!,
+        typeof(OpenIddictEntityFrameworkCoreAuthorization<Guid>).FullName!,
+        typeof(OpenIddictEntityFrameworkCoreScope<Guid>).FullName!,
+        typeof(OpenIddictEntityFrameworkCoreToken<Guid>).FullName!,
         "ArquitecturaBaseMultitenant.Infrastructure.Idempotency.IdempotencyKey",
         typeof(Currency).FullName!,
         typeof(CurrencyTranslation).FullName!,
@@ -102,12 +110,14 @@ public sealed class DataClassificationTests
         var filters = filterNames.ToHashSet(StringComparer.Ordinal);
         var expectedSchema = hasTenant ? "tenant" : hasPublic ? "public_site"
             : hasParties ? "engagement"
+            : ContributedGlobals.TryGetValue(type, out var contributedSchema) ? contributedSchema
             : IsIdentityGlobal(type) ? "identity" : "platform";
         var expectedFilter = hasTenant ? "Tenant" : hasPublic ? "Public"
             : hasParties ? "Parties" : null;
         var isolationFilters = new[] { "Tenant", "Public", "Parties" };
 
-        if (categories > 1 || categories == 0 && !GlobalTypes.Contains(type.FullName!))
+        if (categories > 1 || categories == 0 && !GlobalTypes.Contains(type.FullName!)
+            && !ContributedGlobals.ContainsKey(type) || categories != 0 && ContributedGlobals.ContainsKey(type))
         {
             return $"{type.FullName}: missing or conflicting data classification.";
         }

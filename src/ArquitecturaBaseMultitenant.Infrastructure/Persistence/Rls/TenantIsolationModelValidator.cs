@@ -22,7 +22,7 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Rls;
 /// <summary>Revisa al construir el modelo que cada entidad sea global permitida o tenga exactamente una clase, esquema y filtro de aislamiento. Falla al arrancar si aparece una tabla sin esa protección.</summary>
 internal static class TenantIsolationModelValidator
 {
-    public static void Validate(IReadOnlyModel model)
+    public static void Validate(IReadOnlyModel model, IReadOnlyDictionary<Type, string>? contributedGlobals = null)
     {
         foreach (var entity in model.GetEntityTypes().Where(type => type.BaseType is null && !type.IsOwned()))
         {
@@ -32,6 +32,7 @@ internal static class TenantIsolationModelValidator
             var isShared = typeof(IConsumerBusinessShared).IsAssignableFrom(type);
             var categoryCount = (isTenant ? 1 : 0) + (isPublic ? 1 : 0) + (isShared ? 1 : 0);
             var schema = entity.GetSchema();
+            var contributedGlobal = contributedGlobals?.ContainsKey(type) == true;
             var filters = entity.GetDeclaredQueryFilters().Select(filter => filter.Key).ToHashSet(StringComparer.Ordinal);
             var requiredFilter = isTenant ? ModelBuilderExtensions.TenantFilter
                 : isPublic ? ModelBuilderExtensions.PublicFilter
@@ -40,7 +41,8 @@ internal static class TenantIsolationModelValidator
                 : isPublic ? Schemas.PublicSite
                 : isShared ? Schemas.Engagement : null;
 
-            if (categoryCount > 1 || (categoryCount == 0 && !IsKnownGlobal(type)) ||
+            if (categoryCount > 1 || (categoryCount == 0 && !IsKnownGlobal(type) && !contributedGlobal) ||
+                (contributedGlobal && (categoryCount != 0 || schema != contributedGlobals![type])) ||
                 (categoryCount == 1 && (schema != expectedSchema || !filters.Contains(requiredFilter!))) ||
                 (categoryCount == 0 && (schema is not (Schemas.Platform or Schemas.Identity) ||
                     filters.Overlaps([ModelBuilderExtensions.TenantFilter,

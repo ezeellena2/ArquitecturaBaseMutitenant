@@ -27,6 +27,8 @@ internal static class PersistenceRegistration
         services.AddCaching();
         services.AddScoped<TenantContext>(_ => new TenantContext());
         services.AddScoped<ITenantContext>(provider => provider.GetRequiredService<TenantContext>());
+        foreach (var contributor in PersistenceModelContributors.Discover())
+            services.AddSingleton<IPersistenceModelContributor>(contributor);
         services.AddDbContext<ApplicationDbContext>((_, options) => options
             .UseNpgsql(adminConnectionString)
             .UseOpenIddict<Guid>());

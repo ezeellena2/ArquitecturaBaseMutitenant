@@ -1,10 +1,11 @@
 using ArquitecturaBaseMultitenant.Api.Features;
+using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 
 namespace ArquitecturaBaseMultitenant.Api.Modules.WhatsApp;
 
-/// <summary>Esqueleto exportable de T01; la composición por capa y las opciones se completan en T02.</summary>
+/// <summary>Compone contratos/rutas de la capa Api; la disponibilidad viene del puerto del módulo.</summary>
 public static class WhatsAppApiModule
 {
     public const string WebhookRoute = "WhatsApp.Webhook";
@@ -12,7 +13,7 @@ public static class WhatsAppApiModule
 
     public static IServiceCollection AddWhatsAppModule(this IServiceCollection services)
     {
-        services.AddSingleton<IInstalledModuleRouteAvailability, PendingWebhookAvailability>();
+        services.AddSingleton<IInstalledModuleRouteAvailability, WebhookAvailability>();
         services.AddSingleton<ArquitecturaBaseMultitenant.Api.OpenApi.IHttpContractContributor, WhatsAppContractContributor>();
         services.Configure<RateLimiterOptions>(options => options.AddPolicy(WebhookRateLimit, context =>
             RateLimitPartition.GetFixedWindowLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -23,10 +24,9 @@ public static class WhatsAppApiModule
         return services;
     }
 
-    private sealed class PendingWebhookAvailability : IInstalledModuleRouteAvailability
+    private sealed class WebhookAvailability(IWhatsAppAvailability availability) : IInstalledModuleRouteAvailability
     {
         public string Key => WebhookRoute;
-        // T01 no valida secretos ni implementa firma: nunca deja ejecutar un webhook real.
-        public bool IsAvailable => false;
+        public bool IsAvailable => availability.IsWebhookEnabled;
     }
 }

@@ -1,0 +1,15 @@
+using ArquitecturaBaseMultitenant.Domain.WhatsApp;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Persistence;
+/// <summary>El módulo declara cada entidad global y aplica exclusivamente sus configuraciones.</summary>
+internal sealed class WhatsAppModelContributor : IPersistenceModelContributor
+{
+    public string ConfigurationNamespace => typeof(WhatsAppModelContributor).Namespace!;
+    public IReadOnlyDictionary<Type, string> GlobalEntities { get; } = new Dictionary<Type, string>
+    {
+        [typeof(WhatsAppContact)] = Schemas.Identity, [typeof(WhatsAppMessage)] = Schemas.Identity,
+    };
+    public void Configure(ModelBuilder builder) => builder.ApplyConfigurationsFromAssembly(GetType().Assembly,
+        type => type.Namespace == ConfigurationNamespace);
+}

@@ -22,7 +22,7 @@ public sealed class ServiceDependencyCountTests
     {
         var classes = ApplicationAssembly.GetTypes()
             .Where(type => type is { IsClass: true, IsAbstract: false }
-                && IsInNamespace(type, ServicesNamespace)
+                && ApplicationNamespaceShape.IsServices(type)
                 && !IsGenerated(type))
             .ToArray();
 

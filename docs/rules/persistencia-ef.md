@@ -12,6 +12,8 @@
   - `internal sealed class XConfiguration : IEntityTypeConfiguration<X>` en `Configurations/<Esquema>/`;
   - enums como texto (`HasConversion<string>().HasMaxLength(n)`) y `decimal` con `HasPrecision`;
   - esquema según la clase de dato.
+  - un módulo aporta sus configuraciones mediante `Infrastructure.Persistence.IPersistenceModelContributor`, con su namespace de configuración y un diccionario **explícito** tipo → esquema global. No se exime un namespace completo de clasificación. El núcleo aplica sus configuraciones y cada contribuidor aplica exclusivamente las suyas, exactamente una vez.
+  - runtime registra el contribuidor desde el módulo; DesignTime, bootstrap y fábricas sin DI lo descubren neutralmente con `PersistenceModelContributors.Discover()`, sin opciones, secretos ni red. `new ApplicationDbContext(..., modelContributors: [])` construye el núcleo sin módulos; la clave de caché EF distingue ambos conjuntos. Apagar un canal no quita tablas.
 - **Nombres:**
   - en los repositorios, `Get…` devuelve la entidad seguida por EF o `null`, y además hay `Add` y `Remove`;
   - en los readers, `Find…` devuelve una proyección, `List…` una colección o página, y `Exists…`/`Count…` escalares.
@@ -37,6 +39,7 @@
 
 ## Lo verifica
 - `EntityConfigurationTests` (E2), `DataClassificationTests` (E2), `DecimalPrecisionTests` (E1), `TextLimitsTests` (E1).
+- `WhatsAppPersistenceTests` (E8): modelos runtime/DesignTime/bootstrap iguales, modelo sin módulos, persistencia tras reinicio y declaraciones globales faltantes/duplicadas/con esquema incorrecto. `EntityConfigurationTests` incluye las configuraciones aportadas y exige exactamente una por entidad.
 - `CollationTests` (E2): orden real de "Álvarez", "Ñandú", "Nuñez" y "Zapata" contra la base de los tests (Testcontainers creada con ICU `es-AR`).
 - `MigrationsTests` (E2): falla si falta una migración.
 - `RlsPolicyInventoryTests` (E2), `SortIndexTests` (E2), `TransactionBoundaryTests` (E2).

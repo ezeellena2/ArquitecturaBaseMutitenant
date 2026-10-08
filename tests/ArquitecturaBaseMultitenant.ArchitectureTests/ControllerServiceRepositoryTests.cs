@@ -78,6 +78,8 @@ public sealed class ControllerServiceRepositoryTests
         Assert.Empty(InvalidConstructorDependencies(typeof(ValidController)));
         Assert.Contains(InvalidConstructorDependencies(typeof(InvalidController)),
             description => description.Contains(nameof(ICurrencyCatalog), StringComparison.Ordinal));
+        Assert.Contains(InvalidConstructorDependencies(typeof(InvalidModuleController)),
+            description => description.Contains("IWhatsAppMessageRepository", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -114,11 +116,7 @@ public sealed class ControllerServiceRepositoryTests
             .Select(parameter => $"{controller.FullName}: {parameter.ParameterType.FullName}"));
     }
 
-    private static bool IsApplicationService(Type type) => type.IsInterface
-        && (type.Namespace == ApplicationNamespace + ".Interfaces.Services"
-            || System.Text.RegularExpressions.Regex.IsMatch(type.Namespace ?? "",
-                @"^ArquitecturaBaseMultitenant\.Application\.Modules\.[A-Za-z][A-Za-z0-9]*\.Interfaces\.Services$"))
-        && type.Name.EndsWith("Service", StringComparison.Ordinal);
+    private static bool IsApplicationService(Type type) => ApplicationNamespaceShape.IsServiceContract(type);
 
     private static bool IsApprovedProtocolDependency(Type controller, Type dependency) =>
         controller == typeof(ConnectController) && dependency == typeof(OpenIdPrincipalFactory)
@@ -163,7 +161,7 @@ public sealed class ControllerServiceRepositoryTests
                 .Select(parameter => $"{controller.FullName}.{method.Name}: {parameter.ParameterType.FullName}"));
 
     private static bool IsForbiddenActionParameter(Type type) =>
-        type.Namespace?.StartsWith(ApplicationNamespace + ".Interfaces", StringComparison.Ordinal) == true
+        ApplicationNamespaceShape.IsInterface(type)
         || type.Namespace?.StartsWith("ArquitecturaBaseMultitenant.Infrastructure", StringComparison.Ordinal) == true
         || type.Namespace?.StartsWith("Microsoft.EntityFrameworkCore", StringComparison.Ordinal) == true;
 
@@ -182,6 +180,9 @@ public sealed class ControllerServiceRepositoryTests
     private sealed class ValidController(IReferenceDataService service);
 
     private sealed class InvalidController(ICurrencyCatalog catalog);
+
+    private sealed class InvalidModuleController(
+        ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.IWhatsAppMessageRepository reader);
 
     private sealed class UnconventionallyNamedEndpoint(IReferenceDataService service) : ControllerBase
     {

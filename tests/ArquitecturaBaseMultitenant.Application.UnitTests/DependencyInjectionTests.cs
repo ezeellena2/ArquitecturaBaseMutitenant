@@ -21,12 +21,15 @@ public sealed class DependencyInjectionTests
         var services = new ServiceCollection();
 
         services.AddApplication();
+        ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.WhatsAppModule.AddWhatsAppModule(services);
 
         var repeated = services
             .Where(descriptor => !descriptor.IsKeyedService)
             .Select(descriptor => descriptor.ImplementationType)
             .OfType<Type>()
-            .Where(type => type.Namespace?.StartsWith(ServicesNamespace, StringComparison.Ordinal) == true)
+            .Where(type => type.Namespace?.StartsWith(ServicesNamespace, StringComparison.Ordinal) == true
+                || System.Text.RegularExpressions.Regex.IsMatch(type.Namespace ?? "",
+                    @"^ArquitecturaBaseMultitenant\.Application\.Modules\.[^.]+\.Services(\.|$)"))
             .GroupBy(type => type)
             .Where(group => group.Count() > 1)
             .Select(group => $"{group.Key.Name} ({group.Count()})");
@@ -48,5 +51,15 @@ public sealed class DependencyInjectionTests
             descriptor.ServiceType == typeof(IOptionsChangeTokenSource<>).MakeGenericType(options));
         Assert.Contains(services, descriptor =>
             descriptor.ServiceType == typeof(IValidateOptions<>).MakeGenericType(options));
+    }
+
+    [Fact]
+    public void Detector_rejects_duplicate_module_service_registration()
+    {
+        var services = new ServiceCollection();
+        ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.WhatsAppModule.AddWhatsAppModule(services);
+        ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.WhatsAppModule.AddWhatsAppModule(services);
+        Assert.Contains(services.Where(descriptor => descriptor.ImplementationType is not null)
+            .GroupBy(descriptor => descriptor.ImplementationType), group => group.Count() > 1);
     }
 }

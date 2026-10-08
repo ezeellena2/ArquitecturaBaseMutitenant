@@ -29,6 +29,7 @@ public sealed class ModuleControllersTests
             if (CoreAreas.Contains(controller.Namespace!))
             {
                 Assert.Empty(gates);
+                Assert.Null(controller.GetCustomAttribute<ArquitecturaBaseMultitenant.Api.Features.InstalledModuleRouteAttribute>(inherit: true));
                 Assert.Empty(controller.GetMethods().SelectMany(action => action.GetCustomAttributes<FeatureGateAttribute>(inherit: true)));
                 continue;
             }
@@ -37,6 +38,8 @@ public sealed class ModuleControllersTests
             {
                 Assert.Empty(gates);
                 var registrations = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+                ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.WhatsAppInfrastructureModule.AddWhatsAppModule(
+                    registrations, new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build());
                 ArquitecturaBaseMultitenant.Api.Modules.WhatsApp.WhatsAppApiModule.AddWhatsAppModule(registrations);
                 using var provider = Microsoft.Extensions.DependencyInjection.ServiceCollectionContainerBuilderExtensions.BuildServiceProvider(registrations);
                 var routes = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetServices<ArquitecturaBaseMultitenant.Api.Features.IInstalledModuleRouteAvailability>(provider);

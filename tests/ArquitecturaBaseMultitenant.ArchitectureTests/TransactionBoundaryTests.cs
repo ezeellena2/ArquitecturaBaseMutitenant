@@ -47,6 +47,10 @@ public sealed class TransactionBoundaryTests
 
         Assert.Contains(typeof(RogueReceiver), Receivers([typeof(RogueReceiver)]));
         Assert.False(IsService(typeof(RogueReceiver)));
+        var moduleHelper = typeof(ArquitecturaBaseMultitenant.Application.Modules.Control.Services.InvalidHelperGuard);
+        Assert.True(ApplicationNamespaceShape.IsServices(moduleHelper));
+        Assert.Contains(moduleHelper, Receivers([moduleHelper]));
+        Assert.False(IsService(moduleHelper));
     }
 
     [Fact]
@@ -177,9 +181,8 @@ public sealed class TransactionBoundaryTests
         Production.Select(assembly => assembly.GetType(owner)).OfType<Type>().Any(IsService);
 
     private static bool IsService(Type type) =>
-        type.Namespace?.StartsWith(ApplicationServices + ".", StringComparison.Ordinal) == true
-        && type.GetInterfaces().Any(contract => contract.Namespace?.StartsWith(
-            ServiceContracts, StringComparison.Ordinal) == true);
+        ApplicationNamespaceShape.IsServices(type)
+        && type.GetInterfaces().Any(ApplicationNamespaceShape.IsServiceContract);
 
     private static string[] ConcreteUseViolations(IEnumerable<string> owners) =>
         [.. owners.Where(owner => owner is not (UnitOfWorkClass or Registration))];
