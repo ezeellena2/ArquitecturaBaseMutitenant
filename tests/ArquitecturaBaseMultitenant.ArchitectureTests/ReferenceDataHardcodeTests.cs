@@ -48,6 +48,7 @@ public sealed class ReferenceDataHardcodeTests
                 var source = File.ReadAllText(path);
                 return ReferenceDataHardcodeScanner.FindViolations(source)
                     .Where(violation => !IsDatabaseLocaleDeclaration(relativePath, source, violation))
+                    .Where(violation => !IsOperationalCountryDefault(relativePath, source, violation))
                     .Select(violation => $"{relativePath}: {violation}");
             })
             .Concat(new[] { "Domain", "Application", "Infrastructure", "Api" }
@@ -123,6 +124,28 @@ public sealed class ReferenceDataHardcodeTests
         }
     }
 
+    [Fact]
+    public void Json_operational_policy_exempts_only_the_declared_setting()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "reference-policy-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var directory = Path.Combine(root, "ArquitecturaBaseMultitenant.Api");
+            Directory.CreateDirectory(directory);
+            File.WriteAllText(Path.Combine(directory, "appsettings.json"),
+                "{\"WhatsApp\":{\"AllowedCountries\":[\"AR\"],\"OtherCountry\":\"AR\"},\"currency\":\"USD\"}");
+            File.WriteAllText(Path.Combine(root, "other.json"), "{\"WhatsApp\":{\"AllowedCountries\":[\"AR\"]}}");
+            var violations = ReferenceDataHardcodeScanner.JsonViolations(root).ToArray();
+            Assert.Equal(3, violations.Length);
+            Assert.Contains(violations, value => value.Contains("other.json", StringComparison.Ordinal));
+            Assert.Contains(violations, value => value.EndsWith(": USD", StringComparison.Ordinal));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    }
+
     private static bool IsDatabaseLocaleDeclaration(string relativePath, string source, string violation)
     {
         const string bootstrap = "ArquitecturaBaseMultitenant.Infrastructure/Persistence/DatabaseBootstrapExtensions.cs";
@@ -135,6 +158,28 @@ public sealed class ReferenceDataHardcodeTests
         return Enumerable.Range(0, lines.Length).Any(index =>
             lines[index].Trim() == "internal const string DatabaseIcuLocale = \"es-AR\";"
             && violation == $"line {index + 1}: es-AR");
+    }
+
+    private static bool IsOperationalCountryDefault(string path, string source, string violation) =>
+        path == "ArquitecturaBaseMultitenant.Infrastructure/Modules/WhatsApp/WhatsAppOptions.cs"
+        && source.Split('\n').Select((line, index) => (line, index)).Any(item =>
+            item.line.Trim() == "public string[] AllowedCountries { get; set; } = [\"AR\"];"
+            && violation == $"line {item.index + 1}: AR");
+
+    [Fact]
+    public void Operational_country_policy_does_not_exempt_other_literals_or_catalogs()
+    {
+        const string path = "ArquitecturaBaseMultitenant.Infrastructure/Modules/WhatsApp/WhatsAppOptions.cs";
+        const string source = "public string[] AllowedCountries { get; set; } = [\"AR\"];";
+        Assert.True(IsOperationalCountryDefault(path, source, "line 1: AR"));
+        Assert.False(IsOperationalCountryDefault("Other.cs", source, "line 1: AR"));
+        Assert.False(IsOperationalCountryDefault(path, "var countries = new[] { \"AR\" };", "line 1: AR"));
+        Assert.False(IsOperationalCountryDefault(path, source, "line 2: AR"));
+        Assert.True(ReferenceDataHardcodeScanner.IsAllowedOperationalCountryLiteral(new CallSites.Literal(
+            "ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.WhatsAppOptions", "AR")));
+        Assert.False(ReferenceDataHardcodeScanner.IsAllowedOperationalCountryLiteral(new CallSites.Literal(
+            "ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.WhatsAppOptions", "USD")));
+        Assert.False(ReferenceDataHardcodeScanner.IsAllowedOperationalCountryLiteral(new CallSites.Literal("Other", "AR")));
     }
 }
 
@@ -153,6 +198,7 @@ internal static partial class ReferenceDataHardcodeScanner
         CallSites.Literals(assembly)
             .Where(literal => CatalogCodes.Contains(literal.Value))
             .Where(literal => !IsAllowedIcuLiteral(literal))
+            .Where(literal => !IsAllowedOperationalCountryLiteral(literal))
             .Select(literal => $"{literal.Owner}: {literal.Value}");
 
     public static bool IsAllowedIcuLiteral(CallSites.Literal literal) =>
@@ -160,14 +206,31 @@ internal static partial class ReferenceDataHardcodeScanner
         && (literal.Owner == "ArquitecturaBaseMultitenant.Infrastructure.Persistence.DatabaseBootstrapExtensions"
             || literal.Owner == "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Rls.RuntimeRoleValidator");
 
+    public static bool IsAllowedOperationalCountryLiteral(CallSites.Literal literal) =>
+        literal.Owner == "ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.WhatsAppOptions"
+        && literal.Value == "AR";
+
     public static IEnumerable<string> JsonViolations(string sourceRoot) =>
         Directory.EnumerateFiles(sourceRoot, "*.json", SearchOption.AllDirectories)
             .Where(path => !Path.GetRelativePath(sourceRoot, path)
                 .Split(Path.DirectorySeparatorChar)
                 .Any(segment => segment is "obj" or "bin"))
             .Where(path => !IsGeneratedCatalog(Path.GetRelativePath(sourceRoot, path).Replace('\\', '/')))
-            .SelectMany(path => FindViolations(File.ReadAllText(path))
+            .SelectMany(path => FindViolations(JsonWithoutOperationalCountryPolicy(sourceRoot, path))
                 .Select(violation => $"{Path.GetRelativePath(sourceRoot, path).Replace('\\', '/')}: {violation}"));
+
+    private static string JsonWithoutOperationalCountryPolicy(string sourceRoot, string path)
+    {
+        var source = File.ReadAllText(path);
+        if (Path.GetRelativePath(sourceRoot, path).Replace('\\', '/') != "ArquitecturaBaseMultitenant.Api/appsettings.json") return source;
+        var document = System.Text.Json.Nodes.JsonNode.Parse(source);
+        if (document?["WhatsApp"] is System.Text.Json.Nodes.JsonObject options
+            && options["AllowedCountries"] is System.Text.Json.Nodes.JsonArray countries
+            && countries.All(country => country is System.Text.Json.Nodes.JsonValue value
+                && value.TryGetValue<string>(out var code) && code.Length == 2 && CatalogCodes.Contains(code)))
+            options.Remove("AllowedCountries");
+        return document?.ToJsonString() ?? source;
+    }
 
     private static bool IsGeneratedCatalog(string relativePath) =>
         relativePath.StartsWith("ArquitecturaBaseMultitenant.Infrastructure/Persistence/Seed/ReferenceData/", StringComparison.Ordinal)

@@ -3,6 +3,7 @@
 **Regla:** EF Core vive solo en Infrastructure. Se escribe con repositorios (`I<X>Repository`) y se lee con readers (`I<X>Reader`), sin repositorio genérico. Cada entidad tiene su configuración.
 
 ## Cómo se hace
+- Las configuraciones aportadas por un módulo pueden declarar una FK a `ApplicationUser` únicamente si implementan `IEntityTypeConfiguration<T>`, pertenecen al namespace declarado por su contribuidor y `T` figura explícitamente como entidad global `identity`. Esto no habilita repositorios, readers ni servicios a acceder a Identity; lo comprueba `IdentityAccessTests` (E2).
 - **Entidad:**
   - hereda de `Entity` (Id Guid v7);
   - tiene constructor privado para EF, fábrica estática que valida con `ArgumentException` (un bug) y métodos que devuelven `Result` (reglas);

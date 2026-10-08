@@ -1,3 +1,6 @@
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
 /// <summary>La entidad Identity de EF no cruza al dominio, casos de uso ni HTTP.</summary>
@@ -68,7 +71,51 @@ public sealed class IdentityAccessTests
             || relative == "Persistence/Readers/MemberReader.cs"
             || relative == "Persistence/Seed/PlatformSeeder.cs"
             || relative.StartsWith("Persistence/Migrations/", StringComparison.Ordinal)
-            || relative == "Persistence/Rls/TenantIsolationModelValidator.cs";
+            || relative == "Persistence/Rls/TenantIsolationModelValidator.cs"
+            || IsContributedIdentityConfiguration(relative);
+    }
+
+    private static bool IsContributedIdentityConfiguration(string path)
+    {
+        if (!path.StartsWith("Modules/", StringComparison.Ordinal)) return false;
+        var contributors = PersistenceModelContributors.Discover();
+        return typeof(ApplicationDbContext).Assembly.GetTypes().Any(type =>
+            IsDeclaredIdentityConfiguration(type, contributors)
+            && path == type.FullName!["ArquitecturaBaseMultitenant.Infrastructure.".Length..]
+                .Replace('.', '/') + ".cs");
+    }
+
+    private static bool IsDeclaredIdentityConfiguration(Type type, IEnumerable<IPersistenceModelContributor> contributors) =>
+        type is { IsClass: true, IsAbstract: false }
+        && type.GetInterfaces().Any(contract => contract.IsGenericType
+            && contract.GetGenericTypeDefinition() == typeof(IEntityTypeConfiguration<>)
+            && contributors.Any(contributor => contributor.ConfigurationNamespace == type.Namespace
+                && contributor.GlobalEntities.TryGetValue(contract.GenericTypeArguments[0], out var schema)
+                && schema == Schemas.Identity));
+
+    [Fact]
+    public void Contributed_identity_configuration_requires_contract_namespace_and_explicit_identity_entity()
+    {
+        var configuration = typeof(ConfigurationProbe);
+        Assert.True(IsDeclaredIdentityConfiguration(configuration, [new ContributorProbe(configuration.Namespace!, Schemas.Identity)]));
+        Assert.False(IsDeclaredIdentityConfiguration(configuration, [new ContributorProbe("Other", Schemas.Identity)]));
+        Assert.False(IsDeclaredIdentityConfiguration(configuration, [new ContributorProbe(configuration.Namespace!, Schemas.Platform)]));
+        Assert.False(IsDeclaredIdentityConfiguration(configuration, []));
+        Assert.False(IsDeclaredIdentityConfiguration(typeof(IdentityAccessTests), [new ContributorProbe(configuration.Namespace!, Schemas.Identity)]));
+        Assert.False(IsAllowed("ArquitecturaBaseMultitenant.Infrastructure/Modules/WhatsApp/Persistence/Fake.cs"));
+        Assert.False(IsAllowed("ArquitecturaBaseMultitenant.Infrastructure/Modules/WhatsApp/Services/Fake.cs"));
+    }
+
+    private sealed class ConfigurationProbe : IEntityTypeConfiguration<string>
+    {
+        public void Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<string> builder) => throw new NotSupportedException();
+    }
+
+    private sealed class ContributorProbe(string configurationNamespace, string schema) : IPersistenceModelContributor
+    {
+        public string ConfigurationNamespace => configurationNamespace;
+        public IReadOnlyDictionary<Type, string> GlobalEntities { get; } = new Dictionary<Type, string> { [typeof(string)] = schema };
+        public void Configure(ModelBuilder builder) => throw new NotSupportedException();
     }
 
     private static bool IsGenerated(string file)

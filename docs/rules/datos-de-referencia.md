@@ -4,6 +4,7 @@
 
 ## Cómo se hace
 - **Leer:** inyectá el catálogo (`ICurrencyCatalog`, `ICountryCatalog`, `ITimeZoneCatalog`, `ICultureCatalog` o `ITaxIdTypeCatalog`). Nunca leas las tablas directo desde un servicio.
+- **Política de un canal:** `WhatsApp:AllowedCountries` configura un subconjunto de países habilitados, no reemplaza el catálogo. El valor inicial AR está establecido por el plan E8; la guarda admite únicamente ese default en `WhatsAppOptions` y la propiedad exacta de `Api/appsettings.json`. El país del destino se deriva del parser; las entradas y los selectores siguen usando referencias. Otros literales, listas y propiedades continúan prohibidos.
 - **Validar un código nuevo:** `ValidCurrency()`, `ValidCountry()`, `ValidTimeZone()`, `ValidCulture()` o `ValidTaxIdType()` de `ValidationRules`, en Application y contra los catálogos. Un código deshabilitado es inválido para un dato nuevo, pero sigue siendo legible si ya estaba guardado. `CurrencyCode.Create(code)` en Domain solo valida la sintaxis alfa-3: nunca inyecta `ICurrencyCatalog` de Application.
 - **Redondear un monto:** Application obtiene `MinorUnits` de `ICurrencyCatalog` y llama `Money.Round(minorUnits)`; Domain redondea `AwayFromZero` sin consultar el catálogo.
 - **Formatear:** siempre con `DisplayFormatter` o `shared/format`, que toman sus patrones de `Cultures`.
@@ -29,7 +30,7 @@
 - `docs/architecture/datos-de-referencia.md` (el diseño completo) · `Application/Interfaces/ReferenceData/ICurrencyCatalog.cs` (E1) · `Infrastructure/Persistence/Seed/ReferenceDataSeeder.cs` (E2).
 
 ## Lo verifica
-- `ReferenceDataHardcodeTests` (E1): ningún literal ISO de moneda, país o zona fuera de los JSON de referencia y de los tests.
+- `ReferenceDataHardcodeTests` (E1): ningún literal ISO de moneda, país o zona fuera de los JSON de referencia y de los tests; controla las declaraciones técnicas explícitas de locale ICU y de política de países del canal, con negativos para otros archivos, tipos y propiedades.
 - `ReferenceDataCatalogTests` (E1): JSON válidos, FK internas presentes cuando el código no es `null`, todos los `CountryCodes[]` de zonas compartidas conservados, `UTC` sin país, registros incompletos deshabilitados, zonas y tipos fiscales iniciales habilitados y traducciones —incluidos nombres de `Cultures` y `DisplaySymbol` de monedas— de cada cultura habilitada.
 - `generar.test.mjs` (E1): fuentes locales con hashes válidos, incluido `cldr-region-validity.xml`; filtro ISO que conserva 249 países en CLDR 48.2 y excluye `AN`, `AA` y `XK`; zonas principales, alias horarios y nombres de culturas desde CLDR sin `Intl.DisplayNames`; refresh separado y los cinco JSON reproducibles byte a byte sin red. El CI ejecuta `npm ci` y `npm test` con la versión de `scripts/datos-de-referencia/.node-version`.
 - `CurrencyCodeTests` y `MoneyTests` (E1): sintaxis alfa-3 y redondeo con `MinorUnits` explícitos; los tests de validación en Application cubren existencia y habilitación de la moneda.
