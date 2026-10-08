@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Platform;
+using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,10 +19,17 @@ internal sealed class AccountRecoveryRepository(ApplicationDbContext context) : 
         context.AccountRecoveryRequests.Add(request);
     }
 
+    public Task<AccountRecoveryIdentityHint?> GetIdentityHintAsync(Guid id, CancellationToken cancellationToken) =>
+        context.AccountRecoveryRequests.AsNoTracking().Where(request => request.Id == id)
+            .Select(request => new AccountRecoveryIdentityHint(request.UserId, request.NewMethodType, request.NewMethodValue))
+            .SingleOrDefaultAsync(cancellationToken);
+
     public Task<AccountRecoveryRequest?> GetForUpdateAsync(Guid id, CancellationToken cancellationToken)
     {
         context.RequireTransaction();
-        return context.AccountRecoveryRequests.SingleOrDefaultAsync(request => request.Id == id, cancellationToken);
+        return context.AccountRecoveryRequests.FromSqlInterpolated($"""
+            SELECT *, xmin FROM platform."AccountRecoveryRequests" WHERE "Id" = {id} FOR NO KEY UPDATE
+            """).SingleOrDefaultAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<AccountRecoveryRequest>> ListAwaitingAccountNoticeAsync(int limit,

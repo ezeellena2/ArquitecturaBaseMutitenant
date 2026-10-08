@@ -47,6 +47,7 @@ public static class ValidationTexts
     public static string FilterInvalid => Get(nameof(FilterInvalid));
     public static string NonceFormat => Get(nameof(NonceFormat));
     public static string RecoveryMethodRepeated => Get(nameof(RecoveryMethodRepeated));
+    public static string RecoveryPhoneRepeated => Get(nameof(RecoveryPhoneRepeated));
     public static string OwnedOrganizationsRange => Get(nameof(OwnedOrganizationsRange));
 
     public static string PermissionUnknown => Get(nameof(PermissionUnknown));

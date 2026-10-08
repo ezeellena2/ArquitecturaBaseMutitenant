@@ -201,7 +201,7 @@ public sealed class AccountRecoveryTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task An_unknown_previous_phone_registers_the_request_without_an_account_and_the_contract_is_validated()
+    public async Task An_unknown_previous_phone_rejects_without_a_request_and_the_contract_is_validated()
     {
         using var anonymous = Client();
         var newEmail = $"recover-{Guid.NewGuid():N}@example.test";
@@ -237,17 +237,15 @@ public sealed class AccountRecoveryTests(ApiFactory factory)
 
         using var submitted = await AccountJourney.PostAsync(anonymous, "/api/account-recovery",
             new { email = newEmail, nonce, previousPhone = new { country = "AR", number = "11 2345-6789" } }, Ct);
-        Assert.Equal(HttpStatusCode.Accepted, submitted.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, submitted.StatusCode);
+        Assert.Equal(AccountRecoveryErrors.PhoneAccountNotFoundCode, await CodeAsync(submitted));
+        Assert.True((await JsonAsync(submitted)).GetProperty("errors").TryGetProperty("previousPhone", out _));
 
         await using var scope = factory.Services.CreateAsyncScope();
         var services = scope.ServiceProvider;
-        var request = await services.GetRequiredService<ApplicationDbContext>().AccountRecoveryRequests.AsNoTracking()
-            .SingleAsync(item => item.NewMethodValue == newEmail, Ct);
-        Assert.Null(request.UserId);
-        Assert.Equal(LoginMethodType.Phone, request.PreviousMethodType);
-        Assert.Equal("+5491123456789", request.PreviousMethodValue);
-        Assert.Equal("Recibimos tu pedido para recuperar tu cuenta",
-            Assert.Single(await EmailsToAsync(services, newEmail, before)).Subject);
+        Assert.False(await services.GetRequiredService<ApplicationDbContext>().AccountRecoveryRequests.AsNoTracking()
+            .AnyAsync(item => item.NewMethodValue == newEmail, Ct));
+        Assert.Empty(await EmailsToAsync(services, newEmail, before));
     }
 
     [Fact]

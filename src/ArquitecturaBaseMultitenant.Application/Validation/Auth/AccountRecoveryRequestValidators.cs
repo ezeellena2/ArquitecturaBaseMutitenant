@@ -9,21 +9,26 @@ namespace ArquitecturaBaseMultitenant.Application.Validation.Auth;
 
 internal sealed class PreviewAccountRecoveryRequestValidator : AbstractValidator<PreviewAccountRecoveryRequest>
 {
-    public PreviewAccountRecoveryRequestValidator() =>
-        RuleFor(request => request.PreviousEmail).NotNull().WithMessage(_ => ValidationTexts.Required);
+    public PreviewAccountRecoveryRequestValidator()
+    {
+        RuleFor(request => request.PreviousEmail)
+            .Must((request, previous) => (previous is null) != (request.PreviousPhone is null))
+            .WithMessage(_ => ValidationTexts.EmailOrPhone);
+    }
 }
 
-/// <summary>Exige el correo nuevo y un nonce con forma de token antes de emitir el código de recuperación.</summary>
+/// <summary>Exige un destino nuevo y un nonce con forma de token antes de emitir el código de recuperación.</summary>
 internal sealed class RequestRecoveryCodeRequestValidator : AbstractValidator<RequestRecoveryCodeRequest>
 {
     public RequestRecoveryCodeRequestValidator()
     {
-        RuleFor(request => request.Email).NotNull().WithMessage(_ => ValidationTexts.Required);
+        RuleFor(request => request.Email).Must((request, email) => (email is null) != (request.Phone is null))
+            .WithMessage(_ => ValidationTexts.EmailOrPhone);
         RuleFor(request => request.Nonce).RecoveryNonce();
     }
 }
 
-/// <summary>Exige correo, nonce y un código de la longitud configurada antes de verificarlo.</summary>
+/// <summary>Exige destino, nonce y un código de la longitud configurada antes de verificarlo.</summary>
 internal sealed class VerifyRecoveryCodeRequestValidator : AbstractValidator<VerifyRecoveryCodeRequest>
 {
     public VerifyRecoveryCodeRequestValidator(IOptions<LoginCodeOptions> options)
@@ -31,7 +36,8 @@ internal sealed class VerifyRecoveryCodeRequestValidator : AbstractValidator<Ver
         ArgumentNullException.ThrowIfNull(options);
         var length = options.Value.Length;
 
-        RuleFor(request => request.Email).NotNull().WithMessage(_ => ValidationTexts.Required);
+        RuleFor(request => request.Email).Must((request, email) => (email is null) != (request.Phone is null))
+            .WithMessage(_ => ValidationTexts.EmailOrPhone);
         RuleFor(request => request.Nonce).RecoveryNonce();
         RuleFor(request => request.Code)
             .Cascade(CascadeMode.Stop)
@@ -46,7 +52,8 @@ internal sealed class SubmitAccountRecoveryRequestValidator : AbstractValidator<
 {
     public SubmitAccountRecoveryRequestValidator()
     {
-        RuleFor(request => request.Email).NotNull().WithMessage(_ => ValidationTexts.Required);
+        RuleFor(request => request.Email).Must((request, email) => (email is null) != (request.Phone is null))
+            .WithMessage(_ => ValidationTexts.EmailOrPhone);
         RuleFor(request => request.Nonce).RecoveryNonce();
         RuleFor(request => request.PreviousEmail)
             .Cascade(CascadeMode.Stop)

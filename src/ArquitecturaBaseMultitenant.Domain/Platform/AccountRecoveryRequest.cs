@@ -21,13 +21,13 @@ public sealed class AccountRecoveryRequest : Entity, IVersioned
     }
 
     private AccountRecoveryRequest(Guid loginCodeId, LoginMethodType previousMethodType, string previousMethodValue,
-        Email newEmail, Guid? userId, DateTime createdAtUtc)
+        LoginMethodType newMethodType, string newMethodValue, Guid? userId, DateTime createdAtUtc)
     {
         LoginCodeId = loginCodeId;
         PreviousMethodType = previousMethodType;
         PreviousMethodValue = previousMethodValue;
-        NewMethodType = LoginMethodType.Email;
-        NewMethodValue = newEmail.Value;
+        NewMethodType = newMethodType;
+        NewMethodValue = newMethodValue;
         UserId = userId;
         Status = AccountRecoveryStatus.Pending;
         CreatedAtUtc = createdAtUtc;
@@ -41,7 +41,7 @@ public sealed class AccountRecoveryRequest : Entity, IVersioned
     /// <summary>El correo normalizado o el teléfono en E.164 con el que la persona dice que entraba.</summary>
     public string PreviousMethodValue { get; private set; }
 
-    /// <summary>Por ahora, solo correo: el teléfono como método nuevo llega con el canal de WhatsApp.</summary>
+    /// <summary>Correo o teléfono ya probado con el código y nonce de recuperación.</summary>
     public LoginMethodType NewMethodType { get; private set; }
 
     public string NewMethodValue { get; private set; }
@@ -72,13 +72,26 @@ public sealed class AccountRecoveryRequest : Entity, IVersioned
         string previousMethodValue, Email newEmail, Guid? userId, DateTime nowUtc)
     {
         ArgumentNullException.ThrowIfNull(newEmail);
+        return Submit(loginCodeId, previousMethodType, previousMethodValue, LoginMethodType.Email, newEmail.Value, userId, nowUtc);
+    }
+
+    public static AccountRecoveryRequest Submit(Guid loginCodeId, LoginMethodType previousMethodType,
+        string previousMethodValue, PhoneNumber newPhone, Guid? userId, DateTime nowUtc)
+    {
+        ArgumentNullException.ThrowIfNull(newPhone);
+        return Submit(loginCodeId, previousMethodType, previousMethodValue, LoginMethodType.Phone, newPhone.Value, userId, nowUtc);
+    }
+
+    private static AccountRecoveryRequest Submit(Guid loginCodeId, LoginMethodType previousMethodType,
+        string previousMethodValue, LoginMethodType newMethodType, string newMethodValue, Guid? userId, DateTime nowUtc)
+    {
         ArgumentException.ThrowIfNullOrWhiteSpace(previousMethodValue);
         if (loginCodeId == Guid.Empty) throw new ArgumentException("The verified code is required.", nameof(loginCodeId));
         if (previousMethodType is not (LoginMethodType.Email or LoginMethodType.Phone))
             throw new ArgumentOutOfRangeException(nameof(previousMethodType), previousMethodType,
                 "Only an email or a phone can be the previous method.");
         if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("The instant must be UTC.", nameof(nowUtc));
-        return new AccountRecoveryRequest(loginCodeId, previousMethodType, previousMethodValue, newEmail, userId, nowUtc);
+        return new AccountRecoveryRequest(loginCodeId, previousMethodType, previousMethodValue, newMethodType, newMethodValue, userId, nowUtc);
     }
 
     /// <summary>Aprobar exige una cuenta encontrada; el caso de uso suma el método nuevo como principal.</summary>

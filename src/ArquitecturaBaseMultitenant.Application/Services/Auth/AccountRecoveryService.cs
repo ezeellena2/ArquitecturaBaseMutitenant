@@ -1,11 +1,11 @@
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Phones;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
+using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Platform;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -15,16 +15,16 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
 /// <summary>
 /// «Recuperar mi cuenta» (ADR 0043). Consulta la cuenta anterior sin escribir; cada paso que escribe abre su UoW.
-/// Sólo emite para un correo nuevo libre y registra el pedido una vez por código, revalidando la propiedad.
+/// Sólo emite para un destino nuevo libre y registra el pedido una vez por código, revalidando la propiedad.
 /// </summary>
 internal sealed class AccountRecoveryService(
     LoginCodeIssuer issuer,
     LoginCodeVerifier verifier,
     ISecureTokenGenerator secrets,
-    IUserLookup userLookup,
+    AccountRecoveryGuard guard,
     AccountRecoveryNotifier messenger,
     IAccountRecoveryRepository recoveries,
-    IPhoneNumberParser phones,
+    LoginDestinationResolver destinations,
     IRequestValidator validator,
     IUnitOfWork unitOfWork,
     TimeProvider timeProvider,
@@ -35,9 +35,10 @@ internal sealed class AccountRecoveryService(
         {
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            return await userLookup.FindVerifiedUserIdAsync(LoginMethodType.Email, request.PreviousEmail!.Value,
-                cancellationToken) is null
-                ? FieldErrors.On(AccountRecoveryErrors.AccountNotFound, "previousEmail")
+            var previous = guard.Previous(request.PreviousEmail, request.PreviousPhone);
+            if (previous.IsFailure) return previous.Error;
+            return await guard.FindPreviousAsync(previous.Value, cancellationToken) is null
+                ? AccountRecoveryGuard.PreviousNotFound(previous.Value.Type)
                 : Result.Success();
         });
 
@@ -47,13 +48,15 @@ internal sealed class AccountRecoveryService(
         {
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            var destination = LoginCodeDestination.ForEmail(request.Email!);
+            var resolved = destinations.Resolve(request.Email, request.Phone, request.Channel);
+            if (resolved.IsFailure) return resolved.Error;
+            var destination = resolved.Value;
             var nonceHash = secrets.Hash(request.Nonce!);
             return await unitOfWork.ExecuteInTransactionAsync<Result<RequestLoginCodeResponse>>(async ct =>
             {
-                await issuer.LockDestinationAsync(destination, ct);
-                var owners = await userLookup.FindVerifiedUsersByEmailAsync(request.Email!, ct);
-                if (owners.Count > 0) return FieldErrors.On(AccountRecoveryErrors.MethodInUse, "email");
+                await guard.LockAsync(destination, null, ct);
+                var valid = await guard.CheckNewAsync(destination, ct);
+                if (valid.IsFailure) return valid.Error;
                 var issued = await issuer.IssueRecoveryCodeAsync(destination, nonceHash, ct);
                 if (issued.IsFailure) return issued.Error;
                 await messenger.SendCodeAsync(destination, issued.Value, ct);
@@ -66,12 +69,21 @@ internal sealed class AccountRecoveryService(
         {
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            var destination = LoginCodeDestination.ForEmail(request.Email!);
+            var resolved = destinations.Resolve(request.Email, request.Phone, request.Channel);
+            if (resolved.IsFailure) return resolved.Error;
+            var destination = resolved.Value;
             var nonceHash = secrets.Hash(request.Nonce!);
             // Los intentos fallidos se guardan aunque la verificación falle.
-            return await unitOfWork.ExecuteInTransactionAsync(
-                ct => verifier.VerifyRecoveryAsync(destination, nonceHash, request.Code!, ct),
-                CommitPolicy.OnAnyResult, cancellationToken);
+            return await unitOfWork.ExecuteInTransactionAsync(async ct =>
+            {
+                await guard.LockAsync(destination, null, ct);
+                if (LoginDestinationResolver.Type(destination) == LoginMethodType.Phone)
+                {
+                    var valid = await guard.CheckNewAsync(destination, ct);
+                    if (valid.IsFailure) return valid;
+                }
+                return await verifier.VerifyRecoveryAsync(destination, nonceHash, request.Code!, ct);
+            }, CommitPolicy.OnAnyResult, cancellationToken);
         });
 
     public Task<Result> SubmitAsync(SubmitAccountRecoveryRequest request, CancellationToken cancellationToken) =>
@@ -79,37 +91,39 @@ internal sealed class AccountRecoveryService(
         {
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            var previous = PreviousMethod(request);
+            var previous = guard.Previous(request.PreviousEmail,
+                string.IsNullOrWhiteSpace(request.PreviousPhoneNumber) ? null : new PhoneInputRequest(request.PreviousPhoneCountry, request.PreviousPhoneNumber));
             if (previous.IsFailure) return previous.Error;
-            var newEmail = request.Email!;
-            var destination = LoginCodeDestination.ForEmail(newEmail);
+            var resolved = destinations.Resolve(request.Email, request.Phone, request.Channel);
+            if (resolved.IsFailure) return resolved.Error;
+            var destination = resolved.Value;
+            if (previous.Value.Type == LoginDestinationResolver.Type(destination) && previous.Value.Value == destination.Value)
+                return new ValidationError(new Dictionary<string, string[]>
+                {
+                    [previous.Value.Type == LoginMethodType.Phone ? "previousPhone" : "previousEmail"] =
+                        [previous.Value.Type == LoginMethodType.Phone ? ValidationTexts.RecoveryPhoneRepeated : ValidationTexts.RecoveryMethodRepeated],
+                });
             var nonceHash = secrets.Hash(request.Nonce!);
             return await unitOfWork.ExecuteInTransactionAsync<Result>(async ct =>
             {
+                var userId = await guard.FindPreviousAsync(previous.Value, ct);
+                await guard.LockAsync(destination, userId, ct);
                 var code = await verifier.FindVerifiedRecoveryAsync(destination, nonceHash, ct);
                 if (code is null || await recoveries.ExistsForLoginCodeAsync(code.Id, ct))
                     return AccountRecoveryErrors.VerificationRequired;
                 var (type, value) = previous.Value;
-                var userId = await userLookup.FindVerifiedUserIdAsync(type, value, ct);
-                if (type == LoginMethodType.Email && userId is null)
-                    return FieldErrors.On(AccountRecoveryErrors.AccountNotFound, "previousEmail");
-                if ((await userLookup.FindVerifiedUsersByEmailAsync(newEmail, ct)).Count > 0)
-                    return FieldErrors.On(AccountRecoveryErrors.MethodInUse, "email");
-                recoveries.Add(AccountRecoveryRequest.Submit(code.Id, type, value, newEmail, userId,
-                    timeProvider.GetUtcNow().UtcDateTime));
+                if (userId is null || await guard.FindPreviousAsync(previous.Value, ct) != userId)
+                    return AccountRecoveryGuard.PreviousNotFound(type);
+                var valid = await guard.CheckNewAsync(destination, ct);
+                if (valid.IsFailure) return valid.Error;
+                var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+                recoveries.Add(LoginDestinationResolver.Type(destination) == LoginMethodType.Email
+                    ? AccountRecoveryRequest.Submit(code.Id, type, value, request.Email!, userId, nowUtc)
+                    : AccountRecoveryRequest.Submit(code.Id, type, value,
+                        Domain.ValueObjects.PhoneNumber.Create(destination.Value).Value, userId, nowUtc));
                 // El aviso a la cuenta encontrada sale después, con AccountRecoveryNoticeService.
-                await messenger.NotifyReceivedAsync(destination.Value, ct);
+                await messenger.NotifyReceivedAsync(destination, ct);
                 return Result.Success();
             }, CommitPolicy.OnSuccess, cancellationToken);
         });
-
-
-    private Result<(LoginMethodType Type, string Value)> PreviousMethod(SubmitAccountRecoveryRequest request)
-    {
-        if (request.PreviousEmail is { } email) return Result.Success((LoginMethodType.Email, email.Value));
-        var phone = phones.Parse(request.PreviousPhoneCountry, request.PreviousPhoneNumber, PhoneUsage.Mobile);
-        return phone.IsFailure
-            ? FieldErrors.On(phone.Error, "previousPhone")
-            : Result.Success((LoginMethodType.Phone, phone.Value.Value));
-    }
 }

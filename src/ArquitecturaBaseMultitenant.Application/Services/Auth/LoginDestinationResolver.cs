@@ -28,12 +28,14 @@ internal sealed class LoginDestinationResolver(IPhoneNumberParser phones, IEnume
         return parsed.IsSuccess ? LoginCodeDestination.ForPhone(parsed.Value, channel!) : FieldErrors.On(parsed.Error, "phone");
     }
 
-    internal Result<LoginCodeDestination> FromMethod(LoginMethod method)
+    internal Result<LoginCodeDestination> FromMethod(LoginMethod method) => FromContact(method.Type, method.Value);
+
+    internal Result<LoginCodeDestination> FromContact(LoginMethodType type, string value)
     {
-        if (method.Type == LoginMethodType.Email) return Resolve(Email.Create(method.Value).Value, null, null);
-        var channel = channels.FirstOrDefault(value => value.SupportedMethodType == method.Type && value.IsAvailable);
+        if (type == LoginMethodType.Email) return Resolve(Email.Create(value).Value, null, null);
+        var channel = channels.FirstOrDefault(channel => channel.SupportedMethodType == type && channel.IsAvailable);
         return channel is null ? LoginChannelErrors.Unavailable
-            : LoginCodeDestination.ForPhone(PhoneNumber.Create(method.Value).Value, channel.Key);
+            : LoginCodeDestination.ForPhone(PhoneNumber.Create(value).Value, channel.Key);
     }
 
     internal Result ValidateNew(LoginCodeDestination destination)

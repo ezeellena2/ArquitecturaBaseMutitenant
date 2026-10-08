@@ -17,6 +17,12 @@ public sealed record PlatformRecoveryResponse(Guid Id, DateTime CreatedAtUtc, Gu
     AccountRecoveryStatus Status, DateTime? DecidedAtUtc, string? DecidedBy, string? Reason, uint Version);
 
 public sealed record PlatformRecoveryStatusCount(AccountRecoveryStatus Status, int Count);
+
+/// <summary>Identidad inmutable del pedido, proyectada antes de los locks sin cargar la entidad mutable.</summary>
+public sealed record AccountRecoveryIdentityHint(Guid? UserId, LoginMethodType NewMethodType, string NewMethodValue)
+{
+    public override string ToString() => nameof(AccountRecoveryIdentityHint);
+}
 public sealed record PlatformRecoveryFilterCounts(int Total, IReadOnlyList<PlatformRecoveryStatusCount> Statuses);
 
 /// <summary>Proyección del reader con los valores completos; el servicio los enmascara antes de responder.</summary>

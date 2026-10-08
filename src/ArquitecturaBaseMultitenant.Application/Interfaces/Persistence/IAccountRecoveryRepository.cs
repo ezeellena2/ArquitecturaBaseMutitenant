@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Domain.Platform;
+using ArquitecturaBaseMultitenant.Application.Models.Platform;
 
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 
@@ -9,6 +10,9 @@ public interface IAccountRecoveryRepository
     Task<bool> ExistsForLoginCodeAsync(Guid loginCodeId, CancellationToken cancellationToken);
 
     void Add(AccountRecoveryRequest request);
+
+    /// <summary>Proyección sin seguimiento para tomar identidad/cuenta antes del lock de la solicitud.</summary>
+    Task<AccountRecoveryIdentityHint?> GetIdentityHintAsync(Guid id, CancellationToken cancellationToken);
 
     /// <summary>El pedido con seguimiento, para resolverlo dentro de la UoW.</summary>
     Task<AccountRecoveryRequest?> GetForUpdateAsync(Guid id, CancellationToken cancellationToken);

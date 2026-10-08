@@ -42,6 +42,7 @@
   <data name="FilterInvalid" xml:space="preserve"><value>Elegí un filtro de la lista.</value></data>
   <data name="NonceFormat" xml:space="preserve"><value>El pedido está incompleto. Empezá de nuevo.</value></data>
   <data name="RecoveryMethodRepeated" xml:space="preserve"><value>Tiene que ser un correo distinto del de antes.</value></data>
+  <data name="RecoveryPhoneRepeated" xml:space="preserve"><value>Tiene que ser un número distinto del de antes.</value></data>
   <data name="SlugInvalid" xml:space="preserve"><value>Usá letras minúsculas, números y guiones; la dirección no puede tener dos caracteres.</value></data>
   <data name="WebsiteInvalid" xml:space="preserve"><value>Ingresá una dirección web que empiece con http:// o https://.</value></data>
   <data name="LogoInvalid" xml:space="preserve"><value>Subí una imagen PNG, JPG o WebP de hasta 512 KiB.</value></data>

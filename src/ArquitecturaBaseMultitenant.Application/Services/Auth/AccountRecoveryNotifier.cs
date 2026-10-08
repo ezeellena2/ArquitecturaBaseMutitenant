@@ -8,8 +8,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
 /// <summary>
 /// Mensajes de «Recuperar mi cuenta», dentro de la UoW del servicio. Lo que va al método nuevo sale en la cultura por
-/// defecto y sin cuenta: usar la de la cuenta encontrada delataría que existe. El aviso al dueño de un correo ocupado
-/// sale en su cultura, y el aviso a la cuenta encontrada va a sus métodos que siguen andando.
+/// defecto y sin cuenta. Un destino ocupado no recibe avisos; la cuenta del pedido registrado los recibe por sus
+/// métodos que siguen andando.
 /// </summary>
 internal sealed class AccountRecoveryNotifier(IEnumerable<ILoginCodeChannel> codeChannels,
     IEnumerable<IAccountNoticeChannel> noticeChannels, UserCultureResolver cultures, IUserRepository users,
@@ -26,8 +26,8 @@ internal sealed class AccountRecoveryNotifier(IEnumerable<ILoginCodeChannel> cod
         issued.LoginCode.MarkSent(issued.IssuedAtUtc);
     }
 
-    public async Task NotifyReceivedAsync(string email, CancellationToken cancellationToken) =>
-        await EmailChannel().EnqueueAsync(null, email, new AccountNotice.RecoveryReceived(),
+    public async Task NotifyReceivedAsync(LoginCodeDestination destination, CancellationToken cancellationToken) =>
+        await NoticeChannel(LoginDestinationResolver.Type(destination)).EnqueueAsync(null, destination.Value, new AccountNotice.RecoveryReceived(),
             await cultures.ResolveAsync(null, null, cancellationToken), cancellationToken);
 
     /// <summary>A la cuenta encontrada por el método de antes: alguien pidió recuperarla (lienzo v89, Mensajes).</summary>
@@ -44,7 +44,7 @@ internal sealed class AccountRecoveryNotifier(IEnumerable<ILoginCodeChannel> cod
             account.Culture, principalOnly: false, cancellationToken);
     }
 
-    private IAccountNoticeChannel EmailChannel() =>
-        noticeChannels.FirstOrDefault(channel => channel.MethodType == LoginMethodType.Email)
-        ?? throw new InvalidOperationException("The email notice channel is not registered.");
+    private IAccountNoticeChannel NoticeChannel(LoginMethodType type) =>
+        noticeChannels.FirstOrDefault(channel => channel.MethodType == type)
+        ?? throw new InvalidOperationException("The recovery notice channel is not registered.");
 }

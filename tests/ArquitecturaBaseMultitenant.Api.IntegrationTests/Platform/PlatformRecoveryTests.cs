@@ -272,7 +272,7 @@ public sealed class PlatformRecoveryTests(ApiFactory factory)
     {
         var protector = services.GetRequiredService<IPayloadProtector>();
         var payloads = await services.GetRequiredService<ApplicationDbContext>().OutboxMessages.AsNoTracking()
-            .Where(message => message.Channel == "email" && !before.Contains(message.Id))
+            .Where(message => message.Channel == "email" && !before.Contains(message.Id) && message.EncryptedPayload.Length > 0)
             .Select(message => message.EncryptedPayload).ToArrayAsync(Ct);
         return payloads.Select(payload => JsonSerializer.Deserialize<EmailMessage>(protector.Unprotect(payload))!)
             .Where(message => string.Equals(message.To, to, StringComparison.OrdinalIgnoreCase)).ToArray();

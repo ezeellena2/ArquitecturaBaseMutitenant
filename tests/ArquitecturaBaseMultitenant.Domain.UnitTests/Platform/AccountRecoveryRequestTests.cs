@@ -29,6 +29,19 @@ public sealed class AccountRecoveryRequestTests
     }
 
     [Fact]
+    public void A_phone_destination_is_kept_as_the_verified_new_method_and_can_be_approved()
+    {
+        var phone = PhoneNumber.Create("+5491123456789").Value;
+        var userId = Guid.CreateVersion7();
+        var request = AccountRecoveryRequest.Submit(Guid.CreateVersion7(), LoginMethodType.Email, "antes@example.com", phone, userId, NowUtc);
+        Assert.Equal(LoginMethodType.Phone, request.NewMethodType);
+        Assert.Equal(phone.Value, request.NewMethodValue);
+        Assert.Equal(userId, request.UserId);
+        Assert.True(request.Approve(Guid.CreateVersion7(), "Confirmó sus datos", NowUtc).IsSuccess);
+        Assert.Equal(AccountRecoveryStatus.Approved, request.Status);
+    }
+
+    [Fact]
     public void A_pending_request_is_resolved_once_and_only_a_request_with_an_account_can_be_approved()
     {
         var operatorId = Guid.CreateVersion7();
