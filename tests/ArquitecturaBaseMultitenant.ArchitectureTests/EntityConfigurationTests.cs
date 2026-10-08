@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using OpenIddict.EntityFrameworkCore.Models;
+using ArquitecturaBaseMultitenant.TestSupport;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
@@ -112,11 +113,8 @@ public sealed class EntityConfigurationTests
     public void Architecture_and_design_time_have_the_same_complete_model()
     {
         using var designTime = new DesignTimeApplicationDbContextFactory().CreateDbContext([]);
-        static string[] Describe(IEnumerable<IEntityType> entities) => [.. entities
-            .Select(value => value.ClrType.FullName + ":" + value.GetSchema() + "." + value.GetTableName()
-                + ":" + string.Join(",", value.GetProperties().Select(property => property.Name + "=" + property.GetColumnType()).Order()))
-            .Order(StringComparer.Ordinal)];
-        Assert.Equal(Describe(designTime.Model.GetEntityTypes()), Describe(ArchitectureModel.EntityTypes()));
+        using var architecture = ArchitectureModel.CreateContext();
+        PersistenceModelComparison.AssertEqual(designTime, architecture);
     }
 
 #pragma warning disable CA1812 // Caso de control de la regla, solo se inspecciona.
@@ -128,11 +126,16 @@ internal static class ArchitectureModel
 {
     public static IReadOnlyList<IEntityType> EntityTypes()
     {
+        using var context = CreateContext();
+        return [.. context.Model.GetEntityTypes()];
+    }
+
+    public static ApplicationDbContext CreateContext()
+    {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseNpgsql("Host=localhost;Database=architecture_guard");
         options.UseOpenIddict<Guid>();
-        using var context = new ApplicationDbContext(options.Options, new NoTenantContext());
-        return [.. context.Model.GetEntityTypes()];
+        return new ApplicationDbContext(options.Options, new NoTenantContext());
     }
 
     private sealed class NoTenantContext : ITenantContext

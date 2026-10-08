@@ -6,8 +6,7 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
+using ArquitecturaBaseMultitenant.TestSupport;
 using Microsoft.Extensions.DependencyInjection;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 public sealed class WhatsAppPersistenceTests(ApiFactory factory) : IClassFixture<ApiFactory>
@@ -19,7 +18,8 @@ public sealed class WhatsAppPersistenceTests(ApiFactory factory) : IClassFixture
         var runtime = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         using var design = new DesignTimeApplicationDbContextFactory().CreateDbContext([]);
         using var bootstrap = Context();
-        Assert.Equal(Describe(runtime), Describe(design)); Assert.Equal(Describe(runtime), Describe(bootstrap));
+        PersistenceModelComparison.AssertEqual(runtime, design);
+        PersistenceModelComparison.AssertEqual(runtime, bootstrap);
         Assert.Equal("identity", runtime.Model.FindEntityType(typeof(WhatsAppContact))!.GetSchema());
         Assert.Equal("identity", runtime.Model.FindEntityType(typeof(WhatsAppMessage))!.GetSchema());
     }
@@ -73,11 +73,6 @@ public sealed class WhatsAppPersistenceTests(ApiFactory factory) : IClassFixture
         var contributor = Assert.Single(PersistenceModelContributors.Discover());
         Assert.Throws<InvalidOperationException>(() => PersistenceModelContributors.GlobalEntities([contributor, contributor]));
     }
-    private static string[] Describe(ApplicationDbContext context) =>
-        [.. context.GetService<IDesignTimeModel>().Model.GetEntityTypes().Where(value => !value.IsOwned())
-            .Select(value => value.ClrType.FullName + ":" + value.GetSchema() + "." + value.GetTableName()
-                + ":" + string.Join(",", value.GetProperties().Select(property => property.Name + "=" + property.GetColumnType()).Order()))
-            .Order(StringComparer.Ordinal)];
     private static ApplicationDbContext Context(IEnumerable<IPersistenceModelContributor>? contributors = null)
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql("Host=localhost;Database=fixture-model");

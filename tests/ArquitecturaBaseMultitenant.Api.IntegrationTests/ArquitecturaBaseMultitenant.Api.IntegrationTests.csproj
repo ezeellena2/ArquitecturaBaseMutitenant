@@ -8,5 +8,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ArquitecturaBaseMultitenant.Api\ArquitecturaBaseMultitenant.Api.csproj" />
+    <Compile Include="..\ArquitecturaBaseMultitenant.ArchitectureTests\PersistenceModelComparison.cs" Link="Support\PersistenceModelComparison.cs" />
   </ItemGroup>
 </Project>
