@@ -173,6 +173,7 @@ ArquitecturaBaseMultitenant.Domain/
 │   ├── Error.cs                                      record + fábricas Failure/Validation/NotFound/Conflict…
 │   ├── ErrorType.cs
 │   ├── Result.cs                                     Result y Result<T>, con conversiones implícitas
+│   ├── ContractErrors.cs                             Estado técnico temporal de una ruta publicada antes de implementar…
 │   └── ValidationError.cs                            "Validation.Failed" + errores por campo
 ├── ValueObjects/                                     [E1]
 │   ├── Money.cs                                      [E1] Amount (decimal) + Currency; suma solo con la misma moneda; Round(minorUnits)
@@ -227,6 +228,7 @@ ArquitecturaBaseMultitenant.Domain/
 │   ├── UserStatus.cs                                 [E3] Active | Suspended | PendingDeletion | Deleted
 │   ├── EmailErrors.cs                                [E1] Users.Email.Invalid (lo devuelve Email.Create)
 │   ├── PhoneErrors.cs                                [E1] Users.Phone.Invalid; .NotMobile en E3, con PhoneUsage (el país que no acepta WhatsApp es un error del módulo)
+│   ├── AccountLifecycle.cs                           Reglas de estado y fechas de la cuenta global, independientes…
 │   └── UserErrors.cs                                 [E3] Users.User.*
 ├── Authentication/                                   [E3]
 │   ├── LoginCode.cs
@@ -246,6 +248,7 @@ ArquitecturaBaseMultitenant.Domain/
 │   ├── ExternalLoginErrors.cs                       Centraliza los rechazos del ingreso con Google
 │   ├── AccountErrors.cs                              Identity.Account.* (LockedOut, Suspended, PendingDeletion con la fecha y el cancelTicket)
 │   ├── BusinessSignupErrors.cs                       alta de empresa: Tenancy.Organization.LimitReached y Auth.BusinessSignup.*
+│   ├── LoginMethodChange.cs                         Cambio de método que determina el texto del aviso de…
 │   └── LoginMethodErrors.cs                          Centraliza los errores al agregar, verificar, quitar o elegir un…
 ├── Authorization/                                    [E4]
 │   ├── Permissions.cs                                organización + empresa, sin prefijo (users.read, roles.manage…, company.members.manage), con All,
@@ -519,6 +522,7 @@ ArquitecturaBaseMultitenant.Application/
 │       │   ├── IUserLookup.cs                        búsqueda global por email o teléfono
 │       │   ├── ITokenRevoker.cs
 │       │   ├── IUserStatusReader.cs                  Consulta global acotada al estado de una identidad, sin exponer…
+│       │   ├── ILoginLinkIssuer.cs                   Emite dentro de la UoW del llamador, ligado al método…
 │       │   └── IGoogleAvailability.cs                [E3]
 │       ├── Security/                                 [E3]
 │       │   ├── ISecureTokenGenerator.cs
@@ -578,6 +582,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── ReturnUrls.cs
 │   │   ├── BusinessSignupRequest.cs                  nombre, slug y CUIT de la empresa, y datos de quien la registra
 │   │   ├── TenantSlugAvailability.cs                 Available | Reserved | Taken
+│   │   ├── LoginLinkModels.cs                        El secreto se entrega solo al adaptador que encola el…
 │   │   └── TenantSlugAvailabilityResponse.cs         respuesta de la consulta de una dirección pública
 │   ├── Invitations/                                  [E3]
 │   │   ├── PreviewInvitationRequest.cs               el token, en el cuerpo (nunca en la URL)
@@ -594,6 +599,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── InvitationTokenData.cs                    lo que protege el token de una invitación
 │   │   ├── IssueInvitationRequest.cs                 pedido de emitir una invitación, de la organización o de Plataforma
 │   │   ├── LoginInvitationContext.cs                  Alcances y proyecciones de invitaciones por correo demostrado
+│   │   ├── InvitationDeliveryDestination.cs          Transporte de una invitación cuya identidad y prueba siguen siendo…
 │   │   └── IssuedInvitation.cs                       invitación emitida, lista para encolar su entrega
 │   ├── Profile/                                      [E3]
 │   │   ├── MeResponse.cs                             cuenta + acceso activo + espacio personal + organizaciones + permisos + preferencias efectivas (cultura, zona, moneda) + features
@@ -659,6 +665,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── LoginMethodCodeResponse.cs                Devuelve el método al que se envió un código y…
 │   │   ├── LoginMethodRow.cs                         Método de ingreso visible para los casos de uso de…
 │   │   ├── UserAccountRow.cs                         Datos globales de la cuenta sin exponer ApplicationUser fuera de…
+│   │   ├── AddLoginMethodRequest.cs                  Alta propia por canal registrado
 │   │   ├── VerifyLoginMethodRequest.cs               Entrega el código para verificar un método de ingreso sin…
 │   ├── Legal/
 │   │   ├── AcceptLegalRequest.cs                     Identifica el documento y la versión exacta que una persona…
@@ -673,6 +680,7 @@ ArquitecturaBaseMultitenant.Application/
 │   ├── OrganizationUsers/
 │   │   └── OrganizationUserModels.cs                 Una persona de la organización
 │   ├── Common/
+│   │   ├── PhoneInputRequest.cs                      País y número sin normalizar
 │   │   └── VersionResponse.cs                        La versión que quedó después de un guardado; el front la toma como base…
 │   └── Tenancy/
 │       ├── MemberRow.cs                              Membresía visible solo desde el tenant activo
@@ -771,6 +779,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── BusinessSignupService.cs
 │   │   ├── GoogleAccountGuard.cs                     controla la cuenta antes de entrar con Google; un operador entra solo con código
 │   │   ├── TenantProvisioner.cs                      idempotente: settings, roles de sistema, 1ª empresa, membresía de Dueño (TenantAdmin) y página pública en Draft
+│   │   ├── LoginCodeAttemptVerifier.cs               Verifica el propósito del código y conserva intentos/lockout solo ante…
 │   │   └── TenantSlugAvailabilityService.cs          consulta si una dirección pública está disponible, reservada o tomada
 │   ├── Invitations/                                  [E3]
 │   │   ├── InvitationService.cs                      vista previa y aceptación, con y sin cuenta previa (sin cuenta crea la identidad sin
@@ -874,6 +883,9 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── LoginMethodIssuer.cs                      Agrega un correo de ingreso o reenvía su código de…
 │   │   ├── LoginMethodManagementService.cs           Coordina alta, verificación, elección del principal y baja de métodos…
 │   │   ├── LoginMethodNotifier.cs                    Registra un evento de seguridad y encola el aviso de…
+│   │   ├── LoginMethodLinker.cs                      Vínculo verificado y copia del principal en la UoW del…
+│   │   ├── LegalConsentRecorder.cs                   Registra únicamente consentimiento explícito, dentro de la UoW del llamador
+│   │   ├── AccountRegistrar.cs                       Crea la identidad global
 │   │   ├── LoginMethodVerifier.cs                    Verifica el código de un correo nuevo y, si la…
 │   ├── Legal/
 │   │   ├── AccountDeletionCancelIssuer.cs            Emite un comprobante de cancelación para una cuenta pendiente de…
@@ -1418,6 +1430,7 @@ ArquitecturaBaseMultitenant.Api/
 │   │   ├── AuthEmailMapping.cs                       Traduce el correo HTTP al value object sin exponerlo en…
 │   │   ├── AccountRecoveryHttpRequests.cs            Correo nuevo y nonce del navegador
 │   │   ├── AcceptInvitationHttpRequest.cs
+│   │   ├── AuthContactMapping.cs                     Puente temporal de T01
 │   │   └── BusinessSignupHttpRequest.cs               [E6] POST /api/auth/business-signup ("Registrá tu empresa")
 │   ├── Account/
 │   │   ├── UpdateMeHttpRequest.cs                     [E3]
@@ -1472,6 +1485,9 @@ ArquitecturaBaseMultitenant.Api/
 │   ├── OpenApiExtensions.cs
 │   ├── ProblemResponsesConvention.cs
 │   ├── OwnProtocolAttribute.cs                   Marca navegaciones de protocolo externo que declaran sus respuestas a…
+│   ├── IHttpContractContributor.cs               Metadatos aportados por núcleo o módulos sin dependencias desde el…
+│   ├── IdentityContractContributor.cs            Contrato de identidad E8, aditivo respecto de correo y separado…
+│   ├── HttpContractDocumentation.cs              Forma común de ejemplos, catálogo de errores y headers
 │   └── ProducesProblemAttribute.cs
 ├── RateLimiting/                                      [E3]
 │   ├── RateLimitingExtensions.cs
@@ -1490,6 +1506,9 @@ ArquitecturaBaseMultitenant.Api/
 │                                                      /swagger y /openapi solo en Development (SPA y Api en el mismo origen: sin CORS)
 ├── Features/
 │   ├── DisabledFeatureHandler.cs                      Un módulo apagado responde como una ruta inexistente, sin exponer…
+│   ├── InstalledModuleRouteMiddleware.cs              Sin contribuidor disponible, devuelve el 404 común antes de ejecutar…
+│   ├── InstalledModuleRouteAttribute.cs               Capacidad técnica global instalada
+│   ├── IInstalledModuleRouteAvailability.cs           Cada composición de módulo declara sus rutas técnicas y su…
 │   └── FeatureGateMiddleware.cs                       Oculta módulos antes de evaluar permisos
 ├── Idempotency/
 │   ├── IdempotencyFilter.cs                           Reserva antes del model binding y guarda el resultado solo…
@@ -1607,8 +1626,12 @@ tests/
 │   │   │   ├── LoginCodeValidationTests.cs            Comprueba los datos de solicitud y verificación del código de…
 │   │   │   ├── LoginCodeFlowTests.cs                  Comprueba orden de locks, lecturas, emisión y verificación de códigos
 │   │   │   ├── AccessSwitchPolicyTests.cs
+│   │   │   ├── LoginMethodsCapabilitiesTests.cs      tests de LoginMethodsCapabilities
+│   │   │   ├── LoginLinkIssuerTests.cs               tests de LoginLinkIssuer
+│   │   │   ├── LoginCodeAttemptVerifierTests.cs      tests de LoginCodeAttemptVerifier
 │   │   │   └── TenantProvisionerTests.cs              idempotencia
 │   │   ├── Invitations/
+│   │   │   ├── InvitationDeliveryDestinationTests.cs  tests de InvitationDeliveryDestination
 │   │   │   └── InvitationServiceTests.cs              [E3]
 │   │   ├── Profile/
 │   │   │   └── ProfileServiceTests.cs                 [E3]
@@ -1759,6 +1782,7 @@ tests/
 │   │   ├── ExplicitRouteInventoryTests.cs             [E1] inventario verbo + ruta
 │   │   ├── OpenApiTests.cs                            [E1] cada operación de /api declara su 2xx con esquema y sus errores ProblemDetails; Swagger solo en Development
 │   │   ├── SortMapTests.cs                            Comprueba que el orden solicitado use campos permitidos y direcciones…
+│   │   ├── Etapa8ContractTests.cs                     Contrato T01
 │   │   └── OpenApiContractTests.cs                    [E1] openapi.json al día
 │   ├── Persistence/                                   [E2]
 │   │   ├── WidgetQueryFixture.cs                      [E2] datos Widget y conexión mt_app para búsqueda, orden y cursor
@@ -1880,6 +1904,7 @@ tests/
 │   │   ├── LoginMethodsTests.cs                       sumar, verificar, elegir el principal y quitar (con código en otro método); aviso en todos
 │   │   ├── LoginPersistenceTests.cs                   Comprueba la persistencia de métodos, códigos, auditoría y preferencias de…
 │   │   ├── ProductionSeedTests.cs                     Comprueba el seed de configuración, cliente web y documentos legales…
+│   │   ├── IdentityConsolidationTests.cs              tests de IdentityConsolidation
 │   │   └── SignInServiceTests.cs                      Comprueba los adaptadores de sesión, usuario actual y datos de…
 │   ├── Legal/
 │   │   ├── AccountDeletionLoginTests.cs               Comprueba la prueba de ingreso de una cuenta con baja…
