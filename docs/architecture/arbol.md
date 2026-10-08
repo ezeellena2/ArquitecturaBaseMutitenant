@@ -700,6 +700,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── VerifyLoginCodeRequestValidator.cs
 │   │   ├── ExternalSignInRequestValidator.cs        Exige un retorno de autorización seguro y, solo para altas…
 │   │   ├── AccountRecoveryRequestValidators.cs      Método anterior y nuevo exclusivos Email/Phone, nonce y código
+│   │   ├── LoginLinkRequestValidators.cs            [E8] token seguro y acceso consumer
 │   │   └── BusinessSignupRequestValidator.cs
 │   ├── Invitations/                                  [E3]
 │   │   └── AcceptInvitationRequestValidator.cs
@@ -968,6 +969,7 @@ ArquitecturaBaseMultitenant.Application/
 │       │       ├── IWhatsAppInboundSettings.cs
 │       │       └── IWhatsAppInboundSignal.cs
 │       ├── Models/
+│       │   ├── BotButtons.cs                        [E8] IDs públicos fijos de ingreso/recuperación
 │       │   ├── WhatsAppOutboundMessage.cs            jerarquía cerrada: texto, botones, código, invitación, aviso de la cuenta
 │       │   ├── WhatsAppWebhookRequest.cs
 │       │   ├── WhatsAppWebhookBatch.cs
@@ -1542,6 +1544,8 @@ ArquitecturaBaseMultitenant.Api/
 │   └── FeatureGateMiddleware.cs                       Oculta módulos antes de evaluar permisos
 ├── Idempotency/
 │   ├── IdempotencyFilter.cs                           Reserva antes del model binding y guarda el resultado solo…
+│   ├── IdempotencyReplayAttribute.cs                  [E8] hook neutral antes de cualquier respuesta cacheada
+│   ├── LoginLinkReplayVerifier.cs                    [E8] adapta body/status originales sin registrarlos
 │   └── IdempotentAttribute.cs                         Aplica el filtro de reserva y replay a cada POST…
 └── Legal/
     └── LegalAcceptanceMiddleware.cs                   Bloquea rutas autenticadas mientras falte aceptar documentos vigentes
@@ -1684,6 +1688,7 @@ tests/
 │   │   │   └── PublicPageValidationTests.cs           Cada regla del pedido de Página pública muestra su propio…
 │   ├── Modules/WhatsApp/                             [E8]
 │   │   ├── WhatsAppChannelsTests.cs                  capacidades, avisos y selección de destino
+│   │   ├── WhatsAppBotTests.cs                       reply/operador, marca y límites del bot
 │   │   └── WhatsAppCodeQuotaTests.cs                 admisión diaria dentro de UoW del emisor
 │   ├── Formatting/                                    Versiones para URLs y validadores HTTP
 │   │   └── VersionWireFormatterTests.cs               Dígitos ASCII invariantes para versiones en distintas culturas
@@ -1957,6 +1962,7 @@ tests/
 │   ├── Time/
 │   │   └── TimeZoneServiceTests.cs                    Comprueba rangos UTC de días civiles según una zona IANA
 │   └── Modules/WhatsApp/                            [E8] tests de integración del módulo
+│       ├── WhatsAppBotTests.cs                       webhook firmado→cola→bot, IDs, original owner y ventana
 │       ├── WhatsAppWebhookTests.cs                   firma, tamaño, ACK/dedupe, estados y snapshots
 │       ├── WhatsAppInboundProcessorTests.cs          leases, crash, clock postlocks y rollback/backoff
 │       ├── WhatsAppStartupTests.cs                   opciones y encendido/apagado
