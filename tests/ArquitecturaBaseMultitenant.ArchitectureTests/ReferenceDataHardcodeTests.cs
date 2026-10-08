@@ -227,7 +227,8 @@ internal static partial class ReferenceDataHardcodeScanner
         if (document?["WhatsApp"] is System.Text.Json.Nodes.JsonObject options
             && options["AllowedCountries"] is System.Text.Json.Nodes.JsonArray countries
             && countries.All(country => country is System.Text.Json.Nodes.JsonValue value
-                && value.TryGetValue<string>(out var code) && code.Length == 2 && CatalogCodes.Contains(code)))
+                && value.TryGetValue<string>(out var code) && code.Length == 2
+                && code.All(character => character is >= 'A' and <= 'Z') && CatalogCodes.Contains(code)))
             options.Remove("AllowedCountries");
         return document?.ToJsonString() ?? source;
     }
