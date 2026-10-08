@@ -109,4 +109,10 @@
   <data name="OrganizationApproved.Title" xml:space="preserve"><value>Tu organización ya está lista</value></data>
   <data name="OrganizationApproved.Body" xml:space="preserve"><value>{0} Aprobamos {1} y terminamos el alta. Ya podés entrar como Dueño de tu organización.</value></data>
   <data name="OrganizationApproved.Note" xml:space="preserve"><value>Ingresá con los métodos de tu cuenta y elegí tu organización.</value></data>
+  <data name="LoginMethodRemovedPhone.Subject" xml:space="preserve"><value>Quitaste un WhatsApp de tu cuenta</value></data>
+  <data name="LoginMethodRemovedPhone.Title" xml:space="preserve"><value>Quitaste un método de ingreso</value></data>
+  <data name="LoginMethodRemovedPhone.Body" xml:space="preserve"><value>{0} El {1} a las {2} quitaste el WhatsApp {3} de tu cuenta de {4}. Ya no sirve para ingresar.</value></data>
+  <data name="LoginMethodPrimaryPhone.Subject" xml:space="preserve"><value>Cambiaste el método principal de tu cuenta</value></data>
+  <data name="LoginMethodPrimaryPhone.Title" xml:space="preserve"><value>Cambiaste tu método principal</value></data>
+  <data name="LoginMethodPrimaryPhone.Body" xml:space="preserve"><value>{0} El {1} a las {2} elegiste el WhatsApp {3} como método principal de tu cuenta de {4}. Desde ahora, los avisos llegan ahí.</value></data>
 </root>

@@ -12,11 +12,92 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="WhatsApp.Phone.CountryNotAllowed" xml:space="preserve"><value>WhatsApp no está habilitado para ese país.</value></data>
-<data name="WhatsApp.LoginCode.DailyLimit" xml:space="preserve"><value>No podemos mandar más códigos por WhatsApp por ahora. Probá más tarde.</value></data>
-<data name="WhatsApp.Webhook.InvalidPayload" xml:space="preserve"><value>El cuerpo del webhook no es válido.</value></data>
-<data name="WhatsApp.Webhook.InvalidSignature" xml:space="preserve"><value>La firma del webhook no es válida.</value></data>
-<data name="WhatsApp.Webhook.PayloadTooLarge" xml:space="preserve"><value>El cuerpo del webhook es demasiado grande.</value></data>
-<data name="WhatsApp.Webhook.TooManyRequests" xml:space="preserve"><value>Llegaron demasiadas solicitudes al webhook.</value></data>
-<data name="Bot.OperatorNeutralReply" xml:space="preserve"><value>Para entrar, usá la web.</value></data>
+  <data name="WhatsApp.Phone.CountryNotAllowed" xml:space="preserve">
+    <value>WhatsApp no está habilitado para ese país.</value>
+  </data>
+  <data name="WhatsApp.LoginCode.DailyLimit" xml:space="preserve">
+    <value>No podemos mandar más códigos por WhatsApp por ahora. Probá más tarde.</value>
+  </data>
+  <data name="WhatsApp.Webhook.InvalidPayload" xml:space="preserve">
+    <value>El cuerpo del webhook no es válido.</value>
+  </data>
+  <data name="WhatsApp.Webhook.InvalidSignature" xml:space="preserve">
+    <value>La firma del webhook no es válida.</value>
+  </data>
+  <data name="WhatsApp.Webhook.PayloadTooLarge" xml:space="preserve">
+    <value>El cuerpo del webhook es demasiado grande.</value>
+  </data>
+  <data name="WhatsApp.Webhook.TooManyRequests" xml:space="preserve">
+    <value>Llegaron demasiadas solicitudes al webhook.</value>
+  </data>
+  <data name="Bot.OperatorNeutralReply" xml:space="preserve">
+    <value>Para entrar, usá la web.</value>
+  </data>
+  <data name="MethodChange.Added" xml:space="preserve">
+    <value>agregaste</value>
+  </data>
+  <data name="MethodChange.Primary" xml:space="preserve">
+    <value>elegiste como principal</value>
+  </data>
+  <data name="MethodChange.Removed" xml:space="preserve">
+    <value>quitaste</value>
+  </data>
+  <data name="Page.Allowed" xml:space="preserve">
+    <value>la plataforma permitió volver a publicarla; podés revisarla y publicarla desde tu organización</value>
+  </data>
+  <data name="Page.Blocked" xml:space="preserve">
+    <value>la plataforma la despublicó; quedó en borrador y no se puede publicar hasta que la plataforma lo permita</value>
+  </data>
+  <data name="Support.Contact" xml:space="preserve">
+    <value>soporte de la plataforma</value>
+  </data>
+  <data name="Template.AccountDeleted.Body" xml:space="preserve">
+    <value>Tu cuenta de ArquitecturaBase fue eliminada, con sus métodos de ingreso y tu espacio personal. Este número ya no está asociado a ninguna cuenta.</value>
+  </data>
+  <data name="Template.DeletionCancelled.Body" xml:space="preserve">
+    <value>Cancelaste la baja de tu cuenta de ArquitecturaBase. Tu cuenta sigue activa. Si no fuiste vos, entrá a tu cuenta y revisá tus métodos de ingreso. Si no podés entrar, usá «Recuperá tu cuenta».</value>
+  </data>
+  <data name="Template.DeletionRequested.Body" xml:space="preserve">
+    <value>Pediste la baja de tu cuenta de ArquitecturaBase. Se elimina el {{1}}. Si no fuiste vos o te arrepentiste, ingresá antes de esa fecha para cancelarla.</value>
+  </data>
+  <data name="Template.Invitation.Body" xml:space="preserve">
+    <value>Hola. {{1}} te invitó a sumarte a {{2}} en ArquitecturaBase. La invitación vence el {{3}}.</value>
+  </data>
+  <data name="Template.LoginCode.Body" xml:space="preserve">
+    <value>Tu código de verificación es *{{1}}*. Por tu seguridad, no lo compartas.</value>
+  </data>
+  <data name="Template.LoginMethodChanged.Body" xml:space="preserve">
+    <value>Cambiaron los métodos de ingreso de tu cuenta de ArquitecturaBase: {{1}} {{2}} el {{3}}. Si no fuiste vos, entrá a tu cuenta y revisá tus métodos de ingreso. Si no podés entrar, usá «Recuperá tu cuenta».</value>
+  </data>
+  <data name="Template.OrganizationApproved.Body" xml:space="preserve">
+    <value>Aprobamos {{1}} y terminamos el alta. Ya podés entrar como Dueño de tu organización. Ingresá con los métodos de tu cuenta y elegí tu organización.</value>
+  </data>
+  <data name="Template.OrganizationRejected.Body" xml:space="preserve">
+    <value>No aprobamos la solicitud de alta de {{1}}. Tu cuenta y tu espacio personal siguen funcionando.</value>
+  </data>
+  <data name="Template.PlatformDeletionRequested.Body" xml:space="preserve">
+    <value>La plataforma inició la baja de tu cuenta de ArquitecturaBase y cerramos todas tus sesiones. Se elimina el {{1}}. Si creés que es un error, ingresá antes de esa fecha para cancelarla.</value>
+  </data>
+  <data name="Template.PublicPageModerated.Body" xml:space="preserve">
+    <value>La página pública de {{1}}: {{2}}. Tu organización y sus accesos siguen funcionando.</value>
+  </data>
+  <data name="Template.RecoveryApproved.Body" xml:space="preserve">
+    <value>Aprobamos tu pedido: ya podés entrar a ArquitecturaBase con este número, que quedó como tu método principal.</value>
+  </data>
+  <data name="Template.RecoveryReceived.Body" xml:space="preserve">
+    <value>Recibimos tu pedido para recuperar tu cuenta de ArquitecturaBase. Lo revisa una persona de la plataforma y te avisamos por acá. Si no pediste esto, ignorá este mensaje.</value>
+  </data>
+  <data name="Template.RecoveryRejected.Body" xml:space="preserve">
+    <value>Revisamos tu pedido para recuperar tu cuenta de ArquitecturaBase y no pudimos confirmar que sea tuya. Podés hacer un pedido nuevo desde la pantalla de ingreso.</value>
+  </data>
+  <data name="Template.RecoveryRequested.Body" xml:space="preserve">
+    <value>Alguien pidió recuperar tu cuenta de ArquitecturaBase. Una persona de la plataforma revisa el pedido antes de cambiar algo. Si fuiste vos, no tenés que hacer nada. Si no fuiste vos, escribí a {{1}}.</value>
+  </data>
+  <data name="Template.ReviewLoginMethods.Body" xml:space="preserve">
+    <value>Ya no sos miembro de {{1}}. Tu cuenta de ArquitecturaBase sigue activa. Si entrabas con un correo de esa organización, puede que ya no te sirva: revisá tus métodos de ingreso desde Mi cuenta.</value>
+  </data>
+  <data name="Template.SuspendedDeletionRequested.Body" xml:space="preserve">
+    <value>La plataforma inició la baja de tu cuenta de ArquitecturaBase. Se elimina el {{1}}. Tu cuenta está suspendida, así que no podés cancelar la baja. Si creés que es un error, escribí a {{2}}.</value>
+  </data>
+  <data name="Notice.OccurredAt" xml:space="preserve"><value>{0} a las {1}</value></data>
 </root>

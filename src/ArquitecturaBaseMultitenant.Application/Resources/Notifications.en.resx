@@ -109,4 +109,10 @@
   <data name="OrganizationApproved.Title" xml:space="preserve"><value>Your organization is ready</value></data>
   <data name="OrganizationApproved.Body" xml:space="preserve"><value>{0} We approved {1} and completed its setup. You can now enter your organization as its Owner.</value></data>
   <data name="OrganizationApproved.Note" xml:space="preserve"><value>Sign in with your account methods and select your organization.</value></data>
+  <data name="LoginMethodRemovedPhone.Subject" xml:space="preserve"><value>You removed WhatsApp from your account</value></data>
+  <data name="LoginMethodRemovedPhone.Title" xml:space="preserve"><value>You removed a sign-in method</value></data>
+  <data name="LoginMethodRemovedPhone.Body" xml:space="preserve"><value>{0} On {1} at {2}, you removed WhatsApp {3} from your {4} account. You can no longer use it to sign in.</value></data>
+  <data name="LoginMethodPrimaryPhone.Subject" xml:space="preserve"><value>You changed your primary sign-in method</value></data>
+  <data name="LoginMethodPrimaryPhone.Title" xml:space="preserve"><value>You changed your primary method</value></data>
+  <data name="LoginMethodPrimaryPhone.Body" xml:space="preserve"><value>{0} On {1} at {2}, you chose WhatsApp {3} as your primary sign-in method for your {4} account. Notices will now arrive there.</value></data>
 </root>

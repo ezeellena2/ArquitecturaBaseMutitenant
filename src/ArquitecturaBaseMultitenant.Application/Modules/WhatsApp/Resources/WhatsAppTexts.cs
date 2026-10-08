@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Localizati
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Resources;
 public static class WhatsAppTexts
 {
+    public static string Format(string key, CultureProfile profile, params object[] values) => DisplayFormatter.FormatResource(Get(key, profile), profile, values);
     internal static ResourceManager ResourceManager { get; } = new(
         "ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Resources.WhatsAppTexts", typeof(WhatsAppTexts).Assembly);
     public static string Get(string key, CultureProfile profile)

@@ -24,4 +24,18 @@ internal sealed class WhatsAppTemplateOptions
 {
     public string LoginCode { get; init; } = "codigo_ingreso";
     public string Invitation { get; init; } = "invitacion_organizacion";
+    public string LoginMethodChanged { get; init; } = "aviso_metodo_ingreso";
+    public string ReviewLoginMethods { get; init; } = "revisa_metodos_ingreso";
+    public string DeletionRequested { get; init; } = "baja_cuenta_pedida";
+    public string DeletionCancelled { get; init; } = "baja_cuenta_cancelada";
+    public string AccountDeleted { get; init; } = "cuenta_eliminada";
+    public string PlatformDeletionRequested { get; init; } = "baja_cuenta_plataforma";
+    public string SuspendedDeletionRequested { get; init; } = "baja_cuenta_plataforma_suspendida";
+    public string RecoveryReceived { get; init; } = "recuperacion_recibida";
+    public string RecoveryApproved { get; init; } = "recuperacion_aprobada";
+    public string RecoveryRejected { get; init; } = "recuperacion_rechazada";
+    public string RecoveryRequested { get; init; } = "recuperacion_aviso_cuenta";
+    public string OrganizationApproved { get; init; } = "organizacion_aprobada";
+    public string OrganizationRejected { get; init; } = "organizacion_rechazada";
+    public string PublicPageModerated { get; init; } = "pagina_publica_moderada";
 }

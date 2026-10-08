@@ -285,6 +285,22 @@ public sealed class EmailTemplateTests
         Assert.DoesNotContain("x=1&y=2", removed.HtmlBody);
     }
 
+    [Theory]
+    [InlineData("es-AR", LoginMethodChange.Removed, "Quitaste un WhatsApp")]
+    [InlineData("es-AR", LoginMethodChange.Primary, "Cambiaste el método principal")]
+    [InlineData("en-US", LoginMethodChange.Removed, "You removed WhatsApp")]
+    [InlineData("en-US", LoginMethodChange.Primary, "You changed your primary")]
+    public async Task Phone_removed_and_primary_notices_have_localized_email_copy(string code, LoginMethodChange change, string subject)
+    {
+        var culture = await new CultureProfiles(new JsonReferenceDataCatalog()).LoadAsync(code, Ct);
+        var renderer = new EmailTemplateRenderer(Options.Create(new EmailOptions()), CreateFormatter());
+        var message = await renderer.RenderAccountNoticeAsync("recipient@example.test",
+            new AccountNotice.LoginMethodChanged(change, LoginMethodType.Phone, "•••• 4521", new DateTime(2026, 10, 8, 12, 0, 0, DateTimeKind.Utc),
+                "America/Argentina/Buenos_Aires", "https://example.test/me"), culture, Ct);
+        Assert.Contains(subject, message.Subject);
+        Assert.Contains("•••• 4521", message.TextBody);
+    }
+
     [Fact]
     public async Task Account_notices_translate_copy_and_local_format_to_english()
     {

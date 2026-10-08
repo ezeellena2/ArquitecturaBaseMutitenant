@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Persistence;
 internal sealed class WhatsAppMessageRepository(ApplicationDbContext context) : IWhatsAppMessageRepository
 {
+    public Task LockStreamAsync(string phoneNumberId, string wamid, CancellationToken ct) =>
+        context.AcquireAdvisoryLocksAsync(["module:whatsapp:stream:" + phoneNumberId + ":" + wamid], ct);
     public Task LockEventAsync(string phoneNumberId, string wamid, string eventType, CancellationToken ct) =>
         context.AcquireAdvisoryLocksAsync(["module:whatsapp:event:" + phoneNumberId + ":" + wamid + ":" + eventType], ct);
     public Task<WhatsAppMessage?> GetEventAsync(string phoneNumberId, string wamid, string eventType, CancellationToken ct)

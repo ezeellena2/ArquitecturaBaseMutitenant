@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence;
 public interface IWhatsAppMessageRepository
 {
+    Task LockStreamAsync(string phoneNumberId, string wamid, CancellationToken ct);
     Task LockEventAsync(string phoneNumberId, string wamid, string eventType, CancellationToken ct);
     Task<WhatsAppMessage?> GetEventAsync(string phoneNumberId, string wamid, string eventType, CancellationToken ct);
     Task<IReadOnlyList<WhatsAppMessage>> ListPendingAsync(DateTime nowUtc, int limit, CancellationToken ct);

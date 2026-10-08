@@ -134,6 +134,8 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
         var key = (notice.Change, notice.MethodType) switch
         {
             (LoginMethodChange.Added, LoginMethodType.Phone) => "LoginMethodAddedPhone",
+            (LoginMethodChange.Removed, LoginMethodType.Phone) => "LoginMethodRemovedPhone",
+            (LoginMethodChange.Primary, LoginMethodType.Phone) => "LoginMethodPrimaryPhone",
             (LoginMethodChange.Added, LoginMethodType.Email) => "LoginMethodAddedEmail",
             (LoginMethodChange.Added, LoginMethodType.Google) => "LoginMethodAddedGoogle",
             (LoginMethodChange.Removed, LoginMethodType.Email) => "LoginMethodRemovedEmail",

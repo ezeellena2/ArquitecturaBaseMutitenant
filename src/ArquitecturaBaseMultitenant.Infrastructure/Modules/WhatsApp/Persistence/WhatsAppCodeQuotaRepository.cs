@@ -1,4 +1,4 @@
-using System.Globalization;
+using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
@@ -8,7 +8,7 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Persistenc
 internal sealed class WhatsAppCodeQuotaRepository(ApplicationDbContext context) : IWhatsAppCodeQuotaRepository
 {
     public Task LockAsync(string phoneNumberId, DateOnly dayUtc, CancellationToken ct) => context.AcquireAdvisoryLocksAsync(
-        ["module:whatsapp:quota:" + phoneNumberId + ":" + dayUtc.DayNumber.ToString(CultureInfo.InvariantCulture)], ct);
+        ["module:whatsapp:quota:" + phoneNumberId + ":" + JsonSerializer.Serialize(dayUtc.DayNumber)], ct);
     public async Task<WhatsAppCodeQuota?> GetAsync(string phoneNumberId, DateOnly dayUtc, CancellationToken ct)
     {
         context.RequireTransaction();

@@ -53,4 +53,9 @@ public sealed class WhatsAppMessage : Entity, IVersioned
         return true;
     }
     public void ClearText() => EncryptedText = null;
+    public void MarkOutboundAccepted(DateTime nowUtc)
+    {
+        if (Direction != WhatsAppMessageDirection.Outbound || nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("Outbound UTC required.");
+        ProcessedAtUtc = nowUtc;
+    }
 }
