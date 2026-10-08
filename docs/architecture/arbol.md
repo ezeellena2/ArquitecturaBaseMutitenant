@@ -574,9 +574,6 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── RequestLoginCodeResponse.cs
 │   │   ├── VerifyLoginCodeRequest.cs
 │   │   ├── VerifyLoginCodeResponse.cs
-│   │   ├── RequestLoginLinkRequest.cs                [E8]
-│   │   ├── ConsumeLoginLinkRequest.cs                [E8]
-│   │   ├── LoginLinkPreviewResponse.cs               [E8]
 │   │   ├── LoginMethodsResponse.cs                   respuesta de GET /api/auth/methods: canales encendidos en formato neutro; en E3, correo y Google;
 │   │   │                                             en E8, el módulo suma WhatsApp y sus países (channels: [{ key: "whatsapp", countries: [...] }])
 │   │   ├── ConnectUser.cs                            identidad + acceso y tenant elegidos, para armar el principal
@@ -702,8 +699,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── VerifyLoginCodeRequestValidator.cs
 │   │   ├── ExternalSignInRequestValidator.cs        Exige un retorno de autorización seguro y, solo para altas…
 │   │   ├── AccountRecoveryRequestValidators.cs      Método anterior y nuevo exclusivos Email/Phone, nonce y código
-│   │   ├── BusinessSignupRequestValidator.cs
-│   │   └── RequestLoginLinkRequestValidator.cs      [E8]
+│   │   └── BusinessSignupRequestValidator.cs
 │   ├── Invitations/                                  [E3]
 │   │   └── AcceptInvitationRequestValidator.cs
 │   ├── Profile/                                      [E3]
