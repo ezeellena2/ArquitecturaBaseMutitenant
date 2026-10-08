@@ -11,7 +11,7 @@ internal sealed class WhatsAppOptions
     public string? VerifyToken { get; init; }
     public bool HasWebhookSecrets => !string.IsNullOrWhiteSpace(AppSecret) && !string.IsNullOrWhiteSpace(VerifyToken);
     public string GraphApiVersion { get; init; } = "v25.0";
-    public string[] AllowedCountries { get; init; } = ["AR"];
+    public string[] AllowedCountries { get; set; } = ["AR"];
     [Range(1, 10000)] public int DailyAuthCodeLimit { get; init; } = 100;
     [Range(1, 3650)] public int MessageRetentionDays { get; init; } = 90;
     [Range(6, 300)] public int RetryDelaySeconds { get; init; } = 6;

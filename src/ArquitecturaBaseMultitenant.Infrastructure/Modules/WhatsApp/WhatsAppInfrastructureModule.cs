@@ -38,7 +38,12 @@ public static class WhatsAppInfrastructureModule
         var enabled = !string.IsNullOrWhiteSpace(section[nameof(WhatsAppOptions.PhoneNumberId)]);
         var webhook = enabled && !string.IsNullOrWhiteSpace(section[nameof(WhatsAppOptions.AppSecret)])
             && !string.IsNullOrWhiteSpace(section[nameof(WhatsAppOptions.VerifyToken)]);
-        services.AddOptions<WhatsAppOptions>().Bind(section).ValidateDataAnnotations();
+        services.AddOptions<WhatsAppOptions>().Bind(section).Configure(options =>
+        {
+            var countries = section.GetSection(nameof(WhatsAppOptions.AllowedCountries));
+            // Bind appends to initialized arrays; configured countries replace the default.
+            if (countries.Exists()) options.AllowedCountries = countries.Get<string[]>() ?? [];
+        }).ValidateDataAnnotations();
         if (enabled && System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name is not "GetDocument.Insider")
             services.AddOptions<WhatsAppOptions>().ValidateOnStart();
         services.AddSingleton<IValidateOptions<WhatsAppOptions>, WhatsAppOptionsValidator>();

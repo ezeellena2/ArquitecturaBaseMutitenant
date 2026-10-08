@@ -47,6 +47,20 @@ public sealed class WhatsAppStartupTests
         Assert.Equal(100, options.DailyAuthCodeLimit); Assert.Equal(90, options.MessageRetentionDays);
         Assert.Equal("invitacion_organizacion", options.Templates.Invitation);
     }
+    [Fact]
+    public void Configured_country_array_replaces_the_default_instead_of_appending()
+    {
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["WhatsApp:AllowedCountries:0"] = "US",
+        }).Build();
+        var services = new ServiceCollection();
+        services.AddLogging(); services.AddSingleton<IConfiguration>(configuration);
+        WhatsAppInfrastructureModule.AddWhatsAppModule(services, configuration);
+        using var provider = services.BuildServiceProvider();
+        Assert.Equal(["US"], provider.GetRequiredService<IWhatsAppChannelSettings>().Countries);
+    }
+
     private static ServiceProvider Provider(bool number, bool token, bool app, bool verify)
     {
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
