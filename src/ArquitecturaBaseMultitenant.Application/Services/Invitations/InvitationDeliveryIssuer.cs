@@ -9,18 +9,50 @@ using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.Settings;
+using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Invitations;
 
 /// <summary>Usa datos actuales y cultura/zona explícitas para encolar el canal disponible.</summary>
 internal sealed class InvitationDeliveryIssuer(IEnumerable<IInvitationChannel> channels, UserCultureResolver cultures,
     ITenantSettingsReader settings, IUserRepository users, ILoginMethodReader methods, IPublicOrigin origin,
-    IInvitationReader invitations)
+    IInvitationReader invitations, ILoginMethodRepository methodLocks)
 {
-    internal bool IsAvailable(string channel) => channels.Any(value => value.Key == channel);
+    internal bool IsAvailable(string channel) => channels.Any(value => value.Key == channel && value.IsAvailable);
+
+    /// <summary>Se decide después del lock de identidad y antes de agregar miembro, invitación u outbox.</summary>
+    internal async Task<Result<InvitationDeliveryDestination>> ResolveAsync(string key, Email destination,
+        Guid? recipientId, CancellationToken ct)
+    {
+        var channel = channels.SingleOrDefault(value => value.Key == key && value.IsAvailable);
+        if (channel is null) return InvitationErrors.ChannelUnavailable;
+        if (channel.SupportedMethodType == LoginMethodType.Email)
+            return InvitationDeliveryDestination.ForEmail(destination);
+        if (channel.SupportedMethodType != LoginMethodType.Phone || recipientId is not { } id)
+            return InvitationErrors.ChannelUnavailable;
+        await methodLocks.LockUserAsync(id, ct);
+        var account = await users.GetByIdAsync(id, ct);
+        if (account is null || account.IsPlatformOperator || account.Status != UserStatus.Active)
+            return InvitationErrors.ChannelUnavailable;
+        var phone = SelectPhone(await methods.ListByUserIdAsync(id, ct));
+        return phone is null ? InvitationErrors.ChannelUnavailable : InvitationDeliveryDestination.ForPhone(phone);
+    }
+
+    internal static PhoneNumber? SelectPhone(IReadOnlyList<Application.Models.Identity.LoginMethodRow> candidates)
+    {
+        foreach (var method in candidates.Where(value => value.Type == LoginMethodType.Phone && value.VerifiedAtUtc is not null)
+            .OrderByDescending(value => value.IsPrimary).ThenBy(value => value.VerifiedAtUtc).ThenBy(value => value.Id))
+        {
+            var phone = PhoneNumber.Create(method.Value);
+            if (phone.IsSuccess) return phone.Value;
+        }
+        return null;
+    }
 
     internal async Task EnqueueAsync(Invitation invitation, TenantRow organization, string token,
-        Guid? recipientId, CancellationToken ct, TenantSettings? preparedSettings = null, InvitationGrantRow? grant = null)
+        Guid? recipientId, InvitationDeliveryDestination destination, CancellationToken ct,
+        TenantSettings? preparedSettings = null, InvitationGrantRow? grant = null)
     {
         var channel = channels.Single(value => value.Key == invitation.Channel);
         var inviter = await users.GetByIdAsync(invitation.InviterUserId, ct)
@@ -37,7 +69,7 @@ internal sealed class InvitationDeliveryIssuer(IEnumerable<IInvitationChannel> c
                 && method.Value == invitation.Destination.Value);
         // Al invitar, la empresa y los roles todavía no están guardados y llegan del llamador; al reenviar, se leen.
         grant ??= await invitations.FindGrantAsync(invitation.MemberId, null, ct);
-        await channel.EnqueueAsync(invitation.Destination, new InvitationNotice(organization.Name, inviterName,
+        await channel.EnqueueAsync(destination, new InvitationNotice(organization.Name, inviterName,
             invitation.ExpiresAtUtc, timeZoneId, url, usesEmailCode, grant.Companies, grant.Roles), profile, recipientId, ct);
     }
 }

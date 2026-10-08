@@ -27,7 +27,7 @@ public sealed class LoginCodeController(ILoginCodeService service) : ControllerB
     public async Task<IActionResult> RequestLoginCode([FromBody] RequestLoginCodeHttpRequest request,
         CancellationToken cancellationToken)
     {
-        var email = AuthEmailMapping.Parse(request.Email);
+        var email = AuthContactMapping.ParseEmail(request.Email, request.Phone, request.Channel);
         if (email.IsFailure) return Result.Failure(email.Error).ToActionResult(this);
         return (await service.RequestLoginCodeAsync(new RequestLoginCodeRequest(email.Value), cancellationToken))
             .ToAcceptedResult(this);
@@ -42,7 +42,7 @@ public sealed class LoginCodeController(ILoginCodeService service) : ControllerB
     public async Task<IActionResult> VerifyLoginCode([FromBody] VerifyLoginCodeHttpRequest request,
         CancellationToken cancellationToken)
     {
-        var email = AuthEmailMapping.Parse(request.Email);
+        var email = AuthContactMapping.ParseEmail(request.Email, request.Phone, request.Channel);
         if (email.IsFailure) return Result.Failure(email.Error).ToActionResult(this);
         return (await service.VerifyLoginCodeAsync(
             new VerifyLoginCodeRequest(email.Value, request.Code, request.ReturnUrl), cancellationToken))

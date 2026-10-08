@@ -24,6 +24,9 @@ builder.Services
     .AddInfrastructure(builder.Configuration, builder.Environment)
     .AddPresentation();
 
+ArquitecturaBaseMultitenant.Api.Modules.WhatsApp.WhatsAppApiModule.AddWhatsAppModule(
+    ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.WhatsAppModule.AddWhatsAppModule(builder.Services));
+
 var app = builder.Build();
 
 // El exportador OpenAPI de MSBuild construye el host sin Aspire ni conexiones.
@@ -66,6 +69,7 @@ app.UseRequestLocalization(cultures.CreateRequestLocalizationOptions());
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+app.UseMiddleware<InstalledModuleRouteMiddleware>();
 app.UseRateLimiter();
 
 app.UseAuthentication();

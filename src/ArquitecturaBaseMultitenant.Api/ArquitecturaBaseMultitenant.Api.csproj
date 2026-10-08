@@ -32,4 +32,7 @@
     <Copy SourceFiles="$(OpenApiDocumentsDirectory)/$(MSBuildProjectName).json"
           DestinationFiles="$(MSBuildProjectDirectory)/../../docs/contracts/openapi.json" />
   </Target>
+  <ItemGroup>
+    <EmbeddedResource Include="../../docs/contracts/examples/identity.json" LogicalName="Api.OpenApi.IdentityExamples.json" />
+  </ItemGroup>
 </Project>

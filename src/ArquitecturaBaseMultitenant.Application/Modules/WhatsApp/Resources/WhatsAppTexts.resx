@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="WhatsApp.Phone.CountryNotAllowed" xml:space="preserve"><value>WhatsApp no está habilitado para ese país.</value></data>
+<data name="WhatsApp.LoginCode.DailyLimit" xml:space="preserve"><value>No podemos mandar más códigos por WhatsApp por ahora. Probá más tarde.</value></data>
+<data name="WhatsApp.Webhook.InvalidPayload" xml:space="preserve"><value>El cuerpo del webhook no es válido.</value></data>
+<data name="WhatsApp.Webhook.InvalidSignature" xml:space="preserve"><value>La firma del webhook no es válida.</value></data>
+<data name="WhatsApp.Webhook.PayloadTooLarge" xml:space="preserve"><value>El cuerpo del webhook es demasiado grande.</value></data>
+<data name="WhatsApp.Webhook.TooManyRequests" xml:space="preserve"><value>Llegaron demasiadas solicitudes al webhook.</value></data>
+<data name="Bot.OperatorNeutralReply" xml:space="preserve"><value>Para entrar, usá la web.</value></data>
+</root>

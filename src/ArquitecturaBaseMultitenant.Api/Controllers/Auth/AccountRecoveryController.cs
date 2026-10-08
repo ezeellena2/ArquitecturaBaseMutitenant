@@ -31,7 +31,7 @@ public sealed class AccountRecoveryController(IAccountRecoveryService service) :
     public async Task<IActionResult> Preview([FromBody] PreviewAccountRecoveryHttpRequest request,
         CancellationToken cancellationToken)
     {
-        var email = AuthEmailMapping.Parse(request.PreviousEmail, "previousEmail");
+        var email = AuthContactMapping.ParseEmail(request.PreviousEmail, request.PreviousPhone, null, "previousEmail", "previousPhone");
         if (email.IsFailure) return Result.Failure(email.Error).ToActionResult(this);
         return (await service.PreviewAsync(new PreviewAccountRecoveryRequest(email.Value), cancellationToken))
             .ToActionResult(this);
@@ -46,7 +46,7 @@ public sealed class AccountRecoveryController(IAccountRecoveryService service) :
     public async Task<IActionResult> RequestCode([FromBody] RequestRecoveryCodeHttpRequest request,
         CancellationToken cancellationToken)
     {
-        var email = AuthEmailMapping.Parse(request.Email);
+        var email = AuthContactMapping.ParseEmail(request.Email, request.Phone, request.Channel);
         if (email.IsFailure) return Result.Failure(email.Error).ToActionResult(this);
         return (await service.RequestCodeAsync(new RequestRecoveryCodeRequest(email.Value, request.Nonce),
             cancellationToken)).ToAcceptedResult(this);
@@ -60,7 +60,7 @@ public sealed class AccountRecoveryController(IAccountRecoveryService service) :
     public async Task<IActionResult> VerifyCode([FromBody] VerifyRecoveryCodeHttpRequest request,
         CancellationToken cancellationToken)
     {
-        var email = AuthEmailMapping.Parse(request.Email);
+        var email = AuthContactMapping.ParseEmail(request.Email, request.Phone, request.Channel);
         if (email.IsFailure) return Result.Failure(email.Error).ToActionResult(this);
         return (await service.VerifyCodeAsync(new VerifyRecoveryCodeRequest(email.Value, request.Nonce, request.Code),
             cancellationToken)).ToActionResult(this);
@@ -74,7 +74,7 @@ public sealed class AccountRecoveryController(IAccountRecoveryService service) :
     public async Task<IActionResult> Submit([FromBody] SubmitAccountRecoveryHttpRequest request,
         CancellationToken cancellationToken)
     {
-        var email = AuthEmailMapping.Parse(request.Email);
+        var email = AuthContactMapping.ParseEmail(request.Email, request.Phone, request.Channel);
         if (email.IsFailure) return Result.Failure(email.Error).ToActionResult(this);
         Email? previousEmail = null;
         if (!string.IsNullOrWhiteSpace(request.PreviousEmail))

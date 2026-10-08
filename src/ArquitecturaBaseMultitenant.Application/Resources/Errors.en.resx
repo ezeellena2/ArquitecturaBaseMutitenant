@@ -203,4 +203,15 @@
   <data name="Platform.AccountRecovery.AccountNotFound" xml:space="preserve"><value>There is no account with that email address.</value></data>
   <data name="Identity.LoginMethod.AlreadyUsed" xml:space="preserve"><value>That email address is already associated with another account.</value></data>
   <data name="Tenancy.Party.NotAllowed" xml:space="preserve"><value>You cannot perform this action from the selected access.</value></data>
+  <data name="Title.NotImplemented" xml:space="preserve"><value>Contract pending</value></data>
+  <data name="General.Contract.NotImplemented" xml:space="preserve"><value>This feature is still being prepared.</value></data>
+  <data name="Auth.Contact.ExactlyOne" xml:space="preserve"><value>Enter either an email or a phone number, only one.</value></data>
+  <data name="Auth.LoginMethod.ChannelUnavailable" xml:space="preserve"><value>That sign-in method is unavailable.</value></data>
+  <data name="Auth.LoginCode.PhoneAccountNotFound" xml:space="preserve"><value>There is no account with that number.</value></data>
+  <data name="Auth.Signup.PhoneTaken" xml:space="preserve"><value>You already have an account with that number.</value></data>
+  <data name="Identity.LoginMethod.PhoneAlreadyUsed" xml:space="preserve"><value>That number is already linked to another account.</value></data>
+  <data name="Platform.AccountRecovery.PhoneAccountNotFound" xml:space="preserve"><value>There is no account with that number.</value></data>
+  <data name="Platform.AccountRecovery.PhoneMethodInUse" xml:space="preserve"><value>That number belongs to another account.</value></data>
+  <data name="Auth.LoginLink.Expired" xml:space="preserve"><value>This link no longer works.</value></data>
+  <data name="Auth.LoginLink.AlreadyUsed" xml:space="preserve"><value>This link no longer works.</value></data>
 </root>

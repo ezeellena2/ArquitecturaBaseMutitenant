@@ -23,6 +23,7 @@ public sealed partial class ErrorCodeTests
         "Title.TooManyRequests",
         "Title.MethodNotAllowed",
         "Title.ServiceUnavailable",
+        "Title.NotImplemented",
         "Validation.Failed",
         "General.Unexpected",
         "General.ConcurrencyConflict",

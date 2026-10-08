@@ -40,6 +40,17 @@ public sealed class ResourceParityTests
     }
 
     [Fact]
+    public void Installed_module_texts_have_the_same_keys_and_placeholders()
+    {
+        var assembly = typeof(ErrorTexts).Assembly;
+        var modules = assembly.GetManifestResourceNames().Where(name => name.Contains(".Modules.", StringComparison.Ordinal)
+            && name.EndsWith(".resources", StringComparison.Ordinal)).ToArray();
+        Assert.NotEmpty(modules);
+        foreach (var resource in modules)
+            AssertSameKeysAndPlaceholders(new ResourceManager(resource[..^".resources".Length], assembly));
+    }
+
+    [Fact]
     public void Placeholder_extraction_ignores_escaped_braces_and_preserves_arguments()
     {
         Assert.Equal(["0", "1"], Placeholders("{1} y {0:N2}, pero {{2}} es literal"));

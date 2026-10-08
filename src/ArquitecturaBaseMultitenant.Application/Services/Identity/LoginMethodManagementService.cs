@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Identity;
@@ -16,14 +17,25 @@ internal sealed class LoginMethodManagementService(ICurrentUser currentUser, Log
     TimeProvider timeProvider, ILogger<LoginMethodManagementService> logger) : ILoginMethodManagementService
 {
     public Task<Result<LoginMethodCodeResponse>> AddEmailAsync(AddLoginEmailRequest request, CancellationToken ct) =>
-        OperationLog.RunAsync<LoginMethodCodeResponse>(logger, timeProvider, "AddLoginEmail", async () =>
+        OperationLog.RunAsync<LoginMethodCodeResponse>(logger, timeProvider, "AddLoginEmail", () => AddEmailCoreAsync(request, ct));
+
+    public Task<Result<LoginMethodCodeResponse>> AddAsync(AddLoginMethodRequest request, CancellationToken ct) =>
+        OperationLog.RunAsync<LoginMethodCodeResponse>(logger, timeProvider, "AddLoginMethod", async () =>
         {
             ArgumentNullException.ThrowIfNull(request);
-            if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
-            if (currentUser.UserId is not { } userId) return UserErrors.NotFound;
-            return await unitOfWork.ExecuteInTransactionAsync(token => issuer.AddAsync(userId, request, token),
-                CommitPolicy.OnSuccess, ct);
+            if (request.Phone is not null) return ContractErrors.NotImplemented;
+            if (request.Channel is not null && request.Channel != LoginCodeChannel.Email) return LoginChannelErrors.Unavailable;
+            return await AddEmailCoreAsync(new AddLoginEmailRequest(request.Email), ct);
         });
+
+    private async Task<Result<LoginMethodCodeResponse>> AddEmailCoreAsync(AddLoginEmailRequest request, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
+        if (currentUser.UserId is not { } userId) return UserErrors.NotFound;
+        return await unitOfWork.ExecuteInTransactionAsync(token => issuer.AddAsync(userId, request, token),
+            CommitPolicy.OnSuccess, ct);
+    }
 
     public Task<Result<LoginMethodCodeResponse>> SendCodeAsync(Guid methodId, CancellationToken ct) =>
         OperationLog.RunAsync<LoginMethodCodeResponse>(logger, timeProvider, "SendLoginMethodCode", async () =>

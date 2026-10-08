@@ -21,6 +21,8 @@ public sealed class AccessDeclarationTests
     [
         typeof(ReferenceDataController),
         typeof(LoginCodeController),
+        typeof(LoginLinkController),
+        typeof(ArquitecturaBaseMultitenant.Api.Modules.WhatsApp.Controllers.WhatsAppWebhookController),
         typeof(AccountRecoveryController),
         typeof(ContactController),
         typeof(SignupController),

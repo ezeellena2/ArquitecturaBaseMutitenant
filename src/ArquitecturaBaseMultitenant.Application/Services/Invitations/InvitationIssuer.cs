@@ -37,6 +37,8 @@ internal sealed class InvitationIssuer(IInvitationRepository invitations, IMembe
         if (pendingInvitation is not null && pendingInvitation.Id != request.ReplacingInvitationId)
             return InvitationErrors.AlreadyPending;
         var (organization, userId) = checkedRequest.Value;
+        var destination = await delivery.ResolveAsync(request.Channel, request.Destination, userId, cancellationToken);
+        if (destination.IsFailure) return destination.Error;
         if (userId is { } knownUserId) await members.LockUserAsync(knownUserId, cancellationToken);
         var member = request.MemberId is { } requestedMemberId
             ? await members.GetByIdAsync(requestedMemberId, cancellationToken)
@@ -58,7 +60,7 @@ internal sealed class InvitationIssuer(IInvitationRepository invitations, IMembe
             tokens.Hash(secret), timeProvider.GetUtcNow().UtcDateTime, TimeSpan.FromDays(options.Value.LifetimeDays));
         invitations.Add(invitation);
         var token = tokens.Protect(new InvitationTokenData(tenantId, invitation.Id, secret));
-        await delivery.EnqueueAsync(invitation, organization, token, userId, cancellationToken, preparedSettings, grant);
+        await delivery.EnqueueAsync(invitation, organization, token, userId, destination.Value, cancellationToken, preparedSettings, grant);
         return new IssuedInvitation(invitation.Id, member, invitation.ExpiresAtUtc);
     }
 }

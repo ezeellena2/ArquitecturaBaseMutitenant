@@ -15,6 +15,7 @@ internal static class OpenApiExtensions
 
     public static IServiceCollection AddOpenApiDocumentation(this IServiceCollection services)
     {
+        services.AddSingleton<IHttpContractContributor, IdentityContractContributor>();
         services.AddOpenApi(options =>
         {
             options.AddSchemaTransformer((schema, context, _) =>
@@ -90,7 +91,7 @@ internal static class OpenApiExtensions
                 return Task.CompletedTask;
             });
 
-            options.AddDocumentTransformer((document, _, _) =>
+            options.AddDocumentTransformer((document, context, _) =>
             {
                 document.Components ??= new OpenApiComponents();
                 document.Components.Schemas ??= new Dictionary<string, IOpenApiSchema>(StringComparer.Ordinal);
@@ -105,6 +106,9 @@ internal static class OpenApiExtensions
                         ["search"] = new OpenApiSchema { Type = JsonSchemaType.String | JsonSchemaType.Null },
                     },
                 };
+
+                foreach (var contributor in context.ApplicationServices.GetServices<IHttpContractContributor>())
+                    contributor.Describe(document);
 
                 return Task.CompletedTask;
             });
@@ -139,6 +143,11 @@ internal static class OpenApiExtensions
             },
         };
         schema.Properties["retryAfter"] = new OpenApiSchema
+        {
+            Type = JsonSchemaType.Integer | JsonSchemaType.Null,
+            Format = "int32",
+        };
+        schema.Properties["attemptsLeft"] = new OpenApiSchema
         {
             Type = JsonSchemaType.Integer | JsonSchemaType.Null,
             Format = "int32",

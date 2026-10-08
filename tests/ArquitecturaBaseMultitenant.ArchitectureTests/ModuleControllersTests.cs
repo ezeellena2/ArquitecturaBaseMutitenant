@@ -32,6 +32,17 @@ public sealed class ModuleControllersTests
                 Assert.Empty(controller.GetMethods().SelectMany(action => action.GetCustomAttributes<FeatureGateAttribute>(inherit: true)));
                 continue;
             }
+            var installed = controller.GetCustomAttribute<ArquitecturaBaseMultitenant.Api.Features.InstalledModuleRouteAttribute>(inherit: true);
+            if (installed is not null)
+            {
+                Assert.Empty(gates);
+                var registrations = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+                ArquitecturaBaseMultitenant.Api.Modules.WhatsApp.WhatsAppApiModule.AddWhatsAppModule(registrations);
+                using var provider = Microsoft.Extensions.DependencyInjection.ServiceCollectionContainerBuilderExtensions.BuildServiceProvider(registrations);
+                var routes = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetServices<ArquitecturaBaseMultitenant.Api.Features.IInstalledModuleRouteAvailability>(provider);
+                Assert.Single(routes, route => route.Key == installed.Key);
+                continue;
+            }
             Assert.NotEmpty(gates);
             Assert.All(gates.SelectMany(gate => gate.Features), key => Assert.Contains(key, keys));
         }

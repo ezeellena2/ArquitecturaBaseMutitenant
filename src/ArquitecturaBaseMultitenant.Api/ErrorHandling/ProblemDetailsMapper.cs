@@ -27,6 +27,7 @@ internal static class ProblemDetailsMapper
         ErrorType.Conflict => StatusCodes.Status409Conflict,
         ErrorType.TooManyRequests => StatusCodes.Status429TooManyRequests,
         ErrorType.ServiceUnavailable => StatusCodes.Status503ServiceUnavailable,
+        ErrorType.NotImplemented => StatusCodes.Status501NotImplemented,
         _ => StatusCodes.Status500InternalServerError,
     };
 

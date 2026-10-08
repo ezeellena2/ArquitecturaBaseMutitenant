@@ -19,7 +19,8 @@ internal sealed class LoginMethodsService(
         OperationLog.RunAsync<LoginMethodsResponse>(logger, timeProvider, "GetLoginMethods", () =>
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var available = channels.Select(channel => new LoginChannelAvailability(channel.Key, []))
+            var available = channels.Where(channel => channel.IsAvailable)
+                .Select(channel => new LoginChannelAvailability(channel.Key, channel.Countries, channel.ContactPhone))
                 .ToList();
             if (google.IsEnabled)
             {

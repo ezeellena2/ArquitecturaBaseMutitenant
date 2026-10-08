@@ -115,7 +115,9 @@ public sealed class ControllerServiceRepositoryTests
     }
 
     private static bool IsApplicationService(Type type) => type.IsInterface
-        && type.Namespace == ApplicationNamespace + ".Interfaces.Services"
+        && (type.Namespace == ApplicationNamespace + ".Interfaces.Services"
+            || System.Text.RegularExpressions.Regex.IsMatch(type.Namespace ?? "",
+                @"^ArquitecturaBaseMultitenant\.Application\.Modules\.[A-Za-z][A-Za-z0-9]*\.Interfaces\.Services$"))
         && type.Name.EndsWith("Service", StringComparison.Ordinal);
 
     private static bool IsApprovedProtocolDependency(Type controller, Type dependency) =>

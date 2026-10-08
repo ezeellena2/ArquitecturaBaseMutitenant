@@ -8,6 +8,8 @@ namespace ArquitecturaBaseMultitenant.Domain.Authentication;
 /// </summary>
 public static class LoginCodeErrors
 {
+    public const string PhoneAccountNotFoundCode = "Auth.LoginCode.PhoneAccountNotFound";
+    public static readonly Error PhoneAccountNotFound = Error.Validation(PhoneAccountNotFoundCode, "There is no account with that number.");
     public const string InvalidCode = "Auth.LoginCode.Invalid";
     public const string ExpiredCode = "Auth.LoginCode.Expired";
     public const string AlreadyUsedCode = "Auth.LoginCode.AlreadyUsed";

@@ -8,6 +8,8 @@ namespace ArquitecturaBaseMultitenant.Domain.Authentication;
 /// </summary>
 public static class SignupErrors
 {
+    public const string PhoneTakenCode = "Auth.Signup.PhoneTaken";
+    public static readonly Error PhoneTaken = Error.Validation(PhoneTakenCode, "You already have an account with that number.");
     public const string ClosedCode = "Auth.Signup.Closed";
     public const string BusinessClosedCode = "Auth.BusinessSignup.Closed";
     public const string EmailTakenCode = "Auth.Signup.EmailTaken";

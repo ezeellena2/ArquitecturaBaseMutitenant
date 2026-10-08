@@ -14,4 +14,5 @@ public enum ErrorType
     Conflict = 5,
     TooManyRequests = 6,
     ServiceUnavailable = 7,
+    NotImplemented = 8,
 }

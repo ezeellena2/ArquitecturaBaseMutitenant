@@ -31,4 +31,6 @@ public record Error(string Code, string Description, ErrorType Type, IReadOnlyDi
 
     public static Error ServiceUnavailable(string code, string description, IReadOnlyDictionary<string, object?>? metadata = null) =>
         new(code, description, ErrorType.ServiceUnavailable, metadata);
+
+    public static Error NotImplemented(string code, string description) => new(code, description, ErrorType.NotImplemented);
 }

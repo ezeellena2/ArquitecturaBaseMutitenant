@@ -9,7 +9,7 @@
 - `Description` en inglés: es el respaldo si falta la traducción.
 - Devolverlo en forma implícita: `return RoleErrors.NotFound;`.
 - El controller responde con `ToActionResult(this)`, `ToCreatedResult(...)` o `ToAcceptedResult(this)`, y el mapper arma el ProblemDetails.
-- Tipo → status: Validation 400 · Unauthorized 401 · Forbidden 403 · NotFound 404 · Conflict 409 · TooManyRequests 429 (con `retryAfter`) · ServiceUnavailable 503 · Failure 500.
+- Tipo → status: Validation 400 · Unauthorized 401 · Forbidden 403 · NotFound 404 · Conflict 409 · TooManyRequests 429 (con `retryAfter`) · ServiceUnavailable 503 · Failure 500. En Contrato E8, NotImplemented 501 con `General.Contract.NotImplemented` declara un esqueleto pendiente: no crea una sesión ni representa una regla de negocio; se retira del resultado final de la etapa.
 - Un error `TooManyRequests` lleva los segundos que faltan en la metadata `retryAfter`: el front los usa para la cuenta regresiva del botón.
 - **Un recurso de otro tenant devuelve 404**, nunca 403.
 - Para atar un error de negocio a un campo del formulario: `FieldErrors.On(error, "name")`.

@@ -8,6 +8,8 @@ namespace ArquitecturaBaseMultitenant.Domain.Authentication;
 /// </summary>
 public static class LoginMethodErrors
 {
+    public const string PhoneAlreadyUsedCode = "Identity.LoginMethod.PhoneAlreadyUsed";
+    public static readonly Error PhoneAlreadyUsed = Error.Validation(PhoneAlreadyUsedCode, "That number is already linked to another account.");
     public const string AlreadyUsedCode = "Identity.LoginMethod.AlreadyUsed";
     public static readonly Error AlreadyUsed = Error.Conflict(AlreadyUsedCode, "That email address already belongs to another account.");
     public static readonly Error NotFound = Error.NotFound("Identity.LoginMethod.NotFound", "The method was not found.");

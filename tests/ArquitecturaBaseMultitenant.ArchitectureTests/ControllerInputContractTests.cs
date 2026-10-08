@@ -158,7 +158,9 @@ public sealed class ControllerInputContractTests
     private static bool IsAllowedInput(Type type) =>
         type == typeof(CancellationToken)
         || IsSimpleValue(type)
-        || (type.Assembly == ApiAssembly && IsInNamespace(type, ContractsNamespace));
+        || (type.Assembly == ApiAssembly && (IsInNamespace(type, ContractsNamespace)
+            || System.Text.RegularExpressions.Regex.IsMatch(type.Namespace ?? "",
+                @"^ArquitecturaBaseMultitenant\.Api\.Modules\.[A-Za-z][A-Za-z0-9]*\.Contracts(?:\.|$)")));
 
     private static bool IsSimpleValue(Type type)
     {

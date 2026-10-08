@@ -28,7 +28,7 @@ public sealed class SignupController(IAccountService service) : ControllerBase
     public async Task<IActionResult> RequestCode([FromBody] SignupHttpRequest request,
         CancellationToken cancellationToken)
     {
-        var email = AuthEmailMapping.Parse(request.Email);
+        var email = AuthContactMapping.ParseEmail(request.Email, request.Phone, request.Channel);
         if (email.IsFailure) return Result.Failure(email.Error).ToActionResult(this);
         return (await service.RequestSignupCodeAsync(new SignupRequest(email.Value, request.AcceptedTerms,
             request.Culture, request.TimeZoneId), cancellationToken)).ToAcceptedResult(this);
@@ -43,7 +43,7 @@ public sealed class SignupController(IAccountService service) : ControllerBase
     public async Task<IActionResult> Verify([FromBody] VerifySignupHttpRequest request,
         CancellationToken cancellationToken)
     {
-        var email = AuthEmailMapping.Parse(request.Email);
+        var email = AuthContactMapping.ParseEmail(request.Email, request.Phone, request.Channel);
         if (email.IsFailure) return Result.Failure(email.Error).ToActionResult(this);
         return (await service.VerifySignupAsync(new VerifySignupRequest(email.Value, request.Code,
             request.AcceptedTerms, request.Culture, request.TimeZoneId), cancellationToken)).ToActionResult(this);

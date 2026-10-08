@@ -4,6 +4,10 @@ namespace ArquitecturaBaseMultitenant.Domain.Platform;
 
 public static class AccountRecoveryErrors
 {
+    public const string PhoneMethodInUseCode = "Platform.AccountRecovery.PhoneMethodInUse";
+    public static readonly Error PhoneMethodInUse = Error.Validation(PhoneMethodInUseCode, "That number belongs to another account.");
+    public const string PhoneAccountNotFoundCode = "Platform.AccountRecovery.PhoneAccountNotFound";
+    public static readonly Error PhoneAccountNotFound = Error.Validation(PhoneAccountNotFoundCode, "There is no account with that number.");
     public const string AccountNotFoundCode = "Platform.AccountRecovery.AccountNotFound";
     public static readonly Error AccountNotFound = Error.NotFound(AccountNotFoundCode, "No account has that previous email address.");
     public const string VerificationRequiredCode = "Platform.AccountRecovery.VerificationRequired";

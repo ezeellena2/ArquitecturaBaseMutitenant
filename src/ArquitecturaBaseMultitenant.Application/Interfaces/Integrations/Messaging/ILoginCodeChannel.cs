@@ -1,4 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 
@@ -6,6 +8,13 @@ namespace ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messag
 public interface ILoginCodeChannel
 {
     string Key { get; }
+    LoginMethodType SupportedMethodType { get; }
+    bool IsAvailable { get; }
+    IReadOnlyList<string> Countries { get; }
+    /// <summary>Número público E.164, nunca un identificador técnico del proveedor.</summary>
+    string? ContactPhone { get; }
+    /// <summary>Se usa al agregar un destino; un cambio de países no invalida métodos ya verificados.</summary>
+    Result ValidateNewDestination(LoginCodeDestination destination, string? country);
 
     string RenderLoginCode(string destination, string code, int lifetimeMinutes, CultureProfile culture);
 

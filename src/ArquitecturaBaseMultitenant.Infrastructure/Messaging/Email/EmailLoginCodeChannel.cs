@@ -2,6 +2,8 @@ using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Messaging;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
 
@@ -9,6 +11,12 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
 internal sealed class EmailLoginCodeChannel(IEmailTemplateRenderer templates, IOutbox outbox) : ILoginCodeChannel
 {
     public string Key => OutboxChannel.Email;
+    public LoginMethodType SupportedMethodType => LoginMethodType.Email;
+    public bool IsAvailable => true;
+    public IReadOnlyList<string> Countries => [];
+    public string? ContactPhone => null;
+    public Result ValidateNewDestination(LoginCodeDestination destination, string? country) => destination.Channel == Key
+        ? Result.Success() : Result.Failure(LoginChannelErrors.Unavailable);
 
     public string RenderLoginCode(string destination, string code, int lifetimeMinutes, CultureProfile culture) =>
         JsonSerializer.Serialize(templates.RenderLoginCode(destination, code, lifetimeMinutes, culture));
