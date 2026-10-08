@@ -1966,6 +1966,9 @@ tests/
 │   ├── Time/
 │   │   └── TimeZoneServiceTests.cs                    Comprueba rangos UTC de días civiles según una zona IANA
 │   └── Modules/WhatsApp/                            [E8] tests de integración del módulo
+│       ├── WhatsAppPhoneLinkObserverTests.cs         vínculo/rollback y retiro propio sin robar contacto
+│       ├── WhatsAppAccountLifecycleTests.cs          baja por snapshot y aviso final cifrado
+│       ├── WhatsAppRetentionTests.cs                 ReceivedAtUtc 89/90/91, fecha externa futura, OFF y lotes
 │       ├── WhatsAppBotTests.cs                       webhook firmado→cola→bot, IDs, original owner y ventana
 │       ├── WhatsAppWebhookTests.cs                   firma, tamaño, ACK/dedupe, estados y snapshots
 │       ├── WhatsAppInboundProcessorTests.cs          leases, crash, clock postlocks y rollback/backoff

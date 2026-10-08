@@ -55,6 +55,7 @@
 - ADR 0043: `LoginCodeEnumerationTests` y `EmailAccountStatesTests` (E3, ajuste A2) cubren campos, idempotencia y ausencia de códigos/avisos; `AccountMethodsHttpTests` (E3, ajuste A2) conserva propiedad verificada, reclaim de pendientes, intentos, reenvío y vencimiento; `AccountRecoveryTests` (E5, ajuste A2) comprueba nonce, uso único, revalidación del Submit y avisos legítimos. `RealLoginRateLimitTests` (E3–E6, ajuste A2) mantiene el límite por IP y las políticas de las rutas.
 - `LoginMethodsTests` (E3) cubre la gestión. `LoginCodeTests.Inactive_managed_member_cannot_use_the_email_to_sign_into_personal_access` (E6) y `OrganizationDomainsTests` (E6) comprueban que un exmiembro no pueda entrar con ese correo y que retirar un dominio conserve la protección de los métodos ya vinculados.
 - `WhatsAppIdentityTests` (E8) comprueba Phone global, propósitos separados, locks y carreras, ambas cookies, consentimiento B2C y alta B2B independiente, países nuevos/pending frente a verificados y ausencia de avisos por número ocupado. `WhatsAppOwnerSeedTests` verifica la semilla opcional exclusiva del operador.
+- `WhatsAppPhoneLinkObserverTests`, `WhatsAppAccountLifecycleTests` y `WhatsAppRetentionTests` (E8) comprueban vínculo/rollback, contacto todavía propio, historia A→B/anonimato, eliminación y aviso final, y límite fijo desde la recepción incluso con canal apagado.
 
 ## Detalle
 [backend.md §20](../architecture/backend.md#20-reglas-de-datos-que-se-aplican-solas) · [datos-personales en estandares.md](../architecture/estandares.md)
