@@ -13,6 +13,8 @@ public static class WhatsAppModule
     public static IServiceCollection AddWhatsAppModule(this IServiceCollection services)
     {
         services.AddScoped<IWhatsAppWebhookService, WhatsAppWebhookService>();
+        services.AddScoped<IWhatsAppMessageRetentionService, WhatsAppMessageRetentionService>();
+        services.AddScoped<WhatsAppContactRemover>();
         services.AddScoped<Interfaces.Integrations.IWhatsAppInboundConsumer, WhatsAppBotWriter>();
         services.AddScoped<WhatsAppBotReplyBuilder>();
         services.AddScoped<WhatsAppWebhookWriter>();
@@ -23,6 +25,8 @@ public static class WhatsAppModule
         services.AddScoped<IInvitationChannel, WhatsAppInvitationChannel>();
         services.AddScoped<IAccountNoticeChannel, WhatsAppAccountNoticeChannel>();
         services.AddScoped<IOutboxDeliveryObserver, WhatsAppDeliveryObserver>();
+        services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity.IPhoneLinkObserver, WhatsAppPhoneLinkObserver>();
+        services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Legal.IAccountDeletionParticipant, WhatsAppAccountDeletionParticipant>();
         services.AddSingleton<IErrorTextSource, WhatsAppErrorTextSource>();
         return services;
     }

@@ -28,8 +28,29 @@ internal sealed class WhatsAppMessageRepository(ApplicationDbContext context) : 
     public async Task<IReadOnlyList<WhatsAppMessage>> ListExpiredTextAsync(DateTime beforeUtc, int limit, CancellationToken ct)
     {
         context.RequireTransaction();
-        return await context.Set<WhatsAppMessage>().Where(value => value.EncryptedText != null && value.ReceivedAtUtc < beforeUtc)
-            .OrderBy(value => value.ReceivedAtUtc).ThenBy(value => value.Id).Take(limit).ToArrayAsync(ct);
+        var rows = await context.Set<WhatsAppMessage>().FromSqlInterpolated($"""
+            SELECT *, xmin FROM identity."WhatsAppMessages"
+            WHERE "EncryptedText" IS NOT NULL AND "ReceivedAtUtc" <= {beforeUtc}
+            ORDER BY "ReceivedAtUtc", "Id" LIMIT {limit} FOR UPDATE SKIP LOCKED
+            """).ToArrayAsync(ct);
+        foreach (var row in rows) await context.Entry(row).ReloadAsync(ct);
+        return rows;
+    }
+    public async Task<IReadOnlyList<WhatsAppMessage>> ListOriginalForUpdateAsync(Guid userId, Guid? methodId, CancellationToken ct)
+    {
+        context.RequireTransaction();
+        var rows = methodId is { } method
+            ? await context.Set<WhatsAppMessage>().FromSqlInterpolated($"""
+                SELECT *, xmin FROM identity."WhatsAppMessages"
+                WHERE "OriginalUserId" = {userId} AND "OriginalMethodId" = {method}
+                ORDER BY "Id" FOR UPDATE
+                """).ToArrayAsync(ct)
+            : await context.Set<WhatsAppMessage>().FromSqlInterpolated($"""
+                SELECT *, xmin FROM identity."WhatsAppMessages" WHERE "OriginalUserId" = {userId}
+                ORDER BY "Id" FOR UPDATE
+                """).ToArrayAsync(ct);
+        foreach (var row in rows) await context.Entry(row).ReloadAsync(ct);
+        return rows;
     }
     public void Add(WhatsAppMessage message) { context.RequireTransaction(); context.Set<WhatsAppMessage>().Add(message); }
     public Task<WhatsAppInboundHint?> GetProcessingHintAsync(Guid messageId, CancellationToken ct)

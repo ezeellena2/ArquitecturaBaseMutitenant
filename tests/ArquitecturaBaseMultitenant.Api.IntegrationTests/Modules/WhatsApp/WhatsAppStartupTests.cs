@@ -44,7 +44,7 @@ public sealed class WhatsAppStartupTests
     {
         var options = new WhatsAppOptions();
         Assert.Equal("v25.0", options.GraphApiVersion); Assert.Equal(["AR"], options.AllowedCountries);
-        Assert.Equal(100, options.DailyAuthCodeLimit); Assert.Equal(90, options.MessageRetentionDays);
+        Assert.Equal(100, options.DailyAuthCodeLimit);
         Assert.Equal("invitacion_organizacion", options.Templates.Invitation);
     }
     [Fact]

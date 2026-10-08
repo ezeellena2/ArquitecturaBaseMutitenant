@@ -8,9 +8,54 @@ using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using ArquitecturaBaseMultitenant.TestSupport;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
+using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations;
+using ArquitecturaBaseMultitenant.Api.Features;
+using ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.TechnicalContribution.Persistence;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 public sealed class WhatsAppPersistenceTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
+    [Fact]
+    public async Task Two_distinct_contributions_keep_all_three_explicit_inventory_models_equal_and_WhatsApp_capabilities_unique()
+    {
+        var whatsapp = new CountedContribution(Assert.Single(PersistenceModelContributors.Discover()));
+        var technical = new TechnicalModelContributor();
+        IPersistenceModelContributor[] inventory = [whatsapp, technical];
+        await using var host = factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseSetting("WhatsApp:PhoneNumberId", "fixture-number"); builder.UseSetting("WhatsApp:AccessToken", "fixture-token");
+            builder.UseSetting("WhatsApp:AppSecret", "fixture-secret"); builder.UseSetting("WhatsApp:VerifyToken", "fixture-verify");
+            builder.ConfigureTestServices(services =>
+            {
+                services.RemoveAll<IHostedService>(); services.RemoveAll<IPersistenceModelContributor>();
+                foreach (var contributor in inventory) services.AddSingleton(contributor);
+            });
+        });
+        using var scope = host.Services.CreateScope(); var services = scope.ServiceProvider;
+        var runtime = services.GetRequiredService<ApplicationDbContext>();
+        using var design = Context(inventory); using var bootstrap = Context(inventory);
+        PersistenceModelComparison.AssertEqual(runtime, design); PersistenceModelComparison.AssertEqual(runtime, bootstrap);
+        Assert.NotEmpty(whatsapp.Applications); Assert.All(whatsapp.Applications.Values, count => Assert.Equal(1, count));
+        Assert.NotEmpty(technical.Applications); Assert.All(technical.Applications.Values, count => Assert.Equal(1, count));
+        Assert.Equal("identity", runtime.Model.FindEntityType(typeof(WhatsAppMessage))!.GetSchema());
+        Assert.Equal("identity", runtime.Model.FindEntityType(typeof(TechnicalRecord))!.GetSchema());
+        Assert.True(runtime.GetService<IDesignTimeModel>().Model.FindEntityType(typeof(TechnicalRecord))!.IsTableExcludedFromMigrations());
+        Assert.Single(services.GetServices<ILoginCodeChannel>(), value => value.Key == "whatsapp");
+        Assert.Single(services.GetServices<IInvitationChannel>(), value => value.Key == "whatsapp");
+        Assert.Single(services.GetServices<IAccountNoticeChannel>(), value => value.Key == "whatsapp");
+        Assert.Single(services.GetServices<IChannelSender>(), value => value.Key == "whatsapp");
+        Assert.True(services.GetRequiredService<IWhatsAppAvailability>().IsEnabled);
+        Assert.True(Assert.Single(services.GetServices<IInstalledModuleRouteAvailability>()).IsAvailable);
+        using var core = Context([]); using var baseline = Context();
+        Assert.Null(core.Model.FindEntityType(typeof(TechnicalRecord))); Assert.Null(core.Model.FindEntityType(typeof(WhatsAppMessage)));
+        Assert.Null(baseline.Model.FindEntityType(typeof(TechnicalRecord)));
+        Assert.Equal(baseline.Model.FindEntityType(typeof(WhatsAppMessage))!.ToDebugString(), runtime.Model.FindEntityType(typeof(WhatsAppMessage))!.ToDebugString());
+    }
     [Fact]
     public void Runtime_design_time_and_bootstrap_have_the_same_model_even_when_disabled()
     {

@@ -21,5 +21,11 @@ internal sealed class WhatsAppContactRepository(ApplicationDbContext context) : 
         return await context.Set<WhatsAppContact>().Where(value => value.MethodId == methodId).ToArrayAsync(ct);
     }
     public void Add(WhatsAppContact contact) { context.RequireTransaction(); context.Set<WhatsAppContact>().Add(contact); }
+    public async Task<IReadOnlyList<string>> ListNumbersByUserAsync(Guid userId, CancellationToken ct)
+    {
+        context.RequireTransaction();
+        return await context.Set<WhatsAppContact>().AsNoTracking().Where(value => value.UserId == userId)
+            .OrderBy(value => value.WaId).Select(value => value.WaId).ToArrayAsync(ct);
+    }
     public void Remove(WhatsAppContact contact) { context.RequireTransaction(); context.Set<WhatsAppContact>().Remove(contact); }
 }

@@ -24,6 +24,7 @@ public static class WhatsAppInfrastructureModule
         services.AddSingleton<IWhatsAppInboundSignal>(provider => provider.GetRequiredService<Inbound.WhatsAppInboundSignal>());
         services.AddSingleton<IWhatsAppInboundSettings, Inbound.WhatsAppInboundSettings>();
         services.AddHostedService<Inbound.WhatsAppInboundProcessor>();
+        services.AddHostedService<Retention.WhatsAppMessageRetentionService>();
         services.AddScoped<IWhatsAppContactRepository, WhatsAppContactRepository>();
         services.AddScoped<IWhatsAppMessageRepository, WhatsAppMessageRepository>();
         services.AddScoped<IWhatsAppCodeQuotaRepository, WhatsAppCodeQuotaRepository>();

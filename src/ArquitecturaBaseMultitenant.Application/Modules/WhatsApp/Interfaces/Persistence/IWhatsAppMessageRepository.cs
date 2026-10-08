@@ -13,5 +13,6 @@ public interface IWhatsAppMessageRepository
     Task<WhatsAppMessage?> GetForUpdateAsync(Guid messageId, CancellationToken ct);
     Task<IReadOnlyList<WhatsAppMessage>> ListPendingAsync(DateTime nowUtc, int limit, CancellationToken ct);
     Task<IReadOnlyList<WhatsAppMessage>> ListExpiredTextAsync(DateTime beforeUtc, int limit, CancellationToken ct);
+    Task<IReadOnlyList<WhatsAppMessage>> ListOriginalForUpdateAsync(Guid userId, Guid? methodId, CancellationToken ct);
     void Add(WhatsAppMessage message);
 }

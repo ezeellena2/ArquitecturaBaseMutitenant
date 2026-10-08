@@ -13,7 +13,6 @@ internal sealed class WhatsAppOptions
     public string GraphApiVersion { get; init; } = "v25.0";
     public string[] AllowedCountries { get; set; } = ["AR"];
     [Range(1, 10000)] public int DailyAuthCodeLimit { get; init; } = 100;
-    [Range(1, 3650)] public int MessageRetentionDays { get; init; } = 90;
     [Range(6, 300)] public int RetryDelaySeconds { get; init; } = 6;
     [Range(1, 3600)] public int InboundPollSeconds { get; init; } = 30;
     [Range(1, 3600)] public int InboundLeaseSeconds { get; init; } = 120;

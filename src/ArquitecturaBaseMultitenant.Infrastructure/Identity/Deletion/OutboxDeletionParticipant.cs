@@ -1,5 +1,4 @@
 using ArquitecturaBaseMultitenant.Application.Models.Legal;
-using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +13,16 @@ internal sealed class OutboxDeletionParticipant(ApplicationDbContext database) :
     {
         if (context.TenantId is not null) return;
         database.RequireTransaction();
-        foreach (var message in await database.OutboxMessages.Where(row => row.UserId == context.UserId
-            && row.Status != OutboxStatus.Sent && row.Status != OutboxStatus.Cancelled).ToArrayAsync(ct)) message.Cancel();
+        var messages = await database.OutboxMessages.FromSqlInterpolated($"""
+            SELECT * FROM platform."OutboxMessages"
+            WHERE "UserId" = {context.UserId} AND "Status" NOT IN ('Sent', 'Cancelled')
+            ORDER BY "Id" FOR UPDATE
+            """).ToArrayAsync(ct);
+        foreach (var message in messages)
+        {
+            // El DbContext puede tener Pending y un lease anteriores al bloqueo SQL.
+            await database.Entry(message).ReloadAsync(ct);
+            message.Cancel();
+        }
     }
 }

@@ -81,6 +81,7 @@ public sealed class WhatsAppMessage : Entity, IVersioned
     private static int DeliveryRank(WhatsAppMessageStatus status) => status switch
     { WhatsAppMessageStatus.Sent => 0, WhatsAppMessageStatus.Failed => 1, WhatsAppMessageStatus.Delivered => 2, WhatsAppMessageStatus.Read => 3, _ => -1 };
     public void ClearText() => EncryptedText = null;
+    public void ClearPersonalData() { EncryptedText = null; ContactId = null; }
     public void MarkOutboundAccepted(DateTime nowUtc)
     {
         if (Direction != WhatsAppMessageDirection.Outbound || nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("Outbound UTC required.");
