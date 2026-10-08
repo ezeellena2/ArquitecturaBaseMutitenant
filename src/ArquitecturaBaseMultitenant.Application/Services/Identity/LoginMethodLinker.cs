@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
+using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
@@ -18,9 +19,9 @@ internal sealed class LoginMethodLinker(IExternalLoginLock identities, ILoginMet
         destination.Channel == LoginCodeChannel.Email ? identities.LockEmailAsync(Email.Create(destination.Value).Value, ct)
             : identities.LockPhoneAsync(PhoneNumber.Create(destination.Value).Value, ct);
 
-    internal Task LockMethodAsync(LoginMethod method, CancellationToken ct) => method.Type == LoginMethodType.Phone
-        ? identities.LockPhoneAsync(PhoneNumber.Create(method.Value).Value, ct)
-        : identities.LockEmailAsync(Email.Create(method.Type == LoginMethodType.Email ? method.Value : method.ContactEmail!.Value).Value, ct);
+    internal Task LockMethodAsync(LoginMethodRow hint, CancellationToken ct) => hint.Type == LoginMethodType.Phone
+        ? identities.LockPhoneAsync(PhoneNumber.Create(hint.Value).Value, ct)
+        : identities.LockEmailAsync(Email.Create(hint.Type == LoginMethodType.Email ? hint.Value : hint.ContactEmail!.Value).Value, ct);
 
     internal async Task RemovedAsync(LoginMethod method, CancellationToken ct)
     {

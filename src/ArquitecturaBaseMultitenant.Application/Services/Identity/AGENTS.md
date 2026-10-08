@@ -1,4 +1,5 @@
 Gestión global de la cuenta y sus métodos; los helpers participan en la UoW del servicio, nunca abren otra.
+Antes del lock externo sólo se permite `GetIdentityHintAsync` proyectado; las entidades mutables se cargan después de identidad → cuenta. Un hint tracked anterior al lock conserva pending/IsPrimary obsoletos aunque se repita la consulta.
 Phone usa el resolver neutral de Auth; alta, reenvío y verificación revalidan propiedad y países sólo mientras es nuevo/pending. `LoginMethodLinker` notifica a `IPhoneLinkObserver` al verificar/quitar dentro de esa UoW; elegir principal no cambia el vínculo. Los avisos van a otros destinos disponibles, deduplicados. Google puede ser respaldo disponible aunque no reciba OTP.
 Leé [datos-personales](../../../../docs/rules/datos-personales.md), [guardado](../../../../docs/rules/guardado.md), [emails](../../../../docs/rules/emails.md), [logs](../../../../docs/rules/logs.md) e [identidad](../../../../docs/features/identidad.md).
 Copiá el flujo de `../Auth/AccountService.cs`; verificá LoginMethodsTests y AccountNoticeTests.

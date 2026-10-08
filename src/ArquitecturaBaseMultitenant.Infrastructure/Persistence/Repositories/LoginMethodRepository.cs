@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
@@ -11,6 +12,17 @@ internal sealed class LoginMethodRepository(ApplicationDbContext context) : ILog
 {
     public Task LockUserAsync(Guid userId, CancellationToken cancellationToken) =>
         context.AcquireAdvisoryLocksAsync([AdvisoryLockKeys.Account(userId)], cancellationToken);
+
+    public Task<LoginMethodRow?> GetIdentityHintAsync(Guid userId, Guid methodId, CancellationToken cancellationToken)
+    {
+        context.RequireTransaction();
+        return context.LoginMethods.AsNoTracking()
+            .Where(method => method.Id == methodId && method.UserId == userId)
+            .Select(method => new LoginMethodRow(method.Id, method.Type, method.Value,
+                method.IsPrimary, method.VerifiedAtUtc, method.ManagedByTenantId, method.ContactEmail,
+                method.InvitationOriginTenantId))
+            .SingleOrDefaultAsync(cancellationToken);
+    }
 
     public Task<LoginMethod?> GetByIdForUserAsync(Guid userId, Guid methodId, CancellationToken cancellationToken)
     {

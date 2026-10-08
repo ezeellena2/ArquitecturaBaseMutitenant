@@ -13,7 +13,7 @@ internal sealed class LoginMethodEditor(LoginMethodGuard guard, ILoginMethodRepo
     {
         if (remove)
         {
-            var hint = await methods.GetByIdForUserAsync(userId, request.MethodId, ct);
+            var hint = await methods.GetIdentityHintAsync(userId, request.MethodId, ct);
             if (hint is not null && hint.Type is LoginMethodType.Phone or LoginMethodType.Email) await linker.LockMethodAsync(hint, ct);
         }
         var account = await guard.LockAccountAsync(userId, ct);

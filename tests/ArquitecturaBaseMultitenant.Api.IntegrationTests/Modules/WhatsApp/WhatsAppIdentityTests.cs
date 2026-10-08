@@ -32,6 +32,65 @@ public sealed class WhatsAppIdentityTests(ApiFactory factory) : IClassFixture<Ap
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
     private const string Phone = "+5491134567890";
 
+    [Theory]
+    [InlineData("verify")]
+    [InlineData("resend")]
+    [InlineData("remove")]
+    public async Task Waiting_method_change_reads_state_after_identity_and_account_locks(string change)
+    {
+        var phone = NewPhone();
+        var gate = new MethodIdentityGate(phone);
+        await using var application = Host().WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+        {
+            var descriptor = Assert.Single(services, value => value.ServiceType == typeof(IExternalLoginLock));
+            services.Remove(descriptor);
+            services.AddScoped<IExternalLoginLock>(provider => new PausedMethodIdentityLock(
+                (IExternalLoginLock)ActivatorUtilities.CreateInstance(provider, descriptor.ImplementationType!), gate));
+        }));
+        using var client = application.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var account = await AccountJourney.RegisterAsync(application, client, Ct);
+        using var added = await PostAsync(client, "/api/me/login-methods", Contact(phone), Ct);
+        using var body = await added.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+        var methodId = body!.RootElement.GetProperty("methodId").GetGuid();
+        var code = await CodeAsync(application.Services, phone);
+        gate.Armed = true;
+        var first = PostAsync(client, $"/api/me/login-methods/{methodId}/verify", new { code }, Ct);
+        await gate.FirstReached.Task.WaitAsync(TimeSpan.FromSeconds(15), Ct);
+        var second = change == "remove" ? client.DeleteAsync($"/api/me/login-methods/{methodId}", Ct)
+            : PostAsync(client, $"/api/me/login-methods/{methodId}/{(change == "verify" ? "verify" : "code")}", new { code }, Ct);
+        await gate.SecondReached.Task.WaitAsync(TimeSpan.FromSeconds(15), Ct);
+        gate.ReleaseFirst.TrySetResult();
+        using var verified = await first;
+        Assert.Equal(HttpStatusCode.NoContent, verified.StatusCode);
+        if (change == "remove")
+        {
+            using var primary = await client.PutAsJsonAsync($"/api/me/login-methods/{methodId}/primary", new { }, Ct);
+            Assert.Equal(HttpStatusCode.NoContent, primary.StatusCode);
+        }
+        gate.ReleaseSecond.TrySetResult();
+        using var changed = await second;
+        Assert.Equal(change == "remove" ? HttpStatusCode.NoContent : HttpStatusCode.Conflict, changed.StatusCode);
+        await using var scope = application.Services.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var method = await context.LoginMethods.AsNoTracking().SingleOrDefaultAsync(value => value.Id == methodId, Ct);
+        if (change == "remove")
+        {
+            Assert.Null(method);
+            var primary = Assert.Single(await context.LoginMethods.AsNoTracking().Where(value => value.UserId == account.UserId && value.IsPrimary).ToArrayAsync(Ct));
+            Assert.Equal(LoginMethodType.Email, primary.Type);
+            var user = await context.Users.AsNoTracking().SingleAsync(value => value.Id == account.UserId, Ct);
+            Assert.Equal(account.Email.Value, user.Email);
+            Assert.Null(user.PhoneNumber);
+        }
+        else
+        {
+            Assert.NotNull(method);
+            Assert.NotNull(method.VerifiedAtUtc);
+            using var problem = await changed.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+            Assert.Equal("Identity.LoginMethod.AlreadyVerified", problem!.RootElement.GetProperty("code").GetString());
+        }
+    }
+
     [Fact]
     public async Task Login_request_holds_identity_account_and_code_locks_before_admitting_delivery()
     {
@@ -395,6 +454,34 @@ public sealed class WhatsAppIdentityTests(ApiFactory factory) : IClassFixture<Ap
     private sealed class LockProbe
     {
         internal List<bool> Held { get; } = [];
+    }
+
+    private sealed class MethodIdentityGate(string phone)
+    {
+        private int requests;
+        internal bool Armed { get; set; }
+        internal TaskCompletionSource FirstReached { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal TaskCompletionSource SecondReached { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal TaskCompletionSource ReleaseFirst { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal TaskCompletionSource ReleaseSecond { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal async Task BeforeAsync(PhoneNumber value, CancellationToken ct)
+        {
+            if (!Armed || value.Value != phone) return;
+            var order = Interlocked.Increment(ref requests);
+            (order == 1 ? FirstReached : SecondReached).TrySetResult();
+            await (order == 1 ? ReleaseFirst : ReleaseSecond).Task.WaitAsync(ct);
+        }
+    }
+
+    private sealed class PausedMethodIdentityLock(IExternalLoginLock inner, MethodIdentityGate gate) : IExternalLoginLock
+    {
+        public async Task LockPhoneAsync(PhoneNumber phone, CancellationToken ct)
+        {
+            await gate.BeforeAsync(phone, ct);
+            await inner.LockPhoneAsync(phone, ct);
+        }
+        public Task LockEmailAsync(Email email, CancellationToken ct) => inner.LockEmailAsync(email, ct);
+        public Task AcquireAsync(string subject, Email? email, CancellationToken ct) => inner.AcquireAsync(subject, email, ct);
     }
 
     private sealed class LockProbeAdmission(ApplicationDbContext context, IUserLookup users, LockProbe probe) : ILoginCodeAdmission

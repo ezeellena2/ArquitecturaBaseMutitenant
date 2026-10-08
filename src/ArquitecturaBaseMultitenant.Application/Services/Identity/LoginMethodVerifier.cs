@@ -15,11 +15,11 @@ internal sealed class LoginMethodVerifier(LoginMethodGuard guard, ILoginMethodRe
     TimeProvider timeProvider, LoginMethodLinker linker, IUserLookup lookup, LoginDestinationResolver destinations)
 {
     internal async Task<bool> IsPhoneAsync(Guid userId, Guid methodId, CancellationToken ct) =>
-        (await methods.GetByIdForUserAsync(userId, methodId, ct))?.Type == LoginMethodType.Phone;
+        (await methods.GetIdentityHintAsync(userId, methodId, ct))?.Type == LoginMethodType.Phone;
 
     public async Task<Result> VerifyAsync(Guid userId, VerifyLoginMethodRequest request, CancellationToken ct)
     {
-        var hint = await methods.GetByIdForUserAsync(userId, request.MethodId, ct);
+        var hint = await methods.GetIdentityHintAsync(userId, request.MethodId, ct);
         if (hint is null || hint.Type is not (LoginMethodType.Email or LoginMethodType.Phone)) return LoginMethodErrors.NotFound;
         await linker.LockMethodAsync(hint, ct);
         var account = await guard.LockAccountAsync(userId, ct);

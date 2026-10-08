@@ -54,7 +54,7 @@ internal sealed class LoginMethodIssuer(LoginMethodGuard guard, ILoginMethodRepo
 
     public async Task<Result<LoginMethodCodeResponse>> SendAsync(Guid userId, Guid methodId, CancellationToken ct)
     {
-        var hint = await methods.GetByIdForUserAsync(userId, methodId, ct);
+        var hint = await methods.GetIdentityHintAsync(userId, methodId, ct);
         if (hint is null || hint.Type is not (LoginMethodType.Email or LoginMethodType.Phone)) return LoginMethodErrors.NotFound;
         await linker.LockMethodAsync(hint, ct);
         var account = await guard.LockAccountAsync(userId, ct);
