@@ -212,8 +212,8 @@ Application/
 │     ├─ Legal/                        IAccountDeletionParticipant (CheckAsync, OnRequestedAsync, OnCancelledAsync y ExecuteAsync),
 │     │                                IRetainedOnConsumerDeletion (política por tipo/motivo/plazo), IConsumerCopyDeletion (reemplazo en alcance y UoW del llamador)
 │     ├─ Features/                     IFeatureCatalog (IFeatureService está en Services/)
-│     (en Messaging/ y Phones/ están los puertos que usan los módulos: ILoginCodeChannel, IInvitationChannel,
-│      IAccountNoticeChannel; IPhoneLinkObserver, en la E8)
+│     (en Messaging/ e Identity/ están los puertos que usan los módulos: ILoginCodeChannel, IInvitationChannel,
+│      IAccountNoticeChannel; IPhoneLinkObserver e ILoginLinkIssuer, en la E8)
 ├─ Models/<Área>/                      <Acción>Request, <X>Response y <X>Row (las filas de lectura, en la misma carpeta)
 ├─ Validation/<Área>/                  <Acción>RequestValidator (internal sealed, AbstractValidator<T>)
 ├─ Services/
