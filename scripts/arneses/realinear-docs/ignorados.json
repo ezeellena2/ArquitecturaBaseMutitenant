@@ -1,5 +1,10 @@
 [
   {
+    "id": "catalogos|back|docs/features|ruta-sin-feature|whatsapp",
+    "motivo": "GET/POST /webhooks/whatsapp están documentados en docs/features/whatsapp.md. Son rutas técnicas globales del módulo, fuera de /api/: catalogos reconoce rutas de features solo con ese prefijo y por eso no asocia esta ficha. No falta una feature ni corresponde inventar una ruta /api/.",
+    "fecha": "2026-10-08"
+  },
+  {
     "id": "referencias|back|docs/architecture/arnes.md|ruta-inexistente|Infrastructure/Persistence/Readers/Platform/",
     "motivo": "Carpeta reservada: es la única lista blanca de QueryFilterBypassTests y hoy no existe porque ningún reader quita los filtros \"Tenant\", \"Public\" ni \"Parties\". La fila del mapa queda para que nazca con sus punteros.",
     "fecha": "2026-10-04"
