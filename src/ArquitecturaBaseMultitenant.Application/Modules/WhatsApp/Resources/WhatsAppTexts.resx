@@ -75,7 +75,7 @@
   <data name="Template.OrganizationRejected.Body" xml:space="preserve">
     <value>No aprobamos la solicitud de alta de {{1}}. Tu cuenta y tu espacio personal siguen funcionando.</value>
   </data>
-  <data name="Template.PlatformDeletionRequested.Body" xml:space="preserve">
+  <data name="Template.DeletionRequestedByPlatform.Body" xml:space="preserve">
     <value>La plataforma inició la baja de tu cuenta de ArquitecturaBase y cerramos todas tus sesiones. Se elimina el {{1}}. Si creés que es un error, ingresá antes de esa fecha para cancelarla.</value>
   </data>
   <data name="Template.PublicPageModerated.Body" xml:space="preserve">
@@ -96,7 +96,7 @@
   <data name="Template.ReviewLoginMethods.Body" xml:space="preserve">
     <value>Ya no sos miembro de {{1}}. Tu cuenta de ArquitecturaBase sigue activa. Si entrabas con un correo de esa organización, puede que ya no te sirva: revisá tus métodos de ingreso desde Mi cuenta.</value>
   </data>
-  <data name="Template.SuspendedDeletionRequested.Body" xml:space="preserve">
+  <data name="Template.DeletionRequestedSuspended.Body" xml:space="preserve">
     <value>La plataforma inició la baja de tu cuenta de ArquitecturaBase. Se elimina el {{1}}. Tu cuenta está suspendida, así que no podés cancelar la baja. Si creés que es un error, escribí a {{2}}.</value>
   </data>
   <data name="Notice.OccurredAt" xml:space="preserve"><value>{0} a las {1}</value></data>

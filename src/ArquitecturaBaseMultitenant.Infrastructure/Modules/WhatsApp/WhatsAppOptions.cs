@@ -29,8 +29,8 @@ internal sealed class WhatsAppTemplateOptions
     public string DeletionRequested { get; init; } = "baja_cuenta_pedida";
     public string DeletionCancelled { get; init; } = "baja_cuenta_cancelada";
     public string AccountDeleted { get; init; } = "cuenta_eliminada";
-    public string PlatformDeletionRequested { get; init; } = "baja_cuenta_plataforma";
-    public string SuspendedDeletionRequested { get; init; } = "baja_cuenta_plataforma_suspendida";
+    public string DeletionRequestedByPlatform { get; init; } = "baja_cuenta_plataforma";
+    public string DeletionRequestedSuspended { get; init; } = "baja_cuenta_plataforma_suspendida";
     public string RecoveryReceived { get; init; } = "recuperacion_recibida";
     public string RecoveryApproved { get; init; } = "recuperacion_aprobada";
     public string RecoveryRejected { get; init; } = "recuperacion_rechazada";

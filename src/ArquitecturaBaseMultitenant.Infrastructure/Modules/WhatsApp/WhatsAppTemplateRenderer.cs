@@ -35,7 +35,7 @@ internal sealed class WhatsAppTemplateRenderer(IOptions<WhatsAppOptions> options
             AccountNotice.PublicPageModerated moderated => Message(destination, "PublicPageModerated", culture,
                 [moderated.OrganizationName, WhatsAppTexts.Get(moderated.IsBlocked ? "Page.Blocked" : "Page.Allowed", culture)]),
             AccountNotice.DeletionRequested deletion => Message(destination,
-                !deletion.RequestedByPlatform ? "DeletionRequested" : deletion.CanCancel ? "PlatformDeletionRequested" : "SuspendedDeletionRequested", culture,
+                !deletion.RequestedByPlatform ? "DeletionRequested" : deletion.CanCancel ? "DeletionRequestedByPlatform" : "DeletionRequestedSuspended", culture,
                 deletion.RequestedByPlatform && !deletion.CanCancel
                     ? [formatter.FormatDate(deletion.ScheduledForUtc, await formatter.CreateAsync(culture.Entry.Code, deletion.TimeZoneId, ct)), Support(deletion.SupportEmail?.DisplayValue, culture)]
                     : [formatter.FormatDate(deletion.ScheduledForUtc, await formatter.CreateAsync(culture.Entry.Code, deletion.TimeZoneId, ct))]),

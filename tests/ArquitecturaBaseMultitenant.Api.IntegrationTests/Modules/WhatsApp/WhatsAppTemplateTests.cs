@@ -27,6 +27,16 @@ public sealed class WhatsAppTemplateTests
         var renderer = Renderer();
         var catalog = new WhatsAppTemplateCatalog(Options.Create(new WhatsAppOptions()));
         Assert.Equal(16, catalog.Definitions.Count);
+        var expectedKeys = new[] { "LoginCode", "Invitation", "LoginMethodChanged", "ReviewLoginMethods", "DeletionRequested",
+            "DeletionRequestedByPlatform", "DeletionRequestedSuspended", "DeletionCancelled", "AccountDeleted", "RecoveryReceived",
+            "RecoveryApproved", "RecoveryRejected", "RecoveryRequested", "OrganizationApproved", "OrganizationRejected", "PublicPageModerated" };
+        Assert.Equal(expectedKeys.Order(StringComparer.Ordinal), catalog.Definitions.Select(value => value.Key).Order(StringComparer.Ordinal));
+        Assert.Equal(expectedKeys.Order(StringComparer.Ordinal), typeof(WhatsAppTemplateOptions).GetProperties().Select(value => value.Name).Order(StringComparer.Ordinal));
+        var root = new DirectoryInfo(AppContext.BaseDirectory);
+        while (!File.Exists(Path.Combine(root.FullName, "ArquitecturaBaseMultitenant.slnx"))) root = root.Parent ?? throw new InvalidOperationException("Solution root missing.");
+        using var configured = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(root.FullName, "src", "ArquitecturaBaseMultitenant.Api", "appsettings.json"), Ct));
+        Assert.Equal(expectedKeys.Order(StringComparer.Ordinal), configured.RootElement.GetProperty("WhatsApp").GetProperty("Templates")
+            .EnumerateObject().Select(value => value.Name).Order(StringComparer.Ordinal));
         Assert.Equal(16, catalog.Definitions.Select(value => value.Name).Distinct(StringComparer.Ordinal).Count());
         var messages = new List<WhatsAppOutboundMessage>
         {
