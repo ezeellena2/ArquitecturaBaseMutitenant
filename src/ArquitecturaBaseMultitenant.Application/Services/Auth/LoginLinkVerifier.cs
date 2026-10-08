@@ -17,7 +17,7 @@ internal sealed class LoginLinkVerifier(LoginLinkGuard guard, ISignInService sig
         var nowUtc = clock.GetUtcNow().UtcDateTime;
         var consumed = link.Redeem(nowUtc);
         if (consumed.IsFailure) return Fail(account.Id, consumed.Error, nowUtc);
-        if (snapshot.LockoutEnabled && snapshot.LockoutEndUtc > nowUtc || await signIn.IsLockedOutAsync(account.Id, ct))
+        if (snapshot.LockoutEnabled && snapshot.LockoutEndUtc > nowUtc)
             return Fail(account.Id, AccountErrors.LockedOut, nowUtc);
         if (account.Status == UserStatus.Suspended) return Fail(account.Id, AccountErrors.Suspended, nowUtc);
         if (account.Status == UserStatus.PendingDeletion)

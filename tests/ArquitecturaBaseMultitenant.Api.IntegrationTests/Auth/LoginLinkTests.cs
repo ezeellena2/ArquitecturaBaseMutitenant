@@ -218,6 +218,42 @@ public sealed class LoginLinkTests(ApiFactory factory) : IClassFixture<ApiFactor
         Assert.Equal(HttpStatusCode.TooManyRequests, locked.StatusCode); Assert.False(locked.Headers.Contains("Set-Cookie"));
         Assert.Equal("Identity.Account.LockedOut", (await locked.Content.ReadFromJsonAsync<JsonObject>(Ct))!["code"]!.GetValue<string>());
     }
+    [Theory]
+    [InlineData("preview")]
+    [InlineData("redeem")]
+    [InlineData("replay")]
+    public async Task Expired_lockout_uses_injected_clock_for_new_proof_and_cached_replay(string action)
+    {
+        // Identity's system clock remains before this lockout even after the injected clock advances.
+        _clock.SetUtcNow(new DateTimeOffset(2100, 1, 1, 12, 0, 0, TimeSpan.Zero));
+        await using var app = Host(); using var setup = app.CreateClient();
+        var (user, method, token) = await PrepareAsync(app, setup);
+        using var client = app.CreateClient(new() { HandleCookies = false }); var key = Guid.NewGuid();
+        if (action == "replay")
+        {
+            using var original = await PostAsync(client, "redeem", new { token, access = "consumer" }, key);
+            Assert.Equal(HttpStatusCode.OK, original.StatusCode);
+        }
+        await TransactionAsync(app.Services, async (provider, ct) =>
+        {
+            await provider.GetRequiredService<ILoginMethodRepository>().LockUserAsync(user, ct);
+            var account = await provider.GetRequiredService<ApplicationDbContext>().Users.SingleAsync(value => value.Id == user, ct);
+            account.LockoutEnabled = true; account.LockoutEnd = _clock.GetUtcNow().AddMinutes(5);
+        });
+        Assert.Equal(LoginLinkErrors.InvalidCode, (await IssueAsync(app.Services, user, method)).Error.Code);
+        _clock.Advance(TimeSpan.FromMinutes(6));
+        if (action != "replay")
+        {
+            var issued = await IssueAsync(app.Services, user, method); Assert.True(issued.IsSuccess);
+            token = issued.Value.Token;
+        }
+        using var response = action == "preview"
+            ? await PostAsync(client, "preview", new { token })
+            : await PostAsync(client, "redeem", new { token, access = "consumer" }, key);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(action == "redeem", response.Headers.Contains("Set-Cookie"));
+        Assert.Equal(action == "replay", response.Headers.Contains("Idempotent-Replayed"));
+    }
     [Fact]
     public async Task Pending_deletion_cached_proof_repeats_only_while_original_account_is_eligible()
     {

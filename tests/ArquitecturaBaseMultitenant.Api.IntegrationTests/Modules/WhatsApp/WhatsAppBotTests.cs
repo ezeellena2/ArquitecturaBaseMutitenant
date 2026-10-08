@@ -107,6 +107,25 @@ public sealed class WhatsAppBotTests(ApiFactory factory) : IClassFixture<ApiFact
             Assert.Null(message.ReplyId); Assert.DoesNotContain("#t=", scope.ServiceProvider.GetRequiredService<IPayloadProtector>().Unprotect(message.EncryptedText!));
         }
     }
+    [Fact]
+    public async Task Verified_owner_receives_new_proof_after_lockout_expires_on_injected_clock()
+    {
+        _clock.SetUtcNow(new DateTimeOffset(2100, 1, 1, 12, 0, 0, TimeSpan.Zero));
+        await using var app = Host(); using var client = app.CreateClient(); await app.Services.SeedDatabaseAsync(Ct);
+        var user = await CreatePhoneAsync(app.Services, "+5491134567896", false);
+        await TransactionAsync(app.Services, async (provider, ct) =>
+        {
+            await provider.GetRequiredService<ILoginMethodRepository>().LockUserAsync(user, ct);
+            var account = await provider.GetRequiredService<ApplicationDbContext>().Users.SingleAsync(value => value.Id == user, ct);
+            account.LockoutEnabled = true; account.LockoutEnd = _clock.GetUtcNow().AddMinutes(5);
+        });
+        var blocked = await ReceiveProcessAsync(app, client, "5491134567896"); Assert.Null(blocked.LinkUrl);
+        _clock.Advance(TimeSpan.FromMinutes(6));
+        var allowed = await ReceiveProcessAsync(app, client, "5491134567896");
+        Assert.NotNull(allowed.LinkUrl); Assert.Equal("/login/enlace", new Uri(allowed.LinkUrl).AbsolutePath);
+        await using var read = app.Services.CreateAsyncScope();
+        Assert.Equal(1, await read.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<LoginLink>().CountAsync(value => value.UserId == user, Ct));
+    }
     private string? _lastWamid;
     private async Task<WhatsAppOutboundMessage> ReceiveProcessAsync(WebApplicationFactory<Program> app, HttpClient client, string from, string? replyId = null, Func<Task>? beforeProcess = null)
     {

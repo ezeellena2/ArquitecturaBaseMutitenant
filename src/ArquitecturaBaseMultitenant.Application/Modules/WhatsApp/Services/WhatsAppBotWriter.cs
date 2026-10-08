@@ -12,7 +12,7 @@ using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// <summary>Efectos y reply en la UoW preparada por T06; nunca atribuye una entrada al dueño posterior.</summary>
 internal sealed class WhatsAppBotWriter(IWhatsAppChannelSettings settings, ILoginLinkIssuer links, IOutbox outbox,
-    IPublicOrigin origin, IPlatformSettingsReader platform, ISignInService signIn, WhatsAppBotReplyBuilder replies,
+    IPublicOrigin origin, IPlatformSettingsReader platform, WhatsAppBotReplyBuilder replies,
     TimeProvider clock) : IWhatsAppInboundConsumer
 {
     public async Task ConsumeAsync(WhatsAppInboundContext context, CancellationToken ct)
@@ -29,7 +29,7 @@ internal sealed class WhatsAppBotWriter(IWhatsAppChannelSettings settings, ILogi
             if (account?.IsPlatformOperator == true) body = "Bot.OperatorNeutralReply";
             else if (!context.OriginalMethodAvailable || account is null || context.OriginalMethod is null)
                 body = "Bot.Disabled";
-            else if (account.Status is UserStatus.Suspended or UserStatus.Deleted || await signIn.IsLockedOutAsync(account.Id, ct))
+            else if (account.Status is UserStatus.Suspended or UserStatus.Deleted)
                 body = "Bot.Disabled";
             else
             {

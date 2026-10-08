@@ -27,8 +27,7 @@ internal sealed class LoginLinkService(LoginLinkGuard guard, LoginLinkVerifier v
             var account = await guard.AccountAsync(link, ct);
             if (account is null) return LoginLinkErrors.Invalid;
             if (account.Status == UserStatus.Suspended) return AccountErrors.Suspended;
-            if (await signIn.IsLockedOutAsync(account.Id, ct)) return AccountErrors.LockedOut;
-            // Fresh coherent projection after awaited availability/Identity checks: no stale preview of a converted account.
+            // Fresh coherent projection after awaited availability checks: no stale preview of a converted account.
             var fresh = await guard.FindAsync(tokens.Hash(request.Token!), ct);
             if (fresh is null || fresh.Account.IsPlatformOperator || fresh.Account.Status == UserStatus.Deleted
                 || fresh.ConsumedAtUtc is not null || fresh.InvalidatedAtUtc is not null
