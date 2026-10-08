@@ -100,4 +100,5 @@
     <value>La plataforma inició la baja de tu cuenta de ArquitecturaBase. Se elimina el {{1}}. Tu cuenta está suspendida, así que no podés cancelar la baja. Si creés que es un error, escribí a {{2}}.</value>
   </data>
   <data name="Notice.OccurredAt" xml:space="preserve"><value>{0} a las {1}</value></data>
+  <data name="WhatsApp.Inbound.LeaseExpired" xml:space="preserve"><value>Venció la reserva del mensaje entrante.</value></data>
 </root>

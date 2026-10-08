@@ -8,10 +8,12 @@ internal sealed class WhatsAppContactRepository(ApplicationDbContext context) : 
 {
     public Task LockAsync(string waId, CancellationToken ct) =>
         context.AcquireAdvisoryLocksAsync(["module:whatsapp:contact:" + waId], ct);
-    public Task<WhatsAppContact?> GetAsync(string waId, CancellationToken ct)
+    public async Task<WhatsAppContact?> GetAsync(string waId, CancellationToken ct)
     {
         context.RequireTransaction();
-        return context.Set<WhatsAppContact>().SingleOrDefaultAsync(value => value.WaId == waId, ct);
+        var contact = await context.Set<WhatsAppContact>().SingleOrDefaultAsync(value => value.WaId == waId, ct);
+        if (contact is not null) await context.Entry(contact).ReloadAsync(ct);
+        return contact;
     }
     public async Task<IReadOnlyList<WhatsAppContact>> ListByMethodAsync(Guid methodId, CancellationToken ct)
     {

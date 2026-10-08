@@ -13,6 +13,9 @@ public static class WhatsAppModule
     public static IServiceCollection AddWhatsAppModule(this IServiceCollection services)
     {
         services.AddScoped<IWhatsAppWebhookService, WhatsAppWebhookService>();
+        services.AddScoped<WhatsAppWebhookWriter>();
+        services.AddScoped<IWhatsAppInboundService, WhatsAppInboundService>();
+        services.AddScoped<WhatsAppInboundGuard>();
         services.AddScoped<ILoginCodeAdmission, WhatsAppCodeQuotaIssuer>();
         services.AddScoped<ILoginCodeChannel, WhatsAppLoginCodeChannel>();
         services.AddScoped<IInvitationChannel, WhatsAppInvitationChannel>();

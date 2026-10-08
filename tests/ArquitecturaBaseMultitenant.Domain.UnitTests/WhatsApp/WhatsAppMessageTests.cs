@@ -6,6 +6,13 @@ public sealed class WhatsAppMessageTests
 {
     private static readonly DateTime Now = new(2026, 10, 8, 12, 0, 0, DateTimeKind.Utc);
     [Fact]
+    public void Delivery_callbacks_and_outbound_messages_cannot_be_claimed_as_inbound()
+    {
+        var message = WhatsAppMessage.Create("number", "wamid", "delivered", WhatsAppMessageDirection.Outbound,
+            WhatsAppMessageKind.Delivery, WhatsAppMessageStatus.Delivered, Now, Now);
+        Assert.False(message.TryLease(Guid.NewGuid(), Now, TimeSpan.FromMinutes(1)));
+    }
+    [Fact]
     public void Authentication_never_retains_content() =>
         Assert.Throws<ArgumentException>(() => WhatsAppMessage.Create("number", "wamid", "sent",
             WhatsAppMessageDirection.Outbound, WhatsAppMessageKind.Authentication, WhatsAppMessageStatus.Sent,

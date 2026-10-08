@@ -100,4 +100,5 @@
     <value>The platform started deletion of your ArquitecturaBase account. It will be deleted on {{1}}. Your account is suspended, so you cannot cancel deletion. If you believe this is a mistake, contact {{2}}.</value>
   </data>
   <data name="Notice.OccurredAt" xml:space="preserve"><value>{0} at {1}</value></data>
+  <data name="WhatsApp.Inbound.LeaseExpired" xml:space="preserve"><value>The inbound message lease expired.</value></data>
 </root>

@@ -38,6 +38,11 @@ public sealed class WhatsAppWebhookController(IWhatsAppWebhookService service) :
     [ProducesProblem(StatusCodes.Status413PayloadTooLarge)]
     [ProducesProblem(StatusCodes.Status501NotImplemented)]
     public async Task<IActionResult> Receive([FromBody] WhatsAppWebhookHttpRequest request,
-        [FromHeader(Name = "X-Hub-Signature-256")] string? signature, CancellationToken ct) =>
-        (await service.ReceiveAsync(new WhatsAppWebhookRequest(request.ObjectKind, request.Entry, signature), ct)).ToActionResult(this);
+        [FromHeader(Name = "X-Hub-Signature-256")] string? signature, CancellationToken ct)
+    {
+        var result = await service.ReceiveAsync(new WhatsAppWebhookRequest(request.ObjectKind, request.Entry, signature,
+            HttpContext.Items[Filters.WhatsAppWebhookFilter.OriginalBodyKey] is byte[] bytes ? bytes : default), ct);
+        // ACK de protocolo Meta: 200 sin cuerpo después del commit, en lugar del 204 de una escritura de negocio.
+        return result.IsFailure ? result.ToActionResult(this) : new StatusCodeResult(StatusCodes.Status200OK);
+    }
 }

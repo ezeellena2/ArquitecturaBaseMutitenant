@@ -92,9 +92,9 @@ public sealed class Etapa8ContractTests(ApiFactory factory)
         }));
         using var client = application.CreateClient(new() { AllowAutoRedirect = false });
         using var response = await client.GetAsync("/webhooks/whatsapp?hub.mode=subscribe&hub.verify_token=example&hub.challenge=example-challenge", Ct);
-        Assert.Equal(enabled ? HttpStatusCode.NotImplemented : HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(enabled ? HttpStatusCode.Unauthorized : HttpStatusCode.NotFound, response.StatusCode);
         var problem = await response.Content.ReadFromJsonAsync<JsonObject>(Ct);
-        Assert.Equal(enabled ? "General.Contract.NotImplemented" : "Http.NotFound", problem?["code"]?.GetValue<string>());
+        Assert.Equal(enabled ? "WhatsApp.Webhook.InvalidSignature" : "Http.NotFound", problem?["code"]?.GetValue<string>());
         Assert.False(response.Headers.Contains("Set-Cookie"));
     }
 

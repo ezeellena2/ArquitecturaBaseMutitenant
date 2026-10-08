@@ -258,6 +258,7 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("Type", "Value")
                         .IsUnique()
+                        .HasDatabaseName("IX_LoginMethods_Type_Value")
                         .HasFilter("\"VerifiedAtUtc\" IS NOT NULL");
 
                     b.HasIndex("UserId", "Type", "Value")
@@ -1763,8 +1764,17 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("LeaseUntilUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("NextAttemptAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("OccurredAtUtc")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("OriginalMethodId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("OriginalUserId")
+                        .HasColumnType("uuid");
 
                     b.Property<Guid?>("OutboxMessageId")
                         .HasColumnType("uuid");
@@ -1779,6 +1789,10 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime>("ReceivedAtUtc")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReplyId")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -1800,12 +1814,16 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ContactId");
 
+                    b.HasIndex("OriginalUserId");
+
                     b.HasIndex("ReceivedAtUtc");
 
                     b.HasIndex("PhoneNumberId", "Wamid", "EventType")
                         .IsUnique();
 
                     b.HasIndex("ProcessedAtUtc", "LeaseUntilUtc", "ReceivedAtUtc");
+
+                    b.HasIndex("Direction", "NextAttemptAtUtc", "LeaseUntilUtc", "ReceivedAtUtc");
 
                     b.ToTable("WhatsAppMessages", "identity");
                 });

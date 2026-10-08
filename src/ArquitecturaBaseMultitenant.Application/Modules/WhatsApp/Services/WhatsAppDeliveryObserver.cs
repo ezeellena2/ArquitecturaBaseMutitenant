@@ -12,9 +12,12 @@ internal sealed class WhatsAppDeliveryObserver(IWhatsAppMessageRepository messag
         await messages.LockStreamAsync(receipt.ProviderScope, receipt.ProviderMessageId, cancellationToken);
         if (await messages.GetEventAsync(receipt.ProviderScope, receipt.ProviderMessageId, "accepted", cancellationToken) is not null) return;
         var kind = receipt.Category == nameof(WhatsAppMessageKind.Authentication) ? WhatsAppMessageKind.Authentication : WhatsAppMessageKind.Template;
+        var originalUserId = await messages.GetOutboxUserIdAsync(messageId, cancellationToken);
         var message = WhatsAppMessage.Create(receipt.ProviderScope, receipt.ProviderMessageId, "accepted", WhatsAppMessageDirection.Outbound,
-            kind, WhatsAppMessageStatus.Sent, acceptedAtUtc, acceptedAtUtc, outboxMessageId: messageId);
+            kind, WhatsAppMessageStatus.Sent, acceptedAtUtc, acceptedAtUtc, outboxMessageId: messageId, originalUserId: originalUserId);
         message.MarkOutboundAccepted(acceptedAtUtc);
+        foreach (var callback in await messages.ListDeliveryEventsAsync(receipt.ProviderScope, receipt.ProviderMessageId, cancellationToken))
+            message.ApplyDeliveryStatus(callback.Status, callback.OccurredAtUtc);
         messages.Add(message);
     }
 }

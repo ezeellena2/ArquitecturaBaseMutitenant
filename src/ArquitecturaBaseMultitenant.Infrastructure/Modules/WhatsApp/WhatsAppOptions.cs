@@ -16,6 +16,8 @@ internal sealed class WhatsAppOptions
     [Range(1, 3650)] public int MessageRetentionDays { get; init; } = 90;
     [Range(6, 300)] public int RetryDelaySeconds { get; init; } = 6;
     [Range(1, 3600)] public int InboundPollSeconds { get; init; } = 30;
+    [Range(1, 3600)] public int InboundLeaseSeconds { get; init; } = 120;
+    [Range(1, 100)] public int InboundMaxAttempts { get; init; } = 8;
     public bool ProcessInboundInBackground { get; init; } = true;
     public bool SendArgentineMobilesWithoutNine { get; init; }
     public WhatsAppTemplateOptions Templates { get; init; } = new();

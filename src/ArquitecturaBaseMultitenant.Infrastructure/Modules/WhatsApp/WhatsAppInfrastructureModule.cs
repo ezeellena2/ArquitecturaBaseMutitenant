@@ -17,6 +17,13 @@ public static class WhatsAppInfrastructureModule
     public static IServiceCollection AddWhatsAppModule(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddSingleton<IPersistenceModelContributor, WhatsAppModelContributor>();
+        services.AddSingleton<IWhatsAppSignatureValidator, Webhook.WhatsAppSignatureValidator>();
+        services.AddScoped<IWhatsAppWebhookReader, Webhook.WhatsAppWebhookReader>();
+        services.AddSingleton<IWhatsAppWebhookReplay, Webhook.WhatsAppWebhookReplay>();
+        services.AddSingleton<Inbound.WhatsAppInboundSignal>();
+        services.AddSingleton<IWhatsAppInboundSignal>(provider => provider.GetRequiredService<Inbound.WhatsAppInboundSignal>());
+        services.AddSingleton<IWhatsAppInboundSettings, Inbound.WhatsAppInboundSettings>();
+        services.AddHostedService<Inbound.WhatsAppInboundProcessor>();
         services.AddScoped<IWhatsAppContactRepository, WhatsAppContactRepository>();
         services.AddScoped<IWhatsAppMessageRepository, WhatsAppMessageRepository>();
         services.AddScoped<IWhatsAppCodeQuotaRepository, WhatsAppCodeQuotaRepository>();
