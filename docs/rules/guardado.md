@@ -9,6 +9,7 @@
 4. **Afuera y después del commit:** invalidar el caché. Todo el método va dentro de `OperationLog.RunAsync`.
 - `CommitPolicy.OnAnyResult` solo cuando también hay que guardar si falla: intentos, códigos consumidos, auditoría de seguridad.
 - Los locks usan `AdvisoryLockKeys.For(tenantId, recurso, id)` o `FOR NO KEY UPDATE`, y exigen la transacción del caso de uso.
+- Si hace falta una lectura para localizar el lock, se obtiene una proyección o un hint sin tracking y se relee la entidad después de adquirirlo. Repetir una consulta tracked no refresca la instancia que EF ya conserva: las reglas y escrituras no pueden usar ese estado previo al lock.
 - El método público del servicio de entrada abre la transacción; los helpers trabajan dentro de ella y no reciben `IUnitOfWork`. El tope de 8 cuenta solo dependencias de negocio: excluye `ILogger<T>`, `TimeProvider`, `IRequestValidator` e `IUnitOfWork`, y cuenta todo lo demás, incluido `IOptions<T>` ([ADR 0039](../decisions/0039-tope-de-dependencias-de-negocio.md)). No resolver el tope con clases que solo reenvían ni ampliar la lista blanca de helpers de `TransactionBoundaryTests`. Los desvíos existentes se consolidan antes de E7; el trabajo nuevo de E5 ya cumple esta regla.
 - Hay dos excepciones nominales fuera de los servicios de Application: `ReferenceDataSeeder` y `DatabaseSeeder`. El primero toma `AdvisoryLockKeys.ReferenceDataSeed` para el bootstrap de catálogos. El segundo toma `AdvisoryLockKeys.Seed` y coordina en una UoW el mismo seed global para Development y Production, llamando a `ReferenceDataSeeder.StageAsync` sin anidar una UoW. Son seeds técnicos, no servicios de negocio. Ninguno crea personas ni organizaciones de muestra. Solo `UnitOfWork` llama `SaveChanges`.
 
@@ -37,6 +38,7 @@ public Task<Result> UpdateAsync(UpdateRoleRequest request, CancellationToken ct)
 - `TransactionBoundaryTests` (E2): lee el IL; solo los puntos de entrada de `Interfaces/Services`, `ReferenceDataSeeder` y `DatabaseSeeder` reciben `IUnitOfWork`, y nadie salvo `UnitOfWork` llama a `SaveChanges`.
 - `UnitOfWorkTests` (E2): rollback, no anidar, 23505 → `UniqueConstraintViolationException`.
 - `FakeUnitOfWork` (E2) en los tests unitarios aplica la misma `CommitPolicy`.
+- `WhatsAppIdentityTests` (E8) coordina conexiones reales a PostgreSQL y comprueba relectura fresca en Verify×Verify, Verify×Resend y Primary×Remove: no se borra un método recién verificado ni se deja la cuenta sin principal por un hint previo al lock.
 
 ## Detalle
 [backend.md §5, "Repositorio, reader y UnitOfWork"](../architecture/backend.md#repositorio-reader-y-unitofwork) · ADR 0001
