@@ -1,12 +1,14 @@
 # Etapa 8b: el asistente — plan ejecutable
 
-**Estado:** plan para ejecutar después de cerrar E8; este documento no implementa nada. P1–P3 fueron aceptadas el 2026-10-08 y están en la ADR 0049; no reabrirlas. El lienzo v115 ya incorpora los complementos visuales; copiar sus estados y textos.
+**Estado:** E8 está implementada y verificada técnicamente; su puerta Meta/documental sigue abierta. El 2026-10-09 el usuario autorizó avanzar E8b en paralelo mientras Integración completa ese circuito de E8: excepción expresa a la dependencia de cierre, sin cerrar E8 ni E8b. T00 fija las dependencias y guardas; el resto continúa por sus tareas. P1–P3 fueron aceptadas el 2026-10-08 y están en la ADR 0049; no reabrirlas. El lienzo v115 ya incorpora los complementos visuales; copiar sus estados y textos.
 
 **Objetivo:** un asistente privado en los tres accesos, de solo lectura, con consultas fijas gratuitas, herramientas autorizadas, historial, adjuntos, exportación, configuración, uso y topes. Se puede apagar o quitar sin romper el núcleo ni WhatsApp.
 
 **Arquitectura:** `Domain/Assistant` y `Modules/Assistant` en Application, Infrastructure y Api; puertos neutrales del núcleo y contribución EF de E8. `IChatClient` es el puerto del modelo, Anthropic el adaptador inicial; controllers y SSE en Api, herramientas/casos de uso en Application, archivos/proveedor/EF/workers en Infrastructure. Ninguna llamada externa corre dentro de la UoW.
 
-**Base verificada:** back `a06530d` (plan E8), código anterior `a24aaf0`; front de código `1c6cbc33`; lienzo v115 publicado en `bb7c78de`, cotejado con la copia vigente. La [revisión de alineamiento](../reviews/2026-10-08-alineamiento-etapas-8-y-8b.md) registra las adaptaciones de guardas/DI y lo que existe hoy. La [revisión de alineamiento](../reviews/2026-10-08-alineamiento-etapas-8-y-8b.md) registra las adaptaciones de guardas/DI y lo que existe hoy. E8 todavía no está implementada: las referencias a sus contribuidores, guardas y capacidades son dependencias a recibir, no archivos existentes hoy.
+**Base verificada al 2026-10-09:** back `16662d87fbd2c93696a286a8b428d26b7d70d996`; front `1192f3d427d443d546d40d24694d59351d3c71c9`; lienzo v115 publicado en `bb7c78de`, vigente. El [pase técnico Back](../reviews/2026-10-09-etapa-8-pase-back.md) registra 2262/2262, Front 2350/2350, E2E general 36/36 y WhatsApp 30/30. La [prueba de retiro](../reviews/2026-10-09-etapa-8-retiro-whatsapp.md) pasó 2084/2084. OpenAPI SHA-256 LF `cf80064358a63daa3be361dc4a5308d0ee52e27a31824953061eb1d44b77727d`; tipos Front `70ff361a5c4079f19ffed7e702592eca680f76b9e88ddb3e7647815caf3fac93`. Ninguna de estas pruebas acredita entrega Meta ni cierra E8.
+
+La [revisión de alineamiento](../reviews/2026-10-08-alineamiento-etapas-8-y-8b.md) es la comparación histórica anterior a E8. Su infraestructura prevista ya se recibió: `ApplicationNamespaceShape` reconoce Services/Interfaces de módulos; `ApplicationServicesTests`, `ControllerServiceRepositoryTests`, `TransactionBoundaryTests` y `ServiceDependencyCountTests` conservan controles negativos; `DependencyInjectionTests` compone WhatsApp y detecta duplicados, y `ServiceProviderValidationTests` valida el host. EF tiene `IPersistenceModelContributor`, `PersistenceModelContributors`, clave de caché modular y declaraciones globales explícitas, aplicados en runtime/DesignTime/bootstrap/tests; `WhatsAppPersistenceTests` compara esas vías reales. Los registros WhatsApp son propios de cada capa, y `ModuleIsolationTests` impide referencias del núcleo. E8b extiende estos puntos por forma sin importar WhatsApp; actor durable, streaming/replay privado e IFileStore siguen siendo trabajo E8b.
 
 ## Forma de trabajo
 
@@ -27,22 +29,22 @@ Manda sobre protocolos anteriores. Copiar la [Forma de trabajo de E7](2026-10-04
 3. Front v115: Asistente-Org/Personal/Plat, todos los estados del Tweak **asistente** y sus M-*; Asistente-Config-Org/Uso-Org, Plat-Asistente-Config/Uso y sus M-*; Organizacion/M-Organizacion (Módulos), Mensajes (cuatro alertas de correo), navegación general v115. No usar Archivo ni generadores como especificación.
 4. Arquitectura y reglas: [backend](../architecture/backend.md), [multitenancy](../architecture/multitenancy.md), [Roles](../features/roles.md), [Personal](../features/personal.md); fichas capas-y-flujo, guardado, persistencia-ef, multitenancy, modulos, modulos-habilitados, permisos, API, idempotencia, concurrencia, paginado, datos-de-referencia, datos-personales, logs, fechas-y-zonas, números/moneda, resources y tests; [configuración](../operations/configuracion.md), [plantillas](../operations/whatsapp-plantillas.md). Front: reglas de datos-y-api, estructura, formatos, accesos, responsive, errores y tests.
 
-**Verificación de versiones, 2026-10-08:** se consultaron los índices vivos de NuGet (`v3-flatcontainer/<paquete>/index.json`, última estable) y npm (`/<paquete>/latest`), sin instalar. Las páginas cacheadas tenían parches anteriores. Fijar estas versiones, no `latest` ni prereleases, cuando se ejecute T00.
+**Verificación de versiones, 2026-10-09:** T00 consultó los índices oficiales vivos de NuGet (`v3-flatcontainer/<paquete>/index.json`, última estable sin prerelease) y npm (`/<paquete>/latest`) y fijó versiones exactas. Respecto del 08/10 cambiaron Anthropic y ambos paquetes assistant-ui. Evidencia local sin secretos: `.local/reviews/e8b-contract/t00-packages-20261009.json`. No se actualizan paquetes ajenos; las dependencias nuevas que requieren otro Radix se instalan anidadas conservando las entradas previas del lockfile.
 
 | Paquete nuevo | Versión confirmada | Capa / fuente oficial |
 |---|---|---|
 | Microsoft.Extensions.AI.Abstractions | 10.10.1 | Application, solo dentro del módulo: IChatClient/AIFunction; [NuGet](https://www.nuget.org/packages/Microsoft.Extensions.AI.Abstractions/10.10.1) |
 | Microsoft.Extensions.AI | 10.10.0 | Infrastructure, función/telemetría; [NuGet](https://www.nuget.org/packages/Microsoft.Extensions.AI/10.10.0) |
-| Anthropic | 12.54.1 | Infrastructure; [NuGet](https://www.nuget.org/packages/Anthropic/12.54.1), [SDK oficial y AsIChatClient](https://platform.claude.com/docs/en/cli-sdks-libraries/sdks/csharp#ichatclient-integration). No hace falta un paquete Anthropic.Extensions.AI. |
+| Anthropic | 12.55.0 | Infrastructure; [índice NuGet](https://api.nuget.org/v3-flatcontainer/anthropic/index.json), [SDK oficial y AsIChatClient](https://platform.claude.com/docs/en/cli-sdks-libraries/sdks/csharp#ichatclient-integration). No hace falta un paquete Anthropic.Extensions.AI. |
 | PDFsharp-MigraDoc | 6.2.4 | Infrastructure, exportar PDF multiplataforma, licencia MIT; [NuGet](https://www.nuget.org/packages/PDFsharp-MigraDoc/6.2.4). Sin GDI/WPF ni licencia comercial. PDFsharp llega como dependencia. |
-| @assistant-ui/react | 0.15.25 | Front; [registro npm](https://registry.npmjs.org/@assistant-ui/react/latest), [ExternalStoreRuntime](https://www.assistant-ui.com/docs/runtimes/custom/external-store); peers React 18/19. |
-| @assistant-ui/react-markdown | 0.14.19 | Front; [registro npm](https://registry.npmjs.org/@assistant-ui/react-markdown/latest); peer assistant-ui ^0.15.0. |
+| @assistant-ui/react | 0.15.26 | Front; [registro npm](https://registry.npmjs.org/@assistant-ui/react/latest), [ExternalStoreRuntime](https://www.assistant-ui.com/docs/runtimes/custom/external-store); peers React 18/19. |
+| @assistant-ui/react-markdown | 0.14.20 | Front; [registro npm](https://registry.npmjs.org/@assistant-ui/react-markdown/latest); peer assistant-ui ^0.15.0. |
 | react-markdown | 10.1.0 | Front; [registro npm](https://registry.npmjs.org/react-markdown/latest) |
 | remark-gfm | 4.0.1 | Front; [registro npm](https://registry.npmjs.org/remark-gfm/latest) |
 
 SSE ya viene con .NET 10: [TypedResults.ServerSentEvents](https://learn.microsoft.com/dotnet/api/microsoft.aspnetcore.http.typedresults.serversentevents), devuelto desde controller. No añadir servidor Node, AI SDK, SignalR, MCP ni paquetes de RAG. Versiones back solo en `Directory.Packages.props`; front en package.json/lock. Verificar compatibilidad por restore/build al ejecutar, sin actualizar paquetes ajenos.
 
-Rutas abreviadas: `B/` y `F/` son los dos repos del pedido; `D/`, `A/`, `I/`, `P/` son `B/src/ArquitecturaBaseMultitenant.{Domain,Application,Infrastructure,Api}/`. `AU/`, `IT/`, `AR/`, `DU/` son los proyectos `B/tests/ArquitecturaBaseMultitenant.{Application.UnitTests,Api.IntegrationTests,ArchitectureTests,Domain.UnitTests}/`. Archivos nuevos se nombran concretamente aquí; los de E8 se reciben al cerrarla.
+Rutas abreviadas: `B/` y `F/` son los dos repos del pedido; `D/`, `A/`, `I/`, `P/` son `B/src/ArquitecturaBaseMultitenant.{Domain,Application,Infrastructure,Api}/`. `AU/`, `IT/`, `AR/`, `DU/` son los proyectos `B/tests/ArquitecturaBaseMultitenant.{Application.UnitTests,Api.IntegrationTests,ArchitectureTests,Domain.UnitTests}/`. Archivos nuevos se nombran concretamente aquí; los puntos de extensión E8 ya existen en la base verificada.
 
 ## Tableros contra decisiones
 
@@ -67,7 +69,7 @@ Cada nombre refiere a `F/docs/design/lienzo/<nombre>.dc.html`; los M-* se copian
 | D15 IFileStore | Con adjuntos / Borrar, desktop y M-* | Puerto/disco no tiene tablero propio; descarga privada y borrar archivos con conversación. Nube se decide E10. |
 | D16 Exportación | Menú de una conversación / M-*: Acciones de una conversación | Exportar en Markdown y PDF son dos acciones reales, privadas. |
 | D17 Teléfono | Todos los M-Asistente: Bienvenida / Historial; barras v115 | Asistente segunda pestaña; Inicio/billetera permanece; Difusiones y Recuperaciones pasan a Más donde existan. |
-| D18 Orden | Asistente-* y sus M-*; no estado visual de dependencia | Se ejecuta después de E8 cerrada y copia su módulo; prueba de quitar ambos por separado. |
+| D18 Orden | Asistente-* y sus M-*; no estado visual de dependencia | Se ejecuta sobre la base técnica E8 recibida, con excepción autorizada el 09/10 mientras sigue abierta su puerta Meta; copia su módulo y prueba de quitar ambos por separado. |
 | D19 Modelos permitidos | Plat-Config: Elegir los modelos permitidos; Config-Org: Elegir el modelo / Con su clave | Plataforma-key restringida; own-key todo catálogo activo compatible. |
 | D20 Contador | Tres Asistente/M-*: Quedan 10 consultas / Bienvenida | Mostrar restante solo si ≤ 10; no mostrar contador permanente con 50. |
 | D21 Ayuda | Personal: Respuesta (por qué no entra a Beta); tres Bienvenida/caja | Herramienta help_article para pasos + enlace; artículos es/en, no conocimientos externos. |
@@ -101,7 +103,7 @@ Asistente activo añade Administración › Asistente › Configuración/Uso, In
 
 ## Orden y dependencias
 
-`E8 cerrada → T00 → T01 (contrato commiteado B/F) → (T02–T09 Back ∥ T10–T13 Front) → T14 → T15`.
+`Base técnica E8 recibida + excepción autorizada con puerta Meta abierta → T00 → T01 (contrato commiteado B/F) → (T02–T09 Back ∥ T10–T13 Front) → T14 → T15`. Integración mantiene el cierre operativo de E8 por separado.
 
 P1–P3 están resueltas por 0049. T01 congela el puerto de interacciones con vacío explícito, validación de correo de Dueño para OwnKey y cuotas compartidas UTC. Los estados visuales complementarios ya están en v115; copiar las piezas y textos aprobados.
 
@@ -113,12 +115,14 @@ P1–P3 están resueltas por 0049. T01 congela el puerto de interacciones con va
 
 **Copiar de:** cierre E8/informe y ModuleIsolationTests; paquetes centralizados existentes; importación lazy y temas actuales del front.
 
-- [ ] Confirmar cierre de E8 y sus hashes, sin 501 ni puerta Meta pendiente. Leer los AGENTS/fichas. Preservar cambios/procesos ajenos.
-- [ ] Fijar versiones verificadas arriba. Application admite **solo** AI.Abstractions, por ADR0048; añadir esa entrada exacta a ApplicationPackagesTests y una guarda que restringe tipos AI al namespace del módulo. Domain sigue sin paquetes, SDK/AI/PDF en Infrastructure. No ampliar a cualquier Microsoft.Extensions.*.
-- [ ] Elegir helpers con sufijos vigentes: `AssistantTurnRequester`, `AssistantLimitGuard`, `AssistantPromptBuilder`, `AssistantTitleIssuer`, `AssistantToolResolver`; no copiar Runner/Catalog como helper de Services ni ampliar Processor (reservado a la baja de cuenta). El catálogo vive en Tools, el PDF en Infrastructure.
-- [ ] Aplicar P1–P3 de 0049 y el informe de alineamiento; confirmar recepción de las extensiones de guardas/DI/EF de E8. No reabrir D1–D26. Restore/build afectados al ejecutar; este documento no prueba compatibilidad por haber consultado registros.
+- [x] Confirmar base técnica de E8 y hashes anteriores, sin 501 productivos; registrar la excepción expresa del usuario del 09/10 para avanzar mientras Meta/documentación siguen abiertos. Leer AGENTS/fichas y preservar cambios/procesos ajenos. No cerrar E8.
+- [x] Fijar versiones verificadas arriba. Application admite **solo** AI.Abstractions, por ADR0048; entrada exacta en ApplicationPackagesTests y `AssistantAiBoundaryTests` para firmas/genéricos/IL, con controles negativos y límite exacto Modules.Assistant. Domain sigue sin paquetes; SDK/AI/PDF en Infrastructure. No ampliar a cualquier Microsoft.Extensions.*.
+- [x] Elegir helpers con sufijos vigentes: `AssistantTurnRequester`, `AssistantLimitGuard`, `AssistantPromptBuilder`, `AssistantTitleIssuer`, `AssistantToolResolver`; no copiar Runner/Catalog como helper de Services ni ampliar Processor (reservado a la baja de cuenta). El catálogo vive en Tools, el PDF en Infrastructure.
+- [x] Aplicar P1–P3 de 0049 y el informe de alineamiento a la base: `IConsumerInteractionSource` neutral con vacío explícito hasta fuente productiva; OwnKey exige Dueño activo `SystemRoles.TenantAdmin` con Email verificado utilizable (Google solo no basta); cuota PlatformKey UserId/día UTC global y OwnKey UserId/organización/día UTC. Fijas/títulos no suman preguntas; títulos sí costo. Guardas/DI/EF E8 recibidos como indica Base. No reabrir D1–D26. Restore/build y guardas verifican la compatibilidad antes de T01; los puertos y conductas se implementan en las tareas correspondientes.
 
-**Tests que importan:** paquetes/capas/DI, build afectado; ninguno por mero cambio de texto. **Hecho cuando:** E8 cerrada y dependencias compatibles/fijadas, con decisiones dependientes resueltas antes del freeze.
+**Tests que importan:** paquetes/capas/DI, build afectado; ninguno por mero cambio de texto. **Hecho cuando:** base técnica E8 recibida bajo la excepción autorizada, dependencias compatibles/fijadas y decisiones dependientes resueltas antes del freeze. E8 conserva su puerta Meta/documental abierta.
+
+**Verificado en T00, 09/10:** build afectado sin advertencias/errores; Architecture 178/178 (AI final 12/12), DI Application 5/5 y host DI real 1/1 con perfil sin secretos. Prueba descartable de compilación de `AsIChatClient`/function invocation y PDF en verde, sin ejecutar proveedor. Front `npm ci`/build en verde, árbol de paquetes válido y versiones previas preservadas. `lint` sale 0 con advertencias en archivos preexistentes; el Node disponible 24.14 genera avisos de engines de jsdom ya existente. Detalle y logs locales: `.local/reviews/e8b-contract/t00-delivery.md`. No se ejecutan T01/Partes 2 ni se repiten suites completas E8 en T00.
 
 ### T01 · Publicar HTTP, SSE, permisos, puertos y modelos
 
@@ -235,7 +239,7 @@ Errores de archivo inválido, text vacío/largo, título largo, month inválido,
 ### Texto listo para el chat de Contrato
 
 ```text
-Ejecutá SOLO Parte 1 (T00–T01) del plan C:\Users\ezequ\source\repos\ArquitecturaBaseMutitenant\docs\plans\2026-10-08-etapa-8b-asistente.md. E8 debe estar cerrada. Leé Forma de trabajo, ADR0048, tabla Decidido con el usuario D1–D26 y v115. Confirmá dependencias del plan; fijá HTTP/permisos/esquemas/SSE/errores y puertos neutrales completos en OpenAPI con guardas verdes, pudiendo dejar 501 nuevos temporalmente. Aplicá ADR0049 y el informe de alineamiento antes del freeze; no inventes interacciones productivas ni topes. Regenerá y commiteá tipos en el front hermano. No implementes asistentes/pantallas ni arranques otros chats. Todo main sin push y commits solo rutas propias. Devolvé hashes B/F y contrato congelado para los dos chats paralelos; no cierres E8b.
+Ejecutá SOLO Parte 1 (T00–T01) del plan C:\Users\ezequ\source\repos\ArquitecturaBaseMutitenant\docs\plans\2026-10-08-etapa-8b-asistente.md. Base técnica de E8 recibida; puerta Meta/documental abierta y avance E8b autorizado expresamente el 09/10, sin cerrar E8. Leé Forma de trabajo, ADR0048, tabla Decidido con el usuario D1–D26 y v115. Confirmá dependencias del plan; fijá HTTP/permisos/esquemas/SSE/errores y puertos neutrales completos en OpenAPI con guardas verdes, pudiendo dejar 501 nuevos temporalmente. Aplicá ADR0049 y el informe de alineamiento antes del freeze; no inventes interacciones productivas ni topes. Regenerá y commiteá tipos en el front hermano. No implementes asistentes/pantallas ni arranques otros chats. Todo main sin push y commits solo rutas propias. Devolvé hashes B/F y contrato congelado para los dos chats paralelos; no cierres E8b.
 ```
 
 ## Herramientas y consultas fijas exactas de v1
@@ -413,7 +417,7 @@ Puntos neutrales a extender: `A/Interfaces/Integrations/Features/{IFeatureDefini
 ### Texto listo para el chat del Back
 
 ```text
-Ejecutá SOLO Parte 2a (T02–T09) de C:\Users\ezequ\source\repos\ArquitecturaBaseMutitenant\docs\plans\2026-10-08-etapa-8b-asistente.md. Tu repo es el back; no edites el front. E8 cerrada y T00/T01 commiteadas, con P1–P3 resueltas por ADR0049. Seguí Forma de trabajo rápida, tabla D1–D26 y contrato congelado. Implementá módulo privado y quitable, catálogo y claves, herramientas exactas de solo lectura con permiso interno, consultas fijas sin modelo, worker/turnos/SSE sin buffer/idempotencia durable, topes/uso/títulos/alertas email, IFileStore/adjuntos/exportes/legal/retención/baja. Cada método público que escribe una UoW; proveedor/storage fuera. Sin referencias entre módulos ni permisos de más. Fake solo Testing/E2E, nunca producción. Tests donde importan y commits main sin push por tus rutas. No cambies contrato unilateralmente: anotá necesidad en Cambios al contrato para pasarla al otro chat. Devolvé hashes y build/test completo verde para Integración, sin cerrar E8b ni omitir la prueba manual real.
+Ejecutá SOLO Parte 2a (T02–T09) de C:\Users\ezequ\source\repos\ArquitecturaBaseMutitenant\docs\plans\2026-10-08-etapa-8b-asistente.md. Tu repo es el back; no edites el front. Base técnica E8 recibida bajo la excepción autorizada del 09/10 y T00/T01 commiteadas, con P1–P3 resueltas por ADR0049. Seguí Forma de trabajo rápida, tabla D1–D26 y contrato congelado. Implementá módulo privado y quitable, catálogo y claves, herramientas exactas de solo lectura con permiso interno, consultas fijas sin modelo, worker/turnos/SSE sin buffer/idempotencia durable, topes/uso/títulos/alertas email, IFileStore/adjuntos/exportes/legal/retención/baja. Cada método público que escribe una UoW; proveedor/storage fuera. Sin referencias entre módulos ni permisos de más. Fake solo Testing/E2E, nunca producción. Tests donde importan y commits main sin push por tus rutas. No cambies contrato unilateralmente: anotá necesidad en Cambios al contrato para pasarla al otro chat. Devolvé hashes y build/test completo verde para Integración, sin cerrar E8b ni omitir la prueba manual real.
 ```
 
 ## Parte 2b · Front
@@ -526,7 +530,7 @@ Si clave/modelo/Meta/galería/own-key real requerido no está disponible, puerta
 ### Texto listo para el chat de Integración y puerta
 
 ```text
-Ejecutá SOLO Parte 3 (T14–T15) de C:\Users\ezequ\source\repos\ArquitecturaBaseMutitenant\docs\plans\2026-10-08-etapa-8b-asistente.md. Back/Front implementados contra T01 commiteado, E8 cerrada. Trabajá ambos repos main sin push y commits solo rutas propias, preservando procesos/cambios ajenos. Integrá contrato/SSE/uploads/exports, E2E real con FakeChatClient como único reemplazo del proveedor y herramientas/API/BD/FileStore reales. Corré suites completas/E2E sin filtros/detectores en 0; galería una vez y recorrido con sesiones previas. Hacé prueba manual con clave real de Anthropic, imágenes/PDF/stop/título/uso y regresión WhatsApp real vía túnel configuracion.md, sin secretos en evidencia. Probá quitar Asistente solo en copia descartable conservando WhatsApp/núcleo verdes y UI E8. Si contrato cambia, coordinar B/F mediante Cambios al contrato. Dejá informe corto hashes/resultados/decisiones/pendientes; no cierres con prueba externa/galería pendiente. Apagá solo tu Aspire y restaurá el callback de Meta si correspondió.
+Ejecutá SOLO Parte 3 (T14–T15) de C:\Users\ezequ\source\repos\ArquitecturaBaseMutitenant\docs\plans\2026-10-08-etapa-8b-asistente.md. Back/Front implementados contra T01 commiteado, base técnica E8 recibida bajo la excepción autorizada del 09/10; no cerrar E8 ni sustituir su puerta Meta. Trabajá ambos repos main sin push y commits solo rutas propias, preservando procesos/cambios ajenos. Integrá contrato/SSE/uploads/exports, E2E real con FakeChatClient como único reemplazo del proveedor y herramientas/API/BD/FileStore reales. Corré suites completas/E2E sin filtros/detectores en 0; galería una vez y recorrido con sesiones previas. Hacé prueba manual con clave real de Anthropic, imágenes/PDF/stop/título/uso y regresión WhatsApp real vía túnel configuracion.md, sin secretos en evidencia. Probá quitar Asistente solo en copia descartable conservando WhatsApp/núcleo verdes y UI E8. Si contrato cambia, coordinar B/F mediante Cambios al contrato. Dejá informe corto hashes/resultados/decisiones/pendientes; no cierres con prueba externa/galería pendiente. Apagá solo tu Aspire y restaurá el callback de Meta si correspondió.
 ```
 
 ## Cambios al contrato

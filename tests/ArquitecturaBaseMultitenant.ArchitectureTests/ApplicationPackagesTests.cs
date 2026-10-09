@@ -9,12 +9,13 @@ namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 public sealed class ApplicationPackagesTests
 {
     // Application no conoce EF Core ni ASP.NET Core: solo usa las abstracciones de Microsoft.Extensions (logging y
-    // opciones) y FluentValidation. La lista es explícita a propósito, en lugar de aceptar cualquier Microsoft.Extensions.*:
+    // opciones), FluentValidation y AI.Abstractions solo en Modules.Assistant (ADR 0048). La lista es explícita a propósito:
     // sumar un paquete a Application es una decisión de arquitectura, no algo que se cuela porque el prefijo coincide.
     private static readonly string[] AllowedPackages =
     [
         "FluentValidation",
         "FluentValidation.DependencyInjectionExtensions",
+        "Microsoft.Extensions.AI.Abstractions",
         "Microsoft.Extensions.Logging.Abstractions",
         "Microsoft.Extensions.Options.ConfigurationExtensions",
         "Microsoft.Extensions.Options.DataAnnotations",

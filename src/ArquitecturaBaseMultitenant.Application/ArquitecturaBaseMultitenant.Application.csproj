@@ -10,6 +10,8 @@
 
   <ItemGroup>
     <PackageReference Include="FluentValidation" />
+    <!-- ADR 0048: los tipos AI se usan únicamente dentro de Modules/Assistant. -->
+    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />

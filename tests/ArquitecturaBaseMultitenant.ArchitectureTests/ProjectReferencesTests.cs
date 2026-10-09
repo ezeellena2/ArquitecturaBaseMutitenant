@@ -27,6 +27,15 @@ public sealed class ProjectReferencesTests
         Assert.Empty(forbidden);
     }
 
+    [Fact]
+    public void Domain_does_not_reference_packages_or_shared_frameworks()
+    {
+        var project = XDocument.Load(Path.Combine(SolutionRoot.FullPath, "src",
+            "ArquitecturaBaseMultitenant.Domain", "ArquitecturaBaseMultitenant.Domain.csproj"));
+        Assert.Empty(project.Descendants("PackageReference"));
+        Assert.Empty(project.Descendants("FrameworkReference"));
+    }
+
     private static string[] ReadProjectReferences(string project)
     {
         var path = Path.Combine(SolutionRoot.FullPath, "src", project, project + ".csproj");
