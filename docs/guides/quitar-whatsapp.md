@@ -22,6 +22,8 @@ dotnet ef migrations add DropWhatsApp --project src/ArquitecturaBaseMultitenant.
 
 Revisá `Up`, `Down`, el snapshot y el SQL. Solo pueden desaparecer tablas y relaciones aportadas por el contribuidor WhatsApp. **No se borran `identity.LoginMethods`, `identity.LoginLinks`, cuentas, outbox, anillo Data Protection ni tablas de otros módulos.** La guía no autoriza ejecutar un Drop en una base compartida.
 
+Para exportar solo el retiro, usá como origen la última migración histórica real (`LoginLinks` en el pase de E8), no una anterior: incluir una migración del núcleo ya aplicada puede intentar recrear sus tablas. Revisá también los grants de `Down`: EF no genera los `GRANT` escritos a mano en la creación original. Si se conserva la reversión estructural, la migración nueva debe reponerlos para `mt_app`; la reversión no recupera los datos eliminados del módulo.
+
 Conservá las migraciones históricas y sus `.Designer.cs` sin reescribirlas: la base vacía debe poder recorrer también la creación anterior del módulo y su retiro. Los modelos históricos describen las entidades por nombre; una referencia CLR histórica al módulo impediría borrar sus fuentes y debe corregirse mediante el diseño de la migración antes de aceptar el módulo, no alterando historia aplicada.
 
 ## Retirar fuentes y probar
@@ -29,6 +31,17 @@ Conservá las migraciones históricas y sus `.Designer.cs` sin reescribirlas: la
 Después de generar la migración nueva, quitá de la copia `Domain/WhatsApp`, `Application/Modules/WhatsApp`, `Infrastructure/Modules/WhatsApp`, `Api/Modules/WhatsApp`, tests exclusivos, opciones y assets propios. Conservá los puertos neutrales, Phone y LoginLink. Quitá también la exclusión temporal del descubrimiento: el contribuidor ya no existe y el modelo debe seguir coincidiendo con el snapshot de retiro.
 
 La fixture privada E8 es también exclusiva del módulo: en la copia quitá `TestFeatures/WhatsAppBrowser`, sus `WhatsAppBrowserFixtureTests`/`WhatsAppBrowserControlTests`, el modo `--whatsapp-browser` de `RealE2ESetup` y la referencia del tool al proyecto de integración que incorporó ese modo. Conservá el setup de correo/Google y sus otros comandos. No retires el soporte neutral de `ApiFactory`, OIDC, Phone o outbox. El runner del Front de WhatsApp no se ejecuta en esa copia; los recorridos del núcleo sí.
+
+Los tests mixtos requieren una remoción explícita de su composición, además de borrar los exclusivos. Quitá sus registros/tipos WhatsApp y los casos exclusivos del canal, conservando las assertions del núcleo. En particular:
+
+- `OutboxDeletionRaceTests` usa `Host`, `NowUtc` y `TransactionAsync` del helper `WhatsAppPrivacyFixture`; conservá esas tres piezas como soporte neutral en la copia, sin su `SeedAsync` WhatsApp ni sus opciones. No borres las tres pruebas de carreras del outbox.
+- Conservá los casos Email de `PlatformOrganizationPhoneNoticeTests` y los rechazos de Phone sin canal y enlaces sin prueba de `Etapa8ContractTests`.
+- Para las reglas neutrales de `LoginLinkTests`, reemplazá el encaje WhatsApp de su fixture por un canal técnico de Phone disponible/apagado, exclusivamente de test y sin transporte. La prueba de instalación retirada usa el host normal sin ese canal y debe seguir rechazando Phone. Esto no acredita ningún recorrido Meta.
+- La paridad de resources verifica los módulos que quedan y la ausencia de recursos WhatsApp; no puede exigir que siempre exista al menos un módulo. Retirá de la documentación de la copia las referencias a tests exclusivos borrados y conservá los archivos de referencia del Front que necesitan las guardas cruzadas, sin editar el Front compartido.
+
+Los hosts Development de tests tampoco deben heredar secretos: deshabilitá Google por defecto en la fixture de la copia; los tests del proveedor configuran sus credenciales sintéticas explícitamente. Los hosts de documentación/SPA usan el operador sintético de `UseDevelopmentTestOwner`. El build regenera el OpenAPI de esa instalación sin webhook; no cambies el contrato del checkout compartido para hacer esta prueba.
+
+Antes de cualquier borrado recursivo, resolvé todos los destinos absolutos y verificá que cada uno quede bajo la copia descartable. Registrá los ajustes de tests y documentos de la copia en el informe: «borrar carpetas y listo» no describe este retiro.
 
 Ejecutá build, suites del núcleo y `has-pending-model-changes` según la guía de migraciones. Aplicá el retiro en la base que ya estaba migrada; en la vacía aplicá toda la historia, incluida `DropWhatsApp`. En ambas verificá Email, Google, registro personal/empresarial, legales, recuperación y gestión de métodos; cero capacidades/canales/rutas WhatsApp y disponibilidad falsa. Comprobá también que la presencia de otro contribuidor no aplica dos veces las configuraciones ni borra sus tablas.
 
