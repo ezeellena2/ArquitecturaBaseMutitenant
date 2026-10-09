@@ -148,7 +148,8 @@ public sealed class SpaHostingTests(ApiFactory factory)
     private WebApplicationFactory<Program> CreateApi(string webRoot, string environment = "Testing") =>
         factory.WithWebHostBuilder(builder =>
         {
-            builder.UseEnvironment(environment);
+            if (environment == "Development") builder.UseDevelopmentTestOwner();
+            else builder.UseEnvironment(environment);
             builder.UseWebRoot(webRoot);
         });
 
