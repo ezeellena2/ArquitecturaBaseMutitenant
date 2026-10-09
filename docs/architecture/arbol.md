@@ -653,6 +653,8 @@ ArquitecturaBaseMultitenant.Application/
 │   ├── Notifications/                                [E3]
 │   │   └── AccountNotice.cs                          jerarquía cerrada: LoginMethodChanged (qué pasó, método enmascarado, fecha), ReviewLoginMethods (organización), DeletionRequested (fecha), DeletionCancelled, AccountDeleted
 │   ├── Messaging/                                    [E3]
+│   │   ├── OutboxDispatchClaim.cs                Una reserva durable
+│   │   ├── OutboxDeliveryReceipt.cs              Resultado técnico seguro
 │   │   └── EmailMessage.cs
 │   ├── Features/
 │   │   └── TenantFeatureRow.cs                       Datos persistidos sin cachear el resultado temporal de la habilitación
@@ -1765,6 +1767,7 @@ tests/
 │   │   │   └── TestTenantContext.cs                   Proporciona el espacio controlado por cada test de auditoría
 │   │   ├── Features/
 │   │   │   └── FeatureProbeController.cs              rutas de prueba para la puerta de módulos (FeatureGateTests)
+│   │   ├── WhatsAppQuotaProbeController.cs            Probe del filtro HTTP real alrededor de una reserva durable,…
 │   │   └── Idempotency/
 │   │       └── IdempotencyTestController.cs           El único efecto observable de este POST es el contador…
 │   ├── Tenancy/                                       [E2] los tests de multitenancy.md §13
@@ -1922,6 +1925,7 @@ tests/
 │   │   ├── PlatformTenantCountersTests.cs             tests de PlatformTenantCounters
 │   │   ├── PlatformTenantDetailTests.cs               Dueños vigentes, estado efectivo e historial global por organización
 │   │   ├── PlatformTenantProvisioningHttpTests.cs     tests de PlatformTenantProvisioningHttp
+│   │   ├── PlatformOrganizationPhoneNoticeTests.cs    tests de PlatformOrganizationPhoneNotice
 │   │   └── PublicPageModerationTests.cs               tests de PublicPageModeration
 │   ├── Api/
 │   │   ├── IdempotencyTests.cs                        Comprueba que pedidos repetidos con la misma clave ejecuten una…
@@ -1960,6 +1964,10 @@ tests/
 │   │   ├── OutboxDispatcherTests.cs                   Comprueba despacho, confirmación y reintentos de mensajes pendientes
 │   │   ├── OutboxIdleLoggingTests.cs                  Comprueba que un ciclo sin mensajes no genere registros informativos
 │   │   ├── OutboxTests.cs                             Comprueba el encolado dentro de la transacción del caso de…
+│   │   ├── PickupCodeReaderTests.cs                   tests de PickupCodeReader
+│   │   ├── OutboxMigrationTests.cs                    Upgrade de datos históricos
+│   │   ├── OutboxLeaseTests.cs                        Reinicio, leases viejos y atomicidad del receipt contra PostgreSQL real
+│   │   ├── OutboxDeletionRaceTests.cs                 tests de OutboxDeletionRace
 │   │   └── SmtpTransportTests.cs                      Comprueba que dos mensajes del mismo lote compartan una conexión…
 │   ├── Security/
 │   │   └── LoginCodeSecurityTests.cs                  Comprueba aleatoriedad, longitud y hash ligado a destino y propósito…
@@ -2028,6 +2036,9 @@ tests/
     ├── VersionedContractTests.cs                      Comprueba que las ediciones de entidades con versión reciban esa…
     ├── Support/
     │   └── CallSites.cs                               Las llamadas, los tipos nombrados y los literales de texto…
+    ├── PersistenceModelComparisonTests.cs             tests de PersistenceModelComparison
+    ├── PersistenceModelComparison.cs                  Compara el esquema completo y los metadatos EF que las…
+    ├── ApplicationNamespaceShape.cs                   Los módulos conservan la misma forma de Services/Interfaces del núcleo
     └── ModuleIsolationTests.cs                        [E8] el núcleo no referencia ningún namespace *.Modules.*
 ```
 
