@@ -58,6 +58,28 @@ El fixture bloquea transportes externos. Su control por stdin/stdout privado vin
 
 El build completo del Back finalizó sin advertencias/errores. La primera suite completa Docker pasó **2262 tests, cero fallos y cero omitidos**, en 20m35s; el comando terminó con código 1 porque Microsoft.Testing.Platform intentó ejecutar también el tool E2E. Back corrigió esa configuración en `25983e9f`, declarando `IsTestingPlatformApplication=false`. Después centraliza dos códigos existentes en `WhatsAppErrors` y repite build, pruebas dirigidas y suite completa sobre las fuentes finales. La puerta requiere esa segunda ejecución sin error del comando. Front prepara su runner permanente y la galería; las ejecuciones se ordenan para no sobrescribir DLL en uso.
 
+Back commiteó la centralización en `8e0bb63c1638b7e5a5e52d89c28de91562b24cf6`: los mismos códigos, descripciones y respuestas pasan al catálogo de Domain, sin ignorar hallazgos ni borrar documentación. Build final: **0 advertencias / 0 errores**, 41,92 s. Pruebas dirigidas: **143/143 WhatsApp y 8/8 ErrorCodeTests**. OpenAPI conserva el SHA indicado arriba. La segunda suite completa sigue en curso; el tool ya no se descubre como aplicación de tests. No compilar ni iniciar Aspire sobre esos binarios mientras se usa la API.
+
+Front entregó su preparación estática en `cab63db64ee92fa90cc850282631ed5eac49847e`, sin push. Runner final `579fc2c34b920cef7e2ac8cd5ebb6d26b330893e`: **30 grupos, 15 por tamaño**, todavía sin ejecutar contra la API real. Incluye aprobación/rechazo de recuperación por la UI de Plataforma, seleccionando el pedido por ambos métodos y conservando 390 px en móvil. Build, lint y contracts:check terminaron con código 0; suite completa **2350/2350**, 255 archivos; focales Node **12/12**. La galería quedó en **108/108 casos, 324 PNG**, con el ícono del retorno a WhatsApp y sus cuatro comparaciones actualizados. Su [informe](../../../ArquitecturaBaseMutitenantFront/docs/design/capturas/etapa-8/informe.md) distingue estas pruebas del E2E real pendiente.
+
+## Pendientes documentales del arnés
+
+La centralización del Back eliminó sus dos hallazgos de códigos. Quedan cuatro entradas en el árbol del Back y cinco en el del Front; son archivos existentes que los motores no incorporaron. Los informes son `.local/arneses/realinear-docs/20261009-1216.md` del Back y `.local/arneses/realinear-docs/20261009-1209-front.md` / `20261009-1220-front.md` del Front. Los ajustes mecánicos sí quedaron verificados y commiteados. **Los detectores todavía no están en cero.**
+
+| Repositorio | Entrada existente pendiente |
+|---|---|
+| Back | `docs/features/contrato-http.md` |
+| Back | `src/ArquitecturaBaseMultitenant.Application/Validation/Identity/AddLoginMethodRequestValidator.cs` |
+| Back | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/TestFeatures/WhatsAppErrorProbeController.cs` |
+| Back | `tests/ArquitecturaBaseMultitenant.ArchitectureTests/ModuleControlProbes.cs` |
+| Front | `scripts/capturar-etapa-8.mjs` |
+| Front | `scripts/generar-galeria-etapa-8.mjs` |
+| Front | `scripts/test-e2e-real-whatsapp.mjs` |
+| Front | `src/test/etapa8VisualApp.tsx` |
+| Front | `src/test/etapa8VisualFixtures.ts` |
+
+La skill `arnes` prohíbe abrir los archivos que tocó o rehacer su trabajo. La consulta para permitir la corrección manual del árbol sigue pendiente; no supone una decisión nueva de producto ni autoriza borrar o modificar estos archivos de código.
+
 ## Lo que falta para la puerta
 
 - Completar las suites sobre los commits finales, E2E permanente de ambos repos, documentación en cero, comparación visual afectada y prueba efectiva de quitar el módulo en una copia descartable con bases migrada y vacía.
