@@ -36,6 +36,7 @@ Los tests mixtos requieren una remoción explícita de su composición, además 
 
 - `OutboxDeletionRaceTests` usa `Host`, `NowUtc` y `TransactionAsync` del helper `WhatsAppPrivacyFixture`; conservá esas tres piezas como soporte neutral en la copia, sin su `SeedAsync` WhatsApp ni sus opciones. No borres las tres pruebas de carreras del outbox.
 - Conservá los casos Email de `PlatformOrganizationPhoneNoticeTests` y los rechazos de Phone sin canal y enlaces sin prueba de `Etapa8ContractTests`.
+- En `AccountDeletionParticipantsTests`, el inventario de la copia pasa a los seis participantes del núcleo por nombre, conservando limpieza, privacidad e idempotencia. En `ExplicitRouteInventoryTests`, retirás sólo GET/POST del webhook; la comparación exacta de todas las rutas restantes sigue vigente. Los inventarios de la instalación con WhatsApp conservan sus entradas.
 - Para las reglas neutrales de `LoginLinkTests`, reemplazá el encaje WhatsApp de su fixture por un canal técnico de Phone disponible/apagado, exclusivamente de test y sin transporte. La prueba de instalación retirada usa el host normal sin ese canal y debe seguir rechazando Phone. Esto no acredita ningún recorrido Meta.
 - La paridad de resources verifica los módulos que quedan y la ausencia de recursos WhatsApp; no puede exigir que siempre exista al menos un módulo. Retirá de la documentación de la copia las referencias a tests exclusivos borrados y conservá los archivos de referencia del Front que necesitan las guardas cruzadas, sin editar el Front compartido.
 
