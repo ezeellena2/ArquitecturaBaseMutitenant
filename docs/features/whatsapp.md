@@ -1,6 +1,6 @@
 # WhatsApp
 
-Módulo quitable del número de la plataforma, Etapa 8. El alcance y las tareas están en el [plan ejecutable](../plans/2026-10-07-etapa-8-whatsapp.md); T02–T07 aportan composición, persistencia, adaptadores/outbox cifrado, Phone en identidad/recuperación, webhook durable y bot/enlaces. T08 completa privacidad. El asistente corresponde a E8b y la atención de organizaciones, a E11.
+Módulo quitable del número de la plataforma, Etapa 8. El alcance y las tareas están en el [plan ejecutable](../plans/2026-10-07-etapa-8-whatsapp.md); T02–T08 aportan composición, persistencia, adaptadores/outbox cifrado, Phone en identidad/recuperación, webhook durable, bot/enlaces y privacidad. El asistente corresponde a E8b y la atención de organizaciones, a E11.
 
 ## Contrato publicado en T01
 

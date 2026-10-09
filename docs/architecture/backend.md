@@ -741,7 +741,7 @@ Un guardado deja una sola entrada por acción: `RoleAssignmentTrail` junta los r
 
 ## 15. WhatsApp: un módulo quitable
 
-La estructura sigue el diseño de la Etapa 6 del plan maestro de `../ArquitecturaBase` ([ADR 0007](../decisions/README.md)), para que las dos plantillas se armen igual. El módulo nace en la Etapa 8: composición/persistencia/adaptadores, Phone en identidad/recuperación, webhook durable y bot/enlaces están implementados; T08 completa privacidad. La atención por organización (Etapa 11) sigue la [ADR 0038](../decisions/0038-whatsapp-de-atencion.md). Las precisiones de ingreso/avisos y la relación con el asistente están en [0049](../decisions/0049-precisiones-whatsapp-y-asistente.md) y el [plan E8](../plans/2026-10-07-etapa-8-whatsapp.md).
+La estructura sigue el diseño de la Etapa 6 del plan maestro de `../ArquitecturaBase` ([ADR 0007](../decisions/README.md)), para que las dos plantillas se armen igual. El módulo nace en la Etapa 8: composición/persistencia/adaptadores, Phone en identidad/recuperación, webhook durable, bot/enlaces y privacidad están implementados. La atención por organización (Etapa 11) sigue la [ADR 0038](../decisions/0038-whatsapp-de-atencion.md). Las precisiones de ingreso/avisos y la relación con el asistente están en [0049](../decisions/0049-precisiones-whatsapp-y-asistente.md) y el [plan E8](../plans/2026-10-07-etapa-8-whatsapp.md).
 
 - **Puertos en el núcleo, adaptadores en el módulo.** El núcleo nunca nombra a WhatsApp:
   - `ILoginCodeChannel` e `IInvitationChannel`: el núcleo trae el canal `"email"`. El módulo registra `"whatsapp"`. `LoginCodeChannel` e `InvitationChannel` son **valores**, no enums: el núcleo valida contra los canales registrados.
