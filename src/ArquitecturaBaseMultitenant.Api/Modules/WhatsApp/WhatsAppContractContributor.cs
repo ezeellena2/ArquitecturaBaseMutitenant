@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using Microsoft.OpenApi;
+using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 
 namespace ArquitecturaBaseMultitenant.Api.Modules.WhatsApp;
 
@@ -22,7 +23,7 @@ internal sealed class WhatsAppContractContributor : IHttpContractContributor
         foreach (var path in NewDestinationPaths)
             HttpContractDocumentation.Describe(document, path, HttpMethod.Post,
                 "País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
-                [E(400, "WhatsApp.Phone.CountryNotAllowed", "phone")]);
+                [E(400, WhatsAppErrors.CountryNotAllowedCode, "phone")]);
         foreach (var item in document.Paths.Values)
             foreach (var operation in item.Operations?.Values.AsEnumerable() ?? [])
                 if (operation.RequestBody?.Content?.TryGetValue("application/json", out var media) == true)
@@ -41,7 +42,7 @@ internal sealed class WhatsAppContractContributor : IHttpContractContributor
             [E(401, "WhatsApp.Webhook.InvalidSignature"), HttpContractDocumentation.CoreError(404, "Http.NotFound")]);
         HttpContractDocumentation.Describe(document, "/webhooks/whatsapp", HttpMethod.Post,
             "Meta JSON; X-Hub-Signature-256=sha256=<HMAC> sobre bytes originales, antes de confiar en el JSON. Máximo 5242880 bytes, rate limit del webhook. Sin Idempotency-Key: deduplicar IDs Meta por tipo de evento, responder duplicados 200. 200 solo después de persistir lote; worker durable, sin sesión.",
-            [E(400, "WhatsApp.Webhook.InvalidPayload"), E(401, "WhatsApp.Webhook.InvalidSignature"), E(413, "WhatsApp.Webhook.PayloadTooLarge"), E(429, "WhatsApp.Webhook.TooManyRequests"), HttpContractDocumentation.CoreError(404, "Http.NotFound")],
+            [E(400, "WhatsApp.Webhook.InvalidPayload"), E(401, "WhatsApp.Webhook.InvalidSignature"), E(413, "WhatsApp.Webhook.PayloadTooLarge"), E(429, WhatsAppErrors.WebhookTooManyRequestsCode), HttpContractDocumentation.CoreError(404, "Http.NotFound")],
             examples: new Dictionary<string, JsonNode>
             {
                 ["mensajeEntrante"] = JsonNode.Parse("{\"object\":\"whatsapp_business_account\",\"entry\":[{\"id\":\"example-waba\",\"changes\":[{\"field\":\"messages\",\"value\":{\"messaging_product\":\"whatsapp\",\"metadata\":{\"display_phone_number\":\"5491123456789\",\"phone_number_id\":\"example-platform-number-id\"},\"messages\":[{\"from\":\"5491198765432\",\"id\":\"wamid.example\",\"timestamp\":\"1791457200\",\"type\":\"text\",\"text\":{\"body\":\"Hola\"}}]}}]}]}")!,

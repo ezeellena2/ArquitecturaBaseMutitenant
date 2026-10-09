@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using Microsoft.Extensions.Options;
 using PhoneNumbers;
 using ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
@@ -32,8 +33,8 @@ internal sealed class WhatsAppChannelSettings(IOptions<WhatsAppOptions> options,
             var util = PhoneNumberUtil.GetInstance();
             var region = util.GetRegionCodeForNumber(util.Parse(destination.Value, null));
             return Countries.Contains(region, StringComparer.Ordinal) ? Result.Success()
-                : Error.Validation("WhatsApp.Phone.CountryNotAllowed", "WhatsApp is not enabled for that country.");
+                : WhatsAppErrors.CountryNotAllowed;
         }
-        catch (NumberParseException) { return Error.Validation("WhatsApp.Phone.CountryNotAllowed", "WhatsApp is not enabled for that country."); }
+        catch (NumberParseException) { return WhatsAppErrors.CountryNotAllowed; }
     }
 }

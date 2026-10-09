@@ -1,6 +1,6 @@
 using System.Threading.RateLimiting;
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
-using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.RateLimiting;
 namespace ArquitecturaBaseMultitenant.Api.Modules.WhatsApp.RateLimiting;
@@ -17,7 +17,7 @@ internal sealed class WhatsAppWebhookRateLimitPolicy : IRateLimiterPolicy<string
         var context = rejection.HttpContext;
         context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
         context.Response.Headers.RetryAfter = RetryAfterHeaderFormatter.Format(seconds);
-        var error = Error.TooManyRequests("WhatsApp.Webhook.TooManyRequests", "Too many webhook requests.");
+        var error = WhatsAppErrors.WebhookTooManyRequests(seconds);
         var problem = ProblemDetailsMapper.FromError(error, context.RequestServices.GetRequiredService<ProblemDetailsFactory>(), context);
         problem.Extensions["retryAfter"] = seconds;
         await context.RequestServices.GetRequiredService<IProblemDetailsService>()
