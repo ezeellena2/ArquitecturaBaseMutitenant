@@ -28,6 +28,8 @@ Conservá las migraciones históricas y sus `.Designer.cs` sin reescribirlas: la
 
 Después de generar la migración nueva, quitá de la copia `Domain/WhatsApp`, `Application/Modules/WhatsApp`, `Infrastructure/Modules/WhatsApp`, `Api/Modules/WhatsApp`, tests exclusivos, opciones y assets propios. Conservá los puertos neutrales, Phone y LoginLink. Quitá también la exclusión temporal del descubrimiento: el contribuidor ya no existe y el modelo debe seguir coincidiendo con el snapshot de retiro.
 
+La fixture privada E8 es también exclusiva del módulo: en la copia quitá `TestFeatures/WhatsAppBrowser`, sus `WhatsAppBrowserFixtureTests`/`WhatsAppBrowserControlTests`, el modo `--whatsapp-browser` de `RealE2ESetup` y la referencia del tool al proyecto de integración que incorporó ese modo. Conservá el setup de correo/Google y sus otros comandos. No retires el soporte neutral de `ApiFactory`, OIDC, Phone o outbox. El runner del Front de WhatsApp no se ejecuta en esa copia; los recorridos del núcleo sí.
+
 Ejecutá build, suites del núcleo y `has-pending-model-changes` según la guía de migraciones. Aplicá el retiro en la base que ya estaba migrada; en la vacía aplicá toda la historia, incluida `DropWhatsApp`. En ambas verificá Email, Google, registro personal/empresarial, legales, recuperación y gestión de métodos; cero capacidades/canales/rutas WhatsApp y disponibilidad falsa. Comprobá también que la presencia de otro contribuidor no aplica dos veces las configuraciones ni borra sus tablas.
 
 Registrá commits de origen, bases descartables, migración, SQL revisado y resultados en el informe de Integración. La receta documentada y un modelo de test sin módulo no sustituyen esta prueba de retiro completa.

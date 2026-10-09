@@ -1,0 +1,1 @@
+Fixture privada del navegador E8 sobre ApiFactory, Kestrel y PostgreSQL propios. Ningún controller ni endpoint de control. Leé [tests](../../../../../docs/rules/tests.md) y [el protocolo](../../../../../docs/guides/e2e-whatsapp.md). Sólo Testing; secretos por stdin privado, logs CHECK sin pruebas ni destinos. Verifica WhatsAppBrowserFixtureTests.

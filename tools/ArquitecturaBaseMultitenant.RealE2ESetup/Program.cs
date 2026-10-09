@@ -29,6 +29,19 @@ if (Environment.GetEnvironmentVariable("MT_E2E_ISOLATED") != "1")
     return 1;
 }
 
+if (args is ["--whatsapp-browser", var browserScript])
+{
+    try
+    {
+        var repository = new DirectoryInfo(AppContext.BaseDirectory);
+        while (repository is not null && !File.Exists(Path.Combine(repository.FullName, "ArquitecturaBaseMultitenant.slnx"))) repository = repository.Parent;
+        if (repository is null) throw new InvalidOperationException("Repository root missing.");
+        using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(30));
+        return await ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.WhatsAppBrowser.WhatsAppBrowserFixture.RunAsync(repository.FullName, browserScript, timeout.Token);
+    }
+    catch (Exception exception) { Console.Error.WriteLine($"E8 browser fixture failed ({exception.GetType().Name})."); return 1; }
+}
+
 var configuredEmail = Environment.GetEnvironmentVariable("MT_E2E_BUSINESS_EMAIL");
 var email = Email.Create(configuredEmail);
 if (email.IsFailure || !email.Value.Value.EndsWith("@example.test", StringComparison.OrdinalIgnoreCase))
