@@ -19,8 +19,9 @@
 - **Datos de prueba:** se preparan dentro de un límite real (`factory.InTransactionAsync`).
 - Lo que existe solo para probar va en `TestFeatures/`, nunca en `src/`.
 - `ApiFactory` arranca con `ValidateOnBuild`, como Development: una clase que pide algo sin registrar rompe el arranque de toda la suite. `ValidateScopes` queda apagado porque hay pruebas que leen servicios scoped desde la raíz.
+- La configuración base de `ApiFactory` fija `Email:Delivery=PickupDirectory`, `WhatsApp:PhoneNumberId` vacío y `Seed:PlatformOwner:Phone` vacío, también para hosts Development: no heredan transportes externos ni el Phone del operador local. Una fixture puede sobrescribirlos explícitamente; los tests del seed y del módulo verifican esos overrides.
 - Para aislar `Widget`, `Poster` y `Deal`, la fixture aplica primero las migraciones reales y después llama a `IsolationSchema.ApplyAsync(connection)` del proyecto de tests. Ese helper crea sus tablas con SQL generado por las mismas plantillas de `RlsSql`: `EnableTenantRls`, `EnablePublicRls` y `EnablePartiesRls`. Estas tablas no llevan migraciones productivas.
-- `ApiFactory` configura un pickup `.eml` único por fixture bajo el directorio temporal del sistema y lo borra al terminar; los tests leen los códigos mediante `Support/PickupCodeReader`, filtrando por destinatario y consumiendo solo ese archivo.
+- `ApiFactory` configura un pickup `.eml` único por fixture bajo el directorio temporal del sistema y lo borra al terminar; los tests leen los códigos mediante `Support/PickupCodeReader`, filtrando por destinatario y por el párrafo OTP de seis dígitos propio de la plantilla de prueba. Un número dentro de una URL de invitación no es el código. Se consume sólo el archivo Authentication seleccionado. Los lectores de avisos del outbox no descifran payloads vacíos ya purgados al enviar.
 - `Tenancy/SuspensionJourneyTests` ejerce estado de organización, membresía y cuenta en base real, cachés reales, token B2B, ruta protegida, `/api/me` y refresh.
 - `TestContext.Current.CancellationToken` en lugar de `CancellationToken.None`.
 - Desde E3a, la puerta incluye `npm run test:e2e:real` del front: navegador Playwright, front y Api reales, una base PostgreSQL migrada exclusiva del E2E y códigos leídos de `.eml` en un pickup temporal. El runner crea allí la persona y la organización que necesita. Recorrido obligatorio: registro nuevo → Personal → logout → cuenta propia del E2E por `/login/empresa` → `/org` → F5 conserva el acceso empresa → Perfiles/Personal → logout. No hay mocks ni intercepción de red en esta prueba. `E2E_PICKUP_DIR` apunta al directorio absoluto configurado como `Email:PickupDirectory`. La prueba no lee ni modifica la base Development de Aspire y no imprime códigos, correos ni secretos. Se ejecuta en cada etapa desde E3a, aunque sus tests unitarios e integrados estén verdes.
@@ -38,6 +39,7 @@
 - CI (E0): build + test en cada push; desde la E1 falla si `docs/contracts/openapi.json` no está al día. La comparación con los tipos del front se corre en local (`contracts:check`) hasta que el CI del front la sume en la E10 (ADR 0016, enmienda). `HarnessTests` (E0) exige cada clase C# `*Tests` con un método `[Fact]`/`[Theory]` y los archivos `.test.mjs`/`.test.ts[x]` de «Lo verifica» en la etapa cerrada, también en el front si está el checkout.
 - `ExplicitRouteInventoryTests` (E1): una ruta sin su fila falla.
 - `scripts/test-e2e-real.test.mjs` del front (E3): desde la 3a, la etapa no cierra si el recorrido real no pasa.
+- `PickupCodeReaderTests` y `WhatsAppOwnerSeedTests` (E8): selección MIME del OTP en es/en y override explícito Phone de la fixture.
 
 ## Detalle
 [backend.md §4.6](../architecture/backend.md#46-tests)
