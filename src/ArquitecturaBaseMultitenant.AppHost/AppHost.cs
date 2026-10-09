@@ -1,3 +1,5 @@
+using Aspire.Hosting.DevTunnels;
+
 // Orquesta Postgres, API y front para desarrollo; el recorrido E2E usa una base y correo pickup aislados.
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -75,5 +77,17 @@ builder.AddViteApp("front", "../../../ArquitecturaBaseMutitenantFront")
     .WaitFor(api)
     .WithHttpsEndpoint(port: 5174, env: "PORT", isProxied: false)
     .WithHttpsDeveloperCertificate();
+
+// Copiado de ArquitecturaBase: el túnel local expone sólo HTTPS de la API para Meta.
+// La fixture E2E nunca se publica, incluso si el secreto local mantiene el túnel encendido.
+if (!isolatedE2e && bool.TryParse(builder.Configuration["DevTunnel:Enabled"], out var devTunnelEnabled) && devTunnelEnabled)
+{
+    var devTunnelOptions = new DevTunnelOptions { Region = DevTunnelRegion.BrazilSouth };
+    var devTunnelId = builder.Configuration["DevTunnel:TunnelId"];
+    builder.AddDevTunnel("tunnel",
+            tunnelId: string.IsNullOrWhiteSpace(devTunnelId) ? null : devTunnelId,
+            options: devTunnelOptions)
+        .WithReference(api.GetEndpoint("https"), allowAnonymous: true);
+}
 
 builder.Build().Run();
