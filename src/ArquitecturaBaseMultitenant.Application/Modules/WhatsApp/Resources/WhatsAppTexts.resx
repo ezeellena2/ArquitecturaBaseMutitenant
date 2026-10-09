@@ -61,7 +61,7 @@
     <value>Pediste la baja de tu cuenta de ArquitecturaBase. Se elimina el {{1}}. Si no fuiste vos o te arrepentiste, ingresá antes de esa fecha para cancelarla.</value>
   </data>
   <data name="Template.Invitation.Body" xml:space="preserve">
-    <value>Hola. {{1}} te invitó a sumarte a {{2}} en ArquitecturaBase. La invitación vence el {{3}}.</value>
+    <value>Hola. {{1}} te invitó a sumarte a {{2}} en ArquitecturaBase. La invitación vence el {{3}}. Podés revisarla con el botón.</value>
   </data>
   <data name="Template.LoginCode.Body" xml:space="preserve">
     <value>Tu código de verificación es *{{1}}*. Por tu seguridad, no lo compartas.</value>
@@ -91,13 +91,13 @@
     <value>Revisamos tu pedido para recuperar tu cuenta de ArquitecturaBase y no pudimos confirmar que sea tuya. Podés hacer un pedido nuevo desde la pantalla de ingreso.</value>
   </data>
   <data name="Template.RecoveryRequested.Body" xml:space="preserve">
-    <value>Alguien pidió recuperar tu cuenta de ArquitecturaBase. Una persona de la plataforma revisa el pedido antes de cambiar algo. Si fuiste vos, no tenés que hacer nada. Si no fuiste vos, escribí a {{1}}.</value>
+    <value>Alguien pidió recuperar tu cuenta de ArquitecturaBase. Una persona de la plataforma revisa el pedido antes de cambiar algo. Si fuiste vos, no tenés que hacer nada. Si no fuiste vos, escribí a {{1}} para pedir ayuda.</value>
   </data>
   <data name="Template.ReviewLoginMethods.Body" xml:space="preserve">
     <value>Ya no sos miembro de {{1}}. Tu cuenta de ArquitecturaBase sigue activa. Si entrabas con un correo de esa organización, puede que ya no te sirva: revisá tus métodos de ingreso desde Mi cuenta.</value>
   </data>
   <data name="Template.DeletionRequestedSuspended.Body" xml:space="preserve">
-    <value>La plataforma inició la baja de tu cuenta de ArquitecturaBase. Se elimina el {{1}}. Tu cuenta está suspendida, así que no podés cancelar la baja. Si creés que es un error, escribí a {{2}}.</value>
+    <value>La plataforma inició la baja de tu cuenta de ArquitecturaBase. Se elimina el {{1}}. Tu cuenta está suspendida, así que no podés cancelar la baja. Si creés que es un error, escribí a {{2}} para pedir ayuda.</value>
   </data>
   <data name="Notice.OccurredAt" xml:space="preserve">
     <value>{0} a las {1}</value>

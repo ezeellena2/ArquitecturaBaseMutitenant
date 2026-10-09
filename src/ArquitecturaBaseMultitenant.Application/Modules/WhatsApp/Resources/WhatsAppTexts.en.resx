@@ -61,7 +61,7 @@
     <value>You requested deletion of your ArquitecturaBase account. It will be deleted on {{1}}. If this was not you or you changed your mind, sign in before that date to cancel it.</value>
   </data>
   <data name="Template.Invitation.Body" xml:space="preserve">
-    <value>Hello. {{1}} invited you to join {{2}} in ArquitecturaBase. The invitation expires on {{3}}.</value>
+    <value>Hello. {{1}} invited you to join {{2}} in ArquitecturaBase. The invitation expires on {{3}}. You can review it using the button.</value>
   </data>
   <data name="Template.LoginCode.Body" xml:space="preserve">
     <value>*{{1}}* is your verification code. For your security, do not share this code.</value>
@@ -91,13 +91,13 @@
     <value>We reviewed your request to recover your ArquitecturaBase account and could not confirm that it belongs to you. You can submit a new request from the sign-in page.</value>
   </data>
   <data name="Template.RecoveryRequested.Body" xml:space="preserve">
-    <value>Someone requested recovery of your ArquitecturaBase account. A person from the platform will review the request before changing anything. If this was you, you do not need to do anything. If it was not you, contact {{1}}.</value>
+    <value>Someone requested recovery of your ArquitecturaBase account. A person from the platform will review the request before changing anything. If this was you, you do not need to do anything. If it was not you, contact {{1}} for help.</value>
   </data>
   <data name="Template.ReviewLoginMethods.Body" xml:space="preserve">
     <value>You are no longer a member of {{1}}. Your ArquitecturaBase account is still active. If you used that organization's email to sign in, it may no longer work: review your sign-in methods in My account.</value>
   </data>
   <data name="Template.DeletionRequestedSuspended.Body" xml:space="preserve">
-    <value>The platform started deletion of your ArquitecturaBase account. It will be deleted on {{1}}. Your account is suspended, so you cannot cancel deletion. If you believe this is a mistake, contact {{2}}.</value>
+    <value>The platform started deletion of your ArquitecturaBase account. It will be deleted on {{1}}. Your account is suspended, so you cannot cancel deletion. If you believe this is a mistake, contact {{2}} for help.</value>
   </data>
   <data name="Notice.OccurredAt" xml:space="preserve">
     <value>{0} at {1}</value>

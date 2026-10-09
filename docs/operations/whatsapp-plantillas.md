@@ -54,8 +54,8 @@ Los trece nombres originales se completan con este paquete, cotejado con Mensaje
 |---|---|---|---|
 | codigo_ingreso / es | Tu código de verificación es *{{1}}*. Por tu seguridad, no lo compartas. | {{1}}: 483920 | Copiar código |
 | codigo_ingreso / en | *{{1}}* is your verification code. For your security, do not share this code. | {{1}}: 483920 | Copy code |
-| invitacion_organizacion / es | Hola. {{1}} te invitó a sumarte a {{2}} en ArquitecturaBase. La invitación vence el {{3}}. | {{1}}: Lucía Fernández; {{2}}: Grupo Delta; {{3}}: 04/10/2026 | Ver la invitación |
-| invitacion_organizacion / en | Hello. {{1}} invited you to join {{2}} in ArquitecturaBase. The invitation expires on {{3}}. | {{1}}: Lucy Smith; {{2}}: Delta Group; {{3}}: 10/04/2026 | View invitation |
+| invitacion_organizacion / es | Hola. {{1}} te invitó a sumarte a {{2}} en ArquitecturaBase. La invitación vence el {{3}}. Podés revisarla con el botón. | {{1}}: Lucía Fernández; {{2}}: Grupo Delta; {{3}}: 04/10/2026 | Ver la invitación |
+| invitacion_organizacion / en | Hello. {{1}} invited you to join {{2}} in ArquitecturaBase. The invitation expires on {{3}}. You can review it using the button. | {{1}}: Lucy Smith; {{2}}: Delta Group; {{3}}: 10/04/2026 | View invitation |
 | aviso_metodo_ingreso / es | Cambiaron los métodos de ingreso de tu cuenta de ArquitecturaBase: {{1}} {{2}} el {{3}}. Si no fuiste vos, entrá a tu cuenta y revisá tus métodos de ingreso. Si no podés entrar, usá «Recuperá tu cuenta». | {{1}}: agregaste; {{2}}: •••• 4521; {{3}}: 27/09/2026 a las 14:35 | Ninguno |
 | aviso_metodo_ingreso / en | Your ArquitecturaBase account's sign-in methods changed: you {{1}} {{2}} on {{3}}. If this was not you, sign in and review your sign-in methods. If you cannot sign in, use “Recover your account”. | {{1}}: added; {{2}}: •••• 4521; {{3}}: 09/27/2026 at 2:35 PM | None |
 | revisa_metodos_ingreso / es | Ya no sos miembro de {{1}}. Tu cuenta de ArquitecturaBase sigue activa. Si entrabas con un correo de esa organización, puede que ya no te sirva: revisá tus métodos de ingreso desde Mi cuenta. | {{1}}: Grupo Delta | Ninguno |
