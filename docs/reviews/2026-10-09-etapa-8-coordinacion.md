@@ -76,13 +76,17 @@ El coordinador cotejó el informe y los resúmenes de ambos logs, además de la 
 
 ### Autocontención de tests y retiro del módulo
 
-La copia sin WhatsApp mostró que los tests que levantan Development podían depender del secreto Google de esta máquina y de un operador local. La suite Main anterior pasó, pero no acredita independencia de esos secretos. Back tiene autorizado apagar Google por defecto sólo en `ApiFactory` (los casos Google aportan sus valores explícitos) y usar el helper de operador sintético en los casos Development de `SpaHostingTests`. No se relajan validadores productivos ni cambia el contrato. El build, los dirigidos afectados y la suite completa sobre ese ajuste siguen pendientes.
+La copia sin WhatsApp mostró que los tests que levantan Development podían depender del secreto Google de esta máquina y de un operador local. La suite Main anterior pasó, pero no acredita independencia de esos secretos. Después de la liberación del Front, Back corrigió las fixtures en `e265907d052c6a639e5bfc9051187a8489cd97a9`: Google apagado por defecto sólo en `ApiFactory` (los casos Google aportan sus valores explícitos) y helper de operador sintético en los casos Development de `SpaHostingTests`. No se relajan validadores productivos ni cambia el contrato.
+
+La verificación final se ejecutó con `APPDATA` privado, sin copiar secretos ni retirar `UserSecretsId` productivos: **build completo exit 0, cero advertencias y errores**, 44.61s; **109/109 dirigidos** de Google, registro, arranque, SPA y OpenAPI; **suite completa Docker 2262/2262, cero fallos y omitidos, exit 0**, 16m38.270s. El coordinador cotejó el log y manifiesto, verificó los ocho hashes de evidencias y la ausencia de `Microsoft/UserSecrets` después de terminar, y recalculó ambos hashes LF del contrato: coinciden con los indicados arriba. El [pase Back](2026-10-09-etapa-8-pase-back.md) conserva los resultados previos y registra el final en `37ab6a8e9c79f45b65f06b373d26fd48318eddbe`. Las fuentes, binarios y recursos propios quedaron liberados.
 
 El retiro efectivo se ejecutó únicamente en `.local/module-removal/effective-605be253/source`, con bases y contenedor propios. Su [informe](2026-10-09-etapa-8-retiro-whatsapp.md) conserva las adaptaciones de fixtures e inventarios al quitar el módulo, los intentos fallidos y la comparación de datos, esquema y contrato del núcleo. La cuarta suite completa pasó **2084/2084, cero fallos y omitidos, exit 0**, 14m54.120s. La reversión pasó **12/12 permisos DML individuales** y, después de volver a retirar el módulo, los esquemas de ambas bases coinciden: SHA-256 `04ab3d7e1bda60d9c7e17f30e261f1fc9a41ac1b9fd5d2c3e393486b72034022`. Permanecen iguales los 183 DTO comunes; sólo desaparece el DTO del webhook. El coordinador cotejó el log, las doce filas de permisos, ambos hashes finales y la ausencia del contenedor propio después de la limpieza. Las fuentes finales quedan archivadas sin secretos. Esta prueba técnica de retiro no certifica el recorrido operativo por Meta ni cierra T14 completo.
 
 ## Pendientes documentales del arnés
 
 La centralización del Back eliminó sus dos hallazgos de códigos. Quedan cuatro entradas en el árbol del Back y cinco en el del Front; son archivos existentes que los motores no incorporaron. Los informes son `.local/arneses/realinear-docs/20261009-1216.md` del Back y `.local/arneses/realinear-docs/20261009-1209-front.md` / `20261009-1220-front.md` del Front. Los ajustes mecánicos sí quedaron verificados y commiteados. **Los detectores todavía no están en cero.**
+
+La detección final de ambos repos, `.local/arneses/realinear-docs/20261009-1510.md`, conserva **9 modelo, 0 humano** y marca **2 automáticos** posteriores del Front. El arnés los preparó sin modelo ni fusión en `arnes/realinear-docs/20261009-1512`: **auto 2→0, modelo 5→5, humano 0**, verificación `npx vitest run src/test/harness.test.ts` aprobada y 0 tokens. Informe `.local/arneses/realinear-docs/20261009-1512-front.md`. Esa rama sigue separada de main: la revisión automática rechazó `--fusionar` por faltar una petición humana explícita de fusión, exigida por la skill. Se pidió autorización sobre la rama concreta ya verificada; no se eludió el rechazo ni se editó manualmente lo que hizo el arnés. La autorización de esta fusión y la excepción manual de ambos árboles son consultas distintas, todavía pendientes.
 
 | Repositorio | Entrada existente pendiente |
 |---|---|
@@ -100,7 +104,7 @@ La skill `arnes` prohíbe abrir los archivos que tocó o rehacer su trabajo. La 
 
 ## Lo que falta para la puerta
 
-- Completar la verificación autocontenida del Back sobre el ajuste de fixtures y documentación en cero. El E2E permanente, la comparación visual afectada y el retiro efectivo en una copia con bases migrada y vacía tienen los resultados indicados arriba.
+- Completar documentación en cero. Las suites finales, el E2E permanente, la comparación visual afectada y el retiro efectivo en una copia con bases migrada y vacía tienen los resultados indicados arriba.
 - Resolver aprobación/categoría de todas las variantes y el origen de los cuatro botones URL.
 - Recibir el **celular destinatario real autorizado**, diferente del emisor y de una cuenta de operador para registro/enlace común.
 - Levantar el entorno, verificar el túnel multitenant y cambiar temporalmente el callback compartido según [configuración](../operations/configuracion.md#4-lo-que-tenés-que-hacer-vos-una-sola-vez-fuera-del-código). Conservar la URL anterior para volver a ArquitecturaBase.
