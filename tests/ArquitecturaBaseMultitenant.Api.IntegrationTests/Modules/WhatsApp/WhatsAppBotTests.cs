@@ -37,6 +37,40 @@ public sealed class WhatsAppBotTests(ApiFactory factory) : IClassFixture<ApiFact
         builder.ConfigureTestServices(services =>
         { services.RemoveAll<TimeProvider>(); services.AddSingleton<TimeProvider>(_clock); services.RemoveAll<IHostedService>(); });
     });
+    [Fact]
+    public async Task Short_and_separated_OTP_received_by_webhook_keep_no_text_and_produce_no_bot_effects()
+    {
+        await using var app = Host(); using var client = app.CreateClient();
+        var owner = await CreatePhoneAsync(app.Services, "+5491134567899", platform: false);
+        var texts = new[] { "1234", "12345", "123456", "12-34", "1 2 3 4 5", "12.34.56",
+            "Mi código es 1234", "Código: 12345", "Código: 123456" };
+        var prefix = Guid.NewGuid().ToString("N");
+        var messages = texts.Select((text, index) => new { id = prefix + index, from = "5491134567899",
+            timestamp = _clock.GetUtcNow().ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture),
+            type = "text", text = new { body = text } }).ToArray();
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(new { @object = "whatsapp_business_account", entry = new[] {
+            new { changes = new[] { new { field = "messages", value = new { metadata = new { phone_number_id = "fixture-number" }, messages } } } } } });
+        await using var read = app.Services.CreateAsyncScope(); var db = read.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var notices = await db.OutboxMessages.CountAsync(Ct); var links = await db.Set<LoginLink>().CountAsync(Ct);
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/webhooks/whatsapp") { Content = new ByteArrayContent(bytes) };
+        request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+        request.Headers.Add("X-Hub-Signature-256", "sha256=" + Convert.ToHexString(HMACSHA256.HashData(Encoding.UTF8.GetBytes(Secret), bytes)));
+        using var response = await client.SendAsync(request, Ct); Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var received = await db.Set<WhatsAppMessage>().AsNoTracking().Where(value => value.Wamid.StartsWith(prefix)).ToArrayAsync(Ct);
+        Assert.Equal(texts.Length, received.Length);
+        Assert.All(received, row => { Assert.Null(row.EncryptedText); Assert.Equal(WhatsAppMessageKind.Authentication, row.Kind); Assert.Equal(owner, row.OriginalUserId); });
+        foreach (var row in received)
+        {
+            await using var process = app.Services.CreateAsyncScope();
+            var inbound = process.ServiceProvider.GetRequiredService<IWhatsAppInboundService>();
+            var claimed = await inbound.ClaimAsync(Ct); Assert.NotNull(claimed.Value);
+            Assert.True((await inbound.ProcessAsync(claimed.Value, Ct)).IsSuccess);
+        }
+        var processed = await db.Set<WhatsAppMessage>().AsNoTracking().Where(value => value.Wamid.StartsWith(prefix)).ToArrayAsync(Ct);
+        Assert.All(processed, row => Assert.NotNull(row.ProcessedAtUtc));
+        Assert.Equal(notices, await db.OutboxMessages.CountAsync(Ct));
+        Assert.Equal(links, await db.Set<LoginLink>().CountAsync(Ct));
+    }
     [Theory]
     [InlineData(BotButtons.SignIn, "/login")]
     [InlineData(BotButtons.Recover, "/recuperar")]

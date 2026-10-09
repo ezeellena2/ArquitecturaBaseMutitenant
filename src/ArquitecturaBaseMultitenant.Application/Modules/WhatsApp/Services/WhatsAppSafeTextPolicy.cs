@@ -16,7 +16,8 @@ internal static class WhatsAppSafeTextPolicy
             if (char.IsDigit(character)) digits++;
             else if (!char.IsWhiteSpace(character) && character is not ('-' or '.')) digits = 0;
             word = char.IsAsciiLetterOrDigit(character) || character is '_' or '-' or '/' or '=' ? word + 1 : 0;
-            if (digits >= 6 || word >= 32) return null;
+            // LoginCodeOptions admite desde cuatro dígitos: no depender de la longitud configurada hoy.
+            if (digits >= 4 || word >= 32) return null;
         }
         return clean;
     }
