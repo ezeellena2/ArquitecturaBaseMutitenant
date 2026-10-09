@@ -10,7 +10,7 @@
         "tags": [
           "WhatsApp"
         ],
-        "description": "Ruta técnica global condicional. hub.mode=subscribe y VerifyToken correcto: challenge text/plain. Sin configuración/disponibilidad o módulo retirado: 404 común. T01 apagado siempre; T02 aporta disponibilidad y T05 verificación, sin sesión.",
+        "description": "Ruta técnica global condicional. hub.mode=subscribe y VerifyToken correcto: challenge text/plain. Sin configuración/disponibilidad o módulo retirado: 404 común. Sin sesión.",
         "parameters": [
           {
             "name": "hub.mode",
@@ -109,38 +109,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "400": {
             "description": "Bad Request",
             "content": {
@@ -177,13 +145,6 @@
             "field": null,
             "es": "No encontramos lo que buscás.",
             "en": "We couldn't find what you're looking for."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           }
         ]
       },
@@ -191,7 +152,7 @@
         "tags": [
           "WhatsApp"
         ],
-        "description": "Meta JSON; X-Hub-Signature-256=sha256=<HMAC> sobre bytes originales, antes de confiar en el JSON. Máximo 5242880 bytes, rate limit del webhook. Sin Idempotency-Key: deduplicar IDs Meta por tipo de evento, responder duplicados 200. 200 solo después de persistir lote; worker durable, sin sesión. T01 apagado siempre; stub 501 si se habilita en prueba.",
+        "description": "Meta JSON; X-Hub-Signature-256=sha256=<HMAC> sobre bytes originales, antes de confiar en el JSON. Máximo 5242880 bytes, rate limit del webhook. Sin Idempotency-Key: deduplicar IDs Meta por tipo de evento, responder duplicados 200. 200 solo después de persistir lote; worker durable, sin sesión.",
         "parameters": [
           {
             "name": "X-Hub-Signature-256",
@@ -388,38 +349,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Too Many Requests; WhatsApp.Webhook.TooManyRequests",
             "headers": {
@@ -509,13 +438,6 @@
             "field": null,
             "es": "No encontramos lo que buscás.",
             "en": "We couldn't find what you're looking for."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           }
         ]
       }
@@ -11252,7 +11174,7 @@
         "tags": [
           "Auth"
         ],
-        "description": "Exactamente previousEmail o previousPhone; método perdido no exige posesión. 204 cuando existe cuenta recuperable; sin datos de cuenta ni sesión. T01: previousPhone devuelve 501 temporal.",
+        "description": "Exactamente previousEmail o previousPhone; método perdido no exige posesión. 204 cuando existe cuenta recuperable; sin datos de cuenta ni sesión.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -11457,38 +11379,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [ ],
@@ -11515,13 +11405,6 @@
             "en": "There is no account with that number."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 429,
             "code": "Http.TooManyRequests",
             "field": null,
@@ -11543,7 +11426,7 @@
         "tags": [
           "Auth"
         ],
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164. T01: teléfono devuelve 501 temporal, sin envío ni escritura; completar en T04.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Intentos y topes actuales; retryAfter son segundos y coincide con Retry-After. No guardar códigos ni enlaces en logs. Nonce opaco base64url de 43 caracteres, ligado a este pedido. Sin sesión. Nuevo destino no se agrega a la cuenta. Submit: 202 sin body, prueba previa vigente y previousEmail o previousPhone; resolución asistida de Plataforma conserva reason/version/permiso/SecurityEvent. WhatsApp: cuota diaria persistente de códigos por UTC, una reserva por operación; replay no vuelve a gastar cuota. Error de entrega posterior a 202 se maneja en outbox. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Intentos y topes actuales; retryAfter son segundos y coincide con Retry-After. No guardar códigos ni enlaces en logs. Nonce opaco base64url de 43 caracteres, ligado a este pedido. Sin sesión. Nuevo destino no se agrega a la cuenta. Submit: 202 sin body, prueba previa vigente y previousEmail o previousPhone; resolución asistida de Plataforma conserva reason/version/permiso/SecurityEvent. WhatsApp: cuota diaria persistente de códigos por UTC, una reserva por operación; replay no vuelve a gastar cuota. Error de entrega posterior a 202 se maneja en outbox. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -12007,38 +11890,6 @@
               }
             }
           },
-          "501": {
-            "description": "General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "409": {
             "description": "Request.IdempotencyKeyReused; Request.InProgress",
             "content": {
@@ -12158,13 +12009,6 @@
             "en": "You requested too many codes. Try again later."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 429,
             "code": "Http.TooManyRequests",
             "field": null,
@@ -12221,7 +12065,7 @@
         "tags": [
           "Auth"
         ],
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164. T01: teléfono devuelve 501 temporal, sin envío ni escritura; completar en T04.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Intentos y topes actuales; retryAfter son segundos y coincide con Retry-After. No guardar códigos ni enlaces en logs. Nonce opaco base64url de 43 caracteres, ligado a este pedido. Sin sesión. Nuevo destino no se agrega a la cuenta. Submit: 202 sin body, prueba previa vigente y previousEmail o previousPhone; resolución asistida de Plataforma conserva reason/version/permiso/SecurityEvent. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Intentos y topes actuales; retryAfter son segundos y coincide con Retry-After. No guardar códigos ni enlaces en logs. Nonce opaco base64url de 43 caracteres, ligado a este pedido. Sin sesión. Nuevo destino no se agrega a la cuenta. Submit: 202 sin body, prueba previa vigente y previousEmail o previousPhone; resolución asistida de Plataforma conserva reason/version/permiso/SecurityEvent. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -12738,38 +12582,6 @@
               }
             }
           },
-          "501": {
-            "description": "General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "409": {
             "description": "Request.IdempotencyKeyReused; Request.InProgress",
             "content": {
@@ -12910,13 +12722,6 @@
             "en": "That sign-in method is unavailable."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 429,
             "code": "Http.TooManyRequests",
             "field": null,
@@ -12966,7 +12771,7 @@
         "tags": [
           "Auth"
         ],
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164. T01: teléfono devuelve 501 temporal, sin envío ni escritura; completar en T04.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Intentos y topes actuales; retryAfter son segundos y coincide con Retry-After. No guardar códigos ni enlaces en logs. Nonce opaco base64url de 43 caracteres, ligado a este pedido. Sin sesión. Nuevo destino no se agrega a la cuenta. Submit: 202 sin body, prueba previa vigente y previousEmail o previousPhone; resolución asistida de Plataforma conserva reason/version/permiso/SecurityEvent. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Intentos y topes actuales; retryAfter son segundos y coincide con Retry-After. No guardar códigos ni enlaces en logs. Nonce opaco base64url de 43 caracteres, ligado a este pedido. Sin sesión. Nuevo destino no se agrega a la cuenta. Submit: 202 sin body, prueba previa vigente y previousEmail o previousPhone; resolución asistida de Plataforma conserva reason/version/permiso/SecurityEvent. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -13393,38 +13198,6 @@
               }
             }
           },
-          "501": {
-            "description": "General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "409": {
             "description": "Request.IdempotencyKeyReused; Request.InProgress",
             "content": {
@@ -13544,13 +13317,6 @@
             "en": "You requested too many codes. Try again later."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 429,
             "code": "Http.TooManyRequests",
             "field": null,
@@ -13600,7 +13366,7 @@
         "tags": [
           "Auth"
         ],
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164. T01: teléfono devuelve 501 temporal, sin envío ni escritura; completar en T04.BusinessSignup abierto, independiente de ConsumerSignup; identidad nueva o existente. No crea organización ni PhoneTaken personal. WhatsApp: cuota diaria persistente de códigos por UTC, una reserva por operación; replay no vuelve a gastar cuota. Error de entrega posterior a 202 se maneja en outbox. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.BusinessSignup abierto, independiente de ConsumerSignup; identidad nueva o existente. No crea organización ni PhoneTaken personal. WhatsApp: cuota diaria persistente de códigos por UTC, una reserva por operación; replay no vuelve a gastar cuota. Error de entrega posterior a 202 se maneja en outbox. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -14020,38 +13786,6 @@
               }
             }
           },
-          "501": {
-            "description": "General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "409": {
             "description": "Request.IdempotencyKeyReused; Request.InProgress",
             "content": {
@@ -14150,13 +13884,6 @@
             "en": "You requested too many codes. Try again later."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 403,
             "code": "Auth.BusinessSignup.Closed",
             "field": null,
@@ -14220,7 +13947,7 @@
         "tags": [
           "Auth"
         ],
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164. T01: teléfono devuelve 501 temporal, sin envío ni escritura; completar en T04.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Intentos y topes actuales; retryAfter son segundos y coincide con Retry-After. No guardar códigos ni enlaces en logs.BusinessSignup abierto, independiente de ConsumerSignup; identidad nueva o existente. No crea organización ni PhoneTaken personal. Cuenta, método, Personal cuando corresponde y legales explícitos atómicos. Operador probado: PlatformOnly y sin cookie pública. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Intentos y topes actuales; retryAfter son segundos y coincide con Retry-After. No guardar códigos ni enlaces en logs.BusinessSignup abierto, independiente de ConsumerSignup; identidad nueva o existente. No crea organización ni PhoneTaken personal. Cuenta, método, Personal cuando corresponde y legales explícitos atómicos. Operador probado: PlatformOnly y sin cookie pública. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -14282,7 +14009,7 @@
             "description": "No Content",
             "headers": {
               "Set-Cookie": {
-                "description": "Cookie HttpOnly tras prueba válida; nunca se emite desde webhook ni desde preview. Stubs T01 no la emiten.",
+                "description": "Cookie HttpOnly tras prueba válida; nunca se emite desde webhook ni desde preview.",
                 "schema": {
                   "type": "string"
                 }
@@ -14793,38 +14520,6 @@
               }
             }
           },
-          "501": {
-            "description": "General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "409": {
             "description": "Request.IdempotencyKeyReused; Request.InProgress",
             "content": {
@@ -14942,13 +14637,6 @@
             "field": "channel",
             "es": "Ese método de ingreso no está disponible.",
             "en": "That sign-in method is unavailable."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -15849,7 +15537,7 @@
         "tags": [
           "Auth"
         ],
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164. T01: teléfono devuelve 501 temporal, sin envío ni escritura; completar en T04. Solo método verificado utilizable; conserva invitación por correo de ADR0047. WhatsApp: cuota diaria persistente de códigos por UTC, una reserva por operación; replay no vuelve a gastar cuota. Error de entrega posterior a 202 se maneja en outbox.",
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164. Solo método verificado utilizable; conserva invitación por correo de ADR0047. WhatsApp: cuota diaria persistente de códigos por UTC, una reserva por operación; replay no vuelve a gastar cuota. Error de entrega posterior a 202 se maneja en outbox.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -16261,38 +15949,6 @@
               }
             }
           },
-          "501": {
-            "description": "General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "409": {
             "description": "Request.IdempotencyKeyReused; Request.InProgress",
             "content": {
@@ -16405,13 +16061,6 @@
             "en": "You requested too many codes. Try again later."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 429,
             "code": "Http.TooManyRequests",
             "field": null,
@@ -16461,7 +16110,7 @@
         "tags": [
           "Auth"
         ],
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164. T01: teléfono devuelve 501 temporal, sin envío ni escritura; completar en T04.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Intentos y topes actuales; retryAfter son segundos y coincide con Retry-After. No guardar códigos ni enlaces en logs. returnUrl local/OIDC validado conserva access, PKCE y callback. Respuesta returnUrl, sin tokens OIDC en body.",
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Intentos y topes actuales; retryAfter son segundos y coincide con Retry-After. No guardar códigos ni enlaces en logs. returnUrl local/OIDC validado conserva access, PKCE y callback. Respuesta returnUrl, sin tokens OIDC en body.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -16519,7 +16168,7 @@
             "description": "OK",
             "headers": {
               "Set-Cookie": {
-                "description": "Cookie HttpOnly tras prueba válida; nunca se emite desde webhook ni desde preview. Stubs T01 no la emiten.",
+                "description": "Cookie HttpOnly tras prueba válida; nunca se emite desde webhook ni desde preview.",
                 "schema": {
                   "type": "string"
                 }
@@ -16893,38 +16542,6 @@
               }
             }
           },
-          "501": {
-            "description": "General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "409": {
             "description": "Request.IdempotencyKeyReused; Request.InProgress",
             "content": {
@@ -17044,13 +16661,6 @@
             "en": "That sign-in method is unavailable."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 429,
             "code": "Http.TooManyRequests",
             "field": null,
@@ -17093,7 +16703,7 @@
         "tags": [
           "Auth"
         ],
-        "description": "Enlace opaco 256 bits (43 base64url), hash, 10 minutos, un uso y ligado a MethodId Phone verificado. Uno nuevo invalida los previos de ese método. Revalidar dueño, método, canal, estado y operador bajo lock; operador actual devuelve Invalid incluso en replay, sin cookie, datos o motivo revelador. Token via /login/enlace#t=… y solo memoria; jamás query/storage/log. Preview no consume ni crea cookie. displayName y maskedPhone nullable. T01 devuelve 501.",
+        "description": "Enlace opaco 256 bits (43 base64url), hash, 10 minutos, un uso y ligado a MethodId Phone verificado. Uno nuevo invalida los previos de ese método. Revalidar dueño, método, canal, estado y operador bajo lock; operador actual devuelve Invalid incluso en replay, sin cookie, datos o motivo revelador. Token via /login/enlace#t=… y solo memoria; jamás query/storage/log. Preview no consume ni crea cookie. displayName y maskedPhone nullable.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -17227,38 +16837,6 @@
                       "status": 400,
                       "detail": "This link no longer works.",
                       "code": "Auth.LoginLink.AlreadyUsed",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
                       "traceId": "example-trace-id"
                     }
                   }
@@ -17401,13 +16979,6 @@
             "en": "Wait a moment before requesting another link."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 429,
             "code": "Http.TooManyRequests",
             "field": null,
@@ -17429,7 +17000,7 @@
         "tags": [
           "Auth"
         ],
-        "description": "Enlace opaco 256 bits (43 base64url), hash, 10 minutos, un uso y ligado a MethodId Phone verificado. Uno nuevo invalida los previos de ese método. Revalidar dueño, método, canal, estado y operador bajo lock; operador actual devuelve Invalid incluso en replay, sin cookie, datos o motivo revelador. Token via /login/enlace#t=… y solo memoria; jamás query/storage/log. Solo access=consumer. 200 {access:consumer} y cookie pública, sin tokens OIDC. Replay misma key no crea otra sesión; otra key ya usado. Front ejecuta después signinRedirect con su state y PKCE. T01 devuelve 501, sin cookie.",
+        "description": "Enlace opaco 256 bits (43 base64url), hash, 10 minutos, un uso y ligado a MethodId Phone verificado. Uno nuevo invalida los previos de ese método. Revalidar dueño, método, canal, estado y operador bajo lock; operador actual devuelve Invalid incluso en replay, sin cookie, datos o motivo revelador. Token via /login/enlace#t=… y solo memoria; jamás query/storage/log. Solo access=consumer. 200 {access:consumer} y cookie pública, sin tokens OIDC. Replay misma key no crea otra sesión; otra key ya usado. Front ejecuta después signinRedirect con su state y PKCE.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -17475,7 +17046,7 @@
             "description": "OK",
             "headers": {
               "Set-Cookie": {
-                "description": "Cookie HttpOnly tras prueba válida; nunca se emite desde webhook ni desde preview. Stubs T01 no la emiten.",
+                "description": "Cookie HttpOnly tras prueba válida; nunca se emite desde webhook ni desde preview.",
                 "schema": {
                   "type": "string"
                 }
@@ -17621,38 +17192,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Too Many Requests; Auth.LoginLink.TooManyRequests; Http.TooManyRequests",
             "headers": {
@@ -17838,13 +17377,6 @@
             "field": null,
             "es": "Esperá un momento antes de pedir otro enlace.",
             "en": "Wait a moment before requesting another link."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 429,
@@ -18043,7 +17575,7 @@
         "tags": [
           "Auth"
         ],
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164. T01: teléfono devuelve 501 temporal, sin envío ni escritura; completar en T04.ConsumerSignup abierto; acepta términos explícitos. Crea Persona, nunca empresa. WhatsApp: cuota diaria persistente de códigos por UTC, una reserva por operación; replay no vuelve a gastar cuota. Error de entrega posterior a 202 se maneja en outbox. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.ConsumerSignup abierto; acepta términos explícitos. Crea Persona, nunca empresa. WhatsApp: cuota diaria persistente de códigos por UTC, una reserva por operación; replay no vuelve a gastar cuota. Error de entrega posterior a 202 se maneja en outbox. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -18523,38 +18055,6 @@
               }
             }
           },
-          "501": {
-            "description": "General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "409": {
             "description": "Request.IdempotencyKeyReused; Request.InProgress",
             "content": {
@@ -18653,13 +18153,6 @@
             "en": "You requested too many codes. Try again later."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 403,
             "code": "Auth.Signup.Closed",
             "field": null,
@@ -18737,7 +18230,7 @@
         "tags": [
           "Auth"
         ],
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164. T01: teléfono devuelve 501 temporal, sin envío ni escritura; completar en T04.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Intentos y topes actuales; retryAfter son segundos y coincide con Retry-After. No guardar códigos ni enlaces en logs.ConsumerSignup abierto; acepta términos explícitos. Crea Persona, nunca empresa. Cuenta, método, Personal cuando corresponde y legales explícitos atómicos. Operador probado: PlatformOnly y sin cookie pública. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Intentos y topes actuales; retryAfter son segundos y coincide con Retry-After. No guardar códigos ni enlaces en logs.ConsumerSignup abierto; acepta términos explícitos. Crea Persona, nunca empresa. Cuenta, método, Personal cuando corresponde y legales explícitos atómicos. Operador probado: PlatformOnly y sin cookie pública. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -19362,38 +18855,6 @@
               }
             }
           },
-          "501": {
-            "description": "General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "409": {
             "description": "Request.IdempotencyKeyReused; Request.InProgress",
             "content": {
@@ -19511,13 +18972,6 @@
             "field": "channel",
             "es": "Ese método de ingreso no está disponible.",
             "en": "That sign-in method is unavailable."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -20025,7 +19479,7 @@
         "tags": [
           "Account"
         ],
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164. T01: teléfono devuelve 501 temporal, sin envío ni escritura; completar en T04. Pendiente propio y OTP al destino nuevo; otro dueño falla antes de pendiente, aviso o OTP. WhatsApp: cuota diaria persistente de códigos por UTC, una reserva por operación; replay no vuelve a gastar cuota. Error de entrega posterior a 202 se maneja en outbox. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164. Pendiente propio y OTP al destino nuevo; otro dueño falla antes de pendiente, aviso o OTP. WhatsApp: cuota diaria persistente de códigos por UTC, una reserva por operación; replay no vuelve a gastar cuota. Error de entrega posterior a 202 se maneja en outbox. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -20499,38 +19953,6 @@
               }
             }
           },
-          "501": {
-            "description": "General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "401": {
             "description": "Http.Unauthorized",
             "content": {
@@ -20677,13 +20099,6 @@
             "field": null,
             "es": "Pediste demasiados códigos. Probá de nuevo más tarde.",
             "en": "You requested too many codes. Try again later."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 429,
@@ -21185,38 +20600,6 @@
               }
             }
           },
-          "501": {
-            "description": "General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "401": {
             "description": "Http.Unauthorized",
             "content": {
@@ -21343,13 +20726,6 @@
             "field": null,
             "es": "Pediste demasiados códigos. Probá de nuevo más tarde.",
             "en": "You requested too many codes. Try again later."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 429,
@@ -21858,38 +21234,6 @@
               }
             }
           },
-          "501": {
-            "description": "General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Http.TooManyRequests",
             "headers": {
@@ -22099,13 +21443,6 @@
             "field": "channel",
             "es": "Ese método de ingreso no está disponible.",
             "en": "That sign-in method is unavailable."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 429,
@@ -23458,7 +22795,7 @@
             ]
           }
         },
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164. T01: teléfono devuelve 501 temporal, sin envío ni escritura; completar en T04."
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164."
       },
       "BusinessSignupHttpRequest": {
         "required": [
@@ -27952,7 +27289,7 @@
             ]
           }
         },
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164. T01: teléfono devuelve 501 temporal, sin envío ni escritura; completar en T04."
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164."
       },
       "RequestLoginCodeResponse": {
         "required": [
@@ -28045,7 +27382,7 @@
             ]
           }
         },
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164. T01: teléfono devuelve 501 temporal, sin envío ni escritura; completar en T04."
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164."
       },
       "RoleResponse": {
         "required": [
@@ -28227,7 +27564,7 @@
             ]
           }
         },
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164. T01: teléfono devuelve 501 temporal, sin envío ni escritura; completar en T04."
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164."
       },
       "SubmitAccountRecoveryHttpRequest": {
         "type": "object",
@@ -28371,7 +27708,7 @@
             ]
           }
         },
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164. T01: teléfono devuelve 501 temporal, sin envío ni escritura; completar en T04."
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164."
       },
       "TaxIdTypeReferenceHttpResponse": {
         "required": [
@@ -28994,7 +28331,7 @@
             ]
           }
         },
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164. T01: teléfono devuelve 501 temporal, sin envío ni escritura; completar en T04."
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164."
       },
       "VerifyLoginCodeResponse": {
         "required": [
@@ -29108,7 +28445,7 @@
             ]
           }
         },
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164. T01: teléfono devuelve 501 temporal, sin envío ni escritura; completar en T04."
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164."
       },
       "VerifySignupHttpRequest": {
         "required": [
@@ -29206,7 +28543,7 @@
             ]
           }
         },
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164. T01: teléfono devuelve 501 temporal, sin envío ni escritura; completar en T04."
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164."
       },
       "VersionResponse": {
         "required": [

@@ -50,7 +50,7 @@ internal sealed class WhatsAppBotWriter(IWhatsAppChannelSettings settings, ILogi
             url = Url(context.Message.ReplyId == BotButtons.SignIn ? "login" : "recuperar");
         }
         else if ((await platform.FindAsync(ct))?.ConsumerSignup == ConsumerSignupMode.Open)
-        { body = "Bot.Unknown"; label = "Bot.Create"; url = Url("registro"); }
+        { body = "Bot.Unknown"; label = "Bot.Create"; url = Url("registro?channel=whatsapp"); }
         else { body = "Bot.Closed"; choices = true; }
         var reply = await replies.BuildAsync(numberId, contact.WaId, settings.AppName, account?.Culture, body, expiresAtUtc.Value, ct,
             name, url, label, choices);

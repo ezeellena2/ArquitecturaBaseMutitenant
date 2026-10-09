@@ -6,7 +6,7 @@ namespace ArquitecturaBaseMultitenant.Api.OpenApi;
 /// <summary>Contrato de identidad E8, aditivo respecto de correo y separado de la implementación del transporte.</summary>
 internal sealed class IdentityContractContributor : IHttpContractContributor
 {
-    private const string Destination = "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164. T01: teléfono devuelve 501 temporal, sin envío ni escritura; completar en T04.";
+    private const string Destination = "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.";
     private const string Proof = "Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Intentos y topes actuales; retryAfter son segundos y coincide con Retry-After. No guardar códigos ni enlaces en logs.";
     private static readonly string[] SecretProperties = ["token", "nonce"];
     private static readonly HashSet<string> DestinationRequests = ["RequestLoginCodeHttpRequest", "VerifyLoginCodeHttpRequest", "SignupHttpRequest", "VerifySignupHttpRequest", "AddLoginMethodHttpRequest", "RequestRecoveryCodeHttpRequest", "VerifyRecoveryCodeHttpRequest", "SubmitAccountRecoveryHttpRequest"];
@@ -66,8 +66,8 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
             Describe(document, path, verb, "Sin body ni código de confirmación (ADR0045). Relee propiedad y métodos utilizables bajo lock, conserva principal/personal y avisos. No usa version de Tus datos.",
                 [E(404, "Identity.LoginMethod.NotFound"), E(409, "Identity.LoginMethod.LastMethod"), E(409, "Identity.LoginMethod.LastPersonalMethod"), E(409, "Auth.LoginMethod.NotVerified"), E(409, "General.ConcurrencyConflict")], authenticated: true);
         Describe(document, "/api/account-recovery/preview", HttpMethod.Post,
-            "Exactamente previousEmail o previousPhone; método perdido no exige posesión. 204 cuando existe cuenta recuperable; sin datos de cuenta ni sesión. T01: previousPhone devuelve 501 temporal.",
-            [E(400, "Validation.Failed"), E(400, "Platform.AccountRecovery.AccountNotFound", "previousEmail"), E(400, "Platform.AccountRecovery.PhoneAccountNotFound", "previousPhone"), E(501, "General.Contract.NotImplemented")],
+            "Exactamente previousEmail o previousPhone; método perdido no exige posesión. 204 cuando existe cuenta recuperable; sin datos de cuenta ni sesión.",
+            [E(400, "Validation.Failed"), E(400, "Platform.AccountRecovery.AccountNotFound", "previousEmail"), E(400, "Platform.AccountRecovery.PhoneAccountNotFound", "previousPhone")],
             examples: new Dictionary<string, JsonNode> { ["correo"] = new JsonObject { ["previousEmail"] = "antes@example.com" }, ["telefono"] = new JsonObject { ["previousPhone"] = Phone() } });
         foreach (var (path, verify) in new[] { ("/api/account-recovery/code", false), ("/api/account-recovery/verify", true), ("/api/account-recovery", false) })
             Describe(document, path, HttpMethod.Post, Destination + Proof
@@ -77,9 +77,9 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
         foreach (var (path, redeem) in new[] { ("/api/auth/login-link/preview", false), ("/api/auth/login-link/redeem", true) })
             Describe(document, path, HttpMethod.Post,
                 "Enlace opaco 256 bits (43 base64url), hash, 10 minutos, un uso y ligado a MethodId Phone verificado. Uno nuevo invalida los previos de ese método. Revalidar dueño, método, canal, estado y operador bajo lock; operador actual devuelve Invalid incluso en replay, sin cookie, datos o motivo revelador. Token via /login/enlace#t=… y solo memoria; jamás query/storage/log. "
-                + (redeem ? "Solo access=consumer. 200 {access:consumer} y cookie pública, sin tokens OIDC. Replay misma key no crea otra sesión; otra key ya usado. Front ejecuta después signinRedirect con su state y PKCE. T01 devuelve 501, sin cookie."
-                    : "Preview no consume ni crea cookie. displayName y maskedPhone nullable. T01 devuelve 501."),
-                [E(400, "Validation.Failed"), E(400, "Auth.LoginLink.Invalid"), E(400, "Auth.LoginLink.Expired"), E(400, "Auth.LoginLink.AlreadyUsed"), E(429, "Auth.LoginLink.TooManyRequests"), E(501, "General.Contract.NotImplemented")], redeem,
+                + (redeem ? "Solo access=consumer. 200 {access:consumer} y cookie pública, sin tokens OIDC. Replay misma key no crea otra sesión; otra key ya usado. Front ejecuta después signinRedirect con su state y PKCE."
+                    : "Preview no consume ni crea cookie. displayName y maskedPhone nullable."),
+                [E(400, "Validation.Failed"), E(400, "Auth.LoginLink.Invalid"), E(400, "Auth.LoginLink.Expired"), E(400, "Auth.LoginLink.AlreadyUsed"), E(429, "Auth.LoginLink.TooManyRequests")], redeem,
                 examples: new Dictionary<string, JsonNode> { ["enlace"] = redeem ? new JsonObject { ["token"] = ExampleToken, ["access"] = "consumer" } : new JsonObject { ["token"] = ExampleToken } });
         Describe(document, "/api/auth/business-signup", HttpMethod.Post,
             "Contrato vigente de Tu organización. Requiere cookie pública probada y antiforgery; no recibe phone ni selecciona consumer. Valida BusinessSignup y límite/estado de organización; 200 BusinessSignupResponse existente.",
@@ -103,7 +103,7 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
                 success.Headers ??= new Dictionary<string, IOpenApiHeader>();
                 success.Headers["Set-Cookie"] = new OpenApiHeader
                 {
-                    Description = "Cookie HttpOnly tras prueba válida; nunca se emite desde webhook ni desde preview. Stubs T01 no la emiten.",
+                    Description = "Cookie HttpOnly tras prueba válida; nunca se emite desde webhook ni desde preview.",
                     Schema = new OpenApiSchema { Type = JsonSchemaType.String },
                 };
             }
@@ -112,8 +112,8 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
 
     private const string ExampleToken = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
     private static HttpContractError E(int status, string code, string? field = null) => HttpContractDocumentation.CoreError(status, code, field);
-    private static HttpContractError[] SendErrors() => [E(400, "Validation.Failed"), E(400, "Users.Phone.Invalid", "phone"), E(400, "Users.Phone.NotMobile", "phone"), E(400, "Auth.LoginMethod.ChannelUnavailable", "channel"), E(429, "Auth.LoginCode.ResendTooSoon"), E(429, "Auth.LoginCode.TooManyRequests"), E(501, "General.Contract.NotImplemented")];
-    private static HttpContractError[] VerifyErrors() => [E(400, "Validation.Failed"), E(400, "Auth.LoginCode.Invalid", "code"), E(400, "Auth.LoginCode.Expired", "code"), E(400, "Auth.LoginCode.AlreadyUsed", "code"), E(400, "Auth.LoginCode.TooManyAttempts", "code"), E(403, "Auth.Account.Disabled"), E(403, "Auth.Account.LockedOut"), E(403, "Tenancy.Access.PlatformOnly"), E(400, "Auth.LoginMethod.ChannelUnavailable", "channel"), E(501, "General.Contract.NotImplemented")];
+    private static HttpContractError[] SendErrors() => [E(400, "Validation.Failed"), E(400, "Users.Phone.Invalid", "phone"), E(400, "Users.Phone.NotMobile", "phone"), E(400, "Auth.LoginMethod.ChannelUnavailable", "channel"), E(429, "Auth.LoginCode.ResendTooSoon"), E(429, "Auth.LoginCode.TooManyRequests")];
+    private static HttpContractError[] VerifyErrors() => [E(400, "Validation.Failed"), E(400, "Auth.LoginCode.Invalid", "code"), E(400, "Auth.LoginCode.Expired", "code"), E(400, "Auth.LoginCode.AlreadyUsed", "code"), E(400, "Auth.LoginCode.TooManyAttempts", "code"), E(403, "Auth.Account.Disabled"), E(403, "Auth.Account.LockedOut"), E(403, "Tenancy.Access.PlatformOnly"), E(400, "Auth.LoginMethod.ChannelUnavailable", "channel")];
 
     private static void Describe(OpenApiDocument document, string path, HttpMethod verb, string text, IReadOnlyList<HttpContractError> errors,
         bool idempotent = false, bool authenticated = false, IReadOnlyDictionary<string, JsonNode>? examples = null)

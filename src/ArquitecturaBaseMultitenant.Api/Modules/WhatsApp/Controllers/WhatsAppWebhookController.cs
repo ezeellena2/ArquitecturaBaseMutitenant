@@ -21,7 +21,6 @@ public sealed class WhatsAppWebhookController(IWhatsAppWebhookService service) :
     [ProducesResponseType<string>(StatusCodes.Status200OK, "text/plain")]
     [ProducesProblem(StatusCodes.Status401Unauthorized)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
-    [ProducesProblem(StatusCodes.Status501NotImplemented)]
     public async Task<IActionResult> Verify([FromQuery] WhatsAppWebhookQuery query, CancellationToken ct)
     {
         var result = await service.VerifyAsync(query.Mode, query.VerifyToken, query.Challenge, ct);
@@ -36,7 +35,6 @@ public sealed class WhatsAppWebhookController(IWhatsAppWebhookService service) :
     [ProducesProblem(StatusCodes.Status401Unauthorized)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     [ProducesProblem(StatusCodes.Status413PayloadTooLarge)]
-    [ProducesProblem(StatusCodes.Status501NotImplemented)]
     public async Task<IActionResult> Receive([FromBody] WhatsAppWebhookHttpRequest request,
         [FromHeader(Name = "X-Hub-Signature-256")] string? signature, CancellationToken ct)
     {

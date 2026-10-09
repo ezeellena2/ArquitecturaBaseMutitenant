@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Contracts;
 
-/// <summary>Contrato T01: rutas visibles/exportables, pendientes explícitos y cero sesiones por los esqueletos.</summary>
+/// <summary>Contrato E8: rutas exportables, formas congeladas y rechazo sin sesiones cuando falta una prueba o canal.</summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class Etapa8ContractTests(ApiFactory factory)
 {
@@ -122,6 +122,13 @@ public sealed class Etapa8ContractTests(ApiFactory factory)
         Assert.Equal(400, email!["status"]!.GetValue<int>()); // FieldErrors conserva el 400 actual, aunque la fábrica base sea NotFound.
         Assert.NotNull(doc["paths"]!["/webhooks/whatsapp"]!["post"]!["responses"]!["413"]);
         Assert.DoesNotContain(doc["paths"]!["/webhooks/whatsapp"]!["post"]!["parameters"]!.AsArray(), value => value?["name"]?.GetValue<string>() == "Idempotency-Key");
+        foreach (var path in doc["paths"]!.AsObject())
+            foreach (var operation in path.Value!.AsObject().Where(value => value.Key is "get" or "post" or "put" or "delete"))
+            {
+                Assert.Null(operation.Value?["responses"]?["501"]);
+                Assert.DoesNotContain("T01", operation.Value?["description"]?.GetValue<string>() ?? "");
+                Assert.DoesNotContain(operation.Value?["x-error-codes"]?.AsArray() ?? [], value => value?["code"]?.GetValue<string>() == "General.Contract.NotImplemented");
+            }
     }
 
     private sealed class Availability(bool available) : IInstalledModuleRouteAvailability

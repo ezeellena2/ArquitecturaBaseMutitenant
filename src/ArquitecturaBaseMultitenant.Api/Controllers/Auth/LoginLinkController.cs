@@ -17,7 +17,6 @@ public sealed class LoginLinkController(ILoginLinkService service) : ControllerB
     [HttpPost("preview"), EnableRateLimiting(RateLimitPolicies.LoginVerify)]
     [ProducesResponseType<LoginLinkPreviewResponse>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
-    [ProducesProblem(StatusCodes.Status501NotImplemented)]
     public async Task<IActionResult> Preview([FromBody] PreviewLoginLinkHttpRequest request, CancellationToken ct) =>
         (await service.PreviewAsync(new PreviewLoginLinkRequest(request.Token), ct)).ToActionResult(this);
 
@@ -26,7 +25,6 @@ public sealed class LoginLinkController(ILoginLinkService service) : ControllerB
     [ProducesResponseType<LoginLinkRedeemResponse>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]
-    [ProducesProblem(StatusCodes.Status501NotImplemented)]
     public async Task<IActionResult> Redeem([FromBody] RedeemLoginLinkHttpRequest request, CancellationToken ct) =>
         (await service.RedeemAsync(new RedeemLoginLinkRequest(request.Token, request.Access), ct)).ToActionResult(this);
 }

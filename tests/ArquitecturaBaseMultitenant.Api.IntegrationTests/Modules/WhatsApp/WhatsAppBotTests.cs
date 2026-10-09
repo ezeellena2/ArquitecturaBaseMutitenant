@@ -94,7 +94,7 @@ public sealed class WhatsAppBotTests(ApiFactory factory) : IClassFixture<ApiFact
         var users = await db.Users.CountAsync(Ct); var links = await db.Set<LoginLink>().CountAsync(Ct);
         var reply = await ReceiveProcessAsync(app, client, "5491134567893");
         Assert.Contains("Mi plataforma", reply.Body); Assert.Equal("/registro", new Uri(reply.LinkUrl!).AbsolutePath);
-        Assert.Empty(new Uri(reply.LinkUrl!).Query); Assert.Empty(new Uri(reply.LinkUrl!).Fragment);
+        Assert.Equal("?channel=whatsapp", new Uri(reply.LinkUrl!).Query); Assert.Empty(new Uri(reply.LinkUrl!).Fragment);
         Assert.Equal(users, await db.Users.CountAsync(Ct)); Assert.Equal(links, await db.Set<LoginLink>().CountAsync(Ct));
     }
     [Theory]
