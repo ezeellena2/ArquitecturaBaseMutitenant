@@ -62,7 +62,23 @@ Back commiteó la centralización en `8e0bb63c1638b7e5a5e52d89c28de91562b24cf6`:
 
 Front entregó su preparación estática en `cab63db64ee92fa90cc850282631ed5eac49847e`, sin push. Runner final `579fc2c34b920cef7e2ac8cd5ebb6d26b330893e`: **30 grupos, 15 por tamaño**, todavía sin ejecutar contra la API real. Incluye aprobación/rechazo de recuperación por la UI de Plataforma, seleccionando el pedido por ambos métodos y conservando 390 px en móvil. Build, lint y contracts:check terminaron con código 0; suite completa **2350/2350**, 255 archivos; focales Node **12/12**. La galería quedó en **108/108 casos, 324 PNG**, con el ícono del retorno a WhatsApp y sus cuatro comparaciones actualizados. Su [informe](../../../ArquitecturaBaseMutitenantFront/docs/design/capturas/etapa-8/informe.md) distingue estas pruebas del E2E real pendiente.
 
-Con los binarios liberados, se dio el GO a Front para ejecutar el recorrido general y los 30 grupos WhatsApp con la fixture real aislada. Se encargó a Back el retiro efectivo en una copia descartable con bases migrada y vacía; sus builds no pueden modificar las DLL de main usadas por Front. Ambos resultados siguen pendientes. El coordinador inspeccionó también los cuatro pares recapturados de enlace inválido y ticket de baja vencido: ícono presente en escritorio/móvil, textos legibles y contenido principal sin cortes. Esta revisión visual no sustituye el recorrido integrado ni la entrega por Meta.
+Con los binarios liberados, se dio el GO a Front para ejecutar el recorrido general y los 30 grupos WhatsApp con la fixture real aislada. Se encargó a Back el retiro efectivo en una copia descartable con bases migrada y vacía; sus builds no podían modificar las DLL de main usadas por Front. El coordinador inspeccionó también los cuatro pares recapturados de enlace inválido y ticket de baja vencido: ícono presente en escritorio/móvil, textos legibles y contenido principal sin cortes. Esta revisión visual no sustituye el recorrido integrado ni la entrega por Meta.
+
+### Resultado del E2E integrado
+
+Front completó el recorrido general: **36/36 pruebas, exit 0**, sin fallos, canceladas ni omitidas, 1800419,6797 ms. Son 35 subcasos y su prueba padre, ejecutados completos sin `MT_E2E_ONLY_CASE`. Log: `.local/reviews/e8-front-20261009/e2e-general.log` del Front. El entorno aislado usó claves temporales propias; al terminar detuvo Aspire y confirmó cero sesiones antes de iniciar WhatsApp.
+
+El runner WhatsApp final `4955e9a04dfe3663c0577dadbe5fc1ea700915c7` pasó **30/30 grupos reales, exit 0**, quince en 1440 y quince en 390, 371194 ms. Usó el código Back `8e0bb63c`, con HEAD documental `734fe909`. Verificó OTP, cuenta, ambos accesos, webhook HMAC y deduplicación persistida, bot/enlace y OIDC con state/PKCE, replay, destinos ocupados, aprobación/rechazo de recuperación desde Plataforma persistidos después de F5 y cancelación de baja por enlace con ticket vigente/vencido. Log: `.local/reviews/e8-front-20261009/e2e-whatsapp-f5.log` del Front. Los hashes del contrato permanecen iguales.
+
+Los intentos fallidos se conservan en el informe Front. Sus correcciones pertenecen al soporte de pruebas: espera de la sesión privada de Plataforma, aceptación legal por la UI del operador de prueba en un contexto separado, respeto del cooldown real y correlación de la respuesta de F5 con consultas iniciadas después de navegar. No se cambió producto, autorización, reloj ni respuestas esperadas. Las pruebas dirigidas del soporte pasaron **35/35 Node**, con revisiones independientes aprobadas. La suite funcional completa conserva **2350/2350** y la galería **108/108**.
+
+El coordinador cotejó estos resultados y la liberación explícita de navegador, Vite, Kestrel y PostgreSQL propios. No queda Aspire de esta ejecución. Dio entonces el GO al Back para el ajuste mínimo de autocontención de sus fixtures. La API y las cookies fueron reales; el transporte externo permaneció bloqueado: este resultado no acredita envío ni `delivered` por Meta.
+
+### Autocontención de tests y retiro del módulo
+
+La copia sin WhatsApp mostró que los tests que levantan Development podían depender del secreto Google de esta máquina y de un operador local. La suite Main anterior pasó, pero no acredita independencia de esos secretos. Back tiene autorizado apagar Google por defecto sólo en `ApiFactory` (los casos Google aportan sus valores explícitos) y usar el helper de operador sintético en los casos Development de `SpaHostingTests`. No se relajan validadores productivos ni cambia el contrato. El build, los dirigidos afectados y la suite completa sobre ese ajuste siguen pendientes.
+
+El retiro efectivo se ejecuta únicamente en `.local/module-removal/effective-605be253/source`, con bases y contenedor propios. El informe específico conservará las adaptaciones de fixtures e inventarios al quitar el módulo, los intentos fallidos y la comparación de datos, esquema y contrato del núcleo. La cuarta suite completa está en curso. La reversión requiere comprobar individualmente los cuatro permisos DML de cada una de las tres tablas, doce combinaciones, y volver a retirar el módulo antes de limpiar el contenedor propio. No se certifica T14 con comprobaciones parciales.
 
 ## Pendientes documentales del arnés
 
@@ -84,7 +100,7 @@ La skill `arnes` prohíbe abrir los archivos que tocó o rehacer su trabajo. La 
 
 ## Lo que falta para la puerta
 
-- Completar las suites sobre los commits finales, E2E permanente de ambos repos, documentación en cero, comparación visual afectada y prueba efectiva de quitar el módulo en una copia descartable con bases migrada y vacía.
+- Completar la verificación autocontenida del Back sobre el ajuste de fixtures, documentación en cero y prueba efectiva de quitar el módulo en una copia descartable con bases migrada y vacía. El E2E permanente y la comparación visual afectada tienen los resultados indicados arriba.
 - Resolver aprobación/categoría de todas las variantes y el origen de los cuatro botones URL.
 - Recibir el **celular destinatario real autorizado**, diferente del emisor y de una cuenta de operador para registro/enlace común.
 - Levantar el entorno, verificar el túnel multitenant y cambiar temporalmente el callback compartido según [configuración](../operations/configuracion.md#4-lo-que-tenés-que-hacer-vos-una-sola-vez-fuera-del-código). Conservar la URL anterior para volver a ArquitecturaBase.
