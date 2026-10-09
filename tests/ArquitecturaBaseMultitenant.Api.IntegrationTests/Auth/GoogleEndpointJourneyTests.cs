@@ -69,7 +69,8 @@ public sealed class GoogleEndpointJourneyTests(ApiFactory factory)
         Assert.Equal(samePublicSession, await db.LoginMethods.AnyAsync(row => row.UserId == account.UserId && row.Value == identity.Subject, Ct));
         var protector = services.GetRequiredService<IPayloadProtector>();
         var payloads = await db.OutboxMessages.Where(row => row.Channel == "email" && !before.Contains(row.Id)).Select(row => row.EncryptedPayload).ToArrayAsync(Ct);
-        var notices = payloads.Select(payload => JsonSerializer.Deserialize<EmailMessage>(protector.Unprotect(payload))!)
+        var notices = payloads.Where(payload => payload.Length > 0)
+            .Select(payload => JsonSerializer.Deserialize<EmailMessage>(protector.Unprotect(payload))!)
             .Where(message => message.To == account.Email.Value).ToArray();
         if (samePublicSession) Assert.Contains("Google", Assert.Single(notices).TextBody, StringComparison.Ordinal);
         else Assert.Empty(notices);

@@ -124,7 +124,8 @@ public sealed class AccountSessionActionsTests(ApiFactory factory)
         var payloads = await services.GetRequiredService<ApplicationDbContext>().OutboxMessages.AsNoTracking()
             .Where(message => message.Channel == "email" && !before.Contains(message.Id))
             .Select(message => message.EncryptedPayload).ToArrayAsync(Ct);
-        return [.. payloads.Select(payload => JsonSerializer.Deserialize<EmailMessage>(protector.Unprotect(payload))!)
+        return [.. payloads.Where(payload => payload.Length > 0)
+            .Select(payload => JsonSerializer.Deserialize<EmailMessage>(protector.Unprotect(payload))!)
             .Where(message => string.Equals(message.To, to, StringComparison.OrdinalIgnoreCase))];
     }
 }

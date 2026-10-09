@@ -34,9 +34,10 @@ internal static class PickupCodeReader
                     using var message = await MimeMessage.LoadAsync(stream, cancellationToken);
                     if (!message.To.Mailboxes.Any(mailbox =>
                         string.Equals(mailbox.Address, email, StringComparison.OrdinalIgnoreCase))) continue;
-                    var match = Regex.Match(message.TextBody ?? string.Empty, @"(?<!\d)\d{6}(?!\d)");
+                    // Las plantillas ponen el OTP en una línea propia; una URL de invitación no es un código.
+                    var match = Regex.Match(message.TextBody ?? string.Empty, @"(?m)^(?<code>\d{6})\r?$");
                     if (!match.Success) continue;
-                    code = match.Value;
+                    code = match.Groups["code"].Value;
                 }
                 File.Delete(path);
                 return code;
