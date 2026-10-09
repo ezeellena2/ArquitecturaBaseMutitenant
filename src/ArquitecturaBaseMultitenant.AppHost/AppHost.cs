@@ -49,6 +49,8 @@ if (isolatedE2e)
 
     api.WithEnvironment("Email__Delivery", "PickupDirectory")
         .WithEnvironment("Email__PickupDirectory", pickupDirectory)
+        // Los números del recorrido son ficticios; nunca heredar el transporte Meta de Development.
+        .WithEnvironment("WhatsApp__PhoneNumberId", "")
         .WithEnvironment("Seed__PlatformOwner__Email", "e2e-operator@example.test")
         .WithEnvironment("Seed__PlatformOwner__DisplayName", "Operador E2E")
         .WithEnvironment("Seed__PlatformOwner__Phone", "");
