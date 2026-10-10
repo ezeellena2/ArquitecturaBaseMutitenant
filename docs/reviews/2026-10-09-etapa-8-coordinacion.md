@@ -2,9 +2,9 @@
 
 Continuación autorizada por el usuario desde este chat, después de la [revisión del pase](2026-10-09-etapa-8-revision-del-pase.md). Trabajo en `main`, sin push y sin incluir cambios ajenos. **E8 sigue abierta**: este informe no certifica la puerta T14. Back y Front mantienen sus implementaciones en sus respectivos chats.
 
-**Estado actualizado al 2026-10-09, 23:30 de Argentina:** el circuito real de identidad está completo y su entorno quedó apagado/restaurado. Front revisó el correctivo del runner en `f70fb7e9` (37/37 focales, SPEC y QUALITY aprobadas); está ejecutando 34 grupos en 1440/390 y luego corrige el nombre vacío del menú con el fallback existente «Sin dato». Back audita el 409 de recuperación sin relajar la guarda de versión. El nuevo detector documental arroja **auto 14 / modelo 35 / humano 0** para ambos repos; los nueve hallazgos del corte anterior son evidencia histórica, no el total actual. Meta mantiene 32 variantes creadas, 28 utilizables por categoría y cuatro excepciones en revisión, detalladas en [la guía operativa](../operations/whatsapp-plantillas.md). El cierre exige los pases y la documentación en cero; no se atribuyen a E8 las implementaciones E8b todavía en curso.
+**Estado actualizado al 2026-10-10:** el circuito real de identidad está completo y su entorno quedó apagado/restaurado. El runner ampliado pasó **34/34 grupos en 1440/390** y el menú vacío quedó corregido con «Sin dato». La prueba dirigida del aviso diferido de recuperación pasó **6/6** en una copia aislada del Back, conservando la guarda de versión; la causa del 409 histórico sigue sin atribución. Los arneses Back y Front terminaron verificados con **auto 0 / modelo 0 / humano 0**, se fusionaron con autorización y se reverificaron sin cambios sobre los cortes commiteados de ambos main. La detección de las fuentes de trabajo todavía en curso marca dos automáticos, cero de modelo y cero humanos: no se confunde ese estado con los snapshots verificados. Meta mantiene 32 variantes creadas, 28 utilizables por categoría y cuatro excepciones en revisión, detalladas en [la guía operativa](../operations/whatsapp-plantillas.md). El usuario eligió esperar la revisión, sin contactar soporte. No se atribuyen a E8 las implementaciones E8b todavía en curso.
 
-**Actualización del E2E y menú:** runner ampliado **34/34, exit 0 y verified=true**; menú `845e6fe7` con 38/38 tests, build en verde y SPEC/QUALITY aprobadas, pase Front `de184460`. Las pruebas, snapshots y límites de restauración se detallan en «Correctivos finales de Front». El arnés y las cuatro excepciones Meta siguen pendientes.
+**Actualización del E2E y menú:** runner ampliado **34/34, exit 0 y verified=true**; menú `845e6fe7` con 38/38 tests, build en verde y SPEC/QUALITY aprobadas, pase Front `de184460`. Las pruebas, snapshots y límites de restauración se detallan en «Correctivos finales de Front». Las ramas del arnés se incorporaron y el test del 409 quedó en `630cbbee`; las cuatro excepciones Meta siguen pendientes.
 
 ## Encajes resueltos
 
@@ -104,16 +104,34 @@ La detección de ambos repos, `.local/arneses/realinear-docs/20261009-1510.md`, 
 | Front | `src/test/etapa8VisualApp.tsx` |
 | Front | `src/test/etapa8VisualFixtures.ts` |
 
-La skill `arnes` prohíbe abrir los archivos que tocó o rehacer su trabajo. La consulta para permitir la corrección manual del árbol sigue pendiente; no supone una decisión nueva de producto ni autoriza borrar o modificar estos archivos de código.
+La skill `arnes` prohíbe abrir los archivos que tocó o rehacer su trabajo. En ese corte se consultó una corrección manual del árbol; posteriormente se eligió resolverlo mediante otra corrida completa. No se aplicó esa excepción al árbol ni se borraron o modificaron estos archivos de código para ocultar los hallazgos.
 
 La detección de **23:29 de Argentina**, `.local/arneses/realinear-docs/20261009-2329.md`, informó **auto 14, modelo 35, humano 0**, 0 tokens y «Para vos: Nada». Las fuentes avanzaron con E8b desde el corte 15:15. Se prepara otra corrida completa del arnés sobre snapshots commiteados estables de ambos chats; este resultado no acredita arreglos ni documentación en cero.
 
+### Corridas completas del 10 de octubre
+
+Se usó `--motor codex` con la CLI instalada de la app, `0.162.0-alpha.17.2`, mediante el override temporal documentado `ARNES_CODEX_BIN`; no se cambió la configuración global ni el modelo del manifiesto. Las corridas fueron en segundo plano y se leyeron sus informes al terminar.
+
+| Corte | Estado y verificación | Auto / modelo / humano antes → después | Consumo |
+|---|---|---|---|
+| Front `arnes/realinear-docs/20261010-0006` | Commiteado; `npx vitest run src/test/harness.test.ts` aprobado | 5 / 5 / 0 → **0 / 0 / 0** | Entrada 95084, caché 68864, salida 894, razonamiento 62; costo n/d |
+| Back `arnes/realinear-docs/20261010-0005` | Falló la verificación; conservar como evidencia, **no fusionar** | 11 / 30 / 0 → 0 / 0 / 1 | Entrada 129141, caché 90112, salida 2511, razonamiento 67; costo n/d |
+| Back `arnes/realinear-docs/20261010-0024` | Commiteado; tests Node del arnés y `HarnessTests` aprobados | 11 / 29 / 0 → **0 / 0 / 0** | Entrada 128726, caché 89728, salida 2633, razonamiento 181; costo n/d |
+
+El intento Back fallido dejó un único «Para vos» técnico: reemplazar `OrganizationAssistantSettings` por el DTO publicado `OrganizationAssistantSettingsResponse`. El usuario autorizó esa excepción puntual a la skill; se aplicó exclusivamente en `docs/features/asistente.md`, commit `c2dcbf23`. No se corrigió el árbol manualmente.
+
+Los tests del primer intento también detectaron un puntero `CLAUDE.md` faltante en Infrastructure/Modules/Assistant y la falta del Front hermano en la ubicación del worktree. El owner Back agregó el puntero canónico en `cae9d52f`, con dos guardas verdes. Se preparó un junction de lectura hacia el Front real para la verificación entre repos; no se eliminaron ni relajaron expectativas. La nueva corrida Back tomó ese commit y terminó con «Para vos: Nada», al igual que Front.
+
+Informes: `.local/arneses/realinear-docs/20261010-0006-front.md`, `20261010-0005-back.md` y `20261010-0024-back.md`. El usuario autorizó «Sí, fusionar ambas ramas». Se incorporaron por fast-forward: Back **`62879d7b`** y Front **`1cd1aa2a`**, preservando las fuentes en curso de ambos chats. No se hizo push.
+
+La detección posterior sobre los directorios de trabajo, `.local/arneses/realinear-docs/20261010-0029.md`, terminó con **auto 2 / modelo 0 / humano 0**, «Para vos: Nada» y exit 2, que significa hallazgos pendientes. Para separar ese estado de los cortes incorporados se corrió el arnés `--sin-modelo`, que detecta dentro del worktree de lo commiteado: `20261010-0031-back.md` y `20261010-0031-front.md` confirman **0 / 0 / 0, sin cambios y verificación aprobada en ambos**, 0 tokens. No se fusionó ninguna rama adicional ni se atribuyeron los dos automáticos a una causa no inspeccionada. Los próximos commits de E8b deben volver a comprobar su documentación; el cero de este corte no certifica fuentes posteriores.
+
 ## Lo que falta para la puerta
 
-- Completar documentación en cero. Las suites finales, el E2E permanente, la comparación visual afectada y el retiro efectivo en una copia con bases migrada y vacía tienen los resultados indicados arriba.
+- Mantener la documentación en cero sobre el corte final: los snapshots commiteados incorporados están en cero; el directorio de trabajo con fuentes posteriores en curso conserva dos automáticos. Las suites finales, el E2E permanente, la comparación visual afectada y el retiro efectivo en una copia con bases migrada y vacía tienen los resultados indicados arriba.
 - Resolver aprobación/categoría de las cuatro variantes que todavía no son Utility aprobadas. Los cuatro botones URL ya están creados con el origen del túnel.
-- Completar las entregas reales que dependen de la categoría pendiente de Meta. Bot neutro e ingreso exclusivo del operador, alta empresarial por Phone con ConsumerSignup cerrado, registro personal abierto/cerrado, ingreso posterior a recuperación aprobada, Mi cuenta, destinos ocupados, suspensión, recuperación con ambos métodos anteriores, enlaces usados/invalidados/vencidos y Bot → Personal → Perfiles → Organización tienen evidencia posterior. El correctivo visual de Cuentas está comprobado en el túnel; el rótulo vacío del menú Personal sigue separado. El transporte controlado no sustituye la entrega por Meta.
-- Completar la auditoría dirigida de Back sobre el primer 409 de recuperación, sin dar por confirmada su atribución histórica. La ampliación del E2E permanente pasó 34/34 y el menú cerró su pase documental/revisiones; se conserva separado el snapshot y su transporte controlado.
+- Completar las entregas reales que dependen de la categoría pendiente de Meta. Bot neutro e ingreso exclusivo del operador, alta empresarial por Phone con ConsumerSignup cerrado, registro personal abierto/cerrado, ingreso posterior a recuperación aprobada, Mi cuenta, destinos ocupados, suspensión, recuperación con ambos métodos anteriores, enlaces usados/invalidados/vencidos y Bot → Personal → Perfiles → Organización tienen evidencia posterior. El correctivo visual de Cuentas está comprobado en el túnel; el menú Personal cerró su pase dirigido. El transporte controlado no sustituye la entrega por Meta.
+- Incorporar el pase documental del 409 y la corrección de la premisa de su ficha, conservando la exigencia de versión. La prueba dirigida ya pasó 6/6 y está commiteada; no atribuye la causa del intento histórico. La ampliación del E2E permanente pasó 34/34 y el menú cerró su pase documental/revisiones; se conserva separado el snapshot y su transporte controlado.
 
 ### Correctivos finales de Front
 
@@ -302,4 +320,24 @@ La fotografía final de Meta de **02:23:03 UTC** conserva las 32 variantes: dos 
 
 Front comunicó con autorización humana el hueco T13 y el coordinador cotejó los DTO vigentes: `AssistantUsagePageResponse` no entrega fracción/estado del presupuesto; `AssistantUsageRowResponse` contiene consultas mensuales y un límite diario opcional, pero no consultas de hoy. El lienzo distingue «Hoy» de «Consultas este mes» y exige la barra/estados de presupuesto. Las reglas de formatos impiden calcular montos o porcentajes en Front.
 
-Se encargó a Back evaluar **CC03**, una proyección mínima tipada, con semántica de mes histórico, fecha/ámbito de cuota, PlatformKey compartida, OwnKey y null cuando no aplica. El pase debe incluir contrato, pruebas, OpenAPI, tipos y hashes, manteniendo rutas/permisos/requests; las decisiones de producto no resueltas por las fuentes se consultan antes. CC01 y CC02 ya están autorizados y esperan publicación conjunta. Front sigue T10–T11 y el runner E8; las ramas de T12/T13 que dependen de estos campos esperan el pase B/F. No se incorporaron cálculos ni IDs inventados para completar los estados.
+En ese corte se encargó a Back evaluar **CC03**, una proyección mínima tipada, con semántica de mes histórico, fecha/ámbito de cuota, PlatformKey compartida, OwnKey y null cuando no aplica. Los tres deltas se publicaron después, como acredita el corte siguiente. No se incorporaron cálculos ni IDs inventados para completar los estados.
+
+### CC01, CC02 y CC03 publicados: E8 preservada
+
+Back publicó `ce1494d7f620e0e152a12fde2c8d2eeea5b791e6` y Front regeneró los tipos en `3caae3b0841127a1f252b613247f78fb5173eb07`, con revisiones SPEC/QUALITY aprobadas. CC01 aporta opciones de modelos/precios al permiso de configuración; CC02 publica `activeTurnId` durable y nullable para recuperar Detener; CC03 publica presupuesto y cuota diaria tipados. Sus implementaciones de E8b siguen en los chats respectivos, sin cerrar esa etapa.
+
+El coordinador comparó estructuralmente el contrato publicado con el corte `250c498`: **120 rutas de E8 idénticas, cero retiradas o cambiadas**. Los cuatro esquemas anteriores modificados pertenecen al asistente. Los hashes LF se cotejaron con el pase Back:
+
+- OpenAPI: `ac450a7ca6ccfda23e5bd16f2f2fec0c20e3bec9176cfd785be9960f3919c9f4`.
+- Schema Front: `523dcdbf361e37a624e90746d396d886574425d3df8c3e88c0aadbdc310175e4`.
+- Alias Front: `67f6aa7c2593e5317f23ae34f653e1ff7a72fbeb9e603d14fb19488b4a0818f7`.
+
+Front verificó ese corte con build TypeScript/Vite y `contracts:check`, ambos exit 0. El fixture CC02 `0d3468ca` aporta `activeTurnId: null`, con 34 pruebas y build aprobados. Los hashes iniciales de E8 conservados arriba corresponden a su contrato histórico completo; no se confunden con el documento OpenAPI ampliado de E8b.
+
+### Prueba dirigida del aviso diferido y el 409
+
+Integración reservó únicamente `PlatformRecoveryTests.cs` y preparó una copia `git archive` del Back `62879d7b`, con binarios, fixture Testing y PostgreSQL Testcontainers propios. No levantó Aspire ni Meta, no usó secretos de Development y no compiló las fuentes en curso de T03. La clase completa pasó **6/6, cero fallos y omitidos, exit 0**, en 46,158 s, con compilación incluida.
+
+Los dos casos nuevos de `A_deferred_account_notice_invalidates_the_read_version_without_applying_a_stale_decision` comprueban aprobar y rechazar: leer el pedido Pending, ejecutar el worker real, verificar `AccountNotifiedAtUtc` y el cambio de `xmin`, enviar la versión vieja y recibir **409 `General.ConcurrencyConflict`** sin cambiar métodos, estado, eventos ni outbox. Recargar y decidir con la versión vigente tiene éxito, registra la decisión y emite un solo aviso al método nuevo; no concede una sesión.
+
+Las cinco fuentes del recorrido siguen idénticas al baseline. Se copió al archivo principal solamente el test verificado, después de confirmar que nadie lo había cambiado; commit **`630cbbee1b507fcf665fd999baa81b032330091e`**, sin código de producto, contrato ni guardas modificadas. Recibo: `.local/reviews/2026-10-10-e8-recuperacion-409-recibo.json`. No demuestra la causa del 409 histórico, cuyas versiones antes/después no se conservaron. Back completa su [pase de auditoría](2026-10-10-recuperacion-version-aviso.md) y la corrección técnica de la ficha de concurrencia; la exigencia de versión de recuperación permanece vigente.
