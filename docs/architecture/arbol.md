@@ -36,6 +36,8 @@ ArquitecturaBaseMutitenant/
 │   │   ├── inicio.md                                 inicio de la organización: tarjetas por área y «Para resolver» (ADR 0040)
 │   │   ├── sitio-publico.md                           [E7] publicación por subdominio y directorio
 │   │   ├── personal.md                               [E7] receta de módulos B2C e interacción
+│   │   ├── asistente.md                              Contrato, accesos y persistencia del asistente
+│   │   ├── contrato-http.md                          Contrato HTTP y errores técnicos transversales
 │   │   └── whatsapp.md                               [E8]
 │   ├── operations/
 │   │   ├── configuracion.md                          Google, Gmail y WhatsApp: claves, secretos y pasos en Google y Meta
@@ -168,6 +170,7 @@ ArquitecturaBaseMultitenant.Domain/
 │   ├── Party.cs                                      Identifica a la persona o a la empresa como parte…
 │   ├── PartyPolicy.cs                                Result por parte Consumer o Business; tercero404 y parte equivocada403
 │   ├── PartyErrors.cs                                Tenancy.Party.NotAllowed
+│   ├── IGlobalSecurityAudited.cs                     Un dato global auditable exige evidencia de seguridad dentro de…
 │   └── TextLimits.cs                                 Centraliza los límites de texto que comparten las reglas de…
 ├── Results/                                          [E1]
 │   ├── Error.cs                                      record + fábricas Failure/Validation/NotFound/Conflict…
@@ -518,6 +521,8 @@ ArquitecturaBaseMultitenant.Application/
 │       │   ├── IPublicSiteContext.cs                 [E7] BusinessTenantId? y Slug? del sitio publicado
 │       │   ├── ITenantAccessInitializer.cs           Fija el tenant de un acceso ya autenticado, antes de…
 │       │   ├── IInvitationFlowContext.cs             Identidad válida y continuación protegida del navegador, sin seleccionar un…
+│       │   ├── IExecutionActorContext.cs             Actor actual de la ejecución
+│       │   ├── IExecutionActorScope.cs               Ámbito del actor de ejecución
 │       │   └── IPublicOrigin.cs                      [E3] origen público para armar enlaces
 │       ├── Identity/                                 [E3–E4]
 │       │   ├── ISignInService.cs                     técnico: sign-in, bloqueos, revocar sesiones (≤12 miembros)
@@ -562,6 +567,9 @@ ArquitecturaBaseMultitenant.Application/
 │       ├── Dns/
 │       │   └── IDnsTxtLookup.cs                      consulta los registros TXT de un dominio
 │       ├── Features/
+│       │   ├── IFeatureAvailabilityPolicy.cs         True/false decide este acceso
+│       │   ├── IFeatureDefinitionContributor.cs      Aporte de definiciones de funcionalidades
+│       │   ├── IModuleCapabilityContributor.cs       Listado de capacidades de módulos
 │       │   └── IFeatureCatalog.cs                    Catálogo cerrado de módulos reales
 │       └── Legal/
 │           ├── IConsumerCopyDeletion.cs              Reemplazo de una copia por clave estable de tabla y fila, dentro del alcance y UoW llamadores
@@ -609,6 +617,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── MeResponse.cs                             cuenta + acceso activo + espacio personal + organizaciones + permisos + preferencias efectivas (cultura, zona, moneda) + features
 │   │   ├── OrganizationSummary.cs                         id, nombre, slug y estado (para elegir organización)
 │   │   ├── EffectivePermissions.cs                   organización + por empresa + Plataforma
+│   │   ├── ModuleCapabilityResponse.cs               Disponibilidad y permisos de capacidades de módulos
 │   │   └── UpdateMeRequest.cs
 │   ├── PublicSite/                                   [E6–E7]
 │   │   ├── PublicPageModels.cs                       [E6] borrador privado, guardado, publicación y logo
@@ -734,6 +743,7 @@ ArquitecturaBaseMultitenant.Application/
 │   ├── Identity/
 │   │   ├── AddLoginEmailRequestValidator.cs          Exige un correo antes de iniciar el alta de otro…
 │   │   ├── ChangeLoginMethodRequestValidator.cs      Exige el identificador del método objetivo
+│   │   ├── AddLoginMethodRequestValidator.cs         Exige correo cuando no se proporciona teléfono
 │   │   ├── VerifyLoginMethodRequestValidator.cs      Exige el método de correo y un código numérico antes…
 │   ├── Legal/
 │   │   ├── AcceptLegalRequestValidator.cs            Exige identificadores y versiones legales válidos, sin duplicados, antes de…
@@ -815,6 +825,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── ProfileSnapshotBuilder.cs             Compone la cuenta y sus accesos globales con las preferencias…
 │   │   ├── ProfileEffectivePermissionsBuilder.cs      Compone los permisos del acceso activo desde organización, empresas o Plataforma
 │   │   ├── ProfileRegistration.cs                Registra el perfil de la persona y sus preferencias
+│   │   ├── ProfileModulesBuilder.cs              Construcción de módulos y capacidades del perfil
 │   │   └── ProfilePreferencesResolver.cs             Resuelve la moneda visible del perfil desde preferencias autorizadas y…
 │   ├── Roles/                                        [E4] ← ÁREA DE REFERENCIA
 │   │   ├── RoleService.cs
@@ -1522,6 +1533,7 @@ ArquitecturaBaseMultitenant.Api/
 │   ├── IHttpContractContributor.cs               Metadatos aportados por núcleo o módulos sin dependencias desde el…
 │   ├── IdentityContractContributor.cs            Contrato de identidad E8, aditivo respecto de correo y separado…
 │   ├── HttpContractDocumentation.cs              Forma común de ejemplos, catálogo de errores y headers
+│   ├── ResponseVersionAttribute.cs               Ruta de propiedades CLR hasta la versión uint del éxito…
 │   └── ProducesProblemAttribute.cs
 ├── RateLimiting/                                      [E3]
 │   ├── RateLimitingExtensions.cs
@@ -1547,11 +1559,13 @@ ArquitecturaBaseMultitenant.Api/
 │   ├── InstalledModuleRouteMiddleware.cs              Sin contribuidor disponible, devuelve el 404 común antes de ejecutar…
 │   ├── InstalledModuleRouteAttribute.cs               Capacidad técnica global instalada
 │   ├── IInstalledModuleRouteAvailability.cs           Cada composición de módulo declara sus rutas técnicas y su…
+│   ├── InstalledModuleRouteCategory.cs                Categorías de rutas de módulos instalados
 │   └── FeatureGateMiddleware.cs                       Oculta módulos antes de evaluar permisos
 ├── Idempotency/
 │   ├── IdempotencyFilter.cs                           Reserva antes del model binding y guarda el resultado solo…
 │   ├── IdempotencyReplayAttribute.cs                  [E8] hook neutral antes de cualquier respuesta cacheada
 │   ├── LoginLinkReplayVerifier.cs                    [E8] adapta body/status originales sin registrarlos
+│   ├── IdempotencyMode.cs                             Modos de idempotencia y respuestas durables
 │   └── IdempotentAttribute.cs                         Aplica el filtro de reserva y replay a cada POST…
 └── Legal/
     └── LegalAcceptanceMiddleware.cs                   Bloquea rutas autenticadas mientras falte aceptar documentos vigentes
@@ -1768,6 +1782,7 @@ tests/
 │   │   ├── Features/
 │   │   │   └── FeatureProbeController.cs              rutas de prueba para la puerta de módulos (FeatureGateTests)
 │   │   ├── WhatsAppQuotaProbeController.cs            Probe del filtro HTTP real alrededor de una reserva durable,…
+│   │   ├── WhatsAppErrorProbeController.cs            Controller de prueba de errores de WhatsApp
 │   │   └── Idempotency/
 │   │       └── IdempotencyTestController.cs           El único efecto observable de este POST es el contador…
 │   ├── Tenancy/                                       [E2] los tests de multitenancy.md §13
@@ -1825,6 +1840,8 @@ tests/
 │   │   ├── OpenApiTests.cs                            [E1] cada operación de /api declara su 2xx con esquema y sus errores ProblemDetails; Swagger solo en Development
 │   │   ├── SortMapTests.cs                            Comprueba que el orden solicitado use campos permitidos y direcciones…
 │   │   ├── Etapa8ContractTests.cs                     Contrato T01
+│   │   ├── AssistantErrorContractTests.cs             tests de AssistantErrorContract
+│   │   ├── AssistantContractTests.cs                  tests de AssistantContract
 │   │   └── OpenApiContractTests.cs                    [E1] openapi.json al día
 │   ├── Persistence/                                   [E2]
 │   │   ├── WidgetQueryFixture.cs                      [E2] datos Widget y conexión mt_app para búsqueda, orden y cursor
@@ -1929,10 +1946,12 @@ tests/
 │   │   └── PublicPageModerationTests.cs               tests de PublicPageModeration
 │   ├── Api/
 │   │   ├── IdempotencyTests.cs                        Comprueba que pedidos repetidos con la misma clave ejecuten una…
+│   │   ├── IdempotencyModeContractTests.cs            tests de IdempotencyModeContract
 │   │   └── NormalizedInputTests.cs                    Comprueba la limpieza de texto en el límite HTTP y…
 │   ├── Features/
 │   │   ├── FeatureGateTests.cs                        tests de FeatureGate
 │   │   ├── PlatformFeatureAdministrationTests.cs      tests de PlatformFeatureAdministration
+│   │   ├── FeatureAvailabilityPolicyTests.cs          tests de FeatureAvailabilityPolicy
 │   │   └── PlatformFeatureCivilExpiryTests.cs         fechas civiles, DST, lectura global y vencimiento UTC histórico
 │   ├── Identity/
 │   │   ├── AccountSessionActionsTests.cs              Acciones de Cuenta sin código extra, posesión y avisos
@@ -2039,6 +2058,11 @@ tests/
     ├── PersistenceModelComparisonTests.cs             tests de PersistenceModelComparison
     ├── PersistenceModelComparison.cs                  Compara el esquema completo y los metadatos EF que las…
     ├── ApplicationNamespaceShape.cs                   Los módulos conservan la misma forma de Services/Interfaces del núcleo
+    ├── AssistantPersistenceModelTests.cs              tests de AssistantPersistenceModel
+    ├── AssistantContractTests.cs                      tests de AssistantContract
+    ├── AssistantApprovedContractTests.cs              tests de AssistantApprovedContract
+    ├── AssistantAiBoundaryTests.cs                    ADR 0048
+    ├── ModuleControlProbes.cs                         Clases de control para tests de arquitectura de módulos
     └── ModuleIsolationTests.cs                        [E8] el núcleo no referencia ningún namespace *.Modules.*
 ```
 

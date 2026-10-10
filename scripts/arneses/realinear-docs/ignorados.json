@@ -48,5 +48,80 @@
     "id": "punteros|back|src/ArquitecturaBaseMultitenant.Application/Services/Personal/CLAUDE.md|puntero-huerfano|src/ArquitecturaBaseMultitenant.Application/Services/Personal/CLAUDE.md",
     "motivo": "Carpeta Personal reservada expresamente por T08 para módulos del producto: la plantilla conserva la receta y los punteros, sin código de negocio. Mapa docs/architecture/arnes.md §3 y docs/features/personal.md.",
     "fecha": "2026-10-07"
+  },
+  {
+    "id": "catalogos|back|docs/features/asistente.md|ruta-desconocida|/api/{lado}/assistant",
+    "motivo": "{lado} es la abreviatura documentada de me, organization o platform.",
+    "fecha": "2026-10-10"
+  },
+  {
+    "id": "catalogos|back|docs/features/asistente.md|ruta-desconocida|/api/{lado}/assistant/notice",
+    "motivo": "{lado} es la abreviatura documentada de me, organization o platform.",
+    "fecha": "2026-10-10"
+  },
+  {
+    "id": "catalogos|back|docs/features/asistente.md|ruta-desconocida|/api/{lado}/assistant/conversations",
+    "motivo": "{lado} es la abreviatura documentada de me, organization o platform.",
+    "fecha": "2026-10-10"
+  },
+  {
+    "id": "catalogos|back|docs/features/asistente.md|ruta-desconocida|/api/{lado}/assistant/conversations",
+    "motivo": "{lado} es la abreviatura documentada de me, organization o platform.",
+    "fecha": "2026-10-10"
+  },
+  {
+    "id": "catalogos|back|docs/features/asistente.md|ruta-desconocida|/api/{lado}/assistant/conversations/{id}",
+    "motivo": "{lado} es la abreviatura documentada de me, organization o platform.",
+    "fecha": "2026-10-10"
+  },
+  {
+    "id": "catalogos|back|docs/features/asistente.md|ruta-desconocida|/api/{lado}/assistant/conversations/{id}",
+    "motivo": "{lado} es la abreviatura documentada de me, organization o platform.",
+    "fecha": "2026-10-10"
+  },
+  {
+    "id": "catalogos|back|docs/features/asistente.md|ruta-desconocida|/api/{lado}/assistant/conversations/{id}",
+    "motivo": "{lado} es la abreviatura documentada de me, organization o platform.",
+    "fecha": "2026-10-10"
+  },
+  {
+    "id": "catalogos|back|docs/features/asistente.md|ruta-desconocida|/api/{lado}/assistant/conversations/{id}/messages",
+    "motivo": "{lado} es la abreviatura documentada de me, organization o platform.",
+    "fecha": "2026-10-10"
+  },
+  {
+    "id": "catalogos|back|docs/features/asistente.md|ruta-desconocida|/api/{lado}/assistant/conversations/{id}/turns/{turnId}/stop",
+    "motivo": "{lado} es la abreviatura documentada de me, organization o platform.",
+    "fecha": "2026-10-10"
+  },
+  {
+    "id": "catalogos|back|docs/features/asistente.md|ruta-desconocida|/api/{lado}/assistant/quick/{key}",
+    "motivo": "{lado} es la abreviatura documentada de me, organization o platform.",
+    "fecha": "2026-10-10"
+  },
+  {
+    "id": "catalogos|back|docs/features/asistente.md|ruta-desconocida|/api/{lado}/assistant/conversations/{id}/messages/{messageId}/feedback",
+    "motivo": "{lado} es la abreviatura documentada de me, organization o platform.",
+    "fecha": "2026-10-10"
+  },
+  {
+    "id": "catalogos|back|docs/features/asistente.md|ruta-desconocida|/api/{lado}/assistant/conversations/{id}/attachments",
+    "motivo": "{lado} es la abreviatura documentada de me, organization o platform.",
+    "fecha": "2026-10-10"
+  },
+  {
+    "id": "catalogos|back|docs/features/asistente.md|ruta-desconocida|/api/{lado}/assistant/conversations/{id}/attachments/{attachmentId}",
+    "motivo": "{lado} es la abreviatura documentada de me, organization o platform.",
+    "fecha": "2026-10-10"
+  },
+  {
+    "id": "catalogos|back|docs/features/asistente.md|ruta-desconocida|/api/{lado}/assistant/conversations/{id}/attachments/{attachmentId}",
+    "motivo": "{lado} es la abreviatura documentada de me, organization o platform.",
+    "fecha": "2026-10-10"
+  },
+  {
+    "id": "catalogos|back|docs/features/asistente.md|ruta-desconocida|/api/{lado}/assistant/conversations/{id}/export",
+    "motivo": "{lado} es la abreviatura documentada de me, organization o platform.",
+    "fecha": "2026-10-10"
   }
 ]

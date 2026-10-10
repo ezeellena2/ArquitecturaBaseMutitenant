@@ -74,7 +74,7 @@ ProblemDetails pre-stream con code/traceId y errors de campos; códigos post-str
 
 | HTTP / código | Campo/uso | Español / inglés |
 |---|---|---|
-| 404 `Http.NotFound` | módulo apagado/retirado | Texto común vigente; `Assistant.Module.Disabled` solo diagnóstico interno, sin revelar módulo en HTTP. |
+| 404 `Http.NotFound` | módulo apagado/retirado | Texto común vigente, sin revelar módulo en HTTP. |
 | 404 `Assistant.Conversation.NotFound` | id/ajena | «No encontramos esa conversación.» / “Conversation not found.” |
 | 404 `Assistant.Attachment.NotFound` | archivo ajeno/inexistente | «No encontramos ese adjunto.» / “Attachment not found.” |
 | 400 `Assistant.Settings.NotConfigured` | chat sin clave válida | «El asistente todavía no está configurado.» / “The assistant is not configured yet.” |
