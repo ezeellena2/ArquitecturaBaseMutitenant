@@ -76,7 +76,7 @@ Publicación: schema requerido y nullable, ejemplos con turno y sin turno, tipos
 
 ### CC03 — progreso del presupuesto y cuota diaria en Uso
 
-**Estado: propuesta concreta pendiente de autorización del usuario.** Integración transmitió el hallazgo T13; la raíz cotejó `AssistantUsagePageResponse`, `AssistantUsageRowResponse`, los lienzos v115 de Uso-Org y sus variantes móviles, y la regla de formatos. El contrato tiene costo y presupuesto mensual, pero no su fracción/estado; `queries` es mensual y `dailyLimit` no informa las consultas de hoy. El front tiene prohibido calcular montos o porcentajes.
+**Estado: autorizado expresamente por el usuario el 10/10 UTC; publicación pendiente junto con CC01/CC02.** El usuario respondió «Sí, publicar CC03 y regenerar tipos» a la propuesta concreta. Integración transmitió el hallazgo T13; la raíz cotejó `AssistantUsagePageResponse`, `AssistantUsageRowResponse`, los lienzos v115 de Uso-Org y sus variantes móviles, y la regla de formatos. El contrato tiene costo y presupuesto mensual, pero no su fracción/estado; `queries` es mensual y `dailyLimit` no informa las consultas de hoy. El front tiene prohibido calcular montos o porcentajes.
 
 Delta aditivo mínimo, conservando rutas, permisos, requests y todos los miembros actuales:
 
