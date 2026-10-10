@@ -156,11 +156,20 @@ public sealed class AssistantContractTests(ApiFactory factory)
     [Fact]
     public async Task Default_chat_is_hidden_and_platform_management_can_configure_without_a_key_with_individual_permissions()
     {
-        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
-        var account = await AccountJourney.RegisterAsync(factory, client, Ct);
+        await using var isolated = new ApiFactory();
+        await isolated.InitializeAsync();
+        using var client = isolated.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var account = await AccountJourney.RegisterAsync(isolated, client, Ct);
+        using (var scope = isolated.Services.CreateScope())
+        {
+            var settingsRow = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
+                .Set<AssistantPlatformSettings>().AsNoTracking().SingleAsync(Ct);
+            Assert.False(settingsRow.PersonalEnabled);
+            Assert.Null(settingsRow.EncryptedApiKey);
+        }
         using var consumer = await client.GetAsync("/api/me/assistant", Ct);
         Assert.Equal(HttpStatusCode.NotFound, consumer.StatusCode);
-        await PlatformOperators.GrantAsync(factory.Services, account.UserId, [PlatformPermissions.Assistant.Configure], Ct);
+        await PlatformOperators.GrantAsync(isolated.Services, account.UserId, [PlatformPermissions.Assistant.Configure], Ct);
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
         using var settings = await client.GetAsync("/api/platform/assistant/settings", Ct);
         Assert.Equal(HttpStatusCode.OK, settings.StatusCode);

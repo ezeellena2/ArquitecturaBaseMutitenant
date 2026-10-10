@@ -24,9 +24,12 @@ public sealed class AssistantNoticeMigrationTests
         options.UseOpenIddict<Guid>();
         await using var db = new ApplicationDbContext(options.Options, new NoTenant());
         var migrations = db.Database.GetMigrations().ToArray();
-        Assert.EndsWith("_AssistantNoticeUserVersion", migrations[^1], StringComparison.Ordinal);
+        var noticeMigration = Assert.Single(migrations, migration => migration.EndsWith("_AssistantNoticeUserVersion", StringComparison.Ordinal));
+        var noticeIndex = Array.IndexOf(migrations, noticeMigration);
+        Assert.True(noticeIndex > 0);
+        var predecessor = migrations[noticeIndex - 1];
         var migrator = db.GetService<IMigrator>();
-        await migrator.MigrateAsync(migrations[^2], ct);
+        await migrator.MigrateAsync(predecessor, ct);
         var owner = Guid.NewGuid();
         var secondOwner = Guid.NewGuid();
         var acceptedAtUtc = new DateTime(2026, 10, 1, 12, 0, 0, DateTimeKind.Utc);
@@ -38,7 +41,7 @@ public sealed class AssistantNoticeMigrationTests
         await InsertAsync(earlierBusiness, secondOwner, Access.Business, "1", acceptedAtUtc);
         await InsertAsync(Guid.NewGuid(), secondOwner, Access.Consumer, "1", acceptedAtUtc.AddHours(1));
         await InsertAsync(Guid.NewGuid(), owner, Access.Business, "2", acceptedAtUtc.AddDays(1));
-        await migrator.MigrateAsync(migrations[^1], ct);
+        await migrator.MigrateAsync(noticeMigration, ct);
         var rows = await db.Set<AssistantNoticeAcceptance>().AsNoTracking().ToArrayAsync(ct);
         Assert.Equal(3, rows.Length);
         var kept = Assert.Single(rows, row => row.OwnerUserId == owner && row.NoticeVersion == "1");
@@ -48,10 +51,10 @@ public sealed class AssistantNoticeMigrationTests
         Assert.Equal(earlierBusiness, Assert.Single(rows, row => row.OwnerUserId == secondOwner).Id);
         var conflict = await Assert.ThrowsAsync<PostgresException>(() => InsertAsync(Guid.NewGuid(), owner, Access.Business, "1", acceptedAtUtc));
         Assert.Equal(PostgresErrorCodes.UniqueViolation, conflict.SqlState);
-        await migrator.MigrateAsync(migrations[^2], ct);
+        await migrator.MigrateAsync(predecessor, ct);
         Assert.Equal(3, await db.Set<AssistantNoticeAcceptance>().CountAsync(ct));
         await InsertAsync(Guid.NewGuid(), owner, Access.Business, "1", acceptedAtUtc.AddHours(2));
-        await migrator.MigrateAsync(migrations[^1], ct);
+        await migrator.MigrateAsync(noticeMigration, ct);
         Assert.Equal(first, (await db.Set<AssistantNoticeAcceptance>().AsNoTracking()
             .SingleAsync(row => row.OwnerUserId == owner && row.NoticeVersion == "1", ct)).Id);
 

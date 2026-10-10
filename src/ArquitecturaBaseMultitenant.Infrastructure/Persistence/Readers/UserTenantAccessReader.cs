@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
@@ -73,8 +74,10 @@ internal sealed class UserTenantAccessReader(ApplicationDbContext context, IUser
                      where managedAccess.UserId == access.UserId && managedAccess.TenantId == method.ManagedByTenantId
                          && managedAccess.Status == MemberStatus.Active && manager.Status == TenantStatus.Active
                      select managedAccess.UserId).Any())
-            select new ActiveTenantAdminEmail(access.UserId, method.Value)).Distinct().ToArrayAsync(ct);
+            select new { access.UserId, method.Value }).Distinct().ToArrayAsync(ct);
         var active = await users.ListActiveAsync(candidates.Select(value => value.UserId).Distinct().ToArray(), ct);
-        return candidates.Where(value => active.Contains(value.UserId)).OrderBy(value => value.UserId).ThenBy(value => value.Email, StringComparer.Ordinal).ToArray();
+        return candidates.Where(value => active.Contains(value.UserId))
+            .Select(value => new ActiveTenantAdminEmail(value.UserId, Email.Create(value.Value).Value))
+            .OrderBy(value => value.UserId).ThenBy(value => value.Email.Value, StringComparer.Ordinal).ToArray();
     }
 }

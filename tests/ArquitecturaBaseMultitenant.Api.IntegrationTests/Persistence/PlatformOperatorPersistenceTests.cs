@@ -17,6 +17,14 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 public sealed class PlatformOperatorPersistenceTests(ApiFactory factory)
 {
     private const string BeforePermissions = "20261003221619_SecurityEventEvidence";
+    private const string OperatorPermissions = "20261004005437_PlatformOperatorPermissions";
+    private static readonly string[] HistoricalOwnerPermissions =
+    [
+        "platform.tenants.read", "platform.tenants.manage", "platform.accounts.read", "platform.accounts.manage",
+        "platform.recoveries.manage", "platform.legal.manage", "platform.operators.manage", "platform.audit.read", "platform.settings.manage"
+    ];
+    private static readonly string[] HistoricalSupportPermissions =
+    ["platform.tenants.read", "platform.accounts.read", "platform.recoveries.manage", "platform.audit.read"];
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
@@ -33,12 +41,12 @@ public sealed class PlatformOperatorPersistenceTests(ApiFactory factory)
         await using var context = new ApplicationDbContext(options.Options, new TenantContext());
         var migrator = context.GetService<IMigrator>();
 
-        // Down con pérdida: solo el catálogo completo vuelve a Owner.
+        // ADR 0042: el catálogo histórico de nueve permisos vuelve a Owner, aunque el catálogo vivo crezca.
         await using (var scope = isolated.Services.CreateAsyncScope())
             await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
             {
                 var repository = scope.ServiceProvider.GetRequiredService<IPlatformPermissionAssignmentRepository>();
-                repository.Add(PlatformPermissionAssignment.Create(ownerId, PlatformPermissions.All).Value);
+                repository.Add(PlatformPermissionAssignment.Create(ownerId, HistoricalOwnerPermissions).Value);
                 repository.Add(PlatformPermissionAssignment.Create(supportId, [PlatformPermissions.Audit.Read]).Value);
                 return Task.FromResult(Result.Success());
             }, CommitPolicy.OnSuccess, Ct);
@@ -46,11 +54,11 @@ public sealed class PlatformOperatorPersistenceTests(ApiFactory factory)
         Assert.Equal("Owner", await RoleAsync(isolated, ownerId));
         Assert.Equal("Support", await RoleAsync(isolated, supportId));
 
-        await migrator.MigrateAsync(cancellationToken: Ct);
+        await migrator.MigrateAsync(OperatorPermissions, Ct);
 
         var reader = isolated.Services.GetRequiredService<IPlatformPermissionAssignmentReader>();
-        Assert.Equal(PlatformPermissions.All, await reader.FindPermissionsAsync(ownerId, Ct));
-        Assert.Equal(PlatformOperators.Reduced, await reader.FindPermissionsAsync(supportId, Ct));
+        Assert.Equal(HistoricalOwnerPermissions, await reader.FindPermissionsAsync(ownerId, Ct));
+        Assert.Equal(HistoricalSupportPermissions, await reader.FindPermissionsAsync(supportId, Ct));
         Assert.False(await context.Tenants.AnyAsync(Ct));
     }
 

@@ -354,15 +354,16 @@ public sealed class CompaniesTests(ApiFactory factory)
         Assert.True(added.StatusCode == HttpStatusCode.NoContent, await added.Content.ReadAsStringAsync(Ct));
         await AccountJourney.AuthorizeAsync(adminClient, "business", Ct);
 
-        // /api/me: ningún permiso de la organización y los de su empresa, solo para esa empresa.
+        // /api/me: solo las proyecciones aprobadas a organización y los permisos de su única empresa.
         using var me = await adminClient.GetAsync("/api/me", Ct);
         Assert.Equal(HttpStatusCode.OK, me.StatusCode);
         using var meJson = JsonDocument.Parse(await me.Content.ReadAsStringAsync(Ct));
         var effective = meJson.RootElement.GetProperty("effectivePermissions");
-        Assert.Empty(effective.GetProperty("organization").EnumerateArray());
+        Assert.Equal(Permissions.OrganizationProjectedFromCompany.Order(StringComparer.Ordinal),
+            effective.GetProperty("organization").EnumerateArray().Select(permission => permission.GetString()).Order(StringComparer.Ordinal));
         var company = Assert.Single(effective.GetProperty("companies").EnumerateObject());
         Assert.Equal(companyId, Guid.Parse(company.Name));
-        Assert.Equal([Permissions.Company.Members.Manage, Permissions.Company.Members.Read],
+        Assert.Equal(Permissions.CompanyScoped.Concat(Permissions.OrganizationProjectedFromCompany).Order(StringComparer.Ordinal),
             company.Value.EnumerateArray().Select(permission => permission.GetString()).Order(StringComparer.Ordinal));
 
         // Los roles que se pueden asignar en su empresa: los de cada empresa y los propios, sin los de otra empresa ni

@@ -130,7 +130,7 @@ public sealed class AssistantSettingsTests
         public Task<AssistantKeyMaterial> GetOrganizationKeyAsync(CancellationToken ct) => throw new NotSupportedException();
         public Task<IReadOnlyList<AssistantModelPriceResponse>> ListAllAsync(CancellationToken ct) => Task.FromResult<IReadOnlyList<AssistantModelPriceResponse>>([Model]);
         public Task<PagedResult<AssistantModelPriceResponse>> ListAsync(AssistantModelListRequest request, CancellationToken ct) => throw new NotSupportedException();
-        public Task<IReadOnlyList<ActiveTenantAdminEmail>> ListActiveVerifiedEmailRecipientsAsync(Guid tenantId, CancellationToken ct) => Task.FromResult<IReadOnlyList<ActiveTenantAdminEmail>>(Recipient ? [new(UserId!.Value, "owner@example.test")] : []);
+        public Task<IReadOnlyList<ActiveTenantAdminEmail>> ListActiveVerifiedEmailRecipientsAsync(Guid tenantId, CancellationToken ct) => Task.FromResult<IReadOnlyList<ActiveTenantAdminEmail>>(Recipient ? [new(UserId!.Value, Email.Create("owner@example.test").Value)] : []);
         public Task<IReadOnlyList<Guid>> ListOwnedBusinessTenantIdsAsync(Guid userId, CancellationToken ct) => throw new NotSupportedException();
         public Task<IReadOnlyList<Guid>> ListOwnedOpenTenantIdsAsync(Guid userId, CancellationToken ct) => throw new NotSupportedException();
         public Task<int> CountOtherActiveOwnersAsync(Guid tenantId, Guid userId, CancellationToken ct) => throw new NotSupportedException();

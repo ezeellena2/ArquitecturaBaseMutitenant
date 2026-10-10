@@ -2,9 +2,11 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -82,7 +84,13 @@ public sealed class UserTenantAccessReaderTests(ApiFactory factory)
         {
             var users = services.GetRequiredService<IUserRepository>();
             for (var index = 0; index < userIds.Length; index++)
+            {
                 userIds[index] = (await users.CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct)).Id;
+                var email = LoginMethod.CreateEmail(userIds[index], Email.Create($"owner-{userIds[index]:N}@example.test").Value);
+                Assert.True(email.Verify(nowUtc).IsSuccess);
+                context.LoginMethods.Add(email);
+            }
+            context.LoginMethods.Add(LoginMethod.CreateEmail(userIds[0], Email.Create($"pending-{userIds[0]:N}@example.test").Value));
 
             var pending = await context.Users.SingleAsync(user => user.Id == userIds[1], ct);
             Assert.True(pending.RequestDeletion("Baja de prueba", nowUtc, 30).IsSuccess);
@@ -135,6 +143,11 @@ public sealed class UserTenantAccessReaderTests(ApiFactory factory)
         // membresía inactiva no.
         Assert.Equal(1, await admins.CountOtherActiveOwnersAsync(business.Id, userIds[1], Ct));
         Assert.Equal(0, await admins.CountOtherActiveOwnersAsync(business.Id, userIds[0], Ct));
+        var recipient = Assert.Single(await admins.ListActiveVerifiedEmailRecipientsAsync(business.Id, Ct));
+        Assert.Equal(userIds[0], recipient.UserId);
+        Assert.Equal($"owner-{userIds[0]:N}@example.test", recipient.Email.Value);
+        Assert.DoesNotContain(recipient.Email.Value, recipient.ToString(), StringComparison.Ordinal);
+        Assert.Empty(await admins.ListActiveVerifiedEmailRecipientsAsync(pendingBusiness.Id, Ct));
         Assert.Equal(new[] { business.Id, pendingBusiness.Id }.Order(),
             await admins.ListOwnedOpenTenantIdsAsync(userIds[0], Ct));
         Assert.Equal(new[] { business.Id, pendingBusiness.Id }.Order(),
@@ -151,6 +164,7 @@ public sealed class UserTenantAccessReaderTests(ApiFactory factory)
 
         // Una organización cerrada ya no bloquea; una suspendida, sí (ADR 0035).
         Assert.Equal(new[] { pendingBusiness.Id }, await admins.ListOwnedOpenTenantIdsAsync(userIds[0], Ct));
+        Assert.Empty(await admins.ListActiveVerifiedEmailRecipientsAsync(business.Id, Ct));
     }
 
     private async Task AddMemberAsync(Guid tenantId, Guid userId, DateTime joinedAtUtc)
