@@ -204,7 +204,8 @@ public sealed class WhatsAppIdentityTests(ApiFactory factory) : IClassFixture<Ap
     {
         await using var application = factory.WithWebHostBuilder(builder => builder.UseSetting("WhatsApp:PhoneNumberId", "identity-number")
             .UseSetting("WhatsApp:AccessToken", "fixture-token").UseSetting("WhatsApp:AppSecret", "fixture-secret")
-            .UseSetting("WhatsApp:VerifyToken", "fixture-verify"));
+            .UseSetting("WhatsApp:VerifyToken", "fixture-verify")
+            .ConfigureTestServices(WhatsAppIdentityTestTransport.BlockExternalSender));
         using var client = application.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         await application.Services.SeedDatabaseAsync(Ct);
         using var requested = await PostAsync(client, "/api/auth/signup", Body(), Ct);
@@ -394,7 +395,7 @@ public sealed class WhatsAppIdentityTests(ApiFactory factory) : IClassFixture<Ap
     }
 
     [Fact]
-    public async Task Pending_phone_revalidates_ownership_on_resend_and_verify_without_notifying_current_owner()
+    public async Task Phone_claimed_by_verified_possession_removes_foreign_pending_without_notifying_current_owner()
     {
         var phone = NewPhone();
         await using var application = Host();
@@ -409,12 +410,16 @@ public sealed class WhatsAppIdentityTests(ApiFactory factory) : IClassFixture<Ap
         using var verified = await PostAsync(client, $"/api/me/login-methods/{methodId}/verify", new { code }, Ct);
         foreach (var rejected in new[] { resent, verified })
         {
-            Assert.Equal(HttpStatusCode.BadRequest, rejected.StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, rejected.StatusCode);
             using var problem = await rejected.Content.ReadFromJsonAsync<JsonDocument>(Ct);
-            Assert.Equal("Identity.LoginMethod.PhoneAlreadyUsed", problem!.RootElement.GetProperty("code").GetString());
+            Assert.Equal(LoginMethodErrors.NotFound.Code, problem!.RootElement.GetProperty("code").GetString());
         }
         await using var scope = application.Services.CreateAsyncScope();
-        Assert.False(await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().OutboxMessages.AnyAsync(value => value.UserId == owner, Ct));
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.False(await context.OutboxMessages.AnyAsync(value => value.UserId == owner, Ct));
+        Assert.False(await context.LoginMethods.AnyAsync(value => value.Id == methodId, Ct));
+        Assert.Equal(owner, (await context.LoginMethods.SingleAsync(value => value.Type == LoginMethodType.Phone
+            && value.Value == phone && value.VerifiedAtUtc != null, Ct)).UserId);
     }
 
     [Fact]
@@ -467,7 +472,8 @@ public sealed class WhatsAppIdentityTests(ApiFactory factory) : IClassFixture<Ap
         .UseSetting("WhatsApp:PhoneNumberId", "identity-number").UseSetting("WhatsApp:AccessToken", "fixture-token")
         .UseSetting("WhatsApp:AppSecret", "fixture-secret").UseSetting("WhatsApp:VerifyToken", "fixture-verify")
         .UseSetting("WhatsApp:AllowedCountries:0", country).UseSetting("Authentication:LoginCode:ResendCooldownSeconds", "0")
-        .UseSetting("Authentication:LoginCode:MaxRequestsPerWindow", "100"));
+        .UseSetting("Authentication:LoginCode:MaxRequestsPerWindow", "100")
+        .ConfigureTestServices(WhatsAppIdentityTestTransport.BlockExternalSender));
     private static string NewPhone() => "+54911" + RandomNumberGenerator.GetInt32(30000000, 59999999).ToString(System.Globalization.CultureInfo.InvariantCulture);
     private static object Contact(string phone) => new { phone = new { country = "AR", number = phone }, channel = "whatsapp" };
     private static object SignupBody(string phone, string? code = null) => new { phone = new { country = "US", number = phone }, channel = "whatsapp", acceptedTerms = true, code };

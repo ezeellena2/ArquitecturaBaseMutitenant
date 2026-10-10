@@ -188,6 +188,7 @@ public sealed class InvitationServiceTests
         public Task<IReadOnlyList<Guid>> FindVerifiedUsersByEmailAsync(Email email, CancellationToken ct) => Task.FromResult(Owners);
         public Task<Guid?> FindVerifiedUserIdAsync(LoginMethodType type, string value, CancellationToken ct) => Task.FromResult<Guid?>(null);
         public Task<LoginMethodLookup?> FindMethodAsync(LoginMethodType type, string value, CancellationToken ct) => Task.FromResult<LoginMethodLookup?>(null);
+        public Task<IReadOnlyList<LoginMethodLookup>> FindPendingMethodsAsync(LoginMethodType type, string value, CancellationToken ct) => Task.FromResult<IReadOnlyList<LoginMethodLookup>>([]);
         public Task<string?> FindDisplayNameAsync(Guid userId, CancellationToken ct) => Task.FromResult(DisplayNames.GetValueOrDefault(userId));
         public Task<IReadOnlyList<LoginMethodRow>> ListByUserIdAsync(Guid userId, CancellationToken ct) => Task.FromResult<IReadOnlyList<LoginMethodRow>>([]);
         public Task<bool> IsActiveAsync(Guid userId, Guid tenantId, CancellationToken ct) => Task.FromResult(true);

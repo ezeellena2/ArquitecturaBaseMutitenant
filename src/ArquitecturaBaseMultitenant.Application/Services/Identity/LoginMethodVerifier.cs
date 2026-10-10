@@ -46,7 +46,7 @@ internal sealed class LoginMethodVerifier(LoginMethodGuard guard, ILoginMethodRe
                     ? LoginCodeErrors.AlreadyUsed
                     : LoginCodeErrors.Expired;
         }
-        // Si el correo ya es de otra cuenta, el código no sirve: falla como uno mal escrito (ADR 0041, D4b).
+        // Revalidación de carrera: si el correo pasó a otra cuenta verificada, su prueba previa falla como inválida.
         var usable = method.Type == LoginMethodType.Email
             ? !(await lookup.FindVerifiedUsersByEmailAsync(Email.Create(method.Value).Value, ct)).Any(id => id != userId)
             : await lookup.FindVerifiedUserIdAsync(method.Type, method.Value, ct) is not { } ownerId || ownerId == userId;

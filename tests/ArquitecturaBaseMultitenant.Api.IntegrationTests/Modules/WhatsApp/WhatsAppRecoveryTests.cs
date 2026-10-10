@@ -400,7 +400,8 @@ public sealed class WhatsAppRecoveryTests(ApiFactory factory) : IClassFixture<Ap
         .UseSetting("WhatsApp:PhoneNumberId", "recovery-number").UseSetting("WhatsApp:AccessToken", "fixture-token")
         .UseSetting("WhatsApp:AppSecret", "fixture-secret").UseSetting("WhatsApp:VerifyToken", "fixture-verify")
         .UseSetting("WhatsApp:AllowedCountries:0", country).UseSetting("Authentication:LoginCode:ResendCooldownSeconds", "0")
-        .UseSetting("Authentication:LoginCode:MaxRequestsPerWindow", "100"));
+        .UseSetting("Authentication:LoginCode:MaxRequestsPerWindow", "100")
+        .ConfigureTestServices(WhatsAppIdentityTestTransport.BlockExternalSender));
     private static HttpClient Client(WebApplicationFactory<Program> app) => app.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
     private static string NewPhone() => "+54911" + RandomNumberGenerator.GetInt32(30000000, 59999999).ToString(System.Globalization.CultureInfo.InvariantCulture);
     private static string Nonce() => Microsoft.AspNetCore.WebUtilities.WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(32));

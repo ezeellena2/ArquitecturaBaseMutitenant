@@ -39,13 +39,10 @@ internal sealed class LoginMethodIssuer(LoginMethodGuard guard, ILoginMethodRepo
             return FieldErrors.On(ownerId == userId ? LoginMethodErrors.AlreadyVerified : type == LoginMethodType.Phone ? LoginMethodErrors.PhoneAlreadyUsed : LoginMethodErrors.AlreadyUsed, LoginDestinationResolver.Field(destination));
         }
 
-        // Un destino agregado y sin verificar, de esta cuenta o de otra, se reemplaza: es pedir otro código.
+        // Pedir otro código reemplaza sólo el pendiente propio. Los ajenos se reclaman al probar posesión.
         var validNew = destinations.ValidateNew(destination);
         if (validNew.IsFailure) return validNew.Error;
         await RemoveOwnPendingAsync(userId, type, destination.Value, ct);
-        if (existing is { VerifiedAtUtc: null } && existing.UserId != userId
-            && await methods.GetByIdAsync(existing.MethodId, ct) is { VerifiedAtUtc: null } pending)
-            methods.Remove(pending);
         var method = LoginDestinationResolver.Create(userId, destination);
         var sent = await SendAsync(userId, method, account.Value.Culture, ct);
         if (sent.IsSuccess) methods.Add(method);

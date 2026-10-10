@@ -32,6 +32,14 @@ internal sealed class UserLookup(ApplicationDbContext context) : IUserLookup
             .Select(method => new LoginMethodLookup(method.Id, method.UserId, method.VerifiedAtUtc))
             .FirstOrDefaultAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<LoginMethodLookup>> FindPendingMethodsAsync(
+        LoginMethodType type, string value, CancellationToken cancellationToken) =>
+        await context.LoginMethods.AsNoTracking()
+            .Where(method => method.Type == type && method.Value == value && method.VerifiedAtUtc == null)
+            .OrderBy(method => method.Id)
+            .Select(method => new LoginMethodLookup(method.Id, method.UserId, method.VerifiedAtUtc))
+            .ToArrayAsync(cancellationToken);
+
     public Task<string?> FindDisplayNameAsync(Guid userId, CancellationToken cancellationToken) =>
         context.Users.AsNoTracking()
             .Where(user => user.Id == userId)

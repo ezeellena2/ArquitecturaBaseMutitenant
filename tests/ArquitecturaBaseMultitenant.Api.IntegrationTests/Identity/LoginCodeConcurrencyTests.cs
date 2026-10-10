@@ -194,6 +194,9 @@ public sealed class LoginCodeConcurrencyTests(ApiFactory factory)
         public Task<LoginMethodLookup?> FindMethodAsync(LoginMethodType type, string value, CancellationToken ct) =>
             inner.FindMethodAsync(type, value, ct);
 
+        public Task<IReadOnlyList<LoginMethodLookup>> FindPendingMethodsAsync(LoginMethodType type, string value, CancellationToken ct) =>
+            inner.FindPendingMethodsAsync(type, value, ct);
+
         public Task<string?> FindDisplayNameAsync(Guid userId, CancellationToken ct) =>
             inner.FindDisplayNameAsync(userId, ct);
     }

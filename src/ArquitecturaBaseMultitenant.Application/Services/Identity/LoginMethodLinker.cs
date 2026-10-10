@@ -51,6 +51,17 @@ internal sealed class LoginMethodLinker(IExternalLoginLock identities, ILoginMet
             if (primary.IsFailure) return primary.Error;
             await SynchronizePrimaryAsync(method, ct);
         }
+        // El llamador ya probó posesión bajo el lock del destino. Recién después de todas las reglas exitosas
+        // se retiran las reservas ajenas; observer y aviso siguen en esta misma UoW y una excepción revierte todo.
+        if (!wasVerified && method.Type is LoginMethodType.Email or LoginMethodType.Phone)
+            foreach (var candidate in await lookup.FindPendingMethodsAsync(method.Type, method.Value, ct))
+            {
+                if (candidate.UserId == method.UserId) continue;
+                var pending = await methods.GetByIdAsync(candidate.MethodId, ct);
+                if (pending is { VerifiedAtUtc: null } && pending.UserId != method.UserId
+                    && pending.Type == method.Type && pending.Value == method.Value)
+                    methods.Remove(pending);
+            }
         if (method.Type == LoginMethodType.Phone && !wasVerified)
             foreach (var observer in phoneObservers ?? []) await observer.VerifiedAsync(method.UserId, method.Id, PhoneNumber.Create(method.Value).Value, ct);
         return Result.Success();

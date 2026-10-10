@@ -13,6 +13,10 @@ public interface IUserLookup
     Task<LoginMethodLookup?> FindMethodAsync(LoginMethodType type, string value,
         CancellationToken cancellationToken);
 
+    /// <summary>Todas las reservas no verificadas del tipo y valor exactos; no consulta ContactEmail.</summary>
+    Task<IReadOnlyList<LoginMethodLookup>> FindPendingMethodsAsync(LoginMethodType type, string value,
+        CancellationToken cancellationToken);
+
     Task<string?> FindDisplayNameAsync(Guid userId, CancellationToken cancellationToken);
 }
 

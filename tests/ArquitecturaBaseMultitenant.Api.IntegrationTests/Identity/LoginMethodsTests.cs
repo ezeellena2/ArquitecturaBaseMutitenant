@@ -106,7 +106,7 @@ public sealed class LoginMethodsTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task Adding_an_email_reclaims_another_accounts_pending_method_under_the_destination_lock()
+    public async Task Adding_an_email_preserves_foreign_pending_until_proof_under_the_destination_lock()
     {
         using var client = factory.CreateClient();
         await using var scope = factory.Services.CreateAsyncScope();
@@ -130,13 +130,16 @@ public sealed class LoginMethodsTests(ApiFactory factory)
         var added = await service.AddEmailAsync(new AddLoginEmailRequest(email), Ct);
         Assert.True(added.IsSuccess);
         var methods = services.GetRequiredService<ILoginMethodReader>();
-        Assert.Empty(await methods.ListByUserIdAsync(owner.Id, Ct));
+        Assert.Equal(method.Id, Assert.Single(await methods.ListByUserIdAsync(owner.Id, Ct)).Id);
         var pendingForOther = Assert.Single(await methods.ListByUserIdAsync(other.Id, Ct),
             value => value.VerifiedAtUtc is null);
         Assert.Equal(added.Value.MethodId, pendingForOther.Id);
         Assert.Null(pendingForOther.VerifiedAtUtc);
         Assert.Equal(LoginMethodErrors.NotFound.Code,
             (await service.VerifyAsync(new VerifyLoginMethodRequest(method.Id, "123456"), Ct)).Error.Code);
+        var code = await PickupCodeReader.ReadAsync(services, email.Value, Ct);
+        Assert.True((await service.VerifyAsync(new VerifyLoginMethodRequest(added.Value.MethodId, code), Ct)).IsSuccess);
+        Assert.Empty(await methods.ListByUserIdAsync(owner.Id, Ct));
     }
 
     [Theory]

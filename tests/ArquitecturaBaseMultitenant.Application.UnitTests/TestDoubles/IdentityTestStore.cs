@@ -15,6 +15,7 @@ internal sealed class IdentityTestStore : IUserRepository, ILoginMethodRepositor
     internal Dictionary<Guid, UserAccountRow> Users { get; } = [];
     internal List<LoginMethod> Methods { get; } = [];
     internal List<string> Locks { get; } = [];
+    internal IReadOnlyList<LoginMethodLookup>? PendingLookupOverride { get; set; }
     Task<Result> IUserRepository.RequestDeletionAsync(Guid userId, string reason, DateTime requestedAtUtc, int graceDays, CancellationToken cancellationToken) => throw new NotSupportedException();
     Task<Result> IUserRepository.RequestDeletionByOperatorAsync(Guid userId, Guid operatorId, string reason, DateTime requestedAtUtc, int graceDays, CancellationToken cancellationToken) => throw new NotSupportedException();
     Task<Result> IUserRepository.CancelDeletionAsync(Guid userId, DateTime cancelledAtUtc, CancellationToken cancellationToken) => throw new NotSupportedException();
@@ -44,7 +45,8 @@ internal sealed class IdentityTestStore : IUserRepository, ILoginMethodRepositor
     void ILoginMethodRepository.Remove(LoginMethod method) { Methods.Remove(method); }
     Task<IReadOnlyList<Guid>> IUserLookup.FindVerifiedUsersByEmailAsync(Email email, CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<Guid>>(Methods.Where(m => m.VerifiedAtUtc is not null && (m.Type == LoginMethodType.Email && m.Value == email.Value || m.ContactEmail == email)).Select(m => m.UserId).Distinct().ToArray());
     Task<Guid?> IUserLookup.FindVerifiedUserIdAsync(LoginMethodType type, string value, CancellationToken cancellationToken) => throw new NotSupportedException();
-    Task<LoginMethodLookup?> IUserLookup.FindMethodAsync(LoginMethodType type, string value, CancellationToken cancellationToken) => Task.FromResult(Methods.Where(m => m.Type == type && m.Value == value).Select(m => new LoginMethodLookup(m.Id, m.UserId, m.VerifiedAtUtc)).FirstOrDefault());
+    Task<LoginMethodLookup?> IUserLookup.FindMethodAsync(LoginMethodType type, string value, CancellationToken cancellationToken) => Task.FromResult(Methods.Where(m => m.Type == type && m.Value == value).OrderByDescending(m => m.VerifiedAtUtc is not null).ThenBy(m => m.Id).Select(m => new LoginMethodLookup(m.Id, m.UserId, m.VerifiedAtUtc)).FirstOrDefault());
+    Task<IReadOnlyList<LoginMethodLookup>> IUserLookup.FindPendingMethodsAsync(LoginMethodType type, string value, CancellationToken cancellationToken) => Task.FromResult(PendingLookupOverride ?? (IReadOnlyList<LoginMethodLookup>)Methods.Where(m => m.Type == type && m.Value == value && m.VerifiedAtUtc is null).OrderBy(m => m.Id).Select(m => new LoginMethodLookup(m.Id, m.UserId, m.VerifiedAtUtc)).ToArray());
     Task<string?> IUserLookup.FindDisplayNameAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
     Task ITenantDomainRepository.LockDomainAsync(OrganizationEmailDomain domain, CancellationToken cancellationToken) => throw new NotSupportedException();
     Task<TenantDomain?> ITenantDomainRepository.GetByIdAsync(Guid domainId, CancellationToken cancellationToken) => throw new NotSupportedException();

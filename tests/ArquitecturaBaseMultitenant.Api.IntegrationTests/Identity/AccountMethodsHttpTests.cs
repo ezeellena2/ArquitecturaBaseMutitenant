@@ -55,7 +55,7 @@ public sealed class AccountMethodsHttpTests(ApiFactory factory)
 
     // La reserva pendiente ajena sigue siendo recuperable; sus códigos conservan intentos, reenvío y vencimiento.
     [Fact]
-    public async Task An_unverified_reservation_is_reclaimed_and_its_code_keeps_attempts_and_resends()
+    public async Task An_unverified_reservation_is_preserved_until_proof_and_its_code_keeps_attempts_and_resends()
     {
         var (owner, client, account) = await TwoAccountsAsync();
         var free = "free-" + Guid.NewGuid().ToString("N") + "@example.test";
@@ -108,7 +108,7 @@ public sealed class AccountMethodsHttpTests(ApiFactory factory)
         var db = services.GetRequiredService<ApplicationDbContext>();
         Assert.True(await db.LoginCodes.AnyAsync(code => code.Destination == taken
             && code.Purpose == LoginCodePurpose.VerifyDestination && code.SentAtUtc != null, Ct));
-        Assert.False(await db.LoginMethods.AnyAsync(method => method.UserId == owner.UserId && method.Value == taken, Ct));
+        Assert.True(await db.LoginMethods.AnyAsync(method => method.UserId == owner.UserId && method.Value == taken && method.VerifiedAtUtc == null, Ct));
         Assert.Equal(1, await db.LoginMethods.CountAsync(method => method.UserId == account.UserId
             && method.Value == taken && method.VerifiedAtUtc == null, Ct));
     }
