@@ -106,7 +106,7 @@ La skill `arnes` prohíbe abrir los archivos que tocó o rehacer su trabajo. La 
 
 - Completar documentación en cero. Las suites finales, el E2E permanente, la comparación visual afectada y el retiro efectivo en una copia con bases migrada y vacía tienen los resultados indicados arriba.
 - Resolver aprobación/categoría de las cuatro variantes que todavía no son Utility aprobadas. Los cuatro botones URL ya están creados con el origen del túnel.
-- Completar el recorrido real con el destinatario autorizado terminado en 0069. El entorno, túnel y override temporal del webhook ya están verificados; el primer bot y código de registro tienen `delivered`. Falta confirmar el registro y recorrer ingreso, cuenta, recuperación y demás casos. El transporte controlado no sustituye esta evidencia.
+- Completar los casos restantes del recorrido Meta con el destinatario autorizado terminado en 0069. Registro, ingreso, Mi cuenta, bot/enlaces, destino ocupado y recuperación pendiente/rechazada ya tienen la evidencia posterior de este informe. La aprobación también quedó persistida y entregada; falta terminar su ingreso posterior y los casos adicionales de la puerta. El transporte controlado no sustituye esta evidencia.
 - Restaurar el callback compartido y los encabezados del puerto, y detener exclusivamente el Aspire aislado al liberar la prueba.
 
 ## Decisiones tomadas
@@ -179,3 +179,11 @@ Se ingresó a B por su correo local y se quitó el teléfono desde Mi cuenta, co
 El operador sintético entró por `/plataforma`, con código de su pickup y aceptación de los mismos documentos de demostración autorizados. La bandeja mostró un pedido pendiente con ambos métodos enmascarados. Se rechazó desde «Revisar» con el motivo «Prueba integral E8: rechazo controlado.»; la bandeja pasó a un pedido y cero pendientes. «Ver detalle» recuperó estado, operador y motivo guardados. La base confirmó `Rejected|1` y cuatro Template `Delivered`; WhatsApp Web mostró el aviso de rechazo, sin incluir el motivo interno. No se agregó el teléfono a la cuenta.
 
 Evidencia local sin código ni número completo: `2026-10-09-e8-recuperacion-pendiente-sin-ingreso.jpg`, `2026-10-09-e8-recuperacion-rechazada.jpg` y `2026-10-09-e8-recuperacion-rechazo-detalle.jpg` en `.local/reviews/`. Se preparó un segundo pedido para comprobar aprobación y su botón Utility; todavía no acredita esa rama ni cierra la puerta.
+
+### Recuperación real: aprobación y botón
+
+El usuario verificó el quinto código real y la web registró un segundo pedido pendiente. La aprobación quedó preparada con el motivo «Prueba integral E8: aprobación controlada de cuenta temporal.»; antes de ejecutarla se pidió la autorización puntual para agregar el método de acceso. El usuario respondió «Sí, aprobar la recuperación temporal». Plataforma lo aprobó; después de F5 muestra dos pedidos, cero pendientes, uno Aprobado y otro Rechazado. La consulta de estados confirma lo mismo. La pantalla pública seguía en «Recibimos tu pedido»: aprobar no creó una sesión.
+
+WhatsApp Web mostró «Aprobamos tu pedido: ya podés entrar a ArquitecturaBase con este número, que quedó como tu método principal.» y el botón **Ingresar**. Su botón real abrió `/login` en el origen HTTPS del túnel. El sexto Template quedó `Delivered`; el correo conservado recibió el aviso de método agregado, comprobado en el pickup propio. También se comprobaron allí los dos avisos legítimos de pedido a la cuenta anterior; no son avisos por un número ocupado. Se solicitó un nuevo código desde el ingreso abierto por el botón para terminar la prueba de acceso posterior.
+
+Evidencias: `2026-10-09-e8-recuperacion-aprobar-propuesta.jpg` y `2026-10-09-e8-recuperaciones-decididas.jpg` en `.local/reviews/`. GET Meta de **10/10 a las 00:45:58 UTC** conserva 32 variantes: dos Authentication aprobadas, 26 Utility aprobadas y las cuatro excepciones de categoría/apelación indicadas antes (`2026-10-09-meta-inventario-e8-actualizado.json`). La decisión, el aviso y el botón de recuperación están acreditados; el ingreso posterior y la puerta completa todavía no.
