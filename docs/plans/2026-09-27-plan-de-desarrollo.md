@@ -76,7 +76,7 @@ Las etapas 6, 7 y 8 pueden avanzar en paralelo una vez cerrada la 4; la 5 va des
 | 6 | Registro-Empresa, Inicio-Org, Inicio-Miembro, Usuarios, Usuario, Empresas, Empresa, Configuracion (con el dominio de correo), Pagina-Org y Auditoria-Org |
 | 7 | Landing (la sección «Empresas en ArquitecturaBase» de la portada), Directorio (`/empresas`) y Pagina-Publica, con sus teléfonos (Landing-Movil, M-Directorio y M-Pagina-Publica, como web móvil) |
 | 8 | Ingreso y Registro (los estados de WhatsApp); Cuenta, Cuenta-Agregar, Cuenta-Verificar y Cuenta-Metodo (Mi cuenta › WhatsApp, lienzo v79) con sus teléfonos; Enlace, y Mensajes (canal WhatsApp, incluido «Enlace para entrar (bot)») |
-| 9 | Ingreso: los estados del operador (segundo factor, código del autenticador incorrecto, código de recuperación, configurar el autenticador y guardar los códigos) |
+| 9 | Ingreso y M-Ingreso: los estados «Operador: …» (lienzo v117); Cuenta-Plat y M-Cuenta-Plat: «Confirmá que sos vos» y «Restablecer el autenticador»; Mapa-Ingreso |
 | 10 | Cuenta (Privacidad: Exportar mis datos) y Mensajes (Exportación de datos lista, por correo) |
 
 **El login primero:** la prioridad es que el ingreso completo funcione al 100 %. Por eso la Etapa 3 se hace en tres partes, cada una con su puerta (ver la etapa), y la 3a es el primer recorrido real de punta a punta.
@@ -483,7 +483,17 @@ Agregada el 2026-10-07 a pedido del usuario. Va **justo después de la Etapa 8**
 
 ## Etapa 9: endurecimiento
 
-- TOTP obligatorio para operadores, con reautenticación reciente en las operaciones sensibles. Hasta esta etapa, el operador del seed entra sin segundo factor. En el front, los cinco estados «Operador: …» del tablero Ingreso (segundo factor, código del autenticador incorrecto, código de recuperación, configurar el autenticador y guardar los códigos).
+- **TOTP obligatorio para operadores** (lienzo v117, front `eb5626ea`). Hasta esta etapa, el operador del seed entra sin segundo factor.
+  - **Ingreso y M-Ingreso:** los estados «Operador: …». Son: segundo factor; código incorrecto; demasiados códigos incorrectos, con el mismo bloqueo de la cuenta (`Identity.Account.LockedOut`, 15 minutos); código de recuperación; recuperación incorrecta («Ese código no es válido o ya lo usaste.»); configurar el autenticador; su código incorrecto, y guardar los códigos. Nada menciona al operador antes del código (0043).
+  - **Reautenticación reciente** antes de las acciones sensibles de Plataforma: operadores, cuentas, recuperaciones, organizaciones, documentos legales y configuración.
+    - Se hace en «Confirmá que sos vos», con el código de la app o uno de recuperación.
+    - La ventana de «reciente» la fija el plan de la etapa.
+    - Las personas siguen sin código de confirmación en Mi cuenta (0045).
+    - Lo aprobó el usuario el 2026-10-10.
+  - **Restablecer el autenticador** de un operador, desde el ⋮ de Cuenta-Plat y con motivo.
+    - Cierra sus sesiones y anula sus códigos de recuperación.
+    - Al volver a entrar, el operador lo configura de nuevo.
+    - Lo aprobó el usuario el 2026-10-10.
 - **Caché en Redis.** Hasta esta etapa, `HybridCache` vive en la memoria de la API. Acá **toda la caché pasa a Redis**, pensada antes de programar en una ADR que fija qué se cachea, cuánto dura, quién invalida y cuándo:
   - **Redis en el AppHost**, junto con PostgreSQL, la API y el front, con volumen persistente y contraseña en user-secrets; en producción, Redis administrado con TLS.
   - **Ningún dato viejo después de una invalidación.** `HybridCache` usa Redis como caché compartida por todas las instancias de la API. La ADR decide si queda una capa local corta con su invalidación propagada por Redis o si se lee siempre de Redis. El estado de organizaciones, membresías y permisos se ve invalidado en todas las instancias al instante.
