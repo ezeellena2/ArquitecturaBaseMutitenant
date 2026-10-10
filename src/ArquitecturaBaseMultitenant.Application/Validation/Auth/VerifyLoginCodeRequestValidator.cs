@@ -23,7 +23,7 @@ internal sealed class VerifyLoginCodeRequestValidator : AbstractValidator<Verify
         RuleFor(request => request.ReturnUrl)
             .Cascade(CascadeMode.Stop)
             .NotEmpty().WithMessage(_ => ValidationTexts.Required)
-            .Must(ReturnUrls.IsLoginReturn)
+            .Must((request, returnUrl) => ReturnUrls.TryReadLoginCodeSelection(returnUrl, request.Access, out _))
             .WithMessage(_ => ValidationTexts.ReturnUrlInvalid);
     }
 }

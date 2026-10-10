@@ -46,7 +46,7 @@ public sealed class LoginCodeController(ILoginCodeService service) : ControllerB
         var email = AuthContactMapping.Map(request.Email, request.Phone, request.Channel);
         if (email.IsFailure) return Result.Failure(email.Error).ToActionResult(this);
         return (await service.VerifyLoginCodeAsync(
-            new VerifyLoginCodeRequest(email.Value, request.Code, request.ReturnUrl, request.Phone is null ? null : new PhoneInputRequest(request.Phone.Country, request.Phone.Number), request.Channel), cancellationToken))
+            new VerifyLoginCodeRequest(email.Value, request.Code, request.ReturnUrl, request.Phone is null ? null : new PhoneInputRequest(request.Phone.Country, request.Phone.Number), request.Channel, request.Access), cancellationToken))
             .ToActionResult(this);
     }
 }

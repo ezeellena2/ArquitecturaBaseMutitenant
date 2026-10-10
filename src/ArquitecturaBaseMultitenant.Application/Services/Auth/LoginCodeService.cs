@@ -40,16 +40,17 @@ internal sealed class LoginCodeService(
         {
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
+            if (!ReturnUrls.TryReadLoginCodeSelection(request.ReturnUrl, request.Access, out var selection))
+                throw new InvalidOperationException("A validated login code return became invalid.");
             var destination = verification.Resolve(request.Email, request.Phone, request.Channel);
             if (destination.IsFailure) return destination.Error;
-            var invitation = request.Email is null ? null : await invitations.PrepareAsync(request.Email, request.ReturnUrl!, cancellationToken);
+            var invitation = request.Email is null ? null : await invitations.PrepareAsync(request.Email, selection, cancellationToken);
             using var scope = invitation is null ? null : tenantScope.Enter(invitation.DefaultsTenantId);
             var verified = await unitOfWork.ExecuteInTransactionAsync(
-                ct => verification.VerifyAsync(request, destination.Value, invitation, ct), CommitPolicy.OnAnyResult, cancellationToken);
+                ct => verification.VerifyAsync(request, destination.Value, selection, invitation, ct), CommitPolicy.OnAnyResult, cancellationToken);
             if (verified.IsFailure) return verified.Error;
 
-            var access = ReturnUrls.TryReadAccessSelection(request.ReturnUrl, out var selection)
-                ? selection.Access : Access.Business;
+            var access = selection?.Access ?? Access.Business;
             await signIn.SignInAsync(verified.Value, access, cancellationToken);
             return new VerifyLoginCodeResponse(request.ReturnUrl!);
         });

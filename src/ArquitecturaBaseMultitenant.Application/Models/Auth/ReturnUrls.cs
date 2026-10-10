@@ -11,6 +11,33 @@ public static class ReturnUrls
     public const string InvitationPath = "/invitacion";
     public const string LoginLinkPath = "/login/enlace";
 
+    /// <summary>Sólo OTP: los retornos fijos exigen el acceso literal correspondiente; los anteriores no lo reciben.</summary>
+    public static bool TryReadLoginCodeSelection(string? returnUrl, string? access,
+        out AccessSelectionRequest? selection)
+    {
+        if (TryReadFixedLoginCodeSelection(returnUrl, out selection))
+            return access == (selection.Access == Access.Consumer ? "consumer" : "business");
+        if (access is not null) return false;
+        return returnUrl == InvitationPath || TryReadAccessSelection(returnUrl, out selection);
+    }
+
+    /// <summary>El lado de cada retorno fijo es único; sólo se usa tras validar OTP o su ticket de cancelación.</summary>
+    public static bool TryReadFixedLoginCodeSelection(string? returnUrl,
+        [NotNullWhen(true)] out AccessSelectionRequest? selection)
+    {
+        selection = returnUrl switch
+        {
+            "/" => new AccessSelectionRequest(Access.Consumer, null),
+            "/org" => new AccessSelectionRequest(Access.Business, null),
+            _ => null,
+        };
+        return selection is not null;
+    }
+
+    /// <summary>La cancelación admite también los dos retornos fijos emitidos exclusivamente por OTP.</summary>
+    public static bool IsLoginCodeDeletionReturn([NotNullWhen(true)] string? returnUrl) =>
+        IsDeletionReturn(returnUrl) || TryReadFixedLoginCodeSelection(returnUrl, out _);
+
     /// <summary>La baja conserva los retornos probados y admite la continuación fija de un enlace personal.</summary>
     public static bool IsDeletionReturn([NotNullWhen(true)] string? returnUrl) =>
         returnUrl == LoginLinkPath || IsLoginReturn(returnUrl);

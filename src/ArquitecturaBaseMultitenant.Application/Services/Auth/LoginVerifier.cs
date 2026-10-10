@@ -29,7 +29,8 @@ internal sealed class LoginVerifier(
         PhoneInputRequest? phone, string? channel) => accounts.Resolve(email, phone, channel);
 
     internal async Task<Result<Guid>> VerifyAsync(
-        VerifyLoginCodeRequest request, LoginCodeDestination destination, LoginInvitationsContext? invitation, CancellationToken cancellationToken)
+        VerifyLoginCodeRequest request, LoginCodeDestination destination, AccessSelectionRequest? selection,
+        LoginInvitationsContext? invitation, CancellationToken cancellationToken)
     {
         if (invitation is not null) await invitations.LockEmailAsync(invitation, cancellationToken);
         var userId = invitation is not null ? invitation.ExpectedOwnerId : await accounts.LockAsync(destination, cancellationToken);
@@ -56,27 +57,21 @@ internal sealed class LoginVerifier(
         var account = await accounts.ReadAsync(userId.Value, cancellationToken);
         if (account is null || account.Status is UserStatus.Suspended or UserStatus.Deleted)
             return Fail(userId, AccountErrors.Suspended);
-        if (account.IsPlatformOperator && (!ReturnUrls.TryReadAccessSelection(request.ReturnUrl, out var requested)
-            || requested.Access != Access.Platform))
+        if (account.IsPlatformOperator && selection?.Access != Access.Platform)
             return Fail(userId, AccessErrors.PlatformOnly);
-        if (account.Status == UserStatus.PendingDeletion)
-            return Fail(userId, cancellation.Issue(account, request.ReturnUrl!));
-
         var method = (await loginMethods.ListByUserIdAsync(userId.Value, cancellationToken))
             .SingleOrDefault(method => method.Type == LoginDestinationResolver.Type(destination) && method.Value == destination.Value);
         if (method is null || !await availability.IsAvailableAsync(userId.Value, method, cancellationToken))
             return Fail(userId, LoginCodeErrors.Invalid(attemptsLeft: null));
 
-        if (request.ReturnUrl != ReturnUrls.InvitationPath)
+        if (account.Status == UserStatus.PendingDeletion)
+            return Fail(userId, cancellation.IssueForLoginCode(account, request.ReturnUrl!));
+
+        if (selection?.Access == Access.Business)
         {
-            if (!ReturnUrls.TryReadAccessSelection(request.ReturnUrl, out var selection))
-                throw new InvalidOperationException("A validated return URL became invalid.");
-            if (selection.Access == Access.Business)
-            {
-                var selected = await connect.GetActiveUserAsync(userId.Value, selection.Access,
-                    selection.TenantId, cancellationToken);
-                if (selected.IsFailure) return Fail(userId, selected.Error);
-            }
+            var selected = await connect.GetActiveUserAsync(userId.Value, selection.Access,
+                selection.TenantId, cancellationToken);
+            if (selected.IsFailure) return Fail(userId, selected.Error);
         }
 
         var operatorInvitation = await accounts.AcceptOperatorInvitationAsync(account, request.ReturnUrl!, cancellationToken);

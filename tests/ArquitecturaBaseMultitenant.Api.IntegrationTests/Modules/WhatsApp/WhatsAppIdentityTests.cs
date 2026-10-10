@@ -3,8 +3,10 @@ using System.Security.Cryptography;
 using System.Text;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
+using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.WebUtilities;
@@ -33,10 +35,11 @@ public sealed class WhatsAppIdentityTests(ApiFactory factory) : IClassFixture<Ap
     private const string Phone = "+5491134567890";
 
     [Theory]
-    [InlineData(false, false)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public async Task Phone_code_does_not_authenticate_a_new_owner_after_transfer(bool business, bool initiallyFree)
+    [InlineData(false, false, false)]
+    [InlineData(true, false, false)]
+    [InlineData(true, true, false)]
+    [InlineData(false, false, true)]
+    public async Task Phone_code_does_not_authenticate_a_new_owner_after_transfer(bool business, bool initiallyFree, bool fixedReturn)
     {
         var phone = NewPhone();
         await using var application = Host();
@@ -52,7 +55,8 @@ public sealed class WhatsAppIdentityTests(ApiFactory factory) : IClassFixture<Ap
         using var removed = await ownerClient.DeleteAsync($"/api/me/login-methods/{methodId}", Ct);
         Assert.Equal(HttpStatusCode.NoContent, removed.StatusCode);
         object oldProof = business ? SignupBody(phone, oldCode)
-            : new { phone = new { country = "AR", number = phone }, channel = "whatsapp", code = oldCode, returnUrl = AuthorizePath("consumer") };
+            : new { phone = new { country = "AR", number = phone }, channel = "whatsapp", code = oldCode,
+                returnUrl = fixedReturn ? "/" : AuthorizePath("consumer"), access = fixedReturn ? "consumer" : null };
         if (!initiallyFree)
         {
             using var lost = await PostAsync(anonymous, business ? "/api/auth/business-signup/verify" : "/api/auth/login-code/verify", oldProof, Ct);
@@ -74,6 +78,50 @@ public sealed class WhatsAppIdentityTests(ApiFactory factory) : IClassFixture<Ap
         Assert.Null(challenge.ConsumedAtUtc);
         Assert.Equal(0, challenge.FailedAttempts);
         Assert.Equal(next.UserId, await scope.ServiceProvider.GetRequiredService<IUserLookup>().FindVerifiedUserIdAsync(LoginMethodType.Phone, phone, Ct));
+    }
+
+    [Theory]
+    [InlineData("/", "consumer")]
+    [InlineData("/org", "business")]
+    public async Task Phone_fixed_return_rejects_literal_changes_before_consumption_and_then_enters(string returnUrl, string access)
+    {
+        var phone = NewPhone();
+        await using var application = Host();
+        await application.Services.SeedDatabaseAsync(Ct);
+        var userId = await StagePhoneAsync(application.Services, phone);
+        if (access == "business")
+        {
+            var ownerId = await StagePhoneAsync(application.Services, NewPhone());
+            var tenant = Tenant.CreateBusiness("Empresa Phone OTP fijo", requiresApproval: false);
+            Assert.True(tenant.Activate().IsSuccess);
+            await using var scope = application.Services.CreateAsyncScope();
+            var provider = scope.ServiceProvider;
+            using var entered = provider.GetRequiredService<ITenantScope>().Enter(tenant.Id);
+            await provider.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+            {
+                provider.GetRequiredService<TenantSpaceProvisioner>().Stage(tenant,
+                    TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"), [userId, ownerId], ownerId);
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+        using var client = application.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        using var requested = await PostAsync(client, "/api/auth/login-code", Contact(phone), Ct);
+        Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
+        var code = await CodeAsync(application.Services, phone);
+        using var rejected = await PostAsync(client, "/api/auth/login-code/verify",
+            new { phone = new { country = "AR", number = phone }, channel = "whatsapp", code, returnUrl = returnUrl + "\u200b", access }, Ct);
+        Assert.Equal(HttpStatusCode.BadRequest, rejected.StatusCode);
+        Assert.False(rejected.Headers.Contains("Set-Cookie"));
+        using var verified = await PostAsync(client, "/api/auth/login-code/verify",
+            new { phone = new { country = "AR", number = phone }, channel = "whatsapp", code, returnUrl, access }, Ct);
+        Assert.Equal(HttpStatusCode.OK, verified.StatusCode);
+        Assert.Contains(verified.Headers.GetValues("Set-Cookie"), value => value.StartsWith(".AspNetCore.Identity.Application=", StringComparison.Ordinal));
+        await AccountJourney.AuthorizeAsync(client, access, Ct);
+        using var me = await client.GetAsync("/api/me", Ct);
+        Assert.Equal(HttpStatusCode.OK, me.StatusCode);
+        using var profile = await me.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+        Assert.Equal(userId, profile!.RootElement.GetProperty("id").GetGuid());
+        Assert.Equal(access, profile.RootElement.GetProperty("access").GetString());
     }
 
     [Theory]

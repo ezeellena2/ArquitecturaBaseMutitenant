@@ -15,13 +15,25 @@ internal sealed class AccountDeletionCancelIssuer(IAccountDeletionCancelTicketRe
 {
     internal Error Issue(UserAccountRow account, string returnUrl)
     {
+        if (!ReturnUrls.IsDeletionReturn(returnUrl))
+            throw new InvalidOperationException("The cancellation return URL must be validated.");
+        return IssueValidated(account, returnUrl);
+    }
+
+    internal Error IssueForLoginCode(UserAccountRow account, string returnUrl)
+    {
+        if (!ReturnUrls.IsLoginCodeDeletionReturn(returnUrl))
+            throw new InvalidOperationException("The login code cancellation return URL must be validated.");
+        return IssueValidated(account, returnUrl);
+    }
+
+    private Error IssueValidated(UserAccountRow account, string returnUrl)
+    {
         if (account.Status == UserStatus.Suspended) return AccountErrors.Suspended;
         if (account.Status != UserStatus.PendingDeletion || account.DeletionScheduledForUtc is not { } date)
             return UserErrors.InvalidTransition;
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         if (nowUtc >= date) return AccountDeletionErrors.GraceExpired;
-        if (!ReturnUrls.IsDeletionReturn(returnUrl))
-            throw new InvalidOperationException("The cancellation return URL must be validated.");
         var secret = secrets.Generate();
         var ticket = AccountDeletionCancelTicket.Issue(account.Id, secrets.Hash(secret), nowUtc, returnUrl);
         tickets.Add(ticket);

@@ -46531,7 +46531,7 @@
         "tags": [
           "Auth"
         ],
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Intentos y topes actuales; retryAfter son segundos y coincide con Retry-After. No guardar códigos ni enlaces en logs. returnUrl local/OIDC validado conserva access, PKCE y callback. Respuesta returnUrl, sin tokens OIDC en body.",
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Intentos y topes actuales; retryAfter son segundos y coincide con Retry-After. No guardar códigos ni enlaces en logs. returnUrl OIDC o /invitacion conserva el flujo anterior y exige access ausente/null en el cuerpo. Continuación fija exclusivamente / con access=consumer o /org con access=business, valores literales sin query/fragmento; cualquier discrepancia falla antes de consumir el código. Respuesta returnUrl y cookie de identidad después del commit, sin tokens OIDC en body; el SPA inicia una autorización nueva tras el retorno fijo.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -46567,6 +46567,26 @@
                     },
                     "code": "123456",
                     "returnUrl": "/connect/authorize?client_id=web&access=consumer&response_type=code&code_challenge=example"
+                  }
+                },
+                "personaFija": {
+                  "value": {
+                    "email": "persona@example.com",
+                    "code": "123456",
+                    "returnUrl": "/",
+                    "access": "consumer"
+                  }
+                },
+                "empresaFija": {
+                  "value": {
+                    "phone": {
+                      "country": "AR",
+                      "number": "11 2345 6789"
+                    },
+                    "channel": "whatsapp",
+                    "code": "123456",
+                    "returnUrl": "/org",
+                    "access": "business"
                   }
                 }
               }
@@ -61242,6 +61262,13 @@
               "null",
               "string"
             ]
+          },
+          "access": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Opcional: consumer exacto sólo con returnUrl=/; business exacto sólo con returnUrl=/org. Para OIDC o /invitacion debe omitirse o ser null. Se conserva literal, sin normalizar."
           }
         },
         "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164."

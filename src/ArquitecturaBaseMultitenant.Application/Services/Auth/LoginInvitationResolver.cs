@@ -11,10 +11,9 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 internal sealed class LoginInvitationResolver(ILoginInvitationReader invitations, IUserLookup lookup,
     IUserRepository users, TimeProvider clock)
 {
-    internal async Task<LoginInvitationsContext?> PrepareAsync(Email email, string returnUrl, CancellationToken ct)
+    internal async Task<LoginInvitationsContext?> PrepareAsync(Email email, AccessSelectionRequest? access, CancellationToken ct)
     {
-        if (returnUrl == ReturnUrls.InvitationPath || !ReturnUrls.TryReadAccessSelection(returnUrl, out var access)
-            || access.Access == Access.Platform) return null;
+        if (access is null || access.Access == Access.Platform) return null;
         var pending = await invitations.ListPendingAsync(email, clock.GetUtcNow().UtcDateTime, ct);
         if (pending.Count == 0) return null;
         var owners = await lookup.FindVerifiedUsersByEmailAsync(email, ct);

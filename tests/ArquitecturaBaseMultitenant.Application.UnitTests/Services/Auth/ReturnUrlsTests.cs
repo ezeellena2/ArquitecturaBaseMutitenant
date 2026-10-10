@@ -19,6 +19,21 @@ public sealed class ReturnUrlsTests
     [InlineData("https://example.test/login/enlace")]
     public void Deletion_link_continuation_rejects_queries_fragments_and_external_destinations(string path) =>
         Assert.False(ReturnUrls.IsDeletionReturn(path));
+
+    [Theory]
+    [InlineData("/", "consumer", Access.Consumer)]
+    [InlineData("/org", "business", Access.Business)]
+    public void Fixed_OTP_selection_has_no_tenant_and_does_not_expand_Google_or_generic_deletion_returns(string path, string access, Access expected)
+    {
+        Assert.True(ReturnUrls.TryReadLoginCodeSelection(path, access, out var selection));
+        Assert.NotNull(selection);
+        Assert.Equal(expected, selection.Access);
+        Assert.Null(selection.TenantId);
+        Assert.False(ReturnUrls.IsLoginReturn(path));
+        Assert.False(ReturnUrls.TryReadAccessSelection(path, out _));
+        Assert.False(ReturnUrls.IsDeletionReturn(path));
+        Assert.True(ReturnUrls.IsLoginCodeDeletionReturn(path));
+    }
     [Theory]
     [InlineData("/connect/authorize?client_id=web", Access.Consumer, null)]
     [InlineData("/connect/authorize?access=business", Access.Business, null)]

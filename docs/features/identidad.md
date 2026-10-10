@@ -118,9 +118,28 @@ Ambas puertas de Ingreso llevan a `/recuperar`, pública y sin acceso requerido.
 
 Preview es una lectura: no consume, audita ni emite cookie. Preview y replay usan un snapshot conjunto de enlace, método y cuenta y lo releen después de las comprobaciones asíncronas; rechazan propietario cambiado, método retirado, canal apagado y operador de Plataforma sin revelar datos. El canje toma el lock de cuenta y relee el enlace antes de consumirlo, una sola vez y sólo para `consumer`. Los fallos de estado posteriores a demostrar un enlace vigente también consumen esa prueba. La cookie pública sale después del commit; los términos pendientes siguen pasando por el gate legal existente, sin aceptación automática ni aceptación de invitaciones Email por probar Phone.
 
-El replay con la misma Idempotency-Key revalida el estado actual para cualquier respuesta guardada, incluido el 403 de baja pendiente con `cancelTicket`; no emite otra cookie ni otro ticket. Otra clave encuentra el enlace consumido. La cancelación de baja admite `/login/enlace` como retorno fijo consumer exclusivamente en ese recorrido: el SPA debe comenzar una autorización nueva con state/PKCE al continuar. El encaje Front está registrado en «Cambios al contrato»; no se amplían los retornos del OTP normal.
+El replay con la misma Idempotency-Key revalida el estado actual para cualquier respuesta guardada, incluido el 403 de baja pendiente con `cancelTicket`; no emite otra cookie ni otro ticket. Otra clave encuentra el enlace consumido. La cancelación de baja admite `/login/enlace` como retorno fijo consumer exclusivamente en ese recorrido: el SPA debe comenzar una autorización nueva con state/PKCE al continuar. El encaje Front está registrado en «Cambios al contrato». El enlace no amplía los retornos del OTP; la excepción específica aprobada para OTP se documenta a continuación.
 
 `LoginLinkTests` de Domain e integración, `LoginLinkServiceTests` y `LoginLinkIssuerTests` de Application (E8) cubren hash, vencimiento, límites, supersesión, preview, consumo concurrente, cookie/gate legal, estados de cuenta, método/canal y replay. Son pruebas del núcleo independientes de los archivos CLR del módulo.
+
+## E8 · Continuación fija del ingreso con código
+
+Excepción aprobada por el dueño del producto el 2026-10-10 para «Registro con número ocupado → Ingresar»: **el teléfono no se guarda en el navegador para cruzar la redirección**. `POST /api/auth/login-code/verify` agrega `access?: string | null` exclusivamente para dos retornos literales. Front conserva el teléfono sólo en navigation state y, después del OTP, inicia OIDC con state/PKCE mediante el flujo existente. No hay retorno fijo de Plataforma ni ampliación de Google.
+
+| `returnUrl` | `access` del cuerpo | Conducta |
+|---|---|---|
+| `/` exacto | `consumer` exacto | Prueba identidad y continúa como Persona |
+| `/org` exacto | `business` exacto | Exige cuenta y membresía Business activas |
+| Cualquiera de los dos fijos | Omitido, null, inverso u otro valor | 400 antes de consumir el código |
+| OIDC permitido o `/invitacion` | Omitido/null | Conserva el flujo anterior |
+| OIDC permitido o `/invitacion` | Cualquier valor no null | 400 antes de consumir el código |
+| Otra ruta, fijo con query/fragmento, barras cambiadas, espacios, controles o invisibles | Cualquiera | 400 antes de consumir el código |
+
+Los campos técnicos `returnUrl` y `access` de este cuerpo preservan su valor literal con `RawText`: limpiarlos permitiría aceptar un valor distinto del aprobado. Email y Phone conservan su normalización habitual. La selección OTP es única y se comparte entre verificación, preparación de invitaciones y cookie; no agrega tenant ni crea Personal o aceptación legal. Probar Phone sigue sin aceptar invitaciones Email y conserva la prueba ligada al dueño y propósito originales.
+
+Una baja pendiente emite el ticket de cinco minutos, ligado a cuenta y retorno exacto, sin cookie. Sólo el emisor de OTP admite estos dos fijos; Google y enlaces mantienen sus destinos anteriores. Cancelar usa el retorno del ticket, nunca el cuerpo, y revalida cuenta/operador y, para `/org`, acceso Business en la misma UoW después de preparar Active. Un rechazo revierte cuenta y consumo del ticket. La cookie pública se emite después del commit; un replay del ticket o una prueba vencida no emite sesión.
+
+`LoginCodeFixedReturnTests`, `LoginCodeValidationTests`, `ReturnUrlsTests` y la composición Phone de `WhatsAppIdentityTests` verifican el contrato y las guardas. El [informe del corte](../reviews/2026-10-10-etapa-8-ingreso-retorno-fijo.md) detalla Cambios al contrato y evidencia HTTP. El E2E real Registro ocupado → Ingresar → código → OIDC → sesión/F5 en ambos accesos corresponde a Front y coordinación después de publicar este contrato; no queda demostrado por estos tests HTTP.
 
 ## Reglas de implementación
 

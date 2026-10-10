@@ -61,12 +61,35 @@ public sealed class LoginCodeValidationTests
     }
 
     [Theory]
+    [InlineData("/", "consumer", true)]
+    [InlineData("/org", "business", true)]
+    [InlineData("/", "business", false)]
+    [InlineData("/org", "consumer", false)]
+    [InlineData("/", null, false)]
+    [InlineData("/org", null, false)]
+    [InlineData("/", "platform", false)]
+    [InlineData("/org?tenant=89a04808-4809-47ee-a651-b2dc84a151dd", "business", false)]
+    [InlineData("/org", "Business", false)]
+    [InlineData("/invitacion", null, true)]
+    [InlineData("/invitacion", "consumer", false)]
+    [InlineData("/connect/authorize?access=platform", null, true)]
+    [InlineData("/connect/authorize?access=business", "business", false)]
+    public async Task Verification_accepts_only_matching_fixed_access_or_the_previous_single_source(string returnUrl, string? access, bool expectedValid)
+    {
+        var validator = new VerifyLoginCodeRequestValidator(Options.Create(new LoginCodeOptions()));
+        var result = await validator.ValidateAsync(new VerifyLoginCodeRequest(ValidEmail, "123456", returnUrl, Access: access), Ct);
+        Assert.Equal(expectedValid, result.IsValid);
+    }
+
+    [Theory]
     [InlineData("/invitacion", false, true)]
     [InlineData("/invitacion", true, false)]
     [InlineData("/invitacion?access=consumer", false, false)]
     [InlineData("/invitacion#token", false, false)]
     [InlineData("https://other.test/invitacion", false, false)]
     [InlineData("//other.test/invitacion", false, false)]
+    [InlineData("/", false, false)]
+    [InlineData("/org", false, false)]
     public async Task Google_allows_only_exact_invitation_return_and_only_for_login(
         string returnUrl, bool signup, bool expectedValid)
     {

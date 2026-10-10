@@ -37,8 +37,8 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
             "Canales registrados disponibles, capacidades globales independientes de features por organización. ContactPhone opcional es número público E.164, nunca ID técnico.", []);
         Describe(document, "/api/auth/login-code", HttpMethod.Post, Destination + " Solo método verificado utilizable; conserva invitación por correo de ADR0047.",
             [E(400, "Auth.LoginCode.AccountNotFound", "email"), E(400, "Auth.LoginCode.PhoneAccountNotFound", "phone"), .. SendErrors()], true, examples: Destinations());
-        Describe(document, "/api/auth/login-code/verify", HttpMethod.Post, Destination + Proof + " returnUrl local/OIDC validado conserva access, PKCE y callback. Respuesta returnUrl, sin tokens OIDC en body.",
-            VerifyErrors(), true, examples: Destinations(code: true, returnUrl: true));
+        Describe(document, "/api/auth/login-code/verify", HttpMethod.Post, Destination + Proof + " returnUrl OIDC o /invitacion conserva el flujo anterior y exige access ausente/null en el cuerpo. Continuación fija exclusivamente / con access=consumer o /org con access=business, valores literales sin query/fragmento; cualquier discrepancia falla antes de consumir el código. Respuesta returnUrl y cookie de identidad después del commit, sin tokens OIDC en body; el SPA inicia una autorización nueva tras el retorno fijo.",
+            VerifyErrors(), true, examples: LoginCodeExamples());
         foreach (var prefix in new[] { "/api/auth/signup", "/api/auth/business-signup" })
         {
             var business = prefix.EndsWith("business-signup", StringComparison.Ordinal);
@@ -125,6 +125,13 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
     }
 
     private static JsonObject Phone() => (JsonObject)Examples()["phone"]!.DeepClone();
+    private static Dictionary<string, JsonNode> LoginCodeExamples()
+    {
+        var examples = Destinations(code: true, returnUrl: true);
+        examples["personaFija"] = new JsonObject { ["email"] = "persona@example.com", ["code"] = "123456", ["returnUrl"] = "/", ["access"] = "consumer" };
+        examples["empresaFija"] = new JsonObject { ["phone"] = Phone(), ["channel"] = "<phone-channel-key>", ["code"] = "123456", ["returnUrl"] = "/org", ["access"] = "business" };
+        return examples;
+    }
     private static Dictionary<string, JsonNode> Destinations(bool code = false, bool terms = false, bool returnUrl = false, bool nonce = false, bool previous = false)
     {
         var email = new JsonObject { ["email"] = "persona@example.com" };
@@ -167,6 +174,11 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
             if (CodeRequests.Contains(name)) schema.Properties["code"] = new OpenApiSchema
             {
                 Type = JsonSchemaType.String | JsonSchemaType.Null, Pattern = "^[0-9]+$", Description = "Dígitos ASCII; longitud configurada en Authentication:LoginCode (6 por defecto). No normalizar ni registrar.",
+            };
+            if (name == "VerifyLoginCodeHttpRequest") schema.Properties["access"] = new OpenApiSchema
+            {
+                Type = JsonSchemaType.String | JsonSchemaType.Null,
+                Description = "Opcional: consumer exacto sólo con returnUrl=/; business exacto sólo con returnUrl=/org. Para OIDC o /invitacion debe omitirse o ser null. Se conserva literal, sin normalizar.",
             };
             if (name == "RedeemLoginLinkHttpRequest" || name == "LoginLinkRedeemResponse") schema.Properties["access"] = new OpenApiSchema
             {
