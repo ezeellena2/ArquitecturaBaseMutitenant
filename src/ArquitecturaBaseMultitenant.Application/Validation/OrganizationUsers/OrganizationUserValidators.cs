@@ -13,6 +13,8 @@ internal sealed class ListOrganizationUsersRequestValidator : PagedRequestValida
             .WithMessage(_ => ValidationTexts.Required);
         RuleFor(request => request.CompanyId).Must(id => id is null || id != Guid.Empty)
             .WithMessage(_ => ValidationTexts.Required);
+        RuleFor(request => request.RoleId).Must(id => id is null || id != Guid.Empty)
+            .WithMessage(_ => ValidationTexts.Required);
         RuleFor(request => request).Must(request => !(request.WithoutCompany && request.CompanyId is not null))
             .WithMessage(_ => ValidationTexts.Required);
     }

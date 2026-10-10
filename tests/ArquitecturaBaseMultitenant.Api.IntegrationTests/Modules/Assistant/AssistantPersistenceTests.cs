@@ -22,6 +22,35 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Assistant;
 public sealed class AssistantPersistenceTests(ApiFactory factory)
 {
     [Fact]
+    public async Task Incremental_title_limit_round_trips_eighty_characters_in_both_storage_sides()
+    {
+        using var client = AssistantTestData.Client(factory);
+        var account = await AccountJourney.RegisterAsync(factory, client, AssistantTestData.Ct);
+        var tenantId = await AssistantTestData.ActiveTenantAsync(client);
+        var conversation = await AssistantTestData.ConversationAsync(factory, tenantId, account.UserId, Access.Consumer);
+        var title = new string('t', 80);
+        var platform = PlatformAssistantConversation.Create(account.UserId, factory.Services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime);
+        using (var scope = factory.Services.CreateScope())
+        {
+            var services = scope.ServiceProvider;
+            using var tenant = services.GetRequiredService<ITenantScope>().Enter(tenantId);
+            var db = services.GetRequiredService<ApplicationDbContext>();
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                var row = await db.Set<AssistantConversation>().SingleAsync(value => value.Id == conversation.Id, ct);
+                db.Entry(row).Property(value => value.Title).CurrentValue = title;
+                db.Add(platform);
+                db.Entry(platform).Property(value => value.Title).CurrentValue = title;
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, AssistantTestData.Ct);
+        }
+        using var reread = factory.Services.CreateScope();
+        using var active = reread.ServiceProvider.GetRequiredService<ITenantScope>().Enter(tenantId);
+        var context = reread.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.Equal(title, (await context.Set<AssistantConversation>().AsNoTracking().SingleAsync(value => value.Id == conversation.Id, AssistantTestData.Ct)).Title);
+        Assert.Equal(title, (await context.Set<PlatformAssistantConversation>().AsNoTracking().SingleAsync(value => value.Id == platform.Id, AssistantTestData.Ct)).Title);
+    }
+    [Fact]
     public async Task Forward_upgrade_preserves_existing_reference_rows_and_installs_runtime_permissions_and_RLS()
     {
         var database = "assistant_upgrade_" + Guid.CreateVersion7().ToString("N");

@@ -9,11 +9,19 @@ namespace ArquitecturaBaseMultitenant.Application.Services.PublicSite;
 /// «Para resolver» de la Página pública (ADR 0040): en borrador, o despublicada por la plataforma, que es urgente.
 /// Solo para quien administra la página.
 /// </summary>
-internal sealed class PublicPagePendingItems(IPublicPageReader pages) : IPendingItemSource
+internal sealed class PublicPagePendingItems(IPublicPageReader pages, IPermissionService permissions) : IPendingItemSource
 {
     public const string Area = "publicPage";
     public const string Draft = "publicPageDraft";
     public const string Blocked = "publicPageBlocked";
+
+    public Task<bool> CanResolveAsync(PendingItem item, Guid userId, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        return item.Area == Area && item.Kind is Draft or Blocked && item.CompanyId is null
+            ? permissions.HasPermissionAsync(userId, Permissions.PublicPage.Manage, cancellationToken)
+            : Task.FromResult(false);
+    }
 
     public async Task<IReadOnlyList<PendingItem>> ListAsync(PendingItemContext context,
         CancellationToken cancellationToken)

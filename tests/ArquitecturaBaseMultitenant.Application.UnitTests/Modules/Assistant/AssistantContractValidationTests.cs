@@ -7,6 +7,16 @@ namespace ArquitecturaBaseMultitenant.Application.UnitTests.Modules.Assistant;
 public sealed class AssistantContractValidationTests
 {
     [Fact]
+    public void Assistant_limits_accept_eight_thousand_message_characters_and_eighty_title_characters()
+    {
+        var message = new SendAssistantMessageRequestValidator();
+        Assert.True(message.Validate(new SendAssistantMessageRequest(new string('a', 8000), [], 0)).IsValid);
+        Assert.False(message.Validate(new SendAssistantMessageRequest(new string('a', 8001), [], 0)).IsValid);
+        var title = new UpdateAssistantConversationRequestValidator();
+        Assert.True(title.Validate(new UpdateAssistantConversationRequest(new string('a', 80), false, 0)).IsValid);
+        Assert.False(title.Validate(new UpdateAssistantConversationRequest(new string('a', 81), false, 0)).IsValid);
+    }
+    [Fact]
     public void Quick_accepts_a_new_conversation_or_an_existing_id_and_version_together()
     {
         var validator = new AssistantQuickRequestValidator();

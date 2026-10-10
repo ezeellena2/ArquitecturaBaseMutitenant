@@ -15,6 +15,11 @@ internal sealed class ListOrganizationAuditRequestValidator : CursorRequestValid
 
     public ListOrganizationAuditRequestValidator()
     {
+        RuleFor(request => request).Must(request =>
+            (request.FromUtc is null || request.FromUtc.Value.Kind == DateTimeKind.Utc)
+            && (request.ToUtc is null || request.ToUtc.Value.Kind == DateTimeKind.Utc)
+            && (request.FromUtc is null || request.ToUtc is null || request.FromUtc < request.ToUtc))
+            .WithMessage(_ => ValidationTexts.Required);
         RuleFor(request => request.Period)
             .Must(period => period is not null && Periods.Contains(period, StringComparer.Ordinal))
             .WithMessage(_ => ValidationTexts.Required);

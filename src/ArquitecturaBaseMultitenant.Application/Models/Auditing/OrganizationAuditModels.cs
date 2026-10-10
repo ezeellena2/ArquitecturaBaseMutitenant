@@ -6,6 +6,8 @@ namespace ArquitecturaBaseMultitenant.Application.Models.Auditing;
 
 public sealed record ListOrganizationAuditRequest : CursorRequest
 {
+    public DateTime? FromUtc { get; init; }
+    public DateTime? ToUtc { get; init; }
     public string? Period { get; init; } = "30";
 
     public string? Category { get; init; }

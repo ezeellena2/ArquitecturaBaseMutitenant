@@ -91,6 +91,9 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
     private IQueryable<StateRow> Filtered(Guid tenantId, ListOrganizationUsersRequest request, DateTime nowUtc)
     {
         var members = Members(tenantId);
+        if (request.RoleId is { } roleId)
+            members = members.Where(member => context.RoleAssignments.Any(assignment =>
+                assignment.TenantId == tenantId && assignment.MemberId == member.Id && assignment.RoleId == roleId));
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var matching = MemberSearch.MatchingMemberIds(context, tenantId, request.Search);

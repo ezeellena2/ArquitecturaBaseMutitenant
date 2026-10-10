@@ -9,7 +9,7 @@ internal sealed class UpdateAssistantConversationRequestValidator : AbstractVali
 {
     public UpdateAssistantConversationRequestValidator()
     {
-        RuleFor(request => request.Title).MaximumLength(TextLimits.ShortName).WithMessage(_ => AssistantTexts.Get("Assistant.Validation.TitleTooLong"));
+        RuleFor(request => request.Title).MaximumLength(TextLimits.AssistantTitle).WithMessage(_ => AssistantTexts.Get("Assistant.Validation.TitleTooLong"));
         RuleFor(request => request.IsSaved).NotNull().WithMessage(_ => AssistantTexts.Get("Assistant.Validation.Required"));
         RuleFor(request => request.Version).NotNull().WithMessage(_ => AssistantTexts.Get("Assistant.Validation.VersionRequired"));
     }

@@ -14,7 +14,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
 /// <c>users.invite</c> son las únicamente de esa empresa (<see cref="CompanyInvitationPolicy"/>). Usa los mismos estados
 /// que el listado de Usuarios.
 /// </summary>
-internal sealed class OrganizationUserPendingItems(IOrganizationUserReader users, TimeProvider timeProvider)
+internal sealed class OrganizationUserPendingItems(IOrganizationUserReader users, IPermissionService permissions,
+    TimeProvider timeProvider)
     : IPendingItemSource
 {
     public const string Area = "users";
@@ -49,6 +50,25 @@ internal sealed class OrganizationUserPendingItems(IOrganizationUserReader users
                     row.DeletionRequestedAtUtc, row.DeletionScheduledForUtc, row.MemberId)));
         }
         return items;
+    }
+
+    public async Task<bool> CanResolveAsync(PendingItem item, Guid userId, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        if (item.Area != Area) return false;
+        if (item.Kind == DeletionRequested && item.CompanyId is null)
+            return await permissions.HasPermissionAsync(userId, Permissions.Users.Manage, cancellationToken);
+        if (item.Kind != InvitationExpired) return false;
+        if (item.CompanyId is not { } companyId)
+            return await permissions.HasPermissionAsync(userId, Permissions.Users.Invite, cancellationToken);
+        if (item.TargetId is not { } memberId) return false;
+        var row = await users.FindByIdAsync(memberId, timeProvider.GetUtcNow().UtcDateTime, cancellationToken);
+        if (row is not { State: OrganizationUserState.Expired }
+            || !await permissions.HasCompanyPermissionAsync(userId, companyId, Permissions.Company.Members.Manage,
+                cancellationToken)) return false;
+        var canInvite = await permissions.HasPermissionAsync(userId, Permissions.Users.Invite, cancellationToken);
+        return CompanyInvitationPolicy.CanResolve(new CompanyInvitationScope(companyId, canInvite), row.Roles.Count > 0,
+            [.. row.Companies.Select(company => (company.CompanyId, company.Status))]);
     }
 
     private static PendingItem Expired(OrganizationUserRow row, OrganizationUserCompanyRow? company) =>

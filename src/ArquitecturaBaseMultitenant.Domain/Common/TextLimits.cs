@@ -11,6 +11,8 @@ public static class TextLimits
     public const int ShortName = 60;
     public const int Description = 500;
     public const int LongText = 4000;
+    public const int AssistantMessage = 8000;
+    public const int AssistantTitle = 80;
     /// <summary>El texto de una versión de términos o privacidad, en una cultura.</summary>
     public const int LegalDocument = 100_000;
     public const int AuditSearch = 100;

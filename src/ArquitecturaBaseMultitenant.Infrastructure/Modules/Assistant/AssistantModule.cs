@@ -25,6 +25,8 @@ public static class AssistantModule
         services.AddScoped<IAssistantKeyProtector, AssistantKeyProtector>();
         services.AddScoped<IChatClientFactory, AnthropicChatClientFactory>();
         services.AddSingleton<IValidateOptions<AssistantOptions>, AssistantOptionsValidator>();
+        services.AddSingleton<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Help.IHelpArticleReader,
+            ArquitecturaBaseMultitenant.Infrastructure.Help.RepositoryHelpArticleReader>();
         services.AddScoped<IModuleDataSeedContributor, AssistantReferenceDataSeed>();
         return services;
     }

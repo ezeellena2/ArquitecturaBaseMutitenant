@@ -36,6 +36,8 @@ internal sealed class RoleReader(ApplicationDbContext context, ITenantContext te
         var tenantId = tenantContext.RequiredTenantId;
         var roles = context.Roles.AsNoTracking().Where(role => role.TenantId == tenantId)
             .ApplySearch(request.Search, role => role.Name, role => role.Description);
+        if (request.SystemRoleKey is { } systemKey)
+            roles = roles.Where(role => role.IsSystemRole && role.Name == systemKey);
         roles = request.Scope switch
         {
             RoleScopeFilter.Organization => roles.Where(role => role.Scope == RoleScope.Organization),
@@ -76,6 +78,7 @@ internal sealed class RoleReader(ApplicationDbContext context, ITenantContext te
             && role.NormalizedName == normalized && role.CompanyId == companyId
             && (excludedRoleId == null || role.Id != excludedRoleId), cancellationToken);
     }
+
 
     /// <summary>La misma cuenta que muestran la lista y la ficha (<see cref="Project"/>).</summary>
     public async Task<int> CountUsersAsync(Guid roleId, CancellationToken cancellationToken) =>

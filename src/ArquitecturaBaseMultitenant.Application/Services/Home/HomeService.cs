@@ -31,9 +31,13 @@ internal sealed class HomeService(OrganizationHomeAreasBuilder areas, MemberHome
             var cards = organization is null ? await companies.ListAsync(userId, byCompany, cancellationToken) : [];
 
             // Cada fuente lee con el mismo contexto de datos: van de a una, nunca en paralelo.
-            var pending = new List<PendingItem>();
+            var contributions = new List<(IPendingItemSource Source, PendingItem Item)>();
             foreach (var source in sources)
-                pending.AddRange(await source.ListAsync(context, cancellationToken));
+                contributions.AddRange((await source.ListAsync(context, cancellationToken)).Select(item => (source, item)));
+            // El contexto inicial guía la lectura, pero no autoriza entregar datos tras una revocación durante ella.
+            var pending = new List<PendingItem>();
+            foreach (var (source, item) in contributions)
+                if (await source.CanResolveAsync(item, userId, cancellationToken)) pending.Add(item);
             return new HomeResponse(organization, cards, PendingItemOrder.Sort(pending));
         });
 }

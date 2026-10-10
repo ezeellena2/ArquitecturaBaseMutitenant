@@ -11,6 +11,8 @@ namespace ArquitecturaBaseMultitenant.Application.Models.Platform;
 /// </summary>
 public sealed record ListPlatformAuditRequest : CursorRequest
 {
+    public DateTime? FromUtc { get; init; }
+    public DateTime? ToUtc { get; init; }
     public string? Period { get; init; } = "30";
     public string? Type { get; init; }
     public Guid? TenantId { get; init; }

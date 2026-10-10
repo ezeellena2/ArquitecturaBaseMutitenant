@@ -12,7 +12,7 @@ internal sealed class PlatformAssistantConversationConfiguration : IEntityTypeCo
     {
         builder.ToTable("PlatformAssistantConversations", Schemas.Platform);
         builder.HasKey(value => value.Id);
-        builder.Property(value => value.Title).HasMaxLength(TextLimits.ShortName);
+        builder.Property(value => value.Title).HasMaxLength(TextLimits.AssistantTitle);
         builder.HasIndex(value => new { value.OwnerUserId, value.LastActivityAtUtc, value.Id });
     }
 }

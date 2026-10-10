@@ -19,6 +19,8 @@ public sealed record ListOrganizationUsersRequest : PagedRequest
     public static readonly IReadOnlyCollection<string> SortableFields = ["displayName", "email", "createdAtUtc"];
     public OrganizationUserState? State { get; init; }
     public Guid? CompanyId { get; init; }
+    /// <summary>Internal typed assignment filter; not exposed by the HTTP adapter.</summary>
+    public Guid? RoleId { get; init; }
     public bool WithoutCompany { get; init; }
 }
 

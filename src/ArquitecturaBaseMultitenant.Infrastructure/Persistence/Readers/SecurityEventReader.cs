@@ -54,6 +54,7 @@ internal sealed class SecurityEventReader(ApplicationDbContext context) : ISecur
             : context.Users.AsNoTracking().ApplySearch(request.Search, user => user.DisplayName).Select(user => user.Id);
         var signIns = context.LoginAudits.AsNoTracking();
         if (sinceUtc is { } from) signIns = signIns.Where(item => item.OccurredAtUtc >= from);
+        if (request.ToUtc is { } end) signIns = signIns.Where(item => item.OccurredAtUtc < end);
         if (request.AccountId is { } account) signIns = signIns.Where(item => item.UserId == account);
         if (byName is not null) signIns = signIns.Where(item => item.UserId != null && byName.Contains(item.UserId.Value));
         return keys.Concat(signIns.Select(item => new AuditKey { Id = item.Id, OccurredAtUtc = item.OccurredAtUtc, IsSignIn = true }));
@@ -68,6 +69,7 @@ internal sealed class SecurityEventReader(ApplicationDbContext context) : ISecur
         var events = context.SecurityEvents.AsNoTracking();
         if (eventTypes is not null) events = events.Where(item => eventTypes.Contains(item.Type));
         if (sinceUtc is { } since) events = events.Where(item => item.OccurredAtUtc >= since);
+        if (request.ToUtc is { } end) events = events.Where(item => item.OccurredAtUtc < end);
         if (request.TenantId is { } tenantId) events = events.Where(item => item.TargetTenantId == tenantId);
         if (request.AccountId is { } accountId)
             events = events.Where(item => item.TargetAccountId == accountId || item.ActorId == accountId);

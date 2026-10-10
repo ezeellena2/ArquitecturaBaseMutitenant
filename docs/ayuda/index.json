@@ -1,0 +1,359 @@
+[
+  {
+    "topicKey": "identity.signin",
+    "routeKey": "personal.account",
+    "accesses": [
+      "Consumer"
+    ],
+    "permission": null,
+    "module": null,
+    "titles": {
+      "es": "Métodos de ingreso",
+      "en": "Sign-in methods"
+    },
+    "files": {
+      "es": "identity/signin.es.md",
+      "en": "identity/signin.en.md"
+    }
+  },
+  {
+    "topicKey": "personal.account",
+    "routeKey": "personal.account",
+    "accesses": [
+      "Consumer"
+    ],
+    "permission": null,
+    "module": null,
+    "titles": {
+      "es": "Mi cuenta",
+      "en": "My account"
+    },
+    "files": {
+      "es": "personal/account.es.md",
+      "en": "personal/account.en.md"
+    }
+  },
+  {
+    "topicKey": "personal.organizations",
+    "routeKey": "personal.organizations",
+    "accesses": [
+      "Consumer"
+    ],
+    "permission": null,
+    "module": null,
+    "titles": {
+      "es": "Tus organizaciones",
+      "en": "Your organizations"
+    },
+    "files": {
+      "es": "personal/organizations.es.md",
+      "en": "personal/organizations.en.md"
+    }
+  },
+  {
+    "topicKey": "business.home",
+    "routeKey": "business.home",
+    "accesses": [
+      "Business"
+    ],
+    "permission": null,
+    "module": null,
+    "titles": {
+      "es": "Inicio y pendientes",
+      "en": "Home and pending items"
+    },
+    "files": {
+      "es": "business/home.es.md",
+      "en": "business/home.en.md"
+    }
+  },
+  {
+    "topicKey": "business.users",
+    "routeKey": "business.users",
+    "accesses": [
+      "Business"
+    ],
+    "permission": "users.read",
+    "module": null,
+    "titles": {
+      "es": "Usuarios e invitaciones",
+      "en": "Users and invitations"
+    },
+    "files": {
+      "es": "business/users.es.md",
+      "en": "business/users.en.md"
+    }
+  },
+  {
+    "topicKey": "business.roles",
+    "routeKey": "business.roles",
+    "accesses": [
+      "Business"
+    ],
+    "permission": "roles.read",
+    "module": null,
+    "titles": {
+      "es": "Roles y permisos",
+      "en": "Roles and permissions"
+    },
+    "files": {
+      "es": "business/roles.es.md",
+      "en": "business/roles.en.md"
+    }
+  },
+  {
+    "topicKey": "business.companies",
+    "routeKey": "business.companies",
+    "accesses": [
+      "Business"
+    ],
+    "permission": "companies.read",
+    "module": null,
+    "titles": {
+      "es": "Empresas",
+      "en": "Companies"
+    },
+    "files": {
+      "es": "business/companies.es.md",
+      "en": "business/companies.en.md"
+    }
+  },
+  {
+    "topicKey": "business.settings",
+    "routeKey": "business.settings",
+    "accesses": [
+      "Business"
+    ],
+    "permission": "settings.read",
+    "module": null,
+    "titles": {
+      "es": "Configuración de la organización",
+      "en": "Organization settings"
+    },
+    "files": {
+      "es": "business/settings.es.md",
+      "en": "business/settings.en.md"
+    }
+  },
+  {
+    "topicKey": "business.publicpage",
+    "routeKey": "business.publicpage",
+    "accesses": [
+      "Business"
+    ],
+    "permission": "publicpage.manage",
+    "module": null,
+    "titles": {
+      "es": "Página pública",
+      "en": "Public page"
+    },
+    "files": {
+      "es": "business/publicpage.es.md",
+      "en": "business/publicpage.en.md"
+    }
+  },
+  {
+    "topicKey": "business.audit",
+    "routeKey": "business.audit",
+    "accesses": [
+      "Business"
+    ],
+    "permission": "audit.read",
+    "module": null,
+    "titles": {
+      "es": "Auditoría de la organización",
+      "en": "Organization audit"
+    },
+    "files": {
+      "es": "business/audit.es.md",
+      "en": "business/audit.en.md"
+    }
+  },
+  {
+    "topicKey": "platform.organizations",
+    "routeKey": "platform.organizations",
+    "accesses": [
+      "Platform"
+    ],
+    "permission": "platform.tenants.read",
+    "module": null,
+    "titles": {
+      "es": "Organizaciones de la plataforma",
+      "en": "Platform organizations"
+    },
+    "files": {
+      "es": "platform/organizations.es.md",
+      "en": "platform/organizations.en.md"
+    }
+  },
+  {
+    "topicKey": "platform.accounts",
+    "routeKey": "platform.accounts",
+    "accesses": [
+      "Platform"
+    ],
+    "permission": "platform.accounts.read",
+    "module": null,
+    "titles": {
+      "es": "Cuentas",
+      "en": "Accounts"
+    },
+    "files": {
+      "es": "platform/accounts.es.md",
+      "en": "platform/accounts.en.md"
+    }
+  },
+  {
+    "topicKey": "platform.recoveries",
+    "routeKey": "platform.recoveries",
+    "accesses": [
+      "Platform"
+    ],
+    "permission": "platform.recoveries.manage",
+    "module": null,
+    "titles": {
+      "es": "Recuperaciones",
+      "en": "Recoveries"
+    },
+    "files": {
+      "es": "platform/recoveries.es.md",
+      "en": "platform/recoveries.en.md"
+    }
+  },
+  {
+    "topicKey": "platform.audit",
+    "routeKey": "platform.audit",
+    "accesses": [
+      "Platform"
+    ],
+    "permission": "platform.audit.read",
+    "module": null,
+    "titles": {
+      "es": "Seguridad y auditoría",
+      "en": "Security and audit"
+    },
+    "files": {
+      "es": "platform/audit.es.md",
+      "en": "platform/audit.en.md"
+    }
+  },
+  {
+    "topicKey": "platform.operators",
+    "routeKey": "platform.operators",
+    "accesses": [
+      "Platform"
+    ],
+    "permission": "platform.operators.manage",
+    "module": null,
+    "titles": {
+      "es": "Operadores",
+      "en": "Operators"
+    },
+    "files": {
+      "es": "platform/operators.es.md",
+      "en": "platform/operators.en.md"
+    }
+  },
+  {
+    "topicKey": "platform.legal",
+    "routeKey": "platform.legal",
+    "accesses": [
+      "Platform"
+    ],
+    "permission": "platform.legal.manage",
+    "module": null,
+    "titles": {
+      "es": "Documentos legales",
+      "en": "Legal documents"
+    },
+    "files": {
+      "es": "platform/legal.es.md",
+      "en": "platform/legal.en.md"
+    }
+  },
+  {
+    "topicKey": "platform.settings",
+    "routeKey": "platform.settings",
+    "accesses": [
+      "Platform"
+    ],
+    "permission": "platform.settings.manage",
+    "module": null,
+    "titles": {
+      "es": "Configuración de Plataforma",
+      "en": "Platform settings"
+    },
+    "files": {
+      "es": "platform/settings.es.md",
+      "en": "platform/settings.en.md"
+    }
+  },
+  {
+    "topicKey": "platform.modules",
+    "routeKey": "platform.modules",
+    "accesses": [
+      "Platform"
+    ],
+    "permission": "platform.tenants.manage",
+    "module": null,
+    "titles": {
+      "es": "Módulos",
+      "en": "Modules"
+    },
+    "files": {
+      "es": "platform/modules.es.md",
+      "en": "platform/modules.en.md"
+    }
+  },
+  {
+    "topicKey": "whatsapp.signin",
+    "routeKey": "personal.account",
+    "accesses": [
+      "Consumer"
+    ],
+    "permission": null,
+    "module": "whatsapp",
+    "titles": {
+      "es": "Ingreso por WhatsApp",
+      "en": "WhatsApp sign-in"
+    },
+    "files": {
+      "es": "whatsapp/signin.es.md",
+      "en": "whatsapp/signin.en.md"
+    }
+  },
+  {
+    "topicKey": "assistant.business",
+    "routeKey": "business.home",
+    "accesses": [
+      "Business"
+    ],
+    "permission": "assistant.use",
+    "module": "assistant",
+    "titles": {
+      "es": "Alcance del asistente",
+      "en": "Assistant scope"
+    },
+    "files": {
+      "es": "assistant/business.es.md",
+      "en": "assistant/business.en.md"
+    }
+  },
+  {
+    "topicKey": "assistant.platform",
+    "routeKey": "platform.assistant.usage",
+    "accesses": [
+      "Platform"
+    ],
+    "permission": "platform.assistant.read",
+    "module": "assistant",
+    "titles": {
+      "es": "Configuración y uso del asistente",
+      "en": "Assistant settings and usage"
+    },
+    "files": {
+      "es": "assistant/platform.es.md",
+      "en": "assistant/platform.en.md"
+    }
+  }
+]

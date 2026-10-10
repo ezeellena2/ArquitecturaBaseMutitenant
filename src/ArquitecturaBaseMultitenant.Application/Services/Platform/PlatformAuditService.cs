@@ -30,7 +30,7 @@ internal sealed class PlatformAuditService(ISecurityEventReader reader, IUserRep
         {
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
-            var since = await SinceAsync(request.Period, ct);
+            var since = request.FromUtc ?? await SinceAsync(request.Period, ct);
             var types = EventTypes(request.Type);
             // Los ingresos no tienen organización: con ese filtro no se suman.
             var signIns = request.Type is null or PlatformAuditCategories.SignIns && request.TenantId is null;
@@ -50,7 +50,7 @@ internal sealed class PlatformAuditService(ISecurityEventReader reader, IUserRep
             {
                 ArgumentNullException.ThrowIfNull(request);
                 if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
-                var since = await SinceAsync(request.Period, ct);
+                var since = request.FromUtc ?? await SinceAsync(request.Period, ct);
                 return Result.Success(await reader.ListOrganizationsAsync(request, since, EventTypes(request.Type), ct));
             });
 

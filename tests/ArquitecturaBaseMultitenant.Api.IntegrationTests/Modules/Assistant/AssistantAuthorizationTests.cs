@@ -11,6 +11,10 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.AspNetCore.TestHost;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Tools;
+using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Assistant;
 
@@ -30,6 +34,7 @@ public sealed class AssistantAuthorizationTests(ApiFactory factory)
         var tenantId = await OrganizationJourney.StageAsync(factory, owner, "Assistant permissions", AssistantTestData.Ct);
         await AccountJourney.AuthorizeAsync(ownerClient, "business", AssistantTestData.Ct, tenantId);
         var companyId = await OrganizationJourney.CreateCompanyAsync(ownerClient, "Assistant company", AssistantTestData.Ct);
+        var unassignedCompany = await OrganizationJourney.CreateCompanyAsync(ownerClient, "Unassigned company", AssistantTestData.Ct);
         using var roles = await ownerClient.GetFromJsonAsync<JsonDocument>("/api/roles/paged?scope=Company&pageSize=50", AssistantTestData.Ct);
         var roleId = roles!.RootElement.GetProperty("items").EnumerateArray().Single(value => value.GetProperty("isSystemRole").GetBoolean()).GetProperty("id").GetGuid();
         var admin = await AccountJourney.RegisterAsync(factory, adminClient, AssistantTestData.Ct);
@@ -44,6 +49,16 @@ public sealed class AssistantAuthorizationTests(ApiFactory factory)
             Assert.Empty(await other.ServiceProvider.GetRequiredService<IPermissionService>().GetOrganizationPermissionsAsync(admin.UserId, AssistantTestData.Ct));
         }
         await AccountJourney.AuthorizeAsync(adminClient, "business", AssistantTestData.Ct, tenantId);
+        using var directHost = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+            services.Replace(ServiceDescriptor.Singleton<ICurrentUser>(new ToolActor(admin.UserId)))));
+        using var directScope = directHost.Services.CreateScope();
+        directScope.ServiceProvider.GetRequiredService<ITenantAccessInitializer>().SetFromAccess(tenantId, TenantKind.Business);
+        var directTool = directScope.ServiceProvider.GetRequiredService<IEnumerable<IAssistantTool>>().Single(tool => tool.Key == "org_company_members");
+        var directArguments = JsonSerializer.SerializeToElement(new { companyId, page = 1, pageSize = 20 });
+        Assert.True((await directTool.ExecuteAsync(directArguments, AssistantTestData.Ct)).IsSuccess);
+        var unassigned = await directTool.ExecuteAsync(JsonSerializer.SerializeToElement(new { companyId = unassignedCompany, page = 1, pageSize = 20 }), AssistantTestData.Ct);
+        Assert.Equal(CompanyErrors.NotFound.Code, unassigned.Error.Code);
+        Assert.False(await directScope.ServiceProvider.GetRequiredService<IEnumerable<IAssistantTool>>().Single(tool => tool.Key == "org_users").IsAvailableAsync(AssistantTestData.Ct));
         Assert.Equal(HttpStatusCode.OK, (await adminClient.GetAsync("/api/organization/assistant/conversations", AssistantTestData.Ct)).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await adminClient.GetAsync("/api/organization/assistant/settings", AssistantTestData.Ct)).StatusCode);
         using (var scope = factory.Services.CreateScope())
@@ -73,5 +88,12 @@ public sealed class AssistantAuthorizationTests(ApiFactory factory)
         }
         using var denied = await adminClient.GetAsync("/api/organization/assistant/conversations", AssistantTestData.Ct);
         Assert.Contains(denied.StatusCode, new[] { HttpStatusCode.Forbidden, HttpStatusCode.Unauthorized });
+        Assert.True((await directTool.ExecuteAsync(directArguments, AssistantTestData.Ct)).IsFailure);
+    }
+
+    private sealed class ToolActor(Guid id) : ICurrentUser
+    {
+        public Guid? UserId => id;
+        public Access? Access => Domain.Users.Access.Business;
     }
 }

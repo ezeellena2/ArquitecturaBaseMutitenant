@@ -99,8 +99,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Title")
-                        .HasMaxLength(60)
-                        .HasColumnType("character varying(60)");
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
 
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
@@ -547,8 +547,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Title")
-                        .HasMaxLength(60)
-                        .HasColumnType("character varying(60)");
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
 
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()

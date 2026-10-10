@@ -49,6 +49,7 @@ internal sealed class OrganizationAuditService(IOrganizationAuditReader reader,
     private async Task<(DateTime? StartUtc, DateTime? EndUtc)> GetPeriodAsync(
         ListOrganizationAuditRequest request, CancellationToken cancellationToken)
     {
+        if (request.FromUtc is not null || request.ToUtc is not null) return (request.FromUtc, request.ToUtc);
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         if (request.Period == "0")
         {

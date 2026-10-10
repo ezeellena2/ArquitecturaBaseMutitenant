@@ -7,10 +7,18 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
 
 /// <summary>«Para resolver» de Configuración (ADR 0040): el dominio de correo sin verificar, para quien puede verificarlo.</summary>
-internal sealed class OrganizationDomainPendingItems(ITenantDomainReader domains) : IPendingItemSource
+internal sealed class OrganizationDomainPendingItems(ITenantDomainReader domains, IPermissionService permissions) : IPendingItemSource
 {
     public const string Area = "settings";
     public const string DomainUnverified = "domainUnverified";
+
+    public Task<bool> CanResolveAsync(PendingItem item, Guid userId, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        return item.Area == Area && item.Kind == DomainUnverified && item.CompanyId is null
+            ? permissions.HasPermissionAsync(userId, Permissions.Settings.Manage, cancellationToken)
+            : Task.FromResult(false);
+    }
 
     public async Task<IReadOnlyList<PendingItem>> ListAsync(PendingItemContext context,
         CancellationToken cancellationToken)
