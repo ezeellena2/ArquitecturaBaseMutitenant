@@ -19,6 +19,34 @@ public sealed class AssistantContractTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
     [Fact]
+    public async Task Usage_preserves_authentication_access_permissions_and_honest_501_without_a_provider_key()
+    {
+        using var ownerClient = AssistantTestData.Client(factory);
+        using var memberClient = AssistantTestData.Client(factory);
+        const string businessUsage = "/api/organization/assistant/usage?month=2026-10&groupBy=day&page=1&pageSize=20";
+        const string platformUsage = "/api/platform/assistant/usage?month=2026-10&page=1&pageSize=20";
+        Assert.Equal(HttpStatusCode.Unauthorized, (await ownerClient.GetAsync(businessUsage, Ct)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await ownerClient.GetAsync(platformUsage, Ct)).StatusCode);
+        var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
+        var tenantId = await OrganizationJourney.StageAsync(factory, owner, "Usage contract", Ct);
+        await AssistantTestData.EnableAsync(factory, tenantId);
+        await AccountJourney.AuthorizeAsync(ownerClient, "business", Ct, tenantId);
+        using var business = await ownerClient.GetAsync(businessUsage, Ct);
+        await Stub(business);
+        Assert.Equal(HttpStatusCode.Forbidden, (await ownerClient.GetAsync(platformUsage, Ct)).StatusCode);
+        var member = await AccountJourney.RegisterAsync(factory, memberClient, Ct);
+        await OrganizationJourney.AddActiveMemberAsync(factory, tenantId, member.UserId, Ct);
+        await AccountJourney.AuthorizeAsync(memberClient, "business", Ct, tenantId);
+        Assert.Equal(HttpStatusCode.Forbidden, (await memberClient.GetAsync(businessUsage, Ct)).StatusCode);
+        using var operatorClient = AssistantTestData.Client(factory);
+        var account = await AccountJourney.RegisterAsync(factory, operatorClient, Ct);
+        await PlatformOperators.GrantAsync(factory.Services, account.UserId, [PlatformPermissions.Assistant.Read], Ct);
+        await AccountJourney.AuthorizeAsync(operatorClient, "platform", Ct);
+        using var platform = await operatorClient.GetAsync(platformUsage, Ct);
+        await Stub(platform);
+        Assert.Equal(HttpStatusCode.Forbidden, (await operatorClient.GetAsync(businessUsage, Ct)).StatusCode);
+    }
+    [Fact]
     public async Task Business_configuration_is_accessible_with_configure_without_use_and_preserves_authentication_guards()
     {
         using var ownerClient = AssistantTestData.Client(factory);

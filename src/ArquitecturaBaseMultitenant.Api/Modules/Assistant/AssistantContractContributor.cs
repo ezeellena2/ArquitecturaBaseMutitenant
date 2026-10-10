@@ -227,20 +227,52 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
                     media.Examples["currentPlatformKey"] = new OpenApiExample { Value = UsageExample(document, 0.8m, "NearLimit", "PlatformKey", historical: false) };
                     media.Examples["currentOwnKey"] = new OpenApiExample { Value = UsageExample(document, 1.2m, "LimitReached", "OwnKey", historical: false) };
                     media.Examples["historical"] = new OpenApiExample { Value = UsageExample(document, 0.5m, "WithinLimit", "OwnKey", historical: true) };
+                    media.Examples["dailyPeople"] = new OpenApiExample
+                    {
+                        Description = "Muestra contractual: tres personas distintas en el período; dos por cada día con consumo, una repetida entre días y usando ambas claves cuenta una vez por día. Los títulos no agregan consultas/personas; el día sin consumo tiene cero.",
+                        Value = BusinessDayUsageExample(document),
+                    };
+                    media.Examples["zeroUsage"] = new OpenApiExample { Description = "Muestra contractual sin consumo; configuración o reservas sin invocación no aportan filas.", Value = EmptyUsageExample(document, platform: false) };
                 }
                 else
                 {
-                    var aggregate = media.Examples["success"].Value!.DeepClone().AsObject();
-                    var rows = new JsonArray();
-                    foreach (var kind in new[] { "organization", "personal", "operator" })
+                    media.Examples["success"] = new OpenApiExample
                     {
-                        var row = Example(new OpenApiSchemaReference("AssistantUsageRowResponse", document), document, 0)!.AsObject();
-                        row["kind"] = kind;
-                        row["dailyUsage"] = null;
-                        rows.Add(row);
-                    }
-                    aggregate["rows"]!["items"] = rows;
-                    media.Examples["aggregates"] = new OpenApiExample { Value = aggregate };
+                        Description = "Muestra contractual: la misma organización usó ambas claves. Dos grupos históricos con costo/consultas/tokens propios; USD 20 PlatformKey + USD 7 OwnKey, resumen USD 27 y una organización distinta. Cada fila usa su presupuesto del mismo financiador.",
+                        Value = PlatformFundingUsageExample(document),
+                    };
+                    var historical = PlatformFundingUsageExample(document);
+                    historical["month"] = "2026-09";
+                    historical["cost"] = UsageMoney(37m);
+                    historical["platformKeyCost"] = UsageMoney(30m);
+                    historical["rows"]!["items"]![0]!["cost"] = UsageMoney(30m);
+                    historical["rows"]!["items"]![0]!["budgetProgress"] = new JsonObject { ["fraction"] = 1.2m, ["status"] = "LimitReached" };
+                    historical["rows"]!["items"]![1]!["monthlyBudget"] = null;
+                    historical["rows"]!["items"]![1]!["budgetProgress"] = null;
+                    media.Examples["historicalFunding"] = new OpenApiExample { Description = "Muestra contractual histórica: snapshot del tope PlatformKey USD 25, costo USD 30 y progreso 1,2 sin recorte; OwnKey sin presupuesto. Cambiar Settings actuales no recalcula este mes.", Value = historical };
+                    var noBudget = PlatformFundingUsageExample(document);
+                    noBudget["rows"]!["items"]![0]!["monthlyBudget"] = UsageMoney(0m);
+                    noBudget["rows"]!["items"]![0]!["budgetProgress"] = null;
+                    noBudget["rows"]!["items"]![1]!["monthlyBudget"] = null;
+                    noBudget["rows"]!["items"]![1]!["budgetProgress"] = null;
+                    media.Examples["budgetsNotApplicable"] = new OpenApiExample { Description = "Muestra contractual: presupuesto cero o null no tiene progreso aplicable.", Value = noBudget };
+                    var paginated = PlatformFundingUsageExample(document);
+                    var ownKey = paginated["rows"]!["items"]![1]!.DeepClone().AsObject();
+                    paginated["cost"] = UsageMoney(36m);
+                    paginated["platformKeyCost"] = UsageMoney(29m);
+                    paginated["totalQueries"] = 22;
+                    paginated["peopleCount"] = 11;
+                    paginated["organizationCount"] = 10;
+                    SetUsageRows(paginated, new JsonArray(ownKey), totalCount: 11, page: 2, pageSize: 10);
+                    media.Examples["paginatedFunding"] = new OpenApiExample { Description = "Muestra contractual: diez organizaciones, once grupos. La página 1 contiene PlatformKey de la organización repetida y nueve organizaciones de USD 1/una consulta PlatformKey; la página 2 contiene sólo su OwnKey USD 7/tres consultas. Resúmenes y conteos completos antes de paginar; orden estable con desempate fundingMode.", Value = paginated };
+                    var aggregates = EmptyUsageExample(document, platform: true);
+                    aggregates["cost"] = UsageMoney(10m);
+                    aggregates["platformKeyCost"] = UsageMoney(10m);
+                    aggregates["totalQueries"] = 5;
+                    aggregates["peopleCount"] = 3;
+                    SetUsageRows(aggregates, new JsonArray(UsageRowExample(document, "personal", "PlatformKey", 6m, 3), UsageRowExample(document, "operator", "PlatformKey", 4m, 2)), totalCount: 2);
+                    media.Examples["aggregates"] = new OpenApiExample { Description = "Muestra contractual: Personas y Operadores son agregados PlatformKey sin presupuesto ni cuota individual; cero organizaciones Business con consumo.", Value = aggregates };
+                    media.Examples["zeroUsage"] = new OpenApiExample { Description = "Muestra contractual sin consumo: cero organizaciones con uso, aunque existan organizaciones configuradas.", Value = EmptyUsageExample(document, platform: true) };
                 }
             }
         }
@@ -260,10 +292,9 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         }
         if (schema is OpenApiSchemaReference { Reference.Id: "AssistantConversationResponse" } && example is JsonObject conversation)
             conversation["activeTurnId"] = null;
-        if (schema is OpenApiSchemaReference { Reference.Id: "AssistantUsagePageResponse" } && example is JsonObject usage)
+        if (schema is OpenApiSchemaReference { Reference.Id: "AssistantUsagePageResponse" } && example is JsonObject)
         {
-            usage["budget"] = null;
-            usage["budgetProgress"] = null;
+            return BusinessDayUsageExample(document);
         }
         if (schema is OpenApiSchemaReference { Reference.Id: "AssistantQuickResponse" } && example is JsonObject quick)
         {
@@ -294,8 +325,14 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         usage["platformKeyCost"] = scope == "PlatformKey" ? usage["cost"]!.DeepClone() : null;
         usage["budgetProgress"] = new JsonObject { ["fraction"] = fraction, ["status"] = status };
         usage["totalQueries"] = 100;
+        usage["peopleCount"] = 1;
+        usage["organizationCount"] = null;
         var row = Example(new OpenApiSchemaReference("AssistantUsageRowResponse", document), document, 0)!.AsObject();
         row["kind"] = "person";
+        row["organizationId"] = null;
+        row["peopleCount"] = null;
+        row["fundingMode"] = null;
+        row["budgetProgress"] = null;
         row["day"] = null;
         row["queries"] = 100;
         row["cost"] = usage["cost"]!.DeepClone();
@@ -305,7 +342,94 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
             ["dayUtc"] = "2026-10-09", ["resetAtUtc"] = "2026-10-10T00:00:00Z", ["scope"] = scope,
             ["queries"] = scope == "PlatformKey" ? 49 : 50, ["limit"] = 50, ["limitReached"] = true,
         };
-        usage["rows"]!["items"] = new JsonArray(row);
+        SetUsageRows(usage, new JsonArray(row), totalCount: 1);
+        return usage;
+    }
+
+    private static JsonObject UsageMoney(decimal amount) => new() { ["amount"] = amount, ["currency"] = AssistantContractPolicy.BillingCurrency };
+
+    // Contract samples only; the Usage service remains 501 until its reader is implemented in T06.
+    private static JsonObject EmptyUsageExample(OpenApiDocument document, bool platform)
+    {
+        var usage = Example(new OpenApiSchemaReference("AssistantUsagePageResponse", document), document, 0)!.AsObject();
+        usage["cost"] = UsageMoney(0m);
+        usage["platformKeyCost"] = platform ? UsageMoney(0m) : null;
+        usage["budget"] = null;
+        usage["budgetProgress"] = null;
+        usage["totalQueries"] = 0;
+        usage["peopleCount"] = 0;
+        usage["organizationCount"] = platform ? JsonValue.Create(0) : null;
+        SetUsageRows(usage, new JsonArray(), totalCount: 0);
+        return usage;
+    }
+
+    private static void SetUsageRows(JsonObject usage, JsonArray rows, int totalCount, int page = 1, int pageSize = 20)
+    {
+        var totalPages = (totalCount + pageSize - 1) / pageSize;
+        usage["rows"] = new JsonObject
+        {
+            ["items"] = rows, ["page"] = page, ["pageSize"] = pageSize, ["totalCount"] = totalCount,
+            ["totalPages"] = totalPages, ["hasPrevious"] = page > 1, ["hasNext"] = page < totalPages,
+        };
+    }
+
+    private static JsonObject UsageRowExample(OpenApiDocument document, string kind, string? fundingMode, decimal cost, int queries)
+    {
+        var row = Example(new OpenApiSchemaReference("AssistantUsageRowResponse", document), document, 0)!.AsObject();
+        row["kind"] = kind;
+        row["organizationId"] = kind == "organization" ? JsonValue.Create("10000000-0000-0000-0000-000000000001") : null;
+        row["personId"] = null;
+        row["day"] = null;
+        row["displayName"] = "example";
+        row["queries"] = queries;
+        row["inputTokens"] = queries * 100;
+        row["outputTokens"] = queries * 20;
+        row["cacheWriteTokens"] = 0;
+        row["cacheReadTokens"] = 0;
+        row["cost"] = UsageMoney(cost);
+        row["dailyLimit"] = null;
+        row["monthlyBudget"] = null;
+        row["dailyUsage"] = null;
+        row["peopleCount"] = null;
+        row["fundingMode"] = fundingMode;
+        row["budgetProgress"] = null;
+        return row;
+    }
+
+    private static JsonObject PlatformFundingUsageExample(OpenApiDocument document)
+    {
+        var usage = EmptyUsageExample(document, platform: true);
+        usage["cost"] = UsageMoney(27m);
+        usage["platformKeyCost"] = UsageMoney(20m);
+        usage["totalQueries"] = 13;
+        usage["peopleCount"] = 2;
+        usage["organizationCount"] = 1;
+        var platformKey = UsageRowExample(document, "organization", "PlatformKey", 20m, 10);
+        platformKey["monthlyBudget"] = UsageMoney(25m);
+        platformKey["budgetProgress"] = new JsonObject { ["fraction"] = 0.8m, ["status"] = "NearLimit" };
+        var ownKey = UsageRowExample(document, "organization", "OwnKey", 7m, 3);
+        ownKey["monthlyBudget"] = UsageMoney(7m);
+        ownKey["budgetProgress"] = new JsonObject { ["fraction"] = 1m, ["status"] = "LimitReached" };
+        SetUsageRows(usage, new JsonArray(platformKey, ownKey), totalCount: 2);
+        return usage;
+    }
+
+    private static JsonObject BusinessDayUsageExample(OpenApiDocument document)
+    {
+        var usage = EmptyUsageExample(document, platform: false);
+        usage["cost"] = UsageMoney(20m);
+        usage["platformKeyCost"] = UsageMoney(12m);
+        usage["totalQueries"] = 8;
+        usage["peopleCount"] = 3;
+        var rows = new JsonArray();
+        foreach (var (day, cost, queries, people) in new[] { ("2026-10-07", 12m, 5, 2), ("2026-10-08", 8m, 3, 2), ("2026-10-09", 0m, 0, 0) })
+        {
+            var row = UsageRowExample(document, "day", null, cost, queries);
+            row["day"] = day;
+            row["peopleCount"] = people;
+            rows.Add(row);
+        }
+        SetUsageRows(usage, rows, totalCount: 3);
         return usage;
     }
 
@@ -487,17 +611,28 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         {
             if (schema is not OpenApiSchema mutable) continue;
             ReplaceMoneyReferences(mutable, document);
-            var requiredProjection = name switch
+            string[] requiredProjections = name switch
             {
-                "AssistantConversationResponse" => "activeTurnId",
-                "AssistantUsagePageResponse" => "budgetProgress",
-                "AssistantUsageRowResponse" => "dailyUsage",
-                _ => null,
+                "AssistantConversationResponse" => ["activeTurnId"],
+                "AssistantUsagePageResponse" => ["budgetProgress", "organizationCount"],
+                "AssistantUsageRowResponse" => ["dailyUsage", "peopleCount", "fundingMode", "budgetProgress"],
+                _ => [],
             };
-            if (requiredProjection is not null)
+            foreach (var requiredProjection in requiredProjections)
             {
                 mutable.Required ??= new HashSet<string>(StringComparer.Ordinal);
                 mutable.Required.Add(requiredProjection);
+            }
+            if (name == "AssistantUsagePageResponse" && mutable.Properties!["organizationCount"] is OpenApiSchema organizationCount)
+                organizationCount.Description = "Sólo Platform: organizaciones Business distintas con consumo de modelo contabilizado durante el mes solicitado, antes de paginar; excluye Personas/Operadores y organizaciones sin consumo. Cero sin uso Business; Business devuelve null.";
+            if (name == "AssistantUsageRowResponse")
+            {
+                if (mutable.Properties!["peopleCount"] is OpenApiSchema peopleCount)
+                    peopleCount.Description = "Sólo day Business: UserId distintos con consumo de modelo contabilizado en el día civil de la organización, deduplicados entre ambas claves; títulos no agregan personas/consultas. Cero si el día incluido no tuvo consumo; demás filas null. Page.peopleCount cuenta distintos del período completo.";
+                if (mutable.Properties["fundingMode"] is OpenApiSchema fundingMode)
+                    fundingMode.Description = "organization Platform agrupa OrganizationId + financiación histórica + mes con consumo contabilizado; costos, consultas y tokens pertenecen sólo al grupo. La organización puede tener dos filas; PlatformKey→OwnKey→PlatformKey acumula dos grupos. personal/operator PlatformKey; day/person Business null. Orden estable con desempate por fundingMode; configuración sin consumo no crea filas.";
+                if (mutable.Properties["budgetProgress"] is OpenApiSchema budgetProgress)
+                    budgetProgress.Description = "Sólo organization Platform con presupuesto mensual positivo aplicable: costo confirmado o estimado registrado del mismo org/financiador/mes dividido por snapshot histórico reflejado en monthlyBudget, sin reservas ni Settings actuales. PlatformKey usa tope Plataforma; OwnKey su tope propio, sin sumar topes. Fracción sin recorte; NearLimit desde 0,8, LimitReached desde 1. Presupuesto cero/null y otras filas null.";
             }
             if (name == "AssistantBudgetProgressResponse" && mutable.Properties!["fraction"] is OpenApiSchema fraction)
                 fraction.Format = "decimal";

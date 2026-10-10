@@ -18021,23 +18021,94 @@
                     "value": {
                       "month": "2026-10",
                       "cost": {
-                        "amount": 1,
+                        "amount": 20,
                         "currency": "USD"
                       },
-                      "platformKeyCost": null,
+                      "platformKeyCost": {
+                        "amount": 12,
+                        "currency": "USD"
+                      },
                       "budget": null,
-                      "totalQueries": 1,
-                      "peopleCount": 1,
+                      "totalQueries": 8,
+                      "peopleCount": 3,
                       "rows": {
-                        "items": [ ],
+                        "items": [
+                          {
+                            "kind": "day",
+                            "organizationId": null,
+                            "personId": null,
+                            "day": "2026-10-07",
+                            "displayName": "example",
+                            "queries": 5,
+                            "inputTokens": 500,
+                            "outputTokens": 100,
+                            "cacheWriteTokens": 0,
+                            "cacheReadTokens": 0,
+                            "cost": {
+                              "amount": 12,
+                              "currency": "USD"
+                            },
+                            "dailyLimit": null,
+                            "monthlyBudget": null,
+                            "dailyUsage": null,
+                            "peopleCount": 2,
+                            "fundingMode": null,
+                            "budgetProgress": null
+                          },
+                          {
+                            "kind": "day",
+                            "organizationId": null,
+                            "personId": null,
+                            "day": "2026-10-08",
+                            "displayName": "example",
+                            "queries": 3,
+                            "inputTokens": 300,
+                            "outputTokens": 60,
+                            "cacheWriteTokens": 0,
+                            "cacheReadTokens": 0,
+                            "cost": {
+                              "amount": 8,
+                              "currency": "USD"
+                            },
+                            "dailyLimit": null,
+                            "monthlyBudget": null,
+                            "dailyUsage": null,
+                            "peopleCount": 2,
+                            "fundingMode": null,
+                            "budgetProgress": null
+                          },
+                          {
+                            "kind": "day",
+                            "organizationId": null,
+                            "personId": null,
+                            "day": "2026-10-09",
+                            "displayName": "example",
+                            "queries": 0,
+                            "inputTokens": 0,
+                            "outputTokens": 0,
+                            "cacheWriteTokens": 0,
+                            "cacheReadTokens": 0,
+                            "cost": {
+                              "amount": 0,
+                              "currency": "USD"
+                            },
+                            "dailyLimit": null,
+                            "monthlyBudget": null,
+                            "dailyUsage": null,
+                            "peopleCount": 0,
+                            "fundingMode": null,
+                            "budgetProgress": null
+                          }
+                        ],
                         "page": 1,
-                        "pageSize": 1,
-                        "totalCount": 1,
+                        "pageSize": 20,
+                        "totalCount": 3,
                         "totalPages": 1,
                         "hasPrevious": false,
                         "hasNext": false
                       },
-                      "budgetProgress": null
+                      "budgetProgress": null,
+                      "organizationCount": null
                     }
                   },
                   "currentPlatformKey": {
@@ -18061,7 +18132,7 @@
                         "items": [
                           {
                             "kind": "person",
-                            "organizationId": "10000000-0000-0000-0000-000000000001",
+                            "organizationId": null,
                             "personId": "10000000-0000-0000-0000-000000000001",
                             "day": null,
                             "displayName": "example",
@@ -18086,11 +18157,14 @@
                               "queries": 49,
                               "limit": 50,
                               "limitReached": true
-                            }
+                            },
+                            "peopleCount": null,
+                            "fundingMode": null,
+                            "budgetProgress": null
                           }
                         ],
                         "page": 1,
-                        "pageSize": 1,
+                        "pageSize": 20,
                         "totalCount": 1,
                         "totalPages": 1,
                         "hasPrevious": false,
@@ -18099,7 +18173,8 @@
                       "budgetProgress": {
                         "fraction": 0.8,
                         "status": "NearLimit"
-                      }
+                      },
+                      "organizationCount": null
                     }
                   },
                   "currentOwnKey": {
@@ -18120,7 +18195,7 @@
                         "items": [
                           {
                             "kind": "person",
-                            "organizationId": "10000000-0000-0000-0000-000000000001",
+                            "organizationId": null,
                             "personId": "10000000-0000-0000-0000-000000000001",
                             "day": null,
                             "displayName": "example",
@@ -18145,11 +18220,14 @@
                               "queries": 50,
                               "limit": 50,
                               "limitReached": true
-                            }
+                            },
+                            "peopleCount": null,
+                            "fundingMode": null,
+                            "budgetProgress": null
                           }
                         ],
                         "page": 1,
-                        "pageSize": 1,
+                        "pageSize": 20,
                         "totalCount": 1,
                         "totalPages": 1,
                         "hasPrevious": false,
@@ -18158,7 +18236,8 @@
                       "budgetProgress": {
                         "fraction": 1.2,
                         "status": "LimitReached"
-                      }
+                      },
+                      "organizationCount": null
                     }
                   },
                   "historical": {
@@ -18179,7 +18258,7 @@
                         "items": [
                           {
                             "kind": "person",
-                            "organizationId": "10000000-0000-0000-0000-000000000001",
+                            "organizationId": null,
                             "personId": "10000000-0000-0000-0000-000000000001",
                             "day": null,
                             "displayName": "example",
@@ -18197,11 +18276,14 @@
                               "amount": 20,
                               "currency": "USD"
                             },
-                            "dailyUsage": null
+                            "dailyUsage": null,
+                            "peopleCount": null,
+                            "fundingMode": null,
+                            "budgetProgress": null
                           }
                         ],
                         "page": 1,
-                        "pageSize": 1,
+                        "pageSize": 20,
                         "totalCount": 1,
                         "totalPages": 1,
                         "hasPrevious": false,
@@ -18210,7 +18292,128 @@
                       "budgetProgress": {
                         "fraction": 0.5,
                         "status": "WithinLimit"
-                      }
+                      },
+                      "organizationCount": null
+                    }
+                  },
+                  "dailyPeople": {
+                    "description": "Muestra contractual: tres personas distintas en el período; dos por cada día con consumo, una repetida entre días y usando ambas claves cuenta una vez por día. Los títulos no agregan consultas/personas; el día sin consumo tiene cero.",
+                    "value": {
+                      "month": "2026-10",
+                      "cost": {
+                        "amount": 20,
+                        "currency": "USD"
+                      },
+                      "platformKeyCost": {
+                        "amount": 12,
+                        "currency": "USD"
+                      },
+                      "budget": null,
+                      "totalQueries": 8,
+                      "peopleCount": 3,
+                      "rows": {
+                        "items": [
+                          {
+                            "kind": "day",
+                            "organizationId": null,
+                            "personId": null,
+                            "day": "2026-10-07",
+                            "displayName": "example",
+                            "queries": 5,
+                            "inputTokens": 500,
+                            "outputTokens": 100,
+                            "cacheWriteTokens": 0,
+                            "cacheReadTokens": 0,
+                            "cost": {
+                              "amount": 12,
+                              "currency": "USD"
+                            },
+                            "dailyLimit": null,
+                            "monthlyBudget": null,
+                            "dailyUsage": null,
+                            "peopleCount": 2,
+                            "fundingMode": null,
+                            "budgetProgress": null
+                          },
+                          {
+                            "kind": "day",
+                            "organizationId": null,
+                            "personId": null,
+                            "day": "2026-10-08",
+                            "displayName": "example",
+                            "queries": 3,
+                            "inputTokens": 300,
+                            "outputTokens": 60,
+                            "cacheWriteTokens": 0,
+                            "cacheReadTokens": 0,
+                            "cost": {
+                              "amount": 8,
+                              "currency": "USD"
+                            },
+                            "dailyLimit": null,
+                            "monthlyBudget": null,
+                            "dailyUsage": null,
+                            "peopleCount": 2,
+                            "fundingMode": null,
+                            "budgetProgress": null
+                          },
+                          {
+                            "kind": "day",
+                            "organizationId": null,
+                            "personId": null,
+                            "day": "2026-10-09",
+                            "displayName": "example",
+                            "queries": 0,
+                            "inputTokens": 0,
+                            "outputTokens": 0,
+                            "cacheWriteTokens": 0,
+                            "cacheReadTokens": 0,
+                            "cost": {
+                              "amount": 0,
+                              "currency": "USD"
+                            },
+                            "dailyLimit": null,
+                            "monthlyBudget": null,
+                            "dailyUsage": null,
+                            "peopleCount": 0,
+                            "fundingMode": null,
+                            "budgetProgress": null
+                          }
+                        ],
+                        "page": 1,
+                        "pageSize": 20,
+                        "totalCount": 3,
+                        "totalPages": 1,
+                        "hasPrevious": false,
+                        "hasNext": false
+                      },
+                      "budgetProgress": null,
+                      "organizationCount": null
+                    }
+                  },
+                  "zeroUsage": {
+                    "description": "Muestra contractual sin consumo; configuración o reservas sin invocación no aportan filas.",
+                    "value": {
+                      "month": "2026-10",
+                      "cost": {
+                        "amount": 0,
+                        "currency": "USD"
+                      },
+                      "platformKeyCost": null,
+                      "budget": null,
+                      "totalQueries": 0,
+                      "peopleCount": 0,
+                      "rows": {
+                        "items": [ ],
+                        "page": 1,
+                        "pageSize": 20,
+                        "totalCount": 0,
+                        "totalPages": 0,
+                        "hasPrevious": false,
+                        "hasNext": false
+                      },
+                      "budgetProgress": null,
+                      "organizationCount": null
                     }
                   }
                 }
@@ -29952,107 +30155,401 @@
                 },
                 "examples": {
                   "success": {
+                    "description": "Muestra contractual: la misma organización usó ambas claves. Dos grupos históricos con costo/consultas/tokens propios; USD 20 PlatformKey + USD 7 OwnKey, resumen USD 27 y una organización distinta. Cada fila usa su presupuesto del mismo financiador.",
                     "value": {
                       "month": "2026-10",
                       "cost": {
-                        "amount": 1,
+                        "amount": 27,
                         "currency": "USD"
                       },
-                      "platformKeyCost": null,
-                      "budget": null,
-                      "totalQueries": 1,
-                      "peopleCount": 1,
-                      "rows": {
-                        "items": [ ],
-                        "page": 1,
-                        "pageSize": 1,
-                        "totalCount": 1,
-                        "totalPages": 1,
-                        "hasPrevious": false,
-                        "hasNext": false
-                      },
-                      "budgetProgress": null
-                    }
-                  },
-                  "aggregates": {
-                    "value": {
-                      "month": "2026-10",
-                      "cost": {
-                        "amount": 1,
+                      "platformKeyCost": {
+                        "amount": 20,
                         "currency": "USD"
                       },
-                      "platformKeyCost": null,
                       "budget": null,
-                      "totalQueries": 1,
-                      "peopleCount": 1,
+                      "totalQueries": 13,
+                      "peopleCount": 2,
                       "rows": {
                         "items": [
                           {
                             "kind": "organization",
                             "organizationId": "10000000-0000-0000-0000-000000000001",
-                            "personId": "10000000-0000-0000-0000-000000000001",
-                            "day": "2026-10-09",
+                            "personId": null,
+                            "day": null,
                             "displayName": "example",
-                            "queries": 1,
-                            "inputTokens": 1,
-                            "outputTokens": 1,
-                            "cacheWriteTokens": 1,
-                            "cacheReadTokens": 1,
+                            "queries": 10,
+                            "inputTokens": 1000,
+                            "outputTokens": 200,
+                            "cacheWriteTokens": 0,
+                            "cacheReadTokens": 0,
                             "cost": {
-                              "amount": 1,
+                              "amount": 20,
                               "currency": "USD"
                             },
-                            "dailyLimit": 50,
-                            "monthlyBudget": null,
-                            "dailyUsage": null
+                            "dailyLimit": null,
+                            "monthlyBudget": {
+                              "amount": 25,
+                              "currency": "USD"
+                            },
+                            "dailyUsage": null,
+                            "peopleCount": null,
+                            "fundingMode": "PlatformKey",
+                            "budgetProgress": {
+                              "fraction": 0.8,
+                              "status": "NearLimit"
+                            }
                           },
                           {
-                            "kind": "personal",
+                            "kind": "organization",
                             "organizationId": "10000000-0000-0000-0000-000000000001",
-                            "personId": "10000000-0000-0000-0000-000000000001",
-                            "day": "2026-10-09",
+                            "personId": null,
+                            "day": null,
                             "displayName": "example",
-                            "queries": 1,
-                            "inputTokens": 1,
-                            "outputTokens": 1,
-                            "cacheWriteTokens": 1,
-                            "cacheReadTokens": 1,
+                            "queries": 3,
+                            "inputTokens": 300,
+                            "outputTokens": 60,
+                            "cacheWriteTokens": 0,
+                            "cacheReadTokens": 0,
                             "cost": {
-                              "amount": 1,
+                              "amount": 7,
                               "currency": "USD"
                             },
-                            "dailyLimit": 50,
-                            "monthlyBudget": null,
-                            "dailyUsage": null
-                          },
-                          {
-                            "kind": "operator",
-                            "organizationId": "10000000-0000-0000-0000-000000000001",
-                            "personId": "10000000-0000-0000-0000-000000000001",
-                            "day": "2026-10-09",
-                            "displayName": "example",
-                            "queries": 1,
-                            "inputTokens": 1,
-                            "outputTokens": 1,
-                            "cacheWriteTokens": 1,
-                            "cacheReadTokens": 1,
-                            "cost": {
-                              "amount": 1,
+                            "dailyLimit": null,
+                            "monthlyBudget": {
+                              "amount": 7,
                               "currency": "USD"
                             },
-                            "dailyLimit": 50,
-                            "monthlyBudget": null,
-                            "dailyUsage": null
+                            "dailyUsage": null,
+                            "peopleCount": null,
+                            "fundingMode": "OwnKey",
+                            "budgetProgress": {
+                              "fraction": 1,
+                              "status": "LimitReached"
+                            }
                           }
                         ],
                         "page": 1,
-                        "pageSize": 1,
-                        "totalCount": 1,
+                        "pageSize": 20,
+                        "totalCount": 2,
                         "totalPages": 1,
                         "hasPrevious": false,
                         "hasNext": false
                       },
-                      "budgetProgress": null
+                      "budgetProgress": null,
+                      "organizationCount": 1
+                    }
+                  },
+                  "historicalFunding": {
+                    "description": "Muestra contractual histórica: snapshot del tope PlatformKey USD 25, costo USD 30 y progreso 1,2 sin recorte; OwnKey sin presupuesto. Cambiar Settings actuales no recalcula este mes.",
+                    "value": {
+                      "month": "2026-09",
+                      "cost": {
+                        "amount": 37,
+                        "currency": "USD"
+                      },
+                      "platformKeyCost": {
+                        "amount": 30,
+                        "currency": "USD"
+                      },
+                      "budget": null,
+                      "totalQueries": 13,
+                      "peopleCount": 2,
+                      "rows": {
+                        "items": [
+                          {
+                            "kind": "organization",
+                            "organizationId": "10000000-0000-0000-0000-000000000001",
+                            "personId": null,
+                            "day": null,
+                            "displayName": "example",
+                            "queries": 10,
+                            "inputTokens": 1000,
+                            "outputTokens": 200,
+                            "cacheWriteTokens": 0,
+                            "cacheReadTokens": 0,
+                            "cost": {
+                              "amount": 30,
+                              "currency": "USD"
+                            },
+                            "dailyLimit": null,
+                            "monthlyBudget": {
+                              "amount": 25,
+                              "currency": "USD"
+                            },
+                            "dailyUsage": null,
+                            "peopleCount": null,
+                            "fundingMode": "PlatformKey",
+                            "budgetProgress": {
+                              "fraction": 1.2,
+                              "status": "LimitReached"
+                            }
+                          },
+                          {
+                            "kind": "organization",
+                            "organizationId": "10000000-0000-0000-0000-000000000001",
+                            "personId": null,
+                            "day": null,
+                            "displayName": "example",
+                            "queries": 3,
+                            "inputTokens": 300,
+                            "outputTokens": 60,
+                            "cacheWriteTokens": 0,
+                            "cacheReadTokens": 0,
+                            "cost": {
+                              "amount": 7,
+                              "currency": "USD"
+                            },
+                            "dailyLimit": null,
+                            "monthlyBudget": null,
+                            "dailyUsage": null,
+                            "peopleCount": null,
+                            "fundingMode": "OwnKey",
+                            "budgetProgress": null
+                          }
+                        ],
+                        "page": 1,
+                        "pageSize": 20,
+                        "totalCount": 2,
+                        "totalPages": 1,
+                        "hasPrevious": false,
+                        "hasNext": false
+                      },
+                      "budgetProgress": null,
+                      "organizationCount": 1
+                    }
+                  },
+                  "budgetsNotApplicable": {
+                    "description": "Muestra contractual: presupuesto cero o null no tiene progreso aplicable.",
+                    "value": {
+                      "month": "2026-10",
+                      "cost": {
+                        "amount": 27,
+                        "currency": "USD"
+                      },
+                      "platformKeyCost": {
+                        "amount": 20,
+                        "currency": "USD"
+                      },
+                      "budget": null,
+                      "totalQueries": 13,
+                      "peopleCount": 2,
+                      "rows": {
+                        "items": [
+                          {
+                            "kind": "organization",
+                            "organizationId": "10000000-0000-0000-0000-000000000001",
+                            "personId": null,
+                            "day": null,
+                            "displayName": "example",
+                            "queries": 10,
+                            "inputTokens": 1000,
+                            "outputTokens": 200,
+                            "cacheWriteTokens": 0,
+                            "cacheReadTokens": 0,
+                            "cost": {
+                              "amount": 20,
+                              "currency": "USD"
+                            },
+                            "dailyLimit": null,
+                            "monthlyBudget": {
+                              "amount": 0,
+                              "currency": "USD"
+                            },
+                            "dailyUsage": null,
+                            "peopleCount": null,
+                            "fundingMode": "PlatformKey",
+                            "budgetProgress": null
+                          },
+                          {
+                            "kind": "organization",
+                            "organizationId": "10000000-0000-0000-0000-000000000001",
+                            "personId": null,
+                            "day": null,
+                            "displayName": "example",
+                            "queries": 3,
+                            "inputTokens": 300,
+                            "outputTokens": 60,
+                            "cacheWriteTokens": 0,
+                            "cacheReadTokens": 0,
+                            "cost": {
+                              "amount": 7,
+                              "currency": "USD"
+                            },
+                            "dailyLimit": null,
+                            "monthlyBudget": null,
+                            "dailyUsage": null,
+                            "peopleCount": null,
+                            "fundingMode": "OwnKey",
+                            "budgetProgress": null
+                          }
+                        ],
+                        "page": 1,
+                        "pageSize": 20,
+                        "totalCount": 2,
+                        "totalPages": 1,
+                        "hasPrevious": false,
+                        "hasNext": false
+                      },
+                      "budgetProgress": null,
+                      "organizationCount": 1
+                    }
+                  },
+                  "paginatedFunding": {
+                    "description": "Muestra contractual: diez organizaciones, once grupos. La página 1 contiene PlatformKey de la organización repetida y nueve organizaciones de USD 1/una consulta PlatformKey; la página 2 contiene sólo su OwnKey USD 7/tres consultas. Resúmenes y conteos completos antes de paginar; orden estable con desempate fundingMode.",
+                    "value": {
+                      "month": "2026-10",
+                      "cost": {
+                        "amount": 36,
+                        "currency": "USD"
+                      },
+                      "platformKeyCost": {
+                        "amount": 29,
+                        "currency": "USD"
+                      },
+                      "budget": null,
+                      "totalQueries": 22,
+                      "peopleCount": 11,
+                      "rows": {
+                        "items": [
+                          {
+                            "kind": "organization",
+                            "organizationId": "10000000-0000-0000-0000-000000000001",
+                            "personId": null,
+                            "day": null,
+                            "displayName": "example",
+                            "queries": 3,
+                            "inputTokens": 300,
+                            "outputTokens": 60,
+                            "cacheWriteTokens": 0,
+                            "cacheReadTokens": 0,
+                            "cost": {
+                              "amount": 7,
+                              "currency": "USD"
+                            },
+                            "dailyLimit": null,
+                            "monthlyBudget": {
+                              "amount": 7,
+                              "currency": "USD"
+                            },
+                            "dailyUsage": null,
+                            "peopleCount": null,
+                            "fundingMode": "OwnKey",
+                            "budgetProgress": {
+                              "fraction": 1,
+                              "status": "LimitReached"
+                            }
+                          }
+                        ],
+                        "page": 2,
+                        "pageSize": 10,
+                        "totalCount": 11,
+                        "totalPages": 2,
+                        "hasPrevious": true,
+                        "hasNext": false
+                      },
+                      "budgetProgress": null,
+                      "organizationCount": 10
+                    }
+                  },
+                  "aggregates": {
+                    "description": "Muestra contractual: Personas y Operadores son agregados PlatformKey sin presupuesto ni cuota individual; cero organizaciones Business con consumo.",
+                    "value": {
+                      "month": "2026-10",
+                      "cost": {
+                        "amount": 10,
+                        "currency": "USD"
+                      },
+                      "platformKeyCost": {
+                        "amount": 10,
+                        "currency": "USD"
+                      },
+                      "budget": null,
+                      "totalQueries": 5,
+                      "peopleCount": 3,
+                      "rows": {
+                        "items": [
+                          {
+                            "kind": "personal",
+                            "organizationId": null,
+                            "personId": null,
+                            "day": null,
+                            "displayName": "example",
+                            "queries": 3,
+                            "inputTokens": 300,
+                            "outputTokens": 60,
+                            "cacheWriteTokens": 0,
+                            "cacheReadTokens": 0,
+                            "cost": {
+                              "amount": 6,
+                              "currency": "USD"
+                            },
+                            "dailyLimit": null,
+                            "monthlyBudget": null,
+                            "dailyUsage": null,
+                            "peopleCount": null,
+                            "fundingMode": "PlatformKey",
+                            "budgetProgress": null
+                          },
+                          {
+                            "kind": "operator",
+                            "organizationId": null,
+                            "personId": null,
+                            "day": null,
+                            "displayName": "example",
+                            "queries": 2,
+                            "inputTokens": 200,
+                            "outputTokens": 40,
+                            "cacheWriteTokens": 0,
+                            "cacheReadTokens": 0,
+                            "cost": {
+                              "amount": 4,
+                              "currency": "USD"
+                            },
+                            "dailyLimit": null,
+                            "monthlyBudget": null,
+                            "dailyUsage": null,
+                            "peopleCount": null,
+                            "fundingMode": "PlatformKey",
+                            "budgetProgress": null
+                          }
+                        ],
+                        "page": 1,
+                        "pageSize": 20,
+                        "totalCount": 2,
+                        "totalPages": 1,
+                        "hasPrevious": false,
+                        "hasNext": false
+                      },
+                      "budgetProgress": null,
+                      "organizationCount": 0
+                    }
+                  },
+                  "zeroUsage": {
+                    "description": "Muestra contractual sin consumo: cero organizaciones con uso, aunque existan organizaciones configuradas.",
+                    "value": {
+                      "month": "2026-10",
+                      "cost": {
+                        "amount": 0,
+                        "currency": "USD"
+                      },
+                      "platformKeyCost": {
+                        "amount": 0,
+                        "currency": "USD"
+                      },
+                      "budget": null,
+                      "totalQueries": 0,
+                      "peopleCount": 0,
+                      "rows": {
+                        "items": [ ],
+                        "page": 1,
+                        "pageSize": 20,
+                        "totalCount": 0,
+                        "totalPages": 0,
+                        "hasPrevious": false,
+                        "hasNext": false
+                      },
+                      "budgetProgress": null,
+                      "organizationCount": 0
                     }
                   }
                 }
@@ -54260,6 +54757,7 @@
           "totalQueries",
           "peopleCount",
           "rows",
+          "organizationCount",
           "budgetProgress"
         ],
         "type": "object",
@@ -54310,6 +54808,14 @@
                 "$ref": "#/components/schemas/AssistantBudgetProgressResponse"
               }
             ]
+          },
+          "organizationCount": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Sólo Platform: organizaciones Business distintas con consumo de modelo contabilizado durante el mes solicitado, antes de paginar; excluye Personas/Operadores y organizaciones sin consumo. Cero sin uso Business; Business devuelve null.",
+            "format": "int32"
           }
         }
       },
@@ -54333,6 +54839,9 @@
           "cacheWriteTokens",
           "cacheReadTokens",
           "cost",
+          "budgetProgress",
+          "fundingMode",
+          "peopleCount",
           "dailyUsage"
         ],
         "type": "object",
@@ -54413,6 +54922,36 @@
                 "$ref": "#/components/schemas/AssistantDailyUsageResponse"
               }
             ]
+          },
+          "peopleCount": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Sólo day Business: UserId distintos con consumo de modelo contabilizado en el día civil de la organización, deduplicados entre ambas claves; títulos no agregan personas/consultas. Cero si el día incluido no tuvo consumo; demás filas null. Page.peopleCount cuenta distintos del período completo.",
+            "format": "int32"
+          },
+          "fundingMode": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AssistantMode"
+              }
+            ],
+            "description": "organization Platform agrupa OrganizationId + financiación histórica + mes con consumo contabilizado; costos, consultas y tokens pertenecen sólo al grupo. La organización puede tener dos filas; PlatformKey→OwnKey→PlatformKey acumula dos grupos. personal/operator PlatformKey; day/person Business null. Orden estable con desempate por fundingMode; configuración sin consumo no crea filas."
+          },
+          "budgetProgress": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AssistantBudgetProgressResponse"
+              }
+            ],
+            "description": "Sólo organization Platform con presupuesto mensual positivo aplicable: costo confirmado o estimado registrado del mismo org/financiador/mes dividido por snapshot histórico reflejado en monthlyBudget, sin reservas ni Settings actuales. PlatformKey usa tope Plataforma; OwnKey su tope propio, sin sumar topes. Fracción sin recorte; NearLimit desde 0,8, LimitReached desde 1. Presupuesto cero/null y otras filas null."
           }
         }
       },
