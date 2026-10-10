@@ -58,9 +58,12 @@ public sealed class AssistantContractTests(ApiFactory factory)
         await PlatformOperators.GrantAsync(factory.Services, account.UserId, [PlatformPermissions.Assistant.Configure], Ct);
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
         using var settings = await client.GetAsync("/api/platform/assistant/settings", Ct);
-        await Stub(settings);
+        Assert.Equal(HttpStatusCode.OK, settings.StatusCode);
+        using var configuration = await settings.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+        Assert.False(configuration!.RootElement.GetProperty("hasKey").GetBoolean());
+        Assert.Equal(JsonValueKind.Null, configuration.RootElement.GetProperty("maskedKeySuffix").ValueKind);
         using var chat = await client.GetAsync("/api/platform/assistant", Ct);
-        Assert.Equal(HttpStatusCode.NotFound, chat.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, chat.StatusCode);
         using var usage = await client.GetAsync("/api/platform/assistant/usage?month=2026-10&page=1&pageSize=20", Ct);
         Assert.Equal(HttpStatusCode.Forbidden, usage.StatusCode);
         using var profile = await client.GetFromJsonAsync<JsonDocument>("/api/me", Ct);

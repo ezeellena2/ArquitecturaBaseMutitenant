@@ -16,7 +16,7 @@ internal static class ModelBuilderExtensions
     {
         var tenantId = Expression.Property(Expression.Constant(context), nameof(ApplicationDbContext.ActiveTenantId));
 
-        foreach (var entityType in modelBuilder.Model.GetEntityTypes().Where(entity => entity.BaseType is null).ToArray())
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes().Where(entity => entity.BaseType is null && !entity.IsOwned()).ToArray())
         {
             var type = entityType.ClrType;
             var entity = Expression.Parameter(type, "entity");

@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
+using ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Assistant;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Organization;
 
@@ -116,8 +117,10 @@ public sealed class HomeTests(ApiFactory factory)
     // B4, tablero Inicio-Miembro: quien administra una empresa sin roles de la organización ve la invitación vencida de
     // su empresa, con la empresa, y «Reenviar» lo lleva a la ficha de esa empresa, que puede abrir. Desde la decisión
     // 102, solo la que es únicamente de su empresa: «Reenviar» siempre lleva a algo que puede hacer.
-    [Fact]
-    public async Task A_company_admin_without_organization_roles_sees_the_expired_invitation_of_its_company_and_can_open_it()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task A_company_admin_without_organization_roles_sees_the_expired_invitation_of_its_company_and_can_open_it(bool assistantEnabled)
     {
         using var ownerClient = NewClient();
         var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
@@ -148,12 +151,21 @@ public sealed class HomeTests(ApiFactory factory)
             new { memberId = adminMemberId, roleIds = new[] { companyAdminRoleId } }, Ct);
         Assert.True(added.StatusCode == HttpStatusCode.NoContent, await added.Content.ReadAsStringAsync(Ct));
         await AccountJourney.AuthorizeAsync(adminClient, "business", Ct);
+        if (assistantEnabled) await AssistantTestData.EnableAsync(factory, tenantId);
+        using var assistant = await adminClient.GetAsync("/api/organization/assistant/conversations", Ct);
+        Assert.Equal(assistantEnabled ? HttpStatusCode.OK : HttpStatusCode.NotFound, assistant.StatusCode);
+        using var profile = await adminClient.GetAsync("/api/me", Ct);
+        Assert.Equal(HttpStatusCode.OK, profile.StatusCode);
+        using var profileJson = JsonDocument.Parse(await profile.Content.ReadAsStringAsync(Ct));
+        Assert.Contains(Permissions.Assistant.Use, profileJson.RootElement.GetProperty("effectivePermissions")
+            .GetProperty("organization").EnumerateArray().Select(permission => permission.GetString()));
 
         var home = await OrganizationJourney.HomeAsync(adminClient, Ct);
 
         // Solo la de su empresa, con la empresa: ni la de otra empresa ni la que no es de ninguna, y tampoco las que
         // además dan roles de la organización o entran a otra empresa, que no puede reenviar.
         Assert.Equal(JsonValueKind.Null, home.GetProperty("organization").ValueKind);
+        Assert.Equal(northId, Assert.Single(home.GetProperty("companies").EnumerateArray()).GetProperty("companyId").GetGuid());
         Assert.Equal([("users", "invitationExpired", northInvitee)], Pending(home));
         var row = Assert.Single(home.GetProperty("pending").EnumerateArray());
         Assert.Equal(northId, row.GetProperty("companyId").GetGuid());
@@ -181,6 +193,45 @@ public sealed class HomeTests(ApiFactory factory)
                 .Order(StringComparer.Ordinal),
             ownerRows.Select(item => item.GetProperty("subject").GetString()!).Order(StringComparer.Ordinal));
         Assert.All(ownerRows, item => Assert.Equal(JsonValueKind.Null, item.GetProperty("companyId").ValueKind));
+    }
+
+    [Fact]
+    public async Task An_explicit_organization_role_with_only_assistant_use_keeps_organization_home()
+    {
+        using var ownerClient = NewClient();
+        var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
+        var tenantId = await OrganizationJourney.StageAsync(factory, owner, "Inicio asignado", Ct);
+        await AccountJourney.AuthorizeAsync(ownerClient, "business", Ct);
+        var companyId = await OrganizationJourney.CreateCompanyAsync(ownerClient, "Delta Norte S.A.", Ct);
+        using var memberClient = NewClient();
+        var member = await AccountJourney.RegisterAsync(factory, memberClient, Ct);
+        var memberId = await OrganizationJourney.AddActiveMemberAsync(factory, tenantId, member.UserId, Ct);
+        using var role = await AccountJourney.PostAsync(ownerClient, "/api/roles", new
+        {
+            name = "Solo usar asistente",
+            description = (string?)null,
+            scope = "Organization",
+            companyId = (Guid?)null,
+            permissions = new[] { Permissions.Assistant.Use },
+        }, Ct);
+        Assert.True(role.StatusCode == HttpStatusCode.Created, await role.Content.ReadAsStringAsync(Ct));
+        var roleId = await role.Content.ReadFromJsonAsync<Guid>(Ct);
+        await PutAsync(ownerClient, $"/api/users/{memberId:D}", new
+        {
+            roleIds = new[] { roleId },
+            companies = new[] { new { companyId, roleIds = new[] { await CompanyAdminRoleIdAsync(ownerClient) } } },
+            version = await VersionAsync(ownerClient, $"/api/users/{memberId:D}"),
+        });
+        await AccountJourney.AuthorizeAsync(memberClient, "business", Ct);
+
+        var home = await OrganizationJourney.HomeAsync(memberClient, Ct);
+
+        var organization = home.GetProperty("organization");
+        Assert.Equal(JsonValueKind.Object, organization.ValueKind);
+        foreach (var area in new[] { "users", "roles", "companies", "publicPage", "settings", "audit" })
+            Assert.Equal(JsonValueKind.Null, organization.GetProperty(area).ValueKind);
+        Assert.Empty(home.GetProperty("companies").EnumerateArray());
+        Assert.Empty(Pending(home));
     }
 
     internal static (string? Area, string? Kind, string? Subject)[] Pending(JsonElement home) =>

@@ -23,7 +23,7 @@ public sealed class WhatsAppPersistenceTests(ApiFactory factory) : IClassFixture
     [Fact]
     public async Task Two_distinct_contributions_keep_all_three_explicit_inventory_models_equal_and_WhatsApp_capabilities_unique()
     {
-        var whatsapp = new CountedContribution(Assert.Single(PersistenceModelContributors.Discover()));
+        var whatsapp = new CountedContribution(Assert.Single(PersistenceModelContributors.Discover(), value => value.GlobalEntities.ContainsKey(typeof(WhatsAppMessage))));
         var technical = new TechnicalModelContributor();
         IPersistenceModelContributor[] inventory = [whatsapp, technical];
         await using var host = factory.WithWebHostBuilder(builder =>
@@ -50,7 +50,7 @@ public sealed class WhatsAppPersistenceTests(ApiFactory factory) : IClassFixture
         Assert.Single(services.GetServices<IAccountNoticeChannel>(), value => value.Key == "whatsapp");
         Assert.Single(services.GetServices<IChannelSender>(), value => value.Key == "whatsapp");
         Assert.True(services.GetRequiredService<IWhatsAppAvailability>().IsEnabled);
-        Assert.True(Assert.Single(services.GetServices<IInstalledModuleRouteAvailability>()).IsAvailable);
+        Assert.True(Assert.Single(services.GetServices<IInstalledModuleRouteAvailability>(), value => value.Key == "WhatsApp.Webhook").IsAvailable);
         using var core = Context([]); using var baseline = Context();
         Assert.Null(core.Model.FindEntityType(typeof(TechnicalRecord))); Assert.Null(core.Model.FindEntityType(typeof(WhatsAppMessage)));
         Assert.Null(baseline.Model.FindEntityType(typeof(TechnicalRecord)));
@@ -115,7 +115,7 @@ public sealed class WhatsAppPersistenceTests(ApiFactory factory) : IClassFixture
         Assert.Throws<InvalidOperationException>(() =>
             ArquitecturaBaseMultitenant.Infrastructure.Persistence.Rls.TenantIsolationModelValidator.Validate(builder.Model,
                 new Dictionary<Type, string> { [typeof(Undeclared)] = "platform" }));
-        var contributor = Assert.Single(PersistenceModelContributors.Discover());
+        var contributor = Assert.Single(PersistenceModelContributors.Discover(), value => value.GlobalEntities.ContainsKey(typeof(WhatsAppMessage)));
         Assert.Throws<InvalidOperationException>(() => PersistenceModelContributors.GlobalEntities([contributor, contributor]));
     }
     private static ApplicationDbContext Context(IEnumerable<IPersistenceModelContributor>? contributors = null)

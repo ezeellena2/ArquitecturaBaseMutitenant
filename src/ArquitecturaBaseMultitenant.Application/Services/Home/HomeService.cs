@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 namespace ArquitecturaBaseMultitenant.Application.Services.Home;
 
 /// <summary>
-/// Arma el inicio en un solo pedido de lectura (ADR 0040). Con permisos de la organización, las tarjetas de sus áreas;
+/// Arma el inicio en un solo pedido de lectura (ADR 0040). Con permisos asignados en la organización, las tarjetas de sus áreas;
 /// si no, «Tus empresas» y, en «Para resolver», lo de las empresas donde tiene roles. «Para resolver» junta lo que cada
 /// área aporta por <see cref="IPendingItemSource"/>.
 /// </summary>
@@ -21,12 +21,13 @@ internal sealed class HomeService(OrganizationHomeAreasBuilder areas, MemberHome
         OperationLog.RunAsync<HomeResponse>(logger, timeProvider, "GetHome", async () =>
         {
             if (currentUser.UserId is not { } userId || userId == Guid.Empty) return AccessErrors.NotMember;
+            var assigned = await permissions.GetAssignedOrganizationPermissionsAsync(userId, cancellationToken);
             var granted = await permissions.GetOrganizationPermissionsAsync(userId, cancellationToken);
-            var byCompany = granted.Count > 0
+            var byCompany = assigned.Count > 0
                 ? new Dictionary<Guid, IReadOnlyList<string>>()
                 : await permissions.GetPermissionsByCompanyAsync(userId, cancellationToken);
             var context = new PendingItemContext(userId, granted, byCompany);
-            var organization = granted.Count > 0 ? await areas.SummarizeAsync(context, cancellationToken) : null;
+            var organization = assigned.Count > 0 ? await areas.SummarizeAsync(context, cancellationToken) : null;
             var cards = organization is null ? await companies.ListAsync(userId, byCompany, cancellationToken) : [];
 
             // Cada fuente lee con el mismo contexto de datos: van de a una, nunca en paralelo.

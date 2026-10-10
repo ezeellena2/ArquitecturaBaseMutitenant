@@ -41,7 +41,8 @@ internal static class TenantIsolationModelValidator
                 : isPublic ? Schemas.PublicSite
                 : isShared ? Schemas.Engagement : null;
 
-            if (categoryCount > 1 || (categoryCount == 0 && !IsKnownGlobal(type) && !contributedGlobal) ||
+            if (categoryCount > 1 || typeof(IGlobalSecurityAudited).IsAssignableFrom(type) && categoryCount != 0
+                || (categoryCount == 0 && !IsKnownGlobal(type) && !contributedGlobal) ||
                 (contributedGlobal && (categoryCount != 0 || schema != contributedGlobals![type])) ||
                 (categoryCount == 1 && (schema != expectedSchema || !filters.Contains(requiredFilter!))) ||
                 (categoryCount == 0 && (schema is not (Schemas.Platform or Schemas.Identity) ||

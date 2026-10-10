@@ -29,7 +29,8 @@ ArquitecturaBaseMultitenant.Api.Modules.WhatsApp.WhatsAppApiModule.AddWhatsAppMo
         ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.WhatsAppModule.AddWhatsAppModule(builder.Services), builder.Configuration));
 
 ArquitecturaBaseMultitenant.Api.Modules.Assistant.AssistantApiModule.AddAssistantModule(
-    ArquitecturaBaseMultitenant.Application.Modules.Assistant.AssistantModule.AddAssistantModule(builder.Services));
+    ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.AssistantModule.AddAssistantModule(
+        ArquitecturaBaseMultitenant.Application.Modules.Assistant.AssistantModule.AddAssistantModule(builder.Services)));
 
 var app = builder.Build();
 

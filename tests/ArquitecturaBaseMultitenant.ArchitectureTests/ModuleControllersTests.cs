@@ -28,6 +28,7 @@ public sealed class ModuleControllersTests
     public void Optional_controllers_declare_catalogued_gates_and_the_core_has_none()
     {
         var registrations = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+        Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(registrations, new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build());
         ArquitecturaBaseMultitenant.Application.Modules.Assistant.AssistantModule.AddAssistantModule(registrations);
         ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.WhatsAppInfrastructureModule.AddWhatsAppModule(registrations, new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build());
         ArquitecturaBaseMultitenant.Api.Modules.WhatsApp.WhatsAppApiModule.AddWhatsAppModule(registrations);

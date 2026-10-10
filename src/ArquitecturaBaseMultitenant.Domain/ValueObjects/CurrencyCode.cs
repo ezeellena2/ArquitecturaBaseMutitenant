@@ -6,6 +6,7 @@ namespace ArquitecturaBaseMultitenant.Domain.ValueObjects;
 /// <summary>Código de moneda con forma ISO 4217; el catálogo decide si existe y está habilitado.</summary>
 public sealed class CurrencyCode : ValueObject
 {
+    public const int Length = 3;
     private CurrencyCode(string value)
     {
         Value = value;
@@ -15,7 +16,7 @@ public sealed class CurrencyCode : ValueObject
 
     public static Result<CurrencyCode> Create(string? code)
     {
-        if (code is not { Length: 3 } || !code.All(IsAsciiLetter))
+        if (code is not { Length: Length } || !code.All(IsAsciiLetter))
         {
             return CurrencyCodeErrors.Invalid;
         }

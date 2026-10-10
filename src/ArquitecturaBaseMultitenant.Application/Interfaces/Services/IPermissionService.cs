@@ -3,6 +3,9 @@ namespace ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 /// <summary>Resuelve permisos efectivos desde las asignaciones de la organización activa.</summary>
 public interface IPermissionService
 {
+    /// <summary>Permisos de roles asignados en la organización, sin proyecciones desde empresas.</summary>
+    Task<IReadOnlyList<string>> GetAssignedOrganizationPermissionsAsync(Guid userId, CancellationToken cancellationToken);
+
     Task<IReadOnlyList<string>> GetOrganizationPermissionsAsync(Guid userId, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<string>> GetCompanyPermissionsAsync(Guid userId, Guid companyId,

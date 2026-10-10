@@ -81,7 +81,7 @@ internal sealed class AuditTrailInterceptor(
             .ToArray();
         RequireGlobalSecurityEvents(context, allChanged);
         // Las asignaciones de rol dejan un cambio por persona y lugar (RoleAssignmentTrail), no uno por asignación.
-        var changed = allChanged.Where(entry => entry.Entity is not (PlatformSettings or TenantFeature or RoleAssignment))
+        var changed = allChanged.Where(entry => entry.Entity is not (PlatformSettings or TenantFeature or RoleAssignment or IGlobalSecurityAudited))
             .ToArray();
         if (changed.Length == 0 && roleChanges.Count == 0)
         {
@@ -148,6 +148,14 @@ internal sealed class AuditTrailInterceptor(
     private static void RequireGlobalSecurityEvents(DbContext context,
         IReadOnlyCollection<EntityEntry<IAuditable>> changed)
     {
+        foreach (var global in changed.Select(entry => entry.Entity).OfType<IGlobalSecurityAudited>())
+        {
+            if (!context.ChangeTracker.Entries<SecurityEvent>().Any(entry => entry.State == EntityState.Added
+                && entry.Entity.Type == global.SecurityEventType
+                && entry.Entity.TargetTenantId == global.SecurityEventTargetTenantId
+                && !string.IsNullOrWhiteSpace(entry.Entity.Reason)))
+                throw new InvalidOperationException("Global data changes require a matching security event with reason in the same transaction.");
+        }
         foreach (var feature in changed.Select(entry => entry.Entity).OfType<TenantFeature>())
         {
             if (!context.ChangeTracker.Entries<SecurityEvent>().Any(entry => entry.State == EntityState.Added

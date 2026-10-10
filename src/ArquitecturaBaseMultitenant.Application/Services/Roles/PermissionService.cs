@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.Authorization;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Roles;
 
@@ -10,8 +11,21 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Roles;
 internal sealed class PermissionService(IRoleReader roles, IRolePermissionCache cache, ITenantContext tenantContext,
     ICompanyMembershipReader memberships) : IPermissionService
 {
-    public Task<IReadOnlyList<string>> GetOrganizationPermissionsAsync(Guid userId,
+    public Task<IReadOnlyList<string>> GetAssignedOrganizationPermissionsAsync(Guid userId,
         CancellationToken cancellationToken) => GetAsync(userId, companyId: null, cancellationToken);
+
+    public async Task<IReadOnlyList<string>> GetOrganizationPermissionsAsync(Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var granted = new SortedSet<string>(await GetAssignedOrganizationPermissionsAsync(userId, cancellationToken), StringComparer.Ordinal);
+        if (tenantContext.TenantId is null || tenantContext.TenantKind != TenantKind.Business) return [.. granted];
+        foreach (var company in await memberships.ListActiveForUserAsync(userId, cancellationToken))
+        {
+            var companyPermissions = await GetAsync(userId, company.CompanyId, cancellationToken);
+            granted.UnionWith(companyPermissions.Intersect(Permissions.OrganizationProjectedFromCompany, StringComparer.Ordinal));
+        }
+        return [.. granted];
+    }
 
     public Task<IReadOnlyList<string>> GetCompanyPermissionsAsync(Guid userId, Guid companyId,
         CancellationToken cancellationToken)

@@ -549,6 +549,9 @@ public sealed class ProfileServiceTests
     private sealed class StubPermissions(IReadOnlyList<string>? organization = null,
         IReadOnlyDictionary<Guid, IReadOnlyList<string>>? companies = null) : IPermissionService
     {
+        public Task<IReadOnlyList<string>> GetAssignedOrganizationPermissionsAsync(Guid userId, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<string>>(organization ?? []);
+
         public Task<IReadOnlyList<string>> GetOrganizationPermissionsAsync(Guid userId, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<string>>(organization ?? []);
         public Task<IReadOnlyList<string>> GetCompanyPermissionsAsync(Guid userId, Guid companyId,

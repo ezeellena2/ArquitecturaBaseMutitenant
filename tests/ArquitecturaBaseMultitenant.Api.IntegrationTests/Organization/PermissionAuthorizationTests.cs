@@ -105,6 +105,8 @@ public sealed class PermissionAuthorizationTests
 
     private sealed class TestPermissions(bool organizationGrant, bool companyGrant) : IPermissionService
     {
+        public Task<IReadOnlyList<string>> GetAssignedOrganizationPermissionsAsync(Guid userId, CancellationToken ct) => Task.FromResult<IReadOnlyList<string>>([]);
+
         public Task<IReadOnlyList<string>> GetOrganizationPermissionsAsync(Guid userId, CancellationToken ct) => Task.FromResult<IReadOnlyList<string>>([]);
         public Task<IReadOnlyList<string>> GetCompanyPermissionsAsync(Guid userId, Guid companyId, CancellationToken ct) => Task.FromResult<IReadOnlyList<string>>([]);
         public Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> GetPermissionsByCompanyAsync(Guid userId, CancellationToken ct) =>

@@ -104,6 +104,9 @@ public sealed class RoleServiceTests
 
     internal sealed class FakePermissionService : IPermissionService
     {
+        public Task<IReadOnlyList<string>> GetAssignedOrganizationPermissionsAsync(Guid userId, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<string>>([]);
+
         public Task<IReadOnlyList<string>> GetOrganizationPermissionsAsync(Guid userId, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<string>>([]);
         public Task<IReadOnlyList<string>> GetCompanyPermissionsAsync(Guid userId, Guid companyId, CancellationToken cancellationToken) =>

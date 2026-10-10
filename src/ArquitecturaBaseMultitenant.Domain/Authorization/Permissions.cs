@@ -77,6 +77,10 @@ public static class Permissions
     public static IReadOnlyCollection<string> CompanyScoped { get; } =
     [Company.Members.Read, Company.Members.Manage];
 
+    /// <summary>Permisos de organización que una asignación empresarial activa puede aportar.</summary>
+    public static IReadOnlyCollection<string> OrganizationProjectedFromCompany { get; } =
+    [Assistant.Use];
+
     public static IReadOnlyCollection<string> All { get; } =
     [.. OrganizationScoped, .. CompanyScoped];
 }
