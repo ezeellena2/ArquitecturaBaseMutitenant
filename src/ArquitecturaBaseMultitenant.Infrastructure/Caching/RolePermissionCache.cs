@@ -32,5 +32,5 @@ internal sealed class RolePermissionCache(HybridCache cache, IServiceScopeFactor
         await cache.RemoveAsync(CacheKey(tenantId, roleId), cancellationToken);
 
     private static string CacheKey(Guid tenantId, Guid roleId) =>
-        CacheKeys.Tenant(tenantId, "role-permissions:" + roleId.ToString("N", System.Globalization.CultureInfo.InvariantCulture));
+        CacheKeys.Tenant(tenantId, "role-permissions:v2:" + roleId.ToString("N", System.Globalization.CultureInfo.InvariantCulture));
 }

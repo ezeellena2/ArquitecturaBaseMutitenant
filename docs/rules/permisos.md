@@ -23,7 +23,7 @@
   1. se declara en `Permissions.cs` (organización y empresa), `PersonalPermissions.cs` (`personal.*`) o `PlatformPermissions.cs` (`platform.*`), y en su lista `All` / `OrganizationScoped` / `CompanyScoped` (el personal y el de plataforma, en su `All`);
   2. lleva `Permission.<código>` y `PermissionDescription.<código>` en `Permissions.resx` y `.en.resx`;
   3. el seed se lo da a TenantAdmin (o CompanyAdmin, si es de empresa; o al operador técnico inicial, si es `platform.*`); uno `personal.*` no va al seed ni a ningún rol, porque la persona lo tiene implícito en su espacio personal;
-  4. cuando cambian los permisos de un rol, se llama a `IPermissionService.InvalidateRoleAsync`.
+  4. cuando cambian los permisos de un rol por el servicio, se llama a `IPermissionService.InvalidateRoleAsync` después del commit. Si cambia una plantilla de `SystemRoles`, también se entrega una migración nueva que actualiza los roles de sistema persistidos con nombre, alcance y empresa esperados en cada Business, respetando RLS; no modifica roles personalizados ni repara otras corrupciones. Se agregan sólo tokens faltantes, sin deduplicar los restantes. La migración y el namespace versionado de `RolePermissionCache` se despliegan juntos, antes del tráfico y con reinicio de las instancias anteriores ([receta](../guides/permiso-nuevo.md)).
 
 ## Prohibido
 - `[Authorize(Roles = …)]`, `[Authorize(Policy = …)]` a mano, o preguntar por el rol en el código.
