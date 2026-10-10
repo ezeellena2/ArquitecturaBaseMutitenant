@@ -49,6 +49,21 @@ Evidencia local: `.local/reviews/e8b-contract/t01-{manifest.json,files.json,spec
 
 Ninguna necesidad pendiente al congelar T01. Durante Parte 2 se registra aquí cualquier cambio necesario antes de coordinarlo por el usuario. Eliminar la conducta 501 no autoriza alterar unilateralmente el JSON congelado o los tipos Front.
 
+### CC01 — modelos y precios para configuración Business
+
+**Estado: propuesta pendiente de coordinación por el usuario; no aplicada al contrato congelado.** Integración transmitió el hallazgo Front T12/D19 el 10/10 UTC; la raíz confirmó las firmas y permisos actuales.
+
+`GET /api/organization/assistant/settings` exige assistant.configure y devuelve sólo modelId. `GET /api/organization/assistant` exige assistant.use, ofrece únicamente Id/Name y filtra el modo guardado. El catálogo Platform exige acceso Platform. Por eso Config-Org no puede mostrar precios ni opciones del modo que se está preparando antes de guardar, y una persona con configure sin use no tiene una lectura adecuada.
+
+Propuesta concreta mínima: agregar a **OrganizationAssistantSettingsResponse**, conservando todos sus miembros actuales, `platformKeyModels: AssistantModelPriceResponse[]` y `ownKeyModels: AssistantModelPriceResponse[]`. Se reutiliza el DTO de catálogo ya publicado (Id, Name, Provider, ProviderModelId, InputPricePerMillion, OutputPricePerMillion, IsActive, Version); ambos precios conservan AssistantMoney/Money. Las listas son siempre arrays, vacíos cuando no hay elegibles, independientes del modo guardado:
+
+- PlatformKey: sólo modelos activos, compatibles y permitidos por Plataforma.
+- OwnKey: todos los modelos activos y compatibles si allowOwnKey; array vacío si la política lo impide.
+
+La lectura conserva Business + módulo efectivo + assistant.configure; no exige assistant.use ni llama proveedor. No agrega ruta, permiso o secreto, ni cambia el modelo guardado al consultar opciones. Front puede filtrar el borrador de modo con estos datos reales sin inventar catálogo/precios o consultar Platform.
+
+Si el usuario coordina este delta, actualizar contrato/modelo/ejemplos y tipos B/F, con nuevos hashes y commits. Verificar configure-sin-use, 401/403, aislamiento/política/modelo inactivo o incompatible, precios y ausencia de claves; preservar las 120 rutas E8. T02 y tareas independientes continúan. La compatibilidad integral E8b queda pendiente de resolver CC01.
+
 ## Pase a Back, Front e Integración
 
 Back puede continuar T02–T09 automáticamente según la autorización posterior registrada. Front verifica los commits y este informe antes de implementar su Parte 2b; cada chat toca sólo su repositorio desde el congelamiento. No se enviaron mensajes a otros chats.
