@@ -2,14 +2,25 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 /// <summary>Rechecks the current actor, live gate and effective permissions on every internal execution.</summary>
 internal sealed class AssistantAccessPolicy(ICurrentUser user, AssistantSessionPolicy session, IFeatureService features,
-    IPermissionService organization, IPlatformPermissionService platform)
+    IPermissionService organization, IPlatformPermissionService platform, IAssistantNoticeReader notices)
 {
     internal Access? CurrentAccess => user.Access;
+
+    // Aceptar el primer aviso requiere CanUseAsync. Sólo la vía de datos/ejecución exige consentimiento vigente.
+    internal async Task<bool> CanExecuteAsync(Access? access, IReadOnlyList<string> permissions,
+        Guid? companyId, CancellationToken ct)
+    {
+        if (!await CanUseAsync(access, permissions, companyId, ct) || user.UserId is not { } owner) return false;
+        var version = notices.CurrentVersion;
+        return await notices.ExistsAsync(owner, version, ct)
+            && string.Equals(version, notices.CurrentVersion, StringComparison.Ordinal);
+    }
 
     internal async Task<bool> CanUseAsync(Access? access, IReadOnlyList<string> permissions,
         Guid? companyId, CancellationToken ct)

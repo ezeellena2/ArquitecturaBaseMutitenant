@@ -34,7 +34,7 @@ internal abstract class AssistantTool(AssistantAccessPolicy policy) : IAssistant
     }, SchemaOptions);
 
     public Task<bool> IsAvailableAsync(CancellationToken cancellationToken) =>
-        AccessPolicy.CanUseAsync(Access, Permissions, null, cancellationToken);
+        AccessPolicy.CanExecuteAsync(Access, Permissions, null, cancellationToken);
 
     public async Task<Result<AssistantToolData>> ExecuteAsync(JsonElement arguments, CancellationToken cancellationToken)
     {
@@ -49,8 +49,8 @@ internal abstract class AssistantTool(AssistantAccessPolicy policy) : IAssistant
 
     private async Task<Error?> AuthorizeAsync(Guid? companyId, CancellationToken ct)
     {
-        if (!await AccessPolicy.CanUseAsync(Access, Permissions, null, ct)) return AssistantErrors.QuickQueryNotAvailable;
-        if (companyId is { } company && !await AccessPolicy.CanUseAsync(Access, Permissions, company, ct))
+        if (!await AccessPolicy.CanExecuteAsync(Access, Permissions, null, ct)) return AssistantErrors.QuickQueryNotAvailable;
+        if (companyId is { } company && !await AccessPolicy.CanExecuteAsync(Access, Permissions, company, ct))
             return Domain.Tenancy.CompanyErrors.NotFound;
         return null;
     }

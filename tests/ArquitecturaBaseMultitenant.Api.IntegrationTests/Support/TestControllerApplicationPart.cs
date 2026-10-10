@@ -28,5 +28,6 @@ internal sealed class TestControllerApplicationPart : ApplicationPart, IApplicat
         typeof(IdempotencyTestController).GetTypeInfo(),
         typeof(AuthPipelineProbeController).GetTypeInfo(),
         typeof(FeatureProbeController).GetTypeInfo(),
+        typeof(ExecutionActorProbeController).GetTypeInfo(),
     ];
 }

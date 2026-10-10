@@ -7,7 +7,9 @@ using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
+using ArquitecturaBaseMultitenant.Infrastructure.RequestContext;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -41,8 +43,17 @@ internal static class PersistenceRegistration
 
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddScoped<TenantContext>(provider => new TenantContext(() =>
-            provider.GetRequiredService<ApplicationDbContext>().Database.CurrentTransaction is not null));
+        services.AddHttpContextAccessor();
+        services.AddScoped<ExecutionActorContext>(provider => new ExecutionActorContext(
+            () => provider.GetRequiredService<IHttpContextAccessor>().HttpContext is not null,
+            () => provider.GetRequiredService<TenantContext>().HasBoundTenant,
+            () => provider.GetRequiredService<ApplicationDbContext>().Database.CurrentTransaction is not null));
+        services.AddScoped<IExecutionActorContext>(provider => provider.GetRequiredService<ExecutionActorContext>());
+        services.AddScoped<IExecutionActorScope>(provider => provider.GetRequiredService<ExecutionActorContext>());
+        services.AddScoped<IExecutionActorFactory, ExecutionActorFactory>();
+        services.AddScoped<TenantContext>(provider => new TenantContext(
+            () => provider.GetRequiredService<ApplicationDbContext>().Database.CurrentTransaction is not null,
+            () => provider.GetRequiredService<IExecutionActorContext>().Actor));
         services.AddScoped<ITenantContext>(provider => provider.GetRequiredService<TenantContext>());
         services.AddScoped<ITenantScope>(provider => provider.GetRequiredService<TenantContext>());
         services.AddScoped<ITenantAccessInitializer>(provider => provider.GetRequiredService<TenantContext>());

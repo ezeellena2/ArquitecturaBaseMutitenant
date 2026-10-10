@@ -86,6 +86,7 @@ public sealed class AssistantInvitationHydrationTests(ApiFactory factory)
         using var scope = host.Services.CreateScope();
         var services = scope.ServiceProvider;
         services.GetRequiredService<ITenantAccessInitializer>().SetFromAccess(tenant, TenantKind.Business);
+        await AssistantExecutionActorTests.AcceptNoticeAsync(services);
         await verify(services.GetRequiredService<IEnumerable<IAssistantTool>>().Single(tool => tool.Key == "org_invitations"));
         Assert.Equal(0, counter.Calls);
     }

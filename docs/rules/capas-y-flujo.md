@@ -49,6 +49,20 @@
 - Un servicio que llama a métodos que escriben de otro servicio (lo compartido baja a un helper).
 - Un helper con un sufijo que no está en la tabla, o una fila de la tabla que ya no usa nadie.
 
+## Actor neutral de background
+
+Los puertos `IExecutionActorContext`, `IExecutionActorScope` e `IExecutionActorFactory` viven en `Application/Interfaces/Integrations/Request`; sus adaptadores, en `Infrastructure/RequestContext`. El núcleo no importa módulos para representar al actor. `ExecutionActor` conserva los cinco campos de T01 y agrega propiedades opcionales `TenantKind` y `SessionStartedAtUtc`, sin otra firma, token ni principal.
+
+La captura usa `ICurrentUser` y el contexto de acceso firmado que estableció el servidor. Una operación privada previamente autorizada conserva owner/access/organización; el worker entrega ese binding a `RevalidateAsync`. La factory relee la cuenta, el estado de identidad y el índice global real de membresías antes de entrar al scope, resolver dependencias privadas o abrir UoW. Consumer exige organización Personal activa; Business, Business activa y membresía activa. Plataforma exige operador exclusivo, sin membresías ni organización. Cultura y zona salen de la cuenta y existen en sus catálogos; una preferencia histórica deshabilitada sigue siendo legible. No se modifica `CultureInfo.CurrentCulture`.
+
+La preparación async devuelve el actor. El caller entra **síncronamente** con `using (actorScope.Enter(actor))` y recién entonces resuelve servicios privados y ejecuta el caso. `Enter` es una primitiva técnica para callers confiables, no una autorización ni una capability. No admite request HTTP, tenant base/técnico activo ni transacción abierta. El actor nunca se obtiene de body, header, prompt o argumento de herramienta. HTTP conserva su identidad firmada; `ICurrentUser` usa el actor sólo cuando no hay `HttpContext`, y sin ambos deja la identidad vacía.
+
+El scope usa `AsyncLocal`, admite anidación y restaura en orden inverso. Dispose revoca también los flujos que heredaron el scope; Dispose del contenedor revoca el contexto. Cada tarea independiente entra y sale de su propio scope. `TenantContext` sigue siendo el canónico para filtros/RLS/UoW y proyecta el binding del actor sin cambiar su inicialización HTTP. `ITenantScope.Enter(Guid)` conserva kind null: no habilita Consumer/Business ni reemplaza un actor activo.
+
+Cada fase/herramienta vuelve a autorizar con las reglas productivas: estado de cuenta y organización, membresía vigente sin cache, legales, feature/emergencia y permisos. La captura no concede permisos. La vía de datos/ejecución exige además la versión vigente del aviso IA antes/después de la lectura; aceptar el primer aviso usa la autorización de acceso sin exigir un aviso previo, evitando el círculo de aceptación. State informativo y stubs conservan sus límites.
+
+El inventario cerrado de `IdentityAccessTests` incluye dos consumidores legítimos nuevos de `IUserTenantAccessReader`: la factory neutral necesita verificar el binding antes del acceso privado y `AssistantSessionPolicy` necesita releer membresía en cada fase. No se amplía la excepción de acceso directo a Identity ni se admite un namespace entero.
+
 ## Copiá de
 - El área Roles completa (E4): `Domain/Authorization/Role.cs`, `Application/Services/Roles/RoleService.cs`, `Infrastructure/Persistence/Readers/RoleReader.cs`, `Api/Controllers/Organization/RolesController.cs`.
 - La receta: [`docs/guides/agregar-un-area.md`](../guides/agregar-un-area.md) (E4).
@@ -59,6 +73,7 @@
 - `ApplicationPublicApiTests` (E1): sin `IQueryable` ni `Expression`.
 - `ApplicationServicesTests` (E1): cada servicio tiene su interfaz, cada helper termina con un sufijo de la tabla y cada sufijo de la tabla se usa. `ServiceDependencyCountTests` (E1), `MinimalApiRoutesTests` (E0).
 - `DependencyInjectionTests` (E6): cada clase de `Services` se registra una sola vez, y Application registra y valida sus opciones. `ServiceProviderValidationTests` (E6): `ApiFactory` construye cada registro al arrancar (`ValidateOnBuild`).
+- `ExecutionActorContextTests` (E8b T05a): restauración/anidación, tareas paralelas, cancelación/error, revocación de flujos heredados y guardas neutrales. `AssistantExecutionActorTests`, `AssistantExecutionActorBusinessTests` y `AssistantExecutionActorSecurityTests`: DI/RLS y cuentas/membresías/permisos reales con Docker, scopes base/transacción, operador exclusivo y revocaciones entre fases. `IdentityAccessTests`: inventario exacto de lectores globales.
 
 ## Detalle
 [backend.md §3–§5 y §7](../architecture/backend.md#3-capas-y-dependencias)

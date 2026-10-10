@@ -1,18 +1,25 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Application.Models.Request;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 
 /// <summary>Contexto scoped del acceso activo y del alcance técnico temporal.</summary>
-internal sealed class TenantContext(Func<bool>? hasActiveTransaction = null) : ITenantContext, ITenantScope, ITenantAccessInitializer
+internal sealed class TenantContext(Func<bool>? hasActiveTransaction = null,
+    Func<ExecutionActor?>? executionActor = null) : ITenantContext, ITenantScope, ITenantAccessInitializer
 {
     private readonly Func<bool> _hasActiveTransaction = hasActiveTransaction ?? (() => false);
     private Scope? _activeScope;
 
-    public Guid? TenantId { get; private set; }
+    private Guid? _tenantId;
+    private TenantKind? _tenantKind;
 
-    public TenantKind? TenantKind { get; private set; }
+    internal bool HasBoundTenant => _tenantId is not null || _activeScope is not null;
+
+    public Guid? TenantId { get => _tenantId ?? executionActor?.Invoke()?.TenantId; private set => _tenantId = value; }
+
+    public TenantKind? TenantKind { get => HasBoundTenant ? _tenantKind : executionActor?.Invoke()?.TenantKind; private set => _tenantKind = value; }
 
     public Guid RequiredTenantId => TenantId ??
         throw new InvalidOperationException("The active access has no tenant.");
@@ -29,7 +36,7 @@ internal sealed class TenantContext(Func<bool>? hasActiveTransaction = null) : I
             throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown tenant kind.");
         }
 
-        if (_activeScope is not null || TenantId is not null || _hasActiveTransaction())
+        if (_activeScope is not null || TenantId is not null || executionActor?.Invoke() is not null || _hasActiveTransaction())
         {
             throw new InvalidOperationException("The active access cannot change within this scope.");
         }
@@ -50,6 +57,11 @@ internal sealed class TenantContext(Func<bool>? hasActiveTransaction = null) : I
         if (_hasActiveTransaction())
         {
             throw new InvalidOperationException("Enter must run before opening a transaction.");
+        }
+
+        if (executionActor?.Invoke() is not null)
+        {
+            throw new InvalidOperationException("A technical tenant scope cannot replace an execution actor binding.");
         }
 
         if (TenantId is { } currentTenantId && currentTenantId != tenantId)

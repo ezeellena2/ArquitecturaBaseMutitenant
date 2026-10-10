@@ -59,6 +59,7 @@ public sealed class AssistantToolsExecutionTests(ApiFactory factory)
         using var scope = host.Services.CreateScope();
         var provider = scope.ServiceProvider;
         provider.GetRequiredService<ITenantAccessInitializer>().SetFromAccess(tenantId, TenantKind.Business);
+        await AssistantExecutionActorTests.AcceptNoticeAsync(provider);
         var tool = provider.GetRequiredService<IEnumerable<IAssistantTool>>().Single(row => row.Key == "org_company_members");
         Assert.True((await tool.ExecuteAsync(Args(new { companyId = company, page = 1, pageSize = 20 }), AssistantTestData.Ct)).IsSuccess);
         Assert.Equal(CompanyErrors.NotFound.Code, (await tool.ExecuteAsync(Args(new { companyId = other, page = 1, pageSize = 20 }), AssistantTestData.Ct)).Error.Code);
@@ -99,6 +100,7 @@ public sealed class AssistantToolsExecutionTests(ApiFactory factory)
         using var scope = host.Services.CreateScope();
         var services = scope.ServiceProvider;
         services.GetRequiredService<ITenantAccessInitializer>().SetFromAccess(own, TenantKind.Business);
+        await AssistantExecutionActorTests.AcceptNoticeAsync(services);
         var tools = services.GetRequiredService<IEnumerable<IAssistantTool>>().ToDictionary(tool => tool.Key);
         var owners = await services.GetRequiredService<IAssistantQuickService>().ExecuteAsync("owners", AssistantTestData.Ct);
         Assert.True(owners.IsSuccess, owners.IsFailure ? owners.Error.Code : "");
@@ -152,6 +154,7 @@ public sealed class AssistantToolsExecutionTests(ApiFactory factory)
         using var scope = host.Services.CreateScope();
         var services = scope.ServiceProvider;
         services.GetRequiredService<ITenantAccessInitializer>().SetFromAccess(personal, TenantKind.Personal);
+        await AssistantExecutionActorTests.AcceptNoticeAsync(services);
         var quick = services.GetRequiredService<IAssistantQuickService>();
         var organizations = await quick.ExecuteAsync("my_organizations", AssistantTestData.Ct);
         Assert.True(organizations.IsSuccess, organizations.IsFailure ? organizations.Error.Code : "");
@@ -191,6 +194,7 @@ public sealed class AssistantToolsExecutionTests(ApiFactory factory)
         }));
         using var scope = host.Services.CreateScope();
         var services = scope.ServiceProvider;
+        await AssistantExecutionActorTests.AcceptNoticeAsync(services);
         var quick = services.GetRequiredService<IAssistantQuickService>();
         foreach (var key in new[] { "pending_organizations", "pending_recoveries", "today_security" })
         {

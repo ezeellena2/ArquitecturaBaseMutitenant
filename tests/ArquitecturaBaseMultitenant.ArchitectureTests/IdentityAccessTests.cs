@@ -7,7 +7,7 @@ namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 public sealed class IdentityAccessTests
 {
     [Fact]
-    public void Global_access_reader_is_consumed_only_by_access_selection_tenant_validation_seed_and_me()
+    public void Global_access_reader_has_a_closed_inventory_for_signed_access_background_binding_and_live_session_validation()
     {
         var source = Path.Combine(SolutionRoot.FullPath, "src");
         var consumers = Directory.EnumerateFiles(source, "*.cs", SearchOption.AllDirectories)
@@ -22,9 +22,11 @@ public sealed class IdentityAccessTests
             .ToArray();
 
         Assert.Equal([
+            "ArquitecturaBaseMultitenant.Application/Modules/Assistant/Services/AssistantSessionPolicy.cs",
             "ArquitecturaBaseMultitenant.Application/Services/Auth/ConnectService.cs",
             "ArquitecturaBaseMultitenant.Application/Services/Profile/ProfileSnapshotBuilder.cs",
             "ArquitecturaBaseMultitenant.Infrastructure/Caching/AccessStatusCache.cs",
+            "ArquitecturaBaseMultitenant.Infrastructure/RequestContext/ExecutionActorFactory.cs",
         ], consumers.Order(StringComparer.Ordinal));
     }
 

@@ -53,6 +53,7 @@ public sealed class AssistantAuthorizationTests(ApiFactory factory)
             services.Replace(ServiceDescriptor.Singleton<ICurrentUser>(new ToolActor(admin.UserId)))));
         using var directScope = directHost.Services.CreateScope();
         directScope.ServiceProvider.GetRequiredService<ITenantAccessInitializer>().SetFromAccess(tenantId, TenantKind.Business);
+        await AssistantExecutionActorTests.AcceptNoticeAsync(directScope.ServiceProvider);
         var directTool = directScope.ServiceProvider.GetRequiredService<IEnumerable<IAssistantTool>>().Single(tool => tool.Key == "org_company_members");
         var directArguments = JsonSerializer.SerializeToElement(new { companyId, page = 1, pageSize = 20 });
         Assert.True((await directTool.ExecuteAsync(directArguments, AssistantTestData.Ct)).IsSuccess);

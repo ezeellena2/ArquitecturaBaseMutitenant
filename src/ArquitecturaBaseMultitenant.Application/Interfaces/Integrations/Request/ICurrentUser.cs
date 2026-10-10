@@ -2,7 +2,7 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 
-/// <summary>Identidad de la petición actual; un worker sin sesión expone valores nulos.</summary>
+/// <summary>Identidad firmada de la petición o actor confiable de background; sin ninguno expone valores nulos.</summary>
 public interface ICurrentUser
 {
     Guid? UserId { get; }

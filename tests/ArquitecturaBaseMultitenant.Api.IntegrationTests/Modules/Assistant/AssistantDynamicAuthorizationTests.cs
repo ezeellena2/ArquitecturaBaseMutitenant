@@ -51,6 +51,7 @@ public sealed class AssistantDynamicAuthorizationTests(ApiFactory factory)
         using var scope = host.Services.CreateScope();
         var provider = scope.ServiceProvider;
         provider.GetRequiredService<ITenantAccessInitializer>().SetFromAccess(fixture.TenantId, TenantKind.Business);
+        await AssistantExecutionActorTests.AcceptNoticeAsync(provider);
         var tool = Tool(provider, "help_article");
         var before = await tool.ExecuteAsync(Args(new { topicKey = "business.roles" }), Ct);
         Assert.Single(Assert.IsType<AssistantHelpToolData>(before.Value).Articles);
@@ -95,6 +96,7 @@ public sealed class AssistantDynamicAuthorizationTests(ApiFactory factory)
         using var scope = host.Services.CreateScope();
         var provider = scope.ServiceProvider;
         provider.GetRequiredService<ITenantAccessInitializer>().SetFromAccess(tenant, TenantKind.Personal);
+        await AssistantExecutionActorTests.AcceptNoticeAsync(provider);
         var tool = Tool(provider, "help_article");
         var before = await tool.ExecuteAsync(Args(new { topicKey = "whatsapp.signin" }), Ct);
         Assert.Single(Assert.IsType<AssistantHelpToolData>(before.Value).Articles);
@@ -152,6 +154,7 @@ public sealed class AssistantDynamicAuthorizationTests(ApiFactory factory)
         using var scope = host.Services.CreateScope();
         var provider = scope.ServiceProvider;
         provider.GetRequiredService<ITenantAccessInitializer>().SetFromAccess(tenant, TenantKind.Personal);
+        await AssistantExecutionActorTests.AcceptNoticeAsync(provider);
         Assert.False(await provider.GetRequiredService<IFeatureService>().IsEnabledAsync("whatsapp", Ct));
         var channel = provider.GetRequiredService<IEnumerable<ILoginCodeChannel>>().Single(row => row.Key == "whatsapp");
         Assert.Equal(enabled, channel.IsAvailable);
@@ -221,6 +224,7 @@ public sealed class AssistantDynamicAuthorizationTests(ApiFactory factory)
         using var scope = host.Services.CreateScope();
         var provider = scope.ServiceProvider;
         provider.GetRequiredService<ITenantAccessInitializer>().SetFromAccess(tenant, TenantKind.Business);
+        await AssistantExecutionActorTests.AcceptNoticeAsync(provider);
         var tool = Tool(provider, "org_pending");
         var before = await tool.ExecuteAsync(Args(new { }), Ct);
         Assert.Equal(subject, Assert.Single(Assert.IsType<AssistantPendingToolData>(before.Value).Pending).Subject);
@@ -270,6 +274,7 @@ public sealed class AssistantDynamicAuthorizationTests(ApiFactory factory)
         using var scope = host.Services.CreateScope();
         var provider = scope.ServiceProvider;
         provider.GetRequiredService<ITenantAccessInitializer>().SetFromAccess(fixture.TenantId, TenantKind.Business);
+        await AssistantExecutionActorTests.AcceptNoticeAsync(provider);
         var tool = Tool(provider, "org_pending");
         Assert.NotNull(Assert.Single(Assert.IsType<AssistantPendingToolData>((await tool.ExecuteAsync(Args(new { }), Ct)).Value).Pending).Subject);
         pause.Arm();

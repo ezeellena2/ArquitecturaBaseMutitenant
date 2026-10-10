@@ -36,7 +36,7 @@ internal sealed class HelpArticleTool(AssistantAccessPolicy policy, IHelpArticle
         {
             var metadata = help.Catalog.SingleOrDefault(row => row.TopicKey == article.TopicKey && row.RouteKey == article.RouteKey);
             if (metadata is null || !metadata.Accesses.Contains(me.Access)
-                || !await AccessPolicy.CanUseAsync(me.Access, metadata.Permission is { } permission ? [permission] : [], null, ct)
+                || !await AccessPolicy.CanExecuteAsync(me.Access, metadata.Permission is { } permission ? [permission] : [], null, ct)
                 || metadata.Module is { } module && !await availability.IsAvailableAsync(module, ct)) continue;
             authorized.Add(new AssistantHelpArticleResponse(article.TopicKey, article.Title, article.Text));
         }
