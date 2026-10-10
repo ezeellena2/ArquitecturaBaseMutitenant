@@ -13,15 +13,17 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 /// Expone a MVC los controllers exclusivos de pruebas de rutas, accesos, aislamiento e idempotencia.
 /// Permite ejercitar el pipeline HTTP real sin sumar esas rutas a la API de producción.
 /// </summary>
-internal sealed class TestControllerApplicationPart : ApplicationPart, IApplicationPartTypeProvider
+internal sealed partial class TestControllerApplicationPart : ApplicationPart, IApplicationPartTypeProvider
 {
     public override string Name => nameof(TestControllerApplicationPart);
 
-    public IEnumerable<TypeInfo> Types =>
+    public IEnumerable<TypeInfo> Types => ControllerTypes();
+
+    private static List<TypeInfo> ControllerTypes()
+    {
+        List<TypeInfo> types =
     [
         typeof(TestController).GetTypeInfo(),
-        typeof(WhatsAppErrorProbeController).GetTypeInfo(),
-        typeof(WhatsAppQuotaProbeController).GetTypeInfo(),
         typeof(BusinessOnlyController).GetTypeInfo(),
         typeof(PublicSiteProbeController).GetTypeInfo(),
         typeof(WidgetsController).GetTypeInfo(),
@@ -30,4 +32,9 @@ internal sealed class TestControllerApplicationPart : ApplicationPart, IApplicat
         typeof(FeatureProbeController).GetTypeInfo(),
         typeof(ExecutionActorProbeController).GetTypeInfo(),
     ];
+        AddWhatsAppControllers(types);
+        return types;
+    }
+
+    static partial void AddWhatsAppControllers(List<TypeInfo> types);
 }

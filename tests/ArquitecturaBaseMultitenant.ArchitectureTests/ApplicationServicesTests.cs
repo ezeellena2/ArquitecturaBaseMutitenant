@@ -87,12 +87,15 @@ public sealed partial class ApplicationServicesTests
     /// Un helper es una clase de Services que arma el contenedor y no termina en Service. Así no entran los modelos
     /// internos (<c>IssuedLoginCode</c>), los records, las clases estáticas ni los <c>*Registration</c>.
     /// </summary>
+    static partial void AddAssistantServices(IServiceCollection services);
+    static partial void AddWhatsAppServices(IServiceCollection services);
+
     private static Type[] Helpers()
     {
         var registrations = new ServiceCollection();
         registrations.AddApplication();
-        ArquitecturaBaseMultitenant.Application.Modules.Assistant.AssistantModule.AddAssistantModule(registrations);
-        ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.WhatsAppModule.AddWhatsAppModule(registrations);
+        AddAssistantServices(registrations);
+        AddWhatsAppServices(registrations);
 
         return
         [

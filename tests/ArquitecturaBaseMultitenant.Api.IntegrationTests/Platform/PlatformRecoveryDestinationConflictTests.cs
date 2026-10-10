@@ -2,9 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text.Json;
-using ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
@@ -23,29 +21,26 @@ using Microsoft.Extensions.Hosting;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Platform;
 
-public sealed class PlatformRecoveryDestinationConflictTests
+public sealed partial class PlatformRecoveryDestinationConflictTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    [Fact]
-    public Task Approval_rejects_a_phone_acquired_by_the_recovering_account_after_submission() =>
-        AssertConflictAsync(LoginMethodType.Phone, own: true);
-
     [Theory]
-    [InlineData(LoginMethodType.Phone, false)]
     [InlineData(LoginMethodType.Email, true)]
     [InlineData(LoginMethodType.Email, false)]
     [InlineData(LoginMethodType.Google, true)]
     [InlineData(LoginMethodType.Google, false)]
     public Task Approval_rejects_an_acquired_destination_without_changing_identity_or_the_pending_request(
-        LoginMethodType occupiedType, bool own) => AssertConflictAsync(occupiedType, own);
+        LoginMethodType occupiedType, bool own) => AssertConflictAsync(occupiedType, own, CoreHost, SubmitEmailAsync);
 
-    private static async Task AssertConflictAsync(LoginMethodType occupiedType, bool own)
+    private static async Task AssertConflictAsync(LoginMethodType occupiedType, bool own,
+        Func<ApiFactory, WebApplicationFactory<Program>> createHost,
+        Func<WebApplicationFactory<Program>, HttpClient, string, string, Task> submit)
     {
         // Cada caso tiene su propia base: ningún outbox Phone pendiente interfiere con el pickup de otro caso.
         await using var factory = new ApiFactory();
         await factory.InitializeAsync();
-        await using var app = Host(factory);
+        await using var app = createHost(factory);
         using var person = Client(app);
         var account = await AccountJourney.RegisterAsync(app, person, Ct);
         using var other = Client(app);
@@ -58,7 +53,7 @@ public sealed class PlatformRecoveryDestinationConflictTests
         var destination = occupiedType == LoginMethodType.Phone
             ? "+54911" + RandomNumberGenerator.GetInt32(30000000, 59999999).ToString(System.Globalization.CultureInfo.InvariantCulture)
             : $"recovery-conflict-{Guid.NewGuid():N}@example.test";
-        await SubmitAsync(app, anonymous, destination, account.Email.Value, occupiedType);
+        await submit(app, anonymous, destination, account.Email.Value);
         var original = await RowAsync(platform, destination);
         Assert.Equal("Pending", original.GetProperty("status").GetString());
         var id = original.GetProperty("id").GetGuid();
@@ -95,42 +90,25 @@ public sealed class PlatformRecoveryDestinationConflictTests
         }
     }
 
-    private static WebApplicationFactory<Program> Host(ApiFactory factory) => factory.WithWebHostBuilder(builder => builder
-        .UseEnvironment("Testing")
-        .UseSetting("WhatsApp:PhoneNumberId", "recovery-conflict-number")
-        .UseSetting("WhatsApp:AccessToken", "fixture-token")
-        .UseSetting("WhatsApp:AppSecret", "fixture-secret")
-        .UseSetting("WhatsApp:VerifyToken", "fixture-verify")
-        .UseSetting("WhatsApp:AllowedCountries:0", "AR")
-        .ConfigureTestServices(services =>
-        {
-            services.RemoveAll<IHostedService>();
-            foreach (var sender in services.Where(descriptor => descriptor.ServiceType == typeof(IChannelSender)
-                && descriptor.ImplementationType?.FullName?.Contains(".Modules.WhatsApp.", StringComparison.Ordinal) == true).ToArray())
-                services.Remove(sender);
-            services.AddSingleton<IChannelSender, ForbiddenWhatsAppSender>();
-        }));
+    private static WebApplicationFactory<Program> CoreHost(ApiFactory factory) => factory.WithWebHostBuilder(builder => builder
+        .UseEnvironment("Testing").ConfigureTestServices(services => services.RemoveAll<IHostedService>()));
 
-    private static HttpClient Client(WebApplicationFactory<Program> app) => app.CreateClient(new()
-        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
-
-    private static async Task SubmitAsync(WebApplicationFactory<Program> app, HttpClient client, string destination,
-        string previousEmail, LoginMethodType type)
+    private static async Task SubmitEmailAsync(WebApplicationFactory<Program> app, HttpClient client, string destination,
+        string previousEmail)
     {
         var nonce = Microsoft.AspNetCore.WebUtilities.WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(32));
-        object Body(string? code = null, bool submit = false) => type == LoginMethodType.Phone
-            ? new { phone = new { country = "AR", number = destination }, channel = "whatsapp", nonce, code, previousEmail = submit ? previousEmail : null }
-            : new { email = destination, nonce, code, previousEmail = submit ? previousEmail : null };
+        object Body(string? code = null, bool submit = false) => new { email = destination, nonce, code, previousEmail = submit ? previousEmail : null };
         using var requested = await AccountJourney.PostAsync(client, "/api/account-recovery/code", Body(), Ct);
         Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
-        var code = type == LoginMethodType.Phone
-            ? await WhatsAppIdentityTests.CodeAsync(app.Services, destination)
-            : await PickupCodeReader.ReadAsync(app.Services, destination, Ct);
+        var code = await PickupCodeReader.ReadAsync(app.Services, destination, Ct);
         using var verified = await AccountJourney.PostAsync(client, "/api/account-recovery/verify", Body(code), Ct);
         Assert.Equal(HttpStatusCode.NoContent, verified.StatusCode);
         using var submitted = await AccountJourney.PostAsync(client, "/api/account-recovery", Body(submit: true), Ct);
         Assert.Equal(HttpStatusCode.Accepted, submitted.StatusCode);
     }
+
+    private static HttpClient Client(WebApplicationFactory<Program> app) => app.CreateClient(new()
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
 
     private static async Task OccupyAsync(IServiceProvider services, Guid userId, LoginMethodType type, string destination)
     {
@@ -186,10 +164,4 @@ public sealed class PlatformRecoveryDestinationConflictTests
 
     private sealed record Snapshot(string Recovery, string Methods, string Accounts, string Outbox, string Audit, string Notices);
 
-    private sealed class ForbiddenWhatsAppSender : IChannelSender
-    {
-        public string Key => "whatsapp";
-        public Task SendAsync(string payload, CancellationToken cancellationToken) =>
-            throw new InvalidOperationException("WhatsApp transport is forbidden in recovery conflict tests.");
-    }
 }

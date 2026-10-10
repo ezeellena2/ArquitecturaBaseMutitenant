@@ -10,7 +10,7 @@ namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 /// Comprueba que las ediciones de entidades con versión reciban esa versión en su contrato HTTP. Protege la
 /// detección de cambios simultáneos.
 /// </summary>
-public sealed class VersionedContractTests
+public sealed partial class VersionedContractTests
 {
     [Fact]
     public void Versioned_entity_edits_expose_a_version_in_the_http_contract()
@@ -98,7 +98,7 @@ public sealed class VersionedContractTests
     [Fact]
     public void Composed_version_metadata_requires_a_real_uint_property_on_the_declared_success()
     {
-        Assert.Equal(typeof(uint), VersionType(typeof(ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models.AssistantQuickResponse), "Conversation.Version"));
+        Assert.Equal(typeof(uint), VersionType(typeof(ComposedVersionResponse), "Item.Version"));
         Assert.Null(VersionType(typeof(VersionResponse), "Conversation.Version"));
         Assert.Equal(typeof(string), VersionType(typeof(WrongVersionResponse), "Version"));
         Assert.True(AnswersTheNewVersion(typeof(ComposedProbeController).GetMethod("Valid")!));

@@ -1,17 +1,13 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json.Nodes;
-using ArquitecturaBaseMultitenant.Api.Features;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Contracts;
 
 /// <summary>Contrato E8: rutas exportables, formas congeladas y rechazo sin sesiones cuando falta una prueba o canal.</summary>
 [Collection(ApiTestGroup.Name)]
-public sealed class Etapa8ContractTests(ApiFactory factory)
+public sealed partial class Etapa8ContractTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
     private static readonly object PhoneBody = new { phone = new { country = "AR", number = "11 2345 6789" }, channel = "whatsapp", acceptedTerms = true, nonce = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" };
@@ -79,25 +75,6 @@ public sealed class Etapa8ContractTests(ApiFactory factory)
         Assert.NotNull(problem?["errors"]?["phone"]);
     }
 
-    [Theory]
-    [InlineData(false, false)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public async Task Technical_webhook_requires_its_registered_global_availability(bool installed, bool enabled)
-    {
-        await using var application = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
-        {
-            services.RemoveAll<IInstalledModuleRouteAvailability>();
-            if (installed) services.AddSingleton<IInstalledModuleRouteAvailability>(new Availability(enabled));
-        }));
-        using var client = application.CreateClient(new() { AllowAutoRedirect = false });
-        using var response = await client.GetAsync("/webhooks/whatsapp?hub.mode=subscribe&hub.verify_token=example&hub.challenge=example-challenge", Ct);
-        Assert.Equal(enabled ? HttpStatusCode.Unauthorized : HttpStatusCode.NotFound, response.StatusCode);
-        var problem = await response.Content.ReadFromJsonAsync<JsonObject>(Ct);
-        Assert.Equal(enabled ? "WhatsApp.Webhook.InvalidSignature" : "Http.NotFound", problem?["code"]?.GetValue<string>());
-        Assert.False(response.Headers.Contains("Set-Cookie"));
-    }
-
     [Fact]
     public async Task OpenApi_freezes_contact_shapes_consumer_links_and_bilingual_errors()
     {
@@ -120,8 +97,7 @@ public sealed class Etapa8ContractTests(ApiFactory factory)
         Assert.Equal("There is no account with that number.", phone["en"]!.GetValue<string>());
         var email = Assert.Single(errors, error => error?["code"]?.GetValue<string>() == "Auth.LoginCode.AccountNotFound");
         Assert.Equal(400, email!["status"]!.GetValue<int>()); // FieldErrors conserva el 400 actual, aunque la fábrica base sea NotFound.
-        Assert.NotNull(doc["paths"]!["/webhooks/whatsapp"]!["post"]!["responses"]!["413"]);
-        Assert.DoesNotContain(doc["paths"]!["/webhooks/whatsapp"]!["post"]!["parameters"]!.AsArray(), value => value?["name"]?.GetValue<string>() == "Idempotency-Key");
+        AssertWhatsAppContract(doc);
         foreach (var (path, method) in OriginalE8Operations)
             {
                 var operation = doc["paths"]![path]![method]!;
@@ -131,11 +107,11 @@ public sealed class Etapa8ContractTests(ApiFactory factory)
             }
     }
 
+    static partial void AssertWhatsAppContract(JsonObject document);
+
     // Complete immutable E8 operation inventory: later contract-only routes cannot relax these checks.
     private static readonly (string Path, string Method)[] OriginalE8Operations =
     [
-        ("/webhooks/whatsapp", "get"),
-        ("/webhooks/whatsapp", "post"),
         ("/api/reference-data", "get"),
         ("/api/reference-data/currencies", "get"),
         ("/api/reference-data/countries", "get"),
@@ -271,9 +247,4 @@ public sealed class Etapa8ContractTests(ApiFactory factory)
         ("/api/me", "put"),
     ];
 
-    private sealed class Availability(bool available) : IInstalledModuleRouteAvailability
-    {
-        public string Key => "WhatsApp.Webhook";
-        public bool IsAvailable => available;
-    }
 }

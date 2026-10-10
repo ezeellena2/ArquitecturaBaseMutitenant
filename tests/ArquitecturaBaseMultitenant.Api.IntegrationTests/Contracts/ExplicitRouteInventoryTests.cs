@@ -9,66 +9,14 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Contracts;
 
 /// <summary>Inventario explícito de combinaciones verbo y ruta públicas de la Api.</summary>
 [Collection(ApiTestGroup.Name)]
-public sealed class ExplicitRouteInventoryTests(ApiFactory factory)
+public sealed partial class ExplicitRouteInventoryTests(ApiFactory factory)
 {
-    private static readonly string[] ExpectedRoutes =
+    private static readonly string[] ExpectedRoutes = CreateExpectedRoutes();
+
+    private static string[] CreateExpectedRoutes()
+    {
+        List<string> routes =
     [
-        "GET /api/me/assistant",
-        "POST /api/me/assistant/notice",
-        "GET /api/me/assistant/conversations",
-        "POST /api/me/assistant/conversations",
-        "GET /api/me/assistant/conversations/{id:guid}",
-        "PUT /api/me/assistant/conversations/{id:guid}",
-        "DELETE /api/me/assistant/conversations/{id:guid}",
-        "POST /api/me/assistant/conversations/{id:guid}/messages",
-        "POST /api/me/assistant/conversations/{id:guid}/turns/{turnid:guid}/stop",
-        "POST /api/me/assistant/quick/{key}",
-        "PUT /api/me/assistant/conversations/{id:guid}/messages/{messageid:guid}/feedback",
-        "POST /api/me/assistant/conversations/{id:guid}/attachments",
-        "GET /api/me/assistant/conversations/{id:guid}/attachments/{attachmentid:guid}",
-        "DELETE /api/me/assistant/conversations/{id:guid}/attachments/{attachmentid:guid}",
-        "GET /api/me/assistant/conversations/{id:guid}/export",
-        "GET /api/organization/assistant",
-        "POST /api/organization/assistant/notice",
-        "GET /api/organization/assistant/conversations",
-        "POST /api/organization/assistant/conversations",
-        "GET /api/organization/assistant/conversations/{id:guid}",
-        "PUT /api/organization/assistant/conversations/{id:guid}",
-        "DELETE /api/organization/assistant/conversations/{id:guid}",
-        "POST /api/organization/assistant/conversations/{id:guid}/messages",
-        "POST /api/organization/assistant/conversations/{id:guid}/turns/{turnid:guid}/stop",
-        "POST /api/organization/assistant/quick/{key}",
-        "PUT /api/organization/assistant/conversations/{id:guid}/messages/{messageid:guid}/feedback",
-        "POST /api/organization/assistant/conversations/{id:guid}/attachments",
-        "GET /api/organization/assistant/conversations/{id:guid}/attachments/{attachmentid:guid}",
-        "DELETE /api/organization/assistant/conversations/{id:guid}/attachments/{attachmentid:guid}",
-        "GET /api/organization/assistant/conversations/{id:guid}/export",
-        "GET /api/platform/assistant",
-        "POST /api/platform/assistant/notice",
-        "GET /api/platform/assistant/conversations",
-        "POST /api/platform/assistant/conversations",
-        "GET /api/platform/assistant/conversations/{id:guid}",
-        "PUT /api/platform/assistant/conversations/{id:guid}",
-        "DELETE /api/platform/assistant/conversations/{id:guid}",
-        "POST /api/platform/assistant/conversations/{id:guid}/messages",
-        "POST /api/platform/assistant/conversations/{id:guid}/turns/{turnid:guid}/stop",
-        "POST /api/platform/assistant/quick/{key}",
-        "PUT /api/platform/assistant/conversations/{id:guid}/messages/{messageid:guid}/feedback",
-        "POST /api/platform/assistant/conversations/{id:guid}/attachments",
-        "GET /api/platform/assistant/conversations/{id:guid}/attachments/{attachmentid:guid}",
-        "DELETE /api/platform/assistant/conversations/{id:guid}/attachments/{attachmentid:guid}",
-        "GET /api/platform/assistant/conversations/{id:guid}/export",
-        "GET /api/organization/assistant/settings",
-        "PUT /api/organization/assistant/settings",
-        "GET /api/organization/assistant/usage",
-        "GET /api/platform/assistant/settings",
-        "PUT /api/platform/assistant/settings",
-        "GET /api/platform/assistant/usage",
-        "GET /api/platform/assistant/models",
-        "POST /api/platform/assistant/models",
-        "PUT /api/platform/assistant/models/{id:guid}",
-        "GET /api/platform/tenants/{tenantid:guid}/assistant/policy",
-        "PUT /api/platform/tenants/{tenantid:guid}/assistant/policy",
         "GET /api/reference-data",
         "GET /api/reference-data/currencies",
         "GET /api/reference-data/countries",
@@ -83,8 +31,6 @@ public sealed class ExplicitRouteInventoryTests(ApiFactory factory)
         "POST /api/auth/login-code/verify",
         "POST /api/auth/login-link/preview",
         "POST /api/auth/login-link/redeem",
-        "GET /webhooks/whatsapp",
-        "POST /webhooks/whatsapp",
         "POST /api/account-recovery/preview",
         "POST /api/account-recovery/code",
         "POST /api/account-recovery/verify",
@@ -212,6 +158,13 @@ public sealed class ExplicitRouteInventoryTests(ApiFactory factory)
         "GET /connect/userinfo",
         "POST /connect/userinfo",
     ];
+        AddWhatsAppRoutes(routes);
+        AddAssistantRoutes(routes);
+        return [.. routes];
+    }
+
+    static partial void AddWhatsAppRoutes(List<string> routes);
+    static partial void AddAssistantRoutes(List<string> routes);
 
     [Fact]
     public void Every_explicit_api_route_is_listed_once()

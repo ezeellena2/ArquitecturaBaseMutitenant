@@ -213,9 +213,9 @@ public sealed class ProductionSeedTests
         {
             var repaired = await context.PlatformPermissionAssignments.AsNoTracking().SingleAsync(TestContext.Current.CancellationToken);
             Assert.Equal(ArquitecturaBaseMultitenant.Domain.Authorization.PlatformPermissions.LegacyBootstrap, repaired.Permissions);
-            Assert.DoesNotContain(ArquitecturaBaseMultitenant.Domain.Authorization.PlatformPermissions.Assistant.Use, repaired.Permissions);
-            Assert.DoesNotContain(ArquitecturaBaseMultitenant.Domain.Authorization.PlatformPermissions.Assistant.Configure, repaired.Permissions);
-            Assert.DoesNotContain(ArquitecturaBaseMultitenant.Domain.Authorization.PlatformPermissions.Assistant.Read, repaired.Permissions);
+            foreach (var permission in ArquitecturaBaseMultitenant.Domain.Authorization.PlatformPermissions.All
+                .Except(ArquitecturaBaseMultitenant.Domain.Authorization.PlatformPermissions.LegacyBootstrap, StringComparer.Ordinal))
+                Assert.DoesNotContain(permission, repaired.Permissions);
         }
 
         WebApplicationFactory<Program> NewHost(string ownerEmail) =>

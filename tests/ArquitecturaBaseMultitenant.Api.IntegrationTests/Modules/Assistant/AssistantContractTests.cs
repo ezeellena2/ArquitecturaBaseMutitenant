@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using ArquitecturaBaseMultitenant.Infrastructure.Idempotency;
+using ArquitecturaBaseMultitenant.Domain.Assistant;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -84,9 +87,11 @@ public sealed class AssistantContractTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.Forbidden, chat.StatusCode);
     }
     [Fact]
-    public async Task Consumer_without_roles_reaches_501_with_an_explicit_available_feature_and_private_protocol_keys()
+    public async Task Consumer_without_roles_preserves_stubs_and_uses_durable_private_operations_after_notice()
     {
-        using var host = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+        await using var ownFactory = new ApiFactory();
+        await ownFactory.InitializeAsync();
+        using var host = ownFactory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<IFeatureAvailabilityPolicy>();
             services.AddScoped<IFeatureAvailabilityPolicy, AvailablePolicy>();
@@ -94,20 +99,52 @@ public sealed class AssistantContractTests(ApiFactory factory)
         using var client = host.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         using var anonymous = await client.GetAsync("/api/me/assistant", Ct);
         Assert.Equal(HttpStatusCode.Unauthorized, anonymous.StatusCode);
-        await AccountJourney.RegisterAsync(host, client, Ct);
+        var account = await AccountJourney.RegisterAsync(host, client, Ct);
         using var state = await client.GetAsync("/api/me/assistant", Ct);
         await Stub(state);
         using var profile = await client.GetFromJsonAsync<JsonDocument>("/api/me", Ct);
         Assert.Empty(profile!.RootElement.GetProperty("permissions").EnumerateArray());
         Assert.Contains(profile.RootElement.GetProperty("features").EnumerateArray(), value => value.GetString() == "assistant");
-        foreach (var path in new[] { "/api/me/assistant/conversations", "/api/me/assistant/quick/account" })
+        string[] paths = ["/api/me/assistant/conversations", "/api/me/assistant/quick/my_signin"];
+        foreach (var path in paths)
         {
             using var missing = await client.PostAsJsonAsync(path, new { }, Ct);
             Assert.Equal(HttpStatusCode.BadRequest, missing.StatusCode);
-            using var request = new HttpRequestMessage(HttpMethod.Post, path) { Content = JsonContent.Create(new { }) };
-            request.Headers.Add("Idempotency-Key", Guid.CreateVersion7().ToString("D"));
-            using var result = await client.SendAsync(request, Ct);
-            await Stub(result);
+            using var denied = await AssistantDurableConversationTests.PostAsync(client, path, "{}", Guid.NewGuid());
+            Assert.Equal(HttpStatusCode.BadRequest, denied.StatusCode);
+            using var problem = await denied.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+            Assert.Equal(AssistantErrors.NoticeAcceptanceRequiredCode, problem!.RootElement.GetProperty("code").GetString());
+        }
+        await AssistantExecutionActorTests.AcceptNoticeAsync(client);
+        foreach (var path in paths)
+        {
+            var key = Guid.NewGuid();
+            var quick = path.EndsWith("/my_signin", StringComparison.Ordinal);
+            var expected = quick ? HttpStatusCode.OK : HttpStatusCode.Created;
+            using var result = await AssistantDurableConversationTests.PostAsync(client, path, "{}", key);
+            Assert.Equal(expected, result.StatusCode);
+            var body = await result.Content.ReadAsStringAsync(Ct);
+            using var document = JsonDocument.Parse(body);
+            var conversation = quick ? document.RootElement.GetProperty("conversation") : document.RootElement;
+            Assert.NotEqual(Guid.Empty, conversation.GetProperty("id").GetGuid());
+            Assert.NotEqual(0u, conversation.GetProperty("version").GetUInt32());
+            if (quick)
+            {
+                Assert.Equal(2, document.RootElement.GetProperty("messages").GetArrayLength());
+                Assert.False(string.IsNullOrWhiteSpace(document.RootElement.GetProperty("result").GetProperty("text").GetString()));
+                Assert.DoesNotContain(account.Email.Value, body, StringComparison.Ordinal);
+            }
+            else Assert.NotNull(result.Headers.Location);
+            using var replay = await AssistantDurableConversationTests.PostAsync(client, path, "{}", key);
+            Assert.Equal(expected, replay.StatusCode);
+            Assert.Equal("true", Assert.Single(replay.Headers.GetValues("Idempotent-Replayed")));
+            Assert.Equal(body, await replay.Content.ReadAsStringAsync(Ct));
+            await using var scope = host.Services.CreateAsyncScope();
+            var stored = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<IdempotencyKey>()
+                .AsNoTracking().SingleAsync(row => row.UserId == account.UserId && row.Key == key, Ct);
+            Assert.Null(stored.ResponseBody);
+            Assert.Equal(quick ? "assistant.quick" : "assistant.conversation", stored.ReferenceKind);
+            Assert.NotNull(stored.ReferenceId);
         }
         using var message = new HttpRequestMessage(HttpMethod.Post, $"/api/me/assistant/conversations/{Guid.CreateVersion7():D}/messages")
             { Content = JsonContent.Create(new { text = "Contenido privado de prueba", attachmentIds = Array.Empty<Guid>(), conversationVersion = 0 }) };

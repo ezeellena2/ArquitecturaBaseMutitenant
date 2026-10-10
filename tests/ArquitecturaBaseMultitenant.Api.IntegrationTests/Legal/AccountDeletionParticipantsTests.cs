@@ -65,7 +65,14 @@ public sealed class AccountDeletionParticipantsTests(ApiFactory factory)
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, Ct);
         var participants = services.GetServices<IAccountDeletionParticipant>().ToArray();
-        Assert.Equal(8, participants.Length);
+        string[] core = ["MembershipDeletionParticipant", "PersonalSpaceDeletionParticipant", "LegalAcceptanceDeletionParticipant",
+            "OutboxDeletionParticipant", "RecoveryDeletionParticipant", "EngagementDeletionParticipant"];
+        var expected = new List<string>(core);
+        var application = typeof(TenantSpaceProvisioner).Assembly;
+        foreach (var module in new[] { "WhatsApp", "Assistant" })
+            if (application.GetType($"ArquitecturaBaseMultitenant.Application.Modules.{module}.{module}Module") is not null)
+                expected.Add(module + "AccountDeletionParticipant");
+        Assert.Equal(expected.Order(StringComparer.Ordinal), participants.Select(p => p.GetType().Name).Order(StringComparer.Ordinal));
         var membershipParticipant = Assert.Single(participants,
             participant => participant.GetType().Name == "MembershipDeletionParticipant");
         Assert.All(await context.LegalAcceptances.AsNoTracking().Where(row => row.UserId == account.UserId)

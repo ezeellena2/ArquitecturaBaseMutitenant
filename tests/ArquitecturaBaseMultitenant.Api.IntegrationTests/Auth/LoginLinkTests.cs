@@ -19,17 +19,15 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Time.Testing;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
-public sealed class LoginLinkTests(ApiFactory factory) : IClassFixture<ApiFactory>
+public sealed partial class LoginLinkTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
     private readonly FakeTimeProvider _clock = new(new DateTimeOffset(2026, 10, 8, 12, 0, 0, TimeSpan.Zero));
     private WebApplicationFactory<Program> Host(bool enabled = true) => factory.WithWebHostBuilder(builder =>
     {
-        builder.UseSetting("WhatsApp:PhoneNumberId", enabled ? "fixture-number" : "");
-        builder.UseSetting("WhatsApp:AccessToken", enabled ? "fixture-access" : "");
-        builder.UseSetting("WhatsApp:ProcessInboundInBackground", "false");
         builder.ConfigureTestServices(services =>
         {
+            if (enabled) services.AddSingleton<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging.ILoginCodeChannel, LoginLinkPhoneChannel>();
             services.RemoveAll<TimeProvider>(); services.AddSingleton<TimeProvider>(_clock);
             // No external transport/background processing in these database and HTTP security tests.
             services.RemoveAll<IHostedService>();
@@ -197,16 +195,10 @@ public sealed class LoginLinkTests(ApiFactory factory) : IClassFixture<ApiFactor
         _clock.Advance(TimeSpan.FromMinutes(15)); Assert.True((await IssueAsync(app.Services, user, method)).IsSuccess);
     }
     [Fact]
-    public async Task Verified_phone_survives_country_reduction_and_locked_account_gets_no_cookie()
+    public async Task Locked_account_with_verified_phone_gets_no_cookie()
     {
         await using var app = Host(); using var setup = app.CreateClient(); var (user, _, token) = await PrepareAsync(app, setup);
-        await using var reduced = factory.WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("WhatsApp:PhoneNumberId", "fixture-number"); builder.UseSetting("WhatsApp:AccessToken", "fixture-token");
-            builder.UseSetting("WhatsApp:AllowedCountries:0", "UY"); builder.UseSetting("WhatsApp:ProcessInboundInBackground", "false");
-            builder.ConfigureTestServices(services => { services.RemoveAll<TimeProvider>(); services.AddSingleton<TimeProvider>(_clock); services.RemoveAll<IHostedService>(); });
-        });
-        using var client = reduced.CreateClient(new() { HandleCookies = false });
+        using var client = app.CreateClient(new() { HandleCookies = false });
         using var preview = await PostAsync(client, "preview", new { token }); Assert.Equal(HttpStatusCode.OK, preview.StatusCode);
         await TransactionAsync(app.Services, async (provider, ct) =>
         {

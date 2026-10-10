@@ -12,7 +12,7 @@ using Microsoft.FeatureManagement.Mvc;
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
 /// <summary>Guarda exigida por E5: el núcleo permanece disponible y los módulos declaran su catálogo.</summary>
-public sealed class ModuleControllersTests
+public sealed partial class ModuleControllersTests
 {
     private static readonly HashSet<string> CoreAreas =
     [
@@ -24,15 +24,16 @@ public sealed class ModuleControllersTests
         "ArquitecturaBaseMultitenant.Api.Controllers.PublicSite",
     ];
 
+    static partial void AddWhatsAppControllers(Microsoft.Extensions.DependencyInjection.IServiceCollection registrations);
+    static partial void AddAssistantControllers(Microsoft.Extensions.DependencyInjection.IServiceCollection registrations);
+
     [Fact]
     public void Optional_controllers_declare_catalogued_gates_and_the_core_has_none()
     {
         var registrations = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
         Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(registrations, new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build());
-        ArquitecturaBaseMultitenant.Application.Modules.Assistant.AssistantModule.AddAssistantModule(registrations);
-        ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.WhatsAppInfrastructureModule.AddWhatsAppModule(registrations, new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build());
-        ArquitecturaBaseMultitenant.Api.Modules.WhatsApp.WhatsAppApiModule.AddWhatsAppModule(registrations);
-        ArquitecturaBaseMultitenant.Api.Modules.Assistant.AssistantApiModule.AddAssistantModule(registrations);
+        AddWhatsAppControllers(registrations);
+        AddAssistantControllers(registrations);
         using var provider = Microsoft.Extensions.DependencyInjection.ServiceCollectionContainerBuilderExtensions.BuildServiceProvider(registrations);
         var contributors = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetServices<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Features.IFeatureDefinitionContributor>(provider);
         var keys = Domain.Features.Features.All.Concat(contributors.SelectMany(value => value.Definitions)).Select(definition => definition.Key).ToHashSet(StringComparer.Ordinal);

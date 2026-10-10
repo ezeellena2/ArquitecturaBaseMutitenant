@@ -11,7 +11,7 @@ namespace ArquitecturaBaseMultitenant.Application.UnitTests;
 /// registros de la misma clase dan dos instancias en el mismo pedido; una opción sin registrar se lee con sus valores
 /// por defecto, sin avisar.
 /// </summary>
-public sealed class DependencyInjectionTests
+public sealed partial class DependencyInjectionTests
 {
     private const string ServicesNamespace = "ArquitecturaBaseMultitenant.Application.Services";
 
@@ -21,8 +21,8 @@ public sealed class DependencyInjectionTests
         var services = new ServiceCollection();
 
         services.AddApplication();
-        ArquitecturaBaseMultitenant.Application.Modules.Assistant.AssistantModule.AddAssistantModule(services);
-        ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.WhatsAppModule.AddWhatsAppModule(services);
+        AddAssistantServices(services);
+        AddWhatsAppServices(services);
 
         var repeated = services
             .Where(descriptor => !descriptor.IsKeyedService)
@@ -58,11 +58,12 @@ public sealed class DependencyInjectionTests
     public void Detector_rejects_duplicate_module_service_registration()
     {
         var services = new ServiceCollection();
-        ArquitecturaBaseMultitenant.Application.Modules.Assistant.AssistantModule.AddAssistantModule(services);
-        ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.WhatsAppModule.AddWhatsAppModule(services);
-        ArquitecturaBaseMultitenant.Application.Modules.Assistant.AssistantModule.AddAssistantModule(services);
-        ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.WhatsAppModule.AddWhatsAppModule(services);
+        services.AddScoped<ArquitecturaBaseMultitenant.Application.Modules.Control.Services.DuplicateProbeService>();
+        services.AddScoped<ArquitecturaBaseMultitenant.Application.Modules.Control.Services.DuplicateProbeService>();
         Assert.Contains(services.Where(descriptor => descriptor.ImplementationType is not null)
             .GroupBy(descriptor => descriptor.ImplementationType), group => group.Count() > 1);
     }
+
+    static partial void AddAssistantServices(IServiceCollection services);
+    static partial void AddWhatsAppServices(IServiceCollection services);
 }

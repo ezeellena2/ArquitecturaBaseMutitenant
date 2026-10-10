@@ -79,7 +79,7 @@ public sealed class ControllerServiceRepositoryTests
         Assert.Contains(InvalidConstructorDependencies(typeof(InvalidController)),
             description => description.Contains(nameof(ICurrencyCatalog), StringComparison.Ordinal));
         Assert.Contains(InvalidConstructorDependencies(typeof(InvalidModuleController)),
-            description => description.Contains("IWhatsAppMessageRepository", StringComparison.Ordinal));
+            description => description.Contains("IControlReader", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -182,7 +182,7 @@ public sealed class ControllerServiceRepositoryTests
     private sealed class InvalidController(ICurrencyCatalog catalog);
 
     private sealed class InvalidModuleController(
-        ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.IWhatsAppMessageRepository reader);
+        ArquitecturaBaseMultitenant.Application.Modules.Control.Interfaces.Persistence.IControlReader reader);
 
     private sealed class UnconventionallyNamedEndpoint(IReferenceDataService service) : ControllerBase
     {

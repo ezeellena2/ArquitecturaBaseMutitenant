@@ -4,8 +4,6 @@ using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
-using System.Globalization;
-using System.Resources;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Services.Auth;
 
@@ -28,11 +26,6 @@ public sealed class LoginLinkIssuerTests
         Assert.DoesNotContain("platform", result.Error.Description, StringComparison.OrdinalIgnoreCase);
         Assert.Single(store.Methods);
         Assert.Equal(["account"], store.Locks);
-        var resources = new ResourceManager("ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Resources.WhatsAppTexts", typeof(LoginLinkIssuer).Assembly);
-        var reply = resources.GetString("Bot.OperatorNeutralReply", CultureInfo.GetCultureInfo("es"));
-        Assert.Equal("Para entrar, usá la web.", reply);
-        Assert.DoesNotContain("plataforma", reply!, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("operador", reply!, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("http", reply!, StringComparison.OrdinalIgnoreCase);
+
     }
 }

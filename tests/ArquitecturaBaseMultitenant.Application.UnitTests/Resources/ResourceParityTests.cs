@@ -45,7 +45,13 @@ public sealed class ResourceParityTests
         var assembly = typeof(ErrorTexts).Assembly;
         var modules = assembly.GetManifestResourceNames().Where(name => name.Contains(".Modules.", StringComparison.Ordinal)
             && name.EndsWith(".resources", StringComparison.Ordinal)).ToArray();
-        Assert.NotEmpty(modules);
+        var expected = new List<string>();
+        if (assembly.GetType("ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.WhatsAppModule") is not null)
+            expected.Add("ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Resources.WhatsAppTexts.resources");
+        if (assembly.GetType("ArquitecturaBaseMultitenant.Application.Modules.Assistant.AssistantModule") is not null)
+            expected.AddRange(new[] { "Assistant", "AssistantTexts", "AssistantContractData" }
+                .Select(name => "ArquitecturaBaseMultitenant.Application.Modules.Assistant.Resources." + name + ".resources"));
+        Assert.Equal(expected.Order(StringComparer.Ordinal), modules.Order(StringComparer.Ordinal));
         foreach (var resource in modules)
             AssertSameKeysAndPlaceholders(new ResourceManager(resource[..^".resources".Length], assembly));
     }

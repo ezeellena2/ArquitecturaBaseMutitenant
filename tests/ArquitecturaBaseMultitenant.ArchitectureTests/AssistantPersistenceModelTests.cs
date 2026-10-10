@@ -1,4 +1,3 @@
-using ArquitecturaBaseMultitenant.Domain.Assistant;
 using Microsoft.EntityFrameworkCore;
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
@@ -22,14 +21,6 @@ public sealed class AssistantPersistenceModelTests
         var error = Assert.IsType<InvalidOperationException>(invocation.InnerException);
         Assert.Contains(nameof(GlobalAuditedPrivateProbe), error.Message, StringComparison.Ordinal);
     }
-    [Fact]
-    public void Installed_assistant_maps_private_conversations_and_global_operator_conversations()
-    {
-        var entities = ArchitectureModel.EntityTypes().Where(value => value.ClrType.Namespace == typeof(AssistantErrors).Namespace).ToArray();
-        Assert.Contains(entities, value => value.ClrType.Name == "AssistantConversation" && value.GetSchema() == "tenant");
-        Assert.Contains(entities, value => value.ClrType.Name == "PlatformAssistantConversation" && value.GetSchema() == "platform");
-    }
-
     private sealed class GlobalAuditedPrivateProbe : ITenantOwned, IGlobalSecurityAudited
     {
         public Guid TenantId { get; set; }

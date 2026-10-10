@@ -1,5 +1,4 @@
 using System.Data.Common;
-using ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
@@ -22,21 +21,21 @@ public sealed class OutboxDeletionRaceTests(ApiFactory factory) : IClassFixture<
     public async Task Pending_selection_locks_before_cancellation_and_completion_cannot_overwrite_it()
     {
         var barrier = new SelectionBarrier();
-        await using var host = WhatsAppPrivacyFixture.Host(factory).WithWebHostBuilder(builder =>
+        await using var host = OutboxPrivacyFixture.Host(factory).WithWebHostBuilder(builder =>
             builder.ConfigureTestServices(services => services.AddDbContext<ApplicationDbContext>(options => options.AddInterceptors(barrier))));
         var user = Guid.CreateVersion7(); var channel = "race-" + Guid.NewGuid().ToString("N");
-        var row = OutboxMessage.Enqueue(channel, "encrypted-notice", WhatsAppPrivacyFixture.NowUtc, user);
-        await WhatsAppPrivacyFixture.TransactionAsync(host.Services, (services, _) =>
+        var row = OutboxMessage.Enqueue(channel, "encrypted-notice", OutboxPrivacyFixture.NowUtc, user);
+        await OutboxPrivacyFixture.TransactionAsync(host.Services, (services, _) =>
         { services.GetRequiredService<ApplicationDbContext>().Add(row); return Task.CompletedTask; }, Ct);
         await using var dispatch = host.Services.CreateAsyncScope();
         var service = dispatch.ServiceProvider.GetRequiredService<IOutboxDispatchService>();
         var claim = (await service.ClaimNextAsync([channel], Ct)).Value!; Assert.NotNull(claim);
         barrier.Armed = true;
-        var deleting = WhatsAppPrivacyFixture.TransactionAsync(host.Services, async (services, ct) =>
+        var deleting = OutboxPrivacyFixture.TransactionAsync(host.Services, async (services, ct) =>
         {
             await services.GetRequiredService<ILoginMethodRepository>().LockUserAsync(user, ct);
             await new OutboxDeletionParticipant(services.GetRequiredService<ApplicationDbContext>())
-                .ExecuteAsync(new AccountDeletionContext(user, WhatsAppPrivacyFixture.NowUtc), ct);
+                .ExecuteAsync(new AccountDeletionContext(user, OutboxPrivacyFixture.NowUtc), ct);
         }, Ct);
         await barrier.Selected.Task.WaitAsync(TimeSpan.FromSeconds(10), Ct);
         var completing = service.CompleteAsync(row.Id, claim.LeaseId, OutboxDeliveryReceipt.Accepted("receipt"), Ct);
@@ -57,10 +56,10 @@ public sealed class OutboxDeletionRaceTests(ApiFactory factory) : IClassFixture<
     [Fact]
     public async Task Already_confirmed_sent_is_preserved_even_if_deletion_context_tracked_pending()
     {
-        await using var host = WhatsAppPrivacyFixture.Host(factory);
+        await using var host = OutboxPrivacyFixture.Host(factory);
         var user = Guid.CreateVersion7(); var channel = "sent-" + Guid.NewGuid().ToString("N");
-        var row = OutboxMessage.Enqueue(channel, "encrypted-notice", WhatsAppPrivacyFixture.NowUtc, user);
-        await WhatsAppPrivacyFixture.TransactionAsync(host.Services, (services, _) =>
+        var row = OutboxMessage.Enqueue(channel, "encrypted-notice", OutboxPrivacyFixture.NowUtc, user);
+        await OutboxPrivacyFixture.TransactionAsync(host.Services, (services, _) =>
         { services.GetRequiredService<ApplicationDbContext>().Add(row); return Task.CompletedTask; }, Ct);
         await using var deletion = host.Services.CreateAsyncScope(); var database = deletion.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         Assert.Equal(OutboxStatus.Pending, (await database.OutboxMessages.SingleAsync(value => value.Id == row.Id, Ct)).Status);
@@ -70,7 +69,7 @@ public sealed class OutboxDeletionRaceTests(ApiFactory factory) : IClassFixture<
         await deletion.ServiceProvider.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
         {
             await deletion.ServiceProvider.GetRequiredService<ILoginMethodRepository>().LockUserAsync(user, ct);
-            await new OutboxDeletionParticipant(database).ExecuteAsync(new AccountDeletionContext(user, WhatsAppPrivacyFixture.NowUtc), ct);
+            await new OutboxDeletionParticipant(database).ExecuteAsync(new AccountDeletionContext(user, OutboxPrivacyFixture.NowUtc), ct);
             return Domain.Results.Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
         var saved = await database.OutboxMessages.AsNoTracking().SingleAsync(value => value.Id == row.Id, Ct);
@@ -80,10 +79,10 @@ public sealed class OutboxDeletionRaceTests(ApiFactory factory) : IClassFixture<
     [Fact]
     public async Task Cancellation_reloads_a_lease_acquired_after_the_context_tracked_the_pending_row()
     {
-        await using var host = WhatsAppPrivacyFixture.Host(factory);
+        await using var host = OutboxPrivacyFixture.Host(factory);
         var user = Guid.CreateVersion7(); var channel = "reload-" + Guid.NewGuid().ToString("N");
-        var row = OutboxMessage.Enqueue(channel, "encrypted-notice", WhatsAppPrivacyFixture.NowUtc, user);
-        await WhatsAppPrivacyFixture.TransactionAsync(host.Services, (services, _) =>
+        var row = OutboxMessage.Enqueue(channel, "encrypted-notice", OutboxPrivacyFixture.NowUtc, user);
+        await OutboxPrivacyFixture.TransactionAsync(host.Services, (services, _) =>
         { services.GetRequiredService<ApplicationDbContext>().Add(row); return Task.CompletedTask; }, Ct);
         await using var deletion = host.Services.CreateAsyncScope(); var database = deletion.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         Assert.Null((await database.OutboxMessages.SingleAsync(value => value.Id == row.Id, Ct)).LeaseId);
@@ -92,7 +91,7 @@ public sealed class OutboxDeletionRaceTests(ApiFactory factory) : IClassFixture<
         await deletion.ServiceProvider.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
         {
             await deletion.ServiceProvider.GetRequiredService<ILoginMethodRepository>().LockUserAsync(user, ct);
-            await new OutboxDeletionParticipant(database).ExecuteAsync(new AccountDeletionContext(user, WhatsAppPrivacyFixture.NowUtc), ct);
+            await new OutboxDeletionParticipant(database).ExecuteAsync(new AccountDeletionContext(user, OutboxPrivacyFixture.NowUtc), ct);
             return Domain.Results.Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
         var saved = await database.OutboxMessages.AsNoTracking().SingleAsync(value => value.Id == row.Id, Ct);

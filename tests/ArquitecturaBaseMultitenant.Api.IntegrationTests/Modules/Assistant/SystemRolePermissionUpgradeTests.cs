@@ -1,19 +1,16 @@
 using System.Net;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
-using ArquitecturaBaseMultitenant.Infrastructure.Caching;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 
@@ -116,36 +113,6 @@ public sealed class SystemRolePermissionUpgradeTests
         Assert.All(await check.ServiceProvider.GetRequiredService<ApplicationDbContext>().Tenants
             .AsNoTracking().Where(t => t.Id == pending.Id || t.Id == active.Id).ToArrayAsync(Ct),
             t => Assert.Equal(TenantStatus.Active, t.Status));
-    }
-
-    [Fact]
-    public async Task Legacy_cache_is_ignored_current_cache_is_invalidated_and_other_tenants_are_isolated()
-    {
-        await using var factory = new ApiFactory();
-        await factory.InitializeAsync();
-        using var client = Client(factory);
-        var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
-        var first = await CreateSpaceAsync(factory, owner.UserId, false);
-        var other = await CreateSpaceAsync(factory, owner.UserId, false);
-        var roles = await RolesAsync(factory, first.Id);
-        var roleId = roles.Single(r => r.Name == SystemRoles.TenantAdmin).Id;
-        var cache = factory.Services.GetRequiredService<HybridCache>();
-        var permissionCache = factory.Services.GetRequiredService<IRolePermissionCache>();
-        var legacyKey = CacheKeys.Tenant(first.Id, "role-permissions:" + roleId.ToString("N"));
-        await cache.SetAsync(legacyKey, new[] { Permissions.Roles.Read }, cancellationToken: Ct);
-        Assert.Equal(Permissions.All.Order(StringComparer.Ordinal),
-            await permissionCache.GetRolePermissionsAsync(first.Id, roleId, Ct));
-        Assert.Empty(await permissionCache.GetRolePermissionsAsync(other.Id, roleId, Ct));
-        await SqlAsync(factory, first.Id, """
-            UPDATE tenant."Roles" SET "Permissions" = array_remove("Permissions", 'assistant.configure')
-            WHERE "Name" = 'TenantAdmin';
-            """);
-        Assert.Contains(Permissions.Assistant.Configure, await permissionCache.GetRolePermissionsAsync(first.Id, roleId, Ct));
-        await permissionCache.InvalidateRoleAsync(first.Id, roleId, Ct);
-        Assert.DoesNotContain(Permissions.Assistant.Configure, await permissionCache.GetRolePermissionsAsync(first.Id, roleId, Ct));
-        Assert.Equal(new[] { Permissions.Roles.Read }, await cache.GetOrCreateAsync(legacyKey,
-            _ => ValueTask.FromResult(Array.Empty<string>()), cancellationToken: Ct));
-        Assert.Empty(await permissionCache.GetRolePermissionsAsync(other.Id, roleId, Ct));
     }
 
     [Theory]

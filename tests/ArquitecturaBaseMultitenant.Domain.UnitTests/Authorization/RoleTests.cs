@@ -117,10 +117,7 @@ public sealed class RoleTests
         Assert.Equal(Permissions.All, tenantAdmin.Permissions);
         Assert.True(companyAdmin.IsSystemRole);
         Assert.Equal(RoleScope.AnyCompany, companyAdmin.Scope);
-        Assert.Equal([.. Permissions.CompanyScoped, Permissions.Assistant.Use], companyAdmin.Permissions);
-        Assert.Contains(Permissions.Assistant.Configure, tenantAdmin.Permissions);
-        Assert.DoesNotContain(Permissions.Assistant.Configure, companyAdmin.Permissions);
-        Assert.DoesNotContain(Permissions.Assistant.Use, Permissions.CompanyScoped);
+        Assert.Equal(Permissions.CompanyScoped.Concat(Permissions.OrganizationProjectedFromCompany), companyAdmin.Permissions);
         Assert.Equal([SystemRoles.TenantAdmin, SystemRoles.CompanyAdmin], SystemRoles.All);
     }
 }

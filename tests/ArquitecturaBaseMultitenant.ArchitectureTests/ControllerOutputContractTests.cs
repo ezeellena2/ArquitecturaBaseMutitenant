@@ -10,7 +10,7 @@ namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 /// no se confunde con su homónima de Application, y ningún controller devuelve una entidad ni un tipo de
 /// Infrastructure. Mira los tipos que declara cada acción con <c>ProducesResponseType</c>, que son los del OpenAPI.
 /// </summary>
-public sealed class ControllerOutputContractTests
+public sealed partial class ControllerOutputContractTests
 {
     private const string ContractsNamespace = "ArquitecturaBaseMultitenant.Api.Contracts";
     private const string ModelsNamespace = "ArquitecturaBaseMultitenant.Application.Models";
@@ -49,13 +49,10 @@ public sealed class ControllerOutputContractTests
         Assert.False(IsAllowedOutput(typeof(CursorResult<ProbeResponse>)));
         Assert.False(IsAllowedOutput(typeof(ArquitecturaBaseMultitenant.Domain.Authorization.Role)));
         Assert.False(IsAllowedOutput(typeof(ArquitecturaBaseMultitenant.Application.Common.Validation.ValidationRules)));
-        Assert.True(IsAllowedOutput(typeof(ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models.AssistantStateResponse)));
-        Assert.True(IsAllowedOutput(typeof(ArquitecturaBaseMultitenant.Api.Modules.Assistant.Contracts.AssistantStreamHttpResponse)));
         Assert.True(IsModuleNamespace("ArquitecturaBaseMultitenant.Application.Modules.Example.Models", "Application", "Models"));
         Assert.False(IsModuleNamespace("ArquitecturaBaseMultitenant.Application.Modules.Example.Services", "Application", "Models"));
         Assert.False(IsModuleNamespace("ArquitecturaBaseMultitenant.Application.Modules.Example.ModelsExtra", "Application", "Models"));
         Assert.False(IsModuleNamespace("ArquitecturaBaseMultitenant.Application.Modules.Example.Sub.Models", "Application", "Models"));
-        Assert.False(IsAllowedOutput(typeof(ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Services.IAssistantConversationService)));
     }
 
     private static IEnumerable<(string Action, Type Type)> DeclaredOutputs(Type controller) =>

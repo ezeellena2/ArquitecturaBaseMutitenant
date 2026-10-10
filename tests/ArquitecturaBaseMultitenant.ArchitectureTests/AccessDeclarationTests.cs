@@ -15,14 +15,18 @@ namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 /// Comprueba que cada acción HTTP declare su acceso y que las rutas anónimas pertenezcan a la lista
 /// autorizada. Evita publicar operaciones con un alcance ambiguo.
 /// </summary>
-public sealed class AccessDeclarationTests
+public sealed partial class AccessDeclarationTests
 {
     private static readonly HashSet<Type> AnonymousMainDomainControllers =
+    CreateAnonymousControllers();
+
+    private static HashSet<Type> CreateAnonymousControllers()
+    {
+        HashSet<Type> controllers =
     [
         typeof(ReferenceDataController),
         typeof(LoginCodeController),
         typeof(LoginLinkController),
-        typeof(ArquitecturaBaseMultitenant.Api.Modules.WhatsApp.Controllers.WhatsAppWebhookController),
         typeof(AccountRecoveryController),
         typeof(ContactController),
         typeof(SignupController),
@@ -36,6 +40,11 @@ public sealed class AccessDeclarationTests
         typeof(ConnectController),
         typeof(DirectoryController),
     ];
+        AddWhatsAppAnonymousController(controllers);
+        return controllers;
+    }
+
+    static partial void AddWhatsAppAnonymousController(HashSet<Type> controllers);
 
     [Fact]
     public void Every_production_action_declares_its_access_mode()

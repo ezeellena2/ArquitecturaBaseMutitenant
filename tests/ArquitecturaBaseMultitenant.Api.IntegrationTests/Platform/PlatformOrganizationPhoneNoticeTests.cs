@@ -6,7 +6,6 @@ using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
-using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
@@ -22,25 +21,24 @@ using Microsoft.Extensions.DependencyInjection;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Platform;
 
 [Collection(ApiTestGroup.Name)]
-public sealed class PlatformOrganizationPhoneNoticeTests(ApiFactory factory)
+public sealed partial class PlatformOrganizationPhoneNoticeTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
     [Theory]
-    [InlineData("approve", true, "organizacion_aprobada")]
-    [InlineData("reject", true, "organizacion_rechazada")]
-    [InlineData("unpublish", true, "pagina_publica_moderada")]
-    [InlineData("allow-publish", true, "pagina_publica_moderada")]
-    [InlineData("approve", false, "Aprobamos")]
-    [InlineData("reject", false, "No aprobamos")]
-    [InlineData("unpublish", false, "despublicó")]
-    [InlineData("allow-publish", false, "permitió")]
-    public async Task Real_actions_notify_phone_only_when_enabled_or_email_backup_when_off_and_replay_does_not_duplicate(
-        string action, bool enabled, string expected)
+    [InlineData("approve", "Aprobamos")]
+    [InlineData("reject", "No aprobamos")]
+    [InlineData("unpublish", "despublicó")]
+    [InlineData("allow-publish", "permitió")]
+    public Task Real_actions_notify_email_backup_without_phone_channel_and_replay_does_not_duplicate(string action, string expected) =>
+        AssertNoticeAsync(action, expected, "email");
+
+    private async Task AssertNoticeAsync(string action, string expected, string channel,
+        Action<Microsoft.AspNetCore.Hosting.IWebHostBuilder>? configureHost = null,
+        Action<string, PhoneNumber, Tenant>? verifyPhone = null)
     {
         using var host = factory.WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("WhatsApp:PhoneNumberId", enabled ? "notice-fixture" : "");
-            builder.UseSetting("WhatsApp:AccessToken", enabled ? "fixture-token" : "");
+            configureHost?.Invoke(builder);
         });
         using var client = host.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var operatorAccount = await AccountJourney.RegisterAsync(factory, client, Ct);
@@ -64,7 +62,7 @@ public sealed class PlatformOrganizationPhoneNoticeTests(ApiFactory factory)
             await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
             {
                 db.Users.Add(owner); db.LoginMethods.Add(primary);
-                if (!enabled)
+                if (verifyPhone is null)
                 {
                     var backup = LoginMethod.CreateEmail(owner.Id, email);
                     Assert.True(backup.Verify(clock.GetUtcNow().UtcDateTime).IsSuccess); db.LoginMethods.Add(backup);
@@ -102,17 +100,10 @@ public sealed class PlatformOrganizationPhoneNoticeTests(ApiFactory factory)
         var rows = await verify.ServiceProvider.GetRequiredService<ApplicationDbContext>().OutboxMessages.AsNoTracking()
             .Where(value => value.UserId == owner.Id).ToArrayAsync(Ct);
         var message = Assert.Single(rows);
-        Assert.Equal(enabled ? "whatsapp" : "email", message.Channel);
+        Assert.Equal(channel, message.Channel);
         var payload = verify.ServiceProvider.GetRequiredService<IPayloadProtector>().Unprotect(message.EncryptedPayload);
         Assert.DoesNotContain("INTERNAL-ONLY-REASON", payload);
-        if (enabled)
-        {
-            var outbound = JsonSerializer.Deserialize<WhatsAppOutboundMessage>(payload)!;
-            Assert.Equal(expected, outbound.TemplateName); Assert.Equal(phone.Value, outbound.To);
-            Assert.Equal(tenant.Name, outbound.BodyParameters[0]); Assert.Null(outbound.ButtonParameter);
-            if (action == "allow-publish") Assert.Contains("permitió", outbound.BodyParameters[1]);
-            if (action == "unpublish") Assert.Contains("despublicó", outbound.BodyParameters[1]);
-        }
+        if (verifyPhone is not null) verifyPhone(payload, phone, tenant);
         else
         {
             var outbound = JsonSerializer.Deserialize<EmailMessage>(payload)!;
