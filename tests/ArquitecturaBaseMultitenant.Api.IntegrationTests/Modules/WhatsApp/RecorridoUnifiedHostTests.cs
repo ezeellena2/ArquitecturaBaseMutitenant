@@ -7,6 +7,10 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Recorrido;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.WhatsAppBrowser;
 using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
@@ -29,6 +33,90 @@ public sealed class RecorridoUnifiedHostTests(ApiFactory postgres) : IClassFixtu
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
     private static readonly Uri Redirect = new("https://localtest.me:5174/auth/callback");
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
+    [Fact]
+    public async Task External_host_preserves_business_email_cooldown_after_invalid_attempt_without_replacing_original_code()
+    {
+        var directory = Workspace();
+        try
+        {
+            await using var external = ApiFactory.ForIsolatedDatabase(Connections());
+            await external.InitializeDatabaseAsync(Ct);
+            await using var app = RecorridoApiHost.Configure(external, Root(), directory, RecorridoWhatsAppModule.Configure);
+            using var client = Client(app);
+            var email = Email.Create($"walkthrough-cooldown-{Guid.NewGuid():N}@example.test").Value;
+            // Cuenta verificada preexistente, como E7Preparation: no emite un OTP previo ni altera su reloj.
+            await using (var scope = app.Services.CreateAsyncScope())
+            {
+                var services = scope.ServiceProvider;
+                var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+                var users = services.GetRequiredService<IUserRepository>();
+                await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+                {
+                    var user = await users.CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct);
+                    var method = LoginMethod.CreateEmail(user.Id, email);
+                    method.Verify(nowUtc);
+                    Assert.True(method.MakePrimary().IsSuccess);
+                    services.GetRequiredService<ILoginMethodRepository>().Add(method);
+                    await users.SetPrimaryEmailAsync(user.Id, email, ct);
+                    return Result.Success();
+                }, CommitPolicy.OnSuccess, Ct);
+                Assert.False(await services.GetRequiredService<ApplicationDbContext>().LoginCodes
+                    .AnyAsync(row => row.Destination == email.Value, Ct));
+            }
+
+            using var requested = await AccountJourney.PostAsync(client, "/api/auth/login-code", new { email = email.Value }, Ct);
+            Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
+            var requestedBody = await JsonAsync(requested);
+            var originalCode = await PickupAsync(app.Services, directory, email.Value);
+            var wrongCode = originalCode == "000000" ? "111111" : "000000";
+            using var invalid = await AccountJourney.PostAsync(client, "/api/auth/login-code/verify",
+                new { email = email.Value, code = wrongCode, returnUrl = "/connect/authorize?client_id=web&access=business" }, Ct);
+            Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
+            var invalidBody = await JsonAsync(invalid);
+            Assert.Equal("Auth.LoginCode.Invalid", invalidBody.GetProperty("code").GetString());
+            Assert.Equal(4, invalidBody.GetProperty("attemptsLeft").GetInt32());
+            Assert.False(invalid.Headers.Contains("Set-Cookie"));
+
+            await using var readScope = app.Services.CreateAsyncScope();
+            var db = readScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var original = Assert.Single(await db.LoginCodes.AsNoTracking().Where(row => row.Destination == email.Value).ToArrayAsync(Ct));
+            Assert.Equal(1, original.FailedAttempts);
+            Assert.Null(original.InvalidatedAtUtc);
+            Assert.Null(original.ConsumedAtUtc);
+            var emailOutbox = await db.OutboxMessages.AsNoTracking().Where(row => row.Channel == "email")
+                .Select(row => row.Id).OrderBy(id => id).ToArrayAsync(Ct);
+
+            // PostAsync genera otra clave de idempotencia; se evalúa el cooldown real, no un replay del 202.
+            using var resend = await AccountJourney.PostAsync(client, "/api/auth/login-code", new { email = email.Value }, Ct);
+            Assert.Equal(HttpStatusCode.TooManyRequests, resend.StatusCode);
+            var resendBody = await JsonAsync(resend);
+            Assert.Equal("Auth.LoginCode.ResendTooSoon", resendBody.GetProperty("code").GetString());
+            var retryAfter = resendBody.GetProperty("retryAfter").GetInt32();
+            Assert.InRange(retryAfter, 1, 60);
+            Assert.Equal(TimeSpan.FromSeconds(retryAfter), resend.Headers.RetryAfter!.Delta);
+            Assert.False(resend.Headers.Contains("Set-Cookie"));
+            Assert.Equal(60, requestedBody.GetProperty("resendAfterSeconds").GetInt32());
+            Assert.Equal(60, app.Services.GetRequiredService<IOptions<LoginCodeOptions>>().Value.ResendCooldownSeconds);
+            Assert.Equal(postgres.RuntimeConnectionString, app.Services.GetRequiredService<IConfiguration>().GetConnectionString("appdb"));
+            Assert.Equal("https://localtest.me:5174/", app.Services.GetRequiredService<IConfiguration>()["Authentication:Issuer"]);
+
+            var preserved = Assert.Single(await db.LoginCodes.AsNoTracking().Where(row => row.Destination == email.Value).ToArrayAsync(Ct));
+            Assert.Equal(original.Id, preserved.Id);
+            Assert.Equal(original.CodeHash, preserved.CodeHash);
+            Assert.Equal(original.CreatedAtUtc, preserved.CreatedAtUtc);
+            Assert.Equal(original.ExpiresAtUtc, preserved.ExpiresAtUtc);
+            Assert.Equal(original.SentAtUtc, preserved.SentAtUtc);
+            Assert.Equal(1, preserved.FailedAttempts);
+            Assert.Null(preserved.InvalidatedAtUtc);
+            Assert.Null(preserved.ConsumedAtUtc);
+            Assert.Equal(emailOutbox, await db.OutboxMessages.AsNoTracking().Where(row => row.Channel == "email")
+                .Select(row => row.Id).OrderBy(id => id).ToArrayAsync(Ct));
+            await RecorridoEmailPump.ProcessOnceAsync(app.Services, Ct);
+            Assert.Empty(Directory.GetFiles(directory, "*.eml"));
+        }
+        finally { Directory.Delete(directory, recursive: true); }
+    }
 
     [Theory]
     [InlineData("consumer")]

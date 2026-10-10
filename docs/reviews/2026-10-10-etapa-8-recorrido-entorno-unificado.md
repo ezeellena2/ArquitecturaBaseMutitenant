@@ -2,6 +2,8 @@
 
 Fecha: 2026-10-10. Corte inicial: `fd573a2e0980b7be79a19ba2519770b774fd97c4` (M1). Implementación entregada a Root para publicar su propio scope, sin stage, commit ni push desde el implementador.
 
+Este informe conserva la evidencia histórica del puente `38febf92702426ef030141b51d14cd7785d47cea`, cuyo perfil tenía cooldown 0 y cuya sonda no verificó la cadena E7 22→23. El perfil combinado actual usa 60 segundos reales; su corrección y prueba focal posterior están en el [informe de cooldown](2026-10-10-etapa-8-recorrido-cooldown.md). Los resultados y logs originales de este informe permanecen sin reinterpretar.
+
 ## Problema y resultado
 
 El recorrido E7 usaba API Development, preparador separado sin módulos y correo pickup; la fixture WhatsApp independiente usaba otra base, otro puerto y prohibía también Email. El nuevo modo aislado de AppHost ejecuta `RealE2ESetup --recorrido-host` como recurso `api`: una API real Testing, la misma base PostgreSQL efímera de Aspire, preparación E7 en sus servicios, Front 5174 y correo pickup. El modo normal conserva su composición Development.

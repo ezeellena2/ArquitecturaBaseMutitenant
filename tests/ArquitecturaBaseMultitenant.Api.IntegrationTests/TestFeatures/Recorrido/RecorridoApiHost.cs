@@ -42,7 +42,7 @@ public static class RecorridoApiHost
                     ["Authentication:Clients:Web:PostLogoutRedirectUris:0"] = issuer,
                     ["Authentication:Clients:Web:PostLogoutRedirectUris:1"] = issuer + "invitacion",
                     ["Authentication:LoginCode:HashKey"] = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)),
-                    ["Authentication:LoginCode:ResendCooldownSeconds"] = "0",
+                    ["Authentication:LoginCode:ResendCooldownSeconds"] = "60",
                     ["Authentication:LoginCode:MaxRequestsPerWindow"] = "100",
                     ["Authentication:Google:ClientId"] = "e2e-synthetic-client.apps.googleusercontent.com",
                     ["Authentication:Google:ClientSecret"] = "e2e-synthetic-google-secret",
