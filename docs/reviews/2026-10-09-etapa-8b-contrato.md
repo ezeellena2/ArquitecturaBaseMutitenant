@@ -74,6 +74,19 @@ Antes de leer el turno se revalidan propietario, lado y organización con los mi
 
 Publicación: schema requerido y nullable, ejemplos con turno y sin turno, tipos B/F y nuevos hashes; mantener las 120 rutas E8 intactas y dejar sólo este delta adicional al CC01 aprobado. La conducta durable se verifica en T05 con reabrir pendiente/en ejecución, detener, terminales sin turno activo, dos propietarios/organizaciones/accesos y operadores completos sin lectura ajena. La publicación contractual no sustituye esa prueba de runtime ni habilita dar por resuelta la rama antes de comprobarla. CC01 y CC02 se publicarán juntos en un único pase B/F; T02 puede continuar de manera independiente.
 
+### CC03 — progreso del presupuesto y cuota diaria en Uso
+
+**Estado: propuesta concreta pendiente de autorización del usuario.** Integración transmitió el hallazgo T13; la raíz cotejó `AssistantUsagePageResponse`, `AssistantUsageRowResponse`, los lienzos v115 de Uso-Org y sus variantes móviles, y la regla de formatos. El contrato tiene costo y presupuesto mensual, pero no su fracción/estado; `queries` es mensual y `dailyLimit` no informa las consultas de hoy. El front tiene prohibido calcular montos o porcentajes.
+
+Delta aditivo mínimo, conservando rutas, permisos, requests y todos los miembros actuales:
+
+- `AssistantUsagePageResponse.budgetProgress`: objeto nullable `{fraction: decimal, status: "WithinLimit"|"NearLimit"|"LimitReached"}`. Fracción calculada en Back con costo registrado del mes dividido por su presupuesto, sin incluir meras reservas; no se recorta a 1 si supera el límite. Estado NearLimit desde 0,8 y LimitReached desde 1, conforme a los umbrales 80/100 de T06. Null si no aplica presupuesto. En un mes histórico se usa el presupuesto conservado para ese mes, sin recalcular costos o aplicar un tope actual ficticio. El resumen Platform agregado no tiene un presupuesto único: null.
+- `AssistantUsageRowResponse.dailyUsage`: objeto nullable `{dayUtc: date, resetAtUtc: date-time, scope: "PlatformKey"|"OwnKey", queries: int, limit: int, limitReached: bool}`. Sólo filas Person del Uso Business en el mes civil actual de esa organización. `queries` son las consultas consumidas del día UTC, independiente del total mensual de la fila; PlatformKey lee la cuota compartida por UserId entre accesos y organizaciones, OwnKey la cuota del UserId de esa organización. `limitReached` usa consumo más reservas para indicar si se puede admitir otra consulta; no convierte una reserva en consulta consumida. Fecha y renovación UTC son explícitas. `dailyLimit` existente conserva su significado y coincide con `dailyUsage.limit` cuando hay proyección.
+
+En meses históricos y filas por día, organización, Personal/Operadores agregados, `dailyUsage` es null: no se presenta un total mensual como consumo de hoy ni se inventa una cuota individual del agregado. El período mensual civil y el día de cuota UTC siguen siendo reglas distintas. Ambas propiedades nuevas se devuelven siempre y son required/nullable en OpenAPI. Ninguna proyección contiene chat, prompts, claves ni IDs de conversaciones. No se agregan cálculos al Front ni lecturas de contenido privado desde Platform.
+
+La publicación requiere schema/ejemplos/tipos B/F, pruebas independientes de CC03 y comparación estructural con el freeze T01, dejando únicamente CC01/CC02/CC03 autorizados. T06 debe probar cálculo real, 80/100, cero uso, mes histórico y snapshots, cambio de día/zona, cuota compartida PlatformKey versus OwnKey, reservas y aislamiento. Publicar el contrato no acredita esa conducta ni cierra T13/E8b. Sólo los dos archivos de tipos Front; UI y fixtures pertenecen a Front.
+
 ## Pase a Back, Front e Integración
 
 Back puede continuar T02–T09 automáticamente según la autorización posterior registrada. Front verifica los commits y este informe antes de implementar su Parte 2b; cada chat toca sólo su repositorio desde el congelamiento. No se enviaron mensajes a otros chats.
