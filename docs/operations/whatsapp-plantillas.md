@@ -87,7 +87,16 @@ Las variables de fecha y hora salen de `DisplayFormatter` con cultura y zona exp
 
 **Ajuste operativo aprobado el 2026-10-09:** Meta rechazó crear baja suspendida y aviso de recuperación en es/en porque sus cuerpos terminaban en un parámetro, aun seguido de punto (`100/2388299`, Leading or Trailing Params Not Allowed). El cierre «para pedir ayuda.» / «for help.» de la tabla y los dos ejemplos WhatsApp de Mensajes fue aprobado por el usuario; conserva variables, acción y categoría. No cambia los correos ni autoriza convertir una plantilla a Marketing.
 
-**Estado operativo (consulta real 2026-10-09, 15:16 UTC):** `codigo_ingreso` aprobado en es/en. Se crearon las **26 variantes sin URL** de trece nombres con autorización del usuario y se cotejaron sus cuerpos contra esta guía: 26/26 coinciden. La última consulta confirma **24 aprobadas como Utility**, `aviso_metodo_ingreso/en` **IN_APPEAL / UTILITY** y `pagina_publica_moderada/en` **APPROVED / MARKETING**. Se solicitaron y verificaron las dos revisiones en WhatsApp Manager: rechazo por categoría y reclasificación, respectivamente. Siguen sin estar habilitadas para el recorrido E8 mientras no sean APPROVED / UTILITY. Meta reclasificó la última aun solicitando Utility con `allow_category_change=false`: comprobar **estado y categoría**, no solo APPROVED. Las cuatro variantes con URL (`invitacion_organizacion` y `recuperacion_aprobada`, es/en) siguen sin crear hasta fijar su origen público HTTPS. `invitacion_acceso` es Marketing y pertenece a ArquitecturaBase: no se modifica ni se reutiliza en E8. Los estados pueden cambiar durante la revisión; comprobarlos nuevamente en la WABA antes del recorrido Meta. El [informe de coordinación](../reviews/2026-10-09-etapa-8-coordinacion.md) registra los límites. La suite de payloads y el transporte controlado no certifican aprobación ni `delivered`.
+**Estado operativo (consulta real del 2026-10-09, 23:30 de Argentina; 2026-10-10 02:30 UTC):** las **32 variantes están creadas** con autorización del usuario: dos Authentication aprobadas (`codigo_ingreso`, es/en), **26 APPROVED / UTILITY** y cuatro excepciones. Los botones de `invitacion_organizacion` y `recuperacion_aprobada`, es/en, ya tienen el origen público HTTPS del túnel de prueba. Recuperación aprobada tiene ambas variantes APPROVED / UTILITY; su aviso con botón y el ingreso posterior se comprobaron en el circuito real.
+
+| Variante pendiente | Estado / categoría | Revisión solicitada |
+|---|---|---|
+| `aviso_metodo_ingreso/en` | IN_APPEAL / UTILITY | Apelación por `Category mismatch`: Meta lo interpreta como contenido Authentication |
+| `pagina_publica_moderada/en` | APPROVED / MARKETING | Revisión de categoría |
+| `invitacion_organizacion/es` | APPROVED / MARKETING | Revisión de categoría |
+| `invitacion_organizacion/en` | APPROVED / MARKETING | Revisión de categoría |
+
+WhatsApp Manager muestra las tres revisiones de categoría pendientes. Las cuatro excepciones siguen sin estar habilitadas para E8 mientras no sean **APPROVED / UTILITY**. Meta reclasificó variantes aun solicitando Utility con `allow_category_change=false`: comprobar estado **y** categoría, no sólo APPROVED. No reenviar una revisión pendiente ni usar Marketing como solución. `invitacion_acceso` es Marketing y pertenece a ArquitecturaBase: no se modifica ni se reutiliza en E8. El origen aprobado de los botones corresponde a este entorno de prueba; producción requiere su propio origen y aprobación. Los estados pueden cambiar: volver a consultarlos antes de cada recorrido Meta. El [informe de coordinación](../reviews/2026-10-09-etapa-8-coordinacion.md) distingue las entregas reales acreditadas de las pendientes. La suite de payloads y el transporte controlado no certifican aprobación ni `delivered`.
 
 ## Cómo crearlas y comprobarlas
 
@@ -95,7 +104,7 @@ Las variables de fecha y hora salen de `DisplayFormatter` con cultura y zona exp
 2. Crear el nombre snake_case de la tabla, Authentication solo para código (texto/botón Copiar código de Meta); Utility para los demás. Nunca Marketing.
 3. Cargar es y en por separado, con cuerpo, orden de variables y muestras del paquete T03. Enlaces existentes mediante botón URL con base pública configurada y sufijo variable; nunca inventar ActionUrl donde no existe.
 4. Enviar a revisión **antes de programar el envío**, para que la aprobación avance en paralelo. Comprobar que ambas variantes estén activas en la WABA usada. Dibujada, configurada, aprobada y delivered son estados distintos.
-5. En E8 registrar `WhatsApp:Templates:<Clave>` no secreta y catálogo/orden del módulo, como LoginCode/Invitation de ArquitecturaBase. Son claves a crear en esa etapa, no configuración ya entregada en este repo.
+5. El módulo E8 ya define las 16 claves y sus nombres predeterminados en `WhatsAppTemplateOptions` (`WhatsAppOptions.cs`), y el orden de parámetros en `WhatsAppTemplateCatalog.cs`, bajo `Infrastructure/Modules/WhatsApp/`. Una instalación puede sobrescribir el nombre con `WhatsApp:Templates:<Clave>` no secreta. Esto configura el envío; no crea ni aprueba la plantilla en Meta.
 6. Tests del catálogo verifican 16 nombres, ambas culturas, variante seleccionada y orden del payload. Una prueba del flujo real al celular de prueba debe recibir el mensaje y su evento delivered por el túnel, según la puerta E8.
 
 ## Reglas

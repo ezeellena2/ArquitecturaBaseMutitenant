@@ -2,6 +2,8 @@
 
 Continuación autorizada por el usuario desde este chat, después de la [revisión del pase](2026-10-09-etapa-8-revision-del-pase.md). Trabajo en `main`, sin push y sin incluir cambios ajenos. **E8 sigue abierta**: este informe no certifica la puerta T14. Back y Front mantienen sus implementaciones en sus respectivos chats.
 
+**Estado actualizado al 2026-10-09, 23:30 de Argentina:** el circuito real de identidad está completo y su entorno quedó apagado/restaurado. Front revisó el correctivo del runner en `f70fb7e9` (37/37 focales, SPEC y QUALITY aprobadas); está ejecutando 34 grupos en 1440/390 y luego corrige el nombre vacío del menú con el fallback existente «Sin dato». Back audita el 409 de recuperación sin relajar la guarda de versión. El nuevo detector documental arroja **auto 14 / modelo 35 / humano 0** para ambos repos; los nueve hallazgos del corte anterior son evidencia histórica, no el total actual. Meta mantiene 32 variantes creadas, 28 utilizables por categoría y cuatro excepciones en revisión, detalladas en [la guía operativa](../operations/whatsapp-plantillas.md). El cierre exige los pases y la documentación en cero; no se atribuyen a E8 las implementaciones E8b todavía en curso.
+
 ## Encajes resueltos
 
 | Encaje | Entrega |
@@ -46,9 +48,9 @@ Las solicitudes usaron Utility y `allow_category_change=false`. Aun así, Meta r
 
 Se solicitaron ambas revisiones desde WhatsApp Manager y se verificó el resultado visible: `pagina_publica_moderada/en` en revisión de categoría y `aviso_metodo_ingreso/en` en apelación. La consulta Graph de **15:16 UTC**, repetida a las **17:16 UTC** sin cambios, confirma **24 APPROVED / UTILITY**, `aviso_metodo_ingreso/en` IN_APPEAL / UTILITY y `pagina_publica_moderada/en` APPROVED / MARKETING. La solicitud de revisión no acredita aprobación. Evidencia local sin secretos: `.local/reviews/2026-10-09-meta-utility-revision-estados.json`, `2026-10-09-meta-categoria-en-revision.jpg` y `2026-10-09-meta-rechazo-en-revision.jpg`.
 
-Las **cuatro variantes URL** de `invitacion_organizacion` y `recuperacion_aprobada` siguen sin crear. Necesitan el origen HTTPS público real del front, coherente con `ActionUrl` e issuer. El túnel de webhooks de la API, por sí solo, no hace accesible una URL de Vite local desde el celular. No aprobar botones con un origen de ejemplo o con `localtest.me`.
+En ese primer corte las **cuatro variantes URL** de `invitacion_organizacion` y `recuperacion_aprobada` estaban sin crear, a la espera del origen HTTPS público real del front, coherente con `ActionUrl` e issuer. Después se crearon con el origen del túnel y autorización humana, como registra el recorrido posterior. El túnel de webhooks de la API, por sí solo, no hace accesible una URL de Vite local desde el celular. No aprobar botones con un origen de ejemplo o con `localtest.me`.
 
-Paquete, respuestas y cotejo se conservaron sin secretos en `.local/reviews/2026-10-09-meta-utility-*.json`. Es evidencia local de la consulta, no una garantía sobre estados futuros. Todavía no hubo envíos a un celular real ni evidencia `delivered`.
+Paquete, respuestas y cotejo se conservaron sin secretos en `.local/reviews/2026-10-09-meta-utility-*.json`. Es evidencia local de la consulta, no una garantía sobre estados futuros. Este corte inicial precede los envíos reales y su evidencia `delivered`, registrados más abajo.
 
 ## Soporte de integración
 
@@ -82,7 +84,7 @@ La verificación final se ejecutó con `APPDATA` privado, sin copiar secretos ni
 
 El retiro efectivo se ejecutó únicamente en `.local/module-removal/effective-605be253/source`, con bases y contenedor propios. Su [informe](2026-10-09-etapa-8-retiro-whatsapp.md) conserva las adaptaciones de fixtures e inventarios al quitar el módulo, los intentos fallidos y la comparación de datos, esquema y contrato del núcleo. La cuarta suite completa pasó **2084/2084, cero fallos y omitidos, exit 0**, 14m54.120s. La reversión pasó **12/12 permisos DML individuales** y, después de volver a retirar el módulo, los esquemas de ambas bases coinciden: SHA-256 `04ab3d7e1bda60d9c7e17f30e261f1fc9a41ac1b9fd5d2c3e393486b72034022`. Permanecen iguales los 183 DTO comunes; sólo desaparece el DTO del webhook. El coordinador cotejó el log, las doce filas de permisos, ambos hashes finales y la ausencia del contenedor propio después de la limpieza. Las fuentes finales quedan archivadas sin secretos. Esta prueba técnica de retiro no certifica el recorrido operativo por Meta ni cierra T14 completo.
 
-## Pendientes documentales del arnés
+## Historial documental del arnés
 
 La centralización del Back eliminó sus dos hallazgos de códigos. Quedan cuatro entradas en el árbol del Back y cinco en el del Front; son archivos existentes que los motores no incorporaron. Los informes son `.local/arneses/realinear-docs/20261009-1216.md` del Back y `.local/arneses/realinear-docs/20261009-1209-front.md` / `20261009-1220-front.md` del Front. Los ajustes mecánicos sí quedaron verificados y commiteados. **Los detectores todavía no están en cero.**
 
@@ -102,12 +104,22 @@ La detección de ambos repos, `.local/arneses/realinear-docs/20261009-1510.md`, 
 
 La skill `arnes` prohíbe abrir los archivos que tocó o rehacer su trabajo. La consulta para permitir la corrección manual del árbol sigue pendiente; no supone una decisión nueva de producto ni autoriza borrar o modificar estos archivos de código.
 
+La detección de **23:29 de Argentina**, `.local/arneses/realinear-docs/20261009-2329.md`, informó **auto 14, modelo 35, humano 0**, 0 tokens y «Para vos: Nada». Las fuentes avanzaron con E8b desde el corte 15:15. Se prepara otra corrida completa del arnés sobre snapshots commiteados estables de ambos chats; este resultado no acredita arreglos ni documentación en cero.
+
 ## Lo que falta para la puerta
 
 - Completar documentación en cero. Las suites finales, el E2E permanente, la comparación visual afectada y el retiro efectivo en una copia con bases migrada y vacía tienen los resultados indicados arriba.
 - Resolver aprobación/categoría de las cuatro variantes que todavía no son Utility aprobadas. Los cuatro botones URL ya están creados con el origen del túnel.
 - Completar las entregas reales que dependen de la categoría pendiente de Meta. Bot neutro e ingreso exclusivo del operador, alta empresarial por Phone con ConsumerSignup cerrado, registro personal abierto/cerrado, ingreso posterior a recuperación aprobada, Mi cuenta, destinos ocupados, suspensión, recuperación con ambos métodos anteriores, enlaces usados/invalidados/vencidos y Bot → Personal → Perfiles → Organización tienen evidencia posterior. El correctivo visual de Cuentas está comprobado en el túnel; el rótulo vacío del menú Personal sigue separado. El transporte controlado no sustituye la entrega por Meta.
 - Publicar y ejecutar la ampliación del E2E permanente para alta empresarial Phone con registro personal cerrado. El recorrido real por Meta pasó; el pase del runner sigue pendiente de la preparación de su copia congelada. El primer 409 al decidir la recuperación con WhatsApp anterior también espera la atribución técnica solicitada a Back.
+
+### Nueva revisión operativa de Meta
+
+La consulta Graph de **2026-10-10 02:30:20 UTC** (09/10 23:30 de Argentina) confirma dos Authentication aprobadas, 26 Utility aprobadas y las mismas cuatro excepciones. La UI de soporte muestra **tres revisiones de categoría Pending** (`invitacion_organizacion`, es/en; `pagina_publica_moderada/en`) y **una apelación** (`aviso_metodo_ingreso/en`, última revisión 9 de octubre). El detalle de invitación atribuye la reclasificación a contenido Marketing; el del aviso de métodos atribuye el rechazo a contenido Authentication. Este último aviso no contiene OTP: notifica un cambio ya realizado. El diálogo indica que las revisiones suelen tardar 24 horas; no ofrece una decisión ni garantiza ese plazo. Evidencia: `.local/reviews/2026-10-09-meta-aviso-apelacion-pendiente.jpg`.
+
+Se corrigió la [guía operativa](../operations/whatsapp-plantillas.md), que todavía decía que no se habían creado las cuatro variantes con URL y que el catálogo seguía por implementar. La corrección conserva cuerpos, variables, categoría requerida y textos del lienzo. La acción inmediata recomendada es esperar la revisión ya solicitada y volver a consultar sus estados antes de habilitar el envío. Ante una decisión desfavorable, revisar el motivo y preparar un ajuste concreto de texto/ejemplos para aprobación humana, sin dar por segura su aceptación ni cambiar a Marketing.
+
+Ayuda ofrece «Contactar con el servicio de asistencia». La revisión automática rechazó abrir esa opción porque puede iniciar una escalación externa y la autorización actual sólo cubre inspección; no se creó un caso ni se envió información. Quedó preparado `.local/reviews/2026-10-09-meta-soporte-borrador.md`, con las cuatro variantes y su justificación funcional, sin secretos, destinatarios, códigos ni enlaces privados. Contactarlo y enviar el borrador requiere autorización expresa; no se duplican apelaciones pendientes.
 
 La limpieza de la prueba real está hecha: teléfono libre, cuentas conservadas por sus correos, registro **Abierto/Abierta**, sesiones temporales cerradas, callback compartido anterior y encabezados por defecto restaurados; Aspire aislado detenido y 5176 libre. Los datos temporales quedan únicamente en el volumen aislado.
 
