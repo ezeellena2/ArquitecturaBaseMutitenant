@@ -475,6 +475,8 @@ Agregada el 2026-10-07 a pedido del usuario. Va **justo después de la Etapa 8**
 - configuración, uso y topes en Plataforma y en la organización;
 - el módulo habilitable por organización.
 
+**Orden de las etapas que quedan** (decidido por el usuario el 2026-10-10): **8 → 8b → 11 → 9 → 10.** La Etapa 11, WhatsApp de atención, va antes del endurecimiento (9) y del despliegue (10), así esas dos cubren también los chats de las organizaciones. Los números de las etapas no cambian; cambia solo el orden en que se programan.
+
 **Plan ejecutable vigente:** [2026-10-08-etapa-8b-asistente.md](2026-10-08-etapa-8b-asistente.md), en tres partes según [etapa-en-paralelo](../guides/etapa-en-paralelo.md), con los tableros v114. La [0049](../decisions/0049-precisiones-whatsapp-y-asistente.md) fija el resultado vacío de mensajes personales hasta tener fuente productiva, el requisito de Dueño con Email para OwnKey y cuotas diarias UTC por persona (global platform-key, por organización own-key). Los complementos visuales faltantes se dibujan antes de sus tareas; modo rápido y una sola puerta final. E8b todavía no está implementada.
 
 ---
