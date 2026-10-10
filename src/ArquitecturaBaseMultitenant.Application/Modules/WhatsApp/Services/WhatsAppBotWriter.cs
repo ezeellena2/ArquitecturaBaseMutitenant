@@ -8,6 +8,7 @@ using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// <summary>Efectos y reply en la UoW preparada por T06; nunca atribuye una entrada al dueño posterior.</summary>
@@ -49,7 +50,8 @@ internal sealed class WhatsAppBotWriter(IWhatsAppChannelSettings settings, ILogi
             label = context.Message.ReplyId == BotButtons.SignIn ? "Bot.SignIn" : "Bot.Recover";
             url = Url(context.Message.ReplyId == BotButtons.SignIn ? "login" : "recuperar");
         }
-        else if ((await platform.FindAsync(ct))?.ConsumerSignup == ConsumerSignupMode.Open)
+        else if ((await platform.FindAsync(ct))?.ConsumerSignup == ConsumerSignupMode.Open
+            && settings.ValidateNewDestination(LoginCodeDestination.ForPhone(PhoneNumber.Create(contact.WaId).Value, "whatsapp")).IsSuccess)
         { body = "Bot.Unknown"; label = "Bot.Create"; url = Url("registro?channel=whatsapp"); }
         else { body = "Bot.Closed"; choices = true; }
         var reply = await replies.BuildAsync(numberId, contact.WaId, settings.AppName, account?.Culture, body, expiresAtUtc.Value, ct,
