@@ -64,6 +64,16 @@ La lectura conserva Business + módulo efectivo + assistant.configure; no exige 
 
 Publicar contrato/modelo/ejemplos y tipos B/F, con nuevos hashes y commits, después del cambio estable T02. Verificar configure-sin-use, 401/403, aislamiento/política/modelo inactivo o incompatible, precios y ausencia de claves; preservar las 120 rutas E8. Las guardas contractuales y de acceso acompañan la publicación; la elegibilidad/precios reales se verifican al implementar configuración T03. T02 y tareas independientes continúan. La compatibilidad integral E8b queda pendiente de resolver CC01.
 
+### CC02 — turno activo al reabrir una conversación
+
+**Estado: propuesta concreta pendiente de autorización del usuario.** Integración transmitió el hallazgo de Front; la raíz cotejó los DTOs y las tres rutas `stop`. `AssistantConversationResponse` devuelve `conversation` y `messages`; ninguno contiene el identificador de turno. El identificador sí llega por SSE `start` y `TurnResult`, pero esos datos no están disponibles al reabrir el historial. La ruta de detener exige `conversationId` y `turnId`, por lo que el contrato actual no permite detener desde el detalle reabierto una respuesta que sigue en generación.
+
+Delta mínimo propuesto: agregar **`activeTurnId: string(uuid) | null` al nivel superior de AssistantConversationResponse**, compartido por los GET de detalle Consumer, Business y Platform. La propiedad se devuelve siempre. Contiene sólo el identificador del turno propio no terminal de esa conversación, admitido y todavía cancelable; vale `null` cuando no hay turno activo o éste terminó Complete/Stopped/Failed. La consulta no cambia versiones ni estados. Summary, Message, SSE, requests, rutas y permisos conservan su forma.
+
+Antes de leer el turno se revalidan propietario, lado y organización con los mismos controles del detalle; un chat ajeno o borrado conserva 404. No se agrega una lectura administrativa de turnos ni se deriva el identificador en Front. El índice de un solo turno vivo por conversación de T05 asegura que la referencia sea única. El front puede usar el valor durable para la ruta `stop` existente, con la misma autorización al detener.
+
+Publicación: schema requerido y nullable, ejemplos con turno y sin turno, tipos B/F y nuevos hashes; mantener las 120 rutas E8 intactas y dejar sólo este delta adicional al CC01 aprobado. La conducta durable se verifica en T05 con reabrir pendiente/en ejecución, detener, terminales sin turno activo, dos propietarios/organizaciones/accesos y operadores completos sin lectura ajena. La publicación contractual no sustituye esa prueba de runtime ni habilita dar por resuelta la rama antes de comprobarla. T02 y CC01 pueden continuar mientras se coordina esta adición por el usuario.
+
 ## Pase a Back, Front e Integración
 
 Back puede continuar T02–T09 automáticamente según la autorización posterior registrada. Front verifica los commits y este informe antes de implementar su Parte 2b; cada chat toca sólo su repositorio desde el congelamiento. No se enviaron mensajes a otros chats.
