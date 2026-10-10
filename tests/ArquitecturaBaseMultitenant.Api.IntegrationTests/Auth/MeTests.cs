@@ -4,8 +4,11 @@ using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
+using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
@@ -86,8 +89,20 @@ public sealed class MeTests(ApiFactory factory)
     public async Task Current_legal_document_is_public_in_the_requested_culture(
         string kind, string culture, string expectedPrefix)
     {
-        await factory.Services.SeedDatabaseAsync(Ct);
-        using var client = factory.CreateClient();
+        await using var isolated = new ApiFactory();
+        await isolated.InitializeAsync();
+        await isolated.Services.SeedDatabaseAsync(Ct);
+        await using var scope = isolated.Services.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var nowUtc = scope.ServiceProvider.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        var documentKind = Enum.Parse<LegalDocumentKind>(kind, ignoreCase: true);
+        var current = await context.LegalDocuments.AsNoTracking()
+            .Where(row => row.Kind == documentKind && row.EffectiveAtUtc <= nowUtc)
+            .OrderByDescending(row => row.EffectiveAtUtc).ThenByDescending(row => row.Version)
+            .FirstAsync(Ct);
+        var content = await context.LegalDocumentContents.AsNoTracking()
+            .SingleAsync(row => row.LegalDocumentId == current.Id && row.Culture == culture, Ct);
+        using var client = isolated.CreateClient();
         using var request = new HttpRequestMessage(HttpMethod.Get, $"/api/legal/{kind}");
         request.Headers.AcceptLanguage.ParseAdd(culture);
 
@@ -96,8 +111,11 @@ public sealed class MeTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var document = await response.Content.ReadFromJsonAsync<LegalBody>(Ct);
         Assert.NotNull(document);
-        Assert.Equal(1, document.Version);
+        Assert.Equal(current.Id, document.Id);
+        Assert.Equal(current.Version, document.Version);
         Assert.Equal(culture, document.Culture);
+        Assert.Equal(content.Culture, document.Culture);
+        Assert.Equal(content.Text, document.Text);
         Assert.StartsWith(expectedPrefix, document.Text, StringComparison.Ordinal);
     }
 
@@ -179,5 +197,5 @@ public sealed class MeTests(ApiFactory factory)
         profile.GetProperty("effectivePermissions").GetProperty("platform")
             .EnumerateArray().Select(permission => permission.GetString()).ToArray();
 
-    private sealed record LegalBody(int Version, string Culture, string Text);
+    private sealed record LegalBody(Guid Id, int Version, string Culture, string Text);
 }

@@ -86,21 +86,36 @@ public sealed class LegalAcceptanceTests(ApiFactory factory)
     [Fact]
     public async Task Seeded_legal_documents_are_readable_in_both_enabled_cultures()
     {
-        await factory.Services.SeedDatabaseAsync(Ct);
-        await using var scope = factory.Services.CreateAsyncScope();
+        await using var isolated = new ApiFactory();
+        await isolated.InitializeAsync();
+        await isolated.Services.SeedDatabaseAsync(Ct);
+        await using var scope = isolated.Services.CreateAsyncScope();
         var service = scope.ServiceProvider.GetRequiredService<ILegalService>();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var nowUtc = scope.ServiceProvider.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        foreach (var (kind, culture, prefix) in new[]
+                 {
+                     (LegalDocumentKind.Terms, "es-AR", "DOCUMENTO DE DEMOSTRACIÓN."),
+                     (LegalDocumentKind.Privacy, "en-US", "DEMONSTRATION DOCUMENT."),
+                 })
+        {
+            var current = await context.LegalDocuments.AsNoTracking()
+                .Where(row => row.Kind == kind && row.EffectiveAtUtc <= nowUtc)
+                .OrderByDescending(row => row.EffectiveAtUtc).ThenByDescending(row => row.Version)
+                .FirstAsync(Ct);
+            var content = await context.LegalDocumentContents.AsNoTracking()
+                .SingleAsync(row => row.LegalDocumentId == current.Id && row.Culture == culture, Ct);
 
-        var terms = await service.GetCurrentAsync(LegalDocumentKind.Terms, "es-AR", Ct);
-        var privacy = await service.GetCurrentAsync(LegalDocumentKind.Privacy, "en-US", Ct);
+            var result = await service.GetCurrentAsync(kind, culture, Ct);
 
-        Assert.True(terms.IsSuccess);
-        Assert.True(privacy.IsSuccess);
-        Assert.Equal(2, terms.Value.Version);
-        Assert.Equal(2, privacy.Value.Version);
-        Assert.StartsWith("DOCUMENTO DE DEMOSTRACIÓN.", terms.Value.Text, StringComparison.Ordinal);
-        Assert.StartsWith("DEMONSTRATION DOCUMENT.", privacy.Value.Text, StringComparison.Ordinal);
-        Assert.Equal("es-AR", terms.Value.Culture);
-        Assert.Equal("en-US", privacy.Value.Culture);
+            Assert.True(result.IsSuccess);
+            Assert.Equal(current.Id, result.Value.Id);
+            Assert.Equal(current.Version, result.Value.Version);
+            Assert.Equal(culture, result.Value.Culture);
+            Assert.Equal(content.Culture, result.Value.Culture);
+            Assert.Equal(content.Text, result.Value.Text);
+            Assert.StartsWith(prefix, result.Value.Text, StringComparison.Ordinal);
+        }
     }
 
     [Fact]

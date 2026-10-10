@@ -161,17 +161,19 @@ public sealed class AssistantDurableAuthorizationTests(ApiFactory factory)
     [InlineData("account")]
     public async Task Consumer_durable_replay_requires_live_gate_legal_and_account(string revoke)
     {
-        using var client = AssistantTestData.Client(factory);
-        var account = await AccountJourney.RegisterAsync(factory, client, Ct);
-        await AssistantTestData.PersonalAsync(factory, true);
+        await using var isolated = new ApiFactory();
+        await isolated.InitializeAsync();
+        using var client = AssistantTestData.Client(isolated);
+        var account = await AccountJourney.RegisterAsync(isolated, client, Ct);
+        await AssistantTestData.PersonalAsync(isolated, true);
         await AssistantExecutionActorTests.AcceptNoticeAsync(client);
         var key = Guid.NewGuid();
         using var created = await AssistantDurableConversationTests.PostAsync(client, "/api/me/assistant/conversations", "{}", key);
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
-        if (revoke == "gate") await AssistantTestData.PersonalAsync(factory, false);
+        if (revoke == "gate") await AssistantTestData.PersonalAsync(isolated, false);
         else
         {
-            using var scope = factory.Services.CreateScope();
+            using var scope = isolated.Services.CreateScope();
             var services = scope.ServiceProvider;
             await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
             {
@@ -188,7 +190,7 @@ public sealed class AssistantDurableAuthorizationTests(ApiFactory factory)
         }
         using var replay = await AssistantDurableConversationTests.PostAsync(client, "/api/me/assistant/conversations", "{}", key);
         Assert.Equal(revoke == "gate" ? HttpStatusCode.NotFound : HttpStatusCode.Forbidden, replay.StatusCode);
-        await AssistantTestData.PersonalAsync(factory, true);
+        await AssistantTestData.PersonalAsync(isolated, true);
     }
 
     internal sealed class NoChat : IChatClientFactory
