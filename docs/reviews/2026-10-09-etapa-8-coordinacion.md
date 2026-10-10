@@ -133,7 +133,7 @@ Después del test `630cbbee`, el pase `e3b0f03a`, la ficha `48a77e88` y la actua
 ## Lo que falta para la puerta
 
 - Mantener la documentación en cero sobre el corte final: los snapshots commiteados incorporados están en cero; el directorio de trabajo con fuentes posteriores en curso conserva dos automáticos. Las suites finales, el E2E permanente, la comparación visual afectada y el retiro efectivo en una copia con bases migrada y vacía tienen los resultados indicados arriba.
-- Resolver aprobación/categoría de las cuatro variantes que todavía no son Utility aprobadas. Los cuatro botones URL ya están creados con el origen del túnel.
+- Resolver las tres excepciones de aprobación/categoría confirmadas el 10/10 a las 11:46 UTC: `invitacion_organizacion/es` y `/en` siguen APPROVED / MARKETING y `aviso_metodo_ingreso/en` sigue IN_APPEAL / UTILITY. `pagina_publica_moderada/en` ya está APPROVED / UTILITY; su entrega real todavía no se volvió a probar. Los cuatro botones URL están creados con el origen del túnel. Se mantiene la espera autorizada por el usuario.
 - Completar las entregas reales que dependen de la categoría pendiente de Meta. Bot neutro e ingreso exclusivo del operador, alta empresarial por Phone con ConsumerSignup cerrado, registro personal abierto/cerrado, ingreso posterior a recuperación aprobada, Mi cuenta, destinos ocupados, suspensión, recuperación con ambos métodos anteriores, enlaces usados/invalidados/vencidos y Bot → Personal → Perfiles → Organización tienen evidencia posterior. El correctivo visual de Cuentas está comprobado en el túnel; el menú Personal cerró su pase dirigido. El transporte controlado no sustituye la entrega por Meta.
 
 ### Correctivos finales de Front
