@@ -25,6 +25,7 @@
 Esta sección manda sobre protocolos antiguos que pidan rojo ceremonial, aprobación por pantalla o evidencia por tarea. Copia el bloque inicial «Forma de trabajo» de la [Etapa 7](2026-10-04-etapa-7-publico-y-personal.md) y la [guía de etapa en paralelo](../guides/etapa-en-paralelo.md).
 
 - Programar directo, en el orden de las dependencias, copiando las referencias indicadas. Tests junto al código donde importan: reglas, posesión de métodos, carreras, autenticación, permisos, aislamiento y recorridos reales. No un test por cada estado visual.
+- **Correctivos, instrucción del usuario del 10/10:** modo rápido también para cada arreglo chico: test focal pertinente, build y lint del alcance aplicable, y commit. Sin corte congelado por arreglo, sin cohortes y sin dos revisiones independientes por arreglo; las revisiones independientes y la puerta completa se hacen una sola vez al final de E8 sobre el corte fijo. Conservar evidencias anteriores como historial, sin exigirlas para publicar los siguientes arreglos. Prioridad Back: publicar A1 y su contrato cuanto antes para desbloquear a Front; después N1, N2 y N3, y luego los restantes correctivos abiertos. Los acuerdos de contrato, autenticación, privacidad y aislamiento siguen vigentes.
 - Leer los `AGENTS.md` de raíz y de las carpetas afectadas y sus fichas. Mantener verdes las guardas existentes; no ampliar listas blancas para eludirlas.
 - Tres partes: **1. Contrato**, con la consolidación de identidad como primer paso; **2. Back y Front en paralelo**, un chat por repo; **3. Integración y puerta**, un solo chat sobre ambos repos. El chat de Contrato es el único que toca ambos repos antes de la integración.
 - Cada chat de la parte 2 toca solo su repo. Contrato congelado al terminar la parte 1. Si hay que cambiarlo, registrar «Cambios al contrato» y esperar que el usuario pase el cambio al otro chat; sincronizarlo en ambos repos antes de seguir.
@@ -468,6 +469,7 @@ Ejecutar sobre los commits finales. Si una corrección posterior cambia lógica,
 
 | Verificación | Comando / evidencia esperada |
 |---|---|
+| Revisiones independientes finales | Revisar el conjunto de correctivos y la etapa sobre el mismo par fijo Back/Front, una sola vez al cierre; informes con hallazgos resueltos o pendientes explícitos. No repetir estas revisiones por cada arreglo chico. |
 | Back completo | En B: `dotnet build ArquitecturaBaseMultitenant.slnx` sin errores/advertencias; `dotnet test` completo con Docker, sin fallos ni omitidos relevantes. |
 | Front completo | En F: `npm run build`, `npm run lint`, `npm test`, `npm run contracts:check`, todos exit 0. |
 | E2E real | En F: `npm run test:e2e:real` sin filtro, nuevos recorridos E8 y regresiones; front/API/BD reales. Añadir ejecución Meta siguiente con tiempos/estados, sin secretos. |
