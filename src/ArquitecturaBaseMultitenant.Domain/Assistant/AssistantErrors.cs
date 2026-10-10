@@ -55,4 +55,3 @@ public static class AssistantErrors
     private static ValidationError Field(string code, string description, string field, ErrorType type) =>
         new(code, description, new Dictionary<string, string[]> { [field] = [code] }, type);
 }
-
