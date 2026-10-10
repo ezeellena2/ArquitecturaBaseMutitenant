@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { after, test } from 'node:test';
@@ -49,16 +50,31 @@ test('--detectar sobre los fixtures devuelve exactamente los hallazgos esperados
   assert.match(c.salida.join('\n'), /humano: 1/);
 });
 
-test('--instalar copia la skill versionada de .agents a .claude', async () => {
+test('--instalar copia a .claude las skills versionadas en .agents', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'skill-'));
   temporales.push(dir);
-  await mkdir(join(dir, '.agents', 'skills', 'arnes'), { recursive: true });
-  await writeFile(join(dir, '.agents', 'skills', 'arnes', 'SKILL.md'), '---\nname: arnes\n---\n');
+  for (const nombre of ['puerta', 'arnes']) {
+    await mkdir(join(dir, '.agents', 'skills', nombre), { recursive: true });
+    await writeFile(join(dir, '.agents', 'skills', nombre, 'SKILL.md'), `---\nname: ${nombre}\n---\n`);
+  }
+  await mkdir(join(dir, '.agents', 'skills', 'sin-skill'), { recursive: true });
   const c = captura();
   assert.equal(await ejecutar(['--instalar', '--back', dir], { escribir: c.escribir }), 0);
-  assert.equal(await readFile(join(dir, '.claude', 'skills', 'arnes', 'SKILL.md'), 'utf8'), '---\nname: arnes\n---\n');
-  assert.match(c.salida.join('\n'), /Skill \/arnes instalada/);
+  for (const nombre of ['arnes', 'puerta']) {
+    assert.equal(await readFile(join(dir, '.claude', 'skills', nombre, 'SKILL.md'), 'utf8'), `---\nname: ${nombre}\n---\n`);
+  }
+  assert.equal(existsSync(join(dir, '.claude', 'skills', 'sin-skill')), false);
+  assert.match(c.salida.join('\n'), /Skills instaladas en .+: \/arnes, \/puerta/);
   assert.equal(await ejecutar(['--instalar', '--back', join(dir, 'nada')], { escribir: c.escribir }), 1);
+});
+
+test('cada skill versionada declara su nombre y su descripción', async () => {
+  const raiz = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '.agents', 'skills');
+  for (const carpeta of await readdir(raiz)) {
+    if (!existsSync(join(raiz, carpeta, 'SKILL.md'))) continue;
+    const skill = await readFile(join(raiz, carpeta, 'SKILL.md'), 'utf8');
+    assert.match(skill, new RegExp(`^---\\r?\\nname: ${carpeta}\\r?\\ndescription: .+\\r?\\n---`), carpeta);
+  }
 });
 
 test('la skill del repo declara su nombre y las opciones del CLI', async () => {

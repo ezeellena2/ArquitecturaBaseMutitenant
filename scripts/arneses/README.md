@@ -18,7 +18,7 @@ node scripts/arneses/arnes.mjs realinear-docs --detectar        # 0 tokens: dete
 node scripts/arneses/arnes.mjs realinear-docs                   # corrida completa con el motor del manifiesto
 node scripts/arneses/arnes.mjs realinear-docs --motor codex     # con Codex
 node scripts/arneses/arnes.mjs realinear-docs --repo front --sin-modelo
-node scripts/arneses/arnes.mjs --instalar                       # copia la skill /arnes a .claude/skills/
+node scripts/arneses/arnes.mjs --instalar                       # copia las skills de .agents/skills/ a .claude/skills/
 ```
 
 | Opción | Qué hace |

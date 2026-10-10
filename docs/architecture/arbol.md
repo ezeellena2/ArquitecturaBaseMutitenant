@@ -7,9 +7,15 @@
 ```
 ArquitecturaBaseMutitenant/
 ├── .agents/
-│   └── skills/
-│       └── arnes/
-│           └── SKILL.md                              skill /arnes <nombre>: corre un arnés ejecutable y muestra el resumen (Codex la lee de acá; --instalar la copia a .claude/skills/)
+│   └── skills/                                       skills versionadas: Codex las lee de acá; arnes.mjs --instalar las copia a .claude/skills/
+│       ├── arnes/
+│       │   └── SKILL.md                              skill /arnes <nombre>: corre un arnés ejecutable y muestra el resumen
+│       ├── plan-etapa/
+│       │   └── SKILL.md                              skill /plan-etapa: el plan de una etapa en tres partes, con el texto para cada chat
+│       ├── puerta/
+│       │   └── SKILL.md                              skill /puerta: la puerta de una etapa sobre un corte fijo, con su resumen
+│       └── recorrido/
+│           └── SKILL.md                              skill /recorrido: el recorrido de usuario con Playwright y sus capturas
 ├── .github/
 │   └── workflows/
 │       └── ci.yml                                    [E0] build + test (Docker); desde la E1 verifica docs/contracts/openapi.json

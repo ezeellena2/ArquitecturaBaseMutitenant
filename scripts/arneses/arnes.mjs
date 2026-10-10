@@ -119,15 +119,20 @@ export function sinLineasQueSeBorran(hallazgos) {
 }
 
 /**
- * `.claude/` está en `.gitignore`, así que la skill versionada vive en `.agents/skills/arnes/` (la lee Codex)
- * y acá se copia a `.claude/skills/arnes/` en cada máquina. Es una copia, no un enlace: el repo tiene `core.symlinks=false`.
+ * `.claude/` está en `.gitignore`, así que las skills versionadas viven en `.agents/skills/<nombre>/` (las lee Codex)
+ * y acá se copian a `.claude/skills/` en cada máquina. Son copias, no enlaces: el repo tiene `core.symlinks=false`.
+ * Una carpeta sin `SKILL.md` no es una skill del repo y no se copia.
  */
-export async function instalarSkill(raiz) {
-  const origen = join(raiz, '.agents', 'skills', 'arnes');
-  const destino = join(raiz, '.claude', 'skills', 'arnes');
+export async function instalarSkills(raiz) {
+  const origen = join(raiz, '.agents', 'skills');
+  const destino = join(raiz, '.claude', 'skills');
   if (!existsSync(origen)) throw new Error(`No existe ${origen}`);
-  await cp(origen, destino, { recursive: true });
-  return destino;
+  const nombres = (await readdir(origen, { withFileTypes: true }))
+    .filter((e) => e.isDirectory() && existsSync(join(origen, e.name, 'SKILL.md')))
+    .map((e) => e.name)
+    .sort();
+  for (const nombre of nombres) await cp(join(origen, nombre), join(destino, nombre), { recursive: true });
+  return { destino, nombres };
 }
 
 export async function ejecutar(argv, opts = {}) {
@@ -136,8 +141,8 @@ export async function ejecutar(argv, opts = {}) {
   const args = parsearArgumentos(argv);
   try {
     if (args.instalar) {
-      const destino = await instalarSkill(args.back ?? raizBackPorDefecto());
-      escribir(`Skill /arnes instalada en ${destino}`);
+      const { destino, nombres } = await instalarSkills(args.back ?? raizBackPorDefecto());
+      escribir(`Skills instaladas en ${destino}: ${nombres.map((n) => `/${n}`).join(', ')}`);
       return 0;
     }
     const arneses = await listarArneses(dirArneses);
