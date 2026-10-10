@@ -32,7 +32,7 @@
 - `IdempotentActionsTests` (E1): todo `POST` que declara 201/202 o llama a `ToCreatedResult`/`ToAcceptedResult` (también desde una acción async) tiene `[Idempotent]` (test de arquitectura).
 - `EngagementTests` (E7): el reintento en el mismo sitio crea un solo pedido; cambiar de sitio con la misma clave y cuerpo da 422, y retirar la publicación o apagar el módulo impide el replay.
 - `LoginLinkTests` de integración (E8): replay revalida cuenta, método y canal para éxito y baja pendiente; no repite cookie/ticket y rechaza al operador sin datos.
-- `AssistantDurableConversationTests`, `AssistantDurableTransportTests` y `AssistantDurableAuthorizationTests` (E8b T05b): DTO/version originales después de editar, vencimiento global, rollback, aborto después del commit, fallo de Complete, dos hosts, body/ruta distintos, tombstone y autorización vigente antes de reserva/replay.
+- `AssistantDurableConversationTests`, `AssistantDurableTransportTests` y `AssistantDurableAuthorizationTests` (E8; E8b T05b): DTO/version originales después de editar, vencimiento global, rollback, aborto después del commit, fallo de Complete, dos hosts, body/ruta distintos, tombstone y autorización vigente antes de reserva/replay.
 
 ## Detalle
 [backend.md §20](../architecture/backend.md#20-reglas-de-datos-que-se-aplican-solas)

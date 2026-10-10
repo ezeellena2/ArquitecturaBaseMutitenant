@@ -73,6 +73,171 @@ public sealed class HarnessTests
         }
     }
 
+    [Theory]
+    [InlineData("", "", "")]
+    [InlineData("namespace Probes;", "namespace Probes {", "}")]
+    [InlineData("namespace Probes.Nested;", "namespace Probes { namespace Nested {", "} }")]
+    [InlineData("namespace Probes; partial class Outer {", "namespace Probes { partial class Outer {", "} }", "}")]
+    [InlineData("partial struct Outer<T> {", "partial struct Outer<U> {", "}", "}")]
+    [InlineData("partial record Outer {", "partial record Outer {", "}", "}")]
+    public void CSharp_partial_test_class_uses_a_direct_test_in_another_part(
+        string helperPrefix, string testPrefix, string testSuffix, string helperSuffix = "")
+    {
+        WithCSharpTestFiles([
+            ("Probe.Helpers.cs", helperPrefix + "\npublic sealed partial class ProbeTests { }\n" + helperSuffix),
+            ("Probe.cs", testPrefix + "\npublic sealed partial class ProbeTests {\n[Fact]\npublic void Works() { }\n}\n" + testSuffix)
+        ], backend =>
+        {
+            Assert.Empty(EmptyCSharpTestClasses(backend));
+            Assert.Contains("ProbeTests", TestNames(backend, null));
+        });
+    }
+
+    [Theory]
+    [InlineData("partial class", "class", "", "", "", "")]
+    [InlineData("class", "partial class", "", "", "", "")]
+    [InlineData("class", "class", "", "", "", "")]
+    [InlineData("partial class", "partial class", "namespace One;", "namespace Two;", "", "")]
+    [InlineData("partial class", "partial class", "namespace One {", "namespace Two {", "}", "}")]
+    [InlineData("partial class", "partial class", "partial class One {", "partial class Two {", "}", "}")]
+    [InlineData("partial class", "partial class", "class Outer {", "class Outer {", "}", "}")]
+    [InlineData("partial class", "partial class", "partial class Outer<T> {", "partial class Outer<T, U> {", "}", "}")]
+    [InlineData("partial class", "partial class", "partial class Outer {", "partial struct Outer {", "}", "}")]
+    [InlineData("file partial class", "file partial class", "", "", "", "")]
+    public void CSharp_partial_test_class_is_not_rescued_by_a_different_type(
+        string helperKind, string testKind, string helperPrefix, string testPrefix, string helperSuffix, string testSuffix)
+    {
+        WithCSharpTestFiles([
+            ("Empty.cs", helperPrefix + "\n" + helperKind + " ProbeTests { }\n" + helperSuffix),
+            ("Active.cs", testPrefix + "\n" + testKind + " ProbeTests {\n[Theory]\npublic void Works() { }\n}\n" + testSuffix)
+        ], backend =>
+        {
+            var failure = Assert.Single(EmptyCSharpTestClasses(backend));
+            Assert.Contains("tests/Empty.cs: ProbeTests", failure, StringComparison.Ordinal);
+        });
+    }
+
+    [Fact]
+    public void CSharp_partial_test_class_is_not_rescued_by_another_project()
+    {
+        WithCSharpTestFiles([
+            ("One/One.csproj", "<Project />"),
+            ("One/Modules/Empty.cs", "namespace Probes; partial class ProbeTests { }"),
+            ("Two/Two.csproj", "<Project />"),
+            ("Two/Active.cs", "namespace Probes; partial class ProbeTests {\n[Fact]\npublic void Works() { }\n}")
+        ], backend => Assert.Contains("One/Modules/Empty.cs", Assert.Single(EmptyCSharpTestClasses(backend)), StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void CSharp_partial_test_class_joins_parts_below_the_same_project()
+    {
+        WithCSharpTestFiles([
+            ("One/One.csproj", "<Project />"),
+            ("One/Modules/Empty.cs", "namespace Probes; partial class ProbeTests { }"),
+            ("One/Active.cs", "namespace Probes; partial class ProbeTests {\n[Fact]\npublic void Works() { }\n}")
+        ], backend => Assert.Empty(EmptyCSharpTestClasses(backend)));
+    }
+
+    [Fact]
+    public void CSharp_partial_test_class_ignores_nested_tests_comments_and_strings()
+    {
+        WithCSharpTestFiles([
+            ("Empty.cs", "partial class ProbeTests { }"),
+            ("Decoys.cs", """"
+                partial class ProbeTests
+                {
+                    // [Fact] public void Comment() { }
+                    /*
+                    [Fact]
+                    public void BlockComment() { }
+                    */
+                    string text = "[Fact] public void String() { }";
+                    string verbatim = @"
+                    [Fact]
+                    public void Verbatim() { }";
+                    string raw = """
+                    [Theory]
+                    public void Raw() { }
+                    """;
+                    class NestedTests
+                    {
+                        [Fact]
+                        public void Works() { }
+                    }
+                }
+                """")
+        ], backend =>
+        {
+            var failures = EmptyCSharpTestClasses(backend).ToArray();
+            Assert.Equal(2, failures.Length);
+            Assert.All(failures, failure => Assert.Contains("ProbeTests", failure, StringComparison.Ordinal));
+            Assert.DoesNotContain("ProbeTests", TestNames(backend, null));
+            Assert.Contains("NestedTests", TestNames(backend, null));
+        });
+    }
+
+    [Fact]
+    public void CSharp_partial_test_class_joins_file_local_parts_in_the_same_file()
+    {
+        WithCSharpTestFiles([
+            ("Probe.cs", """
+                file partial class ProbeTests { }
+                file partial class ProbeTests
+                {
+                    [Fact]
+                    public void Works() { }
+                }
+                """)
+        ], backend => Assert.Empty(EmptyCSharpTestClasses(backend)));
+    }
+
+    [Fact]
+    public void CSharp_record_class_without_a_direct_test_is_rejected()
+    {
+        WithCSharpTestFiles([
+            ("Empty.cs", "public record class EmptyProbeTests { }")
+        ], backend => Assert.Contains("EmptyProbeTests", Assert.Single(EmptyCSharpTestClasses(backend)), StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void CSharp_record_class_partial_uses_a_direct_test_in_another_part()
+    {
+        WithCSharpTestFiles([
+            ("Probe.Helpers.cs", "namespace Probes; public partial record class ProbeTests { }"),
+            ("Probe.cs", """
+                namespace Probes;
+                public partial record class ProbeTests
+                {
+                    [Fact]
+                    public void Works() { }
+                }
+                """)
+        ], backend =>
+        {
+            Assert.Empty(EmptyCSharpTestClasses(backend));
+            Assert.Contains("ProbeTests", TestNames(backend, null));
+        });
+    }
+
+    private static void WithCSharpTestFiles((string Path, string Source)[] files, Action<string> verify)
+    {
+        var backend = Path.Combine(Path.GetTempPath(), "harness-partial-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            foreach (var (path, source) in files)
+            {
+                var file = Path.Combine(backend, "tests", path);
+                Directory.CreateDirectory(Path.GetDirectoryName(file)!);
+                File.WriteAllText(file, source);
+            }
+            verify(backend);
+        }
+        finally
+        {
+            if (Directory.Exists(backend)) Directory.Delete(backend, recursive: true);
+        }
+    }
+
     [Fact]
     public void Lo_verifica_requires_closed_stage_Node_and_TypeScript_tests()
     {
@@ -610,7 +775,11 @@ public sealed class HarnessTests
         return known && !Directory.Exists(Path.Combine(Directory.GetParent(Root)!.FullName, sibling));
     }
 
-    private sealed record CSharpTestClass(string Name, string File, bool HasTestMethod);
+    private sealed record CSharpTestClass(string Name, string File, bool HasTestMethod, bool IsPartial, string Identity);
+
+    private sealed record CSharpScope(string Name, int Open, int Close);
+
+    private sealed record CSharpType(string Name, string Identity, int Open, int Close, bool IsClass, bool IsPartial);
 
     private static HashSet<string> TestNames(string backendRoot, string? frontendRoot)
     {
@@ -653,17 +822,79 @@ public sealed class HarnessTests
 
     private static IEnumerable<CSharpTestClass> CSharpTestClasses(string backendRoot)
     {
-        foreach (var file in WorkFiles(Path.Combine(backendRoot, "tests")).Where(file => file.EndsWith(".cs", StringComparison.Ordinal)))
+        var testsRoot = Path.Combine(backendRoot, "tests");
+        var declarations = new List<CSharpTestClass>();
+        foreach (var file in WorkFiles(testsRoot).Where(file => file.EndsWith(".cs", StringComparison.Ordinal)))
         {
             var code = MaskNonCode(File.ReadAllText(file));
-            foreach (Match match in Regex.Matches(code, @"\bclass\s+(?<name>[A-Za-z][A-Za-z0-9_]*Tests)\b", RegexOptions.CultureInvariant))
+            var namespaces = CSharpNamespaces(code).ToArray();
+            var types = CSharpTypes(code, file).ToArray();
+            var project = CSharpProject(file, testsRoot);
+            foreach (var type in types.Where(type => type.IsClass && type.Name.EndsWith("Tests", StringComparison.Ordinal)))
             {
-                var open = code.IndexOf('{', match.Index + match.Length);
-                if (open < 0) continue;
-                var close = ClosingBrace(code, open);
-                if (close < 0) continue;
-                yield return new CSharpTestClass(match.Groups["name"].Value, file, HasTestMethod(code, open, close));
+                var namespaceName = string.Join('.', namespaces
+                    .Where(scope => scope.Open < type.Open && scope.Close > type.Close).Select(scope => scope.Name));
+                var enclosingTypes = types.Where(parent => parent.Open < type.Open && parent.Close > type.Close)
+                    .Select(parent => parent.Identity);
+                var identity = project + "|" + namespaceName + "|" + string.Join('+', enclosingTypes.Append(type.Identity));
+                declarations.Add(new CSharpTestClass(type.Name, file, HasTestMethod(code, type.Open, type.Close), type.IsPartial, identity));
             }
+        }
+
+        var testedPartialTypes = declarations.Where(type => type.IsPartial && type.HasTestMethod)
+            .Select(type => type.Identity).ToHashSet(StringComparer.Ordinal);
+        return declarations.Select(type => type with
+        {
+            HasTestMethod = type.HasTestMethod || type.IsPartial && testedPartialTypes.Contains(type.Identity)
+        });
+    }
+
+    private static string CSharpProject(string file, string testsRoot)
+    {
+        for (var folder = Path.GetDirectoryName(file); folder is not null; folder = Path.GetDirectoryName(folder))
+        {
+            var projects = Directory.EnumerateFiles(folder, "*.csproj").ToArray();
+            if (projects.Length == 1) return projects[0];
+            // Sin un dueño inequívoco no se unen declaraciones entre archivos.
+            if (projects.Length > 1) return file;
+            if (folder == testsRoot) break;
+        }
+        return testsRoot;
+    }
+
+    private static IEnumerable<CSharpScope> CSharpNamespaces(string code)
+    {
+        const string pattern = @"\bnamespace\s+(?<name>@?[A-Za-z_][A-Za-z0-9_]*(?:\s*\.\s*@?[A-Za-z_][A-Za-z0-9_]*)*)\s*(?<delimiter>[;{])";
+        foreach (Match match in Regex.Matches(code, pattern, RegexOptions.CultureInvariant))
+        {
+            var open = match.Index + match.Length - 1;
+            var close = code[open] == ';' ? code.Length : ClosingBrace(code, open);
+            if (close < 0) continue;
+            var name = Regex.Replace(match.Groups["name"].Value, @"\s|@", "", RegexOptions.CultureInvariant);
+            yield return new CSharpScope(name, open, close);
+        }
+    }
+
+    private static IEnumerable<CSharpType> CSharpTypes(string code, string file)
+    {
+        const string pattern = @"\b(?<modifiers>(?:(?:public|internal|protected|private|static|abstract|sealed|new|unsafe|readonly|ref|file|partial)\s+)*)(?<kind>record(?:\s+(?:class|struct))?|class|struct|interface)\s+@?(?<name>[A-Za-z_][A-Za-z0-9_]*)(?:\s*<(?<parameters>[^<>]+)>)?[^{};]*\{";
+        foreach (Match match in Regex.Matches(code, pattern, RegexOptions.CultureInvariant))
+        {
+            var open = match.Index + match.Length - 1;
+            var close = ClosingBrace(code, open);
+            if (close < 0) continue;
+            var name = match.Groups["name"].Value;
+            var kind = Regex.Replace(match.Groups["kind"].Value, @"\s+", " ", RegexOptions.CultureInvariant);
+            var isClass = kind is "class" or "record class";
+            if (kind == "record") kind = "record class";
+            var modifiers = match.Groups["modifiers"].Value.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+            var partial = modifiers.Contains("partial", StringComparer.Ordinal);
+            var arity = match.Groups["parameters"].Success ? match.Groups["parameters"].Value.Count(character => character == ',') + 1 : 0;
+            var identity = kind + ":" + name + "`" + arity.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            // Un contenedor no partial o file-local no identifica el mismo tipo en otro archivo.
+            if (!partial) identity += "@" + file + ":" + open;
+            else if (modifiers.Contains("file", StringComparer.Ordinal)) identity += "@" + file;
+            yield return new CSharpType(name, identity, open, close, isClass, partial);
         }
     }
 

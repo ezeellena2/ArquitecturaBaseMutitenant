@@ -49,7 +49,22 @@
 - Un servicio que llama a métodos que escriben de otro servicio (lo compartido baja a un helper).
 - Un helper con un sufijo que no está en la tabla, o una fila de la tabla que ya no usa nadie.
 
-## Actor neutral de background
+## Copiá de
+- El área Roles completa (E4): `Domain/Authorization/Role.cs`, `Application/Services/Roles/RoleService.cs`, `Infrastructure/Persistence/Readers/RoleReader.cs`, `Api/Controllers/Organization/RolesController.cs`.
+- La receta: [`docs/guides/agregar-un-area.md`](../guides/agregar-un-area.md) (E4).
+
+## Lo verifica
+- `LayerDependencyTests` (E0), `ProjectReferencesTests` (E0), `ApplicationPackagesTests` (E0): dependencias entre capas y paquetes permitidos.
+- `ControllerServiceRepositoryTests` (E1): los controllers inyectan solo `I*Service`.
+- `ApplicationPublicApiTests` (E1): sin `IQueryable` ni `Expression`.
+- `ApplicationServicesTests` (E1): cada servicio tiene su interfaz, cada helper termina con un sufijo de la tabla y cada sufijo de la tabla se usa. `ServiceDependencyCountTests` (E1), `MinimalApiRoutesTests` (E0).
+- `DependencyInjectionTests` (E6): cada clase de `Services` se registra una sola vez, y Application registra y valida sus opciones. `ServiceProviderValidationTests` (E6): `ApiFactory` construye cada registro al arrancar (`ValidateOnBuild`).
+- `ExecutionActorContextTests` (E8; E8b T05a): restauración/anidación, tareas paralelas, cancelación/error, revocación de flujos heredados y guardas neutrales. `AssistantExecutionActorTests`, `AssistantExecutionActorBusinessTests` y `AssistantExecutionActorSecurityTests` (E8; E8b T05a): DI/RLS y cuentas/membresías/permisos reales con Docker, scopes base/transacción, operador exclusivo y revocaciones entre fases. `IdentityAccessTests` (E8; E8b T05a): inventario exacto de lectores globales.
+
+## Detalle
+[backend.md §3–§5 y §7](../architecture/backend.md#3-capas-y-dependencias)
+
+### Actor neutral de background
 
 Los puertos `IExecutionActorContext`, `IExecutionActorScope` e `IExecutionActorFactory` viven en `Application/Interfaces/Integrations/Request`; sus adaptadores, en `Infrastructure/RequestContext`. El núcleo no importa módulos para representar al actor. `ExecutionActor` conserva los cinco campos de T01 y agrega propiedades opcionales `TenantKind` y `SessionStartedAtUtc`, sin otra firma, token ni principal.
 
@@ -62,18 +77,3 @@ El scope usa `AsyncLocal`, admite anidación y restaura en orden inverso. Dispos
 Cada fase/herramienta vuelve a autorizar con las reglas productivas: estado de cuenta y organización, membresía vigente sin cache, legales, feature/emergencia y permisos. La captura no concede permisos. La vía de datos/ejecución exige además la versión vigente del aviso IA antes/después de la lectura; aceptar el primer aviso usa la autorización de acceso sin exigir un aviso previo, evitando el círculo de aceptación. State informativo y stubs conservan sus límites.
 
 El inventario cerrado de `IdentityAccessTests` incluye dos consumidores legítimos nuevos de `IUserTenantAccessReader`: la factory neutral necesita verificar el binding antes del acceso privado y `AssistantSessionPolicy` necesita releer membresía en cada fase. No se amplía la excepción de acceso directo a Identity ni se admite un namespace entero.
-
-## Copiá de
-- El área Roles completa (E4): `Domain/Authorization/Role.cs`, `Application/Services/Roles/RoleService.cs`, `Infrastructure/Persistence/Readers/RoleReader.cs`, `Api/Controllers/Organization/RolesController.cs`.
-- La receta: [`docs/guides/agregar-un-area.md`](../guides/agregar-un-area.md) (E4).
-
-## Lo verifica
-- `LayerDependencyTests` (E0), `ProjectReferencesTests` (E0), `ApplicationPackagesTests` (E0): dependencias entre capas y paquetes permitidos.
-- `ControllerServiceRepositoryTests` (E1): los controllers inyectan solo `I*Service`.
-- `ApplicationPublicApiTests` (E1): sin `IQueryable` ni `Expression`.
-- `ApplicationServicesTests` (E1): cada servicio tiene su interfaz, cada helper termina con un sufijo de la tabla y cada sufijo de la tabla se usa. `ServiceDependencyCountTests` (E1), `MinimalApiRoutesTests` (E0).
-- `DependencyInjectionTests` (E6): cada clase de `Services` se registra una sola vez, y Application registra y valida sus opciones. `ServiceProviderValidationTests` (E6): `ApiFactory` construye cada registro al arrancar (`ValidateOnBuild`).
-- `ExecutionActorContextTests` (E8b T05a): restauración/anidación, tareas paralelas, cancelación/error, revocación de flujos heredados y guardas neutrales. `AssistantExecutionActorTests`, `AssistantExecutionActorBusinessTests` y `AssistantExecutionActorSecurityTests`: DI/RLS y cuentas/membresías/permisos reales con Docker, scopes base/transacción, operador exclusivo y revocaciones entre fases. `IdentityAccessTests`: inventario exacto de lectores globales.
-
-## Detalle
-[backend.md §3–§5 y §7](../architecture/backend.md#3-capas-y-dependencias)
