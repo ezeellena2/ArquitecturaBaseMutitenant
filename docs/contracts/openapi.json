@@ -46371,7 +46371,7 @@
         "tags": [
           "Auth"
         ],
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Invalid informa attemptsLeft sólo ante una prueba activa; sin prueba activa no informa intentos restantes. Los errores del código no incluyen errors.code. Intentos y topes actuales; cuando el error incluye retryAfter, son segundos y coincide con Retry-After. El bloqueo de cuenta no informa un plazo ni ese encabezado. No guardar códigos ni enlaces en logs. returnUrl OIDC o /invitacion conserva el flujo anterior y exige access ausente/null en el cuerpo. Continuación fija exclusivamente / con access=consumer o /org con access=business, valores literales sin query/fragmento; cualquier discrepancia falla antes de consumir el código. Respuesta returnUrl y cookie de identidad después del commit, sin tokens OIDC en body; el SPA inicia una autorización nueva tras el retorno fijo. Baja pendiente: sólo después de probar posesión y dentro de la gracia se emiten cancelTicket, returnUrl validado y fechas de cancelación; con gracia vencida se devuelve Legal.AccountDeletion.GraceExpired, sin ticket.",
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Invalid informa attemptsLeft sólo ante una prueba activa; sin prueba activa no informa intentos restantes. Los errores del código no incluyen errors.code. Intentos y topes actuales; cuando el error incluye retryAfter, son segundos y coincide con Retry-After. El bloqueo de cuenta no informa un plazo ni ese encabezado. No guardar códigos ni enlaces en logs. returnUrl OIDC o /invitacion conserva el flujo anterior y exige access ausente/null en el cuerpo. Continuación fija exclusivamente / con access=consumer o /org con access=business, valores literales sin query/fragmento; cualquier discrepancia falla antes de consumir el código. Respuesta returnUrl y cookie de identidad después del commit, sin tokens OIDC en body; el SPA inicia una autorización nueva tras el retorno fijo. Business fijo: después de probar el código se revalida la membresía y la organización. Sin membresía: Tenancy.Access.NotMember; membresía inactiva: Tenancy.Member.Inactive; organización pendiente, en preparación, suspendida o cerrada: Tenancy.Tenant.PendingApproval, Provisioning, Suspended o Closed. Son 403 sin cookie, errores por campo, Retry-After ni ticket de cancelación. Los errores de membresía inactiva y estado de organización incluyen organizationName y tenantId; NotMember no incluye esos datos. Baja pendiente: sólo después de probar posesión y dentro de la gracia se emiten cancelTicket, returnUrl validado y fechas de cancelación; con gracia vencida se devuelve Legal.AccountDeletion.GraceExpired, sin ticket.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -46636,7 +46636,7 @@
             }
           },
           "403": {
-            "description": "Forbidden; Identity.Account.Suspended; Identity.Account.PendingDeletion; Tenancy.Access.PlatformOnly",
+            "description": "Forbidden; Identity.Account.Suspended; Identity.Account.PendingDeletion; Tenancy.Access.PlatformOnly; Tenancy.Access.NotMember; Tenancy.Member.Inactive; Tenancy.Tenant.PendingApproval; Tenancy.Tenant.Provisioning; Tenancy.Tenant.Suspended; Tenancy.Tenant.Closed",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -46701,6 +46701,146 @@
                       "detail": "This is a platform operator account: it can only enter the platform.",
                       "code": "Tenancy.Access.PlatformOnly",
                       "traceId": "example-trace-id"
+                    }
+                  },
+                  "Tenancy.Access.NotMember.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 403,
+                      "detail": "No sos miembro de esta organización.",
+                      "code": "Tenancy.Access.NotMember",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Tenancy.Access.NotMember.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 403,
+                      "detail": "You are not a member of this organization.",
+                      "code": "Tenancy.Access.NotMember",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Tenancy.Member.Inactive.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 403,
+                      "detail": "Tu acceso a esta organización está deshabilitado.",
+                      "code": "Tenancy.Member.Inactive",
+                      "traceId": "example-trace-id",
+                      "organizationName": "Organización de ejemplo",
+                      "tenantId": "11111111-1111-4111-8111-111111111111"
+                    }
+                  },
+                  "Tenancy.Member.Inactive.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 403,
+                      "detail": "Your access to this organization is disabled.",
+                      "code": "Tenancy.Member.Inactive",
+                      "traceId": "example-trace-id",
+                      "organizationName": "Example organization",
+                      "tenantId": "11111111-1111-4111-8111-111111111111"
+                    }
+                  },
+                  "Tenancy.Tenant.PendingApproval.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 403,
+                      "detail": "La organización espera aprobación.",
+                      "code": "Tenancy.Tenant.PendingApproval",
+                      "traceId": "example-trace-id",
+                      "organizationName": "Organización de ejemplo",
+                      "tenantId": "11111111-1111-4111-8111-111111111111"
+                    }
+                  },
+                  "Tenancy.Tenant.PendingApproval.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 403,
+                      "detail": "The organization is awaiting approval.",
+                      "code": "Tenancy.Tenant.PendingApproval",
+                      "traceId": "example-trace-id",
+                      "organizationName": "Example organization",
+                      "tenantId": "11111111-1111-4111-8111-111111111111"
+                    }
+                  },
+                  "Tenancy.Tenant.Provisioning.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 403,
+                      "detail": "La organización se está preparando.",
+                      "code": "Tenancy.Tenant.Provisioning",
+                      "traceId": "example-trace-id",
+                      "organizationName": "Organización de ejemplo",
+                      "tenantId": "11111111-1111-4111-8111-111111111111"
+                    }
+                  },
+                  "Tenancy.Tenant.Provisioning.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 403,
+                      "detail": "The organization is being provisioned.",
+                      "code": "Tenancy.Tenant.Provisioning",
+                      "traceId": "example-trace-id",
+                      "organizationName": "Example organization",
+                      "tenantId": "11111111-1111-4111-8111-111111111111"
+                    }
+                  },
+                  "Tenancy.Tenant.Suspended.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 403,
+                      "detail": "La organización está suspendida.",
+                      "code": "Tenancy.Tenant.Suspended",
+                      "traceId": "example-trace-id",
+                      "organizationName": "Organización de ejemplo",
+                      "tenantId": "11111111-1111-4111-8111-111111111111"
+                    }
+                  },
+                  "Tenancy.Tenant.Suspended.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 403,
+                      "detail": "The organization is suspended.",
+                      "code": "Tenancy.Tenant.Suspended",
+                      "traceId": "example-trace-id",
+                      "organizationName": "Example organization",
+                      "tenantId": "11111111-1111-4111-8111-111111111111"
+                    }
+                  },
+                  "Tenancy.Tenant.Closed.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 403,
+                      "detail": "La organización está cerrada.",
+                      "code": "Tenancy.Tenant.Closed",
+                      "traceId": "example-trace-id",
+                      "organizationName": "Organización de ejemplo",
+                      "tenantId": "11111111-1111-4111-8111-111111111111"
+                    }
+                  },
+                  "Tenancy.Tenant.Closed.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 403,
+                      "detail": "The organization is closed.",
+                      "code": "Tenancy.Tenant.Closed",
+                      "traceId": "example-trace-id",
+                      "organizationName": "Example organization",
+                      "tenantId": "11111111-1111-4111-8111-111111111111"
                     }
                   }
                 }
@@ -46957,6 +47097,48 @@
             "field": null,
             "es": "Esta cuenta es de un operador: solo entra a Plataforma.",
             "en": "This is a platform operator account: it can only enter the platform."
+          },
+          {
+            "status": 403,
+            "code": "Tenancy.Access.NotMember",
+            "field": null,
+            "es": "No sos miembro de esta organización.",
+            "en": "You are not a member of this organization."
+          },
+          {
+            "status": 403,
+            "code": "Tenancy.Member.Inactive",
+            "field": null,
+            "es": "Tu acceso a esta organización está deshabilitado.",
+            "en": "Your access to this organization is disabled."
+          },
+          {
+            "status": 403,
+            "code": "Tenancy.Tenant.PendingApproval",
+            "field": null,
+            "es": "La organización espera aprobación.",
+            "en": "The organization is awaiting approval."
+          },
+          {
+            "status": 403,
+            "code": "Tenancy.Tenant.Provisioning",
+            "field": null,
+            "es": "La organización se está preparando.",
+            "en": "The organization is being provisioned."
+          },
+          {
+            "status": 403,
+            "code": "Tenancy.Tenant.Suspended",
+            "field": null,
+            "es": "La organización está suspendida.",
+            "en": "The organization is suspended."
+          },
+          {
+            "status": 403,
+            "code": "Tenancy.Tenant.Closed",
+            "field": null,
+            "es": "La organización está cerrada.",
+            "en": "The organization is closed."
           },
           {
             "status": 409,

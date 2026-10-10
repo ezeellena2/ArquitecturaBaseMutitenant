@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
@@ -24,6 +25,89 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 public sealed class LoginCodeFixedReturnTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    [Theory]
+    [InlineData("none", "Tenancy.Access.NotMember", "es")]
+    [InlineData("none", "Tenancy.Access.NotMember", "en")]
+    [InlineData("inactive", "Tenancy.Member.Inactive", "es")]
+    [InlineData("inactive", "Tenancy.Member.Inactive", "en")]
+    [InlineData("pending", "Tenancy.Tenant.PendingApproval", "es")]
+    [InlineData("pending", "Tenancy.Tenant.PendingApproval", "en")]
+    [InlineData("provisioning", "Tenancy.Tenant.Provisioning", "es")]
+    [InlineData("provisioning", "Tenancy.Tenant.Provisioning", "en")]
+    [InlineData("suspended", "Tenancy.Tenant.Suspended", "es")]
+    [InlineData("suspended", "Tenancy.Tenant.Suspended", "en")]
+    [InlineData("closed", "Tenancy.Tenant.Closed", "es")]
+    [InlineData("closed", "Tenancy.Tenant.Closed", "en")]
+    public async Task Business_otp_rejections_match_the_documented_status_localization_and_metadata(string state, string error, string language)
+    {
+        await factory.Services.SeedDatabaseAsync(Ct);
+        var (userId, email) = await CreateAccountAsync();
+        Guid? tenantId = null;
+        if (state != "none")
+        {
+            tenantId = await CreateBusinessAsync(userId, state switch
+            {
+                "pending" => TenantStatus.PendingApproval,
+                "provisioning" => TenantStatus.Provisioning,
+                "suspended" => TenantStatus.Suspended,
+                "closed" => TenantStatus.Closed,
+                _ => TenantStatus.Active,
+            });
+            if (state == "inactive") await ChangeBusinessAsync(userId, tenantId.Value, state);
+        }
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.AcceptLanguage.ParseAdd(language);
+        var code = await RequestCodeAsync(client, email);
+        using var denied = await AccountJourney.PostAsync(client, "/api/auth/login-code/verify",
+            new { email, code, returnUrl = "/org", access = "business" }, Ct);
+        Assert.Equal(HttpStatusCode.Forbidden, denied.StatusCode);
+        Assert.False(denied.Headers.Contains("Set-Cookie"));
+        Assert.False(denied.Headers.Contains("Retry-After"));
+        var problem = (await denied.Content.ReadFromJsonAsync<JsonObject>(Ct))!;
+        Assert.Equal(error, problem["code"]!.GetValue<string>());
+        Assert.Equal(403, problem["status"]!.GetValue<int>());
+        Assert.False(string.IsNullOrWhiteSpace(problem["traceId"]!.GetValue<string>()));
+        Assert.Null(problem["errors"]);
+        Assert.Null(problem["retryAfter"]);
+        if (tenantId is { } organizationId)
+        {
+            Assert.Equal(organizationId.ToString("D"), problem["tenantId"]!.GetValue<string>());
+            Assert.Equal("Empresa OTP fijo", problem["organizationName"]!.GetValue<string>());
+        }
+        else
+        {
+            Assert.Null(problem["tenantId"]);
+            Assert.Null(problem["organizationName"]);
+        }
+
+        await using var development = factory.WithWebHostBuilder(builder => builder.UseDevelopmentTestOwner());
+        using var documentationClient = development.CreateClient();
+        using var documentResponse = await documentationClient.GetAsync("/openapi/v1.json", Ct);
+        Assert.Equal(HttpStatusCode.OK, documentResponse.StatusCode);
+        var document = (await documentResponse.Content.ReadFromJsonAsync<JsonObject>(Ct))!;
+        var operation = document["paths"]!["/api/auth/login-code/verify"]!["post"]!;
+        var documented = Assert.Single(operation["x-error-codes"]!.AsArray(), value => value?["code"]?.GetValue<string>() == error);
+        Assert.Equal(403, documented!["status"]!.GetValue<int>());
+        Assert.Null(documented["field"]);
+        Assert.Equal(problem["detail"]!.GetValue<string>(), documented[language]!.GetValue<string>());
+        var example = operation["responses"]!["403"]!["content"]!["application/problem+json"]!["examples"]![error + "." + language]!["value"]!;
+        foreach (var property in new[] { "status", "code", "detail" })
+            Assert.True(JsonNode.DeepEquals(problem[property], example[property]), property);
+        foreach (var property in new[] { "errors", "retryAfter", "cancelTicket", "returnUrl" })
+        {
+            Assert.Null(problem[property]);
+            Assert.Null(example[property]);
+        }
+        Assert.Equal(problem.ContainsKey("organizationName"), example.AsObject().ContainsKey("organizationName"));
+        Assert.Equal(problem.ContainsKey("tenantId"), example.AsObject().ContainsKey("tenantId"));
+        if (tenantId is not null)
+        {
+            Assert.False(string.IsNullOrWhiteSpace(example["organizationName"]!.GetValue<string>()));
+            Assert.True(Guid.TryParseExact(example["tenantId"]!.GetValue<string>(), "D", out var exampleId));
+            Assert.NotEqual(Guid.Empty, exampleId);
+        }
+    }
 
     [Theory]
     [InlineData("/", "consumer")]
@@ -380,11 +464,16 @@ public sealed class LoginCodeFixedReturnTests(ApiFactory factory)
         return (id, email.Value);
     }
 
-    private async Task<Guid> CreateBusinessAsync(Guid userId)
+    private async Task<Guid> CreateBusinessAsync(Guid userId, TenantStatus status = TenantStatus.Active)
     {
         var (ownerId, _) = await CreateAccountAsync();
-        var tenant = Tenant.CreateBusiness("Empresa OTP fijo", requiresApproval: false);
-        Assert.True(tenant.Activate().IsSuccess);
+        var tenant = Tenant.CreateBusiness("Empresa OTP fijo", requiresApproval: status == TenantStatus.PendingApproval);
+        if (status is TenantStatus.Active or TenantStatus.Suspended or TenantStatus.Closed)
+            Assert.True(tenant.Activate().IsSuccess);
+        if (status is TenantStatus.Suspended or TenantStatus.Closed)
+            Assert.True(tenant.Suspend().IsSuccess);
+        if (status == TenantStatus.Closed) Assert.True(tenant.Close().IsSuccess);
+        Assert.Equal(status, tenant.Status);
         await using var scope = factory.Services.CreateAsyncScope();
         var services = scope.ServiceProvider;
         using var entered = services.GetRequiredService<ITenantScope>().Enter(tenant.Id);

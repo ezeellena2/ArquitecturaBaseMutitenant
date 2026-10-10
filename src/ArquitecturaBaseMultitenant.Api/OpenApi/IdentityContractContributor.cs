@@ -38,7 +38,9 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
         Describe(document, "/api/auth/login-code", HttpMethod.Post, Destination + " Solo método verificado utilizable; conserva invitación por correo de ADR0047.",
             [E(400, "Auth.LoginCode.AccountNotFound", "email"), E(400, "Auth.LoginCode.PhoneAccountNotFound", "phone"), .. SendErrors()], true, examples: Destinations());
         Describe(document, "/api/auth/login-code/verify", HttpMethod.Post, Destination + Proof + " returnUrl OIDC o /invitacion conserva el flujo anterior y exige access ausente/null en el cuerpo. Continuación fija exclusivamente / con access=consumer o /org con access=business, valores literales sin query/fragmento; cualquier discrepancia falla antes de consumir el código. Respuesta returnUrl y cookie de identidad después del commit, sin tokens OIDC en body; el SPA inicia una autorización nueva tras el retorno fijo.",
-            [.. VerifyErrors(), .. AccountStateErrors(), E(409, "Legal.AccountDeletion.GraceExpired")], true, examples: LoginCodeExamples());
+            [.. VerifyErrors(), .. AccountStateErrors(), .. BusinessVerifyErrors(), E(409, "Legal.AccountDeletion.GraceExpired")], true, examples: LoginCodeExamples());
+        AppendDescription(document, "/api/auth/login-code/verify", "Business fijo: después de probar el código se revalida la membresía y la organización. Sin membresía: Tenancy.Access.NotMember; membresía inactiva: Tenancy.Member.Inactive; organización pendiente, en preparación, suspendida o cerrada: Tenancy.Tenant.PendingApproval, Provisioning, Suspended o Closed. Son 403 sin cookie, errores por campo, Retry-After ni ticket de cancelación. Los errores de membresía inactiva y estado de organización incluyen organizationName y tenantId; NotMember no incluye esos datos.");
+        DescribeBusinessVerificationMetadata(document);
         AppendDescription(document, "/api/auth/login-code/verify", "Baja pendiente: sólo después de probar posesión y dentro de la gracia se emiten cancelTicket, returnUrl validado y fechas de cancelación; con gracia vencida se devuelve Legal.AccountDeletion.GraceExpired, sin ticket.");
         foreach (var prefix in new[] { "/api/auth/signup", "/api/auth/business-signup" })
         {
@@ -117,6 +119,26 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
     private static HttpContractError[] SendErrors() => [E(400, "Validation.Failed"), E(400, "Users.Phone.Invalid", "phone"), E(400, "Users.Phone.NotMobile", "phone"), E(400, "Auth.LoginMethod.ChannelUnavailable", "channel"), E(429, "Auth.LoginCode.ResendTooSoon"), E(429, "Auth.LoginCode.TooManyRequests")];
     private static HttpContractError[] VerifyErrors() => [E(400, "Validation.Failed"), E(400, "Auth.LoginCode.Invalid"), E(400, "Auth.LoginCode.Expired"), E(400, "Auth.LoginCode.AlreadyUsed"), E(400, "Auth.LoginCode.TooManyAttempts"), E(400, "Auth.LoginMethod.ChannelUnavailable", "channel")];
     private static HttpContractError[] AccountStateErrors() => [E(403, "Identity.Account.Suspended"), E(429, "Identity.Account.LockedOut"), E(403, "Identity.Account.PendingDeletion"), E(403, "Tenancy.Access.PlatformOnly")];
+    private static HttpContractError[] BusinessVerifyErrors() =>
+    [
+        E(403, "Tenancy.Access.NotMember"), E(403, "Tenancy.Member.Inactive"),
+        E(403, "Tenancy.Tenant.PendingApproval"), E(403, "Tenancy.Tenant.Provisioning"),
+        E(403, "Tenancy.Tenant.Suspended"), E(403, "Tenancy.Tenant.Closed"),
+    ];
+
+    private static void DescribeBusinessVerificationMetadata(OpenApiDocument document)
+    {
+        var examples = document.Paths["/api/auth/login-code/verify"].Operations![HttpMethod.Post]
+            .Responses!["403"].Content!["application/problem+json"].Examples!;
+        foreach (var error in BusinessVerifyErrors().Where(error => error.Code != "Tenancy.Access.NotMember"))
+        foreach (var language in new[] { "es", "en" })
+        {
+            if (examples[error.Code + "." + language] is not OpenApiExample { Value: JsonObject example })
+                throw new InvalidOperationException("Missing business verification error example.");
+            example["organizationName"] = language == "es" ? "Organización de ejemplo" : "Example organization";
+            example["tenantId"] = "11111111-1111-4111-8111-111111111111";
+        }
+    }
 
     private static void AppendDescription(OpenApiDocument document, string path, string text) =>
         document.Paths[path].Operations![HttpMethod.Post].Description += " " + text;
