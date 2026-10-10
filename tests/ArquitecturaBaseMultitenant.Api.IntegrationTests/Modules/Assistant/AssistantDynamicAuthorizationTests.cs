@@ -20,14 +20,12 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
-using ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Assistant;
 
@@ -85,8 +83,7 @@ public sealed class AssistantDynamicAuthorizationTests(ApiFactory factory)
             builder.ConfigureTestServices(services =>
             {
                 services.AddSingleton<IFeatureDefinitionContributor, HelpModuleFeature>();
-                services.Replace(ServiceDescriptor.Singleton<IOptions<WhatsAppOptions>>(Options.Create(new WhatsAppOptions
-                    { PhoneNumberId = "fixture-number", AccessToken = "fixture-token" })));
+                RegisterHelpChannel(services, true, probe);
                 services.Replace(ServiceDescriptor.Singleton<ICurrentUser>(new Actor(account.UserId, Access.Consumer)));
                 services.Replace(ServiceDescriptor.Singleton<IChatClientFactory>(counter));
                 DecorateChannels(services, probe);
@@ -120,7 +117,7 @@ public sealed class AssistantDynamicAuthorizationTests(ApiFactory factory)
     [InlineData(true, "es-AR")]
     [InlineData(false, "en-US")]
     [InlineData(true, "en-US")]
-    public async Task Help_tracks_real_registered_channel_availability_before_and_after_search(bool enabled, string culture)
+    public async Task Help_tracks_registered_channel_availability_before_and_after_search(bool enabled, string culture)
     {
         using var client = AssistantTestData.Client(factory);
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
@@ -145,9 +142,7 @@ public sealed class AssistantDynamicAuthorizationTests(ApiFactory factory)
         {
             services.Replace(ServiceDescriptor.Singleton<ICurrentUser>(new Actor(account.UserId, Access.Consumer)));
             services.Replace(ServiceDescriptor.Singleton<IChatClientFactory>(counter));
-            // Channel settings are real; keep transport registration disabled and alter only fixture options.
-            services.Replace(ServiceDescriptor.Singleton<IOptions<WhatsAppOptions>>(Options.Create(new WhatsAppOptions
-                { PhoneNumberId = enabled ? "fixture-number" : "", AccessToken = "fixture-token" })));
+            RegisterHelpChannel(services, enabled, probe);
             DecorateChannels(services, probe);
             DecorateHelp(services, pause);
         }));
@@ -358,6 +353,25 @@ public sealed class AssistantDynamicAuthorizationTests(ApiFactory factory)
             services.Add(ServiceDescriptor.Describe(typeof(ILoginCodeChannel), provider =>
                 new GuardedChannel((ILoginCodeChannel)Original(provider, original), probe), original.Lifetime));
         }
+    }
+    private static void RegisterHelpChannel(IServiceCollection services, bool available, ChannelProbe probe)
+    {
+        // This direct-tool host needs only the neutral capability, regardless of installed modules.
+        services.RemoveAll<ILoginCodeChannel>();
+        services.AddSingleton<ILoginCodeChannel>(new HelpLoginCodeChannel(available, probe));
+    }
+    private sealed class HelpLoginCodeChannel(bool available, ChannelProbe probe) : ILoginCodeChannel
+    {
+        public string Key => "whatsapp";
+        public LoginMethodType SupportedMethodType => LoginMethodType.Phone;
+        public bool IsAvailable => available;
+        public IReadOnlyList<string> Countries => [];
+        public string? ContactPhone => null;
+        public Result ValidateNewDestination(LoginCodeDestination destination, string? country) => throw probe.UnexpectedSend();
+        public string RenderLoginCode(string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw probe.UnexpectedSend();
+        public void EnqueueRenderedLoginCode(string payload, Guid? userId = null) => throw probe.UnexpectedSend();
+        public void EnqueueSignup(string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw probe.UnexpectedSend();
+        public void EnqueueVerification(Guid? userId, string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw probe.UnexpectedSend();
     }
     private sealed class ChannelProbe
     {

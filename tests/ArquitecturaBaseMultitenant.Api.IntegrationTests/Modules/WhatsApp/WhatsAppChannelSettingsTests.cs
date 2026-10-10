@@ -8,6 +8,30 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 public sealed class WhatsAppChannelSettingsTests
 {
     [Theory]
+    [InlineData(null, false)]
+    [InlineData("", false)]
+    [InlineData(" \t", false)]
+    [InlineData("fixture-number", true)]
+    public void Login_channel_availability_tracks_configured_number_and_subsequent_changes(string? number, bool available)
+    {
+        var options = new ChangingWhatsAppOptions { Value = new WhatsAppOptions { PhoneNumberId = number } };
+        var settings = new WhatsAppChannelSettings(options,
+            Options.Create(new ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email.EmailOptions()));
+        var channel = new WhatsAppLoginCodeChannel(settings, null!, null!);
+        Assert.Equal("whatsapp", channel.Key);
+        Assert.Equal(LoginMethodType.Phone, channel.SupportedMethodType);
+        Assert.Equal(available, channel.IsAvailable);
+
+        options.Value = new WhatsAppOptions { PhoneNumberId = available ? " \t" : "fixture-number" };
+        Assert.Equal(!available, channel.IsAvailable);
+    }
+
+    private sealed class ChangingWhatsAppOptions : IOptions<WhatsAppOptions>
+    {
+        public WhatsAppOptions Value { get; set; } = new();
+    }
+
+    [Theory]
     [InlineData(10, true)]
     [InlineData(5, false)]
     [InlineData(15, false)]
