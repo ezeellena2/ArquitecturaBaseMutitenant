@@ -18,10 +18,10 @@ Seguí [migración](migracion.md), dentro de la copia:
 
 ```text
 dotnet ef migrations add DropWhatsApp --project src/ArquitecturaBaseMultitenant.Infrastructure --startup-project src/ArquitecturaBaseMultitenant.Api --output-dir Persistence/Migrations -- --environment Development --Logging:EventLog:LogLevel:Default None
-dotnet ef migrations script 20261010203618_SystemRoleAssistantPermissions <ID_GENERADO_DropWhatsApp> --idempotent --project src/ArquitecturaBaseMultitenant.Infrastructure --startup-project src/ArquitecturaBaseMultitenant.Api --output drop-whatsapp.sql -- --environment Development --Logging:EventLog:LogLevel:Default None
+dotnet ef migrations script 20261010214712_PlatformOperatorAssistantPermissions <ID_GENERADO_DropWhatsApp> --idempotent --project src/ArquitecturaBaseMultitenant.Infrastructure --startup-project src/ArquitecturaBaseMultitenant.Api --output drop-whatsapp.sql -- --environment Development --Logging:EventLog:LogLevel:Default None
 ```
 
-La última histórica de M2 es `20261010203618_SystemRoleAssistantPermissions`, no LoginLinks. Confirmá la última del corte antes de exportar y usala como origen para exportar sólo el retiro. Generá la migración y Designer por CLI; no escribas el snapshot a mano ni alteres las históricas o sus Designers.
+La última histórica después del upgrade M1 es `20261010214712_PlatformOperatorAssistantPermissions`, no LoginLinks. Confirmá la última del corte antes de exportar y usala como origen para exportar sólo el retiro. Generá la migración y Designer por CLI; no escribas el snapshot a mano ni alteres las históricas o sus Designers.
 
 Revisá `Up`, `Down`, snapshot y SQL completos. Sólo se retiran `identity.WhatsAppContacts`, `identity.WhatsAppMessages`, `identity.WhatsAppCodeQuotas`, `identity.WhatsAppCodeQuotaIps` y sus relaciones/grants exclusivos. Conservá LoginMethods, LoginLinks, cuentas, outbox, Data Protection, legales y todas las tablas de otros módulos. Las columnas durables `ReferenceKind`, `ReferenceId` y `ResponseLocation` de `platform.IdempotencyKeys` son neutrales y permanecen.
 
