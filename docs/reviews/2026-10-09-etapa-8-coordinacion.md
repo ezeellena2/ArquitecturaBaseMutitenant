@@ -105,10 +105,9 @@ La skill `arnes` prohíbe abrir los archivos que tocó o rehacer su trabajo. La 
 ## Lo que falta para la puerta
 
 - Completar documentación en cero. Las suites finales, el E2E permanente, la comparación visual afectada y el retiro efectivo en una copia con bases migrada y vacía tienen los resultados indicados arriba.
-- Resolver aprobación/categoría de todas las variantes y el origen de los cuatro botones URL.
-- Recibir el **celular destinatario real autorizado**, diferente del emisor y de una cuenta de operador para registro/enlace común.
-- Levantar el entorno, verificar el túnel multitenant y cambiar temporalmente el callback compartido según [configuración](../operations/configuracion.md#4-lo-que-tenés-que-hacer-vos-una-sola-vez-fuera-del-código). Conservar la URL anterior para volver a ArquitecturaBase.
-- Ejecutar el recorrido real con WhatsApp, OTP recibido y eventos `delivered`, sin registrar pruebas o números completos. El transporte controlado no sustituye esta evidencia.
+- Resolver aprobación/categoría de las cuatro variantes que todavía no son Utility aprobadas. Los cuatro botones URL ya están creados con el origen del túnel.
+- Completar el recorrido real con el destinatario autorizado terminado en 0069. El entorno, túnel y override temporal del webhook ya están verificados; el primer bot y código de registro tienen `delivered`. Falta confirmar el registro y recorrer ingreso, cuenta, recuperación y demás casos. El transporte controlado no sustituye esta evidencia.
+- Restaurar el callback compartido y los encabezados del puerto, y detener exclusivamente el Aspire aislado al liberar la prueba.
 
 ## Decisiones tomadas
 
@@ -131,7 +130,7 @@ Verificación HTTP pública: `/alive` 200 Healthy, `/ingreso` 200 HTML, discover
 
 Meta aceptó `POST WABA/subscribed_apps` con override temporal hacia `/webhooks/whatsapp` de ese origen, y el GET posterior lo confirmó para la app existente. La segunda app suscrita no cambió. El callback por defecto del App Dashboard sigue siendo el de ArquitecturaBase. Antes de liberar la prueba se debe quitar el override mediante POST sin esos campos para volver al callback previo, como indica la [colección oficial de Meta](https://www.postman.com/meta/whatsapp-business-platform/documentation/du6gzjv/embedded-signup). También se restauran los encabezados por defecto del puerto y se detiene exclusivamente este AppHost.
 
-WhatsApp Web está conectado y tiene el chat del bot. La cuenta conectada termina en 0069; se pidió al usuario confirmar ese destinatario. **Todavía no se enviaron códigos ni avisos a ese número.** No guardar el número completo, códigos ni enlaces de autenticación en informes o capturas.
+WhatsApp Web está conectado y tiene el chat del bot. El usuario autorizó expresamente usar la cuenta conectada terminada en 0069 para las cuentas temporales y códigos/avisos de esta prueba. El primer envío de registro se detalla abajo. No guardar el número completo, códigos ni enlaces de autenticación en informes o capturas.
 
 Chrome bloqueó inicialmente la navegación pública con `ERR_BLOCKED_BY_CLIENT`. El usuario confirmó que ya carga, y se verificó después el formulario real WhatsApp en `/login` (la primera URL `/ingreso` no era una ruta del proyecto). No se desactivaron protecciones ni se continuó por la alternativa local que mostró un error de certificado. Evidencia inicial y del formulario público, sin datos privados: `.local/reviews/2026-10-09-e8-tunel-chrome-bloqueado.jpg` y `2026-10-09-e8-login-whatsapp-publico.jpg`. Esto prepara el recorrido; todavía no acredita OTP ni ingreso.
 
@@ -139,4 +138,22 @@ El usuario autorizó crear las cuatro variantes con botón URL y luego cerrar el
 
 Guía y ejemplo del lienzo quedaron ajustados; Front commit `addd0bd2`. Se alinearon también seis valores de `WhatsAppTexts.resx/en`: invitación y los cierres de baja suspendida/aviso de recuperación aprobados antes que faltaban en resources. Cotejo guía/resources 6/6; paridad 7/7; catálogo WhatsApp 3/3; Application build 0 advertencias/errores; script del lienzo parseado. Las pruebas usan artefactos privados en la copia; ningún build Root sobrescribió DLL de main. El runtime se reinició con esos textos, AppHost build 0/0 y salud pública/OIDC correctos. Sin cambios de lógica, variables, eventos o contrato HTTP. Evidencias locales: `2026-10-09-meta-inventario-e8-completo.json`, `2026-10-09-meta-utility-url-creacion.json` y `2026-10-09-meta-invitaciones-categoria-en-revision.jpg`.
 
-E8b T00 ya está commiteada: Back `fe36e7ce`, Front `429fcfe`. Ambos chats recibieron GO condicionado: Back puede seguir T02–T09 después de T01 aprobado/commiteado y freeze B/F; Front verifica ese freeze antes de empezar T10–T13. No se requiere otra confirmación para ese trabajo autorizado. Mientras falta la confirmación del destinatario conectado, no se envían códigos reales; registro, cuenta, recuperación, bot, avisos y delivered siguen pendientes. No declarar E8 completa.
+E8b T00 ya está commiteada: Back `fe36e7ce`, Front `429fcfe`. Ambos chats recibieron GO condicionado: Back puede seguir T02–T09 después de T01 aprobado/commiteado y freeze B/F; Front verifica ese freeze antes de empezar T10–T13. No se requiere otra confirmación para ese trabajo autorizado. No declarar E8 completa.
+
+### Primer tramo real: bot y código de registro
+
+Con el destinatario autorizado, un «Hola» nuevo recibió por WhatsApp la respuesta sin cuenta y el botón «Crear mi cuenta». La web real mostró «No hay una cuenta con ese número». Antes de registrar había un mensaje Inbound/Text `Processed`, un Outbound/Interactive `Delivered` y cero Authentication en la base aislada. La respuesta del bot acredita entrada real por Meta y su devolución; no es una fixture ni un mensaje histórico del chat.
+
+La revisión automática rechazó inicialmente marcar la casilla de Términos/Privacidad por faltar autorización explícita para el consentimiento. Los dos documentos servidos por la API dicen «DOCUMENTO DE DEMOSTRACIÓN» y que no incluyen términos/política legales. El usuario respondió «Sí, aceptar los textos de demostración para la prueba»; recién después se marcaron y se envió el registro. Esto no autoriza acuerdos productivos ni externos.
+
+La web pasó a «Revisá tu WhatsApp», con destinatario enmascarado y seis casillas vacías. WhatsApp Web recibió el mensaje de Authentication pero **oculta el código de un solo uso y exige verlo en el dispositivo principal**. El usuario leyó el código en el celular, lo ingresó directamente y confirmó que se creó la cuenta; se verificó el shell Personal/Inicio. No se extrae el código de la base, logs ni estado interno para suplir esa lectura. La consulta de metadatos confirma un Outbound/Authentication `Delivered`, con `EncryptedText` nulo; dos eventos Delivery `Sent` y dos `Delivered` para el bot y ese código. Evidencia sin datos privados: `.local/reviews/2026-10-09-e8-registro-personal-confirmado.jpg`.
+
+El GET de Meta del 09/10 a las 23:58:21 UTC confirmó las 32 variantes: ambas `recuperacion_aprobada` ahora están `APPROVED`/`UTILITY`. Quedan cuatro excepciones: `invitacion_organizacion` es/en `APPROVED`/`MARKETING` con revisión de categoría solicitada, `aviso_metodo_ingreso` en `IN_APPEAL`/`UTILITY`, y `pagina_publica_moderada` en `APPROVED`/`MARKETING`. No se envía una invitación como Marketing para sustituir la categoría Utility acordada. Evidencia: `.local/reviews/2026-10-09-meta-inventario-e8-real.json`.
+
+### Mi cuenta y enlace de cuenta vinculada
+
+La revisión automática pidió autorización explícita para agregar una credencial secundaria. El usuario autorizó agregar/verificar `e8-meta-persona-a@example.test` en esta cuenta temporal; se hizo desde Mi cuenta y se verificó con el párrafo OTP del correo en el pickup aislado. Esto acredita la conducta del correo local, no entrega SMTP. El aviso de método agregado se entregó por WhatsApp: un Outbound/Template `Delivered`, sin contenido persistido.
+
+Un segundo «Hola» recibió el botón «Entrar» con URL del túnel. Abrirlo mostró «Entrar a ArquitecturaBase», el número enmascarado y «Continuar». La base conservaba un enlace y cero consumos: abrir preview no lo consumió. «Continuar» entró por OIDC a Personal; la base pasó a un consumo. F5 conservó Personal y reabrir el enlace usado mostró «Este enlace ya no sirve». El token vive sólo en memoria del montaje, y el front retira el fragmento de la URL: recargar ese preview sin fragmento descarta la prueba local, sin consumir ni invalidar el enlace en la base. No atribuir ese caso a un vencimiento del servidor.
+
+Evidencias: `.local/reviews/2026-10-09-e8-bot-preview-real.jpg`, `2026-10-09-e8-bot-ingreso-personal.jpg` y `2026-10-09-e8-bot-enlace-usado.jpg`. Se salió por «Salir», se volvió desde la portada a «Ingresar» y se pidió un código WhatsApp para la cuenta existente. La pantalla explica «Llega al WhatsApp de tu celular. En WhatsApp Web no se muestra.»; el usuario completó el nuevo código en el celular y se verificó Personal. La base confirma dos Authentication `Delivered` acumulados (registro e ingreso), ambos sin contenido cifrado persistido. `2026-10-09-e8-codigo-ingreso-entregado.jpg` muestra el formulario previo sin código. No cerrar la etapa por estos tramos parciales.
