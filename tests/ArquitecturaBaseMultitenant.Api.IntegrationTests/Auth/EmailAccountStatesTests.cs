@@ -77,7 +77,7 @@ public sealed class EmailAccountStatesTests(ApiFactory factory)
             : await AccountJourney.PostAsync(accountClient, "/api/me/login-methods", new { email = owner.Email.Value }, Ct);
         await AssertFieldAsync(response, HttpStatusCode.BadRequest,
             recovery ? "Platform.AccountRecovery.MethodInUse" : "Identity.LoginMethod.AlreadyUsed", "email",
-            recovery ? "Ese correo ya es de otra cuenta." : "Ese correo ya está asociado a otra cuenta.");
+            recovery ? "Ese método de ingreso ya es de otra cuenta." : "Ese correo ya está asociado a otra cuenta.");
         Assert.Equal(before, await CountsAsync(owner.Email.Value));
         await using var scope = factory.Services.CreateAsyncScope();
         Assert.False(await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().LoginMethods.AnyAsync(
@@ -125,7 +125,7 @@ public sealed class EmailAccountStatesTests(ApiFactory factory)
         }
         var before = await CountsAsync(email);
         using var submitted = await AccountJourney.PostAsync(anonymous, "/api/account-recovery", new { email, nonce, previousEmail = owner.Email.Value }, Ct);
-        await AssertFieldAsync(submitted, HttpStatusCode.BadRequest, "Platform.AccountRecovery.MethodInUse", "email", "Ese correo ya es de otra cuenta.");
+        await AssertFieldAsync(submitted, HttpStatusCode.BadRequest, "Platform.AccountRecovery.MethodInUse", "email", "Ese método de ingreso ya es de otra cuenta.");
         Assert.Equal(before, await CountsAsync(email));
         await using var check = factory.Services.CreateAsyncScope();
         Assert.False(await check.ServiceProvider.GetRequiredService<ApplicationDbContext>().AccountRecoveryRequests.AnyAsync(request => request.NewMethodValue == email, Ct));

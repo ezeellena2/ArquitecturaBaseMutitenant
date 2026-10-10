@@ -193,8 +193,8 @@
   <data name="Platform.AccountRecovery.NotFound" xml:space="preserve"><value>No encontramos el pedido.</value></data>
   <data name="Platform.AccountRecovery.AlreadyResolved" xml:space="preserve"><value>Ese pedido ya se resolvió.</value></data>
   <data name="Platform.AccountRecovery.NoAccount" xml:space="preserve"><value>No hay ninguna cuenta con el método de antes. Solo se puede rechazar.</value></data>
-  <data name="Platform.AccountRecovery.MethodInUse" xml:space="preserve"><value>Ese correo ya es de otra cuenta.</value></data>
-  <data name="Platform.AccountRecovery.MethodAlreadyOnAccount" xml:space="preserve"><value>Ese correo ya es un método de esa cuenta.</value></data>
+  <data name="Platform.AccountRecovery.MethodInUse" xml:space="preserve"><value>Ese método de ingreso ya es de otra cuenta.</value></data>
+  <data name="Platform.AccountRecovery.MethodAlreadyOnAccount" xml:space="preserve"><value>Ese método de ingreso ya pertenece a esa cuenta.</value></data>
   <data name="Platform.AccountRecovery.OperatorAccount" xml:space="preserve"><value>La cuenta es de un operador de la plataforma: no se recupera desde acá.</value></data>
   <data name="Features.Module.InvalidExpiry" xml:space="preserve"><value>Elegí una fecha cuyo día completo pueda representarse.</value></data>
   <data name="Legal.AccountDeletion.LeaseInvalid" xml:space="preserve"><value>La autorización para procesar la baja ya no es válida.</value></data>

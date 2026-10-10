@@ -34,7 +34,7 @@ public static class AccountRecoveryErrors
     public static readonly Error NoAccount = Error.Conflict(NoAccountCode,
         "No account has the previous method; the request can only be rejected.");
 
-    /// <summary>El correo nuevo ya es de una cuenta: el operador lo ve en Cuentas, así que se le puede decir.</summary>
+    /// <summary>El método nuevo ya es de otra cuenta: conflicto de aprobación, sin errores de campo públicos.</summary>
     public static readonly Error MethodInUse = Error.Conflict(MethodInUseCode,
         "The new method already belongs to an account.");
 

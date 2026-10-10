@@ -106,7 +106,7 @@ public sealed class AccountRecoveryTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.BadRequest, taken.StatusCode);
         var rejected = await JsonAsync(taken);
         Assert.Equal(AccountRecoveryErrors.MethodInUseCode, rejected.GetProperty("code").GetString());
-        Assert.Equal("Ese correo ya es de otra cuenta.", rejected.GetProperty("errors").GetProperty("email")[0].GetString());
+        Assert.Equal("Ese método de ingreso ya es de otra cuenta.", rejected.GetProperty("errors").GetProperty("email")[0].GetString());
         using var free = await AccountJourney.PostAsync(anonymous, "/api/account-recovery/code",
             new { email = freeEmail, nonce = freeNonce }, Ct);
         Assert.Equal(HttpStatusCode.Accepted, free.StatusCode);

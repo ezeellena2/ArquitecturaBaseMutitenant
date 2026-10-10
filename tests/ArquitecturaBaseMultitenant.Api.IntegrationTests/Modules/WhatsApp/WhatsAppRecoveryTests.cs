@@ -387,7 +387,9 @@ public sealed class WhatsAppRecoveryTests(ApiFactory factory) : IClassFixture<Ap
         {
             Assert.Single(responses, value => value.IsSuccessStatusCode);
             var failed = Assert.Single(responses, value => !value.IsSuccessStatusCode);
-            Assert.Contains(await ErrorAsync(failed), new[] { AccountRecoveryErrors.PhoneMethodInUseCode, "Auth.Signup.PhoneTaken" });
+            var approvalFailed = ReferenceEquals(failed, responses[0]);
+            Assert.Equal(approvalFailed ? HttpStatusCode.Conflict : HttpStatusCode.BadRequest, failed.StatusCode);
+            Assert.Equal(approvalFailed ? AccountRecoveryErrors.MethodInUseCode : "Auth.Signup.PhoneTaken", await ErrorAsync(failed));
             await using var scope = app.Services.CreateAsyncScope();
             Assert.Equal(1, await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().LoginMethods.CountAsync(value => value.Type == LoginMethodType.Phone && value.Value == phone && value.VerifiedAtUtc != null, Ct));
         }

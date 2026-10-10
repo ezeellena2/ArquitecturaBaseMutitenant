@@ -47,12 +47,12 @@ internal sealed class AccountRecoveryGuard(IUserLookup lookup, ILoginMethodRepos
             : await lookup.FindVerifiedUserIdAsync(LoginMethodType.Phone, destination.Value, ct) is { } owner
                 ? [owner] : Array.Empty<Guid>();
         if (recoveringUserId is { } userId && owners.Contains(userId))
-            return LoginDestinationResolver.Type(destination) == LoginMethodType.Phone
-                ? FieldErrors.On(AccountRecoveryErrors.PhoneMethodInUse, "phone") : AccountRecoveryErrors.MethodAlreadyOnAccount;
+            return AccountRecoveryErrors.MethodAlreadyOnAccount;
         if (owners.Count == 0) return Result.Success();
+        if (recoveringUserId is not null) return AccountRecoveryErrors.MethodInUse;
         return LoginDestinationResolver.Type(destination) == LoginMethodType.Phone
             ? FieldErrors.On(AccountRecoveryErrors.PhoneMethodInUse, "phone")
-            : recoveringUserId is null ? FieldErrors.On(AccountRecoveryErrors.MethodInUse, "email") : AccountRecoveryErrors.MethodInUse;
+            : FieldErrors.On(AccountRecoveryErrors.MethodInUse, "email");
     }
 
     internal Task<LoginMethodLookup?> FindPendingAsync(LoginCodeDestination destination, CancellationToken ct) =>
