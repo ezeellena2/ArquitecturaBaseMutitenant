@@ -149,6 +149,8 @@ Una baja pendiente emite el ticket de cinco minutos, ligado a cuenta y retorno e
 
 ## Reglas de implementación
 
+E8 M1 prepara el OTP sin cambios persistentes y admite capacidad de canal sólo al decidir el enqueue en la UoW existente; el rechazo no invalida códigos previos ni deja outbox. Los ingresos legítimos sin entrega conservan su historial y topes por destino con SentAtUtc null, sin gastar cuota. La protección diaria WhatsApp sólo cubre Login de Phone verificado/utilizable del dueño real; Mi cuenta, pending, recuperación y BusinessSignup conservan la clasificación nueva aunque tengan UserId. El [detalle de cuota](whatsapp.md#cuota-de-códigos-e8-m1) mantiene un único total de 100, nuevos hasta 80 y 20/IP/día UTC; no agrega respuestas que revelen cuentas.
+
 - Seguir las fichas [datos-personales](../rules/datos-personales.md), [multitenancy](../rules/multitenancy.md), [guardado](../rules/guardado.md), [result-y-errores](../rules/result-y-errores.md), [emails](../rules/emails.md), [telefonos](../rules/telefonos.md), [api-http](../rules/api-http.md) y [tests](../rules/tests.md).
 - `ApplicationUser` vive en `Infrastructure/Identity`; las reglas sin dependencia de Identity, en `Domain/Users` y `Domain/Authentication`. Los servicios usan repositorios y readers explícitos; una escritura pública tiene un solo límite `IUnitOfWork`.
 - Probar las reglas puras en `Domain.UnitTests`, la cuenta Identity en `Application.UnitTests` y las rutas y el aislamiento en `Api.IntegrationTests`.

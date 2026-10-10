@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 
 internal sealed class WhatsAppMessageRetentionService(IWhatsAppMessageRepository messages, IUnitOfWork unitOfWork,
-    TimeProvider clock, ILogger<WhatsAppMessageRetentionService> logger) : IWhatsAppMessageRetentionService
+    TimeProvider clock, ILogger<WhatsAppMessageRetentionService> logger, IWhatsAppCodeQuotaRepository quotas) : IWhatsAppMessageRetentionService
 {
     internal const int RetentionDays = 90;
     internal const int BatchSize = 100;
@@ -16,6 +16,8 @@ internal sealed class WhatsAppMessageRetentionService(IWhatsAppMessageRepository
         {
             var expired = await messages.ListExpiredTextAsync(clock.GetUtcNow().UtcDateTime.AddDays(-RetentionDays), BatchSize, c);
             foreach (var message in expired) message.ClearText();
-            return Result.Success(expired.Count);
+            var expiredIps = await quotas.ListExpiredIpsAsync(DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime), BatchSize, c);
+            foreach (var ip in expiredIps) quotas.Remove(ip);
+            return Result.Success(expired.Count + expiredIps.Count);
         }, CommitPolicy.OnSuccess, ct));
 }

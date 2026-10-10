@@ -10,5 +10,8 @@ public interface IWhatsAppChannelSettings
     string? ContactPhone { get; }
     IReadOnlyList<string> Countries { get; }
     int DailyAuthCodeLimit { get; }
+    decimal ProtectedAuthCodeFraction => 0.2m;
+    int DailyNewAuthCodeIpLimit => 20;
+    int DailyNewAuthCodeLimit => DailyAuthCodeLimit - (int)Math.Ceiling(DailyAuthCodeLimit * ProtectedAuthCodeFraction);
     Result ValidateNewDestination(LoginCodeDestination destination);
 }

@@ -34,8 +34,10 @@ internal sealed class SignupCodeRequester(SignupPolicy policy, LoginCodeIssuer i
         if (issued.IsFailure) return issued.Error;
 
         var culture = await userCultures.ResolveAsync(null, request.Culture, cancellationToken);
-        var channel = channels.SingleOrDefault(value => value.Key == destination.Channel)
-            ?? throw new InvalidOperationException("The signup channel is not registered.");
+        var channel = channels.SingleOrDefault(value => value.Key == destination.Channel && value.IsAvailable);
+        if (channel is null) return LoginChannelErrors.Unavailable;
+        var admitted = await issuer.AdmitAsync(destination, issued.Value, cancellationToken);
+        if (admitted.IsFailure) return admitted.Error;
         channel.EnqueueSignup(destination.Value, issued.Value.Code, issued.Value.LifetimeMinutes, culture);
         issued.Value.LoginCode.MarkSent(issued.Value.IssuedAtUtc);
         return new RequestLoginCodeResponse(issued.Value.ResendCooldownSeconds);
@@ -60,8 +62,10 @@ internal sealed class SignupCodeRequester(SignupPolicy policy, LoginCodeIssuer i
         if (issued.IsFailure) return issued.Error;
 
         var culture = await userCultures.ResolveAsync(null, request.Culture, cancellationToken);
-        var channel = channels.SingleOrDefault(value => value.Key == destination.Channel)
-            ?? throw new InvalidOperationException("The signup channel is not registered.");
+        var channel = channels.SingleOrDefault(value => value.Key == destination.Channel && value.IsAvailable);
+        if (channel is null) return LoginChannelErrors.Unavailable;
+        var admitted = await issuer.AdmitAsync(destination, issued.Value, cancellationToken);
+        if (admitted.IsFailure) return admitted.Error;
         channel.EnqueueSignup(destination.Value, issued.Value.Code, issued.Value.LifetimeMinutes, culture);
         issued.Value.LoginCode.MarkSent(issued.Value.IssuedAtUtc);
         return new RequestLoginCodeResponse(issued.Value.ResendCooldownSeconds);

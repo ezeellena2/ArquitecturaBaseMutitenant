@@ -25,6 +25,8 @@ internal sealed class WhatsAppChannelSettings(IOptions<WhatsAppOptions> options,
     }
     public IReadOnlyList<string> Countries => options.Value.AllowedCountries;
     public int DailyAuthCodeLimit => options.Value.DailyAuthCodeLimit;
+    public decimal ProtectedAuthCodeFraction => options.Value.ProtectedAuthCodeFraction;
+    public int DailyNewAuthCodeIpLimit => options.Value.DailyNewAuthCodeIpLimit;
     public Result ValidateNewDestination(LoginCodeDestination destination)
     {
         if (!IsEnabled || destination.Channel != "whatsapp") return LoginChannelErrors.Unavailable;

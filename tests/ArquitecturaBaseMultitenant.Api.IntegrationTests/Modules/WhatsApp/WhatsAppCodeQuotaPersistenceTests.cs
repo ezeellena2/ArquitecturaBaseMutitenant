@@ -1,6 +1,9 @@
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
+using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence;
@@ -42,9 +45,11 @@ public sealed class WhatsAppCodeQuotaPersistenceTests(ApiFactory factory)
     [Fact]
     public async Task Rollback_does_not_spend_and_purging_OTP_cannot_reset_reserved_quota()
     {
-        using var client = factory.CreateClient();
+        await using var host = factory.WithWebHostBuilder(builder => builder.UseSetting("WhatsApp:PhoneNumberId", _settings.PhoneNumberId)
+            .UseSetting("WhatsApp:AccessToken", "fixture-token"));
+        using var client = host.CreateClient();
         Assert.True((await ReserveAsync(abort: true)).IsFailure);
-        await using var scope = factory.Services.CreateAsyncScope();
+        await using var scope = host.Services.CreateAsyncScope();
         var provider = scope.ServiceProvider; var context = provider.GetRequiredService<ApplicationDbContext>();
         Assert.False(await context.Set<WhatsAppCodeQuota>().AnyAsync(value => value.PhoneNumberId == _settings.PhoneNumberId, Ct));
         var unit = provider.GetRequiredService<IUnitOfWork>();
@@ -55,7 +60,14 @@ public sealed class WhatsAppCodeQuotaPersistenceTests(ApiFactory factory)
             var issuer = new LoginCodeIssuer(provider.GetRequiredService<ILoginCodeRepository>(), provider.GetRequiredService<ILoginCodeGenerator>(),
                 provider.GetRequiredService<ILoginCodeHasher>(), Options.Create(new LoginCodeOptions()), _clock, [Admission(provider)]);
             var code = await issuer.IssueAccountCodeAsync(Destination, LoginCodePurpose.VerifyDestination, userId, ct);
-            return code.IsSuccess ? Result.Success() : Result.Failure(code.Error);
+            if (code.IsFailure) return Result.Failure(code.Error);
+            var admitted = await issuer.AdmitAsync(Destination, code.Value, ct);
+            if (admitted.IsFailure) return admitted;
+            var channel = new WhatsAppLoginCodeChannel(_settings, provider.GetRequiredService<IWhatsAppTemplateRenderer>(), provider.GetRequiredService<IOutbox>());
+            channel.EnqueueVerification(userId, Destination.Value, code.Value.Code, code.Value.LifetimeMinutes,
+                await provider.GetRequiredService<UserCultureResolver>().ResolveAsync(null, null, ct));
+            code.Value.LoginCode.MarkSent(code.Value.IssuedAtUtc);
+            return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
         Assert.True(await context.LoginCodes.AnyAsync(value => value.RequestedByUserId == userId, Ct));
         await unit.ExecuteInTransactionAsync(async ct =>
@@ -64,7 +76,7 @@ public sealed class WhatsAppCodeQuotaPersistenceTests(ApiFactory factory)
         Assert.Equal(WhatsAppCodeErrors.DailyLimitCode, (await ReserveAsync()).Error.Code);
         Assert.Equal(1, (await context.Set<WhatsAppCodeQuota>().AsNoTracking().SingleAsync(value => value.PhoneNumberId == _settings.PhoneNumberId, Ct)).ReservedCount);
     }
-    private WhatsAppCodeQuotaIssuer Admission(IServiceProvider provider) => new(provider.GetRequiredService<IWhatsAppCodeQuotaRepository>(), _settings, _clock);
+    private WhatsAppCodeQuotaIssuer Admission(IServiceProvider provider) => new(provider.GetRequiredService<IWhatsAppCodeQuotaRepository>(), _settings, _clock, provider.GetRequiredService<ILoginMethodReader>(), provider.GetRequiredService<LoginMethodAvailabilityPolicy>(), provider.GetRequiredService<IRequestInfo>(), provider.GetRequiredService<IWhatsAppQuotaIpHasher>());
 
     [Fact]
     public async Task HTTP_idempotent_replay_returns_original_success_without_reserving_again()
@@ -88,7 +100,7 @@ public sealed class WhatsAppCodeQuotaPersistenceTests(ApiFactory factory)
         await using var scope = factory.Services.CreateAsyncScope();
         return await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
         {
-            var result = await Admission(scope.ServiceProvider).ReserveAsync(Destination, ct);
+            var result = await Admission(scope.ServiceProvider).ReserveAsync(Destination, LoginCodePurpose.Signup, null, ct);
             return abort ? Result.Failure(Error.Conflict("Test.Transaction.Abort", "Fixture rollback.")) : result;
         }, CommitPolicy.OnSuccess, Ct);
     }
@@ -99,7 +111,7 @@ public sealed class WhatsAppCodeQuotaPersistenceTests(ApiFactory factory)
         public string PhoneNumberId { get; } = Guid.NewGuid().ToString("N");
         public string? ContactPhone => null;
         public IReadOnlyList<string> Countries => ["AR"];
-        public int DailyAuthCodeLimit => 1;
+        public int DailyAuthCodeLimit => 2;
         public Result ValidateNewDestination(LoginCodeDestination destination) => Result.Success();
     }
 }

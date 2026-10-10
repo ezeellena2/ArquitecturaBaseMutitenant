@@ -76,24 +76,37 @@ internal sealed class LoginCodeIssuer(
             return limitError;
         }
 
-        foreach (var admission in admissions?.Where(value => value.Channel == destination.Channel) ?? [])
-        {
-            var reserved = await admission.ReserveAsync(destination, cancellationToken);
-            if (reserved.IsFailure) return reserved.Error;
-        }
-
-        foreach (var active in await loginCodes.ListActiveAsync(destination, purpose, requestedByUserId,
-                     nowUtc, cancellationToken))
-        {
-            active.Invalidate(nowUtc);
-        }
-
         var code = codeGenerator.Generate();
         var row = LoginCode.Issue(destination, purpose, requestedByUserId,
             codeHasher.Hash(destination, purpose, code), nowUtc,
             TimeSpan.FromMinutes(settings.LifetimeMinutes), settings.MaxAttempts);
-        loginCodes.Add(row);
         return new IssuedLoginCode(row, code, settings.LifetimeMinutes, settings.ResendCooldownSeconds);
+    }
+
+    /// <summary>Se llama sólo después de decidir el envío, inmediatamente antes de encolar en la misma UoW.</summary>
+    internal async Task<Result> AdmitAsync(LoginCodeDestination destination, IssuedLoginCode issued, CancellationToken ct)
+    {
+        var row = issued.LoginCode;
+        if (issued.IsAdmitted || row.Channel != destination.Channel || row.Destination != destination.Value)
+            throw new InvalidOperationException("The prepared code must be admitted exactly once for its destination.");
+        foreach (var admission in admissions?.Where(value => value.Channel == destination.Channel) ?? [])
+        {
+            var reserved = await admission.ReserveAsync(destination, row.Purpose, row.RequestedByUserId, ct);
+            if (reserved.IsFailure) return reserved.Error;
+        }
+        await PersistAsync(destination, issued, ct);
+        return Result.Success();
+    }
+
+    /// <summary>Conserva emisión y límites de un ingreso legítimo sin entrega, sin admitir capacidad del canal.</summary>
+    internal async Task PersistAsync(LoginCodeDestination destination, IssuedLoginCode issued, CancellationToken ct)
+    {
+        var row = issued.LoginCode;
+        if (issued.IsAdmitted) throw new InvalidOperationException("The prepared code is already persisted.");
+        foreach (var active in await loginCodes.ListActiveAsync(destination, row.Purpose, row.RequestedByUserId, row.CreatedAtUtc, ct))
+            active.Invalidate(row.CreatedAtUtc);
+        loginCodes.Add(row);
+        issued.IsAdmitted = true;
     }
 
     private async Task<Error?> CheckLimitsAsync(LoginCodeDestination destination, LoginCodeOptions settings,
@@ -128,4 +141,5 @@ internal sealed class IssuedLoginCode(LoginCode row, string code, int lifetimeMi
     public DateTime IssuedAtUtc => LoginCode.CreatedAtUtc;
     public int LifetimeMinutes { get; } = lifetimeMinutes;
     public int ResendCooldownSeconds { get; } = resendCooldownSeconds;
+    internal bool IsAdmitted { get; set; }
 }

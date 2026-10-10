@@ -36,7 +36,7 @@ internal sealed partial class WhatsAppMessageRetentionService(IServiceScopeFacto
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
         }
     }
-    [LoggerMessage(Level = LogLevel.Information, Message = "WhatsApp retention cleared {Count} texts after 90 days")]
+    [LoggerMessage(Level = LogLevel.Information, Message = "WhatsApp retention cleared {Count} expired items")]
     private static partial void LogCleared(ILogger logger, int count);
     [LoggerMessage(Level = LogLevel.Error, Message = "WhatsApp retention failed: {Failure}")]
     private static partial void LogFailed(ILogger logger, string failure);

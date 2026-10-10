@@ -59,7 +59,10 @@ internal sealed class AccountRecoveryService(
                 if (valid.IsFailure) return valid.Error;
                 var issued = await issuer.IssueRecoveryCodeAsync(destination, nonceHash, ct);
                 if (issued.IsFailure) return issued.Error;
-                await messenger.SendCodeAsync(destination, issued.Value, ct);
+                var admitted = await issuer.AdmitAsync(destination, issued.Value, ct);
+                if (admitted.IsFailure) return admitted.Error;
+                var sent = await messenger.SendCodeAsync(destination, issued.Value, ct);
+                if (sent.IsFailure) return sent.Error;
                 return new RequestLoginCodeResponse(issued.Value.ResendCooldownSeconds);
             }, CommitPolicy.OnSuccess, cancellationToken);
         });

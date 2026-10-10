@@ -40,7 +40,8 @@ internal sealed class LoginCodeRequester(
         var ownerId = LoginDestinationResolver.Type(destination) == LoginMethodType.Phone ? userId : null;
         var issued = await issuer.IssueLoginCodeAsync(destination, ownerId, cancellationToken);
         if (issued.IsFailure) return issued.Error;
-        await delivery.EnqueueAsync(destination, issued.Value, userId, pending.Select(row => row.TenantId).ToArray(), cancellationToken);
+        var sent = await delivery.EnqueueAsync(destination, issued.Value, userId, pending.Select(row => row.TenantId).ToArray(), cancellationToken);
+        if (sent.IsFailure) return sent.Error;
 
         return new RequestLoginCodeResponse(issued.Value.ResendCooldownSeconds);
     }

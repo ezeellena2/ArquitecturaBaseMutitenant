@@ -16,6 +16,8 @@ Node recibe `API_HTTPS` y `services__api__https__0` con la dirección API, `VITE
 
 ## Control privado por líneas
 
+El perfil UI de la fixture fija explícitamente `DailyAuthCodeLimit=1000`, `ProtectedAuthCodeFraction=0.2` y `DailyNewAuthCodeIpLimit=1000`: margen conservador de 20 OTP por cada uno de los 38 grupos (760 nuevos frente a 800 disponibles). Toda la corrida comparte su ledger; no se reinicia por escenario ni se cambia la IP para evadirlo. Ya usa cooldown 0 y ventana 100 para recorrer UI. Este perfil Testing verifica encaje y sesión, no los defaults de cuota: `WhatsAppQuotaEnqueueTests` y `WhatsAppCodeQuotaTests` prueban por separado 100 total, 80 nuevos, 20/IP y protección mínima 20. No altera la configuración productiva ni acredita Meta.
+
 La salida de Node admite `CHECK <resultado sanitizado>` y `FIXTURE <JSON>`. Back reenvía CHECK al log y contesta cada FIXTURE con una línea JSON por stdin de Node. Sólo puede haber una orden pendiente. El runner consume y cierra stdin al finalizar; nunca imprime una respuesta, cuerpo HTTP, OTP, teléfono, ticket o URL con fragmento. stderr no se publica desde el host. No existe una ruta HTTP de control o lectura de pruebas.
 
 Cada orden lleva `kind`, `scenario` y `phone`. El identificador de escenario es ASCII alfanumérico con guion/underscore, de 1–80 caracteres y único en esa corrida. Los destinos son sintéticos de la fixture: `+54911345678XX`, 14 caracteres. Iniciá `begin` **antes** de la acción UI para capturar el cursor UTC; el mismo escenario no se reinicia ni cambia de destinatario. Para un paso posterior del mismo teléfono, creá otro escenario antes de solicitar el nuevo código. Esperá la respuesta HTTP que confirma el commit antes de leer outbox.

@@ -110,8 +110,11 @@ internal sealed class LoginMethodIssuer(LoginMethodGuard guard, ILoginMethodRepo
             LoginCodePurpose.VerifyDestination, userId, ct);
         if (issued.IsFailure) return issued.Error;
         var code = issued.Value;
+        var profile = await cultures.ResolveAsync(culture, null, ct);
+        var admitted = await codes.AdmitAsync(resolved.Value, code, ct);
+        if (admitted.IsFailure) return admitted.Error;
         channel.EnqueueVerification(userId, method.Value, code.Code, code.LifetimeMinutes,
-            await cultures.ResolveAsync(culture, null, ct));
+            profile);
         code.LoginCode.MarkSent(code.IssuedAtUtc);
         return new LoginMethodCodeResponse(method.Id, code.ResendCooldownSeconds);
     }

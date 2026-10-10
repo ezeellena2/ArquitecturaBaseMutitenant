@@ -60,6 +60,10 @@ public static class WhatsAppBrowserFixture
                 .UseSetting("WhatsApp:VerifyToken", "browser-fixture-verify")
                 .UseSetting("WhatsApp:DisplayPhoneNumber", "+5491134567890")
                 .UseSetting("WhatsApp:ProcessInboundInBackground", "false")
+                // Perfil UI: 38 grupos, margen de 20 OTP/grupo (760 nuevos); defaults de cuota se prueban aparte.
+                .UseSetting("WhatsApp:DailyAuthCodeLimit", "1000")
+                .UseSetting("WhatsApp:ProtectedAuthCodeFraction", "0.2")
+                .UseSetting("WhatsApp:DailyNewAuthCodeIpLimit", "1000")
                 .UseSetting("Authentication:LoginCode:ResendCooldownSeconds", "0")
                 .UseSetting("Authentication:LoginCode:MaxRequestsPerWindow", "100")
                 .ConfigureLogging(logging => logging.ClearProviders())

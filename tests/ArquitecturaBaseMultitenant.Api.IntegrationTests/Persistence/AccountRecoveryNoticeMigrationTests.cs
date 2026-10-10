@@ -24,9 +24,10 @@ public sealed class AccountRecoveryNoticeMigrationTests
         await using var db = new ApplicationDbContext(options.Options, new TenantContext());
         var migrator = db.GetService<IMigrator>();
         var migrations = db.Database.GetMigrations().ToArray();
-        var previous = migrations[^2];
-        var current = migrations[^1];
-        Assert.EndsWith("_AccountRecoveryNoticeReceipt", current, StringComparison.Ordinal);
+        var index = Array.FindIndex(migrations, migration => migration.EndsWith("_AccountRecoveryNoticeReceipt", StringComparison.Ordinal));
+        Assert.True(index > 0);
+        var previous = migrations[index - 1];
+        var current = migrations[index];
         await migrator.MigrateAsync(previous, ct);
         await migrator.MigrateAsync(current, ct);
         Assert.Empty(await db.AccountRecoveryNotices.AsNoTracking().ToArrayAsync(ct));
@@ -68,6 +69,7 @@ public sealed class AccountRecoveryNoticeMigrationTests
         await migrator.MigrateAsync(current, ct);
         Assert.Equal(downgradedVersions, await VersionsAsync());
         await AssertUpgradedAsync();
+        await migrator.MigrateAsync(cancellationToken: ct);
         Assert.False(db.Database.HasPendingModelChanges());
 
         using var client = isolated.CreateClient();

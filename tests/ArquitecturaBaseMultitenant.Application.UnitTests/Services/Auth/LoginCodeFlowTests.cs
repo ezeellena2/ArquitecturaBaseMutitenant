@@ -21,7 +21,25 @@ public sealed class LoginCodeFlowTests
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
-    public async Task Admission_rejection_never_invalidates_or_generates_and_destination_limits_run_first()
+    public async Task Preparing_a_code_without_enqueue_never_spends_admission_or_changes_existing_codes()
+    {
+        var repository = new FakeCodes();
+        var destination = Destination("pending@example.test");
+        var previous = LoginCode.Issue(destination, LoginCodePurpose.Login, null, "old", Now.UtcDateTime.AddMinutes(-2),
+            TimeSpan.FromMinutes(10), 5);
+        repository.Add(previous);
+        var admission = new DeniedAdmission();
+        var issuer = new LoginCodeIssuer(repository, new Generator(), new Hasher(), Options.Create(new LoginCodeOptions()),
+            new FakeTimeProvider(Now), [admission]);
+        var prepared = await issuer.IssueLoginCodeAsync(destination, Ct);
+        Assert.True(prepared.IsSuccess);
+        Assert.Equal(0, admission.Calls);
+        Assert.Single(repository.Codes);
+        Assert.Null(previous.InvalidatedAtUtc);
+    }
+
+    [Fact]
+    public async Task Admission_rejection_never_persists_or_invalidates_and_destination_limits_run_first()
     {
         var repository = new FakeCodes();
         var destination = Destination("ana@example.test");
@@ -31,7 +49,9 @@ public sealed class LoginCodeFlowTests
         var admission = new DeniedAdmission();
         var issuer = new LoginCodeIssuer(repository, new Generator(), new Hasher(), Options.Create(new LoginCodeOptions()),
             new FakeTimeProvider(Now), [admission]);
-        var result = await issuer.IssueLoginCodeAsync(destination, Ct);
+        var prepared = await issuer.IssueLoginCodeAsync(destination, Ct);
+        Assert.True(prepared.IsSuccess);
+        var result = await issuer.AdmitAsync(destination, prepared.Value, Ct);
         Assert.True(result.IsFailure);
         Assert.Equal("Test.Capacity.Denied", result.Error.Code);
         Assert.Null(old.InvalidatedAtUtc);
@@ -47,7 +67,7 @@ public sealed class LoginCodeFlowTests
     {
         public string Channel => "email";
         public int Calls { get; private set; }
-        public Task<Result> ReserveAsync(LoginCodeDestination destination, CancellationToken ct)
+        public Task<Result> ReserveAsync(LoginCodeDestination destination, LoginCodePurpose purpose, Guid? ownerId, CancellationToken ct)
         { Calls++; return Task.FromResult(Result.Failure(Error.TooManyRequests("Test.Capacity.Denied", "Fixture capacity limit."))); }
     }
 
@@ -67,6 +87,7 @@ public sealed class LoginCodeFlowTests
 
         Assert.True(issued.IsSuccess);
         Assert.Equal("123456", issued.Value.Code);
+        Assert.True((await issuer.AdmitAsync(destination, issued.Value, Ct)).IsSuccess);
         Assert.Equal(["lock", "times", "active", "add"], repository.Operations);
         Assert.NotNull(repository.Codes[0].InvalidatedAtUtc);
         Assert.Null(repository.Codes[1].InvalidatedAtUtc);
@@ -105,6 +126,7 @@ public sealed class LoginCodeFlowTests
         var verifier = CreateVerifier(repository);
         var issued = await issuer.IssueLoginCodeAsync(destination, Ct);
         Assert.True(issued.IsSuccess);
+        Assert.True((await issuer.AdmitAsync(destination, issued.Value, Ct)).IsSuccess);
         repository.Operations.Clear();
 
         var success = await verifier.VerifyAsync(destination, LoginCodePurpose.Login, null, "123456", Ct);
@@ -137,7 +159,9 @@ public sealed class LoginCodeFlowTests
         var destination = Destination("ana@example.test");
         var issuer = CreateIssuer(repository);
         var verifier = CreateVerifier(repository);
-        Assert.True((await issuer.IssueSignupCodeAsync(destination, Ct)).IsSuccess);
+        var issued = await issuer.IssueSignupCodeAsync(destination, Ct);
+        Assert.True(issued.IsSuccess);
+        Assert.True((await issuer.AdmitAsync(destination, issued.Value, Ct)).IsSuccess);
 
         Assert.Equal(LoginCodeErrors.InvalidCode,
             (await verifier.VerifyAsync(destination, LoginCodePurpose.Login, null, "123456", Ct)).Error.Code);

@@ -591,7 +591,7 @@ public sealed class WhatsAppIdentityTests(ApiFactory factory) : IClassFixture<Ap
     private sealed class LockProbeAdmission(ApplicationDbContext context, IUserLookup users, LockProbe probe) : ILoginCodeAdmission
     {
         public string Channel => "whatsapp";
-        public async Task<Result> ReserveAsync(LoginCodeDestination destination, CancellationToken ct)
+        public async Task<Result> ReserveAsync(LoginCodeDestination destination, LoginCodePurpose purpose, Guid? ownerId, CancellationToken ct)
         {
             var userId = await users.FindVerifiedUserIdAsync(LoginMethodType.Phone, destination.Value, ct);
             Assert.NotNull(userId);

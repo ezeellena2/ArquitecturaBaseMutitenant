@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Notifications;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
@@ -16,14 +17,15 @@ internal sealed class AccountRecoveryNotifier(IEnumerable<ILoginCodeChannel> cod
     ILoginMethodRepository methods, LoginMethodAvailabilityPolicy availability, AccountNoticeIssuer notices,
     IPlatformSettingsReader settings)
 {
-    public async Task SendCodeAsync(LoginCodeDestination destination, IssuedLoginCode issued,
+    public async Task<Result> SendCodeAsync(LoginCodeDestination destination, IssuedLoginCode issued,
         CancellationToken cancellationToken)
     {
-        var channel = codeChannels.SingleOrDefault(value => value.Key == destination.Channel)
-            ?? throw new InvalidOperationException("The email login channel is not registered.");
+        var channel = codeChannels.SingleOrDefault(value => value.Key == destination.Channel && value.IsAvailable);
+        if (channel is null) return LoginChannelErrors.Unavailable;
         channel.EnqueueVerification(null, destination.Value, issued.Code, issued.LifetimeMinutes,
             await cultures.ResolveAsync(null, null, cancellationToken));
         issued.LoginCode.MarkSent(issued.IssuedAtUtc);
+        return Result.Success();
     }
 
     public async Task NotifyReceivedAsync(LoginCodeDestination destination, CancellationToken cancellationToken) =>

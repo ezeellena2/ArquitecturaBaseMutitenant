@@ -10,6 +10,7 @@ internal sealed class WhatsAppModelContributor : IPersistenceModelContributor
     {
         [typeof(WhatsAppContact)] = Schemas.Identity, [typeof(WhatsAppMessage)] = Schemas.Identity,
         [typeof(WhatsAppCodeQuota)] = Schemas.Identity,
+        [typeof(WhatsAppCodeQuotaIp)] = Schemas.Identity,
     };
     public void Configure(ModelBuilder builder) => builder.ApplyConfigurationsFromAssembly(GetType().Assembly,
         type => type.Namespace == ConfigurationNamespace);

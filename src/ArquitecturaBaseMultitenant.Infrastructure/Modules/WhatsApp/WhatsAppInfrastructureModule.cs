@@ -28,6 +28,7 @@ public static class WhatsAppInfrastructureModule
         services.AddScoped<IWhatsAppContactRepository, WhatsAppContactRepository>();
         services.AddScoped<IWhatsAppMessageRepository, WhatsAppMessageRepository>();
         services.AddScoped<IWhatsAppCodeQuotaRepository, WhatsAppCodeQuotaRepository>();
+        services.AddSingleton<IWhatsAppQuotaIpHasher, WhatsAppQuotaIpHasher>();
         services.AddSingleton<IWhatsAppChannelSettings, WhatsAppChannelSettings>();
         services.AddSingleton<WhatsAppTemplateCatalog>();
         services.AddScoped<IWhatsAppTemplateRenderer, WhatsAppTemplateRenderer>();
