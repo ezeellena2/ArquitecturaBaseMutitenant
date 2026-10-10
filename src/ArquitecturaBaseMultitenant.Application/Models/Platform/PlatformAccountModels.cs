@@ -48,7 +48,11 @@ public sealed record ListPlatformAccountsRequest : PagedRequest
 /// </summary>
 public sealed record PlatformAccountResponse(Guid Id, string? DisplayName, Email? PrimaryEmail,
     PlatformAccountKind Kind, PlatformAccountState State, bool HasPersonalSpace, int OrganizationCount,
-    DateTime? LastSignInAtUtc, LoginAuditMethod? LastSignInMethod, DateTime? InvitationExpiresAtUtc);
+    DateTime? LastSignInAtUtc, LoginAuditMethod? LastSignInMethod, DateTime? InvitationExpiresAtUtc)
+{
+    /// <summary>Phone principal global verificado, enmascarado; null para otro principal o cuenta eliminada.</summary>
+    public string? MaskedPrimaryPhone { get; init; }
+}
 
 public sealed record PlatformAccountStateCount(PlatformAccountState State, int Count);
 public sealed record PlatformAccountKindCount(PlatformAccountKind Kind, int Count);
@@ -63,6 +67,9 @@ public sealed record PlatformAccountDetailResponse(Guid Id, string? DisplayName,
     IReadOnlyList<PlatformAccountMembershipResponse> Organizations, IReadOnlyList<string> SoleOwnerOrganizations,
     IReadOnlyList<string>? OperatorPermissions, uint? OperatorVersion, PlatformAccountStateChangeResponse? LastStateChange)
 {
+    /// <summary>La misma identidad Phone principal enmascarada que el listado, independiente del canal disponible.</summary>
+    public string? MaskedPrimaryPhone { get; init; }
+
     public override string ToString() => nameof(PlatformAccountDetailResponse);
 }
 
@@ -90,7 +97,10 @@ public sealed record PlatformAccountMembershipResponse(Guid TenantId, string Nam
 /// <summary>Proyección del reader global; el servicio la completa con métodos y textos.</summary>
 public sealed record PlatformAccountRow(Guid Id, string? DisplayName, Email? PrimaryEmail, bool IsOperator,
     PlatformAccountState State, bool HasPersonalSpace, int OrganizationCount, DateTime? LastSignInAtUtc,
-    LoginAuditMethod? LastSignInMethod, DateTime? InvitationExpiresAtUtc);
+    LoginAuditMethod? LastSignInMethod, DateTime? InvitationExpiresAtUtc, string? PrimaryPhone)
+{
+    public override string ToString() => nameof(PlatformAccountRow);
+}
 
 public sealed record PlatformAccountDetailRow(PlatformAccountRow Account, DateTime? CreatedAtUtc, DateTime? DeletedAtUtc,
     PlatformAccountStateChangeRow? LastStateChange,

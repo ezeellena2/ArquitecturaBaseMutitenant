@@ -7,6 +7,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.Extensions.Logging;
@@ -49,7 +50,8 @@ internal sealed class PlatformAccountService(IPlatformAccountReader reader, ILog
             var state = row.LastStateChange;
             var deleted = account.State == PlatformAccountState.Deleted;
             var loginMethods = new List<PlatformAccountLoginMethodResponse>();
-            foreach (var method in (await methods.ListByUserIdAsync(accountId, ct))
+            var accountMethods = await methods.ListByUserIdAsync(accountId, ct);
+            foreach (var method in accountMethods
                 .OrderByDescending(method => method.IsPrimary).ThenBy(method => method.Id))
             {
                 var organization = method.ManagedByTenantId is { } tenantId ? await tenants.FindByIdAsync(tenantId, ct) : null;
@@ -68,12 +70,21 @@ internal sealed class PlatformAccountService(IPlatformAccountReader reader, ILog
                 loginMethods, row.Organizations, deleted ? [] : await soleOwners.ListSoleOwnedOrganizationsAsync(accountId, ct),
                 row.OperatorPermissions, row.OperatorVersion,
                 state is null ? null : new PlatformAccountStateChangeResponse(state.AtUtc,
-                    AuditTexts.SecurityEvent(state.Type), state.Reason));
+                    AuditTexts.SecurityEvent(state.Type), state.Reason))
+            {
+                MaskedPrimaryPhone = deleted ? null : accountMethods
+                    .Where(method => method.Type == LoginMethodType.Phone && method.IsPrimary && method.VerifiedAtUtc is not null)
+                    .Select(method => PersonalDataMask.Phone(method.Value)).SingleOrDefault(),
+            };
         });
 
     private static PlatformAccountResponse ToResponse(PlatformAccountRow row) =>
         new(row.Id, DisplayName(row), row.PrimaryEmail, Kind(row), row.State, row.HasPersonalSpace, row.OrganizationCount, row.LastSignInAtUtc,
-            row.LastSignInMethod, row.InvitationExpiresAtUtc);
+            row.LastSignInMethod, row.InvitationExpiresAtUtc)
+        {
+            MaskedPrimaryPhone = row.State != PlatformAccountState.Deleted && row.PrimaryPhone is { } phone
+                ? PersonalDataMask.Phone(phone) : null,
+        };
 
     // La identidad eliminada guarda el nombre en la cultura del worker; se traduce al leer.
     private static string? DisplayName(PlatformAccountRow row) => row.State == PlatformAccountState.Deleted

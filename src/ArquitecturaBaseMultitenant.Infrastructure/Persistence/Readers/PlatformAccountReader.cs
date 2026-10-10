@@ -162,7 +162,11 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
             context.LoginAudits.Where(audit => audit.UserId == account.Id && audit.Succeeded)
                 .OrderByDescending(audit => audit.OccurredAtUtc).ThenByDescending(audit => audit.Id)
                 .Select(audit => (LoginAuditMethod?)audit.Method).FirstOrDefault(),
-            account.InvitationExpiresAtUtc);
+            account.InvitationExpiresAtUtc,
+            account.State == PlatformAccountState.Deleted ? null : context.LoginMethods
+                .Where(method => method.UserId == account.Id && method.Type == LoginMethodType.Phone
+                    && method.IsPrimary && method.VerifiedAtUtc != null)
+                .Select(method => method.Value).FirstOrDefault());
 
     private sealed class AccountProjection
     {
