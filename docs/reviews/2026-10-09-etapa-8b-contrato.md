@@ -51,7 +51,7 @@ Ninguna necesidad pendiente al congelar T01. Durante Parte 2 se registra aquí c
 
 ### CC01 — modelos y precios para configuración Business
 
-**Estado: propuesta pendiente de coordinación por el usuario; no aplicada al contrato congelado.** Integración transmitió el hallazgo Front T12/D19 el 10/10 UTC; la raíz confirmó las firmas y permisos actuales.
+**Estado: autorizada expresamente por el usuario el 10/10 UTC; publicación pendiente después de verificar T02.** El usuario respondió «Sí, publicar CC01 y regenerar tipos» a la propuesta concreta. Integración transmitió el hallazgo Front T12/D19; la raíz confirmó las firmas y permisos actuales.
 
 `GET /api/organization/assistant/settings` exige assistant.configure y devuelve sólo modelId. `GET /api/organization/assistant` exige assistant.use, ofrece únicamente Id/Name y filtra el modo guardado. El catálogo Platform exige acceso Platform. Por eso Config-Org no puede mostrar precios ni opciones del modo que se está preparando antes de guardar, y una persona con configure sin use no tiene una lectura adecuada.
 
@@ -62,7 +62,7 @@ Propuesta concreta mínima: agregar a **OrganizationAssistantSettingsResponse**,
 
 La lectura conserva Business + módulo efectivo + assistant.configure; no exige assistant.use ni llama proveedor. No agrega ruta, permiso o secreto, ni cambia el modelo guardado al consultar opciones. Front puede filtrar el borrador de modo con estos datos reales sin inventar catálogo/precios o consultar Platform.
 
-Si el usuario coordina este delta, actualizar contrato/modelo/ejemplos y tipos B/F, con nuevos hashes y commits. Verificar configure-sin-use, 401/403, aislamiento/política/modelo inactivo o incompatible, precios y ausencia de claves; preservar las 120 rutas E8. T02 y tareas independientes continúan. La compatibilidad integral E8b queda pendiente de resolver CC01.
+Publicar contrato/modelo/ejemplos y tipos B/F, con nuevos hashes y commits, después del cambio estable T02. Verificar configure-sin-use, 401/403, aislamiento/política/modelo inactivo o incompatible, precios y ausencia de claves; preservar las 120 rutas E8. Las guardas contractuales y de acceso acompañan la publicación; la elegibilidad/precios reales se verifican al implementar configuración T03. T02 y tareas independientes continúan. La compatibilidad integral E8b queda pendiente de resolver CC01.
 
 ## Pase a Back, Front e Integración
 
