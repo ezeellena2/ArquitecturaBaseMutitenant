@@ -15,8 +15,8 @@ internal sealed class AssistantModelPriceConfiguration : IEntityTypeConfiguratio
         builder.ToTable("AssistantModelPrices", Schemas.Platform);
         builder.HasKey(value => value.Id);
         builder.Property(value => value.Provider).HasMaxLength(TextLimits.ShortName).IsRequired();
-        builder.Property(value => value.ProviderModelId).HasMaxLength(TextLimits.ShortName).IsRequired();
-        builder.Property(value => value.DisplayName).HasMaxLength(TextLimits.ShortName).IsRequired();
+        builder.Property(value => value.ProviderModelId).HasMaxLength(TextLimits.Description).IsRequired();
+        builder.Property(value => value.DisplayName).HasMaxLength(TextLimits.Description).IsRequired();
         builder.HasIndex(value => new { value.Provider, value.ProviderModelId }).IsUnique().HasDatabaseName(UniqueKeys.AssistantModel);
         builder.OwnsOne(value => value.InputPrice, money =>
         {

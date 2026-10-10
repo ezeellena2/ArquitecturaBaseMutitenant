@@ -13,7 +13,7 @@ internal sealed class UpdatePlatformAssistantSettingsRequestValidator : Abstract
         RuleFor(request => request.AllowedModelIds).Must(values => values is not null && values.All(value => value != Guid.Empty) && values.Distinct().Count() == values.Count).WithMessage(_ => AssistantTexts.Get("Assistant.Validation.IdsInvalid"));
         RuleFor(request => request.Effort).Must(value => value is not null && Enum.IsDefined(value.Value)).WithMessage(_ => AssistantTexts.Get("Assistant.Validation.SelectionInvalid"));
         RuleFor(request => request.DailyMessageLimit).Must(value => value is >= 1).WithMessage(_ => AssistantTexts.Get("Assistant.Validation.LimitsInvalid"));
-        RuleFor(request => request.MonthlyOrganizationBudget).Must(value => value is not null && (value.Amount >= 0 && value.Currency.Value == AssistantContractPolicy.BillingCurrency)).WithMessage(_ => AssistantTexts.Get("Assistant.Validation.PriceInvalid"));
+        RuleFor(request => request.MonthlyOrganizationBudget).Must(AssistantContractPolicy.IsValidBudget).WithMessage(_ => AssistantTexts.Get("Assistant.Validation.PriceInvalid"));
         RuleFor(request => request.PersonalEnabled).NotNull().WithMessage(_ => AssistantTexts.Get("Assistant.Validation.Required"));
         RuleFor(request => request.RetentionDays).Must(value => value is >= 1).WithMessage(_ => AssistantTexts.Get("Assistant.Validation.LimitsInvalid"));
         RuleFor(request => request.KeyAction).Must(value => value is not null && Enum.IsDefined(value.Value)).WithMessage(_ => AssistantTexts.Get("Assistant.Validation.SelectionInvalid"));

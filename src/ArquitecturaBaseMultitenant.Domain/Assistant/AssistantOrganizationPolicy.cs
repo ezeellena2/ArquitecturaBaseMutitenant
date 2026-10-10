@@ -19,6 +19,7 @@ public sealed class AssistantOrganizationPolicy : Entity, IGlobalSecurityAudited
     public int DailyMessageLimit { get; private set; } = AssistantFeature.DefaultDailyMessageLimit;
     public Money MonthlyBudget { get; private set; } = null!;
     public int RetentionDays { get; private set; } = AssistantFeature.DefaultRetentionDays;
+    public void SetAllowOwnKey(bool allowOwnKey) => AllowOwnKey = allowOwnKey;
 
     public static AssistantOrganizationPolicy Create(Guid organizationId, Money monthlyBudget)
     {

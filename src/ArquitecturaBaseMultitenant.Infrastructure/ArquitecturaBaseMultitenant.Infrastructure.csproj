@@ -42,5 +42,6 @@
     <!-- Nombre fijo: "EmailTemplates.<archivo>", sin depender de cómo MSBuild arma el nombre desde la carpeta. -->
     <EmbeddedResource Include="Messaging\Email\Templates\*.html" LogicalName="EmailTemplates.%(Filename)%(Extension)" />
     <EmbeddedResource Include="Persistence\Seed\ReferenceData\*.json" LogicalName="ReferenceData.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Modules\Assistant\ReferenceData\*.json" LogicalName="AssistantReferenceData.%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

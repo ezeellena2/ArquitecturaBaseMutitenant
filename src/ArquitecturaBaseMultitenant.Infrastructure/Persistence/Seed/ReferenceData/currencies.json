@@ -3231,8 +3231,8 @@
       "NumericCode": "840",
       "MinorUnits": 2,
       "Symbol": "US$",
-      "IsEnabled": false,
-      "SortOrder": null,
+      "IsEnabled": true,
+      "SortOrder": 1,
       "Translations": [
         {
           "Culture": "es-AR",

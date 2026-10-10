@@ -25,6 +25,26 @@ public sealed class AssistantPlatformSettings : Entity, IGlobalSecurityAudited, 
     public Money MonthlyOrganizationBudget { get; private set; } = null!;
     [NotAudited] public byte[]? EncryptedApiKey { get; private set; }
     [NotAudited] public string? MaskedKeySuffix { get; private set; }
+    public bool HasKeyOverride { get; private set; }
+
+    public void Update(Guid defaultModelId, Guid[] allowedModelIds, string effort, int dailyMessageLimit,
+        Money monthlyOrganizationBudget, bool personalEnabled, int retentionDays)
+    {
+        DefaultModelId = defaultModelId;
+        AllowedModelIds = [.. allowedModelIds];
+        Effort = effort;
+        DailyMessageLimit = dailyMessageLimit;
+        MonthlyOrganizationBudget = new Money(monthlyOrganizationBudget.Amount, monthlyOrganizationBudget.Currency);
+        PersonalEnabled = personalEnabled;
+        RetentionDays = retentionDays;
+    }
+
+    public void ReplaceKey(byte[]? encryptedKey, string? suffix)
+    {
+        HasKeyOverride = true;
+        EncryptedApiKey = encryptedKey?.ToArray();
+        MaskedKeySuffix = suffix;
+    }
 
     public static AssistantPlatformSettings Create(bool personalEnabled, Money monthlyOrganizationBudget)
     {

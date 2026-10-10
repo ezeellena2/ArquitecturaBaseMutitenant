@@ -13,4 +13,5 @@ public interface ITenantAdminReader
 
     /// <summary>Otros Dueños con membresía y cuenta activas en esa organización.</summary>
     Task<int> CountOtherActiveOwnersAsync(Guid tenantId, Guid userId, CancellationToken ct);
+    Task<IReadOnlyList<ArquitecturaBaseMultitenant.Application.Models.Tenancy.ActiveTenantAdminEmail>> ListActiveVerifiedEmailRecipientsAsync(Guid tenantId, CancellationToken ct);
 }

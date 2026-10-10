@@ -76,6 +76,10 @@ public sealed class AssistantApprovedContractTests
                 Assert.Contains(body["platformKeyModels"]!.AsArray(), value => value!["id"]!.GetValue<string>() == body["modelId"]!.GetValue<string>());
         }
         var success = examples["success"]!["value"]!;
+        var ownKeyAllowed = examples["ownKeyAllowed"]!["value"]!;
+        Assert.Equal("PlatformKey", ownKeyAllowed["mode"]!.GetValue<string>());
+        Assert.True(ownKeyAllowed["allowOwnKey"]!.GetValue<bool>());
+        Assert.NotEmpty(ownKeyAllowed["ownKeyModels"]!.AsArray());
         Assert.Contains(success["platformKeyModels"]!.AsArray(), value => value!["id"]!.GetValue<string>() == success["modelId"]!.GetValue<string>());
         Assert.Empty(examples["noEligibleModels"]!["value"]!["platformKeyModels"]!.AsArray());
         Assert.Empty(examples["noEligibleModels"]!["value"]!["ownKeyModels"]!.AsArray());

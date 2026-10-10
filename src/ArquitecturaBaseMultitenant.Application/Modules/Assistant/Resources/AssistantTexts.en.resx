@@ -45,4 +45,5 @@
   <data name="Assistant.Validation.FileInvalid" xml:space="preserve"><value>Attach a valid file.</value></data>
   <data name="Assistant.Validation.CursorInvalid" xml:space="preserve"><value>The cursor is invalid.</value></data>
   <data name="Assistant.Validation.PageInvalid" xml:space="preserve"><value>Choose a valid page and page size.</value></data>
+<data name="Assistant.Fake.Response" xml:space="preserve"><value>Isolated test provider response.</value></data>
 </root>

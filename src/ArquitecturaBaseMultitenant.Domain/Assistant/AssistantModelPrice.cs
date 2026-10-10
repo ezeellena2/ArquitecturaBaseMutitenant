@@ -20,6 +20,15 @@ public sealed class AssistantModelPrice : Entity, IGlobalSecurityAudited, IVersi
     public bool IsEnabled { get; private set; }
     public Money InputPrice { get; private set; } = null!;
     public Money OutputPrice { get; private set; } = null!;
+    public void Update(string provider, string providerModelId, string displayName, Money inputPrice, Money outputPrice, bool enabled)
+    {
+        Provider = provider;
+        ProviderModelId = providerModelId;
+        DisplayName = displayName;
+        InputPrice = new Money(inputPrice.Amount, inputPrice.Currency);
+        OutputPrice = new Money(outputPrice.Amount, outputPrice.Currency);
+        IsEnabled = enabled;
+    }
 
     public static AssistantModelPrice Create(string provider, string providerModelId, string displayName, Money inputPrice, Money outputPrice)
     {

@@ -6,4 +6,5 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.I
 public interface IChatClientFactory
 {
     Task<Result<IChatClient>> CreateAsync(CancellationToken cancellationToken);
+    Task<Result> ValidateKeyAsync(string key, CancellationToken cancellationToken);
 }

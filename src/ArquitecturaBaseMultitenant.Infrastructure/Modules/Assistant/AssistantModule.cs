@@ -4,6 +4,10 @@ using ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.Persistence.R
 using ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.Persistence.Repositories;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.Extensions.DependencyInjection;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Configuration;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Integrations;
+using Microsoft.Extensions.Options;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant;
 public static class AssistantModule
 {
@@ -14,6 +18,14 @@ public static class AssistantModule
         services.AddScoped<IAssistantConversationReader, AssistantConversationReader>();
         services.AddScoped<IAssistantConversationRepository, AssistantConversationRepository>();
         services.AddScoped<IPlatformAssistantConversationRepository, PlatformAssistantConversationRepository>();
+        services.AddScoped<IAssistantSettingsRepository, AssistantSettingsRepository>();
+        services.AddScoped<IAssistantModelRepository, AssistantModelRepository>();
+        services.AddScoped<IAssistantModelReader, AssistantModelReader>();
+        services.AddSingleton<IAssistantProviderCatalog, AssistantProviderCatalog>();
+        services.AddScoped<IAssistantKeyProtector, AssistantKeyProtector>();
+        services.AddScoped<IChatClientFactory, AnthropicChatClientFactory>();
+        services.AddSingleton<IValidateOptions<AssistantOptions>, AssistantOptionsValidator>();
+        services.AddScoped<IModuleDataSeedContributor, AssistantReferenceDataSeed>();
         return services;
     }
 }

@@ -18,7 +18,8 @@ internal sealed class DatabaseSeeder(
     ReferenceDataCache referenceCache,
     OpenIddictSeeder openIddict,
     PlatformSeeder platform,
-    LegalDocumentSeeder legal)
+    LegalDocumentSeeder legal,
+    IEnumerable<IModuleDataSeedContributor> modules)
 {
     public async Task SeedAsync(CancellationToken cancellationToken)
     {
@@ -38,6 +39,7 @@ internal sealed class DatabaseSeeder(
             await openIddict.SeedAsync(ct);
             await platform.SeedAsync(owner, snapshot, ct);
             await legal.SeedAsync(snapshot.Cultures, ct);
+            foreach (var module in modules) await module.StageAsync(ct);
             return Result.Success(referencesChanged);
         }, CommitPolicy.OnSuccess, cancellationToken);
 

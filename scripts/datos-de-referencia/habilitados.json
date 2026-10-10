@@ -10,7 +10,8 @@
     "en-US": "en"
   },
   "currencies": {
-    "ARS": { "sortOrder": 0 }
+    "ARS": { "sortOrder": 0 },
+    "USD": { "isEnabled": true, "sortOrder": 1 }
   },
   "countries": {
     "AR": { "sortOrder": 0 }

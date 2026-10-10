@@ -22,4 +22,20 @@ public sealed class AssistantOrganizationSettings : Entity, ITenantOwned, IAudit
     [NotAudited] public string? MaskedKeySuffix { get; private set; }
 
     public static AssistantOrganizationSettings Create() => new();
+
+    public void Update(string mode, Guid modelId, string effort, int dailyMessageLimit, Money? monthlyBudget, int retentionDays)
+    {
+        Mode = mode;
+        ModelId = modelId;
+        Effort = effort;
+        DailyMessageLimit = dailyMessageLimit;
+        MonthlyBudget = monthlyBudget is null ? null : new Money(monthlyBudget.Amount, monthlyBudget.Currency);
+        RetentionDays = retentionDays;
+    }
+
+    public void ReplaceKey(byte[]? encryptedKey, string? suffix)
+    {
+        EncryptedApiKey = encryptedKey?.ToArray();
+        MaskedKeySuffix = suffix;
+    }
 }

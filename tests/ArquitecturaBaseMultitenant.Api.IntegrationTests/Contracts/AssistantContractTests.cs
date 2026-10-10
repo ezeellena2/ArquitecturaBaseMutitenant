@@ -46,9 +46,12 @@ public sealed class AssistantContractTests(ApiFactory factory)
                 return Task.FromResult(ArquitecturaBaseMultitenant.Domain.Results.Result.Success());
             }, CommitPolicy.OnSuccess, Ct);
         }
-        // T03 supplies productive options; reaching its stub proves that use is not a prerequisite.
+        // Configuration has its own permission; chat use is not a prerequisite.
         using var settings = await client.GetAsync("/api/organization/assistant/settings", Ct);
-        await Stub(settings);
+        Assert.Equal(HttpStatusCode.OK, settings.StatusCode);
+        using var available = await settings.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+        Assert.Equal(JsonValueKind.Array, available!.RootElement.GetProperty("platformKeyModels").ValueKind);
+        Assert.Equal(JsonValueKind.Array, available.RootElement.GetProperty("ownKeyModels").ValueKind);
         using var chat = await client.GetAsync("/api/organization/assistant", Ct);
         Assert.Equal(HttpStatusCode.Forbidden, chat.StatusCode);
     }

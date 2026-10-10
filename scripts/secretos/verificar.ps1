@@ -29,6 +29,13 @@ foreach ($clave in $requeridas.Keys) {
 }
 
 $claveTelefono = 'Seed:PlatformOwner:Phone'
+$claveAssistant = 'Assistant:Platform:ApiKey'
+if ($cargadas -contains $claveAssistant) {
+    Write-Host "[ok]       $claveAssistant" -ForegroundColor Green
+}
+else {
+    Write-Host "[opcional] $claveAssistant  -> Clave Anthropic de arranque; sin ella el chat queda pendiente de configuración" -ForegroundColor DarkGray
+}
 if ($cargadas -contains $claveTelefono) {
     Write-Host "[ok]       $claveTelefono" -ForegroundColor Green
 }
