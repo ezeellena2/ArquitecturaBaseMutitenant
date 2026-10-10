@@ -56781,6 +56781,16 @@
               "string"
             ]
           },
+          "maskedPrimaryPhone": {
+            "examples": [
+              "•••• 4521"
+            ],
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Phone principal global verificado, enmascarado con PersonalDataMask (solo los últimos cuatro dígitos). Null si el principal es Email/Google, está pendiente o la cuenta fue eliminada. El canal apagado o un país cerrado a nuevas altas no ocultan esta identidad."
+          },
           "organizationCountryCode": {
             "type": [
               "null",

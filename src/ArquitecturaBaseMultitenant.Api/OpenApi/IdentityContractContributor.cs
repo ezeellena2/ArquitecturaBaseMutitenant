@@ -189,7 +189,7 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
             {
                 Type = JsonSchemaType.String | JsonSchemaType.Null, Pattern = "^\\+[1-9][0-9]{7,14}$", Description = "Número público E.164 aportado por el canal. Opcional; no es identificador del proveedor.",
             };
-            if (name is "PlatformAccountResponse" or "PlatformAccountDetailResponse"
+            if (name is "PlatformAccountResponse" or "PlatformAccountDetailResponse" or "MeResponse"
                 && schema.Properties.TryGetValue("maskedPrimaryPhone", out var phoneProperty) && phoneProperty is OpenApiSchema primaryPhone)
             {
                 primaryPhone.Description = "Phone principal global verificado, enmascarado con PersonalDataMask (solo los últimos cuatro dígitos). Null si el principal es Email/Google, está pendiente o la cuenta fue eliminada. El canal apagado o un país cerrado a nuevas altas no ocultan esta identidad.";

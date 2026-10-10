@@ -16,6 +16,8 @@ public sealed record MeResponse(Guid Id, string? DisplayName, Email? Email, Acce
     public IReadOnlyList<ModuleCapabilityResponse> ModuleCapabilities { get; init; } = [];
     public string? FirstName { get; init; }
     public string? LastName { get; init; }
+    /// <summary>Phone principal global verificado, enmascarado; null si no corresponde.</summary>
+    public string? MaskedPrimaryPhone { get; init; }
     /// <summary>País de la organización empresarial activa, desde su cultura del catálogo; no es la región personal.</summary>
     public string? OrganizationCountryCode { get; init; }
     public uint Version { get; init; }

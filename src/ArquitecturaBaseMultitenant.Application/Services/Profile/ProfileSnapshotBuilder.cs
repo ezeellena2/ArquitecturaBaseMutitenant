@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Common.Text;
 using ArquitecturaBaseMultitenant.Application.Models.Profile;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
@@ -52,6 +53,10 @@ internal sealed class ProfileSnapshotBuilder(IUserRepository users, IUserTenantA
             ModuleCapabilities = await modules.CapabilitiesAsync(cancellationToken),
             FirstName = account.FirstName,
             LastName = account.LastName,
+            MaskedPrimaryPhone = account.Status != UserStatus.Deleted
+                && methods.FirstOrDefault(method => method.IsPrimary && method.Type == LoginMethodType.Phone
+                    && method.VerifiedAtUtc is not null) is { } primaryPhone
+                ? PersonalDataMask.Phone(primaryPhone.Value) : null,
             OrganizationCountryCode = profilePreferences.OrganizationCountryCode,
             Version = account.ProfileVersion,
             PendingLegalDocuments = await legal.PendingAsync(userId, cancellationToken),

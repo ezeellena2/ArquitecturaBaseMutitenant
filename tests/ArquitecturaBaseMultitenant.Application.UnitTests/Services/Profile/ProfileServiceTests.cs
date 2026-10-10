@@ -12,6 +12,7 @@ using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Application.Services.Profile;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Application.Services.Roles;
+using ArquitecturaBaseMultitenant.Application.Common.Text;
 using ArquitecturaBaseMultitenant.Application.UnitTests.TestDoubles;
 using ArquitecturaBaseMultitenant.Application.Validation.Profile;
 using ArquitecturaBaseMultitenant.Domain.Common;
@@ -177,6 +178,60 @@ public sealed class ProfileServiceTests
         var profile = await snapshots.BuildAsync(id, access, activeTenantId, Ct);
 
         Assert.Equal(expected, profile!.Email?.Value);
+    }
+
+    [Theory]
+    [InlineData(Access.Business, true, false, "ana@empresa-a.test")]
+    [InlineData(Access.Business, false, false, "ana@example.test")]
+    [InlineData(Access.Business, true, true, "ana@example.test")]
+    [InlineData(Access.Consumer, true, false, "ana@example.test")]
+    [InlineData(Access.Platform, true, false, "ana@example.test")]
+    public async Task Primary_phone_keeps_exact_managed_email_selection_and_reuses_method_read(
+        Access access, bool verifiedManaged, bool otherOrganization, string expectedEmail)
+    {
+        var id = Guid.CreateVersion7();
+        var organizationId = Guid.CreateVersion7();
+        var catalog = new JsonReferenceDataCatalog();
+        using var fixture = new ServiceFixture<ProfileService>();
+        var verifiedAtUtc = fixture.TimeProvider.GetUtcNow().UtcDateTime;
+        const string phone = "+5491155554521";
+        var methods = new StubMethods([
+            new(Guid.CreateVersion7(), LoginMethodType.Phone, phone, true, verifiedAtUtc, null),
+            new(Guid.CreateVersion7(), LoginMethodType.Email, "ana@example.test", false, verifiedAtUtc, null),
+            new(Guid.CreateVersion7(), LoginMethodType.Email, "ana@empresa-a.test", false,
+                verifiedManaged ? verifiedAtUtc : null, organizationId),
+        ]);
+        var snapshots = new ProfileSnapshotBuilder(new StubUsers(Account(id)), new StubAccesses([]),
+            new ProfilePreferencesResolver(new StubSettings(null), catalog, catalog), methods,
+            new LoginMethodAvailabilityPolicy([], new StubGoogle(), new StubMemberships()),
+            new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider),
+            new ProfileEffectivePermissionsBuilder(new StubPermissions(), new StubPlatformPermissions()),
+            new ProfileModulesBuilder(new StubFeatures(), []));
+
+        var profile = await snapshots.BuildAsync(id, access, otherOrganization ? Guid.CreateVersion7() : organizationId, Ct);
+
+        Assert.Equal(expectedEmail, profile!.Email?.Value);
+        Assert.Equal(PersonalDataMask.Phone(phone), profile.MaskedPrimaryPhone);
+        Assert.Equal(1, methods.Reads);
+    }
+
+    [Fact]
+    public async Task Deleted_account_snapshot_does_not_keep_a_verified_primary_phone_mask()
+    {
+        var id = Guid.CreateVersion7();
+        var catalog = new JsonReferenceDataCatalog();
+        using var fixture = new ServiceFixture<ProfileService>();
+        var snapshots = new ProfileSnapshotBuilder(new StubUsers(Account(id) with { Status = UserStatus.Deleted }), new StubAccesses([]),
+            new ProfilePreferencesResolver(new StubSettings(null), catalog, catalog), new StubMethods([
+                new(Guid.CreateVersion7(), LoginMethodType.Phone, "+5491155554521", true, fixture.TimeProvider.GetUtcNow().UtcDateTime, null),
+            ]), new LoginMethodAvailabilityPolicy([], new StubGoogle(), new StubMemberships()),
+            new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider),
+            new ProfileEffectivePermissionsBuilder(new StubPermissions(), new StubPlatformPermissions()),
+            new ProfileModulesBuilder(new StubFeatures(), []));
+
+        var profile = await snapshots.BuildAsync(id, Access.Consumer, null, Ct);
+
+        Assert.Null(profile!.MaskedPrimaryPhone);
     }
 
     [Fact]
@@ -542,8 +597,13 @@ public sealed class ProfileServiceTests
 
     private sealed class StubMethods(IReadOnlyList<LoginMethodRow>? rows = null) : ILoginMethodReader
     {
+        public int Reads { get; private set; }
         public Task<IReadOnlyList<LoginMethodRow>> ListByUserIdAsync(Guid userId,
-            CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<LoginMethodRow>>(rows ?? []);
+            CancellationToken cancellationToken)
+        {
+            Reads++;
+            return Task.FromResult<IReadOnlyList<LoginMethodRow>>(rows ?? []);
+        }
     }
 
     private sealed class StubPermissions(IReadOnlyList<string>? organization = null,
