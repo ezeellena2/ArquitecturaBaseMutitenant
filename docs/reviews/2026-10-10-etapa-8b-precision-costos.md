@@ -1,6 +1,6 @@
 # E8b — propuesta de precisión de tarifas y costos técnicos
 
-Estado: propuesta pendiente de autorización; no modifica contrato HTTP ni aplica aún una excepción de cálculo.
+Estado: autorizada expresamente por el usuario el 2026-10-10: «Sí, autorizar precisión técnica y documentarla». Registrada en [ADR 0051](../decisions/0051-precision-tecnica-de-costos-ia.md) y fichas. No modifica contrato HTTP; implementación y pruebas de T03/T06 continúan pendientes de sus entregas verificadas.
 
 ## Conflicto verificable
 
@@ -10,7 +10,7 @@ Con las tarifas Haiku aprobadas de USD 0,10 de entrada y USD 0,50 de salida por 
 
 T02 ya mapea las tarifas y los agregados `CostAmount` como `numeric(18,6)`. Se conservan sus migraciones históricas; cualquier ajuste posterior se hace con una migración nueva. Seis decimales en el agregado tampoco representan el costo de un solo token de entrada Haiku (USD 0,0000001).
 
-## Cambio propuesto para autorizar
+## Cambio autorizado
 
 - Mantener `Money` con moneda explícita y `decimal` en tarifas, snapshots, reservas y costos técnicos del asistente.
 - Conservar las tarifas por millón con hasta seis decimales, como `numeric(18,6)`, sin redondearlas a centavos. Validar esa precisión al recibir una tarifa nueva y en referencias técnicas de host.
@@ -19,4 +19,4 @@ T02 ya mapea las tarifas y los agregados `CostAmount` como `numeric(18,6)`. Se c
 - Los presupuestos ingresados y la presentación de dinero siguen las unidades menores del catálogo. Correos y exportaciones usan `DisplayFormatter`; la excepción no se extiende a importes comerciales de otras áreas.
 - Documentar el alcance en una ADR y en las dos fichas citadas; verificar acumulación de subcentavos, snapshots, persistencia y cruces de presupuesto mediante pruebas dirigidas y PostgreSQL Docker.
 
-No agrega campos, rutas, permisos ni tipos Front. La autorización de CC01–CC03 no se interpreta como aprobación de esta excepción. Hasta decidirla, T03 puede continuar con configuración y referencias; el cálculo y reconciliación T06 dependen de esta resolución.
+No agrega campos, rutas, permisos ni tipos Front. La autorización de CC01–CC03 no se interpretó como aprobación de esta excepción: se obtuvo una decisión humana específica posterior. T03 continúa con configuración y referencias; T06 aplicará el cálculo, la reconciliación y la migración nueva, con sus pruebas dirigidas y Docker.
