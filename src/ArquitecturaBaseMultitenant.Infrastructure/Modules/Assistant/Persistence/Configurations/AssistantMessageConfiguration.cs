@@ -19,6 +19,7 @@ internal sealed class AssistantMessageConfiguration : IEntityTypeConfiguration<A
         builder.Property(value => value.Text).HasMaxLength(TextLimits.LegalDocument);
         builder.Property(value => value.ToolKey).HasMaxLength(TextLimits.ShortName);
         builder.Property(value => value.ToolState).HasMaxLength(TextLimits.ShortName);
+        builder.Property(value => value.LinksJson).HasColumnType("jsonb");
         builder.HasOne<AssistantConversation>().WithMany().HasForeignKey(value => new { value.TenantId, value.ConversationId }).OnDelete(DeleteBehavior.Cascade);
         builder.HasIndex(value => new { value.TenantId, value.ConversationId, value.CreatedAtUtc, value.Id });
     }

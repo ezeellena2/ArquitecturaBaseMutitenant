@@ -213,6 +213,7 @@ public sealed class AssistantPersistenceTests(ApiFactory factory)
         await using var admin = new NpgsqlConnection(factory.AdminConnectionString);
         await admin.OpenAsync(AssistantTestData.Ct);
         await using var policies = new NpgsqlCommand("SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='tenant' AND c.relname LIKE 'Assistant%' AND c.relrowsecurity AND c.relforcerowsecurity", admin);
-        Assert.Equal(6L, await policies.ExecuteScalarAsync(AssistantTestData.Ct));
+        // T05b adds the private durable binding and file cleanup ledger; both require forced tenant RLS.
+        Assert.Equal(8L, await policies.ExecuteScalarAsync(AssistantTestData.Ct));
     }
 }

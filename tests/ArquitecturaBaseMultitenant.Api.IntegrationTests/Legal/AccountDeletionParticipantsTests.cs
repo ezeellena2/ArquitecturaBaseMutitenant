@@ -65,7 +65,7 @@ public sealed class AccountDeletionParticipantsTests(ApiFactory factory)
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, Ct);
         var participants = services.GetServices<IAccountDeletionParticipant>().ToArray();
-        Assert.Equal(7, participants.Length);
+        Assert.Equal(8, participants.Length);
         var membershipParticipant = Assert.Single(participants,
             participant => participant.GetType().Name == "MembershipDeletionParticipant");
         Assert.All(await context.LegalAcceptances.AsNoTracking().Where(row => row.UserId == account.UserId)

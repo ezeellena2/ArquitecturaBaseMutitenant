@@ -26,6 +26,7 @@ public sealed class AssistantConversationIsolationTests(ApiFactory factory)
         await AssistantTestData.PersonalAsync(factory, true);
         using var client = AssistantTestData.Client(factory);
         var person = await AccountJourney.RegisterAsync(factory, client, AssistantTestData.Ct);
+        await AssistantExecutionActorTests.AcceptNoticeAsync(client);
         var tenantId = await AssistantTestData.ActiveTenantAsync(client);
         var conversation = await AssistantTestData.ConversationAsync(factory, tenantId, person.UserId, Access.Consumer);
         var sibling = await AssistantTestData.ConversationAsync(factory, tenantId, person.UserId, Access.Consumer);
@@ -58,6 +59,7 @@ public sealed class AssistantConversationIsolationTests(ApiFactory factory)
         await AssistantTestData.PersonalAsync(factory, true);
         using var a = AssistantTestData.Client(factory); using var b = AssistantTestData.Client(factory);
         var personA = await AccountJourney.RegisterAsync(factory, a, AssistantTestData.Ct);
+        await AssistantExecutionActorTests.AcceptNoticeAsync(a);
         var personalA = await AssistantTestData.ActiveTenantAsync(a);
         var personB = await AccountJourney.RegisterAsync(factory, b, AssistantTestData.Ct);
         var personalB = await AssistantTestData.ActiveTenantAsync(b);
@@ -111,6 +113,7 @@ public sealed class AssistantConversationIsolationTests(ApiFactory factory)
                 return Task.FromResult(Result.Success());
             }, CommitPolicy.OnSuccess, AssistantTestData.Ct);
         await AccountJourney.AuthorizeAsync(a, "platform", AssistantTestData.Ct);
+        await AssistantExecutionActorTests.AcceptNoticeAsync(a, "/api/platform/assistant/notice");
         Assert.Equal(HttpStatusCode.OK, (await a.GetAsync($"/api/platform/assistant/conversations/{own.Id}", AssistantTestData.Ct)).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await a.GetAsync($"/api/platform/assistant/conversations/{foreign.Id}", AssistantTestData.Ct)).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await a.GetAsync($"/api/platform/assistant/conversations/{foreign.Id}/attachments/{foreignFile.Id}", AssistantTestData.Ct)).StatusCode);
@@ -120,6 +123,7 @@ public sealed class AssistantConversationIsolationTests(ApiFactory factory)
         Assert.Equal(2, first.Items.Count);
         Assert.Equal(HttpStatusCode.BadRequest, (await a.GetAsync($"/api/platform/assistant/conversations?saved=true&cursor={Uri.EscapeDataString(first.NextCursor!)}", AssistantTestData.Ct)).StatusCode);
         await AccountJourney.AuthorizeAsync(b, "platform", AssistantTestData.Ct);
+        await AssistantExecutionActorTests.AcceptNoticeAsync(b, "/api/platform/assistant/notice");
         Assert.Equal(HttpStatusCode.BadRequest, (await b.GetAsync($"/api/platform/assistant/conversations?cursor={Uri.EscapeDataString(first.NextCursor!)}", AssistantTestData.Ct)).StatusCode);
         var last = await a.GetFromJsonAsync<ArquitecturaBaseMultitenant.Application.Common.Pagination.CursorResult<AssistantConversationSummaryResponse>>($"/api/platform/assistant/conversations?limit=2&cursor={Uri.EscapeDataString(first.NextCursor!)}", AssistantTestData.Ct);
         Assert.False(last!.HasMore);

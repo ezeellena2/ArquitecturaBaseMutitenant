@@ -1,3 +1,5 @@
+using ArquitecturaBaseMultitenant.Application.Models.Idempotency;
+
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 
 /// <summary>Distingue una reserva nueva, una operación en curso, una clave usada para otro pedido y una respuesta lista para repetir.</summary>
@@ -14,7 +16,8 @@ public sealed record IdempotencyReservation(
     Guid Id,
     IdempotencyReservationState State,
     int? ResponseStatusCode = null,
-    string? ResponseBody = null);
+    string? ResponseBody = null,
+    IdempotentReference? Reference = null);
 
 /// <summary>Reserva técnica independiente del UnitOfWork del caso de uso.</summary>
 public interface IIdempotencyStore
@@ -28,6 +31,9 @@ public interface IIdempotencyStore
         CancellationToken cancellationToken);
 
     Task CompleteAsync(Guid id, int statusCode, string responseBody, CancellationToken cancellationToken);
+
+    Task CompleteReferenceAsync(Guid id, IdempotentReference reference, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("This store does not support durable references.");
 
     Task ReleaseAsync(Guid id, CancellationToken cancellationToken);
 

@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
@@ -45,16 +46,17 @@ internal sealed class AssistantConversationReader(ApplicationDbContext context, 
         var query = access == Access.Platform
             ? context.Set<PlatformAssistantMessage>().AsNoTracking()
                 .Where(value => value.ConversationId == conversationId && context.Set<PlatformAssistantConversation>().Any(conversation => conversation.Id == value.ConversationId && conversation.OwnerUserId == ownerUserId))
-                .Select(value => new { value.Id, value.Role, value.Status, value.Text, value.CreatedAtUtc, value.Version, value.PositiveFeedback })
+                .Select(value => new { value.Id, value.Role, value.Status, value.Text, value.CreatedAtUtc, value.Version, value.PositiveFeedback, value.LinksJson })
             : context.Set<AssistantMessage>().AsNoTracking().Where(value => value.TenantId == tenantId && value.ConversationId == conversationId
                 && context.Set<AssistantConversation>().Any(conversation => conversation.TenantId == value.TenantId && conversation.Id == value.ConversationId && conversation.OwnerUserId == ownerUserId && conversation.Access == access))
-                .Select(value => new { value.Id, value.Role, value.Status, value.Text, value.CreatedAtUtc, value.Version, value.PositiveFeedback });
+                .Select(value => new { value.Id, value.Role, value.Status, value.Text, value.CreatedAtUtc, value.Version, value.PositiveFeedback, value.LinksJson });
         var page = await AssistantCursorPagination.ToCursorResultAsync(query, request.Limit ?? 50, request.Cursor,
             $"messages:{tenantId:N}:{ownerUserId:N}:{access}:{conversationId:N}", true,
             value => value.CreatedAtUtc, value => value.Id, ct);
         return new CursorResult<AssistantMessageResponse>([.. page.Items.Select(value => new AssistantMessageResponse(value.Id,
             Enum.Parse<AssistantMessageRole>(value.Role), value.Text ?? "", Enum.Parse<AssistantMessageStatus>(value.Status), value.CreatedAtUtc, value.Version,
-            [], [], value.PositiveFeedback == null ? null : value.PositiveFeedback.Value ? AssistantRating.Up : AssistantRating.Down))], page.NextCursor, page.HasMore);
+            [], value.LinksJson is null ? [] : JsonSerializer.Deserialize<AssistantLinkResponse[]>(value.LinksJson)!,
+            value.PositiveFeedback == null ? null : value.PositiveFeedback.Value ? AssistantRating.Up : AssistantRating.Down))], page.NextCursor, page.HasMore);
     }
 
     public Task<bool> ExistsAttachmentAsync(Guid ownerUserId, Access access, Guid conversationId, Guid attachmentId, CancellationToken ct)

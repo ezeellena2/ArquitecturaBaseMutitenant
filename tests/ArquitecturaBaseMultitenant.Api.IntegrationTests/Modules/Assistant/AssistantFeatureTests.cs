@@ -23,6 +23,7 @@ public sealed class AssistantFeatureTests(ApiFactory factory)
         await AssistantTestData.PersonalAsync(factory, false);
         Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/api/me/assistant/conversations", AssistantTestData.Ct)).StatusCode);
         await AssistantTestData.PersonalAsync(factory, true);
+        await AssistantExecutionActorTests.AcceptNoticeAsync(client);
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/me/assistant/conversations", AssistantTestData.Ct)).StatusCode);
         using var scope = factory.Services.CreateScope();
         scope.ServiceProvider.GetRequiredService<ITenantAccessInitializer>().SetFromAccess(tenantId, TenantKind.Personal);
@@ -43,6 +44,7 @@ public sealed class AssistantFeatureTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/api/organization/assistant/conversations", AssistantTestData.Ct)).StatusCode);
         await AssistantTestData.EnableAsync(factory, organization, clock.GetUtcNow().UtcDateTime.AddMinutes(1));
         await host.Services.GetRequiredService<ITenantFeatureCache>().InvalidateAsync(organization, AssistantTestData.Ct);
+        await AssistantExecutionActorTests.AcceptNoticeAsync(client, "/api/organization/assistant/notice");
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/organization/assistant/conversations", AssistantTestData.Ct)).StatusCode);
         clock.Advance(TimeSpan.FromMinutes(1));
         Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/api/organization/assistant/conversations", AssistantTestData.Ct)).StatusCode);

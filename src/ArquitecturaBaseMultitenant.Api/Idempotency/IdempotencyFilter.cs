@@ -1,5 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Idempotency;
+using ArquitecturaBaseMultitenant.Application.Models.Idempotency;
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -16,7 +18,7 @@ public sealed class IdempotencyFilter(
     IIdempotencyStore store,
     ICurrentUser currentUser,
     ITenantContext tenantContext,
-    IPublicSiteContext publicSiteContext) : IAsyncResourceFilter
+    IPublicSiteContext publicSiteContext) : IAsyncResourceFilter, IAsyncResultFilter
 {
     public async Task OnResourceExecutionAsync(ResourceExecutingContext context, ResourceExecutionDelegate next)
     {
@@ -35,8 +37,9 @@ public sealed class IdempotencyFilter(
         if (context.ActionDescriptor.EndpointMetadata.OfType<IdempotentAttribute>().SingleOrDefault()?.Mode
             is IdempotencyMode.DurableReference or IdempotencyMode.DurableStream)
         {
-            // T01 only publishes these protocols. The owning service still returns 501; no private body enters the buffered store.
-            await next();
+            if (context.ActionDescriptor.EndpointMetadata.OfType<IdempotencyDurableAttribute>().SingleOrDefault() is { } durable)
+                await ExecuteDurableAsync(context, next, key, durable);
+            else await next(); // Unimplemented stream/upload protocols retain their honest stubs.
             return;
         }
 
@@ -99,6 +102,95 @@ public sealed class IdempotencyFilter(
             default:
                 throw new InvalidOperationException("Unknown idempotency reservation state.");
         }
+    }
+
+    public async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(next);
+        var binding = context.HttpContext.RequestServices.GetService<IdempotentRequestContext>();
+        if (binding?.ReservationId is { } id && context.Result is IIdempotentReferencedResult referenced)
+        {
+            binding.HasReference = true;
+            // The private UoW has committed. Complete before writing JSON and independently of the client disconnect.
+            await store.CompleteReferenceAsync(id, referenced.Reference, CancellationToken.None);
+        }
+        await next();
+    }
+
+    private async Task ExecuteDurableAsync(ResourceExecutingContext context, ResourceExecutionDelegate next,
+        Guid key, IdempotencyDurableAttribute metadata)
+    {
+        var http = context.HttpContext;
+        var request = http.Request;
+        request.EnableBuffering();
+        request.Body.Position = 0;
+        var digest = Convert.ToHexString(await SHA256.HashDataAsync(request.Body, http.RequestAborted));
+        request.Body.Position = 0;
+        var binding = http.RequestServices.GetRequiredService<IdempotentRequestContext>();
+        binding.Request = new IdempotentRequest(key, digest, string.Concat(request.PathBase, request.Path, request.QueryString),
+            string.Concat(request.Scheme, "://", request.Host));
+        var verifier = (IIdempotentRequestVerifier)http.RequestServices.GetRequiredService(metadata.VerifierType);
+        var recovered = await verifier.ValidateAsync(binding.Request, http.RequestAborted);
+        if (recovered.IsFailure)
+        {
+            context.Result = FromError(http, recovered.Error);
+            return;
+        }
+        if (recovered.Value is { } reference)
+        {
+            await ReplayDurableAsync(context, reference);
+            return;
+        }
+        var reservation = await store.ReserveAsync(tenantContext.TenantId, currentUser.UserId ?? Guid.Empty,
+            key, digest, binding.Request.Route, http.RequestAborted);
+        switch (reservation.State)
+        {
+            case IdempotencyReservationState.Reused:
+                context.Result = Problem(http, ErrorType.Validation, ApiErrorCodes.IdempotencyKeyReused, 422);
+                return;
+            case IdempotencyReservationState.InProgress:
+                // A commit may have landed between preflight and reservation (or its publication may have failed).
+                recovered = await verifier.ValidateAsync(binding.Request, http.RequestAborted);
+                if (recovered.IsFailure) context.Result = FromError(http, recovered.Error);
+                else if (recovered.Value is { } committed) await ReplayDurableAsync(context, committed);
+                else context.Result = Problem(http, ErrorType.Conflict, ApiErrorCodes.InProgress, 409);
+                return;
+            case IdempotencyReservationState.Replay:
+                if (reservation.Reference is not { } completed)
+                    context.Result = Problem(http, ErrorType.Validation, ApiErrorCodes.IdempotencyKeyReused, 422);
+                else await ReplayDurableAsync(context, completed);
+                return;
+            case IdempotencyReservationState.Reserved:
+                binding.ReservationId = reservation.Id;
+                try { await next(); }
+                finally
+                {
+                    if (!binding.HasReference) await store.ReleaseAsync(reservation.Id, CancellationToken.None);
+                }
+                return;
+            default: throw new InvalidOperationException("Unknown durable reservation state.");
+        }
+    }
+
+    private static async Task ReplayDurableAsync(ResourceExecutingContext context, IdempotentReference reference)
+    {
+        var http = context.HttpContext;
+        var resolver = http.RequestServices.GetServices<IIdempotentReplayResolver>().Single(value => value.Kind == reference.Kind);
+        var result = await resolver.ResolveAsync(reference, http.RequestAborted);
+        if (result.IsFailure) { context.Result = FromError(http, result.Error); return; }
+        http.Response.Headers["Idempotent-Replayed"] = "true";
+        context.Result = new IdempotentReferenceResult(result.Value.ResponseValue!, result.Value.Reference);
+    }
+
+    private static ObjectResult FromError(HttpContext http, Error error)
+    {
+        if (error.Code == ApiErrorCodes.IdempotencyKeyReused)
+            return Problem(http, ErrorType.Validation, ApiErrorCodes.IdempotencyKeyReused, 422);
+        var details = ProblemDetailsMapper.FromError(error, http.RequestServices.GetRequiredService<ProblemDetailsFactory>(), http);
+        var result = new ObjectResult(details) { StatusCode = details.Status };
+        result.ContentTypes.Add("application/problem+json");
+        return result;
     }
 
     private async Task ExecuteReservedAsync(

@@ -19,4 +19,7 @@ internal sealed class IdempotencyKey
     public DateTime ExpiresAtUtc { get; private set; }
     public int? ResponseStatusCode { get; private set; }
     public string? ResponseBody { get; private set; }
+    public string? ReferenceKind { get; private set; }
+    public Guid? ReferenceId { get; private set; }
+    public string? ResponseLocation { get; private set; }
 }

@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Models.Idempotency;
 using Npgsql;
 using NpgsqlTypes;
 
@@ -81,11 +82,12 @@ public sealed class IdempotencyStore : IIdempotencyStore
         bool sameRequest;
         int? responseStatusCode;
         string? responseBody;
+        IdempotentReference? reference;
         await using (var existing = connection.CreateCommand())
         {
             existing.Transaction = transaction;
             existing.CommandText = """
-                SELECT "Id", "BodyHash", "Route", "ResponseStatusCode", "ResponseBody"
+                SELECT "Id", "BodyHash", "Route", "ResponseStatusCode", "ResponseBody", "ReferenceKind", "ReferenceId", "ResponseLocation"
                 FROM platform."IdempotencyKeys"
                 WHERE "TenantId" IS NOT DISTINCT FROM @tenant AND "UserId" = @user AND "Key" = @key
                 """;
@@ -101,15 +103,39 @@ public sealed class IdempotencyStore : IIdempotencyStore
                 && string.Equals(reader.GetString(2), route, StringComparison.Ordinal);
             responseStatusCode = reader.IsDBNull(3) ? null : reader.GetInt32(3);
             responseBody = reader.IsDBNull(4) ? null : reader.GetString(4);
+            reference = reader.IsDBNull(5) || reader.IsDBNull(6) || responseStatusCode is null ? null
+                : new IdempotentReference(reader.GetString(5), reader.GetGuid(6), responseStatusCode.Value,
+                    reader.IsDBNull(7) ? null : reader.GetString(7));
         }
 
         await transaction.CommitAsync(cancellationToken);
 
         return sameRequest
             ? responseStatusCode is { } completedStatus
-                ? new IdempotencyReservation(existingId, IdempotencyReservationState.Replay, completedStatus, responseBody)
+                ? new IdempotencyReservation(existingId, IdempotencyReservationState.Replay, completedStatus, responseBody, reference)
                 : new IdempotencyReservation(existingId, IdempotencyReservationState.InProgress)
             : new IdempotencyReservation(existingId, IdempotencyReservationState.Reused);
+    }
+
+    public async Task CompleteReferenceAsync(Guid id, IdempotentReference reference, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(reference);
+        await using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE platform."IdempotencyKeys"
+            SET "ResponseStatusCode" = @status, "ResponseBody" = NULL,
+                "ReferenceKind" = @kind, "ReferenceId" = @reference, "ResponseLocation" = @location
+            WHERE "Id" = @id AND "ResponseStatusCode" IS NULL
+            """;
+        command.Parameters.AddWithValue("id", id);
+        command.Parameters.AddWithValue("status", reference.StatusCode);
+        command.Parameters.AddWithValue("kind", reference.Kind);
+        command.Parameters.AddWithValue("reference", reference.Id);
+        command.Parameters.AddWithValue("location", NpgsqlDbType.Text, (object?)reference.Location ?? DBNull.Value);
+        if (await command.ExecuteNonQueryAsync(cancellationToken) != 1)
+            throw new InvalidOperationException("The durable transport reservation could not be completed.");
     }
 
     /// <summary>Se llama solo después de que terminó el UoW de la acción.</summary>

@@ -61,6 +61,7 @@ public sealed class BusinessAssistantController(IAssistantConversationService se
         (await service.ListAsync(new AssistantConversationListRequest(request.Cursor, request.Limit, request.Saved), cancellationToken)).ToActionResult(this);
 
     [HttpPost("conversations")]
+    [IdempotencyDurable(typeof(AssistantDurableAdapter))]
     [Idempotent(Mode = IdempotencyMode.DurableReference)]
     [ProducesResponseType<AssistantConversationSummaryResponse>(201)]
     [ProducesProblem(400)]
@@ -72,7 +73,7 @@ public sealed class BusinessAssistantController(IAssistantConversationService se
     [ProducesProblem(500)]
     [ProducesProblem(501)]
     public async Task<IActionResult> Create([FromBody] CreateAssistantConversationHttpRequest request, CancellationToken cancellationToken) =>
-        (await service.CreateAsync(new CreateAssistantConversationRequest(), cancellationToken)).ToCreatedResult(this, nameof(Get), value => new { id = value.Id });
+        (await service.CreateAsync(new CreateAssistantConversationRequest(), cancellationToken)).ToReferencedResult(this);
 
     [HttpGet("conversations/{id:guid}")]
     [ProducesResponseType<AssistantConversationResponse>(200)]
@@ -142,6 +143,7 @@ public sealed class BusinessAssistantController(IAssistantConversationService se
         (await service.StopAsync(id, turnId, new StopAssistantTurnRequest(), cancellationToken)).ToActionResult(this);
 
     [HttpPost("quick/{key}")]
+    [IdempotencyDurable(typeof(AssistantDurableAdapter))]
     [Idempotent(Mode = IdempotencyMode.DurableReference)]
     [ResponseVersion("Conversation.Version")]
     [ProducesResponseType<AssistantQuickResponse>(200)]
@@ -154,7 +156,7 @@ public sealed class BusinessAssistantController(IAssistantConversationService se
     [ProducesProblem(500)]
     [ProducesProblem(501)]
     public async Task<IActionResult> Quick([FromRoute] string key, [FromBody] AssistantQuickHttpRequest request, CancellationToken cancellationToken) =>
-        (await service.QuickAsync(key, new AssistantQuickRequest(request.ConversationId, request.Version), cancellationToken)).ToActionResult(this);
+        (await service.QuickAsync(key, new AssistantQuickRequest(request.ConversationId, request.Version), cancellationToken)).ToReferencedResult(this);
 
     [HttpPut("conversations/{id:guid}/messages/{messageId:guid}/feedback")]
     [ProducesResponseType<VersionResponse>(200)]

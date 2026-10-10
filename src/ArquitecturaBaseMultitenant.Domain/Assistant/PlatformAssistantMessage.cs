@@ -15,6 +15,13 @@ public sealed class PlatformAssistantMessage : Entity, IVersioned
     public long? ToolDurationMilliseconds { get; private set; }
     public string? ToolState { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
+    public string? LinksJson { get; private set; }
+
+    public void SetLinks(string linksJson) { ArgumentException.ThrowIfNullOrWhiteSpace(linksJson); LinksJson = linksJson; }
+    public void SetFeedback(bool? positive)
+    {
+        PositiveFeedback = positive;
+    }
 
     public static PlatformAssistantMessage Create(Guid conversationId, string role, string status, string? text, DateTime nowUtc)
     {

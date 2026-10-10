@@ -16,6 +16,7 @@ internal sealed class AssistantNoticePolicy(ICurrentUser user, ILegalReader lega
     IPlatformPermissionService platform,
     IAssistantNoticeReader reader, TimeProvider clock)
 {
+    internal string CurrentVersion => reader.CurrentVersion;
     internal async Task<Result> CheckVersionAsync(string? version, CancellationToken ct)
     {
         if (user.UserId is not { } owner || user.Access is null) return UserErrors.NotFound;

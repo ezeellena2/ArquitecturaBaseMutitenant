@@ -14,6 +14,9 @@ public static class AssistantModule
     public static IServiceCollection AddAssistantModule(this IServiceCollection services)
     {
         services.AddScoped<IAssistantConversationService, AssistantConversationService>();
+        services.AddScoped<IAssistantDurableService, AssistantDurableService>();
+        services.AddScoped<AssistantConversationWriter>();
+        services.AddScoped<AssistantConversationPolicy>();
         services.AddScoped<IAssistantNoticeService, AssistantNoticeService>();
         services.AddScoped<AssistantNoticePolicy>();
         services.AddScoped<AssistantNoticeWriter>();
