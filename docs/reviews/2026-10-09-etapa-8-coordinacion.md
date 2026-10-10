@@ -157,3 +157,17 @@ La revisión automática pidió autorización explícita para agregar una creden
 Un segundo «Hola» recibió el botón «Entrar» con URL del túnel. Abrirlo mostró «Entrar a ArquitecturaBase», el número enmascarado y «Continuar». La base conservaba un enlace y cero consumos: abrir preview no lo consumió. «Continuar» entró por OIDC a Personal; la base pasó a un consumo. F5 conservó Personal y reabrir el enlace usado mostró «Este enlace ya no sirve». El token vive sólo en memoria del montaje, y el front retira el fragmento de la URL: recargar ese preview sin fragmento descarta la prueba local, sin consumir ni invalidar el enlace en la base. No atribuir ese caso a un vencimiento del servidor.
 
 Evidencias: `.local/reviews/2026-10-09-e8-bot-preview-real.jpg`, `2026-10-09-e8-bot-ingreso-personal.jpg` y `2026-10-09-e8-bot-enlace-usado.jpg`. Se salió por «Salir», se volvió desde la portada a «Ingresar» y se pidió un código WhatsApp para la cuenta existente. La pantalla explica «Llega al WhatsApp de tu celular. En WhatsApp Web no se muestra.»; el usuario completó el nuevo código en el celular y se verificó Personal. La base confirma dos Authentication `Delivered` acumulados (registro e ingreso), ambos sin contenido cifrado persistido. `2026-10-09-e8-codigo-ingreso-entregado.jpg` muestra el formulario previo sin código. No cerrar la etapa por estos tramos parciales.
+
+### Principal, retiro y número ocupado
+
+El usuario autorizó hacer principal el correo sintético de A y quitar su teléfono conservando ese correo. Ambas acciones pasaron por sus confirmaciones normales sin casillas de código. Antes de quitar había dos enlaces, uno consumido y ninguno invalidado; después hubo uno invalidado. Abrir el enlace pendiente desde el botón real de WhatsApp mostró «Este enlace ya no sirve». Authentication siguió en dos `Delivered`. El aviso de principal llegó por Meta, y el aviso de retiro al correo restante, comprobado en el pickup propio. Evidencias: `2026-10-09-e8-cuenta-telefono-quitado.jpg` y `2026-10-09-e8-bot-enlace-invalidado.jpg` en `.local/reviews/`.
+
+Se creó la cuenta propia temporal B por `e8-meta-persona-b@example.test`, usando el registro real, los mismos documentos demo autorizados y OTP del pickup. Desde Mi cuenta agregó el teléfono libre autorizado; el usuario lo verificó desde su celular. Ese tercer Authentication quedó `Delivered`. A conserva sólo su correo; B tiene el Phone verificado y un correo principal, lo que permite probar conflicto entre cuentas sin otra persona ni otro número.
+
+| Pantalla real | Caso | Resultado visible |
+|---|---|---|
+| Registro | Phone verificado de B | «Ya tenés una cuenta con ese número.» |
+| Recuperar | Método anterior Email de A; nuevo Phone de B | «Ese número ya es de otra cuenta.» |
+| Mi cuenta de A | Agregar Phone verificado de B | «Ese número ya está asociado a otra cuenta.» |
+
+Los tres rechazos no avanzaron a OTP. El cotejo de 10/10 a las 00:27 y 00:28:40 UTC conservó exactamente **3 Authentication, 3 Interactive y 2 Template `Delivered`**, con cero contenido cifrado en esos mensajes outbound: no emitieron código ni aviso al dueño. Metadatos agregados, sin direcciones, números, wamid ni tokens: `.local/reviews/2026-10-09-e8-meta-metadatos.jsonl`. Recortes sólo del error visible: `2026-10-09-e8-registro-numero-ocupado.jpg`, `2026-10-09-e8-recuperar-numero-ocupado.jpg` y `2026-10-09-e8-cuenta-numero-ocupado.jpg`.
