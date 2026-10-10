@@ -197,6 +197,52 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         {
             if (media.Schema is null) continue;
             media.Examples = new Dictionary<string, IOpenApiExample> { ["success"] = new OpenApiExample { Value = SuccessExample(media.Schema, document, path, method) } };
+            if (method != HttpMethod.Get || media.Schema is not OpenApiSchemaReference reference) continue;
+            if (reference.Reference.Id == "OrganizationAssistantSettingsResponse")
+            {
+                var ownKey = media.Examples["success"].Value!.DeepClone().AsObject();
+                ownKey["allowOwnKey"] = true;
+                ownKey["ownKeyModels"] = new JsonArray(EligibleModelExample(document));
+                media.Examples["ownKeyAllowed"] = new OpenApiExample { Value = ownKey };
+                var empty = media.Examples["success"].Value!.DeepClone().AsObject();
+                empty["mode"] = "OwnKey";
+                empty["platformKeyModels"] = new JsonArray();
+                empty["ownKeyModels"] = new JsonArray();
+                media.Examples["noEligibleModels"] = new OpenApiExample
+                {
+                    Description = "Configuración OwnKey guardada con política posteriormente revocada y sin modelos PlatformKey elegibles; conserva el modelo guardado y permite configurar, sin fallback para admitir turnos.",
+                    Value = empty,
+                };
+            }
+            if (reference.Reference.Id == "AssistantConversationResponse")
+            {
+                var active = media.Examples["success"].Value!.DeepClone().AsObject();
+                active["activeTurnId"] = "20000000-0000-0000-0000-000000000001";
+                media.Examples["activeTurn"] = new OpenApiExample { Value = active };
+            }
+            if (reference.Reference.Id == "AssistantUsagePageResponse")
+            {
+                if (path.StartsWith("/api/organization/", StringComparison.Ordinal))
+                {
+                    media.Examples["currentPlatformKey"] = new OpenApiExample { Value = UsageExample(document, 0.8m, "NearLimit", "PlatformKey", historical: false) };
+                    media.Examples["currentOwnKey"] = new OpenApiExample { Value = UsageExample(document, 1.2m, "LimitReached", "OwnKey", historical: false) };
+                    media.Examples["historical"] = new OpenApiExample { Value = UsageExample(document, 0.5m, "WithinLimit", "OwnKey", historical: true) };
+                }
+                else
+                {
+                    var aggregate = media.Examples["success"].Value!.DeepClone().AsObject();
+                    var rows = new JsonArray();
+                    foreach (var kind in new[] { "organization", "personal", "operator" })
+                    {
+                        var row = Example(new OpenApiSchemaReference("AssistantUsageRowResponse", document), document, 0)!.AsObject();
+                        row["kind"] = kind;
+                        row["dailyUsage"] = null;
+                        rows.Add(row);
+                    }
+                    aggregate["rows"]!["items"] = rows;
+                    media.Examples["aggregates"] = new OpenApiExample { Value = aggregate };
+                }
+            }
         }
     }
     private static JsonNode? SuccessExample(IOpenApiSchema schema, OpenApiDocument document, string path, HttpMethod method)
@@ -207,6 +253,18 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         if (schema is OpenApiSchemaReference { Reference.Id: "OrganizationAssistantSettingsResponse" or "PlatformAssistantSettingsResponse" }
             && example is JsonObject settings && settings["hasKey"]?.GetValue<bool>() == false)
             settings["maskedKeySuffix"] = null;
+        if (schema is OpenApiSchemaReference { Reference.Id: "OrganizationAssistantSettingsResponse" } && example is JsonObject organizationSettings)
+        {
+            organizationSettings["platformKeyModels"] = new JsonArray(EligibleModelExample(document));
+            organizationSettings["ownKeyModels"] = new JsonArray();
+        }
+        if (schema is OpenApiSchemaReference { Reference.Id: "AssistantConversationResponse" } && example is JsonObject conversation)
+            conversation["activeTurnId"] = null;
+        if (schema is OpenApiSchemaReference { Reference.Id: "AssistantUsagePageResponse" } && example is JsonObject usage)
+        {
+            usage["budget"] = null;
+            usage["budgetProgress"] = null;
+        }
         if (schema is OpenApiSchemaReference { Reference.Id: "AssistantQuickResponse" } && example is JsonObject quick)
         {
             var user = Example(new OpenApiSchemaReference("AssistantMessageResponse", document), document, 0)!.AsObject();
@@ -218,6 +276,37 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
             quick["messages"] = new JsonArray(user, assistant);
         }
         return example;
+    }
+
+    private static JsonObject EligibleModelExample(OpenApiDocument document)
+    {
+        var model = Example(new OpenApiSchemaReference("AssistantModelPriceResponse", document), document, 0)!.AsObject();
+        model["isActive"] = true;
+        return model;
+    }
+
+    private static JsonObject UsageExample(OpenApiDocument document, decimal fraction, string status, string scope, bool historical)
+    {
+        var usage = Example(new OpenApiSchemaReference("AssistantUsagePageResponse", document), document, 0)!.AsObject();
+        usage["month"] = historical ? "2026-09" : "2026-10";
+        usage["cost"]!["amount"] = fraction * 20m;
+        usage["budget"] = new JsonObject { ["amount"] = 20m, ["currency"] = AssistantContractPolicy.BillingCurrency };
+        usage["platformKeyCost"] = scope == "PlatformKey" ? usage["cost"]!.DeepClone() : null;
+        usage["budgetProgress"] = new JsonObject { ["fraction"] = fraction, ["status"] = status };
+        usage["totalQueries"] = 100;
+        var row = Example(new OpenApiSchemaReference("AssistantUsageRowResponse", document), document, 0)!.AsObject();
+        row["kind"] = "person";
+        row["day"] = null;
+        row["queries"] = 100;
+        row["cost"] = usage["cost"]!.DeepClone();
+        row["monthlyBudget"] = usage["budget"]!.DeepClone();
+        row["dailyUsage"] = historical ? null : new JsonObject
+        {
+            ["dayUtc"] = "2026-10-09", ["resetAtUtc"] = "2026-10-10T00:00:00Z", ["scope"] = scope,
+            ["queries"] = scope == "PlatformKey" ? 49 : 50, ["limit"] = 50, ["limitReached"] = true,
+        };
+        usage["rows"]!["items"] = new JsonArray(row);
+        return usage;
     }
 
     private static JsonNode? Example(IOpenApiSchema schema, OpenApiDocument document, int depth)
@@ -398,6 +487,20 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         {
             if (schema is not OpenApiSchema mutable) continue;
             ReplaceMoneyReferences(mutable, document);
+            var requiredProjection = name switch
+            {
+                "AssistantConversationResponse" => "activeTurnId",
+                "AssistantUsagePageResponse" => "budgetProgress",
+                "AssistantUsageRowResponse" => "dailyUsage",
+                _ => null,
+            };
+            if (requiredProjection is not null)
+            {
+                mutable.Required ??= new HashSet<string>(StringComparer.Ordinal);
+                mutable.Required.Add(requiredProjection);
+            }
+            if (name == "AssistantBudgetProgressResponse" && mutable.Properties!["fraction"] is OpenApiSchema fraction)
+                fraction.Format = "decimal";
             if (name.StartsWith("AssistantStreamHttpResponseAssistant", StringComparison.Ordinal))
             {
                 mutable.Type = JsonSchemaType.Object;

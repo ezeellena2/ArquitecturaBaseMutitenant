@@ -8,6 +8,9 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Assistant;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Contracts;
 
@@ -15,6 +18,40 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Contracts;
 public sealed class AssistantContractTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
+    [Fact]
+    public async Task Business_configuration_is_accessible_with_configure_without_use_and_preserves_authentication_guards()
+    {
+        using var ownerClient = AssistantTestData.Client(factory);
+        using var client = AssistantTestData.Client(factory);
+        using var anonymous = await client.GetAsync("/api/organization/assistant/settings", Ct);
+        Assert.Equal(HttpStatusCode.Unauthorized, anonymous.StatusCode);
+        var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
+        var tenantId = await OrganizationJourney.StageAsync(factory, owner, "Configuration contract", Ct);
+        var account = await AccountJourney.RegisterAsync(factory, client, Ct);
+        var memberId = await OrganizationJourney.AddActiveMemberAsync(factory, tenantId, account.UserId, Ct);
+        await AssistantTestData.EnableAsync(factory, tenantId);
+        await AccountJourney.AuthorizeAsync(client, "business", Ct, tenantId);
+        using var denied = await client.GetAsync("/api/organization/assistant/settings", Ct);
+        Assert.Equal(HttpStatusCode.Forbidden, denied.StatusCode);
+        using (var scope = factory.Services.CreateScope())
+        {
+            var services = scope.ServiceProvider;
+            using var tenant = services.GetRequiredService<ITenantScope>().Enter(tenantId);
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+            {
+                var role = Role.Create("Configure only", null, RoleScope.Organization, null, [Permissions.Assistant.Configure]).Value;
+                var db = services.GetRequiredService<ApplicationDbContext>();
+                db.Add(role);
+                db.Add(RoleAssignment.Assign(memberId, role.Id, role.Scope, null, null).Value);
+                return Task.FromResult(ArquitecturaBaseMultitenant.Domain.Results.Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+        // T03 supplies productive options; reaching its stub proves that use is not a prerequisite.
+        using var settings = await client.GetAsync("/api/organization/assistant/settings", Ct);
+        await Stub(settings);
+        using var chat = await client.GetAsync("/api/organization/assistant", Ct);
+        Assert.Equal(HttpStatusCode.Forbidden, chat.StatusCode);
+    }
     [Fact]
     public async Task Consumer_without_roles_reaches_501_with_an_explicit_available_feature_and_private_protocol_keys()
     {

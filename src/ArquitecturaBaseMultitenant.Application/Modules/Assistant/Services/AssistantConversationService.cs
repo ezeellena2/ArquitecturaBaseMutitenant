@@ -38,7 +38,8 @@ internal sealed class AssistantConversationService(IAssistantConversationReader 
             var access = user.Access ?? throw new InvalidOperationException("An access is required.");
             var conversation = await reader.FindByIdAsync(ownerId, access, id, cancellationToken);
             if (conversation is null) return AssistantErrors.ConversationNotFound;
-            return new AssistantConversationResponse(conversation, await reader.ListMessagesAsync(ownerId, access, id, request, cancellationToken));
+            // T05 supplies the authorized durable non-terminal turn reference when admission is implemented.
+            return new AssistantConversationResponse(conversation, await reader.ListMessagesAsync(ownerId, access, id, request, cancellationToken), null);
         });
 
     public Task<Result<VersionResponse>> UpdateAsync(Guid id, UpdateAssistantConversationRequest request, CancellationToken cancellationToken) =>

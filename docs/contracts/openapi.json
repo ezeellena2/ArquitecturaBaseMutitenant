@@ -2118,7 +2118,26 @@
                         "items": [ ],
                         "nextCursor": "example",
                         "hasMore": false
-                      }
+                      },
+                      "activeTurnId": null
+                    }
+                  },
+                  "activeTurn": {
+                    "value": {
+                      "conversation": {
+                        "id": "10000000-0000-0000-0000-000000000001",
+                        "title": "example",
+                        "isSaved": false,
+                        "version": 1,
+                        "createdAtUtc": "2026-10-09T12:00:00Z",
+                        "lastActivityAtUtc": "2026-10-09T12:00:00Z"
+                      },
+                      "messages": {
+                        "items": [ ],
+                        "nextCursor": "example",
+                        "hasMore": false
+                      },
+                      "activeTurnId": "20000000-0000-0000-0000-000000000001"
                     }
                   }
                 }
@@ -10340,7 +10359,26 @@
                         "items": [ ],
                         "nextCursor": "example",
                         "hasMore": false
-                      }
+                      },
+                      "activeTurnId": null
+                    }
+                  },
+                  "activeTurn": {
+                    "value": {
+                      "conversation": {
+                        "id": "10000000-0000-0000-0000-000000000001",
+                        "title": "example",
+                        "isSaved": false,
+                        "version": 1,
+                        "createdAtUtc": "2026-10-09T12:00:00Z",
+                        "lastActivityAtUtc": "2026-10-09T12:00:00Z"
+                      },
+                      "messages": {
+                        "items": [ ],
+                        "nextCursor": "example",
+                        "hasMore": false
+                      },
+                      "activeTurnId": "20000000-0000-0000-0000-000000000001"
                     }
                   }
                 }
@@ -16899,7 +16937,95 @@
                       "retentionDays": 30,
                       "hasKey": false,
                       "maskedKeySuffix": null,
-                      "version": 1
+                      "version": 1,
+                      "platformKeyModels": [
+                        {
+                          "id": "10000000-0000-0000-0000-000000000001",
+                          "name": "example",
+                          "provider": "Anthropic",
+                          "providerModelId": "example",
+                          "inputPricePerMillion": {
+                            "amount": 1,
+                            "currency": "USD"
+                          },
+                          "outputPricePerMillion": {
+                            "amount": 1,
+                            "currency": "USD"
+                          },
+                          "isActive": true,
+                          "version": 1
+                        }
+                      ],
+                      "ownKeyModels": [ ]
+                    }
+                  },
+                  "ownKeyAllowed": {
+                    "value": {
+                      "mode": "PlatformKey",
+                      "modelId": "10000000-0000-0000-0000-000000000001",
+                      "effort": "low",
+                      "dailyMessageLimit": 50,
+                      "monthlyBudget": null,
+                      "allowOwnKey": true,
+                      "hasAlertRecipient": false,
+                      "retentionDays": 30,
+                      "hasKey": false,
+                      "maskedKeySuffix": null,
+                      "version": 1,
+                      "platformKeyModels": [
+                        {
+                          "id": "10000000-0000-0000-0000-000000000001",
+                          "name": "example",
+                          "provider": "Anthropic",
+                          "providerModelId": "example",
+                          "inputPricePerMillion": {
+                            "amount": 1,
+                            "currency": "USD"
+                          },
+                          "outputPricePerMillion": {
+                            "amount": 1,
+                            "currency": "USD"
+                          },
+                          "isActive": true,
+                          "version": 1
+                        }
+                      ],
+                      "ownKeyModels": [
+                        {
+                          "id": "10000000-0000-0000-0000-000000000001",
+                          "name": "example",
+                          "provider": "Anthropic",
+                          "providerModelId": "example",
+                          "inputPricePerMillion": {
+                            "amount": 1,
+                            "currency": "USD"
+                          },
+                          "outputPricePerMillion": {
+                            "amount": 1,
+                            "currency": "USD"
+                          },
+                          "isActive": true,
+                          "version": 1
+                        }
+                      ]
+                    }
+                  },
+                  "noEligibleModels": {
+                    "description": "Configuración OwnKey guardada con política posteriormente revocada y sin modelos PlatformKey elegibles; conserva el modelo guardado y permite configurar, sin fallback para admitir turnos.",
+                    "value": {
+                      "mode": "OwnKey",
+                      "modelId": "10000000-0000-0000-0000-000000000001",
+                      "effort": "low",
+                      "dailyMessageLimit": 50,
+                      "monthlyBudget": null,
+                      "allowOwnKey": false,
+                      "hasAlertRecipient": false,
+                      "retentionDays": 30,
+                      "hasKey": false,
+                      "maskedKeySuffix": null,
+                      "version": 1,
+                      "platformKeyModels": [ ],
+                      "ownKeyModels": [ ]
                     }
                   }
                 }
@@ -17910,6 +18036,180 @@
                         "totalPages": 1,
                         "hasPrevious": false,
                         "hasNext": false
+                      },
+                      "budgetProgress": null
+                    }
+                  },
+                  "currentPlatformKey": {
+                    "value": {
+                      "month": "2026-10",
+                      "cost": {
+                        "amount": 16.0,
+                        "currency": "USD"
+                      },
+                      "platformKeyCost": {
+                        "amount": 16.0,
+                        "currency": "USD"
+                      },
+                      "budget": {
+                        "amount": 20,
+                        "currency": "USD"
+                      },
+                      "totalQueries": 100,
+                      "peopleCount": 1,
+                      "rows": {
+                        "items": [
+                          {
+                            "kind": "person",
+                            "organizationId": "10000000-0000-0000-0000-000000000001",
+                            "personId": "10000000-0000-0000-0000-000000000001",
+                            "day": null,
+                            "displayName": "example",
+                            "queries": 100,
+                            "inputTokens": 1,
+                            "outputTokens": 1,
+                            "cacheWriteTokens": 1,
+                            "cacheReadTokens": 1,
+                            "cost": {
+                              "amount": 16.0,
+                              "currency": "USD"
+                            },
+                            "dailyLimit": 50,
+                            "monthlyBudget": {
+                              "amount": 20,
+                              "currency": "USD"
+                            },
+                            "dailyUsage": {
+                              "dayUtc": "2026-10-09",
+                              "resetAtUtc": "2026-10-10T00:00:00Z",
+                              "scope": "PlatformKey",
+                              "queries": 49,
+                              "limit": 50,
+                              "limitReached": true
+                            }
+                          }
+                        ],
+                        "page": 1,
+                        "pageSize": 1,
+                        "totalCount": 1,
+                        "totalPages": 1,
+                        "hasPrevious": false,
+                        "hasNext": false
+                      },
+                      "budgetProgress": {
+                        "fraction": 0.8,
+                        "status": "NearLimit"
+                      }
+                    }
+                  },
+                  "currentOwnKey": {
+                    "value": {
+                      "month": "2026-10",
+                      "cost": {
+                        "amount": 24.0,
+                        "currency": "USD"
+                      },
+                      "platformKeyCost": null,
+                      "budget": {
+                        "amount": 20,
+                        "currency": "USD"
+                      },
+                      "totalQueries": 100,
+                      "peopleCount": 1,
+                      "rows": {
+                        "items": [
+                          {
+                            "kind": "person",
+                            "organizationId": "10000000-0000-0000-0000-000000000001",
+                            "personId": "10000000-0000-0000-0000-000000000001",
+                            "day": null,
+                            "displayName": "example",
+                            "queries": 100,
+                            "inputTokens": 1,
+                            "outputTokens": 1,
+                            "cacheWriteTokens": 1,
+                            "cacheReadTokens": 1,
+                            "cost": {
+                              "amount": 24.0,
+                              "currency": "USD"
+                            },
+                            "dailyLimit": 50,
+                            "monthlyBudget": {
+                              "amount": 20,
+                              "currency": "USD"
+                            },
+                            "dailyUsage": {
+                              "dayUtc": "2026-10-09",
+                              "resetAtUtc": "2026-10-10T00:00:00Z",
+                              "scope": "OwnKey",
+                              "queries": 50,
+                              "limit": 50,
+                              "limitReached": true
+                            }
+                          }
+                        ],
+                        "page": 1,
+                        "pageSize": 1,
+                        "totalCount": 1,
+                        "totalPages": 1,
+                        "hasPrevious": false,
+                        "hasNext": false
+                      },
+                      "budgetProgress": {
+                        "fraction": 1.2,
+                        "status": "LimitReached"
+                      }
+                    }
+                  },
+                  "historical": {
+                    "value": {
+                      "month": "2026-09",
+                      "cost": {
+                        "amount": 10.0,
+                        "currency": "USD"
+                      },
+                      "platformKeyCost": null,
+                      "budget": {
+                        "amount": 20,
+                        "currency": "USD"
+                      },
+                      "totalQueries": 100,
+                      "peopleCount": 1,
+                      "rows": {
+                        "items": [
+                          {
+                            "kind": "person",
+                            "organizationId": "10000000-0000-0000-0000-000000000001",
+                            "personId": "10000000-0000-0000-0000-000000000001",
+                            "day": null,
+                            "displayName": "example",
+                            "queries": 100,
+                            "inputTokens": 1,
+                            "outputTokens": 1,
+                            "cacheWriteTokens": 1,
+                            "cacheReadTokens": 1,
+                            "cost": {
+                              "amount": 10.0,
+                              "currency": "USD"
+                            },
+                            "dailyLimit": 50,
+                            "monthlyBudget": {
+                              "amount": 20,
+                              "currency": "USD"
+                            },
+                            "dailyUsage": null
+                          }
+                        ],
+                        "page": 1,
+                        "pageSize": 1,
+                        "totalCount": 1,
+                        "totalPages": 1,
+                        "hasPrevious": false,
+                        "hasNext": false
+                      },
+                      "budgetProgress": {
+                        "fraction": 0.5,
+                        "status": "WithinLimit"
                       }
                     }
                   }
@@ -19900,7 +20200,26 @@
                         "items": [ ],
                         "nextCursor": "example",
                         "hasMore": false
-                      }
+                      },
+                      "activeTurnId": null
+                    }
+                  },
+                  "activeTurn": {
+                    "value": {
+                      "conversation": {
+                        "id": "10000000-0000-0000-0000-000000000001",
+                        "title": "example",
+                        "isSaved": false,
+                        "version": 1,
+                        "createdAtUtc": "2026-10-09T12:00:00Z",
+                        "lastActivityAtUtc": "2026-10-09T12:00:00Z"
+                      },
+                      "messages": {
+                        "items": [ ],
+                        "nextCursor": "example",
+                        "hasMore": false
+                      },
+                      "activeTurnId": "20000000-0000-0000-0000-000000000001"
                     }
                   }
                 }
@@ -29651,7 +29970,89 @@
                         "totalPages": 1,
                         "hasPrevious": false,
                         "hasNext": false
-                      }
+                      },
+                      "budgetProgress": null
+                    }
+                  },
+                  "aggregates": {
+                    "value": {
+                      "month": "2026-10",
+                      "cost": {
+                        "amount": 1,
+                        "currency": "USD"
+                      },
+                      "platformKeyCost": null,
+                      "budget": null,
+                      "totalQueries": 1,
+                      "peopleCount": 1,
+                      "rows": {
+                        "items": [
+                          {
+                            "kind": "organization",
+                            "organizationId": "10000000-0000-0000-0000-000000000001",
+                            "personId": "10000000-0000-0000-0000-000000000001",
+                            "day": "2026-10-09",
+                            "displayName": "example",
+                            "queries": 1,
+                            "inputTokens": 1,
+                            "outputTokens": 1,
+                            "cacheWriteTokens": 1,
+                            "cacheReadTokens": 1,
+                            "cost": {
+                              "amount": 1,
+                              "currency": "USD"
+                            },
+                            "dailyLimit": 50,
+                            "monthlyBudget": null,
+                            "dailyUsage": null
+                          },
+                          {
+                            "kind": "personal",
+                            "organizationId": "10000000-0000-0000-0000-000000000001",
+                            "personId": "10000000-0000-0000-0000-000000000001",
+                            "day": "2026-10-09",
+                            "displayName": "example",
+                            "queries": 1,
+                            "inputTokens": 1,
+                            "outputTokens": 1,
+                            "cacheWriteTokens": 1,
+                            "cacheReadTokens": 1,
+                            "cost": {
+                              "amount": 1,
+                              "currency": "USD"
+                            },
+                            "dailyLimit": 50,
+                            "monthlyBudget": null,
+                            "dailyUsage": null
+                          },
+                          {
+                            "kind": "operator",
+                            "organizationId": "10000000-0000-0000-0000-000000000001",
+                            "personId": "10000000-0000-0000-0000-000000000001",
+                            "day": "2026-10-09",
+                            "displayName": "example",
+                            "queries": 1,
+                            "inputTokens": 1,
+                            "outputTokens": 1,
+                            "cacheWriteTokens": 1,
+                            "cacheReadTokens": 1,
+                            "cost": {
+                              "amount": 1,
+                              "currency": "USD"
+                            },
+                            "dailyLimit": 50,
+                            "monthlyBudget": null,
+                            "dailyUsage": null
+                          }
+                        ],
+                        "page": 1,
+                        "pageSize": 1,
+                        "totalCount": 1,
+                        "totalPages": 1,
+                        "hasPrevious": false,
+                        "hasNext": false
+                      },
+                      "budgetProgress": null
                     }
                   }
                 }
@@ -52379,10 +52780,36 @@
           }
         }
       },
+      "AssistantBudgetProgressResponse": {
+        "required": [
+          "fraction",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "fraction": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AssistantBudgetStatus"
+          }
+        },
+        "description": "Registered monthly cost divided by the budget snapshot; reservations are excluded and the fraction is not capped."
+      },
+      "AssistantBudgetStatus": {
+        "enum": [
+          "WithinLimit",
+          "NearLimit",
+          "LimitReached"
+        ],
+        "type": "string"
+      },
       "AssistantConversationResponse": {
         "required": [
           "conversation",
-          "messages"
+          "messages",
+          "activeTurnId"
         ],
         "type": "object",
         "properties": {
@@ -52391,6 +52818,13 @@
           },
           "messages": {
             "$ref": "#/components/schemas/CursorResultOfAssistantMessageResponse"
+          },
+          "activeTurnId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -52451,6 +52885,42 @@
             "format": "uint32"
           }
         }
+      },
+      "AssistantDailyUsageResponse": {
+        "required": [
+          "dayUtc",
+          "resetAtUtc",
+          "scope",
+          "queries",
+          "limit",
+          "limitReached"
+        ],
+        "type": "object",
+        "properties": {
+          "dayUtc": {
+            "type": "string",
+            "format": "date"
+          },
+          "resetAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/AssistantMode"
+          },
+          "queries": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "limit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "limitReached": {
+            "type": "boolean"
+          }
+        },
+        "description": "Consumed UTC-day queries; admission exhaustion also includes reservations. PlatformKey is shared by user, OwnKey by organization and user."
       },
       "AssistantDeltaEventResponse": {
         "required": [
@@ -53789,7 +54259,8 @@
           "cost",
           "totalQueries",
           "peopleCount",
-          "rows"
+          "rows",
+          "budgetProgress"
         ],
         "type": "object",
         "properties": {
@@ -53829,6 +54300,16 @@
           },
           "rows": {
             "$ref": "#/components/schemas/PagedResultOfAssistantUsageRowResponse"
+          },
+          "budgetProgress": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AssistantBudgetProgressResponse"
+              }
+            ]
           }
         }
       },
@@ -53851,7 +54332,8 @@
           "outputTokens",
           "cacheWriteTokens",
           "cacheReadTokens",
-          "cost"
+          "cost",
+          "dailyUsage"
         ],
         "type": "object",
         "properties": {
@@ -53919,6 +54401,16 @@
               },
               {
                 "$ref": "#/components/schemas/AssistantMoney"
+              }
+            ]
+          },
+          "dailyUsage": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AssistantDailyUsageResponse"
               }
             ]
           }
@@ -55798,7 +56290,9 @@
           "hasAlertRecipient",
           "retentionDays",
           "hasKey",
-          "version"
+          "version",
+          "platformKeyModels",
+          "ownKeyModels"
         ],
         "type": "object",
         "properties": {
@@ -55850,6 +56344,18 @@
             "minimum": 0,
             "type": "integer",
             "format": "uint32"
+          },
+          "platformKeyModels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssistantModelPriceResponse"
+            }
+          },
+          "ownKeyModels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssistantModelPriceResponse"
+            }
           }
         }
       },

@@ -2,4 +2,4 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 
-public sealed record OrganizationAssistantSettingsResponse(AssistantMode Mode, Guid ModelId, AssistantEffort Effort, int DailyMessageLimit, Money? MonthlyBudget, bool AllowOwnKey, bool HasAlertRecipient, int RetentionDays, bool HasKey, string? MaskedKeySuffix, uint Version);
+public sealed record OrganizationAssistantSettingsResponse(AssistantMode Mode, Guid ModelId, AssistantEffort Effort, int DailyMessageLimit, Money? MonthlyBudget, bool AllowOwnKey, bool HasAlertRecipient, int RetentionDays, bool HasKey, string? MaskedKeySuffix, uint Version, IReadOnlyList<AssistantModelPriceResponse> PlatformKeyModels, IReadOnlyList<AssistantModelPriceResponse> OwnKeyModels);
