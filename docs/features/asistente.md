@@ -32,7 +32,7 @@ T02 guarda conversaciones, mensajes, adjuntos, turnos, configuración organizaci
 | GET `/api/{lado}/assistant/conversations/{id}/attachments/{attachmentId}` | uso | — | 200 binario, Content-Type verificado, Content-Disposition attachment, Cache-Control no-store. |
 | DELETE `/api/{lado}/assistant/conversations/{id}/attachments/{attachmentId}` | uso | `?version=` | 204 si pendiente; si ya es de un mensaje, se elimina con la conversación. |
 | GET `/api/{lado}/assistant/conversations/{id}/export` | uso | `format=markdown|pdf` | 200 descarga privada .md/.pdf, no-store; solo conversación propia, sin tool payloads, claves ni bytes originales de adjuntos. |
-| GET `/api/organization/assistant/settings` | assistant.configure | — | 200 `OrganizationAssistantSettings` |
+| GET `/api/organization/assistant/settings` | assistant.configure | — | 200 `OrganizationAssistantSettingsResponse` |
 | PUT `/api/organization/assistant/settings` | assistant.configure | `{mode:"PlatformKey"|"OwnKey",modelId,effort:"low"|"medium"|"high",dailyMessageLimit?,monthlyBudget?:Money,keyAction:"keep"|"replace"|"clear",apiKey?:string,version}` | 200 VersionResponse. Topes editables solo own-key; platform-key rechaza intentos de cambiarlos. Validar allowOwnKey/model/key y al menos un Dueño activo con método Email verificado utilizable antes de guardar OwnKey; sin él, Assistant.Settings.AlertRecipientRequired. |
 | GET `/api/organization/assistant/usage` | assistant.configure | `month:YYYY-MM,groupBy=day|person,page=1,pageSize=20` | 200 UsagePage, resumen mensual + página de filas/costo, sin texto ni conversationId. |
 | GET `/api/platform/assistant/settings` | platform.assistant.configure; gestión | — | 200 PlatformAssistantSettings |
