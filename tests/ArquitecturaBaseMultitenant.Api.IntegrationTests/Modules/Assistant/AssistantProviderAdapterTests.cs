@@ -49,11 +49,11 @@ public sealed class AssistantProviderAdapterTests
     public async Task Draft_validation_is_minimal_sanitized_without_retries_and_disposes_owned_transport(int status, string? errorCode)
     {
         var handler = new RecordingHandler(status);
-        var result = await AnthropicChatClientFactory.ValidateDraftAsync("isolated-adapter-secret", new HttpClient(handler), TestContext.Current.CancellationToken);
+        var result = await AnthropicChatClientFactory.ValidateDraftAsync("isolated-adapter-secret", "isolated-editable-model", new HttpClient(handler), TestContext.Current.CancellationToken);
         Assert.Equal(1, handler.Requests);
         Assert.True(handler.Disposed);
         using var request = JsonDocument.Parse(handler.Body!);
-        Assert.Equal("claude-haiku-5-5", request.RootElement.GetProperty("model").GetString());
+        Assert.Equal("isolated-editable-model", request.RootElement.GetProperty("model").GetString());
         Assert.Equal(64, request.RootElement.GetProperty("max_tokens").GetInt32());
         Assert.Equal("adaptive", request.RootElement.GetProperty("thinking").GetProperty("type").GetString());
         Assert.Equal("low", request.RootElement.GetProperty("output_config").GetProperty("effort").GetString());

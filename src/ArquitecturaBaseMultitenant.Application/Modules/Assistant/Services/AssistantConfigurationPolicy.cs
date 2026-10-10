@@ -10,7 +10,7 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 internal sealed class AssistantConfigurationPolicy(IAssistantSettingsReader settings, IAssistantModelReader models,
-    IAssistantProviderCatalog references, ITenantAdminReader owners, ITenantContext tenant, ICurrentUser user) : IAssistantConfigurationPolicy
+    ITenantAdminReader owners, ITenantContext tenant, ICurrentUser user) : IAssistantConfigurationPolicy
 {
     public async Task<Result<AssistantRuntimeConfiguration>> ResolveAsync(CancellationToken cancellationToken)
     {
@@ -26,13 +26,11 @@ internal sealed class AssistantConfigurationPolicy(IAssistantSettingsReader sett
         }
         var modelId = organization?.ModelId ?? platform.DefaultModelId;
         var model = (await models.ListAllAsync(cancellationToken)).SingleOrDefault(value => value.Id == modelId);
-        var reference = model is null ? null : references.Find(model.ProviderModelId);
         var effort = organization?.Effort ?? platform.Effort;
-        if (model is not { IsActive: true, Provider: AssistantProvider.Anthropic } || reference is not { Text: true, Tools: true }
-            || !reference.Efforts.Contains(effort) || mode == AssistantMode.PlatformKey && !platform.AllowedModelIds.Contains(modelId))
+        if (model is null || !AssistantModelCompatibilityPolicy.Supports(model, effort) || mode == AssistantMode.PlatformKey && !platform.AllowedModelIds.Contains(modelId))
             return AssistantErrors.ModelNotAllowed;
         if (!(mode == AssistantMode.PlatformKey ? platform.HasKey : organization!.HasKey)) return AssistantErrors.SettingsNotConfigured;
-        return new AssistantRuntimeConfiguration(mode, model, reference, effort,
+        return new AssistantRuntimeConfiguration(mode, model, AssistantModelReferenceBuilder.Build(model), effort,
             mode == AssistantMode.PlatformKey ? platform.DailyMessageLimit : organization!.DailyMessageLimit,
             mode == AssistantMode.PlatformKey ? platform.MonthlyOrganizationBudget : organization!.MonthlyBudget,
             platform.RetentionDays);

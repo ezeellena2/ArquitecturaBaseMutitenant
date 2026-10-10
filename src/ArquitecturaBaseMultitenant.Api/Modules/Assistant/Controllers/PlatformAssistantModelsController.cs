@@ -47,7 +47,7 @@ public sealed class PlatformAssistantModelsController(IAssistantModelService ser
     [ProducesProblem(501)]
     public async Task<IActionResult> Create([FromBody] CreateAssistantModelHttpRequest request, CancellationToken cancellationToken)
     {
-        var result = await service.CreateAsync(new CreateAssistantModelRequest(request.Name, request.Provider, request.ProviderModelId, request.InputPricePerMillion, request.OutputPricePerMillion, request.IsActive), cancellationToken);
+        var result = await service.CreateAsync(new CreateAssistantModelRequest(request.Name, request.Provider, request.ProviderModelId, request.InputPricePerMillion, request.OutputPricePerMillion, request.IsActive, request.Technical?.ToModel()), cancellationToken);
         return result.IsSuccess ? StatusCode(201, result.Value) : result.ToActionResult(this);
     }
 
@@ -61,5 +61,5 @@ public sealed class PlatformAssistantModelsController(IAssistantModelService ser
     [ProducesProblem(500)]
     [ProducesProblem(501)]
     public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateAssistantModelHttpRequest request, CancellationToken cancellationToken) =>
-        (await service.UpdateAsync(id, new UpdateAssistantModelRequest(request.Name, request.Provider, request.ProviderModelId, request.InputPricePerMillion, request.OutputPricePerMillion, request.IsActive, request.Version), cancellationToken)).ToActionResult(this);
+        (await service.UpdateAsync(id, new UpdateAssistantModelRequest(request.Name, request.Provider, request.ProviderModelId, request.InputPricePerMillion, request.OutputPricePerMillion, request.IsActive, request.Version, request.Technical?.ToModel()), cancellationToken)).ToActionResult(this);
 }

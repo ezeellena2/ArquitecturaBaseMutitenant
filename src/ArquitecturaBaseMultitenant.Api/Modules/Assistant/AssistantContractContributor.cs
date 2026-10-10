@@ -145,7 +145,20 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         { yield return ("apiKey", "KeyRequired"); yield return ("apiKey", "KeyUnexpected"); yield return ("apiKey", "KeyTooLong"); yield return ("keyAction", "SelectionInvalid"); yield return ("effort", "SelectionInvalid"); yield return (path.StartsWith("/api/platform/", StringComparison.Ordinal) ? "defaultModelId" : "modelId", "Required"); yield return ("dailyMessageLimit", "LimitsInvalid"); yield return (path.StartsWith("/api/platform/", StringComparison.Ordinal) ? "monthlyOrganizationBudget" : "monthlyBudget", "PriceInvalid");
           if (path.StartsWith("/api/platform/", StringComparison.Ordinal)) { yield return ("allowedModelIds", "IdsInvalid"); yield return ("personalEnabled", "Required"); yield return ("retentionDays", "LimitsInvalid"); } else yield return ("mode", "SelectionInvalid"); }
         if (path.Contains("/models", StringComparison.Ordinal) && method != HttpMethod.Get)
-        { yield return ("name", "Required"); yield return ("provider", "SelectionInvalid"); yield return ("providerModelId", "Required"); yield return ("inputPricePerMillion", "PriceInvalid"); yield return ("outputPricePerMillion", "PriceInvalid"); yield return ("isActive", "Required"); }
+        {
+            yield return ("name", "Required"); yield return ("provider", "SelectionInvalid"); yield return ("providerModelId", "Required");
+            yield return ("inputPricePerMillion", "PriceInvalid"); yield return ("outputPricePerMillion", "PriceInvalid"); yield return ("isActive", "Required");
+            yield return ("technical", "Required");
+            foreach (var field in new[] { "supportsText", "supportsTools", "supportsImages", "supportsPdf", "supportsAdaptiveThinking" })
+                yield return ("technical." + field, "Required");
+            yield return ("technical.efforts", "EffortsInvalid");
+            foreach (var field in new[] { "maxInputTokens", "maxOutputTokens", "longContext.inputTokensThreshold" })
+                yield return ("technical." + field, "TechnicalLimitsInvalid");
+            foreach (var field in new[] { "cacheWrite5MinutesPricePerMillion", "cacheWrite1HourPricePerMillion", "cacheReadPricePerMillion",
+                "longContext.inputPricePerMillion", "longContext.outputPricePerMillion", "longContext.cacheWrite5MinutesPricePerMillion",
+                "longContext.cacheWrite1HourPricePerMillion", "longContext.cacheReadPricePerMillion" })
+                yield return ("technical." + field, "TechnicalPriceInvalid");
+        }
         if (path.Contains("/usage", StringComparison.Ordinal)) { yield return ("month", "MonthInvalid"); yield return ("page", "PageInvalid"); yield return ("pageSize", "PageInvalid"); }
         if (path.EndsWith("/policy", StringComparison.Ordinal) && method == HttpMethod.Put) { yield return ("allowOwnKey", "Required"); yield return ("reason", "Required"); }
         if (path.EndsWith("/notice", StringComparison.Ordinal)) yield return ("noticeVersion", "Required");
@@ -163,7 +176,7 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         if (path.EndsWith("/notice", StringComparison.Ordinal)) return "Consentimiento explícito por usuario y versión, después de aceptar documentos legales vigentes; 204, sin inferir aceptación.";
         if (path.Contains("/turns/", StringComparison.Ordinal)) return "Stop idempotente y durable. RequestAborted solicita stop; la admisión persistida no se deshace.";
         if (path.EndsWith("/policy", StringComparison.Ordinal)) return "Gestión global sin abrir conversaciones ni devolver claves. Ausente: allowOwnKey=false/version=0; PUT requiere motivo y SecurityEvent, revalida configuración/turnos.";
-        if (path.Contains("/models", StringComparison.Ordinal)) return $"Catálogo Anthropic, precios no negativos en {AssistantContractPolicy.BillingCurrency}, unicidad provider/providerModelId. Desactivar modelos referidos; sin endpoint de borrado.";
+        if (path.Contains("/models", StringComparison.Ordinal)) return $"Catálogo Anthropic, precios no negativos en {AssistantContractPolicy.BillingCurrency}, unicidad provider/providerModelId. Datos técnicos completos obligatorios al crear/editar; lectura technical y technicalRevision nullable sólo para filas heredadas incompletas. Revisión calculada por servidor con las tarifas y capacidades efectivas. La selección usa la base actual sin archivo ni reinicio: activo, texto, herramientas, pensamiento adaptativo, esfuerzo admitido y capacidad mínima 51200/2048. Límites menores coherentes se guardan pero no se ofrecen para chat. Tarifas técnicas USD positivas con hasta seis decimales; contexto largo null o umbral menor que la entrada y cinco tarifas completas. Desactivar modelos referidos; sin endpoint de borrado.";
         if (path.EndsWith("/conversations", StringComparison.Ordinal)) return method == HttpMethod.Get
             ? "Cursor opaco ligado a lado/organización/dueño/filtro; orden LastActivityAtUtc/Id descendente, limit=20 máximo100."
             : "Crea sin IA, title=null/isSaved=false; 201 con Location. DurableReference no copia título al store global.";
@@ -189,6 +202,13 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         var example = JsonNode.Parse(body)!;
         foreach (var field in new[] { "inputPricePerMillion", "outputPricePerMillion", "monthlyOrganizationBudget" })
             if (example[field] is JsonObject money) money["currency"] = AssistantContractPolicy.BillingCurrency;
+        if (path.Contains("/models", StringComparison.Ordinal))
+        {
+            example["technical"] = TechnicalExample();
+            var english = example.DeepClone();
+            english["name"] = "Example model";
+            return new Dictionary<string, JsonNode> { ["request.es"] = example, ["request.en"] = english };
+        }
         return new Dictionary<string, JsonNode> { ["request"] = example };
     }
     private static void AddSuccessExample(IOpenApiResponse response, string path, HttpMethod method, OpenApiDocument document)
@@ -198,6 +218,15 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
             if (media.Schema is null) continue;
             media.Examples = new Dictionary<string, IOpenApiExample> { ["success"] = new OpenApiExample { Value = SuccessExample(media.Schema, document, path, method) } };
             if (method != HttpMethod.Get || media.Schema is not OpenApiSchemaReference reference) continue;
+            if (path == "/api/platform/assistant/models")
+            {
+                var legacy = media.Examples["success"].Value!.DeepClone();
+                var model = legacy["items"]![0]!;
+                model["technical"] = null; model["technicalRevision"] = null;
+                model["providerModelId"] = "legacy-unknown";
+                media.Examples["legacyIncomplete"] = new OpenApiExample { Value = legacy,
+                    Description = "Fila heredada sin referencia conocida: se conserva y debe completarse para resultar elegible." };
+            }
             if (reference.Reference.Id == "OrganizationAssistantSettingsResponse")
             {
                 var ownKey = media.Examples["success"].Value!.DeepClone().AsObject();
@@ -290,6 +319,8 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
             organizationSettings["platformKeyModels"] = new JsonArray(EligibleModelExample(document));
             organizationSettings["ownKeyModels"] = new JsonArray();
         }
+        if (path == "/api/platform/assistant/models" && method == HttpMethod.Get && example is JsonObject catalog)
+            catalog["items"] = new JsonArray(EligibleModelExample(document));
         if (schema is OpenApiSchemaReference { Reference.Id: "AssistantConversationResponse" } && example is JsonObject conversation)
             conversation["activeTurnId"] = null;
         if (schema is OpenApiSchemaReference { Reference.Id: "AssistantUsagePageResponse" } && example is JsonObject)
@@ -309,10 +340,21 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         return example;
     }
 
+    private static JsonObject TechnicalExample() => new()
+    {
+        ["supportsText"] = true, ["supportsTools"] = true, ["supportsImages"] = true, ["supportsPdf"] = true,
+        ["supportsAdaptiveThinking"] = true, ["efforts"] = new JsonArray("low", "medium", "high"),
+        ["maxInputTokens"] = 1000000, ["maxOutputTokens"] = 128000,
+        ["cacheWrite5MinutesPricePerMillion"] = UsageMoney(2.5m), ["cacheWrite1HourPricePerMillion"] = UsageMoney(4m),
+        ["cacheReadPricePerMillion"] = UsageMoney(.1m), ["longContext"] = null,
+    };
+
     private static JsonObject EligibleModelExample(OpenApiDocument document)
     {
         var model = Example(new OpenApiSchemaReference("AssistantModelPriceResponse", document), document, 0)!.AsObject();
         model["isActive"] = true;
+        model["technical"] = TechnicalExample();
+        model["technicalRevision"] = "db-v1-" + new string('a', 64);
         return model;
     }
 
@@ -614,6 +656,7 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
             string[] requiredProjections = name switch
             {
                 "AssistantConversationResponse" => ["activeTurnId"],
+                "AssistantModelPriceResponse" => ["technical", "technicalRevision"],
                 "AssistantUsagePageResponse" => ["budgetProgress", "organizationCount"],
                 "AssistantUsageRowResponse" => ["dailyUsage", "peopleCount", "fundingMode", "budgetProgress"],
                 _ => [],
@@ -633,6 +676,26 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
                     fundingMode.Description = "organization Platform agrupa OrganizationId + financiación histórica + mes con consumo contabilizado; costos, consultas y tokens pertenecen sólo al grupo. La organización puede tener dos filas; PlatformKey→OwnKey→PlatformKey acumula dos grupos. personal/operator PlatformKey; day/person Business null. Orden estable con desempate por fundingMode; configuración sin consumo no crea filas.";
                 if (mutable.Properties["budgetProgress"] is OpenApiSchema budgetProgress)
                     budgetProgress.Description = "Sólo organization Platform con presupuesto mensual positivo aplicable: costo confirmado o estimado registrado del mismo org/financiador/mes dividido por snapshot histórico reflejado en monthlyBudget, sin reservas ni Settings actuales. PlatformKey usa tope Plataforma; OwnKey su tope propio, sin sumar topes. Fracción sin recorte; NearLimit desde 0,8, LimitReached desde 1. Presupuesto cero/null y otras filas null.";
+            }
+            if (name is "CreateAssistantModelHttpRequest" or "UpdateAssistantModelHttpRequest")
+            {
+                mutable.Required ??= new HashSet<string>(StringComparer.Ordinal);
+                mutable.Required.Add("technical");
+                mutable.Properties!["technical"] = new OpenApiSchemaReference("AssistantModelTechnicalHttpRequest", document);
+            }
+            if (name is "AssistantModelTechnicalHttpRequest" or "AssistantModelTechnicalResponse" or "AssistantModelLongContextHttpRequest" or "AssistantModelLongContextResponse")
+            {
+                mutable.AdditionalPropertiesAllowed = false;
+                mutable.Required = mutable.Properties!.Keys.Where(key => key != "longContext" || name.EndsWith("Response", StringComparison.Ordinal)).ToHashSet(StringComparer.Ordinal);
+                foreach (var key in mutable.Properties.Keys.Where(key => key.EndsWith("PricePerMillion", StringComparison.Ordinal)).ToArray())
+                    mutable.Properties[key] = new OpenApiSchemaReference("AssistantMoney", document);
+                foreach (var (key, value) in mutable.Properties)
+                    if (value is OpenApiSchema technicalProperty)
+                    {
+                        if (key != "longContext" && technicalProperty.Type is { } type) technicalProperty.Type = type & ~JsonSchemaType.Null;
+                        if (key is "maxInputTokens" or "maxOutputTokens" or "inputTokensThreshold") technicalProperty.Minimum = "1";
+                        if (key == "efforts") { technicalProperty.MinItems = 1; technicalProperty.UniqueItems = true; }
+                    }
             }
             if (name == "AssistantBudgetProgressResponse" && mutable.Properties!["fraction"] is OpenApiSchema fraction)
                 fraction.Format = "decimal";

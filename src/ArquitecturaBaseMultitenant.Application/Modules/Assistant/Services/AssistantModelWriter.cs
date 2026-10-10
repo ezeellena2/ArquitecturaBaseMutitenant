@@ -13,6 +13,7 @@ internal sealed class AssistantModelWriter(IAssistantModelRepository repository,
         if (await repository.ExistsAsync(request.Provider!.Value.ToString(), request.ProviderModelId!, null, ct)) return AssistantErrors.ModelAlreadyExists;
         var model = AssistantModelPrice.Create(request.Provider.Value.ToString(), request.ProviderModelId!, request.Name!, request.InputPricePerMillion!, request.OutputPricePerMillion!);
         model.Update(model.Provider, model.ProviderModelId, model.DisplayName, model.InputPrice, model.OutputPrice, request.IsActive!.Value);
+        model.SetTechnical(AssistantModelReferenceBuilder.ToDomain(request.Technical!));
         repository.Add(model);
         audit.RecordGlobal("Assistant model created", new SecurityEventChanges());
         return model;
@@ -27,6 +28,9 @@ internal sealed class AssistantModelWriter(IAssistantModelRepository repository,
         changes.AddBoolean("assistant.pricesChanged", false, model.InputPrice != request.InputPricePerMillion || model.OutputPrice != request.OutputPricePerMillion);
         changes.AddBoolean("assistant.modelIdentifierChanged", false, model.ProviderModelId != request.ProviderModelId);
         model.Update(request.Provider.Value.ToString(), request.ProviderModelId!, request.Name!, request.InputPricePerMillion!, request.OutputPricePerMillion!, request.IsActive!.Value);
+        var technical = AssistantModelReferenceBuilder.ToDomain(request.Technical!);
+        changes.AddBoolean("assistant.technicalChanged", false, model.Technical != technical);
+        model.SetTechnical(technical);
         repository.MarkUpdated(model);
         audit.RecordGlobal("Assistant model updated", changes);
         return model;

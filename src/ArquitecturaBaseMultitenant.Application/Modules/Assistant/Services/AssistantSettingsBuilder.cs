@@ -1,13 +1,12 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
-using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 internal sealed class AssistantSettingsBuilder(IAssistantSettingsReader settings, IAssistantModelReader models,
-    IAssistantProviderCatalog references, ITenantAdminReader owners, ITenantContext tenant)
+    ITenantAdminReader owners, ITenantContext tenant)
 {
     internal async Task<OrganizationAssistantSettingsResponse> BuildAsync(CancellationToken ct)
     {
@@ -15,7 +14,7 @@ internal sealed class AssistantSettingsBuilder(IAssistantSettingsReader settings
         var platform = await settings.FindPlatformAsync(ct);
         var organization = await settings.FindOrganizationAsync(ct);
         var policy = await settings.FindPolicyAsync(tenantId, ct);
-        var compatible = (await models.ListAllAsync(ct)).Where(model => model.IsActive && IsCompatible(model)).ToArray();
+        var compatible = (await models.ListAllAsync(ct)).Where(model => AssistantModelCompatibilityPolicy.IsCompatible(model)).ToArray();
         var platformModels = compatible.Where(value => platform.AllowedModelIds.Contains(value.Id)).ToArray();
         var ownModels = policy.AllowOwnKey ? compatible : [];
         var mode = organization?.Mode ?? AssistantMode.PlatformKey;
@@ -29,6 +28,4 @@ internal sealed class AssistantSettingsBuilder(IAssistantSettingsReader settings
             mode == AssistantMode.PlatformKey ? platform.MaskedKeySuffix : organization!.MaskedKeySuffix,
             organization?.Version ?? 0, platformModels, ownModels);
     }
-    internal bool IsCompatible(AssistantModelPriceResponse model) =>
-        model.Provider == AssistantProvider.Anthropic && references.Find(model.ProviderModelId) is { Text: true, Tools: true };
 }

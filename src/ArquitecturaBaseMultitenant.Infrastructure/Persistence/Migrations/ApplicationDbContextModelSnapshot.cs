@@ -5273,11 +5273,399 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                                 .HasForeignKey("AssistantModelPriceId");
                         });
 
+                    b.OwnsOne("ArquitecturaBaseMultitenant.Domain.Assistant.AssistantModelTechnical", "Technical", b1 =>
+                        {
+                            b1.Property<Guid>("AssistantModelPriceId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<bool>("HighEffort")
+                                .HasColumnType("boolean")
+                                .HasColumnName("TechnicalHighEffort");
+
+                            b1.Property<int?>("LongInputTokensThreshold")
+                                .HasColumnType("integer")
+                                .HasColumnName("TechnicalLongInputTokensThreshold");
+
+                            b1.Property<bool>("LowEffort")
+                                .HasColumnType("boolean")
+                                .HasColumnName("TechnicalLowEffort");
+
+                            b1.Property<int>("MaxInputTokens")
+                                .HasColumnType("integer")
+                                .HasColumnName("TechnicalMaxInputTokens");
+
+                            b1.Property<int>("MaxOutputTokens")
+                                .HasColumnType("integer")
+                                .HasColumnName("TechnicalMaxOutputTokens");
+
+                            b1.Property<bool>("MediumEffort")
+                                .HasColumnType("boolean")
+                                .HasColumnName("TechnicalMediumEffort");
+
+                            b1.Property<bool>("SupportsAdaptiveThinking")
+                                .HasColumnType("boolean")
+                                .HasColumnName("TechnicalSupportsAdaptiveThinking");
+
+                            b1.Property<bool>("SupportsImages")
+                                .HasColumnType("boolean")
+                                .HasColumnName("TechnicalSupportsImages");
+
+                            b1.Property<bool>("SupportsPdf")
+                                .HasColumnType("boolean")
+                                .HasColumnName("TechnicalSupportsPdf");
+
+                            b1.Property<bool>("SupportsText")
+                                .HasColumnType("boolean")
+                                .HasColumnName("TechnicalSupportsText");
+
+                            b1.Property<bool>("SupportsTools")
+                                .HasColumnType("boolean")
+                                .HasColumnName("TechnicalSupportsTools");
+
+                            b1.Property<string>("TechnicalCacheReadCurrency")
+                                .IsRequired()
+                                .ValueGeneratedOnUpdateSometimes()
+                                .HasMaxLength(3)
+                                .HasColumnType("character(3)")
+                                .HasColumnName("TechnicalCacheReadCurrency");
+
+                            b1.Property<string>("TechnicalCacheWrite1HourCurrency")
+                                .IsRequired()
+                                .ValueGeneratedOnUpdateSometimes()
+                                .HasMaxLength(3)
+                                .HasColumnType("character(3)")
+                                .HasColumnName("TechnicalCacheWrite1HourCurrency");
+
+                            b1.Property<string>("TechnicalCacheWrite5MinutesCurrency")
+                                .IsRequired()
+                                .ValueGeneratedOnUpdateSometimes()
+                                .HasMaxLength(3)
+                                .HasColumnType("character(3)")
+                                .HasColumnName("TechnicalCacheWrite5MinutesCurrency");
+
+                            b1.Property<string>("TechnicalLongCacheReadCurrency")
+                                .ValueGeneratedOnUpdateSometimes()
+                                .HasMaxLength(3)
+                                .HasColumnType("character(3)")
+                                .HasColumnName("TechnicalLongCacheReadCurrency");
+
+                            b1.Property<string>("TechnicalLongCacheWrite1HourCurrency")
+                                .ValueGeneratedOnUpdateSometimes()
+                                .HasMaxLength(3)
+                                .HasColumnType("character(3)")
+                                .HasColumnName("TechnicalLongCacheWrite1HourCurrency");
+
+                            b1.Property<string>("TechnicalLongCacheWrite5MinutesCurrency")
+                                .ValueGeneratedOnUpdateSometimes()
+                                .HasMaxLength(3)
+                                .HasColumnType("character(3)")
+                                .HasColumnName("TechnicalLongCacheWrite5MinutesCurrency");
+
+                            b1.Property<string>("TechnicalLongInputCurrency")
+                                .ValueGeneratedOnUpdateSometimes()
+                                .HasMaxLength(3)
+                                .HasColumnType("character(3)")
+                                .HasColumnName("TechnicalLongInputCurrency");
+
+                            b1.Property<string>("TechnicalLongOutputCurrency")
+                                .ValueGeneratedOnUpdateSometimes()
+                                .HasMaxLength(3)
+                                .HasColumnType("character(3)")
+                                .HasColumnName("TechnicalLongOutputCurrency");
+
+                            b1.HasKey("AssistantModelPriceId");
+
+                            b1.HasIndex("TechnicalCacheReadCurrency");
+
+                            b1.HasIndex("TechnicalCacheWrite1HourCurrency");
+
+                            b1.HasIndex("TechnicalCacheWrite5MinutesCurrency");
+
+                            b1.HasIndex("TechnicalLongCacheReadCurrency");
+
+                            b1.HasIndex("TechnicalLongCacheWrite1HourCurrency");
+
+                            b1.HasIndex("TechnicalLongCacheWrite5MinutesCurrency");
+
+                            b1.HasIndex("TechnicalLongInputCurrency");
+
+                            b1.HasIndex("TechnicalLongOutputCurrency");
+
+                            b1.ToTable("AssistantModelPrices", "platform");
+
+                            b1.WithOwner()
+                                .HasForeignKey("AssistantModelPriceId");
+
+                            b1.HasOne("ArquitecturaBaseMultitenant.Domain.ReferenceData.Currency", null)
+                                .WithMany()
+                                .HasForeignKey("TechnicalCacheReadCurrency")
+                                .OnDelete(DeleteBehavior.Restrict)
+                                .IsRequired();
+
+                            b1.HasOne("ArquitecturaBaseMultitenant.Domain.ReferenceData.Currency", null)
+                                .WithMany()
+                                .HasForeignKey("TechnicalCacheWrite1HourCurrency")
+                                .OnDelete(DeleteBehavior.Restrict)
+                                .IsRequired();
+
+                            b1.HasOne("ArquitecturaBaseMultitenant.Domain.ReferenceData.Currency", null)
+                                .WithMany()
+                                .HasForeignKey("TechnicalCacheWrite5MinutesCurrency")
+                                .OnDelete(DeleteBehavior.Restrict)
+                                .IsRequired();
+
+                            b1.HasOne("ArquitecturaBaseMultitenant.Domain.ReferenceData.Currency", null)
+                                .WithMany()
+                                .HasForeignKey("TechnicalLongCacheReadCurrency")
+                                .OnDelete(DeleteBehavior.Restrict);
+
+                            b1.HasOne("ArquitecturaBaseMultitenant.Domain.ReferenceData.Currency", null)
+                                .WithMany()
+                                .HasForeignKey("TechnicalLongCacheWrite1HourCurrency")
+                                .OnDelete(DeleteBehavior.Restrict);
+
+                            b1.HasOne("ArquitecturaBaseMultitenant.Domain.ReferenceData.Currency", null)
+                                .WithMany()
+                                .HasForeignKey("TechnicalLongCacheWrite5MinutesCurrency")
+                                .OnDelete(DeleteBehavior.Restrict);
+
+                            b1.HasOne("ArquitecturaBaseMultitenant.Domain.ReferenceData.Currency", null)
+                                .WithMany()
+                                .HasForeignKey("TechnicalLongInputCurrency")
+                                .OnDelete(DeleteBehavior.Restrict);
+
+                            b1.HasOne("ArquitecturaBaseMultitenant.Domain.ReferenceData.Currency", null)
+                                .WithMany()
+                                .HasForeignKey("TechnicalLongOutputCurrency")
+                                .OnDelete(DeleteBehavior.Restrict);
+
+                            b1.OwnsOne("ArquitecturaBaseMultitenant.Domain.ValueObjects.Money", "CacheRead", b2 =>
+                                {
+                                    b2.Property<Guid>("AssistantModelTechnicalAssistantModelPriceId")
+                                        .HasColumnType("uuid");
+
+                                    b2.Property<decimal>("Amount")
+                                        .HasPrecision(18, 6)
+                                        .HasColumnType("numeric(18,6)")
+                                        .HasColumnName("TechnicalCacheReadAmount");
+
+                                    b2.Property<string>("Currency")
+                                        .IsRequired()
+                                        .ValueGeneratedOnUpdateSometimes()
+                                        .HasMaxLength(3)
+                                        .HasColumnType("character varying(3)")
+                                        .HasColumnName("TechnicalCacheReadCurrency");
+
+                                    b2.HasKey("AssistantModelTechnicalAssistantModelPriceId");
+
+                                    b2.ToTable("AssistantModelPrices", "platform");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("AssistantModelTechnicalAssistantModelPriceId");
+                                });
+
+                            b1.OwnsOne("ArquitecturaBaseMultitenant.Domain.ValueObjects.Money", "CacheWrite1Hour", b2 =>
+                                {
+                                    b2.Property<Guid>("AssistantModelTechnicalAssistantModelPriceId")
+                                        .HasColumnType("uuid");
+
+                                    b2.Property<decimal>("Amount")
+                                        .HasPrecision(18, 6)
+                                        .HasColumnType("numeric(18,6)")
+                                        .HasColumnName("TechnicalCacheWrite1HourAmount");
+
+                                    b2.Property<string>("Currency")
+                                        .IsRequired()
+                                        .ValueGeneratedOnUpdateSometimes()
+                                        .HasMaxLength(3)
+                                        .HasColumnType("character varying(3)")
+                                        .HasColumnName("TechnicalCacheWrite1HourCurrency");
+
+                                    b2.HasKey("AssistantModelTechnicalAssistantModelPriceId");
+
+                                    b2.ToTable("AssistantModelPrices", "platform");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("AssistantModelTechnicalAssistantModelPriceId");
+                                });
+
+                            b1.OwnsOne("ArquitecturaBaseMultitenant.Domain.ValueObjects.Money", "CacheWrite5Minutes", b2 =>
+                                {
+                                    b2.Property<Guid>("AssistantModelTechnicalAssistantModelPriceId")
+                                        .HasColumnType("uuid");
+
+                                    b2.Property<decimal>("Amount")
+                                        .HasPrecision(18, 6)
+                                        .HasColumnType("numeric(18,6)")
+                                        .HasColumnName("TechnicalCacheWrite5MinutesAmount");
+
+                                    b2.Property<string>("Currency")
+                                        .IsRequired()
+                                        .ValueGeneratedOnUpdateSometimes()
+                                        .HasMaxLength(3)
+                                        .HasColumnType("character varying(3)")
+                                        .HasColumnName("TechnicalCacheWrite5MinutesCurrency");
+
+                                    b2.HasKey("AssistantModelTechnicalAssistantModelPriceId");
+
+                                    b2.ToTable("AssistantModelPrices", "platform");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("AssistantModelTechnicalAssistantModelPriceId");
+                                });
+
+                            b1.OwnsOne("ArquitecturaBaseMultitenant.Domain.ValueObjects.Money", "LongCacheRead", b2 =>
+                                {
+                                    b2.Property<Guid>("AssistantModelTechnicalAssistantModelPriceId")
+                                        .HasColumnType("uuid");
+
+                                    b2.Property<decimal>("Amount")
+                                        .HasPrecision(18, 6)
+                                        .HasColumnType("numeric(18,6)")
+                                        .HasColumnName("TechnicalLongCacheReadAmount");
+
+                                    b2.Property<string>("Currency")
+                                        .IsRequired()
+                                        .ValueGeneratedOnUpdateSometimes()
+                                        .HasMaxLength(3)
+                                        .HasColumnType("character varying(3)")
+                                        .HasColumnName("TechnicalLongCacheReadCurrency");
+
+                                    b2.HasKey("AssistantModelTechnicalAssistantModelPriceId");
+
+                                    b2.ToTable("AssistantModelPrices", "platform");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("AssistantModelTechnicalAssistantModelPriceId");
+                                });
+
+                            b1.OwnsOne("ArquitecturaBaseMultitenant.Domain.ValueObjects.Money", "LongCacheWrite1Hour", b2 =>
+                                {
+                                    b2.Property<Guid>("AssistantModelTechnicalAssistantModelPriceId")
+                                        .HasColumnType("uuid");
+
+                                    b2.Property<decimal>("Amount")
+                                        .HasPrecision(18, 6)
+                                        .HasColumnType("numeric(18,6)")
+                                        .HasColumnName("TechnicalLongCacheWrite1HourAmount");
+
+                                    b2.Property<string>("Currency")
+                                        .IsRequired()
+                                        .ValueGeneratedOnUpdateSometimes()
+                                        .HasMaxLength(3)
+                                        .HasColumnType("character varying(3)")
+                                        .HasColumnName("TechnicalLongCacheWrite1HourCurrency");
+
+                                    b2.HasKey("AssistantModelTechnicalAssistantModelPriceId");
+
+                                    b2.ToTable("AssistantModelPrices", "platform");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("AssistantModelTechnicalAssistantModelPriceId");
+                                });
+
+                            b1.OwnsOne("ArquitecturaBaseMultitenant.Domain.ValueObjects.Money", "LongCacheWrite5Minutes", b2 =>
+                                {
+                                    b2.Property<Guid>("AssistantModelTechnicalAssistantModelPriceId")
+                                        .HasColumnType("uuid");
+
+                                    b2.Property<decimal>("Amount")
+                                        .HasPrecision(18, 6)
+                                        .HasColumnType("numeric(18,6)")
+                                        .HasColumnName("TechnicalLongCacheWrite5MinutesAmount");
+
+                                    b2.Property<string>("Currency")
+                                        .IsRequired()
+                                        .ValueGeneratedOnUpdateSometimes()
+                                        .HasMaxLength(3)
+                                        .HasColumnType("character varying(3)")
+                                        .HasColumnName("TechnicalLongCacheWrite5MinutesCurrency");
+
+                                    b2.HasKey("AssistantModelTechnicalAssistantModelPriceId");
+
+                                    b2.ToTable("AssistantModelPrices", "platform");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("AssistantModelTechnicalAssistantModelPriceId");
+                                });
+
+                            b1.OwnsOne("ArquitecturaBaseMultitenant.Domain.ValueObjects.Money", "LongInput", b2 =>
+                                {
+                                    b2.Property<Guid>("AssistantModelTechnicalAssistantModelPriceId")
+                                        .HasColumnType("uuid");
+
+                                    b2.Property<decimal>("Amount")
+                                        .HasPrecision(18, 6)
+                                        .HasColumnType("numeric(18,6)")
+                                        .HasColumnName("TechnicalLongInputAmount");
+
+                                    b2.Property<string>("Currency")
+                                        .IsRequired()
+                                        .ValueGeneratedOnUpdateSometimes()
+                                        .HasMaxLength(3)
+                                        .HasColumnType("character varying(3)")
+                                        .HasColumnName("TechnicalLongInputCurrency");
+
+                                    b2.HasKey("AssistantModelTechnicalAssistantModelPriceId");
+
+                                    b2.ToTable("AssistantModelPrices", "platform");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("AssistantModelTechnicalAssistantModelPriceId");
+                                });
+
+                            b1.OwnsOne("ArquitecturaBaseMultitenant.Domain.ValueObjects.Money", "LongOutput", b2 =>
+                                {
+                                    b2.Property<Guid>("AssistantModelTechnicalAssistantModelPriceId")
+                                        .HasColumnType("uuid");
+
+                                    b2.Property<decimal>("Amount")
+                                        .HasPrecision(18, 6)
+                                        .HasColumnType("numeric(18,6)")
+                                        .HasColumnName("TechnicalLongOutputAmount");
+
+                                    b2.Property<string>("Currency")
+                                        .IsRequired()
+                                        .ValueGeneratedOnUpdateSometimes()
+                                        .HasMaxLength(3)
+                                        .HasColumnType("character varying(3)")
+                                        .HasColumnName("TechnicalLongOutputCurrency");
+
+                                    b2.HasKey("AssistantModelTechnicalAssistantModelPriceId");
+
+                                    b2.ToTable("AssistantModelPrices", "platform");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("AssistantModelTechnicalAssistantModelPriceId");
+                                });
+
+                            b1.Navigation("CacheRead")
+                                .IsRequired();
+
+                            b1.Navigation("CacheWrite1Hour")
+                                .IsRequired();
+
+                            b1.Navigation("CacheWrite5Minutes")
+                                .IsRequired();
+
+                            b1.Navigation("LongCacheRead");
+
+                            b1.Navigation("LongCacheWrite1Hour");
+
+                            b1.Navigation("LongCacheWrite5Minutes");
+
+                            b1.Navigation("LongInput");
+
+                            b1.Navigation("LongOutput");
+                        });
+
                     b.Navigation("InputPrice")
                         .IsRequired();
 
                     b.Navigation("OutputPrice")
                         .IsRequired();
+
+                    b.Navigation("Technical");
                 });
 
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.AssistantOrganizationPolicy", b =>

@@ -29,8 +29,8 @@ public sealed class AssistantModelCatalogTests
         var originalVersion = model.GetProperty("version").GetUInt32();
         using var changed = await client.PutAsJsonAsync($"/api/platform/assistant/models/{id}", new
         {
-            name = "Precio editado", provider = "Anthropic", providerModelId = "claude-sonnet-5-5", inputPricePerMillion = new { amount = 3.125m, currency = "USD" },
-            outputPricePerMillion = new { amount = 12m, currency = "USD" }, isActive = true, version = originalVersion,
+            name = "Precio editado", provider = "Anthropic", providerModelId = "renamed-preloaded-model", inputPricePerMillion = new { amount = 3.125m, currency = "USD" },
+            outputPricePerMillion = new { amount = 12m, currency = "USD" }, isActive = true, version = originalVersion, technical = model.GetProperty("technical"),
         }, AssistantTestData.Ct);
         var version = await SavedVersion.ReadAsync(changed, AssistantTestData.Ct);
         using (var scope = factory.Services.CreateScope())
@@ -51,30 +51,26 @@ public sealed class AssistantModelCatalogTests
         Assert.Equal(3.125m, saved.GetProperty("inputPricePerMillion").GetProperty("amount").GetDecimal());
         Assert.Equal("Precio editado", saved.GetProperty("name").GetString());
         Assert.Equal(version, saved.GetProperty("version").GetUInt32());
+        Assert.Equal("renamed-preloaded-model", saved.GetProperty("providerModelId").GetString());
+        Assert.Equal(4, after.RootElement.GetProperty("items").GetArrayLength());
+        Assert.Equal(1000000, saved.GetProperty("technical").GetProperty("maxInputTokens").GetInt32());
         using var configuration = await client.GetAsync("/api/platform/assistant/settings", AssistantTestData.Ct);
         Assert.Equal(HttpStatusCode.OK, configuration.StatusCode);
         using var denied = await AccountJourney.PostAsync(client, "/api/platform/assistant/models", new
         {
             name = "Dato nuevo", provider = "Anthropic", providerModelId = "unknown-model", inputPricePerMillion = new { amount = 1m, currency = "USD" },
-            outputPricePerMillion = new { amount = 2m, currency = "USD" }, isActive = true,
+            outputPricePerMillion = new { amount = 2m, currency = "USD" }, isActive = true, technical = AssistantEditableCatalogTests.Technical(),
         }, AssistantTestData.Ct);
         Assert.Equal(HttpStatusCode.BadRequest, denied.StatusCode);
     }
 
     [Fact]
-    public async Task Additional_versioned_reference_allows_catalog_creation_and_own_selection_without_being_platform_allowed()
+    public async Task Database_metadata_allows_catalog_creation_and_own_selection_without_being_platform_allowed()
     {
-        var file = Path.Combine(Path.GetTempPath(), "assistant-catalog-" + Guid.CreateVersion7().ToString("N") + ".json");
-        try
-        {
-            File.WriteAllText(file, """
-                [{"currency":"USD","revision":"isolated-fixture-v2","providerModelId":"isolated-compatible-model","nameEs":"Prueba","nameEn":"Test","inputPerMillion":1,"outputPerMillion":2,"cacheWrite5MinutesPerMillion":1.25,"cacheWrite1HourPerMillion":2,"cacheReadPerMillion":0.1,"text":true,"images":true,"pdf":true,"tools":true,"efforts":["Low"]}]
-                """);
             await using var factory = new ApiFactory();
             await factory.InitializeAsync();
             using var host = factory.WithWebHostBuilder(builder =>
             {
-                builder.UseSetting("Assistant:ProviderReferenceFile", file);
                 builder.UseSetting("Assistant:UseFakeChatClient", "true");
             });
             using var ownerClient = host.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
@@ -89,7 +85,7 @@ public sealed class AssistantModelCatalogTests
             using var created = await AccountJourney.PostAsync(client, "/api/platform/assistant/models", new
             {
                 name = "Modelo adicional", provider = "Anthropic", providerModelId = "isolated-compatible-model", inputPricePerMillion = new { amount = 0.125m, currency = "USD" },
-                outputPricePerMillion = new { amount = 2m, currency = "USD" }, isActive = true,
+                outputPricePerMillion = new { amount = 2m, currency = "USD" }, isActive = true, technical = AssistantEditableCatalogTests.Technical(),
             }, AssistantTestData.Ct);
             Assert.True(created.IsSuccessStatusCode, await created.Content.ReadAsStringAsync(AssistantTestData.Ct));
             using var result = JsonDocument.Parse(await created.Content.ReadAsStringAsync(AssistantTestData.Ct));
@@ -108,7 +104,6 @@ public sealed class AssistantModelCatalogTests
             using var saved = await ownerClient.GetFromJsonAsync<JsonDocument>("/api/organization/assistant/settings", AssistantTestData.Ct);
             Assert.Equal(id, saved!.RootElement.GetProperty("modelId").GetGuid());
             Assert.Equal(0.13m, saved.RootElement.GetProperty("monthlyBudget").GetProperty("amount").GetDecimal());
-        }
-        finally { File.Delete(file); }
+
     }
 }

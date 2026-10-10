@@ -20,6 +20,13 @@ public sealed class AssistantModelPrice : Entity, IGlobalSecurityAudited, IVersi
     public bool IsEnabled { get; private set; }
     public Money InputPrice { get; private set; } = null!;
     public Money OutputPrice { get; private set; } = null!;
+    public AssistantModelTechnical? Technical { get; private set; }
+    public void SetTechnical(AssistantModelTechnical technical)
+    {
+        ArgumentNullException.ThrowIfNull(technical);
+        if (Technical is null) Technical = technical;
+        else Technical.UpdateFrom(technical);
+    }
     public void Update(string provider, string providerModelId, string displayName, Money inputPrice, Money outputPrice, bool enabled)
     {
         Provider = provider;

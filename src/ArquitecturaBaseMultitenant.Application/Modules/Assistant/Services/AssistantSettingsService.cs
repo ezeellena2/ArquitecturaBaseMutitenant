@@ -40,7 +40,7 @@ internal sealed class AssistantSettingsService(IAssistantSettingsReader reader, 
                 if (request.Mode != AssistantMode.OwnKey) return AssistantErrors.SettingsKeyRejected;
                 if (!current.AllowOwnKey) return AssistantErrors.SettingsOwnKeyNotAllowed;
                 if (!current.HasAlertRecipient) return AssistantErrors.SettingsAlertRecipientRequired;
-                var eligible = selection.ValidateOrganization(request, current);
+                var eligible = AssistantSettingsSelectionPolicy.ValidateOrganization(request, current);
                 if (eligible.IsFailure) return eligible.Error;
                 var accepted = await clients.ValidateKeyAsync(request.ApiKey!, cancellationToken);
                 if (accepted.IsFailure) return accepted.Error;

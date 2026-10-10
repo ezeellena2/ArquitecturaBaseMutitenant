@@ -16953,7 +16953,35 @@
                             "currency": "USD"
                           },
                           "isActive": true,
-                          "version": 1
+                          "version": 1,
+                          "technical": {
+                            "supportsText": true,
+                            "supportsTools": true,
+                            "supportsImages": true,
+                            "supportsPdf": true,
+                            "supportsAdaptiveThinking": true,
+                            "efforts": [
+                              "low",
+                              "medium",
+                              "high"
+                            ],
+                            "maxInputTokens": 1000000,
+                            "maxOutputTokens": 128000,
+                            "cacheWrite5MinutesPricePerMillion": {
+                              "amount": 2.5,
+                              "currency": "USD"
+                            },
+                            "cacheWrite1HourPricePerMillion": {
+                              "amount": 4,
+                              "currency": "USD"
+                            },
+                            "cacheReadPricePerMillion": {
+                              "amount": 0.1,
+                              "currency": "USD"
+                            },
+                            "longContext": null
+                          },
+                          "technicalRevision": "db-v1-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                         }
                       ],
                       "ownKeyModels": [ ]
@@ -16987,7 +17015,35 @@
                             "currency": "USD"
                           },
                           "isActive": true,
-                          "version": 1
+                          "version": 1,
+                          "technical": {
+                            "supportsText": true,
+                            "supportsTools": true,
+                            "supportsImages": true,
+                            "supportsPdf": true,
+                            "supportsAdaptiveThinking": true,
+                            "efforts": [
+                              "low",
+                              "medium",
+                              "high"
+                            ],
+                            "maxInputTokens": 1000000,
+                            "maxOutputTokens": 128000,
+                            "cacheWrite5MinutesPricePerMillion": {
+                              "amount": 2.5,
+                              "currency": "USD"
+                            },
+                            "cacheWrite1HourPricePerMillion": {
+                              "amount": 4,
+                              "currency": "USD"
+                            },
+                            "cacheReadPricePerMillion": {
+                              "amount": 0.1,
+                              "currency": "USD"
+                            },
+                            "longContext": null
+                          },
+                          "technicalRevision": "db-v1-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                         }
                       ],
                       "ownKeyModels": [
@@ -17005,7 +17061,35 @@
                             "currency": "USD"
                           },
                           "isActive": true,
-                          "version": 1
+                          "version": 1,
+                          "technical": {
+                            "supportsText": true,
+                            "supportsTools": true,
+                            "supportsImages": true,
+                            "supportsPdf": true,
+                            "supportsAdaptiveThinking": true,
+                            "efforts": [
+                              "low",
+                              "medium",
+                              "high"
+                            ],
+                            "maxInputTokens": 1000000,
+                            "maxOutputTokens": 128000,
+                            "cacheWrite5MinutesPricePerMillion": {
+                              "amount": 2.5,
+                              "currency": "USD"
+                            },
+                            "cacheWrite1HourPricePerMillion": {
+                              "amount": 4,
+                              "currency": "USD"
+                            },
+                            "cacheReadPricePerMillion": {
+                              "amount": 0.1,
+                              "currency": "USD"
+                            },
+                            "longContext": null
+                          },
+                          "technicalRevision": "db-v1-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                         }
                       ]
                     }
@@ -26981,7 +27065,7 @@
         "tags": [
           "Assistant Platform management"
         ],
-        "description": "T01: contrato publicado, conducta pendiente; el servicio devuelve General.Contract.NotImplemented (501). Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Catálogo Anthropic, precios no negativos en USD, unicidad provider/providerModelId. Desactivar modelos referidos; sin endpoint de borrado.",
+        "description": "T01: contrato publicado, conducta pendiente; el servicio devuelve General.Contract.NotImplemented (501). Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Catálogo Anthropic, precios no negativos en USD, unicidad provider/providerModelId. Datos técnicos completos obligatorios al crear/editar; lectura technical y technicalRevision nullable sólo para filas heredadas incompletas. Revisión calculada por servidor con las tarifas y capacidades efectivas. La selección usa la base actual sin archivo ni reinicio: activo, texto, herramientas, pensamiento adaptativo, esfuerzo admitido y capacidad mínima 51200/2048. Límites menores coherentes se guardan pero no se ofrecen para chat. Tarifas técnicas USD positivas con hasta seis decimales; contexto largo null o umbral menor que la entrada y cinco tarifas completas. Desactivar modelos referidos; sin endpoint de borrado.",
         "parameters": [
           {
             "name": "page",
@@ -27037,7 +27121,83 @@
                 "examples": {
                   "success": {
                     "value": {
-                      "items": [ ],
+                      "items": [
+                        {
+                          "id": "10000000-0000-0000-0000-000000000001",
+                          "name": "example",
+                          "provider": "Anthropic",
+                          "providerModelId": "example",
+                          "inputPricePerMillion": {
+                            "amount": 1,
+                            "currency": "USD"
+                          },
+                          "outputPricePerMillion": {
+                            "amount": 1,
+                            "currency": "USD"
+                          },
+                          "isActive": true,
+                          "version": 1,
+                          "technical": {
+                            "supportsText": true,
+                            "supportsTools": true,
+                            "supportsImages": true,
+                            "supportsPdf": true,
+                            "supportsAdaptiveThinking": true,
+                            "efforts": [
+                              "low",
+                              "medium",
+                              "high"
+                            ],
+                            "maxInputTokens": 1000000,
+                            "maxOutputTokens": 128000,
+                            "cacheWrite5MinutesPricePerMillion": {
+                              "amount": 2.5,
+                              "currency": "USD"
+                            },
+                            "cacheWrite1HourPricePerMillion": {
+                              "amount": 4,
+                              "currency": "USD"
+                            },
+                            "cacheReadPricePerMillion": {
+                              "amount": 0.1,
+                              "currency": "USD"
+                            },
+                            "longContext": null
+                          },
+                          "technicalRevision": "db-v1-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                        }
+                      ],
+                      "page": 1,
+                      "pageSize": 1,
+                      "totalCount": 1,
+                      "totalPages": 1,
+                      "hasPrevious": false,
+                      "hasNext": false
+                    }
+                  },
+                  "legacyIncomplete": {
+                    "description": "Fila heredada sin referencia conocida: se conserva y debe completarse para resultar elegible.",
+                    "value": {
+                      "items": [
+                        {
+                          "id": "10000000-0000-0000-0000-000000000001",
+                          "name": "example",
+                          "provider": "Anthropic",
+                          "providerModelId": "legacy-unknown",
+                          "inputPricePerMillion": {
+                            "amount": 1,
+                            "currency": "USD"
+                          },
+                          "outputPricePerMillion": {
+                            "amount": 1,
+                            "currency": "USD"
+                          },
+                          "isActive": true,
+                          "version": 1,
+                          "technical": null,
+                          "technicalRevision": null
+                        }
+                      ],
                       "page": 1,
                       "pageSize": 1,
                       "totalCount": 1,
@@ -27329,7 +27489,7 @@
         "tags": [
           "Assistant Platform management"
         ],
-        "description": "T01: contrato publicado, conducta pendiente; el servicio devuelve General.Contract.NotImplemented (501). Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Catálogo Anthropic, precios no negativos en USD, unicidad provider/providerModelId. Desactivar modelos referidos; sin endpoint de borrado.",
+        "description": "T01: contrato publicado, conducta pendiente; el servicio devuelve General.Contract.NotImplemented (501). Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Catálogo Anthropic, precios no negativos en USD, unicidad provider/providerModelId. Datos técnicos completos obligatorios al crear/editar; lectura technical y technicalRevision nullable sólo para filas heredadas incompletas. Revisión calculada por servidor con las tarifas y capacidades efectivas. La selección usa la base actual sin archivo ni reinicio: activo, texto, herramientas, pensamiento adaptativo, esfuerzo admitido y capacidad mínima 51200/2048. Límites menores coherentes se guardan pero no se ofrecen para chat. Tarifas técnicas USD positivas con hasta seis decimales; contexto largo null o umbral menor que la entrada y cinco tarifas completas. Desactivar modelos referidos; sin endpoint de borrado.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -27349,7 +27509,7 @@
                 "$ref": "#/components/schemas/CreateAssistantModelHttpRequest"
               },
               "examples": {
-                "request": {
+                "request.es": {
                   "value": {
                     "name": "Modelo de ejemplo",
                     "provider": "Anthropic",
@@ -27362,7 +27522,77 @@
                       "amount": 15,
                       "currency": "USD"
                     },
-                    "isActive": true
+                    "isActive": true,
+                    "technical": {
+                      "supportsText": true,
+                      "supportsTools": true,
+                      "supportsImages": true,
+                      "supportsPdf": true,
+                      "supportsAdaptiveThinking": true,
+                      "efforts": [
+                        "low",
+                        "medium",
+                        "high"
+                      ],
+                      "maxInputTokens": 1000000,
+                      "maxOutputTokens": 128000,
+                      "cacheWrite5MinutesPricePerMillion": {
+                        "amount": 2.5,
+                        "currency": "USD"
+                      },
+                      "cacheWrite1HourPricePerMillion": {
+                        "amount": 4,
+                        "currency": "USD"
+                      },
+                      "cacheReadPricePerMillion": {
+                        "amount": 0.1,
+                        "currency": "USD"
+                      },
+                      "longContext": null
+                    }
+                  }
+                },
+                "request.en": {
+                  "value": {
+                    "name": "Example model",
+                    "provider": "Anthropic",
+                    "providerModelId": "model-contract-example",
+                    "inputPricePerMillion": {
+                      "amount": 3,
+                      "currency": "USD"
+                    },
+                    "outputPricePerMillion": {
+                      "amount": 15,
+                      "currency": "USD"
+                    },
+                    "isActive": true,
+                    "technical": {
+                      "supportsText": true,
+                      "supportsTools": true,
+                      "supportsImages": true,
+                      "supportsPdf": true,
+                      "supportsAdaptiveThinking": true,
+                      "efforts": [
+                        "low",
+                        "medium",
+                        "high"
+                      ],
+                      "maxInputTokens": 1000000,
+                      "maxOutputTokens": 128000,
+                      "cacheWrite5MinutesPricePerMillion": {
+                        "amount": 2.5,
+                        "currency": "USD"
+                      },
+                      "cacheWrite1HourPricePerMillion": {
+                        "amount": 4,
+                        "currency": "USD"
+                      },
+                      "cacheReadPricePerMillion": {
+                        "amount": 0.1,
+                        "currency": "USD"
+                      },
+                      "longContext": null
+                    }
                   }
                 }
               }
@@ -27400,7 +27630,7 @@
             }
           },
           "400": {
-            "description": "Bad Request; Validation.Failed; Request.IdempotencyKeyRequired; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed",
+            "description": "Bad Request; Validation.Failed; Request.IdempotencyKeyRequired; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -27412,12 +27642,12 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 400,
-                      "detail": "Completá este campo.",
+                      "detail": "Ingresá una tarifa positiva en USD con hasta seis decimales.",
                       "code": "Validation.Failed",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "isActive": [
-                          "Completá este campo."
+                        "technical.longContext.cacheReadPricePerMillion": [
+                          "Ingresá una tarifa positiva en USD con hasta seis decimales."
                         ]
                       }
                     }
@@ -27427,12 +27657,12 @@
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 400,
-                      "detail": "Complete this field.",
+                      "detail": "Enter a positive USD rate with up to six decimal places.",
                       "code": "Validation.Failed",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "isActive": [
-                          "Complete this field."
+                        "technical.longContext.cacheReadPricePerMillion": [
+                          "Enter a positive USD rate with up to six decimal places."
                         ]
                       }
                     }
@@ -27860,6 +28090,132 @@
             "field": "isActive",
             "es": "Completá este campo.",
             "en": "Complete this field."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical",
+            "es": "Completá este campo.",
+            "en": "Complete this field."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.supportsText",
+            "es": "Completá este campo.",
+            "en": "Complete this field."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.supportsTools",
+            "es": "Completá este campo.",
+            "en": "Complete this field."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.supportsImages",
+            "es": "Completá este campo.",
+            "en": "Complete this field."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.supportsPdf",
+            "es": "Completá este campo.",
+            "en": "Complete this field."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.supportsAdaptiveThinking",
+            "es": "Completá este campo.",
+            "en": "Complete this field."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.efforts",
+            "es": "Elegí esfuerzos únicos entre bajo, medio y alto.",
+            "en": "Choose unique efforts from low, medium and high."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.maxInputTokens",
+            "es": "Ingresá límites positivos: la salida no puede superar la entrada y el umbral debe ser menor que la entrada.",
+            "en": "Enter positive limits: output must not exceed input, and the threshold must be lower than input."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.maxOutputTokens",
+            "es": "Ingresá límites positivos: la salida no puede superar la entrada y el umbral debe ser menor que la entrada.",
+            "en": "Enter positive limits: output must not exceed input, and the threshold must be lower than input."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.longContext.inputTokensThreshold",
+            "es": "Ingresá límites positivos: la salida no puede superar la entrada y el umbral debe ser menor que la entrada.",
+            "en": "Enter positive limits: output must not exceed input, and the threshold must be lower than input."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.cacheWrite5MinutesPricePerMillion",
+            "es": "Ingresá una tarifa positiva en USD con hasta seis decimales.",
+            "en": "Enter a positive USD rate with up to six decimal places."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.cacheWrite1HourPricePerMillion",
+            "es": "Ingresá una tarifa positiva en USD con hasta seis decimales.",
+            "en": "Enter a positive USD rate with up to six decimal places."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.cacheReadPricePerMillion",
+            "es": "Ingresá una tarifa positiva en USD con hasta seis decimales.",
+            "en": "Enter a positive USD rate with up to six decimal places."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.longContext.inputPricePerMillion",
+            "es": "Ingresá una tarifa positiva en USD con hasta seis decimales.",
+            "en": "Enter a positive USD rate with up to six decimal places."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.longContext.outputPricePerMillion",
+            "es": "Ingresá una tarifa positiva en USD con hasta seis decimales.",
+            "en": "Enter a positive USD rate with up to six decimal places."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.longContext.cacheWrite5MinutesPricePerMillion",
+            "es": "Ingresá una tarifa positiva en USD con hasta seis decimales.",
+            "en": "Enter a positive USD rate with up to six decimal places."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.longContext.cacheWrite1HourPricePerMillion",
+            "es": "Ingresá una tarifa positiva en USD con hasta seis decimales.",
+            "en": "Enter a positive USD rate with up to six decimal places."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.longContext.cacheReadPricePerMillion",
+            "es": "Ingresá una tarifa positiva en USD con hasta seis decimales.",
+            "en": "Enter a positive USD rate with up to six decimal places."
           }
         ],
         "x-access": "platform",
@@ -27875,7 +28231,7 @@
         "tags": [
           "Assistant Platform management"
         ],
-        "description": "T01: contrato publicado, conducta pendiente; el servicio devuelve General.Contract.NotImplemented (501). Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Catálogo Anthropic, precios no negativos en USD, unicidad provider/providerModelId. Desactivar modelos referidos; sin endpoint de borrado.",
+        "description": "T01: contrato publicado, conducta pendiente; el servicio devuelve General.Contract.NotImplemented (501). Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Catálogo Anthropic, precios no negativos en USD, unicidad provider/providerModelId. Datos técnicos completos obligatorios al crear/editar; lectura technical y technicalRevision nullable sólo para filas heredadas incompletas. Revisión calculada por servidor con las tarifas y capacidades efectivas. La selección usa la base actual sin archivo ni reinicio: activo, texto, herramientas, pensamiento adaptativo, esfuerzo admitido y capacidad mínima 51200/2048. Límites menores coherentes se guardan pero no se ofrecen para chat. Tarifas técnicas USD positivas con hasta seis decimales; contexto largo null o umbral menor que la entrada y cinco tarifas completas. Desactivar modelos referidos; sin endpoint de borrado.",
         "parameters": [
           {
             "name": "id",
@@ -27894,7 +28250,7 @@
                 "$ref": "#/components/schemas/UpdateAssistantModelHttpRequest"
               },
               "examples": {
-                "request": {
+                "request.es": {
                   "value": {
                     "name": "Modelo de ejemplo",
                     "provider": "Anthropic",
@@ -27908,7 +28264,78 @@
                       "currency": "USD"
                     },
                     "isActive": true,
-                    "version": 1
+                    "version": 1,
+                    "technical": {
+                      "supportsText": true,
+                      "supportsTools": true,
+                      "supportsImages": true,
+                      "supportsPdf": true,
+                      "supportsAdaptiveThinking": true,
+                      "efforts": [
+                        "low",
+                        "medium",
+                        "high"
+                      ],
+                      "maxInputTokens": 1000000,
+                      "maxOutputTokens": 128000,
+                      "cacheWrite5MinutesPricePerMillion": {
+                        "amount": 2.5,
+                        "currency": "USD"
+                      },
+                      "cacheWrite1HourPricePerMillion": {
+                        "amount": 4,
+                        "currency": "USD"
+                      },
+                      "cacheReadPricePerMillion": {
+                        "amount": 0.1,
+                        "currency": "USD"
+                      },
+                      "longContext": null
+                    }
+                  }
+                },
+                "request.en": {
+                  "value": {
+                    "name": "Example model",
+                    "provider": "Anthropic",
+                    "providerModelId": "model-contract-example",
+                    "inputPricePerMillion": {
+                      "amount": 3,
+                      "currency": "USD"
+                    },
+                    "outputPricePerMillion": {
+                      "amount": 15,
+                      "currency": "USD"
+                    },
+                    "isActive": true,
+                    "version": 1,
+                    "technical": {
+                      "supportsText": true,
+                      "supportsTools": true,
+                      "supportsImages": true,
+                      "supportsPdf": true,
+                      "supportsAdaptiveThinking": true,
+                      "efforts": [
+                        "low",
+                        "medium",
+                        "high"
+                      ],
+                      "maxInputTokens": 1000000,
+                      "maxOutputTokens": 128000,
+                      "cacheWrite5MinutesPricePerMillion": {
+                        "amount": 2.5,
+                        "currency": "USD"
+                      },
+                      "cacheWrite1HourPricePerMillion": {
+                        "amount": 4,
+                        "currency": "USD"
+                      },
+                      "cacheReadPricePerMillion": {
+                        "amount": 0.1,
+                        "currency": "USD"
+                      },
+                      "longContext": null
+                    }
                   }
                 }
               }
@@ -27945,7 +28372,7 @@
             }
           },
           "400": {
-            "description": "Bad Request; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed",
+            "description": "Bad Request; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed; Validation.Failed",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -27957,12 +28384,12 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 400,
-                      "detail": "Completá este campo.",
+                      "detail": "Ingresá una tarifa positiva en USD con hasta seis decimales.",
                       "code": "Validation.Failed",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "isActive": [
-                          "Completá este campo."
+                        "technical.longContext.cacheReadPricePerMillion": [
+                          "Ingresá una tarifa positiva en USD con hasta seis decimales."
                         ]
                       }
                     }
@@ -27972,12 +28399,12 @@
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 400,
-                      "detail": "Complete this field.",
+                      "detail": "Enter a positive USD rate with up to six decimal places.",
                       "code": "Validation.Failed",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "isActive": [
-                          "Complete this field."
+                        "technical.longContext.cacheReadPricePerMillion": [
+                          "Enter a positive USD rate with up to six decimal places."
                         ]
                       }
                     }
@@ -28383,6 +28810,132 @@
             "field": "isActive",
             "es": "Completá este campo.",
             "en": "Complete this field."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical",
+            "es": "Completá este campo.",
+            "en": "Complete this field."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.supportsText",
+            "es": "Completá este campo.",
+            "en": "Complete this field."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.supportsTools",
+            "es": "Completá este campo.",
+            "en": "Complete this field."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.supportsImages",
+            "es": "Completá este campo.",
+            "en": "Complete this field."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.supportsPdf",
+            "es": "Completá este campo.",
+            "en": "Complete this field."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.supportsAdaptiveThinking",
+            "es": "Completá este campo.",
+            "en": "Complete this field."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.efforts",
+            "es": "Elegí esfuerzos únicos entre bajo, medio y alto.",
+            "en": "Choose unique efforts from low, medium and high."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.maxInputTokens",
+            "es": "Ingresá límites positivos: la salida no puede superar la entrada y el umbral debe ser menor que la entrada.",
+            "en": "Enter positive limits: output must not exceed input, and the threshold must be lower than input."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.maxOutputTokens",
+            "es": "Ingresá límites positivos: la salida no puede superar la entrada y el umbral debe ser menor que la entrada.",
+            "en": "Enter positive limits: output must not exceed input, and the threshold must be lower than input."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.longContext.inputTokensThreshold",
+            "es": "Ingresá límites positivos: la salida no puede superar la entrada y el umbral debe ser menor que la entrada.",
+            "en": "Enter positive limits: output must not exceed input, and the threshold must be lower than input."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.cacheWrite5MinutesPricePerMillion",
+            "es": "Ingresá una tarifa positiva en USD con hasta seis decimales.",
+            "en": "Enter a positive USD rate with up to six decimal places."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.cacheWrite1HourPricePerMillion",
+            "es": "Ingresá una tarifa positiva en USD con hasta seis decimales.",
+            "en": "Enter a positive USD rate with up to six decimal places."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.cacheReadPricePerMillion",
+            "es": "Ingresá una tarifa positiva en USD con hasta seis decimales.",
+            "en": "Enter a positive USD rate with up to six decimal places."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.longContext.inputPricePerMillion",
+            "es": "Ingresá una tarifa positiva en USD con hasta seis decimales.",
+            "en": "Enter a positive USD rate with up to six decimal places."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.longContext.outputPricePerMillion",
+            "es": "Ingresá una tarifa positiva en USD con hasta seis decimales.",
+            "en": "Enter a positive USD rate with up to six decimal places."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.longContext.cacheWrite5MinutesPricePerMillion",
+            "es": "Ingresá una tarifa positiva en USD con hasta seis decimales.",
+            "en": "Enter a positive USD rate with up to six decimal places."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.longContext.cacheWrite1HourPricePerMillion",
+            "es": "Ingresá una tarifa positiva en USD con hasta seis decimales.",
+            "en": "Enter a positive USD rate with up to six decimal places."
+          },
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": "technical.longContext.cacheReadPricePerMillion",
+            "es": "Ingresá una tarifa positiva en USD con hasta seis decimales.",
+            "en": "Enter a positive USD rate with up to six decimal places."
           }
         ],
         "x-access": "platform",
@@ -53887,6 +54440,74 @@
         ],
         "type": "string"
       },
+      "AssistantModelLongContextHttpRequest": {
+        "required": [
+          "inputTokensThreshold",
+          "inputPricePerMillion",
+          "outputPricePerMillion",
+          "cacheWrite5MinutesPricePerMillion",
+          "cacheWrite1HourPricePerMillion",
+          "cacheReadPricePerMillion"
+        ],
+        "type": "object",
+        "properties": {
+          "inputTokensThreshold": {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "inputPricePerMillion": {
+            "$ref": "#/components/schemas/AssistantMoney"
+          },
+          "outputPricePerMillion": {
+            "$ref": "#/components/schemas/AssistantMoney"
+          },
+          "cacheWrite5MinutesPricePerMillion": {
+            "$ref": "#/components/schemas/AssistantMoney"
+          },
+          "cacheWrite1HourPricePerMillion": {
+            "$ref": "#/components/schemas/AssistantMoney"
+          },
+          "cacheReadPricePerMillion": {
+            "$ref": "#/components/schemas/AssistantMoney"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AssistantModelLongContextResponse": {
+        "required": [
+          "inputTokensThreshold",
+          "inputPricePerMillion",
+          "outputPricePerMillion",
+          "cacheWrite5MinutesPricePerMillion",
+          "cacheWrite1HourPricePerMillion",
+          "cacheReadPricePerMillion"
+        ],
+        "type": "object",
+        "properties": {
+          "inputTokensThreshold": {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "inputPricePerMillion": {
+            "$ref": "#/components/schemas/AssistantMoney"
+          },
+          "outputPricePerMillion": {
+            "$ref": "#/components/schemas/AssistantMoney"
+          },
+          "cacheWrite5MinutesPricePerMillion": {
+            "$ref": "#/components/schemas/AssistantMoney"
+          },
+          "cacheWrite1HourPricePerMillion": {
+            "$ref": "#/components/schemas/AssistantMoney"
+          },
+          "cacheReadPricePerMillion": {
+            "$ref": "#/components/schemas/AssistantMoney"
+          }
+        },
+        "additionalProperties": false
+      },
       "AssistantModelOptionResponse": {
         "required": [
           "id",
@@ -53912,7 +54533,9 @@
           "inputPricePerMillion",
           "outputPricePerMillion",
           "isActive",
-          "version"
+          "version",
+          "technical",
+          "technicalRevision"
         ],
         "type": "object",
         "properties": {
@@ -53943,8 +54566,167 @@
             "minimum": 0,
             "type": "integer",
             "format": "uint32"
+          },
+          "technical": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AssistantModelTechnicalResponse"
+              }
+            ]
+          },
+          "technicalRevision": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
+      },
+      "AssistantModelTechnicalHttpRequest": {
+        "required": [
+          "supportsText",
+          "supportsTools",
+          "supportsImages",
+          "supportsPdf",
+          "supportsAdaptiveThinking",
+          "efforts",
+          "maxInputTokens",
+          "maxOutputTokens",
+          "cacheWrite5MinutesPricePerMillion",
+          "cacheWrite1HourPricePerMillion",
+          "cacheReadPricePerMillion"
+        ],
+        "type": "object",
+        "properties": {
+          "supportsText": {
+            "type": "boolean"
+          },
+          "supportsTools": {
+            "type": "boolean"
+          },
+          "supportsImages": {
+            "type": "boolean"
+          },
+          "supportsPdf": {
+            "type": "boolean"
+          },
+          "supportsAdaptiveThinking": {
+            "type": "boolean"
+          },
+          "efforts": {
+            "minItems": 1,
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssistantEffort"
+            }
+          },
+          "maxInputTokens": {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "maxOutputTokens": {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "cacheWrite5MinutesPricePerMillion": {
+            "$ref": "#/components/schemas/AssistantMoney"
+          },
+          "cacheWrite1HourPricePerMillion": {
+            "$ref": "#/components/schemas/AssistantMoney"
+          },
+          "cacheReadPricePerMillion": {
+            "$ref": "#/components/schemas/AssistantMoney"
+          },
+          "longContext": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AssistantModelLongContextHttpRequest"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "AssistantModelTechnicalResponse": {
+        "required": [
+          "supportsText",
+          "supportsTools",
+          "supportsImages",
+          "supportsPdf",
+          "supportsAdaptiveThinking",
+          "efforts",
+          "maxInputTokens",
+          "maxOutputTokens",
+          "cacheWrite5MinutesPricePerMillion",
+          "cacheWrite1HourPricePerMillion",
+          "cacheReadPricePerMillion",
+          "longContext"
+        ],
+        "type": "object",
+        "properties": {
+          "supportsText": {
+            "type": "boolean"
+          },
+          "supportsTools": {
+            "type": "boolean"
+          },
+          "supportsImages": {
+            "type": "boolean"
+          },
+          "supportsPdf": {
+            "type": "boolean"
+          },
+          "supportsAdaptiveThinking": {
+            "type": "boolean"
+          },
+          "efforts": {
+            "minItems": 1,
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssistantEffort"
+            }
+          },
+          "maxInputTokens": {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "maxOutputTokens": {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "cacheWrite5MinutesPricePerMillion": {
+            "$ref": "#/components/schemas/AssistantMoney"
+          },
+          "cacheWrite1HourPricePerMillion": {
+            "$ref": "#/components/schemas/AssistantMoney"
+          },
+          "cacheReadPricePerMillion": {
+            "$ref": "#/components/schemas/AssistantMoney"
+          },
+          "longContext": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AssistantModelLongContextResponse"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
       },
       "AssistantMoney": {
         "required": [
@@ -55636,6 +56418,9 @@
         "type": "object"
       },
       "CreateAssistantModelHttpRequest": {
+        "required": [
+          "technical"
+        ],
         "type": "object",
         "properties": {
           "name": {
@@ -55685,6 +56470,9 @@
               "null",
               "boolean"
             ]
+          },
+          "technical": {
+            "$ref": "#/components/schemas/AssistantModelTechnicalHttpRequest"
           }
         }
       },
@@ -60634,6 +61422,9 @@
         }
       },
       "UpdateAssistantModelHttpRequest": {
+        "required": [
+          "technical"
+        ],
         "type": "object",
         "properties": {
           "name": {
@@ -60692,6 +61483,9 @@
               "integer"
             ],
             "format": "uint32"
+          },
+          "technical": {
+            "$ref": "#/components/schemas/AssistantModelTechnicalHttpRequest"
           }
         }
       },

@@ -20,7 +20,7 @@ internal sealed class AssistantSettingsWriter(IAssistantSettingsRepository repos
         if (own && !options.HasAlertRecipient) return AssistantErrors.SettingsAlertRecipientRequired;
         if (!own && (request.DailyMessageLimit is not null || request.MonthlyBudget is not null)) return AssistantErrors.SettingsPlatformLimitsReadOnly;
         if (!own && request.KeyAction == AssistantKeyAction.Replace) return AssistantErrors.SettingsKeyRejected;
-        var eligible = selection.ValidateOrganization(request, options);
+        var eligible = AssistantSettingsSelectionPolicy.ValidateOrganization(request, options);
         if (eligible.IsFailure) return eligible.Error;
         if (own && request.KeyAction == AssistantKeyAction.Keep && row?.EncryptedApiKey is null) return AssistantErrors.SettingsNotConfigured;
         var platform = await reader.FindPlatformAsync(ct);

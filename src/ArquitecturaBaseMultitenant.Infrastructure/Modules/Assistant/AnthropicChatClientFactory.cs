@@ -7,6 +7,7 @@ using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Integ
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
@@ -16,7 +17,7 @@ using Microsoft.Extensions.Options;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant;
 
 internal sealed class AnthropicChatClientFactory(IAssistantConfigurationPolicy policy, IAssistantSettingsReader settings,
-    IAssistantKeyProtector protector, IOptions<AssistantOptions> options, ICurrentUser user, ApplicationDbContext context) : IChatClientFactory
+    IAssistantKeyProtector protector, IOptions<AssistantOptions> options, ICurrentUser user, ApplicationDbContext context, IAssistantModelReader models) : IChatClientFactory
 {
     public async Task<Result<IChatClient>> CreateAsync(CancellationToken cancellationToken)
     {
@@ -33,7 +34,7 @@ internal sealed class AnthropicChatClientFactory(IAssistantConfigurationPolicy p
                 ? configuration.Mode == AssistantMode.OwnKey ? protector.UnprotectOrganization(material.Ciphertext) : protector.UnprotectPlatform(material.Ciphertext)
                 : configuration.Mode == AssistantMode.PlatformKey && !material.HasOverride ? options.Value.Platform.ApiKey : null;
             if (string.IsNullOrWhiteSpace(key)) return AssistantErrors.SettingsNotConfigured;
-            return Result.Success(Build(key, configuration.Model.ProviderModelId, configuration.Effort, 2048));
+            return Result.Success(Build(key, configuration.Model.ProviderModelId, configuration.Effort, AssistantTechnicalLimits.MaxOutputTokens));
         }
         catch (CryptographicException) { return AssistantErrors.SettingsNotConfigured; }
     }
@@ -42,14 +43,19 @@ internal sealed class AnthropicChatClientFactory(IAssistantConfigurationPolicy p
         context.RequireNoTransaction();
         if (user.UserId is null || user.Access is not (Domain.Users.Access.Business or Domain.Users.Access.Platform))
             throw new InvalidOperationException("Key validation requires an authorized configuration identity.");
+        var platform = await settings.FindPlatformAsync(cancellationToken);
+        var candidates = (await models.ListAllAsync(cancellationToken)).Where(value => AssistantModelCompatibilityPolicy.Supports(value, AssistantEffort.Low)).ToArray();
+        var model = candidates.FirstOrDefault(value => value.Id == platform.DefaultModelId)
+            ?? candidates.OrderBy(value => value.InputPricePerMillion.Amount + value.OutputPricePerMillion.Amount).ThenBy(value => value.Id).FirstOrDefault();
+        if (model is null) return AssistantErrors.ModelNotAllowed;
         if (options.Value.UseFakeChatClient) return Result.Success();
-        return await ValidateDraftAsync(key, null, cancellationToken);
+        return await ValidateDraftAsync(key, model.ProviderModelId, null, cancellationToken);
     }
-    internal static async Task<Result> ValidateDraftAsync(string key, HttpClient? transport, CancellationToken cancellationToken)
+    internal static async Task<Result> ValidateDraftAsync(string key, string model, HttpClient? transport, CancellationToken cancellationToken)
     {
         try
         {
-            using var client = Build(key, "claude-haiku-5-5", AssistantEffort.Low, 64, transport);
+            using var client = Build(key, model, AssistantEffort.Low, AssistantTechnicalLimits.TitleMaxOutputTokens, transport);
             await client.GetResponseAsync([new ChatMessage(ChatRole.User, "Reply OK.")], cancellationToken: cancellationToken);
             return Result.Success();
         }

@@ -2,7 +2,6 @@ using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Tenancy;
-using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
@@ -49,12 +48,12 @@ public sealed class AssistantSettingsTests
     public void Provider_tariffs_preserve_subcent_values_but_reject_loss_of_six_digit_precision()
     {
         var currency = CurrencyCode.Create("USD").Value;
-        var valid = new CreateAssistantModelRequest("Prueba", AssistantProvider.Anthropic, "fixture-model", new(0.125m, currency), new(2m, currency), true);
+        var valid = new CreateAssistantModelRequest("Prueba", AssistantProvider.Anthropic, "fixture-model", new(0.125m, currency), new(2m, currency), true, Technical());
         var create = new CreateAssistantModelRequestValidator();
         Assert.True(create.Validate(valid).IsValid);
         Assert.False(create.Validate(valid with { InputPricePerMillion = new(0.1234567m, currency) }).IsValid);
         var update = new UpdateAssistantModelRequestValidator();
-        Assert.False(update.Validate(new UpdateAssistantModelRequest("Prueba", AssistantProvider.Anthropic, "fixture-model", new(1m, currency), new(0.1234567m, currency), true, 1)).IsValid);
+        Assert.False(update.Validate(new UpdateAssistantModelRequest("Prueba", AssistantProvider.Anthropic, "fixture-model", new(1m, currency), new(0.1234567m, currency), true, 1, Technical())).IsValid);
     }
     [Fact]
     public async Task Missing_key_returns_not_configured_and_later_live_settings_are_revalidated()
@@ -95,11 +94,15 @@ public sealed class AssistantSettingsTests
         Assert.True((await fixture.Policy.ResolveAsync(TestContext.Current.CancellationToken)).IsSuccess);
         fixture.Model = fixture.Model with { IsActive = false };
         Assert.Equal(AssistantErrors.ModelNotAllowed, (await fixture.Policy.ResolveAsync(TestContext.Current.CancellationToken)).Error);
-        fixture.Model = fixture.Model with { IsActive = true, ProviderModelId = "unknown-reference" };
+        fixture.Model = fixture.Model with { IsActive = true, ProviderModelId = "unknown-reference", Technical = null };
         Assert.Equal(AssistantErrors.ModelNotAllowed, (await fixture.Policy.ResolveAsync(TestContext.Current.CancellationToken)).Error);
     }
 
-    private sealed class Fixture : IAssistantSettingsReader, IAssistantModelReader, IAssistantProviderCatalog, ITenantAdminReader, ITenantContext, ICurrentUser
+    internal static AssistantModelTechnicalRequest Technical() => new(true, true, true, true, true,
+        [AssistantEffort.Low, AssistantEffort.Medium, AssistantEffort.High], 100000, 4096,
+        new(0.125m, CurrencyCode.Create("USD").Value), new(0.2m, CurrencyCode.Create("USD").Value), new(0.01m, CurrencyCode.Create("USD").Value), null);
+
+    private sealed class Fixture : IAssistantSettingsReader, IAssistantModelReader, ITenantAdminReader, ITenantContext, ICurrentUser
     {
         public Money Price { get; } = new(100m, CurrencyCode.Create("USD").Value);
         public AssistantModelPriceResponse Model { get; set; }
@@ -108,23 +111,17 @@ public sealed class AssistantSettingsTests
         public bool AllowOwn { get; set; } = true;
         public bool Recipient { get; set; } = true;
         public AssistantConfigurationPolicy Policy { get; }
-        private readonly AssistantProviderReference reference;
         public Fixture()
         {
-            Model = new(Guid.CreateVersion7(), "Fixture", AssistantProvider.Anthropic, "fixture-model", Price, Price, true, 1);
+            Model = new(Guid.CreateVersion7(), "Fixture", AssistantProvider.Anthropic, "fixture-model", Price, Price, true, 1, AssistantModelReferenceBuilder.ToResponse(AssistantModelReferenceBuilder.ToDomain(Technical())));
             Platform = new(Model.Id, [Model.Id], AssistantEffort.Low, 50, Price, false, 30, true, "0000", 1);
-            reference = new("fixture-v1", Model.ProviderModelId, "Prueba", "Test", Price, Price, Price, Price, Price,
-                null, null, null, null, null, null, true, true, true, true, [AssistantEffort.Low]);
-            Policy = new(this, this, this, this, this, this);
+            Policy = new(this, this, this, this, this);
         }
         public Guid? UserId { get; } = Guid.CreateVersion7();
         public Access? Access => Domain.Users.Access.Business;
         public Guid? TenantId { get; } = Guid.CreateVersion7();
         public TenantKind? TenantKind => Domain.Tenancy.TenantKind.Business;
         public Guid RequiredTenantId => TenantId!.Value;
-        public IReadOnlyList<AssistantProviderReference> All => [reference];
-        public IReadOnlyList<AssistantProviderReference> InitialModels => [reference];
-        public AssistantProviderReference? Find(string providerModelId) => reference.ProviderModelId == providerModelId ? reference : null;
         public Task<bool> IsPersonalEnabledAsync(CancellationToken ct) => Task.FromResult(Platform.PersonalEnabled);
         public Task<PlatformAssistantSettingsResponse> FindPlatformAsync(CancellationToken ct) => Task.FromResult(Platform);
         public Task<AssistantOrganizationSettingsRow?> FindOrganizationAsync(CancellationToken ct) => Task.FromResult(Organization);

@@ -16,6 +16,8 @@ internal sealed class UpdateAssistantModelRequestValidator : AbstractValidator<U
         RuleFor(request => request.ProviderModelId).MaximumLength(TextLimits.Description).WithMessage(_ => AssistantTexts.Get("Assistant.Validation.LimitsInvalid"));
         RuleFor(request => request.InputPricePerMillion).Must(AssistantContractPolicy.IsValidTariff).WithMessage(_ => AssistantTexts.Get("Assistant.Validation.PriceInvalid"));
         RuleFor(request => request.OutputPricePerMillion).Must(AssistantContractPolicy.IsValidTariff).WithMessage(_ => AssistantTexts.Get("Assistant.Validation.PriceInvalid"));
+        RuleFor(request => request.Technical).NotNull().WithMessage(_ => AssistantTexts.Get("Assistant.Validation.Required"));
+        RuleFor(request => request.Technical).SetValidator(new AssistantModelTechnicalRequestValidator()!);
         RuleFor(request => request.IsActive).NotNull().WithMessage(_ => AssistantTexts.Get("Assistant.Validation.Required"));
         RuleFor(request => request.Version).NotNull().WithMessage(_ => AssistantTexts.Get("Assistant.Validation.VersionRequired"));
     }

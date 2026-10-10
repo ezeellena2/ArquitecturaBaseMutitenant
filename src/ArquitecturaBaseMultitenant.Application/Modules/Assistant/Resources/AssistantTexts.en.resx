@@ -46,4 +46,7 @@
   <data name="Assistant.Validation.CursorInvalid" xml:space="preserve"><value>The cursor is invalid.</value></data>
   <data name="Assistant.Validation.PageInvalid" xml:space="preserve"><value>Choose a valid page and page size.</value></data>
 <data name="Assistant.Fake.Response" xml:space="preserve"><value>Isolated test provider response.</value></data>
+  <data name="Assistant.Validation.EffortsInvalid" xml:space="preserve"><value>Choose unique efforts from low, medium and high.</value></data>
+  <data name="Assistant.Validation.TechnicalLimitsInvalid" xml:space="preserve"><value>Enter positive limits: output must not exceed input, and the threshold must be lower than input.</value></data>
+  <data name="Assistant.Validation.TechnicalPriceInvalid" xml:space="preserve"><value>Enter a positive USD rate with up to six decimal places.</value></data>
 </root>

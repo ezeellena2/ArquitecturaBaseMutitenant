@@ -139,18 +139,11 @@ public sealed class AssistantSettingsTests(ApiFactory factory)
     [Fact]
     public async Task Invalid_selection_or_effort_never_validates_a_key_and_revocation_during_validation_is_rechecked()
     {
-        var file = Path.Combine(Path.GetTempPath(), "assistant-preflight-" + Guid.CreateVersion7().ToString("N") + ".json");
-        try
-        {
-            File.WriteAllText(file, """
-                [{"currency":"USD","revision":"isolated-low-only","providerModelId":"claude-sonnet-5-5","nameEs":"Prueba","nameEn":"Test","inputPerMillion":2,"outputPerMillion":10,"cacheWrite5MinutesPerMillion":2.5,"cacheWrite1HourPerMillion":4,"cacheReadPerMillion":0.2,"text":true,"images":true,"pdf":true,"tools":true,"efforts":["Low"]}]
-                """);
             await using var isolated = new ApiFactory();
             await isolated.InitializeAsync();
             var probe = new ValidationProbe();
             using var host = isolated.WithWebHostBuilder(builder =>
             {
-                builder.UseSetting("Assistant:ProviderReferenceFile", file);
                 builder.ConfigureTestServices(services =>
                 {
                     services.RemoveAll<IChatClientFactory>();
@@ -171,6 +164,16 @@ public sealed class AssistantSettingsTests(ApiFactory factory)
             using var initial = await ReadAsync(client, "/api/platform/assistant/settings");
             var version = initial.RootElement.GetProperty("version").GetUInt32();
             var model = initial.RootElement.GetProperty("defaultModelId").GetGuid();
+            using (var catalog = await ReadAsync(client, "/api/platform/assistant/models?page=1&pageSize=20"))
+            {
+                var row = catalog.RootElement.GetProperty("items").EnumerateArray().Single(value => value.GetProperty("id").GetGuid() == model);
+                var body = System.Text.Json.Nodes.JsonNode.Parse(row.GetRawText())!.AsObject();
+                body.Remove("id");
+                body.Remove("technicalRevision");
+                body["technical"]!["efforts"] = new System.Text.Json.Nodes.JsonArray("low");
+                using var changed = await client.PutAsJsonAsync($"/api/platform/assistant/models/{model}", body, AssistantTestData.Ct);
+                await SavedVersion.ReadAsync(changed, AssistantTestData.Ct);
+            }
             foreach (var mutation in new[] { "effort", "default", "allowed" })
             {
                 var body = System.Text.Json.Nodes.JsonNode.Parse(JsonSerializer.Serialize(PlatformBody(initial, version, "replace", "isolated-preflight-6666")))!;
@@ -200,7 +203,7 @@ public sealed class AssistantSettingsTests(ApiFactory factory)
                 {
                     name = row.GetProperty("name").GetString(), provider = "Anthropic", providerModelId = "claude-sonnet-5-5",
                     inputPricePerMillion = new { amount = 2m, currency = "USD" }, outputPricePerMillion = new { amount = 10m, currency = "USD" },
-                    isActive = false, version = row.GetProperty("version").GetUInt32(),
+                    isActive = false, version = row.GetProperty("version").GetUInt32(), technical = row.GetProperty("technical"),
                 }, ct);
                 await SavedVersion.ReadAsync(revoked, ct);
             };
@@ -211,8 +214,7 @@ public sealed class AssistantSettingsTests(ApiFactory factory)
             using var final = await ReadAsync(client, "/api/platform/assistant/settings");
             Assert.Equal(version, final.RootElement.GetProperty("version").GetUInt32());
             Assert.False(final.RootElement.GetProperty("hasKey").GetBoolean());
-        }
-        finally { File.Delete(file); }
+
     }
 
     private static async Task AssertModelNotAllowedAsync(HttpResponseMessage response)

@@ -6,7 +6,6 @@ public sealed class AssistantOptions
     public AssistantPlatformOptions Platform { get; set; } = new();
     public bool UseFakeChatClient { get; set; }
     public bool IsolatedE2E { get; set; }
-    public string? ProviderReferenceFile { get; set; }
     public override string ToString() => "AssistantOptions { [REDACTED] }";
 }
 

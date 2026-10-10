@@ -41,22 +41,18 @@ public sealed class AssistantStartupTests
     }
 
     [Fact]
-    public void Technical_references_can_be_extended_without_recompiling_or_changing_the_http_contract()
+    public void Obsolete_external_file_setting_does_not_extend_the_initial_presets_or_touch_the_filesystem()
     {
-        var file = Path.Combine(Path.GetTempPath(), "assistant-reference-" + Guid.CreateVersion7().ToString("N") + ".json");
-        try
+        using var provider = Provider("Testing", false, false, "not-an-absolute-file");
+        var references = provider.GetRequiredService<IAssistantProviderCatalog>();
+        Assert.Equal(4, references.InitialModels.Count);
+        Assert.Null(references.Find("isolated-compatible-model"));
+        Assert.All(references.InitialModels, value =>
         {
-            File.WriteAllText(file, """
-                [{"currency":"USD","revision":"isolated-fixture-v2","providerModelId":"isolated-compatible-model","nameEs":"Modelo de prueba","nameEn":"Test model","inputPerMillion":1,"outputPerMillion":2,"cacheWrite5MinutesPerMillion":1.25,"cacheWrite1HourPerMillion":2,"cacheReadPerMillion":0.1,"text":true,"images":true,"pdf":true,"tools":true,"efforts":["Low"]}]
-                """);
-            using var provider = Provider("Testing", false, false, file);
-            var references = provider.GetRequiredService<IAssistantProviderCatalog>();
-            Assert.Equal(5, references.All.Count);
-            Assert.Equal(4, references.InitialModels.Count);
-            Assert.Equal("isolated-fixture-v2", references.Find("isolated-compatible-model")!.Revision);
-            Assert.Equal("USD", references.Find("isolated-compatible-model")!.InputPerMillion.Currency.Value);
-        }
-        finally { File.Delete(file); }
+            Assert.True(value.AdaptiveThinking);
+            Assert.Equal(1000000, value.MaxInputTokens);
+            Assert.Equal(128000, value.MaxOutputTokens);
+        });
     }
 
     [Theory]
@@ -73,20 +69,14 @@ public sealed class AssistantStartupTests
     [InlineData("efforts", "[\"999\"]")]
     [InlineData("longPromptThreshold", "100000")]
     [InlineData("longInputPerMillion", "2")]
-    public void Invalid_host_metadata_is_rejected(string property, string value)
+    public void Invalid_bootstrap_metadata_is_rejected(string property, string value)
     {
-        var file = Path.Combine(Path.GetTempPath(), "assistant-reference-invalid-" + Guid.CreateVersion7().ToString("N") + ".json");
-        try
-        {
             var row = JsonNode.Parse("""
-                {"currency":"USD","revision":"fixture-v2","providerModelId":"isolated-model","nameEs":"Prueba","nameEn":"Test","inputPerMillion":1,"outputPerMillion":2,"cacheWrite5MinutesPerMillion":1.25,"cacheWrite1HourPerMillion":2,"cacheReadPerMillion":0.1,"text":true,"images":true,"pdf":true,"tools":true,"efforts":["Low"]}
+                {"currency":"USD","revision":"fixture-v2","providerModelId":"isolated-model","nameEs":"Prueba","nameEn":"Test","inputPerMillion":1,"outputPerMillion":2,"cacheWrite5MinutesPerMillion":1.25,"cacheWrite1HourPerMillion":2,"cacheReadPerMillion":0.1,"text":true,"images":true,"pdf":true,"tools":true,"adaptiveThinking":true,"maxInputTokens":1000000,"maxOutputTokens":128000,"efforts":["Low"]}
                 """)!;
             row[property] = JsonNode.Parse(value);
-            File.WriteAllText(file, new JsonArray(row).ToJsonString());
-            using var provider = Provider("Testing", false, false, file);
-            Assert.Throws<InvalidOperationException>(() => provider.GetRequiredService<IAssistantProviderCatalog>());
-        }
-        finally { File.Delete(file); }
+            using var document = System.Text.Json.JsonDocument.Parse(row.ToJsonString());
+            Assert.Throws<InvalidOperationException>(() => AssistantProviderCatalog.Read(document.RootElement, null));
     }
 
     private static ServiceProvider Provider(string environment, bool fake, bool isolated, string? references = null)
