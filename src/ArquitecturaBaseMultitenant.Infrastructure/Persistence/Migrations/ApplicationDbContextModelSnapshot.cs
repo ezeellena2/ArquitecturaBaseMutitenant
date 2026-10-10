@@ -1934,14 +1934,24 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.ToTable("OutboxMessages", "platform");
                 });
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Platform.AccountRecoveryNotice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ResolvedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AccountRecoveryNotices", "platform");
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Platform.AccountRecoveryRequest", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("AccountNotifiedAtUtc")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
@@ -2000,8 +2010,7 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.HasIndex("CreatedAtUtc", "Id")
-                        .HasFilter("\"AccountNotifiedAtUtc\" IS NULL");
+                    b.HasIndex("CreatedAtUtc", "Id");
 
                     b.HasIndex("Status", "CreatedAtUtc", "Id");
 
@@ -5661,6 +5670,15 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasOne("ArquitecturaBaseMultitenant.Domain.Legal.LegalDocument", null)
                         .WithMany()
                         .HasForeignKey("LegalDocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Platform.AccountRecoveryNotice", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.Platform.AccountRecoveryRequest", null)
+                        .WithOne()
+                        .HasForeignKey("ArquitecturaBaseMultitenant.Domain.Platform.AccountRecoveryNotice", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

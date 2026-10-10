@@ -79,6 +79,7 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
     public DbSet<TenantFeature> TenantFeatures => Set<TenantFeature>();
     public DbSet<PlatformPermissionAssignment> PlatformPermissionAssignments => Set<PlatformPermissionAssignment>();
     public DbSet<AccountRecoveryRequest> AccountRecoveryRequests => Set<AccountRecoveryRequest>();
+    public DbSet<AccountRecoveryNotice> AccountRecoveryNotices => Set<AccountRecoveryNotice>();
     public DbSet<SecurityEvent> SecurityEvents => Set<SecurityEvent>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<LegalDocument> LegalDocuments => Set<LegalDocument>();

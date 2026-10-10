@@ -29,7 +29,7 @@ public sealed class PlatformRecoveryTests(ApiFactory factory)
     [Theory]
     [InlineData(true, AccountRecoveryStatus.Approved)]
     [InlineData(false, AccountRecoveryStatus.Rejected)]
-    public async Task A_deferred_account_notice_invalidates_the_read_version_without_applying_a_stale_decision(
+    public async Task A_deferred_account_notice_preserves_the_read_version_for_the_human_decision(
         bool approve, AccountRecoveryStatus expectedStatus)
     {
         using var person = Client();
@@ -48,13 +48,13 @@ public sealed class PlatformRecoveryTests(ApiFactory factory)
         var beforeNotice = await db.AccountRecoveryRequests.AsNoTracking().SingleAsync(item => item.Id == id, Ct);
         Assert.Equal(AccountRecoveryStatus.Pending, beforeNotice.Status);
         Assert.Equal(readVersion, beforeNotice.Version);
-        Assert.Null(beforeNotice.AccountNotifiedAtUtc);
+        Assert.False(await db.AccountRecoveryNotices.AnyAsync(item => item.Id == id, Ct));
 
         // No cambia otro operador: se ejecuta el mismo worker de avisos de la aplicación.
         await ActivatorUtilities.CreateInstance<AccountRecoveryNoticeWorker>(factory.Services).RunOnceAsync(Ct);
         var afterNotice = await db.AccountRecoveryRequests.AsNoTracking().SingleAsync(item => item.Id == id, Ct);
-        Assert.NotNull(afterNotice.AccountNotifiedAtUtc);
-        Assert.NotEqual(readVersion, afterNotice.Version);
+        Assert.True(await db.AccountRecoveryNotices.AnyAsync(item => item.Id == id, Ct));
+        Assert.Equal(readVersion, afterNotice.Version);
         Assert.Equal(AccountRecoveryStatus.Pending, afterNotice.Status);
         var methodsBeforeDecision = await db.LoginMethods.AsNoTracking().Where(method => method.UserId == account.UserId)
             .OrderBy(method => method.Id)
@@ -66,34 +66,14 @@ public sealed class PlatformRecoveryTests(ApiFactory factory)
         var action = approve ? "approve" : "reject";
         const string reason = "Prueba dirigida de versión.";
 
-        using var stale = await PlatformJourney.PostAsync(platform, $"/api/platform/recoveries/{id:D}/{action}",
-            new { version = readVersion, reason }, Ct);
-        Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
-        Assert.Equal("General.ConcurrencyConflict", await CodeAsync(stale));
-        var afterConflict = await db.AccountRecoveryRequests.AsNoTracking().SingleAsync(item => item.Id == id, Ct);
-        Assert.Equal(afterNotice.Version, afterConflict.Version);
-        Assert.Equal(afterNotice.AccountNotifiedAtUtc, afterConflict.AccountNotifiedAtUtc);
-        Assert.Equal(AccountRecoveryStatus.Pending, afterConflict.Status);
-        Assert.Null(afterConflict.DecidedAtUtc);
-        Assert.Null(afterConflict.DecidedByOperatorId);
-        Assert.Null(afterConflict.DecisionReason);
-        Assert.Equal(methodsBeforeDecision, await db.LoginMethods.AsNoTracking()
-            .Where(method => method.UserId == account.UserId).OrderBy(method => method.Id)
-            .Select(method => new { method.Id, method.Type, method.Value, method.IsPrimary, method.VerifiedAtUtc })
-            .ToArrayAsync(Ct));
-        Assert.Equal(eventsBeforeDecision, await db.SecurityEvents.AsNoTracking().OrderBy(item => item.Id)
-            .Select(item => item.Id).ToArrayAsync(Ct));
-        Assert.Equal(outboxBeforeDecision.Order(), (await OutboxIdsAsync()).Order());
-
-        var reloaded = await RowAsync(platform, newEmail);
-        Assert.Equal(afterNotice.Version, reloaded.GetProperty("version").GetUInt32());
         using var resolved = await PlatformJourney.PostAsync(platform, $"/api/platform/recoveries/{id:D}/{action}",
-            new { version = reloaded.GetProperty("version").GetUInt32(), reason }, Ct);
+            new { version = readVersion, reason }, Ct);
         var savedVersion = await SavedVersion.ReadAsync(resolved, Ct);
         Assert.False(resolved.Headers.Contains("Set-Cookie"));
         var decided = await db.AccountRecoveryRequests.AsNoTracking().SingleAsync(item => item.Id == id, Ct);
         Assert.Equal(expectedStatus, decided.Status);
         Assert.Equal(savedVersion, decided.Version);
+        Assert.Equal(savedVersion, (await RowAsync(platform, newEmail)).GetProperty("version").GetUInt32());
         Assert.NotEqual(afterNotice.Version, savedVersion);
         Assert.NotNull(decided.DecidedAtUtc);
         Assert.Equal(reason, decided.DecisionReason);
@@ -105,6 +85,65 @@ public sealed class PlatformRecoveryTests(ApiFactory factory)
         Assert.Equal(approve ? "Recuperaste tu cuenta" : "No pudimos recuperar tu cuenta", notice.Subject);
         Assert.Equal(approve, await db.LoginMethods.AsNoTracking()
             .AnyAsync(method => method.UserId == account.UserId && method.Value == newEmail && method.IsPrimary, Ct));
+        Assert.Equal(methodsBeforeDecision.Length + (approve ? 1 : 0),
+            await db.LoginMethods.CountAsync(method => method.UserId == account.UserId, Ct));
+    }
+
+    [Theory]
+    [InlineData("approve", "approve")]
+    [InlineData("approve", "reject")]
+    [InlineData("reject", "reject")]
+    public async Task Two_human_decisions_with_the_same_version_have_one_effect_and_the_terminal_notice_preserves_it(
+        string firstAction, string secondAction)
+    {
+        using var person = Client();
+        var account = await AccountJourney.RegisterAsync(factory, person, Ct);
+        using var firstOperator = await OperatorAsync([PlatformPermissions.Recoveries.Manage]);
+        using var secondOperator = await OperatorAsync([PlatformPermissions.Recoveries.Manage]);
+        using var anonymous = Client();
+        var newEmail = $"decision-simultanea-{Guid.NewGuid():N}@example.test";
+        await RecoveryJourney.SubmitAsync(factory, anonymous, newEmail, account.Email.Value, Ct);
+        var row = await RowAsync(firstOperator, newEmail);
+        var id = row.GetProperty("id").GetGuid();
+        var version = row.GetProperty("version").GetUInt32();
+
+        var before = await OutboxIdsAsync();
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var methodsBefore = await db.LoginMethods.CountAsync(method => method.UserId == account.UserId, Ct);
+
+        var responses = await Task.WhenAll(
+            PlatformJourney.PostAsync(firstOperator, $"/api/platform/recoveries/{id:D}/{firstAction}",
+                new { version, reason = "Primera decisión" }, Ct),
+            PlatformJourney.PostAsync(secondOperator, $"/api/platform/recoveries/{id:D}/{secondAction}",
+                new { version, reason = "Segunda decisión" }, Ct));
+        using var first = responses[0];
+        using var second = responses[1];
+        var winner = Assert.Single(responses, response => response.StatusCode == HttpStatusCode.OK);
+        var loser = Assert.Single(responses, response => response.StatusCode == HttpStatusCode.Conflict);
+        Assert.Equal("General.ConcurrencyConflict", await CodeAsync(loser));
+        var savedVersion = await SavedVersion.ReadAsync(winner, Ct);
+        var decided = await db.AccountRecoveryRequests.AsNoTracking().SingleAsync(item => item.Id == id, Ct);
+        Assert.Equal(savedVersion, decided.Version);
+        var approved = decided.Status == AccountRecoveryStatus.Approved;
+        Assert.Equal(approved ? AccountRecoveryStatus.Approved : AccountRecoveryStatus.Rejected, decided.Status);
+        Assert.Single(await db.SecurityEvents.AsNoTracking().Where(item => item.TargetAccountId == account.UserId
+            && (item.Type == SecurityEventType.AccountRecoveryApproved || item.Type == SecurityEventType.AccountRecoveryRejected))
+            .ToArrayAsync(Ct));
+        Assert.Equal(methodsBefore + (approved ? 1 : 0),
+            await db.LoginMethods.CountAsync(method => method.UserId == account.UserId, Ct));
+        var decisionNotice = Assert.Single(await EmailsAsync(scope.ServiceProvider, newEmail, before));
+        Assert.Equal(approved ? "Recuperaste tu cuenta" : "No pudimos recuperar tu cuenta", decisionNotice.Subject);
+
+        Assert.False(await db.AccountRecoveryNotices.AnyAsync(notice => notice.Id == id, Ct));
+        await ActivatorUtilities.CreateInstance<AccountRecoveryNoticeWorker>(factory.Services).RunOnceAsync(Ct);
+        var afterNotice = await RowAsync(firstOperator, newEmail);
+        Assert.Equal(savedVersion, afterNotice.GetProperty("version").GetUInt32());
+        Assert.True(await db.AccountRecoveryNotices.AnyAsync(notice => notice.Id == id, Ct));
+        using var repeated = await PlatformJourney.PostAsync(firstOperator, $"/api/platform/recoveries/{id:D}/reject",
+            new { version = savedVersion, reason = "Ya decidida" }, Ct);
+        Assert.Equal(HttpStatusCode.Conflict, repeated.StatusCode);
+        Assert.Equal(AccountRecoveryErrors.AlreadyResolvedCode, await CodeAsync(repeated));
     }
 
     [Fact]
@@ -223,6 +262,17 @@ public sealed class PlatformRecoveryTests(ApiFactory factory)
         Assert.Equal(JsonValueKind.Null, row.GetProperty("accountId").ValueKind);
         var id = row.GetProperty("id").GetGuid();
         var version = row.GetProperty("version").GetUInt32();
+
+        var beforeAccountNotice = await OutboxIdsAsync();
+        await ActivatorUtilities.CreateInstance<AccountRecoveryNoticeWorker>(factory.Services).RunOnceAsync(Ct);
+        Assert.Equal(version, (await RowAsync(platform, newEmail)).GetProperty("version").GetUInt32());
+        await using (var noticeScope = factory.Services.CreateAsyncScope())
+        {
+            var noticeServices = noticeScope.ServiceProvider;
+            Assert.True(await noticeServices.GetRequiredService<ApplicationDbContext>().AccountRecoveryNotices
+                .AnyAsync(notice => notice.Id == id, Ct));
+            Assert.Empty(await EmailsAsync(noticeServices, newEmail, beforeAccountNotice));
+        }
 
         using var approved = await PlatformJourney.PostAsync(platform, $"/api/platform/recoveries/{id:D}/approve",
             new { version, reason = "Parece suya" }, Ct);

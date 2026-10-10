@@ -25,7 +25,6 @@ internal sealed class AccountRecoveryRequestConfiguration : IEntityTypeConfigura
         builder.HasIndex(request => request.LoginCodeId).IsUnique();
         builder.HasIndex(request => new { request.Status, request.CreatedAtUtc, request.Id });
         builder.HasIndex(request => request.UserId);
-        builder.HasIndex(request => new { request.CreatedAtUtc, request.Id })
-            .HasFilter("\"AccountNotifiedAtUtc\" IS NULL");
+        builder.HasIndex(request => new { request.CreatedAtUtc, request.Id });
     }
 }

@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
@@ -15,6 +16,7 @@ using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.TestHost;
 using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
@@ -264,7 +266,9 @@ public sealed class AccountRecoveryTests(ApiFactory factory)
         Assert.Equal((Requests: 1, Messages: 1), withAccount);
         Assert.Equal((Requests: 0, Messages: 0), withoutAccount);
         var before = await OutboxIdsAsync();
-        await ActivatorUtilities.CreateInstance<AccountRecoveryNoticeWorker>(factory.Services).RunOnceAsync(Ct);
+        await Task.WhenAll(
+            ActivatorUtilities.CreateInstance<AccountRecoveryNoticeWorker>(factory.Services).RunOnceAsync(Ct),
+            ActivatorUtilities.CreateInstance<AccountRecoveryNoticeWorker>(factory.Services).RunOnceAsync(Ct));
 
         await using var scope = factory.Services.CreateAsyncScope();
         var services = scope.ServiceProvider;
@@ -273,13 +277,58 @@ public sealed class AccountRecoveryTests(ApiFactory factory)
         Assert.DoesNotContain(forAccount, warning.TextBody, StringComparison.OrdinalIgnoreCase);
         Assert.Empty(await EmailsToAsync(services, forAccount, before));
         Assert.Empty(await EmailsToAsync(services, forNobody, before));
-        Assert.False(await services.GetRequiredService<ApplicationDbContext>().AccountRecoveryRequests.AnyAsync(
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        Assert.False(await db.AccountRecoveryRequests.AnyAsync(
             request => (request.NewMethodValue == forAccount || request.NewMethodValue == forNobody)
-                && request.AccountNotifiedAtUtc == null, Ct));
+                && !db.AccountRecoveryNotices.Any(notice => notice.Id == request.Id), Ct));
         // Una segunda pasada no repite el aviso.
         var afterFirstPass = await OutboxIdsAsync();
         await ActivatorUtilities.CreateInstance<AccountRecoveryNoticeWorker>(factory.Services).RunOnceAsync(Ct);
         Assert.Empty(await EmailsToAsync(services, account.Email.Value, afterFirstPass));
+    }
+
+    [Fact]
+    public async Task A_failed_notice_commit_rolls_back_both_the_mark_and_outbox_and_allows_one_retry()
+    {
+        using var person = Client();
+        var account = await AccountJourney.RegisterAsync(factory, person, Ct);
+        using var anonymous = Client();
+        var newEmail = $"aviso-rollback-{Guid.NewGuid():N}@example.test";
+        await RecoveryJourney.SubmitAsync(factory, anonymous, newEmail, account.Email.Value, Ct);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var request = await db.AccountRecoveryRequests.AsNoTracking().SingleAsync(item => item.NewMethodValue == newEmail, Ct);
+        var before = await OutboxIdsAsync();
+        var probe = new CommitFailureProbe
+        {
+            BeforeFailing = async (inside, ct) =>
+            {
+                Assert.True(await inside.AccountRecoveryNotices.AnyAsync(notice => notice.Id == request.Id, ct));
+                Assert.True(await inside.OutboxMessages.AnyAsync(message => !before.Contains(message.Id)
+                    && message.UserId == account.UserId, ct));
+                Assert.Equal(request.Version, await inside.AccountRecoveryRequests.Where(item => item.Id == request.Id)
+                    .Select(item => item.Version).SingleAsync(ct));
+            },
+        };
+        await using var failingFactory = factory.WithWebHostBuilder(builder =>
+            builder.ConfigureTestServices(services => FailingCommitUnitOfWork.Replace(services, probe)));
+        await using (var failingScope = failingFactory.Services.CreateAsyncScope())
+        {
+            await Assert.ThrowsAsync<ExpectedCommitFailure>(() => failingScope.ServiceProvider
+                .GetRequiredService<IAccountRecoveryNoticeService>().NotifyAccountsAsync(Ct));
+        }
+        Assert.True(probe.RolledBackBeforeLeaving);
+        Assert.False(await db.AccountRecoveryNotices.AnyAsync(notice => notice.Id == request.Id, Ct));
+        Assert.Equal(before.Order(), (await OutboxIdsAsync()).Order());
+        Assert.Equal(request.Version, await db.AccountRecoveryRequests.Where(item => item.Id == request.Id)
+            .Select(item => item.Version).SingleAsync(Ct));
+
+        await ActivatorUtilities.CreateInstance<AccountRecoveryNoticeWorker>(factory.Services).RunOnceAsync(Ct);
+        Assert.True(await db.AccountRecoveryNotices.AnyAsync(notice => notice.Id == request.Id, Ct));
+        Assert.Single(await EmailsToAsync(scope.ServiceProvider, account.Email.Value, before));
+        var afterRetry = await OutboxIdsAsync();
+        await ActivatorUtilities.CreateInstance<AccountRecoveryNoticeWorker>(factory.Services).RunOnceAsync(Ct);
+        Assert.Equal(afterRetry.Order(), (await OutboxIdsAsync()).Order());
     }
 
     /// <summary>Pide, verifica y registra un pedido; cuenta los pedidos y los mensajes que escribió el registro.</summary>

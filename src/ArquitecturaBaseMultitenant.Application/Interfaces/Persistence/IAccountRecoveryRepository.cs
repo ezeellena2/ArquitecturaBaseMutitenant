@@ -11,6 +11,9 @@ public interface IAccountRecoveryRepository
 
     void Add(AccountRecoveryRequest request);
 
+    /// <summary>Agrega la marca técnica del aviso bajo el lock del pedido y en la UoW que encoló el mensaje.</summary>
+    void AddAccountNotice(AccountRecoveryNotice notice);
+
     /// <summary>Proyección sin seguimiento para tomar identidad/cuenta antes del lock de la solicitud.</summary>
     Task<AccountRecoveryIdentityHint?> GetIdentityHintAsync(Guid id, CancellationToken cancellationToken);
 

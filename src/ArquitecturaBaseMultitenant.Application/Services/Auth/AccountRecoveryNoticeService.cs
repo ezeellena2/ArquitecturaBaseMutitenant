@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Platform;
 using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
@@ -30,7 +31,7 @@ internal sealed class AccountRecoveryNoticeService(
                 {
                     if (recovery.UserId is { } userId)
                         await messenger.NotifyAccountAsync(userId, recovery.CreatedAtUtc, ct);
-                    recovery.MarkAccountNotified(nowUtc);
+                    recoveries.AddAccountNotice(AccountRecoveryNotice.Complete(recovery.Id, nowUtc));
                 }
 
                 return pending.Count;
