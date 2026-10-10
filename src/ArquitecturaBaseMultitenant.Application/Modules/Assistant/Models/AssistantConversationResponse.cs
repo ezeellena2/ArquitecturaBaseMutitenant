@@ -1,0 +1,5 @@
+using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+
+namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
+
+public sealed record AssistantConversationResponse(AssistantConversationSummaryResponse Conversation, CursorResult<AssistantMessageResponse> Messages);

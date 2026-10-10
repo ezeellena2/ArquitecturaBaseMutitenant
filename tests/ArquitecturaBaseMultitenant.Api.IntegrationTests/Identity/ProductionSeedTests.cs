@@ -194,6 +194,20 @@ public sealed class ProductionSeedTests
             .ToArrayAsync(TestContext.Current.CancellationToken))
             .Count(item => item.Type.ToString() == "PlatformOperatorGranted"));
 
+        // Reparar un indicador legado sin asignación no otorga permisos nuevos de módulos opcionales.
+        await context.Database.ExecuteSqlInterpolatedAsync($"""
+            DELETE FROM platform."PlatformPermissionAssignments" WHERE "UserId" = {operatorUser.Id}
+            """, TestContext.Current.CancellationToken);
+        using (var legacyHost = NewHost("pending-owner@example.test"))
+        using (var legacyClient = legacyHost.CreateClient())
+        {
+            var repaired = await context.PlatformPermissionAssignments.AsNoTracking().SingleAsync(TestContext.Current.CancellationToken);
+            Assert.Equal(ArquitecturaBaseMultitenant.Domain.Authorization.PlatformPermissions.LegacyBootstrap, repaired.Permissions);
+            Assert.DoesNotContain(ArquitecturaBaseMultitenant.Domain.Authorization.PlatformPermissions.Assistant.Use, repaired.Permissions);
+            Assert.DoesNotContain(ArquitecturaBaseMultitenant.Domain.Authorization.PlatformPermissions.Assistant.Configure, repaired.Permissions);
+            Assert.DoesNotContain(ArquitecturaBaseMultitenant.Domain.Authorization.PlatformPermissions.Assistant.Read, repaired.Permissions);
+        }
+
         WebApplicationFactory<Program> NewHost(string ownerEmail) =>
             new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {

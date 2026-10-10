@@ -1,0 +1,1 @@
+T01: contrato del Asistente, stubs 501; sin persistencia, proveedor ni trabajo durable todavía. Leé docs/features/asistente.md, docs/rules/modulos.md y docs/rules/capas-y-flujo.md. El núcleo usa puertos neutrales; API mapea contratos a modelos, SSE describe payloads y sobre de transporte por separado.

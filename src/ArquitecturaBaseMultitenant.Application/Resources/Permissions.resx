@@ -58,4 +58,16 @@
   <data name="PermissionDescription.platform.operators.manage" xml:space="preserve"><value>Otorgar o retirar acceso de operador de plataforma.</value></data>
   <data name="PermissionDescription.platform.audit.read" xml:space="preserve"><value>Consultar el registro de auditoría de la plataforma.</value></data>
   <data name="PermissionDescription.platform.settings.manage" xml:space="preserve"><value>Editar los ajustes globales de la plataforma.</value></data>
+  <data name="Area.assistant" xml:space="preserve"><value>Asistente</value></data>
+  <data name="Area.platformAssistant" xml:space="preserve"><value>Asistente de Plataforma</value></data>
+  <data name="Permission.assistant.use" xml:space="preserve"><value>Usar el asistente</value></data>
+  <data name="PermissionDescription.assistant.use" xml:space="preserve"><value>Consultar el asistente con tus permisos.</value></data>
+  <data name="Permission.assistant.configure" xml:space="preserve"><value>Configurar el asistente</value></data>
+  <data name="PermissionDescription.assistant.configure" xml:space="preserve"><value>Configurar y consultar el uso del asistente de la organización.</value></data>
+  <data name="Permission.platform.assistant.use" xml:space="preserve"><value>Usar el asistente de Plataforma</value></data>
+  <data name="PermissionDescription.platform.assistant.use" xml:space="preserve"><value>Consultar el asistente con tus permisos de Plataforma.</value></data>
+  <data name="Permission.platform.assistant.configure" xml:space="preserve"><value>Configurar el asistente de Plataforma</value></data>
+  <data name="PermissionDescription.platform.assistant.configure" xml:space="preserve"><value>Configurar claves, modelos y topes del asistente.</value></data>
+  <data name="Permission.platform.assistant.read" xml:space="preserve"><value>Ver el uso del asistente</value></data>
+  <data name="PermissionDescription.platform.assistant.read" xml:space="preserve"><value>Ver costos y consultas agregados sin leer conversaciones.</value></data>
 </root>

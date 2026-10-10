@@ -145,7 +145,7 @@ public sealed class ProfileServiceTests
             new ProfilePreferencesResolver(new StubSettings(null), catalog, catalog), new StubMethods([method]),
             new LoginMethodAvailabilityPolicy([], new StubGoogle(available), new StubMemberships()),
             new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider),
-            new ProfileEffectivePermissionsBuilder(new StubPermissions(), new StubPlatformPermissions()), new StubFeatures());
+            new ProfileEffectivePermissionsBuilder(new StubPermissions(), new StubPlatformPermissions()), new ProfileModulesBuilder(new StubFeatures(), []));
 
         var profile = await snapshots.BuildAsync(id, Access.Consumer, null, Ct);
 
@@ -171,7 +171,7 @@ public sealed class ProfileServiceTests
             ]),
             new LoginMethodAvailabilityPolicy([], new StubGoogle(), new StubMemberships()),
             new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider),
-            new ProfileEffectivePermissionsBuilder(new StubPermissions(), new StubPlatformPermissions()), new StubFeatures());
+            new ProfileEffectivePermissionsBuilder(new StubPermissions(), new StubPlatformPermissions()), new ProfileModulesBuilder(new StubFeatures(), []));
         Guid? activeTenantId = organization switch { "managed" => managedId, "unmanaged" => unmanagedId, _ => null };
 
         var profile = await snapshots.BuildAsync(id, access, activeTenantId, Ct);
@@ -462,7 +462,7 @@ public sealed class ProfileServiceTests
                 fixture.TimeProvider, NullLogger<PlatformPermissionService>.Instance));
         var snapshots = new ProfileSnapshotBuilder(users, accesses, new ProfilePreferencesResolver(settings, catalog, catalog), new StubMethods(),
             availability, new LegalAcceptanceGuard(new StubLegal(), fixture.TimeProvider), effectivePermissions,
-            features ?? new StubFeatures());
+            new ProfileModulesBuilder(features ?? new StubFeatures(), []));
         return new ProfileService(current, context, snapshots, users, fixture.Validator,
             unitOfWork ?? new FakeUnitOfWork(), fixture.TimeProvider, fixture.Logger);
     }

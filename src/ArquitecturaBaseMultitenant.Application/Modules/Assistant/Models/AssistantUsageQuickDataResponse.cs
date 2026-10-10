@@ -1,0 +1,3 @@
+namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
+
+public sealed record AssistantUsageQuickDataResponse(AssistantUsagePageResponse Usage) : AssistantQuickDataResponse;

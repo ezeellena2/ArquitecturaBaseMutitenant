@@ -1,0 +1,5 @@
+using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+
+namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
+
+public sealed record AssistantInteractionsQuickDataResponse(PagedResult<ArquitecturaBaseMultitenant.Application.Models.Engagement.ConsumerInteractionResponse> Interactions) : AssistantQuickDataResponse;

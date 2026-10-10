@@ -12,5 +12,5 @@ public static class SystemRoles
 
     public static Role CreateTenantAdmin() => Role.CreateSystem(TenantAdmin, RoleScope.Organization, Permissions.All);
 
-    public static Role CreateCompanyAdmin() => Role.CreateSystem(CompanyAdmin, RoleScope.AnyCompany, Permissions.CompanyScoped);
+    public static Role CreateCompanyAdmin() => Role.CreateSystem(CompanyAdmin, RoleScope.AnyCompany, [.. Permissions.CompanyScoped, Permissions.Assistant.Use]);
 }

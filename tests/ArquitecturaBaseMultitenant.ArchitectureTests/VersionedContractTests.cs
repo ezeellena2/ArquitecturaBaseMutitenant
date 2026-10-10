@@ -25,8 +25,7 @@ public sealed class VersionedContractTests
             .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
             .Where(method => method.IsDefined(typeof(HttpPutAttribute)) || method.IsDefined(typeof(HttpDeleteAttribute)))
             .SelectMany(method => method.GetParameters()
-                .Where(parameter => parameter.ParameterType.Namespace?.StartsWith(
-                    "ArquitecturaBaseMultitenant.Api.Contracts", StringComparison.Ordinal) == true)
+                .Where(parameter => IsHttpContractNamespace(parameter.ParameterType.Namespace))
                 .Select(parameter => (Method: method, Contract: parameter.ParameterType)))
             .Where(item => versionedEntityNames.Any(name => item.Contract.Name.Contains(name, StringComparison.Ordinal)))
             .Where(item => !HasVersion(item.Contract))
@@ -82,9 +81,62 @@ public sealed class VersionedContractTests
     private static bool AnswersTheNewVersion(MethodInfo method)
     {
         var declared = method.GetCustomAttributes<ProducesResponseTypeAttribute>(inherit: true).ToArray();
+        var path = method.GetCustomAttribute<ArquitecturaBaseMultitenant.Api.OpenApi.ResponseVersionAttribute>()?.PropertyPath;
         return declared.Any(attribute => attribute.StatusCode == StatusCodes.Status200OK
-                && attribute.Type == typeof(VersionResponse))
+                && (attribute.Type == typeof(VersionResponse) || path is not null && VersionType(attribute.Type, path) == typeof(uint)))
             && declared.All(attribute => attribute.StatusCode != StatusCodes.Status204NoContent);
+    }
+
+    private static Type? VersionType(Type response, string propertyPath)
+    {
+        Type? value = response;
+        foreach (var property in propertyPath.Split('.'))
+            value = value?.GetProperty(property, BindingFlags.Public | BindingFlags.Instance)?.PropertyType;
+        return value;
+    }
+
+    [Fact]
+    public void Composed_version_metadata_requires_a_real_uint_property_on_the_declared_success()
+    {
+        Assert.Equal(typeof(uint), VersionType(typeof(ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models.AssistantQuickResponse), "Conversation.Version"));
+        Assert.Null(VersionType(typeof(VersionResponse), "Conversation.Version"));
+        Assert.Equal(typeof(string), VersionType(typeof(WrongVersionResponse), "Version"));
+        Assert.True(AnswersTheNewVersion(typeof(ComposedProbeController).GetMethod("Valid")!));
+        Assert.False(AnswersTheNewVersion(typeof(ComposedProbeController).GetMethod("Wrong")!));
+        Assert.False(AnswersTheNewVersion(typeof(ComposedProbeController).GetMethod("Missing")!));
+        Assert.False(AnswersTheNewVersion(typeof(ComposedProbeController).GetMethod("Silent")!));
+    }
+
+    private sealed record ComposedVersionResponse(VersionResponse Item);
+    private sealed record WrongVersionResponse(string Version);
+    private sealed class ComposedProbeController : ControllerBase
+    {
+        [ArquitecturaBaseMultitenant.Api.OpenApi.ResponseVersion("Item.Version")]
+        [ProducesResponseType<ComposedVersionResponse>(200)]
+        public OkResult Valid() => Ok();
+        [ArquitecturaBaseMultitenant.Api.OpenApi.ResponseVersion("Version")]
+        [ProducesResponseType<WrongVersionResponse>(200)]
+        public OkResult Wrong() => Ok();
+        [ArquitecturaBaseMultitenant.Api.OpenApi.ResponseVersion("Absent.Version")]
+        [ProducesResponseType<ComposedVersionResponse>(200)]
+        public OkResult Missing() => Ok();
+        [ArquitecturaBaseMultitenant.Api.OpenApi.ResponseVersion("Item.Version")]
+        [ProducesResponseType<ComposedVersionResponse>(200)]
+        [ProducesResponseType(204)]
+        public NoContentResult Silent() => NoContent();
+    }
+
+    private static bool IsHttpContractNamespace(string? value) =>
+        System.Text.RegularExpressions.Regex.IsMatch(value ?? "",
+            @"^ArquitecturaBaseMultitenant\.Api\.(?:Contracts|Modules\.[A-Za-z][A-Za-z0-9]*\.Contracts)(?:\.|$)");
+    [Fact]
+    public void Contract_namespace_guard_includes_modules_but_rejects_models_services_and_similar_prefixes()
+    {
+        Assert.True(IsHttpContractNamespace("ArquitecturaBaseMultitenant.Api.Contracts.Roles"));
+        Assert.True(IsHttpContractNamespace("ArquitecturaBaseMultitenant.Api.Modules.Assistant.Contracts"));
+        Assert.False(IsHttpContractNamespace("ArquitecturaBaseMultitenant.Api.Modules.Assistant.Models"));
+        Assert.False(IsHttpContractNamespace("ArquitecturaBaseMultitenant.Api.Modules.Assistant.Services"));
+        Assert.False(IsHttpContractNamespace("ArquitecturaBaseMultitenant.Api.Modules.Assistant.ContractsExtra"));
     }
 
     private static bool HasVersion(Type contract) =>

@@ -23,6 +23,10 @@
 - `GET /api/platform/tenants/{id}/features` devuelve el catálogo Business y sus valores iniciales (versión 0 cuando no existe fila). `PUT /{featureKey}` exige enabled, source, version y reason; Trial exige vencimiento. La habilitación y el evento se confirman juntos; una edición vieja o una carrera de alta devuelve 409. La plantilla mantiene el catálogo vacío hasta incorporar módulos reales.
 - **El núcleo no es un módulo:** usuarios, roles, empresas, configuración, auditoría y la página pública (con el directorio) están siempre prendidos. Que una organización publique su página o no es su estado (`Draft`/`Published`), no un módulo.
 
+- **Puertos de composición y disponibilidad por acceso:** Cada módulo aporta `IFeatureDefinitionContributor`; el catálogo agregado rechaza claves duplicadas. `IFeatureAvailabilityPolicy.Key` cubre sólo su clave: `true`/`false` decide disponibilidad completa del acceso, `null` delega a `TenantFeatures`. `FeatureService` y el filtro scoped `TenantFeatureFilter` usan esa misma semántica, porque el middleware y `[FeatureGate]` son dos puertas. El apagado de emergencia de configuración prevalece. Consumer y Business requieren un espacio de un alcance compatible; Platform sin espacio sólo se habilita por una decisión explícita de su policy. Sin policy, Platform queda apagado. Las policies duplicadas se rechazan.
+
+Los defaults de FeatureManagement se generan desde el catálogo completo después de que Api compone módulos, sin importar nombres de módulos desde el núcleo. `IModuleCapabilityContributor` añade capacidades neutrales a `/api/me`; `ProfileModulesBuilder` agrupa features y capacidades y ocupa una dependencia de `ProfileSnapshotBuilder`, manteniendo su límite de ocho.
+
 ## Prohibido
 - `if (tenant.Plan == "Pro")` en el código.
 - Chequear el módulo solo en el front.
@@ -40,3 +44,5 @@
 
 ## Detalle
 [backend.md §20](../architecture/backend.md#20-reglas-de-datos-que-se-aplican-solas) · front: `docs/rules/accesos-y-permisos.md`
+
+La metadata `InstalledModuleRouteCategory` distingue webhook técnico anónimo de chat/gestión globales de Plataforma. Los últimos requieren `Access.Platform` exclusivo y `HasPlatformPermission` en el controller o en cada acción; no admiten `AllowAnonymous`. El webhook técnico exige anonimato y ausencia de access/permisos. `ModuleControllersTests` verifica estas categorías con negativos, sin exenciones por nombres de clase.

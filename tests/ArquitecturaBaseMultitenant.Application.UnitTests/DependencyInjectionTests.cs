@@ -21,6 +21,7 @@ public sealed class DependencyInjectionTests
         var services = new ServiceCollection();
 
         services.AddApplication();
+        ArquitecturaBaseMultitenant.Application.Modules.Assistant.AssistantModule.AddAssistantModule(services);
         ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.WhatsAppModule.AddWhatsAppModule(services);
 
         var repeated = services
@@ -57,7 +58,9 @@ public sealed class DependencyInjectionTests
     public void Detector_rejects_duplicate_module_service_registration()
     {
         var services = new ServiceCollection();
+        ArquitecturaBaseMultitenant.Application.Modules.Assistant.AssistantModule.AddAssistantModule(services);
         ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.WhatsAppModule.AddWhatsAppModule(services);
+        ArquitecturaBaseMultitenant.Application.Modules.Assistant.AssistantModule.AddAssistantModule(services);
         ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.WhatsAppModule.AddWhatsAppModule(services);
         Assert.Contains(services.Where(descriptor => descriptor.ImplementationType is not null)
             .GroupBy(descriptor => descriptor.ImplementationType), group => group.Count() > 1);

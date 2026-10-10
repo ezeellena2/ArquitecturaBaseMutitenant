@@ -49,6 +49,13 @@ public sealed class ControllerOutputContractTests
         Assert.False(IsAllowedOutput(typeof(CursorResult<ProbeResponse>)));
         Assert.False(IsAllowedOutput(typeof(ArquitecturaBaseMultitenant.Domain.Authorization.Role)));
         Assert.False(IsAllowedOutput(typeof(ArquitecturaBaseMultitenant.Application.Common.Validation.ValidationRules)));
+        Assert.True(IsAllowedOutput(typeof(ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models.AssistantStateResponse)));
+        Assert.True(IsAllowedOutput(typeof(ArquitecturaBaseMultitenant.Api.Modules.Assistant.Contracts.AssistantStreamHttpResponse)));
+        Assert.True(IsModuleNamespace("ArquitecturaBaseMultitenant.Application.Modules.Example.Models", "Application", "Models"));
+        Assert.False(IsModuleNamespace("ArquitecturaBaseMultitenant.Application.Modules.Example.Services", "Application", "Models"));
+        Assert.False(IsModuleNamespace("ArquitecturaBaseMultitenant.Application.Modules.Example.ModelsExtra", "Application", "Models"));
+        Assert.False(IsModuleNamespace("ArquitecturaBaseMultitenant.Application.Modules.Example.Sub.Models", "Application", "Models"));
+        Assert.False(IsAllowedOutput(typeof(ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Services.IAssistantConversationService)));
     }
 
     private static IEnumerable<(string Action, Type Type)> DeclaredOutputs(Type controller) =>
@@ -68,14 +75,20 @@ public sealed class ControllerOutputContractTests
             || typeof(ProblemDetails).IsAssignableFrom(value))
             return true;
         if (value.Assembly == ApplicationAssembly)
-            return value.Namespace?.StartsWith(ModelsNamespace, StringComparison.Ordinal) == true;
+            return value.Namespace?.StartsWith(ModelsNamespace + ".", StringComparison.Ordinal) == true
+                || IsModuleNamespace(value.Namespace, "Application", "Models");
         return IsContract(value) && value.Name.EndsWith("HttpResponse", StringComparison.Ordinal);
     }
 
     private static bool IsContract(Type type) =>
         (type.Assembly == ApiAssembly || type.DeclaringType == typeof(ControllerOutputContractTests))
-        && (type.Namespace?.StartsWith(ContractsNamespace, StringComparison.Ordinal) == true
+        && (type.Namespace?.StartsWith(ContractsNamespace + ".", StringComparison.Ordinal) == true
+            || IsModuleNamespace(type.Namespace, "Api", "Contracts")
             || type.DeclaringType == typeof(ControllerOutputContractTests));
+
+    private static bool IsModuleNamespace(string? value, string layer, string folder) =>
+        System.Text.RegularExpressions.Regex.IsMatch(value ?? "",
+            "^ArquitecturaBaseMultitenant\\." + layer + "\\.Modules\\.[A-Za-z][A-Za-z0-9]*\\." + folder + "(?:\\.|$)");
 
     private static bool IsController(Type type) =>
         type is { IsClass: true, IsAbstract: false } && typeof(ControllerBase).IsAssignableFrom(type);

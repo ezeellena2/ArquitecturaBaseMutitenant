@@ -1,5 +1,4 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Profile;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
@@ -16,7 +15,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Profile;
 internal sealed class ProfileSnapshotBuilder(IUserRepository users, IUserTenantAccessReader accesses,
     ProfilePreferencesResolver preferences,
     ILoginMethodReader loginMethods, LoginMethodAvailabilityPolicy availability, LegalAcceptanceGuard legal,
-    ProfileEffectivePermissionsBuilder permissions, IFeatureService features)
+    ProfileEffectivePermissionsBuilder permissions, ProfileModulesBuilder modules)
 {
     internal async Task<MeResponse?> BuildAsync(Guid userId, Access access, Guid? activeTenantId,
         CancellationToken cancellationToken)
@@ -48,8 +47,9 @@ internal sealed class ProfileSnapshotBuilder(IUserRepository users, IUserTenantA
             activeTenantId, personalSpace, organizations,
             effectivePermissions,
             account.Culture, account.TimeZoneId, profilePreferences.CurrencyCode,
-            mayReadSettings ? await features.ListEnabledAsync(cancellationToken) : [])
+            mayReadSettings ? await modules.ListEnabledAsync(cancellationToken) : [])
         {
+            ModuleCapabilities = await modules.CapabilitiesAsync(cancellationToken),
             FirstName = account.FirstName,
             LastName = account.LastName,
             OrganizationCountryCode = profilePreferences.OrganizationCountryCode,

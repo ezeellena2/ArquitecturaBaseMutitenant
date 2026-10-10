@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Features;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.FeatureManagement;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -11,8 +12,10 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Features;
 /// <summary>Adapta FeatureManagement para el núcleo sin exponer la librería a Application.</summary>
 internal sealed class FeatureService(IFeatureManager manager, IFeatureCatalog catalog,
     ITenantContext tenantContext, IConfiguration configuration, TimeProvider timeProvider,
-    ILogger<FeatureService> logger) : IFeatureService
+    ILogger<FeatureService> logger, ICurrentUser currentUser, IEnumerable<IFeatureAvailabilityPolicy> policies) : IFeatureService
 {
+    private readonly Dictionary<string, IFeatureAvailabilityPolicy> _policies = policies.ToDictionary(policy => policy.Key, StringComparer.Ordinal);
+
     public async Task<bool> IsEnabledAsync(string key, CancellationToken cancellationToken)
     {
         var result = await OperationLog.RunAsync<bool>(logger, timeProvider, "IsFeatureEnabled", async () =>
@@ -38,7 +41,16 @@ internal sealed class FeatureService(IFeatureManager manager, IFeatureCatalog ca
         var definition = catalog.All.SingleOrDefault(row => row.Key == key);
         var emergencyDisabled = bool.TryParse(configuration[$"FeatureManagement:{key}"], out var enabled)
             && !enabled;
-        return definition is not null && tenantContext.TenantKind is { } kind && definition.Supports(kind)
-            && !emergencyDisabled && await manager.IsEnabledAsync(key);
+        if (definition is null || emergencyDisabled) return false;
+        if (currentUser.Access is Access.Consumer or Access.Business
+            && (tenantContext.TenantKind is not { } scopedKind || !definition.Supports(scopedKind))) return false;
+        if (_policies.TryGetValue(key, out var policy))
+        {
+            if (currentUser.Access is not { } access) return false;
+            if (await policy.IsAvailableAsync(access, cancellationToken) is { } available) return available;
+        }
+        if (currentUser.Access == Access.Platform) return false;
+        return tenantContext.TenantKind is { } kind && definition.Supports(kind)
+            && await manager.IsEnabledAsync(key);
     }
 }

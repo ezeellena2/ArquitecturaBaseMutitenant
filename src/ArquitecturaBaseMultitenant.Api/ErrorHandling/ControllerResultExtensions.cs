@@ -78,6 +78,9 @@ public static class ControllerResultExtensions
     {
         var problem = ProblemDetailsMapper.FromError(error, controller.ProblemDetailsFactory, controller.HttpContext);
 
+        if (problem.Status is StatusCodes.Status429TooManyRequests or StatusCodes.Status503ServiceUnavailable
+            && error.Metadata?.TryGetValue("retryAfter", out var delay) == true && delay is int seconds)
+            controller.Response.Headers.RetryAfter = RetryAfterHeaderFormatter.Format(seconds);
         return new ObjectResult(problem) { StatusCode = problem.Status };
     }
 }

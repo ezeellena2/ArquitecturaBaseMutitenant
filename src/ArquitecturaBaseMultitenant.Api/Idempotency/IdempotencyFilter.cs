@@ -31,6 +31,14 @@ public sealed class IdempotencyFilter(
             return;
         }
 
+        if (context.ActionDescriptor.EndpointMetadata.OfType<IdempotentAttribute>().SingleOrDefault()?.Mode
+            is IdempotencyMode.DurableReference or IdempotencyMode.DurableStream)
+        {
+            // T01 only publishes these protocols. The owning service still returns 501; no private body enters the buffered store.
+            await next();
+            return;
+        }
+
         request.EnableBuffering();
         request.Body.Position = 0;
         var bodyHash = Convert.ToHexString(await SHA256.HashDataAsync(

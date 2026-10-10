@@ -11,13 +11,18 @@ internal static class FeaturesRegistration
 {
     public static IServiceCollection AddFeatures(this IServiceCollection services, IConfiguration configuration)
     {
-        var defaults = Domain.Features.Features.All.ToDictionary(
-            definition => $"{definition.Key}:EnabledFor:0:Name", _ => (string?)"Tenant", StringComparer.Ordinal);
-        var flags = new ConfigurationBuilder().AddInMemoryCollection(defaults)
-            .AddConfiguration(configuration.GetSection("FeatureManagement")).Build();
         services.AddSingleton<IFeatureCatalog, FeatureCatalog>();
         services.AddScoped<IFeatureService, FeatureService>();
-        services.AddScopedFeatureManagement(flags).AddFeatureFilter<TenantFeatureFilter>();
+        services.AddScopedFeatureManagement().AddFeatureFilter<TenantFeatureFilter>();
+        // Resolve the contributed catalog after Api has composed every installed module.
+        services.AddSingleton<IFeatureDefinitionProvider>(provider =>
+        {
+            var defaults = provider.GetRequiredService<IFeatureCatalog>().All.ToDictionary(
+                definition => $"{definition.Key}:EnabledFor:0:Name", _ => (string?)"Tenant", StringComparer.Ordinal);
+            var flags = new ConfigurationBuilder().AddInMemoryCollection(defaults)
+                .AddConfiguration(configuration.GetSection("FeatureManagement")).Build();
+            return new ConfigurationFeatureDefinitionProvider(flags) { RootConfigurationFallbackEnabled = true };
+        });
         return services;
     }
 }

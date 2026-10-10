@@ -13,6 +13,7 @@ public sealed record MeResponse(Guid Id, string? DisplayName, Email? Email, Acce
     EffectivePermissions EffectivePermissions, string Culture, string TimeZoneId, string? CurrencyCode,
     IReadOnlyList<string> Features)
 {
+    public IReadOnlyList<ModuleCapabilityResponse> ModuleCapabilities { get; init; } = [];
     public string? FirstName { get; init; }
     public string? LastName { get; init; }
     /// <summary>País de la organización empresarial activa, desde su cultura del catálogo; no es la región personal.</summary>

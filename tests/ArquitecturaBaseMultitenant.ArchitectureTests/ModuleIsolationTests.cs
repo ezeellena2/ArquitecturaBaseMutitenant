@@ -21,18 +21,40 @@ public sealed class ModuleIsolationTests
             "ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppContact")));
         Assert.True(IsForbidden(new("ArquitecturaBaseMultitenant.Domain.Authentication.LoginMethod",
             "ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppContact")));
+        Assert.True(IsForbidden(new("ArquitecturaBaseMultitenant.Application.Services.Profile.ProfileService",
+            "ArquitecturaBaseMultitenant.Domain.Assistant.AssistantErrors")));
+        Assert.False(IsForbidden(new("ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services.AssistantConversationService",
+            "ArquitecturaBaseMultitenant.Domain.Assistant.AssistantErrors")));
+        Assert.True(IsForbidden(new("ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services.Service",
+            "ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Service")));
+        Assert.True(IsForbidden(new("ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services.Service",
+            "ArquitecturaBaseMultitenant.Domain.Assistant.AssistantErrors")));
+        Assert.True(IsForbidden(new("ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services.Service",
+            "ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppContact")));
         Assert.False(IsForbidden(new("Program", "ArquitecturaBaseMultitenant.Api.Modules.WhatsApp.WhatsAppApiModule")));
         Assert.False(IsForbidden(new("ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Persistence.ContactRepository",
             "ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppContact")));
         Assert.False(IsForbidden(new("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppMessage",
             "ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppContact")));
     }
+    private static readonly string[] OptionalDomainPrefixes = new[] { "Application", "Infrastructure", "Api" }
+        .SelectMany(layer => Assembly.Load("ArquitecturaBaseMultitenant." + layer).GetTypes())
+        .Select(type => System.Text.RegularExpressions.Regex.Match(type.Namespace ?? "", @"^ArquitecturaBaseMultitenant\.[^.]+\.Modules\.([A-Za-z][A-Za-z0-9]*)(?:\.|$)"))
+        .Where(match => match.Success).Select(match => "ArquitecturaBaseMultitenant.Domain." + match.Groups[1].Value + ".")
+        .Distinct(StringComparer.Ordinal).ToArray();
+
     private static bool IsForbidden(ArchitectureIl.TypeUse use)
     {
-        var target = use.Type.Contains(".Modules.", StringComparison.Ordinal)
-            || use.Type.StartsWith("ArquitecturaBaseMultitenant.Domain.WhatsApp.", StringComparison.Ordinal);
-        return target && !use.Owner.Contains(".Modules.", StringComparison.Ordinal)
-            && !use.Owner.StartsWith("ArquitecturaBaseMultitenant.Domain.WhatsApp.", StringComparison.Ordinal)
-            && use.Owner != "Program";
+        var target = ModuleKey(use.Type);
+        return target is not null && use.Owner != "Program"
+            && !string.Equals(ModuleKey(use.Owner), target, StringComparison.Ordinal);
+    }
+    private static string? ModuleKey(string type)
+    {
+        var match = System.Text.RegularExpressions.Regex.Match(type,
+            @"^ArquitecturaBaseMultitenant\.[^.]+\.Modules\.([A-Za-z][A-Za-z0-9]*)(?:\.|$)");
+        if (match.Success) return match.Groups[1].Value;
+        var domain = OptionalDomainPrefixes.FirstOrDefault(prefix => type.StartsWith(prefix, StringComparison.Ordinal));
+        return domain?.Split('.')[2];
     }
 }

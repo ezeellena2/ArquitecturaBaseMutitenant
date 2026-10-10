@@ -214,4 +214,5 @@
   <data name="Platform.AccountRecovery.PhoneMethodInUse" xml:space="preserve"><value>That number belongs to another account.</value></data>
   <data name="Auth.LoginLink.Expired" xml:space="preserve"><value>This link no longer works.</value></data>
   <data name="Auth.LoginLink.AlreadyUsed" xml:space="preserve"><value>This link no longer works.</value></data>
+  <data name="Title.PayloadTooLarge" xml:space="preserve"><value>Payload too large</value></data>
 </root>

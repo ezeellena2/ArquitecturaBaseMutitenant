@@ -91,6 +91,7 @@ public sealed partial class ApplicationServicesTests
     {
         var registrations = new ServiceCollection();
         registrations.AddApplication();
+        ArquitecturaBaseMultitenant.Application.Modules.Assistant.AssistantModule.AddAssistantModule(registrations);
         ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.WhatsAppModule.AddWhatsAppModule(registrations);
 
         return

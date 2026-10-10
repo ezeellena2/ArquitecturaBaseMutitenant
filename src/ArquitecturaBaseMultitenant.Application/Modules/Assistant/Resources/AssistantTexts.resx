@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="Assistant.Conversation.NotFound" xml:space="preserve"><value>No encontramos esa conversación.</value></data>
+  <data name="Assistant.Attachment.NotFound" xml:space="preserve"><value>No encontramos ese adjunto.</value></data>
+  <data name="Assistant.Settings.NotConfigured" xml:space="preserve"><value>El asistente todavía no está configurado.</value></data>
+  <data name="Assistant.Settings.KeyRejected" xml:space="preserve"><value>La clave no es válida.</value></data>
+  <data name="Assistant.Settings.OwnKeyNotAllowed" xml:space="preserve"><value>La plataforma no habilitó tu propia clave.</value></data>
+  <data name="Assistant.Settings.AlertRecipientRequired" xml:space="preserve"><value>Para usar la clave de tu organización, algún Dueño tiene que tener un correo verificado.</value></data>
+  <data name="Assistant.Model.NotAllowed" xml:space="preserve"><value>Elegí un modelo habilitado.</value></data>
+  <data name="Assistant.Model.AlreadyExists" xml:space="preserve"><value>Ese modelo ya está en el catálogo.</value></data>
+  <data name="Assistant.Model.NotFound" xml:space="preserve"><value>No encontramos ese modelo.</value></data>
+  <data name="Assistant.Settings.PlatformLimitsReadOnly" xml:space="preserve"><value>Estos topes los fija la plataforma.</value></data>
+  <data name="Assistant.Notice.AcceptanceRequired" xml:space="preserve"><value>Leé el aviso antes de tu primera consulta.</value></data>
+  <data name="Assistant.Limit.DailyReached" xml:space="preserve"><value>Llegaste a las {limit} consultas de hoy. Se renuevan a las {hora}.</value></data>
+  <data name="Assistant.Limit.MonthlyReached" xml:space="preserve"><value>Llegaste al tope del mes.</value></data>
+  <data name="Assistant.Turn.InProgress" xml:space="preserve"><value>Esperá o detené la respuesta actual.</value></data>
+  <data name="Assistant.Turn.NotFound" xml:space="preserve"><value>No encontramos esa respuesta.</value></data>
+  <data name="Assistant.Attachment.UnsupportedType" xml:space="preserve"><value>Adjuntá una imagen o un PDF.</value></data>
+  <data name="Assistant.Attachment.TooLarge" xml:space="preserve"><value>El archivo pesa más de 10 MB.</value></data>
+  <data name="Assistant.Attachment.TooMany" xml:space="preserve"><value>Podés adjuntar hasta 5 archivos por mensaje.</value></data>
+  <data name="Assistant.Attachment.AlreadyUsed" xml:space="preserve"><value>Ese adjunto ya es de un mensaje.</value></data>
+  <data name="Assistant.QuickQuery.NotAvailable" xml:space="preserve"><value>Esa consulta no está disponible.</value></data>
+  <data name="Assistant.Provider.Unavailable" xml:space="preserve"><value>El asistente no responde ahora.</value></data>
+  <data name="Assistant.Provider.ContextTooLarge" xml:space="preserve"><value>La conversación o los adjuntos son demasiado grandes. Empezá una nueva.</value></data>
+  <data name="Assistant.Export.Failed" xml:space="preserve"><value>No pudimos exportar la conversación.</value></data>
+  <data name="Assistant.Module.Disabled" xml:space="preserve"><value>El módulo está apagado.</value></data>
+  <data name="Assistant.Validation.Required" xml:space="preserve"><value>Completá este campo.</value></data>
+  <data name="Assistant.Validation.TextRequired" xml:space="preserve"><value>Escribí una consulta.</value></data>
+  <data name="Assistant.Validation.TextTooLong" xml:space="preserve"><value>La consulta es demasiado larga.</value></data>
+  <data name="Assistant.Validation.TitleTooLong" xml:space="preserve"><value>El título es demasiado largo.</value></data>
+  <data name="Assistant.Validation.VersionRequired" xml:space="preserve"><value>La versión es obligatoria.</value></data>
+  <data name="Assistant.Validation.MonthInvalid" xml:space="preserve"><value>Ingresá un mes con formato AAAA-MM.</value></data>
+  <data name="Assistant.Validation.PriceInvalid" xml:space="preserve"><value>Ingresá un importe no negativo en USD.</value></data>
+  <data name="Assistant.Validation.IdsInvalid" xml:space="preserve"><value>Elegí identificadores válidos y sin repetir.</value></data>
+  <data name="Assistant.Validation.KeyRequired" xml:space="preserve"><value>Ingresá la clave para reemplazarla.</value></data>
+  <data name="Assistant.Validation.KeyUnexpected" xml:space="preserve"><value>La clave solo se envía al reemplazarla.</value></data>
+  <data name="Assistant.Validation.KeyTooLong" xml:space="preserve"><value>La clave es demasiado larga.</value></data>
+  <data name="Assistant.Validation.SelectionInvalid" xml:space="preserve"><value>Elegí una opción válida.</value></data>
+  <data name="Assistant.Validation.LimitsInvalid" xml:space="preserve"><value>Ingresá un tope válido.</value></data>
+  <data name="Assistant.Validation.QuickVersionInvalid" xml:space="preserve"><value>Indicá la conversación y su versión juntas.</value></data>
+  <data name="Assistant.Validation.FileInvalid" xml:space="preserve"><value>Adjuntá un archivo válido.</value></data>
+  <data name="Assistant.Validation.CursorInvalid" xml:space="preserve"><value>El cursor no es válido.</value></data>
+  <data name="Assistant.Validation.PageInvalid" xml:space="preserve"><value>Elegí una página y un tamaño válidos.</value></data>
+</root>

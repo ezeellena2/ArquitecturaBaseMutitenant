@@ -58,4 +58,16 @@
   <data name="PermissionDescription.platform.operators.manage" xml:space="preserve"><value>Grant or remove platform operator access.</value></data>
   <data name="PermissionDescription.platform.audit.read" xml:space="preserve"><value>View the platform audit log.</value></data>
   <data name="PermissionDescription.platform.settings.manage" xml:space="preserve"><value>Edit global platform settings.</value></data>
+  <data name="Area.assistant" xml:space="preserve"><value>Assistant</value></data>
+  <data name="Area.platformAssistant" xml:space="preserve"><value>Platform assistant</value></data>
+  <data name="Permission.assistant.use" xml:space="preserve"><value>Use the assistant</value></data>
+  <data name="PermissionDescription.assistant.use" xml:space="preserve"><value>Query the assistant with your permissions.</value></data>
+  <data name="Permission.assistant.configure" xml:space="preserve"><value>Configure the assistant</value></data>
+  <data name="PermissionDescription.assistant.configure" xml:space="preserve"><value>Configure and view the organization assistant usage.</value></data>
+  <data name="Permission.platform.assistant.use" xml:space="preserve"><value>Use the platform assistant</value></data>
+  <data name="PermissionDescription.platform.assistant.use" xml:space="preserve"><value>Query the assistant with your platform permissions.</value></data>
+  <data name="Permission.platform.assistant.configure" xml:space="preserve"><value>Configure the platform assistant</value></data>
+  <data name="PermissionDescription.platform.assistant.configure" xml:space="preserve"><value>Configure assistant keys, models and limits.</value></data>
+  <data name="Permission.platform.assistant.read" xml:space="preserve"><value>View assistant usage</value></data>
+  <data name="PermissionDescription.platform.assistant.read" xml:space="preserve"><value>View aggregated costs and queries without reading conversations.</value></data>
 </root>

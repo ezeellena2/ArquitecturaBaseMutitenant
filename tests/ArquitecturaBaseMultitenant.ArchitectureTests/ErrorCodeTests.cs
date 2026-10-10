@@ -24,6 +24,7 @@ public sealed partial class ErrorCodeTests
         "Title.MethodNotAllowed",
         "Title.ServiceUnavailable",
         "Title.NotImplemented",
+        "Title.PayloadTooLarge",
         "Validation.Failed",
         "General.Unexpected",
         "General.ConcurrencyConflict",

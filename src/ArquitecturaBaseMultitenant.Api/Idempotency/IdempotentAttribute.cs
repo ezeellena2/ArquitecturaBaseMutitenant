@@ -4,4 +4,7 @@ namespace ArquitecturaBaseMultitenant.Api.Idempotency;
 
 /// <summary>Aplica el filtro de reserva y replay a cada POST que crea o envía.</summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
-public sealed class IdempotentAttribute() : ServiceFilterAttribute(typeof(IdempotencyFilter));
+public sealed class IdempotentAttribute() : ServiceFilterAttribute(typeof(IdempotencyFilter))
+{
+    public IdempotencyMode Mode { get; set; } = IdempotencyMode.BufferedJson;
+}

@@ -3,6 +3,13 @@ namespace ArquitecturaBaseMultitenant.Domain.Authorization;
 /// <summary>Permisos del backoffice de la plataforma.</summary>
 public static class PlatformPermissions
 {
+    public static class Assistant
+    {
+        public const string Use = "platform.assistant.use";
+        public const string Configure = "platform.assistant.configure";
+        public const string Read = "platform.assistant.read";
+    }
+
     public static class Tenants
     {
         public const string Read = "platform.tenants.read";
@@ -40,6 +47,10 @@ public static class PlatformPermissions
         public const string Manage = "platform.settings.manage";
     }
 
+    /// <summary>Permisos iniciales anteriores a módulos opcionales; solo para reparar indicadores de operador legados.</summary>
+    public static IReadOnlyCollection<string> LegacyBootstrap { get; } =
+    [Tenants.Read, Tenants.Manage, Accounts.Read, Accounts.Manage, Recoveries.Manage, Legal.Manage, Operators.Manage, Audit.Read, Settings.Manage];
+
     public static IReadOnlyCollection<string> All { get; } =
     [
         Tenants.Read,
@@ -51,5 +62,8 @@ public static class PlatformPermissions
         Operators.Manage,
         Audit.Read,
         Settings.Manage,
+        Assistant.Use,
+        Assistant.Configure,
+        Assistant.Read,
     ];
 }

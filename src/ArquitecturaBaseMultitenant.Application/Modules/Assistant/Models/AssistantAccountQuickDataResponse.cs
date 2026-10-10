@@ -1,0 +1,3 @@
+namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
+
+public sealed record AssistantAccountQuickDataResponse(string? DisplayName, IReadOnlyList<AssistantMaskedLoginMethodResponse> LoginMethods, IReadOnlyList<AssistantHelpArticleResponse> Articles) : AssistantQuickDataResponse;

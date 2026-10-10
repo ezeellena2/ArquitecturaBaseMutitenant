@@ -16,7 +16,13 @@ public sealed record ValidationError : Error
     /// muestra debajo del campo, igual que un error de validación.
     /// </summary>
     public ValidationError(string code, string description, IReadOnlyDictionary<string, string[]> errors)
-        : base(code, description, ErrorType.Validation)
+        : this(code, description, errors, ErrorType.Validation)
+    {
+    }
+
+    /// <summary>Conserva errores por campo en reglas con una clasificación propia (por ejemplo 403 o 413).</summary>
+    public ValidationError(string code, string description, IReadOnlyDictionary<string, string[]> errors, ErrorType type)
+        : base(code, description, type)
     {
         ArgumentNullException.ThrowIfNull(errors);
         Errors = errors;

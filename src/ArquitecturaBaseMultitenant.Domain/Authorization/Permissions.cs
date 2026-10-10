@@ -5,6 +5,12 @@ public static class Permissions
 {
     public const string ClaimType = "permission";
 
+    public static class Assistant
+    {
+        public const string Use = "assistant.use";
+        public const string Configure = "assistant.configure";
+    }
+
     public static class Users
     {
         public const string Read = "users.read";
@@ -64,6 +70,8 @@ public static class Permissions
         Settings.Manage,
         Audit.Read,
         PublicPage.Manage,
+        Assistant.Use,
+        Assistant.Configure,
     ];
 
     public static IReadOnlyCollection<string> CompanyScoped { get; } =

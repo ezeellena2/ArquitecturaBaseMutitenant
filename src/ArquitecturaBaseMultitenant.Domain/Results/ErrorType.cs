@@ -15,4 +15,5 @@ public enum ErrorType
     TooManyRequests = 6,
     ServiceUnavailable = 7,
     NotImplemented = 8,
+    PayloadTooLarge = 9,
 }

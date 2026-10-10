@@ -199,12 +199,12 @@ internal sealed class PlatformSeeder(
         foreach (var observer in phoneObservers ?? []) await observer.VerifiedAsync(userId, method.Id, phone, ct);
     }
 
-    // Un operador sin asignación (el primero o un indicador anterior a E5) recibe el catálogo completo;
+    // Un indicador legado sin asignación recibe solo el catálogo anterior a módulos opcionales;
     // una asignación existente se conserva tal cual.
     private async Task EnsureAssignmentAsync(Guid userId, CancellationToken cancellationToken)
     {
         if (!await context.PlatformPermissionAssignments.AnyAsync(assignment => assignment.UserId == userId, cancellationToken))
-            context.PlatformPermissionAssignments.Add(CompleteCatalog(userId));
+            context.PlatformPermissionAssignments.Add(PlatformPermissionAssignment.Create(userId, PlatformPermissions.LegacyBootstrap).Value);
     }
 
     private static PlatformPermissionAssignment CompleteCatalog(Guid userId) =>
