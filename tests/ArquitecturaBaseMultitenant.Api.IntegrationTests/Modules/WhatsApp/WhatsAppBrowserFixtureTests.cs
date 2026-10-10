@@ -1,3 +1,4 @@
+using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.WhatsAppBrowser;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -47,6 +48,40 @@ public sealed class WhatsAppBrowserFixtureTests
     private static ServiceProvider Services(string environment) => new ServiceCollection()
         .AddSingleton<IHostEnvironment>(new FixtureEnvironment { EnvironmentName = environment })
         .AddSingleton(TimeProvider.System).BuildServiceProvider();
+
+    [Theory]
+    [InlineData("1440")]
+    [InlineData("390")]
+    public void Private_commands_require_exact_identifiers_and_backup_email_scenario(string width)
+    {
+        var recovery = JsonSerializer.Deserialize<WhatsAppBrowserRequest>(
+            "{\"Kind\":\"recoveryNotice\",\"Scenario\":\"recovered-1440\",\"Phone\":\"+5491134567880\",\"RecoveryId\":\"9e9ed364-3d8f-48c7-a126-f07bbbc31537\"}")!;
+        Assert.True(recovery.IsValid());
+        var email = JsonSerializer.Deserialize<WhatsAppBrowserRequest>(
+            "{\"Kind\":\"methodEmailCode\",\"Scenario\":\"backup-email-" + width + "\",\"Phone\":\"+5491134567880\",\"Email\":\"e8-backup-" + width + "@example.test\",\"MethodId\":\"9e9ed364-3d8f-48c7-a126-f07bbbc31537\"}")!;
+        Assert.True(email.IsValid());
+        Assert.Equal(nameof(WhatsAppBrowserRequest), email.ToString());
+    }
+
+    [Fact]
+    public void Private_commands_reject_missing_empty_or_non_matching_identifiers()
+    {
+        var id = Guid.NewGuid();
+        var recovery = new WhatsAppBrowserRequest("recoveryNotice", "recovered-1440", "+5491134567880", RecoveryId: id);
+        Assert.False((recovery with { RecoveryId = null }).IsValid());
+        Assert.False((recovery with { RecoveryId = Guid.Empty }).IsValid());
+        var email = new WhatsAppBrowserRequest("methodEmailCode", "backup-email-1440", recovery.Phone,
+            Email: "e8-backup-1440@example.test", MethodId: id);
+        Assert.True(email.IsValid());
+        Assert.False((email with { MethodId = null }).IsValid());
+        Assert.False((email with { MethodId = Guid.Empty }).IsValid());
+        Assert.False((email with { Email = "e8-backup-1440@example.com" }).IsValid());
+        Assert.False((email with { Email = "e8-backup-390@example.test" }).IsValid());
+        Assert.False((email with { Scenario = "backup-email-800" }).IsValid());
+        Assert.False((email with { Scenario = "other" }).IsValid());
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<WhatsAppBrowserRequest>(
+            "{\"Kind\":\"recoveryNotice\",\"RecoveryId\":\"invalid\"}"));
+    }
 
     private sealed class FixtureEnvironment : IHostEnvironment
     {

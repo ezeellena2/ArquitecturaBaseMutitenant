@@ -4,9 +4,11 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Platform;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +25,7 @@ public sealed class WhatsAppBrowserControl
     public const string AppSecret = "browser-fixture-secret";
     public const string NumberId = "browser-fixture-number";
     private readonly IServiceProvider _services;
-    private readonly Dictionary<string, (string Phone, DateTime SinceUtc)> _scenarios = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, ScenarioCursor> _scenarios = new(StringComparer.Ordinal);
 
     public WhatsAppBrowserControl(IServiceProvider services)
     {
@@ -38,7 +40,18 @@ public sealed class WhatsAppBrowserControl
         var nowUtc = _services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
         if (request.Kind == "begin")
         {
-            if (!_scenarios.TryAdd(request.Scenario, (request.Phone, nowUtc)))
+            Guid? ownerId = null;
+            Guid[] existingMethods = [];
+            if (request.Scenario is "backup-email-1440" or "backup-email-390")
+            {
+                await using var beginScope = _services.CreateAsyncScope();
+                var beginDb = beginScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                ownerId = await PrimaryPhoneOwnerAsync(beginDb, request.Phone, ct)
+                    ?? throw new InvalidOperationException("Fixture phone owner not found.");
+                existingMethods = await beginDb.LoginMethods.AsNoTracking().Where(method => method.UserId == ownerId)
+                    .Select(method => method.Id).ToArrayAsync(ct);
+            }
+            if (!_scenarios.TryAdd(request.Scenario, new ScenarioCursor(request.Phone, nowUtc, ownerId, existingMethods)))
                 throw new InvalidOperationException("Fixture scenario already exists.");
             return new { ok = true };
         }
@@ -64,6 +77,21 @@ public sealed class WhatsAppBrowserControl
         await using var scope = _services.CreateAsyncScope();
         var services = scope.ServiceProvider;
         var db = services.GetRequiredService<ApplicationDbContext>();
+        if (request.Kind == "recoveryNotice")
+            return await RecoveryNoticeAsync(services, db, request, scenario, ct);
+        if (request.Kind == "methodEmailCode")
+        {
+            var ownerId = await PrimaryPhoneOwnerAsync(db, scenario.Phone, ct);
+            if (ownerId is null || ownerId != scenario.OwnerId || scenario.ExistingMethods.Contains(request.MethodId!.Value)
+                || !await db.LoginMethods.AsNoTracking().AnyAsync(method => method.Id == request.MethodId
+                    && method.UserId == ownerId && method.Type == LoginMethodType.Email && method.Value == request.Email
+                    && method.VerifiedAtUtc == null && method.ManagedByTenantId == null && method.InvitationOriginTenantId == null, ct)
+                || !await db.LoginCodes.AsNoTracking().AnyAsync(code => code.RequestedByUserId == ownerId
+                    && code.Destination == request.Email && code.Channel == "email" && code.Purpose == LoginCodePurpose.VerifyDestination
+                    && code.CreatedAtUtc >= scenario.SinceUtc && code.SentAtUtc != null && code.ConsumedAtUtc == null
+                    && code.InvalidatedAtUtc == null && code.ExpiresAtUtc > nowUtc, ct))
+                throw new InvalidOperationException("Fixture method is not owned by this scenario.");
+        }
         if (request.Kind == "expireTicket")
         {
             var hash = services.GetRequiredService<ISecureTokenGenerator>().Hash(request.Ticket!);
@@ -97,10 +125,11 @@ public sealed class WhatsAppBrowserControl
                 if ((await inbound.ProcessAsync(claim.Value, ct)).IsFailure) throw new InvalidOperationException("Fixture bot failed.");
             }
         }
-        var channel = request.Kind == "operatorCode" ? "email" : "whatsapp";
-        var destination = request.Kind == "operatorCode" ? OperatorEmail : scenario.Phone;
+        var channel = request.Kind is "operatorCode" or "methodEmailCode" ? "email" : "whatsapp";
+        var destination = request.Kind == "operatorCode" ? OperatorEmail : request.Kind == "methodEmailCode" ? request.Email : scenario.Phone;
         var protector = services.GetRequiredService<IPayloadProtector>();
-        var rows = await db.OutboxMessages.AsNoTracking().Where(row => row.Channel == channel && row.EncryptedPayload != "" && row.CreatedAtUtc >= scenario.SinceUtc)
+        var rows = await db.OutboxMessages.AsNoTracking().Where(row => row.Channel == channel && row.EncryptedPayload != "" && row.CreatedAtUtc >= scenario.SinceUtc
+                && (request.Kind != "methodEmailCode" || row.UserId == scenario.OwnerId))
             .OrderByDescending(row => row.CreatedAtUtc).ToArrayAsync(ct);
         foreach (var row in rows)
         {
@@ -110,13 +139,48 @@ public sealed class WhatsAppBrowserControl
             string? proof = null;
             if (request.Kind == "bot" && value.TryGetProperty("LinkUrl", out var url) && url.ValueKind == JsonValueKind.String) proof = url.GetString();
             if (request.Kind == "code" && value.TryGetProperty("TemplateName", out var template) && template.GetString() == "codigo_ingreso") proof = value.GetProperty("BodyParameters")[0].GetString();
-            if (request.Kind == "operatorCode")
+            if (request.Kind is "operatorCode" or "methodEmailCode")
             {
                 var match = Regex.Match(value.GetProperty("TextBody").GetString() ?? "", @"(?m)^(?<code>\d{6})\r?$", RegexOptions.None, TimeSpan.FromSeconds(1));
                 if (match.Success) proof = match.Groups["code"].Value;
             }
-            if (proof is not null) return new { proof };
+            if (proof is not null) return new PrivateProof(proof);
         }
         throw new InvalidOperationException("Fixture proof not found.");
+    }
+
+    private static Task<Guid?> PrimaryPhoneOwnerAsync(ApplicationDbContext db, string phone, CancellationToken ct) =>
+        db.LoginMethods.AsNoTracking().Where(method => method.Type == LoginMethodType.Phone && method.Value == phone
+            && method.IsPrimary && method.VerifiedAtUtc != null && method.ManagedByTenantId == null && method.InvitationOriginTenantId == null)
+            .Select(method => (Guid?)method.UserId).SingleOrDefaultAsync(ct);
+
+    private static async Task<object> RecoveryNoticeAsync(IServiceProvider services, ApplicationDbContext db,
+        WhatsAppBrowserRequest request, ScenarioCursor scenario, CancellationToken ct)
+    {
+        var recovery = await db.AccountRecoveryRequests.AsNoTracking().SingleOrDefaultAsync(value => value.Id == request.RecoveryId
+            && value.NewMethodType == LoginMethodType.Phone && value.NewMethodValue == scenario.Phone
+            && value.CreatedAtUtc >= scenario.SinceUtc && value.Status == AccountRecoveryStatus.Pending && value.UserId != null, ct)
+            ?? throw new InvalidOperationException("Fixture recovery is not owned by this scenario.");
+        var beforeIds = await db.OutboxMessages.AsNoTracking().Select(row => row.Id).ToArrayAsync(ct);
+        // El servicio real posee su UoW y procesa su tanda global en esta base aislada.
+        var result = await services.GetRequiredService<IAccountRecoveryNoticeService>().NotifyAccountsAsync(ct);
+        if (result.IsFailure) throw new InvalidOperationException("Fixture recovery notice failed.");
+        var after = await db.AccountRecoveryRequests.AsNoTracking().SingleAsync(value => value.Id == recovery.Id, ct);
+        var marked = await db.AccountRecoveryNotices.AsNoTracking().AnyAsync(value => value.Id == recovery.Id, ct);
+        var queuedNotices = await db.OutboxMessages.AsNoTracking().CountAsync(row => !beforeIds.Contains(row.Id)
+            && row.UserId == recovery.UserId && row.EncryptedPayload != "" && (row.Channel == "email" || row.Channel == "whatsapp"), ct);
+        if (after.Version != recovery.Version || after.Status != AccountRecoveryStatus.Pending)
+            throw new InvalidOperationException("Fixture recovery changed during notice.");
+        return new { marked, queuedNotices, beforeVersion = recovery.Version, afterVersion = after.Version };
+    }
+
+    private sealed record ScenarioCursor(string Phone, DateTime SinceUtc, Guid? OwnerId, Guid[] ExistingMethods)
+    {
+        public override string ToString() => nameof(ScenarioCursor);
+    }
+
+    private sealed record PrivateProof([property: System.Text.Json.Serialization.JsonPropertyName("proof")] string Proof)
+    {
+        public override string ToString() => nameof(PrivateProof);
     }
 }
