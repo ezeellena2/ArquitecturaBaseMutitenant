@@ -7,7 +7,7 @@ namespace ArquitecturaBaseMultitenant.Api.OpenApi;
 internal sealed class IdentityContractContributor : IHttpContractContributor
 {
     private const string Destination = "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.";
-    private const string Proof = "Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Intentos y topes actuales; retryAfter son segundos y coincide con Retry-After. No guardar códigos ni enlaces en logs.";
+    private const string Proof = "Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Invalid informa attemptsLeft sólo ante una prueba activa; sin prueba activa no informa intentos restantes. Los errores del código no incluyen errors.code. Intentos y topes actuales; cuando el error incluye retryAfter, son segundos y coincide con Retry-After. El bloqueo de cuenta no informa un plazo ni ese encabezado. No guardar códigos ni enlaces en logs.";
     private static readonly string[] SecretProperties = ["token", "nonce"];
     private static readonly HashSet<string> DestinationRequests = ["RequestLoginCodeHttpRequest", "VerifyLoginCodeHttpRequest", "SignupHttpRequest", "VerifySignupHttpRequest", "AddLoginMethodHttpRequest", "RequestRecoveryCodeHttpRequest", "VerifyRecoveryCodeHttpRequest", "SubmitAccountRecoveryHttpRequest"];
     private static readonly HashSet<string> CodeRequests = ["VerifyLoginCodeHttpRequest", "VerifySignupHttpRequest", "VerifyRecoveryCodeHttpRequest", "VerifyLoginMethodHttpRequest"];
@@ -38,7 +38,8 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
         Describe(document, "/api/auth/login-code", HttpMethod.Post, Destination + " Solo método verificado utilizable; conserva invitación por correo de ADR0047.",
             [E(400, "Auth.LoginCode.AccountNotFound", "email"), E(400, "Auth.LoginCode.PhoneAccountNotFound", "phone"), .. SendErrors()], true, examples: Destinations());
         Describe(document, "/api/auth/login-code/verify", HttpMethod.Post, Destination + Proof + " returnUrl OIDC o /invitacion conserva el flujo anterior y exige access ausente/null en el cuerpo. Continuación fija exclusivamente / con access=consumer o /org con access=business, valores literales sin query/fragmento; cualquier discrepancia falla antes de consumir el código. Respuesta returnUrl y cookie de identidad después del commit, sin tokens OIDC en body; el SPA inicia una autorización nueva tras el retorno fijo.",
-            VerifyErrors(), true, examples: LoginCodeExamples());
+            [.. VerifyErrors(), .. AccountStateErrors(), E(409, "Legal.AccountDeletion.GraceExpired")], true, examples: LoginCodeExamples());
+        AppendDescription(document, "/api/auth/login-code/verify", "Baja pendiente: sólo después de probar posesión y dentro de la gracia se emiten cancelTicket, returnUrl validado y fechas de cancelación; con gracia vencida se devuelve Legal.AccountDeletion.GraceExpired, sin ticket.");
         foreach (var prefix in new[] { "/api/auth/signup", "/api/auth/business-signup" })
         {
             var business = prefix.EndsWith("business-signup", StringComparison.Ordinal);
@@ -48,8 +49,8 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
             if (!business) errors.AddRange([E(400, "Auth.Signup.EmailTaken", "email"), E(400, "Auth.Signup.PhoneTaken", "phone")]);
             Describe(document, business ? prefix + "/code" : prefix, HttpMethod.Post, Destination + policy, errors, true, examples: Destinations(terms: true));
             Describe(document, prefix + "/verify", HttpMethod.Post, Destination + Proof + policy
-                + " Cuenta, método, Personal cuando corresponde y legales explícitos atómicos. Operador probado: PlatformOnly y sin cookie pública.",
-                VerifyErrors().Concat(errors).DistinctBy(error => error.Code).ToArray(), true, examples: Destinations(code: true, terms: true));
+                + " Cuenta, método, Personal cuando corresponde y legales explícitos atómicos. Operador probado: PlatformOnly y sin cookie pública. Baja pendiente se rechaza sin cancelTicket ni retorno de cancelación.",
+                VerifyErrors().Concat(AccountStateErrors()).Concat(errors).DistinctBy(error => error.Code).ToArray(), true, examples: Destinations(code: true, terms: true));
         }
         Describe(document, "/api/me/login-methods", HttpMethod.Get,
             "Identidad propia consumer/business/platform. DTO vigente, Phone solo utilizable con canal disponible. Sin permiso de organización, sin ReauthTicket.", [], authenticated: true);
@@ -59,8 +60,8 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
             "Reenvío para pendiente propio; recarga propiedad y disponibilidad, sin body. No prueba posesión del método principal.",
             [E(404, "Identity.LoginMethod.NotFound"), E(409, "Identity.LoginMethod.AlreadyVerified"), .. SendErrors()], true, true);
         Describe(document, "/api/me/login-methods/{methodId}/verify", HttpMethod.Post,
-            Proof + " Solo OTP del pendiente propio; vínculo, principal si corresponde y avisos en una UoW.",
-            [E(404, "Identity.LoginMethod.NotFound"), E(400, "Identity.LoginMethod.PhoneAlreadyUsed", "phone"), .. VerifyErrors()], true, true,
+            Proof + " Solo OTP del pendiente propio; vínculo, principal si corresponde y avisos en una UoW. El servicio rechaza cuenta suspendida o con baja pendiente sin ticket de cancelación; no evalúa bloqueo temporal de cuenta.",
+            [E(404, "Identity.LoginMethod.NotFound"), E(409, "Identity.LoginMethod.AlreadyVerified"), E(400, "Identity.LoginMethod.PhoneAlreadyUsed", "phone"), E(403, "Identity.Account.Suspended"), E(403, "Identity.Account.PendingDeletion"), .. VerifyErrors()], true, true,
             new Dictionary<string, JsonNode> { ["codigo"] = new JsonObject { ["code"] = "123456" } });
         foreach (var (path, verb) in new[] { ("/api/me/login-methods/{methodId}/primary", HttpMethod.Put), ("/api/me/login-methods/{methodId}", HttpMethod.Delete) })
             Describe(document, path, verb, "Sin body ni código de confirmación (ADR0045). Relee propiedad y métodos utilizables bajo lock, conserva principal/personal y avisos. No usa version de Tus datos.",
@@ -76,10 +77,11 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
                 examples: Destinations(code: verify, nonce: true, previous: path == "/api/account-recovery"));
         foreach (var (path, redeem) in new[] { ("/api/auth/login-link/preview", false), ("/api/auth/login-link/redeem", true) })
             Describe(document, path, HttpMethod.Post,
-                "Enlace opaco 256 bits (43 base64url), hash, 10 minutos, un uso y ligado a MethodId Phone verificado. Uno nuevo invalida los previos de ese método. Revalidar dueño, método, canal, estado y operador bajo lock; operador actual devuelve Invalid incluso en replay, sin cookie, datos o motivo revelador. Token via /login/enlace#t=… y solo memoria; jamás query/storage/log. "
-                + (redeem ? "Solo access=consumer. 200 {access:consumer} y cookie pública, sin tokens OIDC. Replay misma key no crea otra sesión; otra key ya usado. Front ejecuta después signinRedirect con su state y PKCE."
-                    : "Preview no consume ni crea cookie. displayName y maskedPhone nullable."),
-                [E(400, "Validation.Failed"), E(400, "Auth.LoginLink.Invalid"), E(400, "Auth.LoginLink.Expired"), E(400, "Auth.LoginLink.AlreadyUsed"), E(429, "Auth.LoginLink.TooManyRequests")], redeem,
+                "Enlace opaco 256 bits (43 base64url), hash, 10 minutos, un uso y ligado a MethodId Phone verificado. Uno nuevo invalida los previos de ese método. Operador actual devuelve Invalid incluso en replay, sin cookie, datos o motivo revelador. Token via /login/enlace#t=… y solo memoria; jamás query/storage/log. "
+                + "Invalid reúne enlace inexistente, usado, vencido, invalidado, método retirado y cuenta operadora. "
+                + (redeem ? "Revalida dueño, método, canal, estado y operador bajo lock dentro de la UoW. Solo access=consumer. 200 {access:consumer} y cookie pública, sin tokens OIDC. Replay misma key no crea otra sesión; otra key devuelve Invalid si ya fue usado. Baja pendiente: prueba válida y gracia vigente emiten cancelTicket con retorno fijo /login/enlace; gracia vencida devuelve Legal.AccountDeletion.GraceExpired sin ticket. Front ejecuta después signinRedirect con su state y PKCE."
+                    : "Preview hace dos lecturas coherentes del enlace y su cuenta, sin UoW ni lock; revalida dueño, método, canal, estado, operador y vigencia antes de responder. No consume ni crea cookie. displayName y maskedPhone nullable. Una baja pendiente permite preview mientras el enlace sea vigente; no emite cancelTicket."),
+                [E(400, "Validation.Failed"), E(400, "Auth.LoginLink.Invalid"), E(403, "Identity.Account.Suspended"), E(429, "Identity.Account.LockedOut"), .. (redeem ? new[] { E(403, "Identity.Account.PendingDeletion"), E(409, "Legal.AccountDeletion.GraceExpired") } : Array.Empty<HttpContractError>())], redeem,
                 examples: new Dictionary<string, JsonNode> { ["enlace"] = redeem ? new JsonObject { ["token"] = ExampleToken, ["access"] = "consumer" } : new JsonObject { ["token"] = ExampleToken } });
         Describe(document, "/api/auth/business-signup", HttpMethod.Post,
             "Contrato vigente de Tu organización. Requiere cookie pública probada y antiforgery; no recibe phone ni selecciona consumer. Valida BusinessSignup y límite/estado de organización; 200 BusinessSignupResponse existente.",
@@ -93,7 +95,7 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
             Describe(document, "/api/platform/recoveries/{id}/" + action, HttpMethod.Post,
                 "Access platform y permiso " + ArquitecturaBaseMultitenant.Domain.Authorization.PlatformPermissions.Recoveries.Manage
                 + " vigente. Body reason/version existente, decisión humana con SecurityEvent; conserva VersionResponse y concurrencia. Phone es un tipo de método, nunca se convierte en Email.",
-                [E(400, "Validation.Failed"), E(404, "Platform.AccountRecovery.NotFound"), E(409, "Platform.AccountRecovery.AlreadyResolved"), E(409, "Platform.AccountRecovery.NoAccount"), E(409, "Platform.AccountRecovery.MethodInUse"), E(400, "Platform.AccountRecovery.PhoneMethodInUse"), E(409, "Platform.AccountRecovery.OperatorAccount"), E(409, "General.ConcurrencyConflict")], true, true);
+                [E(400, "Validation.Failed"), E(404, "Platform.AccountRecovery.NotFound"), E(409, "Platform.AccountRecovery.AlreadyResolved"), E(409, "General.ConcurrencyConflict"), .. (action == "approve" ? new[] { E(409, "Platform.AccountRecovery.NoAccount"), E(409, "Platform.AccountRecovery.MethodInUse"), E(409, "Platform.AccountRecovery.MethodAlreadyOnAccount"), E(409, "Platform.AccountRecovery.OperatorAccount") } : Array.Empty<HttpContractError>())], true, true);
         foreach (var path in new[] { "/api/auth/login-code/verify", "/api/auth/business-signup/verify", "/api/auth/login-link/redeem" })
         {
             var operation = document.Paths[path].Operations![HttpMethod.Post];
@@ -113,14 +115,18 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
     private const string ExampleToken = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
     private static HttpContractError E(int status, string code, string? field = null) => HttpContractDocumentation.CoreError(status, code, field);
     private static HttpContractError[] SendErrors() => [E(400, "Validation.Failed"), E(400, "Users.Phone.Invalid", "phone"), E(400, "Users.Phone.NotMobile", "phone"), E(400, "Auth.LoginMethod.ChannelUnavailable", "channel"), E(429, "Auth.LoginCode.ResendTooSoon"), E(429, "Auth.LoginCode.TooManyRequests")];
-    private static HttpContractError[] VerifyErrors() => [E(400, "Validation.Failed"), E(400, "Auth.LoginCode.Invalid", "code"), E(400, "Auth.LoginCode.Expired", "code"), E(400, "Auth.LoginCode.AlreadyUsed", "code"), E(400, "Auth.LoginCode.TooManyAttempts", "code"), E(403, "Auth.Account.Disabled"), E(403, "Auth.Account.LockedOut"), E(403, "Tenancy.Access.PlatformOnly"), E(400, "Auth.LoginMethod.ChannelUnavailable", "channel")];
+    private static HttpContractError[] VerifyErrors() => [E(400, "Validation.Failed"), E(400, "Auth.LoginCode.Invalid"), E(400, "Auth.LoginCode.Expired"), E(400, "Auth.LoginCode.AlreadyUsed"), E(400, "Auth.LoginCode.TooManyAttempts"), E(400, "Auth.LoginMethod.ChannelUnavailable", "channel")];
+    private static HttpContractError[] AccountStateErrors() => [E(403, "Identity.Account.Suspended"), E(429, "Identity.Account.LockedOut"), E(403, "Identity.Account.PendingDeletion"), E(403, "Tenancy.Access.PlatformOnly")];
+
+    private static void AppendDescription(OpenApiDocument document, string path, string text) =>
+        document.Paths[path].Operations![HttpMethod.Post].Description += " " + text;
 
     private static void Describe(OpenApiDocument document, string path, HttpMethod verb, string text, IReadOnlyList<HttpContractError> errors,
         bool idempotent = false, bool authenticated = false, IReadOnlyDictionary<string, JsonNode>? examples = null)
     {
         var common = new List<HttpContractError> { E(429, "Http.TooManyRequests"), E(500, "General.Unexpected") };
         if (authenticated) common.AddRange([E(401, "Http.Unauthorized"), E(403, "Http.Forbidden")]);
-        if (idempotent) common.AddRange([E(400, "Request.IdempotencyKeyRequired"), E(409, "Request.IdempotencyKeyReused"), E(409, "Request.InProgress")]);
+        if (idempotent) common.AddRange([E(400, "Request.IdempotencyKeyRequired"), E(422, "Request.IdempotencyKeyReused"), E(409, "Request.InProgress")]);
         HttpContractDocumentation.Describe(document, path, verb, text, errors.Concat(common).DistinctBy(error => error.Code).ToArray(), idempotent, authenticated, examples);
     }
 

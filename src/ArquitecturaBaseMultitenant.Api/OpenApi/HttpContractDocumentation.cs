@@ -75,13 +75,12 @@ public static class HttpContractDocumentation
                         ["status"] = error.Status, ["detail"] = detail, ["code"] = error.Code, ["traceId"] = "example-trace-id",
                     };
                     if (error.Field is not null) example["errors"] = new JsonObject { [error.Field] = new JsonArray(detail) };
-                    if (error.Status == 429) example["retryAfter"] = 60;
-                    if (error.Code == "Auth.LoginCode.Invalid") example["attemptsLeft"] = 4;
+                    if (error.Status == 429 && error.Code != "Identity.Account.LockedOut") example["retryAfter"] = 60;
                     response.Content["application/problem+json"].Examples![error.Code + "." + culture] = new OpenApiExample { Value = example };
                 }
             if (group.Key == 429) response.Headers = new Dictionary<string, IOpenApiHeader>
             {
-                ["Retry-After"] = new OpenApiHeader { Description = "Segundos iguales a retryAfter.", Schema = new OpenApiSchema { Type = JsonSchemaType.Integer } },
+                ["Retry-After"] = new OpenApiHeader { Description = "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.", Schema = new OpenApiSchema { Type = JsonSchemaType.Integer } },
             };
             operation.Responses[StatusName(group.Key)] = response;
         }

@@ -353,7 +353,7 @@
             "description": "Too Many Requests; WhatsApp.Webhook.TooManyRequests",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -4069,7 +4069,7 @@
             "description": "Too Many Requests; Assistant.Limit.DailyReached; Assistant.Limit.MonthlyReached",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -12304,7 +12304,7 @@
             "description": "Too Many Requests; Assistant.Limit.DailyReached; Assistant.Limit.MonthlyReached",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -22354,7 +22354,7 @@
             "description": "Too Many Requests; Assistant.Limit.DailyReached; Assistant.Limit.MonthlyReached",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -34472,7 +34472,7 @@
             }
           },
           "400": {
-            "description": "Bad Request; Validation.Failed; Platform.AccountRecovery.PhoneMethodInUse; Request.IdempotencyKeyRequired",
+            "description": "Bad Request; Validation.Failed; Request.IdempotencyKeyRequired",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -34496,26 +34496,6 @@
                       "status": 400,
                       "detail": "Check the highlighted fields.",
                       "code": "Validation.Failed",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Platform.AccountRecovery.PhoneMethodInUse.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 400,
-                      "detail": "Ese número ya es de otra cuenta.",
-                      "code": "Platform.AccountRecovery.PhoneMethodInUse",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Platform.AccountRecovery.PhoneMethodInUse.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 400,
-                      "detail": "That number belongs to another account.",
-                      "code": "Platform.AccountRecovery.PhoneMethodInUse",
                       "traceId": "example-trace-id"
                     }
                   },
@@ -34640,7 +34620,7 @@
             }
           },
           "409": {
-            "description": "Conflict; Platform.AccountRecovery.AlreadyResolved; Platform.AccountRecovery.NoAccount; Platform.AccountRecovery.MethodInUse; Platform.AccountRecovery.OperatorAccount; General.ConcurrencyConflict; Request.IdempotencyKeyReused; Request.InProgress",
+            "description": "Conflict; Platform.AccountRecovery.AlreadyResolved; General.ConcurrencyConflict; Platform.AccountRecovery.NoAccount; Platform.AccountRecovery.MethodInUse; Platform.AccountRecovery.MethodAlreadyOnAccount; Platform.AccountRecovery.OperatorAccount; Request.InProgress",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -34664,6 +34644,26 @@
                       "status": 409,
                       "detail": "That request has already been resolved.",
                       "code": "Platform.AccountRecovery.AlreadyResolved",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "General.ConcurrencyConflict.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 409,
+                      "detail": "Otra persona cambió esto. Revisá la versión más reciente antes de guardar.",
+                      "code": "General.ConcurrencyConflict",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "General.ConcurrencyConflict.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 409,
+                      "detail": "Someone else changed this. Review the latest version before saving.",
+                      "code": "General.ConcurrencyConflict",
                       "traceId": "example-trace-id"
                     }
                   },
@@ -34692,7 +34692,7 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 409,
-                      "detail": "Ese correo ya es de otra cuenta.",
+                      "detail": "Ese método de ingreso ya es de otra cuenta.",
                       "code": "Platform.AccountRecovery.MethodInUse",
                       "traceId": "example-trace-id"
                     }
@@ -34702,8 +34702,28 @@
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 409,
-                      "detail": "That email address already belongs to another account.",
+                      "detail": "That sign-in method already belongs to another account.",
                       "code": "Platform.AccountRecovery.MethodInUse",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Platform.AccountRecovery.MethodAlreadyOnAccount.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 409,
+                      "detail": "Ese método de ingreso ya pertenece a esa cuenta.",
+                      "code": "Platform.AccountRecovery.MethodAlreadyOnAccount",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Platform.AccountRecovery.MethodAlreadyOnAccount.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 409,
+                      "detail": "That sign-in method already belongs to that account.",
+                      "code": "Platform.AccountRecovery.MethodAlreadyOnAccount",
                       "traceId": "example-trace-id"
                     }
                   },
@@ -34724,46 +34744,6 @@
                       "status": 409,
                       "detail": "This is a platform operator account: it cannot be recovered here.",
                       "code": "Platform.AccountRecovery.OperatorAccount",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.ConcurrencyConflict.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 409,
-                      "detail": "Otra persona cambió esto. Revisá la versión más reciente antes de guardar.",
-                      "code": "General.ConcurrencyConflict",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.ConcurrencyConflict.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 409,
-                      "detail": "Someone else changed this. Review the latest version before saving.",
-                      "code": "General.ConcurrencyConflict",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Request.IdempotencyKeyReused.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 409,
-                      "detail": "Esta clave ya se usó para otra solicitud.",
-                      "code": "Request.IdempotencyKeyReused",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Request.IdempotencyKeyReused.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 409,
-                      "detail": "This key was already used for another request.",
-                      "code": "Request.IdempotencyKeyReused",
                       "traceId": "example-trace-id"
                     }
                   },
@@ -34827,7 +34807,7 @@
             "description": "Http.TooManyRequests",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -34864,6 +34844,38 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Request.IdempotencyKeyReused",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Request.IdempotencyKeyReused.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 422,
+                      "detail": "Esta clave ya se usó para otra solicitud.",
+                      "code": "Request.IdempotencyKeyReused",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Request.IdempotencyKeyReused.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 422,
+                      "detail": "This key was already used for another request.",
+                      "code": "Request.IdempotencyKeyReused",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -34895,6 +34907,13 @@
           },
           {
             "status": 409,
+            "code": "General.ConcurrencyConflict",
+            "field": null,
+            "es": "Otra persona cambió esto. Revisá la versión más reciente antes de guardar.",
+            "en": "Someone else changed this. Review the latest version before saving."
+          },
+          {
+            "status": 409,
             "code": "Platform.AccountRecovery.NoAccount",
             "field": null,
             "es": "No hay ninguna cuenta con el método de antes. Solo se puede rechazar.",
@@ -34904,15 +34923,15 @@
             "status": 409,
             "code": "Platform.AccountRecovery.MethodInUse",
             "field": null,
-            "es": "Ese correo ya es de otra cuenta.",
-            "en": "That email address already belongs to another account."
+            "es": "Ese método de ingreso ya es de otra cuenta.",
+            "en": "That sign-in method already belongs to another account."
           },
           {
-            "status": 400,
-            "code": "Platform.AccountRecovery.PhoneMethodInUse",
+            "status": 409,
+            "code": "Platform.AccountRecovery.MethodAlreadyOnAccount",
             "field": null,
-            "es": "Ese número ya es de otra cuenta.",
-            "en": "That number belongs to another account."
+            "es": "Ese método de ingreso ya pertenece a esa cuenta.",
+            "en": "That sign-in method already belongs to that account."
           },
           {
             "status": 409,
@@ -34920,13 +34939,6 @@
             "field": null,
             "es": "La cuenta es de un operador de la plataforma: no se recupera desde acá.",
             "en": "This is a platform operator account: it cannot be recovered here."
-          },
-          {
-            "status": 409,
-            "code": "General.ConcurrencyConflict",
-            "field": null,
-            "es": "Otra persona cambió esto. Revisá la versión más reciente antes de guardar.",
-            "en": "Someone else changed this. Review the latest version before saving."
           },
           {
             "status": 429,
@@ -34964,7 +34976,7 @@
             "en": "A key identifying this request is required."
           },
           {
-            "status": 409,
+            "status": 422,
             "code": "Request.IdempotencyKeyReused",
             "field": null,
             "es": "Esta clave ya se usó para otra solicitud.",
@@ -35049,7 +35061,7 @@
             }
           },
           "400": {
-            "description": "Bad Request; Validation.Failed; Platform.AccountRecovery.PhoneMethodInUse; Request.IdempotencyKeyRequired",
+            "description": "Bad Request; Validation.Failed; Request.IdempotencyKeyRequired",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -35073,26 +35085,6 @@
                       "status": 400,
                       "detail": "Check the highlighted fields.",
                       "code": "Validation.Failed",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Platform.AccountRecovery.PhoneMethodInUse.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 400,
-                      "detail": "Ese número ya es de otra cuenta.",
-                      "code": "Platform.AccountRecovery.PhoneMethodInUse",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Platform.AccountRecovery.PhoneMethodInUse.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 400,
-                      "detail": "That number belongs to another account.",
-                      "code": "Platform.AccountRecovery.PhoneMethodInUse",
                       "traceId": "example-trace-id"
                     }
                   },
@@ -35217,7 +35209,7 @@
             }
           },
           "409": {
-            "description": "Conflict; Platform.AccountRecovery.AlreadyResolved; Platform.AccountRecovery.NoAccount; Platform.AccountRecovery.MethodInUse; Platform.AccountRecovery.OperatorAccount; General.ConcurrencyConflict; Request.IdempotencyKeyReused; Request.InProgress",
+            "description": "Conflict; Platform.AccountRecovery.AlreadyResolved; General.ConcurrencyConflict; Request.InProgress",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -35244,66 +35236,6 @@
                       "traceId": "example-trace-id"
                     }
                   },
-                  "Platform.AccountRecovery.NoAccount.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 409,
-                      "detail": "No hay ninguna cuenta con el método de antes. Solo se puede rechazar.",
-                      "code": "Platform.AccountRecovery.NoAccount",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Platform.AccountRecovery.NoAccount.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 409,
-                      "detail": "No account has the previous method. It can only be rejected.",
-                      "code": "Platform.AccountRecovery.NoAccount",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Platform.AccountRecovery.MethodInUse.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 409,
-                      "detail": "Ese correo ya es de otra cuenta.",
-                      "code": "Platform.AccountRecovery.MethodInUse",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Platform.AccountRecovery.MethodInUse.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 409,
-                      "detail": "That email address already belongs to another account.",
-                      "code": "Platform.AccountRecovery.MethodInUse",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Platform.AccountRecovery.OperatorAccount.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 409,
-                      "detail": "La cuenta es de un operador de la plataforma: no se recupera desde acá.",
-                      "code": "Platform.AccountRecovery.OperatorAccount",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Platform.AccountRecovery.OperatorAccount.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 409,
-                      "detail": "This is a platform operator account: it cannot be recovered here.",
-                      "code": "Platform.AccountRecovery.OperatorAccount",
-                      "traceId": "example-trace-id"
-                    }
-                  },
                   "General.ConcurrencyConflict.es": {
                     "value": {
                       "type": "about:blank",
@@ -35321,26 +35253,6 @@
                       "status": 409,
                       "detail": "Someone else changed this. Review the latest version before saving.",
                       "code": "General.ConcurrencyConflict",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Request.IdempotencyKeyReused.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 409,
-                      "detail": "Esta clave ya se usó para otra solicitud.",
-                      "code": "Request.IdempotencyKeyReused",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Request.IdempotencyKeyReused.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 409,
-                      "detail": "This key was already used for another request.",
-                      "code": "Request.IdempotencyKeyReused",
                       "traceId": "example-trace-id"
                     }
                   },
@@ -35404,7 +35316,7 @@
             "description": "Http.TooManyRequests",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -35441,6 +35353,38 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Request.IdempotencyKeyReused",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Request.IdempotencyKeyReused.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 422,
+                      "detail": "Esta clave ya se usó para otra solicitud.",
+                      "code": "Request.IdempotencyKeyReused",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Request.IdempotencyKeyReused.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 422,
+                      "detail": "This key was already used for another request.",
+                      "code": "Request.IdempotencyKeyReused",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -35469,34 +35413,6 @@
             "field": null,
             "es": "Ese pedido ya se resolvió.",
             "en": "That request has already been resolved."
-          },
-          {
-            "status": 409,
-            "code": "Platform.AccountRecovery.NoAccount",
-            "field": null,
-            "es": "No hay ninguna cuenta con el método de antes. Solo se puede rechazar.",
-            "en": "No account has the previous method. It can only be rejected."
-          },
-          {
-            "status": 409,
-            "code": "Platform.AccountRecovery.MethodInUse",
-            "field": null,
-            "es": "Ese correo ya es de otra cuenta.",
-            "en": "That email address already belongs to another account."
-          },
-          {
-            "status": 400,
-            "code": "Platform.AccountRecovery.PhoneMethodInUse",
-            "field": null,
-            "es": "Ese número ya es de otra cuenta.",
-            "en": "That number belongs to another account."
-          },
-          {
-            "status": 409,
-            "code": "Platform.AccountRecovery.OperatorAccount",
-            "field": null,
-            "es": "La cuenta es de un operador de la plataforma: no se recupera desde acá.",
-            "en": "This is a platform operator account: it cannot be recovered here."
           },
           {
             "status": 409,
@@ -35541,7 +35457,7 @@
             "en": "A key identifying this request is required."
           },
           {
-            "status": 409,
+            "status": 422,
             "code": "Request.IdempotencyKeyReused",
             "field": null,
             "es": "Esta clave ya se usó para otra solicitud.",
@@ -41731,7 +41647,7 @@
             "description": "Too Many Requests; Http.TooManyRequests",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -41847,7 +41763,7 @@
         "tags": [
           "Auth"
         ],
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Intentos y topes actuales; retryAfter son segundos y coincide con Retry-After. No guardar códigos ni enlaces en logs. Nonce opaco base64url de 43 caracteres, ligado a este pedido. Sin sesión. Nuevo destino no se agrega a la cuenta. Submit: 202 sin body, prueba previa vigente y previousEmail o previousPhone; resolución asistida de Plataforma conserva reason/version/permiso/SecurityEvent. WhatsApp: cuota diaria persistente de códigos por UTC, una reserva por operación; replay no vuelve a gastar cuota. Error de entrega posterior a 202 se maneja en outbox. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Invalid informa attemptsLeft sólo ante una prueba activa; sin prueba activa no informa intentos restantes. Los errores del código no incluyen errors.code. Intentos y topes actuales; cuando el error incluye retryAfter, son segundos y coincide con Retry-After. El bloqueo de cuenta no informa un plazo ni ese encabezado. No guardar códigos ni enlaces en logs. Nonce opaco base64url de 43 caracteres, ligado a este pedido. Sin sesión. Nuevo destino no se agrega a la cuenta. Submit: 202 sin body, prueba previa vigente y previousEmail o previousPhone; resolución asistida de Plataforma conserva reason/version/permiso/SecurityEvent. WhatsApp: cuota diaria persistente de códigos por UTC, una reserva por operación; replay no vuelve a gastar cuota. Error de entrega posterior a 202 se maneja en outbox. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -41962,12 +41878,12 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 400,
-                      "detail": "Ese correo ya es de otra cuenta.",
+                      "detail": "Ese método de ingreso ya es de otra cuenta.",
                       "code": "Platform.AccountRecovery.MethodInUse",
                       "traceId": "example-trace-id",
                       "errors": {
                         "email": [
-                          "Ese correo ya es de otra cuenta."
+                          "Ese método de ingreso ya es de otra cuenta."
                         ]
                       }
                     }
@@ -41977,12 +41893,12 @@
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 400,
-                      "detail": "That email address already belongs to another account.",
+                      "detail": "That sign-in method already belongs to another account.",
                       "code": "Platform.AccountRecovery.MethodInUse",
                       "traceId": "example-trace-id",
                       "errors": {
                         "email": [
-                          "That email address already belongs to another account."
+                          "That sign-in method already belongs to another account."
                         ]
                       }
                     }
@@ -42175,7 +42091,7 @@
             "description": "Too Many Requests; Auth.LoginCode.ResendTooSoon; Auth.LoginCode.TooManyRequests; Http.TooManyRequests; WhatsApp.LoginCode.DailyLimit",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -42311,8 +42227,8 @@
               }
             }
           },
-          "409": {
-            "description": "Request.IdempotencyKeyReused; Request.InProgress",
+          "422": {
+            "description": "Request.IdempotencyKeyReused",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -42323,7 +42239,7 @@
                     "value": {
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
-                      "status": 409,
+                      "status": 422,
                       "detail": "Esta clave ya se usó para otra solicitud.",
                       "code": "Request.IdempotencyKeyReused",
                       "traceId": "example-trace-id"
@@ -42333,12 +42249,24 @@
                     "value": {
                       "type": "about:blank",
                       "title": "Request rejected",
-                      "status": 409,
+                      "status": 422,
                       "detail": "This key was already used for another request.",
                       "code": "Request.IdempotencyKeyReused",
                       "traceId": "example-trace-id"
                     }
-                  },
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Request.InProgress",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
                   "Request.InProgress.es": {
                     "value": {
                       "type": "about:blank",
@@ -42377,8 +42305,8 @@
             "status": 400,
             "code": "Platform.AccountRecovery.MethodInUse",
             "field": "email",
-            "es": "Ese correo ya es de otra cuenta.",
-            "en": "That email address already belongs to another account."
+            "es": "Ese método de ingreso ya es de otra cuenta.",
+            "en": "That sign-in method already belongs to another account."
           },
           {
             "status": 400,
@@ -42451,7 +42379,7 @@
             "en": "A key identifying this request is required."
           },
           {
-            "status": 409,
+            "status": 422,
             "code": "Request.IdempotencyKeyReused",
             "field": null,
             "es": "Esta clave ya se usó para otra solicitud.",
@@ -42486,7 +42414,7 @@
         "tags": [
           "Auth"
         ],
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Intentos y topes actuales; retryAfter son segundos y coincide con Retry-After. No guardar códigos ni enlaces en logs. Nonce opaco base64url de 43 caracteres, ligado a este pedido. Sin sesión. Nuevo destino no se agrega a la cuenta. Submit: 202 sin body, prueba previa vigente y previousEmail o previousPhone; resolución asistida de Plataforma conserva reason/version/permiso/SecurityEvent. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Invalid informa attemptsLeft sólo ante una prueba activa; sin prueba activa no informa intentos restantes. Los errores del código no incluyen errors.code. Intentos y topes actuales; cuando el error incluye retryAfter, son segundos y coincide con Retry-After. El bloqueo de cuenta no informa un plazo ni ese encabezado. No guardar códigos ni enlaces en logs. Nonce opaco base64url de 43 caracteres, ligado a este pedido. Sin sesión. Nuevo destino no se agrega a la cuenta. Submit: 202 sin body, prueba previa vigente y previousEmail o previousPhone; resolución asistida de Plataforma conserva reason/version/permiso/SecurityEvent. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -42586,12 +42514,12 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 400,
-                      "detail": "Ese correo ya es de otra cuenta.",
+                      "detail": "Ese método de ingreso ya es de otra cuenta.",
                       "code": "Platform.AccountRecovery.MethodInUse",
                       "traceId": "example-trace-id",
                       "errors": {
                         "email": [
-                          "Ese correo ya es de otra cuenta."
+                          "Ese método de ingreso ya es de otra cuenta."
                         ]
                       }
                     }
@@ -42601,12 +42529,12 @@
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 400,
-                      "detail": "That email address already belongs to another account.",
+                      "detail": "That sign-in method already belongs to another account.",
                       "code": "Platform.AccountRecovery.MethodInUse",
                       "traceId": "example-trace-id",
                       "errors": {
                         "email": [
-                          "That email address already belongs to another account."
+                          "That sign-in method already belongs to another account."
                         ]
                       }
                     }
@@ -42658,13 +42586,7 @@
                       "status": 400,
                       "detail": "El código no es válido.",
                       "code": "Auth.LoginCode.Invalid",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "El código no es válido."
-                        ]
-                      },
-                      "attemptsLeft": 4
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.Invalid.en": {
@@ -42674,13 +42596,7 @@
                       "status": 400,
                       "detail": "The code is not valid.",
                       "code": "Auth.LoginCode.Invalid",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "The code is not valid."
-                        ]
-                      },
-                      "attemptsLeft": 4
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.Expired.es": {
@@ -42690,12 +42606,7 @@
                       "status": 400,
                       "detail": "El código venció. Pedí uno nuevo.",
                       "code": "Auth.LoginCode.Expired",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "El código venció. Pedí uno nuevo."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.Expired.en": {
@@ -42705,12 +42616,7 @@
                       "status": 400,
                       "detail": "The code has expired. Request a new one.",
                       "code": "Auth.LoginCode.Expired",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "The code has expired. Request a new one."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.AlreadyUsed.es": {
@@ -42720,12 +42626,7 @@
                       "status": 400,
                       "detail": "El código ya se usó. Pedí uno nuevo.",
                       "code": "Auth.LoginCode.AlreadyUsed",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "El código ya se usó. Pedí uno nuevo."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.AlreadyUsed.en": {
@@ -42735,12 +42636,7 @@
                       "status": 400,
                       "detail": "The code has already been used. Request a new one.",
                       "code": "Auth.LoginCode.AlreadyUsed",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "The code has already been used. Request a new one."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.TooManyAttempts.es": {
@@ -42750,12 +42646,7 @@
                       "status": 400,
                       "detail": "Superaste los intentos para este código. Pedí uno nuevo.",
                       "code": "Auth.LoginCode.TooManyAttempts",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "Superaste los intentos para este código. Pedí uno nuevo."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.TooManyAttempts.en": {
@@ -42765,12 +42656,7 @@
                       "status": 400,
                       "detail": "Too many attempts for this code. Request a new one.",
                       "code": "Auth.LoginCode.TooManyAttempts",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "Too many attempts for this code. Request a new one."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginMethod.ChannelUnavailable.es": {
@@ -42861,7 +42747,7 @@
             "description": "Too Many Requests; Http.TooManyRequests",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -42931,80 +42817,8 @@
               }
             }
           },
-          "403": {
-            "description": "Auth.Account.Disabled; Auth.Account.LockedOut; Tenancy.Access.PlatformOnly",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "Auth.Account.Disabled.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 403,
-                      "detail": "Tu cuenta está deshabilitada. Contactá a un administrador.",
-                      "code": "Auth.Account.Disabled",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Auth.Account.Disabled.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 403,
-                      "detail": "Your account is disabled. Contact an administrator.",
-                      "code": "Auth.Account.Disabled",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Auth.Account.LockedOut.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 403,
-                      "detail": "Tu cuenta está bloqueada por unos minutos por demasiados intentos fallidos.",
-                      "code": "Auth.Account.LockedOut",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Auth.Account.LockedOut.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 403,
-                      "detail": "Your account is locked for a few minutes after too many failed attempts.",
-                      "code": "Auth.Account.LockedOut",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Tenancy.Access.PlatformOnly.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 403,
-                      "detail": "Esta cuenta es de un operador: solo entra a Plataforma.",
-                      "code": "Tenancy.Access.PlatformOnly",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Tenancy.Access.PlatformOnly.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 403,
-                      "detail": "This is a platform operator account: it can only enter the platform.",
-                      "code": "Tenancy.Access.PlatformOnly",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Request.IdempotencyKeyReused; Request.InProgress",
+          "422": {
+            "description": "Request.IdempotencyKeyReused",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -43015,7 +42829,7 @@
                     "value": {
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
-                      "status": 409,
+                      "status": 422,
                       "detail": "Esta clave ya se usó para otra solicitud.",
                       "code": "Request.IdempotencyKeyReused",
                       "traceId": "example-trace-id"
@@ -43025,12 +42839,24 @@
                     "value": {
                       "type": "about:blank",
                       "title": "Request rejected",
-                      "status": 409,
+                      "status": 422,
                       "detail": "This key was already used for another request.",
                       "code": "Request.IdempotencyKeyReused",
                       "traceId": "example-trace-id"
                     }
-                  },
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Request.InProgress",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
                   "Request.InProgress.es": {
                     "value": {
                       "type": "about:blank",
@@ -43069,8 +42895,8 @@
             "status": 400,
             "code": "Platform.AccountRecovery.MethodInUse",
             "field": "email",
-            "es": "Ese correo ya es de otra cuenta.",
-            "en": "That email address already belongs to another account."
+            "es": "Ese método de ingreso ya es de otra cuenta.",
+            "en": "That sign-in method already belongs to another account."
           },
           {
             "status": 400,
@@ -43089,51 +42915,30 @@
           {
             "status": 400,
             "code": "Auth.LoginCode.Invalid",
-            "field": "code",
+            "field": null,
             "es": "El código no es válido.",
             "en": "The code is not valid."
           },
           {
             "status": 400,
             "code": "Auth.LoginCode.Expired",
-            "field": "code",
+            "field": null,
             "es": "El código venció. Pedí uno nuevo.",
             "en": "The code has expired. Request a new one."
           },
           {
             "status": 400,
             "code": "Auth.LoginCode.AlreadyUsed",
-            "field": "code",
+            "field": null,
             "es": "El código ya se usó. Pedí uno nuevo.",
             "en": "The code has already been used. Request a new one."
           },
           {
             "status": 400,
             "code": "Auth.LoginCode.TooManyAttempts",
-            "field": "code",
+            "field": null,
             "es": "Superaste los intentos para este código. Pedí uno nuevo.",
             "en": "Too many attempts for this code. Request a new one."
-          },
-          {
-            "status": 403,
-            "code": "Auth.Account.Disabled",
-            "field": null,
-            "es": "Tu cuenta está deshabilitada. Contactá a un administrador.",
-            "en": "Your account is disabled. Contact an administrator."
-          },
-          {
-            "status": 403,
-            "code": "Auth.Account.LockedOut",
-            "field": null,
-            "es": "Tu cuenta está bloqueada por unos minutos por demasiados intentos fallidos.",
-            "en": "Your account is locked for a few minutes after too many failed attempts."
-          },
-          {
-            "status": 403,
-            "code": "Tenancy.Access.PlatformOnly",
-            "field": null,
-            "es": "Esta cuenta es de un operador: solo entra a Plataforma.",
-            "en": "This is a platform operator account: it can only enter the platform."
           },
           {
             "status": 400,
@@ -43164,7 +42969,7 @@
             "en": "A key identifying this request is required."
           },
           {
-            "status": 409,
+            "status": 422,
             "code": "Request.IdempotencyKeyReused",
             "field": null,
             "es": "Esta clave ya se usó para otra solicitud.",
@@ -43192,7 +42997,7 @@
         "tags": [
           "Auth"
         ],
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Intentos y topes actuales; retryAfter son segundos y coincide con Retry-After. No guardar códigos ni enlaces en logs. Nonce opaco base64url de 43 caracteres, ligado a este pedido. Sin sesión. Nuevo destino no se agrega a la cuenta. Submit: 202 sin body, prueba previa vigente y previousEmail o previousPhone; resolución asistida de Plataforma conserva reason/version/permiso/SecurityEvent. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Invalid informa attemptsLeft sólo ante una prueba activa; sin prueba activa no informa intentos restantes. Los errores del código no incluyen errors.code. Intentos y topes actuales; cuando el error incluye retryAfter, son segundos y coincide con Retry-After. El bloqueo de cuenta no informa un plazo ni ese encabezado. No guardar códigos ni enlaces en logs. Nonce opaco base64url de 43 caracteres, ligado a este pedido. Sin sesión. Nuevo destino no se agrega a la cuenta. Submit: 202 sin body, prueba previa vigente y previousEmail o previousPhone; resolución asistida de Plataforma conserva reason/version/permiso/SecurityEvent. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -43292,12 +43097,12 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 400,
-                      "detail": "Ese correo ya es de otra cuenta.",
+                      "detail": "Ese método de ingreso ya es de otra cuenta.",
                       "code": "Platform.AccountRecovery.MethodInUse",
                       "traceId": "example-trace-id",
                       "errors": {
                         "email": [
-                          "Ese correo ya es de otra cuenta."
+                          "Ese método de ingreso ya es de otra cuenta."
                         ]
                       }
                     }
@@ -43307,12 +43112,12 @@
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 400,
-                      "detail": "That email address already belongs to another account.",
+                      "detail": "That sign-in method already belongs to another account.",
                       "code": "Platform.AccountRecovery.MethodInUse",
                       "traceId": "example-trace-id",
                       "errors": {
                         "email": [
-                          "That email address already belongs to another account."
+                          "That sign-in method already belongs to another account."
                         ]
                       }
                     }
@@ -43505,7 +43310,7 @@
             "description": "Too Many Requests; Auth.LoginCode.ResendTooSoon; Auth.LoginCode.TooManyRequests; Http.TooManyRequests",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -43619,8 +43424,8 @@
               }
             }
           },
-          "409": {
-            "description": "Request.IdempotencyKeyReused; Request.InProgress",
+          "422": {
+            "description": "Request.IdempotencyKeyReused",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -43631,7 +43436,7 @@
                     "value": {
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
-                      "status": 409,
+                      "status": 422,
                       "detail": "Esta clave ya se usó para otra solicitud.",
                       "code": "Request.IdempotencyKeyReused",
                       "traceId": "example-trace-id"
@@ -43641,12 +43446,24 @@
                     "value": {
                       "type": "about:blank",
                       "title": "Request rejected",
-                      "status": 409,
+                      "status": 422,
                       "detail": "This key was already used for another request.",
                       "code": "Request.IdempotencyKeyReused",
                       "traceId": "example-trace-id"
                     }
-                  },
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Request.InProgress",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
                   "Request.InProgress.es": {
                     "value": {
                       "type": "about:blank",
@@ -43685,8 +43502,8 @@
             "status": 400,
             "code": "Platform.AccountRecovery.MethodInUse",
             "field": "email",
-            "es": "Ese correo ya es de otra cuenta.",
-            "en": "That email address already belongs to another account."
+            "es": "Ese método de ingreso ya es de otra cuenta.",
+            "en": "That sign-in method already belongs to another account."
           },
           {
             "status": 400,
@@ -43759,7 +43576,7 @@
             "en": "A key identifying this request is required."
           },
           {
-            "status": 409,
+            "status": 422,
             "code": "Request.IdempotencyKeyReused",
             "field": null,
             "es": "Esta clave ya se usó para otra solicitud.",
@@ -44071,7 +43888,7 @@
             "description": "Too Many Requests; Auth.LoginCode.ResendTooSoon; Auth.LoginCode.TooManyRequests; Http.TooManyRequests; WhatsApp.LoginCode.DailyLimit",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -44207,8 +44024,8 @@
               }
             }
           },
-          "409": {
-            "description": "Request.IdempotencyKeyReused; Request.InProgress",
+          "422": {
+            "description": "Request.IdempotencyKeyReused",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -44219,7 +44036,7 @@
                     "value": {
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
-                      "status": 409,
+                      "status": 422,
                       "detail": "Esta clave ya se usó para otra solicitud.",
                       "code": "Request.IdempotencyKeyReused",
                       "traceId": "example-trace-id"
@@ -44229,12 +44046,24 @@
                     "value": {
                       "type": "about:blank",
                       "title": "Request rejected",
-                      "status": 409,
+                      "status": 422,
                       "detail": "This key was already used for another request.",
                       "code": "Request.IdempotencyKeyReused",
                       "traceId": "example-trace-id"
                     }
-                  },
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Request.InProgress",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
                   "Request.InProgress.es": {
                     "value": {
                       "type": "about:blank",
@@ -44333,7 +44162,7 @@
             "en": "A key identifying this request is required."
           },
           {
-            "status": 409,
+            "status": 422,
             "code": "Request.IdempotencyKeyReused",
             "field": null,
             "es": "Esta clave ya se usó para otra solicitud.",
@@ -44368,7 +44197,7 @@
         "tags": [
           "Auth"
         ],
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Intentos y topes actuales; retryAfter son segundos y coincide con Retry-After. No guardar códigos ni enlaces en logs.BusinessSignup abierto, independiente de ConsumerSignup; identidad nueva o existente. No crea organización ni PhoneTaken personal. Cuenta, método, Personal cuando corresponde y legales explícitos atómicos. Operador probado: PlatformOnly y sin cookie pública. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Invalid informa attemptsLeft sólo ante una prueba activa; sin prueba activa no informa intentos restantes. Los errores del código no incluyen errors.code. Intentos y topes actuales; cuando el error incluye retryAfter, son segundos y coincide con Retry-After. El bloqueo de cuenta no informa un plazo ni ese encabezado. No guardar códigos ni enlaces en logs.BusinessSignup abierto, independiente de ConsumerSignup; identidad nueva o existente. No crea organización ni PhoneTaken personal. Cuenta, método, Personal cuando corresponde y legales explícitos atómicos. Operador probado: PlatformOnly y sin cookie pública. Baja pendiente se rechaza sin cancelTicket ni retorno de cancelación. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -44472,13 +44301,7 @@
                       "status": 400,
                       "detail": "El código no es válido.",
                       "code": "Auth.LoginCode.Invalid",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "El código no es válido."
-                        ]
-                      },
-                      "attemptsLeft": 4
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.Invalid.en": {
@@ -44488,13 +44311,7 @@
                       "status": 400,
                       "detail": "The code is not valid.",
                       "code": "Auth.LoginCode.Invalid",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "The code is not valid."
-                        ]
-                      },
-                      "attemptsLeft": 4
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.Expired.es": {
@@ -44504,12 +44321,7 @@
                       "status": 400,
                       "detail": "El código venció. Pedí uno nuevo.",
                       "code": "Auth.LoginCode.Expired",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "El código venció. Pedí uno nuevo."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.Expired.en": {
@@ -44519,12 +44331,7 @@
                       "status": 400,
                       "detail": "The code has expired. Request a new one.",
                       "code": "Auth.LoginCode.Expired",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "The code has expired. Request a new one."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.AlreadyUsed.es": {
@@ -44534,12 +44341,7 @@
                       "status": 400,
                       "detail": "El código ya se usó. Pedí uno nuevo.",
                       "code": "Auth.LoginCode.AlreadyUsed",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "El código ya se usó. Pedí uno nuevo."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.AlreadyUsed.en": {
@@ -44549,12 +44351,7 @@
                       "status": 400,
                       "detail": "The code has already been used. Request a new one.",
                       "code": "Auth.LoginCode.AlreadyUsed",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "The code has already been used. Request a new one."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.TooManyAttempts.es": {
@@ -44564,12 +44361,7 @@
                       "status": 400,
                       "detail": "Superaste los intentos para este código. Pedí uno nuevo.",
                       "code": "Auth.LoginCode.TooManyAttempts",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "Superaste los intentos para este código. Pedí uno nuevo."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.TooManyAttempts.en": {
@@ -44579,12 +44371,7 @@
                       "status": 400,
                       "detail": "Too many attempts for this code. Request a new one.",
                       "code": "Auth.LoginCode.TooManyAttempts",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "Too many attempts for this code. Request a new one."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginMethod.ChannelUnavailable.es": {
@@ -44732,50 +44519,50 @@
             }
           },
           "403": {
-            "description": "Forbidden; Auth.Account.Disabled; Auth.Account.LockedOut; Tenancy.Access.PlatformOnly; Auth.BusinessSignup.Closed",
+            "description": "Forbidden; Identity.Account.Suspended; Identity.Account.PendingDeletion; Tenancy.Access.PlatformOnly; Auth.BusinessSignup.Closed",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 },
                 "examples": {
-                  "Auth.Account.Disabled.es": {
+                  "Identity.Account.Suspended.es": {
                     "value": {
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 403,
-                      "detail": "Tu cuenta está deshabilitada. Contactá a un administrador.",
-                      "code": "Auth.Account.Disabled",
+                      "detail": "Tu cuenta está suspendida.",
+                      "code": "Identity.Account.Suspended",
                       "traceId": "example-trace-id"
                     }
                   },
-                  "Auth.Account.Disabled.en": {
+                  "Identity.Account.Suspended.en": {
                     "value": {
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 403,
-                      "detail": "Your account is disabled. Contact an administrator.",
-                      "code": "Auth.Account.Disabled",
+                      "detail": "Your account is suspended.",
+                      "code": "Identity.Account.Suspended",
                       "traceId": "example-trace-id"
                     }
                   },
-                  "Auth.Account.LockedOut.es": {
+                  "Identity.Account.PendingDeletion.es": {
                     "value": {
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 403,
-                      "detail": "Tu cuenta está bloqueada por unos minutos por demasiados intentos fallidos.",
-                      "code": "Auth.Account.LockedOut",
+                      "detail": "Tu cuenta tiene la baja pedida.",
+                      "code": "Identity.Account.PendingDeletion",
                       "traceId": "example-trace-id"
                     }
                   },
-                  "Auth.Account.LockedOut.en": {
+                  "Identity.Account.PendingDeletion.en": {
                     "value": {
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 403,
-                      "detail": "Your account is locked for a few minutes after too many failed attempts.",
-                      "code": "Auth.Account.LockedOut",
+                      "detail": "Your account is pending deletion.",
+                      "code": "Identity.Account.PendingDeletion",
                       "traceId": "example-trace-id"
                     }
                   },
@@ -44824,10 +44611,10 @@
             }
           },
           "429": {
-            "description": "Too Many Requests; Auth.LoginCode.ResendTooSoon; Auth.LoginCode.TooManyRequests; Http.TooManyRequests",
+            "description": "Too Many Requests; Identity.Account.LockedOut; Auth.LoginCode.ResendTooSoon; Auth.LoginCode.TooManyRequests; Http.TooManyRequests",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -44839,6 +44626,26 @@
                   "$ref": "#/components/schemas/ProblemDetails"
                 },
                 "examples": {
+                  "Identity.Account.LockedOut.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 429,
+                      "detail": "Tu cuenta está bloqueada por unos minutos.",
+                      "code": "Identity.Account.LockedOut",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Identity.Account.LockedOut.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 429,
+                      "detail": "Your account is temporarily locked.",
+                      "code": "Identity.Account.LockedOut",
+                      "traceId": "example-trace-id"
+                    }
+                  },
                   "Auth.LoginCode.ResendTooSoon.es": {
                     "value": {
                       "type": "about:blank",
@@ -44941,8 +44748,8 @@
               }
             }
           },
-          "409": {
-            "description": "Request.IdempotencyKeyReused; Request.InProgress",
+          "422": {
+            "description": "Request.IdempotencyKeyReused",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -44953,7 +44760,7 @@
                     "value": {
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
-                      "status": 409,
+                      "status": 422,
                       "detail": "Esta clave ya se usó para otra solicitud.",
                       "code": "Request.IdempotencyKeyReused",
                       "traceId": "example-trace-id"
@@ -44963,12 +44770,24 @@
                     "value": {
                       "type": "about:blank",
                       "title": "Request rejected",
-                      "status": 409,
+                      "status": 422,
                       "detail": "This key was already used for another request.",
                       "code": "Request.IdempotencyKeyReused",
                       "traceId": "example-trace-id"
                     }
-                  },
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Request.InProgress",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
                   "Request.InProgress.es": {
                     "value": {
                       "type": "about:blank",
@@ -45006,51 +44825,30 @@
           {
             "status": 400,
             "code": "Auth.LoginCode.Invalid",
-            "field": "code",
+            "field": null,
             "es": "El código no es válido.",
             "en": "The code is not valid."
           },
           {
             "status": 400,
             "code": "Auth.LoginCode.Expired",
-            "field": "code",
+            "field": null,
             "es": "El código venció. Pedí uno nuevo.",
             "en": "The code has expired. Request a new one."
           },
           {
             "status": 400,
             "code": "Auth.LoginCode.AlreadyUsed",
-            "field": "code",
+            "field": null,
             "es": "El código ya se usó. Pedí uno nuevo.",
             "en": "The code has already been used. Request a new one."
           },
           {
             "status": 400,
             "code": "Auth.LoginCode.TooManyAttempts",
-            "field": "code",
+            "field": null,
             "es": "Superaste los intentos para este código. Pedí uno nuevo.",
             "en": "Too many attempts for this code. Request a new one."
-          },
-          {
-            "status": 403,
-            "code": "Auth.Account.Disabled",
-            "field": null,
-            "es": "Tu cuenta está deshabilitada. Contactá a un administrador.",
-            "en": "Your account is disabled. Contact an administrator."
-          },
-          {
-            "status": 403,
-            "code": "Auth.Account.LockedOut",
-            "field": null,
-            "es": "Tu cuenta está bloqueada por unos minutos por demasiados intentos fallidos.",
-            "en": "Your account is locked for a few minutes after too many failed attempts."
-          },
-          {
-            "status": 403,
-            "code": "Tenancy.Access.PlatformOnly",
-            "field": null,
-            "es": "Esta cuenta es de un operador: solo entra a Plataforma.",
-            "en": "This is a platform operator account: it can only enter the platform."
           },
           {
             "status": 400,
@@ -45058,6 +44856,34 @@
             "field": "channel",
             "es": "Ese método de ingreso no está disponible.",
             "en": "That sign-in method is unavailable."
+          },
+          {
+            "status": 403,
+            "code": "Identity.Account.Suspended",
+            "field": null,
+            "es": "Tu cuenta está suspendida.",
+            "en": "Your account is suspended."
+          },
+          {
+            "status": 429,
+            "code": "Identity.Account.LockedOut",
+            "field": null,
+            "es": "Tu cuenta está bloqueada por unos minutos.",
+            "en": "Your account is temporarily locked."
+          },
+          {
+            "status": 403,
+            "code": "Identity.Account.PendingDeletion",
+            "field": null,
+            "es": "Tu cuenta tiene la baja pedida.",
+            "en": "Your account is pending deletion."
+          },
+          {
+            "status": 403,
+            "code": "Tenancy.Access.PlatformOnly",
+            "field": null,
+            "es": "Esta cuenta es de un operador: solo entra a Plataforma.",
+            "en": "This is a platform operator account: it can only enter the platform."
           },
           {
             "status": 400,
@@ -45116,7 +44942,7 @@
             "en": "A key identifying this request is required."
           },
           {
-            "status": 409,
+            "status": 422,
             "code": "Request.IdempotencyKeyReused",
             "field": null,
             "es": "Esta clave ya se usó para otra solicitud.",
@@ -45330,33 +45156,13 @@
             }
           },
           "409": {
-            "description": "Conflict; Request.IdempotencyKeyReused; Request.InProgress",
+            "description": "Conflict; Request.InProgress",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 },
                 "examples": {
-                  "Request.IdempotencyKeyReused.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 409,
-                      "detail": "Esta clave ya se usó para otra solicitud.",
-                      "code": "Request.IdempotencyKeyReused",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Request.IdempotencyKeyReused.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 409,
-                      "detail": "This key was already used for another request.",
-                      "code": "Request.IdempotencyKeyReused",
-                      "traceId": "example-trace-id"
-                    }
-                  },
                   "Request.InProgress.es": {
                     "value": {
                       "type": "about:blank",
@@ -45382,11 +45188,33 @@
             }
           },
           "422": {
-            "description": "Unprocessable Entity",
+            "description": "Unprocessable Entity; Request.IdempotencyKeyReused",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Request.IdempotencyKeyReused.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 422,
+                      "detail": "Esta clave ya se usó para otra solicitud.",
+                      "code": "Request.IdempotencyKeyReused",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Request.IdempotencyKeyReused.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 422,
+                      "detail": "This key was already used for another request.",
+                      "code": "Request.IdempotencyKeyReused",
+                      "traceId": "example-trace-id"
+                    }
+                  }
                 }
               }
             }
@@ -45427,7 +45255,7 @@
             "description": "Http.TooManyRequests",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -45523,7 +45351,7 @@
             "en": "A key identifying this request is required."
           },
           {
-            "status": 409,
+            "status": 422,
             "code": "Request.IdempotencyKeyReused",
             "field": null,
             "es": "Esta clave ya se usó para otra solicitud.",
@@ -46234,7 +46062,7 @@
             "description": "Too Many Requests; Auth.LoginCode.ResendTooSoon; Auth.LoginCode.TooManyRequests; Http.TooManyRequests; WhatsApp.LoginCode.DailyLimit",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -46370,8 +46198,8 @@
               }
             }
           },
-          "409": {
-            "description": "Request.IdempotencyKeyReused; Request.InProgress",
+          "422": {
+            "description": "Request.IdempotencyKeyReused",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -46382,7 +46210,7 @@
                     "value": {
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
-                      "status": 409,
+                      "status": 422,
                       "detail": "Esta clave ya se usó para otra solicitud.",
                       "code": "Request.IdempotencyKeyReused",
                       "traceId": "example-trace-id"
@@ -46392,12 +46220,24 @@
                     "value": {
                       "type": "about:blank",
                       "title": "Request rejected",
-                      "status": 409,
+                      "status": 422,
                       "detail": "This key was already used for another request.",
                       "code": "Request.IdempotencyKeyReused",
                       "traceId": "example-trace-id"
                     }
-                  },
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Request.InProgress",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
                   "Request.InProgress.es": {
                     "value": {
                       "type": "about:blank",
@@ -46503,7 +46343,7 @@
             "en": "A key identifying this request is required."
           },
           {
-            "status": 409,
+            "status": 422,
             "code": "Request.IdempotencyKeyReused",
             "field": null,
             "es": "Esta clave ya se usó para otra solicitud.",
@@ -46531,7 +46371,7 @@
         "tags": [
           "Auth"
         ],
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Intentos y topes actuales; retryAfter son segundos y coincide con Retry-After. No guardar códigos ni enlaces en logs. returnUrl OIDC o /invitacion conserva el flujo anterior y exige access ausente/null en el cuerpo. Continuación fija exclusivamente / con access=consumer o /org con access=business, valores literales sin query/fragmento; cualquier discrepancia falla antes de consumir el código. Respuesta returnUrl y cookie de identidad después del commit, sin tokens OIDC en body; el SPA inicia una autorización nueva tras el retorno fijo.",
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Invalid informa attemptsLeft sólo ante una prueba activa; sin prueba activa no informa intentos restantes. Los errores del código no incluyen errors.code. Intentos y topes actuales; cuando el error incluye retryAfter, son segundos y coincide con Retry-After. El bloqueo de cuenta no informa un plazo ni ese encabezado. No guardar códigos ni enlaces en logs. returnUrl OIDC o /invitacion conserva el flujo anterior y exige access ausente/null en el cuerpo. Continuación fija exclusivamente / con access=consumer o /org con access=business, valores literales sin query/fragmento; cualquier discrepancia falla antes de consumir el código. Respuesta returnUrl y cookie de identidad después del commit, sin tokens OIDC en body; el SPA inicia una autorización nueva tras el retorno fijo. Baja pendiente: sólo después de probar posesión y dentro de la gracia se emiten cancelTicket, returnUrl validado y fechas de cancelación; con gracia vencida se devuelve Legal.AccountDeletion.GraceExpired, sin ticket.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -46668,13 +46508,7 @@
                       "status": 400,
                       "detail": "El código no es válido.",
                       "code": "Auth.LoginCode.Invalid",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "El código no es válido."
-                        ]
-                      },
-                      "attemptsLeft": 4
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.Invalid.en": {
@@ -46684,13 +46518,7 @@
                       "status": 400,
                       "detail": "The code is not valid.",
                       "code": "Auth.LoginCode.Invalid",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "The code is not valid."
-                        ]
-                      },
-                      "attemptsLeft": 4
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.Expired.es": {
@@ -46700,12 +46528,7 @@
                       "status": 400,
                       "detail": "El código venció. Pedí uno nuevo.",
                       "code": "Auth.LoginCode.Expired",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "El código venció. Pedí uno nuevo."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.Expired.en": {
@@ -46715,12 +46538,7 @@
                       "status": 400,
                       "detail": "The code has expired. Request a new one.",
                       "code": "Auth.LoginCode.Expired",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "The code has expired. Request a new one."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.AlreadyUsed.es": {
@@ -46730,12 +46548,7 @@
                       "status": 400,
                       "detail": "El código ya se usó. Pedí uno nuevo.",
                       "code": "Auth.LoginCode.AlreadyUsed",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "El código ya se usó. Pedí uno nuevo."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.AlreadyUsed.en": {
@@ -46745,12 +46558,7 @@
                       "status": 400,
                       "detail": "The code has already been used. Request a new one.",
                       "code": "Auth.LoginCode.AlreadyUsed",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "The code has already been used. Request a new one."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.TooManyAttempts.es": {
@@ -46760,12 +46568,7 @@
                       "status": 400,
                       "detail": "Superaste los intentos para este código. Pedí uno nuevo.",
                       "code": "Auth.LoginCode.TooManyAttempts",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "Superaste los intentos para este código. Pedí uno nuevo."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.TooManyAttempts.en": {
@@ -46775,12 +46578,7 @@
                       "status": 400,
                       "detail": "Too many attempts for this code. Request a new one.",
                       "code": "Auth.LoginCode.TooManyAttempts",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "Too many attempts for this code. Request a new one."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginMethod.ChannelUnavailable.es": {
@@ -46838,50 +46636,50 @@
             }
           },
           "403": {
-            "description": "Forbidden; Auth.Account.Disabled; Auth.Account.LockedOut; Tenancy.Access.PlatformOnly",
+            "description": "Forbidden; Identity.Account.Suspended; Identity.Account.PendingDeletion; Tenancy.Access.PlatformOnly",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 },
                 "examples": {
-                  "Auth.Account.Disabled.es": {
+                  "Identity.Account.Suspended.es": {
                     "value": {
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 403,
-                      "detail": "Tu cuenta está deshabilitada. Contactá a un administrador.",
-                      "code": "Auth.Account.Disabled",
+                      "detail": "Tu cuenta está suspendida.",
+                      "code": "Identity.Account.Suspended",
                       "traceId": "example-trace-id"
                     }
                   },
-                  "Auth.Account.Disabled.en": {
+                  "Identity.Account.Suspended.en": {
                     "value": {
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 403,
-                      "detail": "Your account is disabled. Contact an administrator.",
-                      "code": "Auth.Account.Disabled",
+                      "detail": "Your account is suspended.",
+                      "code": "Identity.Account.Suspended",
                       "traceId": "example-trace-id"
                     }
                   },
-                  "Auth.Account.LockedOut.es": {
+                  "Identity.Account.PendingDeletion.es": {
                     "value": {
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 403,
-                      "detail": "Tu cuenta está bloqueada por unos minutos por demasiados intentos fallidos.",
-                      "code": "Auth.Account.LockedOut",
+                      "detail": "Tu cuenta tiene la baja pedida.",
+                      "code": "Identity.Account.PendingDeletion",
                       "traceId": "example-trace-id"
                     }
                   },
-                  "Auth.Account.LockedOut.en": {
+                  "Identity.Account.PendingDeletion.en": {
                     "value": {
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 403,
-                      "detail": "Your account is locked for a few minutes after too many failed attempts.",
-                      "code": "Auth.Account.LockedOut",
+                      "detail": "Your account is pending deletion.",
+                      "code": "Identity.Account.PendingDeletion",
                       "traceId": "example-trace-id"
                     }
                   },
@@ -46910,10 +46708,10 @@
             }
           },
           "429": {
-            "description": "Too Many Requests; Http.TooManyRequests",
+            "description": "Too Many Requests; Identity.Account.LockedOut; Http.TooManyRequests",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -46925,6 +46723,26 @@
                   "$ref": "#/components/schemas/ProblemDetails"
                 },
                 "examples": {
+                  "Identity.Account.LockedOut.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 429,
+                      "detail": "Tu cuenta está bloqueada por unos minutos.",
+                      "code": "Identity.Account.LockedOut",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Identity.Account.LockedOut.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 429,
+                      "detail": "Your account is temporarily locked.",
+                      "code": "Identity.Account.LockedOut",
+                      "traceId": "example-trace-id"
+                    }
+                  },
                   "Http.TooManyRequests.es": {
                     "value": {
                       "type": "about:blank",
@@ -46984,30 +46802,30 @@
             }
           },
           "409": {
-            "description": "Request.IdempotencyKeyReused; Request.InProgress",
+            "description": "Legal.AccountDeletion.GraceExpired; Request.InProgress",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 },
                 "examples": {
-                  "Request.IdempotencyKeyReused.es": {
+                  "Legal.AccountDeletion.GraceExpired.es": {
                     "value": {
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 409,
-                      "detail": "Esta clave ya se usó para otra solicitud.",
-                      "code": "Request.IdempotencyKeyReused",
+                      "detail": "El plazo para cancelar la baja venció.",
+                      "code": "Legal.AccountDeletion.GraceExpired",
                       "traceId": "example-trace-id"
                     }
                   },
-                  "Request.IdempotencyKeyReused.en": {
+                  "Legal.AccountDeletion.GraceExpired.en": {
                     "value": {
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 409,
-                      "detail": "This key was already used for another request.",
-                      "code": "Request.IdempotencyKeyReused",
+                      "detail": "The period to cancel deletion has expired.",
+                      "code": "Legal.AccountDeletion.GraceExpired",
                       "traceId": "example-trace-id"
                     }
                   },
@@ -47034,6 +46852,38 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Request.IdempotencyKeyReused",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Request.IdempotencyKeyReused.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 422,
+                      "detail": "Esta clave ya se usó para otra solicitud.",
+                      "code": "Request.IdempotencyKeyReused",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Request.IdempotencyKeyReused.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 422,
+                      "detail": "This key was already used for another request.",
+                      "code": "Request.IdempotencyKeyReused",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [ ],
@@ -47048,44 +46898,58 @@
           {
             "status": 400,
             "code": "Auth.LoginCode.Invalid",
-            "field": "code",
+            "field": null,
             "es": "El código no es válido.",
             "en": "The code is not valid."
           },
           {
             "status": 400,
             "code": "Auth.LoginCode.Expired",
-            "field": "code",
+            "field": null,
             "es": "El código venció. Pedí uno nuevo.",
             "en": "The code has expired. Request a new one."
           },
           {
             "status": 400,
             "code": "Auth.LoginCode.AlreadyUsed",
-            "field": "code",
+            "field": null,
             "es": "El código ya se usó. Pedí uno nuevo.",
             "en": "The code has already been used. Request a new one."
           },
           {
             "status": 400,
             "code": "Auth.LoginCode.TooManyAttempts",
-            "field": "code",
+            "field": null,
             "es": "Superaste los intentos para este código. Pedí uno nuevo.",
             "en": "Too many attempts for this code. Request a new one."
           },
           {
-            "status": 403,
-            "code": "Auth.Account.Disabled",
-            "field": null,
-            "es": "Tu cuenta está deshabilitada. Contactá a un administrador.",
-            "en": "Your account is disabled. Contact an administrator."
+            "status": 400,
+            "code": "Auth.LoginMethod.ChannelUnavailable",
+            "field": "channel",
+            "es": "Ese método de ingreso no está disponible.",
+            "en": "That sign-in method is unavailable."
           },
           {
             "status": 403,
-            "code": "Auth.Account.LockedOut",
+            "code": "Identity.Account.Suspended",
             "field": null,
-            "es": "Tu cuenta está bloqueada por unos minutos por demasiados intentos fallidos.",
-            "en": "Your account is locked for a few minutes after too many failed attempts."
+            "es": "Tu cuenta está suspendida.",
+            "en": "Your account is suspended."
+          },
+          {
+            "status": 429,
+            "code": "Identity.Account.LockedOut",
+            "field": null,
+            "es": "Tu cuenta está bloqueada por unos minutos.",
+            "en": "Your account is temporarily locked."
+          },
+          {
+            "status": 403,
+            "code": "Identity.Account.PendingDeletion",
+            "field": null,
+            "es": "Tu cuenta tiene la baja pedida.",
+            "en": "Your account is pending deletion."
           },
           {
             "status": 403,
@@ -47095,11 +46959,11 @@
             "en": "This is a platform operator account: it can only enter the platform."
           },
           {
-            "status": 400,
-            "code": "Auth.LoginMethod.ChannelUnavailable",
-            "field": "channel",
-            "es": "Ese método de ingreso no está disponible.",
-            "en": "That sign-in method is unavailable."
+            "status": 409,
+            "code": "Legal.AccountDeletion.GraceExpired",
+            "field": null,
+            "es": "El plazo para cancelar la baja venció.",
+            "en": "The period to cancel deletion has expired."
           },
           {
             "status": 429,
@@ -47123,7 +46987,7 @@
             "en": "A key identifying this request is required."
           },
           {
-            "status": 409,
+            "status": 422,
             "code": "Request.IdempotencyKeyReused",
             "field": null,
             "es": "Esta clave ya se usó para otra solicitud.",
@@ -47144,7 +47008,7 @@
         "tags": [
           "Auth"
         ],
-        "description": "Enlace opaco 256 bits (43 base64url), hash, 10 minutos, un uso y ligado a MethodId Phone verificado. Uno nuevo invalida los previos de ese método. Revalidar dueño, método, canal, estado y operador bajo lock; operador actual devuelve Invalid incluso en replay, sin cookie, datos o motivo revelador. Token via /login/enlace#t=… y solo memoria; jamás query/storage/log. Preview no consume ni crea cookie. displayName y maskedPhone nullable.",
+        "description": "Enlace opaco 256 bits (43 base64url), hash, 10 minutos, un uso y ligado a MethodId Phone verificado. Uno nuevo invalida los previos de ese método. Operador actual devuelve Invalid incluso en replay, sin cookie, datos o motivo revelador. Token via /login/enlace#t=… y solo memoria; jamás query/storage/log. Invalid reúne enlace inexistente, usado, vencido, invalidado, método retirado y cuenta operadora. Preview hace dos lecturas coherentes del enlace y su cuenta, sin UoW ni lock; revalida dueño, método, canal, estado, operador y vigencia antes de responder. No consume ni crea cookie. displayName y maskedPhone nullable. Una baja pendiente permite preview mientras el enlace sea vigente; no emite cancelTicket.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -47194,7 +47058,7 @@
             }
           },
           "400": {
-            "description": "Bad Request; Validation.Failed; Auth.LoginLink.Invalid; Auth.LoginLink.Expired; Auth.LoginLink.AlreadyUsed",
+            "description": "Bad Request; Validation.Failed; Auth.LoginLink.Invalid",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -47240,44 +47104,36 @@
                       "code": "Auth.LoginLink.Invalid",
                       "traceId": "example-trace-id"
                     }
-                  },
-                  "Auth.LoginLink.Expired.es": {
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden; Identity.Account.Suspended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Identity.Account.Suspended.es": {
                     "value": {
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
-                      "status": 400,
-                      "detail": "Este enlace ya no sirve.",
-                      "code": "Auth.LoginLink.Expired",
+                      "status": 403,
+                      "detail": "Tu cuenta está suspendida.",
+                      "code": "Identity.Account.Suspended",
                       "traceId": "example-trace-id"
                     }
                   },
-                  "Auth.LoginLink.Expired.en": {
+                  "Identity.Account.Suspended.en": {
                     "value": {
                       "type": "about:blank",
                       "title": "Request rejected",
-                      "status": 400,
-                      "detail": "This link no longer works.",
-                      "code": "Auth.LoginLink.Expired",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Auth.LoginLink.AlreadyUsed.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 400,
-                      "detail": "Este enlace ya no sirve.",
-                      "code": "Auth.LoginLink.AlreadyUsed",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Auth.LoginLink.AlreadyUsed.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 400,
-                      "detail": "This link no longer works.",
-                      "code": "Auth.LoginLink.AlreadyUsed",
+                      "status": 403,
+                      "detail": "Your account is suspended.",
+                      "code": "Identity.Account.Suspended",
                       "traceId": "example-trace-id"
                     }
                   }
@@ -47286,10 +47142,10 @@
             }
           },
           "429": {
-            "description": "Too Many Requests; Auth.LoginLink.TooManyRequests; Http.TooManyRequests",
+            "description": "Too Many Requests; Identity.Account.LockedOut; Http.TooManyRequests",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -47301,26 +47157,24 @@
                   "$ref": "#/components/schemas/ProblemDetails"
                 },
                 "examples": {
-                  "Auth.LoginLink.TooManyRequests.es": {
+                  "Identity.Account.LockedOut.es": {
                     "value": {
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 429,
-                      "detail": "Esperá un momento antes de pedir otro enlace.",
-                      "code": "Auth.LoginLink.TooManyRequests",
-                      "traceId": "example-trace-id",
-                      "retryAfter": 60
+                      "detail": "Tu cuenta está bloqueada por unos minutos.",
+                      "code": "Identity.Account.LockedOut",
+                      "traceId": "example-trace-id"
                     }
                   },
-                  "Auth.LoginLink.TooManyRequests.en": {
+                  "Identity.Account.LockedOut.en": {
                     "value": {
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 429,
-                      "detail": "Wait a moment before requesting another link.",
-                      "code": "Auth.LoginLink.TooManyRequests",
-                      "traceId": "example-trace-id",
-                      "retryAfter": 60
+                      "detail": "Your account is temporarily locked.",
+                      "code": "Identity.Account.LockedOut",
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Http.TooManyRequests.es": {
@@ -47399,25 +47253,18 @@
             "en": "This link no longer works."
           },
           {
-            "status": 400,
-            "code": "Auth.LoginLink.Expired",
+            "status": 403,
+            "code": "Identity.Account.Suspended",
             "field": null,
-            "es": "Este enlace ya no sirve.",
-            "en": "This link no longer works."
-          },
-          {
-            "status": 400,
-            "code": "Auth.LoginLink.AlreadyUsed",
-            "field": null,
-            "es": "Este enlace ya no sirve.",
-            "en": "This link no longer works."
+            "es": "Tu cuenta está suspendida.",
+            "en": "Your account is suspended."
           },
           {
             "status": 429,
-            "code": "Auth.LoginLink.TooManyRequests",
+            "code": "Identity.Account.LockedOut",
             "field": null,
-            "es": "Esperá un momento antes de pedir otro enlace.",
-            "en": "Wait a moment before requesting another link."
+            "es": "Tu cuenta está bloqueada por unos minutos.",
+            "en": "Your account is temporarily locked."
           },
           {
             "status": 429,
@@ -47441,7 +47288,7 @@
         "tags": [
           "Auth"
         ],
-        "description": "Enlace opaco 256 bits (43 base64url), hash, 10 minutos, un uso y ligado a MethodId Phone verificado. Uno nuevo invalida los previos de ese método. Revalidar dueño, método, canal, estado y operador bajo lock; operador actual devuelve Invalid incluso en replay, sin cookie, datos o motivo revelador. Token via /login/enlace#t=… y solo memoria; jamás query/storage/log. Solo access=consumer. 200 {access:consumer} y cookie pública, sin tokens OIDC. Replay misma key no crea otra sesión; otra key ya usado. Front ejecuta después signinRedirect con su state y PKCE.",
+        "description": "Enlace opaco 256 bits (43 base64url), hash, 10 minutos, un uso y ligado a MethodId Phone verificado. Uno nuevo invalida los previos de ese método. Operador actual devuelve Invalid incluso en replay, sin cookie, datos o motivo revelador. Token via /login/enlace#t=… y solo memoria; jamás query/storage/log. Invalid reúne enlace inexistente, usado, vencido, invalidado, método retirado y cuenta operadora. Revalida dueño, método, canal, estado y operador bajo lock dentro de la UoW. Solo access=consumer. 200 {access:consumer} y cookie pública, sin tokens OIDC. Replay misma key no crea otra sesión; otra key devuelve Invalid si ya fue usado. Baja pendiente: prueba válida y gracia vigente emiten cancelTicket con retorno fijo /login/enlace; gracia vencida devuelve Legal.AccountDeletion.GraceExpired sin ticket. Front ejecuta después signinRedirect con su state y PKCE.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -47512,7 +47359,7 @@
             }
           },
           "400": {
-            "description": "Bad Request; Validation.Failed; Auth.LoginLink.Invalid; Auth.LoginLink.Expired; Auth.LoginLink.AlreadyUsed; Request.IdempotencyKeyRequired",
+            "description": "Bad Request; Validation.Failed; Auth.LoginLink.Invalid; Request.IdempotencyKeyRequired",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -47559,46 +47406,6 @@
                       "traceId": "example-trace-id"
                     }
                   },
-                  "Auth.LoginLink.Expired.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 400,
-                      "detail": "Este enlace ya no sirve.",
-                      "code": "Auth.LoginLink.Expired",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Auth.LoginLink.Expired.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 400,
-                      "detail": "This link no longer works.",
-                      "code": "Auth.LoginLink.Expired",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Auth.LoginLink.AlreadyUsed.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 400,
-                      "detail": "Este enlace ya no sirve.",
-                      "code": "Auth.LoginLink.AlreadyUsed",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Auth.LoginLink.AlreadyUsed.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 400,
-                      "detail": "This link no longer works.",
-                      "code": "Auth.LoginLink.AlreadyUsed",
-                      "traceId": "example-trace-id"
-                    }
-                  },
                   "Request.IdempotencyKeyRequired.es": {
                     "value": {
                       "type": "about:blank",
@@ -47624,20 +47431,62 @@
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden; Identity.Account.Suspended; Identity.Account.PendingDeletion",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Identity.Account.Suspended.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 403,
+                      "detail": "Tu cuenta está suspendida.",
+                      "code": "Identity.Account.Suspended",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Identity.Account.Suspended.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 403,
+                      "detail": "Your account is suspended.",
+                      "code": "Identity.Account.Suspended",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Identity.Account.PendingDeletion.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 403,
+                      "detail": "Tu cuenta tiene la baja pedida.",
+                      "code": "Identity.Account.PendingDeletion",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Identity.Account.PendingDeletion.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 403,
+                      "detail": "Your account is pending deletion.",
+                      "code": "Identity.Account.PendingDeletion",
+                      "traceId": "example-trace-id"
+                    }
+                  }
                 }
               }
             }
           },
           "429": {
-            "description": "Too Many Requests; Auth.LoginLink.TooManyRequests; Http.TooManyRequests",
+            "description": "Too Many Requests; Identity.Account.LockedOut; Http.TooManyRequests",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -47649,26 +47498,24 @@
                   "$ref": "#/components/schemas/ProblemDetails"
                 },
                 "examples": {
-                  "Auth.LoginLink.TooManyRequests.es": {
+                  "Identity.Account.LockedOut.es": {
                     "value": {
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 429,
-                      "detail": "Esperá un momento antes de pedir otro enlace.",
-                      "code": "Auth.LoginLink.TooManyRequests",
-                      "traceId": "example-trace-id",
-                      "retryAfter": 60
+                      "detail": "Tu cuenta está bloqueada por unos minutos.",
+                      "code": "Identity.Account.LockedOut",
+                      "traceId": "example-trace-id"
                     }
                   },
-                  "Auth.LoginLink.TooManyRequests.en": {
+                  "Identity.Account.LockedOut.en": {
                     "value": {
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 429,
-                      "detail": "Wait a moment before requesting another link.",
-                      "code": "Auth.LoginLink.TooManyRequests",
-                      "traceId": "example-trace-id",
-                      "retryAfter": 60
+                      "detail": "Your account is temporarily locked.",
+                      "code": "Identity.Account.LockedOut",
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Http.TooManyRequests.es": {
@@ -47730,30 +47577,30 @@
             }
           },
           "409": {
-            "description": "Request.IdempotencyKeyReused; Request.InProgress",
+            "description": "Legal.AccountDeletion.GraceExpired; Request.InProgress",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 },
                 "examples": {
-                  "Request.IdempotencyKeyReused.es": {
+                  "Legal.AccountDeletion.GraceExpired.es": {
                     "value": {
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 409,
-                      "detail": "Esta clave ya se usó para otra solicitud.",
-                      "code": "Request.IdempotencyKeyReused",
+                      "detail": "El plazo para cancelar la baja venció.",
+                      "code": "Legal.AccountDeletion.GraceExpired",
                       "traceId": "example-trace-id"
                     }
                   },
-                  "Request.IdempotencyKeyReused.en": {
+                  "Legal.AccountDeletion.GraceExpired.en": {
                     "value": {
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 409,
-                      "detail": "This key was already used for another request.",
-                      "code": "Request.IdempotencyKeyReused",
+                      "detail": "The period to cancel deletion has expired.",
+                      "code": "Legal.AccountDeletion.GraceExpired",
                       "traceId": "example-trace-id"
                     }
                   },
@@ -47780,6 +47627,38 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Request.IdempotencyKeyReused",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Request.IdempotencyKeyReused.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 422,
+                      "detail": "Esta clave ya se usó para otra solicitud.",
+                      "code": "Request.IdempotencyKeyReused",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Request.IdempotencyKeyReused.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 422,
+                      "detail": "This key was already used for another request.",
+                      "code": "Request.IdempotencyKeyReused",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [ ],
@@ -47799,25 +47678,32 @@
             "en": "This link no longer works."
           },
           {
-            "status": 400,
-            "code": "Auth.LoginLink.Expired",
+            "status": 403,
+            "code": "Identity.Account.Suspended",
             "field": null,
-            "es": "Este enlace ya no sirve.",
-            "en": "This link no longer works."
-          },
-          {
-            "status": 400,
-            "code": "Auth.LoginLink.AlreadyUsed",
-            "field": null,
-            "es": "Este enlace ya no sirve.",
-            "en": "This link no longer works."
+            "es": "Tu cuenta está suspendida.",
+            "en": "Your account is suspended."
           },
           {
             "status": 429,
-            "code": "Auth.LoginLink.TooManyRequests",
+            "code": "Identity.Account.LockedOut",
             "field": null,
-            "es": "Esperá un momento antes de pedir otro enlace.",
-            "en": "Wait a moment before requesting another link."
+            "es": "Tu cuenta está bloqueada por unos minutos.",
+            "en": "Your account is temporarily locked."
+          },
+          {
+            "status": 403,
+            "code": "Identity.Account.PendingDeletion",
+            "field": null,
+            "es": "Tu cuenta tiene la baja pedida.",
+            "en": "Your account is pending deletion."
+          },
+          {
+            "status": 409,
+            "code": "Legal.AccountDeletion.GraceExpired",
+            "field": null,
+            "es": "El plazo para cancelar la baja venció.",
+            "en": "The period to cancel deletion has expired."
           },
           {
             "status": 429,
@@ -47841,7 +47727,7 @@
             "en": "A key identifying this request is required."
           },
           {
-            "status": 409,
+            "status": 422,
             "code": "Request.IdempotencyKeyReused",
             "field": null,
             "es": "Esta clave ya se usó para otra solicitud.",
@@ -47953,7 +47839,7 @@
             "description": "Http.TooManyRequests",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -48360,7 +48246,7 @@
             "description": "Too Many Requests; Auth.LoginCode.ResendTooSoon; Auth.LoginCode.TooManyRequests; Http.TooManyRequests; WhatsApp.LoginCode.DailyLimit",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -48496,8 +48382,8 @@
               }
             }
           },
-          "409": {
-            "description": "Request.IdempotencyKeyReused; Request.InProgress",
+          "422": {
+            "description": "Request.IdempotencyKeyReused",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -48508,7 +48394,7 @@
                     "value": {
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
-                      "status": 409,
+                      "status": 422,
                       "detail": "Esta clave ya se usó para otra solicitud.",
                       "code": "Request.IdempotencyKeyReused",
                       "traceId": "example-trace-id"
@@ -48518,12 +48404,24 @@
                     "value": {
                       "type": "about:blank",
                       "title": "Request rejected",
-                      "status": 409,
+                      "status": 422,
                       "detail": "This key was already used for another request.",
                       "code": "Request.IdempotencyKeyReused",
                       "traceId": "example-trace-id"
                     }
-                  },
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Request.InProgress",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
                   "Request.InProgress.es": {
                     "value": {
                       "type": "about:blank",
@@ -48636,7 +48534,7 @@
             "en": "A key identifying this request is required."
           },
           {
-            "status": 409,
+            "status": 422,
             "code": "Request.IdempotencyKeyReused",
             "field": null,
             "es": "Esta clave ya se usó para otra solicitud.",
@@ -48671,7 +48569,7 @@
         "tags": [
           "Auth"
         ],
-        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Intentos y topes actuales; retryAfter son segundos y coincide con Retry-After. No guardar códigos ni enlaces en logs.ConsumerSignup abierto; acepta términos explícitos. Crea Persona, nunca empresa. Cuenta, método, Personal cuando corresponde y legales explícitos atómicos. Operador probado: PlatformOnly y sin cookie pública. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
+        "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Invalid informa attemptsLeft sólo ante una prueba activa; sin prueba activa no informa intentos restantes. Los errores del código no incluyen errors.code. Intentos y topes actuales; cuando el error incluye retryAfter, son segundos y coincide con Retry-After. El bloqueo de cuenta no informa un plazo ni ese encabezado. No guardar códigos ni enlaces en logs.ConsumerSignup abierto; acepta términos explícitos. Crea Persona, nunca empresa. Cuenta, método, Personal cuando corresponde y legales explícitos atómicos. Operador probado: PlatformOnly y sin cookie pública. Baja pendiente se rechaza sin cancelTicket ni retorno de cancelación. País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -48767,13 +48665,7 @@
                       "status": 400,
                       "detail": "El código no es válido.",
                       "code": "Auth.LoginCode.Invalid",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "El código no es válido."
-                        ]
-                      },
-                      "attemptsLeft": 4
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.Invalid.en": {
@@ -48783,13 +48675,7 @@
                       "status": 400,
                       "detail": "The code is not valid.",
                       "code": "Auth.LoginCode.Invalid",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "The code is not valid."
-                        ]
-                      },
-                      "attemptsLeft": 4
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.Expired.es": {
@@ -48799,12 +48685,7 @@
                       "status": 400,
                       "detail": "El código venció. Pedí uno nuevo.",
                       "code": "Auth.LoginCode.Expired",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "El código venció. Pedí uno nuevo."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.Expired.en": {
@@ -48814,12 +48695,7 @@
                       "status": 400,
                       "detail": "The code has expired. Request a new one.",
                       "code": "Auth.LoginCode.Expired",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "The code has expired. Request a new one."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.AlreadyUsed.es": {
@@ -48829,12 +48705,7 @@
                       "status": 400,
                       "detail": "El código ya se usó. Pedí uno nuevo.",
                       "code": "Auth.LoginCode.AlreadyUsed",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "El código ya se usó. Pedí uno nuevo."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.AlreadyUsed.en": {
@@ -48844,12 +48715,7 @@
                       "status": 400,
                       "detail": "The code has already been used. Request a new one.",
                       "code": "Auth.LoginCode.AlreadyUsed",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "The code has already been used. Request a new one."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.TooManyAttempts.es": {
@@ -48859,12 +48725,7 @@
                       "status": 400,
                       "detail": "Superaste los intentos para este código. Pedí uno nuevo.",
                       "code": "Auth.LoginCode.TooManyAttempts",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "Superaste los intentos para este código. Pedí uno nuevo."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.TooManyAttempts.en": {
@@ -48874,12 +48735,7 @@
                       "status": 400,
                       "detail": "Too many attempts for this code. Request a new one.",
                       "code": "Auth.LoginCode.TooManyAttempts",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "Too many attempts for this code. Request a new one."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginMethod.ChannelUnavailable.es": {
@@ -49087,50 +48943,50 @@
             }
           },
           "403": {
-            "description": "Forbidden; Auth.Account.Disabled; Auth.Account.LockedOut; Tenancy.Access.PlatformOnly; Auth.Signup.Closed",
+            "description": "Forbidden; Identity.Account.Suspended; Identity.Account.PendingDeletion; Tenancy.Access.PlatformOnly; Auth.Signup.Closed",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 },
                 "examples": {
-                  "Auth.Account.Disabled.es": {
+                  "Identity.Account.Suspended.es": {
                     "value": {
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 403,
-                      "detail": "Tu cuenta está deshabilitada. Contactá a un administrador.",
-                      "code": "Auth.Account.Disabled",
+                      "detail": "Tu cuenta está suspendida.",
+                      "code": "Identity.Account.Suspended",
                       "traceId": "example-trace-id"
                     }
                   },
-                  "Auth.Account.Disabled.en": {
+                  "Identity.Account.Suspended.en": {
                     "value": {
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 403,
-                      "detail": "Your account is disabled. Contact an administrator.",
-                      "code": "Auth.Account.Disabled",
+                      "detail": "Your account is suspended.",
+                      "code": "Identity.Account.Suspended",
                       "traceId": "example-trace-id"
                     }
                   },
-                  "Auth.Account.LockedOut.es": {
+                  "Identity.Account.PendingDeletion.es": {
                     "value": {
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 403,
-                      "detail": "Tu cuenta está bloqueada por unos minutos por demasiados intentos fallidos.",
-                      "code": "Auth.Account.LockedOut",
+                      "detail": "Tu cuenta tiene la baja pedida.",
+                      "code": "Identity.Account.PendingDeletion",
                       "traceId": "example-trace-id"
                     }
                   },
-                  "Auth.Account.LockedOut.en": {
+                  "Identity.Account.PendingDeletion.en": {
                     "value": {
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 403,
-                      "detail": "Your account is locked for a few minutes after too many failed attempts.",
-                      "code": "Auth.Account.LockedOut",
+                      "detail": "Your account is pending deletion.",
+                      "code": "Identity.Account.PendingDeletion",
                       "traceId": "example-trace-id"
                     }
                   },
@@ -49179,10 +49035,10 @@
             }
           },
           "429": {
-            "description": "Too Many Requests; Auth.LoginCode.ResendTooSoon; Auth.LoginCode.TooManyRequests; Http.TooManyRequests",
+            "description": "Too Many Requests; Identity.Account.LockedOut; Auth.LoginCode.ResendTooSoon; Auth.LoginCode.TooManyRequests; Http.TooManyRequests",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -49194,6 +49050,26 @@
                   "$ref": "#/components/schemas/ProblemDetails"
                 },
                 "examples": {
+                  "Identity.Account.LockedOut.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 429,
+                      "detail": "Tu cuenta está bloqueada por unos minutos.",
+                      "code": "Identity.Account.LockedOut",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Identity.Account.LockedOut.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 429,
+                      "detail": "Your account is temporarily locked.",
+                      "code": "Identity.Account.LockedOut",
+                      "traceId": "example-trace-id"
+                    }
+                  },
                   "Auth.LoginCode.ResendTooSoon.es": {
                     "value": {
                       "type": "about:blank",
@@ -49296,8 +49172,8 @@
               }
             }
           },
-          "409": {
-            "description": "Request.IdempotencyKeyReused; Request.InProgress",
+          "422": {
+            "description": "Request.IdempotencyKeyReused",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -49308,7 +49184,7 @@
                     "value": {
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
-                      "status": 409,
+                      "status": 422,
                       "detail": "Esta clave ya se usó para otra solicitud.",
                       "code": "Request.IdempotencyKeyReused",
                       "traceId": "example-trace-id"
@@ -49318,12 +49194,24 @@
                     "value": {
                       "type": "about:blank",
                       "title": "Request rejected",
-                      "status": 409,
+                      "status": 422,
                       "detail": "This key was already used for another request.",
                       "code": "Request.IdempotencyKeyReused",
                       "traceId": "example-trace-id"
                     }
-                  },
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Request.InProgress",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
                   "Request.InProgress.es": {
                     "value": {
                       "type": "about:blank",
@@ -49361,51 +49249,30 @@
           {
             "status": 400,
             "code": "Auth.LoginCode.Invalid",
-            "field": "code",
+            "field": null,
             "es": "El código no es válido.",
             "en": "The code is not valid."
           },
           {
             "status": 400,
             "code": "Auth.LoginCode.Expired",
-            "field": "code",
+            "field": null,
             "es": "El código venció. Pedí uno nuevo.",
             "en": "The code has expired. Request a new one."
           },
           {
             "status": 400,
             "code": "Auth.LoginCode.AlreadyUsed",
-            "field": "code",
+            "field": null,
             "es": "El código ya se usó. Pedí uno nuevo.",
             "en": "The code has already been used. Request a new one."
           },
           {
             "status": 400,
             "code": "Auth.LoginCode.TooManyAttempts",
-            "field": "code",
+            "field": null,
             "es": "Superaste los intentos para este código. Pedí uno nuevo.",
             "en": "Too many attempts for this code. Request a new one."
-          },
-          {
-            "status": 403,
-            "code": "Auth.Account.Disabled",
-            "field": null,
-            "es": "Tu cuenta está deshabilitada. Contactá a un administrador.",
-            "en": "Your account is disabled. Contact an administrator."
-          },
-          {
-            "status": 403,
-            "code": "Auth.Account.LockedOut",
-            "field": null,
-            "es": "Tu cuenta está bloqueada por unos minutos por demasiados intentos fallidos.",
-            "en": "Your account is locked for a few minutes after too many failed attempts."
-          },
-          {
-            "status": 403,
-            "code": "Tenancy.Access.PlatformOnly",
-            "field": null,
-            "es": "Esta cuenta es de un operador: solo entra a Plataforma.",
-            "en": "This is a platform operator account: it can only enter the platform."
           },
           {
             "status": 400,
@@ -49413,6 +49280,34 @@
             "field": "channel",
             "es": "Ese método de ingreso no está disponible.",
             "en": "That sign-in method is unavailable."
+          },
+          {
+            "status": 403,
+            "code": "Identity.Account.Suspended",
+            "field": null,
+            "es": "Tu cuenta está suspendida.",
+            "en": "Your account is suspended."
+          },
+          {
+            "status": 429,
+            "code": "Identity.Account.LockedOut",
+            "field": null,
+            "es": "Tu cuenta está bloqueada por unos minutos.",
+            "en": "Your account is temporarily locked."
+          },
+          {
+            "status": 403,
+            "code": "Identity.Account.PendingDeletion",
+            "field": null,
+            "es": "Tu cuenta tiene la baja pedida.",
+            "en": "Your account is pending deletion."
+          },
+          {
+            "status": 403,
+            "code": "Tenancy.Access.PlatformOnly",
+            "field": null,
+            "es": "Esta cuenta es de un operador: solo entra a Plataforma.",
+            "en": "This is a platform operator account: it can only enter the platform."
           },
           {
             "status": 400,
@@ -49485,7 +49380,7 @@
             "en": "A key identifying this request is required."
           },
           {
-            "status": 409,
+            "status": 422,
             "code": "Request.IdempotencyKeyReused",
             "field": null,
             "es": "Esta clave ya se usó para otra solicitud.",
@@ -49777,7 +49672,7 @@
             "description": "Http.TooManyRequests",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -50290,7 +50185,7 @@
             "description": "Auth.LoginCode.ResendTooSoon; Auth.LoginCode.TooManyRequests; Http.TooManyRequests; WhatsApp.LoginCode.DailyLimit",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -50426,8 +50321,8 @@
               }
             }
           },
-          "409": {
-            "description": "Request.IdempotencyKeyReused; Request.InProgress",
+          "422": {
+            "description": "Request.IdempotencyKeyReused",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -50438,7 +50333,7 @@
                     "value": {
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
-                      "status": 409,
+                      "status": 422,
                       "detail": "Esta clave ya se usó para otra solicitud.",
                       "code": "Request.IdempotencyKeyReused",
                       "traceId": "example-trace-id"
@@ -50448,12 +50343,24 @@
                     "value": {
                       "type": "about:blank",
                       "title": "Request rejected",
-                      "status": 409,
+                      "status": 422,
                       "detail": "This key was already used for another request.",
                       "code": "Request.IdempotencyKeyReused",
                       "traceId": "example-trace-id"
                     }
-                  },
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Request.InProgress",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
                   "Request.InProgress.es": {
                     "value": {
                       "type": "about:blank",
@@ -50577,7 +50484,7 @@
             "en": "A key identifying this request is required."
           },
           {
-            "status": 409,
+            "status": 422,
             "code": "Request.IdempotencyKeyReused",
             "field": null,
             "es": "Esta clave ya se usó para otra solicitud.",
@@ -50720,7 +50627,7 @@
             }
           },
           "409": {
-            "description": "Identity.LoginMethod.AlreadyVerified; Request.IdempotencyKeyReused; Request.InProgress",
+            "description": "Identity.LoginMethod.AlreadyVerified; Request.InProgress",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -50744,26 +50651,6 @@
                       "status": 409,
                       "detail": "This sign-in method is already verified.",
                       "code": "Identity.LoginMethod.AlreadyVerified",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Request.IdempotencyKeyReused.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 409,
-                      "detail": "Esta clave ya se usó para otra solicitud.",
-                      "code": "Request.IdempotencyKeyReused",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Request.IdempotencyKeyReused.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 409,
-                      "detail": "This key was already used for another request.",
-                      "code": "Request.IdempotencyKeyReused",
                       "traceId": "example-trace-id"
                     }
                   },
@@ -50937,7 +50824,7 @@
             "description": "Auth.LoginCode.ResendTooSoon; Auth.LoginCode.TooManyRequests; Http.TooManyRequests; WhatsApp.LoginCode.DailyLimit",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -51104,6 +50991,38 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Request.IdempotencyKeyReused",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Request.IdempotencyKeyReused.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 422,
+                      "detail": "Esta clave ya se usó para otra solicitud.",
+                      "code": "Request.IdempotencyKeyReused",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Request.IdempotencyKeyReused.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 422,
+                      "detail": "This key was already used for another request.",
+                      "code": "Request.IdempotencyKeyReused",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -51204,7 +51123,7 @@
             "en": "A key identifying this request is required."
           },
           {
-            "status": 409,
+            "status": 422,
             "code": "Request.IdempotencyKeyReused",
             "field": null,
             "es": "Esta clave ya se usó para otra solicitud.",
@@ -51232,7 +51151,7 @@
         "tags": [
           "Account"
         ],
-        "description": "Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Intentos y topes actuales; retryAfter son segundos y coincide con Retry-After. No guardar códigos ni enlaces en logs. Solo OTP del pendiente propio; vínculo, principal si corresponde y avisos en una UoW.",
+        "description": "Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Invalid informa attemptsLeft sólo ante una prueba activa; sin prueba activa no informa intentos restantes. Los errores del código no incluyen errors.code. Intentos y topes actuales; cuando el error incluye retryAfter, son segundos y coincide con Retry-After. El bloqueo de cuenta no informa un plazo ni ese encabezado. No guardar códigos ni enlaces en logs. Solo OTP del pendiente propio; vínculo, principal si corresponde y avisos en una UoW. El servicio rechaza cuenta suspendida o con baja pendiente sin ticket de cancelación; no evalúa bloqueo temporal de cuenta.",
         "parameters": [
           {
             "name": "methodId",
@@ -51350,13 +51269,7 @@
                       "status": 400,
                       "detail": "El código no es válido.",
                       "code": "Auth.LoginCode.Invalid",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "El código no es válido."
-                        ]
-                      },
-                      "attemptsLeft": 4
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.Invalid.en": {
@@ -51366,13 +51279,7 @@
                       "status": 400,
                       "detail": "The code is not valid.",
                       "code": "Auth.LoginCode.Invalid",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "The code is not valid."
-                        ]
-                      },
-                      "attemptsLeft": 4
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.Expired.es": {
@@ -51382,12 +51289,7 @@
                       "status": 400,
                       "detail": "El código venció. Pedí uno nuevo.",
                       "code": "Auth.LoginCode.Expired",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "El código venció. Pedí uno nuevo."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.Expired.en": {
@@ -51397,12 +51299,7 @@
                       "status": 400,
                       "detail": "The code has expired. Request a new one.",
                       "code": "Auth.LoginCode.Expired",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "The code has expired. Request a new one."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.AlreadyUsed.es": {
@@ -51412,12 +51309,7 @@
                       "status": 400,
                       "detail": "El código ya se usó. Pedí uno nuevo.",
                       "code": "Auth.LoginCode.AlreadyUsed",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "El código ya se usó. Pedí uno nuevo."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.AlreadyUsed.en": {
@@ -51427,12 +51319,7 @@
                       "status": 400,
                       "detail": "The code has already been used. Request a new one.",
                       "code": "Auth.LoginCode.AlreadyUsed",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "The code has already been used. Request a new one."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.TooManyAttempts.es": {
@@ -51442,12 +51329,7 @@
                       "status": 400,
                       "detail": "Superaste los intentos para este código. Pedí uno nuevo.",
                       "code": "Auth.LoginCode.TooManyAttempts",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "Superaste los intentos para este código. Pedí uno nuevo."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginCode.TooManyAttempts.en": {
@@ -51457,12 +51339,7 @@
                       "status": 400,
                       "detail": "Too many attempts for this code. Request a new one.",
                       "code": "Auth.LoginCode.TooManyAttempts",
-                      "traceId": "example-trace-id",
-                      "errors": {
-                        "code": [
-                          "Too many attempts for this code. Request a new one."
-                        ]
-                      }
+                      "traceId": "example-trace-id"
                     }
                   },
                   "Auth.LoginMethod.ChannelUnavailable.es": {
@@ -51583,71 +51460,103 @@
               }
             }
           },
-          "403": {
-            "description": "Auth.Account.Disabled; Auth.Account.LockedOut; Tenancy.Access.PlatformOnly; Http.Forbidden",
+          "409": {
+            "description": "Identity.LoginMethod.AlreadyVerified; Request.InProgress",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 },
                 "examples": {
-                  "Auth.Account.Disabled.es": {
+                  "Identity.LoginMethod.AlreadyVerified.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 409,
+                      "detail": "Este método de ingreso ya está verificado.",
+                      "code": "Identity.LoginMethod.AlreadyVerified",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Identity.LoginMethod.AlreadyVerified.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 409,
+                      "detail": "This sign-in method is already verified.",
+                      "code": "Identity.LoginMethod.AlreadyVerified",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Request.InProgress.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 409,
+                      "detail": "La solicitud todavía se está procesando.",
+                      "code": "Request.InProgress",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Request.InProgress.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 409,
+                      "detail": "The request is still being processed.",
+                      "code": "Request.InProgress",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Identity.Account.Suspended; Identity.Account.PendingDeletion; Http.Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Identity.Account.Suspended.es": {
                     "value": {
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 403,
-                      "detail": "Tu cuenta está deshabilitada. Contactá a un administrador.",
-                      "code": "Auth.Account.Disabled",
+                      "detail": "Tu cuenta está suspendida.",
+                      "code": "Identity.Account.Suspended",
                       "traceId": "example-trace-id"
                     }
                   },
-                  "Auth.Account.Disabled.en": {
+                  "Identity.Account.Suspended.en": {
                     "value": {
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 403,
-                      "detail": "Your account is disabled. Contact an administrator.",
-                      "code": "Auth.Account.Disabled",
+                      "detail": "Your account is suspended.",
+                      "code": "Identity.Account.Suspended",
                       "traceId": "example-trace-id"
                     }
                   },
-                  "Auth.Account.LockedOut.es": {
+                  "Identity.Account.PendingDeletion.es": {
                     "value": {
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 403,
-                      "detail": "Tu cuenta está bloqueada por unos minutos por demasiados intentos fallidos.",
-                      "code": "Auth.Account.LockedOut",
+                      "detail": "Tu cuenta tiene la baja pedida.",
+                      "code": "Identity.Account.PendingDeletion",
                       "traceId": "example-trace-id"
                     }
                   },
-                  "Auth.Account.LockedOut.en": {
+                  "Identity.Account.PendingDeletion.en": {
                     "value": {
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 403,
-                      "detail": "Your account is locked for a few minutes after too many failed attempts.",
-                      "code": "Auth.Account.LockedOut",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Tenancy.Access.PlatformOnly.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 403,
-                      "detail": "Esta cuenta es de un operador: solo entra a Plataforma.",
-                      "code": "Tenancy.Access.PlatformOnly",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Tenancy.Access.PlatformOnly.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 403,
-                      "detail": "This is a platform operator account: it can only enter the platform.",
-                      "code": "Tenancy.Access.PlatformOnly",
+                      "detail": "Your account is pending deletion.",
+                      "code": "Identity.Account.PendingDeletion",
                       "traceId": "example-trace-id"
                     }
                   },
@@ -51679,7 +51588,7 @@
             "description": "Http.TooManyRequests",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -51749,8 +51658,8 @@
               }
             }
           },
-          "409": {
-            "description": "Request.IdempotencyKeyReused; Request.InProgress",
+          "422": {
+            "description": "Request.IdempotencyKeyReused",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -51761,7 +51670,7 @@
                     "value": {
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
-                      "status": 409,
+                      "status": 422,
                       "detail": "Esta clave ya se usó para otra solicitud.",
                       "code": "Request.IdempotencyKeyReused",
                       "traceId": "example-trace-id"
@@ -51771,29 +51680,9 @@
                     "value": {
                       "type": "about:blank",
                       "title": "Request rejected",
-                      "status": 409,
+                      "status": 422,
                       "detail": "This key was already used for another request.",
                       "code": "Request.IdempotencyKeyReused",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Request.InProgress.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 409,
-                      "detail": "La solicitud todavía se está procesando.",
-                      "code": "Request.InProgress",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Request.InProgress.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 409,
-                      "detail": "The request is still being processed.",
-                      "code": "Request.InProgress",
                       "traceId": "example-trace-id"
                     }
                   }
@@ -51816,11 +51705,32 @@
             "en": "We could not find this sign-in method."
           },
           {
+            "status": 409,
+            "code": "Identity.LoginMethod.AlreadyVerified",
+            "field": null,
+            "es": "Este método de ingreso ya está verificado.",
+            "en": "This sign-in method is already verified."
+          },
+          {
             "status": 400,
             "code": "Identity.LoginMethod.PhoneAlreadyUsed",
             "field": "phone",
             "es": "Ese número ya está asociado a otra cuenta.",
             "en": "That number is already linked to another account."
+          },
+          {
+            "status": 403,
+            "code": "Identity.Account.Suspended",
+            "field": null,
+            "es": "Tu cuenta está suspendida.",
+            "en": "Your account is suspended."
+          },
+          {
+            "status": 403,
+            "code": "Identity.Account.PendingDeletion",
+            "field": null,
+            "es": "Tu cuenta tiene la baja pedida.",
+            "en": "Your account is pending deletion."
           },
           {
             "status": 400,
@@ -51832,51 +51742,30 @@
           {
             "status": 400,
             "code": "Auth.LoginCode.Invalid",
-            "field": "code",
+            "field": null,
             "es": "El código no es válido.",
             "en": "The code is not valid."
           },
           {
             "status": 400,
             "code": "Auth.LoginCode.Expired",
-            "field": "code",
+            "field": null,
             "es": "El código venció. Pedí uno nuevo.",
             "en": "The code has expired. Request a new one."
           },
           {
             "status": 400,
             "code": "Auth.LoginCode.AlreadyUsed",
-            "field": "code",
+            "field": null,
             "es": "El código ya se usó. Pedí uno nuevo.",
             "en": "The code has already been used. Request a new one."
           },
           {
             "status": 400,
             "code": "Auth.LoginCode.TooManyAttempts",
-            "field": "code",
+            "field": null,
             "es": "Superaste los intentos para este código. Pedí uno nuevo.",
             "en": "Too many attempts for this code. Request a new one."
-          },
-          {
-            "status": 403,
-            "code": "Auth.Account.Disabled",
-            "field": null,
-            "es": "Tu cuenta está deshabilitada. Contactá a un administrador.",
-            "en": "Your account is disabled. Contact an administrator."
-          },
-          {
-            "status": 403,
-            "code": "Auth.Account.LockedOut",
-            "field": null,
-            "es": "Tu cuenta está bloqueada por unos minutos por demasiados intentos fallidos.",
-            "en": "Your account is locked for a few minutes after too many failed attempts."
-          },
-          {
-            "status": 403,
-            "code": "Tenancy.Access.PlatformOnly",
-            "field": null,
-            "es": "Esta cuenta es de un operador: solo entra a Plataforma.",
-            "en": "This is a platform operator account: it can only enter the platform."
           },
           {
             "status": 400,
@@ -51921,7 +51810,7 @@
             "en": "A key identifying this request is required."
           },
           {
-            "status": 409,
+            "status": 422,
             "code": "Request.IdempotencyKeyReused",
             "field": null,
             "es": "Esta clave ya se usó para otra solicitud.",
@@ -52150,7 +52039,7 @@
             "description": "Http.TooManyRequests",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
@@ -52506,7 +52395,7 @@
             "description": "Http.TooManyRequests",
             "headers": {
               "Retry-After": {
-                "description": "Segundos iguales a retryAfter.",
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
                 "schema": {
                   "type": "integer"
                 }
