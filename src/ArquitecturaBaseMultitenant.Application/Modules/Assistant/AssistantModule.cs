@@ -56,6 +56,8 @@ public static class AssistantModule
         services.AddScoped<AssistantSettingsWriter>();
         services.AddScoped<AssistantSettingsAuditWriter>();
         services.AddScoped<AssistantModelWriter>();
+        services.AddScoped<AssistantLimitGuard>();
+        services.AddScoped<AssistantUsageWriter>();
         services.AddScoped<IAssistantConfigurationPolicy, AssistantConfigurationPolicy>();
         services.AddOptions<AssistantOptions>().BindConfiguration(AssistantOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
         services.AddSingleton<IFeatureDefinitionContributor, AssistantFeatureDefinitionContributor>();

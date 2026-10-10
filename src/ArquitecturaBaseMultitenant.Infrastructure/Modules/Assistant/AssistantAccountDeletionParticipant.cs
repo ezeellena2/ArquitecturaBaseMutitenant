@@ -18,6 +18,13 @@ internal sealed class AssistantAccountDeletionParticipant(ApplicationDbContext d
     public async Task ExecuteAsync(AccountDeletionContext context, CancellationToken ct)
     {
         db.RequireTransaction();
+        var financeKeys = new List<string> { AdvisoryLockKeys.Account(context.UserId) + ":assistant:finance" };
+        if (context.TenantId is { } financeTenant) financeKeys.Add(AdvisoryLockKeys.For(financeTenant, "assistant:finance:budget", financeTenant));
+        await db.AcquireAdvisoryLocksAsync(financeKeys, ct);
+        var financialOperations = await db.Set<AssistantFinancialOperation>()
+            .Where(row => row.UserId == context.UserId && row.ScopeTenantId == context.TenantId).ToArrayAsync(ct);
+        foreach (var operation in financialOperations) operation.MarkContentDeleted();
+        // Global facts/quotas remain pseudonymous accounting; private copies are removed and never recreated.
         if (context.TenantId is { } tenantId)
         {
             if (tenant.RequiredTenantId != tenantId) throw new InvalidOperationException("Assistant deletion requires the caller's tenant scope.");
@@ -25,6 +32,7 @@ internal sealed class AssistantAccountDeletionParticipant(ApplicationDbContext d
             foreach (var row in conversations) await AssistantFileCleanupWriter.StageAsync(db, context.UserId, row.Id, false, context.NowUtc, ct);
             db.RemoveRange(conversations);
             db.RemoveRange(await db.Set<AssistantDurableOperation>().Where(row => row.OwnerUserId == context.UserId && row.TenantId == tenantId).ToArrayAsync(ct));
+            db.RemoveRange(await db.Set<AssistantUsageFact>().Where(row => row.UserId == context.UserId && row.TenantId == tenantId).ToArrayAsync(ct));
         }
         else
         {

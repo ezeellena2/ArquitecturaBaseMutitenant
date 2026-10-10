@@ -20,6 +20,10 @@ internal sealed class AssistantModelContributor : IPersistenceModelContributor
         [typeof(AssistantOrganizationPolicy)] = Schemas.Platform,
         [typeof(AssistantModelPrice)] = Schemas.Platform,
         [typeof(AssistantNoticeAcceptance)] = Schemas.Platform,
+        [typeof(AssistantPlatformKeyDailyQuota)] = Schemas.Platform,
+        [typeof(AssistantFinancialOperation)] = Schemas.Platform,
+        [typeof(AssistantFinancialCall)] = Schemas.Platform,
+        [typeof(AssistantBudgetMonth)] = Schemas.Platform,
     };
     public void Configure(ModelBuilder builder) => builder.ApplyConfigurationsFromAssembly(GetType().Assembly,
         type => type.Namespace == ConfigurationNamespace);
