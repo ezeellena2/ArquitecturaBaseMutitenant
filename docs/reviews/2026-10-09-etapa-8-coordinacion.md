@@ -171,3 +171,11 @@ Se creó la cuenta propia temporal B por `e8-meta-persona-b@example.test`, usand
 | Mi cuenta de A | Agregar Phone verificado de B | «Ese número ya está asociado a otra cuenta.» |
 
 Los tres rechazos no avanzaron a OTP. El cotejo de 10/10 a las 00:27 y 00:28:40 UTC conservó exactamente **3 Authentication, 3 Interactive y 2 Template `Delivered`**, con cero contenido cifrado en esos mensajes outbound: no emitieron código ni aviso al dueño. Metadatos agregados, sin direcciones, números, wamid ni tokens: `.local/reviews/2026-10-09-e8-meta-metadatos.jsonl`. Recortes sólo del error visible: `2026-10-09-e8-registro-numero-ocupado.jpg`, `2026-10-09-e8-recuperar-numero-ocupado.jpg` y `2026-10-09-e8-cuenta-numero-ocupado.jpg`.
+
+### Recuperación real: pendiente y rechazo
+
+Se ingresó a B por su correo local y se quitó el teléfono desde Mi cuenta, conservando el correo verificado y sin OTP adicional. Con el teléfono libre se inició Recuperar para el correo anterior de A y ese WhatsApp como método nuevo. El usuario verificó el cuarto código real desde el celular; la web envió el pedido y mostró «Recibimos tu pedido», sin iniciar sesión. La consulta agregada confirmó `Pending|1`, cuatro Authentication y tres Template `Delivered`. Intentar ingresar con el teléfono pendiente mostró «No hay una cuenta con ese número», sin emitir otro código. La verificación de posesión no concede acceso por sí sola.
+
+El operador sintético entró por `/plataforma`, con código de su pickup y aceptación de los mismos documentos de demostración autorizados. La bandeja mostró un pedido pendiente con ambos métodos enmascarados. Se rechazó desde «Revisar» con el motivo «Prueba integral E8: rechazo controlado.»; la bandeja pasó a un pedido y cero pendientes. «Ver detalle» recuperó estado, operador y motivo guardados. La base confirmó `Rejected|1` y cuatro Template `Delivered`; WhatsApp Web mostró el aviso de rechazo, sin incluir el motivo interno. No se agregó el teléfono a la cuenta.
+
+Evidencia local sin código ni número completo: `2026-10-09-e8-recuperacion-pendiente-sin-ingreso.jpg`, `2026-10-09-e8-recuperacion-rechazada.jpg` y `2026-10-09-e8-recuperacion-rechazo-detalle.jpg` en `.local/reviews/`. Se preparó un segundo pedido para comprobar aprobación y su botón Utility; todavía no acredita esa rama ni cierra la puerta.
