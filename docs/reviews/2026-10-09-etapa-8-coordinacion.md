@@ -121,6 +121,8 @@ Se corrigió la [guía operativa](../operations/whatsapp-plantillas.md), que tod
 
 Ayuda ofrece «Contactar con el servicio de asistencia». La revisión automática rechazó abrir esa opción porque puede iniciar una escalación externa y la autorización actual sólo cubre inspección; no se creó un caso ni se envió información. Quedó preparado `.local/reviews/2026-10-09-meta-soporte-borrador.md`, con las cuatro variantes y su justificación funcional, sin secretos, destinatarios, códigos ni enlaces privados. Contactarlo y enviar el borrador requiere autorización expresa; no se duplican apelaciones pendientes.
 
+El usuario eligió **«Esperar la revisión (recomendado)»**. El borrador queda sin enviar y no se abre soporte. Se continúa con los cierres técnicos E8; una respuesta de Meta debe volver a comprobarse antes del envío real pendiente.
+
 La limpieza de la prueba real está hecha: teléfono libre, cuentas conservadas por sus correos, registro **Abierto/Abierta**, sesiones temporales cerradas, callback compartido anterior y encabezados por defecto restaurados; Aspire aislado detenido y 5176 libre. Los datos temporales quedan únicamente en el volumen aislado.
 
 ## Decisiones tomadas
