@@ -12,6 +12,7 @@ public static class AssistantApiModule
         services.AddSingleton<IInstalledModuleRouteAvailability, ChatRouteAvailability>();
         services.AddSingleton<IInstalledModuleRouteAvailability>(new RouteAvailability(ManagementRoute, true));
         services.AddSingleton<IHttpContractContributor, AssistantContractContributor>();
+        services.AddScoped<AssistantNoticeReplayVerifier>();
         return services;
     }
     private sealed record RouteAvailability(string Key, bool IsAvailable) : IInstalledModuleRouteAvailability;

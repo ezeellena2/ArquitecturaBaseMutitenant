@@ -16,6 +16,9 @@ public static class AssistantModule
         services.AddSingleton<IPersistenceModelContributor, AssistantModelContributor>();
         services.AddScoped<IAssistantSettingsReader, AssistantSettingsReader>();
         services.AddScoped<IAssistantConversationReader, AssistantConversationReader>();
+        services.AddScoped<IAssistantNoticeReader, AssistantNoticeReader>();
+        services.AddScoped<IAssistantNoticeRepository, AssistantNoticeRepository>();
+        services.AddScoped<IModuleDataSeedContributor, AssistantLegalDocumentSeed>();
         services.AddScoped<IAssistantConversationRepository, AssistantConversationRepository>();
         services.AddScoped<IPlatformAssistantConversationRepository, PlatformAssistantConversationRepository>();
         services.AddScoped<IAssistantSettingsRepository, AssistantSettingsRepository>();

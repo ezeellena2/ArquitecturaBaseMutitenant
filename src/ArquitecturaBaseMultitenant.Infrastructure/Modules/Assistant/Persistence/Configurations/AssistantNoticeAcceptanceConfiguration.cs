@@ -14,6 +14,6 @@ internal sealed class AssistantNoticeAcceptanceConfiguration : IEntityTypeConfig
         builder.HasKey(value => value.Id);
         builder.Property(value => value.NoticeVersion).HasMaxLength(TextLimits.ShortName).IsRequired();
         builder.Property(value => value.Access).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
-        builder.HasIndex(value => new { value.OwnerUserId, value.Access, value.NoticeVersion }).IsUnique();
+        builder.HasIndex(value => new { value.OwnerUserId, value.NoticeVersion }).IsUnique();
     }
 }

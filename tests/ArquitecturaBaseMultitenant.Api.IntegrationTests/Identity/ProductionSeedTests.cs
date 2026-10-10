@@ -113,7 +113,9 @@ public sealed class ProductionSeedTests
             TestContext.Current.CancellationToken));
         var initialEvents = await context.SecurityEvents.AsNoTracking()
             .ToListAsync(TestContext.Current.CancellationToken);
-        Assert.Equal(2, initialEvents.Count);
+        Assert.Equal(3, initialEvents.Count);
+        Assert.Single(initialEvents, item => item.Type == SecurityEventType.PlatformSettingsChanged
+            && item.ActorKind == AuditActorKind.System && item.Reason == "Initial assistant reference seed");
         Assert.Contains(initialEvents, item => item.Type == SecurityEventType.PlatformSettingsChanged);
         Assert.Contains(initialEvents, item => item.Type.ToString() == "PlatformOperatorGranted"
             && item.ActorKind == AuditActorKind.System && item.Reason == "Initial platform owner seed");
@@ -134,12 +136,20 @@ public sealed class ProductionSeedTests
         Assert.NotNull(loginMethod.VerifiedAtUtc);
 
         var documents = await context.LegalDocuments.ToListAsync(TestContext.Current.CancellationToken);
-        Assert.Equal(2, documents.Count);
-        Assert.All(documents, document => Assert.Equal(1, document.Version));
+        Assert.Equal(4, documents.Count);
+        Assert.All(Enum.GetValues<LegalDocumentKind>(), kind =>
+            Assert.Equal([1, 2], documents.Where(document => document.Kind == kind).Select(document => document.Version).Order().ToArray()));
         Assert.Contains(documents, document => document.Kind == LegalDocumentKind.Terms);
         Assert.Contains(documents, document => document.Kind == LegalDocumentKind.Privacy);
         var contents = await context.LegalDocumentContents.ToListAsync(TestContext.Current.CancellationToken);
-        Assert.Equal(4, contents.Count);
+        Assert.Equal(8, contents.Count);
+        var assistantIds = documents.Where(document => document.Version == 2).Select(document => document.Id).ToHashSet();
+        Assert.All(contents.Where(content => assistantIds.Contains(content.LegalDocumentId)), content =>
+        {
+            Assert.Contains("Anthropic", content.Text, StringComparison.Ordinal);
+            Assert.Contains("30", content.Text, StringComparison.Ordinal);
+            Assert.Contains(content.Culture == "es-AR" ? "DEMOSTRACIÓN" : "DEMONSTRATION", content.Text, StringComparison.Ordinal);
+        });
         Assert.Contains(contents, content => content.Culture == "es-AR" &&
             content.Text == "DOCUMENTO DE DEMOSTRACIÓN. Esta plantilla no incluye términos legales. Reemplazá este texto antes de publicar.");
         Assert.Contains(contents, content => content.Culture == "en-US" &&

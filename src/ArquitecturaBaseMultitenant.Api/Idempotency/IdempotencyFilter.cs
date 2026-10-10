@@ -7,6 +7,7 @@ using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 
 namespace ArquitecturaBaseMultitenant.Api.Idempotency;
 
@@ -74,7 +75,11 @@ public sealed class IdempotencyFilter(
                     var checkedReplay = await verifier.ValidateAsync(request, reservation.ResponseStatusCode!.Value, reservation.ResponseBody, httpContext.RequestAborted);
                     if (checkedReplay.IsFailure)
                     {
-                        context.Result = Problem(httpContext, checkedReplay.Error.Type, checkedReplay.Error.Code, StatusCodes.Status400BadRequest);
+                        var details = ProblemDetailsMapper.FromError(checkedReplay.Error,
+                            httpContext.RequestServices.GetRequiredService<ProblemDetailsFactory>(), httpContext);
+                        var rejected = new ObjectResult(details) { StatusCode = details.Status };
+                        rejected.ContentTypes.Add("application/problem+json");
+                        context.Result = rejected;
                         return;
                     }
                 }

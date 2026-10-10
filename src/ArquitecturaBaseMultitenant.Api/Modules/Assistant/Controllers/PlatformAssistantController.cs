@@ -36,6 +36,7 @@ public sealed class PlatformAssistantController(IAssistantConversationService se
 
     [HttpPost("notice")]
     [Idempotent(Mode = IdempotencyMode.BufferedJson)]
+    [IdempotencyReplay(typeof(AssistantNoticeReplayVerifier))]
     [ProducesResponseType(204)]
     [ProducesProblem(400)]
     [ProducesProblem(401)]

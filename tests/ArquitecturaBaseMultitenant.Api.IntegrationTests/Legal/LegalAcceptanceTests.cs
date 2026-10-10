@@ -31,7 +31,7 @@ public sealed class LegalAcceptanceTests(ApiFactory factory)
         using var client = isolated.CreateClient(new WebApplicationFactoryClientOptions
             { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var account = await AccountJourney.RegisterAsync(isolated, client, Ct);
-        var second = await PublishAsync(isolated, 2);
+        var second = await PublishAsync(isolated, 3);
         using var blocked = await client.GetAsync("/api/me/login-methods", Ct);
         Assert.Equal(HttpStatusCode.Forbidden, blocked.StatusCode);
         using var problem = await blocked.Content.ReadFromJsonAsync<JsonDocument>(Ct);
@@ -45,22 +45,22 @@ public sealed class LegalAcceptanceTests(ApiFactory factory)
         using var anonymous = await client.GetAsync("/api/auth/methods", Ct);
         Assert.Equal(HttpStatusCode.OK, anonymous.StatusCode);
 
-        var third = await PublishAsync(isolated, 3);
+        var third = await PublishAsync(isolated, 4);
         using var stale = await AccountJourney.PostAsync(client, "/api/legal/accept",
-            new { documents = new[] { new { id = second.Id, version = 2 } } }, Ct);
+            new { documents = new[] { new { id = second.Id, version = 3 } } }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
         using var accepted = await AccountJourney.PostAsync(client, "/api/legal/accept",
-            new { documents = new[] { new { id = third.Id, version = 3 } } }, Ct);
+            new { documents = new[] { new { id = third.Id, version = 4 } } }, Ct);
         Assert.Equal(HttpStatusCode.NoContent, accepted.StatusCode);
         using var repeated = await AccountJourney.PostAsync(client, "/api/legal/accept",
-            new { documents = new[] { new { id = third.Id, version = 3 } } }, Ct);
+            new { documents = new[] { new { id = third.Id, version = 4 } } }, Ct);
         Assert.Equal(HttpStatusCode.NoContent, repeated.StatusCode);
         using var unblocked = await client.GetAsync("/api/me/login-methods", Ct);
         Assert.Equal(HttpStatusCode.OK, unblocked.StatusCode);
         await using var scope = isolated.Services.CreateAsyncScope();
         var row = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().LegalAcceptances
             .AsNoTracking().SingleAsync(row => row.UserId == account.UserId && row.LegalDocumentId == third.Id, Ct);
-        Assert.Equal(3, row.Version);
+        Assert.Equal(4, row.Version);
         Assert.Equal(DateTimeKind.Utc, row.AcceptedAtUtc.Kind);
         Assert.DoesNotContain(await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().LegalAcceptances
             .AsNoTracking().Where(row => row.UserId == account.UserId).ToArrayAsync(Ct), row => row.LegalDocumentId == second.Id);
@@ -95,8 +95,8 @@ public sealed class LegalAcceptanceTests(ApiFactory factory)
 
         Assert.True(terms.IsSuccess);
         Assert.True(privacy.IsSuccess);
-        Assert.Equal(1, terms.Value.Version);
-        Assert.Equal(1, privacy.Value.Version);
+        Assert.Equal(2, terms.Value.Version);
+        Assert.Equal(2, privacy.Value.Version);
         Assert.StartsWith("DOCUMENTO DE DEMOSTRACIÓN.", terms.Value.Text, StringComparison.Ordinal);
         Assert.StartsWith("DEMONSTRATION DOCUMENT.", privacy.Value.Text, StringComparison.Ordinal);
         Assert.Equal("es-AR", terms.Value.Culture);

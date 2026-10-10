@@ -247,7 +247,7 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OwnerUserId", "Access", "NoticeVersion")
+                    b.HasIndex("OwnerUserId", "NoticeVersion")
                         .IsUnique();
 
                     b.ToTable("AssistantNoticeAcceptances", "platform");

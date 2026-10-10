@@ -9,16 +9,22 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
-internal sealed class AssistantConversationService(IAssistantConversationReader reader, ICurrentUser user, IRequestValidator validator, TimeProvider clock, ILogger<AssistantConversationService> logger) : IAssistantConversationService
+internal sealed class AssistantConversationService(IAssistantConversationReader reader, ICurrentUser user, AssistantNoticeWriter notice,
+    IUnitOfWork unitOfWork, IRequestValidator validator, TimeProvider clock, ILogger<AssistantConversationService> logger) : IAssistantConversationService
 {
     public Task<Result<AssistantStateResponse>> StateAsync(CancellationToken cancellationToken) =>
         OperationLog.RunAsync(logger, clock, "AssistantConversationState", () => Task.FromResult(Result.Failure<AssistantStateResponse>(ContractErrors.NotImplemented)));
 
     public Task<Result> AcceptNoticeAsync(AssistantNoticeRequest request, CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, clock, "AssistantConversationAcceptNotice", () => Task.FromResult(Result.Failure(ContractErrors.NotImplemented)));
+        OperationLog.RunAsync(logger, clock, "AssistantConversationAcceptNotice", async () =>
+        {
+            if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
+            return await unitOfWork.ExecuteInTransactionAsync(ct => notice.AcceptAsync(request, ct), CommitPolicy.OnSuccess, cancellationToken);
+        });
 
     public Task<Result<CursorResult<AssistantConversationSummaryResponse>>> ListAsync(AssistantConversationListRequest request, CancellationToken cancellationToken) =>
         OperationLog.RunAsync<CursorResult<AssistantConversationSummaryResponse>>(logger, clock, "AssistantConversationList", async () =>
