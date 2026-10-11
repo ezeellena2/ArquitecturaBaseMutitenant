@@ -30,6 +30,7 @@ public static class AssistantModule
         services.AddScoped<IAssistantModelReader, AssistantModelReader>();
         services.AddScoped<IAssistantFinanceRepository, AssistantFinanceRepository>();
         services.AddScoped<IAssistantFinanceReader, AssistantFinanceReader>();
+        services.AddScoped<IAssistantUsageReader, AssistantUsageReader>();
         services.AddSingleton<IAssistantProviderCatalog, AssistantProviderCatalog>();
         services.AddScoped<IAssistantKeyProtector, AssistantKeyProtector>();
         services.AddScoped<IChatClientFactory, AnthropicChatClientFactory>();

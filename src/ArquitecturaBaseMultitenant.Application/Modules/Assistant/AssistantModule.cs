@@ -27,6 +27,8 @@ public static class AssistantModule
         services.AddScoped<AssistantNoticeWriter>();
         services.AddScoped<IAssistantSettingsService, AssistantSettingsService>();
         services.AddScoped<IAssistantUsageService, AssistantUsageService>();
+        services.AddScoped<AssistantUsagePolicy>();
+        services.AddScoped<AssistantUsageBuilder>();
         services.AddScoped<IAssistantModelService, AssistantModelService>();
         services.AddScoped<IAssistantPolicyService, AssistantPolicyService>();
         services.AddScoped<AssistantSettingsBuilder>();

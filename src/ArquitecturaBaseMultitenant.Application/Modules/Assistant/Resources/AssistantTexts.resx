@@ -49,4 +49,8 @@
   <data name="Assistant.Validation.EffortsInvalid" xml:space="preserve"><value>Elegí esfuerzos únicos entre bajo, medio y alto.</value></data>
   <data name="Assistant.Validation.TechnicalLimitsInvalid" xml:space="preserve"><value>Ingresá límites positivos: la salida no puede superar la entrada y el umbral debe ser menor que la entrada.</value></data>
   <data name="Assistant.Validation.TechnicalPriceInvalid" xml:space="preserve"><value>Ingresá una tarifa positiva en USD con hasta seis decimales.</value></data>
+  <data name="Assistant.Usage.OrganizationUnavailable" xml:space="preserve"><value>Organización no disponible</value></data>
+  <data name="Assistant.Usage.PersonUnavailable" xml:space="preserve"><value>Cuenta no disponible</value></data>
+  <data name="Assistant.Usage.Personal" xml:space="preserve"><value>Personas</value></data>
+  <data name="Assistant.Usage.Operators" xml:space="preserve"><value>Operadores</value></data>
 </root>

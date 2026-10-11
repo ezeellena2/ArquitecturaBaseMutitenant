@@ -539,6 +539,7 @@ ArquitecturaBaseMultitenant.Application/
 │       ├── Identity/                                 [E3–E4]
 │       │   ├── ISignInService.cs                     técnico: sign-in, bloqueos, revocar sesiones (≤12 miembros)
 │       │   ├── IUserLookup.cs                        búsqueda global por email o teléfono
+│       │   ├── IUserDisplayNameReader.cs             nombres en lote para una página autorizada
 │       │   ├── ITokenRevoker.cs
 │       │   ├── IUserStatusReader.cs                  Estado global y batch neutral de baja; shares ordenados, sin exponer Identity
 │       │   ├── ILoginLinkIssuer.cs                   Emite dentro de la UoW del llamador, ligado al método…
@@ -1253,6 +1254,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   ├── IdentityRegistration.cs                        Identity core, cookies /account y /connect, DataProtection
 │   ├── SignInService.cs
 │   ├── UserLookup.cs                                  búsqueda global por valor de método (lista blanca); Plataforma busca cuentas en PlatformAccountReader
+│   ├── UserDisplayNameReader.cs                       proyecta nombres sin secretos ni cuentas en baja
 │   ├── GoogleAvailability.cs                          [E3] Google se enciende con Authentication:Google:ClientId
 │   ├── UserStatusReader.cs                            Estado global y fence de baja con FOR SHARE ordenado
 │   ├── CloudflareDnsTxtLookup.cs                      Consulta registros TXT públicos mediante el endpoint DNS-over-HTTPS de Cloudflare
@@ -2062,6 +2064,8 @@ tests/
 │   │   ├── AssistantStateTests.cs                    estado HTTP, primer aviso, permisos, catálogo y lectura sin proveedor ni UoW
 │   │   ├── AssistantStateFinanceReaderTests.cs       cuota compartida, ledger por financiación y períodos persistidos
 │   │   ├── AssistantStateBudgetTests.cs              estado mensual/diario real, snapshots y bordes sin escritura
+│   │   ├── AssistantUsageAuthorizationTests.cs       gestión sin chat y validación de páginas y meses
+│   │   ├── AssistantUsageFinanceTests.cs             uso histórico, financiación, paginado SQL, concurrencia y privacidad
 │   │   ├── AssistantSnapshotRetentionTests.cs        purga 24 h, rollback, retry, gates OFF y backlog con páginas bloqueadas
 │   │   ├── AssistantSnapshotSubjectDeletionTests.cs  baja real de copias en otros dueños, organizaciones y Plataforma
 │   │   ├── AssistantSnapshotConcurrentDeletionTests.cs dos bajas simultáneas con copias mutuas y distintos órdenes de commit

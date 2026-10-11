@@ -49,4 +49,8 @@
   <data name="Assistant.Validation.EffortsInvalid" xml:space="preserve"><value>Choose unique efforts from low, medium and high.</value></data>
   <data name="Assistant.Validation.TechnicalLimitsInvalid" xml:space="preserve"><value>Enter positive limits: output must not exceed input, and the threshold must be lower than input.</value></data>
   <data name="Assistant.Validation.TechnicalPriceInvalid" xml:space="preserve"><value>Enter a positive USD rate with up to six decimal places.</value></data>
+  <data name="Assistant.Usage.OrganizationUnavailable" xml:space="preserve"><value>Organization unavailable</value></data>
+  <data name="Assistant.Usage.PersonUnavailable" xml:space="preserve"><value>Account unavailable</value></data>
+  <data name="Assistant.Usage.Personal" xml:space="preserve"><value>Personal accounts</value></data>
+  <data name="Assistant.Usage.Operators" xml:space="preserve"><value>Operators</value></data>
 </root>

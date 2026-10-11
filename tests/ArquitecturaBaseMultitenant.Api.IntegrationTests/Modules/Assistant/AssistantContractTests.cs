@@ -22,7 +22,7 @@ public sealed class AssistantContractTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
     [Fact]
-    public async Task Usage_preserves_authentication_access_permissions_and_honest_501_without_a_provider_key()
+    public async Task Usage_preserves_authentication_access_permissions_and_reads_without_a_provider_key()
     {
         using var ownerClient = AssistantTestData.Client(factory);
         using var memberClient = AssistantTestData.Client(factory);
@@ -35,7 +35,7 @@ public sealed class AssistantContractTests(ApiFactory factory)
         await AssistantTestData.EnableAsync(factory, tenantId);
         await AccountJourney.AuthorizeAsync(ownerClient, "business", Ct, tenantId);
         using var business = await ownerClient.GetAsync(businessUsage, Ct);
-        await Stub(business);
+        Assert.Equal(HttpStatusCode.OK, business.StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await ownerClient.GetAsync(platformUsage, Ct)).StatusCode);
         var member = await AccountJourney.RegisterAsync(factory, memberClient, Ct);
         await OrganizationJourney.AddActiveMemberAsync(factory, tenantId, member.UserId, Ct);
@@ -46,7 +46,7 @@ public sealed class AssistantContractTests(ApiFactory factory)
         await PlatformOperators.GrantAsync(factory.Services, account.UserId, [PlatformPermissions.Assistant.Read], Ct);
         await AccountJourney.AuthorizeAsync(operatorClient, "platform", Ct);
         using var platform = await operatorClient.GetAsync(platformUsage, Ct);
-        await Stub(platform);
+        Assert.Equal(HttpStatusCode.OK, platform.StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await operatorClient.GetAsync(businessUsage, Ct)).StatusCode);
     }
     [Fact]

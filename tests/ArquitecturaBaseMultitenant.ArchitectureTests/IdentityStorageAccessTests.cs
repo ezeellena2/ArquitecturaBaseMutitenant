@@ -16,6 +16,7 @@ public sealed partial class IdentityStorageAccessTests
     [
         Infrastructure + "Identity.SignInService",
         Infrastructure + "Identity.UserLookup",
+        Infrastructure + "Identity.UserDisplayNameReader", // Batch names for an authorized page; omits accounts whose deletion began.
         Infrastructure + "Identity.UserStatusReader",
         Infrastructure + "Persistence.Readers.LoginMethodReader",
         Infrastructure + "Persistence.Readers.LegalReader",
