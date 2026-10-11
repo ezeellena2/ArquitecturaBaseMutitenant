@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -5,6 +6,7 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Common.Text;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Phones;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
@@ -19,6 +21,7 @@ using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Platform;
@@ -85,11 +88,13 @@ public sealed class PlatformAccountPrimaryPhoneTests(ApiFactory factory)
         await AssertIdentityAsync(platform, account, null, search: account.Email);
     }
 
-    [Fact]
-    public async Task Approving_recovery_replaces_the_primary_phone_identity_on_the_next_read()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("+5491100000000")]
+    public async Task Approving_recovery_replaces_the_primary_phone_identity_on_the_next_read(string? firstPhoneCandidate)
     {
         using var platform = await OperatorAsync();
-        var account = await SeedAsync(factory.Services, "PhoneOnly");
+        var account = await SeedAsync(factory.Services, "PhoneOnly", firstPhoneCandidate);
         await AssertIdentityAsync(platform, account, PersonalDataMask.Phone(account.Phone));
         using var anonymous = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var newEmail = "recovered-" + Guid.NewGuid().ToString("N") + "@example.test";
@@ -101,7 +106,8 @@ public sealed class PlatformAccountPrimaryPhoneTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.NoContent, verified.StatusCode);
         using var submitted = await AccountJourney.PostAsync(anonymous, "/api/account-recovery",
             new { email = newEmail, nonce, previousPhone = new { country = "AR", number = account.Phone } }, Ct);
-        Assert.Equal(HttpStatusCode.Accepted, submitted.StatusCode);
+        Assert.True(submitted.StatusCode == HttpStatusCode.Accepted,
+            $"Expected recovery submission HTTP 202, got {(int)submitted.StatusCode}; problem code: {await ProblemCodeAsync(submitted)}");
         var page = await GetPathAsync(platform, "/api/platform/recoveries/paged?search=" + Uri.EscapeDataString(newEmail));
         var request = Assert.Single(page.GetProperty("items").EnumerateArray());
         using var approved = await PlatformJourney.PostAsync(platform,
@@ -160,7 +166,7 @@ public sealed class PlatformAccountPrimaryPhoneTests(ApiFactory factory)
 
     private sealed record Seeded(Guid Id, string Phone, string Email, string Search, Guid? PhoneMethodId, Guid? EmailMethodId, bool NoNameOrEmail);
 
-    private static async Task<Seeded> SeedAsync(IServiceProvider provider, string identity)
+    private static async Task<Seeded> SeedAsync(IServiceProvider provider, string identity, string? firstPhoneCandidate = null)
     {
         await using var scope = provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
@@ -169,9 +175,10 @@ public sealed class PlatformAccountPrimaryPhoneTests(ApiFactory factory)
         var noNameOrEmail = identity is "PhoneOnly" or "PhoneEmail";
         var user = ApplicationUser.Create(noNameOrEmail ? null : "Persona " + Guid.NewGuid().ToString("N"),
             "es-AR", "America/Argentina/Buenos_Aires").Value;
-        var phone = "+54911" + RandomNumberGenerator.GetInt32(20000000, 99999999);
+        var normalizedPhone = await ValidPhoneAsync(services, firstPhoneCandidate);
+        var phone = normalizedPhone.Value;
         var email = "backup-" + user.Id.ToString("N") + "@example.test";
-        var phoneMethod = LoginMethod.CreatePhone(user.Id, PhoneNumber.Create(phone).Value);
+        var phoneMethod = LoginMethod.CreatePhone(user.Id, normalizedPhone);
         var emailMethod = identity is "PhoneEmail" or "EmailPhone"
             ? LoginMethod.CreateEmail(user.Id, Email.Create(email).Value) : null;
         var google = identity == "GooglePhone" ? LoginMethod.CreateGoogle(user.Id, "subject-" + user.Id.ToString("N"), Email.Create(email).Value) : null;
@@ -207,6 +214,31 @@ public sealed class PlatformAccountPrimaryPhoneTests(ApiFactory factory)
     private sealed record AccountActor(Guid? UserId, DateTime? SessionStartedAtUtc) : ICurrentUser
     {
         public Access? Access => ArquitecturaBaseMultitenant.Domain.Users.Access.Consumer;
+    }
+
+    private static async Task<PhoneNumber> ValidPhoneAsync(IServiceProvider services, string? firstCandidate)
+    {
+        var parser = services.GetRequiredService<IPhoneNumberParser>();
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        // E.164 comprueba forma; la recuperación exige además un celular válido en los metadatos reales.
+        for (var attempt = 0; attempt < 64; attempt++)
+        {
+            var candidate = attempt == 0 && firstCandidate is not null ? firstCandidate
+                : "+54911" + RandomNumberGenerator.GetInt32(20000000, 99999999).ToString(CultureInfo.InvariantCulture);
+            var parsed = parser.Parse("AR", candidate, PhoneUsage.Mobile);
+            if (parsed.IsFailure) continue;
+            if (await db.LoginMethods.AnyAsync(method => method.Type == LoginMethodType.Phone && method.Value == parsed.Value.Value, Ct)) continue;
+            return parsed.Value;
+        }
+        throw new InvalidOperationException("The fixture could not generate a valid unused mobile number.");
+    }
+
+    private static async Task<string> ProblemCodeAsync(HttpResponseMessage response)
+    {
+        if (response.Content.Headers.ContentType?.MediaType != "application/problem+json") return "none";
+        using var problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
+        return problem.RootElement.TryGetProperty("code", out var code) && code.ValueKind == JsonValueKind.String
+            ? code.GetString()! : "missing";
     }
 
     // Capacidad neutral para métodos existentes. No habilita altas ni simula entrega de mensajes de un proveedor.
