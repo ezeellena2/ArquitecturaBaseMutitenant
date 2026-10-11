@@ -546,6 +546,8 @@ Ejecutá SOLO Parte 3 (T14–T15) de C:\Users\ezequ\source\repos\ArquitecturaBas
 
 ## Cambios al contrato
 
+**Ajuste visible de Uso aprobado el 11/10, sin delta HTTP:** en el resumen de Asistente-Uso-Org se retiran «Con la clave de la plataforma», su tooltip de origen del tope y «50 consultas por persona por día». El mes puede incluir ambas claves y los topes son configurables; el contrato no respalda una financiación única ni esa cuota global fija. Conservar costo, consultas y personas, y presupuesto/progreso cuando los entregue el servidor. Mostrar la cuota personal sólo donde `dailyUsage`/`dailyLimit` la respalden; los topes actuales siguen en Configuración. No inferir ajustes actuales para meses históricos ni consultar State para quien tiene `assistant.configure` sin `assistant.use`. Mantener las dos filas de Plataforma por financiación aprobadas en CC04. La aprobación manda sobre esos dos textos del lienzo; el móvil no recibe campos nuevos. Front recibió la decisión para T13, que todavía requiere su verificación. No se amplían DTO, rutas, permisos, peticiones ni SSE; no hay CC07.
+
 El [informe del contrato](../reviews/2026-10-09-etapa-8b-contrato.md#cambios-al-contrato) conserva propuestas, autorización y evidencia. Esta tabla distingue publicación del contrato, recepción de Front e implementación; publicar un DTO no acredita un endpoint operativo ni la puerta integral.
 
 | Cambio | Motivo y delta | Publicación y recepción |
