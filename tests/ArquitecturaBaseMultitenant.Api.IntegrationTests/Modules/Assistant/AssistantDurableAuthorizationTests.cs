@@ -90,7 +90,17 @@ public sealed class AssistantDurableAuthorizationTests(ApiFactory factory)
         using var replayProblem = JsonDocument.Parse(await replay.Content.ReadAsStringAsync(Ct));
         Assert.Equal("Assistant.QuickQuery.NotAvailable", replayProblem.RootElement.GetProperty("code").GetString());
         using var revokedHistory = await client.GetAsync($"/api/me/assistant/conversations/{id}", Ct);
-        Assert.Equal(HttpStatusCode.BadRequest, revokedHistory.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, revokedHistory.StatusCode);
+        var remainingHistory = await revokedHistory.Content.ReadFromJsonAsync<AssistantConversationResponse>(Json, Ct);
+        Assert.NotNull(remainingHistory);
+        Assert.Equal(history.Conversation, remainingHistory.Conversation);
+        Assert.Equal(history.Messages.NextCursor, remainingHistory.Messages.NextCursor);
+        Assert.Equal(history.Messages.HasMore, remainingHistory.Messages.HasMore);
+        Assert.Equal(history.Messages.Items.Select(row => JsonSerializer.Serialize(row with { Links = [] }, Json)),
+            remainingHistory.Messages.Items.Select(row => JsonSerializer.Serialize(row with { Links = [] }, Json)));
+        var remaining = Assert.Single(remainingHistory.Messages.Items.Single(row => row.Role == AssistantMessageRole.Assistant).Links);
+        Assert.Equal(one, remaining.Parameters.TenantId);
+        Assert.Equal(AssistantRouteKey.PersonalOrganizations, remaining.RouteKey);
     }
 
     [Theory]
@@ -139,6 +149,15 @@ public sealed class AssistantDurableAuthorizationTests(ApiFactory factory)
         }
         using var success = await AssistantDurableConversationTests.PostAsync(client, "/api/organization/assistant/quick/active_users", "{}", key);
         Assert.Equal(HttpStatusCode.OK, success.StatusCode);
+        using var quick = await success.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+        Assert.NotNull(quick);
+        var conversationId = quick.RootElement.GetProperty("conversation").GetProperty("id").GetGuid();
+        var historyRoute = $"/api/organization/assistant/conversations/{conversationId}";
+        var originalHistory = await client.GetFromJsonAsync<AssistantConversationResponse>(historyRoute, Json, Ct);
+        Assert.NotNull(originalHistory);
+        Assert.Single(originalHistory.Messages.Items.Single(row => row.Role == AssistantMessageRole.Assistant).Links);
+        string? originalLinks = null;
+        string? originalSnapshot = null;
         using (var scope = factory.Services.CreateScope())
         {
             var services = scope.ServiceProvider;
@@ -146,13 +165,50 @@ public sealed class AssistantDurableAuthorizationTests(ApiFactory factory)
             await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
             {
                 var db = services.GetRequiredService<ApplicationDbContext>();
+                originalLinks = await db.Set<Domain.Assistant.AssistantMessage>().AsNoTracking()
+                    .Where(row => row.ConversationId == conversationId && row.Role == "Assistant")
+                    .Select(row => row.LinksJson).SingleAsync(ct);
+                originalSnapshot = await db.Set<Domain.Assistant.AssistantDurableOperation>().AsNoTracking()
+                    .Where(row => row.OwnerUserId == account.UserId && row.Key == key).Select(row => row.SnapshotJson).SingleAsync(ct);
                 if (revokeMember) Assert.True((await db.Members.SingleAsync(row => row.Id == member, ct)).Deactivate().IsSuccess);
                 else db.Remove(await db.RoleAssignments.SingleAsync(row => row.MemberId == member && row.RoleId == data.Id, ct));
                 return Result.Success();
             }, CommitPolicy.OnSuccess, Ct);
         }
+        Assert.NotNull(originalLinks);
+        Assert.NotNull(originalSnapshot);
         using var replay = await AssistantDurableConversationTests.PostAsync(client, "/api/organization/assistant/quick/active_users", "{}", key);
         Assert.Contains(replay.StatusCode, new[] { HttpStatusCode.Forbidden, HttpStatusCode.Unauthorized, HttpStatusCode.BadRequest });
+        using var history = await client.GetAsync(historyRoute, Ct);
+        if (revokeMember)
+        {
+            Assert.Contains(history.StatusCode, new[] { HttpStatusCode.Forbidden, HttpStatusCode.Unauthorized });
+            return;
+        }
+        Assert.Equal(HttpStatusCode.OK, history.StatusCode);
+        var filtered = await history.Content.ReadFromJsonAsync<AssistantConversationResponse>(Json, Ct);
+        Assert.NotNull(filtered);
+        Assert.Equal(originalHistory.Conversation, filtered.Conversation);
+        Assert.Equal(originalHistory.Messages.Items.Select(row => JsonSerializer.Serialize(row with { Links = [] }, Json)),
+            filtered.Messages.Items.Select(row => JsonSerializer.Serialize(row, Json)));
+        using (var scope = factory.Services.CreateScope())
+        {
+            var services = scope.ServiceProvider;
+            using var tenant = services.GetRequiredService<ITenantScope>().Enter(tenantId);
+            var db = services.GetRequiredService<ApplicationDbContext>();
+            Assert.Equal(originalLinks, await db.Set<Domain.Assistant.AssistantMessage>().AsNoTracking()
+                .Where(row => row.ConversationId == conversationId && row.Role == "Assistant")
+                .Select(row => row.LinksJson).SingleAsync(Ct));
+            Assert.Equal(originalSnapshot, await db.Set<Domain.Assistant.AssistantDurableOperation>().AsNoTracking()
+                .Where(row => row.OwnerUserId == account.UserId && row.Key == key).Select(row => row.SnapshotJson).SingleAsync(Ct));
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+            {
+                db.Add(RoleAssignment.Assign(member, data.Id, data.Scope, null, null).Value);
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+        var restored = await client.GetFromJsonAsync<AssistantConversationResponse>(historyRoute, Json, Ct);
+        Assert.Equal(JsonSerializer.Serialize(originalHistory, Json), JsonSerializer.Serialize(restored, Json));
     }
 
     [Theory]

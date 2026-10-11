@@ -56,14 +56,11 @@ internal sealed class AssistantConversationService(IAssistantConversationReader 
             var conversation = await reader.FindByIdAsync(ownerId, access, id, cancellationToken);
             if (conversation is null) return AssistantErrors.ConversationNotFound;
             var messages = await reader.ListMessagesAsync(ownerId, access, id, request, cancellationToken);
-            foreach (var message in messages.Items)
-            {
-                allowed = await policy.AuthorizeLinksAsync(message.Links, cancellationToken);
-                if (allowed.IsFailure) return allowed.Error;
-            }
+            var filtered = await policy.FilterHistoryLinksAsync(messages.Items, cancellationToken);
+            if (filtered.IsFailure) return filtered.Error;
             allowed = await policy.AuthorizeAsync(cancellationToken);
             if (allowed.IsFailure) return allowed.Error;
-            return new AssistantConversationResponse(conversation, messages, null);
+            return new AssistantConversationResponse(conversation, messages with { Items = filtered.Value }, null);
         });
 
     public Task<Result<VersionResponse>> UpdateAsync(Guid id, UpdateAssistantConversationRequest request, CancellationToken cancellationToken) =>

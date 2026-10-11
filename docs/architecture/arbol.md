@@ -2022,6 +2022,8 @@ tests/
 │   │   └── LoginCodeSecurityTests.cs                  Comprueba aleatoriedad, longitud y hash ligado a destino y propósito…
 │   ├── Time/
 │   │   └── TimeZoneServiceTests.cs                    Comprueba rangos UTC de días civiles según una zona IANA
+│   ├── Modules/Assistant/                           [E8b] tests de integración del módulo
+│   │   └── AssistantHistoryLinkTests.cs              historial propio, enlaces vigentes, perfil y empresas bajo RLS
 │   └── Modules/WhatsApp/                            [E8] tests de integración del módulo
 │       ├── WhatsAppPhoneLinkObserverTests.cs         vínculo/rollback y retiro propio sin robar contacto
 │       ├── WhatsAppAccountLifecycleTests.cs          baja por snapshot y aviso final cifrado
