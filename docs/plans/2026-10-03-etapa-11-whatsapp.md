@@ -1,5 +1,16 @@
 # Etapa 11: WhatsApp de atención — plan ejecutable
 
+> **Repaso del 2026-10-11.** Este plan se reescribe en formato corto después de la 8b (`AGENTS.md`, «Cierre liviano»). Mientras tanto, rigen estos puntos:
+> - **Decisiones nuevas:** están en la precisión del 2026-10-11 de la [ADR 0038](../decisions/0038-whatsapp-de-atencion.md). El número de la plataforma se conecta desde la pantalla; «Cargar teléfonos» no revela cuentas; la invitación en español se rehace al cerrar la 8.
+> - **Correcciones al reescribirlo:**
+>   - la fuente visual es el lienzo v119, no la v69 ni la v84;
+>   - la [0043](../decisions/0043-las-pantallas-dicen-si-hay-cuenta.md) reemplazó a la 0041;
+>   - el bot de la plataforma manda el enlace para entrar o registrarse, y las plantillas del sistema son las 16 de la Etapa 8 ([0049](../decisions/0049-precisiones-whatsapp-y-asistente.md));
+>   - la 11 conecta la fuente productiva de «Mis mensajes con empresas» del asistente personal (`IConsumerInteractionSource`, 0049);
+>   - las tablas globales de la plataforma siguen la [0050](../decisions/0050-auditoria-global-de-modulos.md);
+>   - antes de programar hay que verificar con Meta los precios (las 1.000 respuestas gratis por mes) y los requisitos de Tech Provider.
+> - **Fuera del código:** el trámite de Tech Provider con Meta arrancó el 2026-10-11.
+
 > Plan de implementación para esta etapa. Seguir el orden, completar las casillas con evidencia y commitear cada cambio coherente y verificado con rutas explícitas.
 
 **Objetivo:** que la plataforma y cada organización atiendan por WhatsApp con el mismo módulo: números conectados con el alta de Meta, bot con menú, equipos y bandejas de Clientes e Internos, contactos con consentimiento, plantillas, difusiones y la sección «Mensajes» de la persona.

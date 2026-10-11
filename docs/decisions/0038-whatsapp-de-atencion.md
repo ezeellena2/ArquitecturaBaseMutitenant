@@ -65,6 +65,13 @@ Lo decidió el dueño del producto junto con los tableros `Plat-WA-*` y `M-Plat-
   - Las del sistema son las de [`whatsapp-plantillas.md`](../operations/whatsapp-plantillas.md): no se editan ni se borran, y el ⋮ solo deja ver el texto.
   - Sin plantillas de marketing.
 
+### Precisión del 2026-10-11 (repaso antes de la Etapa 11)
+
+Lo decidió el dueño del producto al repasar la etapa:
+- **El número de la plataforma se conecta desde la pantalla.** Plataforma › WhatsApp › Número lo conecta con el alta embebida de Meta, igual que los números de las organizaciones. Sin un número conectado, WhatsApp queda apagado, y el ingreso y el registro muestran solo correo y Google. La configuración del servidor de la Etapa 8 (`WhatsApp:PhoneNumberId`) queda solo para el arranque; cómo se pasa del valor configurado al número conectado lo fija el plan.
+- **«Cargar teléfonos de empleados» no dice si un número tiene cuenta.** La [0043](0043-las-pantallas-dicen-si-hay-cuenta.md) vale para los datos propios de quien usa la pantalla, y acá son teléfonos de otras personas. Sigue mostrando «Ya es miembro», «Se invita» o «Número inválido».
+- **La invitación por WhatsApp en español se rehace como plantilla nueva al cerrar la Etapa 8.** Meta la clasificó como Marketing, y así llega aprobada como Utilidad a «Cargar teléfonos».
+
 ## Alternativas descartadas
 
 - Un bot por persona B2C: Meta no da la API a personas, y no tiene un caso de uso.
