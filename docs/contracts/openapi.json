@@ -447,7 +447,7 @@
         "tags": [
           "Assistant Business"
         ],
-        "description": "T01: contrato publicado, conducta pendiente; el servicio devuelve General.Contract.NotImplemented (501). Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Estado efectivo: apagado404; habilitado sin clave configured=false. remainingMessages=null si >10. Retención30 días salvo guardados, maxAttachmentBytes10485760/maxAttachments5.",
+        "description": "T01: contrato publicado, conducta pendiente; el servicio devuelve General.Contract.NotImplemented (501). Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Estado efectivo: apagado404; habilitado sin clave configured=false. remainingMessages=null si >10. Retención30 días salvo guardados, maxAttachmentBytes10485760/maxAttachments5. monthlyBudgetProgress siempre presente: Consumer/Platform null; Business usa costo registrado y presupuesto snapshot de la misma financiación efectiva y mes civil, sin reservas, suma de financiaciones ni recorte. NearLimit desde 0,8; LimitReached desde 1. Presupuesto no aplicable/cero/null devuelve null. Sin configurar conserva precedencia y las consultas fijas siguen disponibles; State no garantiza admisión.",
         "responses": {
           "200": {
             "description": "OK",
@@ -472,7 +472,348 @@
                       "noticeAccepted": false,
                       "retentionDays": 30,
                       "maxAttachmentBytes": 10485760,
-                      "maxAttachments": 5
+                      "maxAttachments": 5,
+                      "monthlyBudgetProgress": null
+                    }
+                  },
+                  "monthlyZero.es": {
+                    "description": "Muestra contractual Business: presupuesto snapshot USD 10 y costo registrado de la misma financiación efectiva y mes civil; sin reservas ni suma de financiaciones. Fracción sin recorte; NearLimit desde 0,8 y LimitReached desde 1. State no garantiza admisión; consultas fijas disponibles.",
+                    "value": {
+                      "configured": true,
+                      "canConfigure": false,
+                      "models": [
+                        {
+                          "id": "10000000-0000-0000-0000-000000000001",
+                          "name": "Modelo de ejemplo"
+                        }
+                      ],
+                      "quickQueries": [ ],
+                      "dailyLimit": 50,
+                      "dailyResetAtUtc": "2026-10-09T12:00:00Z",
+                      "remainingMessages": 1,
+                      "monthlyBudget": {
+                        "amount": 10,
+                        "currency": "USD"
+                      },
+                      "usedCost": {
+                        "amount": 0,
+                        "currency": "USD"
+                      },
+                      "noticeVersion": "2026-10-08",
+                      "noticeAccepted": false,
+                      "retentionDays": 30,
+                      "maxAttachmentBytes": 10485760,
+                      "maxAttachments": 5,
+                      "monthlyBudgetProgress": {
+                        "fraction": 0,
+                        "status": "WithinLimit"
+                      }
+                    }
+                  },
+                  "monthlyZero.en": {
+                    "description": "Business contract sample: USD 10 budget snapshot and registered cost for the same effective funding and civil month; no reservations or combined funding. Uncapped fraction; NearLimit from 0.8 and LimitReached from 1. State does not guarantee admission; quick queries remain available.",
+                    "value": {
+                      "configured": true,
+                      "canConfigure": false,
+                      "models": [
+                        {
+                          "id": "10000000-0000-0000-0000-000000000001",
+                          "name": "Example model"
+                        }
+                      ],
+                      "quickQueries": [ ],
+                      "dailyLimit": 50,
+                      "dailyResetAtUtc": "2026-10-09T12:00:00Z",
+                      "remainingMessages": 1,
+                      "monthlyBudget": {
+                        "amount": 10,
+                        "currency": "USD"
+                      },
+                      "usedCost": {
+                        "amount": 0,
+                        "currency": "USD"
+                      },
+                      "noticeVersion": "2026-10-08",
+                      "noticeAccepted": false,
+                      "retentionDays": 30,
+                      "maxAttachmentBytes": 10485760,
+                      "maxAttachments": 5,
+                      "monthlyBudgetProgress": {
+                        "fraction": 0,
+                        "status": "WithinLimit"
+                      }
+                    }
+                  },
+                  "monthlyBelowNear.es": {
+                    "description": "Muestra contractual Business: presupuesto snapshot USD 10 y costo registrado de la misma financiación efectiva y mes civil; sin reservas ni suma de financiaciones. Fracción sin recorte; NearLimit desde 0,8 y LimitReached desde 1. State no garantiza admisión; consultas fijas disponibles.",
+                    "value": {
+                      "configured": true,
+                      "canConfigure": false,
+                      "models": [
+                        {
+                          "id": "10000000-0000-0000-0000-000000000001",
+                          "name": "Modelo de ejemplo"
+                        }
+                      ],
+                      "quickQueries": [ ],
+                      "dailyLimit": 50,
+                      "dailyResetAtUtc": "2026-10-09T12:00:00Z",
+                      "remainingMessages": 1,
+                      "monthlyBudget": {
+                        "amount": 10,
+                        "currency": "USD"
+                      },
+                      "usedCost": {
+                        "amount": 7.90,
+                        "currency": "USD"
+                      },
+                      "noticeVersion": "2026-10-08",
+                      "noticeAccepted": false,
+                      "retentionDays": 30,
+                      "maxAttachmentBytes": 10485760,
+                      "maxAttachments": 5,
+                      "monthlyBudgetProgress": {
+                        "fraction": 0.79,
+                        "status": "WithinLimit"
+                      }
+                    }
+                  },
+                  "monthlyBelowNear.en": {
+                    "description": "Business contract sample: USD 10 budget snapshot and registered cost for the same effective funding and civil month; no reservations or combined funding. Uncapped fraction; NearLimit from 0.8 and LimitReached from 1. State does not guarantee admission; quick queries remain available.",
+                    "value": {
+                      "configured": true,
+                      "canConfigure": false,
+                      "models": [
+                        {
+                          "id": "10000000-0000-0000-0000-000000000001",
+                          "name": "Example model"
+                        }
+                      ],
+                      "quickQueries": [ ],
+                      "dailyLimit": 50,
+                      "dailyResetAtUtc": "2026-10-09T12:00:00Z",
+                      "remainingMessages": 1,
+                      "monthlyBudget": {
+                        "amount": 10,
+                        "currency": "USD"
+                      },
+                      "usedCost": {
+                        "amount": 7.90,
+                        "currency": "USD"
+                      },
+                      "noticeVersion": "2026-10-08",
+                      "noticeAccepted": false,
+                      "retentionDays": 30,
+                      "maxAttachmentBytes": 10485760,
+                      "maxAttachments": 5,
+                      "monthlyBudgetProgress": {
+                        "fraction": 0.79,
+                        "status": "WithinLimit"
+                      }
+                    }
+                  },
+                  "monthlyNear.es": {
+                    "description": "Muestra contractual Business: presupuesto snapshot USD 10 y costo registrado de la misma financiación efectiva y mes civil; sin reservas ni suma de financiaciones. Fracción sin recorte; NearLimit desde 0,8 y LimitReached desde 1. State no garantiza admisión; consultas fijas disponibles.",
+                    "value": {
+                      "configured": true,
+                      "canConfigure": false,
+                      "models": [
+                        {
+                          "id": "10000000-0000-0000-0000-000000000001",
+                          "name": "Modelo de ejemplo"
+                        }
+                      ],
+                      "quickQueries": [ ],
+                      "dailyLimit": 50,
+                      "dailyResetAtUtc": "2026-10-09T12:00:00Z",
+                      "remainingMessages": 1,
+                      "monthlyBudget": {
+                        "amount": 10,
+                        "currency": "USD"
+                      },
+                      "usedCost": {
+                        "amount": 8.0,
+                        "currency": "USD"
+                      },
+                      "noticeVersion": "2026-10-08",
+                      "noticeAccepted": false,
+                      "retentionDays": 30,
+                      "maxAttachmentBytes": 10485760,
+                      "maxAttachments": 5,
+                      "monthlyBudgetProgress": {
+                        "fraction": 0.8,
+                        "status": "NearLimit"
+                      }
+                    }
+                  },
+                  "monthlyNear.en": {
+                    "description": "Business contract sample: USD 10 budget snapshot and registered cost for the same effective funding and civil month; no reservations or combined funding. Uncapped fraction; NearLimit from 0.8 and LimitReached from 1. State does not guarantee admission; quick queries remain available.",
+                    "value": {
+                      "configured": true,
+                      "canConfigure": false,
+                      "models": [
+                        {
+                          "id": "10000000-0000-0000-0000-000000000001",
+                          "name": "Example model"
+                        }
+                      ],
+                      "quickQueries": [ ],
+                      "dailyLimit": 50,
+                      "dailyResetAtUtc": "2026-10-09T12:00:00Z",
+                      "remainingMessages": 1,
+                      "monthlyBudget": {
+                        "amount": 10,
+                        "currency": "USD"
+                      },
+                      "usedCost": {
+                        "amount": 8.0,
+                        "currency": "USD"
+                      },
+                      "noticeVersion": "2026-10-08",
+                      "noticeAccepted": false,
+                      "retentionDays": 30,
+                      "maxAttachmentBytes": 10485760,
+                      "maxAttachments": 5,
+                      "monthlyBudgetProgress": {
+                        "fraction": 0.8,
+                        "status": "NearLimit"
+                      }
+                    }
+                  },
+                  "monthlyReached.es": {
+                    "description": "Muestra contractual Business: presupuesto snapshot USD 10 y costo registrado de la misma financiación efectiva y mes civil; sin reservas ni suma de financiaciones. Fracción sin recorte; NearLimit desde 0,8 y LimitReached desde 1. State no garantiza admisión; consultas fijas disponibles.",
+                    "value": {
+                      "configured": true,
+                      "canConfigure": false,
+                      "models": [
+                        {
+                          "id": "10000000-0000-0000-0000-000000000001",
+                          "name": "Modelo de ejemplo"
+                        }
+                      ],
+                      "quickQueries": [ ],
+                      "dailyLimit": 50,
+                      "dailyResetAtUtc": "2026-10-09T12:00:00Z",
+                      "remainingMessages": 1,
+                      "monthlyBudget": {
+                        "amount": 10,
+                        "currency": "USD"
+                      },
+                      "usedCost": {
+                        "amount": 10,
+                        "currency": "USD"
+                      },
+                      "noticeVersion": "2026-10-08",
+                      "noticeAccepted": false,
+                      "retentionDays": 30,
+                      "maxAttachmentBytes": 10485760,
+                      "maxAttachments": 5,
+                      "monthlyBudgetProgress": {
+                        "fraction": 1,
+                        "status": "LimitReached"
+                      }
+                    }
+                  },
+                  "monthlyReached.en": {
+                    "description": "Business contract sample: USD 10 budget snapshot and registered cost for the same effective funding and civil month; no reservations or combined funding. Uncapped fraction; NearLimit from 0.8 and LimitReached from 1. State does not guarantee admission; quick queries remain available.",
+                    "value": {
+                      "configured": true,
+                      "canConfigure": false,
+                      "models": [
+                        {
+                          "id": "10000000-0000-0000-0000-000000000001",
+                          "name": "Example model"
+                        }
+                      ],
+                      "quickQueries": [ ],
+                      "dailyLimit": 50,
+                      "dailyResetAtUtc": "2026-10-09T12:00:00Z",
+                      "remainingMessages": 1,
+                      "monthlyBudget": {
+                        "amount": 10,
+                        "currency": "USD"
+                      },
+                      "usedCost": {
+                        "amount": 10,
+                        "currency": "USD"
+                      },
+                      "noticeVersion": "2026-10-08",
+                      "noticeAccepted": false,
+                      "retentionDays": 30,
+                      "maxAttachmentBytes": 10485760,
+                      "maxAttachments": 5,
+                      "monthlyBudgetProgress": {
+                        "fraction": 1,
+                        "status": "LimitReached"
+                      }
+                    }
+                  },
+                  "monthlyOver.es": {
+                    "description": "Muestra contractual Business: presupuesto snapshot USD 10 y costo registrado de la misma financiación efectiva y mes civil; sin reservas ni suma de financiaciones. Fracción sin recorte; NearLimit desde 0,8 y LimitReached desde 1. State no garantiza admisión; consultas fijas disponibles.",
+                    "value": {
+                      "configured": true,
+                      "canConfigure": false,
+                      "models": [
+                        {
+                          "id": "10000000-0000-0000-0000-000000000001",
+                          "name": "Modelo de ejemplo"
+                        }
+                      ],
+                      "quickQueries": [ ],
+                      "dailyLimit": 50,
+                      "dailyResetAtUtc": "2026-10-09T12:00:00Z",
+                      "remainingMessages": 1,
+                      "monthlyBudget": {
+                        "amount": 10,
+                        "currency": "USD"
+                      },
+                      "usedCost": {
+                        "amount": 12.0,
+                        "currency": "USD"
+                      },
+                      "noticeVersion": "2026-10-08",
+                      "noticeAccepted": false,
+                      "retentionDays": 30,
+                      "maxAttachmentBytes": 10485760,
+                      "maxAttachments": 5,
+                      "monthlyBudgetProgress": {
+                        "fraction": 1.2,
+                        "status": "LimitReached"
+                      }
+                    }
+                  },
+                  "monthlyOver.en": {
+                    "description": "Business contract sample: USD 10 budget snapshot and registered cost for the same effective funding and civil month; no reservations or combined funding. Uncapped fraction; NearLimit from 0.8 and LimitReached from 1. State does not guarantee admission; quick queries remain available.",
+                    "value": {
+                      "configured": true,
+                      "canConfigure": false,
+                      "models": [
+                        {
+                          "id": "10000000-0000-0000-0000-000000000001",
+                          "name": "Example model"
+                        }
+                      ],
+                      "quickQueries": [ ],
+                      "dailyLimit": 50,
+                      "dailyResetAtUtc": "2026-10-09T12:00:00Z",
+                      "remainingMessages": 1,
+                      "monthlyBudget": {
+                        "amount": 10,
+                        "currency": "USD"
+                      },
+                      "usedCost": {
+                        "amount": 12.0,
+                        "currency": "USD"
+                      },
+                      "noticeVersion": "2026-10-08",
+                      "noticeAccepted": false,
+                      "retentionDays": 30,
+                      "maxAttachmentBytes": 10485760,
+                      "maxAttachments": 5,
+                      "monthlyBudgetProgress": {
+                        "fraction": 1.2,
+                        "status": "LimitReached"
+                      }
                     }
                   }
                 }
@@ -8696,7 +9037,7 @@
         "tags": [
           "Assistant Consumer"
         ],
-        "description": "T01: contrato publicado, conducta pendiente; el servicio devuelve General.Contract.NotImplemented (501). Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Estado efectivo: apagado404; habilitado sin clave configured=false. remainingMessages=null si >10. Retención30 días salvo guardados, maxAttachmentBytes10485760/maxAttachments5.",
+        "description": "T01: contrato publicado, conducta pendiente; el servicio devuelve General.Contract.NotImplemented (501). Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Estado efectivo: apagado404; habilitado sin clave configured=false. remainingMessages=null si >10. Retención30 días salvo guardados, maxAttachmentBytes10485760/maxAttachments5. monthlyBudgetProgress siempre presente: Consumer/Platform null; Business usa costo registrado y presupuesto snapshot de la misma financiación efectiva y mes civil, sin reservas, suma de financiaciones ni recorte. NearLimit desde 0,8; LimitReached desde 1. Presupuesto no aplicable/cero/null devuelve null. Sin configurar conserva precedencia y las consultas fijas siguen disponibles; State no garantiza admisión.",
         "responses": {
           "200": {
             "description": "OK",
@@ -8721,7 +9062,8 @@
                       "noticeAccepted": false,
                       "retentionDays": 30,
                       "maxAttachmentBytes": 10485760,
-                      "maxAttachments": 5
+                      "maxAttachments": 5,
+                      "monthlyBudgetProgress": null
                     }
                   }
                 }
@@ -18816,7 +19158,7 @@
         "tags": [
           "Assistant Platform"
         ],
-        "description": "T01: contrato publicado, conducta pendiente; el servicio devuelve General.Contract.NotImplemented (501). Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Estado efectivo: apagado404; habilitado sin clave configured=false. remainingMessages=null si >10. Retención30 días salvo guardados, maxAttachmentBytes10485760/maxAttachments5.",
+        "description": "T01: contrato publicado, conducta pendiente; el servicio devuelve General.Contract.NotImplemented (501). Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Estado efectivo: apagado404; habilitado sin clave configured=false. remainingMessages=null si >10. Retención30 días salvo guardados, maxAttachmentBytes10485760/maxAttachments5. monthlyBudgetProgress siempre presente: Consumer/Platform null; Business usa costo registrado y presupuesto snapshot de la misma financiación efectiva y mes civil, sin reservas, suma de financiaciones ni recorte. NearLimit desde 0,8; LimitReached desde 1. Presupuesto no aplicable/cero/null devuelve null. Sin configurar conserva precedencia y las consultas fijas siguen disponibles; State no garantiza admisión.",
         "responses": {
           "200": {
             "description": "OK",
@@ -18841,7 +19183,8 @@
                       "noticeAccepted": false,
                       "retentionDays": 30,
                       "maxAttachmentBytes": 10485760,
-                      "maxAttachments": 5
+                      "maxAttachments": 5,
+                      "monthlyBudgetProgress": null
                     }
                   }
                 }
@@ -55256,7 +55599,8 @@
           "noticeAccepted",
           "retentionDays",
           "maxAttachmentBytes",
-          "maxAttachments"
+          "maxAttachments",
+          "monthlyBudgetProgress"
         ],
         "type": "object",
         "properties": {
@@ -55330,6 +55674,17 @@
           "maxAttachments": {
             "type": "integer",
             "format": "int32"
+          },
+          "monthlyBudgetProgress": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AssistantBudgetProgressResponse"
+              }
+            ],
+            "description": "Siempre presente. Consumer/Platform null; Business con presupuesto positivo aplicable usa usedCost registrado confirmado o conservador dividido por monthlyBudget snapshot de la misma financiación efectiva y mes civil. Sin reservas, suma de financiaciones, repricing ni recorte; NearLimit desde 0,8 y LimitReached desde 1. Presupuesto cero/null/no aplicable: null, sin división por cero. Configured=false conserva precedencia; consultas fijas siguen disponibles y State no garantiza admisión."
           }
         }
       },
@@ -55752,19 +56107,19 @@
           },
           "inputTokens": {
             "type": "integer",
-            "format": "int32"
+            "format": "int64"
           },
           "outputTokens": {
             "type": "integer",
-            "format": "int32"
+            "format": "int64"
           },
           "cacheWriteTokens": {
             "type": "integer",
-            "format": "int32"
+            "format": "int64"
           },
           "cacheReadTokens": {
             "type": "integer",
-            "format": "int32"
+            "format": "int64"
           },
           "cost": {
             "$ref": "#/components/schemas/AssistantMoney"

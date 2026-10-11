@@ -184,7 +184,7 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         if (path.Contains("/conversations/", StringComparison.Ordinal)) return method == HttpMethod.Get
             ? "Conversación propia, mensajes cronológicos por cursor; limit=50 máximo100. Ajeno devuelve404."
             : "Edición/borrado con uint/xmin y owner firmado; borrar cancela turno y elimina textos/adjuntos con limpieza física diferida fiable.";
-        return "Estado efectivo: apagado404; habilitado sin clave configured=false. remainingMessages=null si >10. Retención30 días salvo guardados, maxAttachmentBytes10485760/maxAttachments5.";
+        return "Estado efectivo: apagado404; habilitado sin clave configured=false. remainingMessages=null si >10. Retención30 días salvo guardados, maxAttachmentBytes10485760/maxAttachments5. monthlyBudgetProgress siempre presente: Consumer/Platform null; Business usa costo registrado y presupuesto snapshot de la misma financiación efectiva y mes civil, sin reservas, suma de financiaciones ni recorte. NearLimit desde 0,8; LimitReached desde 1. Presupuesto no aplicable/cero/null devuelve null. Sin configurar conserva precedencia y las consultas fijas siguen disponibles; State no garantiza admisión.";
     }
     private static Dictionary<string, JsonNode>? RequestExamples(string path, HttpMethod method)
     {
@@ -218,6 +218,37 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
             if (media.Schema is null) continue;
             media.Examples = new Dictionary<string, IOpenApiExample> { ["success"] = new OpenApiExample { Value = SuccessExample(media.Schema, document, path, method) } };
             if (method != HttpMethod.Get || media.Schema is not OpenApiSchemaReference reference) continue;
+            if (reference.Reference.Id == "AssistantStateResponse" && path == "/api/organization/assistant")
+            {
+                foreach (var (name, fraction, status) in new[]
+                {
+                    ("monthlyZero", 0m, "WithinLimit"), ("monthlyBelowNear", 0.79m, "WithinLimit"),
+                    ("monthlyNear", 0.8m, "NearLimit"), ("monthlyReached", 1m, "LimitReached"),
+                    ("monthlyOver", 1.2m, "LimitReached"),
+                })
+                {
+                    foreach (var language in new[] { "es", "en" })
+                    {
+                        var state = media.Examples["success"].Value!.DeepClone().AsObject();
+                        state["configured"] = true;
+                        state["models"] = new JsonArray(new JsonObject
+                        {
+                            ["id"] = "10000000-0000-0000-0000-000000000001",
+                            ["name"] = language == "es" ? "Modelo de ejemplo" : "Example model",
+                        });
+                        state["monthlyBudget"] = UsageMoney(10m);
+                        state["usedCost"] = UsageMoney(fraction * 10m);
+                        state["monthlyBudgetProgress"] = new JsonObject { ["fraction"] = fraction, ["status"] = status };
+                        media.Examples[name + "." + language] = new OpenApiExample
+                        {
+                            Description = language == "es"
+                                ? "Muestra contractual Business: presupuesto snapshot USD 10 y costo registrado de la misma financiación efectiva y mes civil; sin reservas ni suma de financiaciones. Fracción sin recorte; NearLimit desde 0,8 y LimitReached desde 1. State no garantiza admisión; consultas fijas disponibles."
+                                : "Business contract sample: USD 10 budget snapshot and registered cost for the same effective funding and civil month; no reservations or combined funding. Uncapped fraction; NearLimit from 0.8 and LimitReached from 1. State does not guarantee admission; quick queries remain available.",
+                            Value = state,
+                        };
+                    }
+                }
+            }
             if (path == "/api/platform/assistant/models")
             {
                 var legacy = media.Examples["success"].Value!.DeepClone();
@@ -323,6 +354,8 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
             catalog["items"] = new JsonArray(EligibleModelExample(document));
         if (schema is OpenApiSchemaReference { Reference.Id: "AssistantConversationResponse" } && example is JsonObject conversation)
             conversation["activeTurnId"] = null;
+        if (schema is OpenApiSchemaReference { Reference.Id: "AssistantStateResponse" } && example is JsonObject state)
+            state["monthlyBudgetProgress"] = null;
         if (schema is OpenApiSchemaReference { Reference.Id: "AssistantUsagePageResponse" } && example is JsonObject)
         {
             return BusinessDayUsageExample(document);
@@ -657,6 +690,7 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
             {
                 "AssistantConversationResponse" => ["activeTurnId"],
                 "AssistantModelPriceResponse" => ["technical", "technicalRevision"],
+                "AssistantStateResponse" => ["monthlyBudgetProgress"],
                 "AssistantUsagePageResponse" => ["budgetProgress", "organizationCount"],
                 "AssistantUsageRowResponse" => ["dailyUsage", "peopleCount", "fundingMode", "budgetProgress"],
                 _ => [],
@@ -666,6 +700,8 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
                 mutable.Required ??= new HashSet<string>(StringComparer.Ordinal);
                 mutable.Required.Add(requiredProjection);
             }
+            if (name == "AssistantStateResponse" && mutable.Properties!["monthlyBudgetProgress"] is OpenApiSchema monthlyProgress)
+                monthlyProgress.Description = "Siempre presente. Consumer/Platform null; Business con presupuesto positivo aplicable usa usedCost registrado confirmado o conservador dividido por monthlyBudget snapshot de la misma financiación efectiva y mes civil. Sin reservas, suma de financiaciones, repricing ni recorte; NearLimit desde 0,8 y LimitReached desde 1. Presupuesto cero/null/no aplicable: null, sin división por cero. Configured=false conserva precedencia; consultas fijas siguen disponibles y State no garantiza admisión.";
             if (name == "AssistantUsagePageResponse" && mutable.Properties!["organizationCount"] is OpenApiSchema organizationCount)
                 organizationCount.Description = "Sólo Platform: organizaciones Business distintas con consumo de modelo contabilizado durante el mes solicitado, antes de paginar; excluye Personas/Operadores y organizaciones sin consumo. Cero sin uso Business; Business devuelve null.";
             if (name == "AssistantUsageRowResponse")

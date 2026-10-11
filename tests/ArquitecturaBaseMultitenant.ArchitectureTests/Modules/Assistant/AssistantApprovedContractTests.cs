@@ -11,6 +11,134 @@ public sealed class AssistantApprovedContractTests
     private static JsonNode Document() => JsonNode.Parse(File.ReadAllText(Path.Combine(SolutionRoot.FullPath, "docs/contracts/openapi.json")))!;
     private static JsonNode Examples(JsonNode document, string path) => document["paths"]![path]!["get"]!["responses"]!["200"]!["content"]!["application/json"]!["examples"]!;
 
+    [Theory]
+    [InlineData("inputTokens")]
+    [InlineData("outputTokens")]
+    [InlineData("cacheWriteTokens")]
+    [InlineData("cacheReadTokens")]
+    public void CC05_aggregate_tokens_round_trip_as_exact_numbers_above_int32(string field)
+    {
+        var body = Examples(Document(), "/api/platform/assistant/usage")["success"]!["value"]!["rows"]!["items"]![0]!.DeepClone();
+        body[field] = 2_457_600_000L;
+        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        JsonConfiguration.ConfigureJson(options);
+        var dto = JsonSerializer.Deserialize<AssistantUsageRowResponse>(body.ToJsonString(), options)!;
+        var serialized = JsonSerializer.SerializeToNode(dto, options)!;
+        Assert.Equal(JsonValueKind.Number, serialized[field]!.GetValueKind());
+        Assert.Equal(2_457_600_000L, serialized[field]!.GetValue<long>());
+        Assert.True(JsonNode.DeepEquals(body, serialized));
+    }
+
+    [Fact]
+    public void CC05_only_aggregate_token_fields_use_required_int64()
+    {
+        var schemas = Document()["components"]!["schemas"]!;
+        var row = schemas["AssistantUsageRowResponse"]!;
+        foreach (var field in new[] { "inputTokens", "outputTokens", "cacheWriteTokens", "cacheReadTokens" })
+        {
+            Assert.Contains(field, row["required"]!.AsArray().Select(value => value!.GetValue<string>()));
+            Assert.Equal("integer", row["properties"]![field]!["type"]!.GetValue<string>());
+            Assert.Equal("int64", row["properties"]![field]!["format"]!.GetValue<string>());
+            Assert.Equal("int32", schemas["AssistantTurnUsageResponse"]!["properties"]![field]!["format"]!.GetValue<string>());
+        }
+        foreach (var (schema, field) in new[] { ("AssistantUsageRowResponse", "queries"), ("AssistantUsageRowResponse", "peopleCount"), ("AssistantUsagePageResponse", "peopleCount"), ("AssistantUsagePageResponse", "organizationCount"), ("AssistantUsagePageResponse", "totalQueries") })
+            Assert.Equal("int32", schemas[schema]!["properties"]![field]!["format"]!.GetValue<string>());
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("{\"fraction\":0,\"status\":\"WithinLimit\"}")]
+    [InlineData("{\"fraction\":0.79,\"status\":\"WithinLimit\"}")]
+    [InlineData("{\"fraction\":0.8,\"status\":\"NearLimit\"}")]
+    [InlineData("{\"fraction\":1,\"status\":\"LimitReached\"}")]
+    [InlineData("{\"fraction\":1.2,\"status\":\"LimitReached\"}")]
+    public void CC06_state_round_trip_preserves_present_null_or_uncapped_monthly_progress(string? progressJson)
+    {
+        var body = Examples(Document(), "/api/organization/assistant")["success"]!["value"]!.DeepClone();
+        body["monthlyBudgetProgress"] = progressJson is null ? null : JsonNode.Parse(progressJson);
+        if (progressJson is not null)
+        {
+            body["configured"] = true;
+            body["models"] = new JsonArray(new JsonObject { ["id"] = "10000000-0000-0000-0000-000000000001", ["name"] = "Modelo de ejemplo" });
+            body["monthlyBudget"] = new JsonObject { ["amount"] = 10m, ["currency"] = "USD" };
+            body["usedCost"] = new JsonObject { ["amount"] = body["monthlyBudgetProgress"]!["fraction"]!.GetValue<decimal>() * 10m, ["currency"] = "USD" };
+        }
+        AssertStateRoundTrip(body, progressJson ?? "null");
+    }
+
+    [Fact]
+    public void CC06_state_requires_nullable_existing_progress_and_preserves_unconfigured_examples()
+    {
+        var document = Document();
+        var schema = document["components"]!["schemas"]!["AssistantStateResponse"]!;
+        Assert.Contains("monthlyBudgetProgress", schema["required"]!.AsArray().Select(value => value!.GetValue<string>()));
+        var variants = schema["properties"]!["monthlyBudgetProgress"]!["oneOf"]!.AsArray();
+        Assert.Equal(2, variants.Count);
+        Assert.Contains(variants, value => value?["type"]?.GetValue<string>() == "null");
+        Assert.Contains(variants, value => value?["$ref"]?.GetValue<string>() == "#/components/schemas/AssistantBudgetProgressResponse");
+        foreach (var side in new[] { "me", "organization", "platform" })
+        {
+            var examples = Examples(document, $"/api/{side}/assistant");
+            var success = examples["success"]!["value"]!;
+            Assert.False(success["configured"]!.GetValue<bool>());
+            Assert.Null(success["monthlyBudget"]);
+            Assert.Null(success["usedCost"]);
+            Assert.True(success.AsObject().ContainsKey("monthlyBudgetProgress"));
+            Assert.Null(success["monthlyBudgetProgress"]);
+            foreach (var sample in examples.AsObject())
+            {
+                var body = sample.Value!["value"]!;
+                Assert.True(body.AsObject().ContainsKey("monthlyBudgetProgress"), sample.Key);
+                if (side != "organization") Assert.Null(body["monthlyBudgetProgress"]);
+                AssertStateRoundTrip(body, sample.Key);
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("monthlyZero", "0", "WithinLimit")]
+    [InlineData("monthlyBelowNear", "0.79", "WithinLimit")]
+    [InlineData("monthlyNear", "0.8", "NearLimit")]
+    [InlineData("monthlyReached", "1", "LimitReached")]
+    [InlineData("monthlyOver", "1.2", "LimitReached")]
+    public void CC06_business_examples_use_coherent_monthly_money_and_localized_thresholds(string name, string fractionJson, string status)
+    {
+        var examples = Examples(Document(), "/api/organization/assistant");
+        var fraction = JsonNode.Parse(fractionJson)!.GetValue<decimal>();
+        foreach (var language in new[] { "es", "en" })
+        {
+            var sample = examples[name + "." + language];
+            Assert.NotNull(sample);
+            Assert.False(string.IsNullOrWhiteSpace(sample["description"]!.GetValue<string>()));
+            var body = sample["value"]!;
+            Assert.True(body["configured"]!.GetValue<bool>());
+            var models = body["models"]!.AsArray();
+            Assert.NotEmpty(models);
+            Assert.All(models, model =>
+            {
+                Assert.NotEqual(Guid.Empty, model!["id"]!.GetValue<Guid>());
+                Assert.False(string.IsNullOrWhiteSpace(model["name"]!.GetValue<string>()));
+            });
+            Assert.Equal("USD", body["monthlyBudget"]!["currency"]!.GetValue<string>());
+            Assert.Equal(body["monthlyBudget"]!["currency"]!.GetValue<string>(), body["usedCost"]!["currency"]!.GetValue<string>());
+            Assert.Equal(10m, body["monthlyBudget"]!["amount"]!.GetValue<decimal>());
+            Assert.Equal(fraction * 10m, body["usedCost"]!["amount"]!.GetValue<decimal>());
+            Assert.Equal(fraction, body["monthlyBudgetProgress"]!["fraction"]!.GetValue<decimal>());
+            Assert.Equal(status, body["monthlyBudgetProgress"]!["status"]!.GetValue<string>());
+            AssertStateRoundTrip(body, name + "." + language);
+        }
+    }
+
+    private static void AssertStateRoundTrip(JsonNode body, string sample)
+    {
+        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        JsonConfiguration.ConfigureJson(options);
+        var dto = JsonSerializer.Deserialize<AssistantStateResponse>(body.ToJsonString(), options)!;
+        var serialized = JsonSerializer.SerializeToNode(dto, options)!;
+        Assert.True(serialized.AsObject().ContainsKey("monthlyBudgetProgress"), sample);
+        Assert.True(JsonNode.DeepEquals(body, serialized), sample);
+    }
+
     [Fact]
     public void Approved_projections_are_always_serialized_in_both_null_and_populated_states()
     {
@@ -73,7 +201,7 @@ public sealed class AssistantApprovedContractTests
         }
         Assert.Equal(new[] { "PlatformKey", "OwnKey" }, schemas["AssistantMode"]!["enum"]!.AsArray().Select(value => value!.GetValue<string>()));
         foreach (var token in new[] { "inputTokens", "outputTokens", "cacheWriteTokens", "cacheReadTokens" })
-            Assert.Equal("int32", schemas["AssistantUsageRowResponse"]!["properties"]![token]!["format"]!.GetValue<string>());
+            Assert.Equal("int64", schemas["AssistantUsageRowResponse"]!["properties"]![token]!["format"]!.GetValue<string>());
     }
 
     [Fact]
