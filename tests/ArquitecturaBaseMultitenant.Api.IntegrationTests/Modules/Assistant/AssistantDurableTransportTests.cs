@@ -171,9 +171,9 @@ public sealed class AssistantDurableTransportTests(ApiFactory factory)
         public Task LockAsync(Guid owner, Access access, Guid key, Guid? conversation, CancellationToken ct) => Inner.LockAsync(owner, access, key, conversation, ct);
         public Task<AssistantDurableOperationRow?> GetByKeyAsync(Guid owner, Access access, Guid key, CancellationToken ct) => Inner.GetByKeyAsync(owner, access, key, ct);
         public Task<AssistantDurableOperationRow?> GetByIdAsync(Guid owner, Access access, Guid id, CancellationToken ct) => Inner.GetByIdAsync(owner, access, id, ct);
-        public Entity Add(Guid owner, Access access, IdempotentRequest request, Guid conversation, IdempotentReference reference, string snapshot, string? quickKey, DateTime nowUtc)
+        public Entity Add(Guid owner, Access access, IdempotentRequest request, Guid conversation, IdempotentReference reference, string snapshot, string? quickKey, DateTime nowUtc, Guid[]? subjectUserIds = null)
         {
-            var row = Inner.Add(owner, access, request, conversation, reference, snapshot, quickKey, nowUtc);
+            var row = Inner.Add(owner, access, request, conversation, reference, snapshot, quickKey, nowUtc, subjectUserIds);
             if (Fault.Fail) throw new InvalidOperationException("Fixture failure after staging the private effect.");
             return row;
         }

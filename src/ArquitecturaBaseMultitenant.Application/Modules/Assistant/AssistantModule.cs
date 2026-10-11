@@ -15,7 +15,10 @@ public static class AssistantModule
     {
         services.AddScoped<IAssistantConversationService, AssistantConversationService>();
         services.AddScoped<IAssistantDurableService, AssistantDurableService>();
+        services.AddScoped<IAssistantSnapshotRetentionService, AssistantSnapshotRetentionService>();
         services.AddScoped<AssistantConversationWriter>();
+        services.AddScoped<AssistantQuickPreparationBuilder>();
+        services.AddScoped<AssistantSnapshotPrivacyGuard>();
         services.AddScoped<AssistantConversationPolicy>();
         services.AddScoped<IAssistantNoticeService, AssistantNoticeService>();
         services.AddScoped<AssistantNoticePolicy>();

@@ -21,6 +21,8 @@ public static class AssistantModule
         services.AddScoped<IModuleDataSeedContributor, AssistantLegalDocumentSeed>();
         services.AddScoped<IAssistantConversationRepository, AssistantConversationRepository>();
         services.AddScoped<IAssistantDurableRepository, AssistantDurableRepository>();
+        services.AddScoped<IAssistantSnapshotRetentionRepository, AssistantSnapshotRetentionRepository>();
+        services.AddHostedService<Retention.AssistantSnapshotRetentionWorker>();
         services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Legal.IAccountDeletionParticipant, AssistantAccountDeletionParticipant>();
         services.AddScoped<IPlatformAssistantConversationRepository, PlatformAssistantConversationRepository>();
         services.AddScoped<IAssistantSettingsRepository, AssistantSettingsRepository>();

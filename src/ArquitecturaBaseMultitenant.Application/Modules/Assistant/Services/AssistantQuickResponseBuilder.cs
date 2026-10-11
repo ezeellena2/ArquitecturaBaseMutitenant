@@ -9,7 +9,7 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 internal sealed class AssistantQuickResponseBuilder(DisplayFormatter formatter, IProfileService profiles)
 {
     internal async Task<AssistantQuickCompositionResponse> BuildAsync(AssistantQuickDefinition query, AssistantQuickDataResponse data,
-        string culture, string zone, CancellationToken ct)
+        string culture, string zone, CancellationToken ct, IReadOnlyList<AssistantSnapshotSubjectCopy>? subjectCopies = null)
     {
         var context = await formatter.CreateAsync(culture, zone, ct);
         var title = AssistantToolTexts.Get(query.LabelKey, context.Profile);
@@ -54,7 +54,8 @@ internal sealed class AssistantQuickResponseBuilder(DisplayFormatter formatter, 
             };
             links.Add(Link(route, context.Profile, status: status, label: query.Key == "my_signin" ? "Link.ViewAccount" : "Link.View"));
         }
-        return new AssistantQuickCompositionResponse(title, new AssistantQuickResultResponse(text, links, data));
+        return new AssistantQuickCompositionResponse(title, new AssistantQuickResultResponse(text, links, data)
+        { SubjectCopies = subjectCopies ?? [] }) { SubjectCopies = subjectCopies ?? [] };
     }
 
     private static AssistantLinkResponse Link(AssistantRouteKey route, CultureProfile profile, Guid? tenantId = null, AssistantLinkStatus? status = null, string label = "Link.View") =>

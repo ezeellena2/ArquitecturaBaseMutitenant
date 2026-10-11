@@ -116,11 +116,12 @@ internal sealed class SecurityEventReader(ApplicationDbContext context) : ISecur
         foreach (var item in events)
             rows[item.Id] = new PlatformAuditRow(item.Id, item.OccurredAtUtc, item.Type, null, false, null, item.ActorKind,
                 ToAccount(item.Actor), ToAccount(item.Target), item.TargetAccountId, item.TargetTenantId, item.TenantName,
-                item.Reason, item.MaskedIpAddress, item.Changes);
+                item.Reason, item.MaskedIpAddress, item.Changes)
+                { AuditActorId = item.ActorKind == AuditActorKind.System ? null : item.ActorId };
         foreach (var item in signIns)
             rows[item.Id] = new PlatformAuditRow(item.Id, item.OccurredAtUtc, null, item.Method, item.Succeeded,
                 item.FailureCode, AuditActorKind.User, ToAccount(item.Account), ToAccount(item.Account), item.UserId, null,
-                null, null, null);
+                null, null, null) { AuditActorId = item.UserId };
         return rows;
     }
 

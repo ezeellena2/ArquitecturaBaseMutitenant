@@ -18,6 +18,13 @@ internal sealed class PlatformRecoveriesTool(AssistantAccessPolicy policy, IPlat
     protected override async Task<Result<AssistantToolData>> ExecuteCoreAsync(AssistantToolArguments args, CancellationToken ct)
     {
         var result = await recoveries.ListAsync(new ListPlatformRecoveriesRequest { Status = AccountRecoveryStatus.Pending, Page = args.Page, PageSize = args.PageSize }, ct);
-        return result.IsFailure ? result.Error : new AssistantQuickToolData(new AssistantRecoveriesQuickDataResponse([.. result.Value.Items.Take(20).Select(row => new AssistantRecoveryRowResponse(row.Id, row.AccountName, row.Status.ToString(), row.CreatedAtUtc))], result.Value.TotalCount, result.Value.HasNext));
+        if (result.IsFailure) return result.Error;
+        var rows = result.Value.Items.Take(20).ToArray();
+        return new AssistantQuickToolData(new AssistantRecoveriesQuickDataResponse([.. rows.Select(row =>
+            new AssistantRecoveryRowResponse(row.Id, row.AccountName, row.Status.ToString(), row.CreatedAtUtc))], result.Value.TotalCount, result.Value.HasNext))
+        {
+            SubjectCopies = [.. rows.Where(row => row.AccountId != null && row.AccountName != null).Select(row =>
+                new AssistantSnapshotSubjectCopy(row.AccountId!.Value, AssistantSnapshotCopyKind.RecoveryDisplayName, row.Id))],
+        };
     }
 }

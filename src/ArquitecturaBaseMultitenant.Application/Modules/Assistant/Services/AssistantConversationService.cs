@@ -15,7 +15,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Idempotency;
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 internal sealed class AssistantConversationService(IAssistantConversationReader reader, ICurrentUser user, AssistantNoticeWriter notice,
-    AssistantConversationWriter writer, AssistantConversationPolicy policy,
+    AssistantConversationWriter writer, AssistantConversationPolicy policy, AssistantQuickPreparationBuilder preparation,
     IUnitOfWork unitOfWork, IRequestValidator validator, TimeProvider clock, ILogger<AssistantConversationService> logger) : IAssistantConversationService
 {
     public Task<Result<AssistantStateResponse>> StateAsync(CancellationToken cancellationToken) =>
@@ -88,7 +88,9 @@ internal sealed class AssistantConversationService(IAssistantConversationReader 
         OperationLog.RunAsync<IdempotentReplayResponse<AssistantQuickResponse>>(logger, clock, "AssistantConversationQuick", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            var saved = await unitOfWork.ExecuteInTransactionAsync(ct => writer.QuickAsync(key, request, ct), CommitPolicy.OnSuccess, cancellationToken);
+            var prepared = await preparation.PrepareAsync(key, request, cancellationToken);
+            if (prepared.IsFailure) return prepared.Error;
+            var saved = await unitOfWork.ExecuteInTransactionAsync(ct => writer.QuickAsync(prepared.Value, ct), CommitPolicy.OnSuccess, cancellationToken);
             if (saved.IsFailure) return saved.Error;
             var snapshot = saved.Value.AfterSave();
             return new IdempotentReplayResponse<AssistantQuickResponse>(saved.Value.Reference,

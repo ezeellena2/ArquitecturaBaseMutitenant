@@ -50,7 +50,8 @@ internal sealed class AssistantQuickService(AssistantToolResolver tools, Assista
                 responseData = account with { Articles = articles.Articles };
             }
             if (!await tools.IsAvailableAsync(query.ToolKey, cancellationToken)) return AssistantErrors.QuickQueryNotAvailable;
-            return await responses.BuildAsync(query, responseData, profile.Value.Culture, profile.Value.TimeZoneId, cancellationToken);
+            return await responses.BuildAsync(query, responseData, profile.Value.Culture, profile.Value.TimeZoneId, cancellationToken,
+                quick.SubjectCopies);
         });
 
     private async Task<Result<JsonElement>> ArgumentsAsync(string key, string zone, CancellationToken ct)

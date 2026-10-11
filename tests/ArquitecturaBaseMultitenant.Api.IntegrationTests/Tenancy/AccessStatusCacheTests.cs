@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Infrastructure.Caching;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -104,6 +105,12 @@ public sealed class AccessStatusCacheTests
         public Task<IReadOnlyCollection<Guid>> ListActiveAsync(IReadOnlyCollection<Guid> userIds,
             CancellationToken cancellationToken) => Task.FromResult<IReadOnlyCollection<Guid>>(
             state.UserStatus == UserStatus.Active ? userIds : []);
+
+        public Task<Result<IReadOnlyList<UserDeletionStateRow>>> ListDeletionStatesAsync(IReadOnlyCollection<Guid> userIds,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<Result<IReadOnlyList<UserDeletionStateRow>>> LockDeletionStatesAsync(IReadOnlyCollection<Guid> userIds,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 
     private sealed class FakeAccessReader(FakeState state) : IUserTenantAccessReader

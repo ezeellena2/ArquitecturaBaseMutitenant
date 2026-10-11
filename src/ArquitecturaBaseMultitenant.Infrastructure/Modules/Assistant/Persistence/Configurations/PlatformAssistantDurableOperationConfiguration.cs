@@ -15,6 +15,9 @@ internal sealed class PlatformAssistantDurableOperationConfiguration : IEntityTy
         builder.Property(value => value.Kind).HasMaxLength(TextLimits.ShortName);
         builder.Property(value => value.QuickKey).HasMaxLength(TextLimits.ShortName);
         builder.Property(value => value.SnapshotJson).HasColumnType("jsonb");
+        builder.Property(value => value.OriginalSnapshotVersion).HasConversion<long?>().HasColumnType("bigint");
+        builder.Property(value => value.SubjectUserIds).HasColumnType("uuid[]");
+        builder.HasIndex(value => value.SubjectUserIds).HasMethod("gin");
         builder.HasIndex(value => new { value.OwnerUserId, value.Key }).IsUnique();
         builder.HasIndex(value => new { value.OwnerUserId, value.ConversationId, value.Id });
     }

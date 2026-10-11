@@ -88,6 +88,20 @@ public sealed class AssistantQuickQueriesTests
         return new(new DisplayFormatter(catalog, catalog, catalog, catalog, catalog, new LibPhoneNumberDisplayFormatter(), new TimeZoneService(clock), clock), profile);
     }
 
+    [Fact]
+    public async Task Local_builder_keeps_subject_correspondence_without_reconstructing_an_identity_from_a_member_id()
+    {
+        var memberId = Guid.CreateVersion7();
+        var accountId = Guid.CreateVersion7();
+        var copies = new[] { new AssistantSnapshotSubjectCopy(accountId, AssistantSnapshotCopyKind.PeopleDisplayName, memberId) };
+        var response = await Builder(new ProfileStub()).BuildAsync(AssistantQuickCatalog.All.Single(query => query.Key == "active_users"),
+            new AssistantPeopleQuickDataResponse([new(memberId, "Person", "Active")], 1, false), "es-AR",
+            "America/Argentina/Buenos_Aires", Ct, copies);
+        Assert.Same(copies, response.SubjectCopies);
+        Assert.Same(copies, response.Result.SubjectCopies);
+        Assert.NotEqual(memberId, response.SubjectCopies[0].AccountId);
+    }
+
     private sealed class ProfileStub : IProfileService
     {
         internal IReadOnlyList<OrganizationSummary> Organizations { get; init; } = [];

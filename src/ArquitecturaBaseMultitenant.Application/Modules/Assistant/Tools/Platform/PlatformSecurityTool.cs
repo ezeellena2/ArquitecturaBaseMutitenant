@@ -17,6 +17,13 @@ internal sealed class PlatformSecurityTool(AssistantAccessPolicy policy, IPlatfo
     protected override async Task<Result<AssistantToolData>> ExecuteCoreAsync(AssistantToolArguments args, CancellationToken ct)
     {
         var result = await audit.ListAsync(new ListPlatformAuditRequest { After = args.Text("cursor"), Limit = 20, Period = "all", FromUtc = args.Instant("fromUtc"), ToUtc = args.Instant("toUtc") }, ct);
-        return result.IsFailure ? result.Error : new AssistantQuickToolData(new AssistantSecurityQuickDataResponse([.. result.Value.Items.Take(20).Select(row => new AssistantSecurityRowResponse(row.Id, row.Action, row.Actor, row.OccurredAtUtc))], result.Value.NextCursor, result.Value.HasMore));
+        if (result.IsFailure) return result.Error;
+        var rows = result.Value.Items.Take(20).ToArray();
+        return new AssistantQuickToolData(new AssistantSecurityQuickDataResponse([.. rows.Select(row =>
+            new AssistantSecurityRowResponse(row.Id, row.Action, row.Actor, row.OccurredAtUtc))], result.Value.NextCursor, result.Value.HasMore))
+        {
+            SubjectCopies = [.. rows.Where(row => row.AuditActorId != null).Select(row =>
+                new AssistantSnapshotSubjectCopy(row.AuditActorId!.Value, AssistantSnapshotCopyKind.SecurityActorDisplayName, row.Id))],
+        };
     }
 }

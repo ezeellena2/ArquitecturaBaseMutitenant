@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using System.Text.Json.Serialization;
 
 namespace ArquitecturaBaseMultitenant.Application.Models.Platform;
 
@@ -25,7 +26,12 @@ public sealed record ListPlatformAuditRequest : CursorRequest
 /// <summary>Una fila de la auditoría ya traducida: qué pasó, sobre qué, quién y con qué motivo.</summary>
 public sealed record PlatformAuditEventResponse(Guid Id, DateTime OccurredAtUtc, string Type, string Action,
     string Summary, string Target, Guid? TargetTenantId, Guid? TargetAccountId, string Actor, string ActorRole,
-    string? Reason, string? IpAddress);
+    string? Reason, string? IpAddress)
+{
+    /// <summary>Referencia interna de la identidad autora; no es la cuenta destinataria del evento.</summary>
+    [JsonIgnore]
+    public Guid? AuditActorId { get; init; }
+}
 
 /// <summary>Una organización presente en los eventos filtrados, con su nombre global actual.</summary>
 public sealed record PlatformAuditOrganizationResponse(Guid Id, string Name);
@@ -36,6 +42,9 @@ public sealed record PlatformAuditRow(Guid Id, DateTime OccurredAtUtc, SecurityE
     PlatformAuditAccount? Actor, PlatformAuditAccount? TargetAccount, Guid? TargetAccountId, Guid? TargetTenantId,
     string? TargetTenantName, string? Reason, string? MaskedIpAddress, string Changes = "{}")
 {
+    [JsonIgnore]
+    public Guid? AuditActorId { get; init; }
+
     public override string ToString() => nameof(PlatformAuditRow);
 }
 

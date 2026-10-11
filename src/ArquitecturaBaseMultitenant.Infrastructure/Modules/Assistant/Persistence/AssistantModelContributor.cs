@@ -11,6 +11,7 @@ internal sealed class AssistantModelContributor : IPersistenceModelContributor
     {
         [typeof(PlatformAssistantConversation)] = Schemas.Platform,
         [typeof(PlatformAssistantDurableOperation)] = Schemas.Platform,
+        [typeof(AssistantSnapshotRetentionIndex)] = Schemas.Platform,
         [typeof(PlatformAssistantFileCleanup)] = Schemas.Platform,
         [typeof(PlatformAssistantMessage)] = Schemas.Platform,
         [typeof(PlatformAssistantAttachment)] = Schemas.Platform,

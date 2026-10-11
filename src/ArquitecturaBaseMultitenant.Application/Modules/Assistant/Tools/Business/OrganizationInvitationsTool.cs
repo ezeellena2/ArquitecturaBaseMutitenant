@@ -19,13 +19,17 @@ internal sealed class OrganizationInvitationsTool(AssistantAccessPolicy policy, 
         var result = await users.ListAsync(new ListOrganizationUsersRequest { State = args.Text("status") == "Pending" ? OrganizationUserState.Invited : OrganizationUserState.Expired, Page = args.Page, PageSize = args.PageSize }, ct);
         if (result.IsFailure) return result.Error;
         var invitations = new List<AssistantInvitationRowResponse>();
+        var copies = new List<AssistantSnapshotSubjectCopy>();
         foreach (var row in result.Value.Items.Take(20))
         {
             // State selection and invitation hydration are separate reads; a transition requires a new query.
             if (row.InvitationId is not { } id || row.InvitationExpiresAtUtc is not { } expiresAtUtc)
                 return AssistantErrors.QuickQueryNotAvailable;
             invitations.Add(new AssistantInvitationRowResponse(id, row.DisplayName, args.Text("status")!, expiresAtUtc));
+            if (row.UserId is { } accountId && row.DisplayName is not null)
+                copies.Add(new AssistantSnapshotSubjectCopy(accountId, AssistantSnapshotCopyKind.InvitationDisplayName, id));
         }
-        return new AssistantQuickToolData(new AssistantInvitationsQuickDataResponse(invitations, result.Value.TotalCount, result.Value.HasNext));
+        return new AssistantQuickToolData(new AssistantInvitationsQuickDataResponse(invitations, result.Value.TotalCount, result.Value.HasNext))
+        { SubjectCopies = copies };
     }
 }

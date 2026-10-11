@@ -17,6 +17,13 @@ internal sealed class PlatformAccountsTool(AssistantAccessPolicy policy, IPlatfo
     protected override async Task<Result<AssistantToolData>> ExecuteCoreAsync(AssistantToolArguments args, CancellationToken ct)
     {
         var result = await accounts.ListAsync(new ListPlatformAccountsRequest { State = args.EnumValue<PlatformAccountState>("status"), Search = args.Text("search"), Page = args.Page, PageSize = args.PageSize }, ct);
-        return result.IsFailure ? result.Error : new AssistantQuickToolData(new AssistantPeopleQuickDataResponse([.. result.Value.Items.Take(20).Select(row => new AssistantPersonRowResponse(row.Id, row.DisplayName, row.State.ToString()))], result.Value.TotalCount, result.Value.HasNext));
+        if (result.IsFailure) return result.Error;
+        var rows = result.Value.Items.Take(20).ToArray();
+        return new AssistantQuickToolData(new AssistantPeopleQuickDataResponse([.. rows.Select(row =>
+            new AssistantPersonRowResponse(row.Id, row.DisplayName, row.State.ToString()))], result.Value.TotalCount, result.Value.HasNext))
+        {
+            SubjectCopies = [.. rows.Where(row => row.DisplayName != null).Select(row =>
+                new AssistantSnapshotSubjectCopy(row.Id, AssistantSnapshotCopyKind.PeopleDisplayName, row.Id))],
+        };
     }
 }

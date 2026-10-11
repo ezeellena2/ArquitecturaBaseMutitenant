@@ -16,6 +16,13 @@ internal sealed class CompanyMembersTool(AssistantAccessPolicy policy, ICompanyM
     protected override async Task<Result<AssistantToolData>> ExecuteCoreAsync(AssistantToolArguments args, CancellationToken ct)
     {
         var result = await members.ListAsync(args.Id("companyId")!.Value, new ListCompanyMembersRequest { State = args.EnumValue<CompanyMemberState>("status"), Page = args.Page, PageSize = args.PageSize }, ct);
-        return result.IsFailure ? result.Error : new AssistantQuickToolData(new AssistantPeopleQuickDataResponse([.. result.Value.Items.Take(20).Select(row => new AssistantPersonRowResponse(row.MemberId, row.DisplayName, row.State.ToString()))], result.Value.TotalCount, result.Value.HasNext));
+        if (result.IsFailure) return result.Error;
+        var rows = result.Value.Items.Take(20).ToArray();
+        return new AssistantQuickToolData(new AssistantPeopleQuickDataResponse([.. rows.Select(row =>
+            new AssistantPersonRowResponse(row.MemberId, row.DisplayName, row.State.ToString()))], result.Value.TotalCount, result.Value.HasNext))
+        {
+            SubjectCopies = [.. rows.Where(row => row.UserId != null && row.DisplayName != null).Select(row =>
+                new AssistantSnapshotSubjectCopy(row.UserId!.Value, AssistantSnapshotCopyKind.PeopleDisplayName, row.MemberId))],
+        };
     }
 }

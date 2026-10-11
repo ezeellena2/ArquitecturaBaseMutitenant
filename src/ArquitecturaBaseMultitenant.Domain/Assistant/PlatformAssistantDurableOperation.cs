@@ -7,6 +7,8 @@ public sealed class PlatformAssistantDurableOperation : Entity, IVersioned
 {
     private PlatformAssistantDurableOperation() { }
     public uint Version { get; private set; }
+    public uint? OriginalSnapshotVersion { get; private set; }
+    public Guid[] SubjectUserIds { get; private set; } = [];
     public Guid OwnerUserId { get; private set; }
     public Guid Key { get; private set; }
     public string BodyHash { get; private set; } = string.Empty;
@@ -20,7 +22,8 @@ public sealed class PlatformAssistantDurableOperation : Entity, IVersioned
     public DateTime CreatedAtUtc { get; private set; }
 
     public static PlatformAssistantDurableOperation Create(Guid owner, Guid key, string hash, string route,
-        Guid conversationId, string kind, int statusCode, string? location, string snapshot, string? quickKey, DateTime nowUtc)
+        Guid conversationId, string kind, int statusCode, string? location, string snapshot, string? quickKey, DateTime nowUtc,
+        Guid[]? subjectUserIds = null)
     {
         if (owner == Guid.Empty || key == Guid.Empty || conversationId == Guid.Empty) throw new ArgumentException("Non-empty binding IDs are required.");
         ArgumentException.ThrowIfNullOrWhiteSpace(hash);
@@ -30,8 +33,14 @@ public sealed class PlatformAssistantDurableOperation : Entity, IVersioned
         if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("UTC is required.", nameof(nowUtc));
         return new() { OwnerUserId = owner, Key = key, BodyHash = hash, Route = route,
             ConversationId = conversationId, Kind = kind, StatusCode = statusCode, Location = location,
-            SnapshotJson = snapshot, QuickKey = quickKey, CreatedAtUtc = nowUtc };
+            SnapshotJson = snapshot, QuickKey = quickKey, CreatedAtUtc = nowUtc,
+            SubjectUserIds = subjectUserIds?.Where(id => id != Guid.Empty).Distinct().Order().ToArray() ?? [] };
     }
 
-    public void RemoveContent() { SnapshotJson = null; QuickKey = null; }
+    public void PreserveSnapshotVersion()
+    {
+        if (SnapshotJson is not null) OriginalSnapshotVersion ??= Version;
+    }
+
+    public void RemoveContent() { SnapshotJson = null; QuickKey = null; SubjectUserIds = []; }
 }

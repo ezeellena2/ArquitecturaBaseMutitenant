@@ -540,7 +540,7 @@ ArquitecturaBaseMultitenant.Application/
 │       │   ├── ISignInService.cs                     técnico: sign-in, bloqueos, revocar sesiones (≤12 miembros)
 │       │   ├── IUserLookup.cs                        búsqueda global por email o teléfono
 │       │   ├── ITokenRevoker.cs
-│       │   ├── IUserStatusReader.cs                  Consulta global acotada al estado de una identidad, sin exponer…
+│       │   ├── IUserStatusReader.cs                  Estado global y batch neutral de baja; shares ordenados, sin exponer Identity
 │       │   ├── ILoginLinkIssuer.cs                   Emite dentro de la UoW del llamador, ligado al método…
 │       │   ├── IPhoneLinkObserver.cs                 [E8] cambios de Phone dentro de la UoW del núcleo, sin referencia al módulo
 │       │   └── IGoogleAvailability.cs                [E3]
@@ -1254,7 +1254,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   ├── SignInService.cs
 │   ├── UserLookup.cs                                  búsqueda global por valor de método (lista blanca); Plataforma busca cuentas en PlatformAccountReader
 │   ├── GoogleAvailability.cs                          [E3] Google se enciende con Authentication:Google:ClientId
-│   ├── UserStatusReader.cs                            Lee sólo el estado de una identidad global
+│   ├── UserStatusReader.cs                            Estado global y fence de baja con FOR SHARE ordenado
 │   ├── CloudflareDnsTxtLookup.cs                      Consulta registros TXT públicos mediante el endpoint DNS-over-HTTPS de Cloudflare
 │   ├── OpenIddict/
 │   │   ├── OpenIddictRegistration.cs                  code + PKCE + refresh, endpoints, validación local
@@ -1997,6 +1997,7 @@ tests/
 │   │   ├── ProductionSeedTests.cs                     Comprueba el seed de configuración, cliente web y documentos legales…
 │   │   ├── IdentityConsolidationTests.cs              tests de IdentityConsolidation
 │   │   ├── EmailPendingMethodPossessionTests.cs       tests de EmailPendingMethodPossession
+│   │   ├── UserDeletionStateReaderTests.cs            estado neutral y shares de identidad contra el lock de Claim
 │   │   └── SignInServiceTests.cs                      Comprueba los adaptadores de sesión, usuario actual y datos de…
 │   ├── Legal/
 │   │   ├── AccountDeletionLoginTests.cs               Comprueba la prueba de ingreso de una cuenta con baja…
@@ -2004,6 +2005,7 @@ tests/
 │   │   ├── AccountDeletionProcessingTests.cs          Comprueba el reclamo durable y la reanudación de una baja…
 │   │   ├── AccountDeletionTests.cs                    Comprueba sesión, motivo e impedimentos al solicitar una baja
 │   │   ├── AccountDeletionSharedTests.cs              Worker real: copia borrada, retención, otro Consumer, soft-delete, lock y lote acotado
+│   │   ├── LegalVersionCommandTests.cs                Ejecuta el comando real del preparador sobre el seed y…
 │   │   └── LegalAcceptanceTests.cs                    Comprueba que nuevas versiones legales bloqueen las rutas hasta aceptarlas…
 │   ├── Messaging/
 │   │   ├── AccountNoticeTests.cs                      Comprueba que los avisos lleguen a contactos verificados sin duplicados
@@ -2023,7 +2025,47 @@ tests/
 │   ├── Time/
 │   │   └── TimeZoneServiceTests.cs                    Comprueba rangos UTC de días civiles según una zona IANA
 │   ├── Modules/Assistant/                           [E8b] tests de integración del módulo
-│   │   └── AssistantHistoryLinkTests.cs              historial propio, enlaces vigentes, perfil y empresas bajo RLS
+│   │   ├── AssistantAuthorizationTests.cs            tests de AssistantAuthorization
+│   │   ├── AssistantContractTests.cs                 tests de AssistantContract
+│   │   ├── AssistantConversationIsolationTests.cs    tests de AssistantConversationIsolation
+│   │   ├── AssistantDurableAuthorizationTests.cs     tests de AssistantDurableAuthorization
+│   │   ├── AssistantDurableConversationTests.cs      tests de AssistantDurableConversation
+│   │   ├── AssistantDurableDeletionTests.cs          tests de AssistantDurableDeletion
+│   │   ├── AssistantDurableTransportTests.cs         tests de AssistantDurableTransport
+│   │   ├── AssistantDynamicAuthorizationTests.cs     tests de AssistantDynamicAuthorization
+│   │   ├── AssistantEditableCatalogMigrationTests.cs tests de AssistantEditableCatalogMigration
+│   │   ├── AssistantEditableCatalogTests.cs          tests de AssistantEditableCatalog
+│   │   ├── AssistantErrorContractTests.cs            tests de AssistantErrorContract
+│   │   ├── AssistantExecutionActorBusinessTests.cs   tests de AssistantExecutionActorBusiness
+│   │   ├── AssistantExecutionActorSecurityTests.cs   tests de AssistantExecutionActorSecurity
+│   │   ├── AssistantExecutionActorTests.cs           tests de AssistantExecutionActor
+│   │   ├── AssistantFeatureTests.cs                  tests de AssistantFeature
+│   │   ├── AssistantFinanceMigrationTests.cs         tests de AssistantFinanceMigration
+│   │   ├── AssistantFinancePrecisionTests.cs         tests de AssistantFinancePrecision
+│   │   ├── AssistantFinanceTests.cs                  tests de AssistantFinance
+│   │   ├── AssistantInvitationHydrationTests.cs      tests de AssistantInvitationHydration
+│   │   ├── AssistantLegalSeedTests.cs                tests de AssistantLegalSeed
+│   │   ├── AssistantModelCatalogTests.cs             tests de AssistantModelCatalog
+│   │   ├── AssistantNoticeAuthorizationTests.cs      tests de AssistantNoticeAuthorization
+│   │   ├── AssistantNoticeMigrationTests.cs          tests de AssistantNoticeMigration
+│   │   ├── AssistantNoticeSeedRaceTests.cs           tests de AssistantNoticeSeedRace
+│   │   ├── AssistantNoticeTests.cs                   tests de AssistantNotice
+│   │   ├── AssistantPersistenceTests.cs              tests de AssistantPersistence
+│   │   ├── AssistantProviderAdapterTests.cs          tests de AssistantProviderAdapter
+│   │   ├── AssistantSettingsTests.cs                 tests de AssistantSettings
+│   │   ├── AssistantStartupTests.cs                  tests de AssistantStartup
+│   │   ├── AssistantToolsExecutionTests.cs           tests de AssistantToolsExecution
+│   │   ├── PlatformOperatorAssistantUpgradeTests.cs  Upgrade de datos de gestores existentes
+│   │   ├── SystemRolePermissionUpgradeTests.cs       Upgrade real de plantillas persistidas, sin abrir una edición de…
+│   │   ├── AssistantHistoryLinkTests.cs              historial propio, enlaces vigentes, perfil y empresas bajo RLS
+│   │   ├── AssistantTestData.cs                      fixture de permisos, gates y sesiones reales del módulo
+│   │   ├── AssistantSnapshotRetentionTests.cs        purga 24 h, rollback, retry, gates OFF y backlog con páginas bloqueadas
+│   │   ├── AssistantSnapshotSubjectDeletionTests.cs  baja real de copias en otros dueños, organizaciones y Plataforma
+│   │   ├── AssistantSnapshotConcurrentDeletionTests.cs dos bajas simultáneas con copias mutuas y distintos órdenes de commit
+│   │   ├── AssistantSnapshotClaimRaceTests.cs        Claim y composición reales en ambos órdenes, lease vigente y vencido
+│   │   ├── AssistantSnapshotRetentionMigrationTests.cs upgrade, sujetos, purga y xmin original
+│   │   ├── AssistantSnapshotLegacyVariantsMigrationTests.cs diez Quick heredadas y Writer.Existing tras upgrade
+│   │   └── AssistantSnapshotReplayRetentionTests.cs  binding vencido y composición fuera de UoW
 │   └── Modules/WhatsApp/                            [E8] tests de integración del módulo
 │       ├── WhatsAppPhoneLinkObserverTests.cs         vínculo/rollback y retiro propio sin robar contacto
 │       ├── WhatsAppAccountLifecycleTests.cs          baja por snapshot y aviso final cifrado

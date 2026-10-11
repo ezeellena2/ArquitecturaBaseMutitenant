@@ -188,6 +188,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<string>("Location")
                         .HasColumnType("text");
 
+                    b.Property<long?>("OriginalSnapshotVersion")
+                        .HasColumnType("bigint");
+
                     b.Property<Guid>("OwnerUserId")
                         .HasColumnType("uuid");
 
@@ -205,6 +208,10 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<int>("StatusCode")
                         .HasColumnType("integer");
 
+                    b.PrimitiveCollection<Guid[]>("SubjectUserIds")
+                        .IsRequired()
+                        .HasColumnType("uuid[]");
+
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -212,6 +219,10 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .HasColumnName("xmin");
 
                     b.HasKey("TenantId", "Id");
+
+                    b.HasIndex("SubjectUserIds");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SubjectUserIds"), "gin");
 
                     b.HasIndex("TenantId", "ConversationId", "Id");
 
@@ -736,6 +747,31 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.ToTable("AssistantPlatformSettings", "platform");
                 });
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.AssistantSnapshotRetentionIndex", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ScopeTenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OperationId")
+                        .IsUnique();
+
+                    b.HasIndex("ExpiresAtUtc", "Id");
+
+                    b.ToTable("AssistantSnapshotRetentionIndices", "platform");
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.AssistantTurn", b =>
                 {
                     b.Property<Guid>("TenantId")
@@ -992,6 +1028,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<string>("Location")
                         .HasColumnType("text");
 
+                    b.Property<long?>("OriginalSnapshotVersion")
+                        .HasColumnType("bigint");
+
                     b.Property<Guid>("OwnerUserId")
                         .HasColumnType("uuid");
 
@@ -1009,6 +1048,10 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<int>("StatusCode")
                         .HasColumnType("integer");
 
+                    b.PrimitiveCollection<Guid[]>("SubjectUserIds")
+                        .IsRequired()
+                        .HasColumnType("uuid[]");
+
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -1016,6 +1059,10 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .HasColumnName("xmin");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("SubjectUserIds");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SubjectUserIds"), "gin");
 
                     b.HasIndex("OwnerUserId", "Key")
                         .IsUnique();
@@ -5324,51 +5371,43 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                             b1.Property<string>("TechnicalCacheReadCurrency")
                                 .IsRequired()
-                                .ValueGeneratedOnUpdateSometimes()
                                 .HasMaxLength(3)
                                 .HasColumnType("character(3)")
                                 .HasColumnName("TechnicalCacheReadCurrency");
 
                             b1.Property<string>("TechnicalCacheWrite1HourCurrency")
                                 .IsRequired()
-                                .ValueGeneratedOnUpdateSometimes()
                                 .HasMaxLength(3)
                                 .HasColumnType("character(3)")
                                 .HasColumnName("TechnicalCacheWrite1HourCurrency");
 
                             b1.Property<string>("TechnicalCacheWrite5MinutesCurrency")
                                 .IsRequired()
-                                .ValueGeneratedOnUpdateSometimes()
                                 .HasMaxLength(3)
                                 .HasColumnType("character(3)")
                                 .HasColumnName("TechnicalCacheWrite5MinutesCurrency");
 
                             b1.Property<string>("TechnicalLongCacheReadCurrency")
-                                .ValueGeneratedOnUpdateSometimes()
                                 .HasMaxLength(3)
                                 .HasColumnType("character(3)")
                                 .HasColumnName("TechnicalLongCacheReadCurrency");
 
                             b1.Property<string>("TechnicalLongCacheWrite1HourCurrency")
-                                .ValueGeneratedOnUpdateSometimes()
                                 .HasMaxLength(3)
                                 .HasColumnType("character(3)")
                                 .HasColumnName("TechnicalLongCacheWrite1HourCurrency");
 
                             b1.Property<string>("TechnicalLongCacheWrite5MinutesCurrency")
-                                .ValueGeneratedOnUpdateSometimes()
                                 .HasMaxLength(3)
                                 .HasColumnType("character(3)")
                                 .HasColumnName("TechnicalLongCacheWrite5MinutesCurrency");
 
                             b1.Property<string>("TechnicalLongInputCurrency")
-                                .ValueGeneratedOnUpdateSometimes()
                                 .HasMaxLength(3)
                                 .HasColumnType("character(3)")
                                 .HasColumnName("TechnicalLongInputCurrency");
 
                             b1.Property<string>("TechnicalLongOutputCurrency")
-                                .ValueGeneratedOnUpdateSometimes()
                                 .HasMaxLength(3)
                                 .HasColumnType("character(3)")
                                 .HasColumnName("TechnicalLongOutputCurrency");

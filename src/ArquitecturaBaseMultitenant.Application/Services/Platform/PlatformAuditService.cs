@@ -90,14 +90,14 @@ internal sealed class PlatformAuditService(ISecurityEventReader reader, IUserRep
                 row.SignInSucceeded ? "SignIn" : "SignInFailed", summary, Name(row.TargetAccount),
                 null, row.TargetAccountId, Name(row.Actor),
                 AuditTexts.ActorRole(row.Actor?.IsOperator == true ? AuditActorKind.PlatformOperator : AuditActorKind.User),
-                null, null);
+                null, null) { AuditActorId = row.AuditActorId };
         }
 
         var target = row.TargetTenantName ?? (row.TargetAccountId is not null ? Name(row.TargetAccount) : AuditTexts.PlatformTarget());
         var actor = row.ActorKind == AuditActorKind.System ? AuditTexts.Actor(AuditActorKind.System) : Name(row.Actor);
         return new PlatformAuditEventResponse(row.Id, row.OccurredAtUtc, PlatformAuditCategories.Of(type), type.ToString(),
             AuditTexts.SecurityEvent(type), target, row.TargetTenantId, row.TargetAccountId, actor,
-            AuditTexts.ActorRole(row.ActorKind), row.Reason, row.MaskedIpAddress);
+            AuditTexts.ActorRole(row.ActorKind), row.Reason, row.MaskedIpAddress) { AuditActorId = row.AuditActorId };
     }
 
     private static string Name(PlatformAuditAccount? account) => account switch

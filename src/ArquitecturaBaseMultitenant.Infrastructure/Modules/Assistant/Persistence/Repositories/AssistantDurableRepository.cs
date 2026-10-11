@@ -30,16 +30,19 @@ internal sealed class AssistantDurableRepository(ApplicationDbContext db, ITenan
     public Task<AssistantDurableOperationRow?> GetByKeyAsync(Guid owner, Access access, Guid key, CancellationToken ct) =>
         access == Access.Platform
             ? Platform(owner).Where(row => row.Key == key).Select(row => new AssistantDurableOperationRow(
-                new IdempotentReference(row.Kind, row.Id, row.StatusCode, row.Location), row.ConversationId, row.BodyHash, row.Route, row.SnapshotJson, row.QuickKey, row.Version)).SingleOrDefaultAsync(ct)
+                new IdempotentReference(row.Kind, row.Id, row.StatusCode, row.Location), row.ConversationId, row.BodyHash, row.Route, row.SnapshotJson, row.QuickKey, EffectiveVersion(row.OriginalSnapshotVersion, row.Version), row.CreatedAtUtc) { SubjectUserIds = row.SubjectUserIds }).SingleOrDefaultAsync(ct)
             : Private(owner, access).Where(row => row.Key == key).Select(row => new AssistantDurableOperationRow(
-                new IdempotentReference(row.Kind, row.Id, row.StatusCode, row.Location), row.ConversationId, row.BodyHash, row.Route, row.SnapshotJson, row.QuickKey, row.Version)).SingleOrDefaultAsync(ct);
+                new IdempotentReference(row.Kind, row.Id, row.StatusCode, row.Location), row.ConversationId, row.BodyHash, row.Route, row.SnapshotJson, row.QuickKey, EffectiveVersion(row.OriginalSnapshotVersion, row.Version), row.CreatedAtUtc) { SubjectUserIds = row.SubjectUserIds }).SingleOrDefaultAsync(ct);
 
     public Task<AssistantDurableOperationRow?> GetByIdAsync(Guid owner, Access access, Guid id, CancellationToken ct) =>
         access == Access.Platform
             ? Platform(owner).Where(row => row.Id == id).Select(row => new AssistantDurableOperationRow(
-                new IdempotentReference(row.Kind, row.Id, row.StatusCode, row.Location), row.ConversationId, row.BodyHash, row.Route, row.SnapshotJson, row.QuickKey, row.Version)).SingleOrDefaultAsync(ct)
+                new IdempotentReference(row.Kind, row.Id, row.StatusCode, row.Location), row.ConversationId, row.BodyHash, row.Route, row.SnapshotJson, row.QuickKey, EffectiveVersion(row.OriginalSnapshotVersion, row.Version), row.CreatedAtUtc) { SubjectUserIds = row.SubjectUserIds }).SingleOrDefaultAsync(ct)
             : Private(owner, access).Where(row => row.Id == id).Select(row => new AssistantDurableOperationRow(
-                new IdempotentReference(row.Kind, row.Id, row.StatusCode, row.Location), row.ConversationId, row.BodyHash, row.Route, row.SnapshotJson, row.QuickKey, row.Version)).SingleOrDefaultAsync(ct);
+                new IdempotentReference(row.Kind, row.Id, row.StatusCode, row.Location), row.ConversationId, row.BodyHash, row.Route, row.SnapshotJson, row.QuickKey, EffectiveVersion(row.OriginalSnapshotVersion, row.Version), row.CreatedAtUtc) { SubjectUserIds = row.SubjectUserIds }).SingleOrDefaultAsync(ct);
+
+    // Project both physical columns; bigint and PostgreSQL xid cannot safely share a SQL COALESCE.
+    private static uint EffectiveVersion(uint? originalSnapshotVersion, uint version) => originalSnapshotVersion ?? version;
 
     private IQueryable<PlatformAssistantDurableOperation> Platform(Guid owner) =>
         db.Set<PlatformAssistantDurableOperation>().AsNoTracking().Where(row => row.OwnerUserId == owner);
@@ -47,28 +50,45 @@ internal sealed class AssistantDurableRepository(ApplicationDbContext db, ITenan
         db.Set<AssistantDurableOperation>().AsNoTracking().Where(row => row.OwnerUserId == owner && row.Access == access && row.TenantId == tenant.RequiredTenantId);
 
     public Entity Add(Guid owner, Access access, IdempotentRequest request, Guid conversationId,
-        IdempotentReference reference, string snapshot, string? quickKey, DateTime nowUtc)
+        IdempotentReference reference, string snapshot, string? quickKey, DateTime nowUtc, Guid[]? subjectUserIds = null)
     {
+        db.RequireTransaction();
         Entity row = access == Access.Platform
             ? PlatformAssistantDurableOperation.Create(owner, request.Key, request.BodyHash, request.Route, conversationId,
-                reference.Kind, reference.StatusCode, reference.Location, snapshot, quickKey, nowUtc)
+                reference.Kind, reference.StatusCode, reference.Location, snapshot, quickKey, nowUtc, subjectUserIds)
             : AssistantDurableOperation.Create(owner, access, request.Key, request.BodyHash, request.Route, conversationId,
-                reference.Kind, reference.StatusCode, reference.Location, snapshot, quickKey, nowUtc);
+                reference.Kind, reference.StatusCode, reference.Location, snapshot, quickKey, nowUtc, subjectUserIds);
         db.Add(row);
+        db.Add(AssistantSnapshotRetentionIndex.Create(row.Id, access == Access.Platform ? null : tenant.RequiredTenantId, nowUtc));
         return row;
     }
 
     public async Task RemoveContentAsync(Guid owner, Access access, Guid conversationId, CancellationToken ct)
     {
+        db.RequireTransaction();
         if (access == Access.Platform)
         {
-            var rows = await db.Set<PlatformAssistantDurableOperation>().Where(row => row.OwnerUserId == owner && row.ConversationId == conversationId).ToArrayAsync(ct);
+            var ids = await Platform(owner).Where(row => row.ConversationId == conversationId).Select(row => row.Id).ToArrayAsync(ct);
+            await AssistantSnapshotRetentionWriter.LockIndicesAsync(db, ids, ct);
+            var rows = await db.Set<PlatformAssistantDurableOperation>().FromSqlInterpolated($"""
+                SELECT *, xmin FROM platform."PlatformAssistantDurableOperations"
+                WHERE "OwnerUserId" = {owner} AND "ConversationId" = {conversationId} ORDER BY "Id" FOR UPDATE
+                """).ToArrayAsync(ct);
             foreach (var row in rows) row.RemoveContent();
+            await AssistantSnapshotRetentionWriter.RemoveIndicesAsync(db, ids, ct);
         }
         else
         {
-            var rows = await db.Set<AssistantDurableOperation>().Where(row => row.OwnerUserId == owner && row.Access == access && row.TenantId == tenant.RequiredTenantId && row.ConversationId == conversationId).ToArrayAsync(ct);
+            var ids = await Private(owner, access).Where(row => row.ConversationId == conversationId).Select(row => row.Id).ToArrayAsync(ct);
+            await AssistantSnapshotRetentionWriter.LockIndicesAsync(db, ids, ct);
+            var accessValue = access.ToString();
+            var rows = await db.Set<AssistantDurableOperation>().FromSqlInterpolated($"""
+                SELECT *, xmin FROM tenant."AssistantDurableOperations"
+                WHERE "OwnerUserId" = {owner} AND "Access" = {accessValue} AND "TenantId" = {tenant.RequiredTenantId}
+                  AND "ConversationId" = {conversationId} ORDER BY "Id" FOR UPDATE
+                """).ToArrayAsync(ct);
             foreach (var row in rows) row.RemoveContent();
+            await AssistantSnapshotRetentionWriter.RemoveIndicesAsync(db, ids, ct);
         }
     }
 }

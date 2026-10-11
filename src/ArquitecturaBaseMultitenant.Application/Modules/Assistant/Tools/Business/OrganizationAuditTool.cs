@@ -16,6 +16,14 @@ internal sealed class OrganizationAuditTool(AssistantAccessPolicy policy, IOrgan
     protected override async Task<Result<AssistantToolData>> ExecuteCoreAsync(AssistantToolArguments args, CancellationToken ct)
     {
         var result = await audit.ListAsync(new ListOrganizationAuditRequest { After = args.Text("cursor"), Limit = 20, Period = "all", FromUtc = args.Instant("fromUtc"), ToUtc = args.Instant("toUtc") }, ct);
-        return result.IsFailure ? result.Error : new AssistantQuickToolData(new AssistantAuditQuickDataResponse([.. result.Value.Items.Take(20).Select(row => new AssistantAuditRowResponse(row.Id, row.Action, row.ActorDisplayName, row.OccurredAtUtc))], result.Value.NextCursor, result.Value.HasMore));
+        if (result.IsFailure) return result.Error;
+        var rows = result.Value.Items.Take(20).ToArray();
+        return new AssistantQuickToolData(new AssistantAuditQuickDataResponse([.. rows.Select(row =>
+            new AssistantAuditRowResponse(row.Id, row.Action, row.ActorDisplayName, row.OccurredAtUtc))], result.Value.NextCursor, result.Value.HasMore))
+        {
+            SubjectCopies = [.. rows.Where(row => row.ActorKind == nameof(Domain.Auditing.AuditActorKind.User)
+                && row.ActorId != null && row.ActorDisplayName != null).Select(row =>
+                new AssistantSnapshotSubjectCopy(row.ActorId!.Value, AssistantSnapshotCopyKind.AuditActorDisplayName, row.Id))],
+        };
     }
 }

@@ -19,6 +19,13 @@ internal sealed class RoleMembersTool(AssistantAccessPolicy policy, IRoleService
         var role = await roles.GetAsync(roleId, ct);
         if (role.IsFailure) return role.Error;
         var result = await users.ListAsync(new ListOrganizationUsersRequest { RoleId = roleId, Page = args.Page, PageSize = args.PageSize }, ct);
-        return result.IsFailure ? result.Error : new AssistantQuickToolData(new AssistantPeopleQuickDataResponse([.. result.Value.Items.Take(20).Select(row => new AssistantPersonRowResponse(row.MemberId, row.DisplayName, row.State.ToString()))], result.Value.TotalCount, result.Value.HasNext));
+        if (result.IsFailure) return result.Error;
+        var rows = result.Value.Items.Take(20).ToArray();
+        return new AssistantQuickToolData(new AssistantPeopleQuickDataResponse([.. rows.Select(row =>
+            new AssistantPersonRowResponse(row.MemberId, row.DisplayName, row.State.ToString()))], result.Value.TotalCount, result.Value.HasNext))
+        {
+            SubjectCopies = [.. rows.Where(row => row.UserId != null && row.DisplayName != null).Select(row =>
+                new AssistantSnapshotSubjectCopy(row.UserId!.Value, AssistantSnapshotCopyKind.PeopleDisplayName, row.MemberId))],
+        };
     }
 }
