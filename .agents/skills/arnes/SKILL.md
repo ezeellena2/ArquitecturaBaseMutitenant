@@ -13,7 +13,10 @@ Un arnés ejecutable detecta con un script (0 tokens), arregla solo lo mecánico
 2. Corré `node scripts/arneses/arnes.mjs <nombre> <opciones>` **en segundo plano** (puede tardar minutos) y esperá a que termine, sin consultar el avance.
 3. Leé **solo** el `.md` del informe que imprime el comando (`.local/arneses/<nombre>/<fecha>-<repo>.md`).
 4. Mostrá: estado, rama, contadores (auto, modelo y humano, al empezar y al terminar), consumo (tokens y costo cuando el motor lo informa) y la lista «Para vos».
-5. No abras los archivos que tocó el arnés ni rehagas su trabajo. Si el estado es `falló`, decí qué falló y dónde quedó el worktree.
+5. No rehagas lo que el arnés ya hizo: no vuelvas a revisar ni a corregir sus cambios. Lo que queda en «Para vos» o lo que hace fallar la verificación posterior se resuelve así:
+   - **Si es mecánico**, resolvelo vos sin preguntar, en la misma rama del arnés, y volvé a correr el detector y los tests que fallaban. Por ejemplo: una ruta o un símbolo que cambió de lugar, un enlace o un puntero roto, una fila del árbol o una línea de más en un `AGENTS.md`.
+   - **Si es una decisión**, mostrásela a la persona y esperá su respuesta. Por ejemplo: qué dice una regla, una conducta o algo que ve el usuario.
+6. Si el estado es `falló`, decí qué falló y dónde quedó el worktree.
 
 ## Opciones
 
