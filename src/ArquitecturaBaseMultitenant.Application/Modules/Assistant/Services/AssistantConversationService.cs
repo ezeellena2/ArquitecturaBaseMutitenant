@@ -16,10 +16,10 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 internal sealed class AssistantConversationService(IAssistantConversationReader reader, ICurrentUser user, AssistantNoticeWriter notice,
     AssistantConversationWriter writer, AssistantConversationPolicy policy, AssistantQuickPreparationBuilder preparation,
-    IUnitOfWork unitOfWork, IRequestValidator validator, TimeProvider clock, ILogger<AssistantConversationService> logger) : IAssistantConversationService
+    AssistantStateBuilder state, IUnitOfWork unitOfWork, IRequestValidator validator, TimeProvider clock, ILogger<AssistantConversationService> logger) : IAssistantConversationService
 {
     public Task<Result<AssistantStateResponse>> StateAsync(CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, clock, "AssistantConversationState", () => Task.FromResult(Result.Failure<AssistantStateResponse>(ContractErrors.NotImplemented)));
+        OperationLog.RunAsync(logger, clock, "AssistantConversationState", () => state.BuildAsync(cancellationToken));
 
     public Task<Result> AcceptNoticeAsync(AssistantNoticeRequest request, CancellationToken cancellationToken) =>
         OperationLog.RunAsync(logger, clock, "AssistantConversationAcceptNotice", async () =>

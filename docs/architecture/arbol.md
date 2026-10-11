@@ -2059,6 +2059,9 @@ tests/
 │   │   ├── SystemRolePermissionUpgradeTests.cs       Upgrade real de plantillas persistidas, sin abrir una edición de…
 │   │   ├── AssistantHistoryLinkTests.cs              historial propio, enlaces vigentes, perfil y empresas bajo RLS
 │   │   ├── AssistantTestData.cs                      fixture de permisos, gates y sesiones reales del módulo
+│   │   ├── AssistantStateTests.cs                    estado HTTP, primer aviso, permisos, catálogo y lectura sin proveedor ni UoW
+│   │   ├── AssistantStateFinanceReaderTests.cs       cuota compartida, ledger por financiación y períodos persistidos
+│   │   ├── AssistantStateBudgetTests.cs              estado mensual/diario real, snapshots y bordes sin escritura
 │   │   ├── AssistantSnapshotRetentionTests.cs        purga 24 h, rollback, retry, gates OFF y backlog con páginas bloqueadas
 │   │   ├── AssistantSnapshotSubjectDeletionTests.cs  baja real de copias en otros dueños, organizaciones y Plataforma
 │   │   ├── AssistantSnapshotConcurrentDeletionTests.cs dos bajas simultáneas con copias mutuas y distintos órdenes de commit

@@ -11,6 +11,53 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.Persisten
 
 internal sealed class AssistantFinanceReader(ApplicationDbContext db, ITenantContext tenant) : IAssistantFinanceReader
 {
+    public async Task<AssistantDailyQuotaUsageRow> FindDailyQuotaAsync(Guid userId, AssistantMode mode, DateOnly dayUtc, CancellationToken ct)
+    {
+        if (userId == Guid.Empty || !Enum.IsDefined(mode)) throw new ArgumentException("A user and a valid funding mode are required.");
+        if (mode == AssistantMode.PlatformKey)
+            return await db.Set<AssistantPlatformKeyDailyQuota>().AsNoTracking()
+                .Where(row => row.UserId == userId && row.DayUtc == dayUtc)
+                .Select(row => new AssistantDailyQuotaUsageRow(row.ConsumedQueries, row.ReservedQueries))
+                .SingleOrDefaultAsync(ct) ?? new(0, 0);
+        var id = tenant.RequiredTenantId;
+        return await db.Set<AssistantOwnKeyDailyQuota>().AsNoTracking()
+            .Where(row => row.TenantId == id && row.UserId == userId && row.DayUtc == dayUtc)
+            .Select(row => new AssistantDailyQuotaUsageRow(row.ConsumedQueries, row.ReservedQueries))
+            .SingleOrDefaultAsync(ct) ?? new(0, 0);
+    }
+
+    public Task<AssistantBudgetMonthRow?> FindLatestMonthAsync(DateTime nowUtc, CancellationToken ct)
+    {
+        var id = tenant.RequiredTenantId;
+        if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("UTC is required.", nameof(nowUtc));
+        // Return an expired last period too: the caller continues from its immutable end without writing.
+        return db.Set<AssistantBudgetMonth>().AsNoTracking().Where(row => row.OrganizationId == id && row.StartUtc <= nowUtc)
+            .OrderByDescending(row => row.StartUtc).ThenByDescending(row => row.Id)
+            .Select(row => new AssistantBudgetMonthRow(row.Id, row.Month, row.TimeZoneId, row.StartUtc, row.EndUtc))
+            .FirstOrDefaultAsync(ct);
+    }
+
+    public async Task<AssistantMonthCostRow> FindMonthCostAsync(Guid monthId, AssistantKeyFunding funding, CancellationToken ct)
+    {
+        var id = tenant.RequiredTenantId;
+        if (monthId == Guid.Empty || !Enum.IsDefined(funding)) throw new ArgumentException("A month and a valid funding are required.");
+        var completed = db.Set<AssistantFinancialOperation>().AsNoTracking().Where(row => row.ScopeTenantId == id
+            && row.Access == Access.Business && row.BudgetMonthId == monthId && row.Funding == funding
+            && row.State == AssistantFinancialState.Completed);
+        // The technical ledger survives content deletion; a private fact is deliberately not recreated then.
+        // Budget and cost share one statement snapshot even when a newer admission completes concurrently.
+        var snapshot = await completed.OrderByDescending(row => row.CreatedAtUtc).ThenByDescending(row => row.Id)
+            .Select(row => new
+            {
+                Budget = row.MonthlyBudget,
+                Cost = (from call in db.Set<AssistantFinancialCall>().AsNoTracking()
+                    join operation in completed on call.OperationId equals operation.Id
+                    where operation.BudgetMonthId == row.BudgetMonthId && operation.Funding == row.Funding
+                    select call.Cost.Amount).Sum()
+            }).FirstOrDefaultAsync(ct);
+        return snapshot?.Budget is { } budget ? new(budget, new Money(snapshot.Cost, budget.Currency)) : new(null, null);
+    }
+
     public async Task<IReadOnlyList<AssistantFinancialAggregateRow>> ListPlatformAsync(DateTime startUtc, DateTime endUtc, CancellationToken ct)
     {
         if (tenant.TenantId is not null) throw new InvalidOperationException("Platform aggregates require a global management scope.");

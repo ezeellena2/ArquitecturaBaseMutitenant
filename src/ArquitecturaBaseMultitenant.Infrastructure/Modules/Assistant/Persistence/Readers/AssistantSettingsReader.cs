@@ -18,8 +18,9 @@ internal sealed class AssistantSettingsReader(ApplicationDbContext context, ITen
                 value.MonthlyOrganizationBudget, value.PersonalEnabled, value.RetentionDays, value.EncryptedApiKey != null, value.MaskedKeySuffix, value.Version)).SingleOrDefaultAsync(ct);
         row ??= new PlatformAssistantSettingsResponse(Guid.Empty, [], AssistantEffort.Low, AssistantFeature.DefaultDailyMessageLimit,
             new Money(100m, CurrencyCode.Create(AssistantContractPolicy.BillingCurrency).Value), false, AssistantFeature.DefaultRetentionDays, false, null, 0);
-        var key = await GetPlatformKeyAsync(ct);
-        var fallback = !key.HasOverride && key.Ciphertext is null && !string.IsNullOrWhiteSpace(options.Value.Platform.ApiKey);
+        var overridden = await context.Set<AssistantPlatformSettings>().AsNoTracking()
+            .Where(value => value.Id == AssistantPlatformSettings.SingletonId).Select(value => value.HasKeyOverride).SingleOrDefaultAsync(ct);
+        var fallback = !overridden && !row.HasKey && !string.IsNullOrWhiteSpace(options.Value.Platform.ApiKey);
         return row with { HasKey = row.HasKey || fallback, MaskedKeySuffix = fallback ? Suffix(options.Value.Platform.ApiKey!) : row.MaskedKeySuffix };
     }
     public Task<AssistantOrganizationSettingsRow?> FindOrganizationAsync(CancellationToken ct)

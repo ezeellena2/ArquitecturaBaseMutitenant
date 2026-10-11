@@ -87,7 +87,7 @@ public sealed class AssistantContractTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.Forbidden, chat.StatusCode);
     }
     [Fact]
-    public async Task Consumer_without_roles_preserves_stubs_and_uses_durable_private_operations_after_notice()
+    public async Task Consumer_without_roles_reads_state_and_uses_durable_private_operations_after_notice()
     {
         await using var ownFactory = new ApiFactory();
         await ownFactory.InitializeAsync();
@@ -101,7 +101,7 @@ public sealed class AssistantContractTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.Unauthorized, anonymous.StatusCode);
         var account = await AccountJourney.RegisterAsync(host, client, Ct);
         using var state = await client.GetAsync("/api/me/assistant", Ct);
-        await Stub(state);
+        Assert.Equal(HttpStatusCode.OK, state.StatusCode);
         using var profile = await client.GetFromJsonAsync<JsonDocument>("/api/me", Ct);
         Assert.Empty(profile!.RootElement.GetProperty("permissions").EnumerateArray());
         Assert.Contains(profile.RootElement.GetProperty("features").EnumerateArray(), value => value.GetString() == "assistant");

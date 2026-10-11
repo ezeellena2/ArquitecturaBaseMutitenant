@@ -20,6 +20,8 @@ public static class AssistantModule
         services.AddScoped<AssistantQuickPreparationBuilder>();
         services.AddScoped<AssistantSnapshotPrivacyGuard>();
         services.AddScoped<AssistantConversationPolicy>();
+        services.AddScoped<AssistantStateBuilder>();
+        services.AddScoped<AssistantStateConfigurationBuilder>();
         services.AddScoped<IAssistantNoticeService, AssistantNoticeService>();
         services.AddScoped<AssistantNoticePolicy>();
         services.AddScoped<AssistantNoticeWriter>();

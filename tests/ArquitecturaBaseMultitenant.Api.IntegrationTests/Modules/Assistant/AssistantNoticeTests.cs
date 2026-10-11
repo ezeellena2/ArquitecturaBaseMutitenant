@@ -29,7 +29,7 @@ public sealed class AssistantNoticeTests(ApiFactory factory)
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
         await AssistantTestData.PersonalAsync(factory, true);
         using var state = await client.GetAsync("/api/me/assistant", Ct);
-        Assert.Equal(HttpStatusCode.NotImplemented, state.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, state.StatusCode);
         using var response = await SendAsync(client, "unknown", Guid.NewGuid());
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         using var problem = await response.Content.ReadFromJsonAsync<JsonDocument>(Ct);
