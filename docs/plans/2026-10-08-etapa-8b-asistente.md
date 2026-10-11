@@ -411,6 +411,14 @@ Puntos neutrales a extender: `A/Interfaces/Integrations/Features/{IFeatureDefini
 
 ### T09 · Documentación, guardas y receta de quitar
 
+**Pendiente explícito asignado por el usuario el 11/10:** T09 todavía no está terminada. El retiro de WhatsApp pertenece a la puerta E8 y ya pasó 2556/2556; retirar Asistente y retirar ambos módulos pertenecen a esta tarea y a T15 de E8b. El ensayo sobre `puerta-8-5` dejó **siete fallos pendientes**, con archivos, escenarios y evidencia en [el informe del retiro](../reviews/2026-10-11-etapa-8-retiro-asistente.md). No corregirlos en el corte E8 ni confundir el ensayo con T09 aprobada.
+
+- [ ] Mover `AssistantModel` de `Application/Interfaces/Persistence/UniqueKeys.cs:11` a `Application/Modules/Assistant/Interfaces/Persistence/UniqueKeys.cs`, copiando el patrón de WhatsApp; actualizar servicio, configuración EF y test del índice. Conservar el nombre real del índice y el contrato, sin nueva migración por mover la constante. El focal `DbContextModelTests` reprodujo el índice ausente al quitar el módulo.
+- [ ] Sacar la entrada exclusiva de `AssistantSessionPolicy` del inventario núcleo `ArchitectureTests/IdentityAccessTests.cs:24` mediante contribución partial quitable. Mantener cerrado el inventario exacto del núcleo y las guardas de consumidores no declarados.
+- [ ] Resolver los dos casos de `PlatformLegalPublicationTests.cs:36,110`: comprobar las versiones de publicación respecto del seed instalado, manteniendo concurrencia, aceptación e idempotencia y la comprobación propia de legales v2 dentro de los tests del módulo.
+- [ ] Resolver las dos variantes de `ProductionSeedTests.cs:116`: el núcleo conserva sus dos eventos y documentos v1; las expectativas del evento del asistente, legales v2, contenidos y aviso Anthropic pertenecen a su árbol quitable. Mantener la cobertura del seed instalado y su repetición sin efectos duplicados.
+- [ ] Corregir sólo los datos sintéticos de `PlatformAccountPrimaryPhoneTests.cs:172`, validándolos con el parser real antes de guardarlos. El caso de recuperación de la línea 104 devuelve `Users.Phone.Invalid`; conservar sus assertions de 202, aprobación, identidad principal y máscaras. No cambiar la validación productiva ni atribuir a la retirada un teléfono inválido de fixture.
+
 **Archivos:** `B/docs/features/asistente.md`, `docs/guides/{agregar-una-herramienta-al-asistente,quitar-asistente}.md`, fichas modulos/modulos-habilitados/persistencia-ef/logs/ayuda/archivos afectadas, AGENTS de nuevas carpetas, árboles/arquitectura/operaciones; `AR/ModuleIsolationTests.cs`, `IT/Modules/Assistant/AssistantRemovalTests.cs` si la guarda usa fixture pertinente. Informe final en Parte 3.
 
 **Copiar de:** docs/guides/quitar-whatsapp.md E8, recipe Roles/Personal, E8 namespace/model controls; conservar convenciones de permisos/capabilities sin referenciar concretos.
@@ -521,7 +529,8 @@ Ejecutar sobre commits finales, repetir solo controles invalidados por correccio
 | Galería | Índice con tableros contra estados/lista D1–D26, app lado a lado desktop/móvil/tablet; revisada al final. |
 | Recorrido usuario | Navegador con sesiones de antes según puerta [arreglos](2026-10-06-arreglos-antes-de-la-7.md#puerta-el-recorrido-de-un-usuario-nuevo), más E8/E8b sin limpiar cookies ni perder acceso. |
 | Anthropic real | **Pendiente del usuario desde el 2026-10-10:** obtener y cargar la clave; después ejecutar la prueba siguiente sin mocks/modelo fake, registrando IDs/tokens/costo sin contenido privado. No frena implementación ni E2E determinístico. |
-| Quitar Asistente | Copia descartable según T09, BD vacía/migrada, núcleo/build/tests/E8/WhatsApp siguen verdes; chat/grupo/pestaña nuevos desaparecen. No borrar en repos compartidos. |
+| Quitar Asistente | Copia descartable según T09, BD vacía/migrada, núcleo/build/tests/E8/WhatsApp siguen verdes; chat/grupo/pestaña nuevos desaparecen. Resolver y repetir los siete pendientes del ensayo del 11/10. No borrar en repos compartidos. |
+| Quitar ambos módulos | Otra copia descartable, BD vacía/migrada, núcleo/build/tests/ingreso por correo y Google conservan su conducta sin WhatsApp ni Asistente. Ejecutar después de quitar Asistente correctamente; registrar migraciones, conservación de datos/RLS y limpieza del entorno. Es puerta E8b, no requisito de cierre E8. |
 
 Focales durante desarrollo: `dotnet test --project tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj -- --filter-class "*AssistantStreamingTests"`, build proyecto afectado; en F `npm test -- src/modules/assistant/api/stream.test.ts`. Esperado clase/archivo completo en verde, no sustituto de suites finales.
 
