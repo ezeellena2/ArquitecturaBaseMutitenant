@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace ArquitecturaBaseMultitenant.RealE2ESetup;
 
 /// <summary>
-/// Publica una segunda versión de términos cuando el runner deja una orden en su archivo de control.
+/// Publica la siguiente versión de términos cuando el runner deja una orden en su archivo de control.
 /// Permite probar la aceptación de nuevos legales dentro de la base aislada del recorrido E2E.
 /// </summary>
 internal static class LegalVersionCommand
@@ -20,26 +20,34 @@ internal static class LegalVersionCommand
         if (!File.Exists(commandFile) || File.Exists(completedFile)) return;
         using var command = JsonDocument.Parse(await File.ReadAllTextAsync(commandFile, cancellationToken));
         if (command.RootElement.GetProperty("kind").GetString() != "Terms"
-            || command.RootElement.GetProperty("version").GetInt32() != 2)
+            || (command.RootElement.TryGetProperty("version", out var legacyVersion) && legacyVersion.GetInt32() != 2))
             throw new InvalidOperationException("Unsupported isolated E2E legal command.");
 
         await using var scope = services.CreateAsyncScope();
         var provider = scope.ServiceProvider;
-        var nowUtc = provider.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
-        await provider.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+        var published = await provider.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
         {
             var repository = provider.GetRequiredService<ILegalRepository>();
-            var current = await repository.GetCurrentDocumentAsync(LegalDocumentKind.Terms, nowUtc, ct);
-            if (current?.Version != 2)
-            {
-                var document = LegalDocument.Create(LegalDocumentKind.Terms, 2, nowUtc);
-                repository.AddDocument(document);
-                repository.AddContent(LegalDocumentContent.Create(document.Id, "es-AR", "Términos nuevos de prueba."));
-                repository.AddContent(LegalDocumentContent.Create(document.Id, "en-US", "New test terms."));
-            }
-            return Result.Success();
+            await repository.LockKindAsync(LegalDocumentKind.Terms, ct);
+            var latestVersion = await repository.GetLatestVersionAsync(LegalDocumentKind.Terms, ct);
+            var nowUtc = provider.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+            var document = LegalDocument.Create(LegalDocumentKind.Terms, checked(latestVersion + 1), nowUtc);
+            repository.AddDocument(document);
+            repository.AddContent(LegalDocumentContent.Create(document.Id, "es-AR", "Términos nuevos de prueba."));
+            repository.AddContent(LegalDocumentContent.Create(document.Id, "en-US", "New test terms."));
+            return Result.Success((Id: document.Id, Version: document.Version));
         }, CommitPolicy.OnSuccess, cancellationToken);
-        await using var marker = new FileStream(completedFile, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-        await marker.FlushAsync(cancellationToken);
+        // El lector ve el recibo completo, y únicamente después de confirmar la publicación.
+        var temporaryFile = completedFile + ".tmp";
+        try
+        {
+            await File.WriteAllTextAsync(temporaryFile, JsonSerializer.Serialize(new
+                { id = published.Value.Id, version = published.Value.Version }), cancellationToken);
+            File.Move(temporaryFile, completedFile);
+        }
+        finally
+        {
+            File.Delete(temporaryFile);
+        }
     }
 }
