@@ -139,6 +139,8 @@ ArquitecturaBaseMutitenant/
 │       ├── LegacyBrowserSessionCommand.cs             Reproduce cookies anteriores a ADR 0044 en aislamiento
 │       ├── LoginCodeCommand.cs                        Vence un desafío Login real exclusivamente en la base E2E
 │       ├── InvitationCommand.cs                       Prepara escenarios de invitación por orden del runner
+│       ├── RecorridoHost.cs                                Una API Testing real, preparación E7 y control E8 sobre…
+│       ├── E7Preparation.cs                                Preparación E7 independiente de los bindings WhatsApp del host privado
 │       └── AccountEmailCaptures.cs                    Capturas HTML de correos reales en español e inglés
 ├── .editorconfig                                     [E0] estilo y supresiones justificadas
 ├── .gitignore                                        [E0] VisualStudio + .local/ + *.env + appsettings.*.local.json
@@ -177,6 +179,7 @@ ArquitecturaBaseMultitenant.Domain/
 │   ├── PartyPolicy.cs                                Result por parte Consumer o Business; tercero404 y parte equivocada403
 │   ├── PartyErrors.cs                                Tenancy.Party.NotAllowed
 │   ├── IGlobalSecurityAudited.cs                     Un dato global auditable exige evidencia de seguridad dentro de…
+│   ├── RequestErrors.cs                              Errores compartidos de las solicitudes HTTP
 │   └── TextLimits.cs                                 Centraliza los límites de texto que comparten las reglas de…
 ├── Results/                                          [E1]
 │   ├── Error.cs                                      record + fábricas Failure/Validation/NotFound/Conflict…
@@ -285,6 +288,7 @@ ArquitecturaBaseMultitenant.Domain/
 │   ├── AccountRecoveryErrors.cs                      El pedido no tiene un código verificado con su nonce,…
 │   ├── AccountRecoveryRequest.cs                     Pedido público de «Recuperar mi cuenta» (multitenancy.md §3.1)
 │   ├── AccountRecoveryStatus.cs                      Estado de un pedido de «Recuperar mi cuenta»
+│   ├── AccountRecoveryNotice.cs                      Marca técnica global del aviso diferido, con la identidad del…
 │   └── PlatformAuditErrors.cs                        Platform.Audit.NotFound
 ├── Auditing/                                         [E2–E3]
 │   ├── AuditEntry.cs                                 [E2] tenant, append-only
@@ -518,6 +522,7 @@ ArquitecturaBaseMultitenant.Application/
 │   │   ├── IDirectoryReader.cs                       [E7] listado y logo con filtros públicos explícitos
 │   │   ├── IPublicPageRepository.cs                  escribe la página pública dentro de la transacción del servicio
 │   │   ├── ITenantDomainReader.cs                    lee los dominios de la organización con sus correos administrados
+│   │   ├── IModuleDataSeedContributor.cs             Prepara referencias opcionales dentro de la transacción y el lock…
 │   │   └── ITenantDomainRepository.cs                escribe los dominios de correo globales, con lock y versión
 │   └── Integrations/
 │       ├── Request/                                  [E2–E3]
@@ -529,6 +534,7 @@ ArquitecturaBaseMultitenant.Application/
 │       │   ├── IInvitationFlowContext.cs             Identidad válida y continuación protegida del navegador, sin seleccionar un…
 │       │   ├── IExecutionActorContext.cs             Actor actual de la ejecución
 │       │   ├── IExecutionActorScope.cs               Ámbito del actor de ejecución
+│       │   ├── IExecutionActorFactory.cs             Captura el acceso del servidor y revalida el binding de…
 │       │   └── IPublicOrigin.cs                      [E3] origen público para armar enlaces
 │       ├── Identity/                                 [E3–E4]
 │       │   ├── ISignInService.cs                     técnico: sign-in, bloqueos, revocar sesiones (≤12 miembros)
@@ -708,6 +714,7 @@ ArquitecturaBaseMultitenant.Application/
 │       ├── OrganizationDomainModels.cs               Un dominio de la organización con los correos verificados de…
 │       ├── TenantRow.cs
 │       ├── TenantSettingsRow.cs                      Preferencias por defecto del tenant activo
+│       ├── ActiveTenantAdminEmail.cs                 Receptor interno verificado
 │       └── UserTenantAccessRow.cs                    Acceso de una cuenta leído del índice global y de…
 ├── Validation/                                       [E1] un *RequestValidator (internal sealed) por request que lo necesite
 │   ├── Auth/                                         [E3]
@@ -1085,6 +1092,7 @@ ArquitecturaBaseMultitenant.Infrastructure/
 │   │   │   ├── LegalDocumentContentConfiguration.cs   Mapea el texto de una versión legal por cultura
 │   │   │   ├── ReservedTenantSlugConfiguration.cs     direcciones públicas reservadas por la plataforma
 │   │   │   ├── TenantDomainConfiguration.cs           Guarda reservas globales de dominio con unicidad y vínculo a…
+│   │   │   ├── AccountRecoveryNoticeConfiguration.cs  Marca técnica global, única por pedido
 │   │   │   └── TenantFeatureConfiguration.cs          Habilitaciones globales por espacio, únicas por clave y sin RLS
 │   │   ├── Identity/
 │   │   │   ├── ApplicationUserConfiguration.cs        [E3] Email y PhoneNumber sin índice único (copia del método principal)
@@ -1572,6 +1580,9 @@ ArquitecturaBaseMultitenant.Api/
 │   ├── IdempotencyReplayAttribute.cs                  [E8] hook neutral antes de cualquier respuesta cacheada
 │   ├── LoginLinkReplayVerifier.cs                    [E8] adapta body/status originales sin registrarlos
 │   ├── IdempotencyMode.cs                             Modos de idempotencia y respuestas durables
+│   ├── IdempotencyDurableAttribute.cs                 Exige un verificador para solicitudes durables
+│   ├── IdempotentRequestContext.cs                    Conserva la solicitud y su reserva idempotente
+│   ├── IdempotentReferenceResult.cs                   Publishes a typed value and technical reference before JSON serialization
 │   └── IdempotentAttribute.cs                         Aplica el filtro de reserva y replay a cada POST…
 └── Legal/
     └── LegalAcceptanceMiddleware.cs                   Bloquea rutas autenticadas mientras falte aceptar documentos vigentes
@@ -1732,6 +1743,7 @@ tests/
 │   │   └── ChannelContractsTests.cs                   Comprueba los contratos de canales y avisos de cuenta
 │   └── Persistence/
 │       └── FakeUnitOfWorkTests.cs                     Comprueba que el doble transaccional reproduzca las políticas de commit…
+│   ├── ModuleServiceControlProbe.cs                   Probe de servicios duplicados en módulos
 │
 ├── ArquitecturaBaseMultitenant.Api.IntegrationTests/  [E0]
 │   ├── ArquitecturaBaseMultitenant.Api.IntegrationTests.csproj
@@ -1752,11 +1764,15 @@ tests/
 │   │   ├── AccountJourney.cs                          Recorre el registro por correo y obtiene una sesión consumer…
 │   │   ├── PlatformJourney.cs                         prepara organizaciones y operadores para los tests de Plataforma
 │   │   ├── SavedVersion.cs                            Un guardado con versión responde 200 con la versión que…
+│   │   ├── PendingMethodJourney.cs                    Base y reloj privados
+│   │   ├── IsolatedDatabaseConnections.cs             Conexiones privadas explícitas a una única base efímera administrada por…
+│   │   ├── OutboxPrivacyFixture.cs                    Prepara pruebas aisladas de privacidad del outbox
 │   │   └── TestControllerApplicationPart.cs
 │   ├── TestFeatures/                                  [E1] solo para tests, nunca en src/
 │   │   ├── TestController.cs                          [E1] devuelve cada ErrorType
 │   │   ├── Access/                                   [E3] probe de ruta exclusiva Business, sólo para tests
 │   │   │   ├── PublicSiteProbeController.cs           Demuestra independencia entre el sitio público y el acceso privado
+│   │   │   ├── ExecutionActorProbeController.cs       Captura sólo desde el pipeline firmado real
 │   │   │   └── BusinessOnlyController.cs             [E3] demuestra 403 Consumer sin adelantar alta productiva E6
 │   │   ├── Isolation/                                 [E2]
 │   │   │   ├── Widget.cs                              ITenantOwned, IAuditable, ISoftDeletable e IVersioned
@@ -1787,8 +1803,7 @@ tests/
 │   │   │   └── TestTenantContext.cs                   Proporciona el espacio controlado por cada test de auditoría
 │   │   ├── Features/
 │   │   │   └── FeatureProbeController.cs              rutas de prueba para la puerta de módulos (FeatureGateTests)
-│   │   ├── WhatsAppQuotaProbeController.cs            Probe del filtro HTTP real alrededor de una reserva durable,…
-│   │   ├── WhatsAppErrorProbeController.cs            Controller de prueba de errores de WhatsApp
+│   │   ├── HelpModuleFeature.cs                       Habilita WhatsApp para probar el catálogo de ayuda
 │   │   └── Idempotency/
 │   │       └── IdempotencyTestController.cs           El único efecto observable de este POST es el contador…
 │   ├── Tenancy/                                       [E2] los tests de multitenancy.md §13
@@ -1819,6 +1834,7 @@ tests/
 │   │   ├── CompanyPersistenceTests.cs                 Comprueba la persistencia versionada y el aislamiento real de Companies…
 │   │   ├── AccessStatusCacheTests.cs                  Comprueba la caché de estado de cuenta y membresía y…
 │   │   ├── CacheKeyScopeTests.cs
+│   │   ├── ExecutionActorContextTests.cs              tests de ExecutionActorContext
 │   │   └── InvitationsTests.cs                        puerta de la 3c: InvitationIssuer invita a alguien sin cuenta y a alguien con cuenta, y las dos se aceptan
 │   ├── ErrorHandling/                                 [E1]
 │   │   ├── ErrorHandlingTests.cs
@@ -1846,8 +1862,7 @@ tests/
 │   │   ├── OpenApiTests.cs                            [E1] cada operación de /api declara su 2xx con esquema y sus errores ProblemDetails; Swagger solo en Development
 │   │   ├── SortMapTests.cs                            Comprueba que el orden solicitado use campos permitidos y direcciones…
 │   │   ├── Etapa8ContractTests.cs                     Contrato T01
-│   │   ├── AssistantErrorContractTests.cs             tests de AssistantErrorContract
-│   │   ├── AssistantContractTests.cs                  tests de AssistantContract
+│   │   ├── IdentityHttpDocumentationTests.cs          tests de IdentityHttpDocumentation
 │   │   └── OpenApiContractTests.cs                    [E1] openapi.json al día
 │   ├── Persistence/                                   [E2]
 │   │   ├── WidgetQueryFixture.cs                      [E2] datos Widget y conexión mt_app para búsqueda, orden y cursor
@@ -1883,6 +1898,7 @@ tests/
 │   │   ├── AuditAndIdempotencyModelTests.cs           Comprueba esquemas, claves y columnas del rastro de auditoría y…
 │   │   ├── AdvisoryLockKeysTests.cs                   Comprueba el formato estable de claves de locks por espacio,…
 │   │   ├── MigrationsTests.cs                         falta una migración → falla
+│   │   ├── AccountRecoveryNoticeMigrationTests.cs     tests de AccountRecoveryNoticeMigration
 │   │   └── ConcurrencyTests.cs                        Comprueba que xmin detecte una edición simultánea y preserve el…
 │   ├── Auth/                                          [E3]
 │   │   ├── SignupTests.cs
@@ -1912,6 +1928,10 @@ tests/
 │   │   ├── AccountGoogleProtocolTests.cs              Comprueba la protección del desafío para vincular Google a una…
 │   │   ├── AccountRecoveryTests.cs                    «Recuperar mi cuenta» (ADR 0043)
 │   │   ├── BusinessSignupTests.cs                     [E6]
+│   │   ├── MePrimaryPhoneTests.cs                     Identidad principal Phone de Mi cuenta por HTTP y PostgreSQL,…
+│   │   ├── LoginLinkPhoneChannel.cs                   Canal sin transporte, sólo para reglas neutrales de enlaces
+│   │   ├── LoginCodeFixedReturnTests.cs               Prueba el cuerpo HTTP literal y la continuación fija antes…
+│   │   ├── LoginLinkTests.HttpDocumentation.cs        Verifica ejemplos documentados de estados de cuenta
 │   │   └── MeTests.cs
 │   ├── Organization/                                  [E4]
 │   │   ├── RolesTests.cs                              [E4]
@@ -1949,6 +1969,9 @@ tests/
 │   │   ├── PlatformTenantDetailTests.cs               Dueños vigentes, estado efectivo e historial global por organización
 │   │   ├── PlatformTenantProvisioningHttpTests.cs     tests de PlatformTenantProvisioningHttp
 │   │   ├── PlatformOrganizationPhoneNoticeTests.cs    tests de PlatformOrganizationPhoneNotice
+│   │   ├── RolePermissionCacheIsolationTests.cs       La caché versionada conserva invalidación y aislamiento real bajo RLS
+│   │   ├── PlatformRecoveryDestinationConflictTests.cs tests de PlatformRecoveryDestinationConflict
+│   │   ├── PlatformAccountPrimaryPhoneTests.cs        Identidad principal global en Cuentas, por HTTP y PostgreSQL real
 │   │   └── PublicPageModerationTests.cs               tests de PublicPageModeration
 │   ├── Api/
 │   │   ├── IdempotencyTests.cs                        Comprueba que pedidos repetidos con la misma clave ejecuten una…
@@ -1973,6 +1996,7 @@ tests/
 │   │   ├── LoginPersistenceTests.cs                   Comprueba la persistencia de métodos, códigos, auditoría y preferencias de…
 │   │   ├── ProductionSeedTests.cs                     Comprueba el seed de configuración, cliente web y documentos legales…
 │   │   ├── IdentityConsolidationTests.cs              tests de IdentityConsolidation
+│   │   ├── EmailPendingMethodPossessionTests.cs       tests de EmailPendingMethodPossession
 │   │   └── SignInServiceTests.cs                      Comprueba los adaptadores de sesión, usuario actual y datos de…
 │   ├── Legal/
 │   │   ├── AccountDeletionLoginTests.cs               Comprueba la prueba de ingreso de una cuenta con baja…
@@ -2065,10 +2089,9 @@ tests/
     ├── PersistenceModelComparison.cs                  Compara el esquema completo y los metadatos EF que las…
     ├── ApplicationNamespaceShape.cs                   Los módulos conservan la misma forma de Services/Interfaces del núcleo
     ├── AssistantPersistenceModelTests.cs              tests de AssistantPersistenceModel
-    ├── AssistantContractTests.cs                      tests de AssistantContract
-    ├── AssistantApprovedContractTests.cs              tests de AssistantApprovedContract
     ├── AssistantAiBoundaryTests.cs                    ADR 0048
     ├── ModuleControlProbes.cs                         Clases de control para tests de arquitectura de módulos
+    ├── ModulePersistenceControlProbe.cs               Probe de persistencia duplicada en módulos
     └── ModuleIsolationTests.cs                        [E8] el núcleo no referencia ningún namespace *.Modules.*
 ```
 
