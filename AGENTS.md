@@ -52,6 +52,10 @@ El inventario de todos los estándares transversales (los definidos y los propue
   - **una sola puerta al final:** suites completas, E2E real, documentación en 0, la galería lado a lado y el recorrido de usuario.
 
   Desde la Etapa 8, el back y el front van en paralelo, con el contrato primero ([etapa-en-paralelo](docs/guides/etapa-en-paralelo.md)).
+- **Cierre liviano** (pedido del usuario, 2026-10-11):
+  - **La puerta termina.** Se corre una vez y lo que falla vuelve a su dueño. Con el arreglo se repite solo esa verificación, y al final va una sola corrida completa. No se arma un corte nuevo por cada arreglo.
+  - **Sin actas.** El estado de un plan es una tabla de tareas (hecha o pendiente), y el resultado de la puerta es otra tabla corta. No se registra cada corrida ni se commitea documentación por cada paso.
+  - **Lo técnico lo decide quien programa, y lo avisa después.** Entran ahí los cambios de contrato que no cambian lo que una persona ve o puede hacer, los arreglos de scripts y de datos de prueba, y fusionar la propia documentación ya verificada. Al usuario se le pregunta solo lo de producto.
 
 ## Reglas que no se negocian
 1. **Capas:** Domain ← Application ← Infrastructure; Api compone. El recorrido es `Controllers → I<X>Service → <X>Service → I<X>Repository/I<X>Reader/Integrations → Infrastructure`. Sin handlers ni CQRS con `ICommand`, sin repositorio genérico, sin Minimal APIs de negocio, sin Scrutor ni AutoMapper.

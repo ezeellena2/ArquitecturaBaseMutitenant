@@ -5,11 +5,11 @@ description: Corre la puerta completa de una etapa sobre un corte fijo (suites d
 
 # /puerta <etapa> [corte del back] [corte del front]
 
-La puerta se corre **una sola vez, al final de la etapa** (modo rápido, `AGENTS.md`). Esta skill la corre y cuenta el resultado; no arregla nada. Cada fallo vuelve a su dueño y, después del arreglo, se repite lo que ese arreglo invalida.
+La puerta se corre **una sola vez, al final de la etapa** (`AGENTS.md`, «Cierre liviano»). Esta skill la corre y cuenta el resultado; no arregla nada. Cada fallo vuelve a su dueño. Con el arreglo se repite solo esa verificación, y al final va una sola corrida completa. **No se arma un corte nuevo por cada arreglo.**
 
 ## Qué hacer
 
-1. **Fijá el corte.** Usá los dos commits o etiquetas que te pasen. Si no te pasan ninguno, tomá `HEAD` de `main` en cada repo y etiquetalo (`git tag puerta-<etapa>-<n>`). Así no medís código que se sigue moviendo.
+1. **Elegí el punto de partida, una sola vez.** Usá los dos commits que te pasen o, si no te pasan ninguno, `HEAD` de `main` en cada repo. Los arreglos que lleguen después se traen a esos mismos worktrees. La corrida completa final va sobre el último commit.
 2. **Armá dos worktrees hermanos**, de ruta corta y con el nombre exacto de cada repo, porque el E2E, `contracts:check` y el detector buscan el otro repo al lado.
    - Por ejemplo, `C:\e2e\ArquitecturaBaseMutitenant` y `C:\e2e\ArquitecturaBaseMutitenantFront`, con `git worktree add <ruta> <corte>` desde cada repo.
    - En el front corré `npm ci`, porque un `node_modules` enlazado rompe la letra Inter en las capturas.
@@ -32,6 +32,7 @@ La puerta se corre **una sola vez, al final de la etapa** (modo rápido, `AGENTS
 
 4. **Leé solo los resúmenes:** totales, `passed` y `failed`, `# pass` y `# fail`, y los contadores del detector. Si algo falla, abrí solo las líneas del fallo.
 5. **Antes de contar un fallo, descartá el entorno.** Si un test se pasó de tiempo, corré ese archivo solo. Si así pasa, el problema era el entorno y no cuenta como fallo.
+6. **No registres cada corrida.** Las salidas quedan en `.local/`. En el plan va solo la tabla final de abajo.
 
 ## Qué mostrar
 

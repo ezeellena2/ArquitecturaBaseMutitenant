@@ -17,7 +17,7 @@ Las partes 2a y 2b corren al mismo tiempo.
 
 ## Reglas
 
-- **El contrato manda.** Si en la parte 2 un agente necesita cambiarlo, no lo cambia solo: lo anota en «Cambios al contrato» del plan, y el usuario se lo pasa al otro agente. Recién después se cambia, en los dos repos.
+- **El contrato manda.** Si en la parte 2 un agente necesita cambiarlo, no lo cambia solo: lo anota en «Cambios al contrato» del plan, y el coordinador se lo pasa al otro agente. Recién después se cambia, en los dos repos. Al usuario se le pregunta solo si el cambio cambia lo que una persona ve o puede hacer.
 - **Cada agente toca solo su repo.** El del front no edita el back, y al revés. Commits con `git commit -m "…" -- <rutas>`, en `main` y sin push.
 - **Las pantallas salen del tablero vigente.** Si falta un estado, se frena y lo dibuja Diseño.
 - **Los textos van en es y en,** en cada repo: los errores en los resources del back y las pantallas en los `locales` del front.
@@ -31,6 +31,8 @@ Las partes 2a y 2b corren al mismo tiempo.
 4. `node scripts/arneses/arnes.mjs realinear-docs --detectar` en 0. Si no da 0, se corre el arnés.
 5. La galería de capturas lado a lado de las pantallas nuevas.
 6. El recorrido de usuario a mano, en un navegador con sesiones de antes, según la puerta del [plan de arreglos](../plans/2026-10-06-arreglos-antes-de-la-7.md#puerta-el-recorrido-de-un-usuario-nuevo) y los recorridos de la etapa.
+
+La puerta se corre una vez y lo que falla vuelve a su dueño. Con el arreglo se repite solo esa verificación, y al final va una sola corrida completa: no se arma un corte nuevo por cada arreglo. El resultado es una tabla corta, con una fila por paso, y no un registro de cada corrida (`AGENTS.md`, «Cierre liviano»).
 
 ## Cómo se arma el plan de una etapa
 

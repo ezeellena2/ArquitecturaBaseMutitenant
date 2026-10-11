@@ -29,4 +29,4 @@ Un arnés ejecutable detecta con un script (0 tokens), arregla solo lo mecánico
 | `--repo back\|front` | procesa un solo repo |
 | `--fusionar` | si todo verificó, avanza la rama actual con `--ff-only` |
 
-Nunca hagas push ni fusiones sin que la persona lo pida.
+Nunca hagas push. Si la corrida verificó y solo tocó documentación, fusioná su rama con `--fusionar` sin preguntar y avisá después. Si toca código, preguntá antes.
