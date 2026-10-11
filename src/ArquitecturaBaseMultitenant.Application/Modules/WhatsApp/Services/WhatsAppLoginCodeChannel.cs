@@ -9,6 +9,7 @@ internal sealed class WhatsAppLoginCodeChannel(IWhatsAppChannelSettings settings
 {
     public string Key => "whatsapp";
     public LoginMethodType SupportedMethodType => LoginMethodType.Phone;
+    public LoginAuditMethod AuditMethod => LoginAuditMethod.WhatsAppCode;
     public bool IsAvailable => settings.IsEnabled;
     public IReadOnlyList<string> Countries => settings.Countries;
     public string? ContactPhone => settings.ContactPhone;

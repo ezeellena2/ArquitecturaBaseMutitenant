@@ -23,20 +23,20 @@ internal sealed class SignupCodeVerifier(LoginCodeAttemptVerifier verifier, Sign
     {
         var attemptedMethod = await existingMethods.LockAsync(destination, cancellationToken);
         if (LoginDestinationResolver.Type(destination) == LoginMethodType.Phone && attemptedMethod is { VerifiedAtUtc: not null })
-            return Fail(attemptedMethod.UserId, FieldErrors.On(SignupErrors.PhoneTaken, "phone"));
+            return Fail(destination, attemptedMethod.UserId, FieldErrors.On(SignupErrors.PhoneTaken, "phone"));
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         var verified = await verifier.VerifyAsync(destination, LoginCodePurpose.Signup,
             requestedByUserId: null, request.Code!, attemptedMethod?.UserId, cancellationToken);
-        if (verified.IsFailure) return Fail(attemptedMethod?.UserId, verified.Error);
+        if (verified.IsFailure) return Fail(destination, attemptedMethod?.UserId, verified.Error);
 
         var method = await existingMethods.FindAsync(destination, cancellationToken);
         Guid userId;
         if (method is null || method.VerifiedAtUtc is null)
         {
             var validNew = destinations.ValidateNew(destination);
-            if (validNew.IsFailure) return Fail(null, validNew.Error);
+            if (validNew.IsFailure) return Fail(destination, null, validNew.Error);
             var allowed = await policy.CanRegisterAsync(cancellationToken);
-            if (allowed.IsFailure) return Fail(null, allowed.Error);
+            if (allowed.IsFailure) return Fail(destination, null, allowed.Error);
             (LegalDocument Terms, LegalDocument Privacy) documents =
                 await registrar.GetCurrentLegalAsync(nowUtc, cancellationToken);
             if (method is not null)
@@ -47,14 +47,14 @@ internal sealed class SignupCodeVerifier(LoginCodeAttemptVerifier verifier, Sign
         else
         {
             if (await signIn.IsLockedOutAsync(method.UserId, cancellationToken))
-                return Fail(method.UserId, AccountErrors.LockedOut);
+                return Fail(destination, method.UserId, AccountErrors.LockedOut);
             if (await existingMethods.CheckAccountAsync(method.UserId, cancellationToken) is { } accountError)
-                return Fail(method.UserId, accountError);
+                return Fail(destination, method.UserId, accountError);
             userId = await existingMethods.ConfirmAsync(method, nowUtc, cancellationToken);
             await signIn.ResetFailedAttemptsAsync(userId, cancellationToken);
         }
 
-        audits.Add(LoginAudit.Success(userId, LoginAuditMethod.Code, nowUtc));
+        audits.Add(LoginAudit.Success(userId, destinations.AuditMethod(destination), nowUtc));
         return userId;
     }
 
@@ -64,20 +64,20 @@ internal sealed class SignupCodeVerifier(LoginCodeAttemptVerifier verifier, Sign
         var attemptedMethod = await existingMethods.LockAsync(destination, cancellationToken);
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         var allowed = await policy.CanRegisterBusinessAsync(cancellationToken);
-        if (allowed.IsFailure) return Fail(null, allowed.Error);
+        if (allowed.IsFailure) return Fail(destination, null, allowed.Error);
 
         var ownerId = LoginDestinationResolver.Type(destination) == LoginMethodType.Phone && attemptedMethod is { VerifiedAtUtc: not null }
             ? (Guid?)attemptedMethod.UserId : null;
         var verified = await verifier.VerifyAsync(destination, LoginCodePurpose.BusinessSignup,
             ownerId, request.Code!, attemptedMethod?.UserId, cancellationToken);
-        if (verified.IsFailure) return Fail(attemptedMethod?.UserId, verified.Error);
+        if (verified.IsFailure) return Fail(destination, attemptedMethod?.UserId, verified.Error);
 
         var method = await existingMethods.FindAsync(destination, cancellationToken);
         Guid userId;
         if (method is null || method.VerifiedAtUtc is null)
         {
             var validNew = destinations.ValidateNew(destination);
-            if (validNew.IsFailure) return Fail(null, validNew.Error);
+            if (validNew.IsFailure) return Fail(destination, null, validNew.Error);
             var documents = await registrar.GetCurrentLegalAsync(nowUtc, cancellationToken);
             if (method is not null) await existingMethods.RemovePendingAsync(method, cancellationToken);
             userId = await registrar.RegisterBusinessAsync(destination, defaults, nowUtc,
@@ -86,9 +86,9 @@ internal sealed class SignupCodeVerifier(LoginCodeAttemptVerifier verifier, Sign
         else
         {
             if (await signIn.IsLockedOutAsync(method.UserId, cancellationToken))
-                return Fail(method.UserId, AccountErrors.LockedOut);
+                return Fail(destination, method.UserId, AccountErrors.LockedOut);
             if (await existingMethods.CheckAccountAsync(method.UserId, cancellationToken) is { } accountError)
-                return Fail(method.UserId, accountError);
+                return Fail(destination, method.UserId, accountError);
             userId = await existingMethods.ConfirmAsync(method, nowUtc, cancellationToken);
             await signIn.ResetFailedAttemptsAsync(userId, cancellationToken);
             var documents = await registrar.GetCurrentLegalAsync(nowUtc, cancellationToken);
@@ -96,13 +96,13 @@ internal sealed class SignupCodeVerifier(LoginCodeAttemptVerifier verifier, Sign
                 nowUtc, cancellationToken);
         }
 
-        audits.Add(LoginAudit.Success(userId, LoginAuditMethod.Code, nowUtc));
+        audits.Add(LoginAudit.Success(userId, destinations.AuditMethod(destination), nowUtc));
         return userId;
     }
 
-    private Error Fail(Guid? userId, Error error)
+    private Error Fail(LoginCodeDestination destination, Guid? userId, Error error)
     {
-        audits.Add(LoginAudit.Failure(userId, LoginAuditMethod.Code, error,
+        audits.Add(LoginAudit.Failure(userId, destinations.AuditMethod(destination), error,
             timeProvider.GetUtcNow().UtcDateTime));
         return error;
     }

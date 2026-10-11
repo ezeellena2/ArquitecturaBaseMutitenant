@@ -35,6 +35,58 @@ public sealed class WhatsAppIdentityTests(ApiFactory factory) : IClassFixture<Ap
     private const string Phone = "+5491134567890";
 
     [Theory]
+    [InlineData("login", true)]
+    [InlineData("signup", true)]
+    [InlineData("business-signup", true)]
+    [InlineData("login", false)]
+    [InlineData("signup", false)]
+    [InlineData("business-signup", false)]
+    public async Task Code_success_and_failure_audit_the_delivery_channel(string flow, bool phoneChannel)
+    {
+        await using var application = Host();
+        await application.Services.SeedDatabaseAsync(Ct);
+        using var client = application.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var destination = phoneChannel ? NewPhone() : $"audit-{Guid.NewGuid():N}@example.test";
+        var type = phoneChannel ? LoginMethodType.Phone : LoginMethodType.Email;
+        Guid? userId = null;
+        if (flow == "login")
+            userId = phoneChannel ? await StagePhoneAsync(application.Services, destination)
+                : (await AccountJourney.RegisterAsync(application, client, Ct, Email.Create(destination).Value)).UserId;
+        await using var scope = application.Services.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var previous = await context.LoginAudits.AsNoTracking().Where(row => row.UserId == userId && userId != null)
+            .Select(row => row.Id).ToArrayAsync(Ct);
+        object ContactBody(string? code = null) => phoneChannel
+            ? new { phone = new { country = "AR", number = destination }, channel = "whatsapp", code, acceptedTerms = true, returnUrl = AuthorizePath("consumer") }
+            : new { email = destination, code, acceptedTerms = true, returnUrl = AuthorizePath("consumer") };
+        var requestPath = flow switch
+        {
+            "login" => "/api/auth/login-code",
+            "signup" => "/api/auth/signup",
+            _ => "/api/auth/business-signup/code",
+        };
+        var verifyPath = flow == "login" ? requestPath + "/verify"
+            : flow == "signup" ? requestPath + "/verify" : "/api/auth/business-signup/verify";
+        using var requested = await PostAsync(client, requestPath, ContactBody(), Ct);
+        Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
+        var code = phoneChannel ? await CodeAsync(application.Services, destination)
+            : await PickupCodeReader.ReadAsync(application.Services, destination, Ct);
+        using var verified = await PostAsync(client, verifyPath, ContactBody(code), Ct);
+        Assert.Equal(flow == "login" ? HttpStatusCode.OK : HttpStatusCode.NoContent, verified.StatusCode);
+        userId ??= await scope.ServiceProvider.GetRequiredService<IUserLookup>().FindVerifiedUserIdAsync(type, destination, Ct);
+        Assert.NotNull(userId);
+        using var rejected = await PostAsync(client, verifyPath, ContactBody(code), Ct);
+        Assert.Equal(HttpStatusCode.BadRequest, rejected.StatusCode);
+        Assert.False(rejected.Headers.Contains("Set-Cookie"));
+        var audits = await context.LoginAudits.AsNoTracking().Where(row => row.UserId == userId && !previous.Contains(row.Id))
+            .ToArrayAsync(Ct);
+        Assert.Equal(2, audits.Length);
+        Assert.Single(audits, row => row.Succeeded);
+        Assert.Single(audits, row => !row.Succeeded);
+        Assert.All(audits, row => Assert.Equal(phoneChannel ? LoginAuditMethod.WhatsAppCode : LoginAuditMethod.Code, row.Method));
+    }
+
+    [Theory]
     [InlineData(false, false, false)]
     [InlineData(true, false, false)]
     [InlineData(true, true, false)]

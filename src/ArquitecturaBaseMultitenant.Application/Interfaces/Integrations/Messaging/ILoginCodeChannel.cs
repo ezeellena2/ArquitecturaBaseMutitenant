@@ -9,6 +9,8 @@ public interface ILoginCodeChannel
 {
     string Key { get; }
     LoginMethodType SupportedMethodType { get; }
+    /// <summary>Método técnico para la auditoría de éxito o fallo; un canal heredado conserva Code.</summary>
+    LoginAuditMethod AuditMethod => LoginAuditMethod.Code;
     bool IsAvailable { get; }
     IReadOnlyList<string> Countries { get; }
     /// <summary>Número público E.164, nunca un identificador técnico del proveedor.</summary>

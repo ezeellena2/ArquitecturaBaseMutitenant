@@ -46,6 +46,9 @@ internal sealed class LoginDestinationResolver(IPhoneNumberParser phones, IEnume
         return valid.IsFailure ? FieldErrors.On(valid.Error, Field(destination)) : Result.Success();
     }
 
+    internal LoginAuditMethod AuditMethod(LoginCodeDestination destination) =>
+        channels.Single(channel => channel.Key == destination.Channel).AuditMethod;
+
     internal static LoginMethodType Type(LoginCodeDestination destination) => destination.Channel == LoginCodeChannel.Email ? LoginMethodType.Email : LoginMethodType.Phone;
     internal static string Field(LoginCodeDestination destination) => Type(destination) == LoginMethodType.Email ? "email" : "phone";
     internal static LoginMethod Create(Guid userId, LoginCodeDestination destination) => Type(destination) == LoginMethodType.Email

@@ -12,6 +12,7 @@ internal sealed class EmailLoginCodeChannel(IEmailTemplateRenderer templates, IO
 {
     public string Key => OutboxChannel.Email;
     public LoginMethodType SupportedMethodType => LoginMethodType.Email;
+    public LoginAuditMethod AuditMethod => LoginAuditMethod.Code;
     public bool IsAvailable => true;
     public IReadOnlyList<string> Countries => [];
     public string? ContactPhone => null;

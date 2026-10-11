@@ -36,54 +36,54 @@ internal sealed class LoginVerifier(
         var userId = invitation is not null ? invitation.ExpectedOwnerId : await accounts.LockAsync(destination, cancellationToken);
         await attempts.LockDestinationAsync(destination, cancellationToken);
         if (invitation is null && !await accounts.StillOwnsAsync(userId, destination, cancellationToken))
-            return Fail(userId, LoginCodeErrors.Invalid(attemptsLeft: null));
+            return Fail(destination, userId, LoginCodeErrors.Invalid(attemptsLeft: null));
         var ownerId = LoginDestinationResolver.Type(destination) == LoginMethodType.Phone ? userId : null;
         var verified = await verifier.VerifyAsync(destination, LoginCodePurpose.Login,
             ownerId, request.Code!, userId, cancellationToken);
-        if (verified.IsFailure) return Fail(userId, verified.Error);
+        if (verified.IsFailure) return Fail(destination, userId, verified.Error);
 
         if (invitation is not null)
         {
             var accepted = await invitations.AcceptAsync(invitation, cancellationToken);
-            if (accepted.IsFailure) return Fail(userId, accepted.Error);
+            if (accepted.IsFailure) return Fail(destination, userId, accepted.Error);
             await attempts.ResetFailedAttemptsAsync(accepted.Value, cancellationToken);
-            attempts.RecordSuccess(accepted.Value);
+            attempts.RecordSuccess(destination, accepted.Value);
             return accepted.Value;
         }
-        if (userId is null) return Fail(null, LoginCodeErrors.Invalid(attemptsLeft: null));
+        if (userId is null) return Fail(destination, null, LoginCodeErrors.Invalid(attemptsLeft: null));
         if (await attempts.IsLockedOutAsync(userId.Value, cancellationToken))
-            return Fail(userId, AccountErrors.LockedOut);
+            return Fail(destination, userId, AccountErrors.LockedOut);
 
         var account = await accounts.ReadAsync(userId.Value, cancellationToken);
         if (account is null || account.Status is UserStatus.Suspended or UserStatus.Deleted)
-            return Fail(userId, AccountErrors.Suspended);
+            return Fail(destination, userId, AccountErrors.Suspended);
         if (account.IsPlatformOperator && selection?.Access != Access.Platform)
-            return Fail(userId, AccessErrors.PlatformOnly);
+            return Fail(destination, userId, AccessErrors.PlatformOnly);
         var method = (await loginMethods.ListByUserIdAsync(userId.Value, cancellationToken))
             .SingleOrDefault(method => method.Type == LoginDestinationResolver.Type(destination) && method.Value == destination.Value);
         if (method is null || !await availability.IsAvailableAsync(userId.Value, method, cancellationToken))
-            return Fail(userId, LoginCodeErrors.Invalid(attemptsLeft: null));
+            return Fail(destination, userId, LoginCodeErrors.Invalid(attemptsLeft: null));
 
         if (account.Status == UserStatus.PendingDeletion)
-            return Fail(userId, cancellation.IssueForLoginCode(account, request.ReturnUrl!));
+            return Fail(destination, userId, cancellation.IssueForLoginCode(account, request.ReturnUrl!));
 
         if (selection?.Access == Access.Business)
         {
             var selected = await connect.GetActiveUserAsync(userId.Value, selection.Access,
                 selection.TenantId, cancellationToken);
-            if (selected.IsFailure) return Fail(userId, selected.Error);
+            if (selected.IsFailure) return Fail(destination, userId, selected.Error);
         }
 
         var operatorInvitation = await accounts.AcceptOperatorInvitationAsync(account, request.ReturnUrl!, cancellationToken);
-        if (operatorInvitation.IsFailure) return Fail(userId, operatorInvitation.Error);
+        if (operatorInvitation.IsFailure) return Fail(destination, userId, operatorInvitation.Error);
 
         await attempts.ResetFailedAttemptsAsync(userId.Value, cancellationToken);
-        attempts.RecordSuccess(userId.Value);
+        attempts.RecordSuccess(destination, userId.Value);
         return userId.Value;
     }
 
-    private Error Fail(Guid? userId, Error error)
+    private Error Fail(LoginCodeDestination destination, Guid? userId, Error error)
     {
-        return attempts.RecordFailure(userId, error);
+        return attempts.RecordFailure(destination, userId, error);
     }
 }
