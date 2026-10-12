@@ -29,6 +29,33 @@ public sealed class AccountDeletionParticipantsTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
+    [Theory]
+    [InlineData("MembershipDeletionParticipant", TenantKind.Business)]
+    [InlineData("PersonalSpaceDeletionParticipant", TenantKind.Personal)]
+    [InlineData("RecoveryDeletionParticipant", null)]
+    public async Task Deletion_rules_require_the_callers_transaction_and_matching_tenant_scope(
+        string participantName, TenantKind? tenantKind)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var participant = Assert.Single(services.GetServices<IAccountDeletionParticipant>(),
+            candidate => candidate.GetType().Name == participantName);
+        var context = new AccountDeletionContext(Guid.CreateVersion7(),
+            services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime,
+            tenantKind is null ? null : Guid.CreateVersion7(), tenantKind);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => participant.ExecuteAsync(context, Ct));
+
+        if (context.TenantId is not null)
+        {
+            using var wrongTenant = services.GetRequiredService<ITenantScope>().Enter(Guid.CreateVersion7());
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                await Assert.ThrowsAsync<InvalidOperationException>(() => participant.ExecuteAsync(context, ct));
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+    }
+
     [Fact]
     public async Task Current_participants_clean_only_the_account_data_and_can_run_twice()
     {

@@ -1,23 +1,22 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Legal;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Application.Models.Legal;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
-using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
-using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
-using Microsoft.EntityFrameworkCore;
 
-namespace ArquitecturaBaseMultitenant.Infrastructure.Identity.Deletion;
+namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
 
 /// <summary>Retira una membresía de la organización durante la baja de una cuenta, en la transacción ya abierta. Su auditoría es la de cualquier salida, «Quitó a …» con el motivo, y la deja el interceptor. Exige que el worker haya entrado primero al tenant correcto.</summary>
-internal sealed class MembershipDeletionParticipant(ApplicationDbContext database, ITenantContext tenantContext,
+internal sealed class MembershipDeletionParticipant(IAccountDeletionCleanupRepository cleanup, ITenantContext tenantContext,
     ILoginMethodReader loginMethods, IInvitationRepository invitations, IRoleAssignmentRepository assignments,
-    ITenantAdminLock tenantAdmins, ILastTenantAdminGuard tenantAdminGuard) : AccountDeletionParticipant
+    ITenantAdminLock tenantAdmins, ILastTenantAdminGuard tenantAdminGuard) : IAccountDeletionParticipant
 {
-    public override async Task<IReadOnlyList<ArquitecturaBaseMultitenant.Domain.Results.Error>> CheckAsync(
+    public async Task<IReadOnlyList<Error>> CheckAsync(
         AccountDeletionContext context, CancellationToken ct)
     {
         if (context.TenantId is not null) return [];
@@ -25,10 +24,13 @@ internal sealed class MembershipDeletionParticipant(ApplicationDbContext databas
         return result.IsFailure ? [result.Error] : [];
     }
 
-    public override async Task ExecuteAsync(AccountDeletionContext context, CancellationToken ct)
+    public Task OnRequestedAsync(AccountDeletionContext context, CancellationToken ct) => Task.CompletedTask;
+    public Task OnCancelledAsync(AccountDeletionContext context, CancellationToken ct) => Task.CompletedTask;
+
+    public async Task ExecuteAsync(AccountDeletionContext context, CancellationToken ct)
     {
         if (context.TenantId is not { } tenantId) return;
-        database.RequireTransaction();
+        cleanup.RequireTransaction();
         if (tenantContext.RequiredTenantId != tenantId) throw new InvalidOperationException("The deletion step needs its tenant scope.");
         if (context.TenantKind == TenantKind.Business)
         {
@@ -43,7 +45,7 @@ internal sealed class MembershipDeletionParticipant(ApplicationDbContext databas
                 if (invitation.Revoke(context.NowUtc).IsFailure)
                     throw new InvalidOperationException("A checked pending invitation could not be revoked during account deletion.");
         }
-        var member = await database.Members.SingleOrDefaultAsync(row => row.UserId == context.UserId, ct);
+        var member = await cleanup.GetMemberAsync(context.UserId, ct);
         if (member is null || member.Status == MemberStatus.Removed) return;
         if (context.TenantKind == TenantKind.Business)
         {

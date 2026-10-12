@@ -14,6 +14,30 @@ public sealed class ApplicationPublicApiTests
 
     private static readonly Assembly ApplicationAssembly = Assembly.Load("ArquitecturaBaseMultitenant.Application");
 
+    [Theory]
+    [InlineData("MembershipDeletionParticipant")]
+    [InlineData("PersonalSpaceDeletionParticipant")]
+    [InlineData("RecoveryDeletionParticipant")]
+    public void Account_deletion_rules_live_in_application(string participantName)
+    {
+        var participant = ApplicationAssembly.GetType(
+            "ArquitecturaBaseMultitenant.Application.Services.Legal." + participantName);
+        Assert.NotNull(participant);
+        Assert.False(participant.IsPublic);
+        Assert.Contains(participant.GetInterfaces(), contract => contract.Name == "IAccountDeletionParticipant");
+        Assert.Null(Assembly.Load("ArquitecturaBaseMultitenant.Infrastructure").GetType(
+            "ArquitecturaBaseMultitenant.Infrastructure.Identity.Deletion." + participantName));
+    }
+
+    [Fact]
+    public void Last_tenant_admin_guard_is_an_internal_application_rule()
+    {
+        var guard = ApplicationAssembly.GetType(
+            "ArquitecturaBaseMultitenant.Application.Interfaces.Services.ILastTenantAdminGuard");
+        Assert.NotNull(guard);
+        Assert.False(guard.IsPublic);
+    }
+
     [Fact]
     public void Public_application_signatures_do_not_expose_queryables_or_expressions()
     {

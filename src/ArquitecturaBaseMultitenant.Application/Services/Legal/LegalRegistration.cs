@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Legal;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,6 +10,9 @@ internal static class LegalRegistration
     internal static IServiceCollection AddLegal(this IServiceCollection services)
     {
         services.AddScoped<ILastTenantAdminGuard, LastTenantAdminGuard>();
+        services.AddScoped<IAccountDeletionParticipant, MembershipDeletionParticipant>();
+        services.AddScoped<IAccountDeletionParticipant, PersonalSpaceDeletionParticipant>();
+        services.AddScoped<IAccountDeletionParticipant, RecoveryDeletionParticipant>();
         services.AddScoped<ILegalService, LegalService>();
         services.AddScoped<ILegalAcceptanceService, LegalAcceptanceService>();
         services.AddScoped<LegalAcceptanceGuard>();

@@ -6,7 +6,7 @@ namespace ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 /// La regla de la única Dueña (ADR 0035): cada organización no cerrada, incluidas las suspendidas, conserva al menos
 /// otra persona Dueña activa.
 /// </summary>
-public interface ILastTenantAdminGuard
+internal interface ILastTenantAdminGuard
 {
     Task<Result> CheckCanLeaveAsync(Guid userId, CancellationToken ct);
 
