@@ -54,7 +54,7 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
                     : path.EndsWith("/conversations", StringComparison.Ordinal) || path.Contains("/quick/", StringComparison.Ordinal)
                         || path.EndsWith("/attachments", StringComparison.Ordinal) ? "DurableReference" : "BufferedJson";
                 HttpContractDocumentation.Describe(document, path, method,
-                    "T01: contrato publicado, conducta pendiente; el servicio devuelve General.Contract.NotImplemented (501). "
+                    "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. "
                     + "Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. "
                     + Description(path, method), errors, idempotent, authenticated: true,
                     examples: RequestExamples(path, method));
