@@ -21,7 +21,7 @@ export async function detectar(ctx) {
     const carpetas = [{ ruta: s.raiz, entrada: null }, ...s.entradas.filter(e => e.esDirectorio && !e.planeada).map(e => ({ ruta: e.ruta, entrada: e }))];
     for (const c of carpetas) {
       if (c.ruta && !ctx.archivos.esDirectorio(c.ruta)) continue;
-      const nuevas = [...ctx.archivos.directorios].filter(d => posix.dirname(d) === (c.ruta || '.') && !listadas.has(d) && !ctx.excluido(d));
+      const nuevas = [...ctx.archivos.directorios].filter(d => posix.dirname(d) === (c.ruta || '.') && !listadas.has(d) && !ctx.excluido(d) && !ctx.excluido(`${d}/`));
       for (const dir of nuevas.sort()) {
         out.push(ctx.crear({ archivo: ARCHIVO, linea: c.entrada?.linea ?? s.linea, tipo: 'carpeta-nueva', clave: dir,
           real: dir + ' existe y no está en arbol.md', accion: 'modelo', pregunta: 'Agregá la carpeta y su responsabilidad al árbol.' }));

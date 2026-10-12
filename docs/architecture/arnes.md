@@ -49,7 +49,7 @@ Una ficha sin "Lo verifica" está **incompleta**. Todo test de "Lo verifica" lle
 
 ## 3. Mapa de carpetas → punteros
 
-El mapa de responsabilidades y punteros vive en [arbol.md](arbol.md#mapa-de-carpetas-punteros).
+El mapa de responsabilidades y punteros vive en [arbol.md](arbol.md#mapa-de-carpetas--punteros).
 
 ## 4. La tabla "si vas a tocar X, leé Y" (vive en el `AGENTS.md` raíz)
 

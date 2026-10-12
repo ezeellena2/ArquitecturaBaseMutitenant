@@ -218,8 +218,7 @@ test('front: una corrida sobre el repo del front termina con commit y verifica c
   const mostrar = (ruta) => git(front, ['show', `arnes/realinear-docs/20261002-2300:${ruta}`]);
   assert.match(await mostrar('src/shared/AGENTS.md'), /Lo común a todas las áreas/);
   assert.equal((await mostrar('src/shared/CLAUDE.md')).trim(), '@AGENTS.md');
-  assert.match(await mostrar('docs/architecture/arbol.md'), /useAccess\.ts +Acceso activo de la sesión y sus permisos/);
-  assert.match(await mostrar('docs/architecture/arbol.md'), /Money\.test\.ts +tests de Money/);
+  assert.doesNotMatch(await mostrar('docs/architecture/arbol.md'), /useAccess\.ts|Money\.test\.ts/, 'archivos nuevos en una carpeta existente no amplían el árbol');
   assert.match(await mostrar('docs/rules/formatos.md'), /`useAccess`\)? \(el real es `useAccess`\)/);
   assert.doesNotMatch(await mostrar('docs/rules/README.md'), /viejo/);
   assert.equal((await git(front, ['rev-list', '--count', 'main'])).trim(), '1');

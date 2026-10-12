@@ -65,7 +65,7 @@ export async function detectar(ctx) {
     for (const patron of fila.patrones) {
       for (const dir of carpetasDelPatron(patron, ctx, capas)) {
         mapeadas.add(dir);
-        if (fila.planeada || !tieneArchivosDeCodigo(ctx, dir)) continue;
+        if (fila.planeada) continue;
         const agents = `${dir}/AGENTS.md`;
         const claude = `${dir}/CLAUDE.md`;
         if (!ctx.archivos.esArchivo(agents)) {
@@ -85,7 +85,7 @@ export async function detectar(ctx) {
     if (esPuntero(a) && a.includes('/') && !ctx.excluido(a)) carpetasConPuntero.add(a.slice(0, a.lastIndexOf('/')));
   }
   for (const dir of [...carpetasConPuntero].sort()) {
-    if (!tieneArchivosDeCodigo(ctx, dir)) {
+    if (!mapeadas.has(dir) && !tieneArchivosDeCodigo(ctx, dir)) {
       for (const nombreP of ['AGENTS.md', 'CLAUDE.md']) {
         const archivo = `${dir}/${nombreP}`;
         if (ctx.archivos.esArchivo(archivo)) {

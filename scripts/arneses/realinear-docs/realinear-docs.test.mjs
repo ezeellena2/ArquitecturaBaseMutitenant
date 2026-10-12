@@ -91,6 +91,30 @@ test('indices: filas de archivos que no existen y fichas sin fila', async () => 
   ].sort());
 });
 
+test('punteros: conserva la carpeta declarada aunque todavía sólo tenga punteros', async () => {
+  const copia = await mkdtemp(join(tmpdir(), 'punteros-mapeados-'));
+  temporales.push(copia);
+  await cp(raicesFixture.back, copia, { recursive: true });
+  const dir = 'src/Demo.Application/Empty';
+  await mkdir(join(copia, dir), { recursive: true });
+  await writeFile(join(copia, dir, 'AGENTS.md'), 'Modelos.\n');
+  await writeFile(join(copia, dir, 'CLAUDE.md'), '@AGENTS.md\n');
+  const arbol = join(copia, 'docs/architecture/arbol.md');
+  await writeFile(arbol, (await readFile(arbol, 'utf8')) + `\n| \`${dir}/\` | modelos | guardado | — |\n`);
+  const hs = await correr(['punteros'], { ...raicesFixture, back: copia });
+  assert.ok(!hs.some(h => h.archivo.startsWith(dir + '/')), 'el mapa manda también cuando la carpeta no tiene código');
+});
+
+test('arbol: no pide carpetas cubiertas por una exclusión de descendientes', async () => {
+  const copia = await mkdtemp(join(tmpdir(), 'arbol-excluidos-'));
+  temporales.push(copia);
+  await cp(raicesFixture.back, copia, { recursive: true });
+  await mkdir(join(copia, '.agents/skills'), { recursive: true });
+  await writeFile(join(copia, '.agents/skills/SKILL.md'), 'Una skill.');
+  const hs = await correr(['arbol'], { ...raicesFixture, back: copia });
+  assert.ok(!hs.some(h => h.real.startsWith('.agents')), 'una carpeta excluida no amplía el árbol');
+});
+
 test('arbol: el parser reconstruye las rutas de las secciones con ruta y no lee las demás', async () => {
   const texto = await readFile(join(fixtures, 'back', 'docs/architecture/arbol.md'), 'utf8');
   const secciones = parsearArbol(texto, [0, 1, 2]);

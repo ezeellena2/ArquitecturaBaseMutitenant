@@ -23,7 +23,7 @@
 - Probar las plantillas en la matriz de clientes de correo (Gmail, Outlook y otros). La 3b ya incluye el fallback sRGB equivalente al token de marca para clientes sin `oklch`; se verificó el HTML real en Chromium.
 - Conciliar detalles de iconografía, interlineado y alineación de menús/toasts de Radix/Sonner con los prototipos, conservando foco y teclado. La evidencia de 3b está en el informe visual del front; no afecta sus flujos y se presenta para aprobación visual en la puerta 9.
 
-Detalle y alcance de cada punto: [revisión del 2026-09-29](reviews/2026-09-29-revision-etapas-0-2.md). Los puntos 1, 5, 10, 22 y 23 se corrigen antes de la Etapa 3b.
+El [panorama vigente](architecture/backend.md) describe la arquitectura; los pendientes de esta sección se conservan acá.
 
 ## Cuando una pantalla use la pieza
 
