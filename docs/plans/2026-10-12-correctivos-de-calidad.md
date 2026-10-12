@@ -2,7 +2,7 @@
 
 | Tarea | Resultado |
 |---|---|
-| C0 | Creada `invitacion_organizacion_literal`, es/en APPROVED / MARKETING pese a pedir Utility. Pendiente de Meta; no se cambió la configuración. |
+| C0 | Hecha: el usuario acepta `invitacion_organizacion/es` Marketing (ADR 0038); se conserva el nombre y la configuración. Meta confirmó el borrado de `invitacion_organizacion_literal` es/en, sin variantes restantes. |
 | C1 | Pendiente del aviso del usuario de que Diseño publicó el tablero. |
 | C10 | Hecha: contrato y metadatos generados, descripción pública, CUIT, roles, cuenta eliminada y categorías. Build 0/0; unitarios 133 e integración 46 verdes; pruebas focales del front y contratos verdes. |
 | C4 | Hecha: hooks comunes, blocker público, variables tipadas y guarda UNSAFE. Recorridos existentes y prueba de barra final verdes; TypeScript y lint sin errores nuevos. |
@@ -12,7 +12,7 @@
 | C3, C9, C5, C6, C8 | Pendientes, en el orden de la revalidación. |
 | Cierre | Pendiente; una corrida completa al terminar los correctivos habilitados. |
 
-**Decisiones técnicas:** C0 usa el nombre nuevo `invitacion_organizacion_literal` y conserva los componentes URL del inglés aprobado; sólo se configura al verificar ambas variantes APPROVED / UTILITY.
+**Decisiones técnicas:** C0 conserva `invitacion_organizacion` y su configuración según la decisión de producto del 12/10 (ADR 0038); se retira el intento literal de Meta en ambos idiomas.
 
 - C10: FluentValidation publica límites/rangos; `contracts` genera tipos y `validation.ts`; la baja persiste `DisplayName=null` y se traduce según estado al leer.
 - C4: `useResourceAction` reconoce sólo variables ejecutadas por su dueño, incluye reintentos sin observer y excluye borradores abandonados; `useEditPage` conserva el único blocker público y no compara rutas literales.
@@ -54,7 +54,7 @@ Once agentes revalidaron cada caso contra el código. Los 11 son reales; C5, C6 
 
 | # | Qué | Dónde | Listo cuando |
 |---|---|---|---|
-| C0 | **La invitación en español, como plantilla nueva** (texto y creación aprobados por el usuario el 2026-10-12). Se crea en Meta con un nombre nuevo, en español con el texto aprobado («Hola. {{1}} te invitó a unirte a {{2}} en ArquitecturaBase. La invitación vence el {{3}}. Podés revisarla con el botón.», botón «Ver la invitación») y en inglés con el texto de `invitacion_organizacion/en`. Después se cambian `WhatsApp:Templates:Invitation` y `whatsapp-plantillas.md`. | Meta; back `Api/appsettings.json`, `docs/operations/whatsapp-plantillas.md` | la consulta a Meta da las dos variantes APPROVED / UTILITY y la invitación usa el nombre nuevo |
+| C0 | **Conservar la invitación española como Marketing** (decisión del usuario, 12/10/2026; ADR 0038). Se mantiene `invitacion_organizacion` y se borra en Meta `invitacion_organizacion_literal` en es/en, sin cambiar configuración. | Meta; back `docs/operations/whatsapp-plantillas.md` | la consulta a Meta no devuelve variantes literales; la original conserva es APPROVED / MARKETING y en APPROVED / UTILITY |
 | C1 | **«Para resolver» con tope.** Conteo más los primeros ítems de cada área y «Ver todos» hacia el listado filtrado. Los permisos se revisan una sola vez por pedido, no ítem por ítem. | back `Services/OrganizationUsers/OrganizationUserPendingItems.cs`, `Services/Home/HomeService.cs`; front `areas/platform/home/api/pending.ts`, `PlatformToResolve.tsx` | con miles de pendientes, el Inicio hace una cantidad fija de consultas |
 | C2 | **Listas para elegir con búsqueda en el servidor.** Un selector con búsqueda remota en `shared`, que reemplaza las listas cortadas en 100 de roles, personas y empresas («Agregar miembro», filtros, asignaciones). Una sola consulta de opciones por recurso, con su clave. | front `roles/api/roles.ts`, `users/api/users.ts`, `companies/api/companies.ts`, `AddMemberDialog.tsx`; back, un endpoint de opciones paginado si hace falta | se puede elegir la empresa, el rol o la persona número 101 |
 | C3 | **Conteos sin un pedido por empresa.** El back devuelve los conteos por empresa de una vez (`/api/roles/filter-counts` y el conteo por empresa en `users/filter-counts`). El front borra los `useQueries`. | back Roles y OrganizationUsers; front `RolesPage.tsx`, `UsersPage.tsx` | una búsqueda hace un solo pedido de conteos |
