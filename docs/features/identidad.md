@@ -86,7 +86,7 @@ La baja exige sesión iniciada y motivo (ADR 0045). Bloquea al operador y a part
 
 `AccountDeletionWorker` se ejecuta al arrancar y cada hora. Reclama un lease de quince minutos, limpia cada alcance en una transacción independiente y retoma tras una caída. Los participantes actuales cierran y limpian Personal, marcan membresías B `Removed/AccountDeleted` (en la auditoría de la organización queda una sola entrada, «Quitó a …», con el motivo y los roles que tenía), retiran IP/user agent de aceptaciones y cancelan mensajes pendientes de esa cuenta. Se encola el aviso final al principal antes de purgar métodos/códigos/tickets/credenciales. La identidad termina `Deleted`, anonimizada, conservando su Guid y la prueba legal/auditoría. La limpieza Personal tiene DELETE restringido por RLS; no concede borrado de membresías Business.
 
-La extensión Phone pertenece a; exportación queda para. La Etapa 3 está cerrada (figura en `HarnessStage. Fuente: [multitenancy.md §3.1–§3.3](../architecture/multitenancy.md#31-métodos-de-ingreso-la-cuenta-no-depende-de-un-solo-correo), [ADR 0035](../decisions/README../decisions/README.md).
+El ingreso por Phone lo aporta un canal disponible. La exportación personal permanece prevista; el ingreso y la gestión de cuenta se describen en esta ficha.
 
 ## Invitaciones
 

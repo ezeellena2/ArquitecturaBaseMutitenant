@@ -1,3 +1,1 @@
-un módulo quitable.
-Leé [docs/features/asistente.md](../../../../docs/features/asistente.md).
-Copiá de [AssistantModule.cs](AssistantModule.cs).
+Casos de uso del Asistente. Leé [Asistente](../../../../docs/features/asistente.md); copiá [AssistantConversationService.cs](Services/AssistantConversationService.cs).
