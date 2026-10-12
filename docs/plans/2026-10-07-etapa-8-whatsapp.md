@@ -1,6 +1,6 @@
 # Etapa 8: WhatsApp como módulo quitable — plan ejecutable
 
-**Estado: implementación y puerta automatizada verificadas; cierre pendiente del ingreso real con Google.** Las tres pruebas manuales de WhatsApp ya pasaron con el usuario. Las salidas quedan en `.local/`, sin historial de corridas ni push.
+**Estado: Etapa 8 cerrada.** La puerta y las cuatro pruebas manuales pasaron; Google se verificó con registro humano y sesión conservada después de recargar. Las salidas quedan en `.local/`, sin historial de corridas ni push.
 
 | Tarea | Estado |
 |---|---|
@@ -8,7 +8,7 @@
 | T02–T08 · Back | Hecha, incluidos los correctivos de las revisiones E8. |
 | T09–T12 · Front | Hecha, incluidos A1 y las máscaras N2/N3. |
 | T13 · Integración | Hecha. |
-| T14 · Puerta | Verificaciones completas; pendiente únicamente la prueba manual con Google. |
+| T14 · Puerta | Hecha, incluidas las cuatro pruebas manuales. |
 
 | Paso | Resultado | Número |
 |---|---|---|
@@ -22,9 +22,11 @@
 | Galería de cambios E8 | Revisada lado a lado. | 24 comparaciones |
 | Recorrido de usuario | Completo por continuaciones, sin repetir los pasos aprobados. | 110/110: 55 escritorio y 55 móvil |
 | Retiro de WhatsApp | Aprobado, incluida base vacía; no se repite. | 2556/2556 |
-| Pruebas manuales | WhatsApp aprobado; Google pendiente del usuario. | 3/4 |
+| Pruebas manuales | WhatsApp y Google aprobados; Google permanece como método principal tras recargar. | 4/4 |
 
-El retiro exigido por E8 es **sólo WhatsApp**, aprobado **2556/2556**, incluida la comprobación con base vacía. No se repite. Los retiros del asistente y de ambos módulos pertenecen a **T09 y la puerta E8b**; sus siete fallos están en [el informe de retiro](../reviews/2026-10-11-etapa-8-retiro-asistente.md). No se cambia el código del corte E8 por esos fallos.
+**Plan B, texto aprobado por el usuario (2026-10-12):** «Hola. {{1}} te invitó a unirte a {{2}} en ArquitecturaBase. La invitación vence el {{3}}. Podés revisarla con el botón.» Botón: «Ver la invitación». Variables: quien invita, organización y vencimiento. La plantilla nueva todavía no se creó en Meta; la invitación española pendiente no bloquea el cierre, según la decisión vigente.
+
+El retiro exigido por E8 es **sólo WhatsApp**, aprobado **2556/2556**, incluida la comprobación con base vacía. No se repite. Los retiros del asistente y de ambos módulos pertenecen a **T09 y la puerta E8b**; sus pendientes pertenecen al [Asistente](../features/asistente.md). No se cambia el código del corte E8 por esos fallos.
 
 **Meta:** 29 variantes Utility y dos Authentication aprobadas. `aviso_metodo_ingreso/en` está aprobada como Utility. `invitacion_organizacion/es` sigue en Marketing y su revisión de categoría fue rechazada: no se envía esa variante. La invitación real usa `invitacion_organizacion/en`, Utility aprobada. Soporte queda pendiente sin aceptar sus condiciones; al cierre se propone una nueva versión española más literal, que requiere autorización antes de crearla.
 

@@ -15,7 +15,7 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 5 · Plataforma | Cerrada | [Plataforma](../features/plataforma.md), [ADR 0042](../decisions/0042-operadores-de-plataforma.md) |
 | 6 · Organización | Cerrada | [Organizaciones](../features/organizaciones.md) |
 | 7 · Público/Personal | Cerrada | [Sitio público](../features/sitio-publico.md), [Personal](../features/personal.md) |
-| 8 · WhatsApp de plataforma | Puerta en curso | [WhatsApp](../features/whatsapp.md), [Identidad](../features/identidad.md), [plan activo](2026-10-07-etapa-8-whatsapp.md) |
+| 8 · WhatsApp de plataforma | Cerrada | [WhatsApp](../features/whatsapp.md), [Identidad](../features/identidad.md) |
 | 8b · Asistente | En curso; pendiente de plan corto del coordinador | [ADR 0048](../decisions/0048-asistente.md), [0049](../decisions/0049-precisiones-whatsapp-y-asistente.md), [Asistente](../features/asistente.md) |
 | 11 · WhatsApp de atención | Pendiente | [ADR 0038](../decisions/0038-whatsapp-de-atencion.md) |
 | 9 · Endurecimiento | Pendiente | Decisiones de abajo |

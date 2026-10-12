@@ -5,5 +5,5 @@ namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 /// </summary>
 internal static class HarnessStage
 {
-    public static readonly int[] ClosedStages = [0, 1, 2, 3, 4, 5, 6, 7];
+    public static readonly int[] ClosedStages = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 }
