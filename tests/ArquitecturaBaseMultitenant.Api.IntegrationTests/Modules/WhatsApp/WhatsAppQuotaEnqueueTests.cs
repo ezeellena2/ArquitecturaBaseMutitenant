@@ -28,7 +28,9 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Time.Testing;
+using RetentionWorker = ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Retention.WhatsAppMessageRetentionService;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 
 /// <summary>HTTP productivo y pruebas transaccionales de dos conexiones; transporte Meta no se ejecuta.</summary>
@@ -240,7 +242,15 @@ public sealed class WhatsAppQuotaEnqueueTests(ApiFactory factory) : IClassFixtur
             .UseSetting("WhatsApp:AllowedCountries:0", country).UseSetting("WhatsApp:DailyAuthCodeLimit", cap.ToString(System.Globalization.CultureInfo.InvariantCulture))
             // Isolate daily quotas; the independent rate-limit tests retain the productive 20/15-minute window.
             .UseSetting("RateLimiting:LoginCodePermitLimit", "100");
-        builder.ConfigureTestServices(services => { services.RemoveAll<TimeProvider>(); services.AddSingleton<TimeProvider>(_clock); services.AddSingleton<IStartupFilter, RemoteIpFilter>(); });
+        builder.ConfigureTestServices(services =>
+        {
+            services.RemoveAll<TimeProvider>(); services.AddSingleton<TimeProvider>(_clock);
+            // This fixture drives retention explicitly. Advancing its clock must not start a
+            // second cleanup that locks the same IP rows while CleanIpsAsync uses SKIP LOCKED.
+            foreach (var descriptor in services.Where(value => value.ServiceType == typeof(IHostedService)
+                && value.ImplementationType == typeof(RetentionWorker)).ToArray()) services.Remove(descriptor);
+            services.AddSingleton<IStartupFilter, RemoteIpFilter>();
+        });
     });
     private static async Task<Guid> RegisterPhoneAsync(WebApplicationFactory<Program> host, HttpClient client, string phone)
     {
