@@ -17,6 +17,62 @@ internal sealed class HomeService(OrganizationHomeAreasBuilder areas, MemberHome
     IEnumerable<IPendingItemSource> sources, IPermissionService permissions, ICurrentUser currentUser,
     TimeProvider timeProvider, ILogger<HomeService> logger) : IHomeService
 {
+    public Task<Result<HomeResponse>> GetSummaryAsync(CancellationToken cancellationToken) =>
+        OperationLog.RunAsync<HomeResponse>(logger, timeProvider, "GetHomeSummary", async () =>
+        {
+            if (currentUser.UserId is not { } userId || userId == Guid.Empty) return AccessErrors.NotMember;
+            var assigned = await permissions.GetAssignedOrganizationPermissionsAsync(userId, cancellationToken);
+            var granted = await permissions.GetOrganizationPermissionsAsync(userId, cancellationToken);
+            var byCompany = assigned.Count > 0
+                ? new Dictionary<Guid, IReadOnlyList<string>>()
+                : await permissions.GetPermissionsByCompanyAsync(userId, cancellationToken);
+            var context = new PendingItemContext(userId, granted, byCompany);
+            var organization = assigned.Count > 0 ? await areas.SummarizeAsync(context, cancellationToken) : null;
+            var cards = organization is null ? await companies.ListAsync(userId, byCompany, cancellationToken) : [];
+            var contributions = new List<(IPendingItemSource Source, IReadOnlyList<PendingGroup> Groups)>();
+            foreach (var source in sources)
+            {
+                if (source is IPendingGroupSource grouped)
+                    contributions.Add((source, await grouped.ListGroupsAsync(context, cancellationToken)));
+                else
+                    contributions.Add((source, Group(await source.ListAsync(context, cancellationToken), preview: false)));
+            }
+
+            // Una relectura por ámbito después de todas las fuentes, sin autorizar cada fila por separado.
+            var fresh = new PendingItemContext(userId,
+                await permissions.GetOrganizationPermissionsAsync(userId, cancellationToken),
+                assigned.Count > 0 ? null : await permissions.GetPermissionsByCompanyAsync(userId, cancellationToken));
+            var pending = new List<PendingGroup>();
+            foreach (var (source, groups) in contributions)
+            {
+                if (source is IPendingGroupSource grouped)
+                    pending.AddRange(await grouped.RevalidateGroupsAsync(groups, fresh, cancellationToken));
+                else
+                {
+                    // Compatibilidad de fuentes previas: conservan su autorización propia hasta adoptar el puerto agrupado.
+                    var allowed = new List<PendingItem>();
+                    foreach (var item in groups.SelectMany(group => group.Items))
+                        if (await source.CanResolveAsync(item, userId, cancellationToken)) allowed.Add(item);
+                    pending.AddRange(Group(allowed));
+                }
+            }
+            var ordered = pending.Where(group => group.TotalCount > 0 && group.Items.Count > 0)
+                .OrderByDescending(group => group.Items.Any(item => item.Urgent))
+                .ThenBy(group => group.Items[0].SinceUtc is null)
+                .ThenBy(group => group.Items[0].SinceUtc)
+                .ThenBy(group => group.Area, StringComparer.Ordinal)
+                .ThenBy(group => group.Kind, StringComparer.Ordinal)
+                .ThenBy(group => group.CompanyId).ToArray();
+            return new HomeResponse(organization, cards,
+                PendingItemOrder.Sort(ordered.SelectMany(group => group.Items)), ordered);
+        });
+
+    private static IReadOnlyList<PendingGroup> Group(IReadOnlyList<PendingItem> items, bool preview = true) =>
+        [.. items.GroupBy(item => (item.Area, item.Kind, item.CompanyId, item.CompanyName))
+            .Select(group => new PendingGroup(group.Key.Area, group.Key.Kind, group.Count(),
+                preview ? PendingItemOrder.Sort(group).Take(PendingGroup.PreviewLimit).ToArray() : group.ToArray(),
+                group.Key.CompanyId, group.Key.CompanyName))];
+
     public Task<Result<HomeResponse>> GetAsync(CancellationToken cancellationToken) =>
         OperationLog.RunAsync<HomeResponse>(logger, timeProvider, "GetHome", async () =>
         {

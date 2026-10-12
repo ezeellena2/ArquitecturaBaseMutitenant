@@ -16,11 +16,65 @@ namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
 /// </summary>
 internal sealed class OrganizationUserPendingItems(IOrganizationUserReader users, IPermissionService permissions,
     TimeProvider timeProvider)
-    : IPendingItemSource
+    : IPendingGroupSource
 {
     public const string Area = "users";
     public const string InvitationExpired = "invitationExpired";
     public const string DeletionRequested = "deletionRequested";
+
+    public async Task<IReadOnlyList<PendingGroup>> ListGroupsAsync(PendingItemContext context,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        var groups = new List<PendingGroup>();
+        if (context.Can(Permissions.Users.Invite))
+            groups.Add(await GroupAsync(OrganizationUserState.Expired, null, context, cancellationToken));
+        foreach (var companyId in context.CompaniesWhere(Permissions.Company.Members.Manage))
+            groups.Add(await GroupAsync(OrganizationUserState.Expired, companyId, context, cancellationToken));
+        if (context.Can(Permissions.Users.Manage))
+            groups.Add(await GroupAsync(OrganizationUserState.PendingDeletion, null, context, cancellationToken));
+        return groups.Where(group => group.TotalCount > 0).ToArray();
+    }
+
+    public async Task<IReadOnlyList<PendingGroup>> RevalidateGroupsAsync(IReadOnlyList<PendingGroup> groups,
+        PendingItemContext context, CancellationToken cancellationToken)
+    {
+        var allowed = new List<PendingGroup>();
+        var companies = context.CompaniesWhere(Permissions.Company.Members.Manage);
+        foreach (var group in groups)
+        {
+            if (group.Area != Area) continue;
+            if (group.CompanyId is { } companyId)
+            {
+                if (group.Kind == InvitationExpired && companies.Contains(companyId))
+                    allowed.Add(await GroupAsync(OrganizationUserState.Expired, companyId, context, cancellationToken));
+            }
+            else if ((group.Kind == InvitationExpired && context.Can(Permissions.Users.Invite))
+                || (group.Kind == DeletionRequested && context.Can(Permissions.Users.Manage))) allowed.Add(group);
+        }
+        return allowed.Where(group => group.TotalCount > 0).ToArray();
+    }
+
+    private async Task<PendingGroup> GroupAsync(OrganizationUserState state, Guid? companyId,
+        PendingItemContext context, CancellationToken cancellationToken)
+    {
+        var page = await users.ListPendingAsync(new ListOrganizationUsersRequest
+        {
+            State = state,
+            CompanyId = companyId,
+            OnlyCompanyInvitations = companyId is not null && !context.Can(Permissions.Users.Invite),
+        }, timeProvider.GetUtcNow().UtcDateTime, cancellationToken);
+        // SQL aplica la política antes del conteo y límite; la hidratación puede ver un cambio posterior de roles/empresas.
+        var eligible = page.Items.Where(row => companyId is not { } id
+            || CompanyInvitationPolicy.CanResolve(new CompanyInvitationScope(id, context.Can(Permissions.Users.Invite)),
+                row.Roles.Count > 0, [.. row.Companies.Select(company => (company.CompanyId, company.Status))]));
+        var items = eligible.Select(row => state == OrganizationUserState.Expired
+            ? Expired(row, companyId is { } id ? row.Companies.Single(company => company.CompanyId == id) : null)
+            : new PendingItem(Area, DeletionRequested, row.DisplayName, Urgent: false,
+                row.DeletionRequestedAtUtc, row.DeletionScheduledForUtc, row.MemberId)).ToArray();
+        return new PendingGroup(Area, state == OrganizationUserState.Expired ? InvitationExpired : DeletionRequested,
+            page.TotalCount, items, companyId, items.FirstOrDefault()?.CompanyName);
+    }
 
     public async Task<IReadOnlyList<PendingItem>> ListAsync(PendingItemContext context,
         CancellationToken cancellationToken)

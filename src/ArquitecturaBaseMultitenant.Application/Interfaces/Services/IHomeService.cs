@@ -7,4 +7,7 @@ namespace ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 public interface IHomeService
 {
     Task<Result<HomeResponse>> GetAsync(CancellationToken cancellationToken);
+
+    /// <summary>Vista de Inicio: total real y hasta diez filas por tipo y ámbito.</summary>
+    Task<Result<HomeResponse>> GetSummaryAsync(CancellationToken cancellationToken) => GetAsync(cancellationToken);
 }
