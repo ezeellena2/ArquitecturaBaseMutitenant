@@ -33763,6 +33763,13 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "Status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/TenantDomainStatus"
+            }
           }
         ],
         "responses": {
@@ -40511,6 +40518,13 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "Status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/TenantDomainStatus"
             }
           }
         ],
@@ -57237,7 +57251,8 @@
           "Active",
           "PendingDeletion",
           "Inactive",
-          "Invited"
+          "Invited",
+          "Expired"
         ],
         "type": "string"
       },
@@ -58142,6 +58157,15 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/PendingItem"
+            }
+          },
+          "pendingGroups": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/PendingGroup"
             }
           }
         },
@@ -59944,6 +59968,48 @@
           }
         },
         "description": "Expone la fecha programada y el comprobante temporal para cancelar una baja sin iniciar sesión."
+      },
+      "PendingGroup": {
+        "required": [
+          "area",
+          "kind",
+          "totalCount",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "area": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "items": {
+            "maxItems": 10,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PendingItem"
+            }
+          },
+          "companyId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "companyName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "description": "Un tipo de pendiente y su ámbito: total real y primeras filas ordenadas en SQL."
       },
       "PendingItem": {
         "required": [
