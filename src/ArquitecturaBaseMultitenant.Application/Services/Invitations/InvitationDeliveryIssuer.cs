@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -60,8 +61,8 @@ internal sealed class InvitationDeliveryIssuer(IEnumerable<IInvitationChannel> c
         var tenantSettings = preparedSettings is null ? await settings.FindCurrentAsync(ct) : null;
         var profile = await cultures.ResolveAsync(null, preparedSettings?.DefaultCulture ?? tenantSettings?.DefaultCulture ?? inviter.Culture, ct);
         var timeZoneId = preparedSettings?.DefaultTimeZoneId ?? tenantSettings?.DefaultTimeZoneId ?? inviter.TimeZoneId;
-        var publicOrigin = origin.Value ?? throw new InvalidOperationException("The public origin is required for invitation links.");
-        var url = new Uri(publicOrigin, "/invitacion").AbsoluteUri + "#" + token;
+        _ = origin.Value ?? throw new InvalidOperationException("The public origin is required for invitation links.");
+        var url = origin.Absolute(ReturnUrls.InvitationPath) + "#" + token;
         var inviterName = inviter.Status == UserStatus.Deleted
             ? FormattingTexts.DeletedAccount : inviter.DisplayName ?? organization.Name;
         var usesEmailCode = recipientId is { } userId && (await methods.ListByUserIdAsync(userId, ct))

@@ -434,6 +434,8 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
         Assert.Contains("Empresa: Delta Norte S.A.", email.TextBody);
         Assert.Contains("Roles: Administrador", email.TextBody);
         var token = Regex.Match(email.TextBody, @"/invitacion#(?<token>[A-Za-z0-9_-]+)").Groups["token"].Value;
+        Assert.NotEmpty(token);
+        Assert.Contains("https://localhost:5174/invitacion#" + token, email.TextBody, StringComparison.Ordinal);
         var preview = await PreviewInvitationAsync(token);
         Assert.True(preview.IsSuccess);
         Assert.Equal(InvitationPreviewState.NoAccount, preview.Value.State);

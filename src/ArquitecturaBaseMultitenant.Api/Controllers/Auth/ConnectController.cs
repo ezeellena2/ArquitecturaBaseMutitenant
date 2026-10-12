@@ -113,7 +113,7 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
         {
             parameters = parameters.Where(parameter => parameter.Key != Parameters.Prompt).ToList();
         }
-        var loginPath = access == Access.Business ? "/login/empresa" : ReturnUrls.LoginPath;
+        var loginPath = access == Access.Business ? ReturnUrls.BusinessLoginPath : ReturnUrls.LoginPath;
         return Redirect(loginPath + QueryString.Create("returnUrl",
             ReturnUrls.AuthorizePath + QueryString.Create(parameters)));
     }
@@ -162,7 +162,7 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
             preserveInvitation, cancellationToken);
 
         await HttpContext.SignOutAsync(scheme);
-        return SignOut(new AuthenticationProperties { RedirectUri = "/" },
+        return SignOut(new AuthenticationProperties { RedirectUri = ReturnUrls.ConsumerHomePath },
             OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
 

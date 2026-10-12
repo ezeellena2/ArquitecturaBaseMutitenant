@@ -3,13 +3,22 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Application.Models.Auth;
 
-/// <summary>Permite autorización local o el retorno exacto de invitación, sin destinos arbitrarios.</summary>
+/// <summary>Catálogo de destinos del front y validación de retornos permitidos para cada flujo de ingreso.</summary>
 public static class ReturnUrls
 {
     public const string AuthorizePath = "/connect/authorize";
     public const string LoginPath = "/login";
     public const string InvitationPath = "/invitacion";
     public const string LoginLinkPath = "/login/enlace";
+    public const string ConsumerHomePath = "/";
+    public const string BusinessHomePath = "/org";
+    public const string AccountPath = "/cuenta";
+    public const string BusinessLoginPath = "/login/empresa";
+    public const string SignupPath = "/registro";
+    public const string BusinessSignupPath = "/registro/empresa";
+    public const string PlatformPath = "/plataforma";
+    public const string CallbackPath = "/auth/callback";
+    public const string SilentRenewPath = "/silent-renew.html";
 
     public static bool IsLocalAppPath([NotNullWhen(true)] string? path) =>
         !string.IsNullOrEmpty(path) && path[0] == '/'
@@ -32,8 +41,8 @@ public static class ReturnUrls
     {
         selection = returnUrl switch
         {
-            "/" => new AccessSelectionRequest(Access.Consumer, null),
-            "/org" => new AccessSelectionRequest(Access.Business, null),
+            ConsumerHomePath => new AccessSelectionRequest(Access.Consumer, null),
+            BusinessHomePath => new AccessSelectionRequest(Access.Business, null),
             _ => null,
         };
         return selection is not null;

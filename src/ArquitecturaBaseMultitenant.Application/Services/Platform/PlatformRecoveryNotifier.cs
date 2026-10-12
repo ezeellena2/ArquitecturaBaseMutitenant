@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
@@ -19,7 +20,7 @@ internal sealed class PlatformRecoveryNotifier(IEnumerable<IAccountNoticeChannel
     public async Task ApprovedAsync(UserAccountRow account, LoginMethod added, IReadOnlyList<LoginMethod> methods,
         CancellationToken ct)
     {
-        var url = origin.Value is { } value ? new Uri(value, "/login").AbsoluteUri : "/login";
+        var url = origin.Absolute(ReturnUrls.LoginPath);
         if (NoticeChannel(added.Type) is { } channel)
             await channel.EnqueueAsync(account.Id, added.Value, new AccountNotice.RecoveryApproved(url),
                 await cultures.ResolveAsync(account.Culture, null, ct), ct);

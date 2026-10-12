@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using System.Text.Json.Nodes;
 using Microsoft.OpenApi;
 
@@ -156,8 +157,8 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
     private static Dictionary<string, JsonNode> LoginCodeExamples()
     {
         var examples = Destinations(code: true, returnUrl: true);
-        examples["personaFija"] = new JsonObject { ["email"] = "persona@example.com", ["code"] = "123456", ["returnUrl"] = "/", ["access"] = "consumer" };
-        examples["empresaFija"] = new JsonObject { ["phone"] = Phone(), ["channel"] = "<phone-channel-key>", ["code"] = "123456", ["returnUrl"] = "/org", ["access"] = "business" };
+        examples["personaFija"] = new JsonObject { ["email"] = "persona@example.com", ["code"] = "123456", ["returnUrl"] = ReturnUrls.ConsumerHomePath, ["access"] = "consumer" };
+        examples["empresaFija"] = new JsonObject { ["phone"] = Phone(), ["channel"] = "<phone-channel-key>", ["code"] = "123456", ["returnUrl"] = ReturnUrls.BusinessHomePath, ["access"] = "business" };
         return examples;
     }
     private static Dictionary<string, JsonNode> Destinations(bool code = false, bool terms = false, bool returnUrl = false, bool nonce = false, bool previous = false)

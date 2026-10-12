@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -30,9 +31,9 @@ internal sealed class SubdomainRedirectUriValidator(IPublicOrigin publicOrigin, 
         var authorityStart = value.IndexOf("://", StringComparison.Ordinal);
         if (authorityStart < 0) return false;
         var pathStart = value.IndexOf('/', authorityStart + 3);
-        var path = pathStart < 0 ? "/" : value[pathStart..];
-        if (postLogout ? path != "/"
-            : path is not ("/auth/callback" or "/silent-renew.html"))
+        var path = pathStart < 0 ? ReturnUrls.ConsumerHomePath : value[pathStart..];
+        if (postLogout ? path != ReturnUrls.ConsumerHomePath
+            : path is not (ReturnUrls.CallbackPath or ReturnUrls.SilentRenewPath))
         {
             return false;
         }
