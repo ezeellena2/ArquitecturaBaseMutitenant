@@ -1,4 +1,5 @@
 using System.Net;
+using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
@@ -12,7 +13,12 @@ using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Integ
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
+using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
+using ArquitecturaBaseMultitenant.Domain.Auditing;
+using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Settings;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
@@ -34,8 +40,9 @@ public static class AssistantRealProviderFixture
     internal const string KeyName = "Assistant:Platform:ApiKey";
     private static readonly JsonSerializerOptions Json = CreateJson();
 
-    public static async Task<int> RunAsync(string exportDirectory, CancellationToken ct)
+    public static async Task<int> RunAsync(string exportDirectory, CancellationToken ct, bool preparationOnly = false)
     {
+        var stage = "configuration";
         try
         {
             Require(Environment.GetEnvironmentVariable("MT_E2E_ISOLATED") == "1", "IsolatedRequired");
@@ -44,8 +51,11 @@ public static class AssistantRealProviderFixture
             var options = HostSettings(configuration);
             var secret = options[KeyName]!;
             await using var factory = new ApiFactory();
+            stage = "database";
             await factory.InitializeDatabaseAsync(ct);
+            stage = "host";
             await using var host = factory.WithWebHostBuilder(builder => builder
+                .UseContentRoot(ApiContentRoot())
                 .UseSetting("Assistant:TurnWorkerEnabled", "true")
                 .UseSetting("Seed:PlatformOwner:Email", OperatorEmail)
                 .ConfigureLogging(logging => logging.ClearProviders())
@@ -54,11 +64,14 @@ public static class AssistantRealProviderFixture
             Require(!configured.UseFakeChatClient, "FakeForbidden");
             Require(configured.TurnWorkerEnabled, "WorkerRequired");
             using var client = host.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+            stage = "account";
             var owner = await AccountJourney.RegisterAsync(host, client, ct);
-            var tenantId = await OrganizationJourney.StageAsync(factory, owner, "Organización del probe real", ct);
+            stage = "organization";
+            var tenantId = await StageOrganizationAsync(host.Services, owner.UserId, ct);
             await AccountJourney.AuthorizeAsync(client, "business", ct, tenantId);
             await AcceptCurrentLegalAsync(client, ct);
             using var operatorClient = await LoginOperatorAsync(host, ct);
+            stage = "availability";
 
             AssistantModelPriceResponse model;
             using (var scope = host.Services.CreateScope())
@@ -66,12 +79,19 @@ public static class AssistantRealProviderFixture
                 var services = scope.ServiceProvider;
                 Require(services.GetRequiredService<IChatClientFactory>() is AnthropicChatClientFactory, "NativeFactoryRequired");
                 var models = await services.GetRequiredService<IAssistantModelReader>().ListAllAsync(ct);
-                model = await AvailableModelAsync(secret, models, ct) ?? throw new ProbeFailure("NoAvailableCatalogModel");
+                model = preparationOnly
+                    ? models.Where(row => AssistantModelCompatibilityPolicy.Supports(row, AssistantEffort.Low)
+                        && row.Technical is { SupportsImages: true, SupportsPdf: true })
+                        .OrderBy(row => row.InputPricePerMillion.Amount + row.OutputPricePerMillion.Amount).First()
+                    : await AvailableModelAsync(secret, models, ct) ?? throw new ProbeFailure("NoAvailableCatalogModel");
                 await AssistantFileBridge.WriteAsync(services, async token =>
                 {
                     var db = services.GetRequiredService<ApplicationDbContext>();
                     foreach (var row in await db.Set<AssistantModelPrice>().ToArrayAsync(token))
                         row.Update(row.Provider, row.ProviderModelId, row.DisplayName, row.InputPrice, row.OutputPrice, row.Id == model.Id);
+                    services.GetRequiredService<ISecurityEventRepository>().Add(SecurityEvent.ForPlatformSettings(
+                        AuditActorKind.System, Guid.Empty, "Isolated real provider catalog selection",
+                        services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime));
                 }, ct);
             }
 
@@ -95,15 +115,23 @@ public static class AssistantRealProviderFixture
                 using var settings = await ReadAsync(client, Root + "/settings", ct);
                 Require(settings.RootElement.GetProperty("hasAlertRecipient").GetBoolean(), "VerifiedOwnerRequired");
                 Report(new { stage = "preflight", status = "ready", operatorPermissions = true, verifiedOwnerRecipient = true });
+                if (preparationOnly)
+                {
+                    Report(new { stage = "preparation", status = "passed", providerCalls = 0 });
+                    return 0;
+                }
 
+                stage = "multimodal";
                 var multimodal = await AssistantRealProviderScenario.CompleteAsync(client, owner.UserId,
                     "Usá una sola vez org_users para consultar usuarios. Leé también el PDF y la imagen adjuntos. Respondé en hasta tres renglones: cantidad de usuarios, código del PDF y color de la imagen.",
                     attachments: true, stop: false, ct);
                 Require(multimodal.ToolCompleted && multimodal.Text.Contains(AssistantRealProviderAssets.PdfMarker, StringComparison.Ordinal)
                     && (multimodal.Text.Contains("rojo", StringComparison.OrdinalIgnoreCase) || multimodal.Text.Contains("red", StringComparison.OrdinalIgnoreCase)), "ToolAndMultimodalAnswer");
+                stage = "export";
                 await AssistantRealProviderScenario.ExportAsync(client, multimodal.ConversationId, exportDirectory, ct);
                 var platformCalls = await LedgerAsync(host.Services, owner.UserId, tenantId, [multimodal.OperationId], AssistantKeyFunding.PlatformKey, ct);
 
+                stage = "own-key";
                 using (var saved = await client.PutAsJsonAsync(Root + "/settings", new
                 {
                     mode = "OwnKey", modelId = model.Id, effort = "low", dailyMessageLimit = 50,
@@ -116,6 +144,7 @@ public static class AssistantRealProviderFixture
                     && !ownRead.RootElement.GetRawText().Contains(secret, StringComparison.Ordinal), "WriteOnlyKey");
 
                 // El saldo anterior es explícitamente sintético; la llamada actual y su finalización son reales.
+                stage = "own-usage";
                 await CommandAsync(bridge, ready, "quotas", new { email = owner.Email.Value, access = "business", tenantId, remainingMessages = 50, monthlyFraction = .8m }, ct);
                 var own = await AssistantRealProviderScenario.CompleteAsync(client, owner.UserId,
                     "Respondé sólo: Verificación del proveedor real completada.", attachments: false, stop: false, ct);
@@ -126,10 +155,12 @@ public static class AssistantRealProviderFixture
                 await AssistantRealProviderScenario.AssertBudgetBlockedAsync(client, ct);
                 Require(beforeBlocked == await CallCountAsync(host.Services, owner.UserId, tenantId, ct), "BudgetNoProviderCall");
                 await CommandAsync(bridge, ready, "quotas", new { email = owner.Email.Value, access = "business", tenantId, remainingMessages = 50, monthlyFraction = 0m }, ct);
+                stage = "stop";
                 var stopped = await AssistantRealProviderScenario.CompleteAsync(client, owner.UserId,
                     "Escribí una lista larga de 600 elementos numerados, cada uno con una frase distinta sobre organización del trabajo. No uses herramientas.", attachments: false, stop: true, ct);
                 var ownCalls = await LedgerAsync(host.Services, owner.UserId, tenantId, [own.OperationId, stopped.OperationId], AssistantKeyFunding.OwnKey, ct);
                 Require(platformCalls + ownCalls <= 8, "ProviderCallBudget");
+                stage = "usage";
                 using var usage = await ReadAsync(client, Root + "/usage?pageSize=10", ct);
                 Require(usage.RootElement.TryGetProperty("items", out _), "UsageRead");
                 Report(new { stage = "complete", status = "passed", responseAndTitleCalls = platformCalls + ownCalls, keyValidationCalls = 1, syntheticPriorBalance = true });
@@ -146,7 +177,45 @@ public static class AssistantRealProviderFixture
         catch (AnthropicUnauthorizedException) { Report(new { status = "failed", httpStatus = 401 }); return 1; }
         catch (AnthropicForbiddenException) { Report(new { status = "failed", httpStatus = 403 }); return 1; }
         catch (AnthropicRateLimitException) { Report(new { status = "failed", httpStatus = 429 }); return 1; }
-        catch (Exception error) { Report(new { status = "failed", type = error.GetType().Name }); return 1; }
+        catch (Exception error)
+        {
+            var methods = new StackTrace(error, false).GetFrames().Select(frame => frame.GetMethod())
+                .Where(method => method?.DeclaringType?.Namespace is { } space
+                    && (space.StartsWith("ArquitecturaBaseMultitenant", StringComparison.Ordinal)
+                        || space.StartsWith("Microsoft.AspNetCore", StringComparison.Ordinal)
+                        || space.StartsWith("Microsoft.Extensions.FileProviders", StringComparison.Ordinal)))
+                .Select(method => method!.DeclaringType!.FullName + "." + method.Name).Distinct().ToArray();
+            Report(new { status = "failed", stage, type = error.GetType().Name, methods });
+            return 1;
+        }
+    }
+
+    internal static string ApiContentRoot()
+    {
+        var repository = new DirectoryInfo(AppContext.BaseDirectory);
+        while (repository is not null && !File.Exists(Path.Combine(repository.FullName, "ArquitecturaBaseMultitenant.slnx")))
+            repository = repository.Parent;
+        Require(repository is not null, "RepositoryRootRequired");
+        var api = Path.Combine(repository!.FullName, "src", "ArquitecturaBaseMultitenant.Api");
+        Require(File.Exists(Path.Combine(api, "ArquitecturaBaseMultitenant.Api.csproj")), "ApiContentRootRequired");
+        return api;
+    }
+
+    private static async Task<Guid> StageOrganizationAsync(IServiceProvider root, Guid ownerId, CancellationToken ct)
+    {
+        // Mismo preparado que OrganizationJourney; usa el child host ya configurado para el runner externo.
+        var tenant = Tenant.CreateBusiness("Organización del probe real", requiresApproval: false);
+        Require(tenant.Activate().IsSuccess, "OrganizationActivation");
+        await using var scope = root.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenant.Id);
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+        {
+            services.GetRequiredService<TenantSpaceProvisioner>().Stage(tenant,
+                TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"), [ownerId], ownerId);
+            return Task.FromResult(Result.Success());
+        }, CommitPolicy.OnSuccess, ct);
+        return tenant.Id;
     }
 
     internal static Dictionary<string, string?> HostSettings(IConfiguration configuration)
@@ -163,7 +232,7 @@ public static class AssistantRealProviderFixture
     private static async Task<HttpClient> LoginOperatorAsync(WebApplicationFactory<Program> host, CancellationToken ct)
     {
         // InitializeDatabaseAsync sólo bootstrap/migra/referencias. RegisterAsync ya ejecutó SeedDatabaseAsync
-        // sobre este host con OperatorEmail, antes de abrir el host base de OrganizationJourney.
+        // sobre este host con OperatorEmail; la organización se preparó con sus mismos servicios.
         using (var scope = host.Services.CreateScope())
         {
             var services = scope.ServiceProvider;

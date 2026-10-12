@@ -9,6 +9,14 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Assistant;
 
 public sealed class AssistantRealProviderConfigurationTests
 {
+    [Fact]
+    public void Runner_content_root_points_to_the_existing_api_project()
+    {
+        var root = AssistantRealProviderFixture.ApiContentRoot();
+        Assert.True(Path.IsPathFullyQualified(root));
+        Assert.True(File.Exists(Path.Combine(root, "ArquitecturaBaseMultitenant.Api.csproj")));
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

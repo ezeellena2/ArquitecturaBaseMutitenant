@@ -20,10 +20,11 @@ if (Environment.GetEnvironmentVariable("MT_E2E_ISOLATED") != "1")
     return 1;
 }
 
-if (args is ["--assistant-real-probe", var assistantExportDirectory])
+if (args is ["--assistant-real-probe" or "--assistant-real-preflight", var assistantExportDirectory])
 {
     using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(10));
-    return await ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.AssistantBrowser.AssistantRealProviderFixture.RunAsync(assistantExportDirectory, timeout.Token);
+    return await ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.AssistantBrowser.AssistantRealProviderFixture.RunAsync(assistantExportDirectory, timeout.Token,
+        preparationOnly: args[0] == "--assistant-real-preflight");
 }
 
 if (args is ["--whatsapp-browser", var browserScript])
