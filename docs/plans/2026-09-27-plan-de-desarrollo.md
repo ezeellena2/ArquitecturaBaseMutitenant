@@ -90,7 +90,9 @@ Antes de implementar el alta se verifican requisitos y precios vigentes de Meta 
 Una organización arma formularios, los manda por WhatsApp a sus empleados y ve las respuestas numeradas en una planilla.
 - **Etapas y fuente:** son seis, cada una con su sección y las decisiones de producto tomadas en la [hoja de ruta](2026-10-12-formularios-dinamicos-hoja-de-ruta.md).
 - **Requisitos:** la E11 es requisito duro, porque sin número de la organización no hay formularios. Van después de la E10 para nacer con las guardas de la E9 y la nube de la E10.
-- **Módulo:** `Forms` es un módulo quitable aparte de `WhatsApp`, unidos por puertos neutrales del núcleo, como en ArquitecturaBase, de donde se copia el código.
+- **Módulo:** `Forms` es un módulo quitable aparte de `WhatsApp`, unidos por puertos neutrales del núcleo.
+- **ArquitecturaBase:** es referencia, no fuente de código; la estructura sale de este repo.
+- **Specs:** cada etapa tiene su especificación detallada en [`formularios/`](formularios/README.md).
 - **Cómo se trabaja cada etapa:**
   - se escribe en el formato de [etapa en paralelo](../guides/etapa-en-paralelo.md) cuando le toca;
   - sus tableros se dibujan en el lienzo antes de programar.

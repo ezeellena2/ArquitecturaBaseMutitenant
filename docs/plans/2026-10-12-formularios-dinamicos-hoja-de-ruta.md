@@ -2,7 +2,11 @@
 
 Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sección 5](#5-decisiones-de-producto)). Está sumada al [plan de desarrollo](2026-09-27-plan-de-desarrollo.md) como **etapas 12 a 17, después de la E10**. No es un plan de etapa: cada etapa se escribe en el formato de [etapa en paralelo](../guides/etapa-en-paralelo.md) cuando le toque, a partir de su sección de acá.
 
-**Origen.** Es la misma funcionalidad que se está construyendo en `ArquitecturaBase`, adaptada a organizaciones, empresas, plataforma y personas. Allá la Etapa 1 está cerrada y probada con Meta real (envío, respuesta y número guardado), y las demás tienen diseño y decisiones elegidas. Las referencias para copiar código y tableros están en la [sección 6](#6-qué-copiar-de-arquitecturabase).
+**Origen.** Es la misma funcionalidad que se está construyendo en `ArquitecturaBase`, adaptada a organizaciones, empresas, plataforma y personas. Allá la Etapa 1 está cerrada y probada con Meta real (envío, respuesta y número guardado), y las demás tienen diseño y decisiones elegidas.
+
+**ArquitecturaBase es referencia, no fuente de código** (decisión del usuario, 2026-10-12): es otro modelo de negocio. Se toma lo que no depende de él (el protocolo de Meta, los límites, los errores ya pagados) y la estructura se arma con las piezas de este repo ([sección 6](#6-qué-tomar-de-arquitecturabase)).
+
+**Specs por etapa:** cada etapa tiene su especificación detallada en [`formularios/`](formularios/README.md), que `/plan-etapa` convierte en el plan corto cuando le toca.
 
 ## 1. Qué es el producto
 
@@ -56,7 +60,7 @@ Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sec
 - **Qué es de cada uno:**
   - **`Forms`:** definiciones, borrador, versiones, numeración, catálogos, respuestas, archivos, planilla, reglas, aprobaciones y PDF.
   - **`WhatsApp`:** armar el `FLOW_JSON`, publicarlo en Meta como operación durable, las sesiones, el mensaje interactivo y la recepción del `nfm_reply`.
-- **Ninguno referencia al otro.** `ModuleIsolationTests` ya lo rompe. Hablan por puertos neutrales del núcleo, copiados de ArquitecturaBase, en `Application/Interfaces/Integrations/StructuredData/`, con sus modelos en `Application/Models/StructuredData/`:
+- **Ninguno referencia al otro.** `ModuleIsolationTests` ya lo rompe. Hablan por puertos neutrales del núcleo, con la idea de ArquitecturaBase, en `Application/Interfaces/Integrations/StructuredData/`, con sus modelos en `Application/Models/StructuredData/`:
   - `IStructuredFormSource`: WhatsApp lee los formularios publicados que puede mandar;
   - `IStructuredFormChannel`: Forms pide publicar y consulta el estado;
   - `IStructuredRecordSink`: WhatsApp entrega la respuesta capturada;
@@ -89,7 +93,7 @@ Valen todas las de [AGENTS.md](../../AGENTS.md) y las [fichas](../rules/README.m
 
 | Premisa | En formularios |
 | --- | --- |
-| [Capas y flujo](../rules/capas-y-flujo.md) | Controller → `IForm<X>Service` → servicio → repositorio, reader o puerto. Los helpers usan los sufijos de la lista cerrada ([sección 6](#6-qué-copiar-de-arquitecturabase)). |
+| [Capas y flujo](../rules/capas-y-flujo.md) | Controller → `IForm<X>Service` → servicio → repositorio, reader o puerto. Los helpers usan los sufijos de la lista cerrada ([sección 6](#6-qué-tomar-de-arquitecturabase)). |
 | [Guardado](../rules/guardado.md) | Una `ExecuteInTransactionAsync` por método público que escribe. Publicar en Meta, bajar archivos, armar el PDF y avisar van fuera de la transacción, en workers u outbox. |
 | [Errores](../rules/result-y-errores.md) | `Forms.<Entidad>.<Motivo>` en `Domain/Forms/<Entidad>Errors`. Toda falla es ProblemDetails con `code` y `traceId`. |
 | [Aislamiento](../rules/multitenancy.md) y [permisos](../rules/permisos.md) | Todo es privado salvo la biblioteca. Las rutas llevan `[Access]`, `[HasPermission]` (o `[HasPlatformPermission]`) y `[FeatureGate]`; lo ajeno responde 404. Los workers entran con `Enter(tenantId)` sin transacción abierta. |
@@ -113,7 +117,7 @@ Valen todas las de [AGENTS.md](../../AGENTS.md) y las [fichas](../rules/README.m
 
 ## 3. Etapas
 
-Cada etapa lleva su número del plan de desarrollo, de la E12 a la E17. Antes se llamaban F1, F2, F4, F5, F6 y F3; el asistente (F7) pasó a [Después](#después-del-bloque). Entre paréntesis va la etapa de ArquitecturaBase de donde se copia.
+Cada etapa lleva su número del plan de desarrollo, de la E12 a la E17. Antes se llamaban F1, F2, F4, F5, F6 y F3; el asistente (F7) pasó a [Después](#después-del-bloque). Entre paréntesis va la etapa de ArquitecturaBase que sirve de referencia.
 
 Cada una tiene tableros a dibujar en el lienzo vigente del front antes de programar. Los de ArquitecturaBase sirven de referencia de contenido, no de estilo.
 
@@ -282,9 +286,16 @@ Decididas por el usuario el 2026-10-12. No se vuelven a preguntar.
 7. **`Forms` es un módulo aparte de `WhatsApp`,** unidos por puertos neutrales del núcleo, como en ArquitecturaBase.
 8. **Alcance:** seis etapas, con la biblioteca al final. El asistente en WhatsApp (antes F7) queda para después.
 
-## 6. Qué copiar de ArquitecturaBase
+## 6. Qué tomar de ArquitecturaBase
 
-Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBaseFront`. **El código está en `origin/main`:** antes de copiar, traé los cambios, porque la copia local puede estar atrasada. Se sigue desarrollando allá, así que cada etapa copia lo que haya al planificarse.
+Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBaseFront`. **El código está en `origin/main`:** antes de leerlo, traé los cambios, porque la copia local puede estar atrasada. Se sigue desarrollando allá, así que cada etapa mira lo que haya al planificarse.
+
+**Es referencia, no se copia:** la estructura (módulos, entidades, servicios, rutas y pantallas) sale de este repo, con su modelo de organizaciones, empresas y plataforma, sus fichas y sus módulos de ejemplo (Asistente y WhatsApp). De ArquitecturaBase se toma solo lo que no depende del modelo de negocio:
+- cómo se arma y se publica un Flow;
+- los límites de Meta;
+- el formato de los valores;
+- los estados de una publicación;
+- los errores ya pagados.
 
 - **Resúmenes por etapa** con alcance y decisiones: `docs/plans/formularios/` (README, etapa 2, 2B, 3, 4 y 5).
 - **Reglas implementadas de la Etapa 1:** `docs/features/formularios.md` (borrador, publicación, numeración, captura) y `docs/features/whatsapp.md` (perfil de Flows, mensaje interactivo, recepción, presupuesto de 16 KiB y fuentes de Meta).
@@ -307,7 +318,7 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
   - las capturas están en `ArquitecturaBaseFront/docs/design/evidence/formularios-whatsapp/`;
   - se redibujan con el tema de este proyecto en su lienzo.
 
-**Al copiar, se adapta a este repo:**
+**Lo que se toma se adapta a este repo:**
 - `BusinessForms` pasa a `Forms`, en `Domain\Forms\` en vez de `Domain/Modules/`;
 - los puertos van en `Application/Interfaces/Integrations/StructuredData/`, no en `Interfaces/Channels/`;
 - permisos en el catálogo del núcleo, tres clases de datos con RLS, `[Access]`, `[FeatureGate]`, `[Idempotent]`, `OperationLog.RunAsync` e `IVersioned`;
