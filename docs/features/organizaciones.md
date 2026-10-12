@@ -37,6 +37,8 @@ Desde la ficha de su empresa, quien tiene `company.members.manage` en ella suma 
 
 ## Página pública y auditoría
 
+Los enlaces «Ver todos» de Inicio conservan el filtro del grupo: Miembros de empresa acepta `state=Expired` para invitaciones pendientes ya vencidas según el reloj UTC del servidor (la fila y el facet siguen siendo `Invited`); Dominios acepta `status=Pending` o `Verified`. Ambos filtros se aplican antes del conteo y la página. Al limpiar el filtro vuelve el listado habitual.
+
 `/api/organization/public-page` lee y guarda el borrador versionado; `POST .../publish` y `POST .../unpublish` publican o retiran la página. El contenido y el logo pertenecen a `public_site`. El logo se valida por firma y tamaño, se guarda como bytes y no admite URL arbitraria. La página publicada del subdominio y su estado «No disponible» están en [sitio-publico.md](sitio-publico.md). Su lectura pública no concede acceso al borrador ni cambia el acceso privado del token. Moderación bloqueada impide volver a publicar hasta que se resuelva (409 `PublicSite.PublicPage.PublishBlocked`). La entidad rechaza un nombre vacío o largo, una descripción o un contacto largos y un logo inválido (`PublicSite.PublicPage.NameRequired` y los demás de `PublicPageErrors`); el validador del pedido los controla antes, cada uno con su texto.
 
 Publicar un borrador registra `PublishedAtUtc` con el `TimeProvider` del editor. Una publicación repetida mantiene su fecha y una republicación posterior a retirar la página registra el nuevo instante. La migración deja null en páginas históricas publicadas sin evidencia; Plataforma consulta este metadato, sin inferirlo desde auditoría ni desde la creación de la organización.

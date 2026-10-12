@@ -3,7 +3,7 @@
 | Tarea | Resultado |
 |---|---|
 | C0 | Hecha: el usuario acepta `invitacion_organizacion/es` Marketing (ADR 0038); se conserva el nombre y la configuración. Meta confirmó el borrado de `invitacion_organizacion_literal` es/en, sin variantes restantes. |
-| C1 | Pendiente del aviso del usuario de que Diseño publicó el tablero. |
+| C1 | Hecha según lienzo v120 (`74141645`): grupos con título, área y total, hasta 10 filas y «Ver todos» filtrado; compu sin Área y teléfono sólo estado. Guarda SQL con 10/1000 pendientes verde; 6 unitarios, 24 de integración, 46 de arquitectura y 88 del front verdes. |
 | C10 | Hecha: contrato y metadatos generados, descripción pública, CUIT, roles, cuenta eliminada y categorías. Build 0/0; unitarios 133 e integración 46 verdes; pruebas focales del front y contratos verdes. |
 | C4 | Hecha: hooks comunes, blocker público, variables tipadas y guarda UNSAFE. Recorridos y barra final verdes; el primer pending también se verifica (22 casos afectados verdes). TypeScript y lint sin errores nuevos. |
 | C11 | Hecha: reloj de servidor, validación Google, textos compuestos y duplicados. Back 325 y front 341 casos focales verdes; builds/TypeScript sin errores. |
@@ -14,7 +14,7 @@
 | C5 | Hecha: filtro `onlyOwn` aditivo y paginado real con tipos generados; guarda contra respuestas manuales. 7 de integración y 42 del front verdes; build 0/0, TypeScript, lint y contratos sin errores nuevos. |
 | C6 | Hecha: reglas de baja en Application y limpieza EF por puerto; guarda interna. 38 de arquitectura y 48 de integración verdes; builds 0/0. |
 | C8 | Hecha: 27 literales y composición del origen centralizados; guarda fuente y avisos con URL completa. 301 casos verdes; builds 0/0. |
-| Cierre | Corrida completa única terminada; pendiente un fixture de reloj de Assistant para la 8b. Los correctivos habilitados están hechos; C1 espera Diseño. |
+| Cierre | Corrida completa única terminada; pendiente un fixture de reloj de Assistant para la 8b. C1, autorizado después de esa corrida, está hecho y verificado en su alcance, conservando los verdes anteriores. |
 
 | Verificación de cierre | Resultado |
 |---|---|
@@ -24,11 +24,13 @@
 | Arnés y documentación | Tests verdes; detector 0 auto / 0 modelo / 0 humano, sin consumo de modelo. |
 | Contratos | `contracts:check` verde; OpenAPI y tipos generados coinciden. |
 | Revisión final | Completa; los hallazgos y el primer pending detectado por la suite tienen pruebas dirigidas verdes. |
+| C1, alcance autorizado después del cierre | Back: 6 unitarios, 24 de integración y 46 de arquitectura verdes; front: 87 Vitest y 1 del generador verdes. Builds 0 errores, TypeScript y contratos verdes; lint conserva 6 advertencias previas. Detector 0/0/0. |
 
 El fixture pendiente de la 8b activa timers falsos después de montar y reinicia `performance.now()`; al avanzar 60 s todavía muestra una espera. Debe conservar el origen monotónico o montar con el reloj falso desde el principio. Falló también en su única repetición aislada; no se modificó por la exclusión de Assistant. Los archivos propios están commiteados con pathspec y sin push.
 
 **Decisiones técnicas:** C0 conserva `invitacion_organizacion` y su configuración según la decisión de producto del 12/10 (ADR 0038); se retira el intento literal de Meta en ambos idiomas.
 
+- C1: `pendingGroups` aditivo publica total y `maxItems` como fuente única del tope; `IPendingGroupSource` limita en SQL y revalida permisos en lote y política de empresa tras hidratar, mientras `GetAsync` conserva el agregado interno completo; «Ver todos» usa los filtros aditivos `Expired` y `Pending` sin cambiar estados ni facets existentes.
 - C10: FluentValidation publica límites/rangos; `contracts` genera tipos y `validation.ts`; la baja persiste `DisplayName=null` y se traduce según estado al leer.
 - C4: `useResourceAction` reconoce sólo variables ejecutadas por su dueño y observa cache más registro del dueño para reflejar el primer pending; incluye reintentos sin observer y excluye borradores abandonados. `useEditPage` conserva el único blocker público y no compara rutas literales.
 - C11: HTTP `Date` y avance monotónico fijan tiempos/reenvíos sin atrasarse ante respuestas demoradas; los tests conservan el origen monotónico al simular una espera. Application valida el inicio Google y contiene `WebClientOptions`/`AuthServerDefaults` para respetar capas.
