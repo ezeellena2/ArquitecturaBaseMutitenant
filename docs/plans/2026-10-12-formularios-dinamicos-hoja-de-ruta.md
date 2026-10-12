@@ -1,6 +1,6 @@
 # Formularios dinámicos por WhatsApp: hoja de ruta
 
-Estado: **propuesta del 2026-10-12**, para sumar al [plan de desarrollo](2026-09-27-plan-de-desarrollo.md). No es un plan de etapa: cada etapa se escribe en el formato de [etapa en paralelo](../guides/etapa-en-paralelo.md) cuando le toque, a partir de su sección de acá.
+Estado: **propuesta del 2026-10-12, con las decisiones de producto tomadas** ([sección 5](#5-decisiones-de-producto)), para sumar al [plan de desarrollo](2026-09-27-plan-de-desarrollo.md). No es un plan de etapa: cada etapa se escribe en el formato de [etapa en paralelo](../guides/etapa-en-paralelo.md) cuando le toque, a partir de su sección de acá.
 
 **Origen.** Es la misma funcionalidad que se está construyendo en `ArquitecturaBase`, adaptada a organizaciones, empresas, plataforma y personas. Allá la Etapa 1 está cerrada y probada con Meta real (envío, respuesta y número guardado), y las demás tienen diseño y decisiones elegidas. Las referencias para copiar código y tableros están en la [sección 6](#6-qué-copiar-de-arquitecturabase).
 
@@ -26,9 +26,9 @@ Estado: **propuesta del 2026-10-12**, para sumar al [plan de desarrollo](2026-09
 | --- | --- |
 | **Plataforma** | Mantiene la biblioteca de plantillas y habilita el módulo por organización. **Nunca ve formularios, respuestas ni archivos de una organización.** |
 | **Organización (B2B)** | Dueña de sus formularios, catálogos, reglas, respuestas y archivos. Los diseña quien tiene permiso; los responden sus empleados. |
-| **Empresa** | En la v1 los formularios son de la organización; la respuesta guarda la empresa de quien respondió, para filtrar ([para decidir 1](#5-para-decidir-producto)). |
+| **Empresa** | En la v1 los formularios son de la organización; la respuesta guarda la empresa de quien respondió, para filtrar ([decisión 1](#5-decisiones-de-producto)). |
 | **Empleado** | Miembro activo con teléfono verificado y permiso `formrecords.create`. Lo reconoce la bandeja «Internos» de E11. |
-| **Persona (B2C)** | Fuera de la v1. Responder como cliente de una organización es una etapa posterior ([para decidir 3](#5-para-decidir-producto)). |
+| **Persona (B2C)** | Fuera de la v1. Responder como cliente de una organización es una etapa posterior ([decisión 3](#5-decisiones-de-producto)). |
 
 ### Clasificación de los datos
 
@@ -219,13 +219,15 @@ Aplicarlo desde el primer día evita lo que nos frenó la Etapa 1 durante días:
    - errores definitivos de Meta quedaban «Sin confirmar» para siempre;
    - en la Argentina, «125.500» puede leerse como 125,5, por eso la ayuda pide punto decimal y se valida la escala.
 
-## 5. Para decidir (producto)
+## 5. Decisiones de producto
 
-1. **¿Formularios por organización o por empresa?** Recomendado: por organización en la v1; la respuesta guarda la empresa de quien respondió y la planilla filtra por empresa. Formularios y permisos por empresa (`ICompanyOwned`), después.
-2. **Plantillas: ¿copia o referencia?** Recomendado: copia independiente. Una referencia obliga a resolver qué pasa con las respuestas cuando la plataforma cambia la plantilla.
-3. **B2C: ¿cuándo?** Recomendado: después de F7, con la bandeja Clientes de E11 andando y el backlog #51 resuelto.
-4. **¿El número de la plataforma (E8) manda formularios?** Recomendado: no. Es para ingreso y avisos de cuenta.
-5. **Límites por plan** (formularios, respuestas, almacenamiento). Recomendado: en la v1 solo se habilita el feature. Medir el uso real antes de poner topes.
+Decididas por el usuario el 2026-10-12. No se vuelven a preguntar.
+
+1. **Formularios por organización.** En la v1 son de la organización; la respuesta guarda la empresa de quien respondió y la planilla filtra por empresa. Formularios y permisos por empresa (`ICompanyOwned`), después.
+2. **Las plantillas se toman como copia independiente.** Una referencia obliga a resolver qué pasa con las respuestas cuando la plataforma cambia la plantilla.
+3. **B2C, después de F7,** con la bandeja Clientes de E11 andando y el backlog #51 resuelto.
+4. **El número de la plataforma (E8) no manda formularios:** es para ingreso y avisos de cuenta.
+5. **Sin límites por plan en la v1** (formularios, respuestas, almacenamiento): solo se habilita el feature. Medir el uso real antes de poner topes.
 
 ## 6. Qué copiar de ArquitecturaBase
 
