@@ -46,6 +46,21 @@ internal sealed class OrganizationAuditService(IOrganizationAuditReader reader,
             });
     }
 
+    public Task<Result<PagedResult<OrganizationAuditActorResponse>>> ListActorsPagedAsync(
+        ListOrganizationAuditActorsRequest request, CancellationToken cancellationToken) =>
+        OperationLog.RunAsync<PagedResult<OrganizationAuditActorResponse>>(logger, timeProvider, "ListOrganizationAuditActorsPaged", async () =>
+        {
+            ArgumentNullException.ThrowIfNull(request);
+            if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
+            var filters = request.EventFilters();
+            if (await validator.ValidateAsync(filters, cancellationToken) is { } invalidFilters) return invalidFilters;
+            var (startUtc, endUtc) = await GetPeriodAsync(filters, cancellationToken);
+            var page = await reader.ListActorsPagedAsync(filters, request, startUtc, endUtc, cancellationToken);
+            return Result.Success(new PagedResult<OrganizationAuditActorResponse>([.. page.Items.Select(actor =>
+                new OrganizationAuditActorResponse(actor.ActorId, actor.ActorKind.ToString(), AuditTexts.Actor(actor.ActorKind), actor.DisplayName))],
+                page.Page, page.PageSize, page.TotalCount));
+        });
+
     private async Task<(DateTime? StartUtc, DateTime? EndUtc)> GetPeriodAsync(
         ListOrganizationAuditRequest request, CancellationToken cancellationToken)
     {

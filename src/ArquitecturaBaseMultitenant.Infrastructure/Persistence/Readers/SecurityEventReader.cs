@@ -36,11 +36,20 @@ internal sealed class SecurityEventReader(ApplicationDbContext context) : ISecur
         ListPlatformAuditRequest request, DateTime? sinceUtc, IReadOnlyCollection<SecurityEventType>? eventTypes,
         CancellationToken ct)
     {
-        var ids = FilteredEvents(request with { TenantId = null }, sinceUtc, eventTypes)
+        return (await ListOrganizationsPagedAsync(request, new ListPlatformAuditOrganizationsRequest(), sinceUtc, eventTypes, ct)).Items;
+    }
+
+    public Task<PagedResult<PlatformAuditOrganizationResponse>> ListOrganizationsPagedAsync(
+        ListPlatformAuditRequest filters, ListPlatformAuditOrganizationsRequest page, DateTime? sinceUtc,
+        IReadOnlyCollection<SecurityEventType>? eventTypes, CancellationToken ct)
+    {
+        var ids = FilteredEvents(filters with { TenantId = null }, sinceUtc, eventTypes)
             .Where(item => item.TargetTenantId != null).Select(item => item.TargetTenantId!.Value).Distinct();
-        return await context.Tenants.AsNoTracking().Where(tenant => ids.Contains(tenant.Id))
-            .OrderBy(tenant => tenant.Name).ThenBy(tenant => tenant.Id)
-            .Select(tenant => new PlatformAuditOrganizationResponse(tenant.Id, tenant.Name)).ToArrayAsync(ct);
+        return context.Tenants.AsNoTracking().Where(tenant => ids.Contains(tenant.Id))
+            .ApplySearch(page.Search, tenant => tenant.Name)
+            .ApplySort(SortDescriptor.Parse(page.Sort), new SortMap<ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant> { ["name"] = tenant => tenant.Name },
+                new SortDescriptor("name", false), tenant => tenant.Id)
+            .Select(tenant => new PlatformAuditOrganizationResponse(tenant.Id, tenant.Name)).ToPagedResultAsync(page, ct);
     }
 
     private IQueryable<AuditKey> Keys(ListPlatformAuditRequest request, DateTime? sinceUtc,

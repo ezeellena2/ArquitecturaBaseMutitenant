@@ -54,6 +54,18 @@ internal sealed class PlatformAuditService(ISecurityEventReader reader, IUserRep
                 return Result.Success(await reader.ListOrganizationsAsync(request, since, EventTypes(request.Type), ct));
             });
 
+    public Task<Result<PagedResult<PlatformAuditOrganizationResponse>>> ListOrganizationsPagedAsync(
+        ListPlatformAuditOrganizationsRequest request, CancellationToken ct) =>
+        OperationLog.RunAsync<PagedResult<PlatformAuditOrganizationResponse>>(logger, clock, "ListPlatformAuditOrganizationsPaged", async () =>
+        {
+            ArgumentNullException.ThrowIfNull(request);
+            if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
+            var filters = request.EventFilters();
+            if (await validator.ValidateAsync(filters, ct) is { } invalidFilters) return invalidFilters;
+            var since = await SinceAsync(filters.Period, ct);
+            return Result.Success(await reader.ListOrganizationsPagedAsync(filters, request, since, EventTypes(filters.Type), ct));
+        });
+
     private static IReadOnlyCollection<SecurityEventType>? EventTypes(string? category) => category switch
     {
         null => null,

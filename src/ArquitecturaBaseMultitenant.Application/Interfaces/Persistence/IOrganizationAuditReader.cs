@@ -10,4 +10,7 @@ public interface IOrganizationAuditReader
 
     Task<IReadOnlyList<OrganizationAuditActorRow>> ListActorsAsync(ListOrganizationAuditRequest request,
         DateTime? startUtc, DateTime? endUtc, CancellationToken cancellationToken);
+
+    Task<PagedResult<OrganizationAuditActorRow>> ListActorsPagedAsync(ListOrganizationAuditRequest filters,
+        ListOrganizationAuditActorsRequest page, DateTime? startUtc, DateTime? endUtc, CancellationToken cancellationToken);
 }

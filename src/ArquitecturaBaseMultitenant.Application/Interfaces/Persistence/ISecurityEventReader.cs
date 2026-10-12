@@ -22,4 +22,7 @@ public interface ISecurityEventReader
     /// <summary>Organizaciones distintas de los eventos filtrados, sin aplicar TenantId ni la página del pedido.</summary>
     Task<IReadOnlyList<PlatformAuditOrganizationResponse>> ListOrganizationsAsync(ListPlatformAuditRequest request,
         DateTime? sinceUtc, IReadOnlyCollection<SecurityEventType>? eventTypes, CancellationToken ct);
+
+    Task<PagedResult<PlatformAuditOrganizationResponse>> ListOrganizationsPagedAsync(ListPlatformAuditRequest filters,
+        ListPlatformAuditOrganizationsRequest page, DateTime? sinceUtc, IReadOnlyCollection<SecurityEventType>? eventTypes, CancellationToken ct);
 }

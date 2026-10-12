@@ -29,6 +29,7 @@ public sealed class OrganizationAuditController(IOrganizationAuditService servic
         (await service.ListAsync(query.ToModel(), cancellationToken)).ToActionResult(this);
 
     [HttpGet("actors")]
+    [BoundedLegacyCollection("/api/organization/audit/actors/paged")]
     [HasPermission(Permissions.Audit.Read)]
     [ProducesResponseType<IReadOnlyList<OrganizationAuditActorResponse>>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
@@ -37,4 +38,13 @@ public sealed class OrganizationAuditController(IOrganizationAuditService servic
     public async Task<IActionResult> ListActors([FromQuery] OrganizationAuditHttpQuery query,
         CancellationToken cancellationToken) =>
         (await service.ListActorsAsync(query.ToModel(), cancellationToken)).ToActionResult(this);
+
+    [HttpGet("actors/paged")]
+    [HasPermission(Permissions.Audit.Read)]
+    [ProducesResponseType<PagedResult<OrganizationAuditActorResponse>>(StatusCodes.Status200OK)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
+    [ProducesProblem(StatusCodes.Status401Unauthorized)]
+    [ProducesProblem(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> ListActorsPaged([FromQuery] OrganizationAuditActorsHttpQuery query, CancellationToken cancellationToken) =>
+        (await service.ListActorsPagedAsync(query.ToModel(), cancellationToken)).ToActionResult(this);
 }

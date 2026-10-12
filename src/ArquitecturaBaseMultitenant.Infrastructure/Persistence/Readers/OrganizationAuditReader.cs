@@ -29,10 +29,6 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
     private static readonly Dictionary<SecurityEventType, (TenantStatus Before, TenantStatus After)> PlatformActions =
         new() { [SecurityEventType.OrganizationApproved] = (TenantStatus.PendingApproval, TenantStatus.Active) };
 
-    /// <summary>El orden de la lista «Quién» del tablero Auditoria-Org: las personas, «Sistema» y «Plataforma».</summary>
-    private static readonly AuditActorKind[] ActorOrder =
-        [AuditActorKind.User, AuditActorKind.System, AuditActorKind.PlatformOperator];
-
     public async Task<CursorResult<OrganizationAuditRow>> ListAsync(ListOrganizationAuditRequest request,
         DateTime? startUtc, DateTime? endUtc, CancellationToken cancellationToken)
     {
@@ -298,31 +294,49 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
     }
 
     public async Task<IReadOnlyList<OrganizationAuditActorRow>> ListActorsAsync(ListOrganizationAuditRequest request,
-        DateTime? startUtc, DateTime? endUtc, CancellationToken cancellationToken)
+        DateTime? startUtc, DateTime? endUtc, CancellationToken cancellationToken) =>
+        (await ListActorsPagedAsync(request, new ListOrganizationAuditActorsRequest(), startUtc, endUtc, cancellationToken)).Items;
+
+    public async Task<PagedResult<OrganizationAuditActorRow>> ListActorsPagedAsync(ListOrganizationAuditRequest filters,
+        ListOrganizationAuditActorsRequest page, DateTime? startUtc, DateTime? endUtc, CancellationToken cancellationToken)
     {
-        var unfiltered = request with { ActorId = null, ActorKind = null };
-        var stored = await (await FilteredAsync(unfiltered, startUtc, endUtc, cancellationToken))
-            .Select(entry => new { entry.ActorId, entry.ActorKind })
-            .Distinct().ToArrayAsync(cancellationToken);
-        // Solo una persona va con su identificador: qué operador de Plataforma actuó es un dato interno de Plataforma.
-        var actors = stored.Select(actor => (ActorId: actor.ActorKind == AuditActorKind.User ? actor.ActorId : null,
-            actor.ActorKind)).ToHashSet();
-        if (ShowsPlatformActions(unfiltered) && !actors.Contains((null, AuditActorKind.PlatformOperator))
-            && await PlatformActionsOf(tenantContext.RequiredTenantId, startUtc, endUtc).AnyAsync(cancellationToken))
-            actors.Add((null, AuditActorKind.PlatformOperator));
-        var actorIds = actors.Where(actor => actor.ActorKind == AuditActorKind.User && actor.ActorId != null)
-            .Select(actor => actor.ActorId!.Value).Distinct().ToArray();
-        var names = actorIds.Length == 0
-            ? new Dictionary<Guid, string?>()
-            : await context.Users.AsNoTracking().Where(user => actorIds.Contains(user.Id))
-                .Select(user => new { user.Id, user.DisplayName, user.Status })
-                .ToDictionaryAsync(user => user.Id, user => user.Status == UserStatus.Deleted
-                    ? FormattingTexts.DeletedAccount : user.DisplayName, cancellationToken);
-        return actors.Select(actor => new OrganizationAuditActorRow(actor.ActorId, actor.ActorKind,
-                actor.ActorId is { } id ? names.GetValueOrDefault(id) : null))
-            .OrderBy(actor => Array.IndexOf(ActorOrder, actor.ActorKind))
-            .ThenBy(actor => actor.DisplayName, StringComparer.CurrentCulture)
-            .ToArray();
+        var unfiltered = filters with { ActorId = null, ActorKind = null };
+        var keys = (await FilteredAsync(unfiltered, startUtc, endUtc, cancellationToken))
+            .Select(entry => new { ActorId = entry.ActorKind == AuditActorKind.User ? entry.ActorId : null,
+                Order = entry.ActorKind == AuditActorKind.User ? 0 : entry.ActorKind == AuditActorKind.System ? 1 : 2 });
+        if (ShowsPlatformActions(unfiltered))
+            keys = keys.Concat(PlatformActionsOf(tenantContext.RequiredTenantId, startUtc, endUtc)
+                .Select(action => new { ActorId = (Guid?)null, Order = 2 }));
+        keys = keys.Distinct();
+        var deletedAccount = FormattingTexts.DeletedAccount;
+        var system = AuditTexts.Actor(AuditActorKind.System);
+        var platform = AuditTexts.Actor(AuditActorKind.PlatformOperator);
+        var options = from actor in keys
+                      join user in context.Users.AsNoTracking() on actor.ActorId equals (Guid?)user.Id into identities
+                      from user in identities.DefaultIfEmpty()
+                      select new ActorOption
+                      {
+                          ActorId = actor.ActorId, Order = actor.Order,
+                          DisplayName = actor.Order != 0 ? actor.Order == 1 ? system : platform
+                              : user == null ? null : user.Status == UserStatus.Deleted ? deletedAccount : user.DisplayName,
+                      };
+        options = options.ApplySearch(page.Search, actor => actor.DisplayName);
+        // El orden de grupos es fijo (personas, Sistema, Plataforma); el orden pedido cambia sólo sus nombres.
+        var grouped = options.OrderBy(actor => actor.Order);
+        var ordered = SortDescriptor.Parse(page.Sort)?.Descending == true
+            ? grouped.ThenByDescending(actor => actor.DisplayName) : grouped.ThenBy(actor => actor.DisplayName);
+        var result = await ordered.ThenBy(actor => actor.ActorId).ToPagedResultAsync(page, cancellationToken);
+        return new PagedResult<OrganizationAuditActorRow>([.. result.Items.Select(actor => new OrganizationAuditActorRow(
+            actor.ActorId, actor.Order == 0 ? AuditActorKind.User : actor.Order == 1 ? AuditActorKind.System : AuditActorKind.PlatformOperator,
+            actor.Order == 0 ? actor.DisplayName : null))],
+            result.Page, result.PageSize, result.TotalCount);
+    }
+
+    private sealed class ActorOption
+    {
+        public Guid? ActorId { get; init; }
+        public int Order { get; init; }
+        public string? DisplayName { get; init; }
     }
 
     private async Task<IQueryable<AuditEntry>> FilteredAsync(ListOrganizationAuditRequest request,

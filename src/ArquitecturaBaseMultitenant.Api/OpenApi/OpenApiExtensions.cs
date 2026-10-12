@@ -4,6 +4,7 @@ using System.Text.Json.Serialization.Metadata;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.OpenApi;
 
 namespace ArquitecturaBaseMultitenant.Api.OpenApi;
@@ -77,7 +78,7 @@ internal static class OpenApiExtensions
                 return Task.CompletedTask;
             });
 
-            options.AddOperationTransformer((operation, _, _) =>
+            options.AddOperationTransformer((operation, context, _) =>
             {
                 if (operation.Parameters is not null)
                 {
@@ -87,6 +88,18 @@ internal static class OpenApiExtensions
                     {
                         parameter.Schema = CreatePageSizeSchema();
                     }
+                }
+
+                if (context.Description.ActionDescriptor is ControllerActionDescriptor controller
+                    && controller.MethodInfo.GetCustomAttribute<BoundedLegacyCollectionAttribute>() is { } legacy)
+                {
+                    operation.Deprecated = true;
+                    operation.Description = $"Legacy bounded array: at most {legacy.MaxItems} items. Use {legacy.Successor} for paging and search.";
+                    operation.Extensions ??= new Dictionary<string, IOpenApiExtension>();
+                    operation.Extensions["x-successor"] = new JsonNodeExtension(JsonValue.Create(legacy.Successor)!);
+                    if (operation.Responses?.TryGetValue("200", out var response) == true && response.Content is not null)
+                        foreach (var media in response.Content.Values)
+                            if (media.Schema is OpenApiSchema schema) schema.MaxItems = legacy.MaxItems;
                 }
 
                 return Task.CompletedTask;

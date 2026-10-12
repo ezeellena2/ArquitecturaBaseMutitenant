@@ -11,4 +11,7 @@ public interface IOrganizationAuditService
 
     Task<Result<IReadOnlyList<OrganizationAuditActorResponse>>> ListActorsAsync(ListOrganizationAuditRequest request,
         CancellationToken cancellationToken);
+
+    Task<Result<PagedResult<OrganizationAuditActorResponse>>> ListActorsPagedAsync(
+        ListOrganizationAuditActorsRequest request, CancellationToken cancellationToken);
 }
