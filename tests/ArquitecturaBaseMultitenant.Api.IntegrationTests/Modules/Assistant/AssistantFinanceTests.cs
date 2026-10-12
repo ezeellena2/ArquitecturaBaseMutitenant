@@ -190,12 +190,26 @@ public sealed class AssistantFinanceTests(ApiFactory factory)
             await participant.ExecuteAsync(new AccountDeletionContext(binding.UserId, NowUtc, binding.ScopeTenantId), Ct);
             return Result.Success();
         });
-        await CompleteAsync(factory, binding, operation.Id, invoke: false);
-        await CompleteAsync(factory, binding, operation.Id, invoke: false);
+        // Deletion completes accounting before anonymizing its identity; a retry must not rebind the old account.
+        var rebinding = await Assert.ThrowsAsync<InvalidOperationException>(() => CompleteAsync(factory, binding, operation.Id, invoke: false));
+        Assert.Equal("A financial identity cannot be rebound.", rebinding.Message);
+        await WriteAsync(factory, binding, async services =>
+        {
+            var participant = services.GetRequiredService<IEnumerable<IAccountDeletionParticipant>>()
+                .Single(row => row.GetType().Name == "AssistantAccountDeletionParticipant");
+            await participant.ExecuteAsync(new AccountDeletionContext(binding.UserId, NowUtc, binding.ScopeTenantId), Ct);
+            return Result.Success();
+        });
         using var scope = factory.Services.CreateScope();
         using var tenant = scope.ServiceProvider.GetRequiredService<ITenantScope>().Enter(binding.ScopeTenantId!.Value);
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         Assert.Empty(await db.Set<AssistantUsageFact>().Where(row => row.OperationId == operation.Id).ToArrayAsync(Ct));
+        var accounting = await db.Set<AssistantFinancialOperation>().AsNoTracking().SingleAsync(row => row.Id == operation.Id, Ct);
+        Assert.True(accounting.ContentDeleted);
+        Assert.Equal(AssistantFinancialState.Completed, accounting.State);
+        Assert.NotNull(accounting.CompletedAtUtc);
+        Assert.NotEqual(Guid.Empty, accounting.UserId);
+        Assert.NotEqual(binding.UserId, accounting.UserId);
         var technical = await db.Set<AssistantFinancialCall>().AsNoTracking().SingleAsync(row => row.OperationId == operation.Id, Ct);
         Assert.True(technical.IsEstimated); Assert.Equal(.011264m, technical.Cost.Amount);
         Assert.Equal(1, (await db.Set<AssistantPlatformKeyDailyQuota>().SingleAsync(row => row.UserId == binding.UserId, Ct)).ConsumedQueries);

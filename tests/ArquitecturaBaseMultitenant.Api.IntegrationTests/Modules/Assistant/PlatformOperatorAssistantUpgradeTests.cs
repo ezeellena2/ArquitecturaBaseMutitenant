@@ -146,7 +146,7 @@ public sealed class PlatformOperatorAssistantUpgradeTests
         await using var factory = new ApiFactory();
         await factory.InitializeAsync();
         using var manager = AssistantTestData.Client(factory);
-        var account = await AccountJourney.RegisterAsync(factory, manager, Ct);
+        var account = await ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.AssistantTurns.AssistantTurnTestSession.PlatformAccountAsync(factory, manager);
         await PlatformOperators.GrantAsync(factory.Services, account.UserId, PlatformPermissions.LegacyBootstrap, Ct);
         await AccountJourney.AuthorizeAsync(manager, "platform", Ct);
         foreach (var path in new[] { "/api/platform/assistant/models", "/api/platform/assistant/settings", "/api/platform/assistant/conversations", "/api/platform/assistant/usage?month=2026-10" })
@@ -158,6 +158,10 @@ public sealed class PlatformOperatorAssistantUpgradeTests
         {
             await db.GetService<IMigrator>().MigrateAsync(Previous(db), Ct);
             await db.GetService<IMigrator>().MigrateAsync(Upgrade, Ct);
+            var upgraded = await db.PlatformPermissionAssignments.AsNoTracking().SingleAsync(value => value.UserId == account.UserId, Ct);
+            Assert.Equal(PlatformPermissions.LegacyBootstrap.Concat(Added).Order(), upgraded.Permissions.Order());
+            // El upgrade histórico se verifica con su esquema; el runtime exige luego el esquema actual completo.
+            await db.GetService<IMigrator>().MigrateAsync(null, Ct);
         }
         using (var models = await manager.GetAsync("/api/platform/assistant/models", Ct))
             Assert.Equal(HttpStatusCode.OK, models.StatusCode);
@@ -172,7 +176,7 @@ public sealed class PlatformOperatorAssistantUpgradeTests
         using (var history = await manager.GetAsync("/api/platform/assistant/conversations", Ct))
             Assert.Equal(HttpStatusCode.OK, history.StatusCode);
         using (var usage = await manager.GetAsync("/api/platform/assistant/usage?month=2026-10", Ct))
-            Assert.Equal(HttpStatusCode.NotImplemented, usage.StatusCode);
+            Assert.Equal(HttpStatusCode.OK, usage.StatusCode);
         using var settings = await ReadAsync(manager, "/api/platform/assistant/settings");
         Assert.False(settings.RootElement.GetProperty("hasKey").GetBoolean());
         using (var saved = await manager.PutAsJsonAsync("/api/platform/assistant/settings", new

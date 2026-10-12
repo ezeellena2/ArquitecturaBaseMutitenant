@@ -178,7 +178,7 @@ public sealed class AssistantToolsExecutionTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task Platform_direct_queries_delegate_usage_501_and_legal_revalidation_blocks_an_existing_tool()
+    public async Task Platform_direct_queries_read_usage_without_a_provider_and_legal_revalidation_blocks_an_existing_tool()
     {
         using var client = AssistantTestData.Client(factory);
         var account = await AccountJourney.RegisterAsync(factory, client, AssistantTestData.Ct);
@@ -202,8 +202,9 @@ public sealed class AssistantToolsExecutionTests(ApiFactory factory)
             Assert.True(result.IsSuccess, result.IsFailure ? result.Error.Code : "");
         }
         var usage = await quick.ExecuteAsync("assistant_usage", AssistantTestData.Ct);
-        Assert.True(usage.IsFailure);
-        Assert.Equal(ErrorType.NotImplemented, usage.Error.Type);
+        Assert.True(usage.IsSuccess, usage.IsFailure ? usage.Error.Code : "");
+        Assert.IsType<AssistantUsageQuickDataResponse>(usage.Value.Result.Data);
+        Assert.Contains(usage.Value.Result.Links, link => link.RouteKey == AssistantRouteKey.PlatformAssistantUsage);
         var future = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime.AddDays(1);
         var security = services.GetRequiredService<IEnumerable<IAssistantTool>>().Single(row => row.Key == "platform_security");
         var emptyRange = await security.ExecuteAsync(Args(new { fromUtc = future, toUtc = future.AddDays(1) }), AssistantTestData.Ct);

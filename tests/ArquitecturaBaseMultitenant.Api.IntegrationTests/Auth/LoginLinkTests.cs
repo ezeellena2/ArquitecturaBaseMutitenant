@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
@@ -141,10 +142,29 @@ public sealed partial class LoginLinkTests(ApiFactory factory) : IClassFixture<A
     public async Task Redeem_cookie_allows_current_terms_acceptance_before_protected_API()
     {
         await using var app = Host(); using var client = app.CreateClient(new() { AllowAutoRedirect = false, BaseAddress = new Uri("https://localhost") });
+        await app.Services.SeedDatabaseAsync(Ct);
+        await using (var read = app.Services.CreateAsyncScope())
+        {
+            // El seed compartido pudo publicar documentos después del instante inicial de esta fixture.
+            var latestUtc = await read.ServiceProvider.GetRequiredService<ApplicationDbContext>().LegalDocuments
+                .MaxAsync(document => document.EffectiveAtUtc, Ct);
+            if (latestUtc > _clock.GetUtcNow().UtcDateTime) _clock.SetUtcNow(new DateTimeOffset(latestUtc));
+        }
         var (_, _, token) = await PrepareAsync(app, client);
         using var redeem = await PostAsync(client, "redeem", new { token, access = "consumer" });
         Assert.Equal(HttpStatusCode.OK, redeem.StatusCode);
         await AccountJourney.AuthorizeAsync(client, "consumer", Ct);
+        await TransactionAsync(app.Services, async (provider, ct) =>
+        {
+            var db = provider.GetRequiredService<ApplicationDbContext>();
+            var currentVersion = await db.LegalDocuments.Where(document => document.Kind == LegalDocumentKind.Terms)
+                .MaxAsync(document => document.Version, ct);
+            var document = LegalDocument.Create(LegalDocumentKind.Terms, checked(currentVersion + 1), _clock.GetUtcNow().UtcDateTime);
+            var repository = provider.GetRequiredService<ILegalRepository>();
+            repository.AddDocument(document);
+            repository.AddContent(LegalDocumentContent.Create(document.Id, "es-AR", "Términos nuevos de prueba."));
+            repository.AddContent(LegalDocumentContent.Create(document.Id, "en-US", "New test terms."));
+        });
         using var blocked = await client.GetAsync("/api/me/login-methods", Ct);
         Assert.Equal(HttpStatusCode.Forbidden, blocked.StatusCode);
         Assert.Equal("Legal.AcceptanceRequired", (await blocked.Content.ReadFromJsonAsync<JsonObject>(Ct))!["code"]!.GetValue<string>());

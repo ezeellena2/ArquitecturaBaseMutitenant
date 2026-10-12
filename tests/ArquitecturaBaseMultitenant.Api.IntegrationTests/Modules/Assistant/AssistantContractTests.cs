@@ -150,7 +150,7 @@ public sealed class AssistantContractTests(ApiFactory factory)
             { Content = JsonContent.Create(new { text = "Contenido privado de prueba", attachmentIds = Array.Empty<Guid>(), conversationVersion = 0 }) };
         message.Headers.Add("Idempotency-Key", Guid.CreateVersion7().ToString("D"));
         using var response = await client.SendAsync(message, Ct);
-        await Stub(response);
+        await ConversationNotFoundAsync(response);
         Assert.DoesNotContain("Contenido privado de prueba", await response.Content.ReadAsStringAsync(Ct));
     }
     [Fact]
@@ -185,12 +185,12 @@ public sealed class AssistantContractTests(ApiFactory factory)
         var assistant = Assert.Single(capabilities, value => value.GetProperty("key").GetString() == "assistant");
         Assert.False(assistant.GetProperty("available").GetBoolean());
     }
-    private static async Task Stub(HttpResponseMessage response)
+    private static async Task ConversationNotFoundAsync(HttpResponseMessage response)
     {
-        Assert.Equal(HttpStatusCode.NotImplemented, response.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
         using var problem = await response.Content.ReadFromJsonAsync<JsonDocument>(Ct);
-        Assert.Equal("General.Contract.NotImplemented", problem!.RootElement.GetProperty("code").GetString());
+        Assert.Equal(AssistantErrors.ConversationNotFoundCode, problem!.RootElement.GetProperty("code").GetString());
         Assert.False(string.IsNullOrWhiteSpace(problem.RootElement.GetProperty("traceId").GetString()));
     }
     private sealed class AvailablePolicy : IFeatureAvailabilityPolicy
