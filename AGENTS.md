@@ -45,7 +45,7 @@ El inventario de todos los estándares transversales (los definidos y los propue
 
 ## Forma de trabajo
 - Commits chicos, en español, con conventional commits. **Commitear cada cambio coherente y verificado**; los pasos internos de una tarea no requieren commits separados. No acumular trabajo terminado sin commitear.
-- TDD donde hay lógica: test dirigido rojo → verde y build del proyecto afectado durante el trabajo. Si cambia una ruta, persistencia, autenticación o aislamiento, correr además la integración y los tests de seguridad afectados. La solución completa (`dotnet build` sin advertencias y `dotnet test` con Docker) se verifica al cerrar la etapa y en CI; no se repite por cada paso. Apagar Aspire con `aspire stop` si se levantó.
+- TDD donde hay lógica: test dirigido rojo → verde y build del proyecto afectado. Si la tarea cambia una ruta, persistencia, autenticación o aislamiento, **al terminarla** (no antes de cada commit) se corren los tests de integración y de seguridad de esa área. La solución completa (`dotnet build` sin advertencias y `dotnet test` con Docker) se corre una vez, en la puerta, y en CI. Apagar Aspire con `aspire stop` si se levantó.
 - Una pantalla nueva del front se dibuja antes de programarse, y el usuario aprueba el tablero en el lienzo. **Desde la Etapa 7 se programa directo** (pedido del usuario, 2026-10-07):
   - tests donde importan;
   - sin visto bueno por pantalla ni capturas en cada avance;
@@ -57,6 +57,13 @@ El inventario de todos los estándares transversales (los definidos y los propue
   - **Planes cortos.** Un plan de etapa tiene unas 4.000 palabras como mucho: contrato, tareas con sus archivos y tests, y el texto para cada chat. No lleva historial.
   - **Sin actas.** El estado de un plan es una tabla de tareas (hecha o pendiente), y el resultado de la puerta es otra tabla corta. No se registra cada corrida ni se commitea documentación por cada paso. La documentación se toca cuando cambia una regla, un contrato o una decisión.
   - **Lo técnico lo decide quien programa, y lo avisa después.** Entran ahí los cambios de contrato que no cambian lo que una persona ve o puede hacer, los arreglos de scripts y de datos de prueba, y fusionar la propia documentación ya verificada. Al usuario se le pregunta solo lo de producto.
+  - **Lo que no se hace** (en la puerta de la 8 hubo 177 corridas y 558 archivos de evidencia):
+    - revisiones independientes por tarea o por arreglo, como subagentes revisores de especificación o de calidad: hay una sola revisión de código, al cerrar la etapa;
+    - repetir un test que ya pasó, ni corridas «de estabilidad»: un test que se pasó de tiempo se corre solo una vez más, aislado;
+    - guardar evidencia (recibos, hashes, logs de diagnóstico): las salidas quedan en `.local/` y en el plan va solo la tabla final;
+    - recapturar pantallas de etapas anteriores: la galería es solo de las pantallas nuevas o cambiadas en la etapa;
+    - probar el retiro de un módulo en varias variantes: va una vez, en la etapa de ese módulo, con la base vacía (build, tests e ingreso);
+    - worktrees o etiquetas fuera de la puerta.
 
 ## Reglas que no se negocian
 1. **Capas:** Domain ← Application ← Infrastructure; Api compone. El recorrido es `Controllers → I<X>Service → <X>Service → I<X>Repository/I<X>Reader/Integrations → Infrastructure`. Sin handlers ni CQRS con `ICommand`, sin repositorio genérico, sin Minimal APIs de negocio, sin Scrutor ni AutoMapper.

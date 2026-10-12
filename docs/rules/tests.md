@@ -4,7 +4,7 @@
 
 ## Cómo se hace
 - Para un cambio de lógica, observar rojo por la conducta ausente, implementar, repetir el test focal en verde y commitear el cambio coherente. Los pasos internos no necesitan un commit ni una suite completa cada uno.
-- Si cambia una ruta, persistencia, autenticación o aislamiento, correr antes del commit la integración focal y los tests de seguridad afectados. Las pruebas con Testcontainers usan Docker.
+- Si la tarea cambia una ruta, persistencia, autenticación o aislamiento, al terminarla (no antes de cada commit) se corren los tests de integración y de seguridad de esa área. Las pruebas con Testcontainers usan Docker. La suite completa corre una vez, en la puerta.
 - Para documentación, capturas o configuración sin lógica, usar la comprobación pertinente; no escribir un test que solo repita el cambio.
 
 | Qué | Dónde | Con qué |
