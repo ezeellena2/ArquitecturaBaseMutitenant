@@ -1,13 +1,16 @@
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
+using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Inbound;
-internal sealed partial class WhatsAppInboundProcessor(WhatsAppInboundSignal signal, IServiceScopeFactory scopes,
-    IOptions<WhatsAppOptions> options, TimeProvider clock, ILogger<WhatsAppInboundProcessor> logger) : BackgroundService
+internal sealed class WhatsAppInboundProcessor(WhatsAppInboundSignal signal, IServiceScopeFactory scopes,
+    IOptions<WhatsAppOptions> options, TimeProvider clock, ILogger<WhatsAppInboundProcessor> logger)
+    : PeriodicWorker(TimeSpan.FromSeconds(options.Value.InboundPollSeconds), clock, logger)
 {
+    protected override bool Enabled => options.Value.ProcessInboundInBackground && !string.IsNullOrWhiteSpace(options.Value.PhoneNumberId);
     internal async Task<int> ProcessPendingAsync(CancellationToken ct)
     {
         var processed = 0;
@@ -31,25 +34,18 @@ internal sealed partial class WhatsAppInboundProcessor(WhatsAppInboundSignal sig
             }
             catch (Exception exception) when (!ct.IsCancellationRequested)
             {
-                LogFailed(logger, claim.MessageId, exception.GetType().Name);
+                using var logScope = Logger.BeginScope(new Dictionary<string, object> { ["MessageId"] = claim.MessageId });
+                ExceptionLog.Write(Logger, nameof(WhatsAppInboundProcessor), exception);
                 await using var scope = scopes.CreateAsyncScope();
                 await scope.ServiceProvider.GetRequiredService<IWhatsAppInboundService>().FailAsync(claim, ct);
             }
         }
         return processed;
     }
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override Task RunIterationAsync(CancellationToken ct) => ProcessPendingAsync(ct);
+    protected override async ValueTask<bool> WaitForNextIterationAsync(PeriodicTimer timer, CancellationToken ct)
     {
-        if (!options.Value.ProcessInboundInBackground || string.IsNullOrWhiteSpace(options.Value.PhoneNumberId)) return;
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            try { await ProcessPendingAsync(stoppingToken); }
-            catch (Exception exception) when (!stoppingToken.IsCancellationRequested) { LogRoundFailed(logger, exception.GetType().Name); }
-            await signal.WaitAsync(TimeSpan.FromSeconds(options.Value.InboundPollSeconds), clock, stoppingToken);
-        }
+        await signal.WaitAsync(TimeSpan.FromSeconds(options.Value.InboundPollSeconds), Clock, ct);
+        return !ct.IsCancellationRequested;
     }
-    [LoggerMessage(Level = LogLevel.Warning, Message = "WhatsApp inbound message {MessageId} failed with {ExceptionType}")]
-    private static partial void LogFailed(ILogger logger, Guid messageId, string exceptionType);
-    [LoggerMessage(Level = LogLevel.Warning, Message = "WhatsApp inbound round failed with {ExceptionType}")]
-    private static partial void LogRoundFailed(ILogger logger, string exceptionType);
 }

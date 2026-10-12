@@ -6,14 +6,18 @@
 | C1 | Pendiente del aviso del usuario de que Diseño publicó el tablero. |
 | C10 | Hecha: contrato y metadatos generados, descripción pública, CUIT, roles, cuenta eliminada y categorías. Build 0/0; unitarios 133 e integración 46 verdes; pruebas focales del front y contratos verdes. |
 | C4 | Hecha: hooks comunes, blocker público, variables tipadas y guarda UNSAFE. Recorridos existentes y prueba de barra final verdes; TypeScript y lint sin errores nuevos. |
-| C11 | En curso. |
-| C7, C2, C3, C9, C5, C6, C8 | Pendientes, en el orden de la revalidación. |
+| C11 | Hecha: reloj de servidor, validación Google, textos compuestos y duplicados. Back 325 y front 341 casos focales verdes; builds/TypeScript sin errores. |
+| C7 | Hecha en núcleo y WhatsApp: diagnóstico privado y worker común. Rojo observado; 6 unitarios y 46 de integración verdes; build Api 0/0. Asistente se conserva en el alcance de 8b. |
+| C2 | En curso. |
+| C3, C9, C5, C6, C8 | Pendientes, en el orden de la revalidación. |
 | Cierre | Pendiente; una corrida completa al terminar los correctivos habilitados. |
 
 **Decisiones técnicas:** C0 usa el nombre nuevo `invitacion_organizacion_literal` y conserva los componentes URL del inglés aprobado; sólo se configura al verificar ambas variantes APPROVED / UTILITY.
 
 - C10: FluentValidation publica límites/rangos; `contracts` genera tipos y `validation.ts`; la baja persiste `DisplayName=null` y se traduce según estado al leer.
 - C4: `useResourceAction` reconoce sólo variables ejecutadas por su dueño, incluye reintentos sin observer y excluye borradores abandonados; `useEditPage` conserva el único blocker público y no compara rutas literales.
+- C11: HTTP `Date` y avance monotónico fijan tiempos/reenvíos; Application valida el inicio Google y contiene `WebClientOptions`/`AuthServerDefaults` para respetar capas.
+- C7: `ExceptionLog` publica sólo tipos/stacks, también internos; `PeriodicWorker` conserva intervalos/señal y continúa tras fallar. HTTP completa ProblemDetails aun con Accept no admitido para que el framework no registre la excepción cruda.
 
 **Cuándo y quién:** un chat nuevo de Codex, con los dos repos, en paralelo con la 8b y antes de la 11 (decisión del usuario, 2026-10-12). La 11 copia los moldes del núcleo (Roles, las listas para elegir, «Para resolver»): estos arreglos van primero para que no copie sus problemas. **Por qué:** la revisión de código del 2026-10-12 encontró que las reglas se cumplen, pero hay cosas que andan con pocos datos y se rompen con muchos, valores fijos y código copiado en vez de compartido.
 
