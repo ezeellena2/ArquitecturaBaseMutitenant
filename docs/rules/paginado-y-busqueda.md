@@ -39,7 +39,7 @@
 
 ## Lo verifica
 - `HarnessTests` (E0): formato y referencias de la ficha.
-- `GrowingCollectionContractTests`: detecta arrays e interfaces de colección HTTP, permite sólo catálogos cerrados o adaptadores legacy acotados con sucesora paginada y verifica los límites publicados.
+- `GrowingCollectionContractTests` (E0), correctivo C9: detecta arrays e interfaces de colección HTTP, permite sólo catálogos cerrados o adaptadores legacy acotados con sucesora paginada y verifica los límites publicados.
 
 ## Detalle
 [backend.md §9, "Paginado, orden y búsqueda"](../architecture/backend.md#paginado-orden-y-búsqueda)

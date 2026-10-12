@@ -140,8 +140,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   ├── Roles/
 │   │   │   ├── Settings/
 │   │   │   ├── Tenancy/
-│   │   │   ├── Time/
-│   │   │   └── WhatsApp/
+│   │   │   └── Time/
 │   │   ├── Modules/  módulos quitables: el núcleo no los referencia (test)
 │   │   │   ├── Assistant/
 │   │   │   │   ├── Configuration/
@@ -270,8 +269,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   ├── ReferenceData/
 │   │   ├── RequestContext/
 │   │   ├── Security/
-│   │   ├── Time/
-│   │   └── WhatsApp/
+│   │   └── Time/
 │   └── ArquitecturaBaseMultitenant.ServiceDefaults/
 ├── tests/  ver abajo
 │   ├── ArquitecturaBaseMultitenant.Api.IntegrationTests/
