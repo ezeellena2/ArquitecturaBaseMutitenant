@@ -8,7 +8,7 @@ La regla monetaria general redondea cada línea y el total a las unidades menore
 
 Con las tarifas Haiku aprobadas de USD 0,10/0,50 por millón, 1000 tokens de entrada y 100 de salida cuestan USD 0,00015. Cien llamadas acumulan USD 0,015; redondear cada una a dos decimales produce cero. La tarifa de escritura de caché USD 0,125 por millón también debe conservarse antes de calcular.
 
-El usuario autorizó expresamente la [propuesta concreta](../reviews/2026-10-10-etapa-8b-precision-costos.md): «Sí, autorizar precisión técnica y documentarla». La excepción se limita a estimaciones técnicas de IA, sin cambiar contrato HTTP ni tipos Front.
+El usuario autorizó expresamente la [propuesta concreta](0048-asistente.md): «Sí, autorizar precisión técnica y documentarla». La excepción se limita a estimaciones técnicas de IA, sin cambiar contrato HTTP ni tipos Front.
 
 ## Decisión
 

@@ -1,6 +1,6 @@
 # ADR 0037 · Arneses ejecutables
 
-Estado: aceptada el 2026-10-02. La [fila 0037 del índice](README.md) resume esta decisión; el [plan](../plans/2026-10-02-arneses-ejecutables.md) la detalla y registra lo que se decidió al implementarla.
+Estado: aceptada el 2026-10-02. La [fila 0037 del índice](README.md) resume esta decisión; el [plan](0037-arneses-ejecutables.md) la detalla y registra lo que se decidió al implementarla.
 
 ## Contexto
 

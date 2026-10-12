@@ -1,6 +1,6 @@
 # ADR 0039 · El tope de dependencias cuenta solo las de negocio
 
-Estado: aceptada el 2026-10-03 por el dueño del producto, a partir de la [revisión de calidad de diseño](../reviews/2026-10-03-calidad-de-diseno.md) (decisión D1).
+Estado: aceptada el 2026-10-03 por el dueño del producto, a partir de la [revisión de calidad de diseño](README.md) (decisión D1).
 
 ## Contexto
 

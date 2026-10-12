@@ -1,6 +1,6 @@
 # Arneses ejecutables
 
-Un **arnés ejecutable** es una rutina que se corre a mano o programada: **detecta** con un script (0 tokens), **arregla solo** lo mecánico (0 tokens), le pasa a un modelo barato **solo** lo que pide criterio y **deja anotado para vos** lo que es una decisión de producto o un cambio de código. Termina con un commit en una rama aparte (`arnes/<arnés>/<AAAAMMDD-HHmm>`), sin push. Las decisiones están en el [ADR 0037](../../docs/decisions/0037-arneses-ejecutables.md); el plan, en [docs/plans/2026-10-02-arneses-ejecutables.md](../../docs/plans/2026-10-02-arneses-ejecutables.md).
+Un **arnés ejecutable** es una rutina que se corre a mano o programada: **detecta** con un script (0 tokens), **arregla solo** lo mecánico (0 tokens), le pasa a un modelo barato **solo** lo que pide criterio y **deja anotado para vos** lo que es una decisión de producto o un cambio de código. Termina con un commit en una rama aparte (`arnes/<arnés>/<AAAAMMDD-HHmm>`), sin push. Las decisiones están en el [ADR 0037](../../docs/decisions/0037-arneses-ejecutables.md); el plan, en [docs/plans/2026-10-02-arneses-ejecutables.md](../../docs/decisions/0037-arneses-ejecutables.md).
 
 No es lo mismo que [el arnés estático](../../docs/architecture/arnes.md) (fichas, punteros y `HarnessTests`), que **frena** el build cuando algo se rompe pero no arregla nada.
 

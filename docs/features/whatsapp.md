@@ -28,7 +28,7 @@ El bot decide con la cuenta y el método originales de la entrada preparados baj
 
 Desconocido con registro abierto y país habilitado por `WhatsApp:AllowedCountries` recibe un CTA a `/registro?channel=whatsapp`, sin teléfono en query y sin crear identidad. El formulario conserva términos y OTP. El CTA selecciona WhatsApp cuando la API publica ese canal. Con registro cerrado o país excluido recibe la variante `Bot.Closed` con dos botones de respuesta de IDs públicos fijos `bot.sign-in`/`bot.recover`; al elegir uno, el siguiente reply aporta el CTA URL único a ingreso o recuperación. Un Phone ya verificado conserva su enlace de ingreso aunque se retire su país de la lista de altas. El reader admite esos IDs, no tokens arbitrarios. Es el formato de Cloud API copiado de ArquitecturaBase, sin nuevas plantillas ni pantallas.
 
-Los replies libres conservan en su payload cifrado el cierre de ventana `LastInboundAtUtc + 24 h`. Cloud client vuelve a verificarlo con el reloj actual antes de POST: un reply vencido termina sin llamar a Meta y se limpia el payload. Las plantillas no usan esa ventana. El detalle de preview/canje/replay está en [Identidad](identidad.md#e8--enlaces-de-ingreso).
+Los replies libres conservan en su payload cifrado el cierre de ventana `LastInboundAtUtc + 24 h`. Cloud client vuelve a verificarlo con el reloj actual antes de POST: un reply vencido termina sin llamar a Meta y se limpia el payload. Las plantillas no usan esa ventana. El detalle de preview/canje/replay está en [Identidad](identidad.md#enlaces-de-ingreso).
 
 ## Operación y entrega
 

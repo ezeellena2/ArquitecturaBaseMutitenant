@@ -75,7 +75,7 @@ test('punteros: crea, corrige y elimina los que no pertenecen a raíces del mapa
   ].sort());
   const crear = hs.find((h) => h.archivo === 'src/Demo.Application/Services/AGENTS.md');
   const lineas = crear.parche.contenido.trim().split('\n');
-  assert.ok(lineas.length <= 8);
+  assert.ok(lineas.length <= 3);
   assert.match(crear.parche.contenido, /Servicio y helpers/);
   assert.match(crear.parche.contenido, /docs\/rules\/guardado\.md/);
 });

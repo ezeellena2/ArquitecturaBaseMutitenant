@@ -29,6 +29,6 @@ El plan original daba a los operadores dos roles fijos, Owner y Support. El tabl
 
 - **Modelo:** `PlatformPermissionAssignment` reemplaza a `PlatformRole` y `PlatformRoleAssignment`, con la migración `PlatformOperatorPermissions`.
 - **Protección del último administrador:** está hecha (T12, `PlatformOperatorGuard`).
-- **La invitación con vencimiento (2026-10-04)** cambia lo que entregó T16, que crea la cuenta activa en el momento: hace falta el estado pendiente, el vencimiento, reenviar y revocar, con sus tests. La [decisión 23 del plan de la Etapa 5](../plans/2026-10-03-etapa-5-plataforma.md) queda corregida.
+- **La invitación con vencimiento (2026-10-04)** cambia lo que entregó T16, que crea la cuenta activa en el momento: hace falta el estado pendiente, el vencimiento, reenviar y revocar, con sus tests. La [decisión 23 del plan de la Etapa 5](../features/plataforma.md) queda corregida.
 - **T16** suma la invitación de operadores. También los controles de que un operador no entra como persona ni a una organización: en `ConnectService`, en la elección del acceso y en las invitaciones, con sus tests.
 - **Docs que todavía hablan de «rol Owner» o «rol de plataforma»:** `arbol.md` y `backend.md` §11. Se corrigen en la consolidación.

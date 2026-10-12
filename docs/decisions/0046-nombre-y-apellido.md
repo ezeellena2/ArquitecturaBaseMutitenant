@@ -24,4 +24,4 @@ Mi cuenta pide «Nombre y apellido» en un solo campo (`DisplayName`). Además, 
   - los tests.
 - **Front:** Mi cuenta con dos campos, y los tipos regenerados.
 - **Lienzo:** Diseño dibuja «Tus datos» de Cuenta y M-Cuenta con los dos campos, y cualquier otro tablero que edite el nombre.
-- **Plan:** A6 y A7 de los [arreglos antes de la Etapa 7](../plans/2026-10-06-arreglos-antes-de-la-7.md).
+- **Plan:** A6 y A7 de los [arreglos antes de la Etapa 7](../architecture/backend.md).

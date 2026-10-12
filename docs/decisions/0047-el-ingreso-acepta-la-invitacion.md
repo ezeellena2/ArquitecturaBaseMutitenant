@@ -26,4 +26,4 @@ Una organización creada desde Plataforma invita a su Dueño por correo, sin cre
 
 - **Back:** el pedido y la verificación del código reconocen las invitaciones vigentes y las aceptan en la misma transacción. Lleva tests de integración: con invitación vigente, vencida y revocada, por las dos puertas y con varias organizaciones. Probar el correo no registra una aceptación legal: el gate existente exige el consentimiento explícito antes de usar la aplicación.
 - **E2E real:** la Plataforma crea una organización y el Dueño invitado entra por «Ingresá como empresa» con el código, sin tocar el enlace.
-- **Plan:** A9 de los [arreglos antes de la Etapa 7](../plans/2026-10-06-arreglos-antes-de-la-7.md).
+- **Plan:** A9 de los [arreglos antes de la Etapa 7](../architecture/backend.md).

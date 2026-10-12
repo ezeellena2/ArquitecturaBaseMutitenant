@@ -8,6 +8,7 @@
 - No cuentan ILogger, TimeProvider, IRequestValidator ni IUnitOfWork; IOptions y las demás dependencias sí. No partir en delegados vacíos.
 - El servicio público abre la UoW; helpers y adaptadores de puertos neutrales trabajan dentro sin otra UoW.
 - Un adaptador de Integrations registrado por un módulo toma nombre del contrato, conserva tope/registro y no es helper.
+**Sufijos de los helpers** (lista cerrada).
 | Sufijo | Qué hace |
 |---|---|
 | `Policy` | Decide sin escribir: devuelve la decisión o el error. |

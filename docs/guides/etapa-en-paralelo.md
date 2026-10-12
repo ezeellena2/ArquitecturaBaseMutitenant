@@ -1,6 +1,6 @@
 # Una etapa con back y front en paralelo
 
-Desde la Etapa 8, cada etapa con back y front se programa con **dos agentes a la vez**, uno por repo, y se integra al final. Lo pidió el usuario el 2026-10-07. Rige junto con la forma de trabajo rápida: programar directo, tests donde importan y una sola puerta al final ([plan de la Etapa 7](../plans/2026-10-04-etapa-7-publico-y-personal.md), «Forma de trabajo»).
+Desde la Etapa 8, cada etapa con back y front se programa con **dos agentes a la vez**, uno por repo, y se integra al final. Lo pidió el usuario el 2026-10-07. Rige junto con la forma de trabajo rápida: programar directo, tests donde importan y una sola puerta al final ([plan de la Etapa 7](../features/sitio-publico.md), «Forma de trabajo»).
 
 Los dos repos son separados, así que los dos agentes no se pisan. Lo único que comparten es **el contrato**.
 

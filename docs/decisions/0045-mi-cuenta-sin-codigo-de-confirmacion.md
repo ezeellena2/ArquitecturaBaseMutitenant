@@ -38,4 +38,4 @@ Se le ofreció confirmar una vez y quedar habilitado 15 minutos. Eligió que no 
   - los tests de reautenticación pasan a probar que la acción anda sin código y que sale el aviso.
 - **Front:** Mi cuenta deja de abrir el paso del código antes de cada acción. Los diálogos de confirmación («¿Quitar este correo?») siguen, sin código.
 - **E2E real:** el recorrido «quitar un método con código enviado a otro» pasa a quitarlo sin código. «Sesión abierta no suma correo» se reemplaza por «sumar un correo manda solo el código del correo nuevo».
-- **Plan:** A5 de los [arreglos antes de la Etapa 7](../plans/2026-10-06-arreglos-antes-de-la-7.md).
+- **Plan:** A5 de los [arreglos antes de la Etapa 7](../architecture/backend.md).

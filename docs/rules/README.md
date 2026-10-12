@@ -1,6 +1,6 @@
 # Fichas de reglas (backend)
 
-Una ficha por tema, todas con el mismo formato: **Regla · Cómo se hace · Prohibido · Copiá de · Lo verifica · Detalle** ([arnes.md §2](../architecture/arnes.md#2-formato-de-una-ficha-docsrulestemamd)). Las nombran los `AGENTS.md` de cada carpeta y la tabla "si vas a tocar X, leé Y" del `AGENTS.md` raíz.
+Una ficha por tema, todas con el mismo formato: **Regla · Cómo se hace · Prohibido · Copiá de · Lo verifica · Detalle** ([arnes.md §2](../architecture/arnes.md)). Las nombran los `AGENTS.md` de cada carpeta y la tabla "si vas a tocar X, leé Y" del `AGENTS.md` raíz.
 
 | Ficha | Tema |
 |---|---|

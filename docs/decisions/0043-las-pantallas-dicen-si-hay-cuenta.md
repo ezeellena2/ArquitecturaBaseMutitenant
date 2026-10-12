@@ -47,4 +47,4 @@ Las pantallas dicen claramente qué pasa con el correo, **antes** de mandar un c
 - **Back:** la petición del código responde un error propio cuando no hay cuenta, cuando ya la hay o cuando el correo es de un operador, con su código `Area.Entidad.Motivo` en es y en. Desaparecen el código interno que no se mandaba (la precisión de T14) y el aviso «Ya tenés una cuenta con este correo» para quien recupera o agrega un correo ajeno.
 - **Tests:** los que exigían la misma respuesta con un correo libre y con uno ocupado pasan a exigir la respuesta propia de cada caso.
 - **Lienzo:** Diseño dibuja los estados nuevos en Ingreso, Registro, Registro-Empresa, Recuperar y Cuenta-Agregar, con sus `M-*`.
-- **Plan:** se programa como **A2** de los [arreglos antes de la Etapa 7](../plans/2026-10-06-arreglos-antes-de-la-7.md). El E2E real suma un recorrido por cada caso.
+- **Plan:** se programa como **A2** de los [arreglos antes de la Etapa 7](../architecture/backend.md). El E2E real suma un recorrido por cada caso.

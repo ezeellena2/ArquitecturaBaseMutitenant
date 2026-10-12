@@ -36,4 +36,4 @@ Plataforma tiene su propia sesión, como un backoffice:
   - salir de un lado no cierra el otro;
   - cerrar sesiones cierra las dos.
 - **E2E real:** un recorrido nuevo. El operador entra a Plataforma y, en el mismo navegador, una persona ingresa con otro correo. Los dos lados siguen andando.
-- **Plan:** A3 de los [arreglos antes de la Etapa 7](../plans/2026-10-06-arreglos-antes-de-la-7.md).
+- **Plan:** A3 de los [arreglos antes de la Etapa 7](../architecture/backend.md).

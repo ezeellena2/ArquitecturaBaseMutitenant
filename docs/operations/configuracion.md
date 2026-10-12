@@ -142,7 +142,7 @@ Las mismas claves, como variables de entorno con doble guion bajo (`Email__Smtp_
 
 ## Preparación del asistente (E8b, todavía planificada)
 
-El [plan E8b T03](../plans/2026-10-08-etapa-8b-asistente.md#t03--configuración-modelos-y-claves) implementa las claves y opciones siguientes. La prueba manual con proveedor real queda para Integración; las alertas de costo y su SMTP/outbox dependen de T06. No plantillas Meta para el asistente ni cambio de URL del túnel/webhook E8.
+El [configuración del asistente](../features/asistente.md) implementa las claves y opciones siguientes. La prueba manual con proveedor real queda para Integración; las alertas de costo y su SMTP/outbox dependen de T06. No plantillas Meta para el asistente ni cambio de URL del túnel/webhook E8.
 
 ### Claves y catálogo técnico
 
@@ -156,7 +156,7 @@ dotnet user-secrets set "Assistant:Platform:ApiKey" "<tu-clave-de-Anthropic>" --
 
 Reiniciá la API después de cargarla. En producción, configurá el secreto `Assistant__Platform__ApiKey` en el entorno del proceso de la API, mediante el mecanismo de secretos del host. No agregues su valor a archivos versionados. También se puede cargar desde **Configuración del asistente de Plataforma**, con permiso `platform.assistant.configure`: «Reemplazar» valida la clave y la guarda cifrada. Esa elección persistida manda sobre user-secrets y la variable de entorno; «Quitar» también manda e impide que el secreto de arranque la reponga. Cambiar el secreto de arranque no reemplaza una elección persistida: usá Configuración de Plataforma para cambiarla.
 
-La clave puede quedar ausente hasta que la cargues: no es una opción requerida en el arranque. La aplicación y las demás funciones siguen funcionando; el asistente muestra **Sin configurar** del tablero, con **Revisar configuración** sólo para quien tiene permiso. No se llama a Anthropic al iniciar ni se activa un proveedor falso automáticamente. Las suites y el E2E determinístico usan `FakeChatClient` sólo en su entorno aislado explícito y comprueban también el caso sin clave. Por pedido del usuario del 2026-10-10, la [prueba manual con Anthropic real](../plans/2026-10-08-etapa-8b-asistente.md#prueba-manual-con-clave-real) queda pendiente del usuario hasta que obtenga y cargue la clave; los resultados con Fake no acreditan ese tramo.
+La clave puede quedar ausente hasta que la cargues: no es una opción requerida en el arranque. La aplicación y las demás funciones siguen funcionando; el asistente muestra **Sin configurar** del tablero, con **Revisar configuración** sólo para quien tiene permiso. No se llama a Anthropic al iniciar ni se activa un proveedor falso automáticamente. Las suites y el E2E determinístico usan `FakeChatClient` sólo en su entorno aislado explícito y comprueban también el caso sin clave. Por pedido del usuario del 2026-10-10, la [prueba manual con Anthropic real](../features/asistente.md) queda pendiente del usuario hasta que obtenga y cargue la clave; los resultados con Fake no acreditan ese tramo.
 
 Los precios iniciales y presupuestos usan USD. La fuente `scripts/datos-de-referencia/habilitados.json` habilita ARS y USD; ARS sigue siendo el default. Los modelos iniciales y sus precios normales por millón se incorporan una sola vez; el seed del asistente no pisa ediciones posteriores ni rechaza un recorrido sin cambios por una moneda histórica deshabilitada. Los cambios de modelo o política se leen nuevamente antes de admitir cada turno, sin fallback hacia otro modelo o financiamiento de Plataforma.
 
