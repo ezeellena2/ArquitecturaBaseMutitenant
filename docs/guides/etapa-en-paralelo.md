@@ -32,7 +32,7 @@ Las partes 2a y 2b corren al mismo tiempo.
 5. La galería de capturas lado a lado de las pantallas nuevas.
 6. El recorrido de usuario a mano, en un navegador con sesiones de antes, según la puerta del [plan de arreglos](../plans/2026-10-06-arreglos-antes-de-la-7.md#puerta-el-recorrido-de-un-usuario-nuevo) y los recorridos de la etapa.
 
-La puerta se corre una vez y lo que falla vuelve a su dueño. Con el arreglo se repite solo esa verificación, y al final va una sola corrida completa: no se arma un corte nuevo por cada arreglo. El resultado es una tabla corta, con una fila por paso, y no un registro de cada corrida (`AGENTS.md`, «Cierre liviano»).
+Cada paso necesita una corrida completa en verde con el código de la etapa. Lo que falla vuelve a su dueño, y con el arreglo se corre solo lo que ese arreglo toca. No se repite todo al final ni se arma un corte nuevo por cada arreglo. El resultado es una tabla corta, con una fila por paso, y no un registro de cada corrida (`AGENTS.md`, «Velocidad y cierre liviano»).
 
 ## Cómo se arma el plan de una etapa
 
@@ -41,4 +41,4 @@ El plan ejecutable de cada etapa trae tres secciones, una por parte:
 - «Back» y «Front», con sus tareas;
 - «Integración y puerta».
 
-Además trae un texto listo para pegar en cada chat de Codex, y la sección «Cambios al contrato», vacía al empezar.
+Además trae un texto listo para pegar en cada chat de Codex, y la sección «Cambios al contrato», vacía al empezar. Tiene unas 4.000 palabras como mucho y no lleva historial: el estado es una tabla de tareas.

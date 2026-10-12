@@ -16,7 +16,7 @@ El plan tiene que poder ejecutarse sin adivinar. Las decisiones de producto las 
    - la guía `docs/guides/etapa-en-paralelo.md`;
    - como modelo de forma, los planes de la 8 y la 8b: `docs/plans/2026-10-07-etapa-8-whatsapp.md` y `docs/plans/2026-10-08-etapa-8b-asistente.md`.
 2. **Si falta un tablero, pedilo antes de escribir el plan.** Lo dibuja «Conversacion - Diseño», la única que toca el lienzo. Si no le podés escribir, dale el texto al usuario.
-3. **Escribí el plan en `docs/plans/<fecha>-etapa-<n>-<tema>.md`, con estas secciones:**
+3. **Escribí el plan en `docs/plans/<fecha>-etapa-<n>-<tema>.md`, corto (unas 4.000 palabras como mucho, sin historial; `AGENTS.md`, «Velocidad y cierre liviano») y con estas secciones:**
    - **Forma de trabajo:** modo rápido y una sola puerta al final.
    - **Contrato:** rutas, cuerpos, códigos de error y permisos. Va primero y completo.
    - **Back** y **Front:** tareas con sus archivos, el archivo real del que se copia y sus tests. Cada parte lleva el texto listo para pegar en su chat.

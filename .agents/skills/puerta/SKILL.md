@@ -1,15 +1,15 @@
 ---
 name: puerta
-description: Corre la puerta completa de una etapa sobre un corte fijo (suites del back y del front, contrato, E2E real, detector de documentación, galería lado a lado y recorrido de usuario) en worktrees aparte y muestra un resumen corto de qué pasó y qué no. Usala cuando pidan verificar o cerrar una etapa, «correr la puerta» o confirmar que todo está en verde.
+description: Corre la puerta de una etapa (suites del back y del front, contrato, E2E real, detector de documentación, galería lado a lado y recorrido de usuario) en worktrees aparte, con cada paso completo una sola vez y después solo lo que toca cada arreglo, y muestra un resumen corto de qué pasó y qué no. Usala cuando pidan verificar o cerrar una etapa, «correr la puerta» o confirmar que todo está en verde.
 ---
 
 # /puerta <etapa> [corte del back] [corte del front]
 
-La puerta se corre **una sola vez, al final de la etapa** (`AGENTS.md`, «Cierre liviano»). Esta skill la corre y cuenta el resultado; no arregla nada. Cada fallo vuelve a su dueño. Con el arreglo se repite solo esa verificación, y al final va una sola corrida completa. **No se arma un corte nuevo por cada arreglo.**
+La puerta se corre **una sola vez, al final de la etapa** (`AGENTS.md`, «Cierre liviano»). Esta skill la corre y cuenta el resultado; no arregla nada. Cada paso pasa completo una sola vez. Cada fallo vuelve a su dueño, y con el arreglo se corre solo lo que ese arreglo toca. **No se repite todo al final ni se arma un corte nuevo por cada arreglo.** La suite completa de un repo se repite solo si el arreglo tocó algo que usa todo el repo: autenticación, persistencia base o composición de la app.
 
 ## Qué hacer
 
-1. **Elegí el punto de partida, una sola vez.** Usá los dos commits que te pasen o, si no te pasan ninguno, `HEAD` de `main` en cada repo. Los arreglos que lleguen después se traen a esos mismos worktrees. La corrida completa final va sobre el último commit.
+1. **Elegí el punto de partida, una sola vez.** Usá los dos commits que te pasen o, si no te pasan ninguno, `HEAD` de `main` en cada repo. Los arreglos que lleguen después se traen a esos mismos worktrees, y se corre solo lo que tocan.
 2. **Armá dos worktrees hermanos**, de ruta corta y con el nombre exacto de cada repo, porque el E2E, `contracts:check` y el detector buscan el otro repo al lado.
    - Por ejemplo, `C:\e2e\ArquitecturaBaseMutitenant` y `C:\e2e\ArquitecturaBaseMutitenantFront`, con `git worktree add <ruta> <corte>` desde cada repo.
    - En el front corré `npm ci`, porque un `node_modules` enlazado rompe la letra Inter en las capturas.
