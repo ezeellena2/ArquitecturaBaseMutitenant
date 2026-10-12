@@ -14,6 +14,8 @@ Esta ficha describe el acceso empresarial de la plantilla multitenant. Una ident
 
 La emisión y el encolado se delegan al `InvitationIssuer` compartido con la plataforma; el área de usuarios no duplica la creación de tokens ni la entrega por canal. Cada invitación conserva su propio estado e historial. Aceptar una invitación vincula o crea la identidad y concede el acceso Business invitante; aceptar no crea Personal. La baja o salida no puede quitar al último Dueño activo (`Legal.AccountDeletion.LastAdmin`). Los correos administrados bloquean el acceso Personal cuando no queda una membresía activa.
 
+`GET /api/users/filter-counts` conserva los conteos de estado y suma `companyAll`, `withoutCompany` y `companies` en la misma respuesta. El facet de estado ignora el estado seleccionado y conserva la empresa; el facet de empresa ignora la empresa seleccionada y conserva búsqueda y estado. Usuarios hace un solo pedido de conteos al buscar, sin uno por empresa.
+
 ## Empresas y membresías
 
 `GET /api/me` incluye `organizationCountryCode`: el país del catálogo de la cultura predeterminada de la organización empresarial activa. No toma la cultura personal de la cuenta ni exige permiso para leer Configuración; en Persona, Plataforma o una membresía/organización no disponible devuelve `null`. Empresas lo usa para resolver el tipo fiscal de un número nuevo. Configuración relee el perfil cuando cambia ese país.

@@ -8,8 +8,10 @@
 | C4 | Hecha: hooks comunes, blocker público, variables tipadas y guarda UNSAFE. Recorridos existentes y prueba de barra final verdes; TypeScript y lint sin errores nuevos. |
 | C11 | Hecha: reloj de servidor, validación Google, textos compuestos y duplicados. Back 325 y front 341 casos focales verdes; builds/TypeScript sin errores. |
 | C7 | Hecha en núcleo y WhatsApp: diagnóstico privado y worker común. Rojo observado; 6 unitarios y 46 de integración verdes; build Api 0/0. Asistente se conserva en el alcance de 8b. |
-| C2 | En curso. |
-| C3, C9, C5, C6, C8 | Pendientes, en el orden de la revalidación. |
+| C2 | Hecha: opciones remotas de a 10, selección conservada y guardas. Recurso 101, «Todos», caché e invalidación verdes; áreas, TypeScript y lint sin errores nuevos. |
+| C3 | Hecha: conteos agrupados y contratos aditivos. Back 16 de integración y 3 unitarios verdes; front 19 casos verdes, incluidas las dos guardas de un pedido por búsqueda; TypeScript sin errores. |
+| C9 | En curso. |
+| C5, C6, C8 | Pendientes, en el orden de la revalidación. |
 | Cierre | Pendiente; una corrida completa al terminar los correctivos habilitados. |
 
 **Decisiones técnicas:** C0 conserva `invitacion_organizacion` y su configuración según la decisión de producto del 12/10 (ADR 0038); se retira el intento literal de Meta en ambos idiomas.
@@ -17,6 +19,8 @@
 - C10: FluentValidation publica límites/rangos; `contracts` genera tipos y `validation.ts`; la baja persiste `DisplayName=null` y se traduce según estado al leer.
 - C4: `useResourceAction` reconoce sólo variables ejecutadas por su dueño, incluye reintentos sin observer y excluye borradores abandonados; `useEditPage` conserva el único blocker público y no compara rutas literales.
 - C11: HTTP `Date` y avance monotónico fijan tiempos/reenvíos; Application valida el inicio Google y contiene `WebClientOptions`/`AuthServerDefaults` para respetar capas.
+- C2: opciones por recurso bajo su raíz de caché, páginas de 10 y búsqueda remota; caché/detalle conserva la selección y «Todos» carga páginas sólo al pulsarlo.
+- C3: conteos agrupados en SQL; Roles devuelve búsqueda y totales juntos, Usuarios mantiene el facet de estado sin estado y el de empresa con estado; campos nuevos aditivos.
 - C7: `ExceptionLog` publica sólo tipos/stacks, también internos; `PeriodicWorker` conserva intervalos/señal y continúa tras fallar. HTTP completa ProblemDetails aun con Accept no admitido para que el framework no registre la excepción cruda.
 
 **Cuándo y quién:** un chat nuevo de Codex, con los dos repos, en paralelo con la 8b y antes de la 11 (decisión del usuario, 2026-10-12). La 11 copia los moldes del núcleo (Roles, las listas para elegir, «Para resolver»): estos arreglos van primero para que no copie sus problemas. **Por qué:** la revisión de código del 2026-10-12 encontró que las reglas se cumplen, pero hay cosas que andan con pocos datos y se rompen con muchos, valores fijos y código copiado en vez de compartido.
