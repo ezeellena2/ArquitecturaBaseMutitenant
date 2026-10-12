@@ -1,30 +1,22 @@
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
 using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant;
 
-internal sealed partial class AssistantBudgetAlertWorker(IServiceScopeFactory scopes, TimeProvider clock, ILogger<AssistantBudgetAlertWorker> logger) : BackgroundService
+internal sealed class AssistantBudgetAlertWorker(IServiceScopeFactory scopes, TimeProvider clock, ILogger<AssistantBudgetAlertWorker> logger) : PeriodicWorker(TimeSpan.FromMinutes(1), clock, logger)
 {
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    // Preserve the original delayed first pass.
+    private bool first = true;
+    protected override async Task RunIterationAsync(CancellationToken ct)
     {
-        if (System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name is "GetDocument.Insider") return;
-        using var timer = new PeriodicTimer(TimeSpan.FromMinutes(1), clock);
-        while (await timer.WaitForNextTickAsync(stoppingToken))
-        {
-            try
-            {
-                await using var scope = scopes.CreateAsyncScope();
-                var pending = await scope.ServiceProvider.GetRequiredService<IAssistantBudgetAlertRepository>().ListPendingAsync(stoppingToken);
-                foreach (var id in pending)
-                    await scope.ServiceProvider.GetRequiredService<IAssistantBudgetAlertService>().RetryAsync(id, stoppingToken);
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
-            catch (Exception exception) { LogFailure(logger, exception.GetType().Name); }
-        }
+        if (first) { first = false; return; }
+        await using var scope = scopes.CreateAsyncScope();
+        var pending = await scope.ServiceProvider.GetRequiredService<IAssistantBudgetAlertRepository>().ListPendingAsync(ct);
+        foreach (var id in pending)
+            await scope.ServiceProvider.GetRequiredService<IAssistantBudgetAlertService>().RetryAsync(id, ct);
     }
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Assistant budget alert retry failed: {Failure}")]
-    private static partial void LogFailure(ILogger logger, string failure);
+
 }

@@ -3,20 +3,20 @@ using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persi
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
 using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.Retention;
 
 /// <summary>Installed module maintenance continues with emergency, personal and organization feature gates disabled.</summary>
 internal sealed partial class AssistantSnapshotRetentionWorker(IServiceScopeFactory scopes, TimeProvider clock,
-    ILogger<AssistantSnapshotRetentionWorker> logger) : BackgroundService
+    ILogger<AssistantSnapshotRetentionWorker> logger) : PeriodicWorker(TimeSpan.FromMinutes(5), clock, logger)
 {
     internal async Task<int> RunOnceAsync(CancellationToken ct)
     {
         // A fixed cutoff makes the pass finite. Cursor advancement also skips busy rows so the oldest locked
         // page cannot starve the rest; every later pass starts at the beginning and retries those rows.
-        var cutoffUtc = clock.GetUtcNow().UtcDateTime;
+        var cutoffUtc = Clock.GetUtcNow().UtcDateTime;
         AssistantSnapshotRetentionCandidate? after = null;
         var total = 0;
         while (true)
@@ -45,19 +45,7 @@ internal sealed partial class AssistantSnapshotRetentionWorker(IServiceScopeFact
         return total;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        if (System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name is "GetDocument.Insider") return;
-        using var timer = new PeriodicTimer(TimeSpan.FromMinutes(5), clock);
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            try { await RunOnceAsync(stoppingToken); }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
-            catch (Exception exception) { LogFailed(logger, exception.GetType().Name); }
-            try { if (!await timer.WaitForNextTickAsync(stoppingToken)) break; }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
-        }
-    }
+    protected override async Task RunIterationAsync(CancellationToken ct) => await RunOnceAsync(ct);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Assistant retention cleared {Count} expired snapshots")]
     private static partial void LogCleared(ILogger logger, int count);

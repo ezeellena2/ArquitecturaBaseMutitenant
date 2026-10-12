@@ -21,7 +21,7 @@
 - `Application/Common/Logging/OperationLog.cs` (E1)
 
 ## Lo verifica
-- `CA1848` (E0), `SensitiveToStringLoggingTests` (E1), `ControllerInputContractTests` (E1)
+- `CA1848` (E0), `SensitiveToStringLoggingTests` (E1), `ControllerInputContractTests` (E1), `PeriodicWorkerArchitectureTests` (C7: todo worker concreto usa el bucle de `PeriodicWorker`)
 
 ## Detalle
 [backend.md §17](../architecture/backend.md#17-logging-openapi-health-rate-limiting-caché)

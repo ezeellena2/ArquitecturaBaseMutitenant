@@ -3,12 +3,12 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
 using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.Retention;
 
-internal sealed partial class AssistantRetentionWorker(IServiceScopeFactory scopes, TimeProvider clock, ILogger<AssistantRetentionWorker> logger) : BackgroundService
+internal sealed partial class AssistantRetentionWorker(IServiceScopeFactory scopes, TimeProvider clock, ILogger<AssistantRetentionWorker> logger) : PeriodicWorker(TimeSpan.FromMinutes(5), clock, logger)
 {
     internal async Task<int> RunOnceAsync(CancellationToken ct)
     {
@@ -20,7 +20,7 @@ internal sealed partial class AssistantRetentionWorker(IServiceScopeFactory scop
             tenantIds = await repository.ListTenantIdsAsync(ct);
             retentionDays = await repository.RetentionDaysAsync(ct);
         }
-        var cutoffUtc = clock.GetUtcNow().UtcDateTime.AddDays(-retentionDays);
+        var cutoffUtc = Clock.GetUtcNow().UtcDateTime.AddDays(-retentionDays);
         var total = 0;
         foreach (var tenantId in tenantIds.Select(value => (Guid?)value).Prepend(null))
         {
@@ -59,7 +59,7 @@ internal sealed partial class AssistantRetentionWorker(IServiceScopeFactory scop
         {
             var maintenance = cleanupScope.ServiceProvider.GetRequiredService<IFileStoreMaintenance>();
             var files = cleanupScope.ServiceProvider.GetRequiredService<IFileStore>();
-            foreach (var key in await maintenance.ListUnconfirmedAsync("assistant", clock.GetUtcNow().UtcDateTime.AddHours(-24), ct))
+            foreach (var key in await maintenance.ListUnconfirmedAsync("assistant", Clock.GetUtcNow().UtcDateTime.AddHours(-24), ct))
             {
                 var referenced = false;
                 foreach (var tenantId in tenantIds.Select(value => (Guid?)value).Prepend(null))
@@ -79,19 +79,7 @@ internal sealed partial class AssistantRetentionWorker(IServiceScopeFactory scop
         return total;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        if (System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name is "GetDocument.Insider") return;
-        using var timer = new PeriodicTimer(TimeSpan.FromMinutes(5), clock);
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            try { await RunOnceAsync(stoppingToken); }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
-            catch (Exception exception) { LogFailure(logger, exception.GetType().Name); }
-            try { if (!await timer.WaitForNextTickAsync(stoppingToken)) break; }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
-        }
-    }
+    protected override async Task RunIterationAsync(CancellationToken ct) => await RunOnceAsync(ct);
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Assistant cleanup failed: {Failure}")]
     private static partial void LogFailure(ILogger logger, string failure);
