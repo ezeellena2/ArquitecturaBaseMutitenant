@@ -52,3 +52,7 @@ Las pantallas de Roles y Editar rol ya están en el front, según los tableros a
 - Application: `RoleServiceTests`, `RoleServiceWriteTests`, `PermissionTextsTests` y los tests de políticas de baja.
 - API: `RolesTests`, `PermissionAuthorizationTests`, `RolePersistenceTests` (la matriz de permisos efectivos), `UserTenantAccessReaderTests`, `AccountDeletionTests`, `OrganizationUsersTests` (la última Dueña de cada organización) y `CompaniesTests` (el mismo código de alcance desde Usuarios y Empresas) (Docker/Testcontainers).
 - Contrato cruzado: `ArquitecturaBaseMutitenantFront/src/test/roles-contract.test.ts` lee controller, contratos y OpenAPI del back, además de los tipos generados del front.
+
+### Rastro de asignaciones
+
+- **Roles de una persona:** las asignaciones de rol no dejan una entrada cada una. Los roles de una persona en un lugar, la organización o una empresa, dejan una sola entrada `RoleAssignment` con el cambio «Roles de la organización» o «Roles en la empresa»: los nombres antes y después, guardados al escribir (`AuditChangeKeys`), como el tablero Auditoria-Org. Lo arma `RoleAssignmentTrail` desde el ChangeTracker, así que quien cambia los roles de una persona en un lugar carga primero los que ya tiene ahí.

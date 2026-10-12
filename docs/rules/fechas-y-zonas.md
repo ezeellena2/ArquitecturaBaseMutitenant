@@ -24,9 +24,7 @@
 - `Api/Json/UtcDateTimeConverter.cs` (E1) · `Infrastructure/Time/TimeZoneService.cs` (E1)
 
 ## Lo verifica
-- `BannedSymbols.txt` (E0): el build falla con los cinco símbolos prohibidos.
-- `UtcDateTimeTests` (E1), `DateOnlyTimeOnlyTests` (E1), `ReferenceDataCatalogTests` (E1) para IDs y traducciones.
-- `NoManualFormattingTests` (E1): sin formatos de fecha fuera de `DisplayFormatter`.
+- `BannedSymbols.txt` (E0), `NoManualFormattingTests` (E1)
 
 ## Detalle
 [backend.md §11 y §18](../architecture/backend.md#11-fechas-utc-y-zonas-horarias)

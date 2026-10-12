@@ -27,9 +27,7 @@ Los nombres de monedas, países, ciudades horarias y tipos fiscales son **datos 
 - `Application/Resources/ErrorTexts.cs` y `Errors.resx` (E1)
 
 ## Lo verifica
-- `ResourceParityTests` (E1): claves y placeholders iguales en es y en.
-- `ReferenceDataCatalogTests` (E1): traducciones de los catálogos para cada cultura habilitada y cadena de caída.
-- `ErrorCodeTests` (E1), `PermissionTextsTests` (E4), `LocalizationTests` (E1): fallback a es-AR.
+- `ErrorCodeTests` (E0)
 
 ## Detalle
 [backend.md §12](../architecture/backend.md#12-idioma-traducciones-y-resources)

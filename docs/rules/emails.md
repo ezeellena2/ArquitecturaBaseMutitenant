@@ -28,10 +28,7 @@
 - `Domain/ValueObjects/Email.cs` (E1), con la normalización.
 
 ## Lo verifica
-- `EmailTests` (E1): la tabla de casos de `format-cases.json` (`"  Juan@Gmail.COM "` → `juan@gmail.com`, IDN, límites por bytes y `error` para inválidos).
-- `EmailPropertyTests` (E1): ninguna entidad ni modelo tiene una propiedad `string` llamada `*Email`, salvo las copias heredadas `ApplicationUser.Email` y `ApplicationUser.NormalizedEmail`, que están en su lista blanca (test de arquitectura).
-- `SignupTests` (E3): dos registros del mismo correo que solo difieren en mayúsculas ingresan a una sola identidad. Un correo existente no devuelve `Auth.Signup.EmailTaken`.
-- `LoginMethodsTests` (E3) verifica la unicidad de cada correo. `LoginCodeTests.Inactive_managed_member_cannot_use_the_email_to_sign_into_personal_access` (E6) y `OrganizationDomainsTests` comprueban el bloqueo al salir de la organización y la retención del vínculo al retirar el dominio.
+- `EmailPropertyTests` (E1)
 
 ## Detalle
 [backend.md §20](../architecture/backend.md#20-reglas-de-datos-que-se-aplican-solas)

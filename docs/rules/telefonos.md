@@ -31,9 +31,7 @@
 - `Domain/ValueObjects/PhoneNumber.cs` (E1), que solo verifica el E.164 (interpretar lo que escribe la persona es trabajo del parser) · `Infrastructure/Phones/LibPhoneNumberDisplayFormatter.cs` (E1) presenta con libphonenumber tras `IPhoneNumberDisplayFormatter` · `Infrastructure/Phones/LibPhoneNumberParser.cs` (E3), el parser de entrada con `PhoneUsage`; lo usa la página pública para su teléfono de contacto.
 
 ## Lo verifica
-- `LibPhoneNumberParserTests` (E3): el 9 argentino, números con 0 y 15, letras rechazadas, fijo contra celular. El país no permitido para WhatsApp lo prueban los tests del módulo (E8).
-- `PhoneNumberTests` (E1) de Domain y `DisplayFormatterTests` (E1), con los casos de teléfono de `docs/contracts/format-cases.json`, los mismos que corre el front.
-- `DbContextModelTests` (E2): el teléfono de contacto de la página pública es `PhoneNumber` en `varchar(16)`.
+- `HarnessTests` (E0): formato y referencias de la ficha.
 
 ## Detalle
 El componente y el formato en pantalla: [ficha del front](../../../ArquitecturaBaseMutitenantFront/docs/rules/telefonos.md).

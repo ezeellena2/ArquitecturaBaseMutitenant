@@ -31,14 +31,7 @@
 - `docs/architecture/datos-de-referencia.md` (el diseño completo) · `Application/Interfaces/ReferenceData/ICurrencyCatalog.cs` (E1) · `Infrastructure/Persistence/Seed/ReferenceDataSeeder.cs` (E2).
 
 ## Lo verifica
-- `ReferenceDataHardcodeTests` (E1): ningún literal ISO de moneda, país o zona fuera de los JSON de referencia y de los tests; controla las declaraciones técnicas explícitas de locale ICU y de política de países del canal, con negativos para otros archivos, tipos y propiedades.
-- `ReferenceDataCatalogTests` (E1): JSON válidos, FK internas presentes cuando el código no es `null`, todos los `CountryCodes[]` de zonas compartidas conservados, `UTC` sin país, registros incompletos deshabilitados, zonas y tipos fiscales iniciales habilitados y traducciones —incluidos nombres de `Cultures` y `DisplaySymbol` de monedas— de cada cultura habilitada.
-- `generar.test.mjs` (E1): fuentes locales con hashes válidos, incluido `cldr-region-validity.xml`; filtro ISO que conserva 249 países en CLDR 48.2 y excluye `AN`, `AA` y `XK`; zonas principales, alias horarios y nombres de culturas desde CLDR sin `Intl.DisplayNames`; refresh separado y los cinco JSON reproducibles byte a byte sin red. El CI ejecuta `npm ci` y `npm test` con la versión de `scripts/datos-de-referencia/.node-version`.
-- `CurrencyCodeTests` y `MoneyTests` (E1): sintaxis alfa-3 y redondeo con `MinorUnits` explícitos; los tests de validación en Application cubren existencia y habilitación de la moneda.
-- `ReferenceDataSeederTests` (E2): el seed es idempotente y nunca borra.
-- `ReferenceDataReaderTests` (E2): los cinco puertos leen todas las filas y traducciones de `platform` (incluidas las deshabilitadas), conservan relaciones IANA multipaís y el seed invalida HybridCache después del commit cuando hubo cambios.
-- `ReferenceDataServiceTests` (E1): las filas con el mismo `SortOrder` siguen el orden cultural del nombre traducido para la cultura solicitada.
-- `DisplayFormatterTests` (E1) y `formatters.test.ts` (E1): mismo texto para cada caso de `format-cases.json`.
+- `ReferenceDataHardcodeTests` (E1)
 
 ## Detalle
 [datos-de-referencia.md](../architecture/datos-de-referencia.md) · [numeros-y-moneda](numeros-y-moneda.md) · [fechas-y-zonas](fechas-y-zonas.md) · [telefonos](telefonos.md) · [identificacion-fiscal](identificacion-fiscal.md) · [textos-y-traducciones](textos-y-traducciones.md)

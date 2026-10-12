@@ -28,9 +28,7 @@
 - `src/ArquitecturaBaseMultitenant.Domain/ValueObjects/TaxId.cs` y `src/ArquitecturaBaseMultitenant.Domain/ValueObjects/TaxIdValidators/ArgentineCuitValidator.cs` (E6).
 
 ## Lo verifica
-- `TaxIdTests` (E6): los casos válidos e inválidos de `format-cases.json`, que también corre el front con `stdnum`.
-- `CompanyServiceTests` (E6) y `CompaniesTests` (E6): el tipo de la empresa sale del país de la organización (Argentina y Estados Unidos) y se conserva si el número no cambia.
-- `TaxIdPropertyTests` (E6): ninguna propiedad `Cuit`, `Cuil` o `Dni` de tipo `string` (test de arquitectura).
+- `HarnessTests` (E0): formato y referencias de la ficha.
 
 ## Detalle
 [backend.md §20](../architecture/backend.md#20-reglas-de-datos-que-se-aplican-solas)

@@ -37,11 +37,7 @@
 - `Infrastructure/Persistence/Readers/CompanyReader.cs` (E6): un listado con sus conteos por filtro.
 
 ## Lo verifica
-- `PaginationTests` (E2), `CursorPaginationTests` (E2), `SearchTests` (E2); la búsqueda con acentos de Usuarios y Miembros de empresa, en `OrganizationUsersTests` (E6) y `CompaniesTests` (E6).
-- `CompanyAdminTests` (E7): a quién sumar a una empresa se encuentra por nombre, sin acentos, y nunca por su correo tapado.
-- `SortIndexTests` (E2): índice por cada campo de un `SortMap`.
-- `SearchIndexTests` (E6): cada columna que un reader busca con `ApplySearch` tiene su índice trigram. Lee las columnas del código de los readers; las que se buscan dentro de una subconsulta (el Dueño en Plataforma) van en su lista a mano. Un reader que busca con `LIKE` en SQL (la auditoría) tiene que estar en su otra lista, usar la expresión de `ApplySearch` y no `ILIKE`, y tener el índice de cada columna.
-- `PagedRequestValidatorTests` (E1) y `OpenApiTests` (contrato de tamaños de página).
+- `HarnessTests` (E0): formato y referencias de la ficha.
 
 ## Detalle
 [backend.md §9, "Paginado, orden y búsqueda"](../architecture/backend.md#paginado-orden-y-búsqueda)

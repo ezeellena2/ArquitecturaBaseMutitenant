@@ -53,3 +53,16 @@ La búsqueda alcanza solo `PublicPages.Name`, con `ApplySearch`: no distingue ac
 - `PublicPagesTests` (E6) y `PublicPageModerationTests` (E5): edición privada, publicación versionada y moderación.
 - `ExplicitRouteInventoryTests`, `AccessDeclarationTests`, `ControllerOutputContractTests` y `OpenApiContractTests`: rutas, acceso y contratos.
 - `SearchIndexTests` verifica el índice de búsqueda del nombre del directorio; `ValidationMessageTests` verifica los mensajes de cada regla del validador.
+
+### Resolución pública
+
+- **El host del subdominio nunca da acceso a datos privados:** solo `IPublicSiteContext` (`BusinessTenantId?`, `Slug?`), para lo público. `PublicSiteResolutionMiddleware` resuelve exactamente una etiqueta válida sobre el host y puerto del issuer, sin distinguir mayúsculas. Consulta `IPublicSiteReader` una vez y solo cuando la ruta declara `[PublicSite]`, sin caché: página publicada, sin bloqueo, organización Business activa y slug no reservado. Los demás hosts y sitios no disponibles responden el mismo 404 `PublicSite.PublicPage.NotFound` con `traceId`; el tenant de una ruta privada sigue saliendo del claim.
+
+### Guardado y publicación coordinados
+
+  Nunca se reintenta solo. Página pública conserva pendiente el guardado hasta completar la relectura y actualizar su base; su `onSuccess` asíncrono pertenece al hook de la mutación y devuelve la promesa. Guardar y publicar esperan ambas escrituras propias, para que una no mande la versión anterior mientras termina la otra.
+
+### Listado público
+
+**El directorio público es web** (Directorio y M-Directorio): comparte `usePagedQuery` y el recurso HTTP con la portada, muestra `CompanyCard` en tarjetas y arma el buscador del tablero con `Input`. Su `Pagination` declara `variant="web"` y `mobile={phone}` desde la pantalla fuera del marco: en el teléfono conserva rango, página y flechas, sin selector de tamaño ni «Cargar más». La variante predeterminada `app` mantiene el paginado privado. `Pagination.test.tsx` verifica ambos recorridos y `DirectoryPage.test.tsx`, la URL, el debounce y la página real del backend.
+- `/empresas` usa `usePagedQuery` con `filterKeys: []`, `fetchDirectory` y `directoryQueryKey` de `public/site/api/directory.ts`, sin duplicar HTTP/keys en la portada. La búsqueda aplica 300 ms y vuelve a página 1; el tamaño inicial es 10. `Pagination variant="web"` muestra rango/página/flechas en ambos anchos y omite el selector. El vacío general y el vacío de búsqueda tienen textos distintos; este último ofrece Limpiar búsqueda. Los errores usan `apiErrorMessage` y Reintentar.

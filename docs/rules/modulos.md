@@ -27,14 +27,7 @@
 - **Webhook y outbox:** WhatsApp, con `Application/Modules/WhatsApp/WhatsAppModule.cs`, `Api/Modules/WhatsApp/Controllers/WhatsAppWebhookController.cs` y `Infrastructure/Modules/WhatsApp/WhatsAppChannelSender.cs` (E8) · la guía [`quitar-whatsapp.md`](../guides/quitar-whatsapp.md) (E8)
 
 ## Lo verifica
-- `ModuleIsolationTests` (E8).
-- `ModuleControllersTests`, `WhatsAppStartupTests` y `Etapa8ContractTests` (E8): ruta técnica con contribuidor, apagado/retirada, configuración y ausencia de sesión en webhook.
-- La prueba de fuego de la Etapa 8: quitar el módulo y que el núcleo siga en verde.
-- `WhatsAppWebhookTests` (E8): firma, idempotencia, 413, 401.
-- `WhatsAppTemplateTests` (E8): cada plantilla configurada y el orden de sus variables.
-- `WhatsAppBotTests`, `WhatsAppCloudClientTests` y `WhatsAppOutboxTests` (E8): operador neutro, propietario original, reply IDs y ventana verificada también antes del envío.
-- `WhatsAppPhoneLinkObserverTests`, `WhatsAppAccountLifecycleTests` y `WhatsAppRetentionTests` (E8): vínculo sin apropiación, retiro/rollback, baja por propietario original y retención fija por recepción, con canal apagado.
-- `WhatsAppPersistenceTests` (E8): igualdad de las vías reales; composición WA + contribuidor técnico de test con inventario neutral explícito en tres contextos, configuración una vez y capacidades únicas. El fake no amplía el descubrimiento productivo de assemblies.
+- `ModuleIsolationTests` (E8), `ModuleControllersTests` (E8)
 
 ## Detalle
 [backend.md §15](../architecture/backend.md#15-whatsapp-un-módulo-quitable) · ADR 0007

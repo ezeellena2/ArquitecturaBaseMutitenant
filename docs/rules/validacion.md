@@ -27,10 +27,7 @@
 - `Application/Validation/Roles/CreateRoleRequestValidator.cs` (E4)
 
 ## Lo verifica
-- `RequestValidatorTests` (E1), `PagedRequestValidatorTests` (E1), `ReferenceDataValidationTests` (E1).
-- `ValidationProblemTests` (E1): forma del 400 con `errors`.
-- `ValidationMessageTests` (E7): cada regla de cada validador de Application, también dentro de `Include` y `ChildRules`, tiene su propio mensaje; ninguna muestra el texto genérico de FluentValidation.
-- `InjectedValidatorTests` (E1): prohíbe inyectar `IValidator<T>` o validadores concretos en servicios y crearlos con `new` dentro de esos servicios. `ServiceDependencyCountTests` (E1) limita el tamaño del constructor.
+- `ValidationMessageTests` (E7), `InjectedValidatorTests` (E1), `ServiceDependencyCountTests` (E1)
 
 ## Detalle
 [backend.md §6, "Validación"](../architecture/backend.md#6-result-pattern-y-manejo-de-errores)

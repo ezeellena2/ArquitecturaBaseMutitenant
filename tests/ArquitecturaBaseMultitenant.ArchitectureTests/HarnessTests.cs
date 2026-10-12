@@ -339,6 +339,11 @@ public sealed class HarnessTests
         foreach (var file in RuleCards())
         {
             var lines = File.ReadAllLines(file);
+            if (lines.Length > 60)
+            {
+                failures.Add($"{Relative(file)}: {lines.Length} líneas; máximo 60.");
+            }
+
             if (lines.Length == 0 || !lines[0].StartsWith("# ", StringComparison.Ordinal))
             {
                 failures.Add($"{Relative(file)}: falta el título '# <Tema>'.");

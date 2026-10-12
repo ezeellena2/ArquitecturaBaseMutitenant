@@ -26,7 +26,6 @@
 - **Clave foránea que traduce un caso de uso:** igual que el índice único. Si un pedido guarda una fila que apunta a otra mientras otro pedido la borra, la base rechaza al que guarda segundo: 23503 al guardar la fila que apunta, 23001 al borrar con `ON DELETE RESTRICT`. `UnitOfWork` traduce los dos a `ForeignKeyViolationException`; el nombre va en `ForeignKeys` (`Application/Interfaces/Persistence`), la configuración lo fija con `HasConstraintName(ForeignKeys.X)` y el servicio lo compara en `catch (ForeignKeyViolationException e) when (e.ConstraintName == ForeignKeys.X)` y devuelve el `Error` de cada lado: asignar un rol borrado es `RoleErrors.NotFound`; borrar un rol recién asignado, `RoleErrors.HasUsers`.
 - **Largos:** `HasMaxLength(TextLimits.X)`, nunca un número suelto ([textos-libres](textos-libres.md)). Los correos, CUIT y teléfonos son value objects ([emails](emails.md), [identificacion-fiscal](identificacion-fiscal.md), [telefonos](telefonos.md)).
 - **Soft delete:** `ISoftDeletable` y `Remove()`. El interceptor lo convierte en una marca. Para ver lo borrado: `IgnoreQueryFilters(["SoftDelete"])`.
-
 - Son únicos globalmente LoginMethods (tipo + valor), TenantDomains, Tenant.Slug y el PhoneNumberId de WhatsApp.
 
 ## Prohibido
@@ -41,12 +40,7 @@
 - `Infrastructure/Persistence/Configurations/Tenant/RoleConfiguration.cs`, `Repositories/RoleRepository.cs` y `Readers/RoleReader.cs` (E4)
 
 ## Lo verifica
-- `EntityConfigurationTests` (E2), `DataClassificationTests` (E2), `DecimalPrecisionTests` (E1), `TextLimitsTests` (E1).
-- `WhatsAppPersistenceTests` (E8): modelos runtime/DesignTime/bootstrap iguales, modelo sin módulos, persistencia tras reinicio y declaraciones globales faltantes/duplicadas/con esquema incorrecto. `EntityConfigurationTests` incluye las configuraciones aportadas y exige exactamente una por entidad.
-- `CollationTests` (E2): orden real de "Álvarez", "Ñandú", "Nuñez" y "Zapata" contra la base de los tests (Testcontainers creada con ICU `es-AR`).
-- `MigrationsTests` (E2): falla si falta una migración.
-- `RlsPolicyInventoryTests` (E2), `SortIndexTests` (E2), `TransactionBoundaryTests` (E2).
-- `DbContextModelTests` (E6): cada clave de `UniqueKeys` es un índice único del modelo, y cada una de `ForeignKeys`, una clave foránea. `UniqueKeysTests` (E6): Application no escribe nombres de índice ni de clave foránea. `UniqueKeyRaceTests` (E6): dos pedidos que pasan juntos el control previo, y uno guarda mientras el otro recibe 409. `ForeignKeyRaceTests` (E6): asignar un rol mientras otro lo borra, en los dos órdenes.
+- `EntityConfigurationTests` (E2), `DataClassificationTests` (E2), `DecimalPrecisionTests` (E1), `TextLimitsTests` (E1), `TransactionBoundaryTests` (E2), `UniqueKeysTests` (E6)
 
 ## Detalle
 [backend.md §9](../architecture/backend.md#9-persistencia)

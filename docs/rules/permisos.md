@@ -35,9 +35,7 @@
 - `Api/Controllers/Organization/RolesController.cs` (E4) · la guía [`permiso-nuevo.md`](../guides/permiso-nuevo.md) (E4)
 
 ## Lo verifica
-- `PermissionAuthorizationTests` (E4): sin `Policy` ni roles a mano, y cada `[Has*Permission]` nombra un permiso de su catálogo; el permiso de empresa con la alternativa de la organización acepta cualquiera de los dos, siempre con la empresa en la ruta.
-- `PermissionTextsTests` (E4): textos en los dos idiomas.
-- Tests de integración (E4): 401 sin sesión y 403 sin el permiso.
+- `HarnessTests` (E0): formato y referencias de la ficha.
 
 ## Detalle
 [backend.md §14](../architecture/backend.md#14-autorización)

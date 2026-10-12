@@ -14,7 +14,6 @@
 - **Mostrar un número** en un correo o WhatsApp: crear una vez `ctx = await DisplayFormatter.CreateAsync(culture, timeZone)` y usar `await FormatMoneyAsync(money, ctx)`, `FormatDecimal(value, digits, ctx)` o `FormatPercent(fraction, ctx)`. Son métodos tipados; el despachador JSON es interno y se usa solo para `format-cases.json`. Los patrones salen de `ICultureCatalog` y `CurrencyTranslations.DisplaySymbol` da el símbolo para esa cultura. El símbolo global de `Currencies` no basta (ARS se muestra `$` en es-AR y `ARS` en en-US).
 - Al mostrar dinero, primero se redondea a los `MinorUnits` de la moneda y luego se decide el signo. Los formatos compactos y de tamaño promueven la unidad si la magnitud presentada llega a 1000 tras redondear.
 - **Versiones de protocolo:** las versiones de concurrencia usadas en URLs y `ETag` se serializan con `VersionWireFormatter`, como dígitos invariantes sin separadores. Es un serializador técnico permitido explícitamente por `NoManualFormattingTests`; la presentación para una persona sigue en `DisplayFormatter`.
-
 - El JSON number admite hasta 13 dígitos enteros y 2 decimales para importes; superar ese límite requiere un ADR.
 
 ## Prohibido
@@ -30,11 +29,7 @@
 - `Domain/ValueObjects/Money.cs` (E1) · `Application/Common/Formatting/DisplayFormatter.cs` (E1) · `docs/contracts/format-cases.json` (E1)
 
 ## Lo verifica
-- `DecimalPrecisionTests` (E1): ningún `decimal` sin precisión y ningún `double` o `float` en entidades.
-- `MoneyTests` y `CurrencyCodeTests` (E1): sintaxis, suma y redondeo con `MinorUnits` explícitos. `ReferenceDataValidationTests` (E1): existencia y habilitación. `MoneyJsonTests` (E1): forma JSON y sintaxis inválida.
-- `DisplayFormatterTests` (E1): los mismos casos que el front.
-- `NoManualFormattingTests` (E1).
-- `VersionWireFormatterTests` (E7): las versiones de protocolo conservan dígitos ASCII, sin separadores, bajo culturas con formatos numéricos distintos.
+- `DecimalPrecisionTests` (E1), `NoManualFormattingTests` (E0)
 
 ## Detalle
 [backend.md §18](../architecture/backend.md#18-representación-y-formato-de-datos-unificado) · catálogo visual en el front: `docs/rules/formatos.md`

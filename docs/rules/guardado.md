@@ -25,7 +25,6 @@ public Task<Result> UpdateAsync(UpdateRoleRequest request, CancellationToken ct)
 ```
 
 El outbox reclama un lease durable con `SKIP LOCKED` y lo confirma antes de descifrar y enviar, fuera de transacción. `OutboxDispatchService` abre una UoW para Claim y otra para Complete, con scopes separados; Sent, Cancelled y falla terminal purgan el payload y un lease abandonado consume intentos.
-
 - UnitOfWork usa READ COMMITTED, un solo SaveChanges y, ante excepción, rollback y ChangeTracker.Clear().
 
 ## Prohibido
@@ -39,10 +38,7 @@ El outbox reclama un lease durable con `SKIP LOCKED` y lo confirma antes de desc
 - `Application/Services/Roles/RoleService.cs`, métodos `UpdateAsync` y `UpdateCoreAsync` (E4).
 
 ## Lo verifica
-- `TransactionBoundaryTests` (E2): lee el IL; solo los puntos de entrada de `Interfaces/Services`, `ReferenceDataSeeder` y `DatabaseSeeder` reciben `IUnitOfWork`, y nadie salvo `UnitOfWork` llama a `SaveChanges`.
-- `UnitOfWorkTests` (E2): rollback, no anidar, 23505 → `UniqueConstraintViolationException`.
-- `FakeUnitOfWork` (E2) en los tests unitarios aplica la misma `CommitPolicy`.
-- `WhatsAppIdentityTests` (E8) coordina conexiones reales a PostgreSQL y comprueba relectura fresca en Verify×Verify, Verify×Resend y Primary×Remove: no se borra un método recién verificado ni se deja la cuenta sin principal por un hint previo al lock.
+- `TransactionBoundaryTests` (E0)
 
 ## Detalle
 [backend.md §5, "Repositorio, reader y UnitOfWork"](../architecture/backend.md#repositorio-reader-y-unitofwork) · ADR 0001

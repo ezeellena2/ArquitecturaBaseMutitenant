@@ -1,7 +1,6 @@
 # Módulos habilitados por organización (feature flags)
 
 **Regla:** una funcionalidad **vendible u opcional** es un **módulo** (feature). Su controller lleva `[FeatureGate]`, y la plataforma decide qué módulos tiene cada organización (y cuáles están disponibles para el acceso B2C). **Módulo ≠ permiso:** primero se pregunta si la organización tiene el módulo, y después si la persona tiene permiso.
-
 | | Módulo | Permiso |
 |---|---|---|
 | Pregunta | ¿**esta organización** tiene "Reportes"? | ¿**esta persona** puede ver reportes? |
@@ -22,7 +21,6 @@
 - **Plataforma:** la ficha de una organización tiene la sección "Módulos", para prenderlos, apagarlos y fijar la fecha de fin de una prueba, con motivo y `SecurityEvent`.
 - `GET /api/platform/tenants/{id}/features` devuelve el catálogo Business y sus valores iniciales (versión 0 cuando no existe fila). `PUT /{featureKey}` exige enabled, source, version y reason; Trial exige vencimiento. La habilitación y el evento se confirman juntos; una edición vieja o una carrera de alta devuelve 409. La plantilla mantiene el catálogo vacío hasta incorporar módulos reales.
 - **El núcleo no es un módulo:** usuarios, roles, empresas, configuración, auditoría y la página pública (con el directorio) están siempre prendidos. Que una organización publique su página o no es su estado (`Draft`/`Published`), no un módulo.
-
 - **Puertos de composición y disponibilidad por acceso:** Cada módulo aporta `IFeatureDefinitionContributor`; el catálogo agregado rechaza claves duplicadas. `IFeatureAvailabilityPolicy.Key` cubre sólo su clave: `true`/`false` decide disponibilidad completa del acceso, `null` delega a `TenantFeatures`. `FeatureService` y el filtro scoped `TenantFeatureFilter` usan esa misma semántica, porque el middleware y `[FeatureGate]` son dos puertas. El apagado de emergencia de configuración prevalece. Consumer y Business requieren un espacio de un alcance compatible; Platform sin espacio sólo se habilita por una decisión explícita de su policy. Sin policy, Platform queda apagado. Las policies duplicadas se rechazan.
 
 Los defaults de FeatureManagement se generan desde el catálogo completo después de que Api compone módulos, sin importar nombres de módulos desde el núcleo. `IModuleCapabilityContributor` añade capacidades neutrales a `/api/me`; `ProfileModulesBuilder` agrupa features y capacidades y ocupa una dependencia de `ProfileSnapshotBuilder`, manteniendo su límite de ocho.
@@ -38,9 +36,7 @@ Los defaults de FeatureManagement se generan desde el catálogo completo despué
 - `Infrastructure/Features/TenantFeatureFilter.cs` (E5) · la guía [`agregar-un-area.md`](../guides/agregar-un-area.md) (E4), paso "¿es un módulo?" (E5).
 
 ## Lo verifica
-- `EngagementTests` (E7): la creación desde un sitio publicado exige el módulo de esa organización, y las transiciones conservan el gate; replay no omite publicación ni módulo.
-- `FeatureGateTests` (E5): un módulo apagado da 404 y prendido da 200; el apagado de emergencia gana sobre la organización.
-- `ModuleControllersTests` (E5): todo controller fuera del núcleo (el núcleo son las carpetas `Account/`, `Auth/`, `ReferenceData/`, `Organization/`, `Platform/` y `PublicSite/` de `Api/Controllers`) tiene `[FeatureGate]` con una clave del catálogo (test de arquitectura).
+- `ModuleControllersTests` (E5)
 
 ## Detalle
 [backend.md §20](../architecture/backend.md#20-reglas-de-datos-que-se-aplican-solas) · front: `docs/rules/accesos-y-permisos.md`
