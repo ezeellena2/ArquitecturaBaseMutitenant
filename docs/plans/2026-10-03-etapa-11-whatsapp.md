@@ -9,7 +9,12 @@
 >   - la 11 conecta la fuente productiva de «Mis mensajes con empresas» del asistente personal (`IConsumerInteractionSource`, 0049);
 >   - las tablas globales de la plataforma siguen la [0050](../decisions/0050-auditoria-global-de-modulos.md);
 >   - antes de programar hay que verificar con Meta los precios (las 1.000 respuestas gratis por mes) y los requisitos de Tech Provider.
-> - **Fuera del código:** el trámite de Tech Provider con Meta arrancó el 2026-10-11.
+> - **Meta** (según su documentación, consultada el 2026-10-11):
+>   - **Tech Provider se tramita por producto, al lanzarlo.** Cada producto necesita su app con su marca, que es el nombre que ve la organización en la ventana de Meta; su empresa verificada, y la revisión de Meta de `whatsapp_business_messaging` y `whatsapp_business_management`. La plantilla no lo tramita.
+>   - **La 11 se desarrolla y se prueba con el acceso estándar.** Hace falta una app en modo desarrollo; el alta la hace alguien con rol en la app o una cuenta sandbox de Meta, que dura 30 días. «Servicios Ya» está publicada, y una app publicada solo ofrece en el alta los permisos aprobados por revisión. El plan elige qué app de desarrollo se usa.
+>   - **Se usa Embedded Signup v4:** la v2 se retira el 15/10/2026.
+>   - **Los dominios del alta van con HTTPS,** cargados en «Allowed domains» y «Valid OAuth redirect URIs» de la app, incluidos los de desarrollo. Hay que suscribirse al webhook `account_update`.
+>   - **Hay un límite de organizaciones nuevas:** sin la empresa verificada ni la revisión aprobada, son 10 cada 7 días; con las dos, 200.
 
 > Plan de implementación para esta etapa. Seguir el orden, completar las casillas con evidencia y commitear cada cambio coherente y verificado con rutas explícitas.
 
