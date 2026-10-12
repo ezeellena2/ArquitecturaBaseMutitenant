@@ -1,14 +1,28 @@
 # Etapa 8: WhatsApp como módulo quitable — plan ejecutable
 
-**Estado: implementación terminada; puerta pendiente.** Integración continúa en los mismos worktrees, sin etiquetas nuevas ni push. Las salidas están en `.local/`; al cerrar se agrega sólo la tabla final de paso, resultado y número.
+**Estado: implementación y puerta automatizada verificadas; cierre pendiente del ingreso real con Google.** Las tres pruebas manuales de WhatsApp ya pasaron con el usuario. Las salidas quedan en `.local/`, sin historial de corridas ni push.
 
 | Tarea | Estado |
 |---|---|
 | T00–T01 · Consolidación y contrato | Hecha y sincronizada entre Back y Front. |
 | T02–T08 · Back | Hecha, incluidos los correctivos de las revisiones E8. |
 | T09–T12 · Front | Hecha, incluidos A1 y las máscaras N2/N3. |
-| T13 · Integración | Implementada; la verificación integral forma parte de T14. |
-| T14 · Puerta | Pendiente: completar los pasos restantes del recorrido de usuario y las pruebas manuales; conservar las verificaciones aprobadas. |
+| T13 · Integración | Hecha. |
+| T14 · Puerta | Verificaciones completas; pendiente únicamente la prueba manual con Google. |
+
+| Paso | Resultado | Número |
+|---|---|---|
+| Build y lint | Aprobados en ambos repos; sin errores ni advertencias de build. | 0 |
+| Suite Back | Único fallo de fixture corregido; su área y la retención verificadas. | 2816/2817; cuotas 12/12 y retención 2/2 |
+| Suite Front | Aprobada, con los focales del arreglo legal. | 2903/2903; legales 40/40 |
+| E2E real | Aprobado; se conserva. | 37/37 |
+| Legales 5d e ingreso auditado | Aprobados. | 2/2 y 8/8 |
+| Contrato | Sin diferencias. | 0 |
+| Documentación | Detectores aprobados en ambos cortes. | 0/0/0 × 2 |
+| Galería de cambios E8 | Revisada lado a lado. | 24 comparaciones |
+| Recorrido de usuario | Completo por continuaciones, sin repetir los pasos aprobados. | 110/110: 55 escritorio y 55 móvil |
+| Retiro de WhatsApp | Aprobado, incluida base vacía; no se repite. | 2556/2556 |
+| Pruebas manuales | WhatsApp aprobado; Google pendiente del usuario. | 3/4 |
 
 El retiro exigido por E8 es **sólo WhatsApp**, aprobado **2556/2556**, incluida la comprobación con base vacía. No se repite. Los retiros del asistente y de ambos módulos pertenecen a **T09 y la puerta E8b**; sus siete fallos están en [el informe de retiro](../reviews/2026-10-11-etapa-8-retiro-asistente.md). No se cambia el código del corte E8 por esos fallos.
 
@@ -524,10 +538,10 @@ Ejecutá SOLO la Parte 2b (T09–T12) de C:\Users\ezequ\source\repos\Arquitectur
 
 **Copiar de:** E2E real y recorrido reutilizable E7, `F/scripts/capturar-etapa-7.mjs`, galería existente y fixture de LoginCode del E2E. Fixtures/lectura de códigos de pruebas solo en entorno aislado de Testing, nunca una ruta productiva o un bypass de Auth.
 
-- [ ] Verificar el hash de OpenAPI/tipos del freeze y resolver encajes entre implementaciones. Un cambio necesario atraviesa «Cambios al contrato» con coordinación de ambos repos, no solo un arreglo en F.
-- [ ] E2E automatizado con front/API/PostgreSQL reales, 1440 y 390, y usuario/cookies persistentes: registro Phone, ingreso dos puertas, agregado/OTP, principal/quitar sin reauth, recuperación asistida con Phone, enlace preview/redeem y errores del contrato. Para carreras/expiración, fixture limitado a la base E2E como en E7; no degradar límites productivos.
-- [ ] Separar prueba automatizable de transporte controlado y recorrido **Meta real** siguiente. Si un receptor de outbox del arnés permite leer OTP, sirve para lógica E2E aislada, no como evidencia de Cloud API, túnel ni delivered. No llamar Meta a números ficticios. No marcar omitidos como verdes.
-- [ ] Galería una vez: tablero y app lado a lado, los estados afectados de T10–T12 a 1440/390, revisión a 768, es y muestras en. Usar los tableros v116 ya corregidos por 0043/0045; no capturar el estado de código adicional retirado. No capturar OTP, token, enlace completo ni teléfono real sin máscara.
+- [x] Verificar compatibilidad de OpenAPI/tipos y resolver encajes entre implementaciones. Un cambio necesario atraviesa «Cambios al contrato» con coordinación de ambos repos, no solo un arreglo en F.
+- [x] E2E automatizado con front/API/PostgreSQL reales, 1440 y 390, y usuario/cookies persistentes: registro Phone, ingreso dos puertas, agregado/OTP, principal/quitar sin reauth, recuperación asistida con Phone, enlace preview/redeem y errores del contrato. Para carreras/expiración, fixture limitado a la base E2E como en E7; no degradar límites productivos.
+- [x] Separar prueba automatizable de transporte controlado y recorrido **Meta real** siguiente. Si un receptor de outbox del arnés permite leer OTP, sirve para lógica E2E aislada, no como evidencia de Cloud API, túnel ni delivered. No llamar Meta a números ficticios. No marcar omitidos como verdes.
+- [x] Galería una vez: tablero y app lado a lado, los estados afectados de T10–T12 a 1440/390, revisión a 768, es y muestras en. Usar los tableros v116 ya corregidos por 0043/0045; no capturar el estado de código adicional retirado. No capturar OTP, token, enlace completo ni teléfono real sin máscara.
 
 **Hecho cuando:** los recorridos nuevos funcionan con ambos repos reales, los dos contratos coinciden y están listos la galería y el entorno Meta para la puerta.
 
