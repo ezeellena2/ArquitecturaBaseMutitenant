@@ -20,11 +20,17 @@ if (Environment.GetEnvironmentVariable("MT_E2E_ISOLATED") != "1")
     return 1;
 }
 
-if (args is ["--assistant-real-probe" or "--assistant-real-preflight", var assistantExportDirectory])
+if (args is ["--assistant-real-probe" or "--assistant-real-preflight", var assistantExportDirectory, ..])
 {
+    var availableModel = args is ["--assistant-real-probe", _, "--available-model", var model] ? model : null;
+    if (args.Length != 2 && availableModel is null)
+    {
+        Console.Error.WriteLine("Invalid isolated assistant probe arguments.");
+        return 1;
+    }
     using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(10));
     return await ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.AssistantBrowser.AssistantRealProviderFixture.RunAsync(assistantExportDirectory, timeout.Token,
-        preparationOnly: args[0] == "--assistant-real-preflight");
+        preparationOnly: args[0] == "--assistant-real-preflight", availableModel: availableModel);
 }
 
 if (args is ["--whatsapp-browser", var browserScript])

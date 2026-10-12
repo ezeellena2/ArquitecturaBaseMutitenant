@@ -40,7 +40,7 @@ public static class AssistantRealProviderFixture
     internal const string KeyName = "Assistant:Platform:ApiKey";
     private static readonly JsonSerializerOptions Json = CreateJson();
 
-    public static async Task<int> RunAsync(string exportDirectory, CancellationToken ct, bool preparationOnly = false)
+    public static async Task<int> RunAsync(string exportDirectory, CancellationToken ct, bool preparationOnly = false, string? availableModel = null)
     {
         var stage = "configuration";
         try
@@ -83,7 +83,12 @@ public static class AssistantRealProviderFixture
                     ? models.Where(row => AssistantModelCompatibilityPolicy.Supports(row, AssistantEffort.Low)
                         && row.Technical is { SupportsImages: true, SupportsPdf: true })
                         .OrderBy(row => row.InputPricePerMillion.Amount + row.OutputPricePerMillion.Amount).First()
-                    : await AvailableModelAsync(secret, models, ct) ?? throw new ProbeFailure("NoAvailableCatalogModel");
+                    : availableModel is not null
+                        ? models.SingleOrDefault(row => row.ProviderModelId == availableModel
+                            && AssistantModelCompatibilityPolicy.Supports(row, AssistantEffort.Low)
+                            && row.Technical is { SupportsImages: true, SupportsPdf: true }) ?? throw new ProbeFailure("PreservedModelNotCompatible")
+                        : await AvailableModelAsync(secret, models, ct) ?? throw new ProbeFailure("NoAvailableCatalogModel");
+                if (availableModel is not null) Report(new { stage = "availability", model = model.ProviderModelId, status = "preserved" });
                 await AssistantFileBridge.WriteAsync(services, async token =>
                 {
                     var db = services.GetRequiredService<ApplicationDbContext>();

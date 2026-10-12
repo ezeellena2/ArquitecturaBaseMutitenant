@@ -2,6 +2,9 @@ using System.Buffers.Binary;
 using System.IO.Compression;
 using System.Text;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.AssistantBrowser;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
+using ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using PdfSharp.Pdf.IO;
 
@@ -9,6 +12,15 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Assistant;
 
 public sealed class AssistantRealProviderConfigurationTests
 {
+    [Fact]
+    public void Real_probe_assets_fit_the_complete_context_bound_before_the_sdk()
+    {
+        var contents = AssistantRealProviderAssets.Files().Select(file => (AIContent)new DataContent(file.Bytes, file.Type)).ToList();
+        contents.Add(new TextContent("Consulta de prueba"));
+        var binding = new AssistantChatBinding(AssistantMode.PlatformKey, Guid.NewGuid(), "fixture-model", AssistantEffort.Low);
+        Assert.True(AssistantTurnContextGuard.Fits([new ChatMessage(ChatRole.User, contents)], [], binding));
+    }
+
     [Fact]
     public void Runner_content_root_points_to_the_existing_api_project()
     {

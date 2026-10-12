@@ -1,8 +1,6 @@
 using System.Buffers.Binary;
 using System.IO.Compression;
 using System.Text;
-using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
-using ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.Export;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.AssistantBrowser;
 
@@ -12,14 +10,34 @@ internal static class AssistantRealProviderAssets
     internal sealed record File(string Name, string Type, byte[] Bytes);
     internal static File[] Files()
     {
-        var now = TimeProvider.System.GetUtcNow().UtcDateTime;
-        var conversation = new AssistantConversationSummaryResponse(Guid.NewGuid(), "Documento sintético", false, 1, now, now);
-        var message = new AssistantMessageResponse(Guid.NewGuid(), AssistantMessageRole.Assistant, "Código de verificación: " + PdfMarker,
-            AssistantMessageStatus.Complete, now, 1, [], [], null);
-        var pdf = new AssistantExportRenderer().Render(conversation, [message], AssistantExportFormat.Pdf);
-        using var content = pdf.Content;
-        using var bytes = new MemoryStream(); content.CopyTo(bytes);
-        return [new("imagen.png", "image/png", RedPng()), new("documento.pdf", "application/pdf", bytes.ToArray())];
+        return [new("imagen.png", "image/png", RedPng()), new("documento.pdf", "application/pdf", MarkerPdf())];
+    }
+    private static byte[] MarkerPdf()
+    {
+        // PDF real de una página con Helvetica estándar: no incrusta una fuente completa en el contexto.
+        var content = "BT /F1 18 Tf 72 720 Td (Verification code: " + PdfMarker + ") Tj ET\n";
+        string[] objects =
+        [
+            "<< /Type /Catalog /Pages 2 0 R >>",
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+            "<< /Length " + System.Xml.XmlConvert.ToString(Encoding.ASCII.GetByteCount(content)) + " >>\nstream\n" + content + "endstream",
+        ];
+        using var pdf = new MemoryStream();
+        void Write(string value) => pdf.Write(Encoding.ASCII.GetBytes(value));
+        Write("%PDF-1.4\n");
+        var offsets = new List<long>();
+        for (var index = 0; index < objects.Length; index++)
+        {
+            offsets.Add(pdf.Position);
+            Write(System.Xml.XmlConvert.ToString(index + 1) + " 0 obj\n" + objects[index] + "\nendobj\n");
+        }
+        var xref = pdf.Position;
+        Write("xref\n0 6\n0000000000 65535 f \n");
+        foreach (var offset in offsets) Write(System.Xml.XmlConvert.ToString(offset).PadLeft(10, '0') + " 00000 n \n");
+        Write("trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n" + System.Xml.XmlConvert.ToString(xref) + "\n%%EOF\n");
+        return pdf.ToArray();
     }
     private static byte[] RedPng()
     {
