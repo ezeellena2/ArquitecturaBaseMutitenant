@@ -5,18 +5,8 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 ## Raíz
 
 ```text
-├── .artifacts/
-│   ├── comments-validation/
-│   ├── etapa-3c/
-│   ├── etapa-5/
-│   ├── etapa-5-r04/
-│   ├── etapa-5-role-check/
-│   ├── publish-api/
-│   │   └── en/
-│   └── tanda-4f/
 ├── .github/
 │   └── workflows/
-├── .playwright-mcp/
 ├── docs/
 │   ├── architecture/
 │   ├── ayuda/
@@ -34,7 +24,6 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   ├── plans/
 │   ├── reviews/  revisión activa de la 8b hasta el aviso del coordinador
 │   ├── rules/  fichas del arnés: README + una ficha por tema (guardado, fechas, números…); índice en rules/README.md
-│   └── specs/
 ├── scripts/
 │   ├── arneses/  arneses ejecutables: detectan (0 tokens), arreglan lo mecánico y llaman a un modelo barato (ADR 0037)
 │   │   ├── _plantilla/  se copia para crear un arnés nuevo; el CLI ignora las carpetas con _
@@ -50,9 +39,6 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   └── secretos/
 ├── src/  ver abajo
 │   ├── ArquitecturaBaseMultitenant.Api/
-│   │   ├── .artifacts/
-│   │   │   └── etapa-5/
-│   │   ├── .emails/
 │   │   ├── Authentication/
 │   │   ├── Authorization/
 │   │   ├── Contracts/  entrada HTTP: records sealed, props nullable, ToString() sin PII
@@ -96,8 +82,6 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   ├── ArquitecturaBaseMultitenant.AppHost/
 │   │   └── Properties/
 │   ├── ArquitecturaBaseMultitenant.Application/
-│   │   ├── .artifacts/
-│   │   │   └── etapa-5/
 │   │   ├── Common/
 │   │   │   ├── Exceptions/
 │   │   │   ├── Formatting/  presentación unificada del lado del back (backend.md §18)
@@ -114,7 +98,6 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   │   ├── Caching/
 │   │   │   │   ├── Dns/
 │   │   │   │   ├── Engagement/
-│   │   │   │   ├── Execution/
 │   │   │   │   ├── Features/
 │   │   │   │   ├── Files/
 │   │   │   │   ├── Help/
@@ -215,8 +198,6 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │       ├── PublicSite/
 │   │       └── Roles/
 │   ├── ArquitecturaBaseMultitenant.Domain/
-│   │   ├── .artifacts/
-│   │   │   └── etapa-5/
 │   │   ├── Assistant/
 │   │   ├── Auditing/
 │   │   ├── Authentication/
@@ -239,11 +220,10 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   └── TaxIdValidators/
 │   │   └── WhatsApp/
 │   ├── ArquitecturaBaseMultitenant.Infrastructure/
-│   │   ├── .artifacts/
-│   │   │   └── etapa-5/
 │   │   ├── BackgroundJobs/
 │   │   ├── Caching/
 │   │   ├── Features/
+│   │   ├── Files/  almacenamiento privado local y journal de compensación
 │   │   ├── Help/
 │   │   ├── Idempotency/
 │   │   ├── Identity/
@@ -254,6 +234,8 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │       └── Templates/
 │   │   ├── Modules/
 │   │   │   ├── Assistant/
+│   │   │   │   ├── Export/  exportación Markdown/PDF del chat
+│   │   │   │   │   └── Fonts/  fuente y licencia del PDF
 │   │   │   │   ├── Persistence/
 │   │   │   │   │   ├── Configurations/
 │   │   │   │   │   ├── Readers/
@@ -278,20 +260,12 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   ├── Extensions/
 │   │   │   ├── Interceptors/
 │   │   │   ├── Migrations/  una sola carpeta; RLS y grants dentro de cada migración
-│   │   │   ├── Platform/
-│   │   │   │   ├── Configurations/
-│   │   │   │   └── Migrations/
 │   │   │   ├── Readers/  AsNoTracking + proyección a *Row/*Response
 │   │   │   ├── Repositories/  internal sealed; escrituras de agregados
 │   │   │   │   └── RoleRepository.cs  repositorio de referencia
 │   │   │   ├── Rls/
 │   │   │   ├── Seed/
 │   │   │   │   └── ReferenceData/  cinco JSON de salida versionados; no se editan a mano
-│   │   │   ├── Tenant/
-│   │   │   │   ├── Configurations/
-│   │   │   │   ├── Interceptors/
-│   │   │   │   └── Migrations/
-│   │   │   └── WhatsApp/
 │   │   ├── Phones/
 │   │   ├── ReferenceData/
 │   │   ├── RequestContext/
@@ -299,8 +273,6 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   ├── Time/
 │   │   └── WhatsApp/
 │   └── ArquitecturaBaseMultitenant.ServiceDefaults/
-│       └── .artifacts/
-│           └── etapa-5/
 ├── tests/  ver abajo
 │   ├── ArquitecturaBaseMultitenant.Api.IntegrationTests/
 │   │   ├── Api/
@@ -308,6 +280,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   ├── Contracts/
 │   │   ├── ErrorHandling/
 │   │   ├── Features/
+│   │   ├── Files/  pruebas del almacenamiento privado y compensaciones
 │   │   ├── Hosting/
 │   │   ├── Identity/
 │   │   ├── Json/
@@ -331,6 +304,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   ├── TestFeatures/  solo para tests, nunca en src/
 │   │   │   ├── Access/  probe de ruta exclusiva Business, sólo para tests
 │   │   │   ├── AssistantTurns/
+│   │   │   ├── AssistantBrowser/  controles privados del recorrido real aislado
 │   │   │   ├── Auditing/
 │   │   │   ├── Features/
 │   │   │   ├── Idempotency/
@@ -362,8 +336,6 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   └── Roles/
 │   │   └── TestDoubles/  cada fake nace con la interfaz que implementa
 │   ├── ArquitecturaBaseMultitenant.ArchitectureTests/
-│   │   ├── .artifacts/
-│   │   │   └── etapa-5/
 │   │   ├── Modules/
 │   │   │   ├── Assistant/
 │   │   │   └── WhatsApp/
@@ -615,3 +587,7 @@ Decisión del usuario (2026-10-11): cada raíz de capa, área, módulo, proyecto
 | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Users/` | Pruebas de unidad: Users. | [docs/rules/tests.md](../rules/tests.md) | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Users/AccountLifecycleTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Users/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/ValueObjects/` | Pruebas de unidad: Value Objects. | [docs/rules/tests.md](../rules/tests.md) | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/ValueObjects/CultureCodeTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Domain.UnitTests/ValueObjects/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/WhatsApp/` | Pruebas de unidad: WhatsApp. | [docs/rules/tests.md](../rules/tests.md) | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/WhatsApp/WhatsAppMessageTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Domain.UnitTests/WhatsApp/AGENTS.md) |
+| `src/ArquitecturaBaseMultitenant.Infrastructure/Files/` | Almacenamiento privado local y journal de compensación. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Files/LocalFileStore.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Files/AGENTS.md) |
+| `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Export/` | Exportación Markdown/PDF de chats del asistente. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Export/AssistantExportRenderer.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Export/AGENTS.md) |
+| `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Files/` | Pruebas del almacenamiento privado y sus compensaciones. | [docs/rules/tests.md](../rules/tests.md) | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Files/LocalFileStoreTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Files/AGENTS.md) |
+| `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/TestFeatures/AssistantBrowser/` | Fixture privada del recorrido del asistente en Testing aislado. | [docs/rules/tests.md](../rules/tests.md) | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/TestFeatures/AssistantBrowser/AssistantFileBridge.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/TestFeatures/AssistantBrowser/AGENTS.md) |

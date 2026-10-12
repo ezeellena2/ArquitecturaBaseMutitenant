@@ -17,7 +17,7 @@ Panorama de la plantilla B2B + B2C. Una persona tiene una cuenta y elige Persona
 | Tests | xUnit v3, Testcontainers (`postgres:18.x`), NetArchTest + Mono.Cecil, `FakeTimeProvider`, dobles a mano (sin Moq ni FluentAssertions) |
 | Build | `TreatWarningsAsErrors`, `AnalysisLevel=latest-recommended`, `EnforceCodeStyleInBuild`, BannedApiAnalyzers, Central Package Management |
 
-Las versiones son las mismas de `ArquitecturaBase/Directory.Packages.props`. `NodaTime` no se usa: alcanza con `TimeZoneInfo` e IDs IANA.
+Las versiones son las mismas de `Directory.Packages.props`. `NodaTime` no se usa: alcanza con `TimeZoneInfo` e IDs IANA.
 
 ## 2. Solución y proyectos
 

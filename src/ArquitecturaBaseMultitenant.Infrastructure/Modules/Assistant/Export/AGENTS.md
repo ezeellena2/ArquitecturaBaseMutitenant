@@ -1,3 +1,3 @@
-Exportaciones privadas de conversaciones a Markdown y PDF Unicode.
-Leé [Asistente](../../../../../docs/features/asistente.md).
+Exportación Markdown/PDF de chats del asistente.
+Leé [capas-y-flujo](../../../../../docs/rules/capas-y-flujo.md).
 Copiá de [AssistantExportRenderer.cs](AssistantExportRenderer.cs).
