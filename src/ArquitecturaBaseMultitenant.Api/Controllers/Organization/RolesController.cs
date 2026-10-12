@@ -44,6 +44,7 @@ public sealed class RolesController(IRoleService service) : ControllerBase
             Search = query.Search,
             Scope = query.Scope,
             CompanyId = query.CompanyId,
+            OnlyOwn = query.OnlyOwn ?? false,
         }, cancellationToken)).ToActionResult(this);
 
     [HttpGet("{id:guid}")]

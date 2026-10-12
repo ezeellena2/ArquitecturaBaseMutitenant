@@ -39750,6 +39750,13 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "OnlyOwn",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -42446,6 +42453,13 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "OnlyOwn",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
             }
           }
         ],

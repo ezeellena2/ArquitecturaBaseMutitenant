@@ -91,6 +91,18 @@ public sealed class RolesTests(ApiFactory factory)
         Assert.Equal(1, counts.RootElement.GetProperty("companies").GetProperty(north.ToString()).GetInt32());
         Assert.Equal(1, counts.RootElement.GetProperty("companies").GetProperty(south.ToString()).GetInt32());
         Assert.Equal(0, counts.RootElement.GetProperty("anyCompany").GetInt32());
+        foreach (var path in new[] { $"/api/roles/paged?companyId={north:D}&onlyOwn=true", $"/api/companies/{north:D}/roles/paged?onlyOwn=true" })
+        {
+            using var own = await client.GetAsync(path, Ct);
+            Assert.Equal(HttpStatusCode.OK, own.StatusCode);
+            using var ownJson = JsonDocument.Parse(await own.Content.ReadAsStringAsync(Ct));
+            var ownRole = Assert.Single(ownJson.RootElement.GetProperty("items").EnumerateArray());
+            Assert.Equal("SpecificCompany", ownRole.GetProperty("scope").GetString());
+            Assert.Equal(north, ownRole.GetProperty("companyId").GetGuid());
+            Assert.Equal(1, ownJson.RootElement.GetProperty("totalCount").GetInt32());
+        }
+        using var missingCompany = await client.GetAsync("/api/roles/paged?onlyOwn=true", Ct);
+        Assert.Equal(HttpStatusCode.BadRequest, missingCompany.StatusCode);
     }
 
     [Fact]

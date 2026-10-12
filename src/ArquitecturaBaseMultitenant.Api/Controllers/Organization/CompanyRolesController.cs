@@ -37,5 +37,6 @@ public sealed class CompanyRolesController(IRoleService service) : ControllerBas
             PageSize = query.PageSize ?? PagedRequest.DefaultPageSize,
             Sort = query.Sort,
             Search = query.Search,
+            OnlyOwn = query.OnlyOwn ?? false,
         }, cancellationToken)).ToActionResult(this);
 }

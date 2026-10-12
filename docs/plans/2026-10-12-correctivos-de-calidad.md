@@ -11,7 +11,9 @@
 | C2 | Hecha: opciones remotas de a 10, selección conservada y guardas. Recurso 101, «Todos», caché e invalidación verdes; áreas, TypeScript y lint sin errores nuevos. |
 | C3 | Hecha: conteos agrupados y contratos aditivos. Back 16 de integración y 3 unitarios verdes; front 19 casos verdes, incluidas las dos guardas de un pedido por búsqueda; TypeScript sin errores. |
 | C9 | Hecha: auditoría y dominios paginados, legacy con tope SQL y guarda general 3/3. Áreas de back/front e índices verdes; build 0/0, contratos, TypeScript y lint sin errores nuevos. |
-| C5, C6, C8 | Pendientes, en el orden de la revalidación. |
+| C5 | Hecha: filtro `onlyOwn` aditivo y paginado real con tipos generados; guarda contra respuestas manuales. 7 de integración y 42 del front verdes; build 0/0, TypeScript, lint y contratos sin errores nuevos. |
+| C6 | Hecha: reglas de baja en Application y limpieza EF por puerto; guarda interna. 38 de arquitectura y 48 de integración verdes; builds 0/0. |
+| C8 | En curso. |
 | Cierre | Pendiente; una corrida completa al terminar los correctivos habilitados. |
 
 **Decisiones técnicas:** C0 conserva `invitacion_organizacion` y su configuración según la decisión de producto del 12/10 (ADR 0038); se retira el intento literal de Meta en ambos idiomas.
@@ -22,6 +24,8 @@
 - C2: opciones por recurso bajo su raíz de caché, páginas de 10 y búsqueda remota; caché/detalle conserva la selección y «Todos» carga páginas sólo al pulsarlo.
 - C9: rutas /paged aditivas; arrays anteriores deprecados y acotados en SQL a una página, con `maxItems` y sucesora verificables. La guarda sólo lista catálogos; también detectó Dominios sin tope, que recibe el mismo paginado e índices de búsqueda/orden.
 - C3: conteos agrupados en SQL; Roles devuelve búsqueda y totales juntos, Usuarios mantiene el facet de estado sin estado y el de empresa con estado; campos nuevos aditivos.
+- C5: `onlyOwn` conserva el listado asignable por defecto; pestaña y contador comparten la primera página y caché de 30 s, invalidada por Roles. Respuestas concretas usan alias generados; helpers derivan sólo la forma común.
+- C6: tres participantes en Application/AddLegal; `IAccountDeletionCleanupRepository` conserva consultas y limpieza EF, transacciones y scopes, con la regla de última Dueña internal.
 - C7: `ExceptionLog` publica sólo tipos/stacks, también internos; `PeriodicWorker` conserva intervalos/señal y continúa tras fallar. HTTP completa ProblemDetails aun con Accept no admitido para que el framework no registre la excepción cruda.
 
 **Cuándo y quién:** un chat nuevo de Codex, con los dos repos, en paralelo con la 8b y antes de la 11 (decisión del usuario, 2026-10-12). La 11 copia los moldes del núcleo (Roles, las listas para elegir, «Para resolver»): estos arreglos van primero para que no copie sus problemas. **Por qué:** la revisión de código del 2026-10-12 encontró que las reglas se cumplen, pero hay cosas que andan con pocos datos y se rompen con muchos, valores fijos y código copiado en vez de compartido.
