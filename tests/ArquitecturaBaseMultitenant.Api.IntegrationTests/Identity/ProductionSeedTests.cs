@@ -29,7 +29,7 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Identity;
 /// Repetir el arranque no debe duplicar esos datos.
 /// </summary>
 [Collection(ApiTestGroup.Name)]
-public sealed class ProductionSeedTests
+public sealed partial class ProductionSeedTests
 {
     [Theory]
     [InlineData(null, null, "Operator Example Name", "Operator", "Example Name")]
@@ -113,9 +113,10 @@ public sealed class ProductionSeedTests
             TestContext.Current.CancellationToken));
         var initialEvents = await context.SecurityEvents.AsNoTracking()
             .ToListAsync(TestContext.Current.CancellationToken);
-        Assert.Equal(3, initialEvents.Count);
-        Assert.Single(initialEvents, item => item.Type == SecurityEventType.PlatformSettingsChanged
-            && item.ActorKind == AuditActorKind.System && item.Reason == "Initial assistant reference seed");
+        var expectedEvents = 2;
+        ContributeSeedEventCount(ref expectedEvents);
+        Assert.Equal(expectedEvents, initialEvents.Count);
+        AssertModuleSeedEvents(initialEvents);
         Assert.Contains(initialEvents, item => item.Type == SecurityEventType.PlatformSettingsChanged);
         Assert.Contains(initialEvents, item => item.Type.ToString() == "PlatformOperatorGranted"
             && item.ActorKind == AuditActorKind.System && item.Reason == "Initial platform owner seed");
@@ -136,20 +137,16 @@ public sealed class ProductionSeedTests
         Assert.NotNull(loginMethod.VerifiedAtUtc);
 
         var documents = await context.LegalDocuments.ToListAsync(TestContext.Current.CancellationToken);
-        Assert.Equal(4, documents.Count);
+        var expectedVersions = new List<int> { 1 };
+        ContributeLegalVersions(expectedVersions);
+        Assert.Equal(2 * expectedVersions.Count, documents.Count);
         Assert.All(Enum.GetValues<LegalDocumentKind>(), kind =>
-            Assert.Equal([1, 2], documents.Where(document => document.Kind == kind).Select(document => document.Version).Order().ToArray()));
+            Assert.Equal(expectedVersions, documents.Where(document => document.Kind == kind).Select(document => document.Version).Order().ToArray()));
         Assert.Contains(documents, document => document.Kind == LegalDocumentKind.Terms);
         Assert.Contains(documents, document => document.Kind == LegalDocumentKind.Privacy);
         var contents = await context.LegalDocumentContents.ToListAsync(TestContext.Current.CancellationToken);
-        Assert.Equal(8, contents.Count);
-        var assistantIds = documents.Where(document => document.Version == 2).Select(document => document.Id).ToHashSet();
-        Assert.All(contents.Where(content => assistantIds.Contains(content.LegalDocumentId)), content =>
-        {
-            Assert.Contains("Anthropic", content.Text, StringComparison.Ordinal);
-            Assert.Contains("30", content.Text, StringComparison.Ordinal);
-            Assert.Contains(content.Culture == "es-AR" ? "DEMOSTRACIÓN" : "DEMONSTRATION", content.Text, StringComparison.Ordinal);
-        });
+        Assert.Equal(4 * expectedVersions.Count, contents.Count);
+        AssertModuleLegalContents(documents, contents);
         Assert.Contains(contents, content => content.Culture == "es-AR" &&
             content.Text == "DOCUMENTO DE DEMOSTRACIÓN. Esta plantilla no incluye términos legales. Reemplazá este texto antes de publicar.");
         Assert.Contains(contents, content => content.Culture == "en-US" &&
@@ -254,6 +251,11 @@ public sealed class ProductionSeedTests
             Password = password,
         }.ConnectionString;
     }
+
+    static partial void ContributeSeedEventCount(ref int count);
+    static partial void AssertModuleSeedEvents(List<SecurityEvent> events);
+    static partial void ContributeLegalVersions(List<int> versions);
+    static partial void AssertModuleLegalContents(List<LegalDocument> documents, List<LegalDocumentContent> contents);
 
     private static string TestCertificate()
     {

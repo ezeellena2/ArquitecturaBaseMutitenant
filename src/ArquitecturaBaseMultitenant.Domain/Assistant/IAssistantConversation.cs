@@ -11,6 +11,8 @@ public interface IAssistantConversation : IVersioned
     bool IsTitleManual { get; }
     DateTime CreatedAtUtc { get; }
     DateTime LastActivityAtUtc { get; }
+    void Touch(DateTime nowUtc);
+    bool TrySetAutomaticTitle(string title, uint expectedVersion, DateTime nowUtc);
     void Update(string? title, bool isSaved, DateTime nowUtc);
     void RecordQuick(string title, DateTime nowUtc);
 }

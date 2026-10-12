@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 internal sealed class AssistantDurableService(ICurrentUser user, IAssistantDurableRepository repository,
-    IAssistantConversationReader reader, AssistantConversationPolicy policy, AssistantSnapshotPrivacyGuard privacy, TimeProvider clock,
+    IAssistantConversationReader reader, IAssistantTurnService turns, AssistantConversationPolicy policy, AssistantSnapshotPrivacyGuard privacy, TimeProvider clock,
     ILogger<AssistantDurableService> logger) : IAssistantDurableService
 {
     public Task<Result<IdempotentReference?>> ValidateAsync(IdempotentRequest request, string? quickKey, CancellationToken ct) =>
@@ -30,6 +30,7 @@ internal sealed class AssistantDurableService(ICurrentUser user, IAssistantDurab
     public Task<Result<IdempotentReplayResponse>> ReplayAsync(IdempotentReference reference, CancellationToken ct) =>
         OperationLog.RunAsync<IdempotentReplayResponse>(logger, clock, "AssistantDurableReplay", async () =>
         {
+            if (reference.Kind == "assistant.turn") return await turns.ReplayAsync(reference, ct);
             var allowed = await policy.AuthorizeAsync(ct);
             if (allowed.IsFailure) return allowed.Error;
             var row = await repository.GetByIdAsync(user.UserId!.Value, user.Access!.Value, reference.Id, ct);
@@ -60,6 +61,12 @@ internal sealed class AssistantDurableService(ICurrentUser user, IAssistantDurab
             if (!AssistantSnapshotRetentionPolicy.HasContent(currentRow, clock.GetUtcNow().UtcDateTime))
                 return AssistantErrors.ConversationNotFound;
             snapshot = AssistantSnapshotBuilder.Restore(currentRow.SnapshotJson!, currentRow.Version);
+            if (reference.Kind == "assistant.attachment")
+            {
+                if (snapshot.Attachment is not { } attachment || !await reader.ExistsAttachmentAsync(user.UserId.Value, user.Access.Value,
+                    currentRow.ConversationId, attachment.Id, ct)) return AssistantErrors.AttachmentNotFound;
+                return new IdempotentReplayResponse<AssistantAttachmentSummaryResponse>(reference, attachment);
+            }
             if (currentRow.QuickKey is not null)
                 return new IdempotentReplayResponse<AssistantQuickResponse>(reference,
                     new AssistantQuickResponse(snapshot.Conversation, snapshot.Messages, snapshot.Result!));

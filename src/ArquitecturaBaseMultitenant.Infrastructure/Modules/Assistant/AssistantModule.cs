@@ -15,6 +15,9 @@ public static class AssistantModule
     {
         services.AddSingleton<IPersistenceModelContributor, AssistantModelContributor>();
         services.AddScoped<IAssistantSettingsReader, AssistantSettingsReader>();
+        services.AddScoped<IAssistantTurnRepository, AssistantTurnRepository>();
+        services.AddScoped<IAssistantChatContext, AssistantChatContext>();
+        services.AddHostedService<AssistantTurnWorker>();
         services.AddScoped<IAssistantConversationReader, AssistantConversationReader>();
         services.AddScoped<IAssistantNoticeReader, AssistantNoticeReader>();
         services.AddScoped<IAssistantNoticeRepository, AssistantNoticeRepository>();
@@ -29,11 +32,19 @@ public static class AssistantModule
         services.AddScoped<IAssistantModelRepository, AssistantModelRepository>();
         services.AddScoped<IAssistantModelReader, AssistantModelReader>();
         services.AddScoped<IAssistantFinanceRepository, AssistantFinanceRepository>();
+        services.AddScoped<IAssistantBudgetAlertRepository, AssistantBudgetAlertRepository>();
+        services.AddHostedService<AssistantBudgetAlertWorker>();
         services.AddScoped<IAssistantFinanceReader, AssistantFinanceReader>();
         services.AddScoped<IAssistantUsageReader, AssistantUsageReader>();
         services.AddSingleton<IAssistantProviderCatalog, AssistantProviderCatalog>();
         services.AddScoped<IAssistantKeyProtector, AssistantKeyProtector>();
         services.AddScoped<IChatClientFactory, AnthropicChatClientFactory>();
+        services.AddSingleton<AssistantFakeChatMetrics>();
+        services.AddScoped<IAssistantAttachmentRepository, AssistantAttachmentRepository>();
+        services.AddScoped<IAssistantAttachmentContentReader, AssistantAttachmentContentReader>();
+        services.AddScoped<IAssistantExportRenderer, Export.AssistantExportRenderer>();
+        services.AddScoped<IAssistantRetentionRepository, AssistantRetentionRepository>();
+        services.AddHostedService<Retention.AssistantRetentionWorker>();
         services.AddSingleton<IValidateOptions<AssistantOptions>, AssistantOptionsValidator>();
         services.AddSingleton<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Help.IHelpArticleReader,
             ArquitecturaBaseMultitenant.Infrastructure.Help.RepositoryHelpArticleReader>();

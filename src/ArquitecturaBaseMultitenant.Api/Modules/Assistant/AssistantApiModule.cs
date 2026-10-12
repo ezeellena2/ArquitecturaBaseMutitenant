@@ -18,6 +18,10 @@ public static class AssistantApiModule
             new AssistantReplayAdapter(provider.GetRequiredService<ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Services.IAssistantDurableService>(), "assistant.conversation"));
         services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Idempotency.IIdempotentReplayResolver>(provider =>
             new AssistantReplayAdapter(provider.GetRequiredService<ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Services.IAssistantDurableService>(), "assistant.quick"));
+        services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Idempotency.IIdempotentReplayResolver>(provider =>
+            new AssistantReplayAdapter(provider.GetRequiredService<ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Services.IAssistantDurableService>(), "assistant.turn"));
+        services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Idempotency.IIdempotentReplayResolver>(provider =>
+            new AssistantReplayAdapter(provider.GetRequiredService<ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Services.IAssistantDurableService>(), "assistant.attachment"));
         return services;
     }
     private sealed record RouteAvailability(string Key, bool IsAvailable) : IInstalledModuleRouteAvailability;

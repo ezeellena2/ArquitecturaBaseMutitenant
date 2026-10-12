@@ -98,6 +98,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Seed:PlatformOwner:Phone", string.Empty);
         builder.UseSetting("Email:Delivery", "PickupDirectory");
         builder.UseSetting("WhatsApp:PhoneNumberId", string.Empty);
+        // Los hosts auxiliares de preparación no ejecutan turnos de otro host con configuración/proveedor propios.
+        builder.UseSetting("Assistant:TurnWorkerEnabled", "false");
         builder.UseSetting("Authentication:Google:ClientId", string.Empty);
         builder.UseSetting("Authentication:Google:ClientSecret", string.Empty);
         // Como Development: cada registro se construye al arrancar, así una dependencia sin registrar rompe la suite
@@ -114,6 +116,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("RateLimiting:LoginCodePermitLimit", "1000");
         builder.UseSetting("RateLimiting:LoginVerifyPermitLimit", "1000");
         builder.UseSetting("Email:PickupDirectory", _pickupDirectory);
+        builder.UseSetting("Files:RootPath", Path.Combine(_pickupDirectory, "private-files"));
         builder.UseSetting("Authentication:Clients:Web:RedirectUris:0", "https://localhost:5174/auth/callback");
         builder.UseSetting("Authentication:Clients:Web:PostLogoutRedirectUris:0", "https://localhost:5174/");
         builder.UseSetting("Authentication:Clients:Web:PostLogoutRedirectUris:1", "https://localhost:5174/invitacion");

@@ -1,3 +1,4 @@
+using UniqueKeys = ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence.UniqueKeys;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Models.Common;

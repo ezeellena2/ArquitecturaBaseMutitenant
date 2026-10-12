@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.Persistence.Repositories;
 
-internal sealed class AssistantDurableRepository(ApplicationDbContext db, ITenantContext tenant) : IAssistantDurableRepository
+internal sealed class AssistantDurableRepository(ApplicationDbContext db, ITenantContext tenant, IAssistantTurnRepository turns) : IAssistantDurableRepository
 {
     public Task StageFileCleanupAsync(Guid owner, Access access, Guid conversationId, DateTime nowUtc, CancellationToken ct) =>
         AssistantFileCleanupWriter.StageAsync(db, owner, conversationId, access == Access.Platform, nowUtc, ct);
@@ -66,6 +66,7 @@ internal sealed class AssistantDurableRepository(ApplicationDbContext db, ITenan
     public async Task RemoveContentAsync(Guid owner, Access access, Guid conversationId, CancellationToken ct)
     {
         db.RequireTransaction();
+        await turns.CancelConversationAsync(owner, access, conversationId, ct);
         if (access == Access.Platform)
         {
             var ids = await Platform(owner).Where(row => row.ConversationId == conversationId).Select(row => row.Id).ToArrayAsync(ct);

@@ -15,12 +15,8 @@ public interface IAssistantConversationService
     Task<Result<AssistantConversationResponse>> GetAsync(Guid id, AssistantMessageListRequest request, CancellationToken cancellationToken);
     Task<Result<VersionResponse>> UpdateAsync(Guid id, UpdateAssistantConversationRequest request, CancellationToken cancellationToken);
     Task<Result> DeleteAsync(Guid id, uint? version, CancellationToken cancellationToken);
-    Task<Result<AssistantTurnResultResponse>> SendAsync(Guid id, SendAssistantMessageRequest request, CancellationToken cancellationToken);
+    Task<Result<AssistantTurnAdmission>> SendAsync(Guid id, SendAssistantMessageRequest request, CancellationToken cancellationToken);
     Task<Result> StopAsync(Guid id, Guid turnId, StopAssistantTurnRequest request, CancellationToken cancellationToken);
     Task<Result<IdempotentReplayResponse<AssistantQuickResponse>>> QuickAsync(string key, AssistantQuickRequest request, CancellationToken cancellationToken);
     Task<Result<VersionResponse>> FeedbackAsync(Guid id, Guid messageId, AssistantFeedbackRequest request, CancellationToken cancellationToken);
-    Task<Result<AssistantAttachmentSummaryResponse>> UploadAsync(Guid id, AssistantUploadRequest request, CancellationToken cancellationToken);
-    Task<Result<AssistantFileResponse>> DownloadAsync(Guid id, Guid attachmentId, CancellationToken cancellationToken);
-    Task<Result> DeleteAttachmentAsync(Guid id, Guid attachmentId, uint? version, CancellationToken cancellationToken);
-    Task<Result<AssistantFileResponse>> ExportAsync(Guid id, AssistantExportFormat? format, CancellationToken cancellationToken);
 }

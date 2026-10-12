@@ -67,6 +67,18 @@ internal sealed class AssistantFinanceRepository(ApplicationDbContext db, ITenan
             .Sum(row => row.ReservedCost.Amount);
         return reserved + completed + staged;
     }
+    public async Task<decimal> GetCommittedCostAsync(Guid monthId, AssistantKeyFunding funding, CancellationToken ct)
+    {
+        db.RequireTransaction();
+        db.ChangeTracker.DetectChanges();
+        var staged = db.Set<AssistantFinancialOperation>().Local.Where(row => row.BudgetMonthId == monthId && row.Funding == funding &&
+            row.State == AssistantFinancialState.Completed && db.Entry(row).State == EntityState.Modified).Select(row => row.Id).ToArray();
+        var persisted = await (from call in db.Set<AssistantFinancialCall>().AsNoTracking()
+            join operation in db.Set<AssistantFinancialOperation>().AsNoTracking() on call.OperationId equals operation.Id
+            where operation.BudgetMonthId == monthId && operation.Funding == funding && operation.State == AssistantFinancialState.Completed && !staged.Contains(operation.Id)
+            select call.Cost.Amount).SumAsync(ct);
+        return persisted + db.Set<AssistantFinancialCall>().Local.Where(row => staged.Contains(row.OperationId)).Sum(row => row.Cost.Amount);
+    }
     public async Task<IReadOnlyList<AssistantFinancialCall>> ListCallsAsync(Guid operationId, CancellationToken ct)
     {
         db.RequireTransaction();

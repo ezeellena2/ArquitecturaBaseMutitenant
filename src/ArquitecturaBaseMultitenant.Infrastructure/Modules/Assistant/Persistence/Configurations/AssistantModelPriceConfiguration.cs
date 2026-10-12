@@ -1,6 +1,6 @@
+using UniqueKeys = ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence.UniqueKeys;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
 using ArquitecturaBaseMultitenant.Domain.Common;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;

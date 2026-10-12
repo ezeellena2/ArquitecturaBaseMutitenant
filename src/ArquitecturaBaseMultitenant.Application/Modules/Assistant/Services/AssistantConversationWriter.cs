@@ -79,7 +79,7 @@ internal sealed class AssistantConversationWriter(ICurrentUser user, IAssistantC
         var messages = new List<AssistantMessageResponse>();
         var question = AddMessage(row.Id, AssistantMessageRole.User, composition.Value.Title, [], nowUtc);
         messages.Add(question);
-        messages.Add(AddMessage(row.Id, AssistantMessageRole.Assistant, composition.Value.Result.Text, composition.Value.Result.Links, nowUtc.AddTicks(10)));
+        messages.Add(AddMessage(row.Id, AssistantMessageRole.Assistant, composition.Value.Result.Text, composition.Value.Result.Links, nowUtc.AddTicks(10), composition.Value.SubjectCopies.Select(copy => copy.AccountId).Distinct().ToArray()));
         var snapshot = new AssistantDurableSnapshot(AssistantSnapshotBuilder.Summary(row), messages, composition.Value.Result);
         return Stage(request, row, "assistant.quick", 200, null, snapshot, key,
             composition.Value.SubjectCopies.Select(copy => copy.AccountId).Distinct().ToArray());
@@ -108,7 +108,7 @@ internal sealed class AssistantConversationWriter(ICurrentUser user, IAssistantC
         CheckVersion(row, version);
         await durable.StageFileCleanupAsync(Owner, Access, id, clock.GetUtcNow().UtcDateTime, ct);
         await durable.RemoveContentAsync(Owner, Access, id, ct);
-        // No provider/worker/storage is admitted by this cut. Cascade removes owned messages and technical child work.
+        // Global technical work survives this cascade long enough to settle accounting.
         if (row is PlatformAssistantConversation global) platform.Remove(global);
         else repository.Remove((AssistantConversation)row);
         return Result.Success();
@@ -165,13 +165,14 @@ internal sealed class AssistantConversationWriter(ICurrentUser user, IAssistantC
     {
         if (version is { } expected && row.Version != expected) throw new ConcurrencyConflictException("The row changed since it was read.");
     }
-    private AssistantMessageResponse AddMessage(Guid id, AssistantMessageRole role, string text, IReadOnlyList<AssistantLinkResponse> links, DateTime nowUtc)
+    private AssistantMessageResponse AddMessage(Guid id, AssistantMessageRole role, string text, IReadOnlyList<AssistantLinkResponse> links, DateTime nowUtc, IReadOnlyCollection<Guid>? subjects = null)
     {
         Entity row;
         if (Access == Access.Platform)
         {
             var message = PlatformAssistantMessage.Create(id, role.ToString(), nameof(AssistantMessageStatus.Complete), text, nowUtc);
             message.SetLinks(JsonSerializer.Serialize(links));
+            message.SetPrivacySubjects(subjects ?? []);
             platform.Add(message);
             row = message;
         }
@@ -179,6 +180,7 @@ internal sealed class AssistantConversationWriter(ICurrentUser user, IAssistantC
         {
             var message = AssistantMessage.Create(id, role.ToString(), nameof(AssistantMessageStatus.Complete), text, nowUtc);
             message.SetLinks(JsonSerializer.Serialize(links));
+            message.SetPrivacySubjects(subjects ?? []);
             repository.Add(message);
             row = message;
         }

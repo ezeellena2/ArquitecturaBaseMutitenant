@@ -7,7 +7,7 @@ namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 /// Detecta entradas a un alcance de organización fuera de los adaptadores y altas autorizados. Protege el
 /// punto donde se cambia el contexto de aislamiento.
 /// </summary>
-public sealed class TenantScopeUsageTests
+public sealed partial class TenantScopeUsageTests
 {
     private const string TenantContext = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.TenantContext";
     private const string TenantJobRunner = "ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs.TenantJobRunner";
@@ -25,11 +25,18 @@ public sealed class TenantScopeUsageTests
     // Adaptadores de Infrastructure, servicios de entrada y PlatformActionGuard, que entra después de registrar el
     // SecurityEvent (multitenancy.md). Ningún otro helper entra: InvitationService entra antes de que sus helpers
     // lean la invitación. Cada clase declarada tiene que seguir entrando: la que ya no lo necesita sale de la lista.
-    private static readonly HashSet<string> Declared = new(StringComparer.Ordinal)
+    private static readonly HashSet<string> Declared = CreateDeclared();
+    private static HashSet<string> CreateDeclared()
     {
-        TenantJobRunner, TenantSettingsLoader, AccountService, ConnectService, ExternalLoginService,
-        AccountDeletionProcessingService, BusinessSignupService, InvitationService, LoginCodeService, PlatformActionGuard,
-    };
+        var declared = new HashSet<string>(StringComparer.Ordinal)
+        {
+            TenantJobRunner, TenantSettingsLoader, AccountService, ConnectService, ExternalLoginService,
+            AccountDeletionProcessingService, BusinessSignupService, InvitationService, LoginCodeService, PlatformActionGuard,
+        };
+        ContributeTenantScopeCallers(declared);
+        return declared;
+    }
+    static partial void ContributeTenantScopeCallers(HashSet<string> declared);
 
     [Fact]
     public void Only_declared_adapters_and_signup_services_enter_a_tenant_scope()

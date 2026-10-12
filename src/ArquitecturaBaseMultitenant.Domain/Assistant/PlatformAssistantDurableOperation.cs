@@ -37,6 +37,12 @@ public sealed class PlatformAssistantDurableOperation : Entity, IVersioned
             SubjectUserIds = subjectUserIds?.Where(id => id != Guid.Empty).Distinct().Order().ToArray() ?? [] };
     }
 
+    public void AddSubjects(IReadOnlyList<Guid> subjects)
+    {
+        PreserveSnapshotVersion();
+        SubjectUserIds = SubjectUserIds.Concat(subjects).Where(id => id != Guid.Empty).Distinct().Order().ToArray();
+    }
+    public void SetTurnSnapshot(string snapshot) { SnapshotJson = snapshot; OriginalSnapshotVersion = null; }
     public void PreserveSnapshotVersion()
     {
         if (SnapshotJson is not null) OriginalSnapshotVersion ??= Version;

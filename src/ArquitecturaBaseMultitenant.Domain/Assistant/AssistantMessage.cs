@@ -17,8 +17,22 @@ public sealed class AssistantMessage : Entity, ITenantOwned, IVersioned
     public string? ToolState { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public string? LinksJson { get; private set; }
+    public Guid[] SubjectUserIds { get; private set; } = [];
+    public bool PrivacySubjectsKnown { get; private set; }
+    public void SetPrivacySubjects(IReadOnlyCollection<Guid> subjects)
+    {
+        SubjectUserIds = subjects.Where(id => id != Guid.Empty).Distinct().Order().ToArray();
+        PrivacySubjectsKnown = true;
+    }
+    public void AddPrivacySubjects(IReadOnlyCollection<Guid> subjects)
+    {
+        if (!PrivacySubjectsKnown) throw new InvalidOperationException("Unknown message provenance cannot be upgraded by a later tool.");
+        SetPrivacySubjects(SubjectUserIds.Concat(subjects).ToArray());
+    }
 
     public void SetLinks(string linksJson) { ArgumentException.ThrowIfNullOrWhiteSpace(linksJson); LinksJson = linksJson; }
+    public void Checkpoint(string text) { Text = text; }
+    public void Finish(string status) { Status = status; }
     public void SetFeedback(bool? positive)
     {
         PositiveFeedback = positive;

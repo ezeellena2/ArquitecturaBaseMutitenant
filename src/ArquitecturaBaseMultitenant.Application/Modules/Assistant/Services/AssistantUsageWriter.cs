@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -7,7 +8,7 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 /// <summary>Cierra contabilidad del binding ya admitido, aunque se haya revocado el acceso a datos. Sin chats/proveedor/UOW propia.</summary>
-internal sealed class AssistantUsageWriter(IAssistantFinanceRepository repository, TimeProvider clock)
+internal sealed class AssistantUsageWriter(IAssistantFinanceRepository repository, TimeProvider clock, AssistantBudgetNotifier? budget = null) : IAssistantUsageFinalizer
 {
     public async Task<Result<AssistantCallAdmission>> BeginCallAsync(AssistantFinancialBinding binding, Guid operationId,
         int sequence, bool title, CancellationToken ct)
@@ -78,6 +79,7 @@ internal sealed class AssistantUsageWriter(IAssistantFinanceRepository repositor
             if (operation.Access != Access.Platform && !operation.ContentDeleted) repository.Add(AssistantUsageFact.Create(operation, call));
         }
         operation.Complete(clock.GetUtcNow().UtcDateTime);
+        if (budget is not null) await budget.StageAsync(operation, ct);
         return Result.Success();
     }
 }

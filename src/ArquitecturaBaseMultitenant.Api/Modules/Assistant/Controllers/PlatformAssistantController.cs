@@ -21,7 +21,7 @@ namespace ArquitecturaBaseMultitenant.Api.Modules.Assistant.Controllers;
 [Access(Access.Platform)]
 [InstalledModuleRoute(AssistantApiModule.ChatRoute, InstalledModuleRouteCategory.PlatformChat)]
 [HasPlatformPermission(PlatformPermissions.Assistant.Use)]
-public sealed class PlatformAssistantController(IAssistantConversationService service) : ControllerBase
+public sealed class PlatformAssistantController(IAssistantConversationService service, IAssistantAttachmentService attachments, IAssistantExportService exports) : ControllerBase
 {
     [HttpGet]
     [ProducesResponseType<AssistantStateResponse>(200)]
@@ -111,6 +111,7 @@ public sealed class PlatformAssistantController(IAssistantConversationService se
         (await service.DeleteAsync(id, request.Version, cancellationToken)).ToActionResult(this);
 
     [HttpPost("conversations/{id:guid}/messages")]
+    [IdempotencyDurable(typeof(AssistantDurableAdapter))]
     [Idempotent(Mode = IdempotencyMode.DurableStream)]
     [ProducesResponseType<AssistantTurnResultResponse>(200)]
     [ProducesResponseType<AssistantStreamHttpResponse>(200, "text/event-stream")]
@@ -126,7 +127,7 @@ public sealed class PlatformAssistantController(IAssistantConversationService se
     [ProducesProblem(501)]
     [ProducesProblem(503)]
     public async Task<IActionResult> Send([FromRoute] Guid id, [FromBody] SendAssistantMessageHttpRequest request, CancellationToken cancellationToken) =>
-        (await service.SendAsync(id, new SendAssistantMessageRequest(request.Text, request.AttachmentIds, request.ConversationVersion), cancellationToken)).ToActionResult(this);
+        (await service.SendAsync(id, new SendAssistantMessageRequest(request.Text, request.AttachmentIds, request.ConversationVersion), cancellationToken)).ToStreamResult(this);
 
     [HttpPost("conversations/{id:guid}/turns/{turnId:guid}/stop")]
     [Idempotent(Mode = IdempotencyMode.BufferedJson)]
@@ -171,6 +172,7 @@ public sealed class PlatformAssistantController(IAssistantConversationService se
         (await service.FeedbackAsync(id, messageId, new AssistantFeedbackRequest(request.Rating, request.Version), cancellationToken)).ToActionResult(this);
 
     [HttpPost("conversations/{id:guid}/attachments")]
+    [IdempotencyDurable(typeof(AssistantDurableAdapter))]
     [Idempotent(Mode = IdempotencyMode.DurableReference)]
     [ProducesResponseType<AssistantAttachmentSummaryResponse>(201)]
     [Consumes("multipart/form-data")]
@@ -184,7 +186,7 @@ public sealed class PlatformAssistantController(IAssistantConversationService se
     [ProducesProblem(500)]
     [ProducesProblem(501)]
     public async Task<IActionResult> Upload([FromRoute] Guid id, [FromForm] AssistantUploadHttpRequest request, CancellationToken cancellationToken) =>
-        (await service.UploadAsync(id, new AssistantUploadRequest(request.File?.FileName, request.File?.ContentType, request.File?.Length, null, request.ConversationVersion), cancellationToken)).ToCreatedResult(this, nameof(Download), value => new { id, attachmentId = value.Id });
+        (await attachments.UploadAsync(id, new AssistantUploadRequest(request.File?.FileName, request.File?.ContentType, request.File?.Length, request.File?.OpenReadStream(), request.ConversationVersion), cancellationToken)).ToReferencedResult(this);
 
     [HttpGet("conversations/{id:guid}/attachments/{attachmentId:guid}")]
     [ProducesResponseType<byte[]>(200, "application/octet-stream")]
@@ -197,7 +199,7 @@ public sealed class PlatformAssistantController(IAssistantConversationService se
     [ProducesProblem(500)]
     [ProducesProblem(501)]
     public async Task<IActionResult> Download([FromRoute] Guid id, [FromRoute] Guid attachmentId, CancellationToken cancellationToken) =>
-        (await service.DownloadAsync(id, attachmentId, cancellationToken)).ToActionResult(this);
+        (await attachments.DownloadAsync(id, attachmentId, cancellationToken)).ToFileResult(this);
 
     [HttpDelete("conversations/{id:guid}/attachments/{attachmentId:guid}")]
     [ProducesResponseType(204)]
@@ -210,7 +212,7 @@ public sealed class PlatformAssistantController(IAssistantConversationService se
     [ProducesProblem(500)]
     [ProducesProblem(501)]
     public async Task<IActionResult> DeleteAttachment([FromRoute] Guid id, [FromRoute] Guid attachmentId, [FromQuery] AssistantDeleteHttpQuery request, CancellationToken cancellationToken) =>
-        (await service.DeleteAttachmentAsync(id, attachmentId, request.Version, cancellationToken)).ToActionResult(this);
+        (await attachments.DeleteAsync(id, attachmentId, request.Version, cancellationToken)).ToActionResult(this);
 
     [HttpGet("conversations/{id:guid}/export")]
     [ProducesResponseType<byte[]>(200, "application/octet-stream")]
@@ -221,5 +223,5 @@ public sealed class PlatformAssistantController(IAssistantConversationService se
     [ProducesProblem(500)]
     [ProducesProblem(501)]
     public async Task<IActionResult> Export([FromRoute] Guid id, [FromQuery] AssistantExportHttpQuery request, CancellationToken cancellationToken) =>
-        (await service.ExportAsync(id, request.Format, cancellationToken)).ToActionResult(this);
+        (await exports.ExportAsync(id, request.Format, cancellationToken)).ToFileResult(this);
 }

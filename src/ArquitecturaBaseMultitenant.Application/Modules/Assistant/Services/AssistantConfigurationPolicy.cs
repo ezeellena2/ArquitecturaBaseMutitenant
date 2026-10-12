@@ -30,9 +30,15 @@ internal sealed class AssistantConfigurationPolicy(IAssistantSettingsReader sett
         if (model is null || !AssistantModelCompatibilityPolicy.Supports(model, effort) || mode == AssistantMode.PlatformKey && !platform.AllowedModelIds.Contains(modelId))
             return AssistantErrors.ModelNotAllowed;
         if (!(mode == AssistantMode.PlatformKey ? platform.HasKey : organization!.HasKey)) return AssistantErrors.SettingsNotConfigured;
+        var titleModel = (await models.ListAllAsync(cancellationToken))
+            .Where(value => AssistantModelCompatibilityPolicy.Supports(value, AssistantEffort.Low)
+                && (mode == AssistantMode.OwnKey || platform.AllowedModelIds.Contains(value.Id)))
+            .OrderBy(value => value.InputPricePerMillion.Amount + value.OutputPricePerMillion.Amount)
+            .ThenBy(value => value.Id).FirstOrDefault();
+        var titlePrice = titleModel is null ? null : AssistantPriceSnapshotBuilder.Build(titleModel, AssistantModelReferenceBuilder.Build(titleModel));
         return new AssistantRuntimeConfiguration(mode, model, AssistantModelReferenceBuilder.Build(model), effort,
             mode == AssistantMode.PlatformKey ? platform.DailyMessageLimit : organization!.DailyMessageLimit,
             mode == AssistantMode.PlatformKey ? platform.MonthlyOrganizationBudget : organization!.MonthlyBudget,
-            platform.RetentionDays);
+            platform.RetentionDays, titlePrice);
     }
 }

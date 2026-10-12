@@ -13,6 +13,12 @@ public sealed record AssistantRolesToolData(IReadOnlyList<AssistantRoleToolRow> 
 public sealed record AssistantRoleToolRow(Guid Id, string Name, string Scope, Guid? CompanyId, IReadOnlyList<string> Permissions);
 public sealed record AssistantCompaniesToolData(IReadOnlyList<AssistantCompanyToolRow> Companies, int TotalCount, bool HasMore) : AssistantToolData;
 public sealed record AssistantCompanyToolRow(Guid Id, string Name, string Status, int MemberCount);
-public sealed record AssistantPendingToolData(IReadOnlyList<AssistantPendingToolRow> Pending, bool HasMore) : AssistantToolData;
+public sealed record AssistantPendingToolData(IReadOnlyList<AssistantPendingToolRow> Pending, bool HasMore) : AssistantToolData
+{
+    [JsonIgnore]
+    public IReadOnlyList<Guid> SubjectUserIds { get; init; } = [];
+    [JsonIgnore]
+    public bool PrivacySubjectsKnown { get; init; }
+}
 public sealed record AssistantPendingToolRow(string Area, string Kind, string? Subject, bool Urgent);
 public sealed record AssistantHelpToolData(IReadOnlyList<AssistantHelpArticleResponse> Articles) : AssistantToolData;

@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
 /// <summary>La entidad Identity de EF no cruza al dominio, casos de uso ni HTTP.</summary>
-public sealed class IdentityAccessTests
+public sealed partial class IdentityAccessTests
 {
     [Fact]
     public void Global_access_reader_has_a_closed_inventory_for_signed_access_background_binding_and_live_session_validation()
@@ -21,14 +21,18 @@ public sealed class IdentityAccessTests
                 or "ArquitecturaBaseMultitenant.Infrastructure/Persistence/PersistenceRegistration.cs"))
             .ToArray();
 
-        Assert.Equal([
-            "ArquitecturaBaseMultitenant.Application/Modules/Assistant/Services/AssistantSessionPolicy.cs",
+        var expected = new List<string>
+        {
             "ArquitecturaBaseMultitenant.Application/Services/Auth/ConnectService.cs",
             "ArquitecturaBaseMultitenant.Application/Services/Profile/ProfileSnapshotBuilder.cs",
             "ArquitecturaBaseMultitenant.Infrastructure/Caching/AccessStatusCache.cs",
             "ArquitecturaBaseMultitenant.Infrastructure/RequestContext/ExecutionActorFactory.cs",
-        ], consumers.Order(StringComparer.Ordinal));
+        };
+        ContributeGlobalAccessReaders(expected);
+        Assert.Equal(expected.Order(StringComparer.Ordinal), consumers.Order(StringComparer.Ordinal));
     }
+
+    static partial void ContributeGlobalAccessReaders(List<string> readers);
 
     [Fact]
     public void ApplicationUser_is_referenced_only_by_declared_infrastructure_adapters()

@@ -19,6 +19,8 @@ internal sealed class PlatformAssistantMessageConfiguration : IEntityTypeConfigu
         builder.Property(value => value.ToolKey).HasMaxLength(TextLimits.ShortName);
         builder.Property(value => value.ToolState).HasMaxLength(TextLimits.ShortName);
         builder.Property(value => value.LinksJson).HasColumnType("jsonb");
+        builder.Property(value => value.SubjectUserIds).HasColumnType("uuid[]");
+        builder.HasIndex(value => value.SubjectUserIds).HasMethod("gin");
         builder.HasOne<PlatformAssistantConversation>().WithMany().HasForeignKey(value => value.ConversationId).OnDelete(DeleteBehavior.Cascade);
         builder.HasIndex(value => new { value.ConversationId, value.CreatedAtUtc, value.Id });
     }

@@ -1,3 +1,4 @@
+using UniqueKeys = ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence.UniqueKeys;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Models.Common;
@@ -16,7 +17,7 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 internal sealed class AssistantConversationService(IAssistantConversationReader reader, ICurrentUser user, AssistantNoticeWriter notice,
     AssistantConversationWriter writer, AssistantConversationPolicy policy, AssistantQuickPreparationBuilder preparation,
-    AssistantStateBuilder state, IUnitOfWork unitOfWork, IRequestValidator validator, TimeProvider clock, ILogger<AssistantConversationService> logger) : IAssistantConversationService
+    AssistantStateBuilder state, AssistantTurnRequester turns, IUnitOfWork unitOfWork, IRequestValidator validator, TimeProvider clock, ILogger<AssistantConversationService> logger) : IAssistantConversationService
 {
     public Task<Result<AssistantStateResponse>> StateAsync(CancellationToken cancellationToken) =>
         OperationLog.RunAsync(logger, clock, "AssistantConversationState", () => state.BuildAsync(cancellationToken));
@@ -60,7 +61,7 @@ internal sealed class AssistantConversationService(IAssistantConversationReader 
             if (filtered.IsFailure) return filtered.Error;
             allowed = await policy.AuthorizeAsync(cancellationToken);
             if (allowed.IsFailure) return allowed.Error;
-            return new AssistantConversationResponse(conversation, messages with { Items = filtered.Value }, null);
+            return new AssistantConversationResponse(conversation, messages with { Items = filtered.Value }, await turns.ActiveAsync(ownerId, access, id, cancellationToken));
         });
 
     public Task<Result<VersionResponse>> UpdateAsync(Guid id, UpdateAssistantConversationRequest request, CancellationToken cancellationToken) =>
@@ -78,12 +79,25 @@ internal sealed class AssistantConversationService(IAssistantConversationReader 
             return await unitOfWork.ExecuteInTransactionAsync(ct => writer.DeleteAsync(id, version, ct), CommitPolicy.OnSuccess, cancellationToken);
         });
 
-    public Task<Result<AssistantTurnResultResponse>> SendAsync(Guid id, SendAssistantMessageRequest request, CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, clock, "AssistantConversationSend", () => Task.FromResult(Result.Failure<AssistantTurnResultResponse>(ContractErrors.NotImplemented)));
+    public Task<Result<AssistantTurnAdmission>> SendAsync(Guid id, SendAssistantMessageRequest request, CancellationToken cancellationToken) =>
+        OperationLog.RunAsync<AssistantTurnAdmission>(logger, clock, "AssistantConversationSend", async () =>
+        {
+            if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
+            var prepared = await turns.PrepareAsync(id, cancellationToken);
+            if (prepared.IsFailure) return prepared.Error;
+            try { return await unitOfWork.ExecuteInTransactionAsync(ct => turns.AdmitAsync(id, request, prepared.Value, ct), CommitPolicy.OnSuccess, cancellationToken); }
+            catch (ArquitecturaBaseMultitenant.Application.Common.Exceptions.UniqueConstraintViolationException exception)
+                when (exception.ConstraintName is UniqueKeys.AssistantActiveTurn or UniqueKeys.PlatformAssistantActiveTurn)
+            { return AssistantErrors.TurnInProgress; }
+        });
 
     public Task<Result> StopAsync(Guid id, Guid turnId, StopAssistantTurnRequest request, CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, clock, "AssistantConversationStop", () => Task.FromResult(Result.Failure(ContractErrors.NotImplemented)));
-
+        OperationLog.RunAsync(logger, clock, "AssistantConversationStop", async () =>
+        {
+            var prepared = await turns.PrepareAsync(null, cancellationToken);
+            if (prepared.IsFailure) return prepared.Error;
+            return await unitOfWork.ExecuteInTransactionAsync(ct => turns.StopAsync(id, turnId, prepared.Value, ct), CommitPolicy.OnSuccess, cancellationToken);
+        });
     public Task<Result<IdempotentReplayResponse<AssistantQuickResponse>>> QuickAsync(string key, AssistantQuickRequest request, CancellationToken cancellationToken) =>
         OperationLog.RunAsync<IdempotentReplayResponse<AssistantQuickResponse>>(logger, clock, "AssistantConversationQuick", async () =>
         {
@@ -105,17 +119,4 @@ internal sealed class AssistantConversationService(IAssistantConversationReader 
             return VersionResponse.Of(saved);
         });
 
-    public Task<Result<AssistantAttachmentSummaryResponse>> UploadAsync(Guid id, AssistantUploadRequest request, CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, clock, "AssistantConversationUpload", () => Task.FromResult(Result.Failure<AssistantAttachmentSummaryResponse>(ContractErrors.NotImplemented)));
-
-    public Task<Result<AssistantFileResponse>> DownloadAsync(Guid id, Guid attachmentId, CancellationToken cancellationToken) =>
-        OperationLog.RunAsync<AssistantFileResponse>(logger, clock, "AssistantConversationDownload", async () =>
-            await reader.ExistsAttachmentAsync(user.UserId ?? throw new InvalidOperationException("A session is required."), user.Access ?? throw new InvalidOperationException("An access is required."), id, attachmentId, cancellationToken)
-                ? ContractErrors.NotImplemented : AssistantErrors.AttachmentNotFound);
-
-    public Task<Result> DeleteAttachmentAsync(Guid id, Guid attachmentId, uint? version, CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, clock, "AssistantConversationDeleteAttachment", () => Task.FromResult(Result.Failure(ContractErrors.NotImplemented)));
-
-    public Task<Result<AssistantFileResponse>> ExportAsync(Guid id, AssistantExportFormat? format, CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, clock, "AssistantConversationExport", () => Task.FromResult(Result.Failure<AssistantFileResponse>(ContractErrors.NotImplemented)));
 }

@@ -8,7 +8,6 @@ namespace ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 /// </summary>
 public static class UniqueKeys
 {
-    public const string AssistantModel = "IX_AssistantModelPrices_Provider_ProviderModelId";
     /// <summary>Un destino verificado pertenece a una sola cuenta por tipo de método.</summary>
     public const string VerifiedLoginMethod = "IX_LoginMethods_Type_Value";
 

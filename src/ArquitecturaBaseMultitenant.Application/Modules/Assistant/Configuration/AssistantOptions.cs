@@ -4,6 +4,7 @@ public sealed class AssistantOptions
 {
     public const string SectionName = "Assistant";
     public AssistantPlatformOptions Platform { get; set; } = new();
+    public bool TurnWorkerEnabled { get; set; } = true;
     public bool UseFakeChatClient { get; set; }
     public bool IsolatedE2E { get; set; }
     public override string ToString() => "AssistantOptions { [REDACTED] }";

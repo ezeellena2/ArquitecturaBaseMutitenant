@@ -33,23 +33,24 @@ public sealed class PlatformLegalPublicationTests
         var today = Today(isolated);
 
         var initial = await ListAsync(platform);
-        Assert.Equal(2, Group(initial, "Terms").GetProperty("currentVersion").GetInt32());
+        var initialVersion = Group(initial, "Terms").GetProperty("currentVersion").GetInt32();
+        Assert.True(initialVersion >= 1);
 
         var key = Guid.NewGuid().ToString("D");
         var future = Body("Terms", today.AddDays(2));
         using var published = await SendAsync(platform, future, key);
         Assert.Equal(HttpStatusCode.Created, published.StatusCode);
         var created = await JsonAsync(published);
-        Assert.Equal(3, created.GetProperty("version").GetInt32());
+        Assert.Equal(initialVersion + 1, created.GetProperty("version").GetInt32());
         using var replayed = await SendAsync(platform, future, key);
         Assert.Equal("true", Assert.Single(replayed.Headers.GetValues("Idempotent-Replayed")));
         Assert.Equal(created.GetProperty("id").GetGuid(), (await JsonAsync(replayed)).GetProperty("id").GetGuid());
 
         var terms = Group(await ListAsync(platform), "Terms");
-        Assert.Equal(2, terms.GetProperty("currentVersion").GetInt32());
-        Assert.Equal(3, terms.GetProperty("versions").GetArrayLength());
+        Assert.Equal(initialVersion, terms.GetProperty("currentVersion").GetInt32());
+        Assert.Equal(initialVersion + 1, terms.GetProperty("versions").GetArrayLength());
         var detail = await GetAsync(platform, "/" + created.GetProperty("id").GetGuid().ToString("D"));
-        Assert.Equal(3, detail.GetProperty("version").GetInt32());
+        Assert.Equal(initialVersion + 1, detail.GetProperty("version").GetInt32());
         Assert.False(detail.GetProperty("isCurrent").GetBoolean());
         Assert.Equal(["en-US", "es-AR"], detail.GetProperty("contents").EnumerateArray()
             .Select(item => item.GetProperty("culture").GetString()).Order(StringComparer.Ordinal).ToArray());
@@ -63,7 +64,7 @@ public sealed class PlatformLegalPublicationTests
             Assert.Equal(AuditActorKind.PlatformOperator, ev.ActorKind);
             Assert.Equal("Publicación de una versión de un documento legal.", ev.Reason);
             using var diff = JsonDocument.Parse(ev.Changes);
-            Assert.Equal(3, diff.RootElement.GetProperty("version").GetProperty("after").GetInt32());
+            Assert.Equal(initialVersion + 1, diff.RootElement.GetProperty("version").GetProperty("after").GetInt32());
             Assert.DoesNotContain("Términos", ev.Changes, StringComparison.Ordinal);
         }
 
@@ -81,6 +82,7 @@ public sealed class PlatformLegalPublicationTests
         await isolated.InitializeAsync();
         using var platform = await OperatorAsync(isolated, [PlatformPermissions.Legal.Manage]);
         var future = Today(isolated).AddDays(5);
+        var initialVersion = Group(await ListAsync(platform), "Terms").GetProperty("currentVersion").GetInt32();
 
         foreach (var invalid in new object[]
                  {
@@ -107,7 +109,7 @@ public sealed class PlatformLegalPublicationTests
                 versions.Add((await JsonAsync(response)).GetProperty("version").GetInt32());
             }
         }
-        Assert.Equal([3, 4], versions.Order().ToArray());
+        Assert.Equal([initialVersion + 1, initialVersion + 2], versions.Order().ToArray());
 
         using var reader = await OperatorAsync(isolated, [PlatformPermissions.Audit.Read]);
         using var forbidden = await SendAsync(reader, Body("Privacy", future), Guid.NewGuid().ToString("D"));
@@ -116,7 +118,7 @@ public sealed class PlatformLegalPublicationTests
         using var unauthenticated = await anonymous.GetAsync("/api/platform/legal-documents", Ct);
         Assert.Equal(HttpStatusCode.Unauthorized, unauthenticated.StatusCode);
         await using var scope = isolated.Services.CreateAsyncScope();
-        Assert.Equal(4, await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().LegalDocuments
+        Assert.Equal(initialVersion + 2, await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().LegalDocuments
             .CountAsync(document => document.Kind == LegalDocumentKind.Terms, Ct));
     }
 

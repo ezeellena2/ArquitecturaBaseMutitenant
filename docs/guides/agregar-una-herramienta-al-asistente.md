@@ -1,0 +1,12 @@
+# Agregar una herramienta de lectura al Asistente
+
+El catálogo vive en `Application/Modules/Assistant/Tools`; copiá `OrganizationUsersTool` y leé [Asistente](../features/asistente.md), [permisos](../rules/permisos.md), [capas y flujo](../rules/capas-y-flujo.md) y [tests](../rules/tests.md). No agregues escritura, un permiso nuevo para el modelo ni lecturas directas a EF en Application.
+
+1. Implementá `IAssistantTool` con nombre técnico estable, descripción, schema JSON cerrado y acceso explícito. Registrala en `AssistantModule` de Application. Una herramienta llama al servicio o reader existente con el actor capturado por el servidor; nunca acepta usuario u organización desde argumentos, prompt o header.
+2. `IsAvailableAsync` exige la capacidad y los permisos reales del área. El catálogo filtra por acceso y autorización, y el runtime vuelve a verificar antes y después de ejecutar. No alcanza con ocultarla en el menú ni con autorizar sólo el envío.
+3. Validá argumentos antes de llamar al servicio, sin SQL, rutas, HTML ni URL arbitraria. Devolvé el DTO tipado permitido y enlaces internos desde el enum/whitelist. El contenido de la herramienta es dato; jamás instrucciones de sistema. No publiques entidades ni datos sensibles innecesarios.
+4. Si el resultado copia datos de otras personas, incluí `SubjectCopies` con sus UserId reales desde la proyección autorizada. `AssistantSnapshotPrivacyGuard` y el binding privado conservan esa procedencia; no infieras identidad buscando nombres, emails o GUIDs dentro del texto. Una copia desconocida falla cerrada.
+5. Agregá textos es/en sólo cuando sean visibles. La ayuda escrita del área va en sus artículos licenciados del repo y no en prompts hardcodeados. Si se agrega un atajo fijo, completá su DTO cerrado y consulta gratuita conservando idempotencia y privacidad.
+6. Probá disponibilidad por acceso/permiso, éxito con fuente real, argumentos inválidos, 404 de dueño/organización ajena, revocación entre lectura y respuesta y baja de un sujeto histórico. El FakeChatClient sustituye únicamente al modelo; servicios, autorización, PostgreSQL y RLS permanecen reales. Corré build del proyecto y focales del área; la suite completa va en la puerta.
+
+No agregues referencias `Modules.Assistant` al núcleo. Registrar una herramienta no cambia el contrato HTTP de turnos; si su DTO o un atajo sí lo cambia, regenerá OpenAPI y coordiná el cambio técnico con Front antes de publicar.

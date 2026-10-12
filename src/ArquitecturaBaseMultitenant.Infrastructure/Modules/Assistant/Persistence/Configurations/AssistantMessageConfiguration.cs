@@ -20,6 +20,8 @@ internal sealed class AssistantMessageConfiguration : IEntityTypeConfiguration<A
         builder.Property(value => value.ToolKey).HasMaxLength(TextLimits.ShortName);
         builder.Property(value => value.ToolState).HasMaxLength(TextLimits.ShortName);
         builder.Property(value => value.LinksJson).HasColumnType("jsonb");
+        builder.Property(value => value.SubjectUserIds).HasColumnType("uuid[]");
+        builder.HasIndex(value => value.SubjectUserIds).HasMethod("gin");
         builder.HasOne<AssistantConversation>().WithMany().HasForeignKey(value => new { value.TenantId, value.ConversationId }).OnDelete(DeleteBehavior.Cascade);
         builder.HasIndex(value => new { value.TenantId, value.ConversationId, value.CreatedAtUtc, value.Id });
     }

@@ -125,7 +125,7 @@ public sealed class IdempotencyFilter(
         var request = http.Request;
         request.EnableBuffering();
         request.Body.Position = 0;
-        var digest = Convert.ToHexString(await SHA256.HashDataAsync(request.Body, http.RequestAborted));
+        var digest = await DurableDigestAsync(request, http.RequestAborted);
         request.Body.Position = 0;
         var binding = http.RequestServices.GetRequiredService<IdempotentRequestContext>();
         binding.Request = new IdempotentRequest(key, digest, string.Concat(request.PathBase, request.Path, request.QueryString),
@@ -246,6 +246,35 @@ public sealed class IdempotencyFilter(
                 await capture.CopyToAsync(originalBody, context.HttpContext.RequestAborted);
             }
         }
+    }
+
+    private static async Task<string> DurableDigestAsync(HttpRequest request, CancellationToken ct)
+    {
+        if (!request.HasFormContentType) return Convert.ToHexString(await SHA256.HashDataAsync(request.Body, ct));
+        var form = await request.ReadFormAsync(ct);
+        using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        static void Append(IncrementalHash hash, string value)
+        {
+            var bytes = Encoding.UTF8.GetBytes(value);
+            Span<byte> length = stackalloc byte[4];
+            System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(length, bytes.Length);
+            hash.AppendData(length); hash.AppendData(bytes);
+        }
+        Append(hash, "form-v1");
+        foreach (var field in form.OrderBy(row => row.Key, StringComparer.Ordinal))
+        {
+            Append(hash, "field"); Append(hash, field.Key);
+            Append(hash, field.Value.Count.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            foreach (var value in field.Value) Append(hash, value ?? string.Empty);
+        }
+        foreach (var file in form.Files.OrderBy(row => row.Name, StringComparer.Ordinal).ThenBy(row => row.FileName, StringComparer.Ordinal))
+        {
+            Append(hash, "file"); Append(hash, file.Name); Append(hash, file.FileName); Append(hash, file.ContentType);
+            Append(hash, file.Length.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            await using var content = file.OpenReadStream();
+            hash.AppendData(await SHA256.HashDataAsync(content, ct));
+        }
+        return Convert.ToHexString(hash.GetHashAndReset());
     }
 
     private static ObjectResult Problem(HttpContext context, ErrorType type, string code, int statusCode)

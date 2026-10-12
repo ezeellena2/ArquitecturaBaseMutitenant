@@ -17,15 +17,26 @@ using Microsoft.Extensions.Options;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant;
 
 internal sealed class AnthropicChatClientFactory(IAssistantConfigurationPolicy policy, IAssistantSettingsReader settings,
-    IAssistantKeyProtector protector, IOptions<AssistantOptions> options, ICurrentUser user, ApplicationDbContext context, IAssistantModelReader models) : IChatClientFactory
+    IAssistantKeyProtector protector, IOptions<AssistantOptions> options, ICurrentUser user, ApplicationDbContext context, IAssistantModelReader models, IAssistantChatContext execution,
+    AssistantFakeChatMetrics metrics, TimeProvider clock) : IChatClientFactory
 {
     public async Task<Result<IChatClient>> CreateAsync(CancellationToken cancellationToken)
     {
         context.RequireNoTransaction();
         var resolved = await policy.ResolveAsync(cancellationToken);
         if (resolved.IsFailure) return resolved.Error;
-        if (options.Value.UseFakeChatClient) return new FakeChatClient();
         var configuration = resolved.Value;
+        if (execution.Binding is { } binding)
+        {
+            if (configuration.Mode != binding.Mode) return AssistantErrors.SettingsNotConfigured;
+            var admittedModel = (await models.ListAllAsync(cancellationToken)).SingleOrDefault(model => model.Id == binding.ModelId);
+            if (admittedModel is null || admittedModel.ProviderModelId != binding.ProviderModelId ||
+                !AssistantModelCompatibilityPolicy.Supports(admittedModel, binding.Effort)) return AssistantErrors.ModelNotAllowed;
+            if (binding.Mode == AssistantMode.PlatformKey && !(await settings.FindPlatformAsync(cancellationToken)).AllowedModelIds.Contains(binding.ModelId))
+                return AssistantErrors.ModelNotAllowed;
+            configuration = configuration with { Model = admittedModel, Effort = binding.Effort };
+        }
+        if (options.Value.UseFakeChatClient) return new FakeChatClient(metrics, clock);
         try
         {
             var material = configuration.Mode == AssistantMode.OwnKey

@@ -56,4 +56,11 @@ public sealed class AssistantFinancialOperation : Entity
     }
     /// <summary>El participante deja sólo contabilidad pseudónima; no se recrea una copia privada tras la baja.</summary>
     public void MarkContentDeleted() => ContentDeleted = true;
+    public void Anonymize(Guid accountingIdentity)
+    {
+        if (accountingIdentity == Guid.Empty || State is not (AssistantFinancialState.Completed or AssistantFinancialState.Released) || !ContentDeleted)
+            throw new InvalidOperationException("Only finalized deleted content can lose its personal binding.");
+        UserId = accountingIdentity;
+        if (Access != Access.Business) ScopeTenantId = null;
+    }
 }

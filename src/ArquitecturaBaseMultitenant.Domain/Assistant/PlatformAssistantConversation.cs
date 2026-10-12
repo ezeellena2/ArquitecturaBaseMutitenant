@@ -13,6 +13,19 @@ public sealed class PlatformAssistantConversation : Entity, IAssistantConversati
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime LastActivityAtUtc { get; private set; }
 
+    public void Touch(DateTime nowUtc)
+    {
+        if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("UTC is required.", nameof(nowUtc));
+        LastActivityAtUtc = nowUtc;
+    }
+    public bool TrySetAutomaticTitle(string title, uint expectedVersion, DateTime nowUtc)
+    {
+        if (IsTitleManual || Title is not null || Version != expectedVersion) return false;
+        ArgumentException.ThrowIfNullOrWhiteSpace(title);
+        if (title.Length > TextLimits.AssistantTitle) throw new ArgumentException("The title is too long.", nameof(title));
+        Touch(nowUtc); Title = title;
+        return true;
+    }
     public void Update(string? title, bool isSaved, DateTime nowUtc)
     {
         if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("UTC is required.", nameof(nowUtc));

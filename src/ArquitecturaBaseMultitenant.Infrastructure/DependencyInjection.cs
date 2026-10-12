@@ -39,6 +39,12 @@ public static class DependencyInjection
         ArgumentNullException.ThrowIfNull(environment);
 
         services.TryAddSingleton(TimeProvider.System);
+        services.AddOptions<Files.LocalFileStoreOptions>()
+            .Configure(options => options.RootPath = Path.Combine(environment.ContentRootPath, ".local", "private-files"))
+            .BindConfiguration("Files");
+        services.AddSingleton<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Files.IFileStore, Files.LocalFileStore>();
+        services.AddSingleton<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Files.IFileStoreMaintenance>(provider =>
+            (Files.LocalFileStore)provider.GetRequiredService<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Files.IFileStore>());
         services.AddSingleton<ITimeZoneService, TimeZoneService>();
         services.AddSingleton<IPhoneNumberDisplayFormatter, LibPhoneNumberDisplayFormatter>();
         services.AddSingleton<IPhoneNumberParser, LibPhoneNumberParser>();

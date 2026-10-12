@@ -11,6 +11,7 @@ internal sealed class AssistantModelContributor : IPersistenceModelContributor
     {
         [typeof(PlatformAssistantConversation)] = Schemas.Platform,
         [typeof(PlatformAssistantDurableOperation)] = Schemas.Platform,
+        [typeof(AssistantTurnWork)] = Schemas.Platform,
         [typeof(AssistantSnapshotRetentionIndex)] = Schemas.Platform,
         [typeof(PlatformAssistantFileCleanup)] = Schemas.Platform,
         [typeof(PlatformAssistantMessage)] = Schemas.Platform,
@@ -25,6 +26,7 @@ internal sealed class AssistantModelContributor : IPersistenceModelContributor
         [typeof(AssistantFinancialOperation)] = Schemas.Platform,
         [typeof(AssistantFinancialCall)] = Schemas.Platform,
         [typeof(AssistantBudgetMonth)] = Schemas.Platform,
+        [typeof(AssistantBudgetAlert)] = Schemas.Platform,
     };
     public void Configure(ModelBuilder builder) => builder.ApplyConfigurationsFromAssembly(GetType().Assembly,
         type => type.Namespace == ConfigurationNamespace);

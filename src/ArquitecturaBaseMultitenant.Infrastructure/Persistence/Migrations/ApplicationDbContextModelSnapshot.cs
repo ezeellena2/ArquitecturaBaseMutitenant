@@ -73,6 +73,55 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.ToTable("AssistantAttachments", "tenant");
                 });
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.AssistantBudgetAlert", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BudgetCurrency")
+                        .IsRequired()
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasMaxLength(3)
+                        .HasColumnType("character(3)")
+                        .HasColumnName("BudgetCurrency");
+
+                    b.Property<DateTime?>("EnqueuedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Funding")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("MonthId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Threshold")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UsedCurrency")
+                        .IsRequired()
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasMaxLength(3)
+                        .HasColumnType("character(3)")
+                        .HasColumnName("UsedCurrency");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BudgetCurrency");
+
+                    b.HasIndex("UsedCurrency");
+
+                    b.HasIndex("MonthId", "Funding", "Threshold")
+                        .IsUnique();
+
+                    b.ToTable("AssistantBudgetAlerts", "platform");
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.AssistantBudgetMonth", b =>
                 {
                     b.Property<Guid>("Id")
@@ -410,6 +459,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<bool?>("PositiveFeedback")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("PrivacySubjectsKnown")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasMaxLength(60)
@@ -419,6 +471,10 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
+
+                    b.PrimitiveCollection<Guid[]>("SubjectUserIds")
+                        .IsRequired()
+                        .HasColumnType("uuid[]");
 
                     b.Property<string>("Text")
                         .HasMaxLength(100000)
@@ -442,6 +498,10 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .HasColumnName("xmin");
 
                     b.HasKey("TenantId", "Id");
+
+                    b.HasIndex("SubjectUserIds");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SubjectUserIds"), "gin");
 
                     b.HasIndex("TenantId", "ConversationId", "CreatedAtUtc", "Id");
 
@@ -780,11 +840,28 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<long?>("AdmissionVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("AssistantMessageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BindingId")
+                        .HasColumnType("uuid");
+
+                    b.PrimitiveCollection<Guid[]>("ContextMessageIds")
+                        .IsRequired()
+                        .HasColumnType("uuid[]");
+
                     b.Property<Guid>("ConversationId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EventsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
 
                     b.Property<DateTime?>("LeaseExpiresAtUtc")
                         .HasColumnType("timestamp with time zone");
@@ -792,16 +869,114 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("LeaseId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("Sequence")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
 
+                    b.Property<Guid>("UserMessageId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("TenantId", "Id");
+
+                    b.HasIndex("TenantId", "ConversationId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_AssistantTurns_TenantId_ConversationId_Active")
+                        .HasFilter("\"Status\" = 'Pending' OR \"Status\" = 'Running'");
 
                     b.HasIndex("TenantId", "ConversationId", "CreatedAtUtc", "Id");
 
                     b.ToTable("AssistantTurns", "tenant");
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.AssistantTurnWork", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Access")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<int>("CallSequence")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("CallStarted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Culture")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<DateTime>("DeadlineAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Effort")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("Funding")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<DateTime?>("LeaseExpiresAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("LeaseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ModelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ProviderModelId")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<Guid?>("ScopeTenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("SessionStartedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<bool>("StopRequested")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("TenantKind")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("TimeZoneId")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerUserId", "ScopeTenantId", "Id");
+
+                    b.HasIndex("Status", "LeaseExpiresAtUtc", "CreatedAtUtc", "Id");
+
+                    b.ToTable("AssistantTurnWorks", "platform");
                 });
 
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.AssistantUsageDaily", b =>
@@ -1114,6 +1289,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<bool?>("PositiveFeedback")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("PrivacySubjectsKnown")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasMaxLength(60)
@@ -1123,6 +1301,10 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
+
+                    b.PrimitiveCollection<Guid[]>("SubjectUserIds")
+                        .IsRequired()
+                        .HasColumnType("uuid[]");
 
                     b.Property<string>("Text")
                         .HasMaxLength(100000)
@@ -1147,6 +1329,10 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("SubjectUserIds");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SubjectUserIds"), "gin");
+
                     b.HasIndex("ConversationId", "CreatedAtUtc", "Id");
 
                     b.ToTable("PlatformAssistantMessages", "platform");
@@ -1158,11 +1344,28 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<long?>("AdmissionVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("AssistantMessageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BindingId")
+                        .HasColumnType("uuid");
+
+                    b.PrimitiveCollection<Guid[]>("ContextMessageIds")
+                        .IsRequired()
+                        .HasColumnType("uuid[]");
+
                     b.Property<Guid>("ConversationId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EventsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
 
                     b.Property<DateTime?>("LeaseExpiresAtUtc")
                         .HasColumnType("timestamp with time zone");
@@ -1170,12 +1373,23 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("LeaseId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("Sequence")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
 
+                    b.Property<Guid>("UserMessageId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("ConversationId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_PlatformAssistantTurns_ConversationId_Active")
+                        .HasFilter("\"Status\" = 'Pending' OR \"Status\" = 'Running'");
 
                     b.HasIndex("ConversationId", "CreatedAtUtc", "Id");
 
@@ -3717,6 +3931,77 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .HasForeignKey("TenantId", "ConversationId", "MessageId")
                         .HasPrincipalKey("TenantId", "ConversationId", "Id")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.AssistantBudgetAlert", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.ReferenceData.Currency", null)
+                        .WithMany()
+                        .HasForeignKey("BudgetCurrency")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.ReferenceData.Currency", null)
+                        .WithMany()
+                        .HasForeignKey("UsedCurrency")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.OwnsOne("ArquitecturaBaseMultitenant.Domain.ValueObjects.Money", "Budget", b1 =>
+                        {
+                            b1.Property<Guid>("AssistantBudgetAlertId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(24, 12)
+                                .HasColumnType("numeric(24,12)")
+                                .HasColumnName("BudgetAmount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .ValueGeneratedOnUpdateSometimes()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("BudgetCurrency");
+
+                            b1.HasKey("AssistantBudgetAlertId");
+
+                            b1.ToTable("AssistantBudgetAlerts", "platform");
+
+                            b1.WithOwner()
+                                .HasForeignKey("AssistantBudgetAlertId");
+                        });
+
+                    b.OwnsOne("ArquitecturaBaseMultitenant.Domain.ValueObjects.Money", "Used", b1 =>
+                        {
+                            b1.Property<Guid>("AssistantBudgetAlertId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(24, 12)
+                                .HasColumnType("numeric(24,12)")
+                                .HasColumnName("UsedAmount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .ValueGeneratedOnUpdateSometimes()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("UsedCurrency");
+
+                            b1.HasKey("AssistantBudgetAlertId");
+
+                            b1.ToTable("AssistantBudgetAlerts", "platform");
+
+                            b1.WithOwner()
+                                .HasForeignKey("AssistantBudgetAlertId");
+                        });
+
+                    b.Navigation("Budget")
+                        .IsRequired();
+
+                    b.Navigation("Used")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.AssistantBudgetMonth", b =>

@@ -14,8 +14,19 @@ public static class AssistantModule
     public static IServiceCollection AddAssistantModule(this IServiceCollection services)
     {
         services.AddScoped<IAssistantConversationService, AssistantConversationService>();
+        services.AddScoped<IAssistantAttachmentService, AssistantAttachmentService>();
+        services.AddScoped<AssistantAttachmentWriter>();
+        services.AddScoped<IAssistantExportService, AssistantExportService>();
+        services.AddScoped<IAssistantRetentionService, AssistantRetentionService>();
+        services.AddScoped<AssistantRetentionWriter>();
         services.AddScoped<IAssistantDurableService, AssistantDurableService>();
         services.AddScoped<IAssistantSnapshotRetentionService, AssistantSnapshotRetentionService>();
+        services.AddScoped<IAssistantTurnService, AssistantTurnService>();
+        services.AddScoped<AssistantTurnPreparationBuilder>();
+        services.AddScoped<AssistantTurnRequester>();
+        services.AddScoped<AssistantTurnWriter>();
+        services.AddScoped<AssistantTurnBuilder>();
+        services.AddScoped<AssistantTurnToolBuilder>();
         services.AddScoped<AssistantConversationWriter>();
         services.AddScoped<AssistantQuickPreparationBuilder>();
         services.AddScoped<AssistantSnapshotPrivacyGuard>();
@@ -65,6 +76,9 @@ public static class AssistantModule
         services.AddScoped<AssistantModelWriter>();
         services.AddScoped<AssistantLimitGuard>();
         services.AddScoped<AssistantUsageWriter>();
+        services.AddScoped<AssistantBudgetNotifier>();
+        services.AddScoped<IAssistantBudgetAlertService, AssistantBudgetAlertService>();
+        services.AddScoped<IAssistantUsageFinalizer>(provider => provider.GetRequiredService<AssistantUsageWriter>());
         services.AddScoped<IAssistantConfigurationPolicy, AssistantConfigurationPolicy>();
         services.AddOptions<AssistantOptions>().BindConfiguration(AssistantOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
         services.AddSingleton<IFeatureDefinitionContributor, AssistantFeatureDefinitionContributor>();
