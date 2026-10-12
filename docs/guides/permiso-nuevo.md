@@ -2,7 +2,7 @@
 
 Usá esta receta para agregar un permiso a un área o crear el catálogo de otra. Las rutas piden permisos, no roles. La referencia es [Roles](../features/roles.md); las reglas canónicas están en [permisos](../rules/permisos.md) y en [AGENTS.md](../../AGENTS.md).
 
-1. **Declaralo en Domain.** Agregá `Permissions.<Area>.<Action>` con nombre en minúsculas y un punto, por ejemplo `catalog.read`. Sumalo a `Permissions.All` en el orden en que debe aparecer en el selector de roles.
+1. **Declaralo en Domain.** Agregá `Permissions.<Area>.<Action>` con nombre en minúsculas y un punto, por ejemplo `catalog.read`. Sumalo a `Permissions.OrganizationScoped` o a `Permissions.CompanyScoped`, según su alcance, en el orden en que debe aparecer en el selector de roles. `Permissions.All` se arma solo con las dos listas.
 2. **Traducilo.** En `Application/Resources/Permissions.resx` y `Permissions.en.resx`, agregá `Permission.<código>` y `PermissionDescription.<código>`. Para un área nueva, agregá también `Area.<prefijo>`. Usá voseo en español y mantené las claves de ambos idiomas en paridad.
 3. **Pedilo en la ruta.** Usá `[HasPermission(Permissions.<Area>.<Action>)]` para organización, `[HasCompanyPermission]` para empresa y `[HasPlatformPermission]` para plataforma. No compares roles o claims dentro del controller.
 4. **Calculalo desde el servidor.** Los permisos de organización salen de las asignaciones activas del tenant de `tenant_id`; nunca aceptes el tenant desde el cuerpo o la URL. La plataforma conserva su permiso específico.

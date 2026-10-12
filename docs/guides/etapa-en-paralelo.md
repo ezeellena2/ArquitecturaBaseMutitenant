@@ -19,7 +19,7 @@ Las partes 2a y 2b corren al mismo tiempo.
 
 - **El contrato manda.** Si en la parte 2 hace falta cambiarlo, lo decide quien programa y lo anota en «Cambios al contrato» del plan. El coordinador le avisa al otro chat antes de publicarlo, y el cambio se hace en los dos repos. Al usuario se le pregunta solo si el cambio cambia lo que una persona ve o puede hacer.
 - **Cada agente toca solo su repo.** El del front no edita el back, y al revés. Commits con `git commit -m "…" -- <rutas>`, en `main` y sin push.
-- **Las pantallas salen del tablero vigente.** Si falta un estado, se frena y lo dibuja Diseño.
+- **Las pantallas salen del tablero vigente.** Si a un tablero le falta un estado, se le pide a Diseño y se sigue con el resto. Una pantalla nueva entera necesita su tablero aprobado antes de programarse.
 - **Los textos van en es y en,** en cada repo: los errores en los resources del back y las pantallas en los `locales` del front.
 - **Nada se da por terminado** hasta pasar la puerta de la parte 3.
 

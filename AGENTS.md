@@ -2,7 +2,7 @@
 
 Versión multitenant **B2B + B2C** de `../ArquitecturaBase`, como Mercado Libre y para cualquier tipo de negocio: una persona tiene una sola cuenta con dos accesos que no se mezclan, **como persona** (B2C) y **como empresa** (B2B); cada organización puede tener su página pública en un subdominio, y las personas interactúan con ella. La plantilla trae los accesos y la mecánica; no trae módulos de negocio. Usa .NET 10, Aspire 13.5 y PostgreSQL. El front vive en `../ArquitecturaBaseMutitenantFront`. Este archivo es el índice de reglas.
 
-La arquitectura canónica está en dos documentos:
+Las reglas que mandan están en este archivo y en las fichas de [`docs/rules/`](docs/rules/README.md). El panorama de la arquitectura está en dos documentos:
 - [`docs/architecture/backend.md`](docs/architecture/backend.md): capas, patrones y carpetas;
 - [`docs/architecture/multitenancy.md`](docs/architecture/multitenancy.md): organizaciones, empresas y aislamiento.
 
