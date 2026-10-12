@@ -30,7 +30,7 @@ Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sec
 | --- | --- |
 | **Plataforma** | Mantiene la biblioteca de plantillas y habilita el módulo por organización. **Nunca ve formularios, respuestas ni archivos de una organización.** |
 | **Organización (B2B)** | Dueña de sus formularios, catálogos, reglas, respuestas y archivos. Los diseña quien tiene permiso; los responden sus empleados. |
-| **Empresa** | En la v1 los formularios son de la organización; la respuesta guarda la empresa de quien respondió, para filtrar ([decisión 1](#5-decisiones-de-producto)). |
+| **Empresa** | En la v1 los formularios son de la organización; la respuesta guarda las empresas de quien respondió, para filtrar ([decisiones 1 y 9](#5-decisiones-de-producto)). |
 | **Empleado** | Miembro activo con teléfono verificado y permiso `formrecords.create`. Lo reconoce la bandeja «Internos» de E11. |
 | **Persona (B2C)** | Fuera de la v1. Responder como cliente de una organización es una etapa posterior ([decisión 3](#5-decisiones-de-producto)). |
 
@@ -285,6 +285,8 @@ Decididas por el usuario el 2026-10-12. No se vuelven a preguntar.
 6. **El bloque va después de la E10:** 8b → 11 → 9 → 10 → 12 a 17. Nace con Redis, límites y el fuzz de la E9, y con la nube de la E10.
 7. **`Forms` es un módulo aparte de `WhatsApp`,** unidos por puertos neutrales del núcleo, como en ArquitecturaBase.
 8. **Alcance:** seis etapas, con la biblioteca al final. El asistente en WhatsApp (antes F7) queda para después.
+9. **Varias empresas:** si quien responde es miembro de varias empresas, la respuesta guarda todas sus empresas activas, y el filtro por empresa la encuentra por cualquiera.
+10. **Quién manda un formulario desde el chat:** cualquiera con «Atender internos», sin permiso aparte. Lo que limita es que quien recibe tenga `formrecords.create`.
 
 ## 6. Qué tomar de ArquitecturaBase
 

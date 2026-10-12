@@ -113,7 +113,7 @@ Las de producto están en la hoja de ruta (§5) y no se vuelven a preguntar. Las
 | `SourceKey` | texto ≤200 | único por organización: `whatsapp:<sessionId>` |
 | `Channel` | texto | `whatsapp` |
 | `RespondentUserId` | uuid | quien respondió |
-| `RespondentCompanyIds` | uuid[] | **para confirmar** ([§13](#13-para-confirmar-con-el-usuario)) |
+| `RespondentCompanyIds` | uuid[] | todas las empresas activas de quien respondió, al responder ([§13](#13-decisiones-de-producto-de-la-etapa)) |
 | `Culture` | texto | es o en |
 | `SubmittedAtUtc` | timestamptz | la hora firmada por Meta |
 | `CreatedAtUtc` | — | — |
@@ -486,15 +486,12 @@ Al planificar la E12 se verifican contra el código real.
 | [E10] | La nube de `IFileStore`. | La E12 no guarda archivos. |
 | #51 | `Enter` borra `TenantKind`. | Se usa `ExecutionActor` (T5). |
 
-## 13. Para confirmar con el usuario
+## 13. Decisiones de producto de la etapa
 
-Son dos preguntas de producto que la hoja de ruta no resuelve. Se contestan antes del plan de la etapa:
+Las tomó el usuario el 2026-10-12. No se vuelven a preguntar.
 
-1. **¿Qué empresa guarda la respuesta cuando quien responde es miembro de varias?** La decisión 1 dice «la empresa de quien respondió».
-   - Recomendado: guardar todas sus empresas activas al responder, y que el filtro de la planilla (E15) encuentre la respuesta por cualquiera de ellas.
-   - Alternativa: la empresa a la que atiende el número del chat, si atiende a una.
-2. **¿Quién puede mandar un formulario desde el chat?**
-   - Recomendado: cualquiera con «Atender internos», sin un permiso de formularios aparte. Lo que limita es que quien recibe tenga `formrecords.create`.
+1. **La respuesta guarda todas las empresas activas de quien respondió,** tomadas al responder. El filtro por empresa de la planilla (E15) la encuentra por cualquiera de ellas.
+2. **Puede mandar un formulario cualquiera con «Atender internos»,** sin un permiso de formularios aparte. Lo que limita es que quien recibe tenga `formrecords.create`.
 
 ## 14. Referencia de Meta (tomada de ArquitecturaBase)
 
