@@ -37,9 +37,12 @@ internal sealed class CompanyMembershipService(
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             var company = await companies.FindByIdAsync(companyId, cancellationToken);
             if (company is null) return CompanyErrors.NotFound;
-            var page = await reader.ListAsync(companyId, request, cancellationToken);
             var canInvite = currentUser.UserId is { } userId
                 && await permissions.HasPermissionAsync(userId, Permissions.Users.Invite, cancellationToken);
+            var page = await reader.ListAsync(companyId, request with
+            {
+                OnlyCompanyInvitations = request.State == CompanyMemberState.Expired && !canInvite,
+            }, cancellationToken);
             return Result.Success(new PagedResult<CompanyMemberResponse>(
                 [.. page.Items.Select(member => ToResponse(member, canInvite))], page.Page, page.PageSize,
                 page.TotalCount));

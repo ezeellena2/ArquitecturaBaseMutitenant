@@ -13,7 +13,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 
 /// <summary>Pagina miembros de empresa en SQL y proyecta roles/correo sin materializar identidades completas.</summary>
-internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITenantContext tenantContext)
+internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITenantContext tenantContext, TimeProvider timeProvider)
     : ICompanyMembershipReader
 {
     private static readonly SortMap<StateRow> Sort = new()
@@ -218,6 +218,24 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
         var rows = context.CompanyMemberships.AsNoTracking()
             .Where(membership => membership.TenantId == tenantId && membership.CompanyId == companyId);
 
+        if (request.State == CompanyMemberState.Expired)
+        {
+            var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+            rows = rows.Where(membership => membership.Status == CompanyMembershipStatus.Active
+                && context.Members.Any(member => member.TenantId == tenantId && member.Id == membership.MemberId
+                    && member.Status == MemberStatus.Invited)
+                && context.Invitations.Any(invitation => invitation.TenantId == tenantId
+                    && invitation.MemberId == membership.MemberId && invitation.Status == Domain.Invitations.InvitationStatus.Pending
+                    && invitation.ExpiresAtUtc <= nowUtc));
+        }
+        if (request.OnlyCompanyInvitations)
+            rows = rows.Where(membership => membership.Status == CompanyMembershipStatus.Active
+                && !context.RoleAssignments.Any(assignment => assignment.TenantId == tenantId
+                    && assignment.MemberId == membership.MemberId && assignment.CompanyId == null)
+                && !context.CompanyMemberships.Any(other => other.TenantId == tenantId
+                    && other.MemberId == membership.MemberId && other.CompanyId != companyId
+                    && other.Status == CompanyMembershipStatus.Active));
+
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var matching = MemberSearch.MatchingMemberIds(context, tenantId, request.Search);
@@ -232,7 +250,8 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
             rows = rows.Where(membership => !context.RoleAssignments.Any(assignment => assignment.TenantId == tenantId
                 && assignment.CompanyId == companyId && assignment.MemberId == membership.MemberId));
         var states = States(rows, tenantId);
-        return request.State is { } state ? states.Where(row => row.State == state) : states;
+        return request.State is { } state && state != CompanyMemberState.Expired
+            ? states.Where(row => row.State == state) : states;
     }
 
     // Lee una sola vez lo que decide el estado y el orden, y le aplica la expresión del estado.

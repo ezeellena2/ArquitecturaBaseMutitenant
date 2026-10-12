@@ -22,6 +22,10 @@ public sealed record ListOrganizationUsersRequest : PagedRequest
     /// <summary>Internal typed assignment filter; not exposed by the HTTP adapter.</summary>
     public Guid? RoleId { get; init; }
     public bool WithoutCompany { get; init; }
+    /// <summary>Vista previa interna de Inicio, ordenada por el instante del pendiente.</summary>
+    public bool PendingPreview { get; init; }
+    /// <summary>Solo invitaciones resolubles exclusivamente desde la empresa indicada; no se expone por HTTP.</summary>
+    public bool OnlyCompanyInvitations { get; init; }
 }
 
 public sealed record OrganizationUserRoleRow(Guid Id, string Name, bool IsSystemRole, RoleScope Scope,

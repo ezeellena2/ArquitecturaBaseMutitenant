@@ -55,6 +55,20 @@ public sealed class OrganizationDomainsTests(ApiFactory factory)
         Assert.Equal(10, legacyJson.RootElement.GetArrayLength());
         using var invalid = await client.GetAsync("/api/organization/settings/domains/paged?pageSize=999", Ct);
         Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
+
+        using var pending = await client.GetAsync("/api/organization/settings/domains/paged?status=Pending&page=2", Ct);
+        using var pendingJson = JsonDocument.Parse(await pending.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(HttpStatusCode.OK, pending.StatusCode);
+        Assert.Equal(12, pendingJson.RootElement.GetProperty("totalCount").GetInt32());
+        Assert.Equal(2, pendingJson.RootElement.GetProperty("items").GetArrayLength());
+        using var verified = await client.GetAsync("/api/organization/settings/domains/paged?status=Verified", Ct);
+        using var verifiedJson = JsonDocument.Parse(await verified.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(0, verifiedJson.RootElement.GetProperty("totalCount").GetInt32());
+        foreach (var status in new[] { "Removed", "Unknown" })
+        {
+            using var invalidStatus = await client.GetAsync($"/api/organization/settings/domains/paged?status={status}", Ct);
+            Assert.Equal(HttpStatusCode.BadRequest, invalidStatus.StatusCode);
+        }
     }
 
     [Fact]

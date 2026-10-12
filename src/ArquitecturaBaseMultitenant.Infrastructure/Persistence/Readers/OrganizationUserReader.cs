@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
+using ArquitecturaBaseMultitenant.Application.Models.Home;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -36,6 +37,8 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
         DisplayName = input.DisplayName,
         Email = input.Email,
         CreatedAtUtc = input.CreatedAtUtc,
+        PendingSinceUtc = input.MemberStatus == MemberStatus.Invited
+            ? input.PendingInvitationExpiresAtUtc : input.DeletionRequestedAtUtc,
         State = input.MemberStatus == MemberStatus.Invited && input.PendingInvitationExpiresAtUtc != null
             ? input.PendingInvitationExpiresAtUtc <= input.NowUtc
                 ? OrganizationUserState.Expired
@@ -53,8 +56,13 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
         ArgumentNullException.ThrowIfNull(request);
         RequireUtc(nowUtc);
         var tenantId = tenantContext.RequiredTenantId;
-        var page = await Filtered(tenantId, request, nowUtc).ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort, row => row.MemberId)
-            .ToPagedResultAsync(request, cancellationToken);
+        var query = Filtered(tenantId, request, nowUtc);
+        if (request.PendingPreview)
+            request = request with { Page = PagedRequest.DefaultPage, PageSize = PendingGroup.PreviewLimit };
+        var sorted = request.PendingPreview
+            ? query.OrderBy(row => row.PendingSinceUtc == null).ThenBy(row => row.PendingSinceUtc).ThenBy(row => row.MemberId)
+            : query.ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort, row => row.MemberId);
+        var page = await sorted.ToPagedResultAsync(request, cancellationToken);
         if (page.Items.Count == 0)
             return new PagedResult<OrganizationUserRow>([], page.Page, page.PageSize, page.TotalCount);
 
@@ -113,11 +121,22 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
         if (request.CompanyId is { } companyId)
             members = members.Where(member => context.CompanyMemberships.Any(membership =>
                 membership.TenantId == tenantId && membership.MemberId == member.Id
-                && membership.CompanyId == companyId));
+                && membership.CompanyId == companyId
+                && ((!request.PendingPreview && !request.OnlyCompanyInvitations)
+                    || membership.Status == CompanyMembershipStatus.Active)));
+        if (request.OnlyCompanyInvitations && request.CompanyId is { } invitationCompanyId)
+            // CompanyInvitationPolicy, antes de contar y paginar: únicamente de esta empresa.
+            members = members.Where(member => !context.RoleAssignments.Any(assignment =>
+                    assignment.TenantId == tenantId && assignment.MemberId == member.Id && assignment.CompanyId == null)
+                && !context.CompanyMemberships.Any(membership => membership.TenantId == tenantId
+                    && membership.MemberId == member.Id && membership.CompanyId != invitationCompanyId
+                    && membership.Status == CompanyMembershipStatus.Active));
         if (request.WithoutCompany)
             members = members.Where(member => !context.CompanyMemberships.Any(membership =>
                 membership.TenantId == tenantId && membership.MemberId == member.Id));
         var rows = States(members, tenantId, nowUtc);
+        if (request.PendingPreview)
+            rows = rows.Where(row => row.State == OrganizationUserState.Expired || row.State == OrganizationUserState.PendingDeletion);
         return request.State is { } state ? rows.Where(row => row.State == state) : rows;
     }
 
@@ -138,6 +157,8 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
             MemberStatus = member.Status,
             UserStatus = context.Users.Where(user => user.Id == member.UserId)
                 .Select(user => (UserStatus?)user.Status).FirstOrDefault(),
+            DeletionRequestedAtUtc = context.Users.Where(user => user.Id == member.UserId)
+                .Select(user => user.DeletionRequestedAtUtc).FirstOrDefault(),
             PendingInvitationExpiresAtUtc = context.Invitations.Where(invitation => invitation.TenantId == tenantId
                     && invitation.MemberId == member.Id && invitation.Status == InvitationStatus.Pending)
                 .OrderByDescending(invitation => invitation.IssuedAtUtc)
@@ -262,6 +283,7 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
         public MemberStatus MemberStatus { get; init; }
         public UserStatus? UserStatus { get; init; }
         public DateTime? PendingInvitationExpiresAtUtc { get; init; }
+        public DateTime? DeletionRequestedAtUtc { get; init; }
         public DateTime NowUtc { get; init; }
         public string? DisplayName { get; init; }
         public string? Email { get; init; }
@@ -276,6 +298,7 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
         public string? DisplayName { get; init; }
         public string? Email { get; init; }
         public DateTime CreatedAtUtc { get; init; }
+        public DateTime? PendingSinceUtc { get; init; }
     }
 
     private sealed record UserProjection(Guid MemberId, Guid? UserId, string DisplayName, string? Email,
