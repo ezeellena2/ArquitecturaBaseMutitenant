@@ -1,3 +1,3 @@
-Piezas de su capa y área.
+Modelos de entrada y salida de informes.
 Leé [docs/rules/capas-y-flujo.md](../../../../docs/rules/capas-y-flujo.md).
-Copiá de [RoleService.cs](../../Services/Roles/RoleService.cs).
+Copiá de [RoleRow.cs](../Roles/RoleRow.cs).

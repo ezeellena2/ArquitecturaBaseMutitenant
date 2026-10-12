@@ -1,3 +1,3 @@
-Piezas de Features.
+Pruebas de integración: Features.
 Leé [docs/rules/tests.md](../../../docs/rules/tests.md).
 Copiá de [FeatureAvailabilityPolicyTests.cs](FeatureAvailabilityPolicyTests.cs).

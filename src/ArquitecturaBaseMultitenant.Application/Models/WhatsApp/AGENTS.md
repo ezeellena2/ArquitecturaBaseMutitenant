@@ -1,3 +1,3 @@
-Piezas de su capa y área.
+Modelos de entrada y salida de WhatsApp.
 Leé [docs/features/whatsapp.md](../../../../docs/features/whatsapp.md).
-Copiá de [RoleService.cs](../../Services/Roles/RoleService.cs).
+Copiá de [WhatsAppOutboundMessage.cs](../../Modules/WhatsApp/Models/WhatsAppOutboundMessage.cs).

@@ -1,3 +1,3 @@
-una IEntityTypeConfiguration por entidad.
+Configuraciones EF del esquema identidad.
 Leé [docs/features/identidad.md](../../../../../docs/features/identidad.md).
-Copiá de [RoleConfiguration.cs](../Tenant/RoleConfiguration.cs).
+Copiá de [AccountDeletionCancelTicketConfiguration.cs](AccountDeletionCancelTicketConfiguration.cs).

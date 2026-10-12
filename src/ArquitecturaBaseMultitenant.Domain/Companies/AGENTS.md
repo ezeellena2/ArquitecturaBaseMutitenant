@@ -1,3 +1,3 @@
-entidades y <X>Errors del módulo (Domain/WhatsApp/ nace en la E8).
+Entidades, valores y errores de empresas.
 Leé [docs/features/organizaciones.md](../../../docs/features/organizaciones.md).
-Copiá de [RoleService.cs](../../ArquitecturaBaseMultitenant.Application/Services/Roles/RoleService.cs).
+Copiá de [Company.cs](../Tenancy/Company.cs).

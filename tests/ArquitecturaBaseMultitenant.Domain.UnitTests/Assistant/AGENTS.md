@@ -1,3 +1,3 @@
-Piezas de Assistant.
+Pruebas de unidad: asistente.
 Leé [docs/rules/tests.md](../../../docs/rules/tests.md).
 Copiá de [AssistantSnapshotRetentionTests.cs](AssistantSnapshotRetentionTests.cs).

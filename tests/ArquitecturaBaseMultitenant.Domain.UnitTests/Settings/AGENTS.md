@@ -1,3 +1,3 @@
-Piezas de Settings.
+Pruebas de unidad: Settings.
 Leé [docs/rules/tests.md](../../../docs/rules/tests.md).
 Copiá de [PlatformSettingsTests.cs](PlatformSettingsTests.cs).

@@ -1,3 +1,3 @@
-plantillas HTML embebidas: estructura y marcadores {{Nombre}}.
+Adaptadores técnicos de Messaging / correo / Templates.
 Leé [docs/rules/textos-y-traducciones.md](../../../../../docs/rules/textos-y-traducciones.md).
 Copiá de [LoginCode.html](LoginCode.html).

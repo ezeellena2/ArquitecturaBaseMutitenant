@@ -1,3 +1,3 @@
-Piezas de su capa y área.
+Adaptadores técnicos de WhatsApp.
 Leé [docs/features/whatsapp.md](../../../docs/features/whatsapp.md).
-Copiá de [RoleService.cs](../../ArquitecturaBaseMultitenant.Application/Services/Roles/RoleService.cs).
+Copiá de [WhatsAppCloudClient.cs](../Modules/WhatsApp/WhatsAppCloudClient.cs).

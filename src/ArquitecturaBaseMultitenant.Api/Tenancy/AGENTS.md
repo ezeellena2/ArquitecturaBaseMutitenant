@@ -1,3 +1,3 @@
-acceso firmado y contexto público por host, sin mezclar organizaciones.
+Resolución de organización y subdominio para la petición.
 Leé [docs/features/organizaciones.md](../../../docs/features/organizaciones.md).
 Copiá de [PublicSiteResolutionMiddleware.cs](PublicSiteResolutionMiddleware.cs).

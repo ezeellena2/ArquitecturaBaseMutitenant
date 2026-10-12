@@ -1,3 +1,3 @@
-Piezas de su capa y área.
+Pruebas de unidad: módulos / asistente.
 Leé [docs/features/asistente.md](../../../../docs/features/asistente.md).
-Copiá de [RoleService.cs](../../../../src/ArquitecturaBaseMultitenant.Application/Services/Roles/RoleService.cs).
+Copiá de [AssistantContractValidationTests.cs](AssistantContractValidationTests.cs).
