@@ -1,6 +1,6 @@
 # Limpieza de la documentación (tanda 2)
 
-**Cuándo:** apenas cierre la Etapa 8, antes de abrir los chats nuevos de la 8b. **Quién:** un chat nuevo de Codex, con los dos repos. **Por qué:** para programar una pantalla o un área hoy hay que leer unas 30.000 palabras por repo, y cada commit de código arrastra documentación que se mantiene a mano. Las revisiones del 2026-10-11 estimaron unas 45.000 palabras menos sin perder ninguna regla de código. La tanda 1 (back `aa5240be`, `1b0c4aef`; front `979c20db`, `88a8ae89`) ya corrigió las contradicciones; esta tanda cambia la estructura.
+**Cuándo:** apenas cierre la Etapa 8. T1 y T2, que son lo que traba cada commit, van antes de abrir los chats nuevos de la 8b; T3 a T7 son solo documentos y siguen en paralelo con la 8b. **Quién:** un chat nuevo de Codex, con los dos repos. **Por qué:** para programar una pantalla o un área hoy hay que leer unas 30.000 palabras por repo, y cada commit de código arrastra documentación que se mantiene a mano. Las revisiones del 2026-10-11 estimaron unas 45.000 palabras menos sin perder ninguna regla de código. La tanda 1 (back `aa5240be`, `1b0c4aef`; front `979c20db`, `88a8ae89`) ya corrigió las contradicciones; esta tanda cambia la estructura.
 
 **Reglas:** `AGENTS.md`, «Velocidad y cierre liviano». No cambia la conducta del producto ni una regla de código: capas, guardado con `IUnitOfWork`, `Result`, aislamiento, permisos, tiempo, textos en resources, logs y tests de arquitectura. Las capturas siguen versionadas (decisión del usuario). Commits con pathspec, sin push.
 
