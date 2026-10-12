@@ -122,6 +122,8 @@ public static class AssistantRealProviderFixture
                 Report(new { stage = "preflight", status = "ready", operatorPermissions = true, verifiedOwnerRecipient = true });
                 if (preparationOnly)
                 {
+                    await CommandAsync(bridge, ready, "quotas", new { email = owner.Email.Value, access = "business", tenantId, remainingMessages = 50, monthlyFraction = .8m }, ct);
+                    await ReadUsageAsync(client, host.Services.GetRequiredService<TimeProvider>(), fixture: true, ct);
                     Report(new { stage = "preparation", status = "passed", providerCalls = 0 });
                     return 0;
                 }
@@ -166,8 +168,7 @@ public static class AssistantRealProviderFixture
                 var ownCalls = await LedgerAsync(host.Services, owner.UserId, tenantId, [own.OperationId, stopped.OperationId], AssistantKeyFunding.OwnKey, ct);
                 Require(platformCalls + ownCalls <= 8, "ProviderCallBudget");
                 stage = "usage";
-                using var usage = await ReadAsync(client, Root + "/usage?pageSize=10", ct);
-                Require(usage.RootElement.TryGetProperty("items", out _), "UsageRead");
+                await ReadUsageAsync(client, host.Services.GetRequiredService<TimeProvider>(), fixture: false, ct);
                 Report(new { stage = "complete", status = "passed", responseAndTitleCalls = platformCalls + ownCalls, keyValidationCalls = 1, syntheticPriorBalance = true });
                 return 0;
             }
@@ -193,6 +194,17 @@ public static class AssistantRealProviderFixture
             Report(new { status = "failed", stage, type = error.GetType().Name, methods });
             return 1;
         }
+    }
+
+    private static async Task ReadUsageAsync(HttpClient client, TimeProvider clock, bool fixture, CancellationToken ct)
+    {
+        var now = clock.GetUtcNow();
+        var month = System.Xml.XmlConvert.ToString(now.Year).PadLeft(4, '0') + "-"
+            + System.Xml.XmlConvert.ToString(now.Month).PadLeft(2, '0');
+        using var usage = await ReadAsync(client, Root + "/usage?month=" + month + "&pageSize=10", ct);
+        var dto = usage.RootElement.Deserialize<AssistantUsagePageResponse>(JsonOptions);
+        Require(dto is not null && dto.Month == month && dto.Rows.Items is not null && dto.Cost.Currency.Value == "USD", "UsageRead");
+        Report(new { stage = "usage", status = 200, rows = dto!.Rows.Items!.Count, fixture });
     }
 
     internal static string ApiContentRoot()
