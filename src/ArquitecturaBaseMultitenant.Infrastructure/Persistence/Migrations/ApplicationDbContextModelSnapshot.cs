@@ -3109,6 +3109,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("OrganizationId", "Status");
 
+                    b.HasIndex("OrganizationId", "Domain", "Id");
+
                     b.ToTable("TenantDomains", "platform");
                 });
 

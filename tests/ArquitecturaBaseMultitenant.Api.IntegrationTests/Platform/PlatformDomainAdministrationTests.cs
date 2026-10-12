@@ -60,6 +60,11 @@ public sealed class PlatformDomainAdministrationTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.OK, listed.StatusCode);
         using var json = JsonDocument.Parse(await listed.Content.ReadAsStringAsync(Ct));
         Assert.Equal(2, json.RootElement.GetArrayLength());
+        using var domainPage = await platform.GetAsync(path + "/paged?search=" + untouchedDomain, Ct);
+        Assert.Equal(HttpStatusCode.OK, domainPage.StatusCode);
+        using var domainPageJson = JsonDocument.Parse(await domainPage.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(1, domainPageJson.RootElement.GetProperty("totalCount").GetInt32());
+        Assert.Equal(untouchedDomain, Assert.Single(domainPageJson.RootElement.GetProperty("items").EnumerateArray()).GetProperty("domain").GetString());
         var row = Assert.Single(json.RootElement.EnumerateArray(), item => item.GetProperty("domain").GetString() == domain);
         Assert.Equal("Pending", row.GetProperty("status").GetString());
         var version = row.GetProperty("version").GetUInt32();

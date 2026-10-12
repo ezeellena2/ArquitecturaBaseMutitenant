@@ -1,5 +1,7 @@
 using ArquitecturaBaseMultitenant.Api.Authorization;
 using ArquitecturaBaseMultitenant.Api.Contracts.Platform;
+using ArquitecturaBaseMultitenant.Api.Contracts.Organization;
+using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
 using ArquitecturaBaseMultitenant.Api.Idempotency;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
@@ -21,12 +23,22 @@ namespace ArquitecturaBaseMultitenant.Api.Controllers.Platform;
 public sealed class PlatformDomainsController(IPlatformDomainService service) : ControllerBase
 {
     [HttpGet]
+    [BoundedLegacyCollection("/api/platform/tenants/{id}/domains/paged")]
     [ProducesResponseType<IReadOnlyList<OrganizationDomainResponse>>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status401Unauthorized)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> List(Guid id, CancellationToken cancellationToken) =>
         (await service.ListAsync(id, cancellationToken)).ToActionResult(this);
+
+    [HttpGet("paged")]
+    [ProducesResponseType<PagedResult<OrganizationDomainResponse>>(StatusCodes.Status200OK)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
+    [ProducesProblem(StatusCodes.Status401Unauthorized)]
+    [ProducesProblem(StatusCodes.Status403Forbidden)]
+    [ProducesProblem(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ListPaged(Guid id, [FromQuery] OrganizationDomainListHttpQuery query, CancellationToken cancellationToken) =>
+        (await service.ListPagedAsync(id, query.ToModel(), cancellationToken)).ToActionResult(this);
 
     [HttpPost("{domain}/verify")]
     [Idempotent]

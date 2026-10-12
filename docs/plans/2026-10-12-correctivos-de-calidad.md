@@ -10,7 +10,7 @@
 | C7 | Hecha en núcleo y WhatsApp: diagnóstico privado y worker común. Rojo observado; 6 unitarios y 46 de integración verdes; build Api 0/0. Asistente se conserva en el alcance de 8b. |
 | C2 | Hecha: opciones remotas de a 10, selección conservada y guardas. Recurso 101, «Todos», caché e invalidación verdes; áreas, TypeScript y lint sin errores nuevos. |
 | C3 | Hecha: conteos agrupados y contratos aditivos. Back 16 de integración y 3 unitarios verdes; front 19 casos verdes, incluidas las dos guardas de un pedido por búsqueda; TypeScript sin errores. |
-| C9 | En curso. |
+| C9 | Hecha: auditoría y dominios paginados, legacy con tope SQL y guarda general 3/3. Áreas de back/front e índices verdes; build 0/0, contratos, TypeScript y lint sin errores nuevos. |
 | C5, C6, C8 | Pendientes, en el orden de la revalidación. |
 | Cierre | Pendiente; una corrida completa al terminar los correctivos habilitados. |
 
@@ -20,6 +20,7 @@
 - C4: `useResourceAction` reconoce sólo variables ejecutadas por su dueño, incluye reintentos sin observer y excluye borradores abandonados; `useEditPage` conserva el único blocker público y no compara rutas literales.
 - C11: HTTP `Date` y avance monotónico fijan tiempos/reenvíos; Application valida el inicio Google y contiene `WebClientOptions`/`AuthServerDefaults` para respetar capas.
 - C2: opciones por recurso bajo su raíz de caché, páginas de 10 y búsqueda remota; caché/detalle conserva la selección y «Todos» carga páginas sólo al pulsarlo.
+- C9: rutas /paged aditivas; arrays anteriores deprecados y acotados en SQL a una página, con `maxItems` y sucesora verificables. La guarda sólo lista catálogos; también detectó Dominios sin tope, que recibe el mismo paginado e índices de búsqueda/orden.
 - C3: conteos agrupados en SQL; Roles devuelve búsqueda y totales juntos, Usuarios mantiene el facet de estado sin estado y el de empresa con estado; campos nuevos aditivos.
 - C7: `ExceptionLog` publica sólo tipos/stacks, también internos; `PeriodicWorker` conserva intervalos/señal y continúa tras fallar. HTTP completa ProblemDetails aun con Accept no admitido para que el framework no registre la excepción cruda.
 

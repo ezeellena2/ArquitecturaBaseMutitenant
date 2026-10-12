@@ -22,6 +22,42 @@ public sealed class OrganizationDomainsTests(ApiFactory factory)
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
+    public async Task Domains_are_paged_and_legacy_list_is_bounded_without_losing_later_domains()
+    {
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false,
+        });
+        var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
+        await CreateOrganizationAsync(owner.UserId);
+        await AccountJourney.AuthorizeAsync(client, "business", Ct);
+        var suffix = Guid.NewGuid().ToString("N");
+        for (var index = 0; index < 12; index++)
+        {
+            using var created = await AccountJourney.PostAsync(client, "/api/organization/settings/domains",
+                new { domain = $"domain-{index:D2}-{suffix}.example" }, Ct);
+            Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        }
+        using var first = await client.GetAsync("/api/organization/settings/domains/paged", Ct);
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        using var firstJson = JsonDocument.Parse(await first.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(12, firstJson.RootElement.GetProperty("totalCount").GetInt32());
+        Assert.Equal(10, firstJson.RootElement.GetProperty("items").GetArrayLength());
+        using var second = await client.GetAsync("/api/organization/settings/domains/paged?page=2", Ct);
+        using var secondJson = JsonDocument.Parse(await second.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(2, secondJson.RootElement.GetProperty("items").GetArrayLength());
+        Assert.StartsWith("domain-10-", secondJson.RootElement.GetProperty("items")[0].GetProperty("domain").GetString());
+        using var filtered = await client.GetAsync("/api/organization/settings/domains/paged?search=domain-11", Ct);
+        using var filteredJson = JsonDocument.Parse(await filtered.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(1, filteredJson.RootElement.GetProperty("totalCount").GetInt32());
+        using var legacy = await client.GetAsync("/api/organization/settings/domains", Ct);
+        using var legacyJson = JsonDocument.Parse(await legacy.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(10, legacyJson.RootElement.GetArrayLength());
+        using var invalid = await client.GetAsync("/api/organization/settings/domains/paged?pageSize=999", Ct);
+        Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
+    }
+
+    [Fact]
     public async Task Owner_verifies_removes_and_keeps_existing_login_method_associations()
     {
         var dns = new FakeDnsTxtLookup();

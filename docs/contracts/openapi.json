@@ -33269,6 +33269,7 @@
         "tags": [
           "Auditoría de Plataforma"
         ],
+        "description": "Legacy bounded array: at most 10 items. Use /api/platform/audit/organizations/paged for paging and search.",
         "parameters": [
           {
             "name": "After",
@@ -33329,6 +33330,7 @@
             "content": {
               "text/plain": {
                 "schema": {
+                  "maxItems": 10,
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/PlatformAuditOrganizationResponse"
@@ -33337,6 +33339,7 @@
               },
               "application/json": {
                 "schema": {
+                  "maxItems": 10,
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/PlatformAuditOrganizationResponse"
@@ -33345,10 +33348,149 @@
               },
               "text/json": {
                 "schema": {
+                  "maxItems": 10,
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/PlatformAuditOrganizationResponse"
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true,
+        "x-successor": "/api/platform/audit/organizations/paged"
+      }
+    },
+    "/api/platform/audit/organizations/paged": {
+      "get": {
+        "tags": [
+          "Auditoría de Plataforma"
+        ],
+        "parameters": [
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "enum": [
+                10,
+                20,
+                50,
+                100
+              ],
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Period",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "AccountId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "AuditSearch",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfPlatformAuditOrganizationResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfPlatformAuditOrganizationResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfPlatformAuditOrganizationResponse"
                 }
               }
             }
@@ -33481,6 +33623,7 @@
         "tags": [
           "Dominios de organización"
         ],
+        "description": "Legacy bounded array: at most 10 items. Use /api/platform/tenants/{id}/domains/paged for paging and search.",
         "parameters": [
           {
             "name": "id",
@@ -33498,6 +33641,7 @@
             "content": {
               "text/plain": {
                 "schema": {
+                  "maxItems": 10,
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/OrganizationDomainResponse"
@@ -33506,6 +33650,7 @@
               },
               "application/json": {
                 "schema": {
+                  "maxItems": 10,
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/OrganizationDomainResponse"
@@ -33514,10 +33659,139 @@
               },
               "text/json": {
                 "schema": {
+                  "maxItems": 10,
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/OrganizationDomainResponse"
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true,
+        "x-successor": "/api/platform/tenants/{id}/domains/paged"
+      }
+    },
+    "/api/platform/tenants/{id}/domains/paged": {
+      "get": {
+        "tags": [
+          "Dominios de organización"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "enum": [
+                10,
+                20,
+                50,
+                100
+              ],
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfOrganizationDomainResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfOrganizationDomainResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfOrganizationDomainResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -39745,6 +40019,7 @@
         "tags": [
           "Auditoría de la organización"
         ],
+        "description": "Legacy bounded array: at most 10 items. Use /api/organization/audit/actors/paged for paging and search.",
         "parameters": [
           {
             "name": "After",
@@ -39811,6 +40086,7 @@
             "content": {
               "text/plain": {
                 "schema": {
+                  "maxItems": 10,
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/OrganizationAuditActorResponse"
@@ -39819,6 +40095,7 @@
               },
               "application/json": {
                 "schema": {
+                  "maxItems": 10,
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/OrganizationAuditActorResponse"
@@ -39827,10 +40104,148 @@
               },
               "text/json": {
                 "schema": {
+                  "maxItems": 10,
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/OrganizationAuditActorResponse"
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true,
+        "x-successor": "/api/organization/audit/actors/paged"
+      }
+    },
+    "/api/organization/audit/actors/paged": {
+      "get": {
+        "tags": [
+          "Auditoría de la organización"
+        ],
+        "parameters": [
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "enum": [
+                10,
+                20,
+                50,
+                100
+              ],
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Period",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Category",
+            "in": "query",
+            "schema": {
+              "enum": [
+                "users",
+                "roles",
+                "companies",
+                "settings",
+                "organization"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "AuditSearch",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfOrganizationAuditActorResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfOrganizationAuditActorResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfOrganizationAuditActorResponse"
                 }
               }
             }
@@ -39883,12 +40298,14 @@
         "tags": [
           "Dominios de correo de la organización"
         ],
+        "description": "Legacy bounded array: at most 10 items. Use /api/organization/settings/domains/paged for paging and search.",
         "responses": {
           "200": {
             "description": "OK",
             "content": {
               "text/plain": {
                 "schema": {
+                  "maxItems": 10,
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/OrganizationDomainResponse"
@@ -39897,6 +40314,7 @@
               },
               "application/json": {
                 "schema": {
+                  "maxItems": 10,
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/OrganizationDomainResponse"
@@ -39905,6 +40323,7 @@
               },
               "text/json": {
                 "schema": {
+                  "maxItems": 10,
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/OrganizationDomainResponse"
@@ -39943,7 +40362,9 @@
               }
             }
           }
-        }
+        },
+        "deprecated": true,
+        "x-successor": "/api/organization/settings/domains/paged"
       },
       "post": {
         "tags": [
@@ -40022,6 +40443,113 @@
           },
           "409": {
             "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/organization/settings/domains/paged": {
+      "get": {
+        "tags": [
+          "Dominios de correo de la organización"
+        ],
+        "parameters": [
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "enum": [
+                10,
+                20,
+                50,
+                100
+              ],
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfOrganizationDomainResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfOrganizationDomainResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfOrganizationDomainResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -59053,6 +59581,86 @@
         },
         "description": "Representa una página y el total de resultados para que el consumidor pueda mostrar navegación anterior y siguiente."
       },
+      "PagedResultOfOrganizationAuditActorResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrganizationAuditActorResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hasPrevious": {
+            "type": "boolean"
+          },
+          "hasNext": {
+            "type": "boolean"
+          }
+        },
+        "description": "Representa una página y el total de resultados para que el consumidor pueda mostrar navegación anterior y siguiente."
+      },
+      "PagedResultOfOrganizationDomainResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrganizationDomainResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hasPrevious": {
+            "type": "boolean"
+          },
+          "hasNext": {
+            "type": "boolean"
+          }
+        },
+        "description": "Representa una página y el total de resultados para que el consumidor pueda mostrar navegación anterior y siguiente."
+      },
       "PagedResultOfOrganizationUserHttpResponse": {
         "required": [
           "items",
@@ -59106,6 +59714,46 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/PlatformAccountResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hasPrevious": {
+            "type": "boolean"
+          },
+          "hasNext": {
+            "type": "boolean"
+          }
+        },
+        "description": "Representa una página y el total de resultados para que el consumidor pueda mostrar navegación anterior y siguiente."
+      },
+      "PagedResultOfPlatformAuditOrganizationResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlatformAuditOrganizationResponse"
             }
           },
           "page": {

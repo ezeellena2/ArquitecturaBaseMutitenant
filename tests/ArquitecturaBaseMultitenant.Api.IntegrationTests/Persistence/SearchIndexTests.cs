@@ -28,6 +28,9 @@ public sealed class SearchIndexTests(ApiFactory factory)
         new("identity", "AspNetUsers", "DisplayName"),
         new("identity", "AspNetUsers", "Email"),
         new("platform", "PendingTenantOwners", "Address"),
+        // RoleReader reutiliza la consulta base al contar los filtros de C3.
+        new("tenant", "Roles", "Name"),
+        new("tenant", "Roles", "Description"),
     ];
 
     // OrganizationAuditReader busca con SQL en el texto de los cambios: "Changes" es jsonb y ApplySearch no lo pasa a
