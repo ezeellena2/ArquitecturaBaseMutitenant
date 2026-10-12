@@ -62,13 +62,14 @@ test('referencias: lo planeado (E#) y lo excluido no son errores', async () => {
   assert.ok(!hs.some((h) => /agregar-un-area|futuro\.md|RoleService\.cs$/.test(h.real) && h.accion !== 'auto'));
 });
 
-test('punteros: crea, corrige, borra huérfanos y pregunta por los que no están en el mapa', async () => {
+test('punteros: crea, corrige y elimina los que no pertenecen a raíces del mapa', async () => {
   const hs = await correr(['punteros'], raicesFixture);
   assert.deepEqual(resumen(hs), [
     'punteros|puntero-claude-invalido|auto|src/Demo.Domain/CLAUDE.md|src/Demo.Domain/CLAUDE.md',
     'punteros|puntero-faltante|auto|src/Demo.Application/Services/AGENTS.md|src/Demo.Application/Services/AGENTS.md',
     'punteros|puntero-faltante|auto|src/Demo.Application/Services/CLAUDE.md|src/Demo.Application/Services/CLAUDE.md',
-    'punteros|puntero-fuera-del-mapa|modelo|src/Demo.Application/Extra/AGENTS.md|src/Demo.Application/Extra',
+    'punteros|puntero-fuera-del-mapa|auto|src/Demo.Application/Extra/AGENTS.md|src/Demo.Application/Extra/AGENTS.md',
+    'punteros|puntero-fuera-del-mapa|auto|src/Demo.Application/Extra/CLAUDE.md|src/Demo.Application/Extra/CLAUDE.md',
     'punteros|puntero-huerfano|auto|src/Demo.Application/Old/AGENTS.md|src/Demo.Application/Old/AGENTS.md',
     'punteros|puntero-huerfano|auto|src/Demo.Application/Old/CLAUDE.md|src/Demo.Application/Old/CLAUDE.md',
   ].sort());
@@ -179,7 +180,8 @@ test('front: los mismos detectores sobre TS, con el mapa `src/` y el árbol `## 
     'indices|fila-huerfana|auto|docs/rules/README.md|docs/rules/viejo.md',
     'punteros|puntero-faltante|auto|src/areas/business/roles/api/AGENTS.md|src/areas/business/roles/api/AGENTS.md',
     'punteros|puntero-faltante|auto|src/areas/business/roles/api/CLAUDE.md|src/areas/business/roles/api/CLAUDE.md',
-    'punteros|puntero-fuera-del-mapa|modelo|src/extra/AGENTS.md|src/extra',
+    'punteros|puntero-fuera-del-mapa|auto|src/extra/AGENTS.md|src/extra/AGENTS.md',
+    'punteros|puntero-fuera-del-mapa|auto|src/extra/CLAUDE.md|src/extra/CLAUDE.md',
     'punteros|puntero-huerfano|auto|src/old/AGENTS.md|src/old/AGENTS.md',
     'punteros|puntero-huerfano|auto|src/old/CLAUDE.md|src/old/CLAUDE.md',
     'punteros|puntero-faltante|auto|src/shared/AGENTS.md|src/shared/AGENTS.md',

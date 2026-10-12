@@ -1,1 +1,3 @@
-T02: contrato congelado, habilitación y lecturas privadas. Las operaciones restantes conservan el stub 501 hasta sus tareas. Leé docs/features/asistente.md, docs/rules/modulos.md, docs/rules/api-http.md y docs/rules/permisos.md. Cada ruta declara su acceso y autorización; contenido ajeno responde 404 incluso para Dueño u operador. Gestión instalada no requiere clave del proveedor. API mapea contratos a modelos; SSE describe payloads y sobre de transporte por separado.
+lo HTTP del módulo (su *ApiModule, controllers como el del webhook, convención.
+Leé [docs/features/asistente.md](../../../../docs/features/asistente.md).
+Copiá de [AssistantApiModule.cs](AssistantApiModule.cs).

@@ -1,1 +1,3 @@
-Emisor sin ruta y servicio de preview/accept. Leé [guardado](../../../../docs/rules/guardado.md), [multitenancy](../../../../docs/rules/multitenancy.md), [datos-personales](../../../../docs/rules/datos-personales.md) y [logs](../../../../docs/rules/logs.md). Copiá de `../Auth/LoginCodeIssuer.cs`; probá `Api.IntegrationTests/Tenancy/InvitationsTests.cs`.
+Piezas de su capa y área.
+Leé [docs/features/organizaciones.md](../../../../docs/features/organizaciones.md).
+Copiá de [InvitationAcceptanceGuard.cs](InvitationAcceptanceGuard.cs).

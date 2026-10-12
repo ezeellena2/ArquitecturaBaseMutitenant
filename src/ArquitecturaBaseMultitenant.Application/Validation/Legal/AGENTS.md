@@ -1,2 +1,3 @@
-Validadores de aceptación legal y baja, sin persistencia. Leé validacion.md y datos-personales.md.
-Copiá Validation/Identity; pruebas en Api.IntegrationTests/Legal.
+Piezas de su capa y área.
+Leé [docs/rules/capas-y-flujo.md](../../../../docs/rules/capas-y-flujo.md).
+Copiá de [AcceptLegalRequestValidator.cs](AcceptLegalRequestValidator.cs).

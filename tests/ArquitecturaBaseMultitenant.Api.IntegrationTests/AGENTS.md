@@ -1,3 +1,3 @@
-Tests de rutas HTTP y de aislamiento entre organizaciones.
-Antes de escribir, leé: [tests](../../docs/rules/tests.md) · [multitenancy](../../docs/rules/multitenancy.md).
-Copiá de: `Organization/RolesTests.cs` (E4).
+Piezas de su capa y área.
+Leé [docs/rules/capas-y-flujo.md](../../docs/rules/capas-y-flujo.md).
+Copiá de [RolesTests.cs](Organization/RolesTests.cs).

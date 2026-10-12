@@ -1,3 +1,3 @@
-Catálogo de permisos, entidades Role/RoleAssignment y errores puros del dominio.
-Antes de escribir, leé [multitenancy](../../../docs/rules/multitenancy.md) · [persistencia-ef](../../../docs/rules/persistencia-ef.md) · [auditoria](../../../docs/rules/auditoria.md) · [concurrencia](../../../docs/rules/concurrencia.md) · [permisos](../../../docs/rules/permisos.md) · [result-y-errores](../../../docs/rules/result-y-errores.md).
-Conducta del área: [docs/features/roles.md](../../../docs/features/roles.md).
+entidades y <X>Errors del módulo (Domain/WhatsApp/ nace en la E8).
+Leé [docs/features/roles.md](../../../docs/features/roles.md).
+Copiá de [Permissions.cs](Permissions.cs).

@@ -1,1 +1,3 @@
-Invitación privada y reglas de vigencia/uso único. Leé [persistencia-ef](../../../docs/rules/persistencia-ef.md), [multitenancy](../../../docs/rules/multitenancy.md), [emails](../../../docs/rules/emails.md) y [auditoria](../../../docs/rules/auditoria.md). Copiá de `../Authentication/LoginCode.cs`; verificá `Domain.UnitTests/Invitations/InvitationTests.cs`.
+entidades y <X>Errors del módulo (Domain/WhatsApp/ nace en la E8).
+Leé [docs/features/organizaciones.md](../../../docs/features/organizaciones.md).
+Copiá de [Invitation.cs](Invitation.cs).

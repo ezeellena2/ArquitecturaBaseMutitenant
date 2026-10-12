@@ -1,1 +1,3 @@
-FeatureManagement scoped: catálogo de Domain, filtro Tenant por contexto firmado y vigencia evaluada en cada llamada. Leé docs/rules/modulos-habilitados.md, multitenancy.md, logs.md y guardado.md. El núcleo no es un módulo; la plantilla no agrega módulos de ejemplo. Copiá TenantFeatureFilter y TenantFeatureCache; FeatureGateTests verifica el recorrido HTTP y ModuleControllersTests el catálogo.
+filtro de módulos por tenant.
+Leé [docs/rules/modulos-habilitados.md](../../../docs/rules/modulos-habilitados.md).
+Copiá de [TenantFeatureFilter.cs](TenantFeatureFilter.cs).

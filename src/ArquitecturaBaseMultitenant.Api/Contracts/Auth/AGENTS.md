@@ -1,1 +1,3 @@
-Contratos HTTP de ingreso y registro. Leé `docs/rules/api-http.md`, `docs/rules/validacion.md`, `docs/rules/emails.md` y `docs/rules/datos-personales.md`. Los cuerpos con correo o código sobrescriben `ToString()` para no revelar datos en logs.
+Piezas de su capa y área.
+Leé [docs/features/identidad.md](../../../../docs/features/identidad.md).
+Copiá de [AcceptInvitationHttpRequest.cs](AcceptInvitationHttpRequest.cs).

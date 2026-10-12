@@ -1,2 +1,3 @@
-Antes de tocar esto, leé [docs/features/identidad.md](../../../docs/features/identidad.md).
-Login y BusinessSignup pueden ligar OTP al dueño conocido con RequestedByUserId; Verify general rechaza códigos ligados, y VerifyFor exige cuenta/propósito/envío. Signup y Recovery conservan su contrato sin cuenta.
+entidades y <X>Errors del módulo (Domain/WhatsApp/ nace en la E8).
+Leé [docs/rules/modulos.md](../../../docs/rules/modulos.md).
+Copiá de [AccountErrors.cs](AccountErrors.cs).

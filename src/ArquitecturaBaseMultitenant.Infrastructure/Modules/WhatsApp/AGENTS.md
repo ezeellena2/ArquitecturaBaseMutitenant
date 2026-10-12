@@ -1,1 +1,3 @@
-Adaptadores técnicos, EF y workers del módulo quitable. Leé [WhatsApp](../../../../docs/features/whatsapp.md), [módulos](../../../../docs/rules/modulos.md), [guardado](../../../../docs/rules/guardado.md), [logs](../../../../docs/rules/logs.md) y [datos personales](../../../../docs/rules/datos-personales.md). El worker abre scopes, los servicios poseen UoW; SKIP LOCKED reclama leases durables y ningún consumer implica ningún claim. No persistir cuerpo original ni enviar a Meta en tests. Verifican WhatsAppWebhookTests, WhatsAppInboundProcessorTests y WhatsAppPersistenceTests.
+adaptadores del módulo.
+Leé [docs/features/whatsapp.md](../../../../docs/features/whatsapp.md).
+Copiá de [DisabledWhatsAppAvailability.cs](Disabled/DisabledWhatsAppAvailability.cs).

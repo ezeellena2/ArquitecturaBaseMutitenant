@@ -1,1 +1,3 @@
-Generador de los catálogos oficiales. Antes de tocar esto, leé `docs/rules/datos-de-referencia.md` y `docs/architecture/datos-de-referencia.md`. Las salidas se regeneran desde fuentes fijadas; nunca se editan a mano.
+fuentes editables, snapshots/lock fijados y generador de los cinco JSON.
+Leé [docs/rules/datos-de-referencia.md](../../docs/rules/datos-de-referencia.md).
+Copiá de [generar.mjs](generar.mjs).

@@ -297,8 +297,6 @@ public sealed class HarnessTests
     {
         var folders = new[] { Root }
             .Concat(MappedFolders())
-            .Concat(FeatureFolders())
-            .Concat(AreaFolders())
             .Distinct(StringComparer.OrdinalIgnoreCase);
         var missing = folders.SelectMany(MissingPointerFiles).ToArray();
 
@@ -313,10 +311,16 @@ public sealed class HarnessTests
         foreach (var file in AgentFiles())
         {
             var lines = File.ReadAllLines(file);
-            var limit = file == Path.Combine(Root, "AGENTS.md") ? 120 : 8;
+            var limit = file == Path.Combine(Root, "AGENTS.md") ? 140 : 3;
             if (lines.Length > limit)
             {
                 failures.Add($"{Relative(file)}: {lines.Length} líneas; máximo {limit}.");
+            }
+
+            if (file != Path.Combine(Root, "AGENTS.md")
+                && !MappedFolders().Contains(Path.GetDirectoryName(file)!, StringComparer.OrdinalIgnoreCase))
+            {
+                failures.Add($"{Relative(file)}: puntero fuera de una raíz del mapa.");
             }
 
             failures.AddRange(BrokenMarkdownLinks(file, lines));
@@ -494,7 +498,6 @@ public sealed class HarnessTests
                 folders = folders.Where(Directory.Exists)
                     .SelectMany(folder => Directory.EnumerateDirectories(folder, pattern))
                     .Where(folder => !IsBuildDirectory(folder))
-                    .Where(folder => template != "Domain/<Módulo>/" || ModuleNames().Contains(Path.GetFileName(folder)))
                     .ToArray();
             }
             else
@@ -504,64 +507,6 @@ public sealed class HarnessTests
         }
 
         return folders.Where(Directory.Exists);
-    }
-
-    private static IEnumerable<string> AreaFolders()
-    {
-        var features = Path.Combine(Root, "docs", "features");
-        if (!Directory.Exists(features))
-        {
-            return [];
-        }
-
-        var names = Directory.EnumerateFiles(features, "*.md")
-            .Select(Path.GetFileNameWithoutExtension)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        return CodeDirectories()
-            .Where(folder => names.Contains(Path.GetFileName(folder))
-                || (names.Contains("roles") && Path.GetFileName(folder).Equals("Authorization", StringComparison.OrdinalIgnoreCase)))
-            .Where(HasWorkFiles);
-    }
-
-    private static IEnumerable<string> FeatureFolders()
-    {
-        var features = Path.Combine(Root, "docs", "features");
-        if (!Directory.Exists(features)) yield break;
-
-        foreach (var file in Directory.EnumerateFiles(features, "*.md"))
-        {
-            var inFolders = false;
-            foreach (var line in File.ReadLines(file))
-            {
-                if (line.StartsWith("## ", StringComparison.Ordinal))
-                {
-                    inFolders = line == "## Carpetas";
-                    continue;
-                }
-
-                if (!inFolders) continue;
-                var match = Regex.Match(line, @"^\| `(?<path>(?:src|tests)/[^`]+)` \|", RegexOptions.CultureInvariant);
-                if (match.Success) yield return Path.Combine(Root,
-                    match.Groups["path"].Value.Replace('/', Path.DirectorySeparatorChar));
-            }
-        }
-    }
-
-    private static HashSet<string> ModuleNames()
-    {
-        // WhatsApp es el único módulo nombrado en el mapa actual. Los demás se reconocen
-        // por sus carpetas Modules/<Módulo> en las otras capas.
-        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "WhatsApp" };
-        foreach (var layer in new[] { "Application", "Infrastructure", "Api" })
-        {
-            var modules = Path.Combine(Root, "src", "ArquitecturaBaseMultitenant." + layer, "Modules");
-            if (Directory.Exists(modules))
-            {
-                names.UnionWith(Directory.EnumerateDirectories(modules).Select(folder => Path.GetFileName(folder)!));
-            }
-        }
-
-        return names;
     }
 
     private static bool HasWorkFiles(string folder)

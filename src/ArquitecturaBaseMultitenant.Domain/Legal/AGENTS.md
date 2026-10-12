@@ -1,1 +1,3 @@
-Antes de tocar esto, leé [docs/features/identidad.md](../../../docs/features/identidad.md).
+entidades y <X>Errors del módulo (Domain/WhatsApp/ nace en la E8).
+Leé [docs/rules/modulos.md](../../../docs/rules/modulos.md).
+Copiá de [AccountDeletionCancelTicket.cs](AccountDeletionCancelTicket.cs).

@@ -1,1 +1,3 @@
-Vencimiento configurable de invitaciones, sin secretos. Leé [fechas-y-zonas](../../../../docs/rules/fechas-y-zonas.md) y [configuracion](../../../../docs/operations/configuracion.md). Copiá de `../Auth/LoginCodeOptions.cs`.
+opciones de Application por área, validadas al arrancar y sin secretos.
+Leé [docs/features/organizaciones.md](../../../../docs/features/organizaciones.md).
+Copiá de [InvitationOptions.cs](InvitationOptions.cs).

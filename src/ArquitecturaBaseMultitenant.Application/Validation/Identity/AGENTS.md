@@ -1,2 +1,3 @@
-Validadores del perfil global y métodos de ingreso. Leé [validacion](../../../../docs/rules/validacion.md), [emails](../../../../docs/rules/emails.md) y [textos-y-traducciones](../../../../docs/rules/textos-y-traducciones.md).
-Copiá `../Auth/VerifyLoginCodeRequestValidator.cs`; verificá LoginMethodsTests.
+Piezas de su capa y área.
+Leé [docs/features/identidad.md](../../../../docs/features/identidad.md).
+Copiá de [AddLoginEmailRequestValidator.cs](AddLoginEmailRequestValidator.cs).

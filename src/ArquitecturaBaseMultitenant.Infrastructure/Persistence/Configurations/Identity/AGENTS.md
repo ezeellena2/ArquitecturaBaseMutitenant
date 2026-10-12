@@ -1,1 +1,3 @@
-Configuraciones globales de `identity`, sin RLS. Leé [identidad](../../../../../docs/features/identidad.md) y [persistencia-ef](../../../../../docs/rules/persistencia-ef.md).
+una IEntityTypeConfiguration por entidad.
+Leé [docs/features/identidad.md](../../../../../docs/features/identidad.md).
+Copiá de [RoleConfiguration.cs](../Tenant/RoleConfiguration.cs).

@@ -1,1 +1,0 @@
-Vista previa y aceptación de invitaciones con puertos propios. Leé [tests](../../../../docs/rules/tests.md), [multitenancy](../../../../docs/rules/multitenancy.md) y [datos-personales](../../../../docs/rules/datos-personales.md). Copiá `../Profile/ProfileServiceTests.cs`; usá ServiceFixture y FakeUnitOfWork.

@@ -1,1 +1,3 @@
-Ver [WhatsApp](../../../../docs/features/whatsapp.md): contrato técnico T01, stubs 501 y procesamiento pendiente T02–T08. Leé [módulos](../../../../docs/rules/modulos.md); el núcleo no referencia este namespace. Verifican ModuleControllersTests y Etapa8ContractTests.
+un módulo quitable.
+Leé [docs/features/whatsapp.md](../../../../docs/features/whatsapp.md).
+Copiá de [IWhatsAppAvailability.cs](Interfaces/Integrations/IWhatsAppAvailability.cs).

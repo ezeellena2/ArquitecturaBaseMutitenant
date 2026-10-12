@@ -1,1 +1,3 @@
-Rutas globales de Plataforma: [plataforma](../../../../docs/features/plataforma.md), [api-http](../../../../docs/rules/api-http.md), [permisos](../../../../docs/rules/permisos.md), [multitenancy](../../../../docs/rules/multitenancy.md). Access.Platform y HasPlatformPermission; Controller → servicio → Result, sin reglas ni EF. Copiá OrganizationSettingsController.
+Piezas de su capa y área.
+Leé [docs/features/plataforma.md](../../../../docs/features/plataforma.md).
+Copiá de [PlatformAccountsController.cs](PlatformAccountsController.cs).

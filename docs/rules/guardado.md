@@ -24,6 +24,8 @@ public Task<Result> UpdateAsync(UpdateRoleRequest request, CancellationToken ct)
     });
 ```
 
+El outbox reclama un lease durable con `SKIP LOCKED` y lo confirma antes de descifrar y enviar, fuera de transacción. `OutboxDispatchService` abre una UoW para Claim y otra para Complete, con scopes separados; Sent, Cancelled y falla terminal purgan el payload y un lease abandonado consume intentos.
+
 ## Prohibido
 - `SaveChanges` en un repositorio, un helper o un controller.
 - Anidar límites: lanza, porque es un bug.

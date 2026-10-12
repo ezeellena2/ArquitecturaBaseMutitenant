@@ -1,1 +1,3 @@
-Pruebas de políticas del módulo y sus puertos neutrales. Leé [WhatsApp](../../../../docs/features/whatsapp.md), [tests](../../../../docs/rules/tests.md), [módulos](../../../../docs/rules/modulos.md) y [capas y flujo](../../../../docs/rules/capas-y-flujo.md). Copiá las sondas existentes; no hacer envíos externos ni duplicar las integraciones PostgreSQL. Verifican WhatsAppCodeQuotaTests y WhatsAppChannelsTests.
+Piezas de su capa y área.
+Leé [docs/features/whatsapp.md](../../../../docs/features/whatsapp.md).
+Copiá de [RoleService.cs](../../../../src/ArquitecturaBaseMultitenant.Application/Services/Roles/RoleService.cs).

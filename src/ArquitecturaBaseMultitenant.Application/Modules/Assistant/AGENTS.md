@@ -1,1 +1,3 @@
-T02: persistencia, habilitación y lecturas privadas del Asistente. Las operaciones restantes conservan el stub 501 hasta sus tareas. Leé docs/features/asistente.md, docs/rules/modulos.md, docs/rules/capas-y-flujo.md y las fichas de persistencia, permisos y auditoría. Todo reader HTTP exige dueño y acceso; el núcleo usa puertos neutrales. API mapea contratos a modelos; SSE describe payloads y sobre de transporte por separado.
+un módulo quitable.
+Leé [docs/features/asistente.md](../../../../docs/features/asistente.md).
+Copiá de [AssistantModule.cs](AssistantModule.cs).

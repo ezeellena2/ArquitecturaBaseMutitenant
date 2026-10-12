@@ -1,1 +1,0 @@
-Pruebas de invariantes puras de WhatsApp. Leé [WhatsApp](../../../docs/features/whatsapp.md) y [tests](../../../docs/rules/tests.md). Verificá leases, progresión de estados y ausencia de contenido sensible, con instantes UTC explícitos. WhatsAppMessageTests cubre estas entidades.

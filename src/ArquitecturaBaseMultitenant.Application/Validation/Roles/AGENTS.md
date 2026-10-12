@@ -1,4 +1,3 @@
-Validadores de permisos, roles y consultas HTTP de Roles.
-Leé `docs/rules/validacion.md`, `permisos.md`, `paginado-y-busqueda.md` y `textos-y-traducciones.md`.
-Copiá de: `CreateRoleRequestValidator.cs`; validá antes del límite transaccional.
-La conducta del área está en `docs/features/roles.md`.
+Piezas de su capa y área.
+Leé [docs/features/roles.md](../../../../docs/features/roles.md).
+Copiá de [CreateRoleRequestValidator.cs](CreateRoleRequestValidator.cs).

@@ -1,1 +1,3 @@
-Casos de uso legales: consulta de documentos vigentes; aceptación de nuevas versiones y baja de cuenta llegan en las tareas posteriores de E3. Leé `docs/rules/datos-personales.md`, `docs/rules/textos-y-traducciones.md`, `docs/rules/guardado.md` y `docs/rules/logs.md` antes de editar. Las pruebas están en `Api.IntegrationTests/Legal/`.
+Piezas de su capa y área.
+Leé [docs/rules/capas-y-flujo.md](../../../../docs/rules/capas-y-flujo.md).
+Copiá de [AccountDeletionCancelIssuer.cs](AccountDeletionCancelIssuer.cs).

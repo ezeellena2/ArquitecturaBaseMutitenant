@@ -1,1 +1,3 @@
-Contratos internos y respuestas del flujo de invitación; hashes/tokens nunca en diagnóstico. Leé [emails](../../../../docs/rules/emails.md), [api-http](../../../../docs/rules/api-http.md) y [fechas-y-zonas](../../../../docs/rules/fechas-y-zonas.md). Copiá de `../Auth/VerifyLoginCodeRequest.cs`.
+Piezas de su capa y área.
+Leé [docs/features/organizaciones.md](../../../../docs/features/organizaciones.md).
+Copiá de [AcceptInvitationRequest.cs](AcceptInvitationRequest.cs).

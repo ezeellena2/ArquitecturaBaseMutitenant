@@ -1,3 +1,3 @@
-Validadores de pedidos por área. Un servicio recibe solo IRequestValidator; no inyecta IValidator<T>.
-Antes de escribir, leé: [validacion](../../../docs/rules/validacion.md) · [textos-y-traducciones](../../../docs/rules/textos-y-traducciones.md).
-Copiá de: `Roles/CreateRoleRequestValidator.cs` (E4).
+un validador por request, con ValidationRules.
+Leé [docs/rules/validacion.md](../../../docs/rules/validacion.md).
+Copiá de [CreateRoleRequestValidator.cs](Roles/CreateRoleRequestValidator.cs).

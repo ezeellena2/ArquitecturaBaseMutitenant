@@ -1,1 +1,3 @@
-Adaptadores HTTP de módulos opcionales: FeatureGate y apagados 404 ProblemDetails. Leé docs/rules/modulos-habilitados.md, modulos.md, api-http.md, permisos.md y multitenancy.md. FeatureGate comprueba el acceso antes de ocultar el módulo y corre antes de UseAuthorization; no reemplaza autenticación ni Access. InstalledModuleRoute marca una capacidad técnica global: exige un contribuidor registrado y disponible, sin inventar un gate de organización. Copiá DisabledFeatureHandler y FeatureGateMiddleware; verifican FeatureGateTests, ModuleControllersTests y Etapa8ContractTests.
+puerta de los módulos opcionales: FeatureGateMiddleware oculta con 404 un módulo apagado.
+Leé [docs/rules/modulos-habilitados.md](../../../docs/rules/modulos-habilitados.md).
+Copiá de [FeatureGateMiddleware.cs](FeatureGateMiddleware.cs).

@@ -6,9 +6,9 @@
 
 | Nivel | Qué es | Dónde | Tamaño |
 |---|---|---|---|
-| 0. Índice | Reglas que no se negocian, "dónde va cada cosa" y la tabla "si vas a tocar X, leé Y" | `AGENTS.md` de la raíz (`CLAUDE.md` = `@AGENTS.md`) | ≤ 120 líneas |
+| 0. Índice | Reglas que no se negocian, "dónde va cada cosa" y la tabla "si vas a tocar X, leé Y" | `AGENTS.md` de la raíz (`CLAUDE.md` = `@AGENTS.md`) | ≤ 140 líneas |
 | 1. Fichas | Una por tema, con formato fijo (§2) | `docs/rules/<tema>.md` | 20 a 60 líneas cada una |
-| 2. Punteros por carpeta | Qué va acá, qué NO va, qué fichas leer y qué archivo copiar | `AGENTS.md` + `CLAUDE.md` (`@AGENTS.md`) en cada carpeta del mapa (§3) | 3 a 8 líneas en las carpetas de capa; una línea, a `docs/features/<área>.md`, en las carpetas de un área |
+| 2. Punteros por carpeta | Responsabilidad y enlace a su ficha o feature | `AGENTS.md` + `CLAUDE.md` (`@AGENTS.md`) en cada carpeta del mapa (§3) | 1 a 3 líneas en las carpetas de capa; una línea, a `docs/features/<área>.md`, en las carpetas de un área |
 | 3. Verificación | Tests de arquitectura, analizadores, `BannedSymbols.txt`, `TreatWarningsAsErrors` | `tests/*.ArchitectureTests`, `.editorconfig` | una verificación por regla |
 
 Además hay **recetas** (`docs/guides/`: prefijo de backend (E1), migración (E2), agregar un área y permiso nuevo (E4), quitar WhatsApp (E8)) y un **área de referencia** (Roles): código real para copiar, no ejemplos inventados.
@@ -17,7 +17,7 @@ Además hay **recetas** (`docs/guides/`: prefijo de backend (E1), migración (E2
 - **Claude Code** carga el `CLAUDE.md` de la raíz al empezar y el de cada subcarpeta cuando lee archivos de ella.
 - **Codex** lee los `AGENTS.md` desde la raíz hasta la carpeta en la que trabaja.
 
-Por eso cada carpeta lleva los dos archivos: el `CLAUDE.md` solo importa el `AGENTS.md`, así el texto está escrito una sola vez.
+Cada raíz del mapa lleva los dos archivos; sus subcarpetas heredan ese puntero.
 
 **Por qué los punteros son cortos:** se cargan en cada sesión que toca la carpeta. El detalle vive en la ficha, que se lee solo si hace falta, y la ficha a su vez enlaza la sección de `backend.md`. Ninguna regla está escrita dos veces: un puntero **nombra** la ficha, no la copia.
 
@@ -58,10 +58,10 @@ La tabla está solo en el [`AGENTS.md` raíz](../../AGENTS.md#antes-de-escribir-
 ## 5. El arnés se verifica a sí mismo
 
 `HarnessTests`, en `ArchitectureTests`, falla si:
-1. una carpeta del mapa (§3) que ya existe, o una carpeta de un área que ya tiene su `docs/features/<área>.md`, no tiene `AGENTS.md` y `CLAUDE.md`, o su `CLAUDE.md` no es `@AGENTS.md`;
+1. una raíz de proyecto, área o módulo del mapa que ya existe, no tiene `AGENTS.md` y `CLAUDE.md`, o su `CLAUDE.md` no es `@AGENTS.md`;
 2. un `AGENTS.md` o una ficha tiene un enlace roto, sea a una ficha, a un archivo "Copiá de" o a una sección (salvo los marcados `(E#)` de una etapa que todavía no cerró);
 3. una ficha no tiene las secciones del formato (§2), o su "Lo verifica" nombra una clase C# `*Tests` sin método `[Fact]`/`[Theory]` o un archivo `.test.mjs`, `.test.ts` o `.test.tsx` que no existe, salvo que lleve `(E#)` de una etapa que todavía no cerró o diga `Pendiente:`; revisa el repo hermano cuando está presente;
-4. el `AGENTS.md` raíz pasa las 120 líneas, o un puntero pasa las 8.
+4. el `AGENTS.md` raíz pasa las 140 líneas, o un puntero pasa las 3.
 
 Las etapas cerradas viven en una lista explícita de `HarnessStage`, que usan `HarnessTests` y se actualiza en la puerta de cada etapa (plan, puerta 7). Las etapas pueden cerrarse fuera de orden; una referencia o test se exige solo cuando su etapa está en la lista. En particular, cerrar E6 después de E4 no cierra E5.
 

@@ -1,3 +1,3 @@
-Configuraciones de tablas privadas del esquema `tenant`: clave e índices con `TenantId` primero y RLS en la migración.
-
-Leé: [persistencia-ef](../../../../../docs/rules/persistencia-ef.md) · [multitenancy](../../../../../docs/rules/multitenancy.md) · [auditoria](../../../../../docs/rules/auditoria.md). Copiá de: `RoleConfiguration.cs`, el área de referencia.
+una IEntityTypeConfiguration por entidad.
+Leé [docs/rules/persistencia-ef.md](../../../../../docs/rules/persistencia-ef.md).
+Copiá de [AuditEntryConfiguration.cs](AuditEntryConfiguration.cs).

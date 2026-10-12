@@ -1,1 +1,3 @@
-Proyecciones de habilitaciones globales sin EF. Leé docs/rules/modulos-habilitados.md, fechas-y-zonas.md y concurrencia.md. Cachear filas crudas; el vencimiento se evalúa con TimeProvider por llamada.
+Piezas de su capa y área.
+Leé [docs/rules/capas-y-flujo.md](../../../../docs/rules/capas-y-flujo.md).
+Copiá de [TenantFeatureRow.cs](TenantFeatureRow.cs).

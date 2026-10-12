@@ -1,1 +1,3 @@
-Validadores de pedidos de Plataforma. Leé [validacion](../../../../docs/rules/validacion.md), [textos-libres](../../../../docs/rules/textos-libres.md) y [plataforma](../../../../docs/features/plataforma.md). Copiá Roles: mensajes es/en desde ValidationTexts, sin lecturas de existencia/unicidad en validadores.
+Piezas de su capa y área.
+Leé [docs/features/plataforma.md](../../../../docs/features/plataforma.md).
+Copiá de [ListPlatformAuditRequestValidator.cs](ListPlatformAuditRequestValidator.cs).

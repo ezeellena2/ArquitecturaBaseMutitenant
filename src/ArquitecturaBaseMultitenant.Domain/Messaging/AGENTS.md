@@ -1,1 +1,3 @@
-Outbox global persistente, sin secretos en logs. Leé [identidad](../../../docs/features/identidad.md), [guardado](../../../docs/rules/guardado.md) y [logs](../../../docs/rules/logs.md).
+entidades y <X>Errors del módulo (Domain/WhatsApp/ nace en la E8).
+Leé [docs/rules/modulos.md](../../../docs/rules/modulos.md).
+Copiá de [OutboxChannel.cs](OutboxChannel.cs).

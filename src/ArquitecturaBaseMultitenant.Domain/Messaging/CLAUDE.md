@@ -1,1 +1,1 @@
-Seguí [AGENTS.md](AGENTS.md).
+@AGENTS.md

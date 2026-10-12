@@ -1,1 +1,3 @@
-Antes de tocar esto, leé [docs/features/inicio.md](../../../../docs/features/inicio.md).
+Piezas de su capa y área.
+Leé [docs/features/inicio.md](../../../../docs/features/inicio.md).
+Copiá de [HomeRegistration.cs](HomeRegistration.cs).

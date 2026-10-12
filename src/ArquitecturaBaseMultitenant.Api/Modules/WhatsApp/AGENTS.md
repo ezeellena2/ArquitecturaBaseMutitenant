@@ -1,1 +1,3 @@
-Ver [WhatsApp](../../../../docs/features/whatsapp.md): webhook global condicionado por disponibilidad, sin FeatureGate de organización ni sesión. T01 exporta y runtime apaga. Leé [módulos](../../../../docs/rules/modulos.md); verifican AccessDeclarationTests, ModuleControllersTests y Etapa8ContractTests.
+lo HTTP del módulo (su *ApiModule, controllers como el del webhook, convención.
+Leé [docs/features/whatsapp.md](../../../../docs/features/whatsapp.md).
+Copiá de [WhatsAppWebhookHttpRequest.cs](Contracts/WhatsAppWebhookHttpRequest.cs).

@@ -1,1 +1,3 @@
-Entidades globales del módulo WhatsApp, sin dependencias de Application o EF. Leé [WhatsApp](../../../docs/features/whatsapp.md), [módulos](../../../docs/rules/modulos.md), [datos personales](../../../docs/rules/datos-personales.md) y [persistencia](../../../docs/rules/persistencia-ef.md). WhatsAppMessage conserva snapshots originales INSERT-only y nunca OTP, tokens ni enlaces. Verifican WhatsAppMessageTests, WhatsAppPersistenceTests y WhatsAppInboundProcessorTests.
+entidades y <X>Errors del módulo (Domain/WhatsApp/ nace en la E8).
+Leé [docs/features/whatsapp.md](../../../docs/features/whatsapp.md).
+Copiá de [WhatsAppCodeErrors.cs](WhatsAppCodeErrors.cs).

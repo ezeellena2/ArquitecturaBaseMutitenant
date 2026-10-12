@@ -1,1 +1,3 @@
-Bindings partial quitables de AccessDeclarationTests, ApplicationServicesTests y ModuleControllersTests: aportan el controller anónimo, registros de servicios y registros del módulo. Leé [WhatsApp](../../../../docs/features/whatsapp.md), [módulos](../../../../docs/rules/modulos.md) y [tests](../../../../docs/rules/tests.md). Los casos y las guardas compartidos permanecen en las partes núcleo de esas clases.
+Piezas de su capa y área.
+Leé [docs/features/whatsapp.md](../../../../docs/features/whatsapp.md).
+Copiá de [RoleService.cs](../../../../src/ArquitecturaBaseMultitenant.Application/Services/Roles/RoleService.cs).

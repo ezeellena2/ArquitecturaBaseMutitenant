@@ -1,1 +1,3 @@
-Integración del módulo con PostgreSQL real de ApiFactory. Leé [WhatsApp](../../../../docs/features/whatsapp.md), [tests](../../../../docs/rules/tests.md), [módulos](../../../../docs/rules/modulos.md) y [datos personales](../../../../docs/rules/datos-personales.md). Proveedores siempre locales, sin Meta. Fixtures de consumer sustituyen todos los IWhatsAppInboundConsumer antes de registrar la sonda; ausencia de consumer conserva pendientes. Verifican WhatsAppWebhookTests, WhatsAppInboundProcessorTests, WhatsAppPersistenceTests y WhatsAppStartupTests.
+Piezas de su capa y área.
+Leé [docs/features/whatsapp.md](../../../../docs/features/whatsapp.md).
+Copiá de [TestControllerApplicationPart.cs](TestControllerApplicationPart.cs).

@@ -17,7 +17,7 @@ export async function leerMapa(ctx) {
   const out = [];
   for (const f of filas) {
     if (f.celdas.length < 2) continue;
-    const patrones = [...f.celdas[0].matchAll(/`([^`]+)`/g)].map((m) => m[1]).filter((p) => !p.includes('<Módulo>'));
+    const patrones = [...f.celdas[0].matchAll(/`([^`]+)`/g)].map((m) => m[1]);
     if (!patrones.length || /^carpeta$/i.test(f.celdas[0])) continue;
     const linea = base + f.linea;
     const marcas = marcasEtapa(f.celdas[0]);
@@ -95,11 +95,12 @@ export async function detectar(ctx) {
       continue;
     }
     const agents = `${dir}/AGENTS.md`;
-    // Una carpeta de área (hija de una carpeta del mapa) no es una fila del mapa: arbol.md.
-    if (mapeadas.has(dir) || mapeadas.has(dir.slice(0, dir.lastIndexOf('/'))) || !ctx.archivos.esArchivo(agents)) continue;
-    const texto = await ctx.leer(agents);
-    if (/docs\/features\//.test(texto)) continue;
-    out.push(ctx.crear({ archivo: agents, linea: 1, tipo: 'puntero-fuera-del-mapa', clave: dir, real: `${dir} tiene puntero y no está en el mapa de arbol.md ni apunta a docs/features`, contexto: texto.split(/\r?\n/).slice(0, 8).join('\n'), accion: 'modelo', pregunta: `¿Falta la fila de ${dir} en el mapa de arbol.md, o el puntero sobra?` }));
+    if (mapeadas.has(dir)) continue;
+    for (const nombreP of ['AGENTS.md', 'CLAUDE.md']) {
+      const archivo = dir + '/' + nombreP;
+      if (ctx.archivos.esArchivo(archivo)) out.push(ctx.crear({ archivo, linea: 0, tipo: 'puntero-fuera-del-mapa', clave: archivo,
+        real: dir + ' no es una raíz declarada', accion: 'auto', parche: { tipo: 'borrar-archivo', archivo } }));
+    }
   }
   return out;
 }

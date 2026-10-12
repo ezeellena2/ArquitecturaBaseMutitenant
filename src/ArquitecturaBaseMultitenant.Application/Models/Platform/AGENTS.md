@@ -1,4 +1,3 @@
-Pedidos/respuestas de Plataforma. Leé [plataforma](../../../../docs/features/plataforma.md), [concurrencia](../../../../docs/rules/concurrencia.md), [paginado-y-busqueda](../../../../docs/rules/paginado-y-busqueda.md) y [datos-personales](../../../../docs/rules/datos-personales.md). Sin EF ni Identity; entradas nullable y sin datos personales en ToString.
-
-El detalle de organización y su historial tienen contratos propios, ToString sin contactos/motivos y fuentes globales. ExpiresOn es civil; PublishedAtUtc es evidencia UTC nullable de la publicación.
-La ficha de cuenta agrega LastStateChange con evidencia efectiva de status y DeletedAtUtc de la identidad, ambos nullable; no lleva versión de cuenta y conserva OperatorVersion de la asignación. Sus contratos y proyecciones no muestran motivos ni datos personales en ToString.
+Piezas de su capa y área.
+Leé [docs/features/plataforma.md](../../../../docs/features/plataforma.md).
+Copiá de [PlatformAccountModels.cs](PlatformAccountModels.cs).

@@ -1,3 +1,0 @@
-Rutas de prueba para demostrar que un token Consumer recibe 403 en una acción exclusiva Business y que `[PublicSite]` resuelve solo el contexto público. `PublicSiteProbeController` devuelve los dos contextos: una ruta pública conserva el tenant privado vacío y la ruta privada conserva el tenant del token aunque el host sea de otra organización. No crean empresas ni suman rutas productivas.
-Leé: [tests](../../../../docs/rules/tests.md) · [multitenancy](../../../../docs/rules/multitenancy.md) · [api-http](../../../../docs/rules/api-http.md).
-Copiá de `TestFeatures/Isolation/WidgetsController.cs` para el controller de prueba y de `Tenancy/AccessTests.cs` y `Tenancy/SubdomainTests.cs` para las reglas de acceso y host.
