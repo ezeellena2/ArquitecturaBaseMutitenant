@@ -97,6 +97,8 @@ Las revisiones de categoría y la apelación se solicitaron desde WhatsApp Manag
 
 ## Cómo crearlas y comprobarlas
 
+**C0 (12/10/2026):** se crearon con autorización las variantes `invitacion_organizacion_literal/es` y `/en`, solicitando Utility y sin cambio de categoría permitido. Español: «Hola. {{1}} te invitó a unirte a {{2}} en ArquitecturaBase. La invitación vence el {{3}}. Podés revisarla con el botón.», botón «Ver la invitación». Inglés y componentes URL copiados de `invitacion_organizacion/en` aprobado. La consulta posterior devolvió **APPROVED / MARKETING en ambas**. No se usan ni se cambia `WhatsApp:Templates:Invitation` hasta verificar APPROVED / UTILITY en las dos; la creación sola no completa C0. Las muestras son ficticias y no se enviaron invitaciones a personas.
+
 1. En [Meta Business Suite](https://business.facebook.com/), WhatsApp Manager → Administrar plantillas, seleccionar la WABA correcta: desarrollo comparte la de ArquitecturaBase; producción tiene la propia. Ver [configuración §4](configuracion.md#4-lo-que-tenés-que-hacer-vos-una-sola-vez-fuera-del-código).
 2. Crear el nombre snake_case de la tabla, Authentication solo para código (texto/botón Copiar código de Meta); Utility para los demás. Nunca Marketing.
 3. Cargar es y en por separado, con cuerpo, orden de variables y muestras del paquete T03. Enlaces existentes mediante botón URL con base pública configurada y sufijo variable; nunca inventar ActionUrl donde no existe.
