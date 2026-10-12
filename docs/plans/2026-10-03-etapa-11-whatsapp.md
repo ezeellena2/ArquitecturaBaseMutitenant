@@ -15,6 +15,7 @@
 >   - **Se usa Embedded Signup v4:** la v2 se retira el 15/10/2026.
 >   - **Los dominios del alta van con HTTPS,** cargados en «Allowed domains» y «Valid OAuth redirect URIs» de la app, incluidos los de desarrollo. Hay que suscribirse al webhook `account_update`.
 >   - **Hay un límite de organizaciones nuevas:** sin la empresa verificada ni la revisión aprobada, son 10 cada 7 días; con las dos, 200.
+>   - **El nombre visible lo carga la organización en la ventana de Meta,** al crear su perfil de WhatsApp Business, y Meta lo revisa recién cuando sube el límite de mensajes. Si lo cambia después en WhatsApp Manager, cuando Meta lo aprueba llega el webhook `phone_number_name_update` (`APPROVED`). Ahí el sistema vuelve a registrar el número (`POST /<PHONE_NUMBER_ID>/register`, dentro de los 14 días); si no, el nombre nuevo no se aplica.
 
 > Plan de implementación para esta etapa. Seguir el orden, completar las casillas con evidencia y commitear cada cambio coherente y verificado con rutas explícitas.
 
