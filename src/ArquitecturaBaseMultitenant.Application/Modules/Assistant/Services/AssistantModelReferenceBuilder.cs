@@ -1,4 +1,4 @@
-using System.Globalization;
+using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using System.Security.Cryptography;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
@@ -55,7 +55,7 @@ public static class AssistantModelReferenceBuilder
 
     // Decimal scale and effort ordering do not change an effective reference.
     private static string? Rate(Money? value) => value is null ? null
-        : value.Currency.Value + ":" + value.Amount.ToString("G29", CultureInfo.InvariantCulture);
+        : value.Currency.Value + ":" + InvariantWireFormatter.FormatCanonicalDecimal(value.Amount);
 
     public static AssistantProviderReference Build(AssistantModelPriceResponse model)
     {

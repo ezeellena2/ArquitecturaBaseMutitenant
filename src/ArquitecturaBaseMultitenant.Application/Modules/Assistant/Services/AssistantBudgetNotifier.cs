@@ -49,7 +49,7 @@ internal sealed class AssistantBudgetNotifier(IAssistantBudgetAlertRepository al
         else if ((await settings.FindAsync(ct))?.SupportEmail is { } support)
         {
             var profile = await cultures.ResolveAsync(null, null, ct);
-            recipients.Add((null, support.Value, profile.Culture.Name, "UTC"));
+            recipients.Add((null, support.Value, profile.Culture.Name, TimeZoneInfo.Utc.Id));
         }
         if (recipients.Count == 0) return;
         foreach (var recipient in recipients)
@@ -58,8 +58,9 @@ internal sealed class AssistantBudgetNotifier(IAssistantBudgetAlertRepository al
             var culture = CultureInfo.GetCultureInfo(recipient.Culture);
             var subject = AssistantTexts.ResourceManager.GetString("Budget.AlertSubject", culture)!;
             var template = AssistantTexts.ResourceManager.GetString("Budget.AlertBody", culture)!;
-            var text = string.Format(culture, template, alert.Threshold,
-                await formatter.FormatMoneyAsync(alert.Used, context, ct), await formatter.FormatMoneyAsync(alert.Budget, context, ct));
+            var text = template.Replace("{0}", formatter.FormatDecimal(alert.Threshold, 0, context), StringComparison.Ordinal)
+                .Replace("{1}", await formatter.FormatMoneyAsync(alert.Used, context, ct), StringComparison.Ordinal)
+                .Replace("{2}", await formatter.FormatMoneyAsync(alert.Budget, context, ct), StringComparison.Ordinal);
             outbox.Enqueue(OutboxChannel.Email, JsonSerializer.Serialize(new EmailMessage(recipient.Address, subject,
                 "<p>" + WebUtility.HtmlEncode(text) + "</p>", text)), recipient.UserId);
         }

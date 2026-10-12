@@ -34,7 +34,7 @@ internal sealed class AssistantUsageBuilder(IAssistantUsageReader reader, IAssis
             daily = (await reader.ListDailyAsync(currentPeople, mode, dayUtc, cancellationToken)).ToDictionary(value => value.UserId);
         }
         var format = page.Rows.Items.Any(value => value.Day != null)
-            ? await formatter.CreateForCurrentCultureAsync("UTC", cancellationToken) : null;
+            ? await formatter.CreateForCurrentCultureAsync(TimeZoneInfo.Utc.Id, cancellationToken) : null;
         var items = page.Rows.Items.Select(value =>
         {
             var displayName = value.Kind switch
