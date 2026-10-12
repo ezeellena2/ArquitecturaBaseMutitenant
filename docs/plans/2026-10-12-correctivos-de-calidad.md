@@ -4,10 +4,38 @@
 
 **Reglas:** `AGENTS.md`, «Velocidad y cierre liviano». No hay funcionalidad nueva: cada tarea hace cumplir una regla ya escrita (paginado, valores fijos, capas, no duplicar). No se tocan `Modules/Assistant` ni `src/modules/assistant` (son de la 8b) ni `Program.cs`. Los contratos nuevos son aditivos y los coordina este mismo chat en los dos repos. Commits con pathspec, sin push.
 
+## Precisiones de la revalidación (2026-10-12)
+
+Once agentes revalidaron cada caso contra el código. Los 11 son reales; C5, C6 y partes de C10 están algo exagerados. El detalle está en `.local/revision-correctivos/revision-11-correctivos.md`, que no se versiona.
+
+- **Orden de trabajo:**
+  1. C0;
+  2. lo que hoy ve un usuario: C10 (descripción de la página pública, que el front deja en 1000 y el back en 500, y «Cuenta eliminada»), C4 (dirección con «/» al final) y C11 (reloj de la compu);
+  3. C7;
+  4. C1, recién cuando esté publicado el tablero de Diseño (decisión del usuario del 12/10), y C2, C3 y C9;
+  5. al final, C5, C6 y C8.
+- **Cada arreglo suma su guarda, para que no vuelva:**
+  - C1: un test que cuente las consultas con muchos pendientes;
+  - C2: una guarda que prohíba `pageSize=100` en `src/areas/**/api`;
+  - C3: un solo pedido de conteos por búsqueda;
+  - C4: una guarda contra `UNSAFE_`;
+  - C7: un worker que falla registra y sigue, y el texto de un error nunca llega al log;
+  - C8: ninguna ruta del front fuera de `ReturnUrls`;
+  - C9: un test de arquitectura que rechace `IReadOnlyList` en rutas cuyos datos crecen, con una lista blanca de catálogos;
+  - C10: largos y rangos publicados en el OpenAPI;
+  - C11: `Date.now` y `Date.parse` dentro de la guarda de formatos.
+- **Lo que hay que sumar a cada tarea:**
+  - C2: no hace falta un endpoint nuevo, porque las rutas ya aceptan `search`.
+  - C5: hace falta un filtro nuevo en el back, «solo los roles propios de esta empresa».
+  - C6: no hay un bug, es diseño, y por eso va al final.
+  - C8: son 27 literales. Hay que sumar `PlatformOperatorInvitationNotifier`, `OrganizationMembershipEndNoticeBuilder` e `InvitationDeliveryIssuer`, y el patrón de origen está copiado 7 veces.
+  - C10: el CUIT argentino del registro de empresa está acordado (`identificacion-fiscal.md`); solo falta usar `TaxIdNumberField`. Las categorías escritas como texto incluyen también `PublicPage` y `TenantDomain`, y el front las repite en `AuditPage.tsx`.
+
 ## Tareas
 
 | # | Qué | Dónde | Listo cuando |
 |---|---|---|---|
+| C0 | **La invitación en español, como plantilla nueva** (texto y creación aprobados por el usuario el 2026-10-12). Se crea en Meta con un nombre nuevo, en español con el texto aprobado («Hola. {{1}} te invitó a unirte a {{2}} en ArquitecturaBase. La invitación vence el {{3}}. Podés revisarla con el botón.», botón «Ver la invitación») y en inglés con el texto de `invitacion_organizacion/en`. Después se cambian `WhatsApp:Templates:Invitation` y `whatsapp-plantillas.md`. | Meta; back `Api/appsettings.json`, `docs/operations/whatsapp-plantillas.md` | la consulta a Meta da las dos variantes APPROVED / UTILITY y la invitación usa el nombre nuevo |
 | C1 | **«Para resolver» con tope.** Conteo más los primeros ítems de cada área y «Ver todos» hacia el listado filtrado. Los permisos se revisan una sola vez por pedido, no ítem por ítem. | back `Services/OrganizationUsers/OrganizationUserPendingItems.cs`, `Services/Home/HomeService.cs`; front `areas/platform/home/api/pending.ts`, `PlatformToResolve.tsx` | con miles de pendientes, el Inicio hace una cantidad fija de consultas |
 | C2 | **Listas para elegir con búsqueda en el servidor.** Un selector con búsqueda remota en `shared`, que reemplaza las listas cortadas en 100 de roles, personas y empresas («Agregar miembro», filtros, asignaciones). Una sola consulta de opciones por recurso, con su clave. | front `roles/api/roles.ts`, `users/api/users.ts`, `companies/api/companies.ts`, `AddMemberDialog.tsx`; back, un endpoint de opciones paginado si hace falta | se puede elegir la empresa, el rol o la persona número 101 |
 | C3 | **Conteos sin un pedido por empresa.** El back devuelve los conteos por empresa de una vez (`/api/roles/filter-counts` y el conteo por empresa en `users/filter-counts`). El front borra los `useQueries`. | back Roles y OrganizationUsers; front `RolesPage.tsx`, `UsersPage.tsx` | una búsqueda hace un solo pedido de conteos |
@@ -41,5 +69,5 @@ Cada tarea, con los tests de su área. Al final, una sola vez: builds, suites de
 ## Texto para el chat de Codex
 
 ```
-Leé AGENTS.md del back y del front y docs/plans/2026-10-12-correctivos-de-calidad.md (back). Hacé C1 a C11 en ese orden, en los dos repos. Es en paralelo con la 8b: no toques Modules/Assistant, src/modules/assistant ni Program.cs, y commiteá solo tus archivos con pathspec. Los contratos nuevos son aditivos: publicalos y regenerá los tipos del front en el mismo paso. No agregues funcionalidad: cada tarea hace cumplir una regla ya escrita. Las decisiones técnicas son tuyas: anotalas en una línea del plan. Sin push. Al final, la corrida de «Cómo se cierra» una sola vez y la tabla arriba del plan.
+Leé AGENTS.md del back y del front y docs/plans/2026-10-12-correctivos-de-calidad.md (back). Hacé C0 a C11 en el orden de «Precisiones de la revalidación», en los dos repos; C1, recién cuando el usuario te avise que Diseño publicó su tablero. Cada arreglo suma la guarda que dice esa sección. Es en paralelo con la 8b: no toques Modules/Assistant, src/modules/assistant ni Program.cs, y commiteá solo tus archivos con pathspec. Los contratos nuevos son aditivos: publicalos y regenerá los tipos del front en el mismo paso. No agregues funcionalidad: cada tarea hace cumplir una regla ya escrita. Las decisiones técnicas son tuyas: anotalas en una línea del plan. Sin push. Al final, la corrida de «Cómo se cierra» una sola vez y la tabla arriba del plan.
 ```
