@@ -20,6 +20,12 @@ if (Environment.GetEnvironmentVariable("MT_E2E_ISOLATED") != "1")
     return 1;
 }
 
+if (args is ["--assistant-real-probe", var assistantExportDirectory])
+{
+    using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(10));
+    return await ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.AssistantBrowser.AssistantRealProviderFixture.RunAsync(assistantExportDirectory, timeout.Token);
+}
+
 if (args is ["--whatsapp-browser", var browserScript])
 {
     try
