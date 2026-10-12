@@ -73,6 +73,8 @@ public sealed class RolesTests(ApiFactory factory)
         using var response = await client.GetAsync($"/api/roles/paged?companyId={north:D}&pageSize=50", Ct);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
+        Assert.All(json.RootElement.GetProperty("items").EnumerateArray().Where(role => role.GetProperty("scope").GetString() == nameof(RoleScope.SpecificCompany)),
+            role => Assert.Equal("Delta Norte S.A.", role.GetProperty("companyName").GetString()));
         var roles = json.RootElement.GetProperty("items").EnumerateArray()
             .Select(role => (Scope: role.GetProperty("scope").GetString(),
                 Company: role.TryGetProperty("companyId", out var company) && company.ValueKind == JsonValueKind.String ? company.GetGuid() : (Guid?)null))

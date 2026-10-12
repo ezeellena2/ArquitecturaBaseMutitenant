@@ -23,9 +23,9 @@ internal sealed class RoleReader(ApplicationDbContext context, ITenantContext te
     public async Task<RoleFilterCountsResponse> GetFilterCountsAsync(string? search, CancellationToken cancellationToken)
     {
         var tenantId = tenantContext.RequiredTenantId;
-        var all = context.Roles.AsNoTracking().Where(role => role.TenantId == tenantId);
+        var all = ApplyRoleFilters(tenantId, new ListRolesRequest());
         var total = await CountScopesAsync(all, cancellationToken);
-        var filtered = all.ApplySearch(search, role => role.Name, role => role.Description);
+        var filtered = ApplyRoleFilters(tenantId, new ListRolesRequest { Search = search });
         var matching = string.IsNullOrWhiteSpace(search) ? total : await CountScopesAsync(filtered, cancellationToken);
         var anyCompany = matching.GetValueOrDefault(RoleScope.AnyCompany);
         var companies = await filtered.Where(role => role.Scope == RoleScope.SpecificCompany && role.CompanyId != null)
@@ -57,6 +57,21 @@ internal sealed class RoleReader(ApplicationDbContext context, ITenantContext te
     {
         ArgumentNullException.ThrowIfNull(request);
         var tenantId = tenantContext.RequiredTenantId;
+        var roles = ApplyRoleFilters(tenantId, request)
+            .ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort, role => role.Id);
+        var page = await roles.ToPagedResultAsync(request, cancellationToken);
+        if (page.Items.Count == 0)
+            return new PagedResult<RoleRow>([], page.Page, page.PageSize, page.TotalCount);
+
+        var roleIds = page.Items.Select(role => role.Id).ToArray();
+        var rows = await Project(context.Roles.AsNoTracking().Where(role => roleIds.Contains(role.Id)), tenantId)
+            .ToDictionaryAsync(role => role.Id, cancellationToken);
+        return new PagedResult<RoleRow>([.. page.Items.Select(role => SortPermissions(rows[role.Id]))],
+            page.Page, page.PageSize, page.TotalCount);
+    }
+
+    private IQueryable<Role> ApplyRoleFilters(Guid tenantId, ListRolesRequest request)
+    {
         var roles = context.Roles.AsNoTracking().Where(role => role.TenantId == tenantId)
             .ApplySearch(request.Search, role => role.Name, role => role.Description);
         if (request.SystemRoleKey is { } systemKey)
@@ -72,17 +87,7 @@ internal sealed class RoleReader(ApplicationDbContext context, ITenantContext te
                 || role.Scope == RoleScope.SpecificCompany && role.CompanyId == companyId);
         if (request.OnlyOwn)
             roles = roles.Where(role => role.Scope == RoleScope.SpecificCompany && role.CompanyId == request.CompanyId);
-        roles = roles
-            .ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort, role => role.Id);
-        var page = await roles.ToPagedResultAsync(request, cancellationToken);
-        if (page.Items.Count == 0)
-            return new PagedResult<RoleRow>([], page.Page, page.PageSize, page.TotalCount);
-
-        var roleIds = page.Items.Select(role => role.Id).ToArray();
-        var rows = await Project(context.Roles.AsNoTracking().Where(role => roleIds.Contains(role.Id)), tenantId)
-            .ToDictionaryAsync(role => role.Id, cancellationToken);
-        return new PagedResult<RoleRow>([.. page.Items.Select(role => SortPermissions(rows[role.Id]))],
-            page.Page, page.PageSize, page.TotalCount);
+        return roles;
     }
 
     public async Task<RoleRow?> FindByIdAsync(Guid roleId, CancellationToken cancellationToken)
@@ -162,7 +167,9 @@ internal sealed class RoleReader(ApplicationDbContext context, ITenantContext te
             .Select(assignment => assignment.MemberId).Distinct().Count(),
         role.Permissions.ToArray(),
         role.Version,
-        role.CreatedAtUtc));
+        role.CreatedAtUtc,
+        context.Companies.Where(company => company.TenantId == tenantId && company.Id == role.CompanyId)
+            .Select(company => company.Name).FirstOrDefault()));
 
     private static RoleRow SortPermissions(RoleRow role) =>
         role with { Permissions = role.Permissions.Order(StringComparer.Ordinal).ToArray() };

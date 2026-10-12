@@ -9,6 +9,96 @@ namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 /// <summary>Las colecciones JSON de recursos que crecen deben paginar; sólo los catálogos son listas completas.</summary>
 public sealed class GrowingCollectionContractTests
 {
+    // Relaciones del recurso leído y catálogos cerrados. Cada permiso es por propiedad: nunca por controller o área.
+    private static readonly HashSet<string> NestedRelations = new(StringComparer.Ordinal)
+    {
+        "EffectivePermissions.organization", "EffectivePermissions.platform", "MeResponse.permissions",
+        "LoginChannelAvailability.countries", "PlatformAccountDetailResponse.operatorPermissions",
+        "PlatformAccountFilterCounts.kinds", "PlatformAccountFilterCounts.states", "PlatformRecoveryFilterCounts.statuses",
+        "PlatformTenantFilterCounts.sources", "PlatformTenantFilterCounts.statuses",
+        "AccountLoginMethodsResponse.methods", "AccountLoginMethodsResponse.soleOwnerOrganizations",
+        "LoginMethodsResponse.channels", "MeResponse.organizations", "MeResponse.features", "MeResponse.moduleCapabilities", "MeResponse.pendingLegalDocuments",
+        "ModuleCapabilityResponse.capabilities", "ModuleCapabilityResponse.features",
+        "HomeResponse.companies", "HomeResponse.pendingGroups", "HomeCompanyCard.roles",
+        "OrganizationUserHttpResponse.roles", "OrganizationUserHttpResponse.companies", "OrganizationUserCompanyRow.roles",
+        "CompanyMemberHttpResponse.roles", "CompanyCandidateResponse.companies",
+        "RoleResponse.permissions", "PermissionGroupResponse.permissions",
+        "PlatformAccountDetailResponse.loginMethods", "PlatformAccountDetailResponse.organizations", "PlatformAccountDetailResponse.soleOwnerOrganizations",
+        "PlatformTenantDetailResponse.owners", "PlatformTenantFeaturesResponse.features",
+        "PlatformLegalDocumentGroupResponse.versions", "PlatformLegalDocumentResponse.contents",
+        "OrganizationAuditEntryResponse.changes", "PlatformAuditEventResponse.changes",
+        "AssistantStateResponse.models", "AssistantStateResponse.quickQueries", "AssistantModelTechnicalResponse.efforts",
+        "OrganizationAssistantSettingsResponse.platformKeyModels", "OrganizationAssistantSettingsResponse.ownKeyModels",
+        "PlatformAssistantSettingsResponse.allowedModelIds", "AssistantMessageResponse.attachments", "AssistantMessageResponse.links",
+        "CurrencyReferenceHttpResponse.cultures", "CountryReferenceHttpResponse.cultures", "TimeZoneReferenceHttpResponse.countryCodes",
+        "CultureReferenceHttpResponse.cultures", "TaxIdTypeReferenceHttpResponse.cultures",
+        "ReferenceDataHttpResponse.currencies", "ReferenceDataHttpResponse.countries", "ReferenceDataHttpResponse.timeZones",
+        "ReferenceDataHttpResponse.cultures", "ReferenceDataHttpResponse.taxIdTypes",
+    };
+
+    [Fact]
+    public void Nested_JSON_collections_require_a_bound_or_an_explicit_resource_relationship()
+    {
+        using var document = JsonDocument.Parse(File.ReadAllText(Path.Combine(SolutionRoot.FullPath, "docs", "contracts", "openapi.json")));
+        var schemas = document.RootElement.GetProperty("components").GetProperty("schemas");
+        var offenders = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var path in document.RootElement.GetProperty("paths").EnumerateObject())
+        {
+            if (!path.Value.TryGetProperty("get", out var get)) continue;
+            foreach (var response in get.GetProperty("responses").EnumerateObject().Where(response => response.Name.StartsWith('2')))
+            {
+                if (!response.Value.TryGetProperty("content", out var content) || !content.TryGetProperty("application/json", out var json)) continue;
+                InspectNested(json.GetProperty("schema"), schemas, new HashSet<string>(StringComparer.Ordinal), offenders);
+            }
+        }
+        Assert.Empty(offenders.Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public void Nested_detector_rejects_a_pending_list_even_inside_a_paged_envelope()
+    {
+        using var schemas = JsonDocument.Parse("""{"PagedResultOfHomeResponse":{"properties":{"items":{"type":"array","items":{"$ref":"#/components/schemas/HomeResponse"}}}},"HomeResponse":{"properties":{"pending":{"type":"array","items":{"type":"string"}}}}}""");
+        using var response = JsonDocument.Parse("""{"$ref":"#/components/schemas/PagedResultOfHomeResponse"}""");
+        var offenders = new HashSet<string>(StringComparer.Ordinal);
+        InspectNested(response.RootElement, schemas.RootElement, [], offenders);
+        Assert.Contains("HomeResponse.pending", offenders);
+        Assert.DoesNotContain("HomeResponse.pending", NestedRelations);
+    }
+
+    private static void InspectNested(JsonElement schema, JsonElement schemas, HashSet<string> visited, HashSet<string> offenders)
+    {
+        if (schema.TryGetProperty("$ref", out var reference))
+        {
+            var name = reference.GetString()!.Split('/')[^1];
+            if (!visited.Add(name)) return;
+            var definition = schemas.GetProperty(name);
+            if (definition.TryGetProperty("properties", out var properties))
+                foreach (var property in properties.EnumerateObject())
+                {
+                    var key = $"{name}.{property.Name}";
+                    var pagedItems = property.Name == "items" && (name.StartsWith("PagedResultOf", StringComparison.Ordinal) || name.StartsWith("CursorResultOf", StringComparison.Ordinal));
+                    foreach (var variant in Variants(property.Value))
+                        if (variant.TryGetProperty("items", out _) && !variant.TryGetProperty("maxItems", out _) && !pagedItems && !NestedRelations.Contains(key)) offenders.Add(key);
+                    InspectNested(property.Value, schemas, visited, offenders);
+                }
+            return;
+        }
+        foreach (var variant in Variants(schema))
+        {
+            if (variant.TryGetProperty("$ref", out _)) InspectNested(variant, schemas, visited, offenders);
+            if (variant.TryGetProperty("items", out var items)) InspectNested(items, schemas, visited, offenders);
+            if (variant.TryGetProperty("additionalProperties", out var values) && values.ValueKind == JsonValueKind.Object) InspectNested(values, schemas, visited, offenders);
+        }
+    }
+
+    private static IEnumerable<JsonElement> Variants(JsonElement schema)
+    {
+        yield return schema;
+        foreach (var composition in new[] { "anyOf", "oneOf", "allOf" })
+            if (schema.TryGetProperty(composition, out var variants))
+                foreach (var variant in variants.EnumerateArray())
+                    foreach (var nested in Variants(variant)) yield return nested;
+    }
     private static readonly Assembly ApiAssembly = Assembly.Load("ArquitecturaBaseMultitenant.Api");
     private static readonly HashSet<string> Catalogs = new(StringComparer.Ordinal)
     {

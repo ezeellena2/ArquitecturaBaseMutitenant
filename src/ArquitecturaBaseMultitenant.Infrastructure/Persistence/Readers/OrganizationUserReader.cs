@@ -220,7 +220,7 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
                                    equals new { company.TenantId, CompanyId = company.Id }
                                where membership.TenantId == tenantId && memberIds.Contains(membership.MemberId)
                                orderby company.Name
-                               select new { membership.MemberId, membership.CompanyId, company.Name, membership.Status })
+                               select new { membership.MemberId, membership.CompanyId, company.Name, membership.Status, CompanyStatus = company.Status })
             .ToArrayAsync(cancellationToken);
         var companyRoles = await (from assignment in context.RoleAssignments.AsNoTracking()
                                   join role in context.Roles.AsNoTracking()
@@ -238,7 +238,7 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
         var companiesByMember = companies.GroupBy(row => row.MemberId).ToDictionary(group => group.Key,
             group => (IReadOnlyList<OrganizationUserCompanyRow>)[.. group.Select(row =>
                 new OrganizationUserCompanyRow(row.CompanyId, row.Name, row.Status,
-                    companyRolesByMembership.GetValueOrDefault((row.MemberId, row.CompanyId), []))) ]);
+                    companyRolesByMembership.GetValueOrDefault((row.MemberId, row.CompanyId), []), row.CompanyStatus)) ]);
 
         var invitations = await context.Invitations.AsNoTracking()
             .Where(invitation => invitation.TenantId == tenantId && memberIds.Contains(invitation.MemberId)

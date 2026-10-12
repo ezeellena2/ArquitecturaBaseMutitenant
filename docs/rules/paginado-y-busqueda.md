@@ -39,7 +39,7 @@
 
 ## Lo verifica
 - `HarnessTests` (E0): formato y referencias de la ficha.
-- `GrowingCollectionContractTests` (E0), correctivo C9: detecta arrays e interfaces de colección HTTP, permite sólo catálogos cerrados o adaptadores legacy acotados con sucesora paginada y verifica los límites publicados.
+- `GrowingCollectionContractTests` (E0), correctivo C9: detecta arrays e interfaces de colección HTTP también dentro de respuestas anidadas, permite sólo catálogos cerrados o adaptadores legacy acotados con sucesora paginada y verifica los límites publicados; cada relación anidada permitida se declara por propiedad. `HomeResponse.Pending` es el adaptador vacío (`maxItems: 0`); los pendientes HTTP van en los grupos acotados.
 
 ## Detalle
 [backend.md §9, "Paginado, orden y búsqueda"](../architecture/backend.md#paginado-orden-y-búsqueda)

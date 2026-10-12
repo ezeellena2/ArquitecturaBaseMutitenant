@@ -7,7 +7,7 @@ namespace ArquitecturaBaseMultitenant.Application.Models.Home;
 /// solo tiene roles en empresas ve «Tus empresas». Debajo, «Para resolver».
 /// </summary>
 public sealed record HomeResponse(HomeOrganizationSummary? Organization, IReadOnlyList<HomeCompanyCard> Companies,
-    IReadOnlyList<PendingItem> Pending, IReadOnlyList<PendingGroup>? PendingGroups = null);
+    [property: MaxLength(0)] IReadOnlyList<PendingItem> Pending, IReadOnlyList<PendingGroup>? PendingGroups = null);
 
 /// <summary>Un tipo de pendiente y su ámbito: total real y primeras filas ordenadas en SQL.</summary>
 public sealed record PendingGroup(string Area, string Kind, int TotalCount,

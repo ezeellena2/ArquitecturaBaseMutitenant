@@ -32,7 +32,7 @@ public sealed record OrganizationUserRoleRow(Guid Id, string Name, bool IsSystem
     Guid? CompanyId);
 
 public sealed record OrganizationUserCompanyRow(Guid CompanyId, string CompanyName,
-    CompanyMembershipStatus Status, IReadOnlyList<OrganizationUserRoleRow> Roles);
+    CompanyMembershipStatus Status, IReadOnlyList<OrganizationUserRoleRow> Roles, CompanyStatus? CompanyStatus = null);
 
 /// <summary>Una persona de la organización; <c>State</c> lo calcula el reader en SQL (OrganizationUserStatePolicy).</summary>
 public sealed record OrganizationUserRow(Guid MemberId, Guid? UserId, string DisplayName, Email? Email,

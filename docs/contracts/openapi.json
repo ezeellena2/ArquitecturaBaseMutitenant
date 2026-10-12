@@ -58154,6 +58154,7 @@
             }
           },
           "pending": {
+            "maxItems": 0,
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/PendingItem"
@@ -59114,6 +59115,16 @@
             "items": {
               "$ref": "#/components/schemas/OrganizationUserRoleRow"
             }
+          },
+          "companyStatus": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CompanyStatus"
+              }
+            ]
           }
         }
       },
@@ -62206,6 +62217,12 @@
           "createdAtUtc": {
             "type": "string",
             "format": "date-time"
+          },
+          "companyName": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
         "description": "Representación HTTP-independent de un rol; version conserva el xmin de PostgreSQL."
