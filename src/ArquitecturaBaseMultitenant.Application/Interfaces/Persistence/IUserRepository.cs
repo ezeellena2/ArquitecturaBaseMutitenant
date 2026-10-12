@@ -15,7 +15,7 @@ public interface IUserRepository
     Task<Result> RequestDeletionByOperatorAsync(Guid userId, Guid operatorId, string reason, DateTime requestedAtUtc,
         int graceDays, CancellationToken cancellationToken);
     Task<Result> CancelDeletionAsync(Guid userId, DateTime cancelledAtUtc, CancellationToken cancellationToken);
-    Task<Result> CompleteDeletionAsync(Guid userId, DateTime deletedAtUtc, string deletedDisplayName,
+    Task<Result> CompleteDeletionAsync(Guid userId, DateTime deletedAtUtc,
         CancellationToken cancellationToken);
     /// <summary>Suspende una cuenta Active dentro de la UoW del llamador.</summary>
     Task<Result> SuspendAsync(Guid userId, CancellationToken cancellationToken);
@@ -36,7 +36,7 @@ public interface IUserRepository
     Task<Result> AcceptOperatorInvitationAsync(Guid userId, DateTime acceptedAtUtc, CancellationToken cancellationToken);
 
     /// <summary>Revoca la invitación: la identidad queda eliminada y anónima, fuera de Cuentas.</summary>
-    Task<Result> DiscardOperatorInvitationAsync(Guid userId, DateTime discardedAtUtc, string deletedDisplayName,
+    Task<Result> DiscardOperatorInvitationAsync(Guid userId, DateTime discardedAtUtc,
         CancellationToken cancellationToken);
 
     Task<UserAccountRow> CreateAsync(string? displayName, string culture, string timeZoneId,

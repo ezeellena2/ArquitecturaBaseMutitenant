@@ -16,6 +16,7 @@ internal static class OpenApiExtensions
     public static IServiceCollection AddOpenApiDocumentation(this IServiceCollection services)
     {
         services.AddSingleton<IHttpContractContributor, IdentityContractContributor>();
+        services.AddSingleton<IHttpContractContributor, ValidationContractContributor>();
         services.AddOpenApi(options =>
         {
             options.AddSchemaTransformer((schema, context, _) =>

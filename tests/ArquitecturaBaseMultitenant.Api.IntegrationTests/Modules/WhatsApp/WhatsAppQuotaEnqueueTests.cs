@@ -119,7 +119,7 @@ public sealed class WhatsAppQuotaEnqueueTests(ApiFactory factory) : IClassFixtur
                 if (state is "deleted" or "pendingDeletion")
                 {
                     Assert.True((await users.RequestDeletionAsync(owner, "Fixture deletion", _clock.GetUtcNow().UtcDateTime.AddDays(-31), 30, ct)).IsSuccess);
-                    if (state == "deleted") Assert.True((await users.CompleteDeletionAsync(owner, _clock.GetUtcNow().UtcDateTime, "Deleted", ct)).IsSuccess);
+                    if (state == "deleted") Assert.True((await users.CompleteDeletionAsync(owner, _clock.GetUtcNow().UtcDateTime, ct)).IsSuccess);
                 }
                 return Result.Success();
             }, CommitPolicy.OnSuccess, Ct);

@@ -88,7 +88,7 @@ internal sealed class TenantAdministrationService(IPlatformReader reader, Platfo
             var tenant = row.Tenant;
             var state = row.LastStateChange;
             var owners = row.Owners.Select(owner => owner.IdentityStatus == UserStatus.Deleted
-                ? owner with { DisplayName = ErrorTexts.Get("Legal.AccountDeletion.DeletedDisplayName"), Email = null }
+                ? owner with { DisplayName = FormattingTexts.DeletedAccount, Email = null }
                 : owner).ToArray();
             var contact = owners.FirstOrDefault();
             return new PlatformTenantDetailResponse(tenant.Id, tenant.Name, tenant.Slug, tenant.Status,
@@ -116,7 +116,7 @@ internal sealed class TenantAdministrationService(IPlatformReader reader, Platfo
     private static string ActorName(PlatformAuditAccount? account) => account switch
     {
         null => AuditTexts.UnknownAccount(),
-        { IsDeleted: true } => ErrorTexts.Get("Legal.AccountDeletion.DeletedDisplayName"),
+        { IsDeleted: true } => FormattingTexts.DeletedAccount,
         { DisplayName: { Length: > 0 } name } => name,
         { PrimaryEmail: { } email } => PersonalDataMask.Email(email.Value),
         _ => AuditTexts.UnknownAccount(),

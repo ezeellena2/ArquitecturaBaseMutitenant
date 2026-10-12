@@ -103,7 +103,7 @@ internal sealed class PlatformAuditService(ISecurityEventReader reader, IUserRep
     private static string Name(PlatformAuditAccount? account) => account switch
     {
         null => AuditTexts.UnknownAccount(),
-        { IsDeleted: true } => ErrorTexts.Get("Legal.AccountDeletion.DeletedDisplayName"),
+        { IsDeleted: true } => FormattingTexts.DeletedAccount,
         { DisplayName: { Length: > 0 } name } => name,
         { PrimaryEmail: { } email } => PersonalDataMask.Email(email.Value),
         _ => AuditTexts.UnknownAccount(),

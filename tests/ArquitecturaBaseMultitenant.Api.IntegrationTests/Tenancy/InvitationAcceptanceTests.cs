@@ -364,7 +364,7 @@ public sealed class InvitationAcceptanceTests(ApiFactory factory)
                 var user = await services.GetRequiredService<ApplicationDbContext>().Users.SingleAsync(row => row.Id == issued.RecipientId, ct);
                 var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
                 Assert.True((state == "Suspended" ? user.Suspend() : user.RequestDeletion("Test", nowUtc.AddDays(-31), 30)).IsSuccess);
-                if (state == "Deleted") Assert.True(user.CompleteDeletion(nowUtc, "Cuenta eliminada").IsSuccess);
+                if (state == "Deleted") Assert.True(user.CompleteDeletion(nowUtc).IsSuccess);
                 return Result.Success();
             }, CommitPolicy.OnSuccess, Ct);
         }

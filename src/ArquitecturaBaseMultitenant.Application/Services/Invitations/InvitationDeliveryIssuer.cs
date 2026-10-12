@@ -63,7 +63,7 @@ internal sealed class InvitationDeliveryIssuer(IEnumerable<IInvitationChannel> c
         var publicOrigin = origin.Value ?? throw new InvalidOperationException("The public origin is required for invitation links.");
         var url = new Uri(publicOrigin, "/invitacion").AbsoluteUri + "#" + token;
         var inviterName = inviter.Status == UserStatus.Deleted
-            ? ErrorTexts.Get("Legal.AccountDeletion.DeletedDisplayName") : inviter.DisplayName ?? organization.Name;
+            ? FormattingTexts.DeletedAccount : inviter.DisplayName ?? organization.Name;
         var usesEmailCode = recipientId is { } userId && (await methods.ListByUserIdAsync(userId, ct))
             .Any(method => method.Type == LoginMethodType.Email && method.VerifiedAtUtc is not null
                 && method.Value == invitation.Destination.Value);

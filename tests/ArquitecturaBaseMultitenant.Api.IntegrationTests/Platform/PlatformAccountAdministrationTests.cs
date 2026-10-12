@@ -409,7 +409,7 @@ public sealed class PlatformAccountAdministrationTests(ApiFactory factory)
         Assert.True(pending.RequestDeletion("Ya no uso el servicio.", now, 30).IsSuccess);
         var deleted = User("Damián " + prefix);
         Assert.True(deleted.RequestDeletion("Baja", now.AddDays(-31), 30).IsSuccess);
-        Assert.True(deleted.CompleteDeletion(now, "Cuenta eliminada").IsSuccess);
+        Assert.True(deleted.CompleteDeletion(now).IsSuccess);
         var recovery = User("Elena " + prefix);
         var suspendedWithoutMethods = User("Fabián " + prefix);
         Assert.True(suspendedWithoutMethods.Suspend().IsSuccess);

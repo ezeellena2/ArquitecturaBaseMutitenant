@@ -80,7 +80,7 @@ internal sealed class InvitationPreviewBuilder(IInvitationReader invitations, IU
     {
         var grant = await invitations.FindGrantAsync(row.MemberId, row.InviterUserId, ct);
         return new(state, row.TenantId, row.OrganizationName, row.Destination,
-            row.InviterDeleted ? ErrorTexts.Get("Legal.AccountDeletion.DeletedDisplayName") : row.InviterName ?? row.OrganizationName,
+            row.InviterDeleted ? FormattingTexts.DeletedAccount : row.InviterName ?? row.OrganizationName,
             row.IssuedAtUtc, row.ExpiresAtUtc,
             InviterRoles: row.InviterDeleted ? [] : RoleNames(grant.InviterRoles), Companies: grant.Companies,
             Roles: RoleNames(grant.Roles));

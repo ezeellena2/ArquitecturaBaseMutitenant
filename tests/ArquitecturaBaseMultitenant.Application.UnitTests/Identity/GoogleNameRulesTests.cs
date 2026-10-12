@@ -41,16 +41,16 @@ public sealed class GoogleNameRulesTests
         if (invitation)
         {
             user.InvitePlatformOperator(nowUtc.AddDays(7));
-            Assert.True(user.DiscardOperatorInvitation(nowUtc, "Cuenta eliminada").IsSuccess);
+            Assert.True(user.DiscardOperatorInvitation(nowUtc).IsSuccess);
         }
         else
         {
             Assert.True(user.RequestDeletion("Prueba", nowUtc, 30).IsSuccess);
-            Assert.True(user.CompleteDeletion(nowUtc.AddDays(30), "Cuenta eliminada").IsSuccess);
+            Assert.True(user.CompleteDeletion(nowUtc.AddDays(30)).IsSuccess);
         }
         Assert.Null(user.FirstName);
         Assert.Null(user.LastName);
-        Assert.Equal("Cuenta eliminada", user.DisplayName);
+        Assert.Null(user.DisplayName);
     }
 
     private static void Fill(ApplicationUser user, string first, string last) =>

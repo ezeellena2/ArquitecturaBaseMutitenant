@@ -10,6 +10,8 @@ using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,14 +20,6 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITenantContext tenantContext)
     : IOrganizationAuditReader
 {
-    private static readonly Dictionary<string, string[]> Categories = new(StringComparer.Ordinal)
-    {
-        ["users"] = ["Member", "Invitation"],
-        ["roles"] = ["Role", "RoleAssignment"],
-        ["companies"] = ["Company", "CompanyMembership"],
-        ["settings"] = ["TenantSettings", "TenantDomain"],
-        ["organization"] = ["PublicPage", nameof(Tenant)],
-    };
 
     /// <summary>
     /// Las acciones de Plataforma sobre la organización que muestra su auditoría, como el tablero Auditoria-Org, con el
@@ -99,8 +93,9 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
         var actors = actorIds.Length == 0
             ? new Dictionary<Guid, string?>()
             : await context.Users.AsNoTracking().Where(user => actorIds.Contains(user.Id))
-                .Select(user => new { user.Id, user.DisplayName })
-                .ToDictionaryAsync(user => user.Id, user => user.DisplayName, cancellationToken);
+                .Select(user => new { user.Id, user.DisplayName, user.Status })
+                .ToDictionaryAsync(user => user.Id, user => user.Status == UserStatus.Deleted
+                    ? FormattingTexts.DeletedAccount : user.DisplayName, cancellationToken);
         // «Quién» del detalle: nombre · correo (el verificado, primero el principal). Quien ya no es miembro de la
         // organización se muestra solo con su nombre (D7).
         var tenantId = tenantContext.RequiredTenantId;
@@ -132,7 +127,7 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
     private static bool ShowsPlatformActions(ListOrganizationAuditRequest request) =>
         string.IsNullOrWhiteSpace(request.Search) && request.ActorId is null
         && (request.ActorKind is null or nameof(AuditActorKind.PlatformOperator))
-        && (request.Category is null || Categories[request.Category].Contains(nameof(Tenant)));
+        && (request.Category is null || OrganizationAuditCategories.EntityTypes[request.Category].Contains(nameof(Tenant)));
 
     private IQueryable<SecurityEvent> PlatformActionsOf(Guid tenantId, DateTime? startUtc, DateTime? endUtc)
     {
@@ -191,8 +186,9 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
         var userNames = userIds.Length == 0
             ? new Dictionary<Guid, string?>()
             : await context.Users.AsNoTracking().Where(user => userIds.Contains(user.Id))
-                .Select(user => new { user.Id, user.DisplayName })
-                .ToDictionaryAsync(user => user.Id, user => user.DisplayName, cancellationToken);
+                .Select(user => new { user.Id, user.DisplayName, user.Status })
+                .ToDictionaryAsync(user => user.Id, user => user.Status == UserStatus.Deleted
+                    ? FormattingTexts.DeletedAccount : user.DisplayName, cancellationToken);
         var memberNames = members.ToDictionary(member => member.Id,
             member => member.UserId is { } userId ? userNames.GetValueOrDefault(userId) : null);
         // Quien todavía no tiene cuenta ni nombre se nombra por el correo de su última invitación, enmascarado.
@@ -319,8 +315,9 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
         var names = actorIds.Length == 0
             ? new Dictionary<Guid, string?>()
             : await context.Users.AsNoTracking().Where(user => actorIds.Contains(user.Id))
-                .Select(user => new { user.Id, user.DisplayName })
-                .ToDictionaryAsync(user => user.Id, user => user.DisplayName, cancellationToken);
+                .Select(user => new { user.Id, user.DisplayName, user.Status })
+                .ToDictionaryAsync(user => user.Id, user => user.Status == UserStatus.Deleted
+                    ? FormattingTexts.DeletedAccount : user.DisplayName, cancellationToken);
         return actors.Select(actor => new OrganizationAuditActorRow(actor.ActorId, actor.ActorKind,
                 actor.ActorId is { } id ? names.GetValueOrDefault(id) : null))
             .OrderBy(actor => Array.IndexOf(ActorOrder, actor.ActorKind))
@@ -358,7 +355,7 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
         if (endUtc is { } end) entries = entries.Where(entry => entry.OccurredAtUtc < end);
         if (request.Category is { } category)
         {
-            var entityTypes = Categories[category];
+            var entityTypes = OrganizationAuditCategories.EntityTypes[category];
             entries = entries.Where(entry => entityTypes.Contains(entry.EntityType));
         }
 

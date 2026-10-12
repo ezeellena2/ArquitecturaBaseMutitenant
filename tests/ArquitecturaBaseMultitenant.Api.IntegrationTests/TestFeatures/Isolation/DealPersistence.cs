@@ -33,7 +33,7 @@ internal sealed class DealReader(ApplicationDbContext context) : IDealReader
 
     private static IQueryable<DealResponse> Project(IQueryable<Deal> query)
     {
-        var deletedDisplayName = ErrorTexts.Get("Legal.AccountDeletion.DeletedDisplayName");
+        var deletedDisplayName = FormattingTexts.DeletedAccount;
         return query.Select(deal => new DealResponse(deal.Id, deal.Summary,
             deal.ConsumerCopyDeleted ? deletedDisplayName : deal.ConsumerName, deal.Status, deal.Version));
     }

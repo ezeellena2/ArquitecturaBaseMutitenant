@@ -9,7 +9,6 @@ namespace ArquitecturaBaseMultitenant.Application.Validation.Auditing;
 
 internal sealed class ListOrganizationAuditRequestValidator : CursorRequestValidator<ListOrganizationAuditRequest>
 {
-    private static readonly string[] Categories = ["users", "roles", "companies", "settings", "organization"];
     private static readonly string[] Periods = ["0", "7", "30", "all"];
     private static readonly string[] ActorKinds = Enum.GetNames<AuditActorKind>();
 
@@ -24,7 +23,7 @@ internal sealed class ListOrganizationAuditRequestValidator : CursorRequestValid
             .Must(period => period is not null && Periods.Contains(period, StringComparer.Ordinal))
             .WithMessage(_ => ValidationTexts.Required);
         RuleFor(request => request.Category)
-            .Must(category => category is null || Categories.Contains(category, StringComparer.Ordinal))
+            .Must(category => category is null || OrganizationAuditCategories.EntityTypes.ContainsKey(category))
             .WithMessage(_ => ValidationTexts.Required);
         RuleFor(request => request.ActorId)
             .Must(id => id is null || id != Guid.Empty)

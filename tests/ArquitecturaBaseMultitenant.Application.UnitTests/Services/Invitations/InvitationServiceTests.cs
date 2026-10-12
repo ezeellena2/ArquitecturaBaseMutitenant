@@ -122,7 +122,7 @@ public sealed class InvitationServiceTests
 
         var preview = await setup.Service.PreviewAsync(new PreviewInvitationRequest("valid"), Ct);
 
-        Assert.Equal(ErrorTexts.Get("Legal.AccountDeletion.DeletedDisplayName"), preview.Value.InviterName);
+        Assert.Equal(FormattingTexts.DeletedAccount, preview.Value.InviterName);
     }
 
     [Fact]

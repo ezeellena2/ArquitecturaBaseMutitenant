@@ -39643,6 +39643,13 @@
             "name": "Category",
             "in": "query",
             "schema": {
+              "enum": [
+                "users",
+                "roles",
+                "companies",
+                "settings",
+                "organization"
+              ],
               "type": "string"
             }
           },
@@ -39765,6 +39772,13 @@
             "name": "Category",
             "in": "query",
             "schema": {
+              "enum": [
+                "users",
+                "roles",
+                "companies",
+                "settings",
+                "organization"
+              ],
               "type": "string"
             }
           },
@@ -53942,6 +53956,7 @@
         "type": "object",
         "properties": {
           "token": {
+            "maxLength": 4096,
             "type": [
               "null",
               "string"
@@ -54181,6 +54196,7 @@
         ],
         "properties": {
           "email": {
+            "maxLength": 254,
             "type": [
               "null",
               "string"
@@ -56190,18 +56206,21 @@
         "type": "object",
         "properties": {
           "organizationName": {
+            "maxLength": 120,
             "type": [
               "null",
               "string"
             ]
           },
           "slug": {
+            "maxLength": 63,
             "type": [
               "null",
               "string"
             ]
           },
           "firstCompanyName": {
+            "maxLength": 120,
             "type": [
               "null",
               "string"
@@ -56280,12 +56299,14 @@
         "type": "object",
         "properties": {
           "type": {
+            "maxLength": 16,
             "type": [
               "null",
               "string"
             ]
           },
           "number": {
+            "maxLength": 32,
             "type": [
               "null",
               "string"
@@ -56390,6 +56411,7 @@
             "format": "uint32"
           },
           "reason": {
+            "maxLength": 500,
             "type": [
               "null",
               "string"
@@ -56835,6 +56857,7 @@
         "type": "object",
         "properties": {
           "name": {
+            "maxLength": 120,
             "type": [
               "null",
               "string"
@@ -56889,18 +56912,21 @@
         "type": "object",
         "properties": {
           "name": {
+            "maxLength": 120,
             "type": [
               "null",
               "string"
             ]
           },
           "firstCompanyName": {
+            "maxLength": 120,
             "type": [
               "null",
               "string"
             ]
           },
           "ownerEmail": {
+            "maxLength": 254,
             "type": [
               "null",
               "string"
@@ -56924,12 +56950,14 @@
         "type": "object",
         "properties": {
           "name": {
+            "maxLength": 60,
             "type": [
               "null",
               "string"
             ]
           },
           "description": {
+            "maxLength": 500,
             "type": [
               "null",
               "string"
@@ -57658,6 +57686,7 @@
         "type": "object",
         "properties": {
           "email": {
+            "maxLength": 254,
             "type": [
               "null",
               "string"
@@ -57688,6 +57717,7 @@
         "type": "object",
         "properties": {
           "email": {
+            "maxLength": 254,
             "type": [
               "null",
               "string"
@@ -57732,6 +57762,7 @@
             ]
           },
           "text": {
+            "maxLength": 100000,
             "type": [
               "null",
               "string"
@@ -59302,6 +59333,7 @@
             "format": "uint32"
           },
           "reason": {
+            "maxLength": 500,
             "type": [
               "null",
               "string"
@@ -59616,6 +59648,7 @@
         "type": "object",
         "properties": {
           "reason": {
+            "maxLength": 500,
             "type": [
               "null",
               "string"
@@ -60620,6 +60653,7 @@
             "format": "uint32"
           },
           "reason": {
+            "maxLength": 500,
             "type": [
               "null",
               "string"
@@ -60695,6 +60729,7 @@
         ],
         "properties": {
           "previousEmail": {
+            "maxLength": 254,
             "type": [
               "null",
               "string"
@@ -61080,6 +61115,7 @@
         "type": "object",
         "properties": {
           "reason": {
+            "maxLength": 500,
             "type": [
               "null",
               "string"
@@ -61136,6 +61172,7 @@
         ],
         "properties": {
           "email": {
+            "maxLength": 254,
             "type": [
               "null",
               "string"
@@ -61221,6 +61258,7 @@
         ],
         "properties": {
           "email": {
+            "maxLength": 254,
             "type": [
               "null",
               "string"
@@ -61424,6 +61462,7 @@
         ],
         "properties": {
           "email": {
+            "maxLength": 254,
             "type": [
               "null",
               "string"
@@ -61562,6 +61601,7 @@
         ],
         "properties": {
           "email": {
+            "maxLength": 254,
             "type": [
               "null",
               "string"
@@ -61576,6 +61616,7 @@
             "description": "Secreto de 32 bytes, base64url sin padding. Solo cuerpo/memoria; sin logs."
           },
           "previousEmail": {
+            "maxLength": 254,
             "type": [
               "null",
               "string"
@@ -61874,6 +61915,7 @@
         "type": "object",
         "properties": {
           "name": {
+            "maxLength": 120,
             "type": [
               "null",
               "string"
@@ -61927,12 +61969,14 @@
         "type": "object",
         "properties": {
           "firstName": {
+            "maxLength": 100,
             "type": [
               "null",
               "string"
             ]
           },
           "lastName": {
+            "maxLength": 100,
             "type": [
               "null",
               "string"
@@ -62039,6 +62083,7 @@
         "type": "object",
         "properties": {
           "name": {
+            "maxLength": 120,
             "type": [
               "null",
               "string"
@@ -62230,6 +62275,7 @@
             "format": "uint32"
           },
           "reason": {
+            "maxLength": 500,
             "type": [
               "null",
               "string"
@@ -62261,6 +62307,8 @@
             ]
           },
           "maxOwnedOrganizations": {
+            "maximum": 50,
+            "minimum": 1,
             "type": [
               "null",
               "integer"
@@ -62268,12 +62316,14 @@
             "format": "int32"
           },
           "salesEmail": {
+            "maxLength": 254,
             "type": [
               "null",
               "string"
             ]
           },
           "supportEmail": {
+            "maxLength": 254,
             "type": [
               "null",
               "string"
@@ -62287,6 +62337,7 @@
             "format": "uint32"
           },
           "reason": {
+            "maxLength": 500,
             "type": [
               "null",
               "string"
@@ -62301,24 +62352,28 @@
         "type": "object",
         "properties": {
           "slug": {
+            "maxLength": 63,
             "type": [
               "null",
               "string"
             ]
           },
           "name": {
+            "maxLength": 120,
             "type": [
               "null",
               "string"
             ]
           },
           "description": {
+            "maxLength": 500,
             "type": [
               "null",
               "string"
             ]
           },
           "contactEmail": {
+            "maxLength": 254,
             "type": [
               "null",
               "string"
@@ -62335,12 +62390,14 @@
             ]
           },
           "address": {
+            "maxLength": 500,
             "type": [
               "null",
               "string"
             ]
           },
           "website": {
+            "maxLength": 2048,
             "type": [
               "null",
               "string"
@@ -62374,12 +62431,14 @@
         "type": "object",
         "properties": {
           "name": {
+            "maxLength": 60,
             "type": [
               "null",
               "string"
             ]
           },
           "description": {
+            "maxLength": 500,
             "type": [
               "null",
               "string"
@@ -62478,6 +62537,7 @@
         ],
         "properties": {
           "email": {
+            "maxLength": 254,
             "type": [
               "null",
               "string"
@@ -62597,6 +62657,7 @@
         ],
         "properties": {
           "email": {
+            "maxLength": 254,
             "type": [
               "null",
               "string"
@@ -62688,6 +62749,7 @@
         ],
         "properties": {
           "email": {
+            "maxLength": 254,
             "type": [
               "null",
               "string"
@@ -62888,5 +62950,12 @@
     {
       "name": "Legal"
     }
+  ],
+  "x-organization-audit-categories": [
+    "users",
+    "roles",
+    "companies",
+    "settings",
+    "organization"
   ]
 }

@@ -139,7 +139,6 @@
   <data name="Legal.Document.VersionChanged" xml:space="preserve"><value>Los términos cambiaron. Volvé a leerlos y aceptá la versión vigente.</value></data>
   <data name="Legal.AccountDeletion.AlreadyPending" xml:space="preserve"><value>Ya pediste la baja de tu cuenta.</value></data>
   <data name="Legal.AccountDeletion.Blocked" xml:space="preserve"><value>Hay pendientes que impiden dar de baja tu cuenta.</value></data>
-  <data name="Legal.AccountDeletion.DeletedDisplayName" xml:space="preserve"><value>Cuenta eliminada</value></data>
   <data name="Legal.AccountDeletion.GraceExpired" xml:space="preserve"><value>El plazo para cancelar la baja venció.</value></data>
   <data name="Legal.AccountDeletion.InvalidReason" xml:space="preserve"><value>Escribí un motivo de hasta 500 caracteres.</value></data>
   <data name="Legal.AccountDeletion.LastAdmin" xml:space="preserve"><value>Antes de pedir la baja, cada Organización activa debe tener otra persona con el rol Dueño.</value></data>

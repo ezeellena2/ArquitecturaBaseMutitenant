@@ -88,7 +88,7 @@ internal sealed class PlatformAccountService(IPlatformAccountReader reader, ILog
 
     // La identidad eliminada guarda el nombre en la cultura del worker; se traduce al leer.
     private static string? DisplayName(PlatformAccountRow row) => row.State == PlatformAccountState.Deleted
-        ? ErrorTexts.Get("Legal.AccountDeletion.DeletedDisplayName") : row.DisplayName;
+        ? FormattingTexts.DeletedAccount : row.DisplayName;
 
     private static PlatformAccountKind Kind(PlatformAccountRow row) =>
         row.IsOperator ? PlatformAccountKind.Operator : PlatformAccountKind.Person;

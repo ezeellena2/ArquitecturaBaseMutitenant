@@ -189,12 +189,11 @@ public sealed class ApplicationUser : IdentityUser<Guid>, IVersioned
     /// Revocar: la identidad de una invitación sin aceptar queda eliminada y anónima, sin pasar por la gracia. Conserva
     /// el vencimiento como marca de invitación revocada, que no figura en Cuentas.
     /// </summary>
-    public Result DiscardOperatorInvitation(DateTime discardedAtUtc, string deletedDisplayName)
+    public Result DiscardOperatorInvitation(DateTime discardedAtUtc)
     {
         RequireUtc(discardedAtUtc);
-        ArgumentException.ThrowIfNullOrWhiteSpace(deletedDisplayName);
         if (!HasPendingOperatorInvitation) return PlatformOperatorErrors.NoPendingInvitation;
-        Anonymize(discardedAtUtc, deletedDisplayName);
+        Anonymize(discardedAtUtc);
         return Result.Success();
     }
 
@@ -219,21 +218,20 @@ public sealed class ApplicationUser : IdentityUser<Guid>, IVersioned
 
     public Result CancelDeletion(DateTime cancelledAtUtc) => ApplyLifecycle(Lifecycle.CancelDeletion(cancelledAtUtc));
 
-    public Result CompleteDeletion(DateTime deletedAtUtc, string deletedDisplayName)
+    public Result CompleteDeletion(DateTime deletedAtUtc)
     {
         RequireUtc(deletedAtUtc);
-        ArgumentException.ThrowIfNullOrWhiteSpace(deletedDisplayName);
         if (Status == UserStatus.Deleted) return Result.Success();
         var completed = ApplyLifecycle(Lifecycle.CompleteDeletion(deletedAtUtc));
-        if (completed.IsSuccess) Anonymize(deletedAtUtc, deletedDisplayName);
+        if (completed.IsSuccess) Anonymize(deletedAtUtc);
         return completed;
     }
 
-    private void Anonymize(DateTime deletedAtUtc, string deletedDisplayName)
+    private void Anonymize(DateTime deletedAtUtc)
     {
         Status = UserStatus.Deleted;
         DeletedAtUtc = deletedAtUtc;
-        DisplayName = deletedDisplayName;
+        DisplayName = null;
         FirstName = LastName = null;
         Email = NormalizedEmail = PhoneNumber = PasswordHash = null;
         EmailConfirmed = PhoneNumberConfirmed = TwoFactorEnabled = IsPlatformOperator = false;

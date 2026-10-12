@@ -29,7 +29,7 @@ internal sealed class PlatformPublicSiteWriter(IPublicPageRepository pages, ITen
         changes.AddBoolean("publicPage.publishBlocked", wasBlocked, page.PublishBlockedAtUtc is not null);
         audit.Record(tenantId, blocked ? SecurityEventType.PublicPageUnpublished : SecurityEventType.PublicPagePublicationAllowed,
             request.Reason!, changes);
-        auditLog.Record(AuditAction.Updated, "PublicPage", page.Id,
+        auditLog.Record(AuditAction.Updated, nameof(PublicPage), page.Id,
             new Dictionary<string, object?> { ["isPublished"] = page.IsPublished, ["publishBlocked"] = blocked });
         await notices.EnqueuePageModerationAsync(tenant, blocked, ct);
         return page;
