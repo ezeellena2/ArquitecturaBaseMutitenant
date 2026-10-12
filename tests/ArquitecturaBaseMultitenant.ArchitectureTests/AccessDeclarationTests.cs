@@ -52,9 +52,7 @@ public sealed partial class AccessDeclarationTests
         var controllers = typeof(MeController).Assembly.GetTypes()
             .Where(type => type is { IsClass: true, IsAbstract: false }
                 && type.IsSubclassOf(typeof(ControllerBase)));
-        var violations = controllers.SelectMany(controller => controller
-            .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)
-            .Where(method => method.GetCustomAttributes<HttpMethodAttribute>(inherit: true).Any())
+        var violations = controllers.SelectMany(controller => Actions(controller)
             .Select(method => Violation(controller, method))
             .Where(message => message is not null));
 
@@ -62,12 +60,25 @@ public sealed partial class AccessDeclarationTests
     }
 
     [Fact]
+    public void Inherited_actions_use_the_access_of_the_concrete_controller_and_cannot_hide_missing_access()
+    {
+        var denied = Assert.Single(Actions(typeof(InheritedMissingAccessProbe)));
+        Assert.NotNull(Violation(typeof(InheritedMissingAccessProbe), denied));
+        var allowed = Assert.Single(Actions(typeof(InheritedConsumerProbe)));
+        Assert.Null(Violation(typeof(InheritedConsumerProbe), allowed));
+    }
+
+    private static IEnumerable<MethodInfo> Actions(Type controller) => controller
+        .GetMethods(BindingFlags.Instance | BindingFlags.Public)
+        .Where(method => method.GetCustomAttributes<HttpMethodAttribute>(inherit: true).Any());
+
+    [Fact]
     public void Anonymous_controllers_are_an_explicit_closed_list()
     {
         var actual = typeof(MeController).Assembly.GetTypes()
             .Where(type => type.IsSubclassOf(typeof(ControllerBase))
                 && (type.IsDefined(typeof(AllowAnonymousAttribute), inherit: true)
-                    || type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)
+                    || type.GetMethods(BindingFlags.Instance | BindingFlags.Public)
                         .Any(method => method.IsDefined(typeof(AllowAnonymousAttribute), inherit: true)))
                 && !type.GetCustomAttributes(inherit: true)
                     .Any(attribute => attribute.GetType().Name == "PublicSiteAttribute"))
@@ -137,4 +148,14 @@ public sealed partial class AccessDeclarationTests
     {
         [HttpPost] public OkResult Platform() => Ok();
     }
+
+    private abstract class InheritedActionProbeBase : ControllerBase
+    {
+        [HttpGet] public OkResult Read() => Ok();
+    }
+
+    private sealed class InheritedMissingAccessProbe : InheritedActionProbeBase;
+
+    [Access(Access.Consumer)]
+    private sealed class InheritedConsumerProbe : InheritedActionProbeBase;
 }

@@ -55,9 +55,16 @@ public sealed partial class ControllerOutputContractTests
         Assert.False(IsModuleNamespace("ArquitecturaBaseMultitenant.Application.Modules.Example.Sub.Models", "Application", "Models"));
     }
 
+    [Fact]
+    public void Detection_includes_invalid_outputs_in_inherited_controller_actions()
+    {
+        Assert.Equal([typeof(ProbeResponse)], DeclaredOutputs(typeof(InheritedProbeController))
+            .Select(output => output.Type).Where(type => !IsAllowedOutput(type)));
+    }
+
     private static IEnumerable<(string Action, Type Type)> DeclaredOutputs(Type controller) =>
-        controller.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
-            .Where(method => !method.IsSpecialName && !method.IsDefined(typeof(NonActionAttribute), inherit: true))
+        controller.GetMethods(BindingFlags.Public | BindingFlags.Instance)
+            .Where(method => method.DeclaringType != typeof(object) && !method.IsSpecialName && !method.IsDefined(typeof(NonActionAttribute), inherit: true))
             .SelectMany(method => method.GetCustomAttributes<ProducesResponseTypeAttribute>(inherit: true)
                 .Where(attribute => attribute.Type != typeof(void))
                 .Select(attribute => ($"{controller.Name}.{method.Name}", attribute.Type)));
@@ -93,6 +100,15 @@ public sealed partial class ControllerOutputContractTests
     private sealed record ProbeResponse(string Value);
 
     private sealed record ProbeHttpResponse(string Value);
+
+    private abstract class ProbeControllerBase : ControllerBase
+    {
+        [HttpGet]
+        [ProducesResponseType<ProbeResponse>(200)]
+        public OkResult Read() => Ok();
+    }
+
+    private sealed class InheritedProbeController : ProbeControllerBase;
 
     private sealed class ProbeController : ControllerBase
     {

@@ -115,8 +115,8 @@ public sealed class GrowingCollectionContractTests
     [Fact]
     public void Growing_JSON_collections_are_paged_or_have_a_verifiable_bounded_legacy_successor()
     {
-        var actions = ApiAssembly.GetTypes().Where(type => typeof(ControllerBase).IsAssignableFrom(type))
-            .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+        var actions = ApiAssembly.GetTypes().Where(type => !type.IsAbstract && typeof(ControllerBase).IsAssignableFrom(type))
+            .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Instance))
             .Where(method => method.IsDefined(typeof(HttpGetAttribute))).ToArray();
         var offenders = actions.Where(method => !Catalogs.Contains(Key(method)))
             .SelectMany(method => method.GetCustomAttributes<ProducesResponseTypeAttribute>()
@@ -140,12 +140,20 @@ public sealed class GrowingCollectionContractTests
     }
 
     [Fact]
+    public void Inherited_collection_routes_use_the_concrete_controller_prefix()
+    {
+        var action = typeof(InheritedCollectionProbe).GetMethod(nameof(CollectionProbeBase.List))!;
+        Assert.Equal("/probe/items", Route(action));
+        Assert.Equal("InheritedCollectionProbe.List", Key(action));
+    }
+
+    [Fact]
     public void Legacy_collection_limits_and_paged_successors_are_published_in_OpenAPI()
     {
         using var document = JsonDocument.Parse(File.ReadAllText(Path.Combine(SolutionRoot.FullPath, "docs", "contracts", "openapi.json")));
         var paths = document.RootElement.GetProperty("paths");
-        foreach (var action in ApiAssembly.GetTypes().Where(type => typeof(ControllerBase).IsAssignableFrom(type))
-                     .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)))
+        foreach (var action in ApiAssembly.GetTypes().Where(type => !type.IsAbstract && typeof(ControllerBase).IsAssignableFrom(type))
+                     .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Instance)))
         {
             if (action.GetCustomAttribute<BoundedLegacyCollectionAttribute>() is not { } legacy) continue;
             // OpenAPI normaliza las restricciones de ASP.NET de parámetros de ruta.
@@ -174,9 +182,19 @@ public sealed class GrowingCollectionContractTests
         : type.IsArray ? type.GetElementType()
         : type.IsGenericType && Collections.Contains(type.GetGenericTypeDefinition()) ? type.GenericTypeArguments[0] : null;
 
-    private static string Key(MethodInfo method) => $"{method.DeclaringType!.Name}.{method.Name}";
+    private static string Key(MethodInfo method) => $"{method.ReflectedType!.Name}.{method.Name}";
     private static string Route(MethodInfo method) => "/" + string.Join("/", new[]
     {
-        method.DeclaringType!.GetCustomAttribute<RouteAttribute>()?.Template.Trim('/'), method.GetCustomAttribute<HttpGetAttribute>()?.Template?.Trim('/'),
+        method.ReflectedType!.GetCustomAttribute<RouteAttribute>()?.Template.Trim('/'), method.GetCustomAttribute<HttpGetAttribute>()?.Template?.Trim('/'),
     }.Where(part => !string.IsNullOrEmpty(part)));
+
+    private abstract class CollectionProbeBase : ControllerBase
+    {
+        [HttpGet("items")]
+        [ProducesResponseType<IReadOnlyList<Guid>>(200)]
+        public OkResult List() => Ok();
+    }
+
+    [Route("probe")]
+    private sealed class InheritedCollectionProbe : CollectionProbeBase;
 }

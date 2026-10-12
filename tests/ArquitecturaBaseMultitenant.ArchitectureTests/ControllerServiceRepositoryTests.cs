@@ -145,6 +145,13 @@ public sealed class ControllerServiceRepositoryTests
     }
 
     [Fact]
+    public void Detector_rejects_persistence_in_an_inherited_action()
+    {
+        Assert.Contains(InvalidActionDependencies(typeof(InheritedEndpoint)),
+            description => description.Contains("IControlReader", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void Detector_rejects_reference_catalog_dependencies()
     {
         Assert.Contains(ForbiddenControllerDependencies(),
@@ -156,7 +163,7 @@ public sealed class ControllerServiceRepositoryTests
             && type.IsSubclassOf(typeof(ControllerBase)));
 
     private static IEnumerable<string> InvalidActionDependencies(Type controller) =>
-        controller.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)
+        controller.GetMethods(BindingFlags.Instance | BindingFlags.Public)
             .SelectMany(method => method.GetParameters()
                 .Where(parameter => IsForbiddenActionParameter(parameter.ParameterType))
                 .Select(parameter => $"{controller.FullName}.{method.Name}: {parameter.ParameterType.FullName}"));
@@ -190,5 +197,13 @@ public sealed class ControllerServiceRepositoryTests
         [HttpGet]
         public OkObjectResult Get(ICurrencyCatalog catalog) => Ok(catalog);
     }
+
+    private abstract class InheritedEndpointBase : ControllerBase
+    {
+        [HttpGet]
+        public OkResult Read(ArquitecturaBaseMultitenant.Application.Modules.Control.Interfaces.Persistence.IControlReader reader) => Ok();
+    }
+
+    private sealed class InheritedEndpoint : InheritedEndpointBase;
 #pragma warning restore CA1812, CS9113
 }

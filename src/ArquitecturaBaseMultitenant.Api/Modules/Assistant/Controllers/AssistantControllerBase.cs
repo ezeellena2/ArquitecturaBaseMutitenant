@@ -1,0 +1,202 @@
+using ArquitecturaBaseMultitenant.Api.ErrorHandling;
+using ArquitecturaBaseMultitenant.Api.Idempotency;
+using ArquitecturaBaseMultitenant.Api.OpenApi;
+using ArquitecturaBaseMultitenant.Api.Modules.Assistant.Contracts;
+using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Services;
+using Microsoft.AspNetCore.Mvc;
+
+namespace ArquitecturaBaseMultitenant.Api.Modules.Assistant.Controllers;
+
+[ApiController]
+public abstract class AssistantControllerBase(IAssistantConversationService service, IAssistantAttachmentService attachments, IAssistantExportService exports) : ControllerBase
+{
+    [HttpGet]
+    [ProducesResponseType<AssistantStateResponse>(200)]
+    [ProducesProblem(400)]
+    [ProducesProblem(401)]
+    [ProducesProblem(403)]
+    [ProducesProblem(404)]
+    [ProducesProblem(500)]
+    public async Task<IActionResult> State(CancellationToken cancellationToken) =>
+        (await service.StateAsync(cancellationToken)).ToActionResult(this);
+
+    [HttpPost("notice")]
+    [Idempotent(Mode = IdempotencyMode.BufferedJson)]
+    [IdempotencyReplay(typeof(AssistantNoticeReplayVerifier))]
+    [ProducesResponseType(204)]
+    [ProducesProblem(400)]
+    [ProducesProblem(401)]
+    [ProducesProblem(403)]
+    [ProducesProblem(404)]
+    [ProducesProblem(409)]
+    [ProducesProblem(422)]
+    [ProducesProblem(500)]
+    public async Task<IActionResult> AcceptNotice([FromBody] AssistantNoticeHttpRequest request, CancellationToken cancellationToken) =>
+        (await service.AcceptNoticeAsync(new AssistantNoticeRequest(request.NoticeVersion), cancellationToken)).ToActionResult(this);
+
+    [HttpGet("conversations")]
+    [ProducesResponseType<CursorResult<AssistantConversationSummaryResponse>>(200)]
+    [ProducesProblem(400)]
+    [ProducesProblem(401)]
+    [ProducesProblem(403)]
+    [ProducesProblem(404)]
+    [ProducesProblem(500)]
+    public async Task<IActionResult> List([FromQuery] AssistantConversationListHttpQuery request, CancellationToken cancellationToken) =>
+        (await service.ListAsync(new AssistantConversationListRequest(request.Cursor, request.Limit, request.Saved), cancellationToken)).ToActionResult(this);
+
+    [HttpPost("conversations")]
+    [IdempotencyDurable(typeof(AssistantDurableAdapter))]
+    [Idempotent(Mode = IdempotencyMode.DurableReference)]
+    [ProducesResponseType<AssistantConversationSummaryResponse>(201)]
+    [ProducesProblem(400)]
+    [ProducesProblem(401)]
+    [ProducesProblem(403)]
+    [ProducesProblem(404)]
+    [ProducesProblem(409)]
+    [ProducesProblem(422)]
+    [ProducesProblem(500)]
+    public async Task<IActionResult> Create([FromBody] CreateAssistantConversationHttpRequest request, CancellationToken cancellationToken) =>
+        (await service.CreateAsync(new CreateAssistantConversationRequest(), cancellationToken)).ToReferencedResult(this);
+
+    [HttpGet("conversations/{id:guid}")]
+    [ProducesResponseType<AssistantConversationResponse>(200)]
+    [ProducesProblem(400)]
+    [ProducesProblem(401)]
+    [ProducesProblem(403)]
+    [ProducesProblem(404)]
+    [ProducesProblem(500)]
+    public async Task<IActionResult> Get([FromRoute] Guid id, [FromQuery] AssistantMessageListHttpQuery request, CancellationToken cancellationToken) =>
+        (await service.GetAsync(id, new AssistantMessageListRequest(request.Cursor, request.Limit), cancellationToken)).ToActionResult(this);
+
+    [HttpPut("conversations/{id:guid}")]
+    [ProducesResponseType<VersionResponse>(200)]
+    [ProducesProblem(400)]
+    [ProducesProblem(401)]
+    [ProducesProblem(403)]
+    [ProducesProblem(404)]
+    [ProducesProblem(409)]
+    [ProducesProblem(500)]
+    public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateAssistantConversationHttpRequest request, CancellationToken cancellationToken) =>
+        (await service.UpdateAsync(id, new UpdateAssistantConversationRequest(request.Title, request.IsSaved, request.Version), cancellationToken)).ToActionResult(this);
+
+    [HttpDelete("conversations/{id:guid}")]
+    [ProducesResponseType(204)]
+    [ProducesProblem(400)]
+    [ProducesProblem(401)]
+    [ProducesProblem(403)]
+    [ProducesProblem(404)]
+    [ProducesProblem(409)]
+    [ProducesProblem(500)]
+    public async Task<IActionResult> Delete([FromRoute] Guid id, [FromQuery] AssistantDeleteHttpQuery request, CancellationToken cancellationToken) =>
+        (await service.DeleteAsync(id, request.Version, cancellationToken)).ToActionResult(this);
+
+    [HttpPost("conversations/{id:guid}/messages")]
+    [IdempotencyDurable(typeof(AssistantDurableAdapter))]
+    [Idempotent(Mode = IdempotencyMode.DurableStream)]
+    [ProducesResponseType<AssistantTurnResultResponse>(200)]
+    [ProducesResponseType<AssistantStreamHttpResponse>(200, "text/event-stream")]
+    [ProducesProblem(400)]
+    [ProducesProblem(401)]
+    [ProducesProblem(403)]
+    [ProducesProblem(404)]
+    [ProducesProblem(409)]
+    [ProducesProblem(413)]
+    [ProducesProblem(422)]
+    [ProducesProblem(429)]
+    [ProducesProblem(500)]
+    [ProducesProblem(503)]
+    public async Task<IActionResult> Send([FromRoute] Guid id, [FromBody] SendAssistantMessageHttpRequest request, CancellationToken cancellationToken) =>
+        (await service.SendAsync(id, new SendAssistantMessageRequest(request.Text, request.AttachmentIds, request.ConversationVersion), cancellationToken)).ToStreamResult(this);
+
+    [HttpPost("conversations/{id:guid}/turns/{turnId:guid}/stop")]
+    [Idempotent(Mode = IdempotencyMode.BufferedJson)]
+    [ProducesResponseType(204)]
+    [ProducesProblem(400)]
+    [ProducesProblem(401)]
+    [ProducesProblem(403)]
+    [ProducesProblem(404)]
+    [ProducesProblem(409)]
+    [ProducesProblem(422)]
+    [ProducesProblem(500)]
+    public async Task<IActionResult> Stop([FromRoute] Guid id, [FromRoute] Guid turnId, [FromBody] StopAssistantTurnHttpRequest request, CancellationToken cancellationToken) =>
+        (await service.StopAsync(id, turnId, new StopAssistantTurnRequest(), cancellationToken)).ToActionResult(this);
+
+    [HttpPost("quick/{key}")]
+    [IdempotencyDurable(typeof(AssistantDurableAdapter))]
+    [Idempotent(Mode = IdempotencyMode.DurableReference)]
+    [ResponseVersion("Conversation.Version")]
+    [ProducesResponseType<AssistantQuickResponse>(200)]
+    [ProducesProblem(400)]
+    [ProducesProblem(401)]
+    [ProducesProblem(403)]
+    [ProducesProblem(404)]
+    [ProducesProblem(409)]
+    [ProducesProblem(422)]
+    [ProducesProblem(500)]
+    public async Task<IActionResult> Quick([FromRoute] string key, [FromBody] AssistantQuickHttpRequest request, CancellationToken cancellationToken) =>
+        (await service.QuickAsync(key, new AssistantQuickRequest(request.ConversationId, request.Version), cancellationToken)).ToReferencedResult(this);
+
+    [HttpPut("conversations/{id:guid}/messages/{messageId:guid}/feedback")]
+    [ProducesResponseType<VersionResponse>(200)]
+    [ProducesProblem(400)]
+    [ProducesProblem(401)]
+    [ProducesProblem(403)]
+    [ProducesProblem(404)]
+    [ProducesProblem(409)]
+    [ProducesProblem(500)]
+    public async Task<IActionResult> Feedback([FromRoute] Guid id, [FromRoute] Guid messageId, [FromBody] AssistantFeedbackHttpRequest request, CancellationToken cancellationToken) =>
+        (await service.FeedbackAsync(id, messageId, new AssistantFeedbackRequest(request.Rating, request.Version), cancellationToken)).ToActionResult(this);
+
+    [HttpPost("conversations/{id:guid}/attachments")]
+    [IdempotencyDurable(typeof(AssistantDurableAdapter))]
+    [Idempotent(Mode = IdempotencyMode.DurableReference)]
+    [ProducesResponseType<AssistantAttachmentSummaryResponse>(201)]
+    [Consumes("multipart/form-data")]
+    [ProducesProblem(400)]
+    [ProducesProblem(401)]
+    [ProducesProblem(403)]
+    [ProducesProblem(404)]
+    [ProducesProblem(409)]
+    [ProducesProblem(413)]
+    [ProducesProblem(422)]
+    [ProducesProblem(500)]
+    public async Task<IActionResult> Upload([FromRoute] Guid id, [FromForm] AssistantUploadHttpRequest request, CancellationToken cancellationToken) =>
+        (await attachments.UploadAsync(id, new AssistantUploadRequest(request.File?.FileName, request.File?.ContentType, request.File?.Length, request.File?.OpenReadStream(), request.ConversationVersion), cancellationToken)).ToReferencedResult(this);
+
+    [HttpGet("conversations/{id:guid}/attachments/{attachmentId:guid}")]
+    [ProducesResponseType<byte[]>(200, "application/octet-stream")]
+    [ProducesProblem(400)]
+    [ProducesProblem(401)]
+    [ProducesProblem(403)]
+    [ProducesProblem(404)]
+    [ProducesProblem(409)]
+    [ProducesProblem(413)]
+    [ProducesProblem(500)]
+    public async Task<IActionResult> Download([FromRoute] Guid id, [FromRoute] Guid attachmentId, CancellationToken cancellationToken) =>
+        (await attachments.DownloadAsync(id, attachmentId, cancellationToken)).ToFileResult(this);
+
+    [HttpDelete("conversations/{id:guid}/attachments/{attachmentId:guid}")]
+    [ProducesResponseType(204)]
+    [ProducesProblem(400)]
+    [ProducesProblem(401)]
+    [ProducesProblem(403)]
+    [ProducesProblem(404)]
+    [ProducesProblem(409)]
+    [ProducesProblem(413)]
+    [ProducesProblem(500)]
+    public async Task<IActionResult> DeleteAttachment([FromRoute] Guid id, [FromRoute] Guid attachmentId, [FromQuery] AssistantDeleteHttpQuery request, CancellationToken cancellationToken) =>
+        (await attachments.DeleteAsync(id, attachmentId, request.Version, cancellationToken)).ToActionResult(this);
+
+    [HttpGet("conversations/{id:guid}/export")]
+    [ProducesResponseType<byte[]>(200, "application/octet-stream")]
+    [ProducesProblem(400)]
+    [ProducesProblem(401)]
+    [ProducesProblem(403)]
+    [ProducesProblem(404)]
+    [ProducesProblem(500)]
+    public async Task<IActionResult> Export([FromRoute] Guid id, [FromQuery] AssistantExportHttpQuery request, CancellationToken cancellationToken) =>
+        (await exports.ExportAsync(id, request.Format, cancellationToken)).ToFileResult(this);
+}
