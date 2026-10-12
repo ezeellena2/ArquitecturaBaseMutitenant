@@ -6,6 +6,8 @@ namespace ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 /// <summary>Proyecta roles de la organización activa para el detalle y los selectores de autorización.</summary>
 public interface IRoleReader
 {
+    Task<RoleFilterCountsResponse> GetFilterCountsAsync(string? search, CancellationToken cancellationToken);
+
     Task<IReadOnlyList<RoleRow>> ListAllAsync(CancellationToken cancellationToken);
 
     Task<PagedResult<RoleRow>> ListAsync(ListRolesRequest request, CancellationToken cancellationToken);

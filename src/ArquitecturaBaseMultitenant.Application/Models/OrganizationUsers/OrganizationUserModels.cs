@@ -44,7 +44,8 @@ public sealed record OrganizationUserResponse(Guid MemberId, Guid? UserId, strin
     DateTime? DeletionScheduledForUtc);
 
 public sealed record OrganizationUserFilterCountsResponse(int All, int Active, int PendingDeletion,
-    int Invited, int Expired, int Inactive);
+    int Invited, int Expired, int Inactive, int? CompanyAll = null, int? WithoutCompany = null,
+    IReadOnlyDictionary<Guid, int>? Companies = null);
 
 public sealed record InviteOrganizationUserRequest(Email? Email, IReadOnlyCollection<Guid>? RoleIds,
     IReadOnlyCollection<InviteCompanyRolesRequest>? Companies);

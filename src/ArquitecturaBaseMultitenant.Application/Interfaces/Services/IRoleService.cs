@@ -7,6 +7,8 @@ namespace ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 
 public interface IRoleService
 {
+    Task<Result<RoleFilterCountsResponse>> GetFilterCountsAsync(string? search, CancellationToken cancellationToken);
+
     Task<Result<PagedResult<RoleResponse>>> ListAsync(ListRolesRequest request, CancellationToken cancellationToken);
 
     /// <summary>

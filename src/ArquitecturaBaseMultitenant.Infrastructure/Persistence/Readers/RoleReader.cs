@@ -20,6 +20,29 @@ internal sealed class RoleReader(ApplicationDbContext context, ITenantContext te
 
     private static readonly SortDescriptor DefaultSort = new("name", Descending: false);
 
+    public async Task<RoleFilterCountsResponse> GetFilterCountsAsync(string? search, CancellationToken cancellationToken)
+    {
+        var tenantId = tenantContext.RequiredTenantId;
+        var all = context.Roles.AsNoTracking().Where(role => role.TenantId == tenantId);
+        var total = await CountScopesAsync(all, cancellationToken);
+        var filtered = all.ApplySearch(search, role => role.Name, role => role.Description);
+        var matching = string.IsNullOrWhiteSpace(search) ? total : await CountScopesAsync(filtered, cancellationToken);
+        var anyCompany = matching.GetValueOrDefault(RoleScope.AnyCompany);
+        var companies = await filtered.Where(role => role.Scope == RoleScope.SpecificCompany && role.CompanyId != null)
+            .GroupBy(role => role.CompanyId!.Value)
+            .Select(group => new { CompanyId = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(row => row.CompanyId, row => row.Count + anyCompany, cancellationToken);
+        return new RoleFilterCountsResponse(ScopeCounts(matching), ScopeCounts(total), anyCompany, companies);
+    }
+
+    private static Task<Dictionary<RoleScope, int>> CountScopesAsync(IQueryable<Role> roles, CancellationToken ct) =>
+        roles.GroupBy(role => role.Scope).Select(group => new { Scope = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(row => row.Scope, row => row.Count, ct);
+
+    private static RoleScopeCounts ScopeCounts(IReadOnlyDictionary<RoleScope, int> counts) =>
+        new(counts.Values.Sum(), counts.GetValueOrDefault(RoleScope.Organization),
+            counts.GetValueOrDefault(RoleScope.AnyCompany) + counts.GetValueOrDefault(RoleScope.SpecificCompany));
+
     public async Task<IReadOnlyList<RoleRow>> ListAllAsync(CancellationToken cancellationToken)
     {
         var tenantId = tenantContext.RequiredTenantId;

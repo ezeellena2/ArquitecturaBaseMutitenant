@@ -123,6 +123,14 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
         Assert.Equal(50, countsJson.RootElement.GetProperty("all").GetInt32());
         Assert.Equal(49, countsJson.RootElement.GetProperty("invited").GetInt32());
         Assert.Equal(1, countsJson.RootElement.GetProperty("active").GetInt32());
+        Assert.Equal(50, countsJson.RootElement.GetProperty("companyAll").GetInt32());
+        Assert.Equal(50, countsJson.RootElement.GetProperty("withoutCompany").GetInt32());
+        Assert.Empty(countsJson.RootElement.GetProperty("companies").EnumerateObject());
+        using var invitedCounts = await client.GetAsync("/api/users/filter-counts?state=Invited", Ct);
+        using var invitedCountsJson = JsonDocument.Parse(await invitedCounts.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(50, invitedCountsJson.RootElement.GetProperty("all").GetInt32());
+        Assert.Equal(49, invitedCountsJson.RootElement.GetProperty("companyAll").GetInt32());
+        Assert.Equal(49, invitedCountsJson.RootElement.GetProperty("withoutCompany").GetInt32());
 
         var ownerRow = Assert.Single(listJson.RootElement.GetProperty("items").EnumerateArray(),
             item => item.GetProperty("memberId").GetGuid() == ownerMemberId);

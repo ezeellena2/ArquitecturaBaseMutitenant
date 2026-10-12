@@ -41785,6 +41785,84 @@
         }
       }
     },
+    "/api/roles/filter-counts": {
+      "get": {
+        "tags": [
+          "Roles"
+        ],
+        "parameters": [
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleFilterCountsResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleFilterCountsResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleFilterCountsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/roles/paged": {
       "get": {
         "tags": [
@@ -58507,6 +58585,30 @@
           "inactive": {
             "type": "integer",
             "format": "int32"
+          },
+          "companyAll": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "withoutCompany": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "companies": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int32"
+            }
           }
         }
       },
@@ -61291,6 +61393,35 @@
         },
         "description": "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164."
       },
+      "RoleFilterCountsResponse": {
+        "required": [
+          "matching",
+          "total",
+          "anyCompany",
+          "companies"
+        ],
+        "type": "object",
+        "properties": {
+          "matching": {
+            "$ref": "#/components/schemas/RoleScopeCounts"
+          },
+          "total": {
+            "$ref": "#/components/schemas/RoleScopeCounts"
+          },
+          "anyCompany": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "companies": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        },
+        "description": "Una lectura para menú y resumen; una empresa sin roles propios comparte el conteo AnyCompany."
+      },
       "RoleResponse": {
         "required": [
           "id",
@@ -61359,6 +61490,28 @@
         ],
         "type": "string",
         "description": "Ámbito de un rol de organización."
+      },
+      "RoleScopeCounts": {
+        "required": [
+          "all",
+          "organization",
+          "company"
+        ],
+        "type": "object",
+        "properties": {
+          "all": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "organization": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "company": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
       },
       "RoleScopeFilter": {
         "enum": [

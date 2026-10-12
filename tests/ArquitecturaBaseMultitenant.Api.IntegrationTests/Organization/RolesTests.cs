@@ -22,7 +22,11 @@ public sealed class RolesTests(ApiFactory factory)
     public async Task Filtering_by_a_company_lists_its_roles_and_the_ones_valid_in_every_company()
     {
         using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        using var anonymous = await client.GetAsync("/api/roles/filter-counts", Ct);
+        Assert.Equal(HttpStatusCode.Unauthorized, anonymous.StatusCode);
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
+        using var personal = await client.GetAsync("/api/roles/filter-counts", Ct);
+        Assert.Equal(HttpStatusCode.Forbidden, personal.StatusCode);
         var tenant = Tenant.CreateBusiness("Roles por empresa", requiresApproval: false);
         Assert.True(tenant.Activate().IsSuccess);
         await using (var scope = factory.Services.CreateAsyncScope())
@@ -53,6 +57,19 @@ public sealed class RolesTests(ApiFactory factory)
         }
 
         // Tablero Roles, filtro «Vale en: Delta Norte S.A.»: su «Solo lectura» y el Administrador de «Cada empresa».
+        var foreign = Tenant.CreateBusiness("Roles ajenos", requiresApproval: false);
+        Assert.True(foreign.Activate().IsSuccess);
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(foreign.Id);
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+            {
+                services.GetRequiredService<TenantSpaceProvisioner>().Stage(foreign,
+                    TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"), [account.UserId]);
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+        }
         using var response = await client.GetAsync($"/api/roles/paged?companyId={north:D}&pageSize=50", Ct);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
@@ -64,6 +81,16 @@ public sealed class RolesTests(ApiFactory factory)
         Assert.Contains(roles, role => role.Scope == nameof(RoleScope.AnyCompany));
         Assert.DoesNotContain(roles, role => role.Company == south);
         Assert.DoesNotContain(roles, role => role.Scope == nameof(RoleScope.Organization));
+
+        using var countsResponse = await client.GetAsync("/api/roles/filter-counts?search=lectura", Ct);
+        Assert.Equal(HttpStatusCode.OK, countsResponse.StatusCode);
+        using var counts = JsonDocument.Parse(await countsResponse.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(2, counts.RootElement.GetProperty("matching").GetProperty("all").GetInt32());
+        Assert.Equal(0, counts.RootElement.GetProperty("matching").GetProperty("organization").GetInt32());
+        Assert.Equal(4, counts.RootElement.GetProperty("total").GetProperty("all").GetInt32());
+        Assert.Equal(1, counts.RootElement.GetProperty("companies").GetProperty(north.ToString()).GetInt32());
+        Assert.Equal(1, counts.RootElement.GetProperty("companies").GetProperty(south.ToString()).GetInt32());
+        Assert.Equal(0, counts.RootElement.GetProperty("anyCompany").GetInt32());
     }
 
     [Fact]

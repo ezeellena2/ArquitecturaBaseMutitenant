@@ -90,6 +90,7 @@ public sealed partial class ExplicitRouteInventoryTests(ApiFactory factory)
         "DELETE /api/users/{memberid:guid}",
         "GET /api/permissions",
         "GET /api/roles/paged",
+        "GET /api/roles/filter-counts",
         "GET /api/roles/{id:guid}",
         "POST /api/roles",
         "PUT /api/roles/{id:guid}",

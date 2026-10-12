@@ -3,6 +3,8 @@ using ArquitecturaBaseMultitenant.Application.Models.Roles;
 
 namespace ArquitecturaBaseMultitenant.Api.Contracts.Organization;
 
+public sealed record RoleFilterCountsHttpQuery(string? Search);
+
 public sealed record RoleListHttpQuery(int? Page, int? PageSize, string? Sort, string? Search, RoleScopeFilter? Scope,
     Guid? CompanyId);
 

@@ -72,9 +72,19 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
             .Select(group => new { State = group.Key, Count = group.Count() })
             .ToDictionaryAsync(group => group.State, group => group.Count, cancellationToken);
         int Count(OrganizationUserState state) => counts.GetValueOrDefault(state);
+        var companyMembers = Filtered(tenantId, request with { CompanyId = null, WithoutCompany = false }, nowUtc);
+        var companyAll = await companyMembers.CountAsync(cancellationToken);
+        var withoutCompany = await companyMembers.CountAsync(member => !context.CompanyMemberships.Any(membership =>
+            membership.TenantId == tenantId && membership.MemberId == member.MemberId), cancellationToken);
+        var memberIds = companyMembers.Select(member => member.MemberId);
+        var companies = await context.CompanyMemberships.AsNoTracking().Where(membership => membership.TenantId == tenantId
+                && memberIds.Contains(membership.MemberId))
+            .GroupBy(membership => membership.CompanyId)
+            .Select(group => new { CompanyId = group.Key, Count = group.Select(membership => membership.MemberId).Distinct().Count() })
+            .ToDictionaryAsync(row => row.CompanyId, row => row.Count, cancellationToken);
         return new OrganizationUserFilterCountsResponse(counts.Values.Sum(), Count(OrganizationUserState.Active),
             Count(OrganizationUserState.PendingDeletion), Count(OrganizationUserState.Invited),
-            Count(OrganizationUserState.Expired), Count(OrganizationUserState.Inactive));
+            Count(OrganizationUserState.Expired), Count(OrganizationUserState.Inactive), companyAll, withoutCompany, companies);
     }
 
     public async Task<OrganizationUserRow?> FindByIdAsync(Guid memberId, DateTime nowUtc,
