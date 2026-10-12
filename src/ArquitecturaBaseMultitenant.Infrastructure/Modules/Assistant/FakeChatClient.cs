@@ -24,14 +24,16 @@ internal sealed class FakeChatClient(AssistantFakeChatMetrics metrics, TimeProvi
         if (scenario.Contains("[E2E:tool]", StringComparison.Ordinal)
             && !input.SelectMany(row => row.Contents).OfType<FunctionResultContent>().Any())
         {
-            var tool = options?.Tools?.FirstOrDefault(row => row.Name == "org_users") ?? options?.Tools?.FirstOrDefault();
-            if (tool is not null)
+            var tool = options?.Tools?.SingleOrDefault(row => row.Name == "org_users")
+                ?? throw new InvalidOperationException("The scripted users scenario requires its declared tool.");
+            metrics.Tool();
+            yield return new ChatResponseUpdate
             {
-                metrics.Tool();
-                yield return new ChatResponseUpdate { Role = ChatRole.Assistant, Contents = [new FunctionCallContent("e2e-read-only", tool.Name, new Dictionary<string, object?>())] };
-                yield return new ChatResponseUpdate { Contents = [new UsageContent(new UsageDetails { InputTokenCount = 3, OutputTokenCount = 2, TotalTokenCount = 5 })], FinishReason = ChatFinishReason.ToolCalls };
-                yield break;
-            }
+                Role = ChatRole.Assistant,
+                Contents = [new FunctionCallContent("e2e-read-only", tool.Name, new Dictionary<string, object?> { ["page"] = 1, ["pageSize"] = 20 })],
+            };
+            yield return new ChatResponseUpdate { Contents = [new UsageContent(new UsageDetails { InputTokenCount = 3, OutputTokenCount = 2, TotalTokenCount = 5 })], FinishReason = ChatFinishReason.ToolCalls };
+            yield break;
         }
         yield return new ChatResponseUpdate(ChatRole.Assistant, AssistantTexts.Get("Assistant.Fake.Prefix"));
         await Task.Delay(scenario.Contains("[E2E:slow]", StringComparison.Ordinal) ? TimeSpan.FromSeconds(3) : TimeSpan.FromMilliseconds(200), clock, cancellationToken);
