@@ -1,6 +1,6 @@
 # Multitenancy B2B + B2C: accesos, empresas, páginas públicas e interacción
 
-> Complementa a [`backend.md`](backend.md). Cambiar una regla de este documento requiere un ADR. Rehecho el 2026-09-27 con la definición del usuario (ADR 0030).
+> Complementa a [`backend.md`](backend.md). Un cambio que toca el modelo de accesos o el aislamiento requiere un ADR; un cambio técnico, como la CSP o la caché, no lo necesita y se actualiza junto con el código. Rehecho el 2026-09-27 con la definición del usuario (ADR 0030).
 
 ## 1. Qué es, en simple
 

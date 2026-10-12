@@ -10,7 +10,7 @@
 
 ## Cómo se hace
 - **Librería:** `Microsoft.FeatureManagement.AspNetCore`.
-- **Catálogo en código:** `Domain/Features/Features.cs`, con constantes como `Features.Reportes`. Cada módulo declara de qué lado vive (`Consumer`, `Business` o los dos, si usa datos compartidos) y si arranca prendido.
+- **Catálogo:** cada módulo declara su clave, de qué lado vive (`FeatureScope`: `Consumer`, `Business` o `Both`, si usa datos compartidos) y si arranca prendido en un `IFeatureDefinitionContributor` registrado en Application, como `AssistantFeatureDefinitionContributor`. `IFeatureCatalog` junta esas definiciones con `Domain/Features/Features.cs` (`Features.All`, vacío en la plantilla).
 - **Por tenant:** `platform.TenantFeatures` (`TenantId`, `FeatureKey`, `Source` = `Plan` | `Manual` | `Trial`, `ExpiresAtUtc?`, `ExpiresOn?`). El contrato de Plataforma usa la fecha civil `expiresOn`; el writer la convierte al fin exclusivo del día en `TenantSettings.DefaultTimeZoneId`, con `GetDayRangeUtc`, dentro del alcance y la UoW autorizados. Se conserva la civil para su lectura global sin consultar Settings privados; una habilitación histórica sin civil mantiene null. Los gates siguen evaluando UTC.
 - **Filtro:** `TenantFeatureFilter` (el filtro `"Tenant"` de la librería) lee los módulos del tenant activo con caché `t:{tenantId}:features`, que se invalida al cambiarlos.
 - FeatureManagement y el filtro son scoped porque dependen del contexto firmado. La caché contiene filas y fechas, nunca el resultado de vigencia; una prueba vence en el instante `ExpiresAtUtc` aunque la fila siga cacheada. La comprobación HTTP previa corre después de autenticar y resolver el acceso y antes de los permisos; el handler de la librería también devuelve ProblemDetails 404.

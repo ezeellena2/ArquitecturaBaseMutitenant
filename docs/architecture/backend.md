@@ -1,6 +1,6 @@
 # Arquitectura del backend
 
-> Documento canónico. Si otro documento contradice a este, manda este. El aislamiento entre organizaciones tiene su propio documento, [`multitenancy.md`](multitenancy.md), y se lee junto con este.
+> Panorama de la arquitectura del backend. Las reglas mandan en las fichas de [`docs/rules/`](../rules/README.md) y en [`AGENTS.md`](../../AGENTS.md): si este documento las contradice, se corrige este. El aislamiento entre organizaciones tiene su propio documento, [`multitenancy.md`](multitenancy.md), y se lee junto con este.
 
 ArquitecturaBaseMultitenant es la versión multitenant de `../ArquitecturaBase`. **Copia sus convenciones tal cual** (capas, MVC, Result, una sola forma de guardar, ProblemDetails, resources, UTC, `[LoggerMessage]`, tests de arquitectura) y les suma:
 - **B2B + B2C como en Mercado Libre, para cualquier tipo de negocio:** una cuenta por persona con **dos accesos que no se mezclan**: como **persona** (B2C: su espacio personal y lo que pide a las empresas) y como **empresa** (B2B: las organizaciones donde trabaja). Una persona B2C no crea empresas; eso es el alta B2B, "Registrá tu empresa". Cada organización puede tener su **página pública en un subdominio**, y las personas interactúan con ella mediante datos compartidos entre las dos partes. La plantilla trae los accesos y la mecánica; los módulos de negocio los pone cada producto (multitenancy.md);

@@ -23,7 +23,8 @@
 - Editar una plantilla aprobada: se crea otra con sufijo (`_v2`) y se cambia la configuración.
 
 ## Copiá de
-- `Application/Modules/WhatsApp/WhatsAppModule.cs` (E8) · la guía [`quitar-whatsapp.md`](../guides/quitar-whatsapp.md) (E8)
+- **Una funcionalidad dentro de un módulo quitable** (feature por organización con `IFeatureDefinitionContributor`, `[FeatureGate]`, permisos en los catálogos con la migración de roles, rutas de Business y de Plataforma): el Asistente. La composición, en `Application/Modules/Assistant/AssistantModule.cs`; la feature, en `Application/Modules/Assistant/Services/AssistantFeatureDefinitionContributor.cs`; las rutas, en `Api/Modules/Assistant/Controllers/BusinessAssistantController.cs` y `Api/Modules/Assistant/Controllers/PlatformAssistantController.cs`; los permisos, en `Domain/Authorization/Permissions.cs` y `Domain/Authorization/PlatformPermissions.cs`, con las migraciones `Infrastructure/Persistence/Migrations/20261010203618_SystemRoleAssistantPermissions.cs` (roles de sistema) y `Infrastructure/Persistence/Migrations/20261010214712_PlatformOperatorAssistantPermissions.cs` (operadores). El retiro, en [`quitar-asistente.md`](../guides/quitar-asistente.md).
+- **Webhook y outbox:** WhatsApp, con `Application/Modules/WhatsApp/WhatsAppModule.cs`, `Api/Modules/WhatsApp/Controllers/WhatsAppWebhookController.cs` y `Infrastructure/Modules/WhatsApp/WhatsAppChannelSender.cs` (E8) · la guía [`quitar-whatsapp.md`](../guides/quitar-whatsapp.md) (E8)
 
 ## Lo verifica
 - `ModuleIsolationTests` (E8).
