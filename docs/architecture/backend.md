@@ -116,7 +116,7 @@ Prohibido:
 
 ## 4. Carpetas y archivos que marcan el patrón
 
-El árbol completo, archivo por archivo y con la etapa en que nace cada pieza, está en [`arbol.md`](arbol.md). Si este árbol y aquel no coinciden, se corrigen los dos.
+El mapa de carpetas y los archivos modelo están en [`arbol.md`](arbol.md).
 
 Solo se listan las carpetas y los archivos que marcan el patrón. Un área nueva copia la forma de **Roles**, que es el área de referencia ([ADR 0004](../decisions/README.md)).
 

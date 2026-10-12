@@ -46,6 +46,7 @@ test('referencias: rutas, anclas y renombres del fixture', async () => {
     'referencias|ruta-inexistente|auto|docs/features/roles.md|src/Demo.Application/Services/RoleService.cs',
     'referencias|ruta-inexistente|modelo|AGENTS.md|docs/rules/inexistente.md',
     'referencias|ruta-inexistente|modelo|docs/architecture/arnes.md|Domain/Futuro/',
+    'referencias|ruta-inexistente|modelo|docs/architecture/arbol.md|Domain/Futuro/',
     'referencias|ruta-inexistente|modelo|docs/features/roles.md|../rules/no-existe.md',
     'referencias|ruta-inexistente|modelo|docs/features/roles.md|Services/Helper.cs',
     'referencias|ruta-inexistente|modelo|docs/rules/README.md|viejo.md',
@@ -105,22 +106,9 @@ test('arbol: el parser reconstruye las rutas de las secciones con ruta y no lee 
   assert.equal(parsearArbol(texto, [0, 1, 2, 7])[1].entradas.filter((e) => e.planeada).length, 1);
 });
 
-test('arbol: archivos que ya no están, que nunca estuvieron, nuevos y sin descripción', async () => {
+test('arbol: agregar o borrar archivos dentro de una carpeta no genera hallazgos', async () => {
   const hs = await correr(['arbol'], raicesFixture);
-  const arbol = 'docs/architecture/arbol.md';
-  assert.deepEqual(resumen(hs), [
-    `arbol|archivo-faltante|auto|${arbol}|src/Demo.Application/Services/Roles/ViejoService.cs`,
-    `arbol|archivo-faltante|humano|${arbol}|src/Demo.Application/Services/Fantasma.cs`,
-    `arbol|archivo-nuevo|auto|${arbol}|src/Demo.Application/Services/Roles/RoleSpecs.cs`,
-    `arbol|archivo-nuevo|auto|${arbol}|src/Demo.Application/Services/Roles/RoleSpecsTests.cs`,
-    `arbol|archivo-nuevo|modelo|${arbol}|src/Demo.Application/Services/Roles/RoleOther.cs`,
-    `arbol|linea-sin-descripcion|modelo|${arbol}|src/Demo.Application/Services/Roles/Helper.cs`,
-  ].sort());
-  const porArchivo = (nombre) => hs.find((h) => h.id.endsWith(nombre));
-  // La descripción sale del <summary> (primera oración) o del nombre del test: 0 tokens.
-  assert.match(porArchivo('RoleSpecs.cs').parche.texto, /^│   │   ├── RoleSpecs\.cs {10,}Especificaciones de roles$/);
-  assert.match(porArchivo('RoleSpecsTests.cs').parche.texto, /RoleSpecsTests\.cs {10,}tests de RoleSpecs$/);
-  assert.match(porArchivo('RoleOther.cs').esperado, /RoleOther\.cs {10,}<describir>$/);
+  assert.ok(hs.every(h => h.tipo.startsWith('carpeta-')));
 });
 
 test('simbolos: typo único (auto), inexistente y miembro que no está', async () => {
@@ -176,15 +164,14 @@ test('catalogos: permisos, códigos y rutas mencionados que no existen, y grupos
 
 test('front: los mismos detectores sobre TS, con el mapa `src/` y el árbol `## src/`', async () => {
   const hs = await correr(undefined, raicesFixture, 'front');
-  const arbol = 'docs/architecture/arbol.md';
   assert.deepEqual(resumen(hs), [
     'indices|ficha-sin-fila-guia|humano|AGENTS.md|otra.md',
     'indices|fila-huerfana|auto|AGENTS.md|docs/rules/viejo.md',
-    `arbol|archivo-faltante|humano|${arbol}|src/shared/ghost.ts`,
-    `arbol|archivo-nuevo|auto|${arbol}|src/shared/Money.test.ts`,
-    `arbol|archivo-nuevo|modelo|${arbol}|src/shared/other.ts`,
-    `arbol|archivo-nuevo|auto|${arbol}|src/shared/useAccess.ts`,
     'referencias|ruta-inexistente|modelo|docs/architecture/arnes.md|src/futuro/',
+    'referencias|ruta-inexistente|modelo|docs/architecture/arbol.md|src/futuro/',
+    'arbol|carpeta-nueva|modelo|docs/architecture/arbol.md|src/extra',
+    'arbol|carpeta-nueva|modelo|docs/architecture/arbol.md|src/old',
+    'arbol|carpeta-nueva|modelo|docs/architecture/arbol.md|src/test',
     'referencias|ruta-inexistente|modelo|docs/rules/formatos.md|src/shared/formater.ts',
     'simbolos|simbolo-inexistente|modelo|docs/rules/formatos.md|MoneyBannerPage',
     'simbolos|simbolo-inexistente|auto|docs/rules/formatos.md|useAccesss',
@@ -198,8 +185,6 @@ test('front: los mismos detectores sobre TS, con el mapa `src/` y el árbol `## 
     'punteros|puntero-faltante|auto|src/shared/AGENTS.md|src/shared/AGENTS.md',
     'punteros|puntero-faltante|auto|src/shared/CLAUDE.md|src/shared/CLAUDE.md',
   ].sort());
-  const jsdoc = hs.find((h) => h.id.endsWith('useAccess.ts'));
-  assert.match(jsdoc.parche.texto, /^│   ├── useAccess\.ts {10,}Acceso activo de la sesión y sus permisos$/);
   assert.equal(hs.find((h) => h.id.endsWith('useAccesss')).parche.a, '`useAccess`');
   // El catálogo (permisos, códigos y rutas del back) no corre sobre el front.
   assert.ok(!hs.some((h) => h.detector === 'catalogos'));
@@ -218,7 +203,7 @@ test('cada auto del fixture queda arreglado y no queda ningún auto', async () =
   const raices = { back: copia, front: join(fixtures, 'front') };
   const antes = await correr(undefined, raices);
   const autos = antes.filter((h) => h.accion === 'auto');
-  assert.ok(autos.length >= 7);
+  assert.ok(autos.length >= 6);
   const manifiesto = (await arnesReal()).manifiesto;
   const r = await aplicarParches(copia, autos.map((h) => h.parche), manifiesto.permisos);
   assert.deepEqual(r.fallidos, []);

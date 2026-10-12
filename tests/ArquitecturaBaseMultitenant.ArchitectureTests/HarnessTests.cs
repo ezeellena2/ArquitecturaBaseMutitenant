@@ -11,7 +11,7 @@ public sealed class HarnessTests
 {
     private static readonly string Root = SolutionRoot.FullPath;
     private static readonly string FrontRoot = Path.GetFullPath(Path.Combine(Root, "..", "ArquitecturaBaseMutitenantFront"));
-    private static readonly string HarnessDocument = Path.Combine(Root, "docs", "architecture", "arnes.md");
+    private static readonly string HarnessDocument = Path.Combine(Root, "docs", "architecture", "arbol.md");
 
     [Fact]
     public void Test_inventory_discovers_Node_and_TypeScript_in_available_checkouts()
@@ -455,7 +455,7 @@ public sealed class HarnessTests
 
     private static IEnumerable<string> MappedFolders()
     {
-        var lines = SectionLines(File.ReadAllLines(HarnessDocument), "3. Mapa de carpetas → punteros");
+        var lines = SectionLines(File.ReadAllLines(HarnessDocument), "Mapa de carpetas → punteros");
         foreach (var line in lines)
         {
             var match = Regex.Match(line, @"^\| `(?<folder>[^`]+)` \|", RegexOptions.CultureInvariant);

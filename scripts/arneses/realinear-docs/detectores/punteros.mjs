@@ -8,7 +8,7 @@ const escapar = (s) => s.replace(/[.+^${}()|[\]\\]/g, '\\$&');
 
 /** Filas del mapa de carpetas → punteros (arnes.md): { patron, queVa, fichas, copia, linea, planeada }. */
 export async function leerMapa(ctx) {
-  const ruta = 'docs/architecture/arnes.md';
+  const ruta = 'docs/architecture/arbol.md';
   if (!ctx.archivos.esArchivo(ruta)) return [];
   const seccion = secciones(await ctx.leer(ruta)).find((s) => /mapa de carpetas/i.test(s.titulo));
   if (!seccion) return [];
@@ -95,11 +95,11 @@ export async function detectar(ctx) {
       continue;
     }
     const agents = `${dir}/AGENTS.md`;
-    // Una carpeta de área (hija de una carpeta del mapa) no es una fila del mapa: arnes.md §3.
+    // Una carpeta de área (hija de una carpeta del mapa) no es una fila del mapa: arbol.md.
     if (mapeadas.has(dir) || mapeadas.has(dir.slice(0, dir.lastIndexOf('/'))) || !ctx.archivos.esArchivo(agents)) continue;
     const texto = await ctx.leer(agents);
     if (/docs\/features\//.test(texto)) continue;
-    out.push(ctx.crear({ archivo: agents, linea: 1, tipo: 'puntero-fuera-del-mapa', clave: dir, real: `${dir} tiene puntero y no está en el mapa de arnes.md ni apunta a docs/features`, contexto: texto.split(/\r?\n/).slice(0, 8).join('\n'), accion: 'modelo', pregunta: `¿Falta la fila de ${dir} en el mapa de arnes.md §3, o el puntero sobra?` }));
+    out.push(ctx.crear({ archivo: agents, linea: 1, tipo: 'puntero-fuera-del-mapa', clave: dir, real: `${dir} tiene puntero y no está en el mapa de arbol.md ni apunta a docs/features`, contexto: texto.split(/\r?\n/).slice(0, 8).join('\n'), accion: 'modelo', pregunta: `¿Falta la fila de ${dir} en el mapa de arbol.md, o el puntero sobra?` }));
   }
   return out;
 }
