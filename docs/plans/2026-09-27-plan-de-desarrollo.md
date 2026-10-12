@@ -1,6 +1,6 @@
 # Hoja de ruta
 
-Orden vigente: **8 → 8b → 11 → 9 → 10**. [AGENTS.md](../../AGENTS.md) define el modo rápido:
+Orden vigente: **8 → 8b → 11 → 9 → 10 → 12 a 17**. [AGENTS.md](../../AGENTS.md) define el modo rápido:
 contrato primero, programación por dueños y una sola puerta. Tras un arreglo se verifica sólo lo afectado.
 La tabla indica el estado; las reglas y conducta viven en fichas, ADR y features.
 El historial se recupera con git show historial-docs:<ruta>, sin cargar planes cerrados.
@@ -20,6 +20,12 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 11 · WhatsApp de atención | Pendiente | [ADR 0038](../decisions/0038-whatsapp-de-atencion.md) |
 | 9 · Endurecimiento | Pendiente | Decisiones de abajo |
 | 10 · Operación | Pendiente | Decisiones de abajo |
+| 12 · Formularios por WhatsApp | Pendiente | [Hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md) |
+| 13 · Catálogos | Pendiente | Ídem |
+| 14 · Fotos y documentos | Pendiente | Ídem |
+| 15 · Planilla y Excel | Pendiente | Ídem |
+| 16 · Reglas, aprobación y PDF | Pendiente | Ídem |
+| 17 · Biblioteca de plantillas | Pendiente | Ídem |
 
 ## Etapa 8b: pendientes vigentes
 
@@ -73,7 +79,19 @@ Antes de implementar el alta se verifican requisitos y precios vigentes de Meta 
 - Dockerfile de la Api con el SPA en wwwroot.
 - Chequeo cruzado de contratos en el CI del front: descarga también el repo del back y corre `contracts:check` sin saltearlo (enmienda de la ADR 0016). Si el repo del back es privado, se usa un token de solo lectura.
 - Migration bundle ejecutado con `mt_owner`.
+- Adaptador de nube de `IFileStore` (S3 o Azure Blob, se elige acá; [ADR 0048](../decisions/0048-asistente.md), D15). Lo usan el asistente y, desde la E14, los formularios.
 - CI/CD con GitHub Actions y OIDC.
 - Secretos, certificados de OpenIddict y SMTP real.
 - `docs/operations/runbook.md`: alta de `mt_app` **y creación de la base con ICU `es-AR`**, backup y restore, rotación de certificados, suspensiones, purga y baja de datos personales.
 - **Datos personales (P7, segunda parte):** `POST /api/me/data-export` (`[Idempotent]`), `platform.DataExports`, la preparación en segundo plano del JSON y el correo «Exportación de datos lista» (solo por correo), con un enlace de descarga que vence a las 48 h ([datos-personales](../rules/datos-personales.md)), y su participante de la baja, que borra los archivos. En el front, «Exportar mis datos» en la sección Privacidad de `/cuenta`. La baja de la cuenta ya está en la Etapa 3.
+
+## Etapas 12 a 17: formularios por WhatsApp
+
+Una organización arma formularios, los manda por WhatsApp a sus empleados y ve las respuestas numeradas en una planilla.
+- **Etapas y fuente:** son seis, cada una con su sección y las decisiones de producto tomadas en la [hoja de ruta](2026-10-12-formularios-dinamicos-hoja-de-ruta.md).
+- **Requisitos:** la E11 es requisito duro, porque sin número de la organización no hay formularios. Van después de la E10 para nacer con las guardas de la E9 y la nube de la E10.
+- **Módulo:** `Forms` es un módulo quitable aparte de `WhatsApp`, unidos por puertos neutrales del núcleo, como en ArquitecturaBase, de donde se copia el código.
+- **Cómo se trabaja cada etapa:**
+  - se escribe en el formato de [etapa en paralelo](../guides/etapa-en-paralelo.md) cuando le toca;
+  - sus tableros se dibujan en el lienzo antes de programar.
+- **Después:** el asistente en WhatsApp con audios y sugerencias, y B2C.
