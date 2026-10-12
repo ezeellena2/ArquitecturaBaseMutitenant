@@ -15,10 +15,10 @@ public sealed class InvariantWireFormatterTests
         try
         {
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
-            Assert.Equal("10000", InvariantWireFormatter.FormatInteger(10_000));
-            Assert.Equal("9223372036854775807", InvariantWireFormatter.FormatInteger(long.MaxValue));
-            Assert.Equal("1.23", InvariantWireFormatter.FormatCanonicalDecimal(1.230000m));
-            Assert.Equal(InvariantWireFormatter.FormatCanonicalDecimal(1.23m), InvariantWireFormatter.FormatCanonicalDecimal(1.230000m));
+            Assert.Equal("10000", VersionWireFormatter.Format(10_000));
+            Assert.Equal("9223372036854775807", VersionWireFormatter.Format(long.MaxValue));
+            Assert.Equal("1.23", VersionWireFormatter.FormatCanonicalDecimal(1.230000m));
+            Assert.Equal(VersionWireFormatter.FormatCanonicalDecimal(1.23m), VersionWireFormatter.FormatCanonicalDecimal(1.230000m));
         }
         finally { CultureInfo.CurrentCulture = previous; }
     }

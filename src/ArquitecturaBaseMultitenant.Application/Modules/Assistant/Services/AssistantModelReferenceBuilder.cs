@@ -55,7 +55,7 @@ public static class AssistantModelReferenceBuilder
 
     // Decimal scale and effort ordering do not change an effective reference.
     private static string? Rate(Money? value) => value is null ? null
-        : value.Currency.Value + ":" + InvariantWireFormatter.FormatCanonicalDecimal(value.Amount);
+        : value.Currency.Value + ":" + VersionWireFormatter.FormatCanonicalDecimal(value.Amount);
 
     public static AssistantProviderReference Build(AssistantModelPriceResponse model)
     {

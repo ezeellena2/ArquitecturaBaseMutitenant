@@ -264,13 +264,13 @@ public sealed class IdempotencyFilter(
         foreach (var field in form.OrderBy(row => row.Key, StringComparer.Ordinal))
         {
             Append(hash, "field"); Append(hash, field.Key);
-            Append(hash, ArquitecturaBaseMultitenant.Application.Common.Formatting.InvariantWireFormatter.FormatInteger(field.Value.Count));
+            Append(hash, ArquitecturaBaseMultitenant.Application.Common.Formatting.VersionWireFormatter.Format(field.Value.Count));
             foreach (var value in field.Value) Append(hash, value ?? string.Empty);
         }
         foreach (var file in form.Files.OrderBy(row => row.Name, StringComparer.Ordinal).ThenBy(row => row.FileName, StringComparer.Ordinal))
         {
             Append(hash, "file"); Append(hash, file.Name); Append(hash, file.FileName); Append(hash, file.ContentType);
-            Append(hash, ArquitecturaBaseMultitenant.Application.Common.Formatting.InvariantWireFormatter.FormatInteger(file.Length));
+            Append(hash, ArquitecturaBaseMultitenant.Application.Common.Formatting.VersionWireFormatter.Format(file.Length));
             await using var content = file.OpenReadStream();
             hash.AppendData(await SHA256.HashDataAsync(content, ct));
         }
