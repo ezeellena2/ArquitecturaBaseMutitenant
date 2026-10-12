@@ -5,6 +5,7 @@ using System.Security.Cryptography.X509Certificates;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Recorrido;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.WhatsAppBrowser;
+using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.AssistantBrowser;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
@@ -39,6 +40,7 @@ internal static class RecorridoHost
         await using var app = RecorridoApiHost.Configure(factory, repository.FullName, pickup, builder =>
         {
             RecorridoWhatsAppModule.Configure(builder);
+            RecorridoAssistantModule.Configure(builder);
             builder.ConfigureTestServices(services =>
             {
                 services.RemoveAll<IPublicOrigin>();
@@ -64,6 +66,7 @@ internal static class RecorridoHost
         await app.Services.SeedDatabaseAsync(ct);
         var prepared = await E7Preparation.PrepareAsync(app.Services, email, ct);
         var bridge = new WhatsAppFileBridge(app.Services, readyFile, isolated: true);
+        var assistant = new AssistantFileBridge(app.Services, readyFile, isolated: true);
         await using (var marker = new FileStream(readyFile, FileMode.CreateNew, FileAccess.Write, FileShare.None))
             await marker.FlushAsync(ct);
         using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(250));
@@ -75,6 +78,7 @@ internal static class RecorridoHost
             await LegacyBrowserSessionCommand.TryExecuteAsync(app.Services, readyFile, ct);
             await LoginCodeCommand.TryExecuteAsync(app.Services, readyFile, ct);
             await bridge.TryExecuteAsync(client, ct);
+            await assistant.TryExecuteAsync(ct);
             // Un único claim email por tick; WhatsApp cifrado permanece disponible para su control privado.
             await RecorridoEmailPump.ProcessOnceAsync(app.Services, ct);
         }
