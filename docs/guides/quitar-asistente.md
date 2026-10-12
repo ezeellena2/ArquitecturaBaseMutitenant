@@ -26,6 +26,8 @@ Los `AGENTS.md` que quedan tienen que copiar de archivos existentes del núcleo,
 | `Application.UnitTests/Modules/AGENTS.md` | `tests/ArquitecturaBaseMultitenant.Application.UnitTests/Services/Roles/RoleServiceTests.cs` |
 | `ArchitectureTests/Modules/AGENTS.md` | `tests/ArquitecturaBaseMultitenant.ArchitectureTests/ModuleIsolationTests.cs` |
 
+Si retirás también WhatsApp y el corte conserva los AGENTS de las carpetas legadas, el de Infrastructure, en WhatsApp, copia de `Infrastructure/Messaging/Outbox.cs`; el de Application Models, en WhatsApp, copia de `Application/Models/Notifications/AccountNotice.cs`. Cambiá sólo el puntero: los puertos centrales de Phone, ingreso, avisos y outbox permanecen. Si esas carpetas ya no existen en el corte, no las recrees.
+
 En la sección `Copiá de` de `docs/rules/modulos.md`, quitá el ejemplo del Asistente: contiene los cuatro modelos concretos de composición, feature y controllers que salieron. Si quitás ambos módulos, sale también el ejemplo de webhook/outbox WhatsApp; conservá la sección y copiá la composición neutral de `Infrastructure/Persistence/PersistenceModelContributors.cs` y su guarda `tests/ArquitecturaBaseMultitenant.ArchitectureTests/ModuleIsolationTests.cs`. No cambies esas referencias en la instalación que conserva los módulos.
 
 ## Permisos persistidos y aprovisionamiento
