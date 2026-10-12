@@ -58,96 +58,7 @@ Dentro de una organización, los usuarios se diferencian **solo por rol**: el **
 
 ### 3.2 Baja de una cuenta (ADR 0035)
 
-La persona elimina **toda su cuenta**: la identidad, sus métodos de ingreso, su espacio personal y sus membresías. Es definitiva, pero tiene **30 días para arrepentirse** (`PlatformSettings.AccountDeletionGraceDays`). Ley 25.326: el derecho a la supresión.
-
-**Estados de la identidad** (`ApplicationUser.Status`):
-
-```
-Active ──(pide la baja o la inicia la plataforma)──► PendingDeletion ──(pasan los días de gracia)──► Deleted
-  ▲                              │
-  └────(ingresa y la cancela)────┘
-
-Active ──(la plataforma suspende)──► Suspended ──(reactiva)──► Active
-Suspended ──(la plataforma inicia la baja)──► Suspended + fecha ──(pasan los días de gracia)──► Deleted
-Suspended + fecha ──(reactiva, con la baja pedida)──► PendingDeletion
-```
-
-"Necesita recuperación" (§3.1) y "Baja iniciada por la plataforma" son estados que solo se muestran en pantalla, derivados del estado real; no son valores de `ApplicationUser.Status`.
-
-Campos: `DeletionRequestedAtUtc`, `DeletionScheduledForUtc`, `DeletionReason`, `DeletionRequestedByOperatorId?` (null si la pidió la persona; si no, el operador que la inició) y `DeletedAtUtc`. El estado y la baja se guardan por separado (`Status` y `DeletionScheduledForUtc`): una cuenta suspendida con la baja iniciada sigue `Suspended`, con la fecha.
-
-**1. Pedir la baja** (`POST /api/me/deletion`, `[Idempotent]`, desde "Mi cuenta" en cualquiera de los dos accesos):
-- **Sesión iniciada:** la persona confirma el diálogo con motivo, sin código adicional (ADR 0045).
-- **Motivo** obligatorio (texto libre, `TextLimits`).
-- **`AccountDeletionPolicy` bloquea cuando:**
-  - es el **único Dueño** de una organización que no está cerrada (cualquier estado menos `Closed`: `PendingApproval`, `Provisioning`, `Active` o `Suspended`). Da `Legal.AccountDeletion.LastAdmin`, con la lista de organizaciones. La salida es sumar otro Dueño, o pedirle a la plataforma que cierre la organización;
-  - es **operador de la plataforma**: `Legal.AccountDeletion.PlatformOperator`. A un operador lo da de baja otro operador;
-  - la baja **ya está pedida**: `Legal.AccountDeletion.AlreadyPending`;
-  - un **módulo** tiene algo pendiente, según su `IAccountDeletionParticipant.CheckAsync`: `Legal.AccountDeletion.Blocked`, con los motivos traducidos que devuelve cada módulo. La plantilla no trae módulos, así que no bloquea nada por esto.
-- **En la misma transacción:**
-  - la identidad pasa a `PendingDeletion`, con la fecha programada;
-  - se **revocan todas sus sesiones y tokens**, en los dos accesos (autorizaciones y tokens de OpenIddict);
-  - cada participante corre `OnRequestedAsync`, por ejemplo un módulo que cancela lo que la persona tenía pendiente;
-  - se encola el aviso "Pediste la baja de tu cuenta" en **todos** sus métodos, con la fecha y "si no fuiste vos, ingresá para cancelarla";
-  - se registra el `SecurityEvent` `AccountDeletionRequested`.
-- El front cierra la sesión y muestra "Tu cuenta se elimina el dd/mm/aaaa". El diálogo de baja sugiere antes "Exportar mis datos".
-
-**2. Durante la gracia:**
-- **Nadie puede entrar:** la persona tampoco, salvo para cancelar.
-  - Al ingresar (código o Google, por cualquiera de las dos puertas), el servidor **no emite tokens**. Responde `Identity.Account.PendingDeletion`, con la fecha y un `cancelTicket` que vale 5 minutos.
-  - El front muestra "Tu cuenta tiene la baja pedida · Se elimina el dd/mm/aaaa", con "Cancelar la baja y entrar" y "Salir".
-- **Cancelar** (`POST /api/auth/deletion/cancel`):
-  - la identidad vuelve a `Active`, se limpian `DeletionRequestedAtUtc`, `DeletionScheduledForUtc`, `DeletionReason` y `DeletionRequestedByOperatorId`, y cada participante corre `OnCancelledAsync`;
-  - se avisa en todos los métodos y se registra el `SecurityEvent`;
-  - el ingreso sigue por la puerta que había elegido.
-
-  Solo la persona puede cancelar; la plataforma no.
-- **Sus métodos siguen reservados:** nadie puede registrarse con ese correo o ese teléfono. Una invitación a esos métodos no se puede aceptar sin ingresar, y ingresar lleva a cancelar la baja.
-- **En cada organización**, el usuario se ve con el estado **"Baja pedida"**, que sale del estado de la identidad y no de la membresía. No se le pueden cambiar los roles; sí se lo puede quitar.
-- **No cuenta como Dueño.** La protección del último Dueño exige otro Dueño activo (con el rol `TenantAdmin` y la identidad `Active`), así que una organización nunca queda sin Dueño cuando se completa la baja.
-- **La plataforma** ve la cuenta como "Baja pedida", con la fecha.
-
-**3. Eliminación** (`AccountDeletionWorker`):
-- Corre cada hora y toma con `SKIP LOCKED` toda cuenta con `DeletionScheduledForUtc` vencido, esté `PendingDeletion` o `Suspended`.
-- Procesa **una cuenta por pasos**: una transacción por cada tenant que toca (el espacio personal y cada organización), entrando con `ITenantScope` antes de abrirla, y una última para la identidad. La cuenta conserva su estado (`PendingDeletion` o `Suspended`) hasta ese último paso. Cada paso es idempotente, así que si se corta, la próxima corrida la vuelve a tomar y sigue desde donde quedó.
-
-| Dato | Qué pasa |
-|---|---|
-| Identidad | la fila queda, porque la usan la auditoría y las claves foráneas, pero **anonimizada**: nombre "Cuenta eliminada", sin correo, teléfono ni preferencias. `Status = Deleted` y `DeletedAtUtc` |
-| Métodos de ingreso y Google | se **borran**: el correo y el teléfono quedan libres para una cuenta nueva |
-| Sesiones y tokens | ya estaban revocados; se purgan |
-| Espacio personal | el tenant `Personal` pasa a `Closed`. Sus datos privados se **borran**: cada módulo B2C con su participante, y después el barrido por `TenantId` |
-| Membresías | pasan a `Removed`, con motivo `AccountDeleted`, y se quitan sus roles de organización y de empresa. La auditoría de cada organización registra "Cuenta eliminada dejó la organización" |
-| Invitaciones pendientes a sus métodos | se revocan |
-| Invitaciones que mandó ella | siguen valiendo, porque son de la organización; "Invitado por" muestra "Cuenta eliminada" |
-| Datos compartidos con empresas (`engagement`) | la empresa **conserva su registro**, pero la copia de los datos personales (nombre, teléfono y lo que haya pedido el módulo) se reemplaza por "Cuenta eliminada". Si el módulo necesita guardarlos por ley, lo declara con `IRetainedOnConsumerDeletion`, con el motivo y el plazo documentados, y se purgan al vencer |
-| Auditoría y `SecurityEvents` | se **conservan** con el `ActorId`, y el nombre se muestra como "Cuenta eliminada". Nunca tuvieron correos ni teléfonos completos |
-| Aceptaciones legales | se conservan el documento, la versión y la fecha, como prueba; se borran la IP y el user agent |
-| Exportaciones de datos | se borran los archivos |
-| Pedidos de "Recuperar mi cuenta" | se cierran |
-| Outbox | se cancelan los mensajes pendientes para la persona |
-| Caché | se invalidan `u:{userId}:` y `t:{personalTenantId}:` |
-
-El aviso final, "Tu cuenta fue eliminada", va al método principal. Se encola **antes** de borrar los métodos, con la dirección cifrada en el payload. Se registra el `SecurityEvent` `AccountDeleted`.
-
-**La copia compartida y su retención.** `IConsumerBusinessShared.ReplaceConsumerCopy()` borra todos los campos personales copiados y conserva el registro empresarial, su resumen y su estado. El lector traduce `Legal.AccountDeletion.DeletedDisplayName` sólo cuando el marcador técnico indica que la copia se borró: un nombre ausente desde el origen sigue siendo `null`. Ni la copia ni su auditoría guardan el texto traducido; datos copiados y marcador llevan `[NotAudited]`.
-
-`EngagementDeletionParticipant`, el sexto participante del núcleo, actúa sólo en el paso Personal, con el alcance y la UoW abiertos por el llamador. Infrastructure enumera los tipos compartidos del modelo y conserva `Parties`; omite exclusivamente `SoftDelete` para incluir todas las copias. Una política `IRetainedOnConsumerDeletion` de Application identifica el tipo, un motivo técnico y un plazo positivo. La entidad de Domain no implementa ese puerto.
-
-Para lo retenido, `identity.ConsumerDataRetentions` guarda sólo la clave estable `engagement.<tabla>`, los IDs de fila/persona/organización, el motivo, el vencimiento y la fecha de reemplazo. La combinación tipo + partes + fila es única. El vencimiento se fija una sola vez y los registros completados se conservan: repetir, cambiar o retirar una política no reprograma la retención. Cada corrida del worker toma hasta 100 pendientes vencidos. Por cada una abre un scope nuevo y entra al Personal antes de la UoW, incluso cerrado; el lock `FOR UPDATE SKIP LOCKED`, el reemplazo y la marca `CopyReplacedAtUtc` se confirman juntos. No necesita una membresía ni vuelve a leer la cuenta para encontrar el alcance.
-
-**4. Desde la plataforma:**
-- Un operador puede **iniciar la baja** de una cuenta activa o suspendida, por ejemplo ante un pedido legal que llega por fuera de la plataforma.
-- Una cuenta **suspendida** sigue `Suspended`, con la fecha de eliminación. Como no puede ingresar (el ingreso responde cuenta suspendida), **no puede cancelar**. Si la plataforma la reactiva antes de la fecha, pasa a `PendingDeletion` (no a `Active`), y ahí sí puede ingresar y cancelar.
-- Lleva motivo y no pide reautenticar a la persona. Se guarda `DeletionRequestedByOperatorId`, y el `SecurityEvent` `AccountDeletionRequested` se registra con el operador como actor (`ActorKind = PlatformOperator`).
-- Lo bloquean las mismas reglas: si la persona es el **único Dueño** de una organización no cerrada, primero esa organización tiene que sumar otro Dueño, o la plataforma tiene que cerrarla.
-- La cuenta muestra "La plataforma inició la baja el dd/mm/aaaa", en lugar de "Pidió la baja".
-- Sigue el mismo camino: 30 días de gracia, avisos y eliminación.
-- No puede saltearse la gracia ni cancelar por la persona.
-
-**Participantes** (`IAccountDeletionParticipant`: `CheckAsync`, `OnRequestedAsync`, `OnCancelledAsync` y `ExecuteAsync`):
-- los del núcleo: membresías, espacio personal, datos compartidos, aceptaciones legales, exportaciones, pedidos de recuperación y outbox;
-- cada módulo de un producto registra el suyo si guarda datos de la persona. `AccountDeletionParticipantsTests` verifica que toda entidad con datos de una identidad tenga un participante.
+La baja, la gracia, sus participantes y los límites legales están en [datos personales](../rules/datos-personales.md). La ejecución y la copia compartida retenida se describen en [Personal](../features/personal.md). Un módulo aporta su participante al límite y alcance del llamador.
 
 ### 3.3 Invitaciones a una organización
 
@@ -218,30 +129,7 @@ Página pública:   Draft ──(publicar)──► Published ──(despublicar
 
 ## 8. Contexto de la petición
 
-| Pieza | Capa | Rol |
-|---|---|---|
-| `ICurrentUser` | Application | `UserId`, `Access` (`Consumer` \| `Business` \| `Platform`) |
-| `ITenantContext` | Application | `TenantId?` y `TenantKind?` del acceso activo |
-| `IPublicSiteContext` | Application | `BusinessTenantId?` y `Slug?` resueltos por el subdominio (solo para datos públicos) |
-| `ITenantScope` | Application | `Enter(tenantId)` para plataforma, workers y altas |
-| `TenantResolutionMiddleware` | Api | lee `access`, `tenant_id` y `tenant_kind` del token; verifica en caché el estado de cuenta, organización y membresía proyectada en `identity.UserTenantAccesses`; si la organización no está activa, responde el 403 de su estado (§7) |
-| `PublicSiteResolutionMiddleware` | Api | un slug sobre el host y puerto del issuer → página publicada, sin bloqueo, de una organización Business activa |
-
-El host público es exactamente `<slug>.<host de Authentication:Issuer>`, con el mismo puerto y sin distinguir mayúsculas. No admite el dominio principal, IP, dos etiquetas, otro dominio ni slugs inválidos o reservados. Solo las rutas `[PublicSite]` consultan `IPublicSiteReader`, una vez por pedido y sin caché en esta etapa. Si no resuelven sitio, `PublicSiteFilter` responde 404 `PublicSite.PublicPage.NotFound` con `traceId`; nunca modifica `ITenantContext`, que conserva exclusivamente el acceso del claim.
-
-Para consultar los perfiles de una cuenta desde cualquiera de los dos accesos, `identity.UserTenantAccesses` mantiene una proyección global de `tenant.Members` (`UserId`, `TenantId`, `Status`, `JoinedAtUtc`, `RoleName`), sin RLS. Un trigger sobre `Members` la actualiza al insertar, cambiar o borrar una membresía, en la misma transacción del `IUnitOfWork`; la migración copia las membresías previas por tenant bajo RLS. `mt_app` solo tiene `SELECT` sobre la proyección: la función del trigger escribe con el dueño de la base. El nombre y estado de la organización salen de un join con `platform.Tenants`, sin duplicarlos. Los consumidores autorizados están fijados en `IdentityStorageAccessTests`, incluyendo selección de acceso, `/api/me` y metadatos de Dueños para Plataforma; el índice no da permiso para leer datos privados de otro tenant.
-
-El rol de sistema organizacional se reserva en la proyección interna `identity.MemberAccessRoles`, por `TenantId` y `MemberId`, incluso cuando el invitado todavía no tiene `UserId`. Los triggers de asignaciones y roles la reconstruyen sólo dentro del tenant legítimo de la escritura. El trigger de `Members` copia ese valor al índice al vincular la identidad; nunca consulta Roles o RoleAssignments de otro alcance durante la aceptación múltiple por OTP. El runtime no tiene permisos sobre la tabla ni EXECUTE sobre las funciones privilegiadas; éstas usan `SECURITY DEFINER` con `search_path` fijo. La migración reconstruye las reservas y repara perfiles previos bajo cada alcance RLS, sin cambiar el tenant de una UoW de aplicación. `InvitedLoginCodeTests` comprueba roles, permisos y Dueños de ambas organizaciones, actualizaciones posteriores, upgrade y ACL del runtime.
-
-**Rutas:** cada una declara su acceso. `[Access]` acepta uno o varios accesos:
-- `[Access(Consumer)]` para lo de las personas;
-- `[Access(Business)]` + permiso para la administración de la empresa;
-- `[Access(Platform)]` para el backoffice;
-- `[Access(Consumer, Business, Platform)]` para la propia cuenta, que vale con cualquier sesión: `/api/me`, `/api/me/*` y `POST /api/legal/accept`. El operador también lee `GET /api/me`; por eso `POST /api/me/deletion` le responde `Legal.AccountDeletion.PlatformOperator` y no 403;
-- `[PublicSite]` + `[AllowAnonymous]` **solo** para leer lo publicado (`PublicSiteController`); `[PublicSite]` + `[Access(Consumer)]` permite iniciar una interacción. El espacio personal sale del token y la contraparte de `IPublicSiteContext`; los accesos efectivos de controller/acción se intersectan y deben ser exclusivamente Consumer;
-- solo `[AllowAnonymous]`, sin `[Access]`, para las rutas anónimas del dominio principal: el ingreso y el registro (`/api/auth/*` y `/connect/*`), «Registrá tu empresa» (`/api/auth/business-signup`), disponibilidad pública de slug (`GET /api/public-site/slug-availability`), cancelar la baja (`/api/auth/deletion/cancel`), la invitación (`/api/invitations/*`), el enlace, los documentos legales (`GET /api/legal/*`), `GET /api/reference-data` y sus cinco rutas por catálogo (`ReferenceDataController`), el directorio (`DirectoryController` (E7), que no lleva `[PublicSite]`), el pedido de «Recuperar mi cuenta», los correos de contacto (`GET /api/contact`) y los webhooks. `AccessDeclarationTests` las acepta únicamente si su controller está en la lista explícita del test. Estas rutas no dan acceso a datos privados de ningún tenant; el directorio lee solo lo publicado.
-
-Con el acceso equivocado responde 403 `Tenancy.Access.Wrong`. Un recurso de otra organización responde 404, nunca 403, para no revelar que existe.
+El [contexto de petición del backend](backend.md#8-contexto-de-la-petición) distingue ICurrentUser, ITenantContext, IRequestInfo e IPublicSiteContext. El host resuelve solo publicación; el claim identifica el alcance privado.
 
 ## 9. Barreras
 
@@ -297,14 +185,7 @@ El seed inicial de `PlatformSettings` deja `ConsumerSignup = Open`, `BusinessSig
 
 ## 12. Caché, locks, unicidad
 
-- **Prefijos de caché:**
-  - `t:{tenantId}:` (privado);
-  - `s:{businessTenantId}:` (página pública; se invalida al publicar);
-  - `u:{userId}:` (identidad y accesos);
-  - `p:` (plataforma).
-- **Únicos globales:** cada método de ingreso (`LoginMethods`: tipo + valor), el dominio verificado (`TenantDomains`), el `Slug` de la organización y el `PhoneNumberId` de WhatsApp.
-- **Una sola fuente para correos y teléfonos:** `LoginMethods`. `AspNetUsers.Email` y `PhoneNumber` son solo una copia del método principal (ASP.NET Identity los usa), sin índice único; los mantiene el servicio de métodos de ingreso.
-- **Locks de recursos compartidos:** sobre la fila (`FOR NO KEY UPDATE`), por ejemplo para no dar dos veces el mismo horario.
+[Multitenancy](../rules/multitenancy.md) define claves por alcance y locks compartidos; [guardado](../rules/guardado.md), su orden transaccional. [Identidad](../features/identidad.md) conserva LoginMethods como fuente única de correos y teléfonos; la unicidad global y los índices están en [persistencia](../rules/persistencia-ef.md).
 
 ## 13. Tests obligatorios de aislamiento
 

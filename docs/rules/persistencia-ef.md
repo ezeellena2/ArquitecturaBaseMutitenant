@@ -27,6 +27,8 @@
 - **Largos:** `HasMaxLength(TextLimits.X)`, nunca un número suelto ([textos-libres](textos-libres.md)). Los correos, CUIT y teléfonos son value objects ([emails](emails.md), [identificacion-fiscal](identificacion-fiscal.md), [telefonos](telefonos.md)).
 - **Soft delete:** `ISoftDeletable` y `Remove()`. El interceptor lo convierte en una marca. Para ver lo borrado: `IgnoreQueryFilters(["SoftDelete"])`.
 
+- Son únicos globalmente LoginMethods (tipo + valor), TenantDomains, Tenant.Slug y el PhoneNumberId de WhatsApp.
+
 ## Prohibido
 - `DbContext` fuera de Infrastructure.
 - `SaveChanges` en repositorios (ver [guardado](guardado.md)).

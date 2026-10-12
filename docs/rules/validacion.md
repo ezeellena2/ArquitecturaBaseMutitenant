@@ -33,4 +33,4 @@
 - `InjectedValidatorTests` (E1): prohíbe inyectar `IValidator<T>` o validadores concretos en servicios y crearlos con `new` dentro de esos servicios. `ServiceDependencyCountTests` (E1) limita el tamaño del constructor.
 
 ## Detalle
-[backend.md §6, "Validación"](../architecture/backend.md#validación)
+[backend.md §6, "Validación"](../architecture/backend.md#6-result-pattern-y-manejo-de-errores)

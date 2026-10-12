@@ -15,6 +15,8 @@
 - Al mostrar dinero, primero se redondea a los `MinorUnits` de la moneda y luego se decide el signo. Los formatos compactos y de tamaño promueven la unidad si la magnitud presentada llega a 1000 tras redondear.
 - **Versiones de protocolo:** las versiones de concurrencia usadas en URLs y `ETag` se serializan con `VersionWireFormatter`, como dígitos invariantes sin separadores. Es un serializador técnico permitido explícitamente por `NoManualFormattingTests`; la presentación para una persona sigue en `DisplayFormatter`.
 
+- El JSON number admite hasta 13 dígitos enteros y 2 decimales para importes; superar ese límite requiere un ADR.
+
 ## Prohibido
 - `double` o `float` en una entidad o un modelo.
 - `decimal` sin `HasPrecision`.
@@ -35,4 +37,4 @@
 - `VersionWireFormatterTests` (E7): las versiones de protocolo conservan dígitos ASCII, sin separadores, bajo culturas con formatos numéricos distintos.
 
 ## Detalle
-[backend.md §18](../architecture/backend.md#18-representación-y-formato-de-datos-unificado) · catálogo visual en el front: `docs/architecture/formatos.md`
+[backend.md §18](../architecture/backend.md#18-representación-y-formato-de-datos-unificado) · catálogo visual en el front: `docs/rules/formatos.md`

@@ -158,3 +158,12 @@ E8 M1 prepara el OTP sin cambios persistentes y admite capacidad de canal sólo 
 - Probar las reglas puras en `Domain.UnitTests`, la cuenta Identity en `Application.UnitTests` y las rutas y el aislamiento en `Api.IntegrationTests`.
 
 Pruebas A7: `GoogleNamesTests` recorre el provider HTTP de integración y el adaptador real `SignInService`, incluidos nombres compuestos, campos vacíos/escritos, repetición, versión, propiedad y correo sin verificar. `GoogleNameRulesTests` verifica compatibilidad y anonimización; `UserNamesMigrationTests` aplica anterior→nueva en PostgreSQL real con valores nulos, vacíos, de una palabra, varias y una cuenta eliminada. El ingreso real a Google queda fuera de automatización: el E2E focal A4/3b sólo verifica OAuth real hasta Google y la cuenta con API/PostgreSQL/pickup reales.
+
+## Implementación del ingreso en el front
+
+- AuthStatus, AuthCodeStep, AuthMessage y AuthLink son las piezas comunes; el código es un paso de la pantalla, sin ruta propia. El error del OTP pertenece a su paso y se borra al cambiar un dígito; un error de validación sólo marca código si trae errors.code.
+- Phone vive en memoria/navigation state, nunca query ni almacenamiento; un retorno OIDC validado conserva state, PKCE y callback al pasar entre Ingreso y Registro. El retorno fijo directo verifica posesión y después inicia la autorización nueva del acceso elegido.
+- El correo preescrito hacia Ingreso cruza OIDC con almacenamiento temporal de pestaña, validado y consumido una vez. Su lectura en render es pura y se descarta en el efecto del retorno confirmado, también bajo StrictMode. No viaja en URL/logs y no acepta términos por la persona.
+- AccountIdentity deriva nombre, correo y máscara Phone de Me; conserva esa máscara sin formatearla ni usarla como inicial. Menús y Más reutilizan esa fuente con avatar/raya según los datos presentes.
+- Un subdominio usa callback y canje de su origen, issuer fijo y recuperación silenciosa Consumer por iframe; una cuenta sin Personal no lo crea silenciosamente. La CTA conserva la ruta actual y los perfiles vuelven al principal; Salir vuelve a la raíz del propio sitio.
+- Mi cuenta comparte sus diálogos con Inicio Personal desde shared/account. El vencimiento del código lo decide la API; ningún diálogo promete diez minutos ni mantiene countdown de vencimiento.
