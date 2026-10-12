@@ -50,8 +50,7 @@ public sealed class ExternalLoginController(
     [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Google([FromQuery] ExternalLoginQuery query)
     {
-        if (query.Signup) return Invalid("signup", ValidationTexts.Required);
-        return await StartGoogleChallengeAsync(query);
+        return await StartGoogleChallengeAsync(query, false);
     }
 
     [HttpGet("google/antiforgery")]
@@ -74,25 +73,18 @@ public sealed class ExternalLoginController(
     {
         if (!await antiforgery.IsRequestValidAsync(HttpContext))
             return Invalid("requestVerificationToken", ValidationTexts.Required);
-        if (!query.Signup) return Invalid("signup", ValidationTexts.Required);
-        return await StartGoogleChallengeAsync(query);
+        return await StartGoogleChallengeAsync(query, true);
     }
 
-    private async Task<IActionResult> StartGoogleChallengeAsync(ExternalLoginQuery query)
+    private async Task<IActionResult> StartGoogleChallengeAsync(ExternalLoginQuery query, bool signupEndpoint)
     {
+        var valid = await service.ValidateStartAsync(new ExternalLoginStartRequest(query.ReturnUrl,
+            query.Signup, query.AcceptedTerms, query.ReturnTo, signupEndpoint), HttpContext.RequestAborted);
+        if (valid.IsFailure) return valid.ToActionResult(this);
+
         if (await schemes.GetSchemeAsync(GoogleDefaults.AuthenticationScheme) is null)
         {
             return NotFound();
-        }
-
-        if (query.Signup)
-        {
-            if (!query.AcceptedTerms) return Invalid("acceptedTerms", ValidationTexts.Required);
-            if (!IsLocalAppPath(query.ReturnTo)) return Invalid("returnTo", ValidationTexts.ReturnUrlInvalid);
-        }
-        else if (!ReturnUrls.IsLoginReturn(query.ReturnUrl))
-        {
-            return Invalid("returnUrl", ValidationTexts.ReturnUrlInvalid);
         }
 
         var properties = new AuthenticationProperties { RedirectUri = CallbackPath };
@@ -137,7 +129,7 @@ public sealed class ExternalLoginController(
         {
             if (result.Error.Code == AccountErrors.PendingDeletion.Code)
                 pendingCookie.Write(HttpContext, result.Error);
-            var signupClosed = result.Error.Code is "Auth.Signup.Closed" or "Auth.BusinessSignup.Closed";
+            var signupClosed = result.Error.Code is SignupErrors.ClosedCode or SignupErrors.BusinessClosedCode;
             var destination = signup && signupClosed
                 ? Value(state, AccessKey) == "business" ? "/registro/empresa" : "/registro"
                 : Value(state, AccessKey) == "business" ? "/login/empresa" : ReturnUrls.LoginPath;
@@ -149,11 +141,11 @@ public sealed class ExternalLoginController(
         var returnTo = Value(state, ReturnToKey);
         if (Value(state, AccessKey) == "business")
         {
-            var businessReturn = IsLocalAppPath(returnTo) ? returnTo! : "/registro/empresa";
+            var businessReturn = ReturnUrls.IsLocalAppPath(returnTo) ? returnTo! : "/registro/empresa";
             return LocalRedirect(businessReturn + (businessReturn.Contains('?') ? "&" : "?")
                 + "google=complete");
         }
-        if (!IsLocalAppPath(returnTo)) return LocalRedirect("/registro?google=complete");
+        if (!ReturnUrls.IsLocalAppPath(returnTo)) return LocalRedirect("/registro?google=complete");
         return LocalRedirect("/registro" + QueryString.Create(
             new Dictionary<string, string?> { ["google"] = "complete", ["returnTo"] = returnTo }));
     }
@@ -172,8 +164,4 @@ public sealed class ExternalLoginController(
     private static string? Value(IDictionary<string, string?> state, string key) =>
         state.TryGetValue(key, out var value) ? value : null;
 
-    private static bool IsLocalAppPath(string? path) =>
-        !string.IsNullOrEmpty(path)
-        && path[0] == '/' && !path.StartsWith("//", StringComparison.Ordinal)
-        && !path.Contains('\\') && !path.Any(char.IsControl);
 }

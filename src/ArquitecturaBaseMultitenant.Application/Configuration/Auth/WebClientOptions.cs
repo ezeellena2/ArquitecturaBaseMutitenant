@@ -1,9 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace ArquitecturaBaseMultitenant.Infrastructure.Identity.OpenIddict;
+namespace ArquitecturaBaseMultitenant.Application.Configuration.Auth;
 
 /// <summary>URIs del cliente público "web" (el SPA), en Authentication:Clients:Web.</summary>
-internal sealed class WebClientOptions
+public sealed class WebClientOptions
 {
     public const string SectionName = "Authentication:Clients:Web";
 

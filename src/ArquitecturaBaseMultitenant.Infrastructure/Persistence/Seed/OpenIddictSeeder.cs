@@ -1,4 +1,4 @@
-using ArquitecturaBaseMultitenant.Infrastructure.Identity.OpenIddict;
+using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
 using Microsoft.Extensions.Options;
 using OpenIddict.Abstractions;
 using static OpenIddict.Abstractions.OpenIddictConstants;

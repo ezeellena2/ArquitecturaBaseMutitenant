@@ -11,6 +11,11 @@ public static class ReturnUrls
     public const string InvitationPath = "/invitacion";
     public const string LoginLinkPath = "/login/enlace";
 
+    public static bool IsLocalAppPath([NotNullWhen(true)] string? path) =>
+        !string.IsNullOrEmpty(path) && path[0] == '/'
+        && !path.StartsWith("//", StringComparison.Ordinal)
+        && !path.Contains('\\') && !path.Any(char.IsControl);
+
     /// <summary>Sólo OTP: los retornos fijos exigen el acceso literal correspondiente; los anteriores no lo reciben.</summary>
     public static bool TryReadLoginCodeSelection(string? returnUrl, string? access,
         out AccessSelectionRequest? selection)

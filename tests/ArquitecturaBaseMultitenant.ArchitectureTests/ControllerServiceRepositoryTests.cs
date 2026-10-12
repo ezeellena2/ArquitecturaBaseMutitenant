@@ -7,7 +7,8 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
 using NetArchTest.Rules;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
@@ -120,7 +121,7 @@ public sealed class ControllerServiceRepositoryTests
 
     private static bool IsApprovedProtocolDependency(Type controller, Type dependency) =>
         controller == typeof(ConnectController) && dependency == typeof(OpenIdPrincipalFactory)
-        || controller == typeof(ConnectController) && dependency == typeof(IConfiguration)
+        || controller == typeof(ConnectController) && dependency == typeof(IOptions<WebClientOptions>)
         || controller == typeof(ExternalLoginController) && dependency == typeof(IAuthenticationSchemeProvider)
         || controller == typeof(ExternalLoginController) && dependency == typeof(PendingDeletionCookie)
         || controller == typeof(AccountDeletionCancelController) && dependency == typeof(PendingDeletionCookie)

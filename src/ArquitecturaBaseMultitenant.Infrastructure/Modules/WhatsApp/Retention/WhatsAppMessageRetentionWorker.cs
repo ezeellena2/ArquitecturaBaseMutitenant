@@ -5,8 +5,8 @@ using Microsoft.Extensions.Logging;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Retention;
 
 /// <summary>La privacidad sigue con el canal apagado. Cada lote tiene un scope y una UoW propios.</summary>
-internal sealed partial class WhatsAppMessageRetentionService(IServiceScopeFactory scopes, TimeProvider clock,
-    ILogger<WhatsAppMessageRetentionService> logger) : BackgroundService
+internal sealed partial class WhatsAppMessageRetentionWorker(IServiceScopeFactory scopes, TimeProvider clock,
+    ILogger<WhatsAppMessageRetentionWorker> logger) : BackgroundService
 {
     internal async Task<int> RunOnceAsync(CancellationToken ct)
     {

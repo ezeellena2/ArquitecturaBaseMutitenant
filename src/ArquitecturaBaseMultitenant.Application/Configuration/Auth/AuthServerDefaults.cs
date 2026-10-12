@@ -1,7 +1,7 @@
-namespace ArquitecturaBaseMultitenant.Infrastructure.Identity.OpenIddict;
+namespace ArquitecturaBaseMultitenant.Application.Configuration.Auth;
 
 /// <summary>Cliente, scope y rutas del servidor de autorización (sección 5.5).</summary>
-internal static class AuthServerDefaults
+public static class AuthServerDefaults
 {
     public const string WebClientId = "web";
     public const string ApiScope = "api";
