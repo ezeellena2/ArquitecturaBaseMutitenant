@@ -53,9 +53,17 @@ internal sealed class AssistantConversationReader(ApplicationDbContext context, 
         var page = await AssistantCursorPagination.ToCursorResultAsync(query, request.Limit ?? 50, request.Cursor,
             $"messages:{tenantId:N}:{ownerUserId:N}:{access}:{conversationId:N}", true,
             value => value.CreatedAtUtc, value => value.Id, ct);
+        var ids = page.Items.Select(row => row.Id).ToArray();
+        var attachmentRows = access == Access.Platform
+            ? await context.Set<PlatformAssistantAttachment>().AsNoTracking().Where(row => row.ConversationId == conversationId && row.MessageId != null && ids.Contains(row.MessageId.Value))
+                .Select(row => new { MessageId = row.MessageId!.Value, row.Id, row.FileName, row.ContentType, row.Size, row.Version }).ToArrayAsync(ct)
+            : await context.Set<AssistantAttachment>().AsNoTracking().Where(row => row.TenantId == tenantId && row.ConversationId == conversationId && row.MessageId != null && ids.Contains(row.MessageId.Value))
+                .Select(row => new { MessageId = row.MessageId!.Value, row.Id, row.FileName, row.ContentType, row.Size, row.Version }).ToArrayAsync(ct);
+        var attachments = attachmentRows.GroupBy(row => row.MessageId).ToDictionary(group => group.Key,
+            group => group.Select(row => new AssistantAttachmentSummaryResponse(row.Id, row.FileName, row.ContentType, row.Size, row.Version)).ToArray());
         return new CursorResult<AssistantMessageResponse>([.. page.Items.Select(value => new AssistantMessageResponse(value.Id,
             Enum.Parse<AssistantMessageRole>(value.Role), value.Text ?? "", Enum.Parse<AssistantMessageStatus>(value.Status), value.CreatedAtUtc, value.Version,
-            [], value.LinksJson is null ? [] : JsonSerializer.Deserialize<AssistantLinkResponse[]>(value.LinksJson)!,
+            attachments.GetValueOrDefault(value.Id) ?? [], value.LinksJson is null ? [] : JsonSerializer.Deserialize<AssistantLinkResponse[]>(value.LinksJson)!,
             value.PositiveFeedback == null ? null : value.PositiveFeedback.Value ? AssistantRating.Up : AssistantRating.Down))], page.NextCursor, page.HasMore);
     }
 

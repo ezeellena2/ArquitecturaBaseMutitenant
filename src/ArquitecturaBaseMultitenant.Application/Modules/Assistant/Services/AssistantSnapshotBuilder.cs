@@ -6,7 +6,10 @@ using ArquitecturaBaseMultitenant.Domain.Assistant;
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 internal sealed record AssistantDurableSnapshot(AssistantConversationSummaryResponse Conversation,
-    IReadOnlyList<AssistantMessageResponse> Messages, AssistantQuickResultResponse? Result);
+    IReadOnlyList<AssistantMessageResponse> Messages, AssistantQuickResultResponse? Result)
+{
+    public AssistantAttachmentSummaryResponse? Attachment { get; init; }
+}
 
 internal static class AssistantSnapshotBuilder
 {
@@ -42,6 +45,7 @@ internal static class AssistantSnapshotBuilder
         var snapshot = JsonSerializer.Deserialize<AssistantDurableSnapshot>(json, Json)
             ?? throw new InvalidOperationException("A committed assistant snapshot is missing.");
         return snapshot with { Conversation = snapshot.Conversation with { Version = version },
+            Attachment = snapshot.Attachment is { } attachment ? attachment with { Version = version } : null,
             Messages = snapshot.Messages.Select(message => message with { Version = version }).ToArray() };
     }
     internal static AssistantConversationSummaryResponse Summary(IAssistantConversation row) =>

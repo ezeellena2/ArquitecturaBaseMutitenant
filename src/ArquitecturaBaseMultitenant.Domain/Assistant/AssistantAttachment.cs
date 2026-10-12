@@ -15,6 +15,12 @@ public sealed class AssistantAttachment : Entity, ITenantOwned, IVersioned
     public long Size { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
 
+    public void Bind(Guid messageId)
+    {
+        if (messageId == Guid.Empty || MessageId is not null) throw new InvalidOperationException("An attachment can be bound once.");
+        MessageId = messageId;
+    }
+
     public static AssistantAttachment Create(Guid conversationId, string fileName, string contentType, string storageKey, long size, DateTime nowUtc)
     {
         if (conversationId == Guid.Empty) throw new ArgumentException("A conversation is required.", nameof(conversationId));

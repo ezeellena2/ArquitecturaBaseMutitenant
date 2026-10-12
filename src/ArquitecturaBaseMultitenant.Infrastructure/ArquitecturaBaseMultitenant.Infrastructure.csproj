@@ -43,6 +43,7 @@
     <EmbeddedResource Include="Messaging\Email\Templates\*.html" LogicalName="EmailTemplates.%(Filename)%(Extension)" />
     <EmbeddedResource Include="Persistence\Seed\ReferenceData\*.json" LogicalName="ReferenceData.%(Filename)%(Extension)" />
     <EmbeddedResource Include="Modules\Assistant\ReferenceData\*.json" LogicalName="AssistantReferenceData.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Modules\Assistant\Export\Fonts\NotoSans-Regular.ttf" LogicalName="AssistantExport.NotoSans.ttf" />
     <EmbeddedResource Include="..\..\docs\ayuda\index.json" LogicalName="AssistantHelp.index.json" />
     <EmbeddedResource Include="..\..\docs\ayuda\**\*.md">
       <WithCulture>false</WithCulture>
