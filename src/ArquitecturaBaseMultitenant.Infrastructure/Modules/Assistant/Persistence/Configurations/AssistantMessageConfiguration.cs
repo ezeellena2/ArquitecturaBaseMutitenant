@@ -10,15 +10,16 @@ internal sealed class AssistantMessageConfiguration : IEntityTypeConfiguration<A
 {
     public void Configure(EntityTypeBuilder<AssistantMessage> builder)
     {
+        builder.HasBaseType((Type?)null);
         builder.ToTable("AssistantMessages", Schemas.Tenant);
         builder.HasKey(value => new { value.TenantId, value.Id });
         builder.HasAlternateKey(value => new { value.TenantId, value.ConversationId, value.Id });
         builder.HasOne<ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant>().WithMany().HasForeignKey(value => value.TenantId).OnDelete(DeleteBehavior.Restrict);
         builder.Property(value => value.Role).HasMaxLength(TextLimits.ShortName).IsRequired();
-        builder.Property(value => value.Status).HasMaxLength(TextLimits.ShortName).IsRequired();
+        builder.Property(value => value.Status).HasConversion<string>().HasMaxLength(TextLimits.ShortName).IsRequired();
         builder.Property(value => value.Text).HasMaxLength(TextLimits.LegalDocument);
         builder.Property(value => value.ToolKey).HasMaxLength(TextLimits.ShortName);
-        builder.Property(value => value.ToolState).HasMaxLength(TextLimits.ShortName);
+        builder.Property(value => value.ToolState).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.Property(value => value.LinksJson).HasColumnType("jsonb");
         builder.Property(value => value.SubjectUserIds).HasColumnType("uuid[]");
         builder.HasIndex(value => value.SubjectUserIds).HasMethod("gin");

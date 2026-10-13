@@ -10,6 +10,7 @@ internal sealed class PlatformAssistantDurableOperationConfiguration : IEntityTy
 {
     public void Configure(EntityTypeBuilder<PlatformAssistantDurableOperation> builder)
     {
+        builder.HasBaseType((Type?)null);
         builder.ToTable("PlatformAssistantDurableOperations", Schemas.Platform);
         builder.HasKey(value => value.Id);
         builder.Property(value => value.Kind).HasMaxLength(TextLimits.ShortName);

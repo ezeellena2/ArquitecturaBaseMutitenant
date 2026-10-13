@@ -10,7 +10,7 @@ public interface IAssistantTurn
     Guid BindingId { get; }
     Guid[] ContextMessageIds { get; }
     void CaptureContext(IReadOnlyCollection<Guid> ids);
-    string Status { get; }
+    AssistantTurnStatus Status { get; }
     string EventsJson { get; }
     int Sequence { get; }
     uint? AdmissionVersion { get; }

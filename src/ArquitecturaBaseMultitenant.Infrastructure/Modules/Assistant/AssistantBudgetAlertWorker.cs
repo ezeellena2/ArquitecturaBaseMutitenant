@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Options;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Configuration;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -6,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant;
 
-internal sealed class AssistantBudgetAlertWorker(IServiceScopeFactory scopes, TimeProvider clock, ILogger<AssistantBudgetAlertWorker> logger) : PeriodicWorker(TimeSpan.FromMinutes(1), clock, logger)
+internal sealed class AssistantBudgetAlertWorker(IServiceScopeFactory scopes, TimeProvider clock, IOptions<AssistantOptions> options, ILogger<AssistantBudgetAlertWorker> logger) : PeriodicWorker(options.Value.BudgetAlertWorkerInterval, clock, logger)
 {
     // Preserve the original delayed first pass.
     private bool first = true;

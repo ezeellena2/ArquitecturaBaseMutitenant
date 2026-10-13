@@ -10,7 +10,7 @@ public sealed record AssistantTurnFrame(string Event, int Sequence, JsonElement 
 public sealed record AssistantTurnRead(IReadOnlyList<AssistantTurnFrame> Frames, bool Terminal);
 public sealed record AssistantTurnExecution(Guid TurnId, Guid LeaseId, IReadOnlyList<ChatMessage> Messages,
     IReadOnlyList<AITool> Tools, AssistantChatBinding Binding, bool RecoverOnly,
-    Guid ConversationId = default, IReadOnlyList<AssistantMessageResponse>? ContextMessages = null);
+    Guid ConversationId = default, IReadOnlyList<AssistantMessageResponse>? ContextMessages = null, DateTime DeadlineAtUtc = default);
 public sealed record AssistantToolExecution(string Data, IReadOnlyList<Guid> SubjectUserIds);
 public sealed record AssistantChatBinding(AssistantMode Mode, Guid ModelId, string ProviderModelId, AssistantEffort Effort);
 public sealed record AssistantHistoryMessageRow(Guid Id, string Role, bool PrivacySubjectsKnown, Guid[] SubjectUserIds);

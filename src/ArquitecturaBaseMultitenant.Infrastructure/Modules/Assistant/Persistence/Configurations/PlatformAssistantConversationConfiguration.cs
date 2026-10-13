@@ -10,6 +10,7 @@ internal sealed class PlatformAssistantConversationConfiguration : IEntityTypeCo
 {
     public void Configure(EntityTypeBuilder<PlatformAssistantConversation> builder)
     {
+        builder.HasBaseType((Type?)null);
         builder.ToTable("PlatformAssistantConversations", Schemas.Platform);
         builder.HasKey(value => value.Id);
         builder.Property(value => value.Title).HasMaxLength(TextLimits.AssistantTitle);

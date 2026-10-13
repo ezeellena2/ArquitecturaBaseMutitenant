@@ -13,6 +13,23 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Assistant;
 public sealed class AssistantStartupTests
 {
     [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void Invalid_runtime_durations_are_rejected_at_startup(int seconds)
+    {
+        var options = new AssistantOptions { TurnTimeout = TimeSpan.FromSeconds(seconds) };
+        var validator = new AssistantOptionsValidator(new EnvironmentStub());
+        Assert.True(validator.Validate(null, options).Failed);
+    }
+
+    [Fact]
+    public void A_lease_heartbeat_must_run_before_the_lease_expires()
+    {
+        var options = new AssistantOptions { LeaseHeartbeatInterval = TimeSpan.FromSeconds(45) };
+        var validator = new AssistantOptionsValidator(new EnvironmentStub());
+        Assert.True(validator.Validate(null, options).Failed);
+    }
+    [Theory]
     [InlineData("Production", false, false)]
     [InlineData("Development", false, false)]
     [InlineData("E2E", false, false)]

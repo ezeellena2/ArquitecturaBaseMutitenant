@@ -10,6 +10,7 @@ internal sealed class AssistantDurableOperationConfiguration : IEntityTypeConfig
 {
     public void Configure(EntityTypeBuilder<AssistantDurableOperation> builder)
     {
+        builder.HasBaseType((Type?)null);
         builder.ToTable("AssistantDurableOperations", Schemas.Tenant);
         builder.HasKey(value => new { value.TenantId, value.Id });
         builder.HasOne<ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant>().WithMany().HasForeignKey(value => value.TenantId).OnDelete(DeleteBehavior.Restrict);

@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Options;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Configuration;
 using System.Net.ServerSentEvents;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
@@ -29,6 +31,7 @@ internal sealed class AssistantStreamResult(AssistantTurnAdmission admission) : 
     {
         var service = http.RequestServices.GetRequiredService<IAssistantTurnService>();
         var clock = http.RequestServices.GetRequiredService<TimeProvider>();
+        var options = http.RequestServices.GetRequiredService<IOptions<AssistantOptions>>().Value;
         var lastHeartbeat = clock.GetTimestamp();
         var sequence = -1;
         while (!ct.IsCancellationRequested)
@@ -38,7 +41,7 @@ internal sealed class AssistantStreamResult(AssistantTurnAdmission admission) : 
             {
                 var data = new AssistantErrorEventResponse(admission.TurnId, read.Error.Code, http.TraceIdentifier, null, AssistantFailedStatus.Failed);
                 yield return new SseItem<JsonElement>(AssistantTurnJson.Frame("error", sequence + 1, data).Data, "error")
-                    { EventId = admission.TurnId.ToString("D") + ":" + ArquitecturaBaseMultitenant.Application.Common.Formatting.InvariantWireFormatter.FormatInteger(sequence + 1) };
+                    { EventId = admission.TurnId.ToString("D") + ":" + ArquitecturaBaseMultitenant.Application.Common.Formatting.VersionWireFormatter.Format(sequence + 1) };
                 await http.Response.Body.FlushAsync(ct);
                 yield break;
             }
@@ -48,20 +51,20 @@ internal sealed class AssistantStreamResult(AssistantTurnAdmission admission) : 
                 var frame = read.Value.Frames[0];
                 sequence = frame.Sequence;
                 yield return new SseItem<JsonElement>(frame.Data, frame.Event)
-                    { EventId = admission.TurnId.ToString("D") + ":" + ArquitecturaBaseMultitenant.Application.Common.Formatting.InvariantWireFormatter.FormatInteger(sequence) };
+                    { EventId = admission.TurnId.ToString("D") + ":" + ArquitecturaBaseMultitenant.Application.Common.Formatting.VersionWireFormatter.Format(sequence) };
                 await http.Response.Body.FlushAsync(ct);
                 lastHeartbeat = clock.GetTimestamp();
                 if (frame.Event is "done" or "error") yield break;
                 continue;
             }
             if (read.Value.Terminal) yield break;
-            if (clock.GetElapsedTime(lastHeartbeat) >= TimeSpan.FromSeconds(15))
+            if (clock.GetElapsedTime(lastHeartbeat) >= options.StreamHeartbeatInterval)
             {
                 await http.Response.WriteAsync(": heartbeat\n\n", ct);
                 await http.Response.Body.FlushAsync(ct);
                 lastHeartbeat = clock.GetTimestamp();
             }
-            await Task.Delay(TimeSpan.FromMilliseconds(100), clock, ct);
+            await Task.Delay(options.StreamPollInterval, clock, ct);
         }
     }
 }

@@ -11,9 +11,10 @@ internal sealed class PlatformAssistantTurnConfiguration : IEntityTypeConfigurat
 {
     public void Configure(EntityTypeBuilder<PlatformAssistantTurn> builder)
     {
+        builder.HasBaseType((Type?)null);
         builder.ToTable("PlatformAssistantTurns", Schemas.Platform);
         builder.HasKey(value => value.Id);
-        builder.Property(value => value.Status).HasMaxLength(TextLimits.ShortName).IsRequired();
+        builder.Property(value => value.Status).HasConversion<string>().HasMaxLength(TextLimits.ShortName).IsRequired();
         builder.HasOne<PlatformAssistantConversation>().WithMany().HasForeignKey(value => value.ConversationId).OnDelete(DeleteBehavior.Cascade);
         builder.HasIndex(value => new { value.ConversationId, value.CreatedAtUtc, value.Id });
         builder.HasIndex(value => value.ConversationId).IsUnique().HasDatabaseName(UniqueKeys.PlatformAssistantActiveTurn).HasFilter("\"Status\" = 'Pending' OR \"Status\" = 'Running'");

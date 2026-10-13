@@ -25,6 +25,7 @@ public static class AssistantModule
         services.AddScoped<AssistantTurnPreparationBuilder>();
         services.AddScoped<AssistantTurnRequester>();
         services.AddScoped<AssistantTurnWriter>();
+        services.AddScoped<AssistantExecutionIdentityResolver>();
         services.AddScoped<AssistantTurnBuilder>();
         services.AddScoped<AssistantTurnToolBuilder>();
         services.AddScoped<AssistantConversationWriter>();

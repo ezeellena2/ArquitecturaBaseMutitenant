@@ -62,7 +62,7 @@ internal sealed class AssistantTurnRequester(IAssistantTurnRepository turns, IAs
         turns.Touch(conversation, nowUtc);
         turns.Add(AssistantTurnWork.Create(turn.Id, actor.OwnerUserId, actor.Access, actor.TenantId, actor.TenantKind,
             actor.Culture, actor.TimeZoneId, actor.SessionStartedAtUtc, config.Model.Id, config.Model.ProviderModelId,
-            config.Effort.ToString(), reserved.Value.Funding, nowUtc));
+            config.Effort.ToString(), reserved.Value.Funding, nowUtc, nowUtc.Add(prepared.TurnTimeout)));
         return new AssistantTurnAdmission(reference with { Id = binding.Id }, turn.Id);
     }
     internal async Task<Result> StopAsync(Guid conversationId, Guid turnId, AssistantTurnPreparation prepared, CancellationToken ct)

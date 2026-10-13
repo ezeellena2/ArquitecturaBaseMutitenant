@@ -16,6 +16,8 @@ public static class AssistantModule
         services.AddSingleton<IPersistenceModelContributor, AssistantModelContributor>();
         services.AddScoped<IAssistantSettingsReader, AssistantSettingsReader>();
         services.AddScoped<IAssistantTurnRepository, AssistantTurnRepository>();
+        services.AddScoped<AssistantTurnStore, TenantAssistantTurnStore>();
+        services.AddScoped<AssistantTurnStore, PlatformAssistantTurnStore>();
         services.AddScoped<IAssistantChatContext, AssistantChatContext>();
         services.AddHostedService<AssistantTurnWorker>();
         services.AddScoped<IAssistantConversationReader, AssistantConversationReader>();

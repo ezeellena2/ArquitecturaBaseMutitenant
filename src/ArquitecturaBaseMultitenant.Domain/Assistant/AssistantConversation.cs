@@ -3,60 +3,17 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Domain.Assistant;
 
-public sealed class AssistantConversation : Entity, ITenantOwned, IAssistantConversation
+public sealed class AssistantConversation : AssistantConversationBase, ITenantOwned
 {
     private AssistantConversation() { }
     public Guid TenantId { get; private set; }
-    public uint Version { get; private set; }
-    public Guid OwnerUserId { get; private set; }
     public Access Access { get; private set; }
-    public string? Title { get; private set; }
-    public bool IsSaved { get; private set; }
-    public bool IsTitleManual { get; private set; }
-    public DateTime CreatedAtUtc { get; private set; }
-    public DateTime LastActivityAtUtc { get; private set; }
-
-    public void Touch(DateTime nowUtc)
-    {
-        if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("UTC is required.", nameof(nowUtc));
-        LastActivityAtUtc = nowUtc;
-    }
-    public bool TrySetAutomaticTitle(string title, uint expectedVersion, DateTime nowUtc)
-    {
-        if (IsTitleManual || Title is not null || Version != expectedVersion) return false;
-        ArgumentException.ThrowIfNullOrWhiteSpace(title);
-        if (title.Length > TextLimits.AssistantTitle) throw new ArgumentException("The title is too long.", nameof(title));
-        Touch(nowUtc); Title = title;
-        return true;
-    }
-    public void Update(string? title, bool isSaved, DateTime nowUtc)
-    {
-        if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("UTC is required.", nameof(nowUtc));
-        if (title is not null)
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(title);
-            if (title.Length > TextLimits.AssistantTitle) throw new ArgumentException("The title is too long.", nameof(title));
-            Title = title;
-            IsTitleManual = true;
-            LastActivityAtUtc = nowUtc;
-        }
-        IsSaved = isSaved;
-    }
-
-    public void RecordQuick(string title, DateTime nowUtc)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(title);
-        if (title.Length > TextLimits.AssistantTitle) throw new ArgumentException("The title is too long.", nameof(title));
-        if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("UTC is required.", nameof(nowUtc));
-        if (!IsTitleManual && Title is null) Title = title;
-        LastActivityAtUtc = nowUtc;
-    }
 
     public static AssistantConversation Create(Guid ownerUserId, Access access, DateTime nowUtc)
     {
-        if (ownerUserId == Guid.Empty) throw new ArgumentException("An owner is required.", nameof(ownerUserId));
         if (access is not (Access.Consumer or Access.Business)) throw new ArgumentOutOfRangeException(nameof(access));
-        if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("UTC is required.", nameof(nowUtc));
-        return new AssistantConversation { OwnerUserId = ownerUserId, Access = access, CreatedAtUtc = nowUtc, LastActivityAtUtc = nowUtc };
+        var row = new AssistantConversation { Access = access };
+        row.Initialize(ownerUserId, nowUtc);
+        return row;
     }
 }

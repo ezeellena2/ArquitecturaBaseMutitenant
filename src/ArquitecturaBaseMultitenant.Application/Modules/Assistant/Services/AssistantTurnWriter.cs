@@ -1,4 +1,5 @@
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
+using Microsoft.Extensions.Options;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Configuration;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
@@ -9,11 +10,11 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 internal sealed class AssistantTurnWriter(IAssistantTurnRepository turns, IAssistantDurableRepository durable,
     AssistantConversationPolicy policy, AssistantUsageWriter usage, IAssistantFinanceRepository finance,
-    ICurrentUser user, ITenantContext tenant, AssistantSnapshotPrivacyGuard privacy, TimeProvider clock)
+    AssistantExecutionIdentityResolver identity, AssistantSnapshotPrivacyGuard privacy, IOptions<AssistantOptions> options, TimeProvider clock)
 {
-    private Guid Owner => user.UserId ?? throw new InvalidOperationException("An execution actor is required.");
-    private Domain.Users.Access Access => user.Access ?? throw new InvalidOperationException("An execution access is required.");
-    private AssistantFinancialBinding Binding => new(Owner, Access, tenant.TenantId);
+    private Guid Owner => identity.Owner;
+    private Domain.Users.Access Access => identity.Access;
+    private AssistantFinancialBinding Binding => new(Owner, Access, identity.TenantId);
 
     internal async Task<Result<AssistantTurnExecution>> ClaimAsync(Guid id, Guid lease, CancellationToken ct)
     {
@@ -21,7 +22,7 @@ internal sealed class AssistantTurnWriter(IAssistantTurnRepository turns, IAssis
         if (loaded.IsFailure) return loaded.Error;
         var (turn, work) = loaded.Value;
         var recover = work.CallStarted || work.CallSequence != 0 || work.StopRequested || work.DeadlineAtUtc <= clock.GetUtcNow().UtcDateTime;
-        if (!work.Claim(lease, clock.GetUtcNow().UtcDateTime)) return AssistantErrors.TurnInProgress;
+        if (!work.Claim(lease, clock.GetUtcNow().UtcDateTime, options.Value.LeaseDuration)) return AssistantErrors.TurnInProgress;
         var admitted = await durable.GetByIdAsync(Owner, Access, turn.BindingId, ct)
             ?? throw new InvalidOperationException("The admitted turn binding is missing.");
         turn.CaptureAdmissionVersion(admitted.Version);
@@ -54,7 +55,7 @@ internal sealed class AssistantTurnWriter(IAssistantTurnRepository turns, IAssis
         return new AssistantTurnExecution(id, lease, prompt, [], new AssistantChatBinding(
             work.Funding == AssistantKeyFunding.OwnKey ? AssistantMode.OwnKey : AssistantMode.PlatformKey,
             work.ModelId, work.ProviderModelId, Enum.Parse<AssistantEffort>(work.Effort)), recover, turn.ConversationId,
-            messages.Where(row => row.Id != turn.AssistantMessageId).ToArray());
+            messages.Where(row => row.Id != turn.AssistantMessageId).ToArray(), work.DeadlineAtUtc);
     }
     internal async Task<Result> BeginCallAsync(Guid id, Guid lease, int sequence, CancellationToken ct)
     {
@@ -65,7 +66,7 @@ internal sealed class AssistantTurnWriter(IAssistantTurnRepository turns, IAssis
         var call = await usage.BeginCallAsync(Binding, id, sequence, false, ct);
         if (call.IsFailure) return call.Error;
         if (!call.Value.IsNew) return AssistantErrors.TurnInProgress;
-        work.BeginCall(sequence); work.Renew(clock.GetUtcNow().UtcDateTime);
+        work.BeginCall(sequence); work.Renew(clock.GetUtcNow().UtcDateTime, options.Value.LeaseDuration);
         return Result.Success();
     }
     internal async Task<Result<AssistantTitleCall?>> BeginTitleAsync(Guid id, Guid lease, CancellationToken ct)
@@ -82,7 +83,7 @@ internal sealed class AssistantTurnWriter(IAssistantTurnRepository turns, IAssis
         var call = await usage.BeginCallAsync(Binding, id, work.CallSequence + 1, true, ct);
         if (call.IsFailure) return call.Error;
         if (!call.Value.IsNew) return Result.Success<AssistantTitleCall?>(null);
-        work.BeginCall(work.CallSequence + 1); work.Renew(clock.GetUtcNow().UtcDateTime);
+        work.BeginCall(work.CallSequence + 1); work.Renew(clock.GetUtcNow().UtcDateTime, options.Value.LeaseDuration);
         var rows = await turns.ListMessagesAsync(Owner, Access, turn.ConversationId, ct, [turn.UserMessageId, turn.AssistantMessageId]);
         var system = Resources.AssistantTexts.ResourceManager.GetString("Runtime.TitlePrompt", System.Globalization.CultureInfo.GetCultureInfo(work.Culture))!;
         return new AssistantTitleCall(new AssistantChatBinding(work.Funding == AssistantKeyFunding.OwnKey ? AssistantMode.OwnKey : AssistantMode.PlatformKey,
@@ -99,7 +100,7 @@ internal sealed class AssistantTurnWriter(IAssistantTurnRepository turns, IAssis
             var recorded = await usage.RecordUsageAsync(Binding, id, work.CallSequence, counts, ct);
             if (recorded.IsFailure) return recorded;
         }
-        work.EndCall(); work.Renew(clock.GetUtcNow().UtcDateTime);
+        work.EndCall(); work.Renew(clock.GetUtcNow().UtcDateTime, options.Value.LeaseDuration);
         var conversation = await turns.GetConversationAsync(Owner, Access, turn.ConversationId, null, ct);
         var normalized = title?.Trim().Trim('"');
         if (string.IsNullOrWhiteSpace(normalized) || normalized.Length > Domain.Common.TextLimits.AssistantTitle)
@@ -119,7 +120,7 @@ internal sealed class AssistantTurnWriter(IAssistantTurnRepository turns, IAssis
         if (loaded.IsFailure) return loaded.Error;
         var (_, work) = loaded.Value;
         if (work.StopRequested || work.DeadlineAtUtc <= clock.GetUtcNow().UtcDateTime) return AssistantErrors.TurnInProgress;
-        work.Renew(clock.GetUtcNow().UtcDateTime);
+        work.Renew(clock.GetUtcNow().UtcDateTime, options.Value.LeaseDuration);
         return Result.Success();
     }
     internal async Task<Result> CheckpointAsync(Guid id, Guid lease, string? delta, AssistantCallUsage? counts, bool ended, CancellationToken ct)
@@ -139,7 +140,7 @@ internal sealed class AssistantTurnWriter(IAssistantTurnRepository turns, IAssis
             Append(turn, "delta", new AssistantDeltaEventResponse(id, turn.Sequence + 1, delta));
         }
         if (ended) work.EndCall();
-        work.Renew(clock.GetUtcNow().UtcDateTime);
+        work.Renew(clock.GetUtcNow().UtcDateTime, options.Value.LeaseDuration);
         return Result.Success();
     }
     internal async Task<Result> ToolStateAsync(Guid id, Guid lease, string key, string label, AssistantToolState state, CancellationToken ct)
@@ -149,7 +150,7 @@ internal sealed class AssistantTurnWriter(IAssistantTurnRepository turns, IAssis
         var (turn, work) = loaded.Value;
         if (work.StopRequested) return AssistantErrors.TurnInProgress;
         Append(turn, "tool", new AssistantToolEventResponse(id, key, state, label));
-        work.Renew(clock.GetUtcNow().UtcDateTime);
+        work.Renew(clock.GetUtcNow().UtcDateTime, options.Value.LeaseDuration);
         return Result.Success();
     }
     internal async Task<Result> BindSubjectsAsync(Guid id, Guid lease, IReadOnlyList<Guid> subjects, CancellationToken ct)
@@ -174,7 +175,7 @@ internal sealed class AssistantTurnWriter(IAssistantTurnRepository turns, IAssis
             await durable.LockAsync(Owner, Access, Guid.Empty, hint.ConversationId, ct);
         }
         var work = await turns.GetWorkAsync(id, true, ct);
-        if (work is null || work.OwnerUserId != Owner || work.Access != Access || work.ScopeTenantId != tenant.TenantId) return AssistantErrors.TurnNotFound;
+        if (work is null || work.OwnerUserId != Owner || work.Access != Access || work.ScopeTenantId != identity.TenantId) return AssistantErrors.TurnNotFound;
         if (work.IsTerminal) return Result.Success();
         if (work.LeaseId != lease) return AssistantErrors.TurnInProgress;
         if (work.StopRequested) status = "Stopped";
@@ -226,7 +227,7 @@ internal sealed class AssistantTurnWriter(IAssistantTurnRepository turns, IAssis
         var result = new AssistantTurnResultResponse(id, message, 0, new AssistantTurnUsageResponse(
             checked((int)calls.Sum(row => row.InputTokens)), checked((int)calls.Sum(row => row.OutputTokens)),
             checked((int)calls.Sum(row => row.CacheWrite5MinutesTokens + row.CacheWrite1HourTokens + row.CacheWriteUnknownTokens)),
-            checked((int)calls.Sum(row => row.CacheReadTokens)), cost, remaining <= 10 ? remaining : null, monthlyUsed));
+            checked((int)calls.Sum(row => row.CacheReadTokens)), cost, remaining <= AssistantTechnicalLimits.RemainingMessagesNotice ? remaining : null, monthlyUsed));
         var conversation = await turns.GetConversationAsync(Owner, Access, turn.ConversationId, null, ct);
         if (conversation is null) return Result.Success();
         turns.Touch(conversation, clock.GetUtcNow().UtcDateTime);
@@ -236,7 +237,7 @@ internal sealed class AssistantTurnWriter(IAssistantTurnRepository turns, IAssis
     internal async Task<Result> RecoverAsync(Guid id, Guid lease, CancellationToken ct)
     {
         var work = await turns.GetWorkAsync(id, true, ct);
-        if (work is null || work.ScopeTenantId != tenant.TenantId) return AssistantErrors.TurnNotFound;
+        if (work is null || work.ScopeTenantId != identity.TenantId) return AssistantErrors.TurnNotFound;
         if (work.IsTerminal) return Result.Success();
         if (work.LeaseId != lease && work.LeaseExpiresAtUtc > clock.GetUtcNow().UtcDateTime) return AssistantErrors.TurnInProgress;
         var binding = new AssistantFinancialBinding(work.OwnerUserId, work.Access, work.ScopeTenantId);
@@ -264,7 +265,7 @@ internal sealed class AssistantTurnWriter(IAssistantTurnRepository turns, IAssis
         if (ownerSafe.IsFailure) return ownerSafe.Error;
         await durable.LockAsync(Owner, Access, Guid.Empty, hint.ConversationId, ct);
         var work = await turns.GetWorkAsync(id, true, ct);
-        if (work is null || work.OwnerUserId != Owner || work.Access != Access || work.ScopeTenantId != tenant.TenantId) return AssistantErrors.TurnNotFound;
+        if (work is null || work.OwnerUserId != Owner || work.Access != Access || work.ScopeTenantId != identity.TenantId) return AssistantErrors.TurnNotFound;
         if (work.IsTerminal || lease is not null && work.LeaseId != lease) return AssistantErrors.TurnInProgress;
         var turn = await turns.GetAsync(Owner, Access, id, true, ct);
         if (turn is null) return AssistantErrors.TurnNotFound;

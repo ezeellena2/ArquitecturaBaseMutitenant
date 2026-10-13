@@ -10,6 +10,7 @@ internal sealed class AssistantConversationConfiguration : IEntityTypeConfigurat
 {
     public void Configure(EntityTypeBuilder<AssistantConversation> builder)
     {
+        builder.HasBaseType((Type?)null);
         builder.ToTable("AssistantConversations", Schemas.Tenant);
         builder.HasKey(value => new { value.TenantId, value.Id });
         builder.HasOne<ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant>().WithMany().HasForeignKey(value => value.TenantId).OnDelete(DeleteBehavior.Restrict);
