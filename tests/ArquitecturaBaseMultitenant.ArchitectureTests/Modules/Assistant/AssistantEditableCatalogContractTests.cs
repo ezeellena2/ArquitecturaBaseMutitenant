@@ -23,7 +23,8 @@ public sealed class AssistantEditableCatalogContractTests
             Assert.True(metadata["properties"]!["efforts"]!["uniqueItems"]!.GetValue<bool>());
             Assert.Equal(1, metadata["properties"]!["efforts"]!["minItems"]!.GetValue<int>());
             foreach (var money in metadata["properties"]!.AsObject().Where(value => value.Key.EndsWith("PricePerMillion", StringComparison.Ordinal)))
-                Assert.Equal("#/components/schemas/AssistantMoney", money.Value!["$ref"]!.GetValue<string>());
+                Assert.Equal(name.EndsWith("HttpRequest", StringComparison.Ordinal) ? "#/components/schemas/AssistantInputMoney" : "#/components/schemas/AssistantMoney",
+                    money.Value!["$ref"]!.GetValue<string>());
         }
         var response = schemas["AssistantModelPriceResponse"]!;
         Assert.Contains(response["properties"]!["technical"]!["oneOf"]!.AsArray(), value => value?["type"]?.GetValue<string>() == "null");
