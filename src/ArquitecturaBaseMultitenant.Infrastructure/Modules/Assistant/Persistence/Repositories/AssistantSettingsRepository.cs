@@ -13,7 +13,7 @@ internal sealed class AssistantSettingsRepository(ApplicationDbContext context, 
     public async Task<AssistantPlatformSettings?> GetPlatformAsync(uint expectedVersion, CancellationToken ct)
     {
         context.RequireTransaction();
-        await context.AcquireAdvisoryLocksAsync(["global:assistant-settings"], ct);
+        await context.AcquireAdvisoryLocksAsync([AssistantLockKeys.PlatformSettings], ct);
         var row = await context.Set<AssistantPlatformSettings>().SingleOrDefaultAsync(ct);
         Check(row?.Version, expectedVersion);
         if (row is not null) context.Entry(row).Property(value => value.Version).OriginalValue = expectedVersion;
@@ -23,7 +23,7 @@ internal sealed class AssistantSettingsRepository(ApplicationDbContext context, 
     {
         context.RequireTransaction();
         var tenantId = tenant.RequiredTenantId;
-        await context.AcquireAdvisoryLocksAsync([AdvisoryLockKeys.For(tenantId, "assistant-settings", "singleton"),
+        await context.AcquireAdvisoryLocksAsync([AssistantLockKeys.OrganizationSettings(tenantId),
             AdvisoryLockKeys.For(tenantId, "tenant-admin", "assignments")], ct);
         var row = await context.Set<AssistantOrganizationSettings>().SingleOrDefaultAsync(value => value.TenantId == tenantId, ct);
         Check(row?.Version, expectedVersion);
@@ -33,7 +33,7 @@ internal sealed class AssistantSettingsRepository(ApplicationDbContext context, 
     public async Task<AssistantOrganizationPolicy?> GetPolicyAsync(Guid tenantId, uint expectedVersion, CancellationToken ct)
     {
         context.RequireTransaction();
-        await context.AcquireAdvisoryLocksAsync([AdvisoryLockKeys.For(tenantId, "assistant-policy", "singleton")], ct);
+        await context.AcquireAdvisoryLocksAsync([AssistantLockKeys.Policy(tenantId)], ct);
         var row = await context.Set<AssistantOrganizationPolicy>().SingleOrDefaultAsync(value => value.OrganizationId == tenantId, ct);
         Check(row?.Version, expectedVersion);
         if (row is not null) context.Entry(row).Property(value => value.Version).OriginalValue = expectedVersion;

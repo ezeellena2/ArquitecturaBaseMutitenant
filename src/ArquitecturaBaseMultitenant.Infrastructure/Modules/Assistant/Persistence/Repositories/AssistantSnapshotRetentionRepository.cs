@@ -27,7 +27,7 @@ internal sealed class AssistantSnapshotRetentionRepository(ApplicationDbContext 
             { IndexId = row.Id, ExpiresAtUtc = row.ExpiresAtUtc }).ToArrayAsync(ct);
     }
 
-    public async Task<int> PurgeExpiredAsync(AssistantSnapshotRetentionCandidate candidate, DateTime nowUtc, CancellationToken ct)
+    public async Task<AssistantSnapshotCleanupRow> LockExpiredAsync(AssistantSnapshotRetentionCandidate candidate, DateTime nowUtc, CancellationToken ct)
     {
         db.RequireTransaction();
         if (tenant.TenantId != candidate.ScopeTenantId) throw new InvalidOperationException("Retention requires the candidate's tenant scope before the transaction.");
@@ -36,21 +36,16 @@ internal sealed class AssistantSnapshotRetentionRepository(ApplicationDbContext 
             WHERE "OperationId" = {candidate.OperationId} AND "ScopeTenantId" IS NOT DISTINCT FROM {candidate.ScopeTenantId}
               AND "ExpiresAtUtc" <= {nowUtc} FOR UPDATE SKIP LOCKED
             """).ToArrayAsync(ct);
-        if (indices.Length == 0) return 0;
-        var cutoffUtc = nowUtc.AddHours(-24);
+        if (indices.Length == 0) return new(false, null);
         if (candidate.ScopeTenantId is { } tenantId)
         {
             var rows = await db.Set<AssistantDurableOperation>().FromSqlInterpolated($"""
                 SELECT *, xmin FROM tenant."AssistantDurableOperations"
                 WHERE "Id" = {candidate.OperationId} AND "TenantId" = {tenantId} FOR UPDATE SKIP LOCKED
                 """).ToArrayAsync(ct);
-            if (rows.Length == 0 && await db.Set<AssistantDurableOperation>().AsNoTracking()
-                .AnyAsync(row => row.Id == candidate.OperationId && row.TenantId == tenantId, ct)) return 0;
-            if (rows.Length != 0)
-            {
-                if (rows[0].CreatedAtUtc > cutoffUtc) return 0;
-                rows[0].RemoveContent();
-            }
+            var busy = rows.Length == 0 && await db.Set<AssistantDurableOperation>().AsNoTracking()
+                .AnyAsync(row => row.Id == candidate.OperationId && row.TenantId == tenantId, ct);
+            return new(!busy, rows.FirstOrDefault());
         }
         else
         {
@@ -58,19 +53,18 @@ internal sealed class AssistantSnapshotRetentionRepository(ApplicationDbContext 
                 SELECT *, xmin FROM platform."PlatformAssistantDurableOperations"
                 WHERE "Id" = {candidate.OperationId} FOR UPDATE SKIP LOCKED
                 """).ToArrayAsync(ct);
-            if (rows.Length == 0 && await db.Set<PlatformAssistantDurableOperation>().AsNoTracking()
-                .AnyAsync(row => row.Id == candidate.OperationId, ct)) return 0;
-            if (rows.Length != 0)
-            {
-                if (rows[0].CreatedAtUtc > cutoffUtc) return 0;
-                rows[0].RemoveContent();
-            }
+            var busy = rows.Length == 0 && await db.Set<PlatformAssistantDurableOperation>().AsNoTracking()
+                .AnyAsync(row => row.Id == candidate.OperationId, ct);
+            return new(!busy, rows.FirstOrDefault());
         }
-        db.RemoveRange(indices);
-        return 1;
     }
 
-    public async Task PurgeAccountAsync(Guid userId, CancellationToken ct)
+    public Task RemoveIndicesAsync(IReadOnlyList<Guid> operationIds, CancellationToken ct) =>
+        AssistantSnapshotRetentionWriter.RemoveIndicesAsync(db, operationIds.ToArray(), ct);
+
+    public void RemoveOperation(AssistantDurableOperationBase operation) => db.Remove(operation);
+
+    public async Task<IReadOnlyList<AssistantDurableOperationBase>> LockAccountOperationsAsync(Guid userId, CancellationToken ct)
     {
         db.RequireTransaction();
         if (tenant.TenantId is { } tenantId)
@@ -85,12 +79,7 @@ internal sealed class AssistantSnapshotRetentionRepository(ApplicationDbContext 
                 WHERE "TenantId" = {tenantId} AND ("OwnerUserId" = {userId} OR "SubjectUserIds" @> ARRAY[{userId}]::uuid[])
                 ORDER BY "Id" FOR UPDATE
                 """).ToArrayAsync(ct);
-            foreach (var row in rows)
-            {
-                if (row.OwnerUserId == userId) db.Remove(row);
-                else row.RemoveContent();
-            }
-            await AssistantSnapshotRetentionWriter.RemoveIndicesAsync(db, ids, ct);
+            return rows;
         }
         else
         {
@@ -101,12 +90,7 @@ internal sealed class AssistantSnapshotRetentionRepository(ApplicationDbContext 
                 SELECT *, xmin FROM platform."PlatformAssistantDurableOperations"
                 WHERE "OwnerUserId" = {userId} OR "SubjectUserIds" @> ARRAY[{userId}]::uuid[] ORDER BY "Id" FOR UPDATE
                 """).ToArrayAsync(ct);
-            foreach (var row in rows)
-            {
-                if (row.OwnerUserId == userId) db.Remove(row);
-                else row.RemoveContent();
-            }
-            await AssistantSnapshotRetentionWriter.RemoveIndicesAsync(db, ids, ct);
+            return rows;
         }
     }
 }

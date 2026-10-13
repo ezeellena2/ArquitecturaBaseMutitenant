@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Idempotency;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
@@ -110,7 +111,7 @@ public sealed class AssistantSnapshotRetentionTests(ApiFactory factory)
         var count = 0;
         var result = await provider.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
         {
-            count = await provider.GetRequiredService<IAssistantSnapshotRetentionRepository>().PurgeExpiredAsync(candidate, nowUtc, ct);
+            count = await provider.GetRequiredService<AssistantSnapshotRetentionWriter>().PurgeExpiredAsync(candidate, nowUtc, ct);
             return commit ? Result.Success() : (Result)UserErrors.NotFound;
         }, CommitPolicy.OnSuccess, Ct);
         Assert.Equal(commit, result.IsSuccess);

@@ -21,6 +21,8 @@ public static class AssistantModule
         services.AddScoped<AssistantRetentionWriter>();
         services.AddScoped<IAssistantDurableService, AssistantDurableService>();
         services.AddScoped<IAssistantSnapshotRetentionService, AssistantSnapshotRetentionService>();
+        services.AddScoped<AssistantSnapshotRetentionWriter>();
+        services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Legal.IAccountDeletionParticipant, AssistantAccountDeletionParticipant>();
         services.AddScoped<IAssistantTurnService, AssistantTurnService>();
         services.AddScoped<AssistantTurnPreparationBuilder>();
         services.AddScoped<AssistantTurnRequester>();

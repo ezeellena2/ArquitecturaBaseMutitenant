@@ -15,9 +15,9 @@ internal sealed class AssistantFinanceRepository(ApplicationDbContext db, ITenan
         binding.Validate();
         if (tenant.TenantId != binding.ScopeTenantId) throw new InvalidOperationException("Financial accounting requires the original server scope.");
         // Callers acquire Account → Legal before finance. This whole batch is always acquired together.
-        var keys = new List<string> { AdvisoryLockKeys.Account(binding.UserId) + ":assistant:finance",
-            "global:assistant:finance:operation:" + operationId.ToString("N") };
-        if (binding.ScopeTenantId is { } id) keys.Add(AdvisoryLockKeys.For(id, "assistant:finance:budget", id));
+        var keys = new List<string> { AssistantLockKeys.AccountFinance(binding.UserId),
+            AssistantLockKeys.FinancialOperation(operationId) };
+        if (binding.ScopeTenantId is { } id) keys.Add(AssistantLockKeys.Budget(id));
         return db.AcquireAdvisoryLocksAsync(keys, ct);
     }
     public async Task<AssistantFinancialOperation?> GetOperationAsync(AssistantFinancialBinding binding, Guid operationId, CancellationToken ct)

@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
+using ArquitecturaBaseMultitenant.Domain.Assistant;
 
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
@@ -6,5 +7,5 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 internal static class AssistantSnapshotRetentionPolicy
 {
     internal static bool HasContent(AssistantDurableOperationRow row, DateTime nowUtc) =>
-        row.SnapshotJson is not null && row.CreatedAtUtc > nowUtc.AddHours(-24);
+        row.SnapshotJson is not null && row.CreatedAtUtc > nowUtc.Subtract(AssistantSnapshotRetentionIndex.ContentLifetime);
 }

@@ -1,16 +1,17 @@
-using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Configuration;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using Microsoft.Extensions.DependencyInjection;
 using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.Retention;
 
 /// <summary>Installed module maintenance continues with emergency, personal and organization feature gates disabled.</summary>
-internal sealed partial class AssistantSnapshotRetentionWorker(IServiceScopeFactory scopes, TimeProvider clock,
-    ILogger<AssistantSnapshotRetentionWorker> logger) : PeriodicWorker(TimeSpan.FromMinutes(5), clock, logger)
+internal sealed partial class AssistantSnapshotRetentionWorker(IServiceScopeFactory scopes, TenantJobRunner jobs, TimeProvider clock,
+    IOptions<AssistantOptions> options, ILogger<AssistantSnapshotRetentionWorker> logger) : PeriodicWorker(options.Value.SnapshotRetentionWorkerInterval, clock, logger)
 {
     internal async Task<int> RunOnceAsync(CancellationToken ct)
     {
@@ -31,12 +32,18 @@ internal sealed partial class AssistantSnapshotRetentionWorker(IServiceScopeFact
             foreach (var candidate in candidates)
             {
                 ct.ThrowIfCancellationRequested();
-                await using var scope = scopes.CreateAsyncScope();
-                using var tenantScope = candidate.ScopeTenantId is { } tenantId
-                    ? scope.ServiceProvider.GetRequiredService<ITenantScope>().Enter(tenantId) : null;
-                var result = await scope.ServiceProvider.GetRequiredService<IAssistantSnapshotRetentionService>().PurgeExpiredAsync(candidate, ct);
-                if (result.IsFailure) LogFailed(logger, result.Error.Code);
-                else total += result.Value;
+                if (candidate.ScopeTenantId is { } tenantId) await jobs.RunAsync([tenantId], PurgeAsync, ct);
+                else
+                {
+                    await using var scope = scopes.CreateAsyncScope();
+                    await PurgeAsync(scope.ServiceProvider, ct);
+                }
+                async Task PurgeAsync(IServiceProvider services, CancellationToken token)
+                {
+                    var result = await services.GetRequiredService<IAssistantSnapshotRetentionService>().PurgeExpiredAsync(candidate, token);
+                    if (result.IsFailure) LogFailed(logger, result.Error.Code);
+                    else total += result.Value;
+                }
             }
             if (candidates.Count < 100) break;
             after = candidates[^1];
