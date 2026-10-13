@@ -1,6 +1,6 @@
 # ADR 0038 · WhatsApp de atención: plataforma, organizaciones y personas
 
-Estado: aceptada el 2026-10-03, pantalla por pantalla con el dueño del producto. La fuente visual es la página «Organización · WhatsApp» del lienzo v69 (`../ArquitecturaBaseMutitenantFront/docs/design/lienzo`, tableros `WA-*` para la compu y `M-WA-*` para el teléfono), y el detalle de cada elección está en el tablero «Criterio · Decisiones por pantalla». El plan ejecutable es [la Etapa 11](../plans/2026-10-03-etapa-11-whatsapp.md).
+Estado: aceptada el 2026-10-03, pantalla por pantalla con el dueño del producto. La fuente visual es la página «Organización · WhatsApp» del lienzo v69 (`../ArquitecturaBaseMutitenantFront/docs/design/lienzo`, tableros `WA-*` para la compu y `M-WA-*` para el teléfono), y el detalle de cada elección está en el tablero «Criterio · Decisiones por pantalla». El plan ejecutable es [la Etapa 11](../plans/2026-10-13-etapa-11-whatsapp.md).
 
 ## Contexto
 

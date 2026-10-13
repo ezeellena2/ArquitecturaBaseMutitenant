@@ -1,0 +1,169 @@
+# Etapa 11: WhatsApp de atención — plan corto
+
+| Parte | Tareas | Estado |
+|---|---|---|
+| 0 · Decisiones de producto | «Para decidir» D1–D8 | Pendiente del usuario |
+| 1 · Contrato | K1 | Pendiente |
+| 2a · Back | B1–B7 | Pendiente |
+| 2b · Front | F1–F7 | Pendiente |
+| 3 · Integración y puerta | I1–I3 | Pendiente |
+
+## Forma de trabajo
+
+Rige `AGENTS.md` («Velocidad y cierre liviano») y la guía [etapa en paralelo](../guides/etapa-en-paralelo.md): contrato primero; Back y Front a la vez, un chat por repo; integración y **una sola puerta**. Tests donde hay lógica: permisos, aislamiento, carreras, ventana de 24 h, consentimiento, cuotas y recorridos. Commits chicos, verificados, en español y con pathspec; sin push. Cada verificación completa pasa una vez; después de un arreglo, solo lo que toca. Sin actas ni revisiones por tarea: una revisión de código al cerrar. Ningún chat programa algo que dependa de D1–D8 hasta que el usuario las responda.
+
+## Fuentes
+
+- **Producto:** [ADR 0038](../decisions/0038-whatsapp-de-atencion.md) con sus precisiones del 03/10 y del 11/10 (incluida la invitación española como Marketing, decisión del 12/10), [0043](../decisions/0043-las-pantallas-dicen-si-hay-cuenta.md), [0049](../decisions/0049-precisiones-whatsapp-y-asistente.md) y [0050](../decisions/0050-auditoria-global-de-modulos.md). Lo que ya existe: [WhatsApp](../features/whatsapp.md), [plantillas](../operations/whatsapp-plantillas.md) y [configuración](../operations/configuracion.md).
+- **Pantallas:** lienzo v121 del front, todos validados. Organización: `WA-*` y `M-WA-*` (51). Plataforma: `Plat-WA-*` y `M-Plat-WA-*` (14). Además: área WhatsApp de `Rol`, botón «Cargar teléfonos» de `Usuarios`, «Mensajes» del perfil personal, correo «Chats esperando» de `Mensajes`, fila WhatsApp de Módulos en `Organizacion`, grupo «Números sin medio de pago» de `Inicio-Org`, `M-Mas-Plat`, `M-WA-Menu` y `Criterio-Decisiones`. Los datos de ejemplo de los tableros no son datos de prueba: algunos contradicen las reglas (ver «Para Diseño»).
+- **Meta, documentación oficial verificada el 2026-10-13:**
+  - Embedded Signup **v4** (v2 y v3 se retiran el 15/10/2026); `extras` vacío y productos elegidos en la configuración de Facebook Login for Business (`config_id`). El evento `WA_EMBEDDED_SIGNUP` devuelve `FINISH` (con `phone_number_id` y `waba_id`), `CANCEL` (con `current_step`) o `ERROR` (con `error_id`); cerrar en la última pantalla no es cancelar. El `code` vive 30 segundos: se canjea en el servidor, luego `POST /<WABA_ID>/subscribed_apps` y `POST /<PHONE_ID>/register` con PIN de 6 dígitos. Coexistencia: `featureType: whatsapp_business_app_onboarding`, app WhatsApp Business 2.24.17 o más nueva, webhooks `history`, `smb_app_state_sync` y `smb_message_echoes`, sin `/register`, 20 mensajes por segundo.
+  - **Precios desde el 01/10/2026** (página de precios, actualizada el 30/09/2026): por mensaje, según país y categoría. Argentina, USD: marketing 0,0618; utility 0,0260; authentication 0,0260; service 0,0260. **Cada número tiene 1.000 mensajes de servicio entregados gratis por mes**, que no se acumulan y se reinician a las 00:00 de la zona de la cuenta. **Sin medio de pago, Meta entrega los de servicio solo dentro de esos 1.000**; las plantillas siempre exigen medio de pago (error 131042).
+  - Medio de pago: `GET /<WABA_ID>?fields=primary_funding_id,timezone_id`; sin `primary_funding_id` no hay medio de pago. `health_status` no lo informa.
+  - Alta de organizaciones: 10 nuevas cada 7 días; 200 con empresa verificada y App Review. Access Verification ya no se exige. Cada organización paga a Meta con su tarjeta.
+  - Graph API vigente: **v26.0**; la v25.0 vence el 29/07/2028.
+
+## Decisiones técnicas
+
+1. **Módulo:** todo vive en `Modules/WhatsApp` (Domain/WhatsApp y las tres capas), con la llave de módulo por organización `whatsapp` en el catálogo de módulos (`[FeatureGate("whatsapp")]`, como `assistant`). Las funciones de la E8 del número de la plataforma (códigos, invitaciones, avisos, bot de ingreso) no dependen de esa llave.
+2. **Registro de números global:** `identity.WhatsAppChannels` (número, `PhoneNumberId` único, `WabaId`, `OrganizationId` nulo para Plataforma, empresa atendida, estado `Connected | PaymentMissing | Disconnected`, coexistencia, zona de la cuenta de Meta, token cifrado con DataProtection por canal `[NotAudited]`, PIN cifrado, alta y baja). Es global con `IGlobalSecurityAudited` (ADR 0050): `TenantFeaturesChanged` con la organización como destino y `PlatformSettingsChanged` para Plataforma. Se copia el molde de `AssistantOrganizationPolicy`: global, con la llave de organización, leída por el claim. El webhook y el outbox lo leen sin entrar a una organización.
+3. **Número de la plataforma:** al arrancar, si `WhatsApp:PhoneNumberId` está configurado y no hay canal de Plataforma, se crea uno con esos datos (actor System y su evento). Desde ahí manda el canal: conectar desde la pantalla lo reemplaza, y sin canal conectado WhatsApp queda apagado (ingreso y registro solo con correo y Google). `PaymentMissing` en Plataforma: códigos y avisos salen solo por correo; las consultas siguen hasta el tope gratuito. `AppSecret`, `VerifyToken`, `AppId` y `EmbeddedSignupConfigId` siguen siendo configuración de la instalación.
+4. **Entrada:** el webhook sigue global; ubica el canal por `PhoneNumberId` (nunca por el remitente ni el host) y persiste en la cola durable de la E8, con `ChannelId`. El worker procesa cada entrada de organización con `TenantJobRunner` (`ITenantScope.Enter`), revisa el módulo con `IFeatureService` y escribe en las tablas de la organización. La fila global se purga al procesarse.
+5. **Empleado o cliente:** un puerto neutral del núcleo `IActiveMemberPhoneReader` responde si un E.164 es un método Phone verificado de un miembro activo de la organización actual. Nada se publica sobre cuentas ajenas.
+6. **Datos de atención:** las tablas de organización son `ITenantOwned` con RLS: contactos, etiquetas, conversaciones, mensajes, notas, equipos y miembros, bot, plantillas y sus variantes por WABA, difusiones y destinatarios. Plataforma tiene gemelas en `platform` para consultas, equipos, bot y plantillas «Para consultas», con la base común de entidades que usa el asistente. El vínculo contacto↔cuenta es `IConsumerBusinessShared` (`engagement`).
+7. **Salida:** el outbox de la E8, con `ChannelId` en el payload cifrado; el dispatcher toma token y `PhoneNumberId` del canal. Llamadas a Meta fuera de la UoW. Graph v26.0 para el servidor y el SDK.
+8. **Contador del mes:** los webhooks de estado traen `pricing.category` y `pricing.type`. Se cuentan los `service` entregados por canal y mes, en la zona de la cuenta de Meta. `type=regular` marca que ya se cobran.
+9. **Costos estimados:** tabla de datos de referencia `WhatsAppRates` (país, categoría, moneda, precio, vigencia), cargada del CSV oficial vigente desde el 01/10/2026 y actualizada por seed versionado cuando Meta publique otra (solo lo hace al empezar un trimestre). El costo es `Money` y lo calcula el back.
+10. **Importar contactos:** `.xlsx` y `.csv` con ClosedXML (MIT; versión exacta al agregarla, con al menos dos semanas de publicada). La E15 la reutiliza.
+11. **Invitación por teléfono:** hoy la identidad de una invitación es siempre un correo. «Cargar teléfonos» necesita invitaciones cuya identidad y prueba sean un Phone: el núcleo suma `InvitationIdentity` Email|Phone y la aceptación exige ese Phone verificado en la cuenta que ingresa (ADR 0047). Va con tests de seguridad de identidad.
+12. **Tiempo real:** sondeo con TanStack Query (10 s en bandejas, 5 s en la conversación abierta). Sin SignalR en esta etapa.
+13. **Ayuda del asistente:** artículos es/en de las áreas nuevas, con requisito del módulo `whatsapp`, y la guarda que exige artículo por cada área con pantallas (D25 de la ADR 0048).
+
+## Parte 1 · Contrato (K1)
+
+Un solo chat publica todas las rutas en `openapi.json` con `501`, los permisos, la llave de módulo, los códigos con texto es/en y los tipos del front (`npm run contracts`). Las guardas de rutas quedan en verde.
+
+**Permisos:**
+- **Organización**, en el catálogo, `Permissions.resx` y `.en.resx`: `whatsapp.customers` (Atender clientes; incluye ver contactos), `whatsapp.internal` (Atender internos), `whatsapp.broadcasts` (Mandar difusiones) y `whatsapp.manage` (Administrar WhatsApp).
+- **Plataforma:** `platform.whatsapp.manage` (Número, Bot, Equipos y Plantillas) y `platform.whatsapp.attend` (Consultas).
+- **Migraciones de datos:** el seed y las organizaciones existentes según D3; los operadores que ya tienen `platform.operators.manage` reciben los dos permisos de Plataforma, con su `SecurityEvent` (lección A1/M1 de la 8b).
+
+**Texto para el chat del Contrato:**
+
+```
+Leé AGENTS.md de los dos repos y la parte 1 de docs/plans/2026-10-13-etapa-11-whatsapp.md (back). Publicá K1 completo: rutas con 501, permisos con resources y migraciones de datos, llave de módulo, códigos y textos es/en; después npm run contracts en el front. Guardas de rutas y tests de contrato en verde. Commits con pathspec en los dos repos, sin push.
+```
+
+**Rutas de organización:** `[Access(Business)]` y `[FeatureGate("whatsapp")]`, prefijo `/api/organization/whatsapp`. Listados con `PagedResult` de 10 y `search`; ediciones con `version`; `POST` que crean o mandan con `[Idempotent]`.
+
+| Ruta | Permiso | Recibe → devuelve |
+|---|---|---|
+| GET `numbers` | manage | `{items: Number[], signup: {appId, configId, sdkVersion}?}`. `Number = {id, displayNumber, verifiedName, company?: {id,name}, status, coexistence, serviceMessagesThisMonth, freeServiceMessages, chargedServiceMessagesThisMonth, connectedAtUtc, version}` |
+| POST `numbers` | manage | `{code, phoneNumberId, wabaId, companyId?, coexistence}` → 201 `Number` |
+| POST `numbers/{id}/check` | manage | `{version}` → `Number` (vuelve a consultar el medio de pago) |
+| PUT `numbers/{id}` | manage | `{companyId?, version}` → `Number` |
+| DELETE `numbers/{id}?version=` | manage | 204 (D7) |
+| GET/PUT `numbers/{id}/bot` | manage | `{welcome, outOfHours, schedule: {timeZoneId, days[{day, from, to}]}, menu[≤10 {id, label, action: Team|Reply, teamId?, reply?}], askPromotions, offerAccountLink, employeesTeamId?, version}` |
+| GET/POST `teams`, PUT/DELETE `teams/{id}` | manage | `{name, inbox: Customers|Internal, memberIds[], notifyAfterMinutes: 10|15|30|null, version}` |
+| GET `conversations` | customers o internal según `inbox` | `?inbox&teamId&state=Untaken|Mine|All&search&page` → `PagedResult<ConversationRow>` + `{customers, internal, untaken}` |
+| GET `conversations/{id}` | ídem | `?cursor` → `{conversation, messages: Cursor<Message>}`; `Message = {id, kind: Text|Template|Note|Event|Unsupported, direction, author?, text?, status, failure?, createdAtUtc}` |
+| POST `conversations/{id}/take` | ídem | `{version}` → `ConversationRow` |
+| POST `conversations/{id}/messages` | ídem | `{text, version}` → 202 `Message` (toma el chat si estaba sin tomar) |
+| POST `conversations/{id}/notes` | ídem | `{text}` → 201 `Message` |
+| POST `conversations/{id}/transfer` | ídem | `{teamId?, memberId?, version}` → `ConversationRow` |
+| GET `conversations/{id}/template-options` | ídem | → `PagedResult<{templateId, name, category, variables[], estimatedCost: Money}>` |
+| POST `conversations/{id}/templates` | ídem | `{templateId, variables[], version}` → 202 `Message` |
+| GET `contacts` | customers | `?search&tag&consent&page` → `PagedResult<Contact>` + `{total, accepting}` |
+| GET `contacts/{id}`, `contacts/{id}/conversations`, `contacts/{id}/broadcasts` | customers | ficha y sus dos pestañas paginadas |
+| PUT `contacts/{id}` | según D3 | `{name, tags[], consent?, version}` |
+| GET `contacts/import-sample` | según D3 | archivo `.xlsx` (Nombre, Teléfono, Etiqueta, Acepta promociones) |
+| POST `contacts/import` | según D3 | multipart `{file, tag?}` → `{imported, updated, rejected: [{row, reason}]}` |
+| GET `tags` | customers | `PagedResult<string>` |
+| GET/POST `templates`, POST `templates/{id}/duplicate`, DELETE `templates/{id}` | manage | `{name, category: Utility|Marketing, language, body, variables[{label, example}]}`; estado `Approved|Pending|Rejected|Paused` con motivo |
+| GET `broadcasts`, GET `broadcasts/{id}` | broadcasts | lista; resultados con contadores y `PagedResult<Recipient>` |
+| GET `broadcasts/estimate` | broadcasts | `?templateId&tag` → `{recipients, estimatedCost: Money}` |
+| POST `broadcasts` | broadcasts | `{name, templateId, variables[], audience: {kind: AllAccepting|Tag, tag?}, scheduledAtUtc?}` → 201 |
+| POST `broadcasts/{id}/cancel`, POST `broadcasts/{id}/duplicate` | broadcasts | `{version}` / 201 |
+| POST `phone-imports/preview` | `users.invite` | `{phones[≤200], companyId?, roleIds[]}` → filas `{phone, memberName?, outcome: AlreadyMember|Invite|Invalid}` |
+| POST `phone-imports` | `users.invite` | igual → `{linked, invited, invalid}` |
+
+**Rutas de Plataforma:** `[Access(Platform)]`, prefijo `/api/platform/whatsapp`. `number` (GET, POST para conectar, POST `check`, PUT `{consultationsEnabled, version}`), `bot`, `teams`, `conversations` (con las mismas acciones, sin `inbox`, y `account?: {id}` cuando el número es un Phone verificado de una cuenta), `templates?group=consultations|system` (las del sistema son de solo lectura y traen su estado en Meta). Permisos: `platform.whatsapp.manage`; Consultas, `platform.whatsapp.attend`.
+
+**Rutas personales:** `[Access(Consumer)]`, `/api/me/whatsapp/conversations` (lista y detalle de solo lectura) y DELETE `/api/me/whatsapp/links/{id}` (desvincular). La misma lectura alimenta la fuente `whatsapp` de `IConsumerInteractionSource`.
+
+**Errores** (texto es/en en los resources del módulo): `WhatsApp.Number.AlreadyConnected` 409, `WhatsApp.Number.SignupExpired` 400, `WhatsApp.Number.MetaRejected` 422 (con `metaCode`), `WhatsApp.Number.NotFound` 404, `WhatsApp.Conversation.TakenByOther` 409 (con `takenBy`), `WhatsApp.Conversation.WindowClosed` 422, `WhatsApp.Conversation.PaymentRequired` 422 (plantilla sin medio de pago o servicio pasado el tope), `WhatsApp.Bot.TooManyOptions` 400, `WhatsApp.Team.NameTaken` 409, `WhatsApp.Template.NameTaken` 409, `WhatsApp.Template.NotApproved` 422, `WhatsApp.Broadcast.NoRecipients` 422, `WhatsApp.Broadcast.NotCancellable` 409, `WhatsApp.Import.InvalidFile` 400, `WhatsApp.Import.TooManyRows` 400 (más de 5.000), `Invitations.Phone.Unavailable` 503 (sin canal). Recurso ajeno: 404. Módulo apagado: 404 común.
+
+## Parte 2a · Back
+
+Cada tarea suma sus tests de integración en `tests/…Api.IntegrationTests/Modules/WhatsApp/` y los de aislamiento en `Tenancy/`. Moldes: `AssistantControllerBase.cs` (controllers), `AssistantConversationService.cs` (servicio con `OperationLog` y una UoW por método), `AssistantOrganizationPolicy` (global por organización) y `WhatsAppInboundService.cs` (cola durable).
+
+- **B1 · Números y registro.** `WhatsAppChannel` y su configuración EF; protector del token (copiá `AssistantKeyProtector`); cliente Graph del alta (canje del `code`, `subscribed_apps`, `register`, `primary_funding_id` y `timezone_id`); arranque desde la configuración; `IWhatsAppChannelSettings` lee el canal. Fuente de «Para resolver» «Números sin medio de pago» (copiá `IPendingGroupSource` de C1). El webhook `account_update` y el error 131042 marcan `PaymentMissing`; `check` lo revisa. Contador del mes (decisión 8). Tests: alta idempotente, número de otra organización (409), token nunca en logs ni DTO, Plataforma sin canal (ingreso solo con correo y Google) y sin pago (códigos por correo).
+- **B2 · Entrada multi-número.** Ruteo por `PhoneNumberId`, cola con `ChannelId`, `TenantJobRunner`, módulo apagado (no procesa y conserva), `IActiveMemberPhoneReader` en el núcleo (Infrastructure/Identity). Conserva todos los tests de la E8 del número de la plataforma (`WhatsAppWebhookTests`, `WhatsAppInboundProcessorTests`, `WhatsAppBotTests`). Tests: dos organizaciones con números distintos no se cruzan; un remitente que es miembro activo va a Internos y uno que dejó de serlo, a Clientes.
+- **B3 · Bot.** Configuración por número, horario con zona del catálogo de referencia, lista interactiva de hasta 10 opciones, «Además» (preguntar por promociones al terminar la primera conversación; ofrecer el vínculo según D2; empleados directo a su equipo). Plataforma: la opción del sistema «Entrar a mi cuenta» con las ramas de la 0049, sin «Además»; con consultas apagadas, el bot es el de la E8. Respuestas libres solo dentro de las 24 h.
+- **B4 · Bandejas y equipos.** Conversaciones, mensajes y notas; tomar con bloqueo de la conversación (el segundo recibe `TakenByOther` y su mensaje no sale); pasar a un equipo o persona; ventana de 24 h; estados de entrega; correo «Chats esperando» con `PeriodicWorker`, solo con el resumen y la frecuencia de D6; consultas de Plataforma con `account` y su enlace a la ficha si el operador tiene `platform.accounts.read`. Tests: carrera de dos que toman, nota que nunca llega a Meta, ventana vencida, correo sin teléfonos ni textos.
+- **B5 · Contactos, consentimiento y personas.** Contactos, etiquetas y consentimiento `Accepted|Declined|NoAnswer|Unsubscribed` con origen (`Bot|Import|Manual|Unsubscribe`) y fecha; importar con ClosedXML (sin «Sí» queda «Sin respuesta»); vínculo con la cuenta según D2 y D5; rutas personales y fuente de `IConsumerInteractionSource`; «Cargar teléfonos» con la invitación por teléfono del núcleo (decisión 11) y la plantilla `invitacion_organizacion`. Tests: el preview no revela cuentas (0038, precisión del 11/10), un número reciclado no hereda historia (D5), aceptar una invitación por teléfono exige ese Phone verificado.
+- **B6 · Plantillas y difusiones.** Plantillas por la API de Meta, con una variante por WABA; estado y categoría por los webhooks `message_template_status_update` y `template_category_update`; una aprobada se duplica, no se edita. Plantillas del sistema de Plataforma: las 16 de la E8, solo lectura. `WhatsAppRates` y costo estimado. Difusiones solo con plantillas Marketing aprobadas y solo a contactos con `Accepted`, revisado al enviar; respetan el límite de mensajería de la cuenta (`whatsapp_business_manager_messaging_limit`); botón «No recibir más» → `Unsubscribed`; resultados por contacto; programar, cancelar y duplicar. Tests: un contacto que se dio de baja entre programar y enviar no recibe, costo con la tarifa vigente, plantilla rechazada no se puede usar.
+- **B7 · Privacidad, ayuda y retiro.** Retención según D4; participante de la baja (vínculos, contactos ligados, notas con su nombre); inventario para exportar (E10) en [datos personales](../rules/datos-personales.md); artículos de ayuda y su guarda; [quitar WhatsApp](../guides/quitar-whatsapp.md) actualizada; `ModuleIsolationTests` y clasificación de tablas en verde.
+
+**Texto para el chat del Back:**
+
+```
+Leé AGENTS.md del back y docs/plans/2026-10-13-etapa-11-whatsapp.md. Hacé B1 a B7 en orden, contra el contrato publicado en K1, sin cambiarlo (si hace falta, anotalo en «Cambios al contrato» y avisá al coordinador). Copiá los moldes que nombra cada tarea; no inventes. Tests donde hay lógica y los de aislamiento del módulo. Commits chicos con pathspec, sin push. No toques el front.
+```
+
+## Parte 2b · Front
+
+Todo va en `src/modules/whatsapp`, autocontenido y aportado por `registration.ts`, como `src/modules/assistant`. Se copian los tableros vigentes; los estados que faltan los dibuja Diseño y se siguen las demás pantallas mientras tanto. Tests focales con MSW: permisos y módulo, tomar con conflicto, 24 h, alta de Meta (los tres resultados), consentimiento en difusiones y costo mostrado sin calcular dinero.
+
+- **F1 · Navegación y módulo.** Menú «WhatsApp» con su contador y panel (Chats, Contactos, Difusiones); Administración › WhatsApp (Números, Bot, Equipos, Plantillas); teléfono como app (`M-WA-Menu`, barra con Chats y Contactos); Plataforma: «WhatsApp» directo a Consultas, Administración › WhatsApp y la barra con «Consultas» (`M-Mas-Plat`); Personal: «Mensajes». Fila WhatsApp en Módulos, área WhatsApp en `Rol` (sale del catálogo), botón «Cargar teléfonos» en `Usuarios` y grupo de «Para resolver».
+- **F2 · Números y alta.** `WA-Admin*`, `WA-Alta*` y `Plat-WA-Numero`/`Plat-WA-Alta` con sus `M-*`. El SDK de Facebook se carga solo al conectar (v26.0, `config_id` de la API); el oyente de `WA_EMBEDDED_SIGNUP` maneja `FINISH`, `CANCEL` y `ERROR`; en el teléfono no se dibuja la ventana de Meta.
+- **F3 · Chats.** `WA-Chats*` y `Plat-WA-Chats` con sus `M-*`: bandejas, filtros, conversación, tomar, pasar, notas, 24 h y plantilla con costo.
+- **F4 · Contactos.** `WA-Contactos`, `WA-Contacto`, `WA-Contactos-Importar` y sus `M-*`.
+- **F5 · Difusiones.** `WA-Difusiones`, `WA-Difusion-Nueva` y `WA-Difusion-Resultados` con sus `M-*`.
+- **F6 · Bot, Equipos y Plantillas.** `WA-Respuestas`, `WA-Admin-Editar`, `WA-Bot-Recorrido`, `WA-Equipos*`, `WA-Plantilla*` y las de Plataforma, con sus `M-*`.
+- **F7 · Personas y usuarios.** `WA-Mensajes`/`M-WA-Mensaje(s)` y `WA-Telefonos`/`M-WA-Telefonos`.
+
+**Texto para el chat del Front:**
+
+```
+Leé AGENTS.md del front y ../ArquitecturaBaseMutitenant/docs/plans/2026-10-13-etapa-11-whatsapp.md. Hacé F1 a F7 en src/modules/whatsapp, contra los tipos generados en K1, copiando los tableros del lienzo vigente; si a un tablero le falta un estado, seguí con el resto y avisá al coordinador. Tests focales donde hay lógica. No toques el lienzo ni los archivos de Diseño: commiteá solo tus rutas, con pathspec y sin push. No toques el back.
+```
+
+## Parte 3 · Integración y puerta
+
+- **I1 · Meta de desarrollo** (lo hace el usuario en Meta, según D8): app Business en modo desarrollo con el caso de uso WhatsApp; Facebook Login for Business con una configuración creada desde la plantilla de Embedded Signup (`config_id`); los seis interruptores de OAuth, «Allowed domains» y «Valid OAuth redirect URIs» con el dominio HTTPS del túnel; webhook al túnel con `messages`, `account_update`, `message_template_status_update`, `template_category_update`, `phone_number_name_update`, `history`, `smb_app_state_sync` y `smb_message_echoes`; quien prueba, con rol en la app; un número real libre y, para probar plantillas y difusiones, un medio de pago en esa cuenta. Los secretos van con `scripts/secretos/` (`WhatsApp:AppId`, `WhatsApp:AppSecret`, `WhatsApp:EmbeddedSignupConfigId`, `WhatsApp:VerifyToken`).
+- **I2 · Conectar los dos repos.** Front contra la API real; lo que no encaja vuelve a su dueño o se anota en «Cambios al contrato».
+- **I3 · Puerta** (skill `/puerta`, cada paso completo una vez): build sin advertencias y `dotnet test` completo; front `build`, `lint`, `test` y `contracts:check`; E2E real: conectar un número por el alta (la ventana de Facebook la completa el usuario, porque es su cuenta), escribir como cliente y como empleado, tomar en carrera, pasar, nota, plantilla, una difusión chica a un contacto que aceptó, vincular y ver «Mensajes» como persona; detector de documentación en 0; galería solo de las pantallas nuevas; recorrido con `/recorrido`; quitar el módulo una vez con base vacía.
+
+**Texto para el chat de Integración:** «Leé AGENTS.md de los dos repos y la parte 3 de docs/plans/2026-10-13-etapa-11-whatsapp.md. Conectá el front a la API real, corré la puerta con /puerta y dejá la tabla de resultado arriba del plan. Los pasos de Meta que exigen la cuenta del usuario se los pedís a él.»
+
+## Relación con otras etapas
+
+- **E12 a E17 (formularios):** usan `WhatsAppChannels` (`WabaId` y token por organización), las conversaciones de Internos, la regla de tomar y la cola de entrada. No se adelanta nada de formularios.
+- **E9:** la CSP tiene que permitir el SDK de Facebook (`connect.facebook.net` y el marco de `facebook.com`), y los límites de pedidos cubren las rutas nuevas.
+- **E10:** exportar mis datos incluye contactos ligados, vínculos y mensajes propios, según el inventario de B7.
+
+## Para decidir (decisiones de producto del usuario)
+
+| # | Pregunta | Opciones (la recomendada primero) |
+|---|---|---|
+| D1 | Número sin medio de pago | **a)** Mostrar siempre «N de 1.000 gratis este mes» y, sin medio de pago, avisar «Responde hasta 1.000 mensajes por mes. Sin medio de pago no manda plantillas ni difusiones». Corrige el «no puede responder» de `WA-Admin-Pago`, que Meta desmiente. **b)** Dejar los tableros como están. |
+| D2 | Cómo vincula una persona su conversación a su cuenta | **a)** Con un botón del bot, que se ofrece solo si el número es un Phone verificado de una cuenta: escribir desde ese número ya prueba que es suyo. Sin pantalla nueva. **b)** Con un enlace a una pantalla web de confirmación, que hay que dibujar. |
+| D3 | Permisos en los roles de sistema y en contactos | **a)** El Dueño tiene los 4; ningún otro rol de sistema los tiene, y el Dueño arma roles propios. Permisos solo de organización (una empresa atendida no da permisos aparte). Ver, editar e importar contactos y cambiar el consentimiento a mano: «Atender clientes». **b)** Además, el Administrador de empresa atiende clientes e internos. |
+| D4 | Cuánto se guardan los textos de los chats | **a)** Mientras exista el contacto en la organización (o la conversación en Plataforma); se borran al borrar el contacto, al apagar el módulo no. **b)** 90 días, como el número de la plataforma de la E8. **c)** Que lo elija cada organización. |
+| D5 | Qué ve la persona en «Mensajes» | **a)** La conversación desde que la vinculó, como muestra `WA-Mensajes` («Vinculada desde…»). Un número reciclado nunca muestra mensajes del dueño anterior. **b)** Toda la historia de ese número con la organización. |
+| D6 | Frecuencia del correo «Chats esperando» | **a)** Uno por equipo cuando el chat más viejo sin tomar pasa el tiempo elegido; no se repite hasta que la bandeja se vacía y vuelve a llenarse. «No avisar» es una opción. **b)** Uno cada vez que se cumple el tiempo de cada chat. |
+| D7 | Fotos, audios y documentos que mandan los clientes, y desconectar un número | **a)** En esta etapa se ve «Mandó una foto/audio/documento» sin descargarlo; la descarga llega con la E14. Desconectar deja los chats de ese número para leer, sin responder. **b)** Descargar los archivos ya en esta etapa (suma almacenamiento y la nube de la E10). |
+| D8 | Qué app de Meta se usa para desarrollar | **a)** Una app nueva en modo desarrollo, en el mismo portfolio. «Servicios Ya» sigue igual. **b)** Pasar «Servicios Ya» a desarrollo: corta lo que hoy recibe su webhook. |
+
+## Para Diseño
+
+Texto para la conversación de Diseño (única que toca el lienzo):
+
+```
+Etapa 11, sobre el lienzo v121. Contradicciones: Plat-WA-Plantillas y su M-* muestran invitacion_organizacion como Utilidad (es Marketing en español y Utility en inglés); Criterio-Decisiones cita la 0041 en Cargar teléfonos (vale la 0043 y la precisión del 11/10 de la 0038); las respuestas del bot en Mensajes dicen «Por ahora este chat solo sirve para entrar», que deja de ser cierto con Consultas; WA-Alta muestra {{res}} sin resolver; WA-Admin-Pago dice que sin medio de pago no se puede responder, y Meta entrega hasta 1.000 de servicio por mes (según la respuesta del usuario a D1). Estados que faltan: responder un chat que otro tomó; la bandeja Internos con un empleado; el contador pasado de 1.000 («1.240 · 240 se cobran»); chat sin medio de pago pasado el tope, y plantilla en revisión o rechazada al elegirla; Bot: editar bienvenida y fuera de horario (texto, días, horas y zona), los interruptores de «Además», elegir número con varios y el tope de 10; Contactos: editar contacto (etiquetas y consentimiento), desvincular y el resultado de importar con filas rechazadas; contenido de los ⓘ «Qué significa», «Por qué la rechazó Meta» y «Por qué no llegó»; Equipos: opciones del aviso con «No avisar»; correo «Consultas esperando» de Plataforma; difusión programada: cancelar y confirmar el envío, con la zona; Mensajes de la persona: vacío y desvincular; diálogos «Desconectar» y «Cambiar a quién atiende»; Cargar teléfonos, primer paso (pegar o subir) y su entrada desde el ⋮ de M-Usuarios; los dos permisos de WhatsApp en Cuenta-Plat; Plat-WA-Numero con consultas apagadas; invitaciones por teléfono en la lista de Usuarios. Los datos de ejemplo no deben contradecir las reglas: difusiones solo a quienes aceptan y ningún número a la vez de empleado y de cliente.
+```
+
+## Cambios al contrato
+
+Vacía.
