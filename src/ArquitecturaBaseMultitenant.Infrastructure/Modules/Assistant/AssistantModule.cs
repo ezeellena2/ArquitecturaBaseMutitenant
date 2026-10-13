@@ -49,8 +49,8 @@ public static class AssistantModule
         services.AddScoped<IAssistantRetentionRepository, AssistantRetentionRepository>();
         services.AddHostedService<Retention.AssistantRetentionWorker>();
         services.AddSingleton<IValidateOptions<AssistantOptions>, AssistantOptionsValidator>();
-        services.AddSingleton<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Help.IHelpArticleReader,
-            ArquitecturaBaseMultitenant.Infrastructure.Help.RepositoryHelpArticleReader>();
+        services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Help.IHelpArticleReader,
+            Help.RepositoryHelpArticleReader>();
         services.AddScoped<IModuleDataSeedContributor, AssistantReferenceDataSeed>();
         return services;
     }

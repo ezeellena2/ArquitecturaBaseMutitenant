@@ -5,10 +5,10 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Help;
 using ArquitecturaBaseMultitenant.Application.Models.Help;
 using ArquitecturaBaseMultitenant.Domain.Users;
 
-namespace ArquitecturaBaseMultitenant.Infrastructure.Help;
+namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.Help;
 
 /// <summary>Only trusted embedded manifest paths can be read; the chat supplies topic/search, never a path.</summary>
-internal sealed class RepositoryHelpArticleReader : IHelpArticleReader
+internal sealed class RepositoryHelpArticleReader(ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData.ICultureCatalog cultures) : IHelpArticleReader
 {
     private static readonly Assembly Assembly = typeof(RepositoryHelpArticleReader).Assembly;
     private static readonly JsonSerializerOptions ManifestOptions = CreateOptions();
@@ -20,7 +20,10 @@ internal sealed class RepositoryHelpArticleReader : IHelpArticleReader
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(context);
-        if (context.Language is not ("es" or "en") || request.Search?.Length > 100 || request.TopicKey?.Length > 100) return [];
+        var languages = (await cultures.ListAsync(ct)).Where(culture => culture.IsEnabled).Select(culture => culture.LanguageCode).Distinct(StringComparer.Ordinal).ToArray();
+        if (!languages.Contains(context.Language, StringComparer.Ordinal) || request.Search?.Length > 100 || request.TopicKey?.Length > 100) return [];
+        if (_articles.Any(article => languages.Any(language => !article.Files.ContainsKey(language) || !article.Titles.ContainsKey(language))))
+            throw new InvalidOperationException("Each enabled catalog language requires a help translation.");
         var matches = _articles.Where(article => article.Accesses.Contains(context.Access)
             && context.AllowedRoutes.Contains(article.RouteKey, StringComparer.Ordinal)
             && (article.Permission is null || context.Permissions.Contains(article.Permission, StringComparer.Ordinal))
@@ -58,7 +61,7 @@ internal sealed class RepositoryHelpArticleReader : IHelpArticleReader
         if (articles.Select(article => article.TopicKey).Distinct(StringComparer.Ordinal).Count() != articles.Length)
             throw new InvalidOperationException("Help topic keys must be unique.");
         foreach (var article in articles)
-            foreach (var language in new[] { "es", "en" })
+            foreach (var language in article.Files.Keys)
             {
                 if (!article.Files.TryGetValue(language, out var file) || !article.Titles.ContainsKey(language)
                     || !Assembly.GetManifestResourceNames().Contains(ResourceName(file), StringComparer.Ordinal))
