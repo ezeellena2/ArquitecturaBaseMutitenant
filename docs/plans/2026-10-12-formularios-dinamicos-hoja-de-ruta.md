@@ -287,6 +287,8 @@ Decididas por el usuario el 2026-10-12. No se vuelven a preguntar.
 8. **Alcance:** seis etapas, con la biblioteca al final. El asistente en WhatsApp (antes F7) queda para después.
 9. **Varias empresas:** si quien responde es miembro de varias empresas, la respuesta guarda todas sus empresas activas, y el filtro por empresa la encuentra por cualquiera.
 10. **Quién manda un formulario desde el chat:** cualquiera con «Atender internos», sin permiso aparte. Lo que limita es que quien recibe tenga `formrecords.create`.
+11. **Nombres largos en un catálogo de miembros:** si pasan los 30 caracteres del título de una opción en WhatsApp, se cortan con «…» y el nombre completo va en el detalle.
+12. **Catálogo con filtros de más de 200 opciones:** se puede guardar con aviso; el bloqueo es al mandar.
 
 ## 6. Qué tomar de ArquitecturaBase
 

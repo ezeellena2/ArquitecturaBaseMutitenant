@@ -37,7 +37,7 @@
 
 ## 2. Decisiones de la etapa
 
-Valen las de la E12. Estas son las nuevas, técnicas. Las de producto están en la [§13](#13-para-confirmar-con-el-usuario).
+Valen las de la E12. Estas son las nuevas, técnicas. Las de producto están en la [§13](#13-decisiones-de-producto-de-la-etapa).
 
 | # | Decisión | Por qué |
 | --- | --- | --- |
@@ -186,7 +186,7 @@ Las rutas de Business llevan `[Access(Access.Business)]` y `[FeatureGate("forms"
    - **subir o bajar:** bloqueo del catálogo, se busca la vecina activa o dada de baja en el orden de posición, y se intercambian las dos posiciones. La restricción diferida admite el intercambio.
 3. **Filtros:**
    - `PUT` del catálogo con su versión; los filtros se validan contra la fuente;
-   - guardar con más de 200 resultados para la persona de ejemplo está permitido: la vista previa avisa, y el bloqueo es al mandar (para confirmar en la [§13](#13-para-confirmar-con-el-usuario)).
+   - guardar con más de 200 resultados para la persona de ejemplo está permitido: la vista previa avisa, y el bloqueo es al mandar ([§13](#13-decisiones-de-producto-de-la-etapa)).
 4. **Vista previa:** corre el lector con los filtros sin guardar, con la persona de ejemplo como destinatario. No toma su identidad ni sus permisos, y no escribe nada.
 5. **Pregunta de catálogo:**
    - `PUT …/draft` valida que el catálogo exista y se pueda usar;
@@ -195,6 +195,7 @@ Las rutas de Business llevan `[Access(Access.Business)]` y `[FeatureGate("forms"
 6. **Mandar** (cambia la §6.6 de la E12):
    - `FindSendableAsync` de Forms resuelve, para quien recibe y en su idioma, la oferta de cada pregunta de catálogo. Lee los catálogos a mano activos o la fuente con los filtros; es solo lectura.
    - Si una pregunta tiene un problema, no se puede mandar.
+   - **Nombres largos:** un nombre de la fuente «Miembros» de más de 30 caracteres se corta en 29 más «…», y el completo va primero en el detalle ([§13](#13-decisiones-de-producto-de-la-etapa)).
    - **En la UoW de WhatsApp:**
      - se numeran las opciones `o1` a `oN`;
      - se arma `flow_action_payload.data` con `{id: localId, title: text, description?: detail}`;
@@ -282,14 +283,12 @@ Valen los criterios y los datos de ejemplo de la E12 ([texto para Diseño](e12-t
 | [Meta] | Los límites del `Dropdown` dinámico: cuántas opciones, el largo del título y del detalle, y el tamaño de `data` en el mensaje. | 200 opciones, título ≤30 y detalle ≤300. Se verifica en la documentación vigente y en la prueba con Meta. |
 | [E9] | Los límites por organización. | Como en la E12. |
 
-## 13. Para confirmar con el usuario
+## 13. Decisiones de producto de la etapa
 
-1. **Un nombre de miembro de más de 30 caracteres** (el título de una opción en WhatsApp):
-   - Recomendado: cortarlo en 29 y agregar «…», y poner el nombre completo en el detalle de la opción.
-   - Alternativa: no dejar mandar mientras haya un nombre largo.
-2. **Guardar un catálogo con filtros que da más de 200 opciones:**
-   - Recomendado: se guarda, la vista previa avisa y el bloqueo es al mandar (la organización crece y el número cambia igual).
-   - Alternativa: no se guarda, como en ArquitecturaBase.
+Las tomó el usuario el 2026-10-13. No se vuelven a preguntar.
+
+1. **Un nombre de miembro de más de 30 caracteres** (el título de una opción en WhatsApp) se corta en 29 y se le agrega «…», y el nombre completo va primero en el detalle de la opción. Siempre se puede mandar. Las opciones a mano no lo necesitan, porque su texto ya tiene un tope de 30 al guardarse.
+2. **Un catálogo con filtros que da más de 200 opciones se puede guardar.** La vista previa avisa «Más de 200: no se va a poder mandar» y el bloqueo es al mandar, porque la cantidad cambia igual cuando la organización crece.
 
 ## 14. Referencia tomada de ArquitecturaBase
 
