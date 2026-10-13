@@ -9,13 +9,6 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   └── workflows/
 ├── docs/
 │   ├── architecture/
-│   ├── ayuda/
-│   │   ├── assistant/
-│   │   ├── business/
-│   │   ├── identity/
-│   │   ├── personal/
-│   │   ├── platform/
-│   │   └── whatsapp/
 │   ├── contracts/
 │   ├── decisions/
 │   ├── features/  reglas funcionales por área
@@ -223,7 +216,6 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   ├── Caching/
 │   │   ├── Features/
 │   │   ├── Files/  almacenamiento privado local y journal de compensación
-│   │   ├── Help/
 │   │   ├── Idempotency/
 │   │   ├── Identity/
 │   │   │   ├── Deletion/
@@ -233,8 +225,18 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │       └── Templates/
 │   │   ├── Modules/
 │   │   │   ├── Assistant/
+│   │   │   │   ├── Email/  renderizado de alertas desde plantillas del módulo
+│   │   │   │   │   └── Templates/
 │   │   │   │   ├── Export/  exportación Markdown/PDF del chat
 │   │   │   │   │   └── Fonts/  fuente y licencia del PDF
+│   │   │   │   ├── Help/  lector y artículos bilingües aportados por el módulo
+│   │   │   │   │   └── Articles/
+│   │   │   │   │       ├── assistant/
+│   │   │   │   │       ├── business/
+│   │   │   │   │       ├── identity/
+│   │   │   │   │       ├── personal/
+│   │   │   │   │       ├── platform/
+│   │   │   │   │       └── whatsapp/
 │   │   │   │   ├── Persistence/
 │   │   │   │   │   ├── Configurations/
 │   │   │   │   │   ├── Readers/
@@ -495,7 +497,6 @@ Decisión del usuario (2026-10-11): cada raíz de capa, área, módulo, proyecto
 | `src/ArquitecturaBaseMultitenant.Infrastructure/BackgroundJobs/` | Adaptadores técnicos de Background Jobs. | [docs/rules/multitenancy.md](../rules/multitenancy.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/BackgroundJobs/TenantJobRunner.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/BackgroundJobs/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Caching/` | Adaptadores técnicos de caché. | [docs/rules/multitenancy.md](../rules/multitenancy.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Caching/HybridCacheExtensions.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Caching/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Features/` | Adaptadores técnicos de Features. | [docs/rules/modulos-habilitados.md](../rules/modulos-habilitados.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Features/TenantFeatureFilter.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Features/AGENTS.md) |
-| `src/ArquitecturaBaseMultitenant.Infrastructure/Help/` | Adaptadores técnicos de Help. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Help/RepositoryHelpArticleReader.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Help/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Idempotency/` | Adaptadores técnicos de idempotencia. | [docs/rules/idempotencia.md](../rules/idempotencia.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Idempotency/IdempotencyStore.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Idempotency/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Identity/` | Adaptadores técnicos de identidad. | [docs/features/identidad.md](../features/identidad.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Identity/ApplicationUser.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Identity/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Identity/Deletion/` | Adaptadores técnicos de identidad / Deletion. | [docs/rules/datos-personales.md](../rules/datos-personales.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Identity/Deletion/LegalAcceptanceDeletionParticipant.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Identity/Deletion/AGENTS.md) |
@@ -585,5 +586,7 @@ Decisión del usuario (2026-10-11): cada raíz de capa, área, módulo, proyecto
 | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/WhatsApp/` | Pruebas de unidad: WhatsApp. | [docs/rules/tests.md](../rules/tests.md) | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/WhatsApp/WhatsAppMessageTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Domain.UnitTests/WhatsApp/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Files/` | Almacenamiento privado local y journal de compensación. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Files/LocalFileStore.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Files/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Export/` | Exportación Markdown/PDF de chats del asistente. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Export/AssistantExportRenderer.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Export/AGENTS.md) |
+| `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Email/` | Plantillas y renderizado de alertas del asistente. | [docs/rules/textos-y-traducciones.md](../rules/textos-y-traducciones.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Email/AssistantBudgetEmailRenderer.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Email/AGENTS.md) |
+| `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Help/` | Lector y artículos bilingües de ayuda del asistente. | [docs/features/asistente.md](../features/asistente.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Help/RepositoryHelpArticleReader.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Help/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Files/` | Pruebas del almacenamiento privado y sus compensaciones. | [docs/rules/tests.md](../rules/tests.md) | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Files/LocalFileStoreTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Files/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/TestFeatures/AssistantBrowser/` | Fixture privada del recorrido del asistente en Testing aislado. | [docs/rules/tests.md](../rules/tests.md) | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/TestFeatures/AssistantBrowser/AssistantFileBridge.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/TestFeatures/AssistantBrowser/AGENTS.md) |
