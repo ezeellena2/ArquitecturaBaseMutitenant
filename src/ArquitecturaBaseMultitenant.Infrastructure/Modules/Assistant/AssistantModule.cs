@@ -34,6 +34,7 @@ public static class AssistantModule
         services.AddScoped<IAssistantFinanceRepository, AssistantFinanceRepository>();
         services.AddScoped<IAssistantBudgetAlertRepository, AssistantBudgetAlertRepository>();
         services.AddHostedService<AssistantBudgetAlertWorker>();
+        services.AddScoped<IAssistantBudgetEmailRenderer, Email.AssistantBudgetEmailRenderer>();
         services.AddScoped<IAssistantFinanceReader, AssistantFinanceReader>();
         services.AddScoped<IAssistantUsageReader, AssistantUsageReader>();
         services.AddSingleton<IAssistantProviderCatalog, AssistantProviderCatalog>();
