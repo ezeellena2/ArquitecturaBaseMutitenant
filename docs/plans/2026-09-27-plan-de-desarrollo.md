@@ -17,7 +17,7 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 7 · Público/Personal | Cerrada | [Sitio público](../features/sitio-publico.md), [Personal](../features/personal.md) |
 | 8 · WhatsApp de plataforma | Cerrada | [WhatsApp](../features/whatsapp.md), [Identidad](../features/identidad.md) |
 | 8b · Asistente | Cerrada | [ADR 0048](../decisions/0048-asistente.md), [0049](../decisions/0049-precisiones-whatsapp-y-asistente.md), [Asistente](../features/asistente.md) |
-| 11 · WhatsApp de atención | Plan corto listo; esperan las decisiones D1–D8 | [Plan](2026-10-13-etapa-11-whatsapp.md), [ADR 0038](../decisions/0038-whatsapp-de-atencion.md) |
+| 11 · WhatsApp de atención | Plan corto listo, con las decisiones del usuario | [Plan](2026-10-13-etapa-11-whatsapp.md), [ADR 0038](../decisions/0038-whatsapp-de-atencion.md) |
 | 9 · Endurecimiento | Pendiente | Decisiones de abajo |
 | 10 · Operación | Pendiente | Decisiones de abajo |
 | 12 · Formularios por WhatsApp | Pendiente | [Hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md) |
@@ -29,7 +29,7 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 
 ## Etapa 11: WhatsApp de atención
 
-La plataforma y cada organización atienden con el mismo módulo: alta de números por Meta, bot, equipos, bandejas de Clientes e Internos, contactos con consentimiento, plantillas y difusiones, y la fuente productiva de «Mis mensajes con empresas». El [plan corto](2026-10-13-etapa-11-whatsapp.md) tiene el contrato, las tareas, los datos de Meta verificados el 2026-10-13 y las decisiones de producto pendientes.
+La plataforma y cada organización atienden con el mismo módulo: alta de números por Meta, bot, equipos, bandejas de Clientes e Internos, contactos con consentimiento, plantillas y difusiones, y la fuente productiva de «Mis mensajes con empresas». El [plan corto](2026-10-13-etapa-11-whatsapp.md) tiene el contrato, las tareas, los datos de Meta verificados el 2026-10-13 y las decisiones del usuario.
 
 ## Etapa 9: endurecimiento
 

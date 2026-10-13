@@ -73,6 +73,16 @@ Lo decidió el dueño del producto al repasar la etapa:
 - **La invitación por WhatsApp en español sale como Marketing** (decisión del usuario, 2026-10-12). Meta clasificó `invitacion_organizacion/es` como Marketing. Al cerrar la Etapa 8 se probó una plantilla nueva con «te invitó a unirte», y Meta la clasificó Marketing otra vez, en español y en inglés. Se mantiene `invitacion_organizacion`. Una invitación en español cuesta algo más y no le llega a quien apagó las promociones de esa empresa.
 - **Tech Provider va por producto.** La plantilla es genérica, y cada producto que salga de ella tendrá su propia marca. Al lanzarse, cada uno tramita su app con su nombre, su empresa verificada y la revisión de Meta. La plantilla desarrolla y prueba el alta con el acceso estándar de Meta, en una app en modo desarrollo.
 
+### Precisión del 2026-10-13 (plan de la Etapa 11)
+
+Lo decidió el dueño del producto con los datos de Meta verificados ese día ([plan](../plans/2026-10-13-etapa-11-whatsapp.md)):
+- **Pago:** desde el 01/10/2026 Meta cobra por mensaje y da 1.000 mensajes de servicio entregados gratis por número y por mes. Sin medio de pago, el número **responde hasta esos 1.000** y no manda plantillas ni difusiones (reemplaza «no puede ni responder»). La pantalla de números muestra siempre «N de 1.000 gratis este mes».
+- **Vínculo con la cuenta:** se confirma con un botón del bot, que solo se ofrece si el número es un teléfono verificado de una cuenta. «Mensajes» muestra la conversación desde que se vinculó; un número reciclado nunca muestra mensajes del dueño anterior.
+- **Permisos:** son de organización, no por empresa. Solo el Dueño los recibe de entrada. «Atender clientes» incluye ver, editar e importar contactos y cambiar el consentimiento a mano.
+- **Retención:** el texto de los chats se guarda mientras exista el contacto (en Plataforma, la conversación) y se borra con él. Apagar el módulo no borra.
+- **Aviso por correo:** uno por equipo cuando el chat más viejo sin tomar pasa el tiempo elegido; no se repite hasta que la bandeja se vacía y vuelve a llenarse. Se puede elegir «No avisar».
+- **Archivos de los clientes:** en la Etapa 11 se ve «Mandó una foto/audio/documento», sin descarga, que llega con la Etapa 14. Desconectar un número deja sus chats para leer, sin responder.
+
 ## Alternativas descartadas
 
 - Un bot por persona B2C: Meta no da la API a personas, y no tiene un caso de uso.

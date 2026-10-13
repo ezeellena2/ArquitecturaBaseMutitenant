@@ -2,7 +2,7 @@
 
 | Parte | Tareas | Estado |
 |---|---|---|
-| 0 · Decisiones de producto | «Para decidir» D1–D8 | Pendiente del usuario |
+| 0 · Decisiones de producto | D1–D8 | Hechas por el usuario el 2026-10-13 |
 | 1 · Contrato | K1 | Pendiente |
 | 2a · Back | B1–B7 | Pendiente |
 | 2b · Front | F1–F7 | Pendiente |
@@ -10,7 +10,7 @@
 
 ## Forma de trabajo
 
-Rige `AGENTS.md` («Velocidad y cierre liviano») y la guía [etapa en paralelo](../guides/etapa-en-paralelo.md): contrato primero; Back y Front a la vez, un chat por repo; integración y **una sola puerta**. Tests donde hay lógica: permisos, aislamiento, carreras, ventana de 24 h, consentimiento, cuotas y recorridos. Commits chicos, verificados, en español y con pathspec; sin push. Cada verificación completa pasa una vez; después de un arreglo, solo lo que toca. Sin actas ni revisiones por tarea: una revisión de código al cerrar. Ningún chat programa algo que dependa de D1–D8 hasta que el usuario las responda.
+Rige `AGENTS.md` («Velocidad y cierre liviano») y la guía [etapa en paralelo](../guides/etapa-en-paralelo.md): contrato primero; Back y Front a la vez, un chat por repo; integración y **una sola puerta**. Tests donde hay lógica: permisos, aislamiento, carreras, ventana de 24 h, consentimiento, cuotas y recorridos. Commits chicos, verificados, en español y con pathspec; sin push. Cada verificación completa pasa una vez; después de un arreglo, solo lo que toca. Sin actas ni revisiones por tarea: una revisión de código al cerrar.
 
 ## Fuentes
 
@@ -46,7 +46,7 @@ Un solo chat publica todas las rutas en `openapi.json` con `501`, los permisos, 
 **Permisos:**
 - **Organización**, en el catálogo, `Permissions.resx` y `.en.resx`: `whatsapp.customers` (Atender clientes; incluye ver contactos), `whatsapp.internal` (Atender internos), `whatsapp.broadcasts` (Mandar difusiones) y `whatsapp.manage` (Administrar WhatsApp).
 - **Plataforma:** `platform.whatsapp.manage` (Número, Bot, Equipos y Plantillas) y `platform.whatsapp.attend` (Consultas).
-- **Migraciones de datos:** el seed y las organizaciones existentes según D3; los operadores que ya tienen `platform.operators.manage` reciben los dos permisos de Plataforma, con su `SecurityEvent` (lección A1/M1 de la 8b).
+- **Migraciones de datos:** el Dueño (`TenantAdmin`) recibe los cuatro en el seed y en las organizaciones existentes, y ningún otro rol de sistema los recibe (D3); los operadores que ya tienen `platform.operators.manage` reciben los dos permisos de Plataforma, con su `SecurityEvent` (lección A1/M1 de la 8b).
 
 **Texto para el chat del Contrato:**
 
@@ -75,9 +75,9 @@ Leé AGENTS.md de los dos repos y la parte 1 de docs/plans/2026-10-13-etapa-11-w
 | POST `conversations/{id}/templates` | ídem | `{templateId, variables[], version}` → 202 `Message` |
 | GET `contacts` | customers | `?search&tag&consent&page` → `PagedResult<Contact>` + `{total, accepting}` |
 | GET `contacts/{id}`, `contacts/{id}/conversations`, `contacts/{id}/broadcasts` | customers | ficha y sus dos pestañas paginadas |
-| PUT `contacts/{id}` | según D3 | `{name, tags[], consent?, version}` |
-| GET `contacts/import-sample` | según D3 | archivo `.xlsx` (Nombre, Teléfono, Etiqueta, Acepta promociones) |
-| POST `contacts/import` | según D3 | multipart `{file, tag?}` → `{imported, updated, rejected: [{row, reason}]}` |
+| PUT `contacts/{id}` | customers | `{name, tags[], consent?, version}` |
+| GET `contacts/import-sample` | customers | archivo `.xlsx` (Nombre, Teléfono, Etiqueta, Acepta promociones) |
+| POST `contacts/import` | customers | multipart `{file, tag?}` → `{imported, updated, rejected: [{row, reason}]}` |
 | GET `tags` | customers | `PagedResult<string>` |
 | GET/POST `templates`, POST `templates/{id}/duplicate`, DELETE `templates/{id}` | manage | `{name, category: Utility|Marketing, language, body, variables[{label, example}]}`; estado `Approved|Pending|Rejected|Paused` con motivo |
 | GET `broadcasts`, GET `broadcasts/{id}` | broadcasts | lista; resultados con contadores y `PagedResult<Recipient>` |
@@ -143,25 +143,25 @@ Leé AGENTS.md del front y ../ArquitecturaBaseMutitenant/docs/plans/2026-10-13-e
 - **E9:** la CSP tiene que permitir el SDK de Facebook (`connect.facebook.net` y el marco de `facebook.com`), y los límites de pedidos cubren las rutas nuevas.
 - **E10:** exportar mis datos incluye contactos ligados, vínculos y mensajes propios, según el inventario de B7.
 
-## Para decidir (decisiones de producto del usuario)
+## Decisiones del usuario (2026-10-13)
 
-| # | Pregunta | Opciones (la recomendada primero) |
-|---|---|---|
-| D1 | Número sin medio de pago | **a)** Mostrar siempre «N de 1.000 gratis este mes» y, sin medio de pago, avisar «Responde hasta 1.000 mensajes por mes. Sin medio de pago no manda plantillas ni difusiones». Corrige el «no puede responder» de `WA-Admin-Pago`, que Meta desmiente. **b)** Dejar los tableros como están. |
-| D2 | Cómo vincula una persona su conversación a su cuenta | **a)** Con un botón del bot, que se ofrece solo si el número es un Phone verificado de una cuenta: escribir desde ese número ya prueba que es suyo. Sin pantalla nueva. **b)** Con un enlace a una pantalla web de confirmación, que hay que dibujar. |
-| D3 | Permisos en los roles de sistema y en contactos | **a)** El Dueño tiene los 4; ningún otro rol de sistema los tiene, y el Dueño arma roles propios. Permisos solo de organización (una empresa atendida no da permisos aparte). Ver, editar e importar contactos y cambiar el consentimiento a mano: «Atender clientes». **b)** Además, el Administrador de empresa atiende clientes e internos. |
-| D4 | Cuánto se guardan los textos de los chats | **a)** Mientras exista el contacto en la organización (o la conversación en Plataforma); se borran al borrar el contacto, al apagar el módulo no. **b)** 90 días, como el número de la plataforma de la E8. **c)** Que lo elija cada organización. |
-| D5 | Qué ve la persona en «Mensajes» | **a)** La conversación desde que la vinculó, como muestra `WA-Mensajes` («Vinculada desde…»). Un número reciclado nunca muestra mensajes del dueño anterior. **b)** Toda la historia de ese número con la organización. |
-| D6 | Frecuencia del correo «Chats esperando» | **a)** Uno por equipo cuando el chat más viejo sin tomar pasa el tiempo elegido; no se repite hasta que la bandeja se vacía y vuelve a llenarse. «No avisar» es una opción. **b)** Uno cada vez que se cumple el tiempo de cada chat. |
-| D7 | Fotos, audios y documentos que mandan los clientes, y desconectar un número | **a)** En esta etapa se ve «Mandó una foto/audio/documento» sin descargarlo; la descarga llega con la E14. Desconectar deja los chats de ese número para leer, sin responder. **b)** Descargar los archivos ya en esta etapa (suma almacenamiento y la nube de la E10). |
-| D8 | Qué app de Meta se usa para desarrollar | **a)** Una app nueva en modo desarrollo, en el mismo portfolio. «Servicios Ya» sigue igual. **b)** Pasar «Servicios Ya» a desarrollo: corta lo que hoy recibe su webhook. |
+| # | Decisión |
+|---|---|
+| D1 | Cada número muestra siempre «N de 1.000 gratis este mes». Sin medio de pago, el aviso dice «Responde hasta 1.000 mensajes por mes. Sin medio de pago no manda plantillas ni difusiones». |
+| D2 | La persona vincula su conversación con un botón del bot, que solo se ofrece si el número es un Phone verificado de una cuenta. Sin pantalla nueva. |
+| D3 | Solo el Dueño recibe los cuatro permisos de entrada. Son permisos de organización, no por empresa. Ver, editar e importar contactos y cambiar el consentimiento a mano: «Atender clientes». |
+| D4 | El texto de los chats se guarda mientras exista el contacto (en Plataforma, la conversación) y se borra con él. Apagar el módulo no borra. |
+| D5 | «Mensajes» muestra la conversación desde que se vinculó. Un número reciclado nunca muestra mensajes del dueño anterior. |
+| D6 | Un correo «Chats esperando» por equipo cuando el chat más viejo sin tomar pasa el tiempo elegido; no se repite hasta que la bandeja se vacía y vuelve a llenarse. «No avisar» es una opción. |
+| D7 | Fotos, audios y documentos se ven como «Mandó una foto/audio/documento», sin descarga (llega con la E14). Desconectar un número deja sus chats para leer, sin responder. |
+| D8 | Se desarrolla con una app nueva de Meta en modo desarrollo, en el mismo portfolio; «Servicios Ya» no se toca. |
 
 ## Para Diseño
 
 Texto para la conversación de Diseño (única que toca el lienzo):
 
 ```
-Etapa 11, sobre el lienzo v121. Contradicciones: Plat-WA-Plantillas y su M-* muestran invitacion_organizacion como Utilidad (es Marketing en español y Utility en inglés); Criterio-Decisiones cita la 0041 en Cargar teléfonos (vale la 0043 y la precisión del 11/10 de la 0038); las respuestas del bot en Mensajes dicen «Por ahora este chat solo sirve para entrar», que deja de ser cierto con Consultas; WA-Alta muestra {{res}} sin resolver; WA-Admin-Pago dice que sin medio de pago no se puede responder, y Meta entrega hasta 1.000 de servicio por mes (según la respuesta del usuario a D1). Estados que faltan: responder un chat que otro tomó; la bandeja Internos con un empleado; el contador pasado de 1.000 («1.240 · 240 se cobran»); chat sin medio de pago pasado el tope, y plantilla en revisión o rechazada al elegirla; Bot: editar bienvenida y fuera de horario (texto, días, horas y zona), los interruptores de «Además», elegir número con varios y el tope de 10; Contactos: editar contacto (etiquetas y consentimiento), desvincular y el resultado de importar con filas rechazadas; contenido de los ⓘ «Qué significa», «Por qué la rechazó Meta» y «Por qué no llegó»; Equipos: opciones del aviso con «No avisar»; correo «Consultas esperando» de Plataforma; difusión programada: cancelar y confirmar el envío, con la zona; Mensajes de la persona: vacío y desvincular; diálogos «Desconectar» y «Cambiar a quién atiende»; Cargar teléfonos, primer paso (pegar o subir) y su entrada desde el ⋮ de M-Usuarios; los dos permisos de WhatsApp en Cuenta-Plat; Plat-WA-Numero con consultas apagadas; invitaciones por teléfono en la lista de Usuarios. Los datos de ejemplo no deben contradecir las reglas: difusiones solo a quienes aceptan y ningún número a la vez de empleado y de cliente.
+Etapa 11, sobre el lienzo v121. Contradicciones: Plat-WA-Plantillas y su M-* muestran invitacion_organizacion como Utilidad (es Marketing en español y Utility en inglés); Criterio-Decisiones cita la 0041 en Cargar teléfonos (vale la 0043 y la precisión del 11/10 de la 0038); las respuestas del bot en Mensajes dicen «Por ahora este chat solo sirve para entrar», que deja de ser cierto con Consultas; WA-Alta muestra {{res}} sin resolver; WA-Admin-Pago dice que sin medio de pago no se puede responder, y Meta entrega hasta 1.000 de servicio por mes: con la decisión D1, el número muestra siempre «N de 1.000 gratis este mes» y, sin medio de pago, «Responde hasta 1.000 mensajes por mes. Sin medio de pago no manda plantillas ni difusiones». Estados que faltan: el mensaje del bot que ofrece vincular la conversación a la cuenta, con su botón (D2); un mensaje «Mandó una foto/audio/documento» (D7); el chat de un número desconectado, solo para leer (D7); responder un chat que otro tomó; la bandeja Internos con un empleado; el contador pasado de 1.000 («1.240 · 240 se cobran»); chat sin medio de pago pasado el tope, y plantilla en revisión o rechazada al elegirla; Bot: editar bienvenida y fuera de horario (texto, días, horas y zona), los interruptores de «Además», elegir número con varios y el tope de 10; Contactos: editar contacto (etiquetas y consentimiento), desvincular y el resultado de importar con filas rechazadas; contenido de los ⓘ «Qué significa», «Por qué la rechazó Meta» y «Por qué no llegó»; Equipos: opciones del aviso con «No avisar»; correo «Consultas esperando» de Plataforma; difusión programada: cancelar y confirmar el envío, con la zona; Mensajes de la persona: vacío y desvincular; diálogos «Desconectar» y «Cambiar a quién atiende»; Cargar teléfonos, primer paso (pegar o subir) y su entrada desde el ⋮ de M-Usuarios; los dos permisos de WhatsApp en Cuenta-Plat; Plat-WA-Numero con consultas apagadas; invitaciones por teléfono en la lista de Usuarios. Los datos de ejemplo no deben contradecir las reglas: difusiones solo a quienes aceptan y ningún número a la vez de empleado y de cliente.
 ```
 
 ## Cambios al contrato
