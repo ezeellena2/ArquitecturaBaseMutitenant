@@ -189,7 +189,7 @@ Una categoría se borra solo si ninguna plantilla la usa (`Forms.TemplateCategor
 
 ## 8. Pantallas (tableros para Diseño)
 
-Valen los criterios de la E12. Datos de ejemplo:
+Valen los criterios de la E12. El texto para Diseño está en [e17-texto-diseno.md](e17-texto-diseno.md). Datos de ejemplo:
 - **Categorías:** Ventas, Logística y Mantenimiento.
 - **Plantillas:**
   - «Visita a cliente» (Ventas): publicada en la versión 2, con cambios sin publicar, que la usaron 12 organizaciones;
