@@ -15,7 +15,6 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   ├── guides/  recetas: agregar un área, permiso nuevo, migración, prefijo de backend, arneses
 │   ├── operations/
 │   ├── plans/
-│   ├── reviews/  revisión activa de la 8b hasta el aviso del coordinador
 │   ├── rules/  fichas del arnés: README + una ficha por tema (guardado, fechas, números…); índice en rules/README.md
 ├── scripts/
 │   ├── arneses/  arneses ejecutables: detectan (0 tokens), arreglan lo mecánico y llaman a un modelo barato (ADR 0037)

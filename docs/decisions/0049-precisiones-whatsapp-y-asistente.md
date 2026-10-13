@@ -4,7 +4,7 @@ Estado: aceptada el 2026-10-08 por el dueño del producto: «hagamos esto que re
 
 ## Contexto
 
-Los planes ejecutables de [E8](../plans/2026-10-07-etapa-8-whatsapp.md) y [E8b](../plans/2026-10-08-etapa-8b-asistente.md) encontraron seis huecos de producto. El usuario aceptó sus recomendaciones y pidió contrastar documentación, código existente y forma de trabajo antes de empezar, conservando los patrones del proyecto.
+Los planes ejecutables de E8 y E8b (hoy en [WhatsApp](../features/whatsapp.md) y [Asistente](../features/asistente.md)) encontraron seis huecos de producto. El usuario aceptó sus recomendaciones y pidió contrastar documentación, código existente y forma de trabajo antes de empezar, conservando los patrones del proyecto.
 
 ## Decisión
 

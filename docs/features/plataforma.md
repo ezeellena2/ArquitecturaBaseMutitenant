@@ -20,7 +20,7 @@ Las nueve páginas de Plataforma se montan lazy desde el manifiesto `src/layouts
 | Más (teléfono) | `/plataforma/mas` | Sesión `access=platform` | Identidad, Administración según permisos, Mi cuenta y Salir. No requiere un permiso de sección. |
 | Recuperar mi cuenta | `/recuperar` | Pública, sin sesión | Correo o teléfono anterior, método nuevo/código y pedido recibido; Phone nuevo requiere canal disponible. |
 
-La fuente es el lienzo v111 aprobado en `a88a96a`; las diferencias de formas comunes, datos y referencias base están en la [comparación visual de ](../decisions/README.md). Su autorización se conserva como quedó escrita en el plan; la aceptación de la galería final y la puerta completa se registran al completar /.
+La fuente visual es el lienzo vigente del front (`docs/design/lienzo/README.md`); las decisiones de producto están en el [índice de decisiones](../decisions/README.md).
 
 ## Operadores y permisos
 
