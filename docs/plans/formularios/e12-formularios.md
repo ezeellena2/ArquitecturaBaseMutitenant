@@ -441,6 +441,20 @@ Los tableros nuevos llevan el prefijo `FRM-`, como `WA-` en WhatsApp, para no co
 | `WA-Chats-Respuesta` y `M-WA-Conversacion-Respuesta` | la tarjeta de respuesta en el chat | esperando, recibida con número y valores, recibida solo con número (sin permiso), rechazada, vencida; los seis tipos sin perder «No», «0», «Sin respuesta» ni los decimales |
 | `Rol` | el área «Formularios» con sus cinco permisos | ya existe: solo suma filas |
 
+**Dibujados en el lienzo v122** (2026-10-13), con las decisiones del usuario en «Criterio · Decisiones por pantalla» (E12). Los tableros son:
+- `FRM-Listado`, `FRM-Nuevo`, `FRM-Ficha`, `FRM-Ingles`, `FRM-Pregunta`, `FRM-Prefijo`, `FRM-Publicar` y `FRM-Publicacion`;
+- `WA-Chats-Formulario` y `WA-Chats-Respuesta`;
+- los teléfonos `M-FRM-Listado`, `M-FRM-Ficha`, `M-FRM-Pregunta`, `M-WA-Chats-Formulario` y `M-WA-Conversacion-Respuesta`;
+- los ajustes del menú, de Rol y de la ficha de una organización.
+
+**Mandan sobre esta spec en:**
+- **Menú:** «Formularios» va en el menú principal, debajo de WhatsApp.
+- **«Nuevo formulario»:** pide solo el nombre. El prefijo propuesto se ve y se edita en la caja «Datos» de la ficha, junto con el nombre, y se guarda con el borrador.
+- **Guardado:** a mano («Guardar cambios» y «Descartar cambios»).
+- **Preguntas:** el ⋮ de cada una trae Editar, Subir, Bajar y Quitar.
+- **Estado de la publicación:** una palabra corta con ⓘ.
+- **Teléfono:** se edita todo, como app.
+
 ## 10. Tests
 
 | Dónde | Qué |
