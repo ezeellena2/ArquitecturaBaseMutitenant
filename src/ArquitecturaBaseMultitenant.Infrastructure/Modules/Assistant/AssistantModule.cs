@@ -42,7 +42,6 @@ public static class AssistantModule
         services.AddSingleton<IAssistantProviderCatalog, AssistantProviderCatalog>();
         services.AddScoped<IAssistantKeyProtector, AssistantKeyProtector>();
         services.AddScoped<IChatClientFactory, AnthropicChatClientFactory>();
-        services.AddSingleton<AssistantFakeChatMetrics>();
         services.AddScoped<IAssistantAttachmentRepository, AssistantAttachmentRepository>();
         services.AddScoped<IAssistantAttachmentContentReader, AssistantAttachmentContentReader>();
         services.AddScoped<IAssistantExportRenderer, Export.AssistantExportRenderer>();

@@ -1,17 +1,19 @@
 using System.Runtime.CompilerServices;
-using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Resources;
 using Microsoft.Extensions.AI;
 
-namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant;
+namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.AssistantBrowser;
 
-/// <summary>Doble determinista disponible únicamente mediante opciones de host validadas.</summary>
+/// <summary>Doble determinista instalado sólo por ConfigureTestServices.</summary>
 internal sealed class FakeChatClient(AssistantFakeChatMetrics metrics, TimeProvider clock) : IChatClient
 {
+    private static readonly System.Resources.ResourceManager Texts = new("ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.AssistantBrowser.FakeChatTexts", typeof(FakeChatClient).Assembly);
+    private static string Text(string key) => Texts.GetString(key, System.Globalization.CultureInfo.CurrentUICulture)
+        ?? throw new InvalidOperationException("A fake provider fixture resource is missing.");
     public Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         metrics.Title();
-        return Task.FromResult(new ChatResponse(new ChatMessage(ChatRole.Assistant, AssistantTexts.Get("Assistant.Fake.Title")))
+        return Task.FromResult(new ChatResponse(new ChatMessage(ChatRole.Assistant, Text("Assistant.Fake.Title")))
         { Usage = new UsageDetails { InputTokenCount = 1, OutputTokenCount = 1, TotalTokenCount = 2 } });
     }
     public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null,
@@ -35,10 +37,10 @@ internal sealed class FakeChatClient(AssistantFakeChatMetrics metrics, TimeProvi
             yield return new ChatResponseUpdate { Contents = [new UsageContent(new UsageDetails { InputTokenCount = 3, OutputTokenCount = 2, TotalTokenCount = 5 })], FinishReason = ChatFinishReason.ToolCalls };
             yield break;
         }
-        yield return new ChatResponseUpdate(ChatRole.Assistant, AssistantTexts.Get("Assistant.Fake.Prefix"));
+        yield return new ChatResponseUpdate(ChatRole.Assistant, Text("Assistant.Fake.Prefix"));
         await Task.Delay(scenario.Contains("[E2E:slow]", StringComparison.Ordinal) ? TimeSpan.FromSeconds(3) : TimeSpan.FromMilliseconds(200), clock, cancellationToken);
         if (scenario.Contains("[E2E:error]", StringComparison.Ordinal)) throw new HttpRequestException("Isolated provider failure.");
-        yield return new ChatResponseUpdate(ChatRole.Assistant, AssistantTexts.Get("Assistant.Fake.Suffix"));
+        yield return new ChatResponseUpdate(ChatRole.Assistant, Text("Assistant.Fake.Suffix"));
         yield return new ChatResponseUpdate { Contents = [new UsageContent(new UsageDetails { InputTokenCount = 1, OutputTokenCount = 1, TotalTokenCount = 2 })], FinishReason = ChatFinishReason.Stop };
     }
     public object? GetService(Type serviceType, object? serviceKey = null) => serviceType == typeof(IChatClient) && serviceKey is null ? this : null;

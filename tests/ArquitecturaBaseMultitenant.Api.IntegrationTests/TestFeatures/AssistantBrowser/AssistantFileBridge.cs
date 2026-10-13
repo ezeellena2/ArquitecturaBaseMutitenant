@@ -11,7 +11,6 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
-using ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

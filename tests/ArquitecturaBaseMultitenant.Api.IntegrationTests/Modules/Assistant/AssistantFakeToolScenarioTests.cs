@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.AssistantBrowser;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -5,7 +6,6 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.AssistantTur
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Domain.Results;
-using ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;

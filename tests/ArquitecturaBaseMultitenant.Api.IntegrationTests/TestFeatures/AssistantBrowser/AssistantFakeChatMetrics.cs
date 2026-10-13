@@ -1,4 +1,4 @@
-namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant;
+namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.AssistantBrowser;
 
 /// <summary>Contadores sin datos privados del proveedor determinístico autorizado sólo en Testing/E2E.</summary>
 public sealed class AssistantFakeChatMetrics
