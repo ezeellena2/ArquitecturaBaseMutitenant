@@ -247,7 +247,7 @@ Valen los criterios y los datos de ejemplo de la E12 ([texto para Diseño](e12-t
 | Tablero | Qué muestra | Estados |
 | --- | --- | --- |
 | `FRM-Catalogos` y `M-FRM-Catalogos` | listado: nombre, origen (A mano o Con filtros), opciones, «Lo usan» y estado; «Nuevo catálogo»; filtro Todos, A mano y Con filtros | vacío, sin resultados, «No se puede usar» con ⓘ del motivo |
-| `FRM-Catalogo-Nuevo` | diálogo: nombre y origen en dos tarjetas («Escribirlas a mano», «Tomarlas de los miembros, con filtros»); el origen no cambia después | — |
+| `FRM-Catalogo-Nuevo` | diálogo: nombre y origen con el control segmentado «Escribirlas a mano | Tomarlas de los miembros, con filtros», la pieza de Plantilla nueva, Difusión nueva, el bot y el asistente (decisión del usuario del 2026-10-13); el ⓘ dice «No se puede cambiar después.» | — |
 | `FRM-Catalogo` y `M-FRM-Catalogo` (a mano) | ficha con pestañas: **Opciones** (tabla con posición, texto, detalle y código, ⋮ con Editar, Subir, Bajar y Dar de baja o Reactivar; filtro Activas, Dadas de baja y Todas; «Agregar opción») y **Datos** (nombre y descripción es/en; «Lo usan») | sin opciones, 500 alcanzadas, conflicto |
 | `FRM-Catalogo-Opcion` y `M-FRM-Catalogo-Opcion` | diálogo u hoja: texto es/en (≤30, con contador), detalle es/en y código | código repetido, texto largo |
 | `FRM-Catalogo-Filtros` | ficha con filtros: filas de condición («Si», «y») con columna, operador y valor; «Sin incluir a quien lo recibe»; detalle (ninguno, roles, empresas) y orden. Al costado, «Como si lo recibiera» con una persona elegida, «Probar» y el resultado | N opciones, ninguna, más de 200 (aviso), rol o empresa que ya no existe |

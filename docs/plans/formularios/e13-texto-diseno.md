@@ -44,7 +44,7 @@ Una pregunta nueva, «Elegir de un catálogo», usa esas listas. Al mandar el fo
    - el estado es «Se puede usar» o «No se puede usar», con el motivo en ⓘ;
    - filtro Todos, A mano y Con filtros;
    - «Nuevo catálogo», y los estados vacío y sin resultados.
-2. **`FRM-Catalogo-Nuevo`:** un diálogo con el nombre y el origen en dos tarjetas, «Escribirlas a mano» y «Tomarlas de los miembros, con filtros». El origen no cambia después.
+2. **`FRM-Catalogo-Nuevo`:** un diálogo con el nombre y el origen en el control segmentado «Escribirlas a mano | Tomarlas de los miembros, con filtros», la pieza de Plantilla nueva, Difusión nueva, el bot y el asistente (decisión del usuario del 2026-10-13). El ⓘ dice: «No se puede cambiar después.»
 3. **`FRM-Catalogo`** (a mano), una ficha con dos pestañas:
    - **Opciones:**
      - una tabla con posición, texto, detalle y código;

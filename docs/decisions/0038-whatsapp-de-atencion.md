@@ -61,7 +61,7 @@ Lo decidió el dueño del producto junto con los tableros `Plat-WA-*` y `M-Plat-
   - La opción del sistema «Entrar a mi cuenta» manda el enlace para entrar (Etapa 8). No se borra y existe solo en la plataforma.
 - **Equipos:** son de operadores (por ejemplo, Soporte y Altas), sin elegir bandeja.
 - **Plantillas:**
-  - Dos pestañas: «Para consultas» y «Del sistema».
+  - Dos vistas, «Para consultas» y «Del sistema», con control segmentado arriba de la lista (regla del usuario del 2026-10-13: dos vistas de la misma lista no van en pestañas).
   - Las del sistema son las de [`whatsapp-plantillas.md`](../operations/whatsapp-plantillas.md): no se editan ni se borran, y el ⋮ solo deja ver el texto.
   - Sin plantillas de marketing.
 

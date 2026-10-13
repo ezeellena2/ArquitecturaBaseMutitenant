@@ -5,7 +5,7 @@
 | 0 · Decisiones de producto | D1–D8 | Hechas por el usuario el 2026-10-13 |
 | 1 · Contrato | K1 | Pendiente |
 | 2a · Back | B1–B7 | Pendiente |
-| 2b · Front | F1–F7 | Pendiente |
+| 2b · Front | F1–F8 | Pendiente |
 | 3 · Integración y puerta | I1–I3 | Pendiente |
 
 ## Forma de trabajo
@@ -122,11 +122,12 @@ Todo va en `src/modules/whatsapp`, autocontenido y aportado por `registration.ts
 - **F5 · Difusiones.** `WA-Difusiones`, `WA-Difusion-Nueva` y `WA-Difusion-Resultados` con sus `M-*`.
 - **F6 · Bot, Equipos y Plantillas.** `WA-Respuestas`, `WA-Admin-Editar`, `WA-Bot-Recorrido`, `WA-Equipos*`, `WA-Plantilla*` y las de Plataforma, con sus `M-*`.
 - **F7 · Personas y usuarios.** `WA-Mensajes`/`M-WA-Mensaje(s)` y `WA-Telefonos`/`M-WA-Telefonos`.
+- **F8 · Secciones, vistas y filtros** (regla del usuario del 2026-10-13 en `docs/rules/pantallas-y-ui.md` del front; manda sobre los tableros dibujados antes). Las bandejas «Clientes | Internos» de Chats y «Para consultas | Del sistema» en las plantillas de Plataforma van con `SegmentedControl` arriba de la lista, no con pestañas, y los filtros de los listados, como desplegables de `FilterBar`. Uso del asistente (`src/modules/assistant/usage/AssistantUsagePage.tsx`) pasa de pestañas a `SegmentedControl`, en la compu y en el teléfono (`Asistente-Uso-Org` y `M-Asistente-Uso-Org`). La guarda va en `src/test/harness.test.ts`: solo `src/shared/ui/Page.tsx` importa `shared/ui/tabs`.
 
 **Texto para el chat del Front:**
 
 ```
-Leé AGENTS.md del front y ../ArquitecturaBaseMutitenant/docs/plans/2026-10-13-etapa-11-whatsapp.md. Hacé F1 a F7 en src/modules/whatsapp, contra los tipos generados en K1, copiando los tableros del lienzo vigente; si a un tablero le falta un estado, seguí con el resto y avisá al coordinador. Tests focales donde hay lógica. No toques el lienzo ni los archivos de Diseño: commiteá solo tus rutas, con pathspec y sin push. No toques el back.
+Leé AGENTS.md del front y ../ArquitecturaBaseMutitenant/docs/plans/2026-10-13-etapa-11-whatsapp.md. Hacé F1 a F8 (F8 toca también src/modules/assistant/usage y src/test/harness.test.ts) en src/modules/whatsapp, contra los tipos generados en K1, copiando los tableros del lienzo vigente; si a un tablero le falta un estado, seguí con el resto y avisá al coordinador. Tests focales donde hay lógica. No toques el lienzo ni los archivos de Diseño: commiteá solo tus rutas, con pathspec y sin push. No toques el back.
 ```
 
 ## Parte 3 · Integración y puerta
