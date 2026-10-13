@@ -4154,7 +4154,7 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 429,
-                      "detail": "Llegaste a las {limit} consultas de hoy. Se renuevan a las {hora}.",
+                      "detail": "Llegaste a las {limit} consultas de hoy. Se renuevan a las {time}.",
                       "code": "Assistant.Limit.DailyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60,
@@ -4389,7 +4389,7 @@
             "status": 429,
             "code": "Assistant.Limit.DailyReached",
             "field": null,
-            "es": "Llegaste a las {limit} consultas de hoy. Se renuevan a las {hora}.",
+            "es": "Llegaste a las {limit} consultas de hoy. Se renuevan a las {time}.",
             "en": "You reached today's limit of {limit} queries. They reset at {time}."
           },
           {
@@ -11805,7 +11805,7 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 429,
-                      "detail": "Llegaste a las {limit} consultas de hoy. Se renuevan a las {hora}.",
+                      "detail": "Llegaste a las {limit} consultas de hoy. Se renuevan a las {time}.",
                       "code": "Assistant.Limit.DailyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60,
@@ -12040,7 +12040,7 @@
             "status": 429,
             "code": "Assistant.Limit.DailyReached",
             "field": null,
-            "es": "Llegaste a las {limit} consultas de hoy. Se renuevan a las {hora}.",
+            "es": "Llegaste a las {limit} consultas de hoy. Se renuevan a las {time}.",
             "en": "You reached today's limit of {limit} queries. They reset at {time}."
           },
           {
@@ -21238,7 +21238,7 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 429,
-                      "detail": "Llegaste a las {limit} consultas de hoy. Se renuevan a las {hora}.",
+                      "detail": "Llegaste a las {limit} consultas de hoy. Se renuevan a las {time}.",
                       "code": "Assistant.Limit.DailyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60,
@@ -21473,7 +21473,7 @@
             "status": 429,
             "code": "Assistant.Limit.DailyReached",
             "field": null,
-            "es": "Llegaste a las {limit} consultas de hoy. Se renuevan a las {hora}.",
+            "es": "Llegaste a las {limit} consultas de hoy. Se renuevan a las {time}.",
             "en": "You reached today's limit of {limit} queries. They reset at {time}."
           },
           {
