@@ -91,7 +91,7 @@ Lo decidió el dueño del producto con los datos de Meta verificados ese día ([
 - Una lista de teléfonos internos aparte de las cuentas: se mantiene dos veces y el acceso no se corta solo cuando alguien deja la organización.
 - Que la plataforma le pague a Meta y les cobre a las organizaciones: exige ser Solution Partner y manejar facturación ajena. Se puede sumar si WhatsApp pasa a ser parte de un plan pago.
 - Un canal de chat web propio para que la persona escriba desde la plataforma: es un segundo canal entero y parte la conversación en dos.
-- Sub-menús en el bot, IA y avisos push al celular: quedan para después. La pestaña «Recorrido» del bot ya está pensada para mostrar ramas.
+- Sub-menús en el bot, IA y avisos push al celular: quedan para después. La vista «Recorrido» del bot ya está pensada para mostrar ramas.
 
 ## Consecuencias
 
