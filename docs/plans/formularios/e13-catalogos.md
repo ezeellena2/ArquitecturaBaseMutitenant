@@ -239,7 +239,7 @@ Los modelos están en este repo; no se copia código de ArquitecturaBase. Las ab
 
 ## 10. Pantallas (tableros para Diseño)
 
-Valen los criterios y los datos de ejemplo de la E12 ([texto para Diseño](e12-texto-diseno.md)). Ejemplos para esta etapa:
+Valen los criterios y los datos de ejemplo de la E12 ([texto para Diseño](e12-texto-diseno.md)). El texto para Diseño de esta etapa está en [e13-texto-diseno.md](e13-texto-diseno.md). Ejemplos para esta etapa:
 - **«Motivos de visita»:** a mano, con Seguimiento, Venta nueva, Reclamo y Cobranza (dada de baja).
 - **«Supervisores»:** con filtros, «rol tiene Supervisor» y «Sin incluir a quien lo recibe».
 - **«Clientes mayoristas»:** a mano, que no se puede usar porque no tiene opciones activas.
