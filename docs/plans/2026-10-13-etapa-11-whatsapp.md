@@ -3,7 +3,7 @@
 | Parte | Tareas | Estado |
 |---|---|---|
 | 0 · Decisiones de producto | D1–D8 | Hechas por el usuario el 2026-10-13 |
-| 1 · Contrato | K1 | Pendiente |
+| 1 · Contrato | K1 | Hecha: OpenAPI, permisos, migración de datos, textos y tipos del front |
 | 2a · Back | B1–B7 | Pendiente |
 | 2b · Front | F1–F8 | Pendiente |
 | 3 · Integración y puerta | I1–I3 | Pendiente |
@@ -58,28 +58,28 @@ Leé AGENTS.md de los dos repos y la parte 1 de docs/plans/2026-10-13-etapa-11-w
 
 | Ruta | Permiso | Recibe → devuelve |
 |---|---|---|
-| GET `numbers` | manage | `{items: Number[], signup: {appId, configId, sdkVersion}?}`. `Number = {id, displayNumber, verifiedName, company?: {id,name}, status, coexistence, serviceMessagesThisMonth, freeServiceMessages, chargedServiceMessagesThisMonth, connectedAtUtc, version}` |
+| GET `numbers`, GET `numbers/{id}` | manage | `{numbers: PagedResult<Number>, signup: {appId, configId, sdkVersion}?}` y el número. `Number = {id, displayNumber, verifiedName, company?: {id,name}, status, coexistence, serviceMessagesThisMonth, freeServiceMessages, chargedServiceMessagesThisMonth, connectedAtUtc, version}` |
 | POST `numbers` | manage | `{code, phoneNumberId, wabaId, companyId?, coexistence}` → 201 `Number` |
 | POST `numbers/{id}/check` | manage | `{version}` → `Number` (vuelve a consultar el medio de pago) |
 | PUT `numbers/{id}` | manage | `{companyId?, version}` → `Number` |
 | DELETE `numbers/{id}?version=` | manage | 204 (D7) |
 | GET/PUT `numbers/{id}/bot` | manage | `{welcome, outOfHours, schedule: {timeZoneId, days[{day, from, to}]}, menu[≤10 {id, label, action: Team|Reply, teamId?, reply?}], askPromotions, offerAccountLink, employeesTeamId?, version}` |
 | GET/POST `teams`, PUT/DELETE `teams/{id}` | manage | `{name, inbox: Customers|Internal, memberIds[], notifyAfterMinutes: 10|15|30|null, version}` |
-| GET `conversations` | customers o internal según `inbox` | `?inbox&teamId&state=Untaken|Mine|All&search&page` → `PagedResult<ConversationRow>` + `{customers, internal, untaken}` |
-| GET `conversations/{id}` | ídem | `?cursor` → `{conversation, messages: Cursor<Message>}`; `Message = {id, kind: Text|Template|Note|Event|Unsupported, direction, author?, text?, status, failure?, createdAtUtc}` |
-| POST `conversations/{id}/take` | ídem | `{version}` → `ConversationRow` |
-| POST `conversations/{id}/messages` | ídem | `{text, version}` → 202 `Message` (toma el chat si estaba sin tomar) |
+| GET `customers/conversations` o `internal/conversations` | customers o internal, según la ruta | `?teamId&state=Untaken|Mine|All&search&page` → `{conversations: PagedResult<ConversationRow>, counts: {total, untaken}}`. Las acciones siguientes van bajo el mismo prefijo de bandeja. |
+| GET `conversations/{id}` | ídem | `?page` → `{conversation, messages: PagedResult<Message>}`; `Message = {id, kind: Text|Template|Note|Event|Media, direction, author?, text?, mediaKind?, status, failureReason?, createdAtUtc}` |
+| POST `conversations/{id}/take` | ídem | sin cuerpo → `ConversationRow` |
+| POST `conversations/{id}/messages` | ídem | `{text}` → 201 `Message` (toma el chat si estaba sin tomar) |
 | POST `conversations/{id}/notes` | ídem | `{text}` → 201 `Message` |
 | POST `conversations/{id}/transfer` | ídem | `{teamId?, memberId?, version}` → `ConversationRow` |
 | GET `conversations/{id}/template-options` | ídem | → `PagedResult<{templateId, name, category, variables[], estimatedCost: Money}>` |
-| POST `conversations/{id}/templates` | ídem | `{templateId, variables[], version}` → 202 `Message` |
+| POST `conversations/{id}/templates` | ídem | `{templateId, variables[]}` → 201 `Message` |
 | GET `contacts` | customers | `?search&tag&consent&page` → `PagedResult<Contact>` + `{total, accepting}` |
 | GET `contacts/{id}`, `contacts/{id}/conversations`, `contacts/{id}/broadcasts` | customers | ficha y sus dos pestañas paginadas |
 | PUT `contacts/{id}` | customers | `{name, tags[], consent?, version}` |
 | GET `contacts/import-sample` | customers | archivo `.xlsx` (Nombre, Teléfono, Etiqueta, Acepta promociones) |
 | POST `contacts/import` | customers | multipart `{file, tag?}` → `{imported, updated, rejected: [{row, reason}]}` |
-| GET `tags` | customers | `PagedResult<string>` |
-| GET/POST `templates`, POST `templates/{id}/duplicate`, DELETE `templates/{id}` | manage | `{name, category: Utility|Marketing, language, body, variables[{label, example}]}`; estado `Approved|Pending|Rejected|Paused` con motivo |
+| GET `contacts/tags` | customers | `PagedResult<string>` |
+| GET/POST `templates`, GET/DELETE `templates/{id}`, POST `templates/{id}/duplicate` | manage | `{name, category: Utility|Marketing, language, body, variables[{label, example}]}`; estado `Approved|Pending|Rejected|Paused` con motivo |
 | GET `broadcasts`, GET `broadcasts/{id}` | broadcasts | lista; resultados con contadores y `PagedResult<Recipient>` |
 | GET `broadcasts/estimate` | broadcasts | `?templateId&tag` → `{recipients, estimatedCost: Money}` |
 | POST `broadcasts` | broadcasts | `{name, templateId, variables[], audience: {kind: AllAccepting|Tag, tag?}, scheduledAtUtc?}` → 201 |
@@ -91,7 +91,7 @@ Leé AGENTS.md de los dos repos y la parte 1 de docs/plans/2026-10-13-etapa-11-w
 
 **Rutas personales:** `[Access(Consumer)]`, `/api/me/whatsapp/conversations` (lista y detalle de solo lectura) y DELETE `/api/me/whatsapp/links/{id}` (desvincular). La misma lectura alimenta la fuente `whatsapp` de `IConsumerInteractionSource`.
 
-**Errores** (texto es/en en los resources del módulo): `WhatsApp.Number.AlreadyConnected` 409, `WhatsApp.Number.SignupExpired` 400, `WhatsApp.Number.MetaRejected` 422 (con `metaCode`), `WhatsApp.Number.NotFound` 404, `WhatsApp.Conversation.TakenByOther` 409 (con `takenBy`), `WhatsApp.Conversation.WindowClosed` 422, `WhatsApp.Conversation.PaymentRequired` 422 (plantilla sin medio de pago o servicio pasado el tope), `WhatsApp.Bot.TooManyOptions` 400, `WhatsApp.Team.NameTaken` 409, `WhatsApp.Template.NameTaken` 409, `WhatsApp.Template.NotApproved` 422, `WhatsApp.Broadcast.NoRecipients` 422, `WhatsApp.Broadcast.NotCancellable` 409, `WhatsApp.Import.InvalidFile` 400, `WhatsApp.Import.TooManyRows` 400 (más de 5.000), `Invitations.Phone.Unavailable` 503 (sin canal). Recurso ajeno: 404. Módulo apagado: 404 común.
+**Errores** (texto es/en en los resources del módulo; la API no usa 422 para reglas: estado es 409 y dato es 400): `WhatsApp.Number.AlreadyConnected` 409, `WhatsApp.Number.SignupExpired` 400 (campo `code`), `WhatsApp.Number.MetaRejected` 503 (con `metaCode`), `WhatsApp.Number.NotFound` 404, `WhatsApp.Conversation.NotFound` 404, `WhatsApp.Conversation.TakenByOther` 409 (con `takenBy`), `WhatsApp.Conversation.WindowClosed` 409, `WhatsApp.Conversation.PaymentRequired` 409 (plantilla sin medio de pago o servicio pasado el tope), `WhatsApp.Conversation.ReadOnly` 409 (número desconectado, D7), `WhatsApp.Bot.TooManyOptions` 400, `WhatsApp.Team.NotFound` 404, `WhatsApp.Team.NameTaken` 409, `WhatsApp.Contact.NotFound` 404, `WhatsApp.Template.NotFound` 404, `WhatsApp.Template.NameTaken` 409, `WhatsApp.Template.NotApproved` 409, `WhatsApp.Broadcast.NotFound` 404, `WhatsApp.Broadcast.NoRecipients` 400, `WhatsApp.Broadcast.NotCancellable` 409, `WhatsApp.Import.InvalidFile` 400, `WhatsApp.Import.TooManyRows` 400 (más de 5.000), `WhatsApp.Link.NotFound` 404 y, del núcleo, `Invitations.Invitation.ChannelUnavailable` 503. Recurso ajeno: 404. Módulo apagado: 404 común.
 
 ## Parte 2a · Back
 

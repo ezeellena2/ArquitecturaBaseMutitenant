@@ -23,6 +23,8 @@ public sealed class PlatformOperatorAssistantUpgradeTests
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
     private static readonly string[] Added =
         [PlatformPermissions.Assistant.Use, PlatformPermissions.Assistant.Configure, PlatformPermissions.Assistant.Read];
+    // Upgrades posteriores de gestores (E11, WhatsApp); llegan al migrar hasta la última migración.
+    private static readonly string[] LaterUpgrades = [PlatformPermissions.WhatsApp.Manage, PlatformPermissions.WhatsApp.Attend];
 
     [Fact]
     public async Task Upgrade_appends_only_missing_permissions_preserves_accounts_and_audits_once_per_changed_assignment()
@@ -32,7 +34,7 @@ public sealed class PlatformOperatorAssistantUpgradeTests
             "platform.tenants.read", "platform.tenants.manage", "platform.accounts.read", "platform.accounts.manage",
             "platform.recoveries.manage", "platform.legal.manage", "platform.operators.manage", "platform.audit.read", "platform.settings.manage",
         }, PlatformPermissions.LegacyBootstrap);
-        Assert.Equal(PlatformPermissions.LegacyBootstrap.Concat(Added), PlatformPermissions.All);
+        Assert.Equal(PlatformPermissions.LegacyBootstrap.Concat(Added).Concat(LaterUpgrades), PlatformPermissions.All);
         await using var factory = new ApiFactory();
         await factory.InitializeAsync();
         var ids = new List<Guid>();
@@ -218,7 +220,7 @@ public sealed class PlatformOperatorAssistantUpgradeTests
         using var scope = restart.Services.CreateScope();
         var row = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().PlatformPermissionAssignments
             .AsNoTracking().SingleAsync(value => value.UserId == account.UserId, Ct);
-        Assert.Equal(PlatformPermissions.LegacyBootstrap, row.Permissions);
+        Assert.Equal(PlatformPermissions.LegacyBootstrap.Concat(LaterUpgrades), row.Permissions);
     }
 
     private static async Task<HttpResponseMessage> ChangeAsync(HttpClient client, Guid id, JsonDocument detail, IEnumerable<string> permissions)

@@ -70,4 +70,18 @@
   <data name="PermissionDescription.platform.assistant.configure" xml:space="preserve"><value>Configurar claves, modelos y topes del asistente.</value></data>
   <data name="Permission.platform.assistant.read" xml:space="preserve"><value>Ver el uso del asistente</value></data>
   <data name="PermissionDescription.platform.assistant.read" xml:space="preserve"><value>Ver costos y consultas agregados sin leer conversaciones.</value></data>
+  <data name="Area.whatsapp" xml:space="preserve"><value>WhatsApp</value></data>
+  <data name="Area.platformWhatsApp" xml:space="preserve"><value>WhatsApp de Plataforma</value></data>
+  <data name="Permission.whatsapp.customers" xml:space="preserve"><value>Atender clientes</value></data>
+  <data name="PermissionDescription.whatsapp.customers" xml:space="preserve"><value>Ver y responder la bandeja de Clientes, y ver, editar e importar los contactos.</value></data>
+  <data name="Permission.whatsapp.internal" xml:space="preserve"><value>Atender internos</value></data>
+  <data name="PermissionDescription.whatsapp.internal" xml:space="preserve"><value>Ver y responder la bandeja de Internos.</value></data>
+  <data name="Permission.whatsapp.broadcasts" xml:space="preserve"><value>Mandar difusiones</value></data>
+  <data name="PermissionDescription.whatsapp.broadcasts" xml:space="preserve"><value>Crear, programar y cancelar difusiones a los contactos que aceptan promociones.</value></data>
+  <data name="Permission.whatsapp.manage" xml:space="preserve"><value>Administrar WhatsApp</value></data>
+  <data name="PermissionDescription.whatsapp.manage" xml:space="preserve"><value>Conectar números y configurar el bot, los equipos y las plantillas.</value></data>
+  <data name="Permission.platform.whatsapp.manage" xml:space="preserve"><value>Administrar el WhatsApp de Plataforma</value></data>
+  <data name="PermissionDescription.platform.whatsapp.manage" xml:space="preserve"><value>Conectar el número y configurar el bot, los equipos y las plantillas de consultas.</value></data>
+  <data name="Permission.platform.whatsapp.attend" xml:space="preserve"><value>Atender consultas</value></data>
+  <data name="PermissionDescription.platform.whatsapp.attend" xml:space="preserve"><value>Ver y responder las consultas que llegan al número de Plataforma.</value></data>
 </root>

@@ -155,7 +155,8 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │       │   └── Services/
 │   │   │       ├── Models/
 │   │   │       ├── Resources/
-│   │   │       └── Services/
+│   │   │       ├── Services/
+│   │   │       └── Validation/  validadores de los pedidos de atención (E11)
 │   │   ├── Resources/  es (neutral) + en; claves en paridad
 │   │   ├── Services/  servicios internal sealed partial; helpers sin IUnitOfWork
 │   │   │   ├── Auditing/

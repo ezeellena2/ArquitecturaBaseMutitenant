@@ -11,6 +11,14 @@ public static class Permissions
         public const string Configure = "assistant.configure";
     }
 
+    public static class WhatsApp
+    {
+        public const string Customers = "whatsapp.customers";
+        public const string Internal = "whatsapp.internal";
+        public const string Broadcasts = "whatsapp.broadcasts";
+        public const string Manage = "whatsapp.manage";
+    }
+
     public static class Users
     {
         public const string Read = "users.read";
@@ -72,6 +80,10 @@ public static class Permissions
         PublicPage.Manage,
         Assistant.Use,
         Assistant.Configure,
+        WhatsApp.Customers,
+        WhatsApp.Internal,
+        WhatsApp.Broadcasts,
+        WhatsApp.Manage,
     ];
 
     public static IReadOnlyCollection<string> CompanyScoped { get; } =

@@ -8,6 +8,9 @@ public static class WhatsAppTexts
     public static string Format(string key, CultureProfile profile, params object[] values) => DisplayFormatter.FormatResource(Get(key, profile), profile, values);
     internal static ResourceManager ResourceManager { get; } = new(
         "ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Resources.WhatsAppTexts", typeof(WhatsAppTexts).Assembly);
+    /// <summary>Texto en la cultura de la petición: mensajes de validación y errores.</summary>
+    public static string Get(string key) => ResourceManager.GetString(key, CultureInfo.CurrentUICulture)
+        ?? throw new InvalidOperationException($"WhatsApp resource {key} is missing.");
     public static string Get(string key, CultureProfile profile)
     {
         foreach (var language in profile.ResourceLanguages)

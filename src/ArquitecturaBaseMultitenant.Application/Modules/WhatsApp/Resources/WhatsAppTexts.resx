@@ -141,4 +141,109 @@
   <data name="Bot.Closed" xml:space="preserve">
     <value>Hola. Este número no tiene una cuenta de {0} y por ahora no se pueden crear cuentas nuevas. Si tenés una cuenta con otro correo o número, ingresá con ese método o recuperá tu cuenta.</value>
   </data>
+  <data name="WhatsApp.Number.NotFound" xml:space="preserve">
+    <value>No encontramos ese número.</value>
+  </data>
+  <data name="WhatsApp.Number.AlreadyConnected" xml:space="preserve">
+    <value>Ese número ya está conectado.</value>
+  </data>
+  <data name="WhatsApp.Number.SignupExpired" xml:space="preserve">
+    <value>El alta de Meta venció. Conectá el número de nuevo.</value>
+  </data>
+  <data name="WhatsApp.Number.MetaRejected" xml:space="preserve">
+    <value>Meta no aceptó la conexión. Probá de nuevo; si se repite, escribí a soporte.</value>
+  </data>
+  <data name="WhatsApp.Conversation.NotFound" xml:space="preserve">
+    <value>No encontramos esa conversación.</value>
+  </data>
+  <data name="WhatsApp.Conversation.TakenByOther" xml:space="preserve">
+    <value>Otra persona tomó esta conversación y tu mensaje no salió.</value>
+  </data>
+  <data name="WhatsApp.Conversation.WindowClosed" xml:space="preserve">
+    <value>Pasaron 24 horas: solo podés mandar una plantilla.</value>
+  </data>
+  <data name="WhatsApp.Conversation.PaymentRequired" xml:space="preserve">
+    <value>El número necesita un medio de pago en Meta para mandar esto.</value>
+  </data>
+  <data name="WhatsApp.Conversation.ReadOnly" xml:space="preserve">
+    <value>El número de esta conversación está desconectado.</value>
+  </data>
+  <data name="WhatsApp.Bot.TooManyOptions" xml:space="preserve">
+    <value>El menú admite hasta 10 opciones.</value>
+  </data>
+  <data name="WhatsApp.Team.NotFound" xml:space="preserve">
+    <value>No encontramos ese equipo.</value>
+  </data>
+  <data name="WhatsApp.Team.NameTaken" xml:space="preserve">
+    <value>Ya hay un equipo con ese nombre.</value>
+  </data>
+  <data name="WhatsApp.Contact.NotFound" xml:space="preserve">
+    <value>No encontramos ese contacto.</value>
+  </data>
+  <data name="WhatsApp.Template.NotFound" xml:space="preserve">
+    <value>No encontramos esa plantilla.</value>
+  </data>
+  <data name="WhatsApp.Template.NameTaken" xml:space="preserve">
+    <value>Ya hay una plantilla con ese nombre.</value>
+  </data>
+  <data name="WhatsApp.Template.NotApproved" xml:space="preserve">
+    <value>Meta todavía no aprobó esa plantilla.</value>
+  </data>
+  <data name="WhatsApp.Broadcast.NotFound" xml:space="preserve">
+    <value>No encontramos esa difusión.</value>
+  </data>
+  <data name="WhatsApp.Broadcast.NoRecipients" xml:space="preserve">
+    <value>Ninguno de esos contactos acepta promociones.</value>
+  </data>
+  <data name="WhatsApp.Broadcast.NotCancellable" xml:space="preserve">
+    <value>Esa difusión ya no se puede cancelar.</value>
+  </data>
+  <data name="WhatsApp.Import.InvalidFile" xml:space="preserve">
+    <value>Subí un archivo .xlsx o .csv como el ejemplo.</value>
+  </data>
+  <data name="WhatsApp.Import.TooManyRows" xml:space="preserve">
+    <value>El archivo tiene más de 5.000 filas.</value>
+  </data>
+  <data name="WhatsApp.Link.NotFound" xml:space="preserve">
+    <value>No encontramos esa conversación vinculada.</value>
+  </data>
+  <data name="WhatsApp.Validation.Required" xml:space="preserve">
+    <value>Completá este dato.</value>
+  </data>
+  <data name="WhatsApp.Validation.TooLong" xml:space="preserve">
+    <value>El texto es demasiado largo.</value>
+  </data>
+  <data name="WhatsApp.Validation.VersionRequired" xml:space="preserve">
+    <value>Falta la versión. Volvé a cargar la pantalla.</value>
+  </data>
+  <data name="WhatsApp.Validation.SelectionInvalid" xml:space="preserve">
+    <value>Elegí una opción válida.</value>
+  </data>
+  <data name="WhatsApp.Validation.ScheduleInvalid" xml:space="preserve">
+    <value>Revisá los días y los horarios.</value>
+  </data>
+  <data name="WhatsApp.Validation.MenuInvalid" xml:space="preserve">
+    <value>Revisá las opciones del menú: cada una pasa a un equipo o contesta un texto.</value>
+  </data>
+  <data name="WhatsApp.Validation.TagsInvalid" xml:space="preserve">
+    <value>Revisá las etiquetas: hasta 10 y sin repetir.</value>
+  </data>
+  <data name="WhatsApp.Validation.VariablesInvalid" xml:space="preserve">
+    <value>Revisá los datos variables de la plantilla.</value>
+  </data>
+  <data name="WhatsApp.Validation.PhonesInvalid" xml:space="preserve">
+    <value>Cargá entre 1 y 200 teléfonos.</value>
+  </data>
+  <data name="WhatsApp.Validation.ScheduleInPast" xml:space="preserve">
+    <value>Elegí una fecha y una hora futuras.</value>
+  </data>
+  <data name="WhatsApp.Validation.TransferTargetRequired" xml:space="preserve">
+    <value>Elegí un equipo o una persona.</value>
+  </data>
+  <data name="WhatsApp.Validation.NotifyInvalid" xml:space="preserve">
+    <value>Elegí 10, 15 o 30 minutos, o que no avise.</value>
+  </data>
+  <data name="WhatsApp.Validation.FileRequired" xml:space="preserve">
+    <value>Elegí un archivo.</value>
+  </data>
 </root>

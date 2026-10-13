@@ -10,6 +10,12 @@ public static class PlatformPermissions
         public const string Read = "platform.assistant.read";
     }
 
+    public static class WhatsApp
+    {
+        public const string Manage = "platform.whatsapp.manage";
+        public const string Attend = "platform.whatsapp.attend";
+    }
+
     public static class Tenants
     {
         public const string Read = "platform.tenants.read";
@@ -65,5 +71,7 @@ public static class PlatformPermissions
         Assistant.Use,
         Assistant.Configure,
         Assistant.Read,
+        WhatsApp.Manage,
+        WhatsApp.Attend,
     ];
 }

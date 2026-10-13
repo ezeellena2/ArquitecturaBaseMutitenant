@@ -12,6 +12,14 @@ El POST declara máximo 5 MiB, firma `X-Hub-Signature-256` sobre bytes originale
 
 El núcleo conoce capacidades de canales, Phone y puertos neutrales; no compara una clave WhatsApp ni lee sus opciones. La invitación conserva identidad/proof Email y puede entregarse a un Phone verificado de esa misma cuenta. El contrato de identidad está en [Identidad](identidad.md).
 
+## Atención (Etapa 11): contrato publicado
+
+El [plan de la E11](../plans/2026-10-13-etapa-11-whatsapp.md) publica las rutas de atención; mientras su tarea no las implementa, responden 501 `General.Contract.NotImplemented` detrás de su acceso, permiso y módulo.
+- **Organización** (`[FeatureGate("whatsapp")]`): las bandejas van separadas por permiso, `/api/organization/whatsapp/customers/conversations` con `whatsapp.customers` y `/api/organization/whatsapp/internal/conversations` con `whatsapp.internal`. `/api/organization/whatsapp/contacts` usa `whatsapp.customers`; `/api/organization/whatsapp/broadcasts`, `whatsapp.broadcasts`; `/api/organization/whatsapp/numbers`, `/api/organization/whatsapp/teams` y `/api/organization/whatsapp/templates`, `whatsapp.manage`. `/api/organization/whatsapp/phone-imports` («Cargar teléfonos») usa `users.invite`.
+- **Plataforma** (ruta instalada del módulo): `/api/platform/whatsapp/number`, `/api/platform/whatsapp/bot`, `/api/platform/whatsapp/teams` y `/api/platform/whatsapp/templates` con `platform.whatsapp.manage`; `/api/platform/whatsapp/conversations` con `platform.whatsapp.attend`.
+- **Persona:** `/api/me/whatsapp/conversations`, «Mensajes» de solo lectura, y `/api/me/whatsapp/links/{id}` para desvincular.
+- **Permisos de entrada (D3):** solo el Dueño recibe los cuatro de organización. La migración `20261013222720_WhatsAppAttentionPermissions` los agrega a los Dueños existentes y suma los dos de Plataforma a las asignaciones con `platform.operators.manage`, con su `SecurityEvent`.
+
 ## Entrada durable y entrega
 
 `WhatsAppWebhookFilter` limita bytes reales a 5 MiB y verifica HMAC antes del binder, incluso si Content-Length miente. Firma inválida produce 401; JSON firmado inválido, 400; cuerpo excesivo, 413. No persiste ni registra el cuerpo original. El reader procesa lotes del PhoneNumberId configurado y omite otros destinos; no resuelve organizaciones del remitente, host o payload.
