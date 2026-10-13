@@ -198,7 +198,7 @@ Valen los criterios de la E12. El texto para Diseño está en [e17-texto-diseno.
 
 | Tablero | Qué muestra | Estados |
 | --- | --- | --- |
-| `Plat-FRM-Biblioteca` y `M-Plat-FRM-Biblioteca` | listado: nombre, categoría, estado (Borrador, Publicada · v2, Retirada), «Cambios sin publicar» y «La usaron N»; filtro por estado y categoría; «Nueva plantilla»; pestaña «Categorías» | vacío, sin resultados |
+| `Plat-FRM-Biblioteca` y `M-Plat-FRM-Biblioteca` | listado: nombre, categoría, estado (Borrador, Publicada · v2, Retirada), «Cambios sin publicar» y «La usaron N»; filtro por estado y categoría; «Nueva plantilla»; «Categorías» como otra sección del área, no como pestaña (regla del 2026-10-13 en `docs/rules/pantallas-y-ui.md` del front) | vacío, sin resultados |
 | `Plat-FRM-Plantilla-Nueva` | diálogo con el nombre y la categoría | — |
 | `Plat-FRM-Plantilla` | ficha con pestañas: **Preguntas** e **Inglés** (las piezas de la E12), **Catálogos** (los catálogos a mano de la plantilla, con sus opciones) y **Publicación** (estado, versiones con fecha, operador y motivo, «Publicar», «Retirar» y «Volver a publicar») | cambios sin publicar, conflicto |
 | `Plat-FRM-Publicar` y `Plat-FRM-Retirar` | diálogos con el motivo. Publicar muestra además la comprobación (problemas por pregunta o catálogo) | sin problemas, con problemas |
@@ -211,7 +211,7 @@ Valen los criterios de la E12. El texto para Diseño está en [e17-texto-diseno.
 **Elecciones para mostrar con opciones:**
 - **Dónde ve la organización la biblioteca:**
   - recomendado: en «Nuevo formulario», con dos caminos, «Desde cero» y «Desde una plantilla»;
-  - alternativa: una pestaña «Biblioteca» en Formularios.
+  - alternativa: «Biblioteca» como otra sección del panel de Formularios (con la regla del 2026-10-13, ya no puede ser una pestaña).
 - **El menú de Plataforma:** «Formularios» como ítem propio, o dentro de una sección de módulos.
 
 ## 9. Tests

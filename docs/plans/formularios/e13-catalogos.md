@@ -256,8 +256,9 @@ Valen los criterios y los datos de ejemplo de la E12 ([texto para Diseño](e12-t
 | `WA-Chats-Respuesta` (variante) | la tarjeta con un valor de catálogo; rechazada porque «una opción se dio de baja», nombrando la pregunta, con «Mandar de nuevo» | — |
 | `Rol` (ajuste) | el área Formularios suma «Ver catálogos» y «Administrar catálogos» | — |
 
+**Dónde viven los catálogos** (decisión del usuario del 2026-10-13): en el segundo panel de Formularios, que abre «Formularios» y «Catálogos»; en el teléfono, en el grupo de «Más». Sigue la regla de secciones, pestañas y filtros de `docs/rules/pantallas-y-ui.md` del front, y los filtros de los listados van como desplegables, no como pestañas.
+
 **Elecciones para mostrar con opciones:**
-- **Dónde viven los catálogos:** una pestaña «Catálogos» dentro de la página de Formularios, o un ítem propio en el menú. Recomiendo la pestaña.
 - **El editor de filtros en el teléfono:** completo, o solo para ver.
 
 ## 11. Tests

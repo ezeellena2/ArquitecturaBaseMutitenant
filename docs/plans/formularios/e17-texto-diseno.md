@@ -46,7 +46,7 @@ Las plantillas se ordenan en categorías, se publican y se retiran. Una organiza
 1. **`Plat-FRM-Biblioteca`:**
    - nombre, categoría, estado («Borrador», «Publicada · v2», «Retirada»), «Cambios sin publicar» y «La usaron 12»;
    - filtro por estado y por categoría, y «Nueva plantilla»;
-   - una pestaña «Categorías»;
+   - «Categorías» como otra sección del área, no como pestaña (regla del 2026-10-13);
    - estados vacío y sin resultados.
 2. **`Plat-FRM-Plantilla-Nueva`:** un diálogo con el nombre y la categoría.
 3. **`Plat-FRM-Plantilla`,** una ficha con estas pestañas:
@@ -71,7 +71,7 @@ Después vienen los teléfonos: `M-Plat-FRM-Biblioteca`, `M-FRM-Biblioteca` y `M
 **Elecciones que hay que mostrar con opciones:**
 - **Dónde ve la organización la biblioteca:**
   - recomiendo «Nuevo formulario» con dos caminos, «Desde cero» y «Desde una plantilla»;
-  - la alternativa es una pestaña «Biblioteca» en Formularios.
+  - la alternativa es «Biblioteca» como otra sección del panel de Formularios (con la regla del 2026-10-13, ya no puede ser una pestaña).
 - **Dónde va «Formularios» en el menú de Plataforma:** como ítem propio, o dentro de una sección de módulos.
 
 **Textos que ya fija la spec:**

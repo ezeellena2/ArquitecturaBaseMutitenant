@@ -76,8 +76,9 @@ Una pregunta nueva, «Elegir de un catálogo», usa esas listas. Al mandar el fo
 
 Después vienen los teléfonos: `M-FRM-Catalogos`, `M-FRM-Catalogo` y `M-FRM-Catalogo-Opcion`, y los filtros según lo que elija el usuario.
 
+**Dónde viven los catálogos** (decisión del usuario del 2026-10-13): en el segundo panel de Formularios, con «Formularios» y «Catálogos», y en el grupo de «Más» del teléfono.
+
 **Elecciones que hay que mostrar con opciones:**
-- **Dónde viven los catálogos:** una pestaña «Catálogos» dentro de la página de Formularios, o un ítem propio en el menú. Recomiendo la pestaña.
 - **El editor de filtros en el teléfono:** completo, o solo para ver.
 
 **Textos que ya fija la spec:**
