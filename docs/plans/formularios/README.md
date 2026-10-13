@@ -17,4 +17,4 @@ Esta carpeta está fuera del detector (`docs/plans/**`).
 | 14 · Fotos y documentos | — | Cuando ArquitecturaBase programe su etapa 2B |
 | 15 · Planilla y Excel | — | Cuando ArquitecturaBase programe su etapa 3 |
 | 16 · Reglas, aprobación y PDF | — | Cuando ArquitecturaBase programe su etapa 4 |
-| 17 · Biblioteca de plantillas | — | Primero tableros y decisiones de producto: no tiene fuente en ArquitecturaBase |
+| 17 · Biblioteca de plantillas | [e17-biblioteca.md](e17-biblioteca.md) | Spec escrita; las reglas de ejemplo esperan la spec de la E16 |
