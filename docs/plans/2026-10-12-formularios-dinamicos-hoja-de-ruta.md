@@ -154,8 +154,8 @@ Cada una tiene tableros a dibujar en el lienzo vigente del front antes de progra
   - Cada opción tiene texto, detalle y código. El inglés es opcional y, si falta, se usa el español.
   - Una opción se da de baja sin borrarse. Las posiciones son únicas y se reordena con «mover» por id.
 - **Con filtros.**
-  - Condiciones armadas por el sistema sobre vistas versionadas por migración, con columnas permitidas y valores como parámetros, usando la conexión normal.
-  - Primera vista: **miembros de la organización** (nombre, rol, empresa y activo), con RLS. Nunca correo ni teléfono.
+  - Condiciones armadas por el sistema sobre fuentes definidas en el código y versionadas (no vistas SQL: ver la spec de la E13), con columnas permitidas y valores como parámetros, usando la conexión normal.
+  - Primera fuente: **miembros de la organización** (nombre, rol, empresa y activo), con RLS. Nunca correo ni teléfono.
   - Único parámetro de contexto: el destinatario. «Sin incluir a quien lo recibe». Vista previa con una persona de ejemplo elegida explícitamente.
 - **La pregunta «Elegir de un catálogo».** La versión guarda solo la referencia. Cambiar el catálogo de una pregunta publicada crea una pregunta nueva.
 - **Al mandar.**
