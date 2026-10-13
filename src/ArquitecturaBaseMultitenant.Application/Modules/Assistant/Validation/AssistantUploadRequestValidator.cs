@@ -12,7 +12,7 @@ internal sealed class AssistantUploadRequestValidator : AbstractValidator<Assist
         RuleFor(request => request.ConversationVersion).NotNull().WithMessage(_ => AssistantTexts.Get("Assistant.Validation.VersionRequired"));
         RuleFor(request => request.FileName).NotEmpty().WithMessage(_ => AssistantTexts.Get("Assistant.Validation.FileInvalid"))
             .MaximumLength(TextLimits.Description).WithMessage(_ => AssistantTexts.Get("Assistant.Validation.FileInvalid"));
-        RuleFor(request => request.ByteLength).Must(value => value is > 0 and <= 10485760).WithMessage(_ => AssistantTexts.Get("Assistant.Validation.FileInvalid"));
+        RuleFor(request => request.ByteLength).Must(value => value is > 0 and <= AssistantTechnicalLimits.MaxAttachmentBytes).WithMessage(_ => AssistantTexts.Get("Assistant.Validation.FileInvalid"));
         RuleFor(request => request.MediaType).NotEmpty().WithMessage(_ => AssistantTexts.Get("Assistant.Validation.FileInvalid"));
     }
 }

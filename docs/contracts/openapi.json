@@ -447,7 +447,7 @@
         "tags": [
           "Assistant Business"
         ],
-        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Estado efectivo: apagado404; habilitado sin clave configured=false. remainingMessages=null si >10. Retención30 días salvo guardados, maxAttachmentBytes10485760/maxAttachments5. monthlyBudgetProgress siempre presente: Consumer/Platform null; Business usa costo registrado y presupuesto snapshot de la misma financiación efectiva y mes civil, sin reservas, suma de financiaciones ni recorte. NearLimit desde 0,8; LimitReached desde 1. Presupuesto no aplicable/cero/null devuelve null. Sin configurar conserva precedencia y las consultas fijas siguen disponibles; State no garantiza admisión.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Estado efectivo: apagado404; habilitado sin clave configured=false. remainingMessages=null si >10. Retención30 días salvo guardados, maxAttachmentBytes10485760/maxAttachments5. monthlyBudgetProgress siempre presente: Consumer/Platform null; Business usa costo registrado y presupuesto snapshot de la misma financiación efectiva y mes civil, sin reservas, suma de financiaciones ni recorte. NearLimit desde 80%; LimitReached desde 1. Presupuesto no aplicable/cero/null devuelve null. Sin configurar conserva precedencia y las consultas fijas siguen disponibles; State no garantiza admisión.",
         "responses": {
           "200": {
             "description": "OK",
@@ -477,7 +477,7 @@
                     }
                   },
                   "monthlyZero.es": {
-                    "description": "Muestra contractual Business: presupuesto snapshot USD 10 y costo registrado de la misma financiación efectiva y mes civil; sin reservas ni suma de financiaciones. Fracción sin recorte; NearLimit desde 0,8 y LimitReached desde 1. State no garantiza admisión; consultas fijas disponibles.",
+                    "description": "Muestra contractual Business: presupuesto snapshot USD 10 y costo registrado de la misma financiación efectiva y mes civil; sin reservas ni suma de financiaciones. Fracción sin recorte; NearLimit desde 80% y LimitReached desde 1. State no garantiza admisión; consultas fijas disponibles.",
                     "value": {
                       "configured": true,
                       "canConfigure": false,
@@ -545,7 +545,7 @@
                     }
                   },
                   "monthlyBelowNear.es": {
-                    "description": "Muestra contractual Business: presupuesto snapshot USD 10 y costo registrado de la misma financiación efectiva y mes civil; sin reservas ni suma de financiaciones. Fracción sin recorte; NearLimit desde 0,8 y LimitReached desde 1. State no garantiza admisión; consultas fijas disponibles.",
+                    "description": "Muestra contractual Business: presupuesto snapshot USD 10 y costo registrado de la misma financiación efectiva y mes civil; sin reservas ni suma de financiaciones. Fracción sin recorte; NearLimit desde 80% y LimitReached desde 1. State no garantiza admisión; consultas fijas disponibles.",
                     "value": {
                       "configured": true,
                       "canConfigure": false,
@@ -613,7 +613,7 @@
                     }
                   },
                   "monthlyNear.es": {
-                    "description": "Muestra contractual Business: presupuesto snapshot USD 10 y costo registrado de la misma financiación efectiva y mes civil; sin reservas ni suma de financiaciones. Fracción sin recorte; NearLimit desde 0,8 y LimitReached desde 1. State no garantiza admisión; consultas fijas disponibles.",
+                    "description": "Muestra contractual Business: presupuesto snapshot USD 10 y costo registrado de la misma financiación efectiva y mes civil; sin reservas ni suma de financiaciones. Fracción sin recorte; NearLimit desde 80% y LimitReached desde 1. State no garantiza admisión; consultas fijas disponibles.",
                     "value": {
                       "configured": true,
                       "canConfigure": false,
@@ -681,7 +681,7 @@
                     }
                   },
                   "monthlyReached.es": {
-                    "description": "Muestra contractual Business: presupuesto snapshot USD 10 y costo registrado de la misma financiación efectiva y mes civil; sin reservas ni suma de financiaciones. Fracción sin recorte; NearLimit desde 0,8 y LimitReached desde 1. State no garantiza admisión; consultas fijas disponibles.",
+                    "description": "Muestra contractual Business: presupuesto snapshot USD 10 y costo registrado de la misma financiación efectiva y mes civil; sin reservas ni suma de financiaciones. Fracción sin recorte; NearLimit desde 80% y LimitReached desde 1. State no garantiza admisión; consultas fijas disponibles.",
                     "value": {
                       "configured": true,
                       "canConfigure": false,
@@ -749,7 +749,7 @@
                     }
                   },
                   "monthlyOver.es": {
-                    "description": "Muestra contractual Business: presupuesto snapshot USD 10 y costo registrado de la misma financiación efectiva y mes civil; sin reservas ni suma de financiaciones. Fracción sin recorte; NearLimit desde 0,8 y LimitReached desde 1. State no garantiza admisión; consultas fijas disponibles.",
+                    "description": "Muestra contractual Business: presupuesto snapshot USD 10 y costo registrado de la misma financiación efectiva y mes civil; sin reservas ni suma de financiaciones. Fracción sin recorte; NearLimit desde 80% y LimitReached desde 1. State no garantiza admisión; consultas fijas disponibles.",
                     "value": {
                       "configured": true,
                       "canConfigure": false,
@@ -999,38 +999,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -1080,13 +1048,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           }
         ],
         "x-access": "business",
@@ -1448,38 +1409,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -1529,13 +1458,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -1813,38 +1735,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -1894,13 +1784,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           }
         ],
         "x-access": "business",
@@ -2275,38 +2158,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -2356,13 +2207,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -2684,38 +2528,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -2765,13 +2577,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 404,
@@ -3131,38 +2936,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -3212,13 +2985,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 409,
@@ -3574,38 +3340,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -3655,13 +3389,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 409,
@@ -4506,38 +4233,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "503": {
             "description": "Service Unavailable; Assistant.Provider.Unavailable",
             "headers": {
@@ -4626,13 +4321,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -4912,7 +4600,7 @@
         "tags": [
           "Assistant Business"
         ],
-        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Stop idempotente y durable. RequestAborted solicita stop; la admisión persistida no se deshace.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Stop idempotente y durable. RequestAborted cancela sólo al lector del stream; la admisión persistida continúa.",
         "parameters": [
           {
             "name": "id",
@@ -5325,38 +5013,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -5406,13 +5062,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -5964,38 +5613,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -6045,13 +5662,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -6471,38 +6081,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -6552,13 +6130,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 409,
@@ -6615,7 +6186,7 @@
         "tags": [
           "Assistant Business"
         ],
-        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Adjunto privado PNG/JPEG/WebP/PDF, un archivo multipart por upload, máximo 10485760 bytes; hasta cinco al consumir mensaje. Verificar firma y extensión. Pendiente hasta consumo, replay por referencia privada, sin storageKey o URL pública.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Adjunto privado PNG/JPEG/WebP/PDF, un archivo multipart por upload, máximo 10485760 bytes; hasta 5 al consumir mensaje. Verificar firma y extensión. Pendiente hasta consumo, replay por referencia privada, sin storageKey o URL pública.",
         "parameters": [
           {
             "name": "id",
@@ -6694,7 +6265,7 @@
                     "value": {
                       "id": "10000000-0000-0000-0000-000000000001",
                       "fileName": "example",
-                      "mediaType": "example",
+                      "mediaType": "image/png",
                       "byteLength": 1,
                       "version": 1
                     }
@@ -7208,38 +6779,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -7289,13 +6828,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -7402,7 +6934,7 @@
         "tags": [
           "Assistant Business"
         ],
-        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Adjunto privado PNG/JPEG/WebP/PDF, un archivo multipart por upload, máximo 10485760 bytes; hasta cinco al consumir mensaje. Verificar firma y extensión. Pendiente hasta consumo, replay por referencia privada, sin storageKey o URL pública.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Adjunto privado PNG/JPEG/WebP/PDF, un archivo multipart por upload, máximo 10485760 bytes; hasta 5 al consumir mensaje. Verificar firma y extensión. Pendiente hasta consumo, replay por referencia privada, sin storageKey o URL pública.",
         "parameters": [
           {
             "name": "id",
@@ -7856,38 +7388,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -7937,13 +7437,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 404,
@@ -7998,7 +7491,7 @@
         "tags": [
           "Assistant Business"
         ],
-        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Adjunto privado PNG/JPEG/WebP/PDF, un archivo multipart por upload, máximo 10485760 bytes; hasta cinco al consumir mensaje. Verificar firma y extensión. Pendiente hasta consumo, replay por referencia privada, sin storageKey o URL pública.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Adjunto privado PNG/JPEG/WebP/PDF, un archivo multipart por upload, máximo 10485760 bytes; hasta 5 al consumir mensaje. Verificar firma y extensión. Pendiente hasta consumo, replay por referencia privada, sin storageKey o URL pública.",
         "parameters": [
           {
             "name": "id",
@@ -8467,38 +7960,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -8548,13 +8009,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 409,
@@ -8921,38 +8375,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -9004,13 +8426,6 @@
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 404,
             "code": "Assistant.Conversation.NotFound",
             "field": null,
@@ -9037,7 +8452,7 @@
         "tags": [
           "Assistant Consumer"
         ],
-        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Estado efectivo: apagado404; habilitado sin clave configured=false. remainingMessages=null si >10. Retención30 días salvo guardados, maxAttachmentBytes10485760/maxAttachments5. monthlyBudgetProgress siempre presente: Consumer/Platform null; Business usa costo registrado y presupuesto snapshot de la misma financiación efectiva y mes civil, sin reservas, suma de financiaciones ni recorte. NearLimit desde 0,8; LimitReached desde 1. Presupuesto no aplicable/cero/null devuelve null. Sin configurar conserva precedencia y las consultas fijas siguen disponibles; State no garantiza admisión.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Estado efectivo: apagado404; habilitado sin clave configured=false. remainingMessages=null si >10. Retención30 días salvo guardados, maxAttachmentBytes10485760/maxAttachments5. monthlyBudgetProgress siempre presente: Consumer/Platform null; Business usa costo registrado y presupuesto snapshot de la misma financiación efectiva y mes civil, sin reservas, suma de financiaciones ni recorte. NearLimit desde 80%; LimitReached desde 1. Presupuesto no aplicable/cero/null devuelve null. Sin configurar conserva precedencia y las consultas fijas siguen disponibles; State no garantiza admisión.",
         "responses": {
           "200": {
             "description": "OK",
@@ -9249,38 +8664,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -9330,13 +8713,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           }
         ],
         "x-access": "consumer",
@@ -9696,38 +9072,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -9777,13 +9121,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -10059,38 +9396,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -10140,13 +9445,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           }
         ],
         "x-access": "consumer",
@@ -10519,38 +9817,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -10600,13 +9866,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -10926,38 +10185,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -11007,13 +10234,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 404,
@@ -11371,38 +10591,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -11452,13 +10640,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 409,
@@ -11812,38 +10993,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -11893,13 +11042,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 409,
@@ -12742,38 +11884,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "503": {
             "description": "Service Unavailable; Assistant.Provider.Unavailable",
             "headers": {
@@ -12862,13 +11972,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -13146,7 +12249,7 @@
         "tags": [
           "Assistant Consumer"
         ],
-        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Stop idempotente y durable. RequestAborted solicita stop; la admisión persistida no se deshace.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Stop idempotente y durable. RequestAborted cancela sólo al lector del stream; la admisión persistida continúa.",
         "parameters": [
           {
             "name": "id",
@@ -13559,38 +12662,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -13640,13 +12711,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -14196,38 +13260,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -14277,13 +13309,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -14701,38 +13726,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -14782,13 +13775,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 409,
@@ -14843,7 +13829,7 @@
         "tags": [
           "Assistant Consumer"
         ],
-        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Adjunto privado PNG/JPEG/WebP/PDF, un archivo multipart por upload, máximo 10485760 bytes; hasta cinco al consumir mensaje. Verificar firma y extensión. Pendiente hasta consumo, replay por referencia privada, sin storageKey o URL pública.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Adjunto privado PNG/JPEG/WebP/PDF, un archivo multipart por upload, máximo 10485760 bytes; hasta 5 al consumir mensaje. Verificar firma y extensión. Pendiente hasta consumo, replay por referencia privada, sin storageKey o URL pública.",
         "parameters": [
           {
             "name": "id",
@@ -14922,7 +13908,7 @@
                     "value": {
                       "id": "10000000-0000-0000-0000-000000000001",
                       "fileName": "example",
-                      "mediaType": "example",
+                      "mediaType": "image/png",
                       "byteLength": 1,
                       "version": 1
                     }
@@ -15436,38 +14422,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -15517,13 +14471,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -15628,7 +14575,7 @@
         "tags": [
           "Assistant Consumer"
         ],
-        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Adjunto privado PNG/JPEG/WebP/PDF, un archivo multipart por upload, máximo 10485760 bytes; hasta cinco al consumir mensaje. Verificar firma y extensión. Pendiente hasta consumo, replay por referencia privada, sin storageKey o URL pública.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Adjunto privado PNG/JPEG/WebP/PDF, un archivo multipart por upload, máximo 10485760 bytes; hasta 5 al consumir mensaje. Verificar firma y extensión. Pendiente hasta consumo, replay por referencia privada, sin storageKey o URL pública.",
         "parameters": [
           {
             "name": "id",
@@ -16082,38 +15029,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -16163,13 +15078,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 404,
@@ -16222,7 +15130,7 @@
         "tags": [
           "Assistant Consumer"
         ],
-        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Adjunto privado PNG/JPEG/WebP/PDF, un archivo multipart por upload, máximo 10485760 bytes; hasta cinco al consumir mensaje. Verificar firma y extensión. Pendiente hasta consumo, replay por referencia privada, sin storageKey o URL pública.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Adjunto privado PNG/JPEG/WebP/PDF, un archivo multipart por upload, máximo 10485760 bytes; hasta 5 al consumir mensaje. Verificar firma y extensión. Pendiente hasta consumo, replay por referencia privada, sin storageKey o URL pública.",
         "parameters": [
           {
             "name": "id",
@@ -16691,38 +15599,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -16772,13 +15648,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 409,
@@ -17143,38 +16012,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -17224,13 +16061,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 404,
@@ -17637,38 +16467,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -17718,13 +16516,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           }
         ],
         "x-access": "business",
@@ -18168,38 +16959,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -18249,13 +17008,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 409,
@@ -19035,38 +17787,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -19118,13 +17838,6 @@
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 400,
             "code": "Validation.Failed",
             "field": "month",
@@ -19158,7 +17871,7 @@
         "tags": [
           "Assistant Platform"
         ],
-        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Estado efectivo: apagado404; habilitado sin clave configured=false. remainingMessages=null si >10. Retención30 días salvo guardados, maxAttachmentBytes10485760/maxAttachments5. monthlyBudgetProgress siempre presente: Consumer/Platform null; Business usa costo registrado y presupuesto snapshot de la misma financiación efectiva y mes civil, sin reservas, suma de financiaciones ni recorte. NearLimit desde 0,8; LimitReached desde 1. Presupuesto no aplicable/cero/null devuelve null. Sin configurar conserva precedencia y las consultas fijas siguen disponibles; State no garantiza admisión.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Estado efectivo: apagado404; habilitado sin clave configured=false. remainingMessages=null si >10. Retención30 días salvo guardados, maxAttachmentBytes10485760/maxAttachments5. monthlyBudgetProgress siempre presente: Consumer/Platform null; Business usa costo registrado y presupuesto snapshot de la misma financiación efectiva y mes civil, sin reservas, suma de financiaciones ni recorte. NearLimit desde 80%; LimitReached desde 1. Presupuesto no aplicable/cero/null devuelve null. Sin configurar conserva precedencia y las consultas fijas siguen disponibles; State no garantiza admisión.",
         "responses": {
           "200": {
             "description": "OK",
@@ -19370,38 +18083,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -19451,13 +18132,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           }
         ],
         "x-access": "platform",
@@ -19819,38 +18493,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -19900,13 +18542,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -20184,38 +18819,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -20265,13 +18868,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           }
         ],
         "x-access": "platform",
@@ -20646,38 +19242,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -20727,13 +19291,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -21055,38 +19612,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -21136,13 +19661,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 404,
@@ -21502,38 +20020,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -21583,13 +20069,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 409,
@@ -21945,38 +20424,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -22026,13 +20473,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 409,
@@ -22877,38 +21317,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "503": {
             "description": "Service Unavailable; Assistant.Provider.Unavailable",
             "headers": {
@@ -22997,13 +21405,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -23283,7 +21684,7 @@
         "tags": [
           "Assistant Platform"
         ],
-        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Stop idempotente y durable. RequestAborted solicita stop; la admisión persistida no se deshace.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Stop idempotente y durable. RequestAborted cancela sólo al lector del stream; la admisión persistida continúa.",
         "parameters": [
           {
             "name": "id",
@@ -23696,38 +22097,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -23777,13 +22146,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -24335,38 +22697,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -24416,13 +22746,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -24842,38 +23165,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -24923,13 +23214,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 409,
@@ -24986,7 +23270,7 @@
         "tags": [
           "Assistant Platform"
         ],
-        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Adjunto privado PNG/JPEG/WebP/PDF, un archivo multipart por upload, máximo 10485760 bytes; hasta cinco al consumir mensaje. Verificar firma y extensión. Pendiente hasta consumo, replay por referencia privada, sin storageKey o URL pública.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Adjunto privado PNG/JPEG/WebP/PDF, un archivo multipart por upload, máximo 10485760 bytes; hasta 5 al consumir mensaje. Verificar firma y extensión. Pendiente hasta consumo, replay por referencia privada, sin storageKey o URL pública.",
         "parameters": [
           {
             "name": "id",
@@ -25065,7 +23349,7 @@
                     "value": {
                       "id": "10000000-0000-0000-0000-000000000001",
                       "fileName": "example",
-                      "mediaType": "example",
+                      "mediaType": "image/png",
                       "byteLength": 1,
                       "version": 1
                     }
@@ -25579,38 +23863,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -25660,13 +23912,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -25773,7 +24018,7 @@
         "tags": [
           "Assistant Platform"
         ],
-        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Adjunto privado PNG/JPEG/WebP/PDF, un archivo multipart por upload, máximo 10485760 bytes; hasta cinco al consumir mensaje. Verificar firma y extensión. Pendiente hasta consumo, replay por referencia privada, sin storageKey o URL pública.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Adjunto privado PNG/JPEG/WebP/PDF, un archivo multipart por upload, máximo 10485760 bytes; hasta 5 al consumir mensaje. Verificar firma y extensión. Pendiente hasta consumo, replay por referencia privada, sin storageKey o URL pública.",
         "parameters": [
           {
             "name": "id",
@@ -26227,38 +24472,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -26308,13 +24521,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 404,
@@ -26369,7 +24575,7 @@
         "tags": [
           "Assistant Platform"
         ],
-        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Adjunto privado PNG/JPEG/WebP/PDF, un archivo multipart por upload, máximo 10485760 bytes; hasta cinco al consumir mensaje. Verificar firma y extensión. Pendiente hasta consumo, replay por referencia privada, sin storageKey o URL pública.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Adjunto privado PNG/JPEG/WebP/PDF, un archivo multipart por upload, máximo 10485760 bytes; hasta 5 al consumir mensaje. Verificar firma y extensión. Pendiente hasta consumo, replay por referencia privada, sin storageKey o URL pública.",
         "parameters": [
           {
             "name": "id",
@@ -26838,38 +25044,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -26919,13 +25093,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 409,
@@ -27292,38 +25459,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -27373,13 +25508,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 404,
@@ -27732,38 +25860,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -27813,13 +25909,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           }
         ],
         "x-access": "platform",
@@ -28275,38 +26364,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -28356,13 +26413,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -28995,38 +27045,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -29076,13 +27094,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 409,
@@ -29503,38 +27514,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -29584,13 +27563,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           }
         ],
         "x-access": "platform",
@@ -29893,38 +27865,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -29974,13 +27914,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 409,
@@ -30233,38 +28166,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -30314,13 +28215,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           }
         ],
         "x-access": "platform",
@@ -30773,38 +28667,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -30854,13 +28716,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 409,
@@ -31641,38 +29496,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -31722,13 +29545,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -54873,6 +52689,12 @@
             "type": "string"
           },
           "mediaType": {
+            "enum": [
+              "image/png",
+              "image/jpeg",
+              "image/webp",
+              "application/pdf"
+            ],
             "type": "string"
           },
           "byteLength": {
@@ -55178,6 +53000,28 @@
           }
         }
       },
+      "AssistantInputMoney": {
+        "required": [
+          "amount",
+          "currency"
+        ],
+        "type": "object",
+        "properties": {
+          "amount": {
+            "exclusiveMaximum": 1000000000000,
+            "minimum": 0,
+            "type": "number",
+            "format": "decimal"
+          },
+          "currency": {
+            "maxLength": 3,
+            "minLength": 3,
+            "pattern": "^[A-Z]{3}$",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "AssistantInvitationRowResponse": {
         "required": [
           "id",
@@ -55450,19 +53294,19 @@
             "format": "int32"
           },
           "inputPricePerMillion": {
-            "$ref": "#/components/schemas/AssistantMoney"
+            "$ref": "#/components/schemas/AssistantInputMoney"
           },
           "outputPricePerMillion": {
-            "$ref": "#/components/schemas/AssistantMoney"
+            "$ref": "#/components/schemas/AssistantInputMoney"
           },
           "cacheWrite5MinutesPricePerMillion": {
-            "$ref": "#/components/schemas/AssistantMoney"
+            "$ref": "#/components/schemas/AssistantInputMoney"
           },
           "cacheWrite1HourPricePerMillion": {
-            "$ref": "#/components/schemas/AssistantMoney"
+            "$ref": "#/components/schemas/AssistantInputMoney"
           },
           "cacheReadPricePerMillion": {
-            "$ref": "#/components/schemas/AssistantMoney"
+            "$ref": "#/components/schemas/AssistantInputMoney"
           }
         },
         "additionalProperties": false
@@ -55628,13 +53472,13 @@
             "format": "int32"
           },
           "cacheWrite5MinutesPricePerMillion": {
-            "$ref": "#/components/schemas/AssistantMoney"
+            "$ref": "#/components/schemas/AssistantInputMoney"
           },
           "cacheWrite1HourPricePerMillion": {
-            "$ref": "#/components/schemas/AssistantMoney"
+            "$ref": "#/components/schemas/AssistantInputMoney"
           },
           "cacheReadPricePerMillion": {
-            "$ref": "#/components/schemas/AssistantMoney"
+            "$ref": "#/components/schemas/AssistantInputMoney"
           },
           "longContext": {
             "oneOf": [
@@ -55745,6 +53589,7 @@
         "type": "object",
         "properties": {
           "noticeVersion": {
+            "maxLength": 500,
             "type": [
               "null",
               "string"
@@ -56334,7 +54179,7 @@
                 "$ref": "#/components/schemas/AssistantBudgetProgressResponse"
               }
             ],
-            "description": "Siempre presente. Consumer/Platform null; Business con presupuesto positivo aplicable usa usedCost registrado confirmado o conservador dividido por monthlyBudget snapshot de la misma financiación efectiva y mes civil. Sin reservas, suma de financiaciones, repricing ni recorte; NearLimit desde 0,8 y LimitReached desde 1. Presupuesto cero/null/no aplicable: null, sin división por cero. Configured=false conserva precedencia; consultas fijas siguen disponibles y State no garantiza admisión."
+            "description": "Siempre presente. Consumer/Platform null; Business con presupuesto positivo aplicable usa usedCost registrado confirmado o conservador dividido por monthlyBudget snapshot de la misma financiación efectiva y mes civil. Sin reservas, suma de financiaciones, repricing ni recorte; NearLimit desde 80% y LimitReached desde 1. Presupuesto cero/null/no aplicable: null, sin división por cero. Configured=false conserva precedencia; consultas fijas siguen disponibles y State no garantiza admisión."
           }
         }
       },
@@ -56829,7 +54674,7 @@
                 "$ref": "#/components/schemas/AssistantBudgetProgressResponse"
               }
             ],
-            "description": "Sólo organization Platform con presupuesto mensual positivo aplicable: costo confirmado o estimado registrado del mismo org/financiador/mes dividido por snapshot histórico reflejado en monthlyBudget, sin reservas ni Settings actuales. PlatformKey usa tope Plataforma; OwnKey su tope propio, sin sumar topes. Fracción sin recorte; NearLimit desde 0,8, LimitReached desde 1. Presupuesto cero/null y otras filas null."
+            "description": "Sólo organization Platform con presupuesto mensual positivo aplicable: costo confirmado o estimado registrado del mismo org/financiador/mes dividido por snapshot histórico reflejado en monthlyBudget, sin reservas ni Settings actuales. PlatformKey usa tope Plataforma; OwnKey su tope propio, sin sumar topes. Fracción sin recorte; NearLimit desde 80%, LimitReached desde 1. Presupuesto cero/null y otras filas null."
           }
         }
       },
@@ -57436,6 +55281,7 @@
         "type": "object",
         "properties": {
           "name": {
+            "maxLength": 500,
             "type": [
               "null",
               "string"
@@ -57452,6 +55298,7 @@
             ]
           },
           "providerModelId": {
+            "maxLength": 500,
             "type": [
               "null",
               "string"
@@ -57463,7 +55310,7 @@
                 "type": "null"
               },
               {
-                "$ref": "#/components/schemas/AssistantMoney"
+                "$ref": "#/components/schemas/AssistantInputMoney"
               }
             ]
           },
@@ -57473,7 +55320,7 @@
                 "type": "null"
               },
               {
-                "$ref": "#/components/schemas/AssistantMoney"
+                "$ref": "#/components/schemas/AssistantInputMoney"
               }
             ]
           },
@@ -62273,12 +60120,14 @@
         "type": "object",
         "properties": {
           "text": {
+            "maxLength": 8000,
             "type": [
               "null",
               "string"
             ]
           },
           "attachmentIds": {
+            "maxItems": 5,
             "type": [
               "null",
               "array"
@@ -62693,6 +60542,7 @@
         "type": "object",
         "properties": {
           "title": {
+            "maxLength": 80,
             "type": [
               "null",
               "string"
@@ -62722,6 +60572,7 @@
         "type": "object",
         "properties": {
           "name": {
+            "maxLength": 500,
             "type": [
               "null",
               "string"
@@ -62738,6 +60589,7 @@
             ]
           },
           "providerModelId": {
+            "maxLength": 500,
             "type": [
               "null",
               "string"
@@ -62749,7 +60601,7 @@
                 "type": "null"
               },
               {
-                "$ref": "#/components/schemas/AssistantMoney"
+                "$ref": "#/components/schemas/AssistantInputMoney"
               }
             ]
           },
@@ -62759,7 +60611,7 @@
                 "type": "null"
               },
               {
-                "$ref": "#/components/schemas/AssistantMoney"
+                "$ref": "#/components/schemas/AssistantInputMoney"
               }
             ]
           },
@@ -62802,6 +60654,7 @@
             "format": "uint32"
           },
           "reason": {
+            "maxLength": 500,
             "type": [
               "null",
               "string"
@@ -62945,7 +60798,7 @@
                 "type": "null"
               },
               {
-                "$ref": "#/components/schemas/AssistantMoney"
+                "$ref": "#/components/schemas/AssistantInputMoney"
               }
             ]
           },
@@ -62960,6 +60813,7 @@
             ]
           },
           "apiKey": {
+            "maxLength": 4000,
             "type": [
               "null",
               "string"
@@ -63094,7 +60948,7 @@
                 "type": "null"
               },
               {
-                "$ref": "#/components/schemas/AssistantMoney"
+                "$ref": "#/components/schemas/AssistantInputMoney"
               }
             ]
           },
@@ -63122,6 +60976,7 @@
             ]
           },
           "apiKey": {
+            "maxLength": 4000,
             "type": [
               "null",
               "string"

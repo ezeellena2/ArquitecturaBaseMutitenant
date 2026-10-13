@@ -42,6 +42,13 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
     public void Describe(OpenApiDocument document)
     {
         DescribeSchemas(document);
+        if (document.Components?.Schemas?.TryGetValue("AssistantAttachmentSummaryResponse", out var attachmentSchema) == true
+            && attachmentSchema is OpenApiSchema attachment && attachment.Properties?["mediaType"] is OpenApiSchema mediaType)
+            mediaType.Enum = AssistantTechnicalLimits.AttachmentMediaTypes.Select(value => (JsonNode)JsonValue.Create(value)!).ToList();
+        if (document.Components?.Schemas?.TryGetValue("SendAssistantMessageHttpRequest", out var sendSchema) == true
+            && sendSchema is OpenApiSchema send && send.Properties?["attachmentIds"] is OpenApiSchema ids)
+            ids.MaxItems = AssistantTechnicalLimits.MaxAttachments;
+
         foreach (var (path, item) in document.Paths.Where(pair => IsOwnPath(pair.Key)))
             foreach (var (method, operation) in item.Operations ?? [])
             {
@@ -91,9 +98,9 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
     private static JsonArray Permissions(string path, HttpMethod method)
     {
         if (path.StartsWith("/api/me/", StringComparison.Ordinal)) return [];
-        if (path.StartsWith("/api/organization/", StringComparison.Ordinal)) return new JsonArray(IsChat(path) ? "assistant.use" : "assistant.configure");
-        if (path.EndsWith("/policy", StringComparison.Ordinal)) return new JsonArray(method == HttpMethod.Get ? "platform.tenants.read" : "platform.tenants.manage");
-        return new JsonArray(IsChat(path) ? "platform.assistant.use" : path.EndsWith("/usage", StringComparison.Ordinal) ? "platform.assistant.read" : "platform.assistant.configure");
+        if (path.StartsWith("/api/organization/", StringComparison.Ordinal)) return new JsonArray(IsChat(path) ? Domain.Authorization.Permissions.Assistant.Use : Domain.Authorization.Permissions.Assistant.Configure);
+        if (path.EndsWith("/policy", StringComparison.Ordinal)) return new JsonArray(method == HttpMethod.Get ? Domain.Authorization.PlatformPermissions.Tenants.Read : Domain.Authorization.PlatformPermissions.Tenants.Manage);
+        return new JsonArray(IsChat(path) ? Domain.Authorization.PlatformPermissions.Assistant.Use : path.EndsWith("/usage", StringComparison.Ordinal) ? Domain.Authorization.PlatformPermissions.Assistant.Read : Domain.Authorization.PlatformPermissions.Assistant.Configure);
     }
     private static List<HttpContractError> Errors(string path, HttpMethod method)
     {
@@ -105,7 +112,6 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
             HttpContractDocumentation.CoreError(403, "Legal.AcceptanceRequired"),
             HttpContractDocumentation.CoreError(404, "Http.NotFound"),
             HttpContractDocumentation.CoreError(500, "General.Unexpected"),
-            HttpContractDocumentation.CoreError(501, "General.Contract.NotImplemented"),
         };
         if (method == HttpMethod.Post)
             list.AddRange([HttpContractDocumentation.CoreError(400, "Request.IdempotencyKeyRequired"),
@@ -171,12 +177,12 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         if (path.Contains("/quick/", StringComparison.Ordinal)) return "Consulta fija sin IA, títulos automáticos, cuota ni costo; revalida permisos de la herramienta. DurableReference reconstruye el resultado privado tras revalidar dueño/lado/organización/legales/módulo/permisos.";
         if (path.EndsWith("/settings", StringComparison.Ordinal)) return "Clave write-only: keyAction keep/replace/clear; apiKey solo en replace, sin key/cipher en salidas o logs. OwnKey requiere política y Dueño activo con Email verificado utilizable. PlatformKey rechaza topes propios. Gestión Plataforma accesible sin clave de chat.";
         if (path.Contains("/usage", StringComparison.Ordinal)) return "Agregados mensuales paginados YYYY-MM; sin texto, conversationId, títulos ni archivos. Costo platform-key separado de own-key.";
-        if (path.Contains("/attachments", StringComparison.Ordinal)) return "Adjunto privado PNG/JPEG/WebP/PDF, un archivo multipart por upload, máximo 10485760 bytes; hasta cinco al consumir mensaje. Verificar firma y extensión. Pendiente hasta consumo, replay por referencia privada, sin storageKey o URL pública.";
+        if (path.Contains("/attachments", StringComparison.Ordinal)) return $"Adjunto privado PNG/JPEG/WebP/PDF, un archivo multipart por upload, máximo {AssistantTechnicalLimits.MaxAttachmentBytes} bytes; hasta {AssistantTechnicalLimits.MaxAttachments} al consumir mensaje. Verificar firma y extensión. Pendiente hasta consumo, replay por referencia privada, sin storageKey o URL pública.";
         if (path.EndsWith("/export", StringComparison.Ordinal)) return "Descarga Markdown UTF-8 o PDF privada, no-store; solo conversación propia. Sin tool payloads, claves ni bytes originales de adjuntos; sin IA, cuota ni costo.";
         if (path.EndsWith("/notice", StringComparison.Ordinal)) return "Consentimiento explícito por usuario y versión, después de aceptar documentos legales vigentes; 204, sin inferir aceptación.";
-        if (path.Contains("/turns/", StringComparison.Ordinal)) return "Stop idempotente y durable. RequestAborted solicita stop; la admisión persistida no se deshace.";
+        if (path.Contains("/turns/", StringComparison.Ordinal)) return "Stop idempotente y durable. RequestAborted cancela sólo al lector del stream; la admisión persistida continúa.";
         if (path.EndsWith("/policy", StringComparison.Ordinal)) return "Gestión global sin abrir conversaciones ni devolver claves. Ausente: allowOwnKey=false/version=0; PUT requiere motivo y SecurityEvent, revalida configuración/turnos.";
-        if (path.Contains("/models", StringComparison.Ordinal)) return $"Catálogo Anthropic, precios no negativos en {AssistantContractPolicy.BillingCurrency}, unicidad provider/providerModelId. Datos técnicos completos obligatorios al crear/editar; lectura technical y technicalRevision nullable sólo para filas heredadas incompletas. Revisión calculada por servidor con las tarifas y capacidades efectivas. La selección usa la base actual sin archivo ni reinicio: activo, texto, herramientas, pensamiento adaptativo, esfuerzo admitido y capacidad mínima 51200/2048. Límites menores coherentes se guardan pero no se ofrecen para chat. Tarifas técnicas USD positivas con hasta seis decimales; contexto largo null o umbral menor que la entrada y cinco tarifas completas. Desactivar modelos referidos; sin endpoint de borrado.";
+        if (path.Contains("/models", StringComparison.Ordinal)) return $"Catálogo Anthropic, precios no negativos en {AssistantContractPolicy.BillingCurrency}, unicidad provider/providerModelId. Datos técnicos completos obligatorios al crear/editar; lectura technical y technicalRevision nullable sólo para filas heredadas incompletas. Revisión calculada por servidor con las tarifas y capacidades efectivas. La selección usa la base actual sin archivo ni reinicio: activo, texto, herramientas, pensamiento adaptativo, esfuerzo admitido y capacidad mínima {AssistantTechnicalLimits.MaxInputTokens}/{AssistantTechnicalLimits.MaxOutputTokens}. Límites menores coherentes se guardan pero no se ofrecen para chat. Tarifas técnicas USD positivas con hasta seis decimales; contexto largo null o umbral menor que la entrada y cinco tarifas completas. Desactivar modelos referidos; sin endpoint de borrado.";
         if (path.EndsWith("/conversations", StringComparison.Ordinal)) return method == HttpMethod.Get
             ? "Cursor opaco ligado a lado/organización/dueño/filtro; orden LastActivityAtUtc/Id descendente, limit=20 máximo100."
             : "Crea sin IA, title=null/isSaved=false; 201 con Location. DurableReference no copia título al store global.";
@@ -184,7 +190,7 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         if (path.Contains("/conversations/", StringComparison.Ordinal)) return method == HttpMethod.Get
             ? "Conversación propia, mensajes cronológicos por cursor; limit=50 máximo100. Ajeno devuelve404."
             : "Edición/borrado con uint/xmin y owner firmado; borrar cancela turno y elimina textos/adjuntos con limpieza física diferida fiable.";
-        return "Estado efectivo: apagado404; habilitado sin clave configured=false. remainingMessages=null si >10. Retención30 días salvo guardados, maxAttachmentBytes10485760/maxAttachments5. monthlyBudgetProgress siempre presente: Consumer/Platform null; Business usa costo registrado y presupuesto snapshot de la misma financiación efectiva y mes civil, sin reservas, suma de financiaciones ni recorte. NearLimit desde 0,8; LimitReached desde 1. Presupuesto no aplicable/cero/null devuelve null. Sin configurar conserva precedencia y las consultas fijas siguen disponibles; State no garantiza admisión.";
+        return $"Estado efectivo: apagado404; habilitado sin clave configured=false. remainingMessages=null si >{AssistantTechnicalLimits.RemainingMessagesNotice}. Retención30 días salvo guardados, maxAttachmentBytes{AssistantTechnicalLimits.MaxAttachmentBytes}/maxAttachments{AssistantTechnicalLimits.MaxAttachments}. monthlyBudgetProgress siempre presente: Consumer/Platform null; Business usa costo registrado y presupuesto snapshot de la misma financiación efectiva y mes civil, sin reservas, suma de financiaciones ni recorte. NearLimit desde {AssistantTechnicalLimits.BudgetNearPercent}%; LimitReached desde 1. Presupuesto no aplicable/cero/null devuelve null. Sin configurar conserva precedencia y las consultas fijas siguen disponibles; State no garantiza admisión.";
     }
     private static Dictionary<string, JsonNode>? RequestExamples(string path, HttpMethod method)
     {
@@ -223,7 +229,7 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
                 foreach (var (name, fraction, status) in new[]
                 {
                     ("monthlyZero", 0m, "WithinLimit"), ("monthlyBelowNear", 0.79m, "WithinLimit"),
-                    ("monthlyNear", 0.8m, "NearLimit"), ("monthlyReached", 1m, "LimitReached"),
+                    ("monthlyNear", AssistantTechnicalLimits.BudgetNearFraction, "NearLimit"), ("monthlyReached", 1m, "LimitReached"),
                     ("monthlyOver", 1.2m, "LimitReached"),
                 })
                 {
@@ -242,7 +248,7 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
                         media.Examples[name + "." + language] = new OpenApiExample
                         {
                             Description = language == "es"
-                                ? "Muestra contractual Business: presupuesto snapshot USD 10 y costo registrado de la misma financiación efectiva y mes civil; sin reservas ni suma de financiaciones. Fracción sin recorte; NearLimit desde 0,8 y LimitReached desde 1. State no garantiza admisión; consultas fijas disponibles."
+                                ? $"Muestra contractual Business: presupuesto snapshot USD 10 y costo registrado de la misma financiación efectiva y mes civil; sin reservas ni suma de financiaciones. Fracción sin recorte; NearLimit desde {AssistantTechnicalLimits.BudgetNearPercent}% y LimitReached desde 1. State no garantiza admisión; consultas fijas disponibles."
                                 : "Business contract sample: USD 10 budget snapshot and registered cost for the same effective funding and civil month; no reservations or combined funding. Uncapped fraction; NearLimit from 0.8 and LimitReached from 1. State does not guarantee admission; quick queries remain available.",
                             Value = state,
                         };
@@ -284,7 +290,7 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
             {
                 if (path.StartsWith("/api/organization/", StringComparison.Ordinal))
                 {
-                    media.Examples["currentPlatformKey"] = new OpenApiExample { Value = UsageExample(document, 0.8m, "NearLimit", "PlatformKey", historical: false) };
+                    media.Examples["currentPlatformKey"] = new OpenApiExample { Value = UsageExample(document, AssistantTechnicalLimits.BudgetNearFraction, "NearLimit", "PlatformKey", historical: false) };
                     media.Examples["currentOwnKey"] = new OpenApiExample { Value = UsageExample(document, 1.2m, "LimitReached", "OwnKey", historical: false) };
                     media.Examples["historical"] = new OpenApiExample { Value = UsageExample(document, 0.5m, "WithinLimit", "OwnKey", historical: true) };
                     media.Examples["dailyPeople"] = new OpenApiExample
@@ -423,7 +429,7 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
 
     private static JsonObject UsageMoney(decimal amount) => new() { ["amount"] = amount, ["currency"] = AssistantContractPolicy.BillingCurrency };
 
-    // Contract samples only; the Usage service remains 501 until its reader is implemented in T06.
+    // Examples preserve the implemented monthly usage contract.
     private static JsonObject EmptyUsageExample(OpenApiDocument document, bool platform)
     {
         var usage = Example(new OpenApiSchemaReference("AssistantUsagePageResponse", document), document, 0)!.AsObject();
@@ -481,7 +487,7 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         usage["organizationCount"] = 1;
         var platformKey = UsageRowExample(document, "organization", "PlatformKey", 20m, 10);
         platformKey["monthlyBudget"] = UsageMoney(25m);
-        platformKey["budgetProgress"] = new JsonObject { ["fraction"] = 0.8m, ["status"] = "NearLimit" };
+        platformKey["budgetProgress"] = new JsonObject { ["fraction"] = AssistantTechnicalLimits.BudgetNearFraction, ["status"] = "NearLimit" };
         var ownKey = UsageRowExample(document, "organization", "OwnKey", 7m, 3);
         ownKey["monthlyBudget"] = UsageMoney(7m);
         ownKey["budgetProgress"] = new JsonObject { ["fraction"] = 1m, ["status"] = "LimitReached" };
@@ -532,8 +538,8 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
                     "month" => JsonValue.Create("2026-10"),
                     "dailyLimit" or "dailyMessageLimit" => JsonValue.Create(50),
                     "retentionDays" => JsonValue.Create(30),
-                    "maxAttachmentBytes" => JsonValue.Create(10485760),
-                    "maxAttachments" => JsonValue.Create(5),
+                    "maxAttachmentBytes" => JsonValue.Create(AssistantTechnicalLimits.MaxAttachmentBytes),
+                    "maxAttachments" => JsonValue.Create(AssistantTechnicalLimits.MaxAttachments),
                     "noticeVersion" => JsonValue.Create("2026-10-08"),
                     _ => Example(property, document, depth + 1),
                 };
@@ -578,7 +584,7 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
                             Required = new HashSet<string>(StringComparer.Ordinal) { "file", "conversationVersion" },
                             Properties = new Dictionary<string, IOpenApiSchema>
                             {
-                                ["file"] = new OpenApiSchema { Type = JsonSchemaType.String, Format = "binary", Description = "Un archivo PNG/JPEG/WebP/PDF, hasta 10485760 bytes." },
+                                ["file"] = new OpenApiSchema { Type = JsonSchemaType.String, Format = "binary", Description = $"Un archivo PNG/JPEG/WebP/PDF, hasta {AssistantTechnicalLimits.MaxAttachmentBytes} bytes." },
                                 ["conversationVersion"] = new OpenApiSchema { Type = JsonSchemaType.Integer, Format = "uint32", Minimum = "0", Maximum = "4294967295" },
                             },
                         },
@@ -590,7 +596,7 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         if (method != HttpMethod.Get || !path.EndsWith("/export", StringComparison.Ordinal) && !path.Contains("/attachments/", StringComparison.Ordinal)) return;
         if (operation.Responses!["200"] is not OpenApiResponse response) return;
         var mediaTypes = path.EndsWith("/export", StringComparison.Ordinal) ? new[] { "text/markdown", "application/pdf" }
-            : ["image/png", "image/jpeg", "image/webp", "application/pdf"];
+            : AssistantTechnicalLimits.AttachmentMediaTypes.ToArray();
         response.Content = mediaTypes.ToDictionary(value => value, value => new OpenApiMediaType
         {
             Schema = new OpenApiSchema { Type = JsonSchemaType.String, Format = "binary" },
@@ -654,17 +660,17 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
             }
         }
     }
-    private static IOpenApiSchema ReplaceMoneyReferences(IOpenApiSchema schema, OpenApiDocument document)
+    private static IOpenApiSchema ReplaceMoneyReferences(IOpenApiSchema schema, OpenApiDocument document, string moneySchema = "AssistantMoney")
     {
         if (schema is OpenApiSchemaReference reference)
-            return reference.Reference.Id == "Money" ? new OpenApiSchemaReference("AssistantMoney", document) : schema;
+            return reference.Reference.Id == "Money" ? new OpenApiSchemaReference(moneySchema, document) : schema;
         if (schema is not OpenApiSchema mutable) return schema;
         foreach (var key in mutable.Properties?.Keys.ToArray() ?? [])
-            mutable.Properties![key] = ReplaceMoneyReferences(mutable.Properties[key], document);
-        if (mutable.Items is not null) mutable.Items = ReplaceMoneyReferences(mutable.Items, document);
-        if (mutable.OneOf is not null) mutable.OneOf = mutable.OneOf.Select(value => ReplaceMoneyReferences(value, document)).ToList();
-        if (mutable.AnyOf is not null) mutable.AnyOf = mutable.AnyOf.Select(value => ReplaceMoneyReferences(value, document)).ToList();
-        if (mutable.AllOf is not null) mutable.AllOf = mutable.AllOf.Select(value => ReplaceMoneyReferences(value, document)).ToList();
+            mutable.Properties![key] = ReplaceMoneyReferences(mutable.Properties[key], document, moneySchema);
+        if (mutable.Items is not null) mutable.Items = ReplaceMoneyReferences(mutable.Items, document, moneySchema);
+        if (mutable.OneOf is not null) mutable.OneOf = mutable.OneOf.Select(value => ReplaceMoneyReferences(value, document, moneySchema)).ToList();
+        if (mutable.AnyOf is not null) mutable.AnyOf = mutable.AnyOf.Select(value => ReplaceMoneyReferences(value, document, moneySchema)).ToList();
+        if (mutable.AllOf is not null) mutable.AllOf = mutable.AllOf.Select(value => ReplaceMoneyReferences(value, document, moneySchema)).ToList();
         return mutable;
     }
 
@@ -682,10 +688,26 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
                 ["currency"] = new OpenApiSchema { Type = JsonSchemaType.String, Pattern = "^[A-Z]{3}$", MinLength = 3, MaxLength = 3 },
             },
         };
+        schemas["AssistantInputMoney"] = new OpenApiSchema
+        {
+            Type = JsonSchemaType.Object, AdditionalPropertiesAllowed = false,
+            Required = new HashSet<string>(StringComparer.Ordinal) { "amount", "currency" },
+            Properties = new Dictionary<string, IOpenApiSchema>
+            {
+                ["amount"] = new OpenApiSchema { Type = JsonSchemaType.Number, Format = "decimal", Minimum = "0",
+                    ExclusiveMaximum = Application.Common.Formatting.VersionWireFormatter.FormatCanonicalDecimal(AssistantContractPolicy.MaxAmountExclusive) },
+                ["currency"] = new OpenApiSchema { Type = JsonSchemaType.String, Pattern = "^[A-Z]{3}$", MinLength = 3, MaxLength = 3 },
+            },
+        };
         foreach (var (name, schema) in schemas.Where(pair => pair.Key.Contains("Assistant", StringComparison.Ordinal)))
         {
             if (schema is not OpenApiSchema mutable) continue;
-            ReplaceMoneyReferences(mutable, document);
+            ReplaceMoneyReferences(mutable, document, name.Contains("Request", StringComparison.Ordinal) ? "AssistantInputMoney" : "AssistantMoney");
+            if (name is "AssistantModelTechnicalHttpRequest" or "AssistantModelLongContextHttpRequest")
+                foreach (var (field, numericProperty) in mutable.Properties ?? new Dictionary<string, IOpenApiSchema>())
+                    if (field is "maxInputTokens" or "maxOutputTokens" or "inputTokensThreshold" && numericProperty is OpenApiSchema number)
+                        number.Minimum = "1";
+
             string[] requiredProjections = name switch
             {
                 "AssistantConversationResponse" => ["activeTurnId"],
@@ -701,7 +723,7 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
                 mutable.Required.Add(requiredProjection);
             }
             if (name == "AssistantStateResponse" && mutable.Properties!["monthlyBudgetProgress"] is OpenApiSchema monthlyProgress)
-                monthlyProgress.Description = "Siempre presente. Consumer/Platform null; Business con presupuesto positivo aplicable usa usedCost registrado confirmado o conservador dividido por monthlyBudget snapshot de la misma financiación efectiva y mes civil. Sin reservas, suma de financiaciones, repricing ni recorte; NearLimit desde 0,8 y LimitReached desde 1. Presupuesto cero/null/no aplicable: null, sin división por cero. Configured=false conserva precedencia; consultas fijas siguen disponibles y State no garantiza admisión.";
+                monthlyProgress.Description = $"Siempre presente. Consumer/Platform null; Business con presupuesto positivo aplicable usa usedCost registrado confirmado o conservador dividido por monthlyBudget snapshot de la misma financiación efectiva y mes civil. Sin reservas, suma de financiaciones, repricing ni recorte; NearLimit desde {AssistantTechnicalLimits.BudgetNearPercent}% y LimitReached desde 1. Presupuesto cero/null/no aplicable: null, sin división por cero. Configured=false conserva precedencia; consultas fijas siguen disponibles y State no garantiza admisión.";
             if (name == "AssistantUsagePageResponse" && mutable.Properties!["organizationCount"] is OpenApiSchema organizationCount)
                 organizationCount.Description = "Sólo Platform: organizaciones Business distintas con consumo de modelo contabilizado durante el mes solicitado, antes de paginar; excluye Personas/Operadores y organizaciones sin consumo. Cero sin uso Business; Business devuelve null.";
             if (name == "AssistantUsageRowResponse")
@@ -711,7 +733,7 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
                 if (mutable.Properties["fundingMode"] is OpenApiSchema fundingMode)
                     fundingMode.Description = "organization Platform agrupa OrganizationId + financiación histórica + mes con consumo contabilizado; costos, consultas y tokens pertenecen sólo al grupo. La organización puede tener dos filas; PlatformKey→OwnKey→PlatformKey acumula dos grupos. personal/operator PlatformKey; day/person Business null. Orden estable con desempate por fundingMode; configuración sin consumo no crea filas.";
                 if (mutable.Properties["budgetProgress"] is OpenApiSchema budgetProgress)
-                    budgetProgress.Description = "Sólo organization Platform con presupuesto mensual positivo aplicable: costo confirmado o estimado registrado del mismo org/financiador/mes dividido por snapshot histórico reflejado en monthlyBudget, sin reservas ni Settings actuales. PlatformKey usa tope Plataforma; OwnKey su tope propio, sin sumar topes. Fracción sin recorte; NearLimit desde 0,8, LimitReached desde 1. Presupuesto cero/null y otras filas null.";
+                    budgetProgress.Description = $"Sólo organization Platform con presupuesto mensual positivo aplicable: costo confirmado o estimado registrado del mismo org/financiador/mes dividido por snapshot histórico reflejado en monthlyBudget, sin reservas ni Settings actuales. PlatformKey usa tope Plataforma; OwnKey su tope propio, sin sumar topes. Fracción sin recorte; NearLimit desde {AssistantTechnicalLimits.BudgetNearPercent}%, LimitReached desde 1. Presupuesto cero/null y otras filas null.";
             }
             if (name is "CreateAssistantModelHttpRequest" or "UpdateAssistantModelHttpRequest")
             {
@@ -724,7 +746,7 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
                 mutable.AdditionalPropertiesAllowed = false;
                 mutable.Required = mutable.Properties!.Keys.Where(key => key != "longContext" || name.EndsWith("Response", StringComparison.Ordinal)).ToHashSet(StringComparer.Ordinal);
                 foreach (var key in mutable.Properties.Keys.Where(key => key.EndsWith("PricePerMillion", StringComparison.Ordinal)).ToArray())
-                    mutable.Properties[key] = new OpenApiSchemaReference("AssistantMoney", document);
+                    mutable.Properties[key] = new OpenApiSchemaReference(name.EndsWith("HttpRequest", StringComparison.Ordinal) ? "AssistantInputMoney" : "AssistantMoney", document);
                 foreach (var (key, value) in mutable.Properties)
                     if (value is OpenApiSchema technicalProperty)
                     {

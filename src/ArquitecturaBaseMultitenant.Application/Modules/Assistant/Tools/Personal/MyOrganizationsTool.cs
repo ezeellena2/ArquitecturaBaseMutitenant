@@ -18,7 +18,7 @@ internal sealed class MyOrganizationsTool(AssistantAccessPolicy policy, IProfile
         if (profile.IsFailure) return profile.Error;
         var organizations = profile.Value.Organizations;
         return new AssistantQuickToolData(new AssistantOrganizationsQuickDataResponse(
-            [.. organizations.OrderBy(row => row.Name, StringComparer.Ordinal).ThenBy(row => row.Id).Take(20)
+            [.. organizations.OrderBy(row => row.Name, StringComparer.Ordinal).ThenBy(row => row.Id).Take(AssistantTechnicalLimits.QuickRows)
                 .Select(row => new AssistantOrganizationRowResponse(row.Id, row.Name, row.Status.ToString()))],
             organizations.Count, organizations.Count > 20));
     }

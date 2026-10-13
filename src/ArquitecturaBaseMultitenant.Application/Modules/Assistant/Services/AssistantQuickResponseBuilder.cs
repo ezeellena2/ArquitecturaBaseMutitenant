@@ -28,7 +28,7 @@ internal sealed class AssistantQuickResponseBuilder(DisplayFormatter formatter, 
             if (profile.IsSuccess)
             {
                 var authorized = profile.Value.Organizations.Where(row => row.IsSelectable).Select(row => row.Id).ToHashSet();
-                foreach (var row in organizations.Organizations.Where(row => authorized.Contains(row.Id)).Take(20))
+                foreach (var row in organizations.Organizations.Where(row => authorized.Contains(row.Id)).Take(AssistantTechnicalLimits.QuickRows))
                     links.Add(Link(AssistantRouteKey.PersonalOrganizations, context.Profile, tenantId: row.Id, label: "Link.ViewOrganization"));
             }
         }

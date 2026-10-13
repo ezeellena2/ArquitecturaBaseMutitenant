@@ -14,7 +14,7 @@ internal sealed class AssistantAttachmentContentReader(IAssistantAttachmentRepos
     public async Task<Result<IReadOnlyList<AssistantAttachmentContent>>> ReadAsync(Guid owner, Access access, Guid conversationId, IReadOnlyList<Guid> attachmentIds, CancellationToken ct)
     {
         if (db.Database.CurrentTransaction is not null) throw new InvalidOperationException("File reads must run outside a transaction.");
-        if (attachmentIds.Count > 5) return AssistantErrors.AttachmentTooMany;
+        if (attachmentIds.Count > AssistantTechnicalLimits.MaxAttachments) return AssistantErrors.AttachmentTooMany;
         var rows = await repository.ListAsync(owner, access, conversationId, attachmentIds, ct);
         if (rows.Count != attachmentIds.Count) return AssistantErrors.AttachmentNotFound;
         var output = new List<AssistantAttachmentContent>();
@@ -22,7 +22,7 @@ internal sealed class AssistantAttachmentContentReader(IAssistantAttachmentRepos
         {
             await using var stream = await files.OpenReadAsync(row.StorageKey, ct);
             if (stream is null) return AssistantErrors.AttachmentNotFound;
-            if (row.ByteLength > 10485760) return AssistantErrors.AttachmentTooLarge;
+            if (row.ByteLength > AssistantTechnicalLimits.MaxAttachmentBytes) return AssistantErrors.AttachmentTooLarge;
             var bytes = new byte[checked((int)row.ByteLength)];
             try { await stream.ReadExactlyAsync(bytes, ct); }
             catch (EndOfStreamException) { return AssistantErrors.AttachmentNotFound; }

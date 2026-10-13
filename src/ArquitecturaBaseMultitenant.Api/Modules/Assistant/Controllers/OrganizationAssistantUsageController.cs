@@ -27,7 +27,6 @@ public sealed class OrganizationAssistantUsageController(IAssistantUsageService 
     [ProducesProblem(403)]
     [ProducesProblem(404)]
     [ProducesProblem(500)]
-    [ProducesProblem(501)]
     public async Task<IActionResult> ListOrganization([FromQuery] OrganizationAssistantUsageHttpQuery request, CancellationToken cancellationToken) =>
         (await service.ListOrganizationAsync(new OrganizationAssistantUsageRequest(request.Month, request.GroupBy, request.Page, request.PageSize), cancellationToken)).ToActionResult(this);
 }

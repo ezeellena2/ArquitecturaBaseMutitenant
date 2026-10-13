@@ -27,7 +27,6 @@ public sealed class PlatformAssistantUsageController(IAssistantUsageService serv
     [ProducesProblem(403)]
     [ProducesProblem(404)]
     [ProducesProblem(500)]
-    [ProducesProblem(501)]
     public async Task<IActionResult> ListPlatform([FromQuery] PlatformAssistantUsageHttpQuery request, CancellationToken cancellationToken) =>
         (await service.ListPlatformAsync(new PlatformAssistantUsageRequest(request.Month, request.Page, request.PageSize), cancellationToken)).ToActionResult(this);
 }

@@ -25,7 +25,7 @@ internal sealed class AssistantModelReader(ApplicationDbContext context) : IAssi
             .Select(value => AssistantModelReferenceBuilder.WithRevision(new AssistantModelPriceResponse(value.Id, value.DisplayName, Enum.Parse<AssistantProvider>(value.Provider),
                 value.ProviderModelId, value.InputPrice, value.OutputPrice, value.IsEnabled, value.Version,
                 AssistantModelReferenceBuilder.ToResponse(value.Technical))))
-            .ToPagedResultAsync(new CatalogPage { Page = request.Page ?? 1, PageSize = request.PageSize ?? 20 }, ct);
+            .ToPagedResultAsync(new CatalogPage { Page = request.Page ?? 1, PageSize = request.PageSize ?? AssistantTechnicalLimits.QuickRows }, ct);
     }
     private sealed record CatalogPage : PagedRequest;
 }

@@ -17,7 +17,7 @@ internal sealed class ValidationContractContributor(IServiceProvider services) :
         if (document.Components?.Schemas is not { } schemas) return;
         using var scope = services.CreateScope();
         var contracts = typeof(ValidationContractContributor).Assembly.GetTypes()
-            .Where(type => type.Namespace?.StartsWith("ArquitecturaBaseMultitenant.Api.Contracts.", StringComparison.Ordinal) == true);
+            .Where(type => type.Namespace?.StartsWith("ArquitecturaBaseMultitenant.Api.", StringComparison.Ordinal) == true && (type.Name.EndsWith("HttpRequest", StringComparison.Ordinal) || type.Name.EndsWith("HttpQuery", StringComparison.Ordinal)));
         var models = typeof(Application.DependencyInjection).Assembly.GetTypes();
         foreach (var contract in contracts)
         {

@@ -82,7 +82,7 @@ internal sealed class AssistantLimitGuard(IAssistantFinanceRepository repository
     public static AssistantDailyQuotaRow Describe(int consumed, int reserved, int limit, DateOnly dayUtc)
     {
         var remaining = (int)Math.Max(0L, (long)limit - consumed - reserved);
-        return new(consumed, reserved, limit, remaining > 10 ? null : remaining,
+        return new(consumed, reserved, limit, remaining > AssistantTechnicalLimits.RemainingMessagesNotice ? null : remaining,
             dayUtc.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc));
     }
     private static int RetrySeconds(DateTime nowUtc, DateTime resetUtc) =>

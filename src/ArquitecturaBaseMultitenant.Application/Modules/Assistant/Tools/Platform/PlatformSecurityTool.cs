@@ -16,9 +16,9 @@ internal sealed class PlatformSecurityTool(AssistantAccessPolicy policy, IPlatfo
     protected override IReadOnlyList<AssistantToolParameter> Parameters => [new("cursor", "string"), new("fromUtc", "utc"), new("toUtc", "utc")];
     protected override async Task<Result<AssistantToolData>> ExecuteCoreAsync(AssistantToolArguments args, CancellationToken ct)
     {
-        var result = await audit.ListAsync(new ListPlatformAuditRequest { After = args.Text("cursor"), Limit = 20, Period = "all", FromUtc = args.Instant("fromUtc"), ToUtc = args.Instant("toUtc") }, ct);
+        var result = await audit.ListAsync(new ListPlatformAuditRequest { After = args.Text("cursor"), Limit = AssistantTechnicalLimits.QuickRows, Period = "all", FromUtc = args.Instant("fromUtc"), ToUtc = args.Instant("toUtc") }, ct);
         if (result.IsFailure) return result.Error;
-        var rows = result.Value.Items.Take(20).ToArray();
+        var rows = result.Value.Items.Take(AssistantTechnicalLimits.QuickRows).ToArray();
         return new AssistantQuickToolData(new AssistantSecurityQuickDataResponse([.. rows.Select(row =>
             new AssistantSecurityRowResponse(row.Id, row.Action, row.Actor, row.OccurredAtUtc))], result.Value.NextCursor, result.Value.HasMore))
         {

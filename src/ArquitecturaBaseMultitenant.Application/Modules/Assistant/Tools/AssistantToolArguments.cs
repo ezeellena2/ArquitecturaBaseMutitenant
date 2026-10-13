@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using System.Globalization;
 using System.Text.Json;
 
@@ -8,7 +9,7 @@ internal sealed record AssistantToolParameter(string Name, string Type, bool Req
 internal sealed class AssistantToolArguments(JsonElement json)
 {
     internal int Page => Integer("page", 1);
-    internal int PageSize => Integer("pageSize", 20);
+    internal int PageSize => Integer("pageSize", AssistantTechnicalLimits.QuickRows);
     internal int Integer(string key, int fallback) => json.TryGetProperty(key, out var value) ? value.GetInt32() : fallback;
     internal string? Text(string key) => json.TryGetProperty(key, out var value) ? value.GetString()?.Trim() : null;
     internal Guid? Id(string key) => Text(key) is { } value ? Guid.Parse(value) : null;
@@ -27,7 +28,7 @@ internal sealed class AssistantToolArguments(JsonElement json)
             if (parameter.Type == "integer")
             {
                 if (field.Value.ValueKind != JsonValueKind.Number || !field.Value.TryGetInt32(out var number) || number < 1
-                    || (field.Name == "pageSize" ? number is not (10 or 20) : number > 1_000_000)) return false;
+                    || (field.Name == "pageSize" ? number is not (AssistantTechnicalLimits.SmallQuickPageSize or AssistantTechnicalLimits.QuickRows) : number > 1_000_000)) return false;
                 continue;
             }
             if (field.Value.ValueKind != JsonValueKind.String) return false;

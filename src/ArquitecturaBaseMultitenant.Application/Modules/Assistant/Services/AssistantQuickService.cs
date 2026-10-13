@@ -58,24 +58,24 @@ internal sealed class AssistantQuickService(AssistantToolResolver tools, Assista
     {
         switch (key)
         {
-            case "active_users": return JsonSerializer.SerializeToElement(new { status = "Active", page = 1, pageSize = 20 });
-            case "expired_invitations": return JsonSerializer.SerializeToElement(new { status = "Expired", page = 1, pageSize = 20 });
+            case "active_users": return JsonSerializer.SerializeToElement(new { status = "Active", page = 1, pageSize = AssistantTechnicalLimits.QuickRows });
+            case "expired_invitations": return JsonSerializer.SerializeToElement(new { status = "Expired", page = 1, pageSize = AssistantTechnicalLimits.QuickRows });
             case "owners":
-                var owners = await roles.ListAsync(new ListRolesRequest { SystemRoleKey = SystemRoles.TenantAdmin, Page = 1, PageSize = 20 }, ct);
+                var owners = await roles.ListAsync(new ListRolesRequest { SystemRoleKey = SystemRoles.TenantAdmin, Page = 1, PageSize = AssistantTechnicalLimits.QuickRows }, ct);
                 if (owners.IsFailure) return owners.Error;
                 if (owners.Value.Items.Count != 1) return AssistantErrors.QuickQueryNotAvailable;
-                return JsonSerializer.SerializeToElement(new { roleId = owners.Value.Items[0].Id, page = 1, pageSize = 20 });
+                return JsonSerializer.SerializeToElement(new { roleId = owners.Value.Items[0].Id, page = 1, pageSize = AssistantTechnicalLimits.QuickRows });
             case "recent_changes": return JsonSerializer.SerializeToElement(new { });
-            case "pending_organizations": return JsonSerializer.SerializeToElement(new { status = "PendingApproval", page = 1, pageSize = 20 });
-            case "pending_recoveries": return JsonSerializer.SerializeToElement(new { status = "Pending", page = 1, pageSize = 20 });
+            case "pending_organizations": return JsonSerializer.SerializeToElement(new { status = "PendingApproval", page = 1, pageSize = AssistantTechnicalLimits.QuickRows });
+            case "pending_recoveries": return JsonSerializer.SerializeToElement(new { status = "Pending", page = 1, pageSize = AssistantTechnicalLimits.QuickRows });
             case "today_security":
                 var nowUtc = clock.GetUtcNow().UtcDateTime;
                 var range = zones.GetDayRangeUtc(DateOnly.FromDateTime(zones.ConvertToLocal(nowUtc, zone)), zone);
                 return JsonSerializer.SerializeToElement(new { fromUtc = range.StartUtc, toUtc = range.EndUtc });
             case "assistant_usage":
                 var month = DateOnly.FromDateTime(zones.ConvertToLocal(clock.GetUtcNow().UtcDateTime, zone));
-                return JsonSerializer.SerializeToElement(new { month = JsonSerializer.SerializeToElement(month).GetString()![..7], page = 1, pageSize = 20 });
-            case "my_messages": return JsonSerializer.SerializeToElement(new { page = 1, pageSize = 20 });
+                return JsonSerializer.SerializeToElement(new { month = JsonSerializer.SerializeToElement(month).GetString()![..7], page = 1, pageSize = AssistantTechnicalLimits.QuickRows });
+            case "my_messages": return JsonSerializer.SerializeToElement(new { page = 1, pageSize = AssistantTechnicalLimits.QuickRows });
             default: return JsonSerializer.SerializeToElement(new { });
         }
     }

@@ -28,7 +28,6 @@ public sealed class PlatformAssistantPolicyController(IAssistantPolicyService se
     [ProducesProblem(403)]
     [ProducesProblem(404)]
     [ProducesProblem(500)]
-    [ProducesProblem(501)]
     public async Task<IActionResult> Get([FromRoute] Guid tenantId, CancellationToken cancellationToken) =>
         (await service.GetAsync(tenantId, cancellationToken)).ToActionResult(this);
 
@@ -41,7 +40,6 @@ public sealed class PlatformAssistantPolicyController(IAssistantPolicyService se
     [ProducesProblem(404)]
     [ProducesProblem(409)]
     [ProducesProblem(500)]
-    [ProducesProblem(501)]
     public async Task<IActionResult> Update([FromRoute] Guid tenantId, [FromBody] UpdateAssistantPolicyHttpRequest request, CancellationToken cancellationToken) =>
         (await service.UpdateAsync(tenantId, new UpdateAssistantPolicyRequest(request.AllowOwnKey, request.Version, request.Reason), cancellationToken)).ToActionResult(this);
 }

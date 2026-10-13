@@ -20,7 +20,7 @@ internal sealed class RoleMembersTool(AssistantAccessPolicy policy, IRoleService
         if (role.IsFailure) return role.Error;
         var result = await users.ListAsync(new ListOrganizationUsersRequest { RoleId = roleId, Page = args.Page, PageSize = args.PageSize }, ct);
         if (result.IsFailure) return result.Error;
-        var rows = result.Value.Items.Take(20).ToArray();
+        var rows = result.Value.Items.Take(AssistantTechnicalLimits.QuickRows).ToArray();
         return new AssistantQuickToolData(new AssistantPeopleQuickDataResponse([.. rows.Select(row =>
             new AssistantPersonRowResponse(row.MemberId, row.DisplayName, row.State.ToString()))], result.Value.TotalCount, result.Value.HasNext))
         {

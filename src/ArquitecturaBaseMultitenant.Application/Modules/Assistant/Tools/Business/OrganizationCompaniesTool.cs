@@ -17,6 +17,6 @@ internal sealed class OrganizationCompaniesTool(AssistantAccessPolicy policy, IC
     protected override async Task<Result<AssistantToolData>> ExecuteCoreAsync(AssistantToolArguments args, CancellationToken ct)
     {
         var result = await companies.ListAsync(new ListCompaniesRequest { Status = args.EnumValue<CompanyStatus>("status"), Search = args.Text("search"), Page = args.Page, PageSize = args.PageSize }, ct);
-        return result.IsFailure ? result.Error : new AssistantCompaniesToolData([.. result.Value.Items.Take(20).Select(row => new AssistantCompanyToolRow(row.Id, row.Name, row.Status.ToString(), row.MemberCount))], result.Value.TotalCount, result.Value.HasNext);
+        return result.IsFailure ? result.Error : new AssistantCompaniesToolData([.. result.Value.Items.Take(AssistantTechnicalLimits.QuickRows).Select(row => new AssistantCompanyToolRow(row.Id, row.Name, row.Status.ToString(), row.MemberCount))], result.Value.TotalCount, result.Value.HasNext);
     }
 }
