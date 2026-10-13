@@ -117,6 +117,19 @@ public sealed class OrganizationWhatsAppContactsController(IWhatsAppContactServi
     public async Task<IActionResult> GetImportSample(CancellationToken cancellationToken) =>
         (await service.GetImportSampleAsync(cancellationToken)).ToFileResult(this);
 
+    [HttpPost("import/preview")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType<WhatsAppImportPreviewResponse>(200)]
+    [ProducesProblem(400)]
+    [ProducesProblem(401)]
+    [ProducesProblem(403)]
+    [ProducesProblem(404)]
+    [ProducesProblem(413)]
+    [ProducesProblem(500)]
+    public async Task<IActionResult> PreviewImport([FromForm] ImportWhatsAppContactsHttpRequest request, CancellationToken cancellationToken) =>
+        (await service.PreviewImportAsync(new ImportWhatsAppContactsRequest(request.File?.FileName, request.File?.ContentType, request.File?.OpenReadStream(), request.Tag), cancellationToken))
+        .ToActionResult(this);
+
     [HttpPost("import")]
     [Idempotent]
     [Consumes("multipart/form-data")]

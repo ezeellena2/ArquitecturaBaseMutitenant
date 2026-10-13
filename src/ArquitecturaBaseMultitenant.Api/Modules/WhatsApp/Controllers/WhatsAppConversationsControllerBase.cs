@@ -126,4 +126,31 @@ public abstract class WhatsAppConversationsControllerBase(IWhatsAppConversationS
     public async Task<IActionResult> SendTemplate([FromRoute] Guid id, [FromBody] SendWhatsAppTemplateHttpRequest request, CancellationToken cancellationToken) =>
         (await service.SendTemplateAsync(Inbox, id, new SendWhatsAppTemplateRequest(request.TemplateId, request.Variables), cancellationToken))
         .ToCreatedResult(this, nameof(Get), _ => new { id });
+
+    [HttpGet("conversations/{id:guid}/transfer-options/teams")]
+    [ProducesResponseType<PagedResult<WhatsAppTransferTeamResponse>>(200)]
+    [ProducesProblem(400)]
+    [ProducesProblem(401)]
+    [ProducesProblem(403)]
+    [ProducesProblem(404)]
+    [ProducesProblem(500)]
+    public async Task<IActionResult> ListTransferTeams([FromRoute] Guid id, [FromQuery] WhatsAppPagedHttpQuery query, CancellationToken cancellationToken) =>
+        (await service.ListTransferTeamsAsync(Inbox, id, TransferPage(query), cancellationToken)).ToActionResult(this);
+
+    [HttpGet("conversations/{id:guid}/transfer-options/people")]
+    [ProducesResponseType<PagedResult<WhatsAppTransferPersonResponse>>(200)]
+    [ProducesProblem(400)]
+    [ProducesProblem(401)]
+    [ProducesProblem(403)]
+    [ProducesProblem(404)]
+    [ProducesProblem(500)]
+    public async Task<IActionResult> ListTransferPeople([FromRoute] Guid id, [FromQuery] WhatsAppPagedHttpQuery query, CancellationToken cancellationToken) =>
+        (await service.ListTransferPeopleAsync(Inbox, id, TransferPage(query), cancellationToken)).ToActionResult(this);
+
+    private static WhatsAppTransferOptionListRequest TransferPage(WhatsAppPagedHttpQuery query) => new()
+    {
+        Page = query.Page ?? PagedRequest.DefaultPage,
+        PageSize = query.PageSize ?? PagedRequest.DefaultPageSize,
+        Search = query.Search,
+    };
 }

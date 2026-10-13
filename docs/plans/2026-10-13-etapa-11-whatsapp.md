@@ -156,6 +156,7 @@ Leé AGENTS.md del front y ../ArquitecturaBaseMutitenant/docs/plans/2026-10-13-e
 | D6 | Un correo «Chats esperando» por equipo cuando el chat más viejo sin tomar pasa el tiempo elegido; no se repite hasta que la bandeja se vacía y vuelve a llenarse. «No avisar» es una opción. |
 | D7 | Fotos, audios y documentos se ven como «Mandó una foto/audio/documento», sin descarga (llega con la E14). Desconectar un número deja sus chats para leer, sin responder. |
 | D8 | Se desarrolla con una app nueva de Meta en modo desarrollo, en el mismo portfolio; «Servicios Ya» no se toca. |
+| D9 | El bot no se apaga: con un número conectado siempre responde. Diseño saca «Activo» de los tableros del bot. |
 
 ## Para Diseño
 
@@ -167,4 +168,16 @@ Etapa 11, sobre el lienzo v121. Contradicciones: Plat-WA-Plantillas y su M-* mue
 
 ## Cambios al contrato
 
-Vacía.
+Aprobados por el usuario el 2026-10-13, después de cruzar el contrato con los tableros ([página de revisión](https://claude.ai/artifact/WvegbB8Pv8Z4ev8eqtJ6Nd)). Publicados en los dos repos.
+
+| # | Cambio | Para |
+|---|---|---|
+| CC01 | GET `{bandeja}/conversations/{id}/transfer-options/teams` y `/people`, con el permiso de la bandeja: equipos con su cantidad de personas y personas con sus chats tomados | «Pasar a» (B4) |
+| CC02 | `contactId` y `tags` en la fila de la conversación | «Ver ficha» y la etiqueta del encabezado (B4) |
+| CC03 | `body` en las opciones de plantilla | Vista previa (B6) |
+| CC04 | GET `broadcasts/template-options` y `broadcasts/tags` con «Mandar difusiones» | Nueva difusión (B6) |
+| CC05 | POST `contacts/import/preview`: filas, nuevas, actualizadas y rechazadas, sin guardar | «Importar 48 contactos» (B5) |
+| CC06 | Desvincular pasa a DELETE `/api/me/whatsapp/conversations/{id}/link` | «Mensajes» de la persona (B5) |
+| CC07 | Conteos en las listas: `paymentMissing` en números, `scheduled` en difusiones y `approved` en plantillas | Resúmenes de los tableros |
+| CC08 | `moduleCards` en el Inicio (`HomeModuleCard(key, total)`, hasta 10); B1 suma el puerto del núcleo y el agregado de `HomeService` | Tarjeta «WhatsApp · 2 números» (B1) |
+| CC09 | GET `/api/organization/whatsapp/untaken`: sin tomar por bandeja, null en la que la persona no puede ver | Contador del menú (B4) |

@@ -21,9 +21,9 @@ public sealed record UpdateWhatsAppTeamRequest(string? Name, IReadOnlyList<Guid>
 public sealed record DeleteWhatsAppTeamRequest(uint? Version);
 
 /// <summary>Una fila de la bandeja. El teléfono es el del cliente de la organización; la ventana de 24 h se mide desde su último mensaje.</summary>
-public sealed record WhatsAppConversationRowResponse(Guid Id, WhatsAppInbox? Inbox, string? ContactName, string DisplayNumber,
-    string? LastMessagePreview, DateTime LastMessageAtUtc, bool Unread, WhatsAppReferenceResponse? Team, WhatsAppReferenceResponse? Assignee,
-    bool LinkedToAccount, DateTime? WindowOpenUntilUtc, bool ReadOnly, Guid? AccountId, uint Version);
+public sealed record WhatsAppConversationRowResponse(Guid Id, WhatsAppInbox? Inbox, Guid? ContactId, string? ContactName, string DisplayNumber,
+    IReadOnlyList<string> Tags, string? LastMessagePreview, DateTime LastMessageAtUtc, bool Unread, WhatsAppReferenceResponse? Team,
+    WhatsAppReferenceResponse? Assignee, bool LinkedToAccount, DateTime? WindowOpenUntilUtc, bool ReadOnly, Guid? AccountId, uint Version);
 
 public sealed record WhatsAppConversationCountsResponse(int Customers, int Internal, int Untaken);
 
@@ -56,8 +56,19 @@ public sealed record AddWhatsAppNoteRequest(string? Text)
 
 public sealed record TransferWhatsAppConversationRequest(Guid? TeamId, Guid? MemberId, uint? Version);
 
-public sealed record WhatsAppTemplateOptionResponse(Guid TemplateId, string Name, WhatsAppTemplateCategory Category, IReadOnlyList<string> Variables,
-    Money EstimatedCost);
+public sealed record WhatsAppTemplateOptionResponse(Guid TemplateId, string Name, WhatsAppTemplateCategory Category, string Body,
+    IReadOnlyList<string> Variables, Money EstimatedCost);
+
+/// <summary>Un equipo al que se puede pasar el chat, con la cantidad de personas.</summary>
+public sealed record WhatsAppTransferTeamResponse(Guid Id, string Name, int MemberCount);
+
+/// <summary>Una persona del equipo del chat a la que se le puede pasar, con los chats que ya tiene tomados.</summary>
+public sealed record WhatsAppTransferPersonResponse(Guid Id, string Name, int TakenCount);
+
+public sealed record WhatsAppTransferOptionListRequest : PagedRequest;
+
+/// <summary>Los sin tomar de cada bandeja que la persona puede ver; null en la que no tiene permiso.</summary>
+public sealed record WhatsAppUntakenResponse(int? Customers, int? Internal);
 
 public sealed record WhatsAppTemplateOptionListRequest : PagedRequest;
 

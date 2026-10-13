@@ -48,17 +48,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedResultOfWhatsAppBroadcastResponse"
+                  "$ref": "#/components/schemas/WhatsAppBroadcastListResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedResultOfWhatsAppBroadcastResponse"
+                  "$ref": "#/components/schemas/WhatsAppBroadcastListResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedResultOfWhatsAppBroadcastResponse"
+                  "$ref": "#/components/schemas/WhatsAppBroadcastListResponse"
                 }
               }
             }
@@ -367,6 +367,250 @@
             "en": "The number needs a payment method in Meta to send this."
           }
         ],
+        "x-access": "business",
+        "x-permissions": [
+          "whatsapp.broadcasts"
+        ],
+        "x-module-gate": "feature:whatsapp"
+      }
+    },
+    "/api/organization/whatsapp/broadcasts/template-options": {
+      "get": {
+        "tags": [
+          "WhatsApp Business broadcasts"
+        ],
+        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo.",
+        "parameters": [
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "enum": [
+                10,
+                20,
+                50,
+                100
+              ],
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTemplateOptionResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTemplateOptionResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTemplateOptionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ],
+        "x-error-codes": [ ],
+        "x-access": "business",
+        "x-permissions": [
+          "whatsapp.broadcasts"
+        ],
+        "x-module-gate": "feature:whatsapp"
+      }
+    },
+    "/api/organization/whatsapp/broadcasts/tags": {
+      "get": {
+        "tags": [
+          "WhatsApp Business broadcasts"
+        ],
+        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo.",
+        "parameters": [
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "enum": [
+                10,
+                20,
+                50,
+                100
+              ],
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfstring"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfstring"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfstring"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ],
+        "x-error-codes": [ ],
         "x-access": "business",
         "x-permissions": [
           "whatsapp.broadcasts"
@@ -2036,6 +2280,202 @@
           }
         ],
         "x-error-codes": [ ],
+        "x-access": "business",
+        "x-permissions": [
+          "whatsapp.customers"
+        ],
+        "x-module-gate": "feature:whatsapp"
+      }
+    },
+    "/api/organization/whatsapp/contacts/import/preview": {
+      "post": {
+        "tags": [
+          "WhatsApp Business contacts"
+        ],
+        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo.",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "File": {
+                    "$ref": "#/components/schemas/IFormFile"
+                  },
+                  "Tag": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhatsAppImportPreviewResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhatsAppImportPreviewResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhatsAppImportPreviewResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request; WhatsApp.Import.InvalidFile; WhatsApp.Import.TooManyRows",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "WhatsApp.Import.InvalidFile.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "Subí un archivo .xlsx o .csv como el ejemplo.",
+                      "code": "WhatsApp.Import.InvalidFile",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "file": [
+                          "Subí un archivo .xlsx o .csv como el ejemplo."
+                        ]
+                      }
+                    }
+                  },
+                  "WhatsApp.Import.InvalidFile.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "Upload an .xlsx or .csv file like the sample.",
+                      "code": "WhatsApp.Import.InvalidFile",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "file": [
+                          "Upload an .xlsx or .csv file like the sample."
+                        ]
+                      }
+                    }
+                  },
+                  "WhatsApp.Import.TooManyRows.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "El archivo tiene más de 5.000 filas.",
+                      "code": "WhatsApp.Import.TooManyRows",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "file": [
+                          "El archivo tiene más de 5.000 filas."
+                        ]
+                      }
+                    }
+                  },
+                  "WhatsApp.Import.TooManyRows.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "The file has more than 5,000 rows.",
+                      "code": "WhatsApp.Import.TooManyRows",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "file": [
+                          "The file has more than 5,000 rows."
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload Too Large",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ],
+        "x-error-codes": [
+          {
+            "status": 400,
+            "code": "WhatsApp.Import.InvalidFile",
+            "field": "file",
+            "es": "Subí un archivo .xlsx o .csv como el ejemplo.",
+            "en": "Upload an .xlsx or .csv file like the sample."
+          },
+          {
+            "status": 400,
+            "code": "WhatsApp.Import.TooManyRows",
+            "field": "file",
+            "es": "El archivo tiene más de 5.000 filas.",
+            "en": "The file has more than 5,000 rows."
+          }
+        ],
         "x-access": "business",
         "x-permissions": [
           "whatsapp.customers"
@@ -3876,6 +4316,355 @@
         "x-module-gate": "feature:whatsapp"
       }
     },
+    "/api/organization/whatsapp/customers/conversations/{id}/transfer-options/teams": {
+      "get": {
+        "tags": [
+          "WhatsApp Business inboxes"
+        ],
+        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "enum": [
+                10,
+                20,
+                50,
+                100
+              ],
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTransferTeamResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTransferTeamResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTransferTeamResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found; WhatsApp.Team.NotFound; WhatsApp.Conversation.NotFound",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "WhatsApp.Team.NotFound.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 404,
+                      "detail": "No encontramos ese equipo.",
+                      "code": "WhatsApp.Team.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "WhatsApp.Team.NotFound.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 404,
+                      "detail": "We couldn't find that team.",
+                      "code": "WhatsApp.Team.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "WhatsApp.Conversation.NotFound.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 404,
+                      "detail": "No encontramos esa conversación.",
+                      "code": "WhatsApp.Conversation.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "WhatsApp.Conversation.NotFound.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 404,
+                      "detail": "We couldn't find that conversation.",
+                      "code": "WhatsApp.Conversation.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ],
+        "x-error-codes": [
+          {
+            "status": 404,
+            "code": "WhatsApp.Team.NotFound",
+            "field": null,
+            "es": "No encontramos ese equipo.",
+            "en": "We couldn't find that team."
+          },
+          {
+            "status": 404,
+            "code": "WhatsApp.Conversation.NotFound",
+            "field": null,
+            "es": "No encontramos esa conversación.",
+            "en": "We couldn't find that conversation."
+          }
+        ],
+        "x-access": "business",
+        "x-permissions": [
+          "whatsapp.customers"
+        ],
+        "x-module-gate": "feature:whatsapp"
+      }
+    },
+    "/api/organization/whatsapp/customers/conversations/{id}/transfer-options/people": {
+      "get": {
+        "tags": [
+          "WhatsApp Business inboxes"
+        ],
+        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "enum": [
+                10,
+                20,
+                50,
+                100
+              ],
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTransferPersonResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTransferPersonResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTransferPersonResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found; WhatsApp.Conversation.NotFound",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "WhatsApp.Conversation.NotFound.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 404,
+                      "detail": "No encontramos esa conversación.",
+                      "code": "WhatsApp.Conversation.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "WhatsApp.Conversation.NotFound.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 404,
+                      "detail": "We couldn't find that conversation.",
+                      "code": "WhatsApp.Conversation.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ],
+        "x-error-codes": [
+          {
+            "status": 404,
+            "code": "WhatsApp.Conversation.NotFound",
+            "field": null,
+            "es": "No encontramos esa conversación.",
+            "en": "We couldn't find that conversation."
+          }
+        ],
+        "x-access": "business",
+        "x-permissions": [
+          "whatsapp.customers"
+        ],
+        "x-module-gate": "feature:whatsapp"
+      }
+    },
     "/api/organization/whatsapp/internal/conversations": {
       "get": {
         "tags": [
@@ -5481,6 +6270,355 @@
         "x-module-gate": "feature:whatsapp"
       }
     },
+    "/api/organization/whatsapp/internal/conversations/{id}/transfer-options/teams": {
+      "get": {
+        "tags": [
+          "WhatsApp Business inboxes"
+        ],
+        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "enum": [
+                10,
+                20,
+                50,
+                100
+              ],
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTransferTeamResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTransferTeamResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTransferTeamResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found; WhatsApp.Team.NotFound; WhatsApp.Conversation.NotFound",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "WhatsApp.Team.NotFound.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 404,
+                      "detail": "No encontramos ese equipo.",
+                      "code": "WhatsApp.Team.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "WhatsApp.Team.NotFound.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 404,
+                      "detail": "We couldn't find that team.",
+                      "code": "WhatsApp.Team.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "WhatsApp.Conversation.NotFound.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 404,
+                      "detail": "No encontramos esa conversación.",
+                      "code": "WhatsApp.Conversation.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "WhatsApp.Conversation.NotFound.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 404,
+                      "detail": "We couldn't find that conversation.",
+                      "code": "WhatsApp.Conversation.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ],
+        "x-error-codes": [
+          {
+            "status": 404,
+            "code": "WhatsApp.Team.NotFound",
+            "field": null,
+            "es": "No encontramos ese equipo.",
+            "en": "We couldn't find that team."
+          },
+          {
+            "status": 404,
+            "code": "WhatsApp.Conversation.NotFound",
+            "field": null,
+            "es": "No encontramos esa conversación.",
+            "en": "We couldn't find that conversation."
+          }
+        ],
+        "x-access": "business",
+        "x-permissions": [
+          "whatsapp.internal"
+        ],
+        "x-module-gate": "feature:whatsapp"
+      }
+    },
+    "/api/organization/whatsapp/internal/conversations/{id}/transfer-options/people": {
+      "get": {
+        "tags": [
+          "WhatsApp Business inboxes"
+        ],
+        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "enum": [
+                10,
+                20,
+                50,
+                100
+              ],
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTransferPersonResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTransferPersonResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTransferPersonResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found; WhatsApp.Conversation.NotFound",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "WhatsApp.Conversation.NotFound.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 404,
+                      "detail": "No encontramos esa conversación.",
+                      "code": "WhatsApp.Conversation.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "WhatsApp.Conversation.NotFound.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 404,
+                      "detail": "We couldn't find that conversation.",
+                      "code": "WhatsApp.Conversation.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ],
+        "x-error-codes": [
+          {
+            "status": 404,
+            "code": "WhatsApp.Conversation.NotFound",
+            "field": null,
+            "es": "No encontramos esa conversación.",
+            "en": "We couldn't find that conversation."
+          }
+        ],
+        "x-access": "business",
+        "x-permissions": [
+          "whatsapp.internal"
+        ],
+        "x-module-gate": "feature:whatsapp"
+      }
+    },
     "/api/platform/whatsapp/conversations": {
       "get": {
         "tags": [
@@ -7077,6 +8215,355 @@
             "field": "templateId",
             "es": "Meta todavía no aprobó esa plantilla.",
             "en": "Meta has not approved that template yet."
+          }
+        ],
+        "x-access": "platform",
+        "x-permissions": [
+          "platform.whatsapp.attend"
+        ],
+        "x-module-gate": "installed-management"
+      }
+    },
+    "/api/platform/whatsapp/conversations/{id}/transfer-options/teams": {
+      "get": {
+        "tags": [
+          "WhatsApp Platform inquiries"
+        ],
+        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "enum": [
+                10,
+                20,
+                50,
+                100
+              ],
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTransferTeamResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTransferTeamResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTransferTeamResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found; WhatsApp.Team.NotFound; WhatsApp.Conversation.NotFound",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "WhatsApp.Team.NotFound.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 404,
+                      "detail": "No encontramos ese equipo.",
+                      "code": "WhatsApp.Team.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "WhatsApp.Team.NotFound.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 404,
+                      "detail": "We couldn't find that team.",
+                      "code": "WhatsApp.Team.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "WhatsApp.Conversation.NotFound.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 404,
+                      "detail": "No encontramos esa conversación.",
+                      "code": "WhatsApp.Conversation.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "WhatsApp.Conversation.NotFound.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 404,
+                      "detail": "We couldn't find that conversation.",
+                      "code": "WhatsApp.Conversation.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ],
+        "x-error-codes": [
+          {
+            "status": 404,
+            "code": "WhatsApp.Team.NotFound",
+            "field": null,
+            "es": "No encontramos ese equipo.",
+            "en": "We couldn't find that team."
+          },
+          {
+            "status": 404,
+            "code": "WhatsApp.Conversation.NotFound",
+            "field": null,
+            "es": "No encontramos esa conversación.",
+            "en": "We couldn't find that conversation."
+          }
+        ],
+        "x-access": "platform",
+        "x-permissions": [
+          "platform.whatsapp.attend"
+        ],
+        "x-module-gate": "installed-management"
+      }
+    },
+    "/api/platform/whatsapp/conversations/{id}/transfer-options/people": {
+      "get": {
+        "tags": [
+          "WhatsApp Platform inquiries"
+        ],
+        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "enum": [
+                10,
+                20,
+                50,
+                100
+              ],
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTransferPersonResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTransferPersonResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTransferPersonResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found; WhatsApp.Conversation.NotFound",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "WhatsApp.Conversation.NotFound.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 404,
+                      "detail": "No encontramos esa conversación.",
+                      "code": "WhatsApp.Conversation.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "WhatsApp.Conversation.NotFound.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 404,
+                      "detail": "We couldn't find that conversation.",
+                      "code": "WhatsApp.Conversation.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ],
+        "x-error-codes": [
+          {
+            "status": 404,
+            "code": "WhatsApp.Conversation.NotFound",
+            "field": null,
+            "es": "No encontramos esa conversación.",
+            "en": "We couldn't find that conversation."
           }
         ],
         "x-access": "platform",
@@ -8763,17 +10250,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTemplateResponse"
+                  "$ref": "#/components/schemas/WhatsAppTemplateListResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTemplateResponse"
+                  "$ref": "#/components/schemas/WhatsAppTemplateListResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTemplateResponse"
+                  "$ref": "#/components/schemas/WhatsAppTemplateListResponse"
                 }
               }
             }
@@ -9602,17 +11089,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTemplateResponse"
+                  "$ref": "#/components/schemas/WhatsAppTemplateListResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTemplateResponse"
+                  "$ref": "#/components/schemas/WhatsAppTemplateListResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedResultOfWhatsAppTemplateResponse"
+                  "$ref": "#/components/schemas/WhatsAppTemplateListResponse"
                 }
               }
             }
@@ -10384,6 +11871,85 @@
         "x-module-gate": "installed-management"
       }
     },
+    "/api/organization/whatsapp/untaken": {
+      "get": {
+        "tags": [
+          "WhatsApp Business inboxes"
+        ],
+        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhatsAppUntakenResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhatsAppUntakenResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhatsAppUntakenResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ],
+        "x-error-codes": [ ],
+        "x-access": "business",
+        "x-permissions": [ ],
+        "x-module-gate": "feature:whatsapp"
+      }
+    },
     "/api/me/whatsapp/conversations": {
       "get": {
         "tags": [
@@ -10656,7 +12222,7 @@
         "x-module-gate": "feature:whatsapp"
       }
     },
-    "/api/me/whatsapp/links/{id}": {
+    "/api/me/whatsapp/conversations/{id}/link": {
       "delete": {
         "tags": [
           "WhatsApp Personal"
@@ -69347,6 +70913,23 @@
           }
         }
       },
+      "HomeModuleCard": {
+        "required": [
+          "key",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "description": "La tarjeta de un módulo prendido (por ejemplo «WhatsApp · 2 números»): el front arma el texto con la clave."
+      },
       "HomeOrganizationSummary": {
         "type": "object",
         "properties": {
@@ -69469,6 +71052,16 @@
             ],
             "items": {
               "$ref": "#/components/schemas/PendingGroup"
+            }
+          },
+          "moduleCards": {
+            "maxItems": 10,
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/HomeModuleCard"
             }
           }
         },
@@ -71825,6 +73418,86 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/WhatsAppTemplateResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hasPrevious": {
+            "type": "boolean"
+          },
+          "hasNext": {
+            "type": "boolean"
+          }
+        },
+        "description": "Representa una página y el total de resultados para que el consumidor pueda mostrar navegación anterior y siguiente."
+      },
+      "PagedResultOfWhatsAppTransferPersonResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WhatsAppTransferPersonResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hasPrevious": {
+            "type": "boolean"
+          },
+          "hasNext": {
+            "type": "boolean"
+          }
+        },
+        "description": "Representa una página y el total de resultados para que el consumidor pueda mostrar navegación anterior y siguiente."
+      },
+      "PagedResultOfWhatsAppTransferTeamResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WhatsAppTransferTeamResponse"
             }
           },
           "page": {
@@ -76325,6 +77998,22 @@
           }
         }
       },
+      "WhatsAppBroadcastListResponse": {
+        "required": [
+          "broadcasts",
+          "scheduled"
+        ],
+        "type": "object",
+        "properties": {
+          "broadcasts": {
+            "$ref": "#/components/schemas/PagedResultOfWhatsAppBroadcastResponse"
+          },
+          "scheduled": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "WhatsAppBroadcastResponse": {
         "required": [
           "id",
@@ -76741,6 +78430,7 @@
         "required": [
           "id",
           "displayNumber",
+          "tags",
           "lastMessageAtUtc",
           "unread",
           "linkedToAccount",
@@ -76763,6 +78453,13 @@
               }
             ]
           },
+          "contactId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
           "contactName": {
             "type": [
               "null",
@@ -76771,6 +78468,14 @@
           },
           "displayNumber": {
             "type": "string"
+          },
+          "tags": {
+            "maxItems": 10,
+            "type": "array",
+            "items": {
+              "maxLength": 40,
+              "type": "string"
+            }
           },
           "lastMessagePreview": {
             "type": [
@@ -76831,6 +78536,33 @@
           }
         },
         "description": "Una fila de la bandeja. El teléfono es el del cliente de la organización; la ventana de 24 h se mide desde su último mensaje."
+      },
+      "WhatsAppImportPreviewResponse": {
+        "required": [
+          "rows",
+          "new",
+          "updated",
+          "rejected"
+        ],
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "new": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "updated": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rejected": {
+            "$ref": "#/components/schemas/PagedResultOfWhatsAppImportRejectionResponse"
+          }
+        },
+        "description": "Lo que haría la importación, sin guardar: filas nuevas, actualizadas y rechazadas."
       },
       "WhatsAppImportRejectionResponse": {
         "required": [
@@ -76905,12 +78637,17 @@
       },
       "WhatsAppNumberListResponse": {
         "required": [
-          "numbers"
+          "numbers",
+          "paymentMissing"
         ],
         "type": "object",
         "properties": {
           "numbers": {
             "$ref": "#/components/schemas/PagedResultOfWhatsAppNumberResponse"
+          },
+          "paymentMissing": {
+            "type": "integer",
+            "format": "int32"
           },
           "signup": {
             "oneOf": [
@@ -76922,7 +78659,8 @@
               }
             ]
           }
-        }
+        },
+        "description": "La lista de números, cuántos no tienen medio de pago y los datos del alta."
       },
       "WhatsAppNumberResponse": {
         "required": [
@@ -77297,11 +79035,28 @@
           "string"
         ]
       },
+      "WhatsAppTemplateListResponse": {
+        "required": [
+          "templates",
+          "approved"
+        ],
+        "type": "object",
+        "properties": {
+          "templates": {
+            "$ref": "#/components/schemas/PagedResultOfWhatsAppTemplateResponse"
+          },
+          "approved": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "WhatsAppTemplateOptionResponse": {
         "required": [
           "templateId",
           "name",
           "category",
+          "body",
           "variables",
           "estimatedCost"
         ],
@@ -77316,6 +79071,9 @@
           },
           "category": {
             "$ref": "#/components/schemas/WhatsAppTemplateCategory"
+          },
+          "body": {
+            "type": "string"
           },
           "variables": {
             "maxItems": 10,
@@ -77416,6 +79174,70 @@
             ]
           }
         }
+      },
+      "WhatsAppTransferPersonResponse": {
+        "required": [
+          "id",
+          "name",
+          "takenCount"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "takenCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "description": "Una persona del equipo del chat a la que se le puede pasar, con los chats que ya tiene tomados."
+      },
+      "WhatsAppTransferTeamResponse": {
+        "required": [
+          "id",
+          "name",
+          "memberCount"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "memberCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "description": "Un equipo al que se puede pasar el chat, con la cantidad de personas."
+      },
+      "WhatsAppUntakenResponse": {
+        "type": "object",
+        "properties": {
+          "customers": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "internal": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          }
+        },
+        "description": "Los sin tomar de cada bandeja que la persona puede ver; null en la que no tiene permiso."
       },
       "WhatsAppWebhookHttpRequest": {
         "type": "object",

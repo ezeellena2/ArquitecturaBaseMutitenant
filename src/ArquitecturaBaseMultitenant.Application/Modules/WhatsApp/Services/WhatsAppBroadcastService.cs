@@ -9,8 +9,14 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 
 internal sealed class WhatsAppBroadcastService(TimeProvider clock, ILogger<WhatsAppBroadcastService> logger) : IWhatsAppBroadcastService
 {
-    public Task<Result<PagedResult<WhatsAppBroadcastResponse>>> ListAsync(WhatsAppBroadcastListRequest request, CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, clock, "WhatsAppBroadcastList", () => Task.FromResult(Result.Failure<PagedResult<WhatsAppBroadcastResponse>>(ContractErrors.NotImplemented)));
+    public Task<Result<WhatsAppBroadcastListResponse>> ListAsync(WhatsAppBroadcastListRequest request, CancellationToken cancellationToken) =>
+        OperationLog.RunAsync(logger, clock, "WhatsAppBroadcastList", () => Task.FromResult(Result.Failure<WhatsAppBroadcastListResponse>(ContractErrors.NotImplemented)));
+
+    public Task<Result<PagedResult<WhatsAppTemplateOptionResponse>>> ListTemplateOptionsAsync(WhatsAppTemplateOptionListRequest request, CancellationToken cancellationToken) =>
+        OperationLog.RunAsync(logger, clock, "WhatsAppBroadcastListTemplateOptions", () => Task.FromResult(Result.Failure<PagedResult<WhatsAppTemplateOptionResponse>>(ContractErrors.NotImplemented)));
+
+    public Task<Result<PagedResult<string>>> ListTagsAsync(WhatsAppTagListRequest request, CancellationToken cancellationToken) =>
+        OperationLog.RunAsync(logger, clock, "WhatsAppBroadcastListTags", () => Task.FromResult(Result.Failure<PagedResult<string>>(ContractErrors.NotImplemented)));
 
     public Task<Result<WhatsAppBroadcastDetailResponse>> GetAsync(Guid id, WhatsAppBroadcastDetailRequest request, CancellationToken cancellationToken) =>
         OperationLog.RunAsync(logger, clock, "WhatsAppBroadcastGet", () => Task.FromResult(Result.Failure<WhatsAppBroadcastDetailResponse>(ContractErrors.NotImplemented)));

@@ -23,6 +23,7 @@ public sealed partial class ExplicitRouteInventoryTests
             "GET /api/organization/whatsapp/contacts/{id:guid}/broadcasts",
             "GET /api/organization/whatsapp/contacts/tags",
             "GET /api/organization/whatsapp/contacts/import-sample",
+            "POST /api/organization/whatsapp/contacts/import/preview",
             "POST /api/organization/whatsapp/contacts/import",
             "GET /api/organization/whatsapp/templates",
             "POST /api/organization/whatsapp/templates",
@@ -32,6 +33,8 @@ public sealed partial class ExplicitRouteInventoryTests
             "GET /api/organization/whatsapp/broadcasts",
             "POST /api/organization/whatsapp/broadcasts",
             "GET /api/organization/whatsapp/broadcasts/estimate",
+            "GET /api/organization/whatsapp/broadcasts/template-options",
+            "GET /api/organization/whatsapp/broadcasts/tags",
             "GET /api/organization/whatsapp/broadcasts/{id:guid}",
             "POST /api/organization/whatsapp/broadcasts/{id:guid}/cancel",
             "POST /api/organization/whatsapp/broadcasts/{id:guid}/duplicate",
@@ -50,7 +53,8 @@ public sealed partial class ExplicitRouteInventoryTests
             "POST /api/platform/whatsapp/templates/{id:guid}/duplicate",
             "GET /api/me/whatsapp/conversations",
             "GET /api/me/whatsapp/conversations/{id:guid}",
-            "DELETE /api/me/whatsapp/links/{id:guid}",
+            "DELETE /api/me/whatsapp/conversations/{id:guid}/link",
+            "GET /api/organization/whatsapp/untaken",
         ]);
         foreach (var prefix in new[] { "/api/organization/whatsapp/teams", "/api/platform/whatsapp/teams" })
             routes.AddRange(
@@ -72,6 +76,8 @@ public sealed partial class ExplicitRouteInventoryTests
                 $"POST {prefix}/conversations/{{id:guid}}/transfer",
                 $"GET {prefix}/conversations/{{id:guid}}/template-options",
                 $"POST {prefix}/conversations/{{id:guid}}/templates",
+                $"GET {prefix}/conversations/{{id:guid}}/transfer-options/teams",
+                $"GET {prefix}/conversations/{{id:guid}}/transfer-options/people",
             ]);
     }
 }

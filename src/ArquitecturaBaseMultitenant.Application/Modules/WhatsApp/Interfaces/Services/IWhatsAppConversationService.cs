@@ -16,4 +16,7 @@ public interface IWhatsAppConversationService
     Task<Result<WhatsAppConversationRowResponse>> TransferAsync(WhatsAppInbox? inbox, Guid id, TransferWhatsAppConversationRequest request, CancellationToken cancellationToken);
     Task<Result<PagedResult<WhatsAppTemplateOptionResponse>>> ListTemplateOptionsAsync(WhatsAppInbox? inbox, Guid id, WhatsAppTemplateOptionListRequest request, CancellationToken cancellationToken);
     Task<Result<WhatsAppChatMessageResponse>> SendTemplateAsync(WhatsAppInbox? inbox, Guid id, SendWhatsAppTemplateRequest request, CancellationToken cancellationToken);
+    Task<Result<PagedResult<WhatsAppTransferTeamResponse>>> ListTransferTeamsAsync(WhatsAppInbox? inbox, Guid id, WhatsAppTransferOptionListRequest request, CancellationToken cancellationToken);
+    Task<Result<PagedResult<WhatsAppTransferPersonResponse>>> ListTransferPeopleAsync(WhatsAppInbox? inbox, Guid id, WhatsAppTransferOptionListRequest request, CancellationToken cancellationToken);
+    Task<Result<WhatsAppUntakenResponse>> GetUntakenAsync(CancellationToken cancellationToken);
 }

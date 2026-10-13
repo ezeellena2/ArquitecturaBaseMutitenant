@@ -26,7 +26,7 @@ namespace ArquitecturaBaseMultitenant.Api.Modules.WhatsApp.Controllers;
 public sealed class OrganizationWhatsAppTemplatesController(IWhatsAppTemplateService service) : ControllerBase
 {
     [HttpGet]
-    [ProducesResponseType<PagedResult<WhatsAppTemplateResponse>>(200)]
+    [ProducesResponseType<WhatsAppTemplateListResponse>(200)]
     [ProducesProblem(400)]
     [ProducesProblem(401)]
     [ProducesProblem(403)]
@@ -100,7 +100,7 @@ public sealed class OrganizationWhatsAppTemplatesController(IWhatsAppTemplateSer
 public sealed class PlatformWhatsAppTemplatesController(IWhatsAppTemplateService service) : ControllerBase
 {
     [HttpGet]
-    [ProducesResponseType<PagedResult<WhatsAppTemplateResponse>>(200)]
+    [ProducesResponseType<WhatsAppTemplateListResponse>(200)]
     [ProducesProblem(400)]
     [ProducesProblem(401)]
     [ProducesProblem(403)]

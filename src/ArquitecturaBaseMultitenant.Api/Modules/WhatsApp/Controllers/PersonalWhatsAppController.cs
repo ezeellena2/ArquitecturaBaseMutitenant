@@ -49,7 +49,7 @@ public sealed class PersonalWhatsAppController(IPersonalWhatsAppService service)
             PageSize = query.PageSize ?? PagedRequest.DefaultPageSize,
         }, cancellationToken)).ToActionResult(this);
 
-    [HttpDelete("links/{id:guid}")]
+    [HttpDelete("conversations/{id:guid}/link")]
     [ProducesResponseType(204)]
     [ProducesProblem(401)]
     [ProducesProblem(403)]

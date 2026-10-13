@@ -41,10 +41,15 @@ public sealed record WhatsAppImportRejectionResponse(int Row, string Reason);
 
 public sealed record WhatsAppImportResponse(int Imported, int Updated, PagedResult<WhatsAppImportRejectionResponse> Rejected);
 
+/// <summary>Lo que haría la importación, sin guardar: filas nuevas, actualizadas y rechazadas.</summary>
+public sealed record WhatsAppImportPreviewResponse(int Rows, int New, int Updated, PagedResult<WhatsAppImportRejectionResponse> Rejected);
+
 public sealed record WhatsAppTemplateResponse(Guid Id, string Name, WhatsAppTemplateCategory Category, string Language, string Body,
     IReadOnlyList<string> Variables, WhatsAppTemplateStatus Status, string? RejectionReason, bool IsSystem, DateTime UpdatedAtUtc, uint Version);
 
 public enum WhatsAppTemplateGroup { Consultations, System }
+
+public sealed record WhatsAppTemplateListResponse(PagedResult<WhatsAppTemplateResponse> Templates, int Approved);
 
 public sealed record WhatsAppTemplateListRequest : PagedRequest
 {
@@ -68,6 +73,8 @@ public sealed record WhatsAppBroadcastResponse(Guid Id, string Name, WhatsAppRef
     int Unsubscribed, int Failed, Money EstimatedCost, uint Version);
 
 public sealed record WhatsAppBroadcastListRequest : PagedRequest;
+
+public sealed record WhatsAppBroadcastListResponse(PagedResult<WhatsAppBroadcastResponse> Broadcasts, int Scheduled);
 
 public sealed record WhatsAppRecipientResponse(Guid ContactId, string? ContactName, string DisplayNumber, WhatsAppRecipientStatus Status,
     string? FailureReason, DateTime ChangedAtUtc);

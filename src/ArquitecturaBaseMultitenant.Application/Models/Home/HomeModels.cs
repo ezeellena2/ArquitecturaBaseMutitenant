@@ -7,11 +7,16 @@ namespace ArquitecturaBaseMultitenant.Application.Models.Home;
 /// solo tiene roles en empresas ve «Tus empresas». Debajo, «Para resolver».
 /// </summary>
 public sealed record HomeResponse(HomeOrganizationSummary? Organization, IReadOnlyList<HomeCompanyCard> Companies,
-    [property: MaxLength(HomeResponse.LegacyPendingLimit)] IReadOnlyList<PendingItem> Pending, IReadOnlyList<PendingGroup>? PendingGroups = null)
+    [property: MaxLength(HomeResponse.LegacyPendingLimit)] IReadOnlyList<PendingItem> Pending, IReadOnlyList<PendingGroup>? PendingGroups = null,
+    [property: MaxLength(HomeResponse.ModuleCardLimit)] IReadOnlyList<HomeModuleCard>? ModuleCards = null)
 {
     /// <summary>La lista plana anterior quedó vacía: «Para resolver» va en <see cref="PendingGroups"/>.</summary>
     public const int LegacyPendingLimit = 0;
+    public const int ModuleCardLimit = 10;
 }
+
+/// <summary>La tarjeta de un módulo prendido (por ejemplo «WhatsApp · 2 números»): el front arma el texto con la clave.</summary>
+public sealed record HomeModuleCard(string Key, int Total);
 
 /// <summary>Un tipo de pendiente y su ámbito: total real y primeras filas ordenadas en SQL.</summary>
 public sealed record PendingGroup(string Area, string Kind, int TotalCount,

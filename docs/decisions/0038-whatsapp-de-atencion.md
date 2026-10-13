@@ -81,6 +81,7 @@ Lo decidió el dueño del producto con los datos de Meta verificados ese día ([
 - **Permisos:** son de organización, no por empresa. Solo el Dueño los recibe de entrada. «Atender clientes» incluye ver, editar e importar contactos y cambiar el consentimiento a mano.
 - **Retención:** el texto de los chats se guarda mientras exista el contacto (en Plataforma, la conversación) y se borra con él. Apagar el módulo no borra.
 - **Aviso por correo:** uno por equipo cuando el chat más viejo sin tomar pasa el tiempo elegido; no se repite hasta que la bandeja se vacía y vuelve a llenarse. Se puede elegir «No avisar».
+- **Bot:** no se apaga; con un número conectado siempre responde.
 - **Archivos de los clientes:** en la Etapa 11 se ve «Mandó una foto/audio/documento», sin descarga, que llega con la Etapa 14. Desconectar un número deja sus chats para leer, sin responder.
 
 ## Alternativas descartadas

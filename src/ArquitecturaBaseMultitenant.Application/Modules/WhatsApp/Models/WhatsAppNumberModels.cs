@@ -13,7 +13,8 @@ public sealed record WhatsAppNumberResponse(Guid Id, string DisplayNumber, strin
     WhatsAppNumberStatus Status, bool Coexistence, int ServiceMessagesThisMonth, int FreeServiceMessages, int ChargedServiceMessagesThisMonth,
     DateTime ConnectedAtUtc, uint Version);
 
-public sealed record WhatsAppNumberListResponse(PagedResult<WhatsAppNumberResponse> Numbers, WhatsAppSignupConfigResponse? Signup);
+/// <summary>La lista de números, cuántos no tienen medio de pago y los datos del alta.</summary>
+public sealed record WhatsAppNumberListResponse(PagedResult<WhatsAppNumberResponse> Numbers, int PaymentMissing, WhatsAppSignupConfigResponse? Signup);
 
 public sealed record WhatsAppNumberListRequest : PagedRequest;
 

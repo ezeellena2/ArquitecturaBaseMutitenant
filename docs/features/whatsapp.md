@@ -17,7 +17,7 @@ El núcleo conoce capacidades de canales, Phone y puertos neutrales; no compara 
 El [plan de la E11](../plans/2026-10-13-etapa-11-whatsapp.md) publica las rutas de atención; mientras su tarea no las implementa, responden 501 `General.Contract.NotImplemented` detrás de su acceso, permiso y módulo.
 - **Organización** (`[FeatureGate("whatsapp")]`): las bandejas van separadas por permiso, `/api/organization/whatsapp/customers/conversations` con `whatsapp.customers` y `/api/organization/whatsapp/internal/conversations` con `whatsapp.internal`. `/api/organization/whatsapp/contacts` usa `whatsapp.customers`; `/api/organization/whatsapp/broadcasts`, `whatsapp.broadcasts`; `/api/organization/whatsapp/numbers`, `/api/organization/whatsapp/teams` y `/api/organization/whatsapp/templates`, `whatsapp.manage`. `/api/organization/whatsapp/phone-imports` («Cargar teléfonos») usa `users.invite`.
 - **Plataforma** (ruta instalada del módulo): `/api/platform/whatsapp/number`, `/api/platform/whatsapp/bot`, `/api/platform/whatsapp/teams` y `/api/platform/whatsapp/templates` con `platform.whatsapp.manage`; `/api/platform/whatsapp/conversations` con `platform.whatsapp.attend`.
-- **Persona:** `/api/me/whatsapp/conversations`, «Mensajes» de solo lectura, y `/api/me/whatsapp/links/{id}` para desvincular.
+- **Persona:** `/api/me/whatsapp/conversations`, «Mensajes» de solo lectura, y `/api/me/whatsapp/conversations/{id}/link` para desvincular.
 - **Permisos de entrada (D3):** solo el Dueño recibe los cuatro de organización. La migración `20261013222720_WhatsAppAttentionPermissions` los agrega a los Dueños existentes y suma los dos de Plataforma a las asignaciones con `platform.operators.manage`, con su `SecurityEvent`.
 
 ## Entrada durable y entrega

@@ -14,5 +14,6 @@ public interface IWhatsAppContactService
     Task<Result<WhatsAppContactResponse>> UpdateAsync(Guid id, UpdateWhatsAppContactRequest request, CancellationToken cancellationToken);
     Task<Result<PagedResult<string>>> ListTagsAsync(WhatsAppTagListRequest request, CancellationToken cancellationToken);
     Task<Result<WhatsAppFileResponse>> GetImportSampleAsync(CancellationToken cancellationToken);
+    Task<Result<WhatsAppImportPreviewResponse>> PreviewImportAsync(ImportWhatsAppContactsRequest request, CancellationToken cancellationToken);
     Task<Result<WhatsAppImportResponse>> ImportAsync(ImportWhatsAppContactsRequest request, CancellationToken cancellationToken);
 }

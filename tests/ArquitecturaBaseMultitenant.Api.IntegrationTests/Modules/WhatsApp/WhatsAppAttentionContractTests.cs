@@ -31,7 +31,8 @@ public sealed class WhatsAppAttentionContractTests(ApiFactory factory)
                 var access = operation!["x-access"]!.GetValue<string>();
                 Assert.Equal(path.StartsWith("/api/me/", StringComparison.Ordinal) ? "consumer" : path.StartsWith("/api/platform/", StringComparison.Ordinal) ? "platform" : "business", access);
                 var permissions = operation["x-permissions"]!.AsArray().Select(value => value!.GetValue<string>()).ToArray();
-                if (access == "consumer") Assert.Empty(permissions);
+                // El contador del menú suma las bandejas que la persona puede ver: no declara un permiso único.
+                if (access == "consumer" || path == "/api/organization/whatsapp/untaken") Assert.Empty(permissions);
                 else Assert.Single(permissions);
                 Assert.Equal(access == "platform" ? "installed-management" : "feature:" + WhatsAppFeature.Key, operation["x-module-gate"]!.GetValue<string>());
                 Assert.NotNull(operation["x-error-codes"]);

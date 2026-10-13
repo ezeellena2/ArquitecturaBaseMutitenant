@@ -30,6 +30,9 @@ internal sealed class WhatsAppContactService(TimeProvider clock, ILogger<WhatsAp
     public Task<Result<WhatsAppFileResponse>> GetImportSampleAsync(CancellationToken cancellationToken) =>
         OperationLog.RunAsync(logger, clock, "WhatsAppContactGetImportSample", () => Task.FromResult(Result.Failure<WhatsAppFileResponse>(ContractErrors.NotImplemented)));
 
+    public Task<Result<WhatsAppImportPreviewResponse>> PreviewImportAsync(ImportWhatsAppContactsRequest request, CancellationToken cancellationToken) =>
+        OperationLog.RunAsync(logger, clock, "WhatsAppContactPreviewImport", () => Task.FromResult(Result.Failure<WhatsAppImportPreviewResponse>(ContractErrors.NotImplemented)));
+
     public Task<Result<WhatsAppImportResponse>> ImportAsync(ImportWhatsAppContactsRequest request, CancellationToken cancellationToken) =>
         OperationLog.RunAsync(logger, clock, "WhatsAppContactImport", () => Task.FromResult(Result.Failure<WhatsAppImportResponse>(ContractErrors.NotImplemented)));
 }

@@ -22,6 +22,7 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
         ("WhatsAppBotSchedule", "days", 7), ("WhatsAppBotScheduleInput", "days", 7),
         ("UpdateWhatsAppBotHttpRequest", "menu", WhatsAppFeature.MaxMenuOptions), ("UpdatePlatformWhatsAppBotHttpRequest", "menu", WhatsAppFeature.MaxMenuOptions),
         ("WhatsAppContactResponse", "tags", WhatsAppFeature.MaxContactTags), ("UpdateWhatsAppContactHttpRequest", "tags", WhatsAppFeature.MaxContactTags),
+        ("WhatsAppConversationRowResponse", "tags", WhatsAppFeature.MaxContactTags),
         ("WhatsAppTemplateResponse", "variables", WhatsAppFeature.MaxTemplateVariables), ("WhatsAppTemplateOptionResponse", "variables", WhatsAppFeature.MaxTemplateVariables),
         ("SendWhatsAppTemplateHttpRequest", "variables", WhatsAppFeature.MaxTemplateVariables), ("CreateWhatsAppTemplateHttpRequest", "variables", WhatsAppFeature.MaxTemplateVariables),
         ("CreateWhatsAppBroadcastHttpRequest", "variables", WhatsAppFeature.MaxTemplateVariables),
@@ -43,7 +44,7 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
                 if (Property(schemas, schema, property) is { } value) value.MaxItems = maxItems;
             foreach (var (schema, property, maxLength) in Lengths)
                 if (Property(schemas, schema, property) is { } value) value.MaxLength = maxLength;
-            foreach (var (schema, property) in new[] { ("UpdateWhatsAppContactHttpRequest", "tags"), ("WhatsAppContactResponse", "tags") })
+            foreach (var (schema, property) in new[] { ("UpdateWhatsAppContactHttpRequest", "tags"), ("WhatsAppContactResponse", "tags"), ("WhatsAppConversationRowResponse", "tags") })
                 if (Property(schemas, schema, property)?.Items is OpenApiSchema item) item.MaxLength = WhatsAppTextLimits.Tag;
             foreach (var schema in new[] { "SendWhatsAppTemplateHttpRequest", "CreateWhatsAppBroadcastHttpRequest" })
                 if (Property(schemas, schema, "variables")?.Items is OpenApiSchema item) item.MaxLength = WhatsAppTextLimits.TemplateVariable;
@@ -73,6 +74,8 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
     private static string? Permission(string path) => path switch
     {
         _ when path.StartsWith("/api/me/", StringComparison.Ordinal) => null,
+        // El contador del menú cuenta solo las bandejas que la persona puede ver; no declara un permiso único.
+        "/api/organization/whatsapp/untaken" => null,
         _ when path.StartsWith("/api/platform/whatsapp/conversations", StringComparison.Ordinal) => PlatformPermissions.WhatsApp.Attend,
         _ when path.StartsWith("/api/platform/", StringComparison.Ordinal) => PlatformPermissions.WhatsApp.Manage,
         _ when path.StartsWith("/api/organization/whatsapp/customers", StringComparison.Ordinal) => Permissions.WhatsApp.Customers,
@@ -124,9 +127,8 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
             if (path.EndsWith("/templates", StringComparison.Ordinal)) Add(409, WhatsAppErrors.TemplateNotApprovedCode, "templateId");
             if (path.EndsWith("/transfer", StringComparison.Ordinal)) Add(404, WhatsAppErrors.TeamNotFoundCode);
         }
-        if (path.StartsWith("/api/me/whatsapp/links/", StringComparison.Ordinal)) Add(404, WhatsAppErrors.LinkNotFoundCode);
         if (path.Contains("/contacts/{id}", StringComparison.Ordinal)) Add(404, WhatsAppErrors.ContactNotFoundCode);
-        if (path.EndsWith("/contacts/import", StringComparison.Ordinal))
+        if (path.EndsWith("/contacts/import", StringComparison.Ordinal) || path.EndsWith("/contacts/import/preview", StringComparison.Ordinal))
         {
             Add(400, WhatsAppErrors.ImportInvalidFileCode, "file");
             Add(400, WhatsAppErrors.ImportTooManyRowsCode, "file");

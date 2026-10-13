@@ -25,7 +25,7 @@ namespace ArquitecturaBaseMultitenant.Api.Modules.WhatsApp.Controllers;
 public sealed class OrganizationWhatsAppBroadcastsController(IWhatsAppBroadcastService service) : ControllerBase
 {
     [HttpGet]
-    [ProducesResponseType<PagedResult<WhatsAppBroadcastResponse>>(200)]
+    [ProducesResponseType<WhatsAppBroadcastListResponse>(200)]
     [ProducesProblem(400)]
     [ProducesProblem(401)]
     [ProducesProblem(403)]
@@ -33,6 +33,36 @@ public sealed class OrganizationWhatsAppBroadcastsController(IWhatsAppBroadcastS
     [ProducesProblem(500)]
     public async Task<IActionResult> List([FromQuery] WhatsAppPagedHttpQuery query, CancellationToken cancellationToken) =>
         (await service.ListAsync(new WhatsAppBroadcastListRequest
+        {
+            Page = query.Page ?? PagedRequest.DefaultPage,
+            PageSize = query.PageSize ?? PagedRequest.DefaultPageSize,
+            Search = query.Search,
+        }, cancellationToken)).ToActionResult(this);
+
+    [HttpGet("template-options")]
+    [ProducesResponseType<PagedResult<WhatsAppTemplateOptionResponse>>(200)]
+    [ProducesProblem(400)]
+    [ProducesProblem(401)]
+    [ProducesProblem(403)]
+    [ProducesProblem(404)]
+    [ProducesProblem(500)]
+    public async Task<IActionResult> ListTemplateOptions([FromQuery] WhatsAppPagedHttpQuery query, CancellationToken cancellationToken) =>
+        (await service.ListTemplateOptionsAsync(new WhatsAppTemplateOptionListRequest
+        {
+            Page = query.Page ?? PagedRequest.DefaultPage,
+            PageSize = query.PageSize ?? PagedRequest.DefaultPageSize,
+            Search = query.Search,
+        }, cancellationToken)).ToActionResult(this);
+
+    [HttpGet("tags")]
+    [ProducesResponseType<PagedResult<string>>(200)]
+    [ProducesProblem(400)]
+    [ProducesProblem(401)]
+    [ProducesProblem(403)]
+    [ProducesProblem(404)]
+    [ProducesProblem(500)]
+    public async Task<IActionResult> ListTags([FromQuery] WhatsAppPagedHttpQuery query, CancellationToken cancellationToken) =>
+        (await service.ListTagsAsync(new WhatsAppTagListRequest
         {
             Page = query.Page ?? PagedRequest.DefaultPage,
             PageSize = query.PageSize ?? PagedRequest.DefaultPageSize,
