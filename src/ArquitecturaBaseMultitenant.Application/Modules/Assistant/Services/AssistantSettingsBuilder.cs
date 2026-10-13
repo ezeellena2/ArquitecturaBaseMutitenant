@@ -25,7 +25,8 @@ internal sealed class AssistantSettingsBuilder(IAssistantSettingsReader settings
             policy.AllowOwnKey, (await owners.ListActiveVerifiedEmailRecipientsAsync(tenantId, ct)).Count > 0,
             platform.RetentionDays,
             mode == AssistantMode.PlatformKey ? platform.HasKey : organization!.HasKey,
-            mode == AssistantMode.PlatformKey ? platform.MaskedKeySuffix : organization!.MaskedKeySuffix,
+            // The platform key belongs to Platform: an organization only learns whether it is configured.
+            mode == AssistantMode.PlatformKey ? null : organization!.MaskedKeySuffix,
             organization?.Version ?? 0, platformModels, ownModels);
     }
 }
