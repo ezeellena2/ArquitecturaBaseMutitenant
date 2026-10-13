@@ -426,17 +426,19 @@ Se dibujan en el lienzo vigente, de a una, con opciones y tu aprobación. Arquit
 - estados con color y palabra corta, y el detalle en ⓘ;
 - el teléfono es una app.
 
+Los tableros nuevos llevan el prefijo `FRM-`, como `WA-` en WhatsApp, para no confundirlos con `Criterio-Formularios`, que trata de los campos de un formulario de pantalla. El texto para el chat de Diseño está en [e12-texto-diseno.md](e12-texto-diseno.md).
+
 | Tablero | Qué muestra | Estados |
 | --- | --- | --- |
-| `Formularios` y `M-Formularios` | listado: nombre, prefijo, estado y última publicación; ⋮; «Nuevo formulario» | vacío, sin resultados, cargando, error; filtro Todos, Publicados y Borradores |
-| `Formularios-Nuevo` | diálogo con el nombre | prefijo propuesto |
-| `Formulario` y `M-Formulario` | ficha con pestañas: **Preguntas** (lista, «Agregar pregunta», subir y bajar, vista previa del teléfono al costado), **Inglés** (los textos en inglés al lado del original, con lo que falta marcado) y **Publicación** (versión activa, estado y vista previa oficial) | guardado, guardando, no se guardó, conflicto (409) |
-| `Formulario-Pregunta` | diálogo: tipo, texto y ayuda es/en, obligatoria, largo máximo, decimales u opciones | cada uno de los seis tipos |
-| `Formulario-Prefijo` | el prefijo en la ficha | propuesto, editado, tomado, bloqueado |
-| `Formulario-Publicar` | diálogo de comprobación: problemas por pregunta, versión nueva y cambios | sin problemas, con problemas, borrador sin guardar, otra publicación en curso, WhatsApp no disponible |
-| `Formulario-Publicacion` | el estado en la pestaña Publicación | Publicando, Sin confirmar, Publicada vN, No se pudo publicar (con el motivo por pregunta) |
+| `FRM-Listado` y `M-FRM-Listado` | listado: nombre, prefijo, estado y última publicación; ⋮; «Nuevo formulario» | vacío, sin resultados, cargando, error; filtro Todos, Publicados y Borradores |
+| `FRM-Nuevo` | diálogo con el nombre | prefijo propuesto |
+| `FRM-Ficha` y `M-FRM-Ficha` | ficha con pestañas: **Preguntas** (lista, «Agregar pregunta», subir y bajar, vista previa del teléfono al costado), **Inglés** (los textos en inglés al lado del original, con lo que falta marcado) y **Publicación** (versión activa, estado y vista previa oficial) | guardado, guardando, no se guardó, conflicto (409) |
+| `FRM-Pregunta` y `M-FRM-Pregunta` | diálogo: tipo, texto y ayuda es/en, obligatoria, largo máximo, decimales u opciones | cada uno de los seis tipos |
+| `FRM-Prefijo` | el prefijo en la ficha | propuesto, editado, tomado, bloqueado |
+| `FRM-Publicar` | diálogo de comprobación: problemas por pregunta, versión nueva y cambios | sin problemas, con problemas, borrador sin guardar, otra publicación en curso, WhatsApp no disponible |
+| `FRM-Publicacion` | el estado en la pestaña Publicación | Publicando, Sin confirmar, Publicada vN, No se pudo publicar (con el motivo por pregunta) |
 | `WA-Chats-Formulario` y `M-WA-Chats-Formulario` | en un chat de Internos, «Mandar formulario»: elegir, texto (≤1024) y vista del mensaje | botón apagado con su motivo (ventana cerrada, no es empleado, sin formularios, envío pendiente), mandando, encolado, falló |
-| `WA-Chats-Respuesta` y `M-WA-Conversacion` | la tarjeta de respuesta en el chat | esperando, recibida con número y valores, recibida solo con número (sin permiso), rechazada, vencida; los seis tipos sin perder «No», «0», «Sin respuesta» ni los decimales |
+| `WA-Chats-Respuesta` y `M-WA-Conversacion-Respuesta` | la tarjeta de respuesta en el chat | esperando, recibida con número y valores, recibida solo con número (sin permiso), rechazada, vencida; los seis tipos sin perder «No», «0», «Sin respuesta» ni los decimales |
 | `Rol` | el área «Formularios» con sus cinco permisos | ya existe: solo suma filas |
 
 ## 10. Tests
