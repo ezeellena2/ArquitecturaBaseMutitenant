@@ -14,13 +14,13 @@
 | C5 | Hecha: filtro `onlyOwn` aditivo y paginado real con tipos generados; guarda contra respuestas manuales. 7 de integración y 42 del front verdes; build 0/0, TypeScript, lint y contratos sin errores nuevos. |
 | C6 | Hecha: reglas de baja en Application y limpieza EF por puerto; guarda interna. 38 de arquitectura y 48 de integración verdes; builds 0/0. |
 | C8 | Hecha: 27 literales y composición del origen centralizados; guarda fuente y avisos con URL completa. 301 casos verdes; builds 0/0. |
-| Cierre | Corrida completa única terminada; pendiente un fixture de reloj de Assistant para la 8b. C1, autorizado después de esa corrida, está hecho y verificado en su alcance, conservando los verdes anteriores. |
+| Cierre | Corrida completa única terminada; fixture de reloj de Assistant corregido y verificado en la 8b. C1, autorizado después de esa corrida, está hecho y verificado en su alcance, conservando los verdes anteriores. |
 
 | Verificación de cierre | Resultado |
 |---|---|
 | Back: build y suites, incluida arquitectura | Build 0 advertencias / 0 errores; 3072/3072 casos verdes agregados, sin omisiones. Sólo se repitieron la referencia documental corregida y el timeout aislado (verde). |
 | Front: build, TypeScript y lint | Build verde; TypeScript verde después de los arreglos; lint sin errores, con 6 advertencias preexistentes. |
-| Front: suite | Una corrida completa de 3042 casos; 3041 verdes agregados tras arreglos y repeticiones dirigidas. Pendiente únicamente `src/modules/assistant/components/AssistantRetryButton.test.tsx`. |
+| Front: suite | 3042/3042 verdes acumulados: una corrida completa y focos dirigidos. `AssistantRetryButton.test.tsx` usa timers falsos desde el montaje y pasó en la 8b. |
 | Arnés y documentación | Tests verdes; detector 0 auto / 0 modelo / 0 humano, sin consumo de modelo. |
 | Contratos | `contracts:check` verde; OpenAPI y tipos generados coinciden. |
 | Revisión final | Hallazgos de la Guía del 12/10 corregidos: paginado independiente, etiquetas de empresa en contrato, filtros únicos de Roles, guardas C3/C7/C8/C9/C10, textos y hook simplificado. 36 integraciones verdes y focos del front verdes; build, TypeScript, contratos y lint sin errores (6 advertencias previas). |
@@ -96,6 +96,8 @@ Once agentes revalidaron cada caso contra el código. Los 11 son reales; C5, C6 
 - un formateador en el CI, que reformatearía todo el repo y se pisaría con la 8b.
 
 ## Asistente: lo hace la 8b, antes de su puerta
+
+Implementado en main; tareas y verificación final en [correctivos del asistente](2026-10-12-correctivos-asistente.md).
 
 - Una base para los tres controllers idénticos (`Api/Modules/Assistant/Controllers/{Business,Consumer,Platform}AssistantController.cs`): las derivadas declaran solo ruta, acceso, permiso y gate.
 - Una base para las entidades gemelas (`AssistantConversation` y `PlatformAssistantConversation`, y lo mismo con Message, Turn y DurableOperation).
