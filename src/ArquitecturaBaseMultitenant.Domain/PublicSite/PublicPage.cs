@@ -109,12 +109,6 @@ public sealed class PublicPage : Entity, IPublishedByBusiness, IVersioned
 
     private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
-    private static bool HasSupportedImageSignature(byte[] bytes, string? contentType) => contentType switch
-    {
-        "image/png" => bytes.AsSpan().StartsWith(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }),
-        "image/jpeg" => bytes.Length >= 3 && bytes[0] == 0xff && bytes[1] == 0xd8 && bytes[2] == 0xff,
-        "image/webp" => bytes.Length >= 12 && bytes.AsSpan(0, 4).SequenceEqual("RIFF"u8)
-            && bytes.AsSpan(8, 4).SequenceEqual("WEBP"u8),
-        _ => false,
-    };
+    private static bool HasSupportedImageSignature(byte[] bytes, string? contentType) =>
+        FileMediaTypes.Images.Contains(contentType) && FileSignaturePolicy.Matches(contentType, bytes);
 }
