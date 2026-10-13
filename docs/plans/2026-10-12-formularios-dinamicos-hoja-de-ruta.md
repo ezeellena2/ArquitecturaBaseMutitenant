@@ -289,7 +289,10 @@ Decididas por el usuario el 2026-10-12. No se vuelven a preguntar.
 10. **Quién manda un formulario desde el chat:** cualquiera con «Atender internos», sin permiso aparte. Lo que limita es que quien recibe tenga `formrecords.create`.
 11. **Nombres largos en un catálogo de miembros:** si pasan los 30 caracteres del título de una opción en WhatsApp, se cortan con «…» y el nombre completo va en el detalle.
 12. **Catálogo con filtros de más de 200 opciones:** se puede guardar con aviso; el bloqueo es al mandar.
-13. **Biblioteca, edición:** borrador y publicar, con versiones; publicar y retirar piden motivo.14. **Biblioteca, catálogos:** una plantilla trae solo catálogos a mano.15. **Biblioteca, categorías:** las arma la plataforma (nombre es/en y orden), sin listas fijas en el código.16. **Biblioteca, uso:** la plataforma ve solo cuántas organizaciones usaron cada plantilla, nunca cuáles.
+13. **Biblioteca, edición:** borrador y publicar, con versiones; publicar y retirar piden motivo.
+14. **Biblioteca, catálogos:** una plantilla trae solo catálogos a mano.
+15. **Biblioteca, categorías:** las arma la plataforma (nombre es/en y orden), sin listas fijas en el código.
+16. **Biblioteca, uso:** la plataforma ve solo cuántas organizaciones usaron cada plantilla, nunca cuáles.14. **Biblioteca, catálogos:** una plantilla trae solo catálogos a mano.15. **Biblioteca, categorías:** las arma la plataforma (nombre es/en y orden), sin listas fijas en el código.16. **Biblioteca, uso:** la plataforma ve solo cuántas organizaciones usaron cada plantilla, nunca cuáles.
 
 ## 6. Qué tomar de ArquitecturaBase
 
