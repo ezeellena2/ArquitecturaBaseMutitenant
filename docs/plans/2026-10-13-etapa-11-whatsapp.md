@@ -167,6 +167,7 @@ Leé AGENTS.md del front y ../ArquitecturaBaseMutitenant/docs/plans/2026-10-13-e
 | D9 | El bot no se apaga: con un número conectado siempre responde. Diseño saca «Activo» de los tableros del bot. |
 | D10 | Al editar un contacto se puede crear una etiqueta nueva («Crear «VIP»»). Si ya hay una igual sin distinguir mayúsculas, se elige esa. Vale también para «Etiqueta para todos» al importar. Es solo del front; el contrato ya la acepta. |
 | D11 | Una conversación termina cuando se cierra su ventana de 24 h; no hay botón para cerrarla. Si el cliente vuelve a escribir, pasa otra vez por el bot y queda sin tomar en el equipo que elija. En la ficha aparece como una conversación nueva. |
+| D12 | (2026-10-14) Bienvenida y Fuera de horario no tienen interruptor: se editan el texto, los días y las horas, pero no se apagan. Coincide con los tableros de la v123 y con el contrato. |
 
 ## Para Diseño
 
