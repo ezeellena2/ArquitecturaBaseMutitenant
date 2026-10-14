@@ -25,18 +25,6 @@ public sealed partial class PlatformOrganizationPhoneNoticeTests(ApiFactory fact
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    private async Task DisconnectPlatformNumbersAsync()
-    {
-        await using var connection = new Npgsql.NpgsqlConnection(factory.AdminConnectionString);
-        await connection.OpenAsync(Ct);
-        await using var command = new Npgsql.NpgsqlCommand("""
-            UPDATE identity."WhatsAppChannels" SET "Status" = 'Disconnected', "DisconnectedAtUtc" = now(), "EncryptedToken" = ''::bytea,
-                "EncryptedPin" = NULL
-            WHERE "OrganizationId" IS NULL AND "Status" <> 'Disconnected'
-            """, connection);
-        await command.ExecuteNonQueryAsync(Ct);
-    }
-
     [Theory]
     [InlineData("approve", "Aprobamos")]
     [InlineData("reject", "No aprobamos")]
@@ -49,9 +37,6 @@ public sealed partial class PlatformOrganizationPhoneNoticeTests(ApiFactory fact
         Action<Microsoft.AspNetCore.Hosting.IWebHostBuilder>? configureHost = null,
         Action<string, PhoneNumber, Tenant>? verifyPhone = null)
     {
-        // Desde la decisión 3 de la E11 el número de Plataforma vive en la base: «sin canal» es sin un número conectado, aunque
-        // otra prueba de la colección lo haya dejado conectado desde la configuración.
-        if (configureHost is null) await DisconnectPlatformNumbersAsync();
         using var host = factory.WithWebHostBuilder(builder =>
         {
             configureHost?.Invoke(builder);

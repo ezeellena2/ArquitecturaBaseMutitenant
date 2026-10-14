@@ -21,8 +21,14 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 
 /// <summary>Control privado contra outbox cifrado y tickets persistidos reales; ningún cambio alcanza otro escenario.</summary>
 [Collection(ApiTestGroup.Name)]
-public sealed class WhatsAppBrowserControlTests(ApiFactory factory)
+public sealed class WhatsAppBrowserControlTests(ApiFactory factory) : IAsyncLifetime
 {
+    // Conecta el número de Plataforma desde la configuración: empieza sin el de otra prueba y no se lo deja a las
+    // siguientes.
+    public async ValueTask InitializeAsync() => await PlatformWhatsAppNumberReset.DisconnectAsync(factory, Ct);
+
+    public async ValueTask DisposeAsync() => await PlatformWhatsAppNumberReset.DisconnectAsync(factory, Ct);
+
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]

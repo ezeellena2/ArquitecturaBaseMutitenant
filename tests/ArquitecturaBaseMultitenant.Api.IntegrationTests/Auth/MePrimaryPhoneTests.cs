@@ -26,7 +26,7 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
 
 /// <summary>Identidad principal Phone de Mi cuenta por HTTP y PostgreSQL, con canales neutrales.</summary>
 [Collection(ApiTestGroup.Name)]
-public sealed class MePrimaryPhoneTests(ApiFactory factory)
+public sealed partial class MePrimaryPhoneTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 

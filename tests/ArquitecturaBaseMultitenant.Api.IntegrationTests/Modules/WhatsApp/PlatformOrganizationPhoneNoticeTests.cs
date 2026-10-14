@@ -1,10 +1,17 @@
 using System.Text.Json;
+using ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Platform;
 
-public sealed partial class PlatformOrganizationPhoneNoticeTests
+public sealed partial class PlatformOrganizationPhoneNoticeTests : IAsyncLifetime
 {
+    // El aviso por correo supone que no hay número de Plataforma, y la variante por WhatsApp conecta uno desde la
+    // configuración (decisión 3 de la E11): cada caso empieza y termina sin número.
+    public async ValueTask InitializeAsync() => await PlatformWhatsAppNumberReset.DisconnectAsync(factory, Ct);
+
+    public async ValueTask DisposeAsync() => await PlatformWhatsAppNumberReset.DisconnectAsync(factory, Ct);
+
     [Theory]
     [InlineData("approve", "organizacion_aprobada")]
     [InlineData("reject", "organizacion_rechazada")]

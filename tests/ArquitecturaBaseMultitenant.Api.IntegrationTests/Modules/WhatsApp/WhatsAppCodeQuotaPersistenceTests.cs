@@ -22,8 +22,13 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 
 /// <summary>La reserva concurrente, rollback y purga no dependen del historial de OTP.</summary>
 [Collection(ApiTestGroup.Name)]
-public sealed class WhatsAppCodeQuotaPersistenceTests(ApiFactory factory)
+public sealed class WhatsAppCodeQuotaPersistenceTests(ApiFactory factory) : IAsyncLifetime
 {
+    // Conecta el número de Plataforma desde la configuración: empieza sin el de otra prueba y no se lo deja a las siguientes.
+    public async ValueTask InitializeAsync() => await PlatformWhatsAppNumberReset.DisconnectAsync(factory, Ct);
+
+    public async ValueTask DisposeAsync() => await PlatformWhatsAppNumberReset.DisconnectAsync(factory, Ct);
+
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
     private readonly FakeTimeProvider _clock = new(new DateTimeOffset(2026, 10, 8, 23, 59, 58, TimeSpan.Zero));
     private readonly Settings _settings = new();
