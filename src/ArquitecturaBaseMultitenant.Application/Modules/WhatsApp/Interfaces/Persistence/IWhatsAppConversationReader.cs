@@ -33,7 +33,7 @@ public sealed record WhatsAppWaitingRow(Guid TeamId, int Count, DateTime OldestW
 public sealed record WhatsAppConversationRow(Guid Id, WhatsAppInbox? Inbox, Guid? ContactId, string? ContactName, IReadOnlyList<string> Tags,
     Guid? MemberUserId, string WaId, string? LastMessagePreview, DateTime LastMessageAtUtc, bool AwaitingReply, Guid? TeamId, string? TeamName,
     Guid? AssigneeUserId, Guid? AssigneeMemberId, DateTime? LastInboundAtUtc, Guid ChannelId, string? ChannelNumber,
-    WhatsAppNumberStatus ChannelStatus, uint Version)
+    WhatsAppNumberStatus ChannelStatus, uint Version, bool LinkedToAccount = false)
 {
     public override string ToString() => nameof(WhatsAppConversationRow);
 }

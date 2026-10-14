@@ -67,12 +67,14 @@ internal sealed class WhatsAppContactReader(ApplicationDbContext context, ITenan
         Id = customer.Id, Name = customer.Name, WaId = customer.WaId, Tags = customer.Tags, Consent = customer.Consent,
         ConsentSource = customer.ConsentSource, ConsentChangedAtUtc = customer.ConsentChangedAtUtc,
         LastConversationAtUtc = customer.LastConversationAtUtc, Version = customer.Version,
+        Linked = context.Set<WhatsAppConversationLink>().Any(link => context.Set<WhatsAppChat>()
+            .Any(chat => chat.TenantId == customer.TenantId && chat.CustomerId == customer.Id && chat.Id == link.ChatId)),
         LatestConversationId = context.Set<WhatsAppChat>().Where(chat => chat.TenantId == customer.TenantId && chat.CustomerId == customer.Id)
             .OrderByDescending(chat => chat.LastMessageAtUtc).ThenByDescending(chat => chat.Id).Select(chat => (Guid?)chat.Id).FirstOrDefault(),
     });
 
     private static WhatsAppContactResponse Response(ContactProjection row) => new(row.Id, row.Name, row.WaId, [.. row.Tags], row.Consent,
-        row.ConsentSource, row.ConsentChangedAtUtc, LinkedToAccount: false, row.LastConversationAtUtc, row.Version, row.LatestConversationId);
+        row.ConsentSource, row.ConsentChangedAtUtc, row.Linked, row.LastConversationAtUtc, row.Version, row.LatestConversationId);
 
     private sealed class ContactProjection
     {
@@ -86,5 +88,6 @@ internal sealed class WhatsAppContactReader(ApplicationDbContext context, ITenan
         public DateTime? LastConversationAtUtc { get; init; }
         public uint Version { get; init; }
         public Guid? LatestConversationId { get; init; }
+        public bool Linked { get; init; }
     }
 }

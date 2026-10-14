@@ -25,6 +25,8 @@ internal sealed class WhatsAppContactChildListRequestValidator() : PagedRequestV
 
 internal sealed class WhatsAppTagListRequestValidator() : PagedRequestValidator<WhatsAppTagListRequest>([]);
 
+internal sealed class PersonalWhatsAppConversationListRequestValidator() : PagedRequestValidator<PersonalWhatsAppConversationListRequest>([]);
+
 internal sealed class WhatsAppContactListRequestValidator : PagedRequestValidator<WhatsAppContactListRequest>
 {
     public WhatsAppContactListRequestValidator() : base([])

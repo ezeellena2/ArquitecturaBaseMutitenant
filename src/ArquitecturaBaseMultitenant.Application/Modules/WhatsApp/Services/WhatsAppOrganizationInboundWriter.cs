@@ -15,7 +15,8 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// al pasar a las tablas de la organización.
 /// </summary>
 internal sealed class WhatsAppOrganizationInboundWriter(IWhatsAppChatRepository chats, IWhatsAppCustomerRepository customers,
-    IActiveMemberPhoneReader members, IPayloadProtector protector, WhatsAppAttentionBotWriter bot, TimeProvider clock) : IWhatsAppInboundConsumer
+    IActiveMemberPhoneReader members, IPayloadProtector protector, WhatsAppAttentionBotWriter bot, WhatsAppConversationLinkWriter links,
+    TimeProvider clock) : IWhatsAppInboundConsumer
 {
     public async Task ConsumeAsync(WhatsAppInboundContext context, CancellationToken ct)
     {
@@ -44,7 +45,8 @@ internal sealed class WhatsAppOrganizationInboundWriter(IWhatsAppChatRepository 
         customer?.RecordConversation(occurredAtUtc);
         chats.Add(WhatsAppChatMessage.Inbound(chat.Id, message.Wamid, text, media, occurredAtUtc));
         chat.RecordInbound(occurredAtUtc, text);
-        await bot.RespondAsync(channel, chat, customer, newConversation, message.ReplyId, ct);
+        await links.CopyAsync(chat.Id, WhatsAppMessageDirection.Inbound, text, media, occurredAtUtc, message.OriginalUserId, ct);
+        await bot.RespondAsync(context, chat, customer, newConversation, ct);
         message.ClearPersonalData();
     }
 

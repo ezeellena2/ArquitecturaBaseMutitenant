@@ -18,7 +18,8 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// Las notas nunca salen a Meta. Pasar a un equipo lo deja sin tomar en ese equipo; pasar a una persona, tomado por ella.
 /// </summary>
 internal sealed class WhatsAppConversationService(IWhatsAppChatRepository chats, IWhatsAppTeamRepository teams, IWhatsAppTeamReader teamReader,
-    WhatsAppTeamResponseBuilder teamPeople, WhatsAppConversationResponseBuilder responses, WhatsAppReplyIssuer replies, ICurrentUser user, IUnitOfWork unitOfWork, IRequestValidator validator, TimeProvider clock,
+    WhatsAppTeamResponseBuilder teamPeople, WhatsAppConversationResponseBuilder responses, WhatsAppReplyIssuer replies,
+    WhatsAppConversationLinkWriter links, ICurrentUser user, IUnitOfWork unitOfWork, IRequestValidator validator, TimeProvider clock,
     ILogger<WhatsAppConversationService> logger) : IWhatsAppConversationService
 {
     public Task<Result<WhatsAppConversationListResponse>> ListAsync(WhatsAppInbox? inbox, WhatsAppConversationListRequest request,
@@ -66,6 +67,7 @@ internal sealed class WhatsAppConversationService(IWhatsAppChatRepository chats,
                 var message = WhatsAppChatMessage.Outbound(chat.Id, WhatsAppChatMessageKind.Text, Me, await MyNameAsync(ct), text, issued.Value, null, nowUtc);
                 chats.Add(message);
                 chat.RecordOutbound(nowUtc, text);
+                await links.CopyAsync(chat.Id, WhatsAppMessageDirection.Outbound, text, null, nowUtc, null, ct);
                 return Response(message);
             }, CommitPolicy.OnSuccess, cancellationToken);
         });

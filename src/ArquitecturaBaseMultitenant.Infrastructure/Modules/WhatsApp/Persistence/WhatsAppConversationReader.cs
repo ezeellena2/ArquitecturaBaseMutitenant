@@ -97,7 +97,7 @@ internal sealed class WhatsAppConversationReader(ApplicationDbContext context, I
                        Id = chat.Id, Inbox = null, ContactId = null, ContactName = null, Tags = null, MemberUserId = null, WaId = chat.WaId,
                        LastMessagePreview = chat.LastMessagePreview, LastMessageAtUtc = chat.LastMessageAtUtc, AwaitingReply = chat.AwaitingReply,
                        TeamId = chat.TeamId, TeamName = team == null ? null : team.Name, AssigneeUserId = chat.AssigneeUserId,
-                       AssigneeMemberId = null, LastInboundAtUtc = chat.LastInboundAtUtc, ChannelId = channel.Id,
+                       AssigneeMemberId = null, LastInboundAtUtc = chat.LastInboundAtUtc, ChannelId = channel.Id, Linked = false,
                        ChannelNumber = channel.DisplayNumber, ChannelStatus = channel.Status, Version = chat.Version,
                    };
         var tenantId = tenant.RequiredTenantId;
@@ -118,6 +118,7 @@ internal sealed class WhatsAppConversationReader(ApplicationDbContext context, I
                    LastMessagePreview = chat.LastMessagePreview, LastMessageAtUtc = chat.LastMessageAtUtc, AwaitingReply = chat.AwaitingReply,
                    TeamId = chat.TeamId, TeamName = team == null ? null : team.Name, AssigneeUserId = chat.AssigneeUserId,
                    AssigneeMemberId = member == null ? null : member.Id, LastInboundAtUtc = chat.LastInboundAtUtc, ChannelId = channel.Id,
+                   Linked = context.Set<WhatsAppConversationLink>().Any(link => link.ChatId == chat.Id),
                    ChannelNumber = channel.DisplayNumber, ChannelStatus = channel.Status, Version = chat.Version,
                };
     }
@@ -125,7 +126,7 @@ internal sealed class WhatsAppConversationReader(ApplicationDbContext context, I
     private static WhatsAppConversationRow Row(ConversationProjection row) => new(row.Id, row.Inbox, row.ContactId, row.ContactName,
         row.Tags is null ? [] : [.. row.Tags], row.MemberUserId, row.WaId, row.LastMessagePreview, row.LastMessageAtUtc, row.AwaitingReply,
         row.TeamId, row.TeamName, row.AssigneeUserId, row.AssigneeMemberId, row.LastInboundAtUtc, row.ChannelId, row.ChannelNumber,
-        row.ChannelStatus, row.Version);
+        row.ChannelStatus, row.Version, row.Linked);
 
     private async Task<PagedResult<WhatsAppChatMessageResponse>> MessagesAsync<T>(IQueryable<T> messages, PagedRequest request, CancellationToken ct)
         where T : WhatsAppChatMessageBase
@@ -184,6 +185,7 @@ internal sealed class WhatsAppConversationReader(ApplicationDbContext context, I
         public string? ChannelNumber { get; init; }
         public WhatsAppNumberStatus ChannelStatus { get; init; }
         public uint Version { get; init; }
+        public bool Linked { get; init; }
     }
 
     private sealed class MessageProjection

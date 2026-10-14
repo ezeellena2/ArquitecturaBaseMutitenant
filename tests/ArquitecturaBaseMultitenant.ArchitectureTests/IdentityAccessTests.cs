@@ -29,10 +29,14 @@ public sealed partial class IdentityAccessTests
             "ArquitecturaBaseMultitenant.Infrastructure/RequestContext/ExecutionActorFactory.cs",
         };
         ContributeGlobalAccessReaders(expected);
+        ContributeWhatsAppGlobalAccessReaders(expected);
         Assert.Equal(expected.Order(StringComparer.Ordinal), consumers.Order(StringComparer.Ordinal));
     }
 
     static partial void ContributeGlobalAccessReaders(List<string> readers);
+
+    // Cada módulo quitable aporta los suyos en su propio método parcial: un módulo retirado no deja referencias.
+    static partial void ContributeWhatsAppGlobalAccessReaders(List<string> readers);
 
     [Fact]
     public void ApplicationUser_is_referenced_only_by_declared_infrastructure_adapters()

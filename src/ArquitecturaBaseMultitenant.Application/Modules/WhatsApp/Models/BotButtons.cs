@@ -9,6 +9,7 @@ public static class BotButtons
     public const string Recover = "bot.recover";
     public const string PromotionsYes = "bot.promotions.yes";
     public const string PromotionsNo = "bot.promotions.no";
+    public const string LinkAccount = "bot.link";
     private const string OptionPrefix = "bot.option.";
 
     public static string Option(Guid id) => OptionPrefix + id.ToString("N");
@@ -18,5 +19,5 @@ public static class BotButtons
         reply is { Length: 43 } && reply.StartsWith(OptionPrefix, StringComparison.Ordinal)
         && Guid.TryParseExact(reply.AsSpan(OptionPrefix.Length), "N", out var id) ? id : null;
 
-    public static bool IsKnown(string? reply) => reply is SignIn or Recover or PromotionsYes or PromotionsNo || ParseOption(reply) is not null;
+    public static bool IsKnown(string? reply) => reply is SignIn or Recover or PromotionsYes or PromotionsNo or LinkAccount || ParseOption(reply) is not null;
 }

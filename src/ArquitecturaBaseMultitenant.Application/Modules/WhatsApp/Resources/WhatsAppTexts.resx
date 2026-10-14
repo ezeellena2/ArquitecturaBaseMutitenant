@@ -225,6 +225,15 @@
   <data name="Import.SheetName" xml:space="preserve">
     <value>Contactos</value>
   </data>
+  <data name="Bot.LinkOffer" xml:space="preserve">
+    <value>¿Querés ver esta conversación en «Mensajes» de tu cuenta?</value>
+  </data>
+  <data name="Bot.LinkButton" xml:space="preserve">
+    <value>Vincular mi cuenta</value>
+  </data>
+  <data name="Bot.LinkDone" xml:space="preserve">
+    <value>Listo: vas a ver esta conversación en «Mensajes» de tu cuenta.</value>
+  </data>
   <data name="WhatsApp.Number.NotFound" xml:space="preserve">
     <value>No encontramos ese número.</value>
   </data>

@@ -23,6 +23,8 @@ public sealed class WhatsAppCustomer : Entity, ITenantOwned, IVersioned
     public DateTime? LastConversationAtUtc { get; private set; }
     /// <summary>Cuándo el bot le preguntó por promociones: lo hace una sola vez por contacto.</summary>
     public DateTime? PromotionsAskedAtUtc { get; private set; }
+    /// <summary>Cuándo el bot le ofreció vincular la conversación con su cuenta (D2): una sola vez por contacto.</summary>
+    public DateTime? LinkOfferedAtUtc { get; private set; }
 
     public static WhatsAppCustomer Create(PhoneNumber waId, DateTime nowUtc)
     {
@@ -70,6 +72,12 @@ public sealed class WhatsAppCustomer : Entity, ITenantOwned, IVersioned
             .Distinct(StringComparer.OrdinalIgnoreCase).Take(WhatsAppFeature.MaxContactTags)]);
         if (acceptsPromotions) { if (Consent != WhatsAppConsent.Unsubscribed) ChangeConsent(WhatsAppConsent.Accepted, WhatsAppConsentSource.Import, nowUtc); }
         else if (ConsentSource is null) ChangeConsent(WhatsAppConsent.NoAnswer, WhatsAppConsentSource.Import, nowUtc);
+    }
+
+    public void MarkLinkOffered(DateTime nowUtc)
+    {
+        if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("UTC required.", nameof(nowUtc));
+        LinkOfferedAtUtc ??= nowUtc;
     }
 
     public void MarkPromotionsAsked(DateTime nowUtc)

@@ -86,7 +86,7 @@ internal sealed class WhatsAppConversationResponseBuilder(IWhatsAppConversationR
             var window = row.LastInboundAtUtc + WhatsAppChatBase.Window;
             result.Add(new WhatsAppConversationRowResponse(row.Id, row.Inbox, row.ContactId, contactName, row.WaId, row.Tags,
                 row.LastMessagePreview, row.LastMessageAtUtc, row.AwaitingReply, row.TeamId is { } team ? new(team, row.TeamName ?? string.Empty) : null,
-                assignee, LinkedToAccount: false, window > nowUtc ? window : null, row.ChannelStatus == WhatsAppNumberStatus.Disconnected, accountId,
+                assignee, row.LinkedToAccount, window > nowUtc ? window : null, row.ChannelStatus == WhatsAppNumberStatus.Disconnected, accountId,
                 row.Version, new WhatsAppConversationChannelResponse(row.ChannelId, row.ChannelNumber ?? string.Empty, row.ChannelStatus),
                 row.AssigneeUserId == Me));
         }

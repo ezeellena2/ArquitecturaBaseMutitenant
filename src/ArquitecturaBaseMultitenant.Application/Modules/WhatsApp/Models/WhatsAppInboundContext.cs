@@ -2,9 +2,13 @@ using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
-/// <summary>Propiedad original revalidada bajo Phone, cuenta, contacto y mensaje. Nunca representa al dueño posterior.</summary>
+/// <summary>
+/// Propiedad original revalidada bajo Phone, cuenta, contacto y mensaje. Nunca representa al dueño posterior.
+/// OriginalMethodOwned: el teléfono sigue siendo verificado de esa cuenta; OriginalMethodAvailable, además, sirve para entrar.
+/// </summary>
 public sealed record WhatsAppInboundContext(WhatsAppMessage Message, WhatsAppContact? Contact,
-    UserAccountRow? OriginalAccount, LoginMethod? OriginalMethod, bool OriginalMethodAvailable, WhatsAppInboundChannel? Channel = null)
+    UserAccountRow? OriginalAccount, LoginMethod? OriginalMethod, bool OriginalMethodAvailable, WhatsAppInboundChannel? Channel = null,
+    bool OriginalMethodOwned = false)
 {
     public override string ToString() => nameof(WhatsAppInboundContext);
 }

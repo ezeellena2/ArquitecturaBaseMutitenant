@@ -50,6 +50,8 @@ public static class WhatsAppInfrastructureModule
         services.AddScoped<IWhatsAppConversationReader, WhatsAppConversationReader>();
         services.AddScoped<IWhatsAppTeamNoticeRepository, WhatsAppTeamNoticeRepository>();
         services.AddScoped<IWhatsAppContactReader, WhatsAppContactReader>();
+        services.AddScoped<IWhatsAppConversationLinkRepository, WhatsAppConversationLinkRepository>();
+        services.AddScoped<IWhatsAppConversationLinkReader, WhatsAppConversationLinkReader>();
         services.AddSingleton<Application.Modules.WhatsApp.Interfaces.Integrations.IWhatsAppContactSpreadsheet, WhatsAppContactSpreadsheet>();
         services.AddScoped<Application.Modules.WhatsApp.Interfaces.Integrations.IWhatsAppWaitingEmailRenderer, Email.WhatsAppWaitingEmailRenderer>();
         services.AddSingleton<IWhatsAppTokenProtector, WhatsAppTokenProtector>();

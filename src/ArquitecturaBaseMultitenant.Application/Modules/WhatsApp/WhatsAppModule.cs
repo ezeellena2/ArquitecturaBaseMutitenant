@@ -58,6 +58,8 @@ public static class WhatsAppModule
         services.AddScoped<PlatformWhatsAppAuditWriter>();
         services.AddScoped<WhatsAppWaitingNotifier>();
         services.AddScoped<WhatsAppContactImportResolver>();
+        services.AddScoped<WhatsAppConversationLinkWriter>();
+        services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Engagement.IConsumerInteractionSource, WhatsAppConsumerInteractionSource>();
         services.AddScoped<IWhatsAppWaitingNoticeService, WhatsAppWaitingNoticeService>();
         services.AddScoped<IWhatsAppContactService, WhatsAppContactService>();
         services.AddScoped<IWhatsAppTemplateService, WhatsAppTemplateService>();

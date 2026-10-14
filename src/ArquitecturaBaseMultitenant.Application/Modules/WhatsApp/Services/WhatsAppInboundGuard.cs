@@ -23,9 +23,11 @@ internal sealed class WhatsAppInboundGuard(IWhatsAppMessageRepository messages, 
         var contact = hint.WaId is { } sender ? await contacts.GetAsync(sender, ct) : null;
         var account = message.OriginalUserId is { } userId ? await users.GetByIdAsync(userId, ct) : null;
         var method = message.OriginalMethodId is { } methodId ? await methods.GetByIdAsync(methodId, ct) : null;
-        var valid = method is { Type: LoginMethodType.Phone, VerifiedAtUtc: not null } && method.UserId == message.OriginalUserId
-            && method.Value == contact?.WaId && (await availability.AvailableAsync([method], ct)).Count != 0;
+        // El teléfono sigue siendo verificado de la cuenta original; para entrar con él, además, el ingreso tiene que estar disponible.
+        var owned = method is { Type: LoginMethodType.Phone, VerifiedAtUtc: not null } && method.UserId == message.OriginalUserId
+            && method.Value == contact?.WaId;
+        var valid = owned && (await availability.AvailableAsync([method!], ct)).Count != 0;
         var channel = await channels.FindInboundAsync(message.ChannelId, message.PhoneNumberId, ct);
-        return new(message, contact, account, valid ? method : null, valid, channel);
+        return new(message, contact, account, valid ? method : null, valid, channel, owned);
     }
 }

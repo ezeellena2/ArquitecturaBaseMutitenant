@@ -5,9 +5,11 @@ using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Inbound;
-internal sealed class WhatsAppInboundProcessor(WhatsAppInboundSignal signal, IServiceScopeFactory scopes, TenantJobRunner tenants,
+internal sealed class WhatsAppInboundProcessor(WhatsAppInboundSignal signal, IServiceScopeFactory scopes,
     IOptions<WhatsAppOptions> options, TimeProvider clock, ILogger<WhatsAppInboundProcessor> logger)
     : PeriodicWorker(TimeSpan.FromSeconds(options.Value.InboundPollSeconds), clock, logger)
 {
@@ -43,18 +45,16 @@ internal sealed class WhatsAppInboundProcessor(WhatsAppInboundSignal signal, ISe
         }
         return processed;
     }
-    /// <summary>La entrada de un número de organización se procesa dentro de su alcance; la de Plataforma, en un scope común.</summary>
+    /// <summary>
+    /// La entrada de un número de organización se procesa en un scope propio, como la organización (el vínculo con una cuenta
+    /// es un dato compartido y su parte la sella el guardado, como en RolePermissionCache); la de Plataforma, en un scope común.
+    /// </summary>
     private async Task<Result> ProcessAsync(WhatsAppInboundClaim claim, CancellationToken ct)
     {
-        if (claim.OrganizationId is not { } organizationId)
-        {
-            await using var scope = scopes.CreateAsyncScope();
-            return await scope.ServiceProvider.GetRequiredService<IWhatsAppInboundService>().ProcessAsync(claim, ct);
-        }
-        var result = Result.Success();
-        await tenants.RunAsync([organizationId], async (provider, token) =>
-            result = await provider.GetRequiredService<IWhatsAppInboundService>().ProcessAsync(claim, token), ct);
-        return result;
+        await using var scope = scopes.CreateAsyncScope();
+        if (claim.OrganizationId is { } organizationId)
+            scope.ServiceProvider.GetRequiredService<ITenantAccessInitializer>().SetFromAccess(organizationId, TenantKind.Business);
+        return await scope.ServiceProvider.GetRequiredService<IWhatsAppInboundService>().ProcessAsync(claim, ct);
     }
     protected override Task RunIterationAsync(CancellationToken ct) => ProcessPendingAsync(ct);
     protected override async ValueTask<bool> WaitForNextIterationAsync(PeriodicTimer timer, CancellationToken ct)
