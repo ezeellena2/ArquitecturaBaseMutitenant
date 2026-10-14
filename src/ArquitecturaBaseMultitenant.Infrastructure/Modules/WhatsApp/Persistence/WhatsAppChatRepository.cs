@@ -52,6 +52,20 @@ internal sealed class WhatsAppChatRepository(ApplicationDbContext context, ITena
         return context.Set<WhatsAppChatMessage>().SingleOrDefaultAsync(value => value.TenantId == tenantId && value.OutboxMessageId == outboxMessageId, ct);
     }
 
+    public async Task<IReadOnlyList<WhatsAppChat>> ListTakenByAsync(Guid userId, CancellationToken ct)
+    {
+        context.RequireTransaction();
+        var tenantId = tenant.RequiredTenantId;
+        return await context.Set<WhatsAppChat>().Where(value => value.TenantId == tenantId && value.AssigneeUserId == userId).ToArrayAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<WhatsAppChatMessage>> ListAuthoredByAsync(Guid userId, CancellationToken ct)
+    {
+        context.RequireTransaction();
+        var tenantId = tenant.RequiredTenantId;
+        return await context.Set<WhatsAppChatMessage>().Where(value => value.TenantId == tenantId && value.AuthorUserId == userId).ToArrayAsync(ct);
+    }
+
     public async Task<IReadOnlyList<WhatsAppChat>> ListByTeamAsync(Guid teamId, CancellationToken ct)
     {
         context.RequireTransaction();

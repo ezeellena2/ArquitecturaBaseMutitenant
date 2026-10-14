@@ -11,6 +11,8 @@ public interface IPlatformWhatsAppChatRepository
     Task<bool> HasInboundAsync(string wamid, CancellationToken ct);
     Task<PlatformWhatsAppChatMessage?> GetOutboundAsync(Guid outboxMessageId, CancellationToken ct);
     Task<IReadOnlyList<PlatformWhatsAppChat>> ListByTeamAsync(Guid teamId, CancellationToken ct);
+    Task<IReadOnlyList<PlatformWhatsAppChat>> ListTakenByAsync(Guid userId, CancellationToken ct);
+    Task<IReadOnlyList<PlatformWhatsAppChatMessage>> ListAuthoredByAsync(Guid userId, CancellationToken ct);
     void Add(PlatformWhatsAppChat chat);
     void Add(PlatformWhatsAppChatMessage message);
 }

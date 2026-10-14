@@ -14,6 +14,8 @@ public interface IWhatsAppConversationLinkRepository
     Task<WhatsAppConversationLink?> GetAsync(Guid id, CancellationToken ct);
     void Add(WhatsAppConversationLink link);
     void Add(WhatsAppLinkedMessage message);
+    /// <summary>Los vínculos de esa persona, desde su espacio personal (para la baja de su cuenta).</summary>
+    Task<IReadOnlyList<WhatsAppConversationLink>> ListForConsumerAsync(Guid consumerTenantId, CancellationToken ct);
     /// <summary>Desvincular borra el vínculo y sus copias.</summary>
     void Remove(WhatsAppConversationLink link);
 }

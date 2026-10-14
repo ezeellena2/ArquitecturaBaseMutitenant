@@ -23,6 +23,12 @@ internal sealed class WhatsAppConversationLinkRepository(ApplicationDbContext co
         return context.Set<WhatsAppConversationLink>().SingleOrDefaultAsync(value => value.Id == id, ct);
     }
 
+    public async Task<IReadOnlyList<WhatsAppConversationLink>> ListForConsumerAsync(Guid consumerTenantId, CancellationToken ct)
+    {
+        context.RequireTransaction();
+        return await context.Set<WhatsAppConversationLink>().Where(value => value.ConsumerTenantId == consumerTenantId).ToArrayAsync(ct);
+    }
+
     public void Add(WhatsAppConversationLink link) { context.RequireTransaction(); context.Set<WhatsAppConversationLink>().Add(link); }
     public void Add(WhatsAppLinkedMessage message) { context.RequireTransaction(); context.Set<WhatsAppLinkedMessage>().Add(message); }
     public void Remove(WhatsAppConversationLink link) { context.RequireTransaction(); context.Set<WhatsAppConversationLink>().Remove(link); }

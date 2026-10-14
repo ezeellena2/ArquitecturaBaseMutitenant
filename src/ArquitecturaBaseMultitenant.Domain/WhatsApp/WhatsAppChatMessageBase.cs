@@ -65,6 +65,9 @@ public abstract class WhatsAppChatMessageBase : Entity
     /// <summary>Borra el texto y el autor (retención y bajas); el mensaje queda como hecho sin contenido.</summary>
     public void ClearContent() { Text = null; AuthorName = null; }
 
+    /// <summary>La cuenta de quien escribió se eliminó: el mensaje o la nota quedan sin su nombre.</summary>
+    public void ForgetAuthor() { AuthorUserId = null; AuthorName = null; }
+
     private void Initialize(Guid chatId, WhatsAppChatMessageKind kind, WhatsAppMessageDirection direction, Guid? authorUserId, string? authorName,
         string? text, DateTime createdAtUtc)
     {

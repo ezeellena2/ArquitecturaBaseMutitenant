@@ -71,6 +71,7 @@ public static class WhatsAppModule
         services.AddScoped<WhatsAppCostResolver>();
         services.AddScoped<WhatsAppBroadcastChannelResolver>();
         services.AddScoped<WhatsAppBroadcastRecipientWriter>();
+        services.AddScoped<WhatsAppAccountDataRemover>();
         services.AddScoped<IWhatsAppBroadcastDispatchService, WhatsAppBroadcastDispatchService>();
         services.AddScoped<IWhatsAppBroadcastService, WhatsAppBroadcastService>();
         services.AddScoped<IWhatsAppPhoneImportService, WhatsAppPhoneImportService>();
