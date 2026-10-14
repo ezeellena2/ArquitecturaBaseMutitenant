@@ -150,7 +150,7 @@ Leé AGENTS.md del front y ../ArquitecturaBaseMutitenant/docs/plans/2026-10-13-e
 
 - **E12 a E17 (formularios):** usan `WhatsAppChannels` (`WabaId` y token por organización), las conversaciones de Internos, la regla de tomar y la cola de entrada. No se adelanta nada de formularios.
 - **E9:** la CSP tiene que permitir el SDK de Facebook (`connect.facebook.net` y el marco de `facebook.com`), y los límites de pedidos cubren las rutas nuevas.
-- **E10:** exportar mis datos incluye contactos ligados, vínculos y mensajes propios, según el inventario de B7.
+- **E10:** exportar mis datos incluye contactos ligados, vínculos y mensajes propios, según el inventario de B7. Antes de lanzar, resolver el acceso del alta embebida: la configuración de desarrollo (`EmbeddedSignupConfigId` 2541931872886066) da un acceso de usuario del sistema que vence a los 60 días y hoy no se renueva. Hay que usar una configuración con acceso que no vence o renovarlo.
 
 ## Decisiones del usuario (2026-10-13)
 
