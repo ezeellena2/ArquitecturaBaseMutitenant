@@ -38,9 +38,14 @@ internal sealed class WhatsAppWebhookReader(IPhoneNumberParser phones) : IWhatsA
                             if (type == "text" && Property(message, "text", out var content)) text = Text(content, "body");
                             if (type == "button" && Property(message, "button", out var button)) reply = Text(button, "payload");
                             if (type == "interactive" && Property(message, "interactive", out var interactive)
-                                && Property(interactive, "button_reply", out var buttonReply)) reply = Text(buttonReply, "id");
-                            // Solo identificadores de acciones públicas del bot; nunca un token recibido.
-                            reply = reply is BotButtons.SignIn or BotButtons.Recover ? reply : null;
+                                && (Property(interactive, "button_reply", out var choice) || Property(interactive, "list_reply", out choice)))
+                            {
+                                reply = Text(choice, "id");
+                                // Lo que eligió queda en la conversación con el texto que vio.
+                                text = Text(choice, "title");
+                            }
+                            // Solo identificadores de respuestas que ofrece el bot; nunca un token recibido.
+                            reply = BotButtons.IsKnown(reply) ? reply : null;
                             // Lo que no es texto ni respuesta se informa por su tipo, sin el archivo (D7 de la E11).
                             var contentType = kind == WhatsAppMessageKind.Unsupported ? Short(type) : null;
                             messages.Add(new(number, id, sender.Value.Value, kind, text, reply, time, contentType));

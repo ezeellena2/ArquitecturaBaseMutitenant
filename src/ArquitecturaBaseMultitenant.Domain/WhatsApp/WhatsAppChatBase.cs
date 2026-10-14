@@ -58,6 +58,23 @@ public abstract class WhatsAppChatBase : Entity, IVersioned
         LastMessageAtUtc = nowUtc; LastMessagePreview = Preview(preview); AwaitingReply = false;
     }
 
+    /// <summary>
+    /// Un mensaje del bot: no cuenta como respuesta de una persona, así que el chat sigue esperando si nadie lo atendió.
+    /// </summary>
+    public void RecordBotReply(DateTime nowUtc, string? preview)
+    {
+        RequireUtc(nowUtc);
+        if (nowUtc >= LastMessageAtUtc) { LastMessageAtUtc = nowUtc; LastMessagePreview = Preview(preview); }
+    }
+
+    /// <summary>
+    /// Una conversación nueva (la ventana de 24 horas se había cerrado) vuelve a pasar por el bot: sin equipo ni quien la tome.
+    /// </summary>
+    public void RestartWithBot()
+    {
+        TeamId = null; AssigneeUserId = null; TakenAtUtc = null; WaitingSinceUtc = null;
+    }
+
     /// <summary>Lo toma una persona; si ya lo tomó otra, no cambia.</summary>
     public Result Take(Guid userId, DateTime nowUtc)
     {

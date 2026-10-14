@@ -12,8 +12,12 @@ internal static class WhatsAppRequestRules
         && days.All(day => day is { Day: { } weekday, From: { } from, To: { } to } && Enum.IsDefined(weekday) && from < to)
         && days.Select(day => day.Day).Distinct().Count() == days.Count;
 
+    /// <summary>
+    /// La forma de cada opción. El tope de 10 es una regla del bot (WhatsApp.Bot.TooManyOptions): en Plataforma también
+    /// cuenta la opción del sistema. Acá solo se cortan los pedidos desmedidos.
+    /// </summary>
     internal static bool IsValidMenu(IReadOnlyList<WhatsAppBotMenuOptionInput>? menu) =>
-        menu is not null && menu.Count <= WhatsAppFeature.MaxMenuOptions && menu.All(option =>
+        menu is not null && menu.Count <= WhatsAppFeature.MaxMenuOptions * 2 && menu.All(option =>
             option is { Label: { Length: > 0 and <= WhatsAppTextLimits.MenuLabel }, Action: { } action } && Enum.IsDefined(action)
             && (action == WhatsAppBotAction.Team
                 ? option.TeamId is { } team && team != Guid.Empty && option.Reply is null

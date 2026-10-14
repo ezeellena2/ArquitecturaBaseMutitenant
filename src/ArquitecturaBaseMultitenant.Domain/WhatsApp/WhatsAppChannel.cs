@@ -63,7 +63,9 @@ public sealed class WhatsAppChannel : Entity, IGlobalSecurityAudited, IVersioned
             DisplayNumber = displayNumber?.Value, VerifiedName = string.IsNullOrWhiteSpace(verifiedName) ? null : verifiedName.Trim(),
             Coexistence = coexistence, Source = source, UsageTimeZoneId = usageTimeZoneId, ConnectedAtUtc = nowUtc,
             Status = hasPayment ? WhatsAppNumberStatus.Connected : WhatsAppNumberStatus.PaymentMissing,
-            ConsultationsEnabled = organizationId is null,
+            // El de Plataforma conectado por la pantalla atiende consultas; el que sale de la configuración (una instalación de la
+            // Etapa 8) sigue solo con el bot de ingreso hasta que un operador las prende.
+            ConsultationsEnabled = organizationId is null && source == WhatsAppChannelSource.Signup,
         };
     }
 

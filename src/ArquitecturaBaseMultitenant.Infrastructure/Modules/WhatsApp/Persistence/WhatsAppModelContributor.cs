@@ -15,7 +15,14 @@ internal sealed class WhatsAppModelContributor : IPersistenceModelContributor
         [typeof(WhatsAppChannelUsage)] = Schemas.Identity,
         [typeof(PlatformWhatsAppChat)] = Schemas.Platform,
         [typeof(PlatformWhatsAppChatMessage)] = Schemas.Platform,
+        [typeof(PlatformWhatsAppBot)] = Schemas.Platform,
+        [typeof(PlatformWhatsAppTeam)] = Schemas.Platform,
     };
-    public void Configure(ModelBuilder builder) => builder.ApplyConfigurationsFromAssembly(GetType().Assembly,
-        type => type.Namespace == ConfigurationNamespace);
+    public void Configure(ModelBuilder builder)
+    {
+        // El horario y el menú del bot son valores dentro de su jsonb, no entidades.
+        builder.Ignore<WhatsAppBotHours>();
+        builder.Ignore<WhatsAppBotOption>();
+        builder.ApplyConfigurationsFromAssembly(GetType().Assembly, type => type.Namespace == ConfigurationNamespace);
+    }
 }

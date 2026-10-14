@@ -75,13 +75,17 @@ internal sealed class WhatsAppCloudClient(HttpClient client, IOptions<WhatsAppOp
                 return new { messaging_product = "whatsapp", recipient_type = "individual", to, type = "text", text = new { body = message.Body } };
             var interactive = new System.Text.Json.Nodes.JsonObject
             {
-                ["type"] = message.LinkUrl is not null ? "cta_url" : "button",
+                ["type"] = message.LinkUrl is not null ? "cta_url" : message.ListRows is not null ? "list" : "button",
                 ["body"] = new System.Text.Json.Nodes.JsonObject { ["text"] = message.Body },
             };
             if (message.Footer is not null) interactive["footer"] = new System.Text.Json.Nodes.JsonObject { ["text"] = message.Footer };
             interactive["action"] = message.LinkUrl is not null
                 ? new System.Text.Json.Nodes.JsonObject { ["name"] = "cta_url", ["parameters"] = new System.Text.Json.Nodes.JsonObject
                     { ["display_text"] = message.LinkLabel, ["url"] = message.LinkUrl } }
+                : message.ListRows is { } rows
+                ? new System.Text.Json.Nodes.JsonObject { ["button"] = message.ListButton, ["sections"] = new System.Text.Json.Nodes.JsonArray(
+                    new System.Text.Json.Nodes.JsonObject { ["rows"] = new System.Text.Json.Nodes.JsonArray([.. rows.Select(row =>
+                        (System.Text.Json.Nodes.JsonNode)new System.Text.Json.Nodes.JsonObject { ["id"] = row.Id, ["title"] = row.Title })]) }) }
                 : new System.Text.Json.Nodes.JsonObject { ["buttons"] = new System.Text.Json.Nodes.JsonArray(
                     [.. (message.ReplyButtons ?? []).Select(button => (System.Text.Json.Nodes.JsonNode)new System.Text.Json.Nodes.JsonObject
                         { ["type"] = "reply", ["reply"] = new System.Text.Json.Nodes.JsonObject { ["id"] = button.Id, ["title"] = button.Title } })]) };

@@ -21,6 +21,8 @@ public sealed class WhatsAppCustomer : Entity, ITenantOwned, IVersioned
     public DateTime? ConsentChangedAtUtc { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime? LastConversationAtUtc { get; private set; }
+    /// <summary>Cuándo el bot le preguntó por promociones: lo hace una sola vez por contacto.</summary>
+    public DateTime? PromotionsAskedAtUtc { get; private set; }
 
     public static WhatsAppCustomer Create(PhoneNumber waId, DateTime nowUtc)
     {
@@ -54,6 +56,12 @@ public sealed class WhatsAppCustomer : Entity, ITenantOwned, IVersioned
         if (Consent == consent && ConsentSource is not null) return false;
         Consent = consent; ConsentSource = source; ConsentChangedAtUtc = nowUtc;
         return true;
+    }
+
+    public void MarkPromotionsAsked(DateTime nowUtc)
+    {
+        if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("UTC required.", nameof(nowUtc));
+        PromotionsAskedAtUtc ??= nowUtc;
     }
 
     public void RecordConversation(DateTime occurredAtUtc)

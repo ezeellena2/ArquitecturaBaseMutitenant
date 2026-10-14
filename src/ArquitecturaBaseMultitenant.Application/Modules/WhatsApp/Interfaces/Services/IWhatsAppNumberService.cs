@@ -4,7 +4,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Services;
 
-/// <summary>Números de la organización: alta embebida, medio de pago, a quién atienden y su bot.</summary>
+/// <summary>Números de la organización: alta embebida, medio de pago y a quién atienden. El bot de cada uno, en IWhatsAppBotService.</summary>
 public interface IWhatsAppNumberService
 {
     Task<Result<WhatsAppNumberListResponse>> ListAsync(WhatsAppNumberListRequest request, CancellationToken cancellationToken);
@@ -14,6 +14,4 @@ public interface IWhatsAppNumberService
     Task<Result<WhatsAppNumberResponse>> CheckAsync(Guid id, CheckWhatsAppNumberRequest request, CancellationToken cancellationToken);
     Task<Result<WhatsAppNumberResponse>> UpdateAsync(Guid id, UpdateWhatsAppNumberRequest request, CancellationToken cancellationToken);
     Task<Result> DisconnectAsync(Guid id, DeleteWhatsAppNumberRequest request, CancellationToken cancellationToken);
-    Task<Result<WhatsAppBotResponse>> GetBotAsync(Guid id, CancellationToken cancellationToken);
-    Task<Result<WhatsAppBotResponse>> UpdateBotAsync(Guid id, UpdateWhatsAppBotRequest request, CancellationToken cancellationToken);
 }

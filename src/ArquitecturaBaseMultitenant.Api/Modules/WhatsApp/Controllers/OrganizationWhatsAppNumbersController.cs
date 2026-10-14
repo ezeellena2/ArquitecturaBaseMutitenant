@@ -21,7 +21,7 @@ namespace ArquitecturaBaseMultitenant.Api.Modules.WhatsApp.Controllers;
 [Access(Access.Business)]
 [FeatureGate(WhatsAppFeature.Key)]
 [HasPermission(Permissions.WhatsApp.Manage)]
-public sealed class OrganizationWhatsAppNumbersController(IWhatsAppNumberService service) : ControllerBase
+public sealed class OrganizationWhatsAppNumbersController(IWhatsAppNumberService service, IWhatsAppBotService bots) : ControllerBase
 {
     [HttpGet]
     [ProducesResponseType<WhatsAppNumberListResponse>(200)]
@@ -120,7 +120,7 @@ public sealed class OrganizationWhatsAppNumbersController(IWhatsAppNumberService
     [ProducesProblem(404)]
     [ProducesProblem(500)]
     public async Task<IActionResult> GetBot([FromRoute] Guid id, CancellationToken cancellationToken) =>
-        (await service.GetBotAsync(id, cancellationToken)).ToActionResult(this);
+        (await bots.GetAsync(id, cancellationToken)).ToActionResult(this);
 
     [HttpPut("{id:guid}/bot")]
     [ResponseVersion("Version")]
@@ -132,6 +132,6 @@ public sealed class OrganizationWhatsAppNumbersController(IWhatsAppNumberService
     [ProducesProblem(409)]
     [ProducesProblem(500)]
     public async Task<IActionResult> UpdateBot([FromRoute] Guid id, [FromBody] UpdateWhatsAppBotHttpRequest request, CancellationToken cancellationToken) =>
-        (await service.UpdateBotAsync(id, new UpdateWhatsAppBotRequest(request.Welcome, request.OutOfHours, request.Schedule, request.Menu,
+        (await bots.UpdateAsync(id, new UpdateWhatsAppBotRequest(request.Welcome, request.OutOfHours, request.Schedule, request.Menu,
             request.AskPromotions, request.OfferAccountLink, request.EmployeesTeamId, request.Version), cancellationToken)).ToActionResult(this);
 }

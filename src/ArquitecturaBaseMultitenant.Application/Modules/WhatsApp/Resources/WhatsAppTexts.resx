@@ -141,6 +141,33 @@
   <data name="Bot.Closed" xml:space="preserve">
     <value>Hola. Este número no tiene una cuenta de {0} y por ahora no se pueden crear cuentas nuevas. Si tenés una cuenta con otro correo o número, ingresá con ese método o recuperá tu cuenta.</value>
   </data>
+  <data name="Bot.DefaultWelcome" xml:space="preserve">
+    <value>¡Hola! Gracias por escribirnos. En breve te respondemos.</value>
+  </data>
+  <data name="Bot.DefaultOutOfHours" xml:space="preserve">
+    <value>Gracias por escribirnos. Ahora estamos fuera de horario: te respondemos apenas volvamos.</value>
+  </data>
+  <data name="Bot.MenuButton" xml:space="preserve">
+    <value>Ver opciones</value>
+  </data>
+  <data name="Bot.SignInOption" xml:space="preserve">
+    <value>Entrar a mi cuenta</value>
+  </data>
+  <data name="Bot.PromotionsQuestion" xml:space="preserve">
+    <value>¿Querés recibir promociones por WhatsApp? Podés darte de baja cuando quieras.</value>
+  </data>
+  <data name="Bot.PromotionsYes" xml:space="preserve">
+    <value>Sí</value>
+  </data>
+  <data name="Bot.PromotionsNo" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="Bot.PromotionsAccepted" xml:space="preserve">
+    <value>Listo, te vamos a mandar promociones.</value>
+  </data>
+  <data name="Bot.PromotionsDeclined" xml:space="preserve">
+    <value>Listo, no te vamos a mandar promociones.</value>
+  </data>
   <data name="WhatsApp.Number.NotFound" xml:space="preserve">
     <value>No encontramos ese número.</value>
   </data>

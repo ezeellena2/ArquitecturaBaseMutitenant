@@ -17,6 +17,11 @@ public static class WhatsAppModule
         services.AddScoped<WhatsAppContactRemover>();
         services.AddScoped<Interfaces.Integrations.IWhatsAppInboundConsumer, WhatsAppBotWriter>();
         services.AddScoped<Interfaces.Integrations.IWhatsAppInboundConsumer, WhatsAppOrganizationInboundWriter>();
+        services.AddScoped<Interfaces.Integrations.IWhatsAppInboundConsumer, PlatformWhatsAppInboundWriter>();
+        services.AddScoped<WhatsAppSignInLinkIssuer>();
+        services.AddScoped<WhatsAppAttentionBotWriter>();
+        services.AddScoped<PlatformWhatsAppBotWriter>();
+        services.AddScoped<WhatsAppBotResolver>();
         services.AddScoped<WhatsAppModulePolicy>();
         services.AddScoped<WhatsAppBotReplyBuilder>();
         services.AddScoped<WhatsAppWebhookWriter>();
@@ -40,6 +45,8 @@ public static class WhatsAppModule
         services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Features.IModuleHomeCardSource, WhatsAppModuleHomeCardSource>();
         services.AddScoped<IWhatsAppNumberService, WhatsAppNumberService>();
         services.AddScoped<IPlatformWhatsAppNumberService, PlatformWhatsAppNumberService>();
+        services.AddScoped<IWhatsAppBotService, WhatsAppBotService>();
+        services.AddScoped<IPlatformWhatsAppBotService, PlatformWhatsAppBotService>();
         services.AddScoped<IWhatsAppTeamService, WhatsAppTeamService>();
         services.AddScoped<IWhatsAppConversationService, WhatsAppConversationService>();
         services.AddScoped<IWhatsAppContactService, WhatsAppContactService>();

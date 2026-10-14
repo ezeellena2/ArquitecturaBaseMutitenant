@@ -20,7 +20,7 @@ namespace ArquitecturaBaseMultitenant.Api.Modules.WhatsApp.Controllers;
 [Access(Access.Platform)]
 [InstalledModuleRoute(WhatsAppApiModule.ManagementRoute, InstalledModuleRouteCategory.PlatformManagement)]
 [HasPlatformPermission(PlatformPermissions.WhatsApp.Manage)]
-public sealed class PlatformWhatsAppNumberController(IPlatformWhatsAppNumberService service) : ControllerBase
+public sealed class PlatformWhatsAppNumberController(IPlatformWhatsAppNumberService service, IPlatformWhatsAppBotService bots) : ControllerBase
 {
     [HttpGet("number")]
     [ProducesResponseType<PlatformWhatsAppNumberResponse>(200)]
@@ -78,7 +78,7 @@ public sealed class PlatformWhatsAppNumberController(IPlatformWhatsAppNumberServ
     [ProducesProblem(404)]
     [ProducesProblem(500)]
     public async Task<IActionResult> GetBot(CancellationToken cancellationToken) =>
-        (await service.GetBotAsync(cancellationToken)).ToActionResult(this);
+        (await bots.GetAsync(cancellationToken)).ToActionResult(this);
 
     [HttpPut("bot")]
     [ResponseVersion("Version")]
@@ -90,6 +90,6 @@ public sealed class PlatformWhatsAppNumberController(IPlatformWhatsAppNumberServ
     [ProducesProblem(409)]
     [ProducesProblem(500)]
     public async Task<IActionResult> UpdateBot([FromBody] UpdatePlatformWhatsAppBotHttpRequest request, CancellationToken cancellationToken) =>
-        (await service.UpdateBotAsync(new UpdatePlatformWhatsAppBotRequest(request.Welcome, request.OutOfHours, request.Schedule, request.Menu, request.Version), cancellationToken))
+        (await bots.UpdateAsync(new UpdatePlatformWhatsAppBotRequest(request.Welcome, request.OutOfHours, request.Schedule, request.Menu, request.Version), cancellationToken))
         .ToActionResult(this);
 }

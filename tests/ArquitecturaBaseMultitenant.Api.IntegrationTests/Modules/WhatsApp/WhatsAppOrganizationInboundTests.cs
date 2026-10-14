@@ -111,14 +111,15 @@ public sealed class WhatsAppOrganizationInboundTests(ApiFactory factory)
 
     private sealed record ChatRow(WhatsAppInbox Inbox, Guid? MemberUserId, Guid? CustomerId, string? Text);
 
-    /// <summary>Lo que ve la organización: entra a su alcance, como un trabajo, y lee con RLS.</summary>
+    /// <summary>Lo que escribió la otra parte, como lo ve la organización: entra a su alcance y lee con RLS (el bot responde aparte, B3).</summary>
     private static async Task<IReadOnlyList<ChatRow>> ChatsAsync(WebApplicationFactory<Program> host, Guid tenantId)
     {
         await using var scope = host.Services.CreateAsyncScope();
         using var tenantScope = scope.ServiceProvider.GetRequiredService<ITenantScope>().Enter(tenantId);
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         return await (from chat in db.Set<WhatsAppChat>().AsNoTracking()
-                      from message in db.Set<WhatsAppChatMessage>().AsNoTracking().Where(value => value.ChatId == chat.Id)
+                      from message in db.Set<WhatsAppChatMessage>().AsNoTracking()
+                          .Where(value => value.ChatId == chat.Id && value.Direction == WhatsAppMessageDirection.Inbound)
                       orderby message.CreatedAtUtc
                       select new ChatRow(chat.Inbox, chat.MemberUserId, chat.CustomerId, message.Text)).ToArrayAsync(Ct);
     }

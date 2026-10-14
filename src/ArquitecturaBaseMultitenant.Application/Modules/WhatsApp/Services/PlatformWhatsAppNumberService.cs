@@ -94,12 +94,6 @@ internal sealed class PlatformWhatsAppNumberService(IWhatsAppChannelReader reade
             return await ResponseAsync(cancellationToken);
         });
 
-    public Task<Result<PlatformWhatsAppBotResponse>> GetBotAsync(CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, clock, "PlatformWhatsAppNumberGetBot", () => Task.FromResult(Result.Failure<PlatformWhatsAppBotResponse>(ContractErrors.NotImplemented)));
-
-    public Task<Result<PlatformWhatsAppBotResponse>> UpdateBotAsync(UpdatePlatformWhatsAppBotRequest request, CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, clock, "PlatformWhatsAppNumberUpdateBot", () => Task.FromResult(Result.Failure<PlatformWhatsAppBotResponse>(ContractErrors.NotImplemented)));
-
     private async Task<PlatformWhatsAppNumberResponse> ResponseAsync(CancellationToken ct)
     {
         var row = await reader.FindPlatformAsync(clock.GetUtcNow().UtcDateTime, ct);

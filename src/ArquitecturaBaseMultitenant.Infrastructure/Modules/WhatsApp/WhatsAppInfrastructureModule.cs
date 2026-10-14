@@ -40,6 +40,11 @@ public static class WhatsAppInfrastructureModule
         services.AddScoped<IWhatsAppChatRepository, WhatsAppChatRepository>();
         services.AddScoped<IPlatformWhatsAppChatRepository, PlatformWhatsAppChatRepository>();
         services.AddScoped<IWhatsAppCustomerRepository, WhatsAppCustomerRepository>();
+        services.AddScoped<IWhatsAppBotRepository, WhatsAppBotRepository>();
+        services.AddScoped<IPlatformWhatsAppBotRepository, PlatformWhatsAppBotRepository>();
+        services.AddScoped<IWhatsAppBotReader, WhatsAppBotReader>();
+        services.AddScoped<IWhatsAppTeamRepository, WhatsAppTeamRepository>();
+        services.AddScoped<IPlatformWhatsAppTeamRepository, PlatformWhatsAppTeamRepository>();
         services.AddSingleton<IWhatsAppTokenProtector, WhatsAppTokenProtector>();
         services.AddScoped<WhatsAppChannelCredentials>();
         services.AddSingleton<WhatsAppPlatformChannelState>();

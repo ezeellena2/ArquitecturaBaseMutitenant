@@ -29,7 +29,7 @@ public sealed class WhatsAppBotTests
         contact.RecordInbound(now);
         var message = WhatsAppMessage.Create("fixture-number", "fixture-message", "inbound", WhatsAppMessageDirection.Inbound,
             WhatsAppMessageKind.Text, WhatsAppMessageStatus.Pending, now, now, contact.Id);
-        await new WhatsAppBotWriter(settings, null!, outbox, null!, null!, null!, clock)
+        await new WhatsAppBotWriter(settings, new WhatsAppSignInLinkIssuer(settings, null!, outbox, null!, null!, null!), clock)
             .ConsumeAsync(new(message, contact, null, null, false), Ct);
         Assert.Equal(0, outbox.Calls);
     }
@@ -45,6 +45,6 @@ public sealed class WhatsAppBotTests
     private sealed class Outbox : IOutbox
     {
         public int Calls { get; private set; }
-        public void Enqueue(string channel, string payload, Guid? userId = null) => Calls++;
+        public Guid Enqueue(string channel, string payload, Guid? userId = null) { Calls++; return Guid.CreateVersion7(); }
     }
 }

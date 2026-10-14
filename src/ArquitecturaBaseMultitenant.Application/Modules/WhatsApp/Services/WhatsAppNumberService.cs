@@ -128,12 +128,6 @@ internal sealed class WhatsAppNumberService(IWhatsAppChannelReader reader, IWhat
             }, CommitPolicy.OnSuccess, cancellationToken);
         });
 
-    public Task<Result<WhatsAppBotResponse>> GetBotAsync(Guid id, CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, clock, "WhatsAppNumberGetBot", () => Task.FromResult(Result.Failure<WhatsAppBotResponse>(ContractErrors.NotImplemented)));
-
-    public Task<Result<WhatsAppBotResponse>> UpdateBotAsync(Guid id, UpdateWhatsAppBotRequest request, CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, clock, "WhatsAppNumberUpdateBot", () => Task.FromResult(Result.Failure<WhatsAppBotResponse>(ContractErrors.NotImplemented)));
-
     private async Task<Result<WhatsAppNumberResponse>> FindAsync(Guid id, CancellationToken ct) =>
         await reader.FindOrganizationAsync(id, clock.GetUtcNow().UtcDateTime, ct) is { } number ? number : WhatsAppErrors.NumberNotFound;
 

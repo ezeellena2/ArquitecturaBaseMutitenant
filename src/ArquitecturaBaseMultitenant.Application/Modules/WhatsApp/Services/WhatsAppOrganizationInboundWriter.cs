@@ -10,11 +10,12 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 
 /// <summary>
 /// La entrada a un número de la organización, dentro de su alcance y de la transacción del procesador (decisión 4 de la
-/// E11): un miembro activo con ese teléfono verificado va a Internos; los demás, a Clientes con su contacto. La copia
-/// global se purga al pasar a las tablas de la organización.
+/// E11): un miembro activo con ese teléfono verificado va a Internos; los demás, a Clientes con su contacto. Una entrada
+/// con la ventana de 24 horas cerrada empieza otra conversación, que vuelve a pasar por el bot. La copia global se purga
+/// al pasar a las tablas de la organización.
 /// </summary>
 internal sealed class WhatsAppOrganizationInboundWriter(IWhatsAppChatRepository chats, IWhatsAppCustomerRepository customers,
-    IActiveMemberPhoneReader members, IPayloadProtector protector, TimeProvider clock) : IWhatsAppInboundConsumer
+    IActiveMemberPhoneReader members, IPayloadProtector protector, WhatsAppAttentionBotWriter bot, TimeProvider clock) : IWhatsAppInboundConsumer
 {
     public async Task ConsumeAsync(WhatsAppInboundContext context, CancellationToken ct)
     {
@@ -32,15 +33,18 @@ internal sealed class WhatsAppOrganizationInboundWriter(IWhatsAppChatRepository 
         var chat = await chats.GetAsync(channel.Id, waId.Value, member is null ? WhatsAppInbox.Customers : WhatsAppInbox.Internal, ct);
         WhatsAppCustomer? customer = null;
         if (member is null) customer = await CustomerAsync(waId, nowUtc, ct);
+        var newConversation = chat is null || !chat.IsWindowOpen(occurredAtUtc);
         if (chat is null)
         {
             chat = customer is null ? WhatsAppChat.ForMember(channel.Id, waId, member!.Value, nowUtc)
                 : WhatsAppChat.ForCustomer(channel.Id, waId, customer.Id, nowUtc);
             chats.Add(chat);
         }
+        else if (newConversation) chat.RestartWithBot();
         customer?.RecordConversation(occurredAtUtc);
         chats.Add(WhatsAppChatMessage.Inbound(chat.Id, message.Wamid, text, media, occurredAtUtc));
         chat.RecordInbound(occurredAtUtc, text);
+        await bot.RespondAsync(channel, chat, customer, newConversation, message.ReplyId, ct);
         message.ClearPersonalData();
     }
 
