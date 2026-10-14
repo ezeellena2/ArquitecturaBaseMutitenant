@@ -2,7 +2,13 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
+using ArquitecturaBaseMultitenant.Domain.Invitations;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Organization;
 
@@ -186,6 +192,72 @@ public sealed partial class HomeTests(ApiFactory factory)
                 .Order(StringComparer.Ordinal),
             ownerRows.Select(item => item.GetProperty("subject").GetString()!).Order(StringComparer.Ordinal));
         Assert.All(ownerRows, item => Assert.Equal(JsonValueKind.Null, item.GetProperty("companyId").ValueKind));
+    }
+
+    /// <summary>
+    /// Caso 6 del E2E real, con la invitación por correo después de la decisión 11 de la E11 (InvitationIdentity): la
+    /// vencida de su empresa llega con el correo a Inicio del Administrador de empresa, a Usuarios y a Miembros de la
+    /// empresa. Se vence como lo hace el comando «expire» de RealE2ESetup: por id, destino (un Email) y estado.
+    /// </summary>
+    [Fact]
+    public async Task The_expired_company_invitation_keeps_its_email_in_home_users_and_company_members()
+    {
+        using var ownerClient = NewClient();
+        var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
+        var tenantId = await OrganizationJourney.StageAsync(factory, owner, "Inicio con correo vencido", Ct);
+        await AccountJourney.AuthorizeAsync(ownerClient, "business", Ct);
+        var companyId = await OrganizationJourney.CreateCompanyAsync(ownerClient, "Delta Este S.A.", Ct);
+        var companyAdminRoleId = await CompanyAdminRoleIdAsync(ownerClient);
+        var invitee = Email.Create($"Vencida-{Guid.NewGuid():N}@Example.test").Value;
+        using var issued = await AccountJourney.PostAsync(ownerClient, "/api/users/invitations", new
+        {
+            email = invitee.DisplayValue, roleIds = Array.Empty<Guid>(),
+            companies = new[] { new { companyId, roleIds = new[] { companyAdminRoleId } } },
+        }, Ct);
+        Assert.True(issued.StatusCode == HttpStatusCode.Created, await issued.Content.ReadAsStringAsync(Ct));
+        using (var issuedJson = JsonDocument.Parse(await issued.Content.ReadAsStringAsync(Ct)))
+        {
+            var invitationId = issuedJson.RootElement.GetProperty("invitationId").GetGuid();
+            await using var scope = factory.Services.CreateAsyncScope();
+            var services = scope.ServiceProvider;
+            using var tenant = services.GetRequiredService<ITenantScope>().Enter(tenantId);
+            var expiredAtUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime.AddMinutes(-1);
+            Assert.Equal(1, await services.GetRequiredService<ApplicationDbContext>().Invitations
+                .Where(invitation => invitation.Id == invitationId && invitation.Destination == invitee
+                    && invitation.Status == InvitationStatus.Pending)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(invitation => invitation.ExpiresAtUtc, expiredAtUtc), Ct));
+        }
+
+        using var adminClient = NewClient();
+        var admin = await AccountJourney.RegisterAsync(factory, adminClient, Ct);
+        var adminMemberId = await OrganizationJourney.AddActiveMemberAsync(factory, tenantId, admin.UserId, Ct);
+        using (var added = await AccountJourney.PostAsync(ownerClient, $"/api/companies/{companyId:D}/members",
+            new { memberId = adminMemberId, roleIds = new[] { companyAdminRoleId } }, Ct))
+            Assert.True(added.StatusCode == HttpStatusCode.NoContent, await added.Content.ReadAsStringAsync(Ct));
+        await AccountJourney.AuthorizeAsync(adminClient, "business", Ct);
+
+        var home = await OrganizationJourney.HomeAsync(adminClient, Ct);
+        var group = Assert.Single(home.GetProperty("pendingGroups").EnumerateArray(),
+            value => value.GetProperty("area").GetString() == "users" && value.GetProperty("kind").GetString() == "invitationExpired");
+        var item = Assert.Single(group.GetProperty("items").EnumerateArray());
+        Assert.Equal(invitee.DisplayValue, item.GetProperty("subject").GetString());
+        Assert.Equal("Delta Este S.A.", item.GetProperty("companyName").GetString());
+        var memberId = item.GetProperty("targetId").GetGuid();
+        Assert.Equal([("users", "invitationExpired", invitee.DisplayValue)], Pending(home));
+
+        using var users = await ownerClient.GetAsync("/api/users/paged?state=Expired&pageSize=50", Ct);
+        Assert.True(users.StatusCode == HttpStatusCode.OK, await users.Content.ReadAsStringAsync(Ct));
+        using var usersJson = JsonDocument.Parse(await users.Content.ReadAsStringAsync(Ct));
+        var row = Assert.Single(usersJson.RootElement.GetProperty("items").EnumerateArray(),
+            value => value.GetProperty("memberId").GetGuid() == memberId);
+        Assert.Equal(invitee.DisplayValue, row.GetProperty("email").GetString());
+        Assert.Equal(JsonValueKind.Null, row.GetProperty("phone").ValueKind);
+
+        using var members = await adminClient.GetAsync($"/api/companies/{companyId:D}/members/paged?state=Invited&pageSize=50", Ct);
+        Assert.True(members.StatusCode == HttpStatusCode.OK, await members.Content.ReadAsStringAsync(Ct));
+        using var membersJson = JsonDocument.Parse(await members.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(invitee.DisplayValue, Assert.Single(membersJson.RootElement.GetProperty("items").EnumerateArray(),
+            value => value.GetProperty("memberId").GetGuid() == memberId).GetProperty("email").GetString());
     }
 
     internal static (string? Area, string? Kind, string? Subject)[] Pending(JsonElement home) =>
