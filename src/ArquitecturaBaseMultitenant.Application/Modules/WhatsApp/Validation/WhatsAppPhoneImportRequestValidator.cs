@@ -10,6 +10,9 @@ internal sealed class WhatsAppPhoneImportRequestValidator : AbstractValidator<Wh
     public WhatsAppPhoneImportRequestValidator()
     {
         RuleFor(request => request.Phones).Must(values => values is { Count: > 0 and <= WhatsAppFeature.MaxPhoneImport } && values.All(value => value is not null)).WithMessage(_ => WhatsAppTexts.Get("WhatsApp.Validation.PhonesInvalid"));
-        RuleFor(request => request.RoleIds).Must(WhatsAppRequestRules.AreValidIds).WithMessage(_ => WhatsAppTexts.Get("WhatsApp.Validation.SelectionInvalid"));
+        // Los roles son de la empresa elegida: sin empresa no hay roles.
+        RuleFor(request => request.RoleIds).Must((request, ids) => WhatsAppRequestRules.AreValidIds(ids) && (request.CompanyId is not null || ids!.Count == 0))
+            .WithMessage(_ => WhatsAppTexts.Get("WhatsApp.Validation.SelectionInvalid"));
+        RuleFor(request => request.CompanyId).Must(id => id != Guid.Empty).WithMessage(_ => WhatsAppTexts.Get("WhatsApp.Validation.SelectionInvalid"));
     }
 }

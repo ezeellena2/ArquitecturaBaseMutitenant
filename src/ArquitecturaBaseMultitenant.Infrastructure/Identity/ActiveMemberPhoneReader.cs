@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
@@ -23,5 +24,24 @@ internal sealed class ActiveMemberPhoneReader(ApplicationDbContext context, ITen
                     && user.Status == UserStatus.Active && user.DeletedAtUtc == null
                     && member.TenantId == tenantId && member.Status == MemberStatus.Active
                 select (Guid?)user.Id).FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<MemberPhoneRow>> ListMembersAsync(IReadOnlyCollection<PhoneNumber> phones,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(phones);
+        if (phones.Count == 0) return [];
+        var tenantId = tenant.RequiredTenantId;
+        var values = phones.Select(phone => phone.Value).ToArray();
+        var rows = await (from method in context.LoginMethods.AsNoTracking()
+                          join user in context.Users.AsNoTracking() on method.UserId equals user.Id
+                          join member in context.Members.AsNoTracking() on user.Id equals member.UserId
+                          where method.Type == LoginMethodType.Phone && values.Contains(method.Value) && method.VerifiedAtUtc != null
+                              && user.DeletedAtUtc == null && member.TenantId == tenantId
+                              && (member.Status == MemberStatus.Active || member.Status == MemberStatus.Inactive)
+                          select new MemberPhoneRow(method.Value, user.DisplayName,
+                              member.Status == MemberStatus.Active && user.Status == UserStatus.Active))
+            .ToListAsync(cancellationToken);
+        return [.. rows.DistinctBy(row => row.Phone, StringComparer.Ordinal)];
     }
 }

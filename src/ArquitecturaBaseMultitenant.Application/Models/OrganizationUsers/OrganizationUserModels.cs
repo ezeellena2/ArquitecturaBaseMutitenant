@@ -57,6 +57,9 @@ public sealed record InviteOrganizationUserRequest(Email? Email, IReadOnlyCollec
 
 public sealed record InviteCompanyRolesRequest(Guid CompanyId, IReadOnlyCollection<Guid>? RoleIds);
 
+/// <summary>El teléfono verificado (E.164) de un miembro; activo si el miembro y su cuenta lo están.</summary>
+public sealed record MemberPhoneRow(string Phone, string? DisplayName, bool IsActive);
+
 /// <summary>La invitación emitida y cuándo vence, para el aviso «Invitamos a … La invitación vence el …».</summary>
 public sealed record OrganizationInvitationIssuedResponse(Guid InvitationId, DateTime ExpiresAtUtc);
 

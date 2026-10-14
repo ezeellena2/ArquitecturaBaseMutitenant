@@ -24,6 +24,11 @@ public static class InvitationErrors
     public static readonly Error SignInRequired = Error.Unauthorized(SignInRequiredCode, "Sign in to accept the invitation.");
     public static readonly Error WrongAccount = Error.Forbidden(WrongAccountCode, "The signed-in account cannot accept this invitation.");
     public static readonly Error ChannelUnavailable = Error.Validation(ChannelUnavailableCode, "The invitation channel is unavailable.");
+    /// <summary>
+    /// El mismo motivo cuando el canal de Plataforma se cae por un rato (sin número conectado o sin medio de pago): «Cargar
+    /// teléfonos» responde 503 y se puede volver a probar.
+    /// </summary>
+    public static Error ChannelUnavailableForNow() => Error.ServiceUnavailable(ChannelUnavailableCode, ChannelUnavailable.Description);
     /// <summary>Un operador de plataforma nunca entra a una organización (ADR 0042); quien invita no se entera.</summary>
     public static readonly Error PlatformOperator = Error.Forbidden(PlatformOperatorCode, "A platform operator cannot join an organization.");
 }

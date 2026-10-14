@@ -98,7 +98,7 @@ public sealed class WhatsAppAttentionContractTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task Routes_answer_not_implemented_behind_the_module_and_404_without_it()
+    public async Task Routes_answer_behind_the_module_and_404_without_it()
     {
         using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
@@ -107,14 +107,12 @@ public sealed class WhatsAppAttentionContractTests(ApiFactory factory)
         using (var off = await client.GetAsync("/api/organization/whatsapp/numbers", Ct))
             Assert.Equal(HttpStatusCode.NotFound, off.StatusCode);
         await EnableAsync(tenant);
-        // Lo que todavía no está programado (B5c, «Cargar teléfonos»).
-        foreach (var path in new[] { "/api/organization/whatsapp/phone-imports/preview" })
-        {
-            using var response = await client.PostAsJsonAsync(path, new { phones = Array.Empty<object>(), roleIds = Array.Empty<Guid>() }, Ct);
-            Assert.Equal(HttpStatusCode.NotImplemented, response.StatusCode);
-            using var problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
-            Assert.Equal(ContractErrors.NotImplementedCode, problem.RootElement.GetProperty("code").GetString());
-        }
+        // Con el módulo prendido, la última ruta del contrato (B5c) ya responde: una lista vacía es un 400 de validación.
+        using var response = await client.PostAsJsonAsync("/api/organization/whatsapp/phone-imports/preview",
+            new { phones = Array.Empty<object>(), roleIds = Array.Empty<Guid>() }, Ct);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        using var problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
+        Assert.NotEqual(ContractErrors.NotImplementedCode, problem.RootElement.GetProperty("code").GetString());
     }
 
     private async Task EnableAsync(Guid tenantId)
